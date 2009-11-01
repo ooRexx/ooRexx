@@ -123,13 +123,11 @@
       end
    end
 
-   if self~catstyle~wordpos("WIZZARD") > 0 then
-   do
+   if self~catstyle~wordpos("WIZZARD") > 0 then do
       self~Wizard = 1
       self~catstyle = self~catstyle~changestr("WIZZARD","")
    end
-   else if self~catstyle~wordpos("WIZARD") > 0 then
-   do
+   else if self~catstyle~wordpos("WIZARD") > 0 then do
       self~Wizard = 1
       self~catstyle = self~catstyle~changestr("WIZARD","")
    end
@@ -205,7 +203,7 @@
       if self~catalog['page']['w'] = .nil then self~catalog['page']['w'] = self~sizeX - (self~catX+self~catcx+20)
    end
 
-   self~CategoryPage
+   self~categoryPage
 
    if m > 0 then do
       if self~catmax = 0 then self~catmax = 5
@@ -252,12 +250,12 @@
    end
 
 -- This method returns the current page index
-::method CurrentCategory unguarded
+::method currentCategory unguarded
    return self~catalog['category']
 
 -- This method adds controls to CategoryDialog dialog itself.  The dialog that is the parent to
 -- the child dialogs that make up the pages of the CategoryDialog.
-::method CategoryPage protected
+::method categoryPage protected
 
    size = self~getTextSizeDlg("Hg")
    textHeight = size~height
@@ -393,6 +391,11 @@
    oldPage = self~CurrentCategory
    if oldPage < self~catalog['count'] then self~ChangePage(oldPage+1)
 
+
+::method sendMessageToCategoryControl unguarded external "LIBRARY oodialog catdlg_sendMessageToCategoryControl"
+::method sendMessageToCategoryItem unguarded
+   forward message "sendMessageToCategoryControl"
+
 ::method BoxMessage unguarded private
    use arg category, id, msg, wP, lP
    if category~Datatype("N") = 0 then category = self~catalog['category']  /* assume current page is addressed */
@@ -401,28 +404,46 @@
    if id = -1 then return -1
    return SendWinMsg("PTR", self~catalog['handles'][category], id, msg, wP, lP)
 
-::method AddCategoryComboEntry unguarded
-   use arg id, data, category
-   if arg(2,"o") = 1 then return -1
-   return self~BoxMessage(category, id, 0x00000143, 0, "T" || data)
 
-::method InsertCategoryComboEntry unguarded
-   use arg id, item, data, category
-   if arg(3,"o") = 1 then return -1
-   if arg(2,"o") = 1 then item = self~GetCurrentCategoryComboIndex(id, category)
-   return self~BoxMessage(category, id, 0x0000014A, item-1, "T" || data)
+::method addCategoryComboEntry unguarded
+   use strict arg id, string, pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   comboBox = self~newComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   else return comboBox~add(string)
+
+::method insertCategoryComboEntry unguarded
+   use strict arg id, index = 0, string, pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   comboBox = self~newComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   if arg(2, 'O') then return comboBox~insert( , string)
+   else return comboBox~insert(index, string)
+
+::method getCategoryComboEntry unguarded external "LIBRARY oodialog catdlg_getCategoryComboEntry"
+
+::method findCategoryComboEntry unguarded
+   use strict arg id, string, pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   comboBox = self~newComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   return comboBox~find(string)
+
+::method categoryComboAddDirectory unguarded
+   use strict arg id, drivepath, fileAttributes = "", pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   comboBox = self~newComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   return comboBox~addDirectory(drivePath, fileAttibutes)
+
+
+
 
 /* don't use string but the index */
 ::method DeleteCategoryComboEntry unguarded
    use arg id, index, category
    if arg(2,"o") = 1 then index = self~GetCurrentCategoryComboIndex(id, category)
    return self~BoxMessage(category, id, 0x00000144, index-1, 0)
-
-::method FindCategoryComboEntry unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | data = "DATA" then return -1
-   item = self~BoxMessage(category, id, 0x0000014C, 0, "T" || data)
-   if item > 0 then return item + 1; else return 0
 
 ::method GetCurrentCategoryComboIndex unguarded
    use arg id, category
@@ -437,14 +458,6 @@
    use arg id, category
    return self~BoxMessage(category, id, 0x00000146, 0, 0)
 
-::method GetCategoryComboEntry unguarded
-   use arg id, ndx, category
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   len = SendWinMsg("DLG", self~catalog['handles'][category], id, 0x00000149, ndx-1,0)
-   if len <= 0 then return ""
-   else return SendWinMsg("PTR", self~catalog['handles'][category], id, 0x00000148, ndx-1,"G" || len+1)
-
 ::method ChangeCategoryComboEntry unguarded
    use arg id, item, data, category
    if arg(2,"o") = 1 then item = self~GetCurrentCategoryComboIndex(id, category)
@@ -452,44 +465,57 @@
    self~DeleteCategoryComboEntry(id, item, category)
    return self~InsertCategoryComboEntry(id, item, data, category)
 
-::method CategoryComboAddDirectory unguarded
-   use arg id, drvpath, fattr, category
-   READWRITE  = 0
-   READONLY   = 1
-   HIDDEN     = 2
-   SYSTEM     = 4
-   DIRECTORY  = 16
-   ARCHIVE    = 32
-   interpret( "opts = "fattr~translate('+',' ') )
-   return self~BoxMessage(category, id, 0x00000145, opts, "T" || drvpath)
-
 ::method CategoryComboDrop unguarded
    use arg id, category
    return self~BoxMessage(category, id, 0x0000014B, 0, 0)
 
 
-::method AddCategoryListEntry unguarded
-   use arg id, data, category
-   if arg(2,"o") = 1 then return -1
-   return self~BoxMessage(category, id, 0x00000180, 0, "T" || data)
+/* The following methods are to manipulate a list box. */
 
-::method InsertCategoryListEntry unguarded
-   use arg id, item, data, category
-   if arg(3,"o") = 1 then return -1
-   if arg(2,"o") = 1 then item = self~GetCurrentCategoryListIndex(id, category)
-   return self~BoxMessage(category, id, 0x00000181, item-1, "T" || data)
+::method setCategoryListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
+
+::method addCategoryListEntry unguarded
+   use strict arg id, text, pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   listBox = self~newListBox(id, pageID)
+   if listBox == .nil then return -1
+   else return listBox~add(text)
+
+::method insertCategoryListEntry unguarded
+   use strict arg id, index = (-2), text, pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   listBox = self~newListBox(id, pageID)
+   if listBox == .nil then return -1
+   if arg(2, 'O') then return listBox~insert( , text)
+   else return listBox~insert(index, text)
+
+::method findCategoryListEntry unguarded
+   use strict arg id, text, pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   listBox = self~newListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~find(text)
+
+::method getCategoryListEntry unguarded
+   use strict arg id, index, pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   listBox = self~newListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~getText(index)
+
+::method categoryListAddDirectory unguarded
+   use strict arg id, drivePath, fileAttributes = "", pageID = (-1)
+   if pageID == -1 then pageID = self~catalog['category']
+   listBox = self~newListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~addDirectory(drivePath, fileAttributes)
+
 
 /* don't use string but the index */
 ::method DeleteCategoryListEntry unguarded
    use arg id, index, category
    if arg(2,"o") = 1 then index = self~GetCurrentCategoryListIndex(id, category)
    return self~BoxMessage(category, id, 0x00000182, index-1, 0)
-
-::method FindCategoryListEntry unguarded
-   use arg id, data, category
-   if arg(2,"o") = 1 then return -1
-   item = self~BoxMessage(category, id, 0x0000018F, 0, "T" || data)
-   if item > 0 then return item + 1; else return 0
 
 ::method GetCurrentCategoryListIndex unguarded
    use arg id, category
@@ -504,14 +530,6 @@
    use arg id, category
    return self~BoxMessage(category, id, 0x0000018B, 0, 0)
 
-::method GetCategoryListEntry unguarded
-   use arg id, ndx, category
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   len = SendWinMsg("DLG", self~catalog['handles'][category], id, 0x0000018A, ndx-1,0)
-   if len <= 0 then return ""
-   else return SendWinMsg("PTR", self~catalog['handles'][category], id, 0x00000189, ndx-1,"G" || len+1)
-
 ::method ChangeCategoryListEntry unguarded
    use arg id, item, data, category
    if arg(2,"o") = 1 then item = self~GetCurrentCategoryListIndex(id, category)
@@ -519,19 +537,6 @@
    self~DeleteCategoryListEntry(id, item, category)
    return self~InsertCategoryListEntry(id, item, data, category)
 
-::method SetCategoryListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
-
-
-::method CategoryListAddDirectory unguarded
-   use arg id, drvpath, fattr, category
-   READWRITE  = 0
-   READONLY   = 1
-   HIDDEN     = 2
-   SYSTEM     = 4
-   DIRECTORY  = 16
-   ARCHIVE    = 32
-   interpret( "opts = "fattr~translate('+',' ') )
-   return self~BoxMessage(category, id, 0x0000018D, opts, "T" || drvpath)
 
 
 ::method CategoryListDrop unguarded
@@ -729,25 +734,22 @@
 
 
 
-::method SendMessageToCategoryItem unguarded
-   use strict arg id, a2, a3, a4, category = ""
-   if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
-   if \ id~datatype("W") then id = self~resolveSymbolicId(id)
-   return SendWinMsg("DLG", self~catalog['handles'][category], id, a2, a3, a4)
-
-::method SetCategoryItemFont unguarded
-   use strict arg id, hFont, bRedraw = 1, category = ""     /* WM_SETFONT */
+::method setCategoryItemFont unguarded
+   use strict arg id, hFont, bRedraw = 1, category = ""
    if arg(4, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
 
    hCtrl = self~getControlHandle(id, self~catalog['handles'][category])
-   return SendWinMsg("ANY", hCtrl, "0x0030", hFont, bRedraw)
+   msg   = self~WM_SETFONT
+   return self~sendWinHandleMsg(msg, hFont, bRedraw, hCtrl)
 
-::method FocusCategoryItem unguarded
+::method focusCategoryItem unguarded
    use strict arg id, category = ""
    if arg(2,'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
 
    hCtrl = self~getControlHandle(id, self~catalog['handles'][category])
-   return SendWinMsg("ANY", self~catalog['handles'][category], "0x0028", hCtrl, 1)
+   hDlg  = self~catalog['handles'][category]
+   msg   = self~WM_NEXTDLGCTL
+   return self~sendWinHandleMsg(msg, hCtrl, 1, hDlg)
 
 /* set/get the horizontal scroll width of a list box */
 

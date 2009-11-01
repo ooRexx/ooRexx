@@ -152,10 +152,10 @@ void userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg)
  * @return Pointer to void, could be used in the return statement of a method
  *         to return NULLOBJECT after the exeception is raised.
  */
-void *wrongClassException(RexxThreadContext *c, int pos, const char *n)
+RexxObjectPtr wrongClassException(RexxThreadContext *c, int pos, const char *n)
 {
     c->RaiseException2(Rexx_Error_Invalid_argument_noclass, c->WholeNumber(pos), c->String(n));
-    return NULL;
+    return NULLOBJECT;
 }
 
 /**
@@ -172,11 +172,12 @@ void *wrongClassException(RexxThreadContext *c, int pos, const char *n)
  * @note  There is no space after 'valid' the caller must provide it in msg if
  *        it is needed
  */
-void invalidTypeException(RexxThreadContext *c, int pos, const char *type)
+RexxObjectPtr invalidTypeException(RexxThreadContext *c, int pos, const char *type)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Argument %d is not a valid%s", pos, type);
     userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
 }
 
 void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual)
@@ -487,11 +488,51 @@ size_t rxArgCount(RexxMethodContext * context)
     return (size_t)count;
 }
 
+/**
+ * Converts a string representing a number into an unsigned 64 bit number and
+ * raises an exception if the conversion fails.
+ *
+ * The string must have a format of 123456789 or 0xFFAB. A leading 0 without the
+ * following X will cause the string to be interpreted as an octal number, which
+ * may or may not trigger a failure.  It is not the intent that this function be
+ * used for octal numbers.
+ *
+ * Note that it is the use of 0 as the third argument that allows _strtoui64()
+ * to interpret the string as decimal or hexadecimal based.
+ *
+ * @param c       Method context we are operating in.
+ * @param str     String to convert.
+ * @param number  [OUT]  Converted number is returned here.
+ * @param pos     Argument position.  Used for exception.
+ *
+ * @return True if the number was converted, false if an exceptions is raised.
+ *
+ * @note  There is no way to tell the difference between a valid _UI64_MAX
+ *        number and an error.  The function simply assumes a return of
+ *        _UI64_MAX is an error signal.
+ */
 bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos)
 {
     char *end;
     *number = _strtoui64(str, &end, 0);
     if ( (end - str != strlen(str)) || errno == EINVAL || *number == _UI64_MAX )
+    {
+        invalidTypeException(c->threadContext, pos, " number");
+        return false;
+    }
+    return true;
+}
+
+/*
+ * This function behaves exactly like rxStr2Number(), except it is for 32-bit
+ * numbers, and ERANGE can differentiate between a valid ULONG_MAX and an error
+ * return.
+ */
+bool rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, int pos)
+{
+    char *end;
+    *number = strtoul(str, &end, 0);
+    if ( (end - str != strlen(str)) || errno == ERANGE )
     {
         invalidTypeException(c->threadContext, pos, " number");
         return false;

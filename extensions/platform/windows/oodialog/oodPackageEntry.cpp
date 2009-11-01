@@ -184,6 +184,9 @@ REXX_METHOD_PROTOTYPE(wb_setSizeY);
 REXX_METHOD_PROTOTYPE(wb_getPixelX);
 REXX_METHOD_PROTOTYPE(wb_getPixelY);
 REXX_METHOD_PROTOTYPE(wb_init_windowBase);
+REXX_METHOD_PROTOTYPE(wb_sendMessage);
+REXX_METHOD_PROTOTYPE(wb_sendWinIntMsg);
+REXX_METHOD_PROTOTYPE(wb_sendWinHandleMsg);
 REXX_METHOD_PROTOTYPE(wb_enable);
 REXX_METHOD_PROTOTYPE(wb_isEnabled);
 REXX_METHOD_PROTOTYPE(wb_isVisible);
@@ -225,7 +228,8 @@ REXX_METHOD_PROTOTYPE(pbdlg_getFontName);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontSize);
 REXX_METHOD_PROTOTYPE(pbdlg_getAutoDetect);
 REXX_METHOD_PROTOTYPE(pbdlg_setAutoDetect);
-REXX_METHOD_PROTOTYPE(pbdlg_sendNumericMsg);
+REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToControl);
+REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToWindow);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
@@ -283,6 +287,8 @@ REXX_METHOD_PROTOTYPE(userdlg_init);
 REXX_METHOD_PROTOTYPE(catdlg_createCategoryDialog);
 REXX_METHOD_PROTOTYPE(catdlg_getControlDataPage);
 REXX_METHOD_PROTOTYPE(catdlg_setControlDataPage);
+REXX_METHOD_PROTOTYPE(catdlg_sendMessageToCategoryControl);
+REXX_METHOD_PROTOTYPE(catdlg_getCategoryComboEntry);
 
 REXX_METHOD_PROTOTYPE(dyndlg_init_cls);
 REXX_METHOD_PROTOTYPE(dyndlg_getBasePtr);
@@ -624,6 +630,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_setSizeY,                    wb_setSizeY),
     REXX_METHOD(wb_getPixelX,                   wb_getPixelX),
     REXX_METHOD(wb_getPixelY,                   wb_getPixelY),
+    REXX_METHOD(wb_sendMessage,                 wb_sendMessage),
+    REXX_METHOD(wb_sendWinIntMsg,               wb_sendWinIntMsg),
+    REXX_METHOD(wb_sendWinHandleMsg,            wb_sendWinHandleMsg),
     REXX_METHOD(wb_enable,                      wb_enable),
     REXX_METHOD(wb_isEnabled,                   wb_isEnabled),
     REXX_METHOD(wb_isVisible,                   wb_isVisible),
@@ -662,7 +671,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setDlgFont,               pbdlg_setDlgFont),
     REXX_METHOD(pbdlg_getAutoDetect,            pbdlg_getAutoDetect),
     REXX_METHOD(pbdlg_setAutoDetect,            pbdlg_setAutoDetect),
-    REXX_METHOD(pbdlg_sendNumericMsg,           pbdlg_sendNumericMsg),
+    REXX_METHOD(pbdlg_sendMessageToControl,     pbdlg_sendMessageToControl),
+    REXX_METHOD(pbdlg_sendMessageToWindow,      pbdlg_sendMessageToWindow),
     REXX_METHOD(pbdlg_get,                      pbdlg_get),
     REXX_METHOD(pbdlg_getDlgHandle,             pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_isDialogActive,           pbdlg_isDialogActive),
@@ -692,7 +702,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_stopIt,                   pbdlg_stopIt),
     REXX_METHOD(pbdlg_getTextSizeDlg,           pbdlg_getTextSizeDlg),
     REXX_METHOD(pbdlg_newControl,               pbdlg_newControl),
-    REXX_METHOD(pbdlg_putControl_pvt,         pbdlg_putControl_pvt),
+    REXX_METHOD(pbdlg_putControl_pvt,           pbdlg_putControl_pvt),
     REXX_METHOD(pbdlg_unInit,                   pbdlg_unInit),
 
     REXX_METHOD(generic_setListTabulators,      generic_setListTabulators),
@@ -717,9 +727,11 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(userdlg_init,                   userdlg_init),
 
-    REXX_METHOD(catdlg_createCategoryDialog,    catdlg_createCategoryDialog),
-    REXX_METHOD(catdlg_getControlDataPage,      catdlg_getControlDataPage),
-    REXX_METHOD(catdlg_setControlDataPage,      catdlg_setControlDataPage),
+    REXX_METHOD(catdlg_createCategoryDialog,           catdlg_createCategoryDialog),
+    REXX_METHOD(catdlg_getControlDataPage,             catdlg_getControlDataPage),
+    REXX_METHOD(catdlg_setControlDataPage,             catdlg_setControlDataPage),
+    REXX_METHOD(catdlg_getCategoryComboEntry,          catdlg_getCategoryComboEntry),
+    REXX_METHOD(catdlg_sendMessageToCategoryControl,   catdlg_sendMessageToCategoryControl),
 
     REXX_METHOD(dyndlg_init_cls,                dyndlg_init_cls),
     REXX_METHOD(dyndlg_getBasePtr,              dyndlg_getBasePtr),

@@ -2034,36 +2034,6 @@ RexxMethod2(RexxObjectPtr, dyndlg_stopDynamic_pvt, OPTIONAL_RexxObjectPtr, ignor
 #define CATEGORYDIALOG_CLASS  "CategoryDialog"
 
 
-bool getHwndCategoryPage(RexxMethodContext *c, RexxObjectPtr categoryDlg, uint32_t *pageID, HWND *hDlg)
-{
-    bool result = false;
-
-    RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(categoryDlg, "CATALOG");
-    RexxArrayObject handles = (RexxArrayObject)c->DirectoryAt(catalog, "handles");
-
-    if ( *pageID == 0 )
-    {
-        // Look up the active page number.
-        RexxObjectPtr rxPageID = c->DirectoryAt(catalog, "category");
-
-        if ( ! c->UnsignedInt32(rxPageID, pageID) )
-        {
-            // TODO an exception is probably needed.
-            goto done_out;
-        }
-    }
-    RexxObjectPtr rxHwnd = c->ArrayAt(handles, *pageID);
-    if ( rxHwnd != NULLOBJECT )
-    {
-        *hDlg = (HWND)string2pointer(c->ObjectToStringValue(rxHwnd));
-        result = true;
-    }
-
-done_out:
-    return result;
-}
-
-
 /**
  * Given a CategoryDialog, retrieves the dialog handle corresponding to the
  * given page ID.
@@ -2071,11 +2041,11 @@ done_out:
  * Note that it is expected that this function will be called from native
  * methods where the pageID argument is possibly omitted in the Rexx method. The
  * category number of 0, is the main dialog, the parent dialog of a
- * CategoryDialog. The original implementation of ooDialog had a convention, if
- * the category number is is omitted and the dialog is a category dialog, the
- * category number should be the category number of the current category page.
- * Because of this, we need to know if the pageID argument was omitted in order
- * to evalute things correctly.
+ * CategoryDialog.
+ *
+ * The original implementation of ooDialog had a convention, if the category
+ * number is is omitted and the dialog is a category dialog, the category number
+ * should be the category number of the current category page.
  *
  * @param c            Method context we are operating under.
  *
@@ -2086,8 +2056,8 @@ done_out:
  *                     page is not done.  When the active page is looked up, the
  *                     resolved page ID is returned here.
  *
- * @param hDlg         [in / out]  The handle of the page dialog is returned
- *                     here, on success.  Its value on entry is ignored.
+ * @param hDlg         [out]  The handle of the page dialog is returned here, on
+ *                     success.
  *
  * @return  True if no error, otherwise false.
  *
@@ -2100,25 +2070,72 @@ done_out:
  *           NULLOBJECT is done for them. Note that the indexes of the CATALOG
  *           directory are all lower case.
  */
-bool getCategoryHDlg(RexxMethodContext *c, RexxObjectPtr categoryDlg, uint32_t *pageID, HWND *hDlg, bool idArgExists)
+bool getCategoryHDlg(RexxMethodContext *context, RexxObjectPtr categoryDlg, uint32_t *pageID, HWND *hDlg,
+                         int argPosPageID)
 {
     bool result = false;
 
-    if ( idArgExists && *pageID == 0 )
+    RexxDirectoryObject catalog = (RexxDirectoryObject)context->SendMessage0(categoryDlg, "CATALOG");
+    RexxArrayObject handles = (RexxArrayObject)context->DirectoryAt(catalog, "handles");
+
+    if ( argumentOmitted(argPosPageID) )
     {
-        *hDlg = rxGetWindowHandle(c, categoryDlg);
-        if ( *hDlg != NULL )
+        // Look up the active page number.
+        RexxObjectPtr rxPageID = context->DirectoryAt(catalog, "category");
+
+        if ( ! context->UnsignedInt32(rxPageID, pageID) )
         {
-            result = true;
+            failedToRetrieveException(context->threadContext, "current category page", categoryDlg);
+            goto done_out;
         }
-        goto done_out;
+    }
+    else
+    {
+        if ( *pageID == 0 )
+        {
+            invalidCategoryPageException(context, 0, argPosPageID);
+            goto done_out;
+        }
     }
 
-    result = getHwndCategoryPage(c, categoryDlg, pageID, hDlg);
+    RexxObjectPtr rxHwnd = context->ArrayAt(handles, *pageID);
+    if ( rxHwnd == NULLOBJECT )
+    {
+        invalidCategoryPageException(context, *pageID, argPosPageID);
+    }
+    else
+    {
+        *hDlg = (HWND)string2pointer(context->ObjectToStringValue(rxHwnd));
+        result = true;
+    }
 
 done_out:
     return result;
 }
+
+
+HWND getCategoryHCtrl(RexxMethodContext *context, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID, uint32_t pageID)
+{
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd->rexxSelf);
+        return NULL;
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return NULL;
+    }
+
+    HWND hDlg;
+    if ( ! getCategoryHDlg(context, pcpbd->rexxSelf, &pageID, &hDlg, 3) )
+    {
+        return NULL;
+    }
+    return GetDlgItem(hDlg, id);
+}
+
 
 /**
  * Gets the current 'category page number' for a dialog.  By definition this is
@@ -2242,7 +2259,7 @@ RexxMethod4(RexxObjectPtr, catdlg_getControlDataPage, RexxObjectPtr, rxID,  OPTI
     }
 
     HWND hDlg;
-    if ( ! getHwndCategoryPage(context, pcpbd->rexxSelf, &pageID, &hDlg) )
+    if ( ! getCategoryHDlg(context, pcpbd->rexxSelf, &pageID, &hDlg, 2) )
     {
         return TheNegativeOneObj;
     }
@@ -2282,7 +2299,7 @@ RexxMethod5(int32_t, catdlg_setControlDataPage, RexxObjectPtr, rxID, CSTRING, da
     }
 
     HWND hDlg;
-    if ( ! getHwndCategoryPage(context, pcpbd->rexxSelf, &pageID, &hDlg) )
+    if ( ! getCategoryHDlg(context, pcpbd->rexxSelf, &pageID, &hDlg, 3) )
     {
         return -1;
     }
@@ -2292,6 +2309,85 @@ RexxMethod5(int32_t, catdlg_setControlDataPage, RexxObjectPtr, rxID, CSTRING, da
     return setControlData(context, pcpbd, id, data, hDlg, ctrlType);
 }
 
+
+/** CategoryDialog::sendMessageToCategoryControl()
+ *
+ *  Sends a window message to the specified dialog control.
+ *
+ *  @param  rxID    The resource ID of the control, may be numeric or symbolic.
+ *
+ *  @param  wm_msg  The Windows window message ID.  This can be specified in
+ *                  either "0xFFFF" or numeric format.
+ *
+ *  @param  _wParam  The WPARAM value for the message.
+ *  @param  _lParam  The LPARAM value for the message.
+ *
+ *  @return The result of sending the message, as returned by the operating
+ *          system.  This is returned as a number
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  sendMessageToCategoryItem(), which forwards to this method, was a
+ *            documented method prior to the 4.0.0 release.  Therefore,
+ *            sendMessageToCategoryControl() can not raise an exception for a
+ *            bad resource ID.
+ *
+ *            There is the feeling that the implementation of the CategoryDialog
+ *            is less than ideal, so there are no plans to enhance or extend
+ *            that class, no sendMessageToCategoryControlH() will be added.
+ */
+RexxMethod6(RexxObjectPtr, catdlg_sendMessageToCategoryControl, RexxObjectPtr, rxID, CSTRING, wm_msg,
+            RexxObjectPtr, _wParam, RexxObjectPtr, _lParam, OPTIONAL_uint32_t, pageID, CSELF, pCSelf)
+{
+    RexxObjectPtr result = TheNegativeOneObj;
+
+    HWND hCtrl = getCategoryHCtrl(context, (pCPlainBaseDialog)pCSelf, rxID, pageID);
+    if ( hCtrl != NULL )
+    {
+        result = sendWinMsgGeneric(context, hCtrl, wm_msg, _wParam, _lParam, 2, true);
+    }
+    return result;
+}
+
+
+/** CategoryDialog::getCategoryComboEntry()
+ *
+ *  Gets the text of the combo box item at the specified index, on the specified
+ *  category page.
+ *
+ *  @param  rxID    The resource ID of the dialog control.  Can be numeric or
+ *                  symbolic.
+ *
+ *  @param  index   The 1-based item index.  (The underlying combo box uses
+ *                  0-based indexes.)
+ *
+ *  @param  pageID  [OPTIONAL] The page ID for the page the combo box is on.  If
+ *                  this argument is omitted, it is assumed that the page is the
+ *                  current category page.  Best practice would be to explicity
+ *                  name the page by using the page ID.
+ *
+ *  @return  The item's text or the empty string on error.
+ *
+ *  @remarks  This function works correctly and is retained as an example.
+ *            However, at this point in time the approach with CategoryDialog
+ *            and combo boxes, list boxes, etc., is going to be:
+ *
+ *            In the Rexx code, get the control object itself and invoke the
+ *            proper method on that control.
+ *
+ */
+RexxMethod4(RexxStringObject, catdlg_getCategoryComboEntry, RexxObjectPtr, rxID, uint32_t, index,  OPTIONAL_uint32_t, pageID,
+            CSELF, pCSelf)
+{
+    RexxStringObject result = context->NullString();
+
+    HWND hCtrl = getCategoryHCtrl(context, (pCPlainBaseDialog)pCSelf, rxID, pageID);
+    if ( hCtrl != NULL )
+    {
+        result = cbLbGetText(context, hCtrl, index, winComboBox);
+    }
+    return result;
+}
 
 #ifndef USE_DS_CONTROL
 

@@ -136,6 +136,23 @@ char *getDlgMessage(DIALOGADMIN *addressedTo, char *buffer, bool peek)
 ( ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (FocusDidChange(p)) )
 
 
+/**
+ *
+ *
+ * @param message
+ * @param param
+ * @param lparam
+ * @param addressedTo
+ *
+ * @return MsgReplyType
+ *
+ * @remarks  Pre 4.0.1 the "message" put into the message queue, i.e., the
+ *           method invocation string such as onEndTrack(101, 0x00CA23F0), was
+ *           used in an interpret command.  Therefore, all string arguments were
+ *           enclosed in quotes to prevent errors.  Now, the message string is
+ *           used with sendWith(), no interpret is involved.  The string
+ *           arguments now must not be enclosed in quotes.
+ */
 MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo)
 {
    register LONG i = 0;
@@ -197,7 +214,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                          * return because we need to send 4 args to ooRexx.
                          */
 
-                        _snprintf(msgstr, 511, "%s(%u,%d,%d,\"%s\")", m[i].rexxProgram,
+                        _snprintf(msgstr, 511, "%s(%u,%d,%d,%s)", m[i].rexxProgram,
                                   pIA->hdr.idFrom, pIA->iItem, pIA->iSubItem, np);
                         AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                         return ReplyFalse;
@@ -246,14 +263,14 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                             else if ( MatchSelect(m[i].tag, pLV) )
                             {
                                 np = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
-                                _snprintf(msgstr, 511, "%s(%u,%d,\"%s\")", m[i].rexxProgram, param, item, np);
+                                _snprintf(msgstr, 511, "%s(%u,%d,%s)", m[i].rexxProgram, param, item, np);
                                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 continue;
                             }
                             else if ( MatchFocus(m[i].tag, pLV) )
                             {
                                 np = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
-                                _snprintf(msgstr, 511, "%s(%u,%d,\"%s\")", m[i].rexxProgram, param, item, np);
+                                _snprintf(msgstr, 511, "%s(%u,%d,%s)", m[i].rexxProgram, param, item, np);
                                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 continue;
                             }
@@ -335,7 +352,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                     np = "MENU";
 
                                 /* Use AddDialogMessage directely to send 5 args to ooRexx. */
-                                _snprintf(msgstr, 511, "%s(%u,\"%s\",%d,%d,%d)", m[i].rexxProgram,
+                                _snprintf(msgstr, 511, "%s(%u,%s,%d,%d,%d)", m[i].rexxProgram,
                                           phi->iCtrlId, np, phi->MousePos.x, phi->MousePos.y, phi->dwContextId);
                                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 return ReplyFalse;
@@ -350,7 +367,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                  * the x and y coordinates are sent as -1 and -1.
                                  * Args to ooRexx: hwnd, x, y
                                  */
-                                _snprintf(msgstr, 511, "%s('0x%p',%d,%d)", m[i].rexxProgram, param,
+                                _snprintf(msgstr, 511, "%s(0x%p,%d,%d)", m[i].rexxProgram, param,
                                           ((int)(short)LOWORD(lparam)), ((int)(short)HIWORD(lparam)));
                                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 return ((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
@@ -361,7 +378,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                             {
                                 /* Args to ooRexx: index, hMenu
                                  */
-                                _snprintf(msgstr, 511, "%s(%d,'0x%p')", m[i].rexxProgram, param, lparam);
+                                _snprintf(msgstr, 511, "%s(%d,0x%p)", m[i].rexxProgram, param, lparam);
                                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 return ReplyFalse;
                             }
@@ -407,7 +424,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                  * we don't have a context. ;-(
                                  */
 
-                                _snprintf(msgstr, 511, "%s('0x%p')", m[i].rexxProgram, param);
+                                _snprintf(msgstr, 511, "%s(0x%p)", m[i].rexxProgram, param);
                                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
 
                                 return ((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
@@ -427,7 +444,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
             }
             else if ( message == WM_HSCROLL || message == WM_VSCROLL)
             {
-                _snprintf(msgstr, 511, "%s(%u,\"0x%p\")", m[i].rexxProgram, param, lparam);
+                _snprintf(msgstr, 511, "%s(%u,0x%p)", m[i].rexxProgram, param, lparam);
                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                 return ReplyFalse;
             }
@@ -436,11 +453,11 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
             {
                 if ( handle != NULL )
                 {
-                    _snprintf(msgstr, 511, "%s(%u,\"0x%p\",\"%s\")", m[i].rexxProgram, param, handle, np);
+                    _snprintf(msgstr, 511, "%s(%u,0x%p,%s)", m[i].rexxProgram, param, handle, np);
                 }
                 else
                 {
-                    _snprintf(msgstr, 511, "%s(%u,%d,\"%s\")", m[i].rexxProgram, param, item, np);
+                    _snprintf(msgstr, 511, "%s(%u,%d,%s)", m[i].rexxProgram, param, item, np);
                 }
             }
             else
@@ -613,26 +630,6 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
        else retstr->strlength = ret;  /* for get text because \0 isn't copied always */
        if (retstr->strlength < 0) retstr->strlength = 0;   /* could be LB_ERR = -1 */
        return 0;
-    }
-    else if ( strcmp(argv[0].strptr,"ANY") == 0 )
-    {
-        /* Currently, all SendWinMsg("ANY") calls from ooDialog classes have
-         * this format:  SendWinMsg("ANY", handle, msgID, handle, decimal)
-         * where the msgID has the hex format.  Handling the decimal as a long
-         * works for now.
-         */
-        LRESULT ret;
-        UINT msgID = strtoul(argv[2].strptr, '\0', 16);
-        HANDLE wParam = GET_HANDLE(argv[3].strptr);
-        LONG lParam = atol(argv[4].strptr);
-
-       ret = SendMessage(hWnd, msgID, (WPARAM)wParam, (LPARAM)lParam);
-       if ( ret == 0 )
-       {
-           RETVAL(0)
-       }
-
-       RETHANDLE(ret);
     }
     return 0;
 }
@@ -957,7 +954,7 @@ void processKeyPress(KEYPRESSDATA *pKeyData, WPARAM wParam, LPARAM lParam, PCHAR
         else
             strcat(info, " scrollOff");
 
-        sprintf(oodMsg, "%s(%u,%u,%u,%u,\"%s\")", pMethod, wParam, bShift, bControl, bAlt, info);
+        sprintf(oodMsg, "%s(%u,%u,%u,%u,%s)", pMethod, wParam, bShift, bControl, bAlt, info);
         AddDialogMessage((char *)oodMsg, pMessageQueue);
     }
 }
@@ -1545,15 +1542,12 @@ RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIO
         goto done_out;
     }
 
-    uint64_t number;
-
-    UINT winMessage;
-    UINT wmFilter;
-    if ( ! rxStr2Number(context, wm, &number, 2) )
+    uint32_t winMessage;
+    uint32_t wmFilter;
+    if ( ! rxStr2Number32(context, wm, &winMessage, 2) )
     {
         goto done_out;
     }
-    winMessage = (UINT)number;
 
     if ( argumentOmitted(3) )
     {
@@ -1561,12 +1555,15 @@ RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIO
     }
     else
     {
-        if ( ! rxStr2Number(context, _wmFilter, &number, 3) )
+        if ( ! rxStr2Number32(context, _wmFilter, &wmFilter, 3) )
         {
             goto done_out;
         }
-        wmFilter = (UINT)number;
     }
+
+    uint64_t number;  // TODO redo this function using oodGetWParam() / oodGetLParam()
+                      // Fix those 2 functions to handle optional args. Throw
+                      // convert2PointerSize() away
 
     WPARAM    wParam;
     ULONG_PTR wpFilter;

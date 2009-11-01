@@ -58,6 +58,8 @@ extern const char     *controlType2winName(oodControl_t control);
 extern oodControl_t    oodName2controlType(CSTRING name);
 extern bool            isControlMatch(HWND, oodControl_t);
 
+extern RexxStringObject cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
+
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081

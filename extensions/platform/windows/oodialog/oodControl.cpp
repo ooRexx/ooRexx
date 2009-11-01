@@ -1253,7 +1253,7 @@ done_out:
  *
  * @return The Rexx string object that represents the text.
  */
-static RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_t index, oodControl_t ctrl)
+RexxStringObject cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl)
 {
     RexxStringObject result = c->NullString();
 
@@ -1261,7 +1261,7 @@ static RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, 
     {
         uint32_t msg = (ctrl == winComboBox ? CB_GETLBTEXTLEN : LB_GETTEXTLEN);
 
-        LRESULT l = SendMessage(pcdc->hCtrl, msg, index, 0);
+        LRESULT l = SendMessage(hCtrl, msg, index, 0);
         if ( l > 0 )
         {
             char *buf = (char *)malloc(l + 1);
@@ -1272,7 +1272,7 @@ static RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, 
             }
 
             msg = (ctrl == winComboBox ? CB_GETLBTEXT : LB_GETTEXT);
-            l = SendMessage(pcdc->hCtrl, msg, index, (LPARAM)buf);
+            l = SendMessage(hCtrl, msg, index, (LPARAM)buf);
             if ( l > 0 )
             {
                 result = c->String(buf);
@@ -1406,7 +1406,7 @@ static int32_t cbLbAddDirectory(HWND hCtrl, CSTRING drivePath, CSTRING fileAttri
  */
 RexxMethod2(RexxObjectPtr, lb_getText, uint32_t, index, CSELF, pCSelf)
 {
-    return cbLbGetText(context, (pCDialogControl)pCSelf, index, winListBox);
+    return cbLbGetText(context, ((pCDialogControl)pCSelf)->hCtrl, index, winListBox);
 }
 
 /** ListBox::add()
@@ -1565,7 +1565,7 @@ RexxMethod3(int32_t, lb_addDirectory, CSTRING, drivePath, OPTIONAL_CSTRING, file
  */
 RexxMethod2(RexxStringObject, cb_getText, uint32_t, index, CSELF, pCSelf)
 {
-    return cbLbGetText(context, (pCDialogControl)pCSelf, index, winComboBox);
+    return cbLbGetText(context, ((pCDialogControl)pCSelf)->hCtrl, index, winComboBox);
 }
 
 

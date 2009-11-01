@@ -74,6 +74,13 @@
 ::attribute pixelX get external "LIBRARY oodialog wb_getPixelX"
 ::attribute pixelY get external "LIBRARY oodialog wb_getPixelY"
 
+::method sendMessage unguarded external "LIBRARY oodialog wb_sendMessage"
+::method sendMessageHandle unguarded external "LIBRARY oodialog wb_sendMessage"
+
+::method sendWinIntMsg unguarded external "LIBRARY oodialog wb_sendWinIntMsg"
+::method sendWinHandleMsg unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"
+::method sendWinHandleMsgH unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"
+
 ::method enable unguarded external "LIBRARY oodialog wb_enable"
 ::method disable unguarded external "LIBRARY oodialog wb_enable"
 ::method isVisible unguarded external "LIBRARY oodialog wb_isVisible"
@@ -293,7 +300,10 @@
  */
 ::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils EventNotification
 
-::constant DM_REPOSITION  "0x0402"
+::constant DM_REPOSITION                 "0x0402"    -- No return
+::constant WM_SETFONT                    "0x0030"    -- No return
+::constant WM_NEXTDLGCTL                 "0x0028"    -- No return or 0
+::constant WM_USER_INTERRUPTSCROLL       "0x0A02"    -- TRUE
 
 
 ::method init class external "LIBRARY oodialog pbdlg_init_cls"
@@ -302,7 +312,6 @@
 ::method getFontSize class external "LIBRARY oodialog pbdlg_getFontSize_cls"
 
 -- External adminstration buffer. Get can not be private for now see MenuBar::attachTo()
---
 ::attribute adm get
 
 -- Automatic data field detection on/off
@@ -422,7 +431,10 @@
        end
    end
 
-::method sendNumericMsg unguarded external "LIBRARY oodialog pbdlg_sendNumericMsg"
+::method sendMessageToWindow unguarded external "LIBRARY oodialog pbdlg_sendMessageToWindow"
+::method sendMessageToWindowH unguarded external "LIBRARY oodialog pbdlg_sendMessageToWindow"
+::method sendMessageToControl unguarded external "LIBRARY oodialog pbdlg_sendMessageToControl"
+::method sendMessageToControlH unguarded external "LIBRARY oodialog pbdlg_sendMessageToControl"
 
 ::method get unguarded external "LIBRARY oodialog pbdlg_get"
 ::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
@@ -439,16 +451,10 @@
 ::method getControlText unguarded external "LIBRARY oodialog pbdlg_getControlText"
 ::method setControlText unguarded external "LIBRARY oodialog pbdlg_setControlText"
 
--- TODO getItem() could be deprecated and forward to getControlHandle().  getControl would return
--- a .Pointer; getItem() could check for a null pointer and return 0 in its place.  Also need to
--- deal with -1 for bad resource ID, although the return for getItem is not documented as returning
--- -1.
 ::method getControlHandle unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
-::method getItem unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
 
--- Send the DM_REPOSITION  message to the dialog.
 ::method ensureVisible unguarded
-   return self~sendNumericMsg(self~DM_REPOSITION, 0, 0)
+   return self~sendWinIntMsg(self~DM_REPOSITION, 0, 0)
 
 
 /* The following methods 'connect' a Windows dialog control with a 'data' attribute of the Rexx
@@ -642,17 +648,17 @@
    if arg(2, 'O') then return comboBox~insert( , string)
    else return comboBox~insert(index, string)
 
-::method getComboEntry unguarded
-   use strict arg id, index
-   comboBox = self~newComboBox(id)
-   if comboBox == .nil then return -1
-   return comboBox~getText(index)
-
 ::method findComboEntry unguarded
    use strict arg id, string
    comboBox = self~newComboBox(id)
    if comboBox == .nil then return -1
    return comboBox~find(string)
+
+::method getComboEntry unguarded
+   use strict arg id, index
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~getText(index)
 
 ::method comboAddDirectory unguarded
    use strict arg id, drivepath, fileAttributes = ""
@@ -733,11 +739,18 @@
    if listBox == .nil then return -1
    return listBox~find(text)
 
+::method getListEntry unguarded
+   use strict arg id, index
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~getText(index)
+
 ::method listAddDirectory unguarded
    use strict arg id, drivePath, fileAttributes = ""
    listBox = self~newListBox(id)
    if listBox == .nil then return -1
    return listBox~addDirectory(drivePath, fileAttributes)
+
 
    /* Deletes an item from a list box. */
    /* For argument 'index' don't use string but the index */
@@ -768,12 +781,6 @@
    return self~BoxMessage(id, 0x0000018B, 0, 0)
 
    /* Returns the text string of entry index */
-
-::method getListEntry unguarded
-   use strict arg id, indexx
-   listBox = self~newListBox(id)
-   if listBox == .nil then return -1
-   return listBox~getText
 
    /* Changes the item at 'index' with 'dataString' */
 
@@ -839,25 +846,10 @@
 ::method hideWindow unguarded external "LIBRARY oodialog pbdlg_showWindow"
 ::method hideWindowFast unguarded external "LIBRARY oodialog pbdlg_showWindow"
 
-::method showItem unguarded
-   forward message "showControl"
-
-::method hideItem unguarded
-   forward message "hideControl"
-
-::method showItemFast unguarded
-   forward message "showControlFast"
-
-::method hideItemFast unguarded
-   forward message "hideControlFast"
-
-::method focusItem unguarded
-   forward message "focusControl"
-
 ::method focusControl unguarded external "LIBRARY oodialog pbdlg_focusControl"
 ::method setFocusToWindow unguarded external "LIBRARY oodialog pbdlg_setFocus"
-::method TabToNext unguarded external "LIBRARY oodialog pbdlg_tabTo"
-::method TabToPrevious unguarded external "LIBRARY oodialog pbdlg_tabTo"
+::method tabToNext unguarded external "LIBRARY oodialog pbdlg_tabTo"
+::method tabToPrevious unguarded external "LIBRARY oodialog pbdlg_tabTo"
 ::method setFocus unguarded external "LIBRARY oodialog pbdlg_setFocus"
 ::method getFocus unguarded external "LIBRARY oodialog pbdlg_getFocus"
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
@@ -987,12 +979,27 @@
    forward message 'setWindowText'
 ::method windowTitle unguarded
    forward message 'getWindowText'
-::method ItemTitle unguarded
+
+::method sendMessageToItem unguarded
+   forward message "sendMessageToControl"
+::method getItem unguarded
+   forward message "getControlHandle"
+::method itemTitle unguarded
    forward message 'getControlText'
 ::method enableItem unguarded
    forward message 'enableControl'
 ::method disableItem unguarded
    forward message 'disableControl'
+::method showItem unguarded
+   forward message "showControl"
+::method hideItem unguarded
+   forward message "hideControl"
+::method showItemFast unguarded
+   forward message "showControlFast"
+::method hideItemFast unguarded
+   forward message "hideControlFast"
+::method focusItem unguarded
+   forward message "focusControl"
 
 ::method getStaticControl unguarded
    forward message 'newStatic'

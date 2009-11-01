@@ -75,8 +75,8 @@
      sprite.step = 1
 
      self~parentDlg = dlg
-     spritewin = self~parentDlg~getItem(sprite.buttonid)
-     parse value self~parentDlg~GetWindowRect(spritewin) with spos.left spos.top spos.right spos.bottom
+     spritewin = self~parentDlg~getControlHandle(sprite.buttonid)
+     parse value self~parentDlg~getWindowRect(spritewin) with spos.left spos.top spos.right spos.bottom
 
      spos.bottom = spos.bottom - spos.top
      spos.right = spos.right - spos.left

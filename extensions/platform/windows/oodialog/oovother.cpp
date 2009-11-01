@@ -2724,8 +2724,7 @@ RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     }
     else if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
     {
-        invalidTypeException(context->threadContext, 2, " TVSIL_XXX flag");
-        return NULLOBJECT;
+        return invalidTypeException(context->threadContext, 2, " TVSIL_XXX flag");
     }
 
     RexxObjectPtr result = context->GetObjectVariable(tvGetAttributeName(type));

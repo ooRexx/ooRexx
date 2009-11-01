@@ -743,6 +743,76 @@ static inline HWND getWBWindow(void *pCSelf)
     return ((pCWindowBase)pCSelf)->hwnd;
 }
 
+static LRESULT sendWinMsg(RexxMethodContext *context, CSTRING wm_msg, WPARAM wParam, LPARAM lParam,
+                          HWND _hwnd, pCWindowBase pcwb)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    uint32_t msgID;
+    if ( ! rxStr2Number32(context, wm_msg, &msgID, 2) )
+    {
+        return 0;
+    }
+
+    HWND hwnd;
+    if ( argumentOmitted(4) )
+    {
+        if ( pcwb->hwnd == NULL )
+        {
+            noWindowsDialogException(context, pcwb->rexxSelf);
+            return 0;
+        }
+        hwnd = pcwb->hwnd;
+    }
+    else
+    {
+        hwnd = (HWND)_hwnd;
+    }
+
+    LRESULT result = SendMessage(hwnd, msgID, wParam, lParam);
+    oodSetSysErrCode(context->threadContext);
+    return result;
+}
+
+RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *c, HWND hwnd, CSTRING wm_msg, RexxObjectPtr _wParam,
+                                RexxObjectPtr _lParam, int argPos, bool doIntReturn)
+{
+    oodResetSysErrCode(c->threadContext);
+
+    uint32_t msgID;
+    if ( ! rxStr2Number32(c, wm_msg, &msgID, argPos) )
+    {
+        return TheZeroObj;
+    }
+    argPos++;
+
+    WPARAM wParam;
+    if ( ! oodGetWParam(c, _wParam, &wParam, argPos) )
+    {
+        return TheZeroObj;
+    }
+    argPos++;
+
+    LPARAM lParam;
+    if ( ! oodGetLParam(c, _lParam, &lParam, argPos) )
+    {
+        return TheZeroObj;
+    }
+
+    LRESULT lr = SendMessage(hwnd, msgID, wParam, lParam);
+    oodSetSysErrCode(c->threadContext);
+
+    if ( doIntReturn )
+    {
+        return c->Intptr((intptr_t)lr);
+    }
+    else
+    {
+        return pointer2string(c, (void *)lr);
+    }
+}
+
+
 /**
  * Common code to call ShowWindow() from a native C++ API method.
  *
@@ -861,6 +931,8 @@ bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWi
     pcwb->factorX = LOWORD(bu) / 4;
     pcwb->factorY = HIWORD(bu) / 8;
 
+    pcwb->rexxSelf = self;
+
     if ( hwndObj != NULL )
     {
         RECT r = {0};
@@ -972,6 +1044,119 @@ RexxMethod1(uint32_t, wb_getPixelY, CSELF, pCSelf)
     GetWindowRect(pcs->hwnd, &r);
     return r.bottom - r.top;
 }
+
+/** WindowBase::sendMessage()
+ *  WindowBase::sendMessageHandle()
+ *
+ *  Sends a window message to the underlying window of this object.
+ *
+ *  @param  wm_msg  The Windows window message ID.  This can be specified in
+ *                  either "0xFFFF" or numeric format.
+ *
+ *  @param  wParam  The WPARAM value for the message.
+ *  @param  lParam  The LPARAM value for the message.
+ *
+ *  @return The result of sending the message, as returned by the operating
+ *          system.  For sendMessage() the result is returned as a whole number.
+ *          For sendMessageHandle() the result is returned as an operating
+ *          system handle.
+ *
+ *  @note Sets the .SystemErrorCode.
+ *
+ *        The wParam and lParam arguments can be in a number of formats.  An
+ *        attempt is made to convert the Rexx object from a .Pointer, pointer
+ *        string, uintptr_t number, or intptr_t number.  If they all fail, an
+ *        exception is raised.
+ *
+ *        These methods will not work for window messages that take a string as
+ *        an argument or return a string as a result.
+ *
+ *  @remarks  This function is used for the documented DialogControl
+ *            processMessage() method, and therefore needs to remain generic.
+ *            Internally, most of the time, it would make more sense to use one
+ *            of the argument type specific methods like sendWinIntMsg().
+ */
+RexxMethod5(RexxObjectPtr, wb_sendMessage, CSTRING, wm_msg, RexxObjectPtr, _wParam, RexxObjectPtr, _lParam,
+            NAME, method, CSELF, pCSelf)
+{
+    HWND hwnd = getWBWindow(pCSelf);
+    bool doIntReturn = (strlen(method) == 11 ? true : false);
+
+    return sendWinMsgGeneric(context, hwnd, wm_msg, _wParam, _lParam, 1, doIntReturn);
+}
+
+/** WindowBase::sendWinIntMsg()
+ *
+ *  Sends a message to a Windows window where WPARAM and LPARAM are both numbers
+ *  and the return is a number.  I.e., neither param is a handle and the return
+ *  is not a string or a handle.
+ *
+ *  @param  wm_msg  The Windows window message ID.  This can be specified in
+ *                  "0xFFFF" format or numeric format.
+ *
+ *  @param  wParam  The WPARAM value for the message.
+ *  @param  lParam  The LPARAM value for the message.
+ *
+ *  @param  _hwnd   [OPTIONAL]  The handle of the window the message is sent to.
+ *                  If omitted, the window handle of this object is used.
+ *
+ *  @return The result of sending the message, as returned by the operating
+ *          system.
+ *
+ *  @remarks  Sets the .SystemErrorCode.
+ *
+ *            This method is not meant to be documented for the user, it is
+ *            intended to be used internally only.  Currently, all uses of this
+ *            function have a return of a number.  If a need comes up to return
+ *            a handle, then add sendWinIntMsgH().
+ */
+RexxMethod5(intptr_t, wb_sendWinIntMsg, CSTRING, wm_msg, uintptr_t, wParam, intptr_t, lParam,
+            OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
+{
+    return (intptr_t)sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
+}
+
+
+/** WindowBase::sendWinHandleMsg()
+ *  WindowBase::sendWinHandleMsgH()
+ *
+ *  Sends a message to a Windows window where WPARAM is a handle and LPARAM is a
+ *  number.  The result is returned as a number or as a handle, depending on the
+ *  invoking method.
+ *
+ *  @param  wm_msg  The Windows window message ID.  This can be specified as a
+ *                  decimal number, or in "0xFFFF" format.
+ *
+ *  @param  wParam  The WPARAM value for the message.  The must be in pointer or
+ *                  handle format.
+ *  @param  lParam  The LPARAM value for the message.
+ *
+ *  @param  _hwnd   [OPTIONAL]  The handle of the window the message is sent to.
+ *                  If omitted, the window handle of this object is used.
+ *
+ *  @return The result of sending the message, as returned by the operating
+ *          system.
+ *
+ *  @remarks  Sets the .SystemErrorCode.
+ *
+ *            This method is not meant to be documented to the user, it is
+ *            intended to be used internally only.
+ */
+RexxMethod6(RexxObjectPtr, wb_sendWinHandleMsg, CSTRING, wm_msg, POINTERSTRING, wParam, intptr_t, lParam,
+            OPTIONAL_POINTERSTRING, _hwnd, NAME, method, CSELF, pCSelf)
+{
+    LRESULT lr = sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
+
+    if ( strlen(method) == 16 )
+    {
+        return context->Intptr((intptr_t)lr);
+    }
+    else
+    {
+        return pointer2string(context, (void *)lr);
+    }
+}
+
 
 /** WindowBase::enable() / WindowBase::disable()
  *
@@ -2012,45 +2197,82 @@ RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
     return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
 }
 
-
-/** PlainBaseDialog::sendNumericMsg()
+/** PlainBaseDialog::sendMessageToControl()
+ *  PlainBaseDialog::sendMessageToControlH()
  *
- *  Sends a message to a Windows window where WPARAM and LPARAM are both numbers
- *  and the return is a number.  I.e., neither param is a handle and the return
- *  is not a string or a handle.
+ *  Sends a window message to the specified dialog control.
+ *
+ *  @param  rxID    The resource ID of the control, may be numeric or symbolic.
  *
  *  @param  wm_msg  The Windows window message ID.  This can be specified in
  *                  either "0xFFFF" or numeric format.
  *
- *  @param  wParam  The WPARAM value for the message.
- *  @param  lParam  The LPARAM value for the message.
+ *  @param  _wParam  The WPARAM value for the message.
+ *  @param  _lParam  The LPARAM value for the message.
  *
  *  @return The result of sending the message, as returned by the operating
- *          system.
+ *          system.  sendMessageToControl() returns the result as a number.
+ *          sendMessageToControlH() returns the result as an operating system
+ *          handle.
  *
- *  @remarks  There is no reason why this method can not be used internally with
- *            handles as either the params, or as the return.  Provided of
- *            course that the caller understands the message being sent.  This
- *            is not meant to be documented.
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  sendMessageToItem(), which forwards to this method, a method of
+ *            DialogExtensions, but was moved back into PlainBaseDialog after
+ *            the 4.0.0 release.  Therefore, sendMessageToControl() can not
+ *            raise an exception for a bad resource ID, sendMessageToControlH()
+ *            can.
  */
-RexxMethod4(intptr_t, pbdlg_sendNumericMsg, CSTRING, wm_msg, uintptr_t, wParam, intptr_t, lParam, CSELF, pCSelf)
+RexxMethod6(RexxObjectPtr, pbdlg_sendMessageToControl, RexxObjectPtr, rxID, CSTRING, wm_msg,
+            RexxObjectPtr, _wParam, RexxObjectPtr, _lParam, NAME, method, CSELF, pCSelf)
 {
-    HWND hDlg = ((pCPlainBaseDialog)pCSelf)->hDlg;
-    if ( hDlg == NULL )
+    bool doIntReturn = (strlen(method) == 20 ? true : false);
+
+    HWND hCtrl = getPBDControlWindow(context, (pCPlainBaseDialog)pCSelf, rxID);
+    if ( hCtrl == NULL )
     {
-        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
-        return 0;
+        if ( doIntReturn )
+        {
+            return TheNegativeOneObj;
+        }
+        else
+        {
+            return invalidTypeException(context->threadContext, 1, " resource ID, there is no matching dialog control");
+        }
     }
 
-    uint64_t msgID;
-    if ( ! rxStr2Number(context, wm_msg, &msgID, 1) )
-    {
-        return 0;
-    }
-
-    return (intptr_t)SendMessage(hDlg, (uint32_t)msgID, (WPARAM)wParam, (LPARAM)lParam);
+    return sendWinMsgGeneric(context, hCtrl, wm_msg, _wParam, _lParam, 2, doIntReturn);
 }
 
+
+/** PlainBaseDialog::sendMessageToWindow()
+ *  PlainBaseDialog::sendMessageToWindowH()
+ *
+ *  Sends a window message to the specified window.
+ *
+ *  @param  _hwnd   The handle of the window the message is sent to.
+ *  @param  wm_msg  The Windows window message ID.  This can be specified in
+ *                  either "0xFFFF" or numeric format.
+ *
+ *  @param  _wParam  The WPARAM value for the message.
+ *  @param  _lParam  The LPARAM value for the message.
+ *
+ *  @return The result of sending the message, as returned by the operating
+ *          system.  sendMessageToWindow() returns the result as a number and
+ *          sendMessageToWindowH() returns the the result as an operating systme
+ *          handle.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod6(RexxObjectPtr, pbdlg_sendMessageToWindow, CSTRING, _hwnd, CSTRING, wm_msg,
+            RexxObjectPtr, _wParam, RexxObjectPtr, _lParam, NAME, method, CSELF, pCSelf)
+{
+    HWND hwnd = (HWND)string2pointer(_hwnd);
+
+    bool doIntReturn = (strlen(method) == 19 ? true : false);
+
+    return sendWinMsgGeneric(context, hwnd, wm_msg, _wParam, _lParam, 2, doIntReturn);
+}
 
 /** PlainBaseDialog::get()
  *
@@ -2875,7 +3097,7 @@ RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData,
  *  "The getValue method gets the value of a dialog item, regardless of its
  *  type. The item must have been connected before."
  *
- *  @param  rxID  The reosource ID of control.
+ *  @param  rxID  The resource ID of control.
  *
  *  @return  The 'data' value of the dialog control.  This of course varies
  *           depending on the type of the dialog control.
@@ -3075,6 +3297,14 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
  *          control.  Before a Rexx object is instantiated, the window words are
  *          checked to see if there is already an instantiated object. If so,
  *          that object is returned rather than instantiating a new object.
+ *
+ *          It goes without saying that the intent here is to exactly preserve
+ *          pre 4.0.0 behavior.  With category dialogs, it is somewhat hard to
+ *          be sure the behavior is preserved. Prior to 4.0.0, getControl(id,
+ *          catPage) would assign the parent dialog as the oDlg of controls on
+ *          one of the pages.  This seems technically wrong, but the same thing
+ *          is done here. Need to investigate whether this ever makes a
+ *          difference?
  */
 RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint32_t, categoryPageID,
             NAME, msgName, OSELF, self, CSELF, pCSelf)
@@ -3087,11 +3317,21 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
 
     if ( c->IsOfType(self, "CATEGORYDIALOG") )
     {
-        if ( ! getCategoryHDlg(context, self, &categoryPageID, &hDlg, argumentExists(2)) )
-        {
-            goto out;
-        }
         isCategoryDlg = true;
+
+        // If the category page is not omitted and equal to 0, then we already
+        // have the dialog handle.  It is the handle of the parent Rexx dialog.
+        // Otherwise, we need to resolve the handle, which is the handle of one
+        // of the child dialogs used for the pages of the parent dialog.
+
+        if ( ! (argumentExists(2) && categoryPageID == 0) )
+        {
+            if ( ! getCategoryHDlg(context, self, &categoryPageID, &hDlg, 2) )
+            {
+                context->ClearCondition();
+                goto out;
+            }
+        }
     }
 
     uint32_t id;
@@ -3101,6 +3341,14 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
     }
 
     HWND hControl = GetDlgItem(hDlg, (int)id);
+    if ( isCategoryDlg && hControl == NULL )
+    {
+        // It could be that this is a control in the parent dialog of the
+        // category dialog.  So, try once more.  If this still fails, then we
+        // give up.
+        hControl = GetDlgItem(((pCPlainBaseDialog)pCSelf)->hDlg, (int)id);
+    }
+
     if ( hControl == NULL )
     {
         goto out;
@@ -3152,7 +3400,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
     {
         result = rxControl;
         setWindowPtr(hControl, GWLP_USERDATA, (LONG_PTR)result);
-        c->SendMessage1(self, "putControl", result);
+        c->SendMessage1(self, "PUTCONTROL", result);
     }
 
 out:

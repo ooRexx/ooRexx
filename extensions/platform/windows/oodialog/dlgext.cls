@@ -128,12 +128,6 @@
    self~start("execute", sh, icon, sleeptime, "NOTMODAL")
 
 
-::method sendMessageToItem unguarded
-   parse arg id,a2,a3,a4
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return SendWinMsg("DLG",self~dlgHandle,id,a2,a3,a4)
-
 ::method peekDialogMessage unguarded
    return getDlgMsg(self~adm, .true)
 
@@ -151,20 +145,20 @@
    use arg id
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return HandleScrollBar("GR",self~getItem(id))
+   return HandleScrollBar("GR",self~getControlHandle(id))
 
 ::method SetSBPos unguarded
    use arg id, pos, redraw
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    if arg(3, "o") = 1 then redraw = 1
-   return HandleScrollBar("SP",self~getItem(id),pos, redraw)
+   return HandleScrollBar("SP",self~getControlHandle(id),pos, redraw)
 
 ::method GetSBPos unguarded
    use arg id
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return HandleScrollBar("GP",self~getItem(id))
+   return HandleScrollBar("GP",self~getControlHandle(id))
 
 ::method CombineELwithSB
    use arg elid, sbid, step, poscode
@@ -249,10 +243,11 @@
    use arg id
    return self~BoxMessage(id, 0x000001A1, 0, 0)/self~factorY
 
-::method SetItemFont unguarded
-   use arg id, hFont, bRedraw     /* WM_SETFONT */
-   if arg(3, 'o') = 1 then bRedraw = 1
-   return SendWinMsg("ANY", self~getItem(id), "0x0030", hFont, bRedraw)
+::method setControlFont unguarded
+   use strict arg id, hFont, bRedraw = .true
+   hCtrl = self~getControlHandle(id)
+   msg   = self~WM_SETFONT
+   return self~sendWinHandleMsg(msg, hFont, bRedraw, hCtrl)
 
 ::method getWindowRect unguarded -- old method returns coordinates as a string
    forward message "windowRect" continue
@@ -300,6 +295,9 @@
    use strict arg id, width, height, showOptions = ""
    s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
    return self~resizeControl(id, s, showOptions)
+
+::method setItemFont unguarded
+   forward message 'setControlFont'
 
 
 /******************************************************************************/
@@ -437,7 +435,7 @@
    if arg(8, "o") = 1 then ylen = 0
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if arg(1, "o") = 1 then hwnd = self~getItem(id)
+   if arg(1, "o") = 1 then hwnd = self~getControlHandle(id)
    return BmpButton(self~adm, "D", hwnd, id, px, py, srcx, srcy, xlen, ylen)
 
 -- Draw the bitmap step by step.
@@ -483,7 +481,7 @@
    if (cursx > xl) then cursx = xl
    if (cursy > yl) then cursy = yl
 
-   hwnd = self~getItem(id)
+   hwnd = self~getControlHandle(id)
    if hwnd = 0 then return -1
 
    parse value self~GetWindowRect(hwnd) with r.left r.top r.right r.bottom
@@ -637,42 +635,30 @@
 
    /* This method scrolls 'text' in the button */
 
-::method ScrollInButton unguarded
+::method scrollInButton unguarded
    use arg id, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color
-   hwnd = self~getItem(id)
+   hwnd = self~getControlHandle(id)
    if arg() = 1 then
       return self~ScrollText(hwnd)
    else
       return self~ScrollText(hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
 
 
-   /* This method will scroll text in a window with the given size, font, */
-   /* color. Text will be scrolled from right to left. */
-   /* Call it twice and the scrolling will stop */
-   /* See method WriteToWindow for valid fontStyles */
+-- This method will scroll text in a window with the given size, font, color. Text will be scrolled from
+-- right to left. Call it twice and the scrolling will stop.  See method WriteToWindow for valid fontStyles.
+::method scrollText unguarded
+   use strict arg hwnd, text = "", fontName = "System", fontSize = 10, fontStyle = "", -
+                  displaceY = 0, step = 4, sleep = 10, color = 0
 
-::method ScrollText unguarded
-   use arg hwnd, text, fontName, fontSize, fontStyle,,
-           displaceY, step, sleep, color
-
-   if arg(3, "o") = 1 | fontName = "FONTNAME" then fontName = "System"
-   if arg(4, "o") = 1 | fontSize = "FONTSIZE" then fontSize = 10
-   if arg(5, "o") = 1 | fontStyle = "FONTSTYLE" then fontStyle = ""
-   if arg(6, "o") = 1 | displaceY = "DISPLACEY" then displaceY = 0
-   if arg(7, "o") = 1 | step = "STEP" then step = 4
-   if arg(8, "o") = 1 | sleep = "SLEEP" then sleep = 10
-   if arg(9, "o") = 1 | color = "COLOR" then color = 0
-
-   if self~ScrollNow = 0 & arg() > 1 then
-   do
-      self~ScrollNow = 1
-      ret = ScrollText(self~adm, hwnd, text, fontName, fontSize, fontStyle,,
-                       displaceY, step, sleep, color)
-   end; else do
-      -- Send the interrupt scroll message, 0x0a02 == WM_USER_INTERRUPTSCROLL
-      ret = SendWinMsg("ANY",self~dlgHandle, "0x0a02", hwnd, 0)
+   if self~scrollNow = 0 & arg() > 1 then do
+      self~scrollNow = 1
+      ret = ScrollText(self~adm, hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
    end
-   self~ScrollNow = 0
+   else do
+      self~sendWinHandleMsg(self~WM_USER_INTERRUPTSCROLL, hwnd, 0)
+      ret = 0
+   end
+   self~scrollNow = 0
    return ret
 
 
@@ -705,7 +691,7 @@
 
 ::method WriteToButton unguarded
    argarr = arg(1, "A")
-   argarr[1] = self~getItem(argarr[1])  /* transform first argument into window handle */
+   argarr[1] = self~getControlHandle(argarr[1])  /* transform first argument into window handle */
    forward message (WriteToWindow) arguments (argarr)
 
 
@@ -713,7 +699,7 @@
 
 ::method ScrollButton unguarded
    use arg id, xPos, yPos, left, top, right, bottom
-   return ScrollTheWindow(self~adm, self~getItem(id), xPos, yPos, left, top, right, bottom, "yes")
+   return ScrollTheWindow(self~adm, self~getControlHandle(id), xPos, yPos, left, top, right, bottom, "yes")
 
 
    /* This method will return the device context of a window */
@@ -726,7 +712,7 @@
 
 ::method GetButtonDC unguarded
    use arg id
-   return self~GetWindowDC(self~getItem(id))
+   return self~GetWindowDC(self~getControlHandle(id))
 
    /* This method will free the device context of a window */
 
@@ -738,7 +724,7 @@
 
 ::method FreeButtonDC unguarded
    use arg id, dc
-   hwnd = self~getItem(id)
+   hwnd = self~getControlHandle(id)
    return self~FreeWindowDC(hwnd, dc)
 
 ::method CaptureMouse external "LIBRARY oodialog dlgext_captureMouse"

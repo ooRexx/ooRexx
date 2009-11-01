@@ -57,10 +57,6 @@
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 ::method unInit external "LIBRARY oodialog dlgctrl_unInit"
 
-::method processMessage
-   parse arg msg,wp,lp
-   return SendWinMsg("DLG",self~hDlg,self~Id,msg,wp,lp)
-
 ::method message2Parent unguarded private /* This is the replacement for BoxMessage */
    use arg msg, wP, lP
    return SendWinMsg("PTR", self~hDlg, self~Id, msg, wP, lP)
@@ -122,6 +118,10 @@
 ::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
 ::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
 ::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
+
+-- DEPRECATED
+::method processMessage
+  forward message "sendMessage"
 
 -- DEPRECATED
 ::method assignWindow
@@ -1191,8 +1191,6 @@
     left = .DlgUtil~loWord(marg)
     return left" "right
 
-::method getLine external "LIBRARY oodialog e_getLine"
-
 ::method "Tab="
     use arg dlgunits
     self~Message2Parent(0x00CB, 1, "L" || dlgunits)
@@ -1412,7 +1410,7 @@
 
 ::class 'ComboBox' subclass DialogControl public
 
-::method getText external "LIBRARY oodialog lb_getText"
+::method getText external "LIBRARY oodialog cb_getText"
 ::method add external "LIBRARY oodialog cb_add"
 ::method insert external "LIBRARY oodialog cb_insert"
 ::method select external "LIBRARY oodialog cb_select"

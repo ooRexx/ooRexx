@@ -78,7 +78,6 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
     c->RaiseException1(Rexx_Error_Interpretation_user_defined, c->String(buf));
 }
 
-//
 
 /**
  *  93.900
@@ -86,11 +85,14 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
  *        The specified method, built-in function, or external routine exists,
  *        but you used it incorrectly.
  *
+ *  The "methName" method can not be invoked on "objectName" when the Windows
+ *  dialog does not exist.
+ *
  *  The connectEdit method can not be invoked on a StyleDlg when the Windows
  *  dialog does not exist.
  *
  * @param c
- * @param pcpbd
+ * @param rxDlg
  */
 RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg)
 {
@@ -100,6 +102,34 @@ RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
 }
+
+/**
+ *  93.900
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
+ *  Argument "position" is not a valid category page number; found "num"
+ *
+ *  Arguemnt 2 is not a valid category page number; found 0
+ *
+ * @param c
+ * @param rxDlg
+ */
+RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int pageNum, int pos)
+{
+    TCHAR buf[256];
+    _snprintf(buf, sizeof(buf), "Argument %d is not a valid category page number; found %d", pos, pageNum);
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
+    return NULLOBJECT;
+}
+
+
+inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
+{
+    failedToRetrieveException(c, "dialog administration block", source);
+}
+
 
 bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum)
 {
@@ -111,12 +141,6 @@ bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName,
         return false;
     }
     return true;
-}
-
-
-inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
-{
-    failedToRetrieveException(c, "dialog administration block", source);
 }
 
 
@@ -344,6 +368,96 @@ void oodSetSysErrCode(RexxThreadContext *context, DWORD code)
 void oodResetSysErrCode(RexxThreadContext *context)
 {
     context->DirectoryPut(TheDotLocalObj, TheZeroObj, "SYSTEMERRORCODE");
+}
+
+
+bool oodGetWParam(RexxMethodContext *c, RexxObjectPtr wp, WPARAM *wParam, int argPos)
+{
+    WPARAM result = 0;
+    bool success = true;
+
+    if ( c->Uintptr(wp, (uintptr_t *)&result) )
+    {
+        goto done_out;
+    }
+
+    if ( c->IsPointer(wp) )
+    {
+        result = (WPARAM)c->PointerValue((RexxPointerObject)wp);
+        goto done_out;
+    }
+
+    uint64_t number;
+    if ( rxStr2Number(c, c->ObjectToStringValue(wp), &number, argPos) )
+    {
+        result = (WPARAM)number;
+        goto done_out;
+    }
+    else
+    {
+        c->ClearCondition();
+    }
+
+    // Really, a WPARAM should be unsigned.  But, we'll try this and if it
+    // works, cast it.
+    intptr_t iptr;
+    if ( c->Intptr(wp, &iptr) )
+    {
+        result = (WPARAM)iptr;
+        goto done_out;
+    }
+
+    wrongArgValueException(c->threadContext, argPos, "whole number, pointer object, hex string", wp);
+
+done_out:
+    *wParam = result;
+    return success;
+}
+
+
+bool oodGetLParam(RexxMethodContext *c, RexxObjectPtr lp, LPARAM *lParam, int argPos)
+{
+    LPARAM result = 0;
+    bool success = true;
+
+    if ( c->Intptr(lp, (intptr_t *)&result) )
+    {
+        goto done_out;
+    }
+
+    if ( c->IsPointer(lp) )
+    {
+        result = (LPARAM)c->PointerValue((RexxPointerObject)lp);
+        goto done_out;
+    }
+
+    // Really a LPARAM should be signed.  But with casting, who knows how the
+    // Rexx number may have ended up being represented.  So, we go ahead and try
+    // these forms
+    uintptr_t u;
+    if ( c->Uintptr(lp, &u) )
+    {
+        result = (LPARAM)u;
+        goto done_out;
+    }
+
+    uint64_t number;
+    if ( rxStr2Number(c, c->ObjectToStringValue(lp), &number, argPos) )
+    {
+        result = (LPARAM)number;
+        goto done_out;
+    }
+    else
+    {
+        c->ClearCondition();
+    }
+
+    wrongArgValueException(c->threadContext, argPos, "whole number, pointer object, hex string", lp);
+    success = false;
+
+done_out:
+    *lParam = result;
+    return success;
 }
 
 

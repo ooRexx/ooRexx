@@ -80,6 +80,7 @@ typedef enum
 typedef struct _wbCSelf {
     HWND              hwnd;
     RexxObjectPtr     rexxHwnd;
+    RexxObjectPtr     rexxSelf;
     wholenumber_t     initCode;
     uint32_t          sizeX;
     uint32_t          sizeY;
@@ -172,6 +173,7 @@ extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, 
 
 extern void          ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
+extern RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int, int);
 extern inline void   failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
 
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
@@ -180,6 +182,8 @@ extern bool          oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjec
 extern DWORD         oodGetSysErrCode(RexxThreadContext *);
 extern void          oodSetSysErrCode(RexxThreadContext *, DWORD);
 extern void          oodResetSysErrCode(RexxThreadContext *context);
+extern bool          oodGetWParam(RexxMethodContext *, RexxObjectPtr, WPARAM *, int);
+extern bool          oodGetLParam(RexxMethodContext *, RexxObjectPtr, LPARAM *, int);
 
 extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
@@ -212,7 +216,7 @@ extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, P
 extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 
 // These functions are defined in oodUser.cpp.
-extern bool     getCategoryHDlg(RexxMethodContext *, RexxObjectPtr, uint32_t *, HWND *, bool);
+extern bool getCategoryHDlg(RexxMethodContext *, RexxObjectPtr, uint32_t *, HWND *, int);
 extern uint32_t getCategoryNumber(RexxMethodContext *, RexxObjectPtr);
 
 // These functions are defined in oodUtilities.cpp
@@ -223,6 +227,7 @@ extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObje
 extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hDlg);
 extern RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd);
 extern RexxObjectPtr oodGetFocus(RexxMethodContext *c, HWND hDlg);
+extern RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *, HWND, CSTRING, RexxObjectPtr, RexxObjectPtr, int, bool);
 
 // These functions are defined in oodBaseDialog.cpp
 extern bool initWindowExtensions(RexxMethodContext *, RexxObjectPtr, HWND, pCWindowBase, pCPlainBaseDialog);

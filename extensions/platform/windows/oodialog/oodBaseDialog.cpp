@@ -506,6 +506,7 @@ RexxMethod5(RexxObjectPtr, winex_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTR
             if ( hdc == NULL )
             {
                 invalidTypeException(context->threadContext, 3, " handle to a device context");
+                goto error_out;
             }
             GetTextExtentPoint32(hdc, text, (int)strlen(text), &size);
         }
@@ -515,6 +516,7 @@ RexxMethod5(RexxObjectPtr, winex_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTR
             if ( hFont == NULL )
             {
                 invalidTypeException(context->threadContext, 3, " handle to a font");
+                goto error_out;
             }
 
             HDC hdc = GetDC(hwnd);

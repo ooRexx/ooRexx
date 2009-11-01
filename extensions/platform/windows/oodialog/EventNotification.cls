@@ -193,7 +193,7 @@
        when type = "LOSTFOCUS" then lp = 5
        when type = "ERRSPACE"  then lp = -2
        when type = "KEYDOWN"   then do   /* can first be called from initDialog */
-           return self~addUserMsg(msgToRise, 0x0000002E, "0xFFFFFFFF", 0, 0, self~getItem(id), "0xFFFFFFFF") /* WM_VKEYTOITEM */
+           return self~addUserMsg(msgToRise, 0x0000002E, "0xFFFFFFFF", 0, 0, self~getControlHandle(id), "0xFFFFFFFF") /* WM_VKEYTOITEM */
        end
        otherwise return -1
    end
@@ -224,11 +224,11 @@
 
 
 ::method connectScrollBarEvent         /* can only be called in initDialog */
-   use strict arg id, type, msgToRise = "", category = 1
+   use strict arg id, type, msgToRise = "", categoryHDlg = (.NullHandle)
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if arg(4,'O') then hnd = self~getItem(id)
-   else hnd = self~getItem(id, category)
+   if arg(4,'O') then hnd = self~getControlHandle(id)
+   else hnd = self~getControlHandle(id, categoryHdlg)
    if hnd = 0 then return -1
    if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
@@ -258,7 +258,7 @@
    if arg(5, 'E'), min~datatype('N'), arg(6,'E'), max~datatype('N') then self~setSBRange(id, min, max, 0)
    if arg(7, 'E'), pos~datatype('N') then self~setSBPos(id, pos, 0)
 
-   hwnd = self~getItem(id)
+   hwnd = self~getControlHandle(id)
    WM_HSCROLL = 0x00000114
    WM_VSCROOL = 0x00000115
    wf = "0x0000FFFF"
@@ -397,11 +397,11 @@
 
 
 ::method connectTrackBarEvent   /* can only be called in initDialog */
-   use strict arg id, type, msgToRise = "", category = 1
+   use strict arg id, type, msgToRise = "", categoryHDlg = .NullHandle
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if arg(4,'O') then hwnd = self~getItem(id)
-   else hwnd = self~getItem(id, category)
+   if arg(4,'O') then hwnd = self~getControlHandle(id)
+   else hwnd = self~getControlHandle(id, categoryHdlg)
    if hwnd = 0 then return -1
    if msgToRise == "" then msgToRise = "on" || type
    type = type~translate

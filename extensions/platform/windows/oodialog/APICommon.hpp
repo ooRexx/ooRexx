@@ -58,8 +58,6 @@ extern void systemServiceExceptionComCode(RexxThreadContext *context, const char
 extern void outOfMemoryException(RexxThreadContext *c);
 extern void userDefinedMsgException(RexxThreadContext *c, CSTRING msg);
 extern void userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg);
-extern void *wrongClassException(RexxThreadContext *c, int pos, const char *n);
-extern void invalidTypeException(RexxThreadContext *c, int pos, const char *type);
 extern void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual);
 extern void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen);
 extern void numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
@@ -75,11 +73,13 @@ extern void nullObjectException(RexxThreadContext *c, CSTRING name, int pos);
 extern void nullObjectException(RexxThreadContext *c, CSTRING name);
 extern void nullPointerException(RexxThreadContext *c, int pos);
 
+extern RexxObjectPtr wrongClassException(RexxThreadContext *c, int pos, const char *n);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, int pos, const char *list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, int pos, const char *list, const char *actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
 extern RexxObjectPtr notBooleanException(RexxThreadContext *c, int pos, RexxObjectPtr actual);
+extern RexxObjectPtr invalidTypeException(RexxThreadContext *c, int pos, const char *type);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber);
@@ -89,6 +89,7 @@ extern bool    rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr ob
 extern bool            requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, int pos);
 extern size_t          rxArgCount(RexxMethodContext * context);
 extern bool            rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos);
+extern bool            rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, int pos);
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);
