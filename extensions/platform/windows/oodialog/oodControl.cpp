@@ -1392,6 +1392,11 @@ static int32_t cbLbAddDirectory(HWND hCtrl, CSTRING drivePath, CSTRING fileAttri
 }
 
 
+RexxMethod1(RexxObjectPtr, lb_isSingleSelection, CSELF, pCSelf)
+{
+    return (isSingleSelectionListBox(getDCHCtrl(pCSelf)) ? TheTrueObj : TheFalseObj);
+}
+
 /** ListBox::getText()
  *
  *  Return the text of the item at the specified index.

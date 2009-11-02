@@ -475,6 +475,7 @@ REXX_METHOD_PROTOTYPE(bc_test);
 REXX_METHOD_PROTOTYPE(bc_test_cls);
 
 // ListBox
+REXX_METHOD_PROTOTYPE(lb_isSingleSelection);
 REXX_METHOD_PROTOTYPE(lb_getText);
 REXX_METHOD_PROTOTYPE(lb_add);
 REXX_METHOD_PROTOTYPE(lb_insert);
@@ -912,6 +913,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_test_cls,                    bc_test_cls),
 
     // ListBox
+    REXX_METHOD(lb_isSingleSelection,           lb_isSingleSelection),
     REXX_METHOD(lb_getText,                     lb_getText),
     REXX_METHOD(lb_add,                         lb_add),
     REXX_METHOD(lb_insert,                      lb_insert),

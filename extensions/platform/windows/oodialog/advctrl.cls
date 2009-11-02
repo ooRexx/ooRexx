@@ -488,7 +488,7 @@
    return self~stringWidthPx(text) / self~factorX
 
 ::method columnWidthPx
-  use strict arg column
+   use strict arg column
   return self~sendWinIntMsg(self~LVM_GETCOLUMNWIDTH, column, 0)
 
 ::method columnWidth  -- Dialog units, not accurate.
@@ -497,7 +497,7 @@
 
 ::method insertColumnPx external "LIBRARY oodialog lv_insertColumnPx"
 ::method insertColumn -- Dialog units, not accurate.
-   use arg nr = 0, text, width, fmt = "L"
+   use strict arg nr = 0, text, width, fmt = "L"
    width = trunc(width * self~factorX)
    return self~insertColumnPx(nr, text, width, fmt)
 
@@ -1310,11 +1310,19 @@
 
 ::class 'ListBox' subclass DialogControl public
 
+::constant LB_GETCOUNT             "0x018B"
+::constant LB_GETTOPINDEX          "0x018E"
+::constant LB_GETSELCOUNT          "0x0190"
 ::constant LB_GETHORIZONTALEXTENT  "0x0193"
 ::constant LB_SETHORIZONTALEXTENT  "0x0194"
+::constant LB_SETCOLUMNWIDTH       "0x0195"
+::constant LB_SETTOPINDEX          "0x0197"
+::constant LB_SETITEMHEIGHT        "0x01A0"
+::constant LB_GETITEMHEIGHT        "0x01A1"
 
 
 ::method setTabulators external "LIBRARY oodialog generic_setListTabulators"
+::method isSingleSelection external "LIBRARY oodialog lb_isSingleSelection"
 ::method getText external "LIBRARY oodialog lb_getText"
 ::method add external "LIBRARY oodialog lb_add"
 ::method insert external "LIBRARY oodialog lb_insert"
@@ -1333,11 +1341,14 @@
 ::method selectedIndex
    return self~Message2Parent(0x00000188, 0, 0) + 1
 
-::method Selected
-   return self~getText(self~SelectedIndex)
+::method selected
+   return self~getText(self~selectedIndex)
 
-::method SelectIndex
-   use arg ndx
+::constant LB_SETCURSEL            "0x0186"
+::constant LB_SELITEMRANGE         "0x019B"
+
+::method SelectIndex                                        -- Need C++ implementation
+   use strict arg ndx = 0
    if arg(1,'o') = 1 then ndx = 0
    return self~Message2Parent(0x00000186, ndx-1, 0)
 
@@ -1346,39 +1357,37 @@
    if arg(1,'o') = 1 then ndx = 0
    return self~Message2Parent(0x00000186, ndx-1, "D")
 
+::constant LB_SELITEMRANGE         "0x019B"
+
 ::method SelectRange
-   use arg fromNdx, toNdx
-   if arg(1,'o') = 1 then fromNdx = 1
-   if arg(2,'o') = 1 then toNdx = self~Items
-
-   lparam = (toNdx-1) * "10000"~x2d + (fromNdx-1)
-   return self~Message2Parent(0x0000019B, 1, lparam)
-
+   use strict arg fromNdx = 1, toNdx = (self~items)
+   if self~isSingleSelection then return -1
+   lParam = .DlgUtil~makeLParam(fromNdx - 1, toNdx - 1)
+   return self~sendWinIntMsg(self~LB_SELITEMRANGE, .true, lParam)
 
 ::method deselectRange
    use strict arg fromNdx = 1, toNdx = (self~items)
+   if self~isSingleSelection then return -1
+   lParam = .DlgUtil~makeLParam(fromNdx - 1, toNdx - 1)
+   return self~sendWinIntMsg(self~LB_SELITEMRANGE, .false, lParam)
 
-   lparam = (toNdx-1) * "10000"~x2d + (fromNdx-1)
-   return self~Message2Parent(0x0000019B, 0, lparam)
+::method items
+   return self~sendWinIntMsg(self~LB_GETCOUNT, 0, 0)
 
+::method selectedItems
+   return self~sendWinIntMsg(self~LB_GETSELCOUNT, 0, 0)
 
-::method Items
-   return self~Message2Parent(0x0000018B, 0, 0)
-
-::method SelectedItems
-   return self~Message2Parent(0x00000190, 0, 0)
-
-::method selectedIndexes
+::method selectedIndexes    -- TODO be nice to return an array
    return self~oDlg~getListBoxData(self~id)
 
-::method MakeFirstVisible
+::method makeFirstVisible
    use strict arg ndx = 1
-   return self~Message2Parent(0x00000197, ndx - 1, 0)
+   return self~sendWinIntMsg(self~LB_SETTOPINDEX, ndx - 1, 0)
 
-::method GetFirstVisible
-   return self~Message2Parent(0x0000018E, 0, 0) + 1
+::method getFirstVisible
+   return self~sendWinIntMsg(self~LB_GETTOPINDEX, 0, 0) + 1
 
-::method Modify
+::method modify
    use strict arg index = (self~selectedIndex), newItem
    if index <= 0 then return -1
    self~delete(index)
@@ -1389,27 +1398,41 @@
    self~sendWinIntMsg(self~LB_SETHORIZONTALEXTENT, pixels, 0)
    return 0
 
+::method widthPx
+   return self~sendWinIntMsg(self~LB_GETHORIZONTALEXTENT, 0, 0)
+
+::method "itemHeightPx="
+   use strict arg pixels
+   self~sendWinIntMsg(self~LB_SETITEMHEIGHT, pixels, 0)
+
+::method itemHeightPx
+   return self~sendWinIntMsg(self~LB_GETITEMHEIGHT, 0, 0)
+
+::method "columnWidthPx="
+   use strict arg pixels
+   self~sendWinIntMsg(self~LB_SETCOLUMNWIDTH, pixels, 0)
+
 ::method setWidth       -- Dialog units, not accurate
    use strict arg dlgunits
    if dlgunits~datatype("N") = 0 then return -1
    px = trunc(dlgunits * self~factorX)
    self~setWidthPx(px)
 
-::method Width
-   return self~Message2Parent(0x00000193, 0, 0)/self~factorX
+::method width          -- Dialog units, not accurate
+   return self~widthPx / self~factorX
 
-::method "ItemHeight="
-   use arg dlgunits
-   if arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   self~Message2Parent(0x000001A0, 0, dlgunits*self~factorY)
+::method "itemHeight="  -- Dialog units, not accurate
+   use strict arg dlgunits
+   if dlgunits~datatype("N") = 0 then return
+   self~itemHeightPx = trunc(dlgunits * self~factorY)
 
-::method ItemHeight
-   return self~Message2Parent(0x000001A1, 0, 0)/self~factorY
+::method itemHeight     -- Dialog units, not accurate
+   return self~itemHeightPx / self~factorY
 
-::method "ColumnWidth="
-   use arg dlgunits
-   if arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   self~Message2Parent(0x00000195, dlgunits*self~factorX, 0)
+::method "columnWidth=" -- Dialog units, not accurate
+   use strict arg dlgunits
+   if dlgunits~datatype("N") = 0 then return
+   self~columnWidthPx = trunc(dlgunits * self~factorX)
 
 
 /********** Combo Box Class ***************************************************/
