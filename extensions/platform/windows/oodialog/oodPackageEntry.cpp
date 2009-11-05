@@ -480,6 +480,9 @@ REXX_METHOD_PROTOTYPE(lb_getText);
 REXX_METHOD_PROTOTYPE(lb_add);
 REXX_METHOD_PROTOTYPE(lb_insert);
 REXX_METHOD_PROTOTYPE(lb_select);
+REXX_METHOD_PROTOTYPE(lb_selectIndex);
+REXX_METHOD_PROTOTYPE(lb_deselectIndex);
+REXX_METHOD_PROTOTYPE(lb_selectedIndex);
 REXX_METHOD_PROTOTYPE(lb_find);
 REXX_METHOD_PROTOTYPE(lb_addDirectory);
 
@@ -918,6 +921,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lb_add,                         lb_add),
     REXX_METHOD(lb_insert,                      lb_insert),
     REXX_METHOD(lb_select,                      lb_select),
+    REXX_METHOD(lb_selectIndex,               lb_selectIndex),
+    REXX_METHOD(lb_deselectIndex,               lb_deselectIndex),
+    REXX_METHOD(lb_selectedIndex,               lb_selectedIndex),
     REXX_METHOD(lb_find,                        lb_find),
     REXX_METHOD(lb_addDirectory,                lb_addDirectory),
 

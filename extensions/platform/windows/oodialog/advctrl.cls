@@ -1102,25 +1102,33 @@
 ::method removeStyle external "LIBRARY oodialog e_style"
 ::method getStyle external "LIBRARY oodialog e_style"
 
+::constant EM_SETSEL               "0x00B1"
+::constant EM_GETRECT              "0x00B2"
+::constant EM_SETRECT              "0x00B3"
+::constant EM_SETRECTNP            "0x00B4"
+::constant EM_SCROLL               "0x00B5"
+::constant EM_LINESCROLL           "0x00B6"
+::constant EM_SCROLLCARET          "0x00B7"
+::constant EM_GETMODIFY            "0x00B8"
+::constant EM_SETMODIFY            "0x00B9"
 
 ::method select
-    use arg start, end
-    if arg(1,'o') = 1 then start = 1
-    if arg(2,'o') = 1 then end = 0
-    self~Message2Parent(0x00B1, start-1, end-1)
+    use strict arg start = 1, end = 0
+    self~sendWinIntMsg(self~,EM_SETSEL start - 1, end - 1)
 
 ::method ScrollCommand
-    use arg kind, reps
-    if arg(1,'o') = 1 then kind = "UP"; else kind = kind~translate
-    if arg(2,'o') = 1 then reps = 1
+    use arg kind = "UP", reps = 1
+    kind = kind~translate
+
     select
         when kind = "UP" | kind = "LEFT" then sb = 0
         when kind = "DOWN" | kind = "RIGHT" then sb = 1
         when kind = "PAGEUP" | kind = "PAGELEFT" then sb = 2
         when kind = "PAGEDOWN" | kind = "PAGERIGHT" then sb = 3
+        otherwise sb = 0
     end
     do i = 1 to reps
-        self~Message2Parent(0x00B5, sb, 0)
+        self~sendWinIntMsg(self~EM_SCROLL, sb, 0)
     end
 
 ::method LineScroll
@@ -1310,6 +1318,10 @@
 
 ::class 'ListBox' subclass DialogControl public
 
+::constant LB_DELETESTRING         "0x0182"
+::constant LB_RESETCONTENT         "0x0184"
+::constant LB_SETCURSEL            "0x0186"
+::constant LB_GETCURSEL            "0x0188"
 ::constant LB_GETCOUNT             "0x018B"
 ::constant LB_GETTOPINDEX          "0x018E"
 ::constant LB_GETSELCOUNT          "0x0190"
@@ -1317,9 +1329,9 @@
 ::constant LB_SETHORIZONTALEXTENT  "0x0194"
 ::constant LB_SETCOLUMNWIDTH       "0x0195"
 ::constant LB_SETTOPINDEX          "0x0197"
+::constant LB_SELITEMRANGE         "0x019B"
 ::constant LB_SETITEMHEIGHT        "0x01A0"
 ::constant LB_GETITEMHEIGHT        "0x01A1"
-
 
 ::method setTabulators external "LIBRARY oodialog generic_setListTabulators"
 ::method isSingleSelection external "LIBRARY oodialog lb_isSingleSelection"
@@ -1327,39 +1339,24 @@
 ::method add external "LIBRARY oodialog lb_add"
 ::method insert external "LIBRARY oodialog lb_insert"
 ::method select external "LIBRARY oodialog lb_select"
+::method selectIndex external "LIBRARY oodialog lb_selectIndex"
+::method deSelectIndex external "LIBRARY oodialog lb_deselectIndex"
+::method selectedIndex external "LIBRARY oodialog lb_selectedIndex"
 ::method find external "LIBRARY oodialog lb_find"
 ::method addDirectory external "LIBRARY oodialog lb_addDirectory"
 
-::method Delete
-   use arg index
-   if arg(1,"o") = 1 then index = self~SelectedIndex
-   return self~Message2Parent(0x00000182, index-1, 0)
+::method delete
+   use strict arg index = (self~selectedIndex)
+   if index == 0 then return 0
+   return self~sendWinIntMsg(self~LB_DELETESTRING, index - 1, 0)
 
-::method DeleteAll
-   return self~Message2Parent(0x00000184, 0, 0)
-
-::method selectedIndex
-   return self~Message2Parent(0x00000188, 0, 0) + 1
+::method deleteAll
+   return self~sendWinIntMsg(self~LB_RESETCONTENT, 0, 0)
 
 ::method selected
    return self~getText(self~selectedIndex)
 
-::constant LB_SETCURSEL            "0x0186"
-::constant LB_SELITEMRANGE         "0x019B"
-
-::method SelectIndex                                        -- Need C++ implementation
-   use strict arg ndx = 0
-   if arg(1,'o') = 1 then ndx = 0
-   return self~Message2Parent(0x00000186, ndx-1, 0)
-
-::method DeSelectIndex
-   use arg ndx
-   if arg(1,'o') = 1 then ndx = 0
-   return self~Message2Parent(0x00000186, ndx-1, "D")
-
-::constant LB_SELITEMRANGE         "0x019B"
-
-::method SelectRange
+::method selectRange
    use strict arg fromNdx = 1, toNdx = (self~items)
    if self~isSingleSelection then return -1
    lParam = .DlgUtil~makeLParam(fromNdx - 1, toNdx - 1)
@@ -1377,7 +1374,7 @@
 ::method selectedItems
    return self~sendWinIntMsg(self~LB_GETSELCOUNT, 0, 0)
 
-::method selectedIndexes    -- TODO be nice to return an array
+::method selectedIndexes                                    -- TODO be nice to return an array
    return self~oDlg~getListBoxData(self~id)
 
 ::method makeFirstVisible

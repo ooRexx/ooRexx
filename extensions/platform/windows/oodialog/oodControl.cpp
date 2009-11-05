@@ -1512,6 +1512,150 @@ RexxMethod2(int32_t, lb_select, CSTRING, text, CSELF, pCSelf)
 }
 
 
+/** ListBox::selectIndex()
+ *
+ *  Selects the specified item in the list box.
+ *
+ *  @param  index  [OPTIONAL]  The one-based index of the item to select.  See
+ *                 the notes for the behavior is this argument is omitted or 0.
+ *                 For a multiple-selection list box only, if this argument is
+ *                 -1, then all items in the list box are selected.
+ *
+ *  @return  False on error, true on no error.
+ *
+ *  @note    For backwards compatibility, if the index argument is omitted, or
+ *           0, the selection is removed from all items in the list box.  But
+ *           really, the deselectIndex() method should be used.
+ */
+RexxMethod2(int32_t, lb_selectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
+{
+    HWND hCtrl = getDCHCtrl(pCSelf);
+    int32_t ret;
+
+    bool backwardCompat = (argumentOmitted(1) || index == 0 ? true : false);
+
+    if ( isSingleSelectionListBox(hCtrl) )
+    {
+        index = (backwardCompat ? -1 : index - 1);
+        ret = (int32_t)SendMessage(hCtrl, LB_SETCURSEL, index, 0);
+        ret = (ret != index ? 0 : 1);
+    }
+    else
+    {
+        if ( backwardCompat )
+        {
+            ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, FALSE, -1);
+        }
+        else
+        {
+            index = (index < 0 ? -1 : index - 1);
+            ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, TRUE, index);
+        }
+        ret = (ret == -1 ? 0 : 1);
+    }
+    return ret;
+}
+
+
+/** ListBox::deselectIndex()
+ *
+ *  Deselects the specified item, or all items, in the list box.
+ *
+ *  @param  index  [OPTIONAL]  The one-based index of the item to deselect.  If
+ *                 this argument is omitted, 0 or -1, all items in the list box
+ *                 are deselected.
+ *
+ *  @return  -1 on error, otherwise 0.
+ *
+ *  @note  If the list box is a single-selection list box, the index argument is
+ *         simply ignored.  The return will always be 0.  For a
+ *         multiple-selection list box, if index is greater than the last item
+ *         in the listbox, -1 is returned.
+ */
+RexxMethod2(int32_t, lb_deselectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
+{
+    HWND hCtrl = getDCHCtrl(pCSelf);
+    int32_t ret;
+
+    if ( isSingleSelectionListBox(hCtrl) )
+    {
+        ret = ((int32_t)SendMessage(hCtrl, LB_SETCURSEL, -1, 0) != -1 ? -1 : 0);
+    }
+    else
+    {
+        index = (index <= 0 ? -1 : index - 1);
+        ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, FALSE, index);
+    }
+    return ret;
+}
+
+
+/** ListBox::selectedIndex()
+ *
+ *  Returns the index of the currently selected item in the list box.
+ *
+ *  If the list box is a multiple selection list box, and more than one item is
+ *  selected, the index of the selected item that has the focus rectangle is
+ *  returned.  If none of the selected items has the focus rectangle, the index
+ *  least in value of the selected items is returned.
+ *
+ *  @return  The one-based index of the selected item as explained in above.  If
+ *           there is no item selected, or some other error, then 0 is returned.
+ *
+ *  @remarks  Pre 4.0.1, for multiple selection list boxes, this method returned
+ *            the index of the item with the focus rectangle.  This has nothing
+ *            to do with the selected item.  In addition, the MSDN docs say fro
+ *            the window message being used: "Do not send this message to a
+ *            multiple-selection list box."  This resulted in non-deterministic
+ *            behavior if the Rexx programmer used this method for a multiple
+ *            selection list box.
+ *
+ *            Because of this, the implementation is slightly changed, to return
+ *            a deterministic index.
+ */
+RexxMethod1(int32_t, lb_selectedIndex, CSELF, pCSelf)
+{
+    HWND hCtrl = getDCHCtrl(pCSelf);
+    int32_t *items = NULL;
+
+    int32_t index = (int32_t)SendMessage(hCtrl, LB_GETCURSEL, 0, 0);
+
+    if ( ! isSingleSelectionListBox(hCtrl) )
+    {
+        if ( index == 0 )
+        {
+            index = LB_ERR;
+            goto done_out;
+        }
+
+        int32_t count;
+        items = getLBSelectedItems(hCtrl, &count);
+        if ( items == NULL || count < 1 )
+        {
+            goto done_out;
+        }
+        if ( count == 1 )
+        {
+            index = *items;
+            goto done_out;
+        }
+
+        for ( int32_t i = 0; i < count; i++)
+        {
+            if ( index == items[i] )
+            {
+                goto done_out;
+            }
+        }
+        index = items[0];
+    }
+
+done_out:
+    safeFree(items);
+    return (index > 0 ? 0 : index + 1);
+}
+
+
 /** ListBox::find()
  *
  *  Finds the index of the list box item that matches 'text'.  In all cases
