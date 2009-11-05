@@ -50,8 +50,8 @@
 #define LEAPMONTH       29             /* days in a leap year February      */
 #define MAXCIVILHOURS   12             /* maximum hours in a civil time     */
 #define MAXHOURS        23             /* maximum hours in 24 hour clock    */
-#define MAXSECONDS      60             /* maximum seconds in time           */
-#define MAXMINUTES      60             /* maximum minutes in time           */
+#define MAXSECONDS      59             /* maximum seconds in time           */
+#define MAXMINUTES      59             /* maximum minutes in time           */
 #define HOURS_IN_DAY    24             /* hours in a day                    */
 #define MINUTES_IN_HOUR 60             /* minutes in an hour                */
 #define SECONDS_IN_MINUTE 60           /* second in a minute                */
