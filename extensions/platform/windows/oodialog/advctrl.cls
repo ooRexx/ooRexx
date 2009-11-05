@@ -1114,7 +1114,7 @@
 
 ::method select
     use strict arg start = 1, end = 0
-    self~sendWinIntMsg(self~,EM_SETSEL start - 1, end - 1)
+    self~sendWinIntMsg(self~EM_SETSEL, start - 1, end - 1)
 
 ::method ScrollCommand
     use arg kind = "UP", reps = 1
