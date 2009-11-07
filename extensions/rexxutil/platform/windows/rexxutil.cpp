@@ -277,6 +277,14 @@ FILE_SYSTEM | FILE_ARCHIVED | MUST_HAVE_DIRECTORY | FILE_DIRECTORY
 #define SORT_DECENDING 1
 
 /*********************************************************************/
+/* Define used for Unicode translation. Not present in early Windows */
+/* SDKs.                                                             */
+/*********************************************************************/
+#ifndef WC_ERR_INVALID_CHARS
+#define WC_ERR_INVALID_CHARS      0x00000080
+#endif
+
+/*********************************************************************/
 /* Structures used throughout REXXUTIL.C                             */
 /*********************************************************************/
 
@@ -383,6 +391,63 @@ static   P_GDFSE pGetDiskFreeSpaceEx = NULL;
 /****************  REXXUTIL Supporting Functions  ********************/
 /****************  REXXUTIL Supporting Functions  ********************/
 /*********************************************************************/
+
+/**
+ * Tests if the the current operating system version meets the specified
+ * requirements. Really a front end to VerifyVersionInfo().  See MSDN docs for
+ * type and condition flags.
+ *
+ * @param major       OS major number.
+ * @param minor       OS minor number.
+ * @param sp          Service pack level.
+ * @param type        Further refines the test.  See MSDN for all the flags, but
+ *                    for example there is VER_NT_WORKSTATION to differentiate
+ *                    between NT desktop and NT server.
+ * @param condition   The test condition.  Typical flags would be VER_EQUAL or
+ *                    VER_GREATER_EQUAL.
+ *
+ * @return True if the condition is met by the current operating system, or
+ *         false if not.
+ */
+static bool isWindowsVersion(DWORD major, DWORD minor, unsigned int sp, unsigned int type, unsigned int condition)
+{
+    OSVERSIONINFOEX ver;
+    DWORDLONG       mask = 0;
+    DWORD           testForMask = VER_MAJORVERSION | VER_MINORVERSION;
+
+    ZeroMemory(&ver, sizeof(OSVERSIONINFOEX));
+
+    ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    ver.dwMajorVersion = major;
+    ver.dwMinorVersion = minor;
+
+    VER_SET_CONDITION(mask, VER_MAJORVERSION, condition);
+    VER_SET_CONDITION(mask, VER_MINORVERSION, condition);
+
+    if ( condition != VER_EQUAL )
+    {
+        ver.wServicePackMajor = sp;
+        testForMask |= VER_SERVICEPACKMAJOR;
+        VER_SET_CONDITION(mask, VER_SERVICEPACKMAJOR, condition);
+    }
+
+    if ( type != 0 )
+    {
+        ver.wProductType = type;
+        testForMask |= VER_PRODUCT_TYPE;
+        VER_SET_CONDITION(mask, VER_PRODUCT_TYPE, condition);
+    }
+
+    if ( VerifyVersionInfo(&ver, testForMask, mask) )
+        return true;
+    else
+        return false;
+}
+
+inline bool isAtLeastVista(void)
+{
+    return isWindowsVersion(6, 0, 0, 0, VER_GREATER_EQUAL);
+}
 
 /*********************************************************************/
 /*                                                                   */
@@ -5616,7 +5681,7 @@ RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRI
 
         if ( StrStrI(mappingFlags, "ERR_INVALID") != NULL )
         {
-            if ( codePage == CP_UTF8 )
+            if ( codePage == CP_UTF8 && isAtLeastVista() )
             {
                 dwFlags |= WC_ERR_INVALID_CHARS;
             }
