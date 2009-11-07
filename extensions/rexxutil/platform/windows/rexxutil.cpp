@@ -439,9 +439,13 @@ static bool isWindowsVersion(DWORD major, DWORD minor, unsigned int sp, unsigned
     }
 
     if ( VerifyVersionInfo(&ver, testForMask, mask) )
+    {
         return true;
+    }
     else
+    {
         return false;
+    }
 }
 
 inline bool isAtLeastVista(void)
