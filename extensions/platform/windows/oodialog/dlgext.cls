@@ -44,18 +44,15 @@
 
 ::class 'DialogExtensions' public mixinclass Object
 
-   /* This method will do the same as execute but it will do an asynchronous */
-   /* dispatch of messages      */
-
+-- Execute with asynchronous message dispatching.
 ::method executeAsync unguarded
-   use arg sleeptime, sh, icon = 0, nomodal
-   if sleeptime~Datatype('N') = 0 then sleeptime = 10
-   if arg(2,'o') = 1 then sh = "DEFAULT"
-   if arg(4,'o') = 1 then nomodal = 0
-   if self~startIt(icon, nomodal) \= 0 then do
-      if self~useStem then self~SetDataStem(self~dlgData); else self~SetData
+   use strict arg sleepTime = 10, sh = "NORMAL", icon = 0, modeless = .false
+
+   if self~startIt(icon, modeless) \= 0 then do
+      if self~useStem then self~setDataStem(self~dlgData)
+      else self~setData
       self~show(sh)
-      self~start("AsyncMessageHandling", sleeptime)
+      self~start("asyncMessageHandling", sleepTime)
       do while self~automaticMethods~Items > 0
          p = self~automaticMethods~pull
          m = self~automaticMethods~pull
@@ -68,24 +65,23 @@
    else self~stopit
    return 1
 
-   /* This method ends the asynchronous execution of a dialog */
-
+-- End the asynchronous execution of the dialog.
 ::method endAsyncExecution unguarded
    do while self~finished = 0
       call msSleep 20
    end
    if self~initCode = 1 then do
-      if self~useStem then self~GetDataStem(self~dlgData)
-      self~GetData
+      if self~useStem then self~getDataStem(self~dlgData)
+      self~getData
    end
    if self~adm \= 0 then self~stopit
    return self~initCode
 
+-- Asynchronously dispatch windows messages.
+::method asyncMessageHandling unguarded private
+   use strict arg sleepTime = 10
+   if \ sleepTime~datatype('W') then sleepTime = 10
 
-   /* This method is started asynchronously to handle dialog messages */
-
-::method asyncMessageHandling unguarded protected
-   use arg sleeptime
    do while self~finished = 0 & self~adm \= 0
       msg = getDlgMsg(self~adm)
       if msg~pos("1DLGDELETED1") > 0 then do
@@ -98,43 +94,36 @@
             self~sendWith(methodName, argList)
          end
          else do
-            if sleeptime \= 0 then call msSleep sleeptime
+            call msSleep sleepTime
          end
       end
    end
 
-   /* Run a nonmodal dialog */
+-- Run a modeless dialog
 ::method popup
-   use arg sh, sleeptime, icon = 0
-   if arg(1,'o') = 1 then sh = "DEFAULT"
-   if sleeptime~Datatype('N') = 0 then sleeptime = 10
-   /* start execute and return to caller */
-   self~start("execute", sh, icon, sleeptime, "NOTMODAL")
-
+   use strict arg sh = "NORMAL", sleepTime = 10, icon = 0
+   if \ sleepTime~datatype('W') then sleepTime = 10
+   self~start("execute", sh, icon, sleeptime, .true)
 
 ::method popupAsChild
-   use arg parent, sh, sleeptime, icon = 0
+   use strict arg parent, sh = "NORMAL", sleepTime = 10, icon = 0
 
-   if arg(1,'o') = 1 | parent = 0 then do
-       call errorDialog "No parent dialog specified!"
+   if \ parent~isA(.PlainBaseDialog) then do
+       call errorDialog "Specified parent is not a dialog!"
        return -1
    end
-   if arg(2,'o') = 1 then sh = "DEFAULT"
-   if sleeptime~Datatype('N') = 0 then sleeptime = 10
+
+   if \ sleepTime~datatype('W') then sleepTime = 10
    parent~childDialogs~insert(self)  /* add to the parents child list (last item) */
    self~parentDlg = parent
 
-   /* start execute and return to caller */
-   self~start("execute", sh, icon, sleeptime, "NOTMODAL")
-
+   self~start("execute", sh, icon, sleeptime, .true)
 
 ::method peekDialogMessage unguarded
    return getDlgMsg(self~adm, .true)
 
 
- /* The following Methods are to set/get the behaviour of/from a scrollbar */
- /* You can use scrollbars to connect them with numerical entry fields */
-
+ /* Scrollbar methods */
 ::method setSBRange unguarded
    use arg id, min, max, redraw = .true
    sb = self~newScrollBar(id)

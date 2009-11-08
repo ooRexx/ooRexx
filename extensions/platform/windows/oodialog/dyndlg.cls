@@ -392,10 +392,7 @@
    if self~basePtr = 0 then return 0
 
    icon = self~resolveIconID(icon)
-   if modeless <> 0 & modless <> 1 then do
-     if modeless~translate = "NOTMODAL" then modeless = .true
-     else modeless = .false
-   end
+   if \ modeless~datatype('O') then modeless = .false
 
    if \ self~startParentDialog(icon, modeless) then return 0
 

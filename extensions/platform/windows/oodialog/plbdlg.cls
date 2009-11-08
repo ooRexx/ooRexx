@@ -300,10 +300,10 @@
  */
 ::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils EventNotification
 
-::constant DM_REPOSITION                 "0x0402"    -- No return
-::constant WM_SETFONT                    "0x0030"    -- No return
-::constant WM_NEXTDLGCTL                 "0x0028"    -- No return or 0
-::constant WM_USER_INTERRUPTSCROLL       "0x0A02"    -- TRUE
+::constant DM_REPOSITION                 "0x0402"
+::constant WM_SETFONT                    "0x0030"
+::constant WM_NEXTDLGCTL                 "0x0028"
+::constant WM_USER_INTERRUPTSCROLL       "0x0A02"
 
 
 ::method init class external "LIBRARY oodialog pbdlg_init_cls"
@@ -342,38 +342,29 @@
  */
 ::method init external "LIBRARY oodialog pbdlg_init"
 ::method unInit external "LIBRARY oodialog pbdlg_unInit"
-
 ::method setDlgFont external "LIBRARY oodialog pbdlg_setDlgFont"
 
-   /* This method will be called after the Windows dialog has been created. */
-   /* It is useful to set data fields and initialize combo & list boxes */
-
-::method initDialog unguarded protected
+::method initDialog unguarded private
    return 0
 
-   /* This method will dispatch messages from dialog until OK or Cancel */
-   /* push button has been pushed or ESC or Enter has been presed */
-
-::method run unguarded protected
-   use strict arg sleeptime = 0
+-- Dispatches window messages until the dialog is terminated.
+::method run unguarded private
+   use strict arg sleepTime = 1
+   if \ sleepTime~datatype('W') then sleepTime = 1
 
    do while self~finished = 0
-      self~handleMessages(sleeptime)
+      self~handleMessages(sleepTime)
    end
 
-   /* this method will create the dialog, show it (see method show), start */
-   /* automatic methods and destroy the dialog. Data will be set and */
-   /* received */
-
+-- Creates the dialog, shows it, and destroys it.  Dialog "data" is set and received.
 ::method execute unguarded
    expose dlgData.
-   use arg sh, icon = 0, sleeptime, nomodal
+   use strict arg sh = "NORMAL", icon = 0, sleepTime = 1, modeless = .false
+
    icon = self~resolveIconId(icon)
-   if sleeptime~Datatype('N') = 0 then sleeptime = 0   /* default is no sleep for execute */
-   if arg(4, 'o') = 1 then nomodal = 0
-   if self~startIt(icon, nomodal) \= 0 then do
-      if self~useStem then self~SetDataStem(dlgData.)
-      else self~SetData
+   if self~startIt(icon, modeless) \= 0 then do
+      if self~useStem then self~setDataStem(dlgData.)
+      else self~setData
       self~show(sh)
       do while self~automaticMethods~Items > 0
          p = self~automaticMethods~pull
@@ -382,18 +373,54 @@
          o = c~new(p, self)
          o~start(m)
       end
-      self~run(sleeptime)
+
+      self~run(sleepTime)
+
       if self~initCode = 1 then do
-         if self~useStem then self~GetDataStem(dlgData.)
-         self~GetData
+         if self~useStem then self~getDataStem(dlgData.)
+         self~getData
       end
-      if self~adm \= 0 then self~stopit
+      if self~adm \= 0 then self~stopIt
       return self~initCode
    end
    else do
-      self~stopit
+      self~stopIt
    end
    return 0
+
+-- Retrieve, if available, and dispatch one window message.
+::method handleMessages unguarded private
+   use strict arg sleepTime = 1
+   if self~adm = 0 then do
+       self~finished = 2
+       return
+   end
+
+   msg = getDlgMsg(self~adm)
+   if msg~pos("1DLGDELETED1") > 0 then do
+      if self~finished = 0 then self~finished = 2
+   end
+   else do
+      if msg \= "" then do
+         parse var msg methodName '(' args ')'
+         argList = args~space(0)~makeArray(',')
+         self~sendWith(methodName, argList)
+      end
+      else do
+         call msSleep sleepTime
+      end
+   end
+
+-- Clear all pending window messages
+::method clearMessages unguarded private
+   if self~adm = 0 then return
+   msg = getDlgMsg(self~adm)
+   do while msg \= "" & self~adm \= 0
+       if msg~pos("1DLGDELETED1") > 0 then do
+          if self~finished = 0 then self~finished = 2
+       end
+       msg = getDlgMsg(self~adm)
+   end
 
 ::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
 ::method stopIt external "LIBRARY oodialog pbdlg_stopIt"
@@ -796,43 +823,6 @@
 ::method ListDrop unguarded
    use arg id
    return self~BoxMessage(id, 0x00000184, 0, 0)
-
-   /* This method will handle one dialog message synchronously */
-
-::method handleMessages unguarded protected
-   use arg sleeptime
-   if self~adm = 0 then do
-       self~finished = 2
-       return
-   end
-   if arg(1,'o') = 1 then sleeptime = 0
-   msg = getDlgMsg(self~adm)
-   if msg~pos("1DLGDELETED1") > 0 then do
-      if self~finished = 0 then self~finished = 2
-   end
-   else do
-      if msg \= "" then do
-         parse var msg methodName '(' args ')'
-         argList = args~space(0)~makeArray(',')
-         self~sendWith(methodName, argList)
-      end
-      else do
-         if sleeptime \= 0 then call msSleep sleeptime
-      end
-   end
-
-
-   /* This method will clear all pending dialog messages */
-
-::method clearMessages unguarded protected
-   if self~adm = 0 then return
-   msg = getDlgMsg(self~adm)
-   do while msg \= "" & self~adm \= 0
-       if msg~pos("1DLGDELETED1") > 0 then do
-          if self~finished = 0 then self~finished = 2
-       end
-       msg = getDlgMsg(self~adm)
-   end
 
 
 ::method enableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"

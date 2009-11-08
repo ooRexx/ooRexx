@@ -58,24 +58,12 @@
    return self~initCode
 
 -- Create a Windows dialog out of the resource stored in Library.
---
--- From docs for the arg: modal
--- If a modal or a modeless dialog is to be created. A value of 0 signals a modal dialog should be
--- created. A value of 1, or the string "NOTMODAL" case insignificant, signals a modeless dialog
--- should be created. The default is 0.
---
--- So the arg 'modal' is misnamed, it should be modeless so that 0 (false) signals a modal dialog
--- and 1 (true) signals a modeless dialog.  Changing this, 9/7/2009
 ::method startIt
    expose library resource dlgData.
-   use arg icon = 0, modeless = 0
+   use strict arg icon = 0, modeless = .false
 
    icon = self~resolveIconID(icon)
-
-   if modeless <> 0 & modeless <> 1 then do
-     if modeless~translate = "NOTMODAL" then modeless = 1
-     else modeless = 0
-   end
+   if \ modeless~datatype('O') then modeless = .false
 
    if self~startDialog(library, resource, self~autoDetect, icon, modeless) then do
       -- if autodetection is on, create the data attributes
