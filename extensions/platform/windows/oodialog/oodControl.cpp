@@ -950,6 +950,13 @@ uint32_t parseEditStyle(CSTRING keyWords)
     return style;
 }
 
+
+RexxMethod1(logical_t, e_isSingleLine, CSELF, pCSelf)
+{
+    return isSingleLineEdit(getDCHCtrl(pCSelf));
+}
+
+
 RexxMethod1(RexxObjectPtr, e_selection, CSELF, pCSelf)
 {
     pCDialogControl pcdc = (pCDialogControl)pCSelf;
@@ -986,15 +993,81 @@ RexxMethod3(RexxObjectPtr, e_replaceSelText, CSTRING, replacement, OPTIONAL_logi
 }
 
 
-RexxMethod3(RexxStringObject, e_getLine, uint32_t, lineNumber, OPTIONAL_RexxObjectPtr, ignored, CSELF, pCSelf)
+/** Edit::lineIndex()
+ *
+ *  Gets the character index of the first character of a specified line in a
+ *  multiline edit control. A character index is the zero-based index of the
+ *  character from the beginning of the edit control.
+ *
+ *  @param  lineNumber  The one-based index of the line whose character index is
+ *                      desired.  A value of –1 specifies the current line
+ *                      number (the line that contains the caret).
+ *
+ *  @return The character index. -1 is returned if the specified line index is
+ *          not within bounds of the edit control lines.  (More than the curent
+ *          number of lines or 0.)
+ *
+ *  @remarks  The EM_LINEINDEX message is documented as returning -1 if the line
+ *            number specified as being greater than the current number of lines
+ *            in the edit control.  However, under 64-bit Windows, the return is
+ *            0x00000000FFFFFFFF (4294967295) rather than -1.
+ */
+RexxMethod2(RexxObjectPtr, e_lineIndex, int32_t, lineNumber, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
+    RexxObjectPtr result = TheNegativeOneObj;
+    if ( lineNumber != 0 )
+    {
+        HWND hCtrl = getDCHCtrl(pCSelf);
 
-    HWND hwnd = ((pCDialogControl)pCSelf)->hCtrl;
+        if ( isSingleLineEdit(hCtrl) )
+        {
+            if ( lineNumber == 1 )
+            {
+                result = TheOneObj;
+            }
+        }
+        else
+        {
+            if ( lineNumber != -1 )
+            {
+                lineNumber--;
+            }
+
+            uint32_t charIndex = (uint32_t)SendMessage(hCtrl, EM_LINEINDEX, lineNumber, 0);
+            if ( charIndex != 0xFFFFFFFF )
+            {
+                result = context->UnsignedInt32(++charIndex);
+            }
+        }
+    }
+    return result;
+}
+
+
+/** Edit::getLine()
+ *
+ *  Retrieves the text of the specified line.
+ *
+ *  @param  lineNumber  The one-base index of the line whose text is desired.
+ *                      A value of –1 specifies the current line number (the
+ *                      line that contains the caret).
+ *  @param  ignored     Prior to 4.0.1, ooDialog required the user to specify
+ *                      how long the line was (or how much text to retrieve) if
+ *                      the line was over 255 characters.  This restriction is
+ *                      removed and this argument is simply ignored to provide
+ *                      backward compatibility.
+ *
+ *  @return  The text of the specified line, or the empty string if an error
+ *           occurs.  Recall that it is possible that the line specified
+ *           actually contains no text.
+ */
+RexxMethod3(RexxStringObject, e_getLine, int32_t, lineNumber, OPTIONAL_RexxObjectPtr, ignored, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
     char *buf = NULL;
     RexxStringObject result = context->NullString();
 
-    if ( lineNumber < 1 )
+    if ( lineNumber == 0 )
     {
         goto done_out;
     }
@@ -1009,9 +1082,13 @@ RexxMethod3(RexxStringObject, e_getLine, uint32_t, lineNumber, OPTIONAL_RexxObje
     }
     else
     {
-        lineNumber--;
-        int32_t charIndex = (int32_t)SendMessage(hwnd, EM_LINEINDEX, lineNumber, 0);
-        if ( charIndex == -1 )
+        if ( lineNumber != -1 )
+        {
+            lineNumber--;
+        }
+
+        uint32_t charIndex = (uint32_t)SendMessage(hwnd, EM_LINEINDEX, lineNumber, 0);
+        if ( charIndex == 0xFFFFFFFF )
         {
             goto done_out;
         }
@@ -1021,9 +1098,8 @@ RexxMethod3(RexxStringObject, e_getLine, uint32_t, lineNumber, OPTIONAL_RexxObje
         {
             goto done_out;
         }
-        count++;
 
-        buf = (char *)LocalAlloc(LPTR, count);
+        buf = (char *)LocalAlloc(LPTR, ++count);
         if ( buf == NULL )
         {
             outOfMemoryException(context->threadContext);
@@ -1033,7 +1109,7 @@ RexxMethod3(RexxStringObject, e_getLine, uint32_t, lineNumber, OPTIONAL_RexxObje
         (*(WORD *)buf) = count;
         if ( SendMessage(hwnd, EM_GETLINE, lineNumber, (LPARAM)buf) != 0 )
         {
-            result = c->String(buf);
+            result = context->String(buf);
         }
     }
 
@@ -1115,7 +1191,6 @@ RexxMethod2(RexxObjectPtr, e_setCue, CSTRING, text, CSELF, pCSelf)
     {
         return TheOneObj;
     }
-    pCDialogControl pcdc = (pCDialogControl)pCSelf;
 
     // The text is limited to 255.
     WCHAR wszCue[QUE_MAX_TEXT + 1];
@@ -1126,7 +1201,7 @@ RexxMethod2(RexxObjectPtr, e_setCue, CSTRING, text, CSELF, pCSelf)
     }
 
     putUnicodeText((LPWORD)wszCue, text);
-    return (Edit_SetCueBannerText(pcdc->hCtrl, wszCue) ? TheZeroObj : TheOneObj);
+    return (Edit_SetCueBannerText(getDCHCtrl(pCSelf), wszCue) ? TheZeroObj : TheOneObj);
 }
 
 

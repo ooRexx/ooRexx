@@ -1087,6 +1087,8 @@
 
 ::class 'EditControl' subclass DialogControl public
 
+::method isSingleLine external "LIBRARY oodialog e_isSingleLine"
+
 ::method selection external "LIBRARY oodialog e_selection"
 ::method selected
     s = self~selection
@@ -1094,6 +1096,7 @@
 
 ::method replaceSelText external "LIBRARY oodialog e_replaceSelText"
 ::method getLine external "LIBRARY oodialog e_getLine"
+::method lineIndex external "LIBRARY oodialog e_lineIndex"
 ::method hideBalloon external "LIBRARY oodialog e_hideBallon"
 ::method showBalloon external "LIBRARY oodialog e_showBallon"
 ::method setCue external "LIBRARY oodialog e_setCue"
@@ -1111,48 +1114,53 @@
 ::constant EM_SCROLLCARET          "0x00B7"
 ::constant EM_GETMODIFY            "0x00B8"
 ::constant EM_SETMODIFY            "0x00B9"
+::constant EM_GETLINECOUNT         "0x00BA"
+::constant EM_LINEINDEX            "0x00BB"
 
 ::method select
     use strict arg start = 1, end = 0
     self~sendWinIntMsg(self~EM_SETSEL, start - 1, end - 1)
+    return 0
 
-::method ScrollCommand
+::method scrollCommand
     use arg kind = "UP", reps = 1
     kind = kind~translate
-
+    if self~isSingleLine then return 0
     select
-        when kind = "UP" | kind = "LEFT" then sb = 0
-        when kind = "DOWN" | kind = "RIGHT" then sb = 1
-        when kind = "PAGEUP" | kind = "PAGELEFT" then sb = 2
-        when kind = "PAGEDOWN" | kind = "PAGERIGHT" then sb = 3
-        otherwise sb = 0
+        when kind = "UP" | kind = "LEFT" then wParam = 0
+        when kind = "DOWN" | kind = "RIGHT" then wParam = 1
+        when kind = "PAGEUP" | kind = "PAGELEFT" then wParam = 2
+        when kind = "PAGEDOWN" | kind = "PAGERIGHT" then wParam = 3
+        otherwise wParam = 0
     end
     do i = 1 to reps
-        self~sendWinIntMsg(self~EM_SCROLL, sb, 0)
+        ret = self~sendWinIntMsg(self~EM_SCROLL, wParam, 0)
     end
+    return ret
 
-::method LineScroll
-    use arg cx, cy
-    return \self~Message2Parent(0x00B6, cx, cy)
+::method lineScroll
+    use strict arg cx, cy
+    if self~isSingleLine then return 1
+    self~sendWinIntMsg(self~EM_LINESCROLL, cx, cy)
+    return 0
 
-::method EnsureCaretVisibility
-    return \self~Message2Parent(0x00B7, 0, 0)
+::method ensureCaretVisibility
+    use strict arg
+    self~sendWinIntMsg(self~EM_SCROLLCARET, 0, 0)
+    return 0
 
-::method IsModified
-    return self~Message2Parent(0x00B8, 0, 0)
+::method isModified
+    use strict arg
+    return self~sendWinIntMsg(self~EM_GETMODIFY, 0, 0) <> 0
 
-::method SetModified
-    use arg bool
-    if arg(1,'o') = 1 then bool = 1
-    self~Message2Parent(0x00B9, bool, 0)
+::method setModified
+    use strict arg bool = .true
+    self~sendWinIntMsg(self~EM_SETMODIFY, bool, 0)
+    return 0
 
-::method Lines
-    return self~Message2Parent(0x00BA, 0, 0)
-
-::method LineIndex
-    use arg line
-    if arg(1,'o') = 1 then line = 0
-    return self~Message2Parent(0x00BB, line-1, 0) +1
+::method lines
+    use strict arg
+    return self~sendWinIntMsg(self~EM_GETLINECOUNT, 0, 0)
 
 ::method LineLength
     use arg line
