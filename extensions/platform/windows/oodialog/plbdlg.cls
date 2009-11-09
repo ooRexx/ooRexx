@@ -654,13 +654,7 @@
    end
 
 
-
-::method BoxMessage unguarded private
-   use arg id, msg, wP, lP
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return SendWinMsg("PTR", self~dlgHandle, id, msg, wP, lP)
-
+-- Methods to manipulate a ComboBox
 
 ::method addComboEntry unguarded
    use strict arg id, string
@@ -691,59 +685,46 @@
    use strict arg id, drivepath, fileAttributes = ""
    comboBox = self~newComboBox(id)
    if comboBox == .nil then return -1
-   return comboBox~addDirectory(drivePath, fileAttibutes)
+   return comboBox~addDirectory(drivePath, fileAttributes)
 
+::method deleteComboEntry unguarded
+   use strict arg id, index = (self~getCurrentComboIndex(id))
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~delete(index)
 
-   /* This method deletes a string from the combo box. */
-   /* For argument 'index' don't use string but the index instead */
-   /* Use 'FindComboEntry' to retrieve the index of an item. */
+::method getCurrentComboIndex unguarded
+   use strict arg id
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~selectedIndex
 
-::method DeleteComboEntry unguarded
-   use arg id, index
-   if arg(2,"o") = 1 then index = self~GetCurrentComboIndex(id)
-   return self~BoxMessage(id, 0x00000144, index-1, 0)
+::method setCurrentComboIndex unguarded
+   use strict arg id, ndx = 0
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~selectIndex(ndx)
 
+::method getComboItems unguarded
+   use strict arg id
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~items
 
-
-   /* This returns the index of the currently selected item */
-
-::method GetCurrentComboIndex unguarded
-   use arg id
-   return self~BoxMessage(id, 0x00000147, 0, 0)+1
-
-
-   /* Sets the selection index (0 means nothing selected) */
-
-::method SetCurrentComboIndex unguarded
-   use arg id, ndx
-   if arg(2,'o') = 1 then ndx = 0
-   return self~BoxMessage(id, 0x0000014E, ndx-1, 0)
-
-   /* Returns the number of items within the combo box */
-
-::method GetComboItems unguarded
-   use arg id
-   return self~BoxMessage(id, 0x00000146, 0, 0)
-
-   /* Changes the value of 'item' to 'string' */
-
-::method ChangeComboEntry unguarded
-   use arg id, item, string
-   if arg(2,"o") = 1 then item = self~GetCurrentComboIndex(id)
+::method changeComboEntry unguarded
+   use strict arg id, item = (self~getCurrentComboIndex(id)), string
    if item <= 0 then return -1
-   self~DeleteComboEntry(id, item)
-   return self~InsertComboEntry(id, item, string)
+   self~deleteComboEntry(id, item)
+   return self~insertComboEntry(id, item, string)
+
+::method comboDrop unguarded
+   use strict arg id
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~deleteAll
 
 
-
-   /* Deletes all strings of the combo box */
-
-::method ComboDrop unguarded
-   use arg id
-   return self~BoxMessage(id, 0x0000014B, 0, 0)
-
-
-/* The following methods are to manipulate a list box. */
+-- Methods to manipulate a ListBox
 
 ::method setListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
 
@@ -778,51 +759,42 @@
    if listBox == .nil then return -1
    return listBox~addDirectory(drivePath, fileAttributes)
 
+::method deleteListEntry unguarded
+   use strict arg id, index = (self~getCurrentListIndex(id))
+   if index == 0 then return -1
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~delete(index)
 
-   /* Deletes an item from a list box. */
-   /* For argument 'index' don't use string but the index */
+::method getCurrentListIndex unguarded
+   use strict arg id
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~selectedIndex
 
-::method DeleteListEntry unguarded
-   use arg id, index
-   if arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
-   return self~BoxMessage(id, 0x00000182, index-1, 0)
-
-
-   /* Returns the index of the currently selected list box item */
-
-::method GetCurrentListIndex unguarded
-   use arg id
-   return self~BoxMessage(id, 0x00000188, 0, 0) + 1
-
-   /* Sets the selection index (0 means nothing selected) */
-
-::method SetCurrentListIndex unguarded
-   use arg id, ndx
-   if arg(2,'o') = 1 then ndx = 0
-   return self~BoxMessage(id, 0x00000186, ndx-1, 0)
-
-   /* Returns the number of items within the list box */
+::method setCurrentListIndex unguarded
+   use strict arg id, ndx = 0
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~selectIndex(ndx)
 
 ::method GetListItems unguarded
-   use arg id
-   return self~BoxMessage(id, 0x0000018B, 0, 0)
+   use strict arg id
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~items
 
-   /* Returns the text string of entry index */
-
-   /* Changes the item at 'index' with 'dataString' */
-
-::method ChangeListEntry unguarded
-   use arg id, index, dataString
-   if arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
+::method changeListEntry unguarded
+   use strict arg id, index = (self~getCurrentListIndex(id)), newString
    if index <= 0 then return -1
-   self~DeleteListEntry(id, index)
-   return self~InsertListEntry(id, index, dataString)
+   self~deleteListEntry(id, index)
+   return self~insertListEntry(id, index, newString)
 
-   /* Removes all items from list box 'id' */
-
-::method ListDrop unguarded
-   use arg id
-   return self~BoxMessage(id, 0x00000184, 0, 0)
+::method listDrop unguarded
+   use strict arg id
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~deleteAll
 
 
 ::method enableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"

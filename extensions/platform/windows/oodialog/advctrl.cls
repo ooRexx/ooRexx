@@ -1126,6 +1126,11 @@
 ::method removeStyle external "LIBRARY oodialog e_style"
 ::method getStyle external "LIBRARY oodialog e_style"
 
+::method setTabStops external "LIBRARY oodialog e_setTabStops"
+::method "Tab="
+    use strict arg dlgunits
+    self~setTabStops(.array~of(dlgunits))
+
 ::method select
     use strict arg start = 1, end = 0
     self~sendWinIntMsg(self~EM_SETSEL, start - 1, end - 1)
@@ -1233,11 +1238,6 @@
     return m~left m~right
 
 -- TODO Tab= never seems to have been documented.  setTabStops() has been added.
-::method "Tab="
-    use strict arg dlgunits
-    self~setTabStops(.array~of(dlgunits))
-
-::method setTabStops external "LIBRARY oodialog e_setTabStops"
 
 
 /******************* ButtonControl Classes ************************************/
