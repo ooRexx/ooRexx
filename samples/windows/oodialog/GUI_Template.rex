@@ -284,22 +284,6 @@ exit -1
                         /* ------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
-::method run
-/* ------------------------------------------------------------------------- */
-/* If you do not need to add processing to this class you can delete it      */
-
-                        /* ------------------------------------------------- */
-                        /* add code here to run after the windows dialog     */
-                        /* object is displayed, & before it handles messages */
-                        /* ------------------------------------------------- */
-
-  self~run:super               /* this handles message calls/key presses etc */
-
-                        /* ------------------------------------------------- */
-                        /* add code here to run just after OK/Cancel methods */
-                        /* ------------------------------------------------- */
-
-/* ------------------------------------------------------------------------- */
 ::method ok
 /* ------------------------------------------------------------------------- */
 /* If you do not need to add processing to this class you can delete it      */
