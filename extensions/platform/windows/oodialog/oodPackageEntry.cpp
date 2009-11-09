@@ -401,6 +401,7 @@ REXX_METHOD_PROTOTYPE(e_selection);
 REXX_METHOD_PROTOTYPE(e_replaceSelText);
 REXX_METHOD_PROTOTYPE(e_getLine);
 REXX_METHOD_PROTOTYPE(e_lineIndex);
+REXX_METHOD_PROTOTYPE(e_setTabStops);
 REXX_METHOD_PROTOTYPE(e_showBallon);
 REXX_METHOD_PROTOTYPE(e_hideBallon);
 REXX_METHOD_PROTOTYPE(e_setCue);
@@ -861,6 +862,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(e_replaceSelText,               e_replaceSelText),
     REXX_METHOD(e_getLine,                      e_getLine),
     REXX_METHOD(e_lineIndex,                    e_lineIndex),
+    REXX_METHOD(e_setTabStops,                  e_setTabStops),
     REXX_METHOD(e_style,                        e_style),
     REXX_METHOD(e_showBallon,                   e_showBallon),
     REXX_METHOD(e_hideBallon,                   e_hideBallon),

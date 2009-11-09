@@ -1007,6 +1007,11 @@ RexxMethod3(RexxObjectPtr, e_replaceSelText, CSTRING, replacement, OPTIONAL_logi
  *          not within bounds of the edit control lines.  (More than the curent
  *          number of lines or 0.)
  *
+ *  @note  The lineIndex() method is intended for multi-line edit controls,
+ *         however, it will behave as documented for single-line edit controls.
+ *         The return is always 1 for a single-line if the lineNumber argument
+ *         is 1 or -1 and always -1 for any other value.
+ *
  *  @remarks  The EM_LINEINDEX message is documented as returning -1 if the line
  *            number specified as being greater than the current number of lines
  *            in the edit control.  However, under 64-bit Windows, the return is
@@ -1021,7 +1026,7 @@ RexxMethod2(RexxObjectPtr, e_lineIndex, int32_t, lineNumber, CSELF, pCSelf)
 
         if ( isSingleLineEdit(hCtrl) )
         {
-            if ( lineNumber == 1 )
+            if ( lineNumber == 1 || lineNumber == -1 )
             {
                 result = TheOneObj;
             }
@@ -1115,6 +1120,98 @@ RexxMethod3(RexxStringObject, e_getLine, int32_t, lineNumber, OPTIONAL_RexxObjec
 
 done_out:
     safeLocalFree(buf);
+    return result;
+}
+
+
+/** Edit::setTabStops()
+ *
+ *  Sets the tab stops for text copied into a multi-line edit control.
+ *
+ *  When text is copied to the control, any tab character in the text causes
+ *  space to be generated up to the next tab stop.  This method is ignored if
+ *  the edit control is a single-line edit control.
+ *
+ *  @param  tabStops  An array containing the tab stops.  Each tab stop is a
+ *                    positive number expressed in dialog template units.  If
+ *                    the array contains no elements, default tab stops are set
+ *                    at every 32 dialog template units.
+ *
+ *                    If the array contains only 1 element at index 1, tab stops
+ *                    are set at every n dialog template units, where n is the
+ *                    distance at index 1.
+ *
+ *                    Otherwise, tab stops are set to the numbers contained in
+ *                    the array.
+ *
+ *  @return  True if all tab stops were set, otherwise false.
+ *
+ *  @note  The array must contain all positive numbers (or be an empty array to
+ *         set the default tab stops.)  Also, the array must not be sparse,
+ *         i.e., it must not skip any array indexes.
+ *
+ *         The operating system will not do negative tab stops.  I.e. you can
+ *         not do 15 35 20.  Also, note that when specifying an array of more
+ *         than 1 tap stop, each tab stop is the absolute position of the tab
+ *         stop, not the distance between the tab stops.
+ *
+ *         Under normal circumstances there is no way for a user to enter a tab
+ *         character by typing in a multi-line edit control.  The edit control
+ *         would need to be sub-classed and this is not provided by ooDialog.
+ */
+RexxMethod2(logical_t, e_setTabStops, RexxArrayObject, tabStops, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+
+    logical_t result = 0;
+    HWND hwnd = getDCHCtrl(pCSelf);
+    uint32_t *buf = NULL;
+
+    if ( isSingleLineEdit(hwnd) )
+    {
+        goto done_out;
+    }
+
+    size_t count = c->ArrayItems(tabStops);
+    if ( count == 0 )
+    {
+        result = SendMessage(hwnd, EM_SETTABSTOPS, 0, 0);
+        goto done_out;
+    }
+
+    buf = (uint32_t *)malloc(count * sizeof(uint32_t *));
+    if ( buf == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        goto done_out;
+    }
+
+    RexxObjectPtr item;
+    uint32_t tabStop;
+    for ( size_t i = 1; i <= count; i++ )
+    {
+        item = c->ArrayAt(tabStops, i);
+        if ( item == NULLOBJECT )
+        {
+            wrongObjInArrayException(c->threadContext, 1, i, "a positive number");
+            goto done_out;
+        }
+        if ( ! c->UnsignedInt32(item, &tabStop) )
+        {
+            wrongObjInArrayException(c->threadContext, 1, i, "a positive number");
+            goto done_out;
+        }
+        buf[i - 1] = tabStop;
+    }
+
+    result = SendMessage(hwnd, EM_SETTABSTOPS, count, (LPARAM)buf);
+
+    // Redraw the text in the edit control.  This will resize the tabs if there
+    // is already text in the edit control with tabs.
+    InvalidateRect(hwnd, NULL, TRUE);
+
+done_out:
+    safeFree(buf);
     return result;
 }
 

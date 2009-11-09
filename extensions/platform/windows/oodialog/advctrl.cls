@@ -57,10 +57,6 @@
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 ::method unInit external "LIBRARY oodialog dlgctrl_unInit"
 
-::method message2Parent unguarded private /* This is the replacement for BoxMessage */
-   use arg msg, wP, lP
-   return SendWinMsg("PTR", self~hDlg, self~Id, msg, wP, lP)
-
 ::method setColor
    use arg colorbk, colorfg
    if arg(2,'o') = 1 then
@@ -1087,6 +1083,31 @@
 
 ::class 'EditControl' subclass DialogControl public
 
+::constant EM_SETSEL               "0x00B1"
+::constant EM_SCROLL               "0x00B5"
+::constant EM_LINESCROLL           "0x00B6"
+::constant EM_SCROLLCARET          "0x00B7"
+::constant EM_GETMODIFY            "0x00B8"
+::constant EM_SETMODIFY            "0x00B9"
+::constant EM_GETLINECOUNT         "0x00BA"
+::constant EM_LINELENGTH           "0x00C1"
+::constant EM_LIMITTEXT            "0x00C5"
+::constant EM_LINEFROMCHAR         "0x00C9"
+::constant EM_SETTABSTOPS          "0x00CB"
+::constant EM_SETPASSWORDCHAR      "0x00CC"
+::constant EM_GETFIRSTVISIBLELINE  "0x00CE"
+::constant EM_SETREADONLY          "0x00CF"
+::constant EM_GETPASSWORDCHAR      "0x00D2"
+::constant EM_SETMARGINS           "0x00D3"
+::constant EM_GETMARGINS           "0x00D4"
+
+::constant EM_NEGATIVEONE          4294967295
+
+::constant EC_LEFTMARGIN           1       -- 0x0001
+::constant EC_RIGHTMARGIN          2       -- 0x0002
+::constant EC_USEFONTINFO          65535   -- 0xFFFF
+
+
 ::method isSingleLine external "LIBRARY oodialog e_isSingleLine"
 
 ::method selection external "LIBRARY oodialog e_selection"
@@ -1104,18 +1125,6 @@
 ::method addStyle external "LIBRARY oodialog e_style"
 ::method removeStyle external "LIBRARY oodialog e_style"
 ::method getStyle external "LIBRARY oodialog e_style"
-
-::constant EM_SETSEL               "0x00B1"
-::constant EM_GETRECT              "0x00B2"
-::constant EM_SETRECT              "0x00B3"
-::constant EM_SETRECTNP            "0x00B4"
-::constant EM_SCROLL               "0x00B5"
-::constant EM_LINESCROLL           "0x00B6"
-::constant EM_SCROLLCARET          "0x00B7"
-::constant EM_GETMODIFY            "0x00B8"
-::constant EM_SETMODIFY            "0x00B9"
-::constant EM_GETLINECOUNT         "0x00BA"
-::constant EM_LINEINDEX            "0x00BB"
 
 ::method select
     use strict arg start = 1, end = 0
@@ -1162,57 +1171,73 @@
     use strict arg
     return self~sendWinIntMsg(self~EM_GETLINECOUNT, 0, 0)
 
-::method LineLength
-    use arg line
-    if arg(1,'o') = 1 then line = -1; else line = line-1
-    ndx = self~Message2Parent(0x00BB, line, 0)
-    return self~Message2Parent(0x00C1, ndx, 0)
+::method lineLength
+    use strict arg line = (-1)
+    if line == -1 then line = self~EM_NEGATIVEONE
+    else line -= 1
+    ndx = self~lineIndex(line)
+    if ndx == -1 then return -1
+    return self~sendWinIntMsg(self~EM_LINELENGTH, ndx - 1, 0)
 
-::method SetLimit
-    use arg limit
-    self~Message2Parent(0x00C5, limit, 0)
+::method setLimit
+    use strict arg limit
+    self~sendWinIntMsg(self~EM_LIMITTEXT, limit, 0)
+    return 0
 
-::method LineFromIndex
-    use arg ndx
-    if arg(1,'o') = 1 then ndx = -1; else ndx = ndx - 1
-    return self~Message2Parent(0x00C9, ndx, 0) +1
+::method lineFromIndex
+    use strict arg ndx = (-1)
+    if ndx == -1 then ndx = self~EM_NEGATIVEONE
+    else ndx -= 1
+    return self~sendWinIntMsg(self~EM_LINEFROMCHAR, ndx, 0) + 1
 
-::method "PasswordChar="
-    use arg char
-    self~Message2Parent(0x00CC, char~c2d, 0)
+::method "passwordChar="
+    use strict arg char
+    ch = char~c2d
+    if self~isSingleLine, ch > 0, ch < 256 then self~sendWinIntMsg(self~EM_SETPASSWORDCHAR, ch, 0)
 
-::method PasswordChar
-    char = self~Message2Parent(0x00D2, 0, 0)
+::method passwordChar
+    char = self~sendWinIntMsg(self~EM_GETPASSWORDCHAR, 0, 0)
     if char \= 0 then return char~d2c
     else return ""
 
-::method FirstVisibleLine
-    return self~Message2Parent(0x00CE, 0, 0) + 1
+::method firstVisibleLine
+    return self~sendWinIntMsg(EM_GETFIRSTVISIBLELINE, 0, 0) + 1
 
-::method SetReadOnly
-    use arg bool
-    if arg(1,'o') = 1 then bool = 1
-    return \self~Message2Parent(0x00CF, bool, 0)
+::method setReadOnly
+    use strict arg bool = .true
+    return self~sendWinIntMsg(self~EM_SETREADONLY, bool, 0) <> 0
 
-::method SetMargins
+::method setMargins
     use arg left, right
-    flag = 0
-    if arg(1,'o') = 1 & arg(2,'o') = 1 then flag = "0xFFFF" /* no arguments = auto margins */
-    else do
-        if arg(1,'e') = 1 then flag = flag + 1
-        if arg(2,'e') = 1 then flag = flag + 2
+    if arg(1, 'O'), arg(2, 'O') then do
+       self~sendWinIntMsg(self~EM_SETMARGINS, 0, self~EC_USEFONTINFO)
     end
-    self~Message2Parent(0x00D3, flag, right*X2D("10000") + left)
+    else do
+       flag = 0
+       if arg(1, 'E') then flag = self~EC_LEFTMARGIN
+       if arg(2, 'E') then flag .DlgUtil~or(flag, self~EC_RIGHTMARGIN)
+       lParam = .DlgUtil~makeLParam(right, left)
+       self~sendWinIntMsg(self~EM_SETMARGINS, flag, lParam)
+    end
+    return 0
 
-::method Margins
-    marg = self~Message2Parent(0x00D4, 0, 0)
-    right = .DlgUtil~hiWord(marg)
-    left = .DlgUtil~loWord(marg)
-    return left" "right
+::method getMargins
+    marg = self~sendWinIntMsg(self~EM_GETMARGINS, 0, 0)
+    m = .directory~new
+    m~right = .DlgUtil~hiWord(marg)
+    m~left = .DlgUtil~loWord(marg)
+    return m
 
+::method margins
+    m = self~getMargins
+    return m~left m~right
+
+-- TODO Tab= never seems to have been documented.  setTabStops() has been added.
 ::method "Tab="
-    use arg dlgunits
-    self~Message2Parent(0x00CB, 1, "L" || dlgunits)
+    use strict arg dlgunits
+    self~setTabStops(.array~of(dlgunits))
+
+::method setTabStops external "LIBRARY oodialog e_setTabStops"
 
 
 /******************* ButtonControl Classes ************************************/
