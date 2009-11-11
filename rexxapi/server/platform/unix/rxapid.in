@@ -1,5 +1,17 @@
 #! /bin/bash
 #
+# The following is LSB information
+### BEGIN INIT INFO
+# Provides: rxapi
+# Required-Start: $local_fs $network $time
+# Required-Stop: $local_fs $network $time
+# Default-Start:  2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: start and stop rxapi daemon
+# Description: rxapid provides the communication service for between all running
+#	 ooRexx scripts
+### END INIT INFO#
+#
 # rxapid.sh    Start/Stop the rxapi daemon.
 #
 # description: rxapi is a standard UNIX program which coordinates the sharing
