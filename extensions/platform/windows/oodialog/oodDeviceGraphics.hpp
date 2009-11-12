@@ -45,5 +45,6 @@ extern RexxObjectPtr oodGetWindowRect(RexxMethodContext *, HWND hwnd);
 extern RexxObjectPtr clearRect(RexxMethodContext *, HWND, PRECT);
 extern RexxObjectPtr redrawRect(RexxMethodContext *, HWND, PRECT, bool);
 extern RexxObjectPtr drawButton(HWND hDlg, HWND hCtrl, uint32_t id);
+extern int getHeightFromFontSize(int fontSize);
 
 #endif

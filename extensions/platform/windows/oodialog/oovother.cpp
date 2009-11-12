@@ -3728,6 +3728,108 @@ err_out:
     return NULLOBJECT;
 }
 
+/* TODO convert to using optional .Rect arg */
+
+/** ButtonControl::scroll()
+ *
+ *  Moves the specified rectangle within the button and redraws the uncovered
+ *  area with the button background color.  This method is used to move bitmaps
+ *  within bitmap buttons.
+ *
+ *  @note  Sets .SystemErrorCode.
+ *
+ *  @remarks  TODO convert to using an options .Rect arg.
+ *
+ *            The original ooDialog external function had an option whether or
+ *            not to redraw the uncovered portion of the button.  The option was
+ *            not documented and internally the function was always called with
+ *            true.  That option was therefore eliminated
+ */
+RexxMethod7(logical_t, bc_scroll, int32_t, xPos, int32_t, yPos, int32_t, left, int32_t, top, int32_t, right, int32_t, bottom, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, pcdc->oDlg);
+
+    DIALOGADMIN *dlgAdm;
+    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(context->threadContext, pcdc->rexxSelf);
+        goto err_out;
+    }
+    dlgAdm = pcpbd->dlgAdm;
+
+    HWND hwnd = pcdc->hCtrl;
+    RECT r;
+    if ( GetWindowRect(hwnd, &r) )
+    {
+        RECT rs;
+        HDC hDC = GetDC(hwnd);
+
+        rs.left = left;
+        rs.top = top;
+        rs.right = right;
+        rs.bottom = bottom;
+
+        r.right = r.right - r.left;
+        r.bottom = r.bottom - r.top;
+        r.left = 0;
+        r.top = 0;
+
+        if ( ScrollDC(hDC, xPos, yPos, &rs, &r, NULL, NULL) == 0 )
+        {
+            oodSetSysErrCode(context->threadContext);
+            goto err_out;
+        }
+
+        // Draw uncovered rectangle with background color.
+        HBRUSH hBrush, hOldBrush;
+        HPEN hOldPen, hPen;
+
+        if ( dlgAdm->BkgBrush )
+        {
+            hBrush = dlgAdm->BkgBrush;
+        }
+        else
+        {
+            hBrush = GetSysColorBrush(COLOR_BTNFACE);
+        }
+
+        hPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
+        hOldPen = (HPEN)SelectObject(hDC, hPen);
+        hOldBrush = (HBRUSH)SelectObject(hDC, hBrush);
+
+        if ( xPos > 0 )
+        {
+            Rectangle(hDC, rs.left, rs.top, rs.left + xPos, rs.bottom);
+        }
+        else if ( xPos < 0 )
+        {
+            Rectangle(hDC, rs.right + xPos, rs.top, rs.right, rs.bottom);
+        }
+
+        if ( yPos > 0 )
+        {
+            Rectangle(hDC, rs.left, rs.top, rs.right, rs.top + yPos);
+        }
+        else if ( yPos < 0 )
+        {
+            Rectangle(hDC, rs.left, rs.bottom + yPos, rs.right, rs.bottom);
+        }
+
+        SelectObject(hDC, hOldBrush);
+        SelectObject(hDC, hOldPen);
+        DeleteObject(hPen);
+
+        ReleaseDC(hwnd, hDC);
+        return 0;
+    }
+
+    err_out:
+    return 1;
+}
+
 RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst,
             RexxObjectPtr, idLast, RexxObjectPtr, idCheck)
 {
@@ -3782,38 +3884,38 @@ CSTRING getIsChecked(HWND hwnd)
     return state;
 
 }
-RexxMethod1(CSTRING, rb_getCheckState, OSELF, self)
+RexxMethod1(CSTRING, rb_getCheckState, CSELF, pCSelf)
 {
-    return getIsChecked(rxGetWindowHandle(context, self));
+    return getIsChecked(getDCHCtrl(pCSelf));
 }
-RexxMethod1(int, rb_check, OSELF, self)
+RexxMethod1(int, rb_check, CSELF, pCSelf)
 {
-    SendMessage(rxGetWindowHandle(context, self), BM_SETCHECK, BST_CHECKED, 0);
+    SendMessage(getDCHCtrl(pCSelf), BM_SETCHECK, BST_CHECKED, 0);
     return 0;
 }
 
-RexxMethod1(int, rb_uncheck, OSELF, self)
+RexxMethod1(int, rb_uncheck, CSELF, pCSelf)
 {
-    SendMessage(rxGetWindowHandle(context, self), BM_SETCHECK, BST_UNCHECKED, 0);
+    SendMessage(getDCHCtrl(pCSelf), BM_SETCHECK, BST_UNCHECKED, 0);
     return 0;
 }
 
 /* DEPRECATED */
-RexxMethod1(CSTRING, rb_isChecked, OSELF, self)
+RexxMethod1(CSTRING, rb_isChecked, CSELF, pCSelf)
 {
-    return getIsChecked(rxGetWindowHandle(context, self));
+    return getIsChecked(getDCHCtrl(pCSelf));
 }
 
 /* DEPRECATED */
-RexxMethod1(int, rb_indeterminate, OSELF, self)
+RexxMethod1(int, rb_indeterminate, CSELF, pCSelf)
 {
-    SendMessage(rxGetWindowHandle(context, self), BM_SETCHECK, BST_INDETERMINATE, 0);
+    SendMessage(getDCHCtrl(pCSelf), BM_SETCHECK, BST_INDETERMINATE, 0);
     return 0;
 }
 
-RexxMethod1(logical_t, ckbx_isIndeterminate, OSELF, self)
+RexxMethod1(logical_t, ckbx_isIndeterminate, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     if ( getButtonInfo(hwnd, NULL, NULL) == check  )
     {
         return (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_INDETERMINATE ? 1 : 0);
@@ -3821,9 +3923,9 @@ RexxMethod1(logical_t, ckbx_isIndeterminate, OSELF, self)
     return 0;
 }
 
-RexxMethod1(int, ckbx_setIndeterminate, OSELF, self)
+RexxMethod1(int, ckbx_setIndeterminate, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     if ( getButtonInfo(hwnd, NULL, NULL) == check  )
     {
         SendMessage(hwnd, BM_SETCHECK, BST_INDETERMINATE, 0);
@@ -4773,7 +4875,6 @@ out:
     return result;
 }
 
-
 /** Image::userIcon()  [class method]
  *
  *  Retrieves a user icon.  A user icon is added through
@@ -4807,13 +4908,11 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
         goto out;
     }
 
-    pCPlainBaseDialog pcpbd = dlgToCSelf(context, dlg);
-    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+    DIALOGADMIN *dlgAdm = getDlgAdm(context, dlg);
+    if ( dlgAdm == NULL )
     {
-        failedToRetrieveDlgAdmException(context->threadContext, dlg);
         goto out;
     }
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
 
     const char *fileName = NULL;
     for ( size_t i = 0; i < dlgAdm->IT_size; i++ )
@@ -4829,7 +4928,6 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
         invalidTypeException(context->threadContext, 2, " resource ID for a user icon");
         goto out;
     }
-
 
     if ( argumentExists(3) )
     {

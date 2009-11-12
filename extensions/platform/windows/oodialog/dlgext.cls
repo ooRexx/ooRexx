@@ -306,24 +306,13 @@
    if arg(2,"E") then self~automaticMethods~push(methodName)
    if arg(3,"E") then self~automaticMethods~push(parameters)
 
--- Load a bitmap from a file into memory and return the bitmap handle.
-::method LoadBitmap
-   use arg bmpFilename, option = ""
-   option = option~translate
-   return LoadRemoveBitmap(self~adm, bmpFilename, "LOAD" || option)
-
--- Free the bitmap memory.
-::method RemoveBitmap
-   use arg hBitmap
-   return LoadRemoveBitmap(self~adm, hBitmap, "REMOVE")
-
 -- Set a bitmap as the background brush. The argument option can be:
 --   "USEPAL" : This will use the color palette of the bitmap.
-::method BackgroundBitmap
-   use arg bmpFilename, option = ""
+::method backgroundBitmap
+   use strict arg bmpFilename, option = ""
    option = option~translate
-   self~BkgBitmap = self~LoadBitmap(bmpFilename, option)
-   ret = SetBackground(self~adm, "BMP", self~BkgBitmap)
+   self~bkgBitmap = self~loadBitmap(bmpFilename, option)
+   ret = SetBackground(self~adm, "BMP", self~bkgBitmap)
 
 -- Install a bitmap button.
 --
@@ -470,8 +459,9 @@
    if (cursx > xl) then cursx = xl
    if (cursy > yl) then cursy = yl
 
-   hwnd = self~getControlHandle(id)
-   if hwnd = 0 then return -1
+   button = self~newPushButton(id)
+   if button == .nil then return -1
+   hwnd = button~hwnd
 
    parse value self~GetWindowRect(hwnd) with r.left r.top r.right r.bottom
    r.right = r.right - r.left
@@ -516,7 +506,7 @@
       if sbot > r.bottom-stepy then sbot = r.bottom-stepy
       if s_top < 0 then s_top = 0
 
-      ret = ScrollTheWindow(self~adm, hwnd, stepx, stepy, sleft, s_top, srgt, sbot, "yes")
+      ret = button~scroll(stepx, stepy, trunc(sleft), trunc(s_top), trunc(srgt), trunc(sbot))
       if ret = 1 then do
          if (timer \== 0) then ret = winTimer("STOP", timer)
          return 1
@@ -668,10 +658,7 @@
    /*    "BOLD"                  */
    /*    "HEAVY"                 */
 
-::method WriteToWindow unguarded
-   use arg hwnd, xPos, yPos, text, fontName = "System", fontSize = 10, fontStyle = "", fgColor = (-1), bkColor = (-1)
-   fontStyle = fontStyle~translate
-   return WriteText(hwnd, xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor)  /* more than 6 arguments means use font */
+::method WriteToWindow unguarded external "LIBRARY oodialog dlgext_writeToWindow"
 
 
    /* This method allows you to write text to a button in the given font in */
@@ -684,12 +671,13 @@
    forward message (WriteToWindow) arguments (argarr)
 
 
-   /* This method moves the rectangle within a button */
-
+-- This method moves the rectangle within a button.  TODO be sure can take a .Rect for arg
 ::method ScrollButton unguarded
-   use arg id, xPos, yPos, left, top, right, bottom
-   return ScrollTheWindow(self~adm, self~getControlHandle(id), xPos, yPos, left, top, right, bottom, "yes")
-
+   -- use arg id, xPos, yPos, left, top, right, bottom
+   newArgs = arg(2, "A")
+   button = self~newPushButton(arg(1))
+   if button == .nil then return -1
+   return button~sendWith("Scroll", newArgs)
 
    /* This method will return the device context of a window */
 

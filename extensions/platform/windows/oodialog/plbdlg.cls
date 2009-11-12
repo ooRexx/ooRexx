@@ -689,6 +689,7 @@
 
 ::method deleteComboEntry unguarded
    use strict arg id, index = (self~getCurrentComboIndex(id))
+   if index <= 0 then return -1
    comboBox = self~newComboBox(id)
    if comboBox == .nil then return -1
    return comboBox~delete(index)
@@ -722,7 +723,6 @@
    comboBox = self~newComboBox(id)
    if comboBox == .nil then return -1
    return comboBox~deleteAll
-
 
 -- Methods to manipulate a ListBox
 

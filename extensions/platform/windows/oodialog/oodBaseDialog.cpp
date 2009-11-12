@@ -52,6 +52,7 @@
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 #include "oodData.hpp"
+#include "oodDeviceGraphics.hpp"
 #include "oodText.hpp"
 
 
@@ -716,10 +717,7 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
     {
         fontSize = 8;
     }
-
-    HDC hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
-    int height = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-    DeleteDC(hdc);
+    int height = getHeightFromFontSize(fontSize);
 
     if ( argumentExists(3) )
     {
@@ -1101,6 +1099,63 @@ RexxMethod2(RexxObjectPtr, winex_restoreCursorShape, OPTIONAL_POINTERSTRING, new
 done_out:
     return pointer2string(context, oldCursor);
 }
+
+
+RexxMethod4(logical_t, winex_writeDirect, POINTERSTRING, hDC, int32_t, xPos, int32_t, yPos, CSTRING, text)
+{
+    if ( hDC != NULL )
+    {
+       TextOut((HDC)hDC, xPos, yPos, text, (int)strlen(text));
+       return 0;
+    }
+    return 1;
+}
+
+/** WindowExtension::loadBitmap()
+ *
+ *
+ *
+ *  @remarks  Self could be either a dialog or a dialog control.  If self is a
+ *            dialog control, then getDlgAdm() will return null.  That's okay,
+ *            we just need to remember to clear the condition that will have
+ *            been raised.
+ */
+RexxMethod3(RexxStringObject, winex_loadBitmap, CSTRING, bitmapFile, OPTIONAL_CSTRING, opts, OSELF, self)
+{
+    HBITMAP hBmp = (HBITMAP)LoadDIB(bitmapFile);
+
+    if ( hBmp != NULL && opts != NULL && StrStrI(opts, "USEPAL") != NULL )
+    {
+        DIALOGADMIN *dlgAdm = getDlgAdm(context, self);
+        if ( dlgAdm != NULL )
+        {
+            if ( dlgAdm->ColorPalette )
+            {
+                DeleteObject(dlgAdm->ColorPalette);
+            }
+            dlgAdm->ColorPalette = CreateDIBPalette((LPBITMAPINFO)hBmp);
+            SetSysPalColors(dlgAdm->ColorPalette);
+        }
+        else
+        {
+            context->ClearCondition();
+        }
+    }
+
+    return pointer2string(context, hBmp);
+}
+
+
+RexxMethod1(logical_t, winex_removeBitmap, POINTERSTRING, hBitmap)
+{
+    if ( hBitmap != NULL )
+    {
+        LocalFree(hBitmap);
+        return 0;
+    }
+    return 1;
+}
+
 
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\

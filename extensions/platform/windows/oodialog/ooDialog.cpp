@@ -1109,8 +1109,15 @@ RexxMethod5(RexxObjectPtr, wb_sendMessage, CSTRING, wm_msg, RexxObjectPtr, _wPar
  *            intended to be used internally only.  Currently, all uses of this
  *            function have a return of a number.  If a need comes up to return
  *            a handle, then add sendWinIntMsgH().
+ *
+ *            In addition, wParam should really be uintptr_t.  However, some,
+ *            many?, control messages use / accept negative nubmers for wParam.
+ *            If we were just casting the number here, that would work.  But,
+ *            the interpreter checks the range before invoking and negative
+ *            numbers cause a condition to be raised.  So, we use intptr_t for
+ *            wParam here.  It may become needed to add a sendWinUintMsg().
  */
-RexxMethod5(intptr_t, wb_sendWinIntMsg, CSTRING, wm_msg, uintptr_t, wParam, intptr_t, lParam,
+RexxMethod5(intptr_t, wb_sendWinIntMsg, CSTRING, wm_msg, intptr_t, wParam, intptr_t, lParam,
             OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
 {
     return (intptr_t)sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
@@ -1137,9 +1144,9 @@ RexxMethod5(intptr_t, wb_sendWinIntMsg, CSTRING, wm_msg, uintptr_t, wParam, intp
  *  @return The result of sending the message, as returned by the operating
  *          system.
  *
- *  @remarks  Sets the .SystemErrorCode.
+ *  @note     Sets the .SystemErrorCode.
  *
- *            This method is not meant to be documented to the user, it is
+ *  @remarks  This method is not meant to be documented to the user, it is
  *            intended to be used internally only.
  */
 RexxMethod6(RexxObjectPtr, wb_sendWinHandleMsg, CSTRING, wm_msg, POINTERSTRING, wParam, intptr_t, lParam,
@@ -3323,8 +3330,14 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
         // have the dialog handle.  It is the handle of the parent Rexx dialog.
         // Otherwise, we need to resolve the handle, which is the handle of one
         // of the child dialogs used for the pages of the parent dialog.
+        //
+        // In addition, the original Rexx code would check if the category page
+        // ID was greater than 9000 and if so treat things as though the control
+        // were part of the parent dialog, not one of the child dialog's
+        // controls.  That is done here.  TODO - need to test that this part is
+        // working correctly.
 
-        if ( ! (argumentExists(2) && categoryPageID == 0) )
+        if ( ! (argumentExists(2) && (categoryPageID == 0 || categoryPageID > 9000)) )
         {
             if ( ! getCategoryHDlg(context, self, &categoryPageID, &hDlg, 2) )
             {

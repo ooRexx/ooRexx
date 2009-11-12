@@ -1261,6 +1261,7 @@
 ::method getImageList external "LIBRARY oodialog bc_getImageList"
 ::method getImage external "LIBRARY oodialog bc_getImage"
 ::method setImage external "LIBRARY oodialog bc_setImage"
+::method scroll unguarded external "LIBRARY oodialog bc_scroll"
 
 /* For internal testing only, do not use this method */
 ::method test external "LIBRARY oodialog bc_test"
@@ -1286,11 +1287,6 @@
    newarg[1] = self~hwnd
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
    forward to (self~oDlg) Arguments (newarg)
-
-   /* This method moves the rectangle within a button and redraws the uncovered area */
-::method scroll unguarded
-   use arg xPos, yPos, left, top, right, bottom
-   return ScrollTheWindow(self~oDlg~adm, self~hwnd, xPos, yPos, left, top, right, bottom, "yes")
 
 ::method getBitmapSizeX unguarded
    return self~oDlg~GetBitmapSizeX(self~ID)

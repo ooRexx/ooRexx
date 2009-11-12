@@ -74,6 +74,11 @@
 ::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
 
 ::method getTextSizeScreen  external "LIBRARY oodialog winex_getTextSizeScreen"
+::method writeDirect unguarded external "LIBRARY oodialog winex_writeDirect"
+
+::method loadBitmap unguarded external "LIBRARY oodialog winex_loadBitmap"
+::method removeBitmap unguarded external "LIBRARY oodialog winex_removeBitmap"
+
 ::method cursor_Arrow unguarded external "LIBRARY oodialog winex_setCursorShape"
 ::method cursor_AppStarting unguarded external "LIBRARY oodialog winex_setCursorShape"
 ::method cursor_Cross unguarded external "LIBRARY oodialog winex_setCursorShape"
@@ -86,7 +91,6 @@
 ::method cursorPos unguarded       -- old method, returns a string
    forward message "getCursorPos" continue
    return result~x result~y
-
 
 
 ::method GetDC unguarded
@@ -105,20 +109,6 @@
 ::method DeleteObject unguarded
    use arg obj
    return HandleDC_Obj("D", obj)
-
-   /* This method loads a bitmap from file into memory */
-   /* It returns a handle to the bitmap */
-
-::method LoadBitmap unguarded
-   use arg bmpFilename, option
-   if arg(2, 'o') = 1 then option = ""; else option = option~translate
-   return LoadRemoveBitmap(0 /* NULL adm */, bmpFilename, "LOAD" || option)
-
-   /* This method will free a memory bitmap */
-
-::method RemoveBitmap unguarded
-   use arg hBitmap
-   return LoadRemoveBitmap(0 /* NULL adm */, hBitmap, "REMOVE")
 
 ::method CreateBrush unguarded
     use arg color, brushSpecifier
@@ -151,10 +141,6 @@
 
    /* This method allows you to write text to a device context to a given */
    /* position */
-
-::method WriteDirect unguarded
-   use arg dc, xPos, yPos, text
-   return WriteText(dc, xPos, yPos, text)               /* 4 arguments means don't use font */
 
    /* This method loads a graphic object into device context */
 

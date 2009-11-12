@@ -54,6 +54,7 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodDeviceGraphics.hpp"
+#include "oodText.hpp"
 
 
 extern LPBITMAPINFO LoadDIB(const char *szFile);
@@ -227,9 +228,76 @@ err_out:
     return TheOneObj;
 }
 
+/**
+ * Given the point size of a font, calculate its height.  This is for the
+ * display device, i.e., not for a printer device.
+ *
+ * @param fontSize  The point size of the font.
+ *
+ * @return A calculated height for the font.
+ */
+int getHeightFromFontSize(int fontSize)
+{
+    HDC hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
+    int height = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    DeleteDC(hdc);
+    return height;
+}
+
+void drawFontToDC(HDC hDC, int32_t x, int32_t y, const char * text, uint32_t fontSize, const char * opts, const char * fontName,
+                  int32_t fgColor, int32_t bkColor)
+{
+   HFONT hFont, oldFont;
+   COLORREF oldFg, oldBk;
+
+   int weight = getWeight(opts);
+   int height = getHeightFromFontSize(fontSize);
+
+   hFont = CreateFont(fontSize, height, 0, 0, weight, StrStrI(opts, "ITALIC") != NULL, StrStrI(opts, "UNDERLINE") != NULL,
+                      StrStrI(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                      FF_DONTCARE, fontName);
+
+   oldFont = (HFONT)SelectObject(hDC, hFont);
+
+   int oldMode = 0;
+   if ( StrStrI(opts, "TRANSPARENT") != NULL )
+   {
+       oldMode = SetBkMode(hDC, TRANSPARENT);
+   }
+   else if ( StrStrI(opts, "OPAQUE") != NULL )
+   {
+       oldMode = SetBkMode(hDC, OPAQUE);
+   }
+
+   if ( fgColor != -1 )
+   {
+       oldFg = SetTextColor(hDC, PALETTEINDEX(fgColor));
+   }
+   if  (bkColor != -1 )
+   {
+       oldBk = SetBkColor(hDC, PALETTEINDEX(bkColor));
+   }
+
+   TextOut(hDC, x, y, text, (int)strlen(text));
+
+   SelectObject(hDC, oldFont);
+   DeleteObject(hFont);
+   if ( oldMode != 0 )
+   {
+       SetBkMode(hDC, oldMode);
+   }
+   if ( fgColor != -1 )
+   {
+       SetTextColor(hDC, oldFg);
+   }
+   if ( bkColor != -1 )
+   {
+       SetBkColor(hDC, oldBk);
+   }
+}
+
 
 /* Get and free a device, create pen and brush objects (no font), assign and delete graphic objects */
-
 size_t RexxEntry HandleDC_Obj(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    HDC hDC;
@@ -1282,6 +1350,35 @@ RexxMethod2(RexxObjectPtr, dlgext_isMouseButtonDown, OPTIONAL_CSTRING, whichButt
 RexxMethod1(RexxObjectPtr, dlgext_setForgroundWindow, RexxStringObject, hwnd)
 {
     return oodSetForegroundWindow(context, (HWND)string2pointer(context, hwnd));
+}
+
+
+RexxMethod9(logical_t, dlgext_writeToWindow, POINTERSTRING, hwnd, int32_t, xPos, int32_t, yPos, CSTRING, text,
+            OPTIONAL_CSTRING, fontName, OPTIONAL_uint32_t, fontSize, OPTIONAL_CSTRING, fontStyle,
+            OPTIONAL_int32_t, fgColor, OPTIONAL_int32_t, bkColor)
+{
+    fontName  = (argumentOmitted(5) ? "System" : fontName);
+    fontSize  = (argumentOmitted(6) ? 10       : fontSize);
+    fontStyle = (argumentOmitted(7) ? ""       : fontStyle);
+    fgColor   = (argumentOmitted(8) ? -1       : fgColor);
+    bkColor   = (argumentOmitted(9) ? -1       : bkColor);
+
+    HDC hDC = NULL;
+    if ( StrStrI(fontStyle, "CLIENT") != NULL )
+    {
+        hDC = GetDC((HWND)hwnd);
+    }
+    else
+    {
+        hDC = GetWindowDC((HWND)hwnd);
+    }
+    if ( hDC != NULL )
+    {
+        drawFontToDC(hDC, xPos, yPos, text, fontSize, fontStyle, fontName, fgColor, bkColor);
+        ReleaseDC((HWND)hwnd, hDC);
+        return 0;
+    }
+    return 1;
 }
 
 

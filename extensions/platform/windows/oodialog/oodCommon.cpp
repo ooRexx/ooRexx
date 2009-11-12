@@ -841,6 +841,28 @@ char *strdup_2methodName(const char *str)
     return retStr;
 }
 
+
+// TODO This function does not seem too useful.
+DIALOGADMIN *getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg)
+{
+    DIALOGADMIN *dlgAdm = NULL;
+
+    if ( c->IsOfType(dlg, "PLAINBASEDIALOG") )
+    {
+        pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
+        if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+        {
+            failedToRetrieveDlgAdmException(c->threadContext, dlg);
+        }
+        else
+        {
+            dlgAdm = pcpbd->dlgAdm;
+        }
+    }
+    return dlgAdm;
+}
+
+/* TODO This function can probably be eliminated now that we are useing CSELF */
 DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
 {
     DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");

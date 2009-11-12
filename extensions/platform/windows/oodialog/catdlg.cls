@@ -51,23 +51,21 @@
 
 ::class 'CategoryDialog' subclass UserDialog public
 
-   /* arg style=[ "DROPDOWN" | "TOPLINE" | "NOBORDER" | "WIZARD"] */
+-- A directory that contains internal data.  This should be private, but I'm not sure of the
+-- consequences to existing programs if it is changed.  MM
+::attribute catalog protected
 
-::method Catalog attribute protected   /* A directory that contains internal data */
-::method StaticID attribute protected  /*  */
-::method CatX attribute private
-::method CatY attribute private
-::method CatCX attribute private
-::method CatStyle attribute private
-::method CatLabel attribute private
-::method CatMax attribute private
-::method Wizard attribute private
+::attribute staticID private
+::attribute catX private
+::attribute catY private
+::attribute catCX private
+::attribute catStyle private
+::attribute catLabel private
+::attribute catMax private
+::attribute wizard private
 
-::method "!MarkAsCatDlg!"   /* this is to mark the class as a category dialog */
-
-   /* arg style=[ "DROPDOWN" | "TOPLINE" | "NOBORDER" | "WIZARD"] */
-
-::method Init
+-- arg cdstyle=[ "DROPDOWN" | "TOPLINE" | "NOBORDER" | "WIZARD"] */
+::method init
    use arg dlgData., cdx, cdy, cdcx, cdstyle, cdtable, cdlabel, cdmax, includeFile
 
    newArgs = .array~new(2)
@@ -88,13 +86,13 @@
    self~catalog['page']['expected'] = 200
 
    if arg(1,'o') = 1 then self~useStem = .false; else self~useStem = .true
-   if arg(2,'o') = 1 then self~catx = 10; else self~catX = cdx
-   if arg(3,'o') = 1 then self~caty = 4; else self~caty = cdy
-   if arg(4,'o') = 1 then self~catcx = 0; else self~catcx = cdcx
-   if arg(5,'o') = 1 then self~catstyle = ""; else self~catstyle = cdstyle~translate
+   if arg(2,'o') = 1 then self~catX = 10; else self~catX = cdx
+   if arg(3,'o') = 1 then self~catY = 4; else self~catY = cdy
+   if arg(4,'o') = 1 then self~catCX = 0; else self~catCX = cdcx
+   if arg(5,'o') = 1 then self~catStyle = ""; else self~catStyle = cdstyle~translate
    if arg(6,'o') = 1 then cdtable = ""
-   if arg(7,"o") = 1 then self~catlabel = "Page:"; else self~catlabel = cdlabel
-   if arg(8,"o") = 1 then self~catmax = 0; else self~catmax = cdmax
+   if arg(7,"o") = 1 then self~catLabel = "Page:"; else self~catLabel = cdlabel
+   if arg(8,"o") = 1 then self~catMax = 0; else self~catMax = cdmax
 
    if cdtable \= '' then
    do
@@ -123,15 +121,15 @@
       end
    end
 
-   if self~catstyle~wordpos("WIZZARD") > 0 then do
-      self~Wizard = 1
-      self~catstyle = self~catstyle~changestr("WIZZARD","")
+   if self~catStyle~wordpos("WIZZARD") > 0 then do
+      self~wizard = 1
+      self~catStyle = self~catStyle~changestr("WIZZARD","")
    end
-   else if self~catstyle~wordpos("WIZARD") > 0 then do
-      self~Wizard = 1
-      self~catstyle = self~catstyle~changestr("WIZARD","")
+   else if self~catStyle~wordpos("WIZARD") > 0 then do
+      self~wizard = 1
+      self~catStyle = self~catStyle~changestr("WIZARD","")
    end
-   else self~Wizard = 0
+   else self~wizard = 0
 
    self~catalog['id'] = .array~new(self~catalog['count'],100)
    self~catalog['base'] = .array~new(self~catalog['count'])
@@ -148,7 +146,7 @@
 
 ::method defineDialog protected
    if self~basePtr = 0 then return 0
-   if self~catstyle~wordpos('DROPDOWN') = 0 then
+   if self~catStyle~wordpos('DROPDOWN') = 0 then
       do i = 9001 to (9000 + self~catalog['count'])
          self~connectButtonEvent(i, "CLICKED", "CHANGEPAGE")
       end
@@ -159,75 +157,75 @@
    end
 
    self~catalog['category'] = 0
-   n = self~catstyle~wordpos("TOPLINE")
-   if n > 0 then self~catmax = 1
-   m = self~catstyle~wordpos("DROPDOWN")
+   n = self~catStyle~wordpos("TOPLINE")
+   if n > 0 then self~catMax = 1
+   m = self~catStyle~wordpos("DROPDOWN")
 
-   if (n > 0 | m > 0) & self~catstyle~wordpos('NOBORDER') = 0 then self~catstyle = self~catstyle||" NOBORDER"
+   if (n > 0 | m > 0) & self~catStyle~wordpos('NOBORDER') = 0 then self~catStyle = self~catStyle||" NOBORDER"
 
    if self~catalog['page']['h'] = .nil then self~catalog['page']['h'] = self~sizeY - 40
 
    size = self~getTextSizeDlg("Hg")
    textHeight = size~height
 
-   if self~catcx = 0 & n = 0 then  /* dropdown or none */
+   if self~catCX = 0 & n = 0 then  /* dropdown or none */
    do
       do i = 1 to self~catalog['count']
          if self~catalog['page']['font'] <> "" then
               size = self~getTextSizeDlg(catnames.i,self~catalog['page']['font'],self~catalog['page']['fsize'])
          else
               size = self~getTextSizeDlg(catnames.i)
-         self~catcx = max(self~catcx,size~width)
+         self~catCX = max(self~catCX,size~width)
       end
-      if n = 0 then self~catcx = self~catcx + 20
+      if n = 0 then self~catCX = self~catCX + 20
    end
 
    if n > 0 | m > 0 then do  /* topline or dropdown */
       if self~catalog['page']['x'] = .nil then self~catalog['page']['x'] = 1
       if m > 0 then do
-        if self~catalog['page']['y'] = .nil then self~catalog['page']['y'] = self~caty*2+textHeight+4
+        if self~catalog['page']['y'] = .nil then self~catalog['page']['y'] = self~catY*2+textHeight+4
       end
-      else if self~catalog['page']['y'] = .nil then self~catalog['page']['y'] = self~caty+textHeight+5
+      else if self~catalog['page']['y'] = .nil then self~catalog['page']['y'] = self~catY+textHeight+5
 
       if self~catalog['page']['w'] = .nil then self~catalog['page']['w'] = self~sizeX - 2
    end
    else do
-      if self~catmax = 0 then do
-        if self~catalog['page']['x'] = .nil then self~catalog['page']['x'] = self~catX+10+self~catcx
+      if self~catMax = 0 then do
+        if self~catalog['page']['x'] = .nil then self~catalog['page']['x'] = self~catX+10+self~catCX
       end
       else
-        if self~catalog['page']['x'] = .nil then self~catalog['page']['x'] = self~catX+10+self~catcx * ((self~catalog['count']-1)%self~catmax+1)
+        if self~catalog['page']['x'] = .nil then self~catalog['page']['x'] = self~catX+10+self~catCX * ((self~catalog['count']-1)%self~catMax+1)
 
       if self~catalog['page']['y'] = .nil then self~catalog['page']['y'] = 5
 
-      if self~catalog['page']['w'] = .nil then self~catalog['page']['w'] = self~sizeX - (self~catX+self~catcx+20)
+      if self~catalog['page']['w'] = .nil then self~catalog['page']['w'] = self~sizeX - (self~catX+self~catCX+20)
    end
 
    self~categoryPage
 
    if m > 0 then do
-      if self~catmax = 0 then self~catmax = 5
-      if self~catalog['count'] < self~catmax then self~catmax = self~catalog['count']
-      if self~catmax < self~catalog['count'] then
-           if self~catlabel='' then
-                self~createComboBox(9001, self~catX, self~caty, self~catcx, (self~catmax+1)*(textHeight+4), -
-                                 self~catstyle~delword(m, 1) || " CAT VSCROLL")
-           else self~createComboBoxInput(9001, self~catX, self~caty, , self~catcx, self~catmax,             -
-                                         self~catlabel, self~catstyle~delword(m, 1) || " CAT VSCROLL")
-      else if self~catlabel='' then
-                self~createComboBox(9001, self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),    -
-                                    self~catstyle~delword(m, 1) || " CAT")
-           else self~createComboBoxInput(9001, self~catX, self~caty, , self~catcx, self~catmax,             -
-                                         self~catlabel, self~catstyle~delword(m, 1) || " CAT")
+      if self~catMax = 0 then self~catMax = 5
+      if self~catalog['count'] < self~catMax then self~catMax = self~catalog['count']
+      if self~catMax < self~catalog['count'] then
+           if self~catLabel='' then
+                self~createComboBox(9001, self~catX, self~catY, self~catCX, (self~catMax+1)*(textHeight+4), -
+                                 self~catStyle~delword(m, 1) || " CAT VSCROLL")
+           else self~createComboBoxInput(9001, self~catX, self~catY, , self~catCX, self~catMax,             -
+                                         self~catLabel, self~catStyle~delword(m, 1) || " CAT VSCROLL")
+      else if self~catLabel='' then
+                self~createComboBox(9001, self~catX,self~catY,self~catCX,(self~catMax+1)*(textHeight+4),    -
+                                    self~catStyle~delword(m, 1) || " CAT")
+           else self~createComboBoxInput(9001, self~catX, self~catY, , self~catCX, self~catMax,             -
+                                         self~catLabel, self~catStyle~delword(m, 1) || " CAT")
    end
    else do
-      if (n >0) then newstyle = self~catstyle~delword(n, 1)
-                else newstyle = self~catstyle
+      if (n >0) then newstyle = self~catStyle~delword(n, 1)
+                else newstyle = self~catStyle
       if self~catalog['page']['font'] <> "" then
-         self~createRadioButtonStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax,,
+         self~createRadioButtonStem(9001, self~catX, self~catY, self~catCX, catnames., self~catMax,,
                            newstyle || " CAT",,self~catalog['page']['font'],self~catalog['page']['fsize'])
       else
-         self~createRadioButtonStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
+         self~createRadioButtonStem(9001, self~catX, self~catY, self~catCX, catnames., self~catMax, newstyle || " CAT")
    end
 
    if \ self~startParentDialog(0, .false) then return 0
@@ -260,10 +258,10 @@
    size = self~getTextSizeDlg("Hg")
    textHeight = size~height
 
-   if self~catstyle~wordpos("TOPLINE") > 0 then
-      self~createBlackFrame(-1, 0, 2, self~sizeX, textHeight + (self~caty+2))
-   else if self~catstyle~wordpos("DROPDOWN") > 0 then
-      self~createBlackFrame(-1, 0, 2, self~sizeX, textHeight + (self~caty*2)+1)
+   if self~catStyle~wordpos("TOPLINE") > 0 then
+      self~createBlackFrame(-1, 0, 2, self~sizeX, textHeight + (self~catY+2))
+   else if self~catStyle~wordpos("DROPDOWN") > 0 then
+      self~createBlackFrame(-1, 0, 2, self~sizeX, textHeight + (self~catY*2)+1)
 
    lbtext = self~catalog['page']['leftbtntext']
    rbtext = self~catalog['page']['rightbtntext']
@@ -273,13 +271,13 @@
    do
       self~createPushButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
          self~sizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
-      if self~Wizard = 1 then
+      if self~wizard = 1 then
          self~createPushButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
                              ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    else do
       self~createOkCancelRightBottom
-      if self~Wizard = 1 then
+      if self~wizard = 1 then
          self~createPushButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    self~createBlackFrame(-1, 0, self~sizeY - 20, self~sizeX, 1)
@@ -288,7 +286,7 @@
 
 ::method initDialog protected
    /* set the mark to the first radio button */
-   if self~catstyle~wordpos('DROPDOWN') > 0 then do
+   if self~catStyle~wordpos('DROPDOWN') > 0 then do
       do i = 1 to self~catalog['count']
          self~addComboEntry(9001, self~catalog['names'][i])
       end
@@ -319,7 +317,7 @@
    /* the first page is selected. */
 
 ::method GetSelectedPage unguarded
-   if self~catstyle~wordpos('DROPDOWN') = 0 then do
+   if self~catStyle~wordpos('DROPDOWN') = 0 then do
       np = 9001
       do while self~getRadioButtonData(np) = 0 & np < (9001 + self~catalog['count'])
          np = np + 1
@@ -348,7 +346,7 @@
    /* if ChangePage is called automatically, 2 arg are passed (WParam and LParam) */
    if arg(2,'o') = 0 | NewPage > 9000 then NewPage = self~GetSelectedPage
    else do
-      if self~catstyle~wordpos("DROPDOWN") = 0 then do
+      if self~catStyle~wordpos("DROPDOWN") = 0 then do
           /* SetRadioButton only works for registered radio buttons */
           /* uncheck the old radio button and check the new one */
           self~SendMessageToItem(9000+OldPage,"0x000000F1",0,0)
@@ -360,7 +358,7 @@
 
    self~HideWindowFast(self~catalog['handles'][self~catalog['category']])
    self~catalog['category'] = NewPage
-   if self~Wizard = 1 then do
+   if self~wizard = 1 then do
       if NewPage = 1 then do
          self~DisableItem(11)
          self~EnableItem(12)
@@ -396,26 +394,20 @@
 ::method sendMessageToCategoryItem unguarded
    forward message "sendMessageToCategoryControl"
 
-::method BoxMessage unguarded private
-   use arg category, id, msg, wP, lP
-   if category~Datatype("N") = 0 then category = self~catalog['category']  /* assume current page is addressed */
-   if category > 9000 then forward class (super)
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return SendWinMsg("PTR", self~catalog['handles'][category], id, msg, wP, lP)
-
+::method categoryComboBox unguarded private
+   use strict arg id, pageID
+   if pageID == -1 then pageID = self~catalog['category']
+   return self~newComboBox(id, pageID)
 
 ::method addCategoryComboEntry unguarded
    use strict arg id, string, pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   comboBox = self~newComboBox(id, pageID)
+   comboBox = self~categoryComboBox(id, pageID)
    if comboBox == .nil then return -1
    else return comboBox~add(string)
 
 ::method insertCategoryComboEntry unguarded
    use strict arg id, index = 0, string, pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   comboBox = self~newComboBox(id, pageID)
+   comboBox = self~categoyComboBox(id, pageID)
    if comboBox == .nil then return -1
    if arg(2, 'O') then return comboBox~insert( , string)
    else return comboBox~insert(index, string)
@@ -424,243 +416,170 @@
 
 ::method findCategoryComboEntry unguarded
    use strict arg id, string, pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   comboBox = self~newComboBox(id, pageID)
+   comboBox = self~categoryComboBox(id, pageID)
    if comboBox == .nil then return -1
    return comboBox~find(string)
 
 ::method categoryComboAddDirectory unguarded
    use strict arg id, drivepath, fileAttributes = "", pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   comboBox = self~newComboBox(id, pageID)
+   comboBox = self~categoryComboBox(id, pageID)
    if comboBox == .nil then return -1
    return comboBox~addDirectory(drivePath, fileAttibutes)
 
+::method deleteCategoryComboEntry unguarded
+   use strict arg id, index = (-2), pageID = (-1)
+   comboBox = self~categoryComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   if index == -2 then index = self~getCurrentCategoryComboIndex(id, pageID)
+   if index <= 0 then return -1
+   return comboBox~delete(index)
 
+::method getCurrentCategoryComboIndex unguarded
+   use strict arg id, pageID = (-1)
+   comboBox = self~categoryComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   return comboBox~selectedIndex
 
+::method setCurrentCategoryComboIndex unguarded
+   use strict arg id, ndx = 0, pageID = (-1)
+   comboBox = self~categoryComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   return comboBox~selectIndex(ndx)
 
-/* don't use string but the index */
-::method DeleteCategoryComboEntry unguarded
-   use arg id, index, category
-   if arg(2,"o") = 1 then index = self~GetCurrentCategoryComboIndex(id, category)
-   return self~BoxMessage(category, id, 0x00000144, index-1, 0)
+::method getCategoryComboItems unguarded
+   use strict arg id, pageID = (-1)
+   comboBox = self~categoryComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   return comboBox~items
 
-::method GetCurrentCategoryComboIndex unguarded
-   use arg id, category
-   return self~BoxMessage(category, id, 0x00000147, 0, 0)+1
-
-::method SetCurrentCategoryComboIndex unguarded
-   use arg id, ndx, category
-   if arg(2,'o') = 1 then ndx = 0
-   return self~BoxMessage(category, id, 0x0000014E, ndx-1, 0)
-
-::method GetCategoryComboItems unguarded
-   use arg id, category
-   return self~BoxMessage(category, id, 0x00000146, 0, 0)
-
-::method ChangeCategoryComboEntry unguarded
-   use arg id, item, data, category
-   if arg(2,"o") = 1 then item = self~GetCurrentCategoryComboIndex(id, category)
+::method changeCategoryComboEntry unguarded
+   use strict arg id, item = (-2), newEntry, pageID = (-1)
+   if item == -2 then item = self~getCurrentCategoryComboIndex(id, pageID)
    if item <= 0 then return -1
-   self~DeleteCategoryComboEntry(id, item, category)
-   return self~InsertCategoryComboEntry(id, item, data, category)
+   ret = self~deleteCategoryComboEntry(id, item, pageID)
+   if ret <= 0 then return -1
+   return self~insertCategoryComboEntry(id, item, newEntry, pageID)
 
-::method CategoryComboDrop unguarded
-   use arg id, category
-   return self~BoxMessage(category, id, 0x0000014B, 0, 0)
+::method categoryComboDrop unguarded
+   use strict arg id, pageID = (-1)
+   comboBox = self~categoryComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   return comboBox~deleteAll
 
 
-/* The following methods are to manipulate a list box. */
+-- Methods to manipulate a list box.
+
+::method categoryListBox unguarded private
+   use strict arg id, pageID
+   if pageID == -1 then pageID = self~catalog['category']
+   return self~newListBox(id, pageID)
 
 ::method setCategoryListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
 
 ::method addCategoryListEntry unguarded
    use strict arg id, text, pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   listBox = self~newListBox(id, pageID)
+   listBox = self~categoryListBox(id, pageID)
    if listBox == .nil then return -1
    else return listBox~add(text)
 
 ::method insertCategoryListEntry unguarded
    use strict arg id, index = (-2), text, pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   listBox = self~newListBox(id, pageID)
+   listBox = self~categoryListBox(id, pageID)
    if listBox == .nil then return -1
    if arg(2, 'O') then return listBox~insert( , text)
    else return listBox~insert(index, text)
 
 ::method findCategoryListEntry unguarded
    use strict arg id, text, pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   listBox = self~newListBox(id, pageID)
+   listBox = self~categoryListBox(id, pageID)
    if listBox == .nil then return -1
    return listBox~find(text)
 
 ::method getCategoryListEntry unguarded
    use strict arg id, index, pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   listBox = self~newListBox(id, pageID)
+   listBox = self~categoryListBox(id, pageID)
    if listBox == .nil then return -1
    return listBox~getText(index)
 
 ::method categoryListAddDirectory unguarded
    use strict arg id, drivePath, fileAttributes = "", pageID = (-1)
-   if pageID == -1 then pageID = self~catalog['category']
-   listBox = self~newListBox(id, pageID)
+   listBox = self~categoryListBox(id, pageID)
    if listBox == .nil then return -1
    return listBox~addDirectory(drivePath, fileAttributes)
 
+::method deleteCategoryListEntry unguarded
+   use strict arg id, index = (-2), pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   if index == -2 then index = self~getCurrentCategoryListIndex(id, pageID)
+   if index <= 0 then return -1
+   return listBox~delete(index)
 
-/* don't use string but the index */
-::method DeleteCategoryListEntry unguarded
-   use arg id, index, category
-   if arg(2,"o") = 1 then index = self~GetCurrentCategoryListIndex(id, category)
-   return self~BoxMessage(category, id, 0x00000182, index-1, 0)
+::method getCurrentCategoryListIndex unguarded
+   use strict arg id, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~selectedIndex
 
-::method GetCurrentCategoryListIndex unguarded
-   use arg id, category
-   return self~BoxMessage(category, id, 0x00000188, 0, 0) + 1
+::method setCurrentCategoryListIndex unguarded
+   use strict arg id, ndx = 0, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~selectIndex(ndx)
 
-::method SetCurrentCategoryListIndex unguarded
-   use arg id, ndx, category
-   if arg(2,'o') = 1 then ndx = 0
-   return self~BoxMessage(category, id, 0x00000186, ndx-1, 0)
+::method getCategoryListItems unguarded
+   use strict arg id, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~items
 
-::method GetCategoryListItems unguarded
-   use arg id, category
-   return self~BoxMessage(category, id, 0x0000018B, 0, 0)
-
-::method ChangeCategoryListEntry unguarded
-   use arg id, item, data, category
-   if arg(2,"o") = 1 then item = self~GetCurrentCategoryListIndex(id, category)
+::method changeCategoryListEntry unguarded
+   use strict arg id, item = (-2), newEntry, pageID = (-1)
+   if item == -2 then item = self~getCurrentCategoryListIndex(id, pageID)
    if item <= 0 then return -1
-   self~DeleteCategoryListEntry(id, item, category)
-   return self~InsertCategoryListEntry(id, item, data, category)
+   ret = self~deleteCategoryListEntry(id, item, pageID)
+   if ret <= 0 then return -1
+   return self~insertCategoryListEntry(id, item, newEntry, pageID)
 
+::method categoryListDrop unguarded
+   use strict arg id, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~deleteAll
 
+::method setCategoryListWidthPx unguarded
+   use strict arg id, pixels, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~setWidthPx(pixels)
 
-::method CategoryListDrop unguarded
-   use arg id, category
-   return self~BoxMessage(category, id, 0x00000184, 0, 0)
+::method getCategoryListWidthPx unguarded
+   use strict arg id, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~widthPx
 
+::method setCategoryListColumnWidthPx unguarded
+   use strict arg id, pixels, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   listBox~columnWidthPx = pixels
+   return 0
 
--- The following methods are to set or get the 'data' of a single dialog control on one of
--- the category pages of the CategroyDialog.  It is  necessary to know the category page number
--- of the dialog control in order for to correctly identify the control.  If the page number
--- argument is omitted, it is assumed the page number is the current page number.
+::method setCategoryListItemHeightPx unguarded
+   use strict arg id, pixels, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   listBox~listItemHeightPx = pixels
+   return 0
 
-::method getControlDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
-::method getCheckBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
-::method getRadioButtonDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
-::method getEditDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
-::method getListBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
-::method getComboBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getCategoryListItemHeightPx unguarded
+   use strict arg id, pageID = (-1)
+   listBox = self~categoryListBox(id, pageID)
+   if listBox == .nil then return -1
+   return listBox~itemHeightPx
 
-::method setControlDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
-::method setStaticDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
-::method setCheckBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
-::method setRadioButtonDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
-::method setEditDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
-::method setListBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
-::method setComboBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
-
-::method getControlDataAttribute unguarded
-   use arg attributeName, category
-   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
-   id = self~dataConnection~first
-   do while (id \= .nil)
-      if self~dataConnection[id] = attributeName then do
-         data = self~getControlData(id, category)
-         self~sendWith(attributeName'=', .array~of(data))
-         return
-      end
-      i = self~dataConnection~Next(i)
-   end
-
-::method setControlDataAttribute unguarded
-   use arg attributeName, category
-   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current category page */
-   id = self~dataConnection~first
-   do while (id \= .nil)
-      if self~dataConnection[id] = attributeName then do
-         data = self~send(attributeName)
-         return self~setControlData(id, data, category)
-      end
-      id = self~dataConnection~next(id)
-   end
-
--- DEPRECATED
-::method getCategoryEntryLine unguarded
-   forward message 'getEditDataPage'
-::method getCategoryListLine unguarded
-   forward message 'getListBoxDataPage'
-::method getCategoryComboLine unguarded
-   forward message 'getComboBoxDataPage'
-::method getCategoryCheckBox unguarded
-   forward message 'getCheckBoxDataPage'
-::method getCategoryRadioButton unguarded
-   forward message 'getRadioButtonDataPage'
-::method getCategoryMultiList unguarded
-   forward message 'getListBoxDataPage'
-::method getCategoryValue unguarded
-   forward message 'getControlDataPage'
-::method getCategoryAttrib unguarded
-   forward message 'getControlDataAttribute'
-::method setCategoryStaticText unguarded
-   forward message 'setStaticDataPage'
-::method setCategoryEntryLine unguarded
-   forward message 'setEditDataPage'
-::method setCategoryListLine unguarded
-   forward message 'setListBoxDataPage'
-::method setCategoryComboLine unguarded
-   forward message 'setComboBoxDataPage'
-::method setCategoryCheckBox unguarded
-   forward message 'setCheckBoxDataPage'
-::method setCategoryRadioButton unguarded
-   forward message 'setRadioButtonDataPage'
-::method setCategoryMultiList unguarded
-   forward message 'setListBoxDataPage'
-::method setCategoryValue unguarded
-   forward message 'setControlDataPage'
-::method setCategoryAttrib unguarded
-   forward message 'setControlDataAttribute'
-
--- DEPRECATED (maybe?)
-::method getItem unguarded
-   forward message 'getControlHandle'
-
-::method enableCategoryItem unguarded
-   forward message 'enableCategoryControl'
-
-::method disableCategoryItem unguarded
-   forward message 'disableCategoryControl'
-
-::method hideCategoryItem unguarded
-   forward message 'hideCategoryControl'
-
-::method showCategoryItem unguarded
-   forward message 'showCategoryCotrol'
-
-::method resizeCategoryItem unguarded  -- old method, this is not accurate
-   use strict arg id, width, height, showOptions = "", category = ""
-   if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
-
-   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
-   if hwnd = 0 then return -1
-   size = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
-   return .Window~new(hwnd)~resizeTo(size, showOptions)
-
-::method moveCategoryItem unguarded    -- old method, this is not accurate
-   use strict arg id, xPos, yPos, showOptions = "", category = ""
-   if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
-
-   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
-   if hwnd = 0 then return -1
-   pos = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
-   return .Window~new(hwnd)~moveTo(pos, showOptions)
-
--- End DEPRECATED (maybe ?)
-
+-- The following methods are generic methods to work with a dialog control.
 
 ::method getControlHandle unguarded
    use arg id, hDlg
@@ -732,9 +651,7 @@
    pos = .Point~new(xPos, yPos)
    return .Window~new(hwnd)~moveTo(pos, showOptions)
 
-
-
-::method setCategoryItemFont unguarded
+::method setCategoryControlFont unguarded
    use strict arg id, hFont, bRedraw = 1, category = ""
    if arg(4, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
 
@@ -742,7 +659,7 @@
    msg   = self~WM_SETFONT
    return self~sendWinHandleMsg(msg, hFont, bRedraw, hCtrl)
 
-::method focusCategoryItem unguarded
+::method focusCategoryControl unguarded
    use strict arg id, category = ""
    if arg(2,'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
 
@@ -751,29 +668,156 @@
    msg   = self~WM_NEXTDLGCTL
    return self~sendWinHandleMsg(msg, hCtrl, 1, hDlg)
 
-/* set/get the horizontal scroll width of a list box */
 
-::method SetCategoryListWidth unguarded
-   use arg id, dlgunits, category
-   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(category, id, 0x00000194, dlgunits*self~factorX, 0)
+-- The following methods are to set or get the 'data' of a single dialog control on one of
+-- the category pages of the CategroyDialog.  It is  necessary to know the category page number
+-- of the dialog control in order for to correctly identify the control.  If the page number
+-- argument is omitted, it is assumed the page number is the current page number.
 
-::method GetCategoryListWidth unguarded
-   use arg id, category
-   return self~BoxMessage(category, id, 0x00000193, 0, 0)/self~factorX
+::method getControlDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getCheckBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getRadioButtonDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getEditDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getListBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getComboBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
 
-::method SetCategoryListColumnWidth unguarded
-   use arg id, dlgunits, category
-   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(category, id, 0x00000195, dlgunits*self~factorX, 0)
+::method setControlDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setStaticDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setCheckBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setRadioButtonDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setEditDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setListBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setComboBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
 
-::method SetCategoryListItemHeight unguarded
-   use arg id, dlgunits, category
-   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(category, id, 0x000001A0, 0, dlgunits*self~factorY)
+::method getControlDataAttribute unguarded
+   use arg attributeName, category
+   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+   id = self~dataConnection~first
+   do while (id \= .nil)
+      if self~dataConnection[id] = attributeName then do
+         data = self~getControlData(id, category)
+         self~sendWith(attributeName'=', .array~of(data))
+         return
+      end
+      i = self~dataConnection~Next(i)
+   end
 
-::method GetCategoryListItemHeight unguarded
-   use arg id, category
-   return self~BoxMessage(category, id, 0x000001A1, 0, 0)/self~factorY
+::method setControlDataAttribute unguarded
+   use arg attributeName, category
+   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current category page */
+   id = self~dataConnection~first
+   do while (id \= .nil)
+      if self~dataConnection[id] = attributeName then do
+         data = self~send(attributeName)
+         return self~setControlData(id, data, category)
+      end
+      id = self~dataConnection~next(id)
+   end
 
 
+
+-- DEPRECATED and DEPRECATED Maybe to end of file
+::method getCategoryEntryLine unguarded
+   forward message 'getEditDataPage'
+::method getCategoryListLine unguarded
+   forward message 'getListBoxDataPage'
+::method getCategoryComboLine unguarded
+   forward message 'getComboBoxDataPage'
+::method getCategoryCheckBox unguarded
+   forward message 'getCheckBoxDataPage'
+::method getCategoryRadioButton unguarded
+   forward message 'getRadioButtonDataPage'
+::method getCategoryMultiList unguarded
+   forward message 'getListBoxDataPage'
+::method getCategoryValue unguarded
+   forward message 'getControlDataPage'
+::method getCategoryAttrib unguarded
+   forward message 'getControlDataAttribute'
+::method setCategoryStaticText unguarded
+   forward message 'setStaticDataPage'
+::method setCategoryEntryLine unguarded
+   forward message 'setEditDataPage'
+::method setCategoryListLine unguarded
+   forward message 'setListBoxDataPage'
+::method setCategoryComboLine unguarded
+   forward message 'setComboBoxDataPage'
+::method setCategoryCheckBox unguarded
+   forward message 'setCheckBoxDataPage'
+::method setCategoryRadioButton unguarded
+   forward message 'setRadioButtonDataPage'
+::method setCategoryMultiList unguarded
+   forward message 'setListBoxDataPage'
+::method setCategoryValue unguarded
+   forward message 'setControlDataPage'
+::method setCategoryAttrib unguarded
+   forward message 'setControlDataAttribute'
+
+-- DEPRECATED (maybe?)
+::method getItem unguarded
+   forward message 'getControlHandle'
+
+::method enableCategoryItem unguarded
+   forward message 'enableCategoryControl'
+
+::method disableCategoryItem unguarded
+   forward message 'disableCategoryControl'
+
+::method hideCategoryItem unguarded
+   forward message 'hideCategoryControl'
+
+::method showCategoryItem unguarded
+   forward message 'showCategoryControl'
+
+::method setCategoryItemFont unguarded
+   forward message "setCategoryControlFont"
+
+::method focusCategoryItem unguarded
+   forward message "focusCategoryControl"
+
+::method resizeCategoryItem unguarded            -- Old method using dialog units, this is not accurate
+   use strict arg id, width, height, showOptions = "", category = ""
+   if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']
+
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return -1
+   size = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
+   return .Window~new(hwnd)~resizeTo(size, showOptions)
+
+::method moveCategoryItem unguarded              -- Old method using dialog units, this is not accurate
+   use strict arg id, xPos, yPos, showOptions = "", category = ""
+   if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return -1
+   pos = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
+   return .Window~new(hwnd)~moveTo(pos, showOptions)
+
+::method getCategoryListItemHeight unguarded     -- Old method using dialog units, this is not accurate
+   use strict arg id, pageID = (-1)
+   pixels = self~getCategoryListItemHeightPx(id, pageID)
+   if pixels <= 0 then return pixels
+   else return pixels / self~factorY
+
+::method setCategoryListWidth unguarded          -- Old method using dialog units, this is not accurate
+   use strict arg id, dlgunits, pageID = (-1)
+   pixels = dlgunits * self~factorX
+   return self~setCategoryListWidthPx(id, pixels, pageID)
+
+::method getCategoryListWidth unguarded          -- Old method using dialog units, this is not accurate
+   use strict arg id, pageID = (-1)
+   pixels = self~getListWidthPx(id, pageID)
+   if pixels <= 0 then return pixels
+   else return pixels / self~factorX
+
+::method setCategoryListColumnWidth unguarded    -- Old method using dialog units, this is not accurate
+   use arg strict id, dlgunits, pageID = (-1)
+   pixels = dlgunits * self~factorX
+   return self~setCategoryListColumnWidthPx(id, pixels, pageID)
+
+::method setCategoryListItemHeight unguarded     -- Old method using dialog units, this is not accurate
+   use strict arg id, dlgunits, pageID = (-1)
+   pixels = dlgunits * self~factorY
+   return self~setCategoryItemHeightPx(id, pixels, pageID)
+
+
+-- End DEPRECATED (maybe ?)

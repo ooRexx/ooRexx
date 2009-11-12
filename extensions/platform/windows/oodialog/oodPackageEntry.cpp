@@ -94,17 +94,13 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 
-REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleScrollBar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DCDraw);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DrawGetSet);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(ScrollText);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(ScrollTheWindow);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDC_Obj);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SetBackground);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(LoadRemoveBitmap);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(WriteText);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleTreeCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
@@ -124,22 +120,18 @@ REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
-    REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),
-    REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),
-    REXX_CLASSIC_ROUTINE(DCDraw,               DCDraw),
-    REXX_CLASSIC_ROUTINE(DrawGetSet,           DrawGetSet),
-    REXX_CLASSIC_ROUTINE(ScrollText,           ScrollText),
-    REXX_CLASSIC_ROUTINE(ScrollTheWindow,      ScrollTheWindow),
-    REXX_CLASSIC_ROUTINE(HandleDC_Obj,         HandleDC_Obj),
-    REXX_CLASSIC_ROUTINE(SetBackground,        SetBackground),
-    REXX_CLASSIC_ROUTINE(LoadRemoveBitmap,     LoadRemoveBitmap),
-    REXX_CLASSIC_ROUTINE(WriteText,            WriteText),
+    REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),     /* 7  */
+    REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),           /* 7  */
+    REXX_CLASSIC_ROUTINE(DCDraw,               DCDraw),              /* 7  */
+    REXX_CLASSIC_ROUTINE(DrawGetSet,           DrawGetSet),          /* 9  */
+    REXX_CLASSIC_ROUTINE(ScrollText,           ScrollText),          /* 9  */
+    REXX_CLASSIC_ROUTINE(HandleDC_Obj,         HandleDC_Obj),        /* 17  could this benefit from being a DC object ?*/
+    REXX_CLASSIC_ROUTINE(SetBackground,        SetBackground),       /* 11 */
     REXX_CLASSIC_ROUTINE(HandleTreeCtrl,       HandleTreeCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrl,       HandleListCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
-    REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),
+    REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),           /* 2 */
 
     REXX_TYPED_ROUTINE(getDlgMsg,              getDlgMsg),
     REXX_TYPED_ROUTINE(messageDialog_rtn,      messageDialog_rtn),
@@ -280,6 +272,7 @@ REXX_METHOD_PROTOTYPE(dlgext_drawButton);
 REXX_METHOD_PROTOTYPE(dlgext_mouseCapture);
 REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
+REXX_METHOD_PROTOTYPE(dlgext_writeToWindow);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
 REXX_METHOD_PROTOTYPE(baseDlg_test);
@@ -341,6 +334,9 @@ REXX_METHOD_PROTOTYPE(winex_setCursorShape);
 REXX_METHOD_PROTOTYPE(winex_setCursorPos);
 REXX_METHOD_PROTOTYPE(winex_getCursorPos);
 REXX_METHOD_PROTOTYPE(winex_restoreCursorShape);
+REXX_METHOD_PROTOTYPE(winex_writeDirect);
+REXX_METHOD_PROTOTYPE(winex_loadBitmap);
+REXX_METHOD_PROTOTYPE(winex_removeBitmap);
 
 REXX_METHOD_PROTOTYPE(ri_init);
 REXX_METHOD_PROTOTYPE(ri_release);
@@ -465,6 +461,7 @@ REXX_METHOD_PROTOTYPE(bc_getImage);
 REXX_METHOD_PROTOTYPE(bc_setImage);
 REXX_METHOD_PROTOTYPE(bc_setImageList);
 REXX_METHOD_PROTOTYPE(bc_getImageList);
+REXX_METHOD_PROTOTYPE(bc_scroll);
 REXX_METHOD_PROTOTYPE(rb_checkInGroup_cls);
 REXX_METHOD_PROTOTYPE(rb_getCheckState);
 REXX_METHOD_PROTOTYPE(rb_checked);
@@ -731,6 +728,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_mouseCapture,            dlgext_mouseCapture),
     REXX_METHOD(dlgext_captureMouse,            dlgext_captureMouse),
     REXX_METHOD(dlgext_isMouseButtonDown,       dlgext_isMouseButtonDown),
+    REXX_METHOD(dlgext_writeToWindow,           dlgext_writeToWindow),
 
     REXX_METHOD(baseDlg_init,                   baseDlg_init),
     REXX_METHOD(baseDlg_test,                   baseDlg_test),
@@ -809,6 +807,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(winex_setCursorPos,             winex_setCursorPos),
     REXX_METHOD(winex_getCursorPos,             winex_getCursorPos),
     REXX_METHOD(winex_restoreCursorShape,       winex_restoreCursorShape),
+    REXX_METHOD(winex_writeDirect,              winex_writeDirect),
+    REXX_METHOD(winex_loadBitmap,               winex_loadBitmap),
+    REXX_METHOD(winex_removeBitmap,             winex_removeBitmap),
 
     REXX_METHOD(ri_init,                        ri_init),
     REXX_METHOD(ri_release,                     ri_release),
@@ -908,6 +909,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_setImage,                    bc_setImage),
     REXX_METHOD(bc_setImageList,                bc_setImageList),
     REXX_METHOD(bc_getImageList,                bc_getImageList),
+    REXX_METHOD(bc_scroll,                      bc_scroll),
     REXX_METHOD(rb_checkInGroup_cls,            rb_checkInGroup_cls),
     REXX_METHOD(rb_checked,                     rb_checked),
     REXX_METHOD(rb_check,                       rb_check),
