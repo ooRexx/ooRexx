@@ -125,6 +125,22 @@ RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int pageNum, in
 }
 
 
+void controlFailedException(RexxThreadContext *c, const char *msg, const char *func, const char *control)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), msg, func, control);
+    systemServiceException(c, buffer);
+}
+
+
+void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char *style)
+{
+    char msg[128];
+    _snprintf(msg, sizeof(msg), "This %s does not have the %s style", obj, style);
+    userDefinedMsgException(c->threadContext, msg);
+}
+
+
 inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
 {
     failedToRetrieveException(c, "dialog administration block", source);

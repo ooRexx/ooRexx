@@ -176,6 +176,8 @@ extern void          ooDialogInternalException(RexxMethodContext *, char *, int,
 extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
 extern RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int, int);
 extern inline void   failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
+extern void          controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
+extern void          wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
 
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern uint32_t      oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
@@ -342,6 +344,15 @@ inline bool isYes(const char * s)
 inline const char *comctl32VersionName(DWORD id)
 {
     return comctl32VersionPart(id, COMCTL32_FULL_PART);
+}
+
+inline bool hasStyle(HWND hwnd, LONG style)
+{
+    if ( (GetWindowLong(hwnd, GWL_STYLE) & style) || (GetWindowLong(hwnd, GWL_EXSTYLE) & style) )
+    {
+        return true;
+    }
+    return false;
 }
 
 /**
