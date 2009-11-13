@@ -570,9 +570,11 @@ RexxObject *PackageManager::dropRegisteredRoutine(RexxString *name)
 
     {
         UnsafeBlock releaser;
+        // if this is a registered routine, removed it from the registered table
+        registeredRoutines->remove(name);
         // just allow this to pass through to Rexxapi.  If this was truely registered
         // instead of loaded implicitly, this will remove the entry.  Otherwise, it will
-        // return false.  Regardless, we leave it in our internal tables until we exit.
+        // return false.
         return RexxDeregisterFunction(functionName) == 0 ? TheFalseObject : TheTrueObject;
     }
 }
