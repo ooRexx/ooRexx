@@ -339,6 +339,26 @@ done_out:
     return adm;
 }
 
+HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, uint32_t *index, uint32_t id)
+{
+    HBRUSH hBrush = NULL;
+    uint32_t i = 0;
+
+    if ( dlgAdm != NULL && dlgAdm->ColorTab != NULL )
+    {
+        while ( i < dlgAdm->CT_size && dlgAdm->ColorTab[i].itemID != id )
+        {
+           i++;
+        }
+        if ( i < dlgAdm->CT_size )
+        {
+            hBrush = dlgAdm->ColorTab[i].ColorBrush;
+            *index = i;
+        }
+    }
+    return hBrush;
+}
+
 /**
  * Do some common set up when creating the underlying Windows dialog for any
  * ooDialog dialog.  This involves setting the 'topDlg' and the TheInstance

@@ -57,19 +57,6 @@
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 ::method unInit external "LIBRARY oodialog dlgctrl_unInit"
 
-::method setColor
-   use arg colorbk, colorfg
-   if arg(2,'o') = 1 then
-       return SetBackground(self~oDlg~adm, "COL", self~id, colorbk)  /* creates an entry in the dialogs color table */
-   else
-       return SetBackground(self~oDlg~adm, "COL", self~id, colorbk, colorfg)  /* set both, background and foreground color */
-
-::method setSysColor
-   use arg colorbk, colorfg
-   if arg(2,'o') = 1 then
-       return SetBackground(self~oDlg~adm, "COL", self~id, colorbk, "", "SYS")  /* creates an entry in the dialogs color table */
-   else
-       return SetBackground(self~oDlg~adm, "COL", self~id, colorbk, colorfg, "SYS")  /* set both, background and foreground color */
 
 ::method getFocus unguarded
    forward to (self~oDlg)
@@ -88,6 +75,8 @@
 ::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method redrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
 ::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
+::method setColor external "LIBRARY oodialog dlgctrl_setColor"
+::method setSysColo external "LIBRARY oodialog dlgctrl_setColor"r
 
 ::method value unguarded  -- TODO this method won't work if this control is on a category page.
                           -- Implement in native code
@@ -1530,49 +1519,43 @@
 
 ::class 'ScrollBar' subclass DialogControl public
 
-::method SetRange
-   use arg min, max, redraw
-   if arg(3, "o") = 1 then redraw = 1
-   return HandleScrollBar("SR",self~hwnd,min,max, redraw)
+::method setRange external "LIBRARY oodialog sb_setRange"
+::method getRange external "LIBRARY oodialog sb_getRange"
+::method setPos external "LIBRARY oodialog sb_setPosition"
+::method getPosition external "LIBRARY oodialog sb_getPosition"
+::method position external "LIBRARY oodialog sb_getPosition"
 
-::method Range
-   return HandleScrollBar("GR",self~hwnd)
+::method range
+   r = self~getRange
+   return r~min r~max
 
-::method SetPos
-   use arg pos, redraw
-   if arg(2, "o") = 1 then redraw = 1
-   return HandleScrollBar("SP",self~hwnd,pos, redraw)
-
-::method Position
-   return HandleScrollBar("GP",self~hwnd)
-
-::method DeterminePosition
-   use arg posdata, single, page
-   if arg(2,"o") = 1 then single = 1
-   if arg(3,"o") = 1 then page = 10
+::method determinePosition
+   use strict arg posdata, single = 1, page = 10
    code = .DlgUtil~loWord(posdata)
-   parse value self~Range with rmin rmax
-   pos = self~Position
+   pos = self~getPosition
+   r = self~getRange
+   if .SystemErrorCode <> 0 then return pos -- getRange failed
+
    select
       /* Line up */
-      when code = 0 then pos = max(rmin,pos - single)
+      when code = 0 then pos = max(r~min, pos - single)
       /* Line down */
-      when code = 1 then pos = min(rmax,pos + single)
+      when code = 1 then pos = min(r~max, pos + single)
       /* page up */
-      when code = 2 then pos = max(rmin,pos - page)
+      when code = 2 then pos = max(r~min, pos - page)
       /* page down */
-      when code = 3 then pos = min(rmax,pos + page)
+      when code = 3 then pos = min(r~max, pos + page)
       /* track position */
       when code = 4 then pos = .DlgUtil~hiWord(posdata)
       /* tracking */
       when code = 5 then pos = .DlgUtil~loWord(posdata)
       /* top */
-      when code = 6 then pos = rmin
+      when code = 6 then pos = r~min
       /* bottom */
-      when code = 7 then pos = rmax
+      when code = 7 then pos = r~max
       otherwise nop;
    end
-   self~SetPos(pos)
+   self~setPos(pos)
    return pos
 
 

@@ -234,7 +234,6 @@ typedef enum
 #define VALIDBMP(addr, ndx, id) \
    (addr && &addr->BmpTab[ndx] && (ndx < addr->BT_size) && (addr->BmpTab[ndx].buttonID == (ULONG)id))
 
-
 #define SEARCHBRUSH(addr, ndx, id, brush) \
    {                     \
       ndx = 0;\
@@ -447,7 +446,7 @@ typedef struct
    BITMAPTABLEENTRY  *BmpTab;
    INT                BT_size;
    COLORTABLEENTRY   *ColorTab;
-   INT                CT_size;
+   uint32_t           CT_size;
    ICONTABLEENTRY    *IconTab;
    size_t             IT_size;
    HWND               TheDlg;
@@ -495,6 +494,7 @@ extern RexxPointerObject TheNullPtrObj;
 extern RexxClassObject ThePlainBaseDialogClass;
 extern RexxClassObject TheDynamicDialogClass;
 
+extern HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, uint32_t *index, uint32_t id);
 
 inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
 {

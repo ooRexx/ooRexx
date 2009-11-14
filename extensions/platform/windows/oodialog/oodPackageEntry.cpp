@@ -94,7 +94,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleScrollBar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DCDraw);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DrawGetSet);
@@ -120,7 +119,6 @@ REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),     /* 7  */
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),           /* 7  */
     REXX_CLASSIC_ROUTINE(DCDraw,               DCDraw),              /* 7  */
     REXX_CLASSIC_ROUTINE(DrawGetSet,           DrawGetSet),          /* 9  */
@@ -390,6 +388,7 @@ REXX_METHOD_PROTOTYPE(dlgctrl_redrawRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_clearRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(dlgctrl_captureMouse);
+REXX_METHOD_PROTOTYPE(dlgctrl_setColor);
 
 // Edit
 REXX_METHOD_PROTOTYPE(e_isSingleLine);
@@ -441,6 +440,12 @@ REXX_METHOD_PROTOTYPE(pbc_setStep);
 REXX_METHOD_PROTOTYPE(pbc_setMarquee);
 REXX_METHOD_PROTOTYPE(pbc_setBkColor);
 REXX_METHOD_PROTOTYPE(pbc_setBarColor);
+
+// ScrollBar
+REXX_METHOD_PROTOTYPE(sb_getRange);
+REXX_METHOD_PROTOTYPE(sb_setRange);
+REXX_METHOD_PROTOTYPE(sb_getPosition);
+REXX_METHOD_PROTOTYPE(sb_setPosition);
 
 // Static
 REXX_METHOD_PROTOTYPE(stc_getIcon);
@@ -787,6 +792,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_redrawRect,             dlgctrl_redrawRect),
     REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
     REXX_METHOD(dlgctrl_captureMouse,           dlgctrl_captureMouse),
+    REXX_METHOD(dlgctrl_setColor,               dlgctrl_setColor),
 
     REXX_METHOD(window_init,                    window_init),
     REXX_METHOD(window_unInit,                  window_unInit),
@@ -892,6 +898,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbc_setMarquee,                 pbc_setMarquee),
     REXX_METHOD(pbc_setBkColor,                 pbc_setBkColor),
     REXX_METHOD(pbc_setBarColor,                pbc_setBarColor),
+
+    REXX_METHOD(sb_getRange,                    sb_getRange),
+    REXX_METHOD(sb_setRange,                    sb_setRange),
+    REXX_METHOD(sb_getPosition,                 sb_getPosition),
+    REXX_METHOD(sb_setPosition,                 sb_setPosition),
 
     REXX_METHOD(stc_getIcon,                    stc_getIcon),
     REXX_METHOD(stc_setIcon,                    stc_setIcon),

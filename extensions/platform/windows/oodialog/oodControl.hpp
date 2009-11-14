@@ -59,7 +59,7 @@ extern oodControl_t    oodName2controlType(CSTRING name);
 extern bool            isControlMatch(HWND, oodControl_t);
 
 extern RexxStringObject cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
-
+extern DIALOGADMIN *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc);
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081
@@ -91,7 +91,7 @@ inline bool isSingleSelectionListBox(HWND hDlg, uint32_t id)
     return isSingleSelectionListBox(GetDlgItem(hDlg, id));
 }
 
-/* Retrieve specified fields in the CDialogControl struct. */
+/* Retrieve specific fields / information from the CDialogControl struct. */
 inline HWND getDCHCtrl(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->hCtrl);

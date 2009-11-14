@@ -290,6 +290,23 @@ RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlT
 #define DIALOGCONTROL_CLASS        "DialogControl"
 
 
+DIALOGADMIN *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc)
+{
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, pcdc->oDlg);
+
+    DIALOGADMIN *dlgAdm = NULL;
+    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, pcdc->rexxSelf);
+    }
+    else
+    {
+        dlgAdm = pcpbd->dlgAdm;
+    }
+    return dlgAdm;
+}
+
+
 /**
  * If there is subclass data, free it.
  */
@@ -872,6 +889,78 @@ RexxMethod1(RexxObjectPtr, dlgctrl_captureMouse, CSELF, pCSelf)
 {
     HWND oldCapture = (HWND)SendMessage(getDCHDlg(pCSelf), WM_USER_GETSETCAPTURE, 1, (LPARAM)getDCHCtrl(pCSelf));
     return pointer2string(context, oldCapture);
+}
+
+/** DialogControl::setColor()
+ *  DialogControl::setSysColor
+ */
+RexxMethod4(logical_t, dlgctrl_setColor, int32_t, bkColor, OPTIONAL_int32_t, fgColor, NAME, method, CSELF, pCSelf)
+{
+    DIALOGADMIN *dlgAdm = getDCDlgAdm(context, (pCDialogControl)pCSelf);
+    if ( dlgAdm == NULL )
+    {
+        return 1;
+    }
+
+    if ( dlgAdm->ColorTab == NULL )
+    {
+        dlgAdm->ColorTab = (COLORTABLEENTRY *)LocalAlloc(LMEM_FIXED, sizeof(COLORTABLEENTRY) * MAX_CT_ENTRIES);
+        if ( dlgAdm->ColorTab == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            return 1;
+        }
+        dlgAdm->CT_size = 0;
+    }
+
+    if ( dlgAdm->CT_size < MAX_CT_ENTRIES )
+    {
+        if ( argumentOmitted(2) )
+        {
+            fgColor = -1;
+        }
+
+        uint32_t i = 0;
+        uint32_t id = ((pCDialogControl)pCSelf)->id;
+
+        HBRUSH hbrush = searchForBrush(dlgAdm, &i, id);
+        if ( hbrush != NULL )
+        {
+            if ( ! dlgAdm->ColorTab[i].isSysBrush )
+            {
+                DeleteObject(hbrush);
+            }
+        }
+        else
+        {
+            i = dlgAdm->CT_size;
+            dlgAdm->ColorTab[i].itemID = id;
+            dlgAdm->CT_size++;
+        }
+
+        dlgAdm->ColorTab[i].ColorBk = bkColor;
+        dlgAdm->ColorTab[i].ColorFG = fgColor;
+
+        if ( method[3] == 'S' )
+        {
+            dlgAdm->ColorTab[i].ColorBrush = GetSysColorBrush(dlgAdm->ColorTab[i].ColorBk);
+            dlgAdm->ColorTab[i].isSysBrush = true;
+        }
+        else
+        {
+            dlgAdm->ColorTab[i].ColorBrush = CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
+            dlgAdm->ColorTab[i].isSysBrush = false;
+        }
+    }
+    else
+    {
+        MessageBox(NULL, "Dialog control elements have exceeded the maximum\n"
+                   "number of allocated color table entries. The color\n"
+                   "for the dialog control can not be added.",
+                   "Error", MB_OK | MB_ICONHAND);
+        return 1;
+    }
+    return 0;
 }
 
 

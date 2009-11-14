@@ -122,123 +122,131 @@
 ::method peekDialogMessage unguarded
    return getDlgMsg(self~adm, .true)
 
-
- /* Scrollbar methods */
 ::method setSBRange unguarded
-   use arg id, min, max, redraw = .true
+   use strict arg id, min, max, redraw = .true
    sb = self~newScrollBar(id)
    if sb == .nil then return -1
    return sb~setRange(min, max, redraw)
 
-::method GetSBRange unguarded
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return HandleScrollBar("GR",self~getControlHandle(id))
+::method getSBRange unguarded   -- Old method, returns a string.  Not going to add an enhanced method.
+   use strict arg id
+   sb = self~newScrollBar(id)
+   if sb == .nil then return -1
+   return sb~range
 
-::method SetSBPos unguarded
-   use arg id, pos, redraw
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(3, "o") = 1 then redraw = 1
-   return HandleScrollBar("SP",self~getControlHandle(id),pos, redraw)
+::method setSBPos unguarded
+   use strict arg id, pos, redraw = .true
+   sb = self~newScrollBar(id)
+   if sb == .nil then return -1
+   return sb~setPos(pos, redraw)
 
-::method GetSBPos unguarded
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return HandleScrollBar("GP",self~getControlHandle(id))
+::method getSBPos unguarded
+   use strict arg id
+   sb = self~newScrollBar(id)
+   if sb == .nil then return -1
+   return sb~getPos
 
-::method CombineELwithSB
-   use arg elid, sbid, step, poscode
+::method determineSBPosition unguarded
+   use strict arg id, posdata, single = 1, page = 10
+   sb = self~newScrollBar(id)
+   if sb == .nil then return -1
+   return sb~determinePosition
 
+::method combineELwithSB
+   use strict arg elid, sbID, step, poscode
+   sb = self~newScrollBar(sbID)
+   if sb == .nil then return -1
    pos = self~getEditData(elid)
-   parse value self~GetSBRange(sbid) with min max
-   if pos~DataType("N") = 0 then return
+   if \ pos~DataType("W") then return -1
 
-   if arg(4,"o") = 0 then do
+   r = sb~getRange
+   if .SystemErrorCode <> 0 then return -1
+
+   if arg(4, "E") then do
        sbc = .DlgUtil~loWord(poscode)
        if sbc = 0 & step > 0 then step = -step
        else if sbc = 1 & step < 0 then step = +step
    end
 
-   if (step > 0) then do
-      if pos < max then pos = pos + step
+   if step > 0 then do
+      if pos < r~max then pos = pos + step
    end
-   else if (step < 0) then do
-      if pos > min then pos = pos + step
+   else if step < 0 then do
+      if pos > r~min then pos = pos + step
    end
-   else if arg(4,'o') = 0 then do
+   else if arg(4, 'E') then do
       /* calc the position returned by message */
       pos = .DlgUtil~hiWord(poscode)
    end
-   self~SetSBPos(sbid, pos)
-   self~setEditData(elid,pos)
+   sb~setPos(pos)
+   self~setEditData(elid, pos)
    return 0
 
+::method setListWidthPx unguarded
+   use strict arg id, pixels
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~setWidthPx(pixels)
 
-::method DetermineSBPosition unguarded
-   use arg id, posdata, single, page
-   if arg(3,"o") = 1 then single = 1
-   if arg(4,"o") = 1 then page = 10
-   code = .DlgUtil~loWord(posdata)
-   parse value self~GetSBRange(id) with rmin rmax
-   pos = self~GetSBPos(id)
-   select
-      /* Line up */
-      when code = 0 then pos = max(rmin,pos - single)
-      /* Line down */
-      when code = 1 then pos = min(rmax,pos + single)
-      /* page up */
-      when code = 2 then pos = max(rmin,pos - page)
-      /* page down */
-      when code = 3 then pos = min(rmax,pos + page)
-      /* track position */
-      when code = 4 then pos = .DlgUtil~hiWord(posdata)
-      /* tracking */
-      when code = 5 then pos = .DlgUtil~hiWord(posdata)
-      /* top */
-      when code = 6 then pos = rmin
-      /* bottom */
-      when code = 7 then pos = rmax
-      otherwise nop;
-   end
-   self~SetSBPos(id, pos)
-   return pos
+::method getListWidthPx unguarded
+   use strict arg id
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~widthPx
 
+::method setListColumnWidthPx unguarded
+   use strict arg id, pixels
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   listBox~columnWidthPx = pixels
+   return 0
 
-/* set/get the horizontal scroll width of a list box */
+::method setListItemHeightPx unguarded
+   use strict arg id, pixels
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   listBox~listItemHeightPx = pixels
+   return 0
 
-::method SetListWidth unguarded
-   use arg id, dlgunits
-   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(id, 0x00000194, dlgunits*self~factorX, 0)
+::method getListItemHeightPx unguarded
+   use strict arg id
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~itemHeightPx
 
-::method GetListWidth unguarded
-   use arg id
-   return self~BoxMessage(id, 0x00000193, 0, 0)/self~factorX
+::method setListWidth unguarded         -- Old method uses dialog units - not accurate
+   use strict arg id, dlgunits
+   pixels = dlgunits * self~factorX
+   return self~setListWidthPx(id, pixels)
 
-::method SetListColumnWidth unguarded
-   use arg id, dlgunits
-   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(id, 0x00000195, dlgunits*self~factorX, 0)
+::method getListWidth unguarded         -- Old method uses dialog units - not accurate
+   use strict arg id
+   pixels = self~getListWidthPx(id)
+   if pixels <= 0 then return pixels
+   else return pixels / self~factorX
 
-::method SetListItemHeight unguarded
-   use arg id, dlgunits
-   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(id, 0x000001A0, 0, dlgunits*self~factorY)
+::method setListColumnWidth unguarded   -- Old method uses dialog units - not accurate
+   use strict arg id, dlgunits
+   pixels = dlgunits * self~factorX
+   return self~setListColumnWidthPx(id, pixels)
 
-::method GetListItemHeight unguarded
-   use arg id
-   return self~BoxMessage(id, 0x000001A1, 0, 0)/self~factorY
+::method setListItemHeight unguarded    -- Old method uses dialog units - not accurate
+   use strict arg id, dlgunits
+   pixels = dlgunits * self~factorY
+   return self~setListItemHeightPx(id, pixels)
+
+::method getListItemHeight unguarded    -- Old method uses dialog units - not accurate
+   use strict arg id
+   pixels = self~getListItemHeightPx(id)
+   if pixes <= 0 then return pixels
+   else return pixels / self~factorY
 
 ::method setControlFont unguarded
    use strict arg id, hFont, bRedraw = .true
    hCtrl = self~getControlHandle(id)
-   msg   = self~WM_SETFONT
-   return self~sendWinHandleMsg(msg, hFont, bRedraw, hCtrl)
+   return self~sendWinHandleMsg(self~WM_SETFONT, hFont, bRedraw, hCtrl)
 
-::method getWindowRect unguarded -- old method returns coordinates as a string
+::method getWindowRect unguarded        -- Old method returns coordinates as a string.
    forward message "windowRect" continue
    rect = result
    return rect~left rect~top rect~right rect~bottom
