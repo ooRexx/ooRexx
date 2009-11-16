@@ -66,7 +66,7 @@
                 'light blue','white','grey','dark grey','red','light green',,
                 'yellow','blue','pink','turquoise')
    self~init:super()
-   if \ self~createcenter(200,235,"OODialog Color Drawing Demonstration",,,"System", 8) then
+   if \ self~createcenter(200, 235, "OODialog Color Drawing Demonstration", , , "System", 8) then
       self~initCode = 1
 
 ::method DefineDialog
@@ -99,7 +99,7 @@
    dc = self~getButtonDC(100)
    mybrush = self~createbrush(10)         /* white      */
    mypen   = self~createpen(1,'solid',0)  /* thin black */
-   sysFont = self~CreateFont("System",10)
+   sysFont = self~CreateFontEx("System",10)
    oldFont = self~FontToDC(dc,sysFont)
    self~writetobutton(100,45*x,30*y,"Black rectangles","Arial",12,"BOLD")
    self~writetobutton(100,80*x,80*y,"White rectangles","Arial",12,"BOLD")
@@ -115,7 +115,9 @@
 ::method cancel                                          /* stop drawing program */
    expose x y dc mybrush mypen sysfont oldfont
    self~finished = 1
-   tmpFont = self~CreateFont("Arial",28,"BOLD")
+   opts = .directory~new
+   opts~weight = 700
+   tmpFont = self~CreateFontEx("Arial",28,opts)
    xFont = self~FontToDC(dc,tmpFont)
    do i=2 to 6
       if i//2 = 1 then self~TransparentText(dc)
