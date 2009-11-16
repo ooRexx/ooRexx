@@ -44,7 +44,54 @@ extern RexxObjectPtr oodGetClientRect(RexxMethodContext *, HWND hwnd, PRECT);
 extern RexxObjectPtr oodGetWindowRect(RexxMethodContext *, HWND hwnd);
 extern RexxObjectPtr clearRect(RexxMethodContext *, HWND, PRECT);
 extern RexxObjectPtr redrawRect(RexxMethodContext *, HWND, PRECT, bool);
-extern RexxObjectPtr drawButton(HWND hDlg, HWND hCtrl, uint32_t id);
-extern int getHeightFromFontSize(int fontSize);
+extern logical_t     oodColorTable(RexxMethodContext *, DIALOGADMIN *, uint32_t, int32_t, int32_t, bool);
+extern int           getHeightFromFontSize(int fontSize);
+extern void          maybeSetColorPalette(RexxMethodContext *, HBITMAP, CSTRING, DIALOGADMIN *, RexxObjectPtr);
+extern LPBITMAPINFO  loadDIB(const char *szFile);
+extern WORD          numDIBColorEntries(LPBITMAPINFO lpBmpInfo);
+extern BOOL          DrawBackgroundBmp(pCPlainBaseDialog, HWND, WPARAM, LPARAM);
+extern HPALETTE      CreateDIBPalette(LPBITMAPINFO);
+extern BOOL          DrawBitmapButton(DIALOGADMIN *, pCPlainBaseDialog, WPARAM, LPARAM, bool);
+
+
+/* macros for searching and checking the bitmap table */
+#define SEARCHBMP(addr, ndx, id) \
+   {                     \
+      ndx = 0;\
+      if (addr && addr->BmpTab)              \
+      while ((ndx < addr->BT_size) && (addr->BmpTab[ndx].buttonID != (ULONG)id))\
+         ndx++;                                                  \
+   }
+
+#define VALIDBMP(addr, ndx, id) \
+   (addr && &addr->BmpTab[ndx] && (ndx < addr->BT_size) && (addr->BmpTab[ndx].buttonID == (ULONG)id))
+
+//
+// macros to access the fields in a BITMAPINFO struct
+// field_value = macro(pBitmapInfo)
+//
+
+#define BI_WIDTH(pBI)       (int)((pBI)->bmiHeader.biWidth)
+#define BI_HEIGHT(pBI)      (int)((pBI)->bmiHeader.biHeight)
+#define BI_PLANES(pBI)      ((pBI)->bmiHeader.biPlanes)
+#define BI_BITCOUNT(pBI)    ((pBI)->bmiHeader.biBitCount)
+
+//
+// macros to access BITMAPINFO fields in a DIB
+// field_value = macro(pDIB)
+//
+
+#define DIB_WIDTH(pDIB)     (BI_WIDTH((LPBITMAPINFO)(pDIB)))
+#define DIB_HEIGHT(pDIB)    (BI_HEIGHT((LPBITMAPINFO)(pDIB)))
+#define DIB_PLANES(pDIB)    (BI_PLANES((LPBITMAPINFO)(pDIB)))
+#define DIB_BITCOUNT(pDIB)  (BI_BITCOUNT((LPBITMAPINFO)(pDIB)))
+//#define DIB_COLORS(pDIB)    (((LPBITMAPINFO)pDIB)->bmiHeader.biClrUsed)
+#define DIB_COLORS(pDIB)    (numDIBColorEntries((LPBITMAPINFO)(pDIB)))
+#define DIB_BISIZE(pDIB)    (sizeof(BITMAPINFOHEADER) \
+                            + DIB_COLORS(pDIB) * sizeof(RGBQUAD))
+#define DIB_PBITS(pDIB)     (((LPSTR)((LPBITMAPINFO)(pDIB))) \
+                            + DIB_BISIZE(pDIB))
+#define DIB_PBI(pDIB)       ((LPBITMAPINFO)(pDIB))
+
 
 #endif

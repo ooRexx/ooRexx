@@ -147,6 +147,12 @@ inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr 
 }
 
 
+inline void failedToRetrieveDlgAdmException(RexxThreadContext *c)
+{
+    userDefinedMsgException(c, "Could not retrieve the dialog administration information block.");
+}
+
+
 bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum)
 {
     if ( ComCtl32Version < minimum )
@@ -858,22 +864,54 @@ char *strdup_2methodName(const char *str)
 }
 
 
-// TODO This function does not seem too useful.
-DIALOGADMIN *getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg)
+/**
+ * Convenience function to retrieve the dialog admin block from a generic
+ * ooDialog Rexx object.
+ *
+ * Normally this function would be used when the Rexx object is known to be a
+ * PlainBaseDialog or a DialogControl object.  But, it could be called for any
+ * Rexx object.  It will fail for any object that is not a dialog or a dialog
+ * control object.
+ *
+ * @param c      Method context we are operating in.
+ * @param self   The Rexx object.
+ *
+ * @return A pointer to the dialog admin block on success, or NULL on failure.
+ *
+ * @note  An exception is raised on failure.
+ */
+DIALOGADMIN *getDlgAdm(RexxMethodContext *c, RexxObjectPtr self)
 {
     DIALOGADMIN *dlgAdm = NULL;
+    pCPlainBaseDialog pcpbd = NULL;
 
-    if ( c->IsOfType(dlg, "PLAINBASEDIALOG") )
+    if ( c->IsOfType(self, "PLAINBASEDIALOG") )
     {
-        pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
-        if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+        pcpbd = dlgToCSelf(c, self);
+    }
+    else if ( c->IsOfType(self, "DIALOGCONTROL") )
+    {
+        pCDialogControl pcdc = (pCDialogControl)c->GetCSelf();  // TODO need to test that this works!
+        if ( pcdc != NULL )
         {
-            failedToRetrieveDlgAdmException(c->threadContext, dlg);
+            pcpbd = dlgToCSelf(c, pcdc->oDlg);
+        }
+    }
+
+    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+    {
+        if ( self == NULLOBJECT )
+        {
+            failedToRetrieveDlgAdmException(c->threadContext);
         }
         else
         {
-            dlgAdm = pcpbd->dlgAdm;
+            failedToRetrieveDlgAdmException(c->threadContext, self);
         }
+    }
+    else
+    {
+        dlgAdm = pcpbd->dlgAdm;
     }
     return dlgAdm;
 }

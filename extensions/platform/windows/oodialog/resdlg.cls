@@ -83,13 +83,6 @@
 ::method startDialog private external "LIBRARY oodialog resdlg_startDialog_pvt"
 ::method getDataTableIDs private external "LIBRARY oodialog resdlg_getDataTableIDs_pvt"
 
-::method stopIt
-   forward class (super) continue
-   ret = result
-   if self~bkgBrushBmp \= 0 then self~deleteObject(self~bkgBrushBmp)
-   if self~bkgBitmap \= 0 then self~removeBitmap(self~bkgBitmap)
-   return ret
-
 -- This method is deprecated, instead use the Menu classes directly.
 ::method setMenu
   use strict arg id

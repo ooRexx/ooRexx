@@ -42,25 +42,25 @@
 // Enum for errors during key press processing
 typedef enum
 {
-    noErr = 0,
-    nameErr = 1,       // The method name was too long, or the empty string.
-    winAPIErr = 2,     // A Windows API failure.
-    memoryErr = 5,     // Memory allocation error.
-    maxMethodsErr = 6, // No room left in the method table.
-    dupMethodErr = 7,  // The method name provided already exists in the table, so nothing was done.
-    badFilterErr = 8,  // The filter provided was not a filter, so it was ignored.
-    keyMapErr = 9      // Some or all of the keys did not get mapped.
+    noErr         = 0,
+    nameErr       = 1,  // The method name was too long, or the empty string.
+    winAPIErr     = 2,  // A Windows API failure.
+    memoryErr     = 5,  // Memory allocation error.
+    maxMethodsErr = 6,  // No room left in the method table.
+    dupMethodErr  = 7,  // The method name provided already exists in the table, so nothing was done.
+    badFilterErr  = 8,  // The filter provided was not a filter, so it was ignored.
+    keyMapErr     = 9   // Some or all of the keys did not get mapped.
 } keyPressErr_t;
 
 // Shared functions for keyboard hooks and key press subclassing.
-extern void removeKBHook(DIALOGADMIN *dlgAdm);
+extern void          removeKBHook(DIALOGADMIN *dlgAdm);
 extern keyPressErr_t setKeyPressData(KEYPRESSDATA *, CSTRING, CSTRING, CSTRING);
-extern void processKeyPress(KEYPRESSDATA *, WPARAM, LPARAM, PCHAR);
-extern void freeKeyPressData(KEYPRESSDATA *);
-extern uint32_t seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
-extern void removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
+extern void          processKeyPress(KEYPRESSDATA *, WPARAM, LPARAM, PCHAR);
+extern void          freeKeyPressData(KEYPRESSDATA *);
+extern uint32_t      seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
+extern void          removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
 
-
+extern LRESULT      PaletteMessage(DIALOGADMIN *, HWND, UINT, WPARAM, LPARAM);
 extern BOOL         AddDialogMessage(CHAR * msg, CHAR * Qptr);
 extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 

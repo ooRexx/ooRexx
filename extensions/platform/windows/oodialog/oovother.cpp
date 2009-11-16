@@ -42,7 +42,6 @@
 #include <dlgs.h>
 #include <malloc.h>
 #include <errno.h>
-//#include <shlwapi.h>
 #include <commctrl.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
@@ -50,10 +49,9 @@
 #include "oodMessaging.hpp"
 #include "oodData.hpp"
 #include "oodText.hpp"
+#include "oodDeviceGraphics.hpp"
 
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
-WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
-extern LPBITMAPINFO LoadDIB(const char *szFile);
 
 /**
  * Defines and structs for Button controls: .ButtonControl, .GroupBox, etc..
@@ -96,14 +94,6 @@ RexxObjectPtr rxNewImageList(RexxMethodContext *, HIMAGELIST);
 #define IMAGECLASS                 ".Image"
 
 
-// Helper functions.
-CSTRING getImageTypeName(uint8_t);
-RexxObjectPtr rxNewImageFromControl(RexxMethodContext *, HWND, HANDLE, uint8_t, oodControl_t);
-RexxObjectPtr rxNewEmptyImage(RexxMethodContext *, DWORD);
-RexxObjectPtr rxNewValidImage(RexxMethodContext *, HANDLE, uint8_t, PSIZE, uint32_t, bool);
-
-#define IMAGE_TYPE_LIST            "Bitmap, Icon, Cursor, Enhanced Metafile"
-
 typedef struct _OODIMAGE
 {
     SIZE     size;
@@ -120,9 +110,20 @@ typedef struct _OODIMAGE
     bool     isValid;
 } OODIMAGE, *POODIMAGE;
 
+
+// Helper functions.
+CSTRING getImageTypeName(uint8_t);
+RexxObjectPtr rxNewImageFromControl(RexxMethodContext *, HWND, HANDLE, uint8_t, oodControl_t);
+RexxObjectPtr rxNewEmptyImage(RexxMethodContext *, DWORD);
+RexxObjectPtr rxNewValidImage(RexxMethodContext *, HANDLE, uint8_t, PSIZE, uint32_t, bool);
+
+#define IMAGE_TYPE_LIST            "Bitmap, Icon, Cursor, Enhanced Metafile"
+
 POODIMAGE rxGetOodImage(RexxMethodContext *, RexxObjectPtr, int);
 POODIMAGE rxGetImageIcon(RexxMethodContext *, RexxObjectPtr, int);
 POODIMAGE rxGetImageBitmap(RexxMethodContext *, RexxObjectPtr, int);
+
+RexxObjectPtr oodILFromBMP(RexxMethodContext *, HIMAGELIST *, RexxObjectPtr, int, int, HWND);
 
 
 /**
@@ -1804,135 +1805,6 @@ static inline CSTRING lvGetAttributeName(uint8_t type)
     }
 }
 
-/**
- * Creates a Windows ImageList and the corresponding ooDialog .ImageList object
- * from a single bitmap.
- *
- * The Windows ImageList supports adding any number of images from a single
- * bitmap.  The individual images are assumed to be side-by-side in the bitmap.
- * The number of images is determined by the width of a single image.
- *
- * At this time, this function is used to allow the ooDialog programmer to
- * assign an image list to a dialog control by just passing in a bitmap, rather
- * than first creating an .ImageList object.  This is much less flexible, but
- * allows the programmer to write fewer lines of code.  In addition, it mimics
- * the behavior of pre-4.0 code allowing that code to be removed.
- *
- * @param c       The method context we are operating in.
- * @param himl    [in / out] The created handle of the ImageList is returned.
- * @param ilSrc   The bitmap.
- * @param width   [optional]  The width of a single image.  When omitted, the
- *                height of the actual bitmap is used for the width.
- * @param height  [optional]  The height of a single image.  If omitted the
- *                height of the actual bitmap is used.
- * @param hwnd    The window handle of the control.  Used to create a device
- *                context if needed.
- *
- * @return An instantiated .ImageList object on success, or NULLOBJECT on
- *         failure.
- *
- * @note These objects are accepted for the image list source (ilSrc): .Image
- *       object, a bitmap file name, a bitmap handle.  A bitmap handle can be
- *       either a pointer string, or a .Pointer object.  The bitmap handle is
- *       needed to provide backward compatibility, but its use is discouraged.
- *
- * @note This function needs to support the original ooDialog design where
- *       bitmaps were loaded as DIBs.  If the image list source is a handle,
- *       GetObject() is used to test if the bitmap is a compatible bitmap (DDB.)
- *       If GetObject() returns 0, it is still a device independent (DIB) and
- *       needs to be converted to a device dependent bitmap.
- */
-RexxObjectPtr rxILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr ilSrc,
-                          int width, int height, HWND hwnd)
-{
-    HBITMAP hDDB = NULL;
-    RexxObjectPtr imageList = NULLOBJECT;
-    bool canRelease = false;
-    BITMAP bmpInfo;
-
-    if ( c->IsOfType(ilSrc, "Image") )
-    {
-        POODIMAGE oi = rxGetImageBitmap(c, ilSrc, 1);
-        if ( oi == NULLOBJECT )
-        {
-            goto done_out;
-        }
-        hDDB = (HBITMAP)oi->hImage;
-    }
-    else if ( c->IsString(ilSrc) || c->IsPointer(ilSrc) )
-    {
-        CSTRING bitmap = c->ObjectToStringValue(ilSrc);
-
-        // See if the user passed in the handle to an already loaded bitmap.
-        hDDB = (HBITMAP)GET_HANDLE(bitmap);
-        if ( hDDB != NULL )
-        {
-            if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == 0 )
-            {
-                HDC dc = GetDC(hwnd);
-                hDDB = CreateDIBitmap(dc, (BITMAPINFOHEADER*)hDDB, CBM_INIT, DIB_PBITS(hDDB),
-                                      DIB_PBI(hDDB), DIB_RGB_COLORS);
-                if ( hDDB == NULL )
-                {
-                    oodSetSysErrCode(c->threadContext);
-                    ReleaseDC(hwnd, dc);
-                    goto done_out;
-                }
-                ReleaseDC(hwnd, dc);
-                canRelease = true;
-            }
-        }
-        else
-        {
-            hDDB = (HBITMAP)LoadImage(NULL, bitmap, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-            if ( hDDB == NULL )
-            {
-                oodSetSysErrCode(c->threadContext);
-                goto done_out;
-            }
-            canRelease = true;
-        }
-    }
-    else
-    {
-        wrongArgValueException(c->threadContext, 1, "ImageList, Image, bitmap file name, bitmap handle", ilSrc);
-        goto done_out;
-    }
-
-    if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == sizeof(BITMAP) )
-    {
-        if ( width == 0 )
-        {
-            width = bmpInfo.bmHeight;
-        }
-        if ( height == 0 )
-        {
-            height = bmpInfo.bmHeight;
-        }
-        int count = bmpInfo.bmWidth / width;
-
-        HIMAGELIST il = ImageList_Create(width, height, ILC_COLOR8, count, 0);
-        if ( il != NULL )
-        {
-            if ( ImageList_Add(il, hDDB, NULL) == -1 )
-            {
-                ImageList_Destroy(il);
-                goto done_out;
-            }
-
-            imageList = rxNewImageList(c, il);
-            *himl = il;
-        }
-    }
-
-done_out:
-    if ( hDDB && canRelease )
-    {
-        DeleteObject(hDDB);
-    }
-    return imageList;
-}
-
 /** ListControl::setImageList()
  *
  *  Sets or removes one of a list-view's image lists.
@@ -2003,7 +1875,7 @@ RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
     }
     else
     {
-        imageList = rxILFromBMP(context, &himl, ilSrc, width, height, hwnd);
+        imageList = oodILFromBMP(context, &himl, ilSrc, width, height, hwnd);
         if ( imageList == NULLOBJECT )
         {
             goto err_out;
@@ -2415,7 +2287,7 @@ RexxMethod4(RexxObjectPtr, tv_setImageList, RexxObjectPtr, ilSrc,
     }
     else
     {
-        imageList = rxILFromBMP(context, &himl, ilSrc, width, height, hwnd);
+        imageList = oodILFromBMP(context, &himl, ilSrc, width, height, hwnd);
         if ( imageList == NULLOBJECT )
         {
             goto err_out;
@@ -2523,7 +2395,7 @@ RexxMethod4(RexxObjectPtr, tab_setImageList, RexxObjectPtr, ilSrc,
     }
     else
     {
-        imageList = rxILFromBMP(context, &himl, ilSrc, width, height, hwnd);
+        imageList = oodILFromBMP(context, &himl, ilSrc, width, height, hwnd);
         if ( imageList == NULLOBJECT )
         {
             goto err_out;
@@ -3563,9 +3435,9 @@ RexxMethod7(logical_t, bc_scroll, int32_t, xPos, int32_t, yPos, int32_t, left, i
         HBRUSH hBrush, hOldBrush;
         HPEN hOldPen, hPen;
 
-        if ( dlgAdm->BkgBrush )
+        if ( pcpbd->bkgBrush )
         {
-            hBrush = dlgAdm->BkgBrush;
+            hBrush = pcpbd->bkgBrush;
         }
         else
         {
@@ -3602,7 +3474,7 @@ RexxMethod7(logical_t, bc_scroll, int32_t, xPos, int32_t, yPos, int32_t, left, i
         return 0;
     }
 
-    err_out:
+err_out:
     return 1;
 }
 
@@ -3757,6 +3629,135 @@ RexxObjectPtr rxNewImageList(RexxMethodContext *c, HIMAGELIST himl)
     if ( theClass != NULL )
     {
         imageList = c->SendMessage1(theClass, "NEW", c->NewPointer(himl));
+    }
+    return imageList;
+}
+
+/**
+ * Creates a Windows ImageList and the corresponding ooDialog .ImageList object
+ * from a single bitmap.
+ *
+ * The Windows ImageList supports adding any number of images from a single
+ * bitmap.  The individual images are assumed to be side-by-side in the bitmap.
+ * The number of images is determined by the width of a single image.
+ *
+ * At this time, this function is used to allow the ooDialog programmer to
+ * assign an image list to a dialog control by just passing in a bitmap, rather
+ * than first creating an .ImageList object.  This is much less flexible, but
+ * allows the programmer to write fewer lines of code.  In addition, it mimics
+ * the behavior of pre-4.0 code allowing that code to be removed.
+ *
+ * @param c       The method context we are operating in.
+ * @param himl    [in / out] The created handle of the ImageList is returned.
+ * @param ilSrc   The bitmap.
+ * @param width   [optional]  The width of a single image.  When omitted, the
+ *                height of the actual bitmap is used for the width.
+ * @param height  [optional]  The height of a single image.  If omitted the
+ *                height of the actual bitmap is used.
+ * @param hwnd    The window handle of the control.  Used to create a device
+ *                context if needed.
+ *
+ * @return An instantiated .ImageList object on success, or NULLOBJECT on
+ *         failure.
+ *
+ * @note These objects are accepted for the image list source (ilSrc): .Image
+ *       object, a bitmap file name, a bitmap handle.  A bitmap handle can be
+ *       either a pointer string, or a .Pointer object.  The bitmap handle is
+ *       needed to provide backward compatibility, but its use is discouraged.
+ *
+ * @note This function needs to support the original ooDialog design where
+ *       bitmaps were loaded as DIBs.  If the image list source is a handle,
+ *       GetObject() is used to test if the bitmap is a compatible bitmap (DDB.)
+ *       If GetObject() returns 0, it is still a device independent (DIB) and
+ *       needs to be converted to a device dependent bitmap.
+ */
+RexxObjectPtr oodILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr ilSrc,
+                          int width, int height, HWND hwnd)
+{
+    HBITMAP hDDB = NULL;
+    RexxObjectPtr imageList = NULLOBJECT;
+    bool canRelease = false;
+    BITMAP bmpInfo;
+
+    if ( c->IsOfType(ilSrc, "Image") )
+    {
+        POODIMAGE oi = rxGetImageBitmap(c, ilSrc, 1);
+        if ( oi == NULLOBJECT )
+        {
+            goto done_out;
+        }
+        hDDB = (HBITMAP)oi->hImage;
+    }
+    else if ( c->IsString(ilSrc) || c->IsPointer(ilSrc) )
+    {
+        CSTRING bitmap = c->ObjectToStringValue(ilSrc);
+
+        // See if the user passed in the handle to an already loaded bitmap.
+        hDDB = (HBITMAP)GET_HANDLE(bitmap);
+        if ( hDDB != NULL )
+        {
+            if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == 0 )
+            {
+                HDC dc = GetDC(hwnd);
+                hDDB = CreateDIBitmap(dc, (BITMAPINFOHEADER*)hDDB, CBM_INIT, DIB_PBITS(hDDB),
+                                      DIB_PBI(hDDB), DIB_RGB_COLORS);
+                if ( hDDB == NULL )
+                {
+                    oodSetSysErrCode(c->threadContext);
+                    ReleaseDC(hwnd, dc);
+                    goto done_out;
+                }
+                ReleaseDC(hwnd, dc);
+                canRelease = true;
+            }
+        }
+        else
+        {
+            hDDB = (HBITMAP)LoadImage(NULL, bitmap, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+            if ( hDDB == NULL )
+            {
+                oodSetSysErrCode(c->threadContext);
+                goto done_out;
+            }
+            canRelease = true;
+        }
+    }
+    else
+    {
+        wrongArgValueException(c->threadContext, 1, "ImageList, Image, bitmap file name, bitmap handle", ilSrc);
+        goto done_out;
+    }
+
+    if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == sizeof(BITMAP) )
+    {
+        if ( width == 0 )
+        {
+            width = bmpInfo.bmHeight;
+        }
+        if ( height == 0 )
+        {
+            height = bmpInfo.bmHeight;
+        }
+        int count = bmpInfo.bmWidth / width;
+
+        HIMAGELIST il = ImageList_Create(width, height, ILC_COLOR8, count, 0);
+        if ( il != NULL )
+        {
+            if ( ImageList_Add(il, hDDB, NULL) == -1 )
+            {
+                ImageList_Destroy(il);
+                goto done_out;
+            }
+
+            imageList = rxNewImageList(c, il);
+            *himl = il;
+        }
+    }
+
+done_out:
+    if ( hDDB && canRelease )
+    {
+        DeleteObject(hDDB);
     }
     return imageList;
 }

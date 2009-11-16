@@ -122,6 +122,8 @@ typedef struct _pbdCSelf {
     RexxObjectPtr        rexxSelf;
     HWND                 hDlg;
     DIALOGADMIN          *dlgAdm;
+    HBRUSH               bkgBrush;
+    HBITMAP              bkgBitmap;
     logical_t            autoDetect;
     uint32_t             fontSize;
 } CPlainBaseDialog;
@@ -234,11 +236,6 @@ extern RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *, HWND, CSTRING, RexxO
 
 // These functions are defined in oodBaseDialog.cpp
 extern bool initWindowExtensions(RexxMethodContext *, RexxObjectPtr, HWND, pCWindowBase, pCPlainBaseDialog);
-
-// These functions are defined in oovbmp.cpp, for now.
-extern LPBITMAPINFO LoadDIB(const char *szFile);
-extern void SetSysPalColors(HPALETTE hPal);
-extern HPALETTE CreateDIBPalette(LPBITMAPINFO lpBmpInfo);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;

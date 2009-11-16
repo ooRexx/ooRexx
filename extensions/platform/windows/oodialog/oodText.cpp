@@ -48,8 +48,6 @@
 #include "APICommon.hpp"
 #include "oodText.hpp"
 
-extern HWND ScrollingButton = NULL;
-extern HWND RedrawScrollingButton = NULL;
 HANDLE TimerEvent = NULL;
 ULONG TimerCount = 0;
 ULONG_PTR Timer = 0;

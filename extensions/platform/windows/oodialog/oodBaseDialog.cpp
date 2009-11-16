@@ -59,11 +59,12 @@
 class LoopThreadArgs
 {
 public:
-    RexxMethodContext *context;  // Used for data autodetection only.
-    DIALOGADMIN *dlgAdmin;
-    uint32_t resourceId;
-    bool autoDetect;
-    bool *release;               // Used for a return value
+    RexxMethodContext *context;       // Used for data autodetection only.
+    pCPlainBaseDialog  pcpbd;
+    DIALOGADMIN       *dlgAdmin;
+    uint32_t           resourceId;
+    bool               autoDetect;
+    bool              *release;       // Used for a return value
 };
 
 /**
@@ -86,8 +87,6 @@ RexxMethod3(RexxObjectPtr, baseDlg_init, ARGLIST, args, SUPER, super, OSELF, sel
         }
 
         context->SendMessage1(self, "SCROLLNOW=", TheZeroObj);
-        context->SendMessage1(self, "BKGBITMAP=", TheZeroObj);
-        context->SendMessage1(self, "BKGBRUSHBMP=", TheZeroObj);
         context->SendMessage1(self, "MENUBAR=", context->Nil());
         context->SendMessage1(self, "ISLINKED=", TheFalseObj);
     }
@@ -142,9 +141,11 @@ DWORD WINAPI WindowLoopThread(void *arg)
     ULONG ret;
 
     LoopThreadArgs *args = (LoopThreadArgs *)arg;
-
     dlgAdm = args->dlgAdmin;
-    dlgAdm->TheDlg = CreateDialogParam(dlgAdm->TheInstance, MAKEINTRESOURCE(args->resourceId), 0, (DLGPROC)RexxDlgProc, dlgAdm->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
+
+    // Pass the pointer to the CSelf for this dialog to WM_INITDIALOG.
+    dlgAdm->TheDlg = CreateDialogParam(dlgAdm->TheInstance, MAKEINTRESOURCE(args->resourceId), 0,
+                                       (DLGPROC)RexxDlgProc, (LPARAM)args->pcpbd);
     dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
 
     release = args->release;
@@ -262,6 +263,7 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
 
     LoopThreadArgs threadArgs;
     threadArgs.context = context;
+    threadArgs.pcpbd = pcpbd;
     threadArgs.dlgAdmin = dlgAdm;
     threadArgs.resourceId = dlgID;
     threadArgs.autoDetect = autoDetect ? true : false;
@@ -1122,29 +1124,10 @@ RexxMethod4(logical_t, winex_writeDirect, POINTERSTRING, hDC, int32_t, xPos, int
  */
 RexxMethod3(RexxStringObject, winex_loadBitmap, CSTRING, bitmapFile, OPTIONAL_CSTRING, opts, OSELF, self)
 {
-    HBITMAP hBmp = (HBITMAP)LoadDIB(bitmapFile);
-
-    if ( hBmp != NULL && opts != NULL && StrStrI(opts, "USEPAL") != NULL )
-    {
-        DIALOGADMIN *dlgAdm = getDlgAdm(context, self);
-        if ( dlgAdm != NULL )
-        {
-            if ( dlgAdm->ColorPalette )
-            {
-                DeleteObject(dlgAdm->ColorPalette);
-            }
-            dlgAdm->ColorPalette = CreateDIBPalette((LPBITMAPINFO)hBmp);
-            SetSysPalColors(dlgAdm->ColorPalette);
-        }
-        else
-        {
-            context->ClearCondition();
-        }
-    }
-
+    HBITMAP hBmp = (HBITMAP)loadDIB(bitmapFile);
+    maybeSetColorPalette(context, hBmp, opts, NULL, self);
     return pointer2string(context, hBmp);
 }
-
 
 RexxMethod1(logical_t, winex_removeBitmap, POINTERSTRING, hBitmap)
 {
@@ -1229,10 +1212,6 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
        if (!SetRexxStem(name, -1, "hThread", data))  { RETERR; }
        pointer2string(data, dlgAdm->TheDlg);
        if (!SetRexxStem(name, -1, "hDialog", data))  { RETERR; }
-       pointer2string(data, dlgAdm->BkgBrush);
-       if (!SetRexxStem(name, -1, "BkgBrush", data))  { RETERR; }
-       pointer2string(data, dlgAdm->BkgBitmap);
-       if (!SetRexxStem(name, -1, "BkgBitmap", data))  { RETERR; }
        itoa(dlgAdm->OnTheTop, data, 10);
        if (!SetRexxStem(name, -1, "TopMost", data))  { RETERR; }
        pointer2string(data, dlgAdm->AktChild);
@@ -1311,10 +1290,6 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
                if (!SetRexxStem(name, cnt, "hThread", data)) { RETERR; }
                pointer2string(data, DialogTab[i]->TheDlg);
                if (!SetRexxStem(name, cnt, "hDialog", data)) { RETERR; }
-               pointer2string(data, DialogTab[i]->BkgBrush);
-               if (!SetRexxStem(name, cnt, "BkgBrush", data)) { RETERR; }
-               pointer2string(data, DialogTab[i]->BkgBitmap);
-               if (!SetRexxStem(name, cnt, "BkgBitmap", data)) { RETERR; }
                itoa(DialogTab[i]->OnTheTop, data, 10);
                if (!SetRexxStem(name, cnt, "TopMost", data)) { RETERR; }
                pointer2string(data, DialogTab[i]->AktChild);

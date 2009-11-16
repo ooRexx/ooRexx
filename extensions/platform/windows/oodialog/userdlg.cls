@@ -53,11 +53,7 @@
 
 ::method stopIt
    forward class (super) continue
-   forward message "stopDynamic" continue
-   ret = result
-   if self~bkgBrushBmp \= 0 then self~deleteObject(self~bkgBrushBmp)
-   if self~bkgBitmap \= 0 then self~removeBitmap(self~bkgBitmap)
-   return ret
+   forward message "stopDynamic"
 
 -- DEPRECATED menu bar methods.  Use the Menu classes directly.
 ::method setMenu

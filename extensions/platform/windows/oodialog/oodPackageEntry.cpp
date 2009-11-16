@@ -46,12 +46,14 @@
 
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
-HINSTANCE MyInstance = NULL;
-DIALOGADMIN * DialogTab[MAXDIALOGS] = {NULL};
-DIALOGADMIN * topDlg = {NULL};
-INT StoredDialogs = 0;
-CRITICAL_SECTION crit_sec = {0};
-DWORD ComCtl32Version = 0;
+HINSTANCE            MyInstance = NULL;
+DIALOGADMIN         *DialogTab[MAXDIALOGS] = {NULL};
+DIALOGADMIN         *topDlg = {NULL};
+INT                  StoredDialogs = 0;
+CRITICAL_SECTION     crit_sec = {0};
+DWORD                ComCtl32Version = 0;
+HWND                 ScrollingButton = NULL;
+HWND                 RedrawScrollingButton = NULL;
 
 // Initialized in dlgutil_init_cls
 RexxObjectPtr       TheTrueObj = NULLOBJECT;
@@ -99,7 +101,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(DCDraw);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DrawGetSet);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(ScrollText);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDC_Obj);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(SetBackground);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleTreeCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
@@ -107,7 +108,7 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleControlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
 
-REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg);
+REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(messageDialog_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(fileNameDlg_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(findWindow_rtn);
@@ -124,14 +125,13 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(DrawGetSet,           DrawGetSet),          /* 9  */
     REXX_CLASSIC_ROUTINE(ScrollText,           ScrollText),          /* 9  */
     REXX_CLASSIC_ROUTINE(HandleDC_Obj,         HandleDC_Obj),        /* 17  could this benefit from being a DC object ?*/
-    REXX_CLASSIC_ROUTINE(SetBackground,        SetBackground),       /* 11 */
     REXX_CLASSIC_ROUTINE(HandleTreeCtrl,       HandleTreeCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrl,       HandleListCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
     REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),           /* 2 */
 
-    REXX_TYPED_ROUTINE(getDlgMsg,              getDlgMsg),
+    REXX_TYPED_ROUTINE(getDlgMsg_rtn,          getDlgMsg_rtn),
     REXX_TYPED_ROUTINE(messageDialog_rtn,      messageDialog_rtn),
     REXX_TYPED_ROUTINE(findWindow_rtn,         findWindow_rtn),
     REXX_TYPED_ROUTINE(fileNameDlg_rtn,        fileNameDlg_rtn),
@@ -231,6 +231,9 @@ REXX_METHOD_PROTOTYPE(pbdlg_toTheTop);
 REXX_METHOD_PROTOTYPE(pbdlg_getFocus);
 REXX_METHOD_PROTOTYPE(pbdlg_setFocus);
 REXX_METHOD_PROTOTYPE(pbdlg_tabTo);
+REXX_METHOD_PROTOTYPE(pbdlg_backgroundBitmap);
+REXX_METHOD_PROTOTYPE(pbdlg_tiledBackgroundBitmap);
+REXX_METHOD_PROTOTYPE(pbdlg_backgroundColor);
 REXX_METHOD_PROTOTYPE(pbdlg_focusControl);
 REXX_METHOD_PROTOTYPE(pbdlg_showControl);
 REXX_METHOD_PROTOTYPE(pbdlg_showWindow);
@@ -266,6 +269,7 @@ REXX_METHOD_PROTOTYPE(dlgext_redrawWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_redrawControl);
 REXX_METHOD_PROTOTYPE(dlgext_resizeMoveControl);
 REXX_METHOD_PROTOTYPE(dlgext_setForgroundWindow);
+REXX_METHOD_PROTOTYPE(dlgext_setColor);
 REXX_METHOD_PROTOTYPE(dlgext_drawButton);
 REXX_METHOD_PROTOTYPE(dlgext_mouseCapture);
 REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
@@ -694,6 +698,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getFocus,                 pbdlg_getFocus),
     REXX_METHOD(pbdlg_setFocus,                 pbdlg_setFocus),
     REXX_METHOD(pbdlg_tabTo,                    pbdlg_tabTo),
+    REXX_METHOD(pbdlg_backgroundBitmap,         pbdlg_backgroundBitmap),
+    REXX_METHOD(pbdlg_tiledBackgroundBitmap,    pbdlg_tiledBackgroundBitmap),
+    REXX_METHOD(pbdlg_backgroundColor,          pbdlg_backgroundColor),
     REXX_METHOD(pbdlg_focusControl,             pbdlg_focusControl),
     REXX_METHOD(pbdlg_showControl,              pbdlg_showControl),
     REXX_METHOD(pbdlg_connect_ControName,       pbdlg_connect_ControName),
@@ -729,6 +736,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_redrawRect,              dlgext_redrawRect),
     REXX_METHOD(dlgext_resizeMoveControl,       dlgext_resizeMoveControl),
     REXX_METHOD(dlgext_setForgroundWindow,      dlgext_setForgroundWindow),
+    REXX_METHOD(dlgext_setColor,                dlgext_setColor),
     REXX_METHOD(dlgext_drawButton,              dlgext_drawButton),
     REXX_METHOD(dlgext_mouseCapture,            dlgext_mouseCapture),
     REXX_METHOD(dlgext_captureMouse,            dlgext_captureMouse),

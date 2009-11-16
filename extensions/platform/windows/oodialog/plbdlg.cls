@@ -336,7 +336,6 @@
 -- A queue containing the methods that will be started concurrently before execution of the dialog
 ::attribute automaticMethods private
 
-
 /** PlainBaseDialog::init()  Performs the necessary intialization, including the
  * set up of the dialog management block, for all dialogs.
  */
@@ -477,8 +476,11 @@
 ::method setWindowText unguarded external "LIBRARY oodialog pbdlg_setWindowText"
 ::method getControlText unguarded external "LIBRARY oodialog pbdlg_getControlText"
 ::method setControlText unguarded external "LIBRARY oodialog pbdlg_setControlText"
-
 ::method getControlHandle unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
+
+::method backgroundBitmap external "LIBRARY oodialog pbdlg_backgroundBitmap"
+::method tiledBackgroundBitmap external "LIBRARY oodialog pbdlg_tiledBackgroundBitmap"
+::method backgroundColor external "LIBRARY oodialog pbdlg_backgroundColor"
 
 ::method ensureVisible unguarded
    return self~sendWinIntMsg(self~DM_REPOSITION, 0, 0)
@@ -778,7 +780,7 @@
    if listBox == .nil then return -1
    return listBox~selectIndex(ndx)
 
-::method GetListItems unguarded
+::method getListItems unguarded
    use strict arg id
    listBox = self~newListBox(id)
    if listBox == .nil then return -1

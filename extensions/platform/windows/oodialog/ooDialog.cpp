@@ -59,9 +59,6 @@
 #include "oodResourceIDs.hpp"
 
 extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
-extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
-extern BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam);
-extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 
 static HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
@@ -77,24 +74,31 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 {
    HBRUSH hbrush = NULL;
    HWND hW;
-   DIALOGADMIN * addressedTo = NULL;
-   BOOL MsgEnabled = FALSE;
-   register INT i=0;
 
    if (uMsg != WM_INITDIALOG)
    {
-       SEEK_DLGADM_TABLE(hDlg, addressedTo);
-       if (!addressedTo && topDlg && dialogInAdminTable(topDlg) && topDlg->TheDlg) addressedTo = topDlg;
+       pCPlainBaseDialog pcpbd = NULL;
+       DIALOGADMIN *addressedTo = seekDlgAdm(hDlg);
 
-       if (addressedTo)
+       if ( addressedTo == NULL && topDlg != NULL && dialogInAdminTable(topDlg) && topDlg->TheDlg != NULL )
        {
-          MsgEnabled = IsWindowEnabled(hDlg) && dialogInAdminTable(addressedTo);
+           addressedTo = topDlg;
+           pcpbd = (pCPlainBaseDialog)getWindowPtr(addressedTo->TheDlg, GWLP_USERDATA);
+       }
+       else
+       {
+           pcpbd = (pCPlainBaseDialog)getWindowPtr(hDlg, GWLP_USERDATA);
+       }
+
+       if ( addressedTo != NULL && pcpbd != NULL )
+       {
+          bool msgEnabled = IsWindowEnabled(hDlg) && dialogInAdminTable(addressedTo);
 
           // Do not search message table for WM_PAINT to improve redraw.
-          if ( MsgEnabled && (uMsg != WM_PAINT) && (uMsg != WM_NCPAINT) )
+          if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
           {
-              MsgReplyType searchReply;
-              if ( (searchReply = SearchMessageTable(uMsg, wParam, lParam, addressedTo)) != NotMatched )
+              MsgReplyType searchReply = SearchMessageTable(uMsg, wParam, lParam, addressedTo);
+              if ( searchReply != NotMatched )
               {
                   // Note pre 4.0.1, reply was always FALSE, pass on to the system to process.
                   return (searchReply == ReplyTrue ? TRUE : FALSE);
@@ -103,18 +107,25 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
           switch (uMsg) {
              case WM_PAINT:
-                if (addressedTo->BkgBitmap) DrawBackgroundBmp(addressedTo, hDlg, wParam, lParam);
+                if ( pcpbd->bkgBitmap != NULL )
+                {
+                    DrawBackgroundBmp(pcpbd, hDlg, wParam, lParam);
+                }
                 break;
 
              case WM_DRAWITEM:
-                if ((lParam != 0) && (addressedTo)) return DrawBitmapButton(addressedTo, hDlg, wParam, lParam, MsgEnabled);
+                if ( lParam != 0 )
+                {
+                    return DrawBitmapButton(addressedTo, pcpbd, wParam, lParam, msgEnabled);
+                }
                 break;
 
              case WM_CTLCOLORDLG:
-                if (addressedTo->BkgBrush)
+                if (pcpbd->bkgBrush)
                 {
-                    return (LRESULT) addressedTo->BkgBrush;
+                    return (LRESULT)pcpbd->bkgBrush;
                 }
+                break;
 
              case WM_CTLCOLORSTATIC:
              case WM_CTLCOLORBTN:
@@ -122,28 +133,40 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
              case WM_CTLCOLORLISTBOX:
              case WM_CTLCOLORMSGBOX:
              case WM_CTLCOLORSCROLLBAR:
-                if (addressedTo->CT_size)
+                if ( addressedTo->CT_size > 0 )
                 {
                     // See of the user has set the dialog item with a different
                     // color.
-                    LONG id = GetWindowLong((HWND)lParam, GWL_ID);
-                    SEARCHBRUSH(addressedTo, i, id, hbrush);
-                    if (hbrush)
+                    long id = GetWindowLong((HWND)lParam, GWL_ID);
+                    if ( id > 0 )
                     {
-                        if ( addressedTo->ColorTab[i].isSysBrush )
+                        register size_t i = 0;
+                        while ( i < addressedTo->CT_size && addressedTo->ColorTab[i].itemID != id )
                         {
-                            SetBkColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorBk));
-                            if ( addressedTo->ColorTab[i].ColorFG != -1 )
-                            {
-                                SetTextColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorFG));
-                            }
+                           i++;
                         }
-                        else
+                        if ( i < addressedTo->CT_size )
                         {
-                            SetBkColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorBk));
-                            if ( addressedTo->ColorTab[i].ColorFG != -1 )
+                            hbrush = addressedTo->ColorTab[i].ColorBrush;
+                        }
+
+                        if (hbrush)
+                        {
+                            if ( addressedTo->ColorTab[i].isSysBrush )
                             {
-                                SetTextColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorFG));
+                                SetBkColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorBk));
+                                if ( addressedTo->ColorTab[i].ColorFG != -1 )
+                                {
+                                    SetTextColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorFG));
+                                }
+                            }
+                            else
+                            {
+                                SetBkColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorBk));
+                                if ( addressedTo->ColorTab[i].ColorFG != -1 )
+                                {
+                                    SetTextColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorFG));
+                                }
                             }
                         }
                     }
@@ -155,37 +178,29 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
              case WM_COMMAND:
-             switch( LOWORD(wParam) )
-             {
-                 // For both IDOK and IDCANCEL, the notification code (the high
-                 // word value,) must be 0.
-                 case IDOK:
-                     if ( HIWORD(wParam) == 0 )
-                     {
-                         addressedTo->LeaveDialog = 1;
-                     }
-                     return TRUE;
+                 switch( LOWORD(wParam) )
+                 {
+                     // For both IDOK and IDCANCEL, the notification code (the high
+                     // word value,) must be 0.
+                     case IDOK:
+                         if ( HIWORD(wParam) == 0 )
+                         {
+                             addressedTo->LeaveDialog = 1;
+                         }
+                         return TRUE;
 
-                 case IDCANCEL:
-                     if ( HIWORD(wParam) == 0 )
-                     {
-                         addressedTo->LeaveDialog = 2;
-                     }
-                     return TRUE;
-             }
-             break;
-
-#ifdef __CTL3D
-             case WM_SYSCOLORCHANGE:
-                if (addressedTo->Use3DControls)
-                    Ctl3dColorChange();
-             break;
-#endif
+                     case IDCANCEL:
+                         if ( HIWORD(wParam) == 0 )
+                         {
+                             addressedTo->LeaveDialog = 2;
+                         }
+                         return TRUE;
+                 }
+                 break;
 
              case WM_QUERYNEWPALETTE:
              case WM_PALETTECHANGED:
-                if (addressedTo) return PaletteMessage(addressedTo, hDlg, uMsg, wParam, lParam);
-                break;
+                 return PaletteMessage(addressedTo, hDlg, uMsg, wParam, lParam);
 
              case WM_SETTEXT:
              case WM_NCPAINT:
@@ -203,8 +218,12 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 /* Create a child dialog of this dialog and return its window
                  * handle. The dialog template pointer is passed here as the
                  * LPARAM arg from DynamicDialog::startChildDialog().
+                 *
+                 * Note that child dialogs do not have a backing Rexx dialog.
+                 * There is no CPlainBaseDialog struct.  We pass NULL as the
+                 * indirect param to indicate that.
                  */
-                hW = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc, addressedTo->Use3DControls);
+                hW = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc, NULL);
                 ReplyMessage((LRESULT)hW);
                 return (LRESULT)hW;
 
@@ -250,7 +269,8 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                      success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
                  }
                  ReplyMessage((LRESULT)success);
-             } return (TRUE);
+                 return (TRUE);
+             }
 
              case WM_USER_SUBCLASS_REMOVE:
                  ReplyMessage((LRESULT)RemoveWindowSubclass(GetDlgItem(hDlg, (int)lParam), (SUBCLASSPROC)wParam, (int)lParam));
@@ -287,13 +307,17 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
        }
    }
    else
-   /* the WM_INITDIALOG message is sent by CreateDialog(Indirect)Param before TheDlg is set */
    {
-#ifdef __CTL3D
-         if (lParam)    /* Use3DControls is the lparam that is specified for the Create API */
-             Ctl3dSubclassDlgEx(hDlg, CTL3D_ALL);
-#endif
-         return TRUE;
+       // In CreateDialogParam() / CreateDialogIndirectParam() we pass the
+       // pointer to the PlainBaseDialog CSelf as the param.  Unless we created
+       // a child dialog. The OS then sends us this value as the LPARAM argument
+       // in the WM_INITDIALOG message. The pointer is then stored in the user
+       // data field of the window words for this dialog.
+       if ( lParam != NULL )
+       {
+           setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+       }
+       return TRUE;
    }
    return FALSE;
 }
@@ -2772,6 +2796,164 @@ RexxMethod2(RexxObjectPtr, pbdlg_tabTo, NAME, method, CSELF, pCSelf)
     return previousFocus;
 }
 
+/** PlainBaseDialog::backgroundBitmap()
+ *
+ *  Uses the specified bitmap for the background of the dialog.
+ *
+ *  The bitmap is stretched or shrunk to fit the size of the dialog and the
+ *  bitmap is drawn internally by ooDialog.  Contrast this with
+ *  tiledBackgroundBitmap().
+ *
+ *  @param  bitmapFileName  The name of a bitmap file to use as the dilaog
+ *                          background.
+ *
+ *  @return  True on success, false for some error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *         The .SystemErrorCode is set to: 2 ERROR_FILE_NOT_FOUND The system
+ *         cannot find the file specified, if there is a problem with the bitmap
+ *         file.  This might be because the file could not be found.  However,
+ *         this code is used for other problems, such as the file was not a
+ *         valid bitmap file.
+ *
+ *         If the dialog already had a custom background set, it is changed to
+ *         the bitmap.  However, if an error ocurrs, then the existing custom
+ *         background is not changed.
+ *
+ *  @remarks  In 4.0.1 and prior, this method was a DialogExtension method and
+ *            it did not return a value.  When it was moved to PlainBaseDialog
+ *            after 4.0.1, the return was added.
+ */
+RexxMethod3(RexxObjectPtr, pbdlg_backgroundBitmap, CSTRING, bitmapFileName, OPTIONAL_CSTRING, opts, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    HBITMAP hBitmap = (HBITMAP)loadDIB(bitmapFileName);
+    if ( hBitmap == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_FILE_NOT_FOUND);
+        return TheFalseObj;
+    }
+    maybeSetColorPalette(context, hBitmap, opts, pcpbd->dlgAdm, NULL);
+
+    if ( pcpbd->bkgBitmap != NULL )
+    {
+        DeleteObject(pcpbd->bkgBitmap);
+    }
+    pcpbd->bkgBitmap = hBitmap;
+    return TheTrueObj;
+}
+
+/** PlainBaseDialog::tiledBackgroundBitmap()
+ *
+ *  Sets a bitmap to be used as a custom dialog background.
+ *
+ *  An operating system 'brush' is created from the bitmap and used to paint the
+ *  dialog background.  If the bitmap size is less than the size of the dialog,
+ *  this results in the background having a 'tiled' effect.  The painting is
+ *  done entirely by the operating system.  Contrast this to the
+ *  backgroundBitmap() method.
+ *
+ *  @param  bitmapFileName  The name of a bitmap file to use as the dilaog
+ *                          background.
+ *
+ *  @return  True on success, false for some error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *         The .SystemErrorCode is set to: 2 ERROR_FILE_NOT_FOUND The system
+ *         cannot find the file specified, if there is a problem with the bitmap
+ *         file.  This might be because the file could not be found.  However,
+ *         this code is used for other problems, such as the file was not a
+ *         valid bitmap file.
+ *
+ *         If the dialog already had a custom background set, it is changed to
+ *         the bitmap.  However, if an error ocurrs, then the existing custom
+ *         background is not changed.
+ *
+ *  @remarks  In 4.0.1 and prior, this method was a DialogExtension method and
+ *            it did not return a value.  When it was moved to PlainBaseDialog
+ *            after 4.0.1, the return was added.
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_tiledBackgroundBitmap, CSTRING, bitmapFileName, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    HBITMAP hBitmap = (HBITMAP)loadDIB(bitmapFileName);
+    if ( hBitmap == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_FILE_NOT_FOUND);
+        return TheFalseObj;
+    }
+
+    LOGBRUSH logicalBrush;
+    logicalBrush.lbStyle = BS_DIBPATTERNPT;
+    logicalBrush.lbColor = DIB_RGB_COLORS;
+    logicalBrush.lbHatch = (ULONG_PTR)hBitmap;
+
+    HBRUSH hBrush = CreateBrushIndirect(&logicalBrush);
+    uint32_t rc = GetLastError();
+    LocalFree((void *)hBitmap);
+
+    if ( hBrush == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, rc);
+        return TheFalseObj;
+    }
+
+    if ( pcpbd->bkgBrush != NULL )
+    {
+        DeleteObject(pcpbd->bkgBrush);
+    }
+    pcpbd->bkgBrush = hBrush;
+    return TheTrueObj;
+}
+
+/** PlainBaseDialog::backgroundColor()
+ *
+ *  Sets a custom background color for the dialog.
+ *
+ *  In Windows, background colors are painted using a "brush."  This method
+ *  creates a new brush for the specified color and this brush is then used
+ *  whenever the background of the dialog needs to be repainted.
+ *
+ *  @param  color  The color index.
+ *
+ *  @return  True on success, false for some error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *         If the dialog already had a custom background color set, it is
+ *         changed to the new color.  However, if an error ocurrs creating the
+ *         new color brush then the custom color is not changed.
+ *
+ *  @remarks  In 4.0.1 and prior, this method was a DialogExtension method and
+ *            it did not return a value.  When it was moved to PlainBaseDialog
+ *            after 4.0.1, the return was added.
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_backgroundColor, uint32_t, colorIndex, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    HBRUSH hBrush = CreateSolidBrush(PALETTEINDEX(colorIndex));
+    if ( hBrush == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheFalseObj;
+    }
+
+    if ( pcpbd->bkgBrush != NULL )
+    {
+        DeleteObject(pcpbd->bkgBrush);
+    }
+    pcpbd->bkgBrush = hBrush;
+    return TheTrueObj;
+}
+
 /** PlainBaseDialog::getControlText()
  *
  *  Gets the text of the specified control.
@@ -3222,6 +3404,15 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
     pcpbd->hDlg = NULL;
     pcpbd->wndBase->hwnd = NULL;
     pcpbd->wndBase->rexxHwnd = TheZeroObj;
+
+    if ( pcpbd->bkgBitmap != NULL )
+    {
+        LocalFree(pcpbd->bkgBitmap);
+    }
+    if ( pcpbd->bkgBrush != NULL )
+    {
+        DeleteObject(pcpbd->bkgBrush);
+    }
 
     if ( argumentOmitted(1) )
     {

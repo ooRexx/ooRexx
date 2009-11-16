@@ -111,6 +111,54 @@ char *getDlgMessage(DIALOGADMIN *addressedTo, char *buffer, bool peek)
 }
 
 
+/**
+ * Process WM_QUERYNEWPALETTE and WM_PALETTECHANGED messages, called from
+ * RexxDlgProc().
+ *
+ * @param dlgAdm
+ * @param hDlg
+ * @param msg
+ * @param wParam
+ * @param lParam
+ *
+ * @return LRESULT
+ */
+LRESULT PaletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch ( msg )
+    {
+        case WM_PALETTECHANGED:
+            if ( (HWND)wParam == hDlg )
+            {
+                // Nothing to do (it was us.)
+                return FALSE;
+            }
+        case WM_QUERYNEWPALETTE:
+            if ( dlgAdm->ColorPalette )
+            {
+                HDC hDC = GetDC(hDlg);
+                SelectPalette(hDC, dlgAdm->ColorPalette, 0);
+
+                unsigned int ret = RealizePalette(hDC);
+                ReleaseDC(hDlg, hDC);
+
+                if ( ret != GDI_ERROR )
+                {
+                    // Have everything repainted.
+                    InvalidateRect(hDlg, NULL, TRUE);
+                    return TRUE;
+                }
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+
 #define SelectionDidChange(p) ((p->uNewState & LVIS_SELECTED) != (p->uOldState & LVIS_SELECTED))
 #define FocusDidChange(p)     ((p->uNewState & LVIS_FOCUSED) != (p->uOldState & LVIS_FOCUSED))
 
@@ -567,7 +615,7 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam
  *           empty.
  *
  */
-RexxRoutine2(RexxStringObject, getDlgMsg, CSTRING, adm, OPTIONAL_logical_t, doPeek)
+RexxRoutine2(RexxStringObject, getDlgMsg_rtn, CSTRING, adm, OPTIONAL_logical_t, doPeek)
 {
     DIALOGADMIN * dlgAdm = (DIALOGADMIN *)string2pointer(adm);
     if ( dlgAdm == NULL )

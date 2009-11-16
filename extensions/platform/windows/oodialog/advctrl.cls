@@ -57,7 +57,6 @@
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 ::method unInit external "LIBRARY oodialog dlgctrl_unInit"
 
-
 ::method getFocus unguarded
    forward to (self~oDlg)
 
@@ -76,7 +75,7 @@
 ::method redrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
 ::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
 ::method setColor external "LIBRARY oodialog dlgctrl_setColor"
-::method setSysColo external "LIBRARY oodialog dlgctrl_setColor"r
+::method setSysColor external "LIBRARY oodialog dlgctrl_setColor"
 
 ::method value unguarded  -- TODO this method won't work if this control is on a category page.
                           -- Implement in native code

@@ -70,9 +70,10 @@ BOOL IsNestedDialogMessage(DIALOGADMIN * dlgAdm, LPMSG lpmsg);
 class LoopThreadArgs
 {
 public:
-    DLGTEMPLATE *dlgTemplate;
-    DIALOGADMIN *dlgAdmin;
-    bool        *release;
+    DLGTEMPLATE       *dlgTemplate;
+    DIALOGADMIN       *dlgAdmin;
+    pCPlainBaseDialog  pcpbd;
+    bool              *release;
 };
 
 /**
@@ -88,7 +89,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     bool *release = args->release;
     DIALOGADMIN *dlgAdm = args->dlgAdmin;
 
-    dlgAdm->TheDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, dlgAdm->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
+    dlgAdm->TheDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, (LPARAM)args->pcpbd);
     dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
 
     if ( dlgAdm->TheDlg )
@@ -924,11 +925,12 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
 RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, modeless, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
 
-    DIALOGADMIN *dlgAdm = pcdd->pcpbd->dlgAdm;
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
     if ( dlgAdm == NULL )
     {
-        failedToRetrieveDlgAdmException(context->threadContext, pcdd->pcpbd->rexxSelf);
+        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
         return FALSE;
     }
 
@@ -952,6 +954,7 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     LoopThreadArgs threadArgs;
     threadArgs.dlgTemplate = p;
     threadArgs.dlgAdmin = dlgAdm;
+    threadArgs.pcpbd = pcpbd;
     threadArgs.release = &Release;
 
     dlgAdm->TheThread = CreateThread(NULL, 2000, (LPTHREAD_START_ROUTINE)WindowUsrLoopThread, &threadArgs, 0, &thID);

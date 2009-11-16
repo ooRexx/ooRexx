@@ -246,10 +246,8 @@
    hCtrl = self~getControlHandle(id)
    return self~sendWinHandleMsg(self~WM_SETFONT, hFont, bRedraw, hCtrl)
 
-::method getWindowRect unguarded        -- Old method returns coordinates as a string.
-   forward message "windowRect" continue
-   rect = result
-   return rect~left rect~top rect~right rect~bottom
+::method setControlSysColor external "LIBRARY oodialog dlgext_setColor"
+::method setControlColor external "LIBRARY oodialog dlgext_setColor"
 
 ::method setWindowRect unguarded external "LIBRARY oodialog dlgext_setWindowRect"
 ::method getControlRect unguarded external "LIBRARY oodialog dlgext_getControlRect"
@@ -271,6 +269,11 @@
    return .Window~new(hwnd)~redraw
 
 -- DEPRECATED
+::method getWindowRect unguarded        -- Old method returns coordinates as a string.
+   forward message "windowRect" continue
+   rect = result
+   return rect~left rect~top rect~right rect~bottom
+
 ::method getButtonRect unguarded -- old method returns coordinates as a string
    forward message "getControlRect" continue
    rect = result
@@ -296,12 +299,16 @@
 ::method setItemFont unguarded
    forward message 'setControlFont'
 
+::method setItemColor
+   forward message "setControlColor"
+
+::method setItemSysColor
+   forward message "setControlSysColor"
+-- END DEPRECATED
+
 
 /******************************************************************************/
 /* Bitmap extensions */
-
-::method BkgBitmap attribute protected   -- handle to bitmap that will be displayed in the background
-::method BkgBrushBmp attribute protected -- handle to brushbmp that will be displayed in the background
 
 -- This method will add a method that will be started automatically and run concurrently when
 -- the dialog is executed. That is the  method 'InClass'~'MethodName' will be started, when
@@ -313,14 +320,6 @@
    self~automaticMethods~push(inClass)
    if arg(2,"E") then self~automaticMethods~push(methodName)
    if arg(3,"E") then self~automaticMethods~push(parameters)
-
--- Set a bitmap as the background brush. The argument option can be:
---   "USEPAL" : This will use the color palette of the bitmap.
-::method backgroundBitmap
-   use strict arg bmpFilename, option = ""
-   option = option~translate
-   self~bkgBitmap = self~loadBitmap(bmpFilename, option)
-   ret = SetBackground(self~adm, "BMP", self~bkgBitmap)
 
 -- Install a bitmap button.
 --
@@ -386,13 +385,6 @@
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return BmpButton(self~adm, "G", id)
-
--- Set a bitmap as the background brush.
-::method TiledBackgroundBitmap
-   use arg bmpFilename
-   if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
-   self~BkgBrushBmp = self~CreateBrush(,bmpFilename)
-   ret = SetBackground(self~adm, "BRU", self~BkgBrushBmp)
 
 -- Return the horizontal bitmap extension.
 ::method GetBitmapSizeX unguarded
@@ -579,12 +571,6 @@
    self~RedrawButton(id,0)
    return 0
 
-::method BackgroundColor
-   use arg color
-   if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
-   self~BkgBrushBmp = self~CreateBrush(color)
-   ret = SetBackground(self~adm, "BRU", self~BkgBrushBmp)
-
 ::method CreateBrush unguarded
     use arg color = 1, brushSpecifier = ""
     if arg() = 0 then return HandleDC_Obj("B")
@@ -593,31 +579,6 @@
     if brushSpecifier = "UPDIAGONAL" | brushSpecifier = "DOWNDIAGONAL" | brushSpecifier = "CROSS" | brushSpecifier = "DIAGCROSS",
     | brushSpecifier = "HORIZONTAL" | brushSpecifier = "VERTICAL" then return HandleDC_Obj("B", color, brushSpecifier)
     else return HandleDC_Obj("B", self~adm, color, brushSpecifier)  /* brushSpecifier must be filename or resource ID */
-
-
-::method setControlSysColor
-   use arg id, colorbk, colorfg
-   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(3,'o') = 1 then
-       return SetBackground(self~adm, "COL", id, colorbk, "", "SYS")
-   else
-       return SetBackground(self~adm, "COL", id, colorbk, colorfg, "SYS")
-
-::method setControlColor
-   use arg id, colorbk, colorfg
-   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(3,'o') = 1 then
-       return SetBackground(self~adm, "COL", id, colorbk)
-   else
-       return SetBackground(self~adm, "COL", id, colorbk, colorfg)
-
-::method setItemColor
-   forward message "setControlColor"
-
-::method setItemSysColor
-   forward message "setControlSysColor"
 
 
    /* This method scrolls 'text' in the button */
@@ -728,8 +689,6 @@
         say  "hThread: " admdump.hThread
         say  "hDialog: " admdump.hDialog
         say  "hMenu: " admdump.hMenu
-        say  "BkgBrush: " admdump.BkgBrush
-        say  "BkgBitmap: " admdump.BkgBitmap
         say  "TopMost: " admdump.TopMost
         say  "CurrentChild: " admdump.CurrentChild
         say  "DLL: " admdump.Dll
@@ -764,8 +723,6 @@
             say  "hDialog: " admdump.i.hDialog
             if admdump.i.hDialog \=0 then say "Window title:" self~WindowTitle(x2d(admdump.i.hDialog))
             say  "hMenu: " admdump.i.hMenu
-            say  "BkgBrush: " admdump.i.BkgBrush
-            say  "BkgBitmap: " admdump.i.BkgBitmap
             say  "TopMost: " admdump.i.TopMost
             say  "CurrentChild: " admdump.i.CurrentChild
             say  "DLL: " admdump.i.Dll

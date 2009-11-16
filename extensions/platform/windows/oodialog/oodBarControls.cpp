@@ -261,7 +261,7 @@ RexxMethod4(logical_t, sb_setRange, int32_t, min, int32_t, max, OPTIONAL_logical
     oodResetSysErrCode(context->threadContext);
     redraw = (argumentOmitted(3) ? TRUE : redraw);
 
-    if ( SetScrollRange(getDCHCtrl(pCSelf), SB_CTL, min, max, redraw) == 0 )
+    if ( SetScrollRange(getDCHCtrl(pCSelf), SB_CTL, min, max, (BOOL)redraw) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return 1;
@@ -300,7 +300,7 @@ RexxMethod3(logical_t, sb_setPosition, int32_t, pos, OPTIONAL_logical_t, redraw,
     oodResetSysErrCode(context->threadContext);
     redraw = (argumentOmitted(3) ? TRUE : redraw);
 
-    if ( SetScrollPos(getDCHCtrl(pCSelf), SB_CTL, pos, redraw) == 0 )
+    if ( SetScrollPos(getDCHCtrl(pCSelf), SB_CTL, pos, (BOOL)redraw) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return 0;

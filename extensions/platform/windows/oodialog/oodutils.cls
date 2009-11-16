@@ -91,6 +91,10 @@
 ::method 'height=' external "LIBRARY oodialog point_setY"
 
 
+/* - - - - - - - - - - - - - Private routines- - - - - - - - - - - - - - - - -*/
+::routine getDlgMsg external "LIBRARY oodialog getDlgMsg_rtn"
+
+
 /* - - - - - - - - - - - - - Public routines - - - - - - - - - - - - - - - - -*/
 
 ::routine fileNameDialog public external "LIBRARY oodialog fileNameDlg_rtn"
