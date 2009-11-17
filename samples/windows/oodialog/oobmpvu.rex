@@ -76,6 +76,10 @@
    self~comboAddDirectory(101, "*.bmp", "READWRITE")
    self~comboAddDirectory(101, "*.dib", "READWRITE")
 
+   -- This is done so that when the dialog is initially displayed, the bitmap viewer portion,
+   -- the bitmap button, is blank.
+   self~changeBitmapButton(102,0)
+
 ::method fileSelected                        /* drop-down selection */
    self~getData
    if self~filename = "..." then self~OK

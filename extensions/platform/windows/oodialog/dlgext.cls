@@ -246,8 +246,8 @@
    hCtrl = self~getControlHandle(id)
    return self~sendWinHandleMsg(self~WM_SETFONT, hFont, bRedraw, hCtrl)
 
-::method setControlSysColor external "LIBRARY oodialog dlgext_setColor"
-::method setControlColor external "LIBRARY oodialog dlgext_setColor"
+::method setControlSysColor external "LIBRARY oodialog dlgext_setControlColor"
+::method setControlColor external "LIBRARY oodialog dlgext_setControlColor"
 
 ::method setWindowRect unguarded external "LIBRARY oodialog dlgext_setWindowRect"
 ::method getControlRect unguarded external "LIBRARY oodialog dlgext_getControlRect"

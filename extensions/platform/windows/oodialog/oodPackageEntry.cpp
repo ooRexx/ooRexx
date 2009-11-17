@@ -269,7 +269,7 @@ REXX_METHOD_PROTOTYPE(dlgext_redrawWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_redrawControl);
 REXX_METHOD_PROTOTYPE(dlgext_resizeMoveControl);
 REXX_METHOD_PROTOTYPE(dlgext_setForgroundWindow);
-REXX_METHOD_PROTOTYPE(dlgext_setColor);
+REXX_METHOD_PROTOTYPE(dlgext_setControlColor);
 REXX_METHOD_PROTOTYPE(dlgext_drawButton);
 REXX_METHOD_PROTOTYPE(dlgext_mouseCapture);
 REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
@@ -736,7 +736,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_redrawRect,              dlgext_redrawRect),
     REXX_METHOD(dlgext_resizeMoveControl,       dlgext_resizeMoveControl),
     REXX_METHOD(dlgext_setForgroundWindow,      dlgext_setForgroundWindow),
-    REXX_METHOD(dlgext_setColor,                dlgext_setColor),
+    REXX_METHOD(dlgext_setControlColor,         dlgext_setControlColor),
     REXX_METHOD(dlgext_drawButton,              dlgext_drawButton),
     REXX_METHOD(dlgext_mouseCapture,            dlgext_mouseCapture),
     REXX_METHOD(dlgext_captureMouse,            dlgext_captureMouse),

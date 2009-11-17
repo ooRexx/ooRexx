@@ -2391,10 +2391,10 @@ RexxMethod1(RexxObjectPtr, dlgext_setForgroundWindow, RexxStringObject, hwnd)
 }
 
 
-/** DialogExtensions::setColor()
- *  DialogExtensions::setSysColor
+/** DialogExtensions::setControlColor()
+ *  DialogExtensions::setControlSysColor
  */
-RexxMethod5(int32_t, dlgext_setColor, RexxObjectPtr, rxID, int32_t, bkColor, OPTIONAL_int32_t, fgColor,
+RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkColor, OPTIONAL_int32_t, fgColor,
             NAME, method, OSELF, self)
 {
     pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
@@ -2406,7 +2406,7 @@ RexxMethod5(int32_t, dlgext_setColor, RexxObjectPtr, rxID, int32_t, bkColor, OPT
     }
 
     return (int32_t) oodColorTable(context, pcpbd->dlgAdm, id, bkColor, (argumentOmitted(3) ? -1 : fgColor),
-                                   (method[3] == 'S'));
+                                   (method[10] == 'S'));
 }
 
 

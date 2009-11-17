@@ -58,268 +58,317 @@
 #include "oodDeviceGraphics.hpp"
 #include "oodResourceIDs.hpp"
 
-extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
-extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 
-static HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
+/**
+ * Loads and returns the handle to an icon for the specified ID, of the
+ * specified size.
+ *
+ * The icons can come from the user resource DLL, a user defined dialog, the
+ * OODialog DLL, the System.  IDs for the icons bound to the OODialog.dll are
+ * reserved.
+ *
+ * @param dlgAdm    Pointer to the dialog administration block.
+ * @param id        Numerical resource ID.
+ * @param iconSrc   Flag indicating the source of the icon.
+ * @param cx        The desired width of the icon.
+ * @param cy        The desired height of the icon.
+ *
+ * @return The handle to the loaded icon on success, or null on failure.
+ */
+static HICON getIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, int cy)
+{
+    HINSTANCE hInst = NULL;
+    LPCTSTR   pName = NULL;
+    UINT      loadFlags = 0;
+
+    if ( iconSrc & ICON_FILE )
+    {
+        /* Load the icon from a file, file name should be in the icon table. */
+        INT i;
+
+        for ( i = 0; i < dlgAdm->IT_size; i++ )
+        {
+            if ( dlgAdm->IconTab[i].iconID == id )
+            {
+                pName = dlgAdm->IconTab[i].fileName;
+                break;
+            }
+        }
+
+        if ( ! pName )
+            return NULL;
+
+        loadFlags = LR_LOADFROMFILE;
+    }
+    else if ( iconSrc & ICON_OODIALOG )
+    {
+        /* Load the icon from the resources in oodialog.dll. */
+        hInst = MyInstance;
+        pName = MAKEINTRESOURCE(id);
+        loadFlags = LR_SHARED;
+    }
+    else
+    {
+        /* Load the icon from the user's resource DLL. */
+        hInst = dlgAdm->TheInstance;
+        pName = MAKEINTRESOURCE(id);
+        loadFlags = LR_SHARED;
+    }
+
+    return (HICON)LoadImage(hInst, pName, IMAGE_ICON, cx, cy, loadFlags);
+}
 
 
-/* dialog procedure
-   handles the search for user defined messages and bitmap buttons
-   handles messages necessary for 3d controls
-   seeks for the addressed dialog to handle the messages */
-
-
+/**
+ * The dialog procedure function for all ooDialog dialogs.
+ *
+ * @param hDlg
+ * @param uMsg
+ * @param wParam
+ * @param lParam
+ *
+ * @return LRESULT CALLBACK
+ */
 LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-   HBRUSH hbrush = NULL;
-   HWND hW;
+    HBRUSH hbrush = NULL;
+    HWND hW;
 
-   if (uMsg != WM_INITDIALOG)
-   {
-       pCPlainBaseDialog pcpbd = NULL;
-       DIALOGADMIN *addressedTo = seekDlgAdm(hDlg);
+    if ( uMsg != WM_INITDIALOG )
+    {
+        DIALOGADMIN *addressedTo = seekDlgAdm(hDlg);
 
-       if ( addressedTo == NULL && topDlg != NULL && dialogInAdminTable(topDlg) && topDlg->TheDlg != NULL )
-       {
-           addressedTo = topDlg;
-           pcpbd = (pCPlainBaseDialog)getWindowPtr(addressedTo->TheDlg, GWLP_USERDATA);
-       }
-       else
-       {
-           pcpbd = (pCPlainBaseDialog)getWindowPtr(hDlg, GWLP_USERDATA);
-       }
+        if ( addressedTo == NULL && topDlg != NULL && dialogInAdminTable(topDlg) && topDlg->TheDlg != NULL )
+        {
+            addressedTo = topDlg;
+        }
 
-       if ( addressedTo != NULL && pcpbd != NULL )
-       {
-          bool msgEnabled = IsWindowEnabled(hDlg) && dialogInAdminTable(addressedTo);
-
-          // Do not search message table for WM_PAINT to improve redraw.
-          if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
-          {
-              MsgReplyType searchReply = SearchMessageTable(uMsg, wParam, lParam, addressedTo);
-              if ( searchReply != NotMatched )
-              {
-                  // Note pre 4.0.1, reply was always FALSE, pass on to the system to process.
-                  return (searchReply == ReplyTrue ? TRUE : FALSE);
-              }
-          }
-
-          switch (uMsg) {
-             case WM_PAINT:
-                if ( pcpbd->bkgBitmap != NULL )
-                {
-                    DrawBackgroundBmp(pcpbd, hDlg, wParam, lParam);
-                }
-                break;
-
-             case WM_DRAWITEM:
-                if ( lParam != 0 )
-                {
-                    return DrawBitmapButton(addressedTo, pcpbd, wParam, lParam, msgEnabled);
-                }
-                break;
-
-             case WM_CTLCOLORDLG:
-                if (pcpbd->bkgBrush)
-                {
-                    return (LRESULT)pcpbd->bkgBrush;
-                }
-                break;
-
-             case WM_CTLCOLORSTATIC:
-             case WM_CTLCOLORBTN:
-             case WM_CTLCOLOREDIT:
-             case WM_CTLCOLORLISTBOX:
-             case WM_CTLCOLORMSGBOX:
-             case WM_CTLCOLORSCROLLBAR:
-                if ( addressedTo->CT_size > 0 )
-                {
-                    // See of the user has set the dialog item with a different
-                    // color.
-                    long id = GetWindowLong((HWND)lParam, GWL_ID);
-                    if ( id > 0 )
-                    {
-                        register size_t i = 0;
-                        while ( i < addressedTo->CT_size && addressedTo->ColorTab[i].itemID != id )
-                        {
-                           i++;
-                        }
-                        if ( i < addressedTo->CT_size )
-                        {
-                            hbrush = addressedTo->ColorTab[i].ColorBrush;
-                        }
-
-                        if (hbrush)
-                        {
-                            if ( addressedTo->ColorTab[i].isSysBrush )
-                            {
-                                SetBkColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorBk));
-                                if ( addressedTo->ColorTab[i].ColorFG != -1 )
-                                {
-                                    SetTextColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorFG));
-                                }
-                            }
-                            else
-                            {
-                                SetBkColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorBk));
-                                if ( addressedTo->ColorTab[i].ColorFG != -1 )
-                                {
-                                    SetTextColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorFG));
-                                }
-                            }
-                        }
-                    }
-                }
-                if (hbrush)
-                   return (LRESULT)hbrush;
-                else
-                   return DefWindowProc(hDlg, uMsg, wParam, lParam);
-
-
-             case WM_COMMAND:
-                 switch( LOWORD(wParam) )
-                 {
-                     // For both IDOK and IDCANCEL, the notification code (the high
-                     // word value,) must be 0.
-                     case IDOK:
-                         if ( HIWORD(wParam) == 0 )
-                         {
-                             addressedTo->LeaveDialog = 1;
-                         }
-                         return TRUE;
-
-                     case IDCANCEL:
-                         if ( HIWORD(wParam) == 0 )
-                         {
-                             addressedTo->LeaveDialog = 2;
-                         }
-                         return TRUE;
-                 }
-                 break;
-
-             case WM_QUERYNEWPALETTE:
-             case WM_PALETTECHANGED:
-                 return PaletteMessage(addressedTo, hDlg, uMsg, wParam, lParam);
-
-             case WM_SETTEXT:
-             case WM_NCPAINT:
-             case WM_NCACTIVATE:
-#ifdef __CTL3D
-                if (addressedTo->Use3DControls)
-                {
-                    SetWindowLong(hDlg, DWL_MSGRESULT,Ctl3dDlgFramePaint(hDlg, uMsg, wParam, lParam));
-                    return TRUE;
-                }
-#endif
+        if ( addressedTo != NULL )
+        {
+            pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(addressedTo->TheDlg, GWLP_USERDATA);
+            if ( pcpbd == NULL )
+            {
+                printf("RexxDlgProc() ERROR no dialog CSelf. addressedTo=%p pcpdb=%p hDlg=%p\n", addressedTo, pcpbd, hDlg);
                 return FALSE;
+            }
 
-              case WM_USER_CREATECHILD:
-                /* Create a child dialog of this dialog and return its window
-                 * handle. The dialog template pointer is passed here as the
-                 * LPARAM arg from DynamicDialog::startChildDialog().
-                 *
-                 * Note that child dialogs do not have a backing Rexx dialog.
-                 * There is no CPlainBaseDialog struct.  We pass NULL as the
-                 * indirect param to indicate that.
-                 */
-                hW = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc, NULL);
-                ReplyMessage((LRESULT)hW);
-                return (LRESULT)hW;
+            bool msgEnabled = IsWindowEnabled(hDlg) && dialogInAdminTable(addressedTo);
 
-             case WM_USER_INTERRUPTSCROLL:
-                addressedTo->StopScroll = wParam;
-                return (TRUE);
-
-             case WM_USER_GETFOCUS:
-                ReplyMessage((LRESULT)GetFocus());
-                return (TRUE);
-
-             case WM_USER_GETSETCAPTURE:
-                if ( wParam == 0 )
+            // Do not search message table for WM_PAINT to improve redraw.
+            if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
+            {
+                MsgReplyType searchReply = SearchMessageTable(uMsg, wParam, lParam, addressedTo);
+                if ( searchReply != NotMatched )
                 {
-                    ReplyMessage((LRESULT)GetCapture());
+                    // Note pre 4.0.1, reply was always FALSE, pass on to the system to process.
+                    return(searchReply == ReplyTrue ? TRUE : FALSE);
                 }
-                else if ( wParam == 2 )
-                {
-                    uint32_t rc = 0;
-                    if ( ReleaseCapture == 0 )
+            }
+
+            switch ( uMsg )
+            {
+                case WM_PAINT:
+                    if ( pcpbd->bkgBitmap != NULL )
                     {
-                        rc = GetLastError();
+                        DrawBackgroundBmp(pcpbd, hDlg, wParam, lParam);
                     }
-                    ReplyMessage((LRESULT)rc);
-                }
-                else
-                {
-                    ReplyMessage((LRESULT)SetCapture((HWND)lParam));
-                }
-                return (TRUE);
+                    break;
 
-             case WM_USER_GETKEYSTATE:
-                ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
-                return (TRUE);
+                case WM_DRAWITEM:
+                    if ( lParam != 0 )
+                    {
+                        return DrawBitmapButton(addressedTo, pcpbd, wParam, lParam, msgEnabled);
+                    }
+                    break;
 
-             case WM_USER_SUBCLASS:
-             {
-                 SUBCLASSDATA * pData = (SUBCLASSDATA *)lParam;
-                 BOOL success = FALSE;
+                case WM_CTLCOLORDLG:
+                    if ( pcpbd->bkgBrush )
+                    {
+                        return(LRESULT)pcpbd->bkgBrush;
+                    }
+                    break;
 
-                 if ( pData )
-                 {
-                     success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
-                 }
-                 ReplyMessage((LRESULT)success);
-                 return (TRUE);
-             }
+                case WM_CTLCOLORSTATIC:
+                case WM_CTLCOLORBTN:
+                case WM_CTLCOLOREDIT:
+                case WM_CTLCOLORLISTBOX:
+                case WM_CTLCOLORMSGBOX:
+                case WM_CTLCOLORSCROLLBAR:
+                    if ( addressedTo->CT_size > 0 )
+                    {
+                        // See of the user has set the dialog item with a different
+                        // color.
+                        long id = GetWindowLong((HWND)lParam, GWL_ID);
+                        if ( id > 0 )
+                        {
+                            register size_t i = 0;
+                            while ( i < addressedTo->CT_size && addressedTo->ColorTab[i].itemID != id )
+                            {
+                                i++;
+                            }
+                            if ( i < addressedTo->CT_size )
+                            {
+                                hbrush = addressedTo->ColorTab[i].ColorBrush;
+                            }
 
-             case WM_USER_SUBCLASS_REMOVE:
-                 ReplyMessage((LRESULT)RemoveWindowSubclass(GetDlgItem(hDlg, (int)lParam), (SUBCLASSPROC)wParam, (int)lParam));
-                 return (TRUE);
+                            if ( hbrush )
+                            {
+                                if ( addressedTo->ColorTab[i].isSysBrush )
+                                {
+                                    SetBkColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorBk));
+                                    if ( addressedTo->ColorTab[i].ColorFG != -1 )
+                                    {
+                                        SetTextColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorFG));
+                                    }
+                                }
+                                else
+                                {
+                                    SetBkColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorBk));
+                                    if ( addressedTo->ColorTab[i].ColorFG != -1 )
+                                    {
+                                        SetTextColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorFG));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if ( hbrush )
+                        return(LRESULT)hbrush;
+                    else
+                        return DefWindowProc(hDlg, uMsg, wParam, lParam);
 
-             case WM_USER_HOOK:
-                 ReplyMessage((LRESULT)SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)wParam, NULL, GetCurrentThreadId()));
-                 return (TRUE);
 
-             case WM_USER_CONTEXT_MENU:
-             {
-                 PTRACKPOP ptp = (PTRACKPOP)wParam;
-                 uint32_t cmd;
+                case WM_COMMAND:
+                    switch ( LOWORD(wParam) )
+                    {
+                        // For both IDOK and IDCANCEL, the notification code (the high
+                        // word value,) must be 0.
+                        case IDOK:
+                            if ( HIWORD(wParam) == 0 )
+                            {
+                                addressedTo->LeaveDialog = 1;
+                            }
+                            return TRUE;
 
-                 SetLastError(0);
-                 cmd = (uint32_t)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
-                                                  ptp->hWnd, ptp->lptpm);
+                        case IDCANCEL:
+                            if ( HIWORD(wParam) == 0 )
+                            {
+                                addressedTo->LeaveDialog = 2;
+                            }
+                            return TRUE;
+                    }
+                    break;
 
-                 // If TPM_RETURNCMD is specified, the return is the menu item
-                 // selected.  Otherwise, the return is 0 for failure and
-                 // non-zero for success.
-                 if ( ! (ptp->flags & TPM_RETURNCMD) )
-                 {
-                     cmd = (cmd == 0 ? FALSE : TRUE);
-                     if ( cmd == FALSE )
-                     {
-                         ptp->dwErr = GetLastError();
-                     }
-                 }
-                 ReplyMessage((LRESULT)cmd);
-                 return (TRUE);
-             }
-          }
-       }
-   }
-   else
-   {
-       // In CreateDialogParam() / CreateDialogIndirectParam() we pass the
-       // pointer to the PlainBaseDialog CSelf as the param.  Unless we created
-       // a child dialog. The OS then sends us this value as the LPARAM argument
-       // in the WM_INITDIALOG message. The pointer is then stored in the user
-       // data field of the window words for this dialog.
-       if ( lParam != NULL )
-       {
-           setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)lParam);
-       }
-       return TRUE;
-   }
-   return FALSE;
+                case WM_QUERYNEWPALETTE:
+                case WM_PALETTECHANGED:
+                    return PaletteMessage(addressedTo, hDlg, uMsg, wParam, lParam);
+
+                case WM_USER_CREATECHILD:
+                    /* Create a child dialog of this dialog and return its window
+                     * handle. The dialog template pointer is passed here as the
+                     * LPARAM arg from DynamicDialog::startChildDialog().
+                     *
+                     * Note that child dialogs do not have a backing Rexx dialog.
+                     * There is no CPlainBaseDialog struct.  We pass NULL as the
+                     * indirect param to indicate that.
+                     */
+                    hW = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc, NULL);
+                    ReplyMessage((LRESULT)hW);
+                    return TRUE;
+
+                case WM_USER_INTERRUPTSCROLL:
+                    addressedTo->StopScroll = wParam;
+                    return TRUE;
+
+                case WM_USER_GETFOCUS:
+                    ReplyMessage((LRESULT)GetFocus());
+                    return TRUE;
+
+                case WM_USER_GETSETCAPTURE:
+                    if ( wParam == 0 )
+                    {
+                        ReplyMessage((LRESULT)GetCapture());
+                    }
+                    else if ( wParam == 2 )
+                    {
+                        uint32_t rc = 0;
+                        if ( ReleaseCapture == 0 )
+                        {
+                            rc = GetLastError();
+                        }
+                        ReplyMessage((LRESULT)rc);
+                    }
+                    else
+                    {
+                        ReplyMessage((LRESULT)SetCapture((HWND)lParam));
+                    }
+                    return TRUE;
+
+                case WM_USER_GETKEYSTATE:
+                    ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
+                    return TRUE;
+
+                case WM_USER_SUBCLASS:
+                    {
+                        SUBCLASSDATA * pData = (SUBCLASSDATA *)lParam;
+                        BOOL success = FALSE;
+
+                        if ( pData )
+                        {
+                            success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
+                        }
+                        ReplyMessage((LRESULT)success);
+                        return TRUE;
+                    }
+
+                case WM_USER_SUBCLASS_REMOVE:
+                    ReplyMessage((LRESULT)RemoveWindowSubclass(GetDlgItem(hDlg, (int)lParam), (SUBCLASSPROC)wParam, (int)lParam));
+                    return TRUE;
+
+                case WM_USER_HOOK:
+                    ReplyMessage((LRESULT)SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)wParam, NULL, GetCurrentThreadId()));
+                    return TRUE;
+
+                case WM_USER_CONTEXT_MENU:
+                    {
+                        PTRACKPOP ptp = (PTRACKPOP)wParam;
+                        uint32_t cmd;
+
+                        SetLastError(0);
+                        cmd = (uint32_t)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
+                                                         ptp->hWnd, ptp->lptpm);
+
+                        // If TPM_RETURNCMD is specified, the return is the menu item
+                        // selected.  Otherwise, the return is 0 for failure and
+                        // non-zero for success.
+                        if ( ! (ptp->flags & TPM_RETURNCMD) )
+                        {
+                            cmd = (cmd == 0 ? FALSE : TRUE);
+                            if ( cmd == FALSE )
+                            {
+                                ptp->dwErr = GetLastError();
+                            }
+                        }
+                        ReplyMessage((LRESULT)cmd);
+                        return TRUE;
+                    }
+            }
+        }
+    }
+    else
+    {
+        // In CreateDialogParam() / CreateDialogIndirectParam() we pass the
+        // pointer to the PlainBaseDialog CSelf as the param, unless we created a
+        // child dialog. The OS then sends us this value as the LPARAM argument
+        // in the WM_INITDIALOG message. The pointer is stored in the user data
+        // field of the window words for this dialog.
+        if ( lParam != NULL )
+        {
+            setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        }
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static DIALOGADMIN * allocDlgAdmin(RexxMethodContext *c)
@@ -675,14 +724,14 @@ BOOL GetDialogIcons(DIALOGADMIN *dlgAdm, INT id, UINT iconSrc, PHANDLE phBig, PH
     cx = GetSystemMetrics(SM_CXICON);
     cy = GetSystemMetrics(SM_CYICON);
 
-    *phBig = GetIconForID(dlgAdm, id, iconSrc, cx, cy);
+    *phBig = getIconForID(dlgAdm, id, iconSrc, cx, cy);
 
     /* If that didn't get the big icon, try to get the default icon. */
     if ( ! *phBig && id != IDI_DLG_DEFAULT )
     {
         id = IDI_DLG_DEFAULT;
         iconSrc = ICON_OODIALOG;
-        *phBig = GetIconForID(dlgAdm, id, iconSrc, cx, cy);
+        *phBig = getIconForID(dlgAdm, id, iconSrc, cx, cy);
     }
 
     /* If still no big icon, don't bother trying for the small icon. */
@@ -690,7 +739,7 @@ BOOL GetDialogIcons(DIALOGADMIN *dlgAdm, INT id, UINT iconSrc, PHANDLE phBig, PH
     {
         cx = GetSystemMetrics(SM_CXSMICON);
         cy = GetSystemMetrics(SM_CYSMICON);
-        *phSmall = GetIconForID(dlgAdm, id, iconSrc, cx, cy);
+        *phSmall = getIconForID(dlgAdm, id, iconSrc, cx, cy);
 
         /* Very unlikely that the big icon was obtained and failed to get the
          * small icon.  But, if so, fail completely.  If the big icon came from
@@ -714,66 +763,6 @@ BOOL GetDialogIcons(DIALOGADMIN *dlgAdm, INT id, UINT iconSrc, PHANDLE phBig, PH
 
     dlgAdm->SharedIcon = iconSrc != ICON_FILE;
     return TRUE;
-}
-
-
-/**
- * Loads and returns the handle to an icon for the specified ID, of the
- * specified size.
- *
- * The icons can come from the user resource DLL, a user defined dialog, the
- * OODialog DLL, the System.  IDs for the icons bound to the OODialog.dll are
- * reserved.
- *
- * @param dlgAdm    Pointer to the dialog administration block.
- * @param id        Numerical resource ID.
- * @param iconSrc   Flag indicating the source of the icon.
- * @param cx        The desired width of the icon.
- * @param cy        The desired height of the icon.
- *
- * @return The handle to the loaded icon on success, or null on failure.
- */
-static HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, int cy)
-{
-    HINSTANCE hInst = NULL;
-    LPCTSTR   pName = NULL;
-    UINT      loadFlags = 0;
-
-    if ( iconSrc & ICON_FILE )
-    {
-        /* Load the icon from a file, file name should be in the icon table. */
-        INT i;
-
-        for ( i = 0; i < dlgAdm->IT_size; i++ )
-        {
-            if ( dlgAdm->IconTab[i].iconID == id )
-            {
-                pName = dlgAdm->IconTab[i].fileName;
-                break;
-            }
-        }
-
-        if ( ! pName )
-            return NULL;
-
-        loadFlags = LR_LOADFROMFILE;
-    }
-    else if ( iconSrc & ICON_OODIALOG )
-    {
-        /* Load the icon from the resources in oodialog.dll. */
-        hInst = MyInstance;
-        pName = MAKEINTRESOURCE(id);
-        loadFlags = LR_SHARED;
-    }
-    else
-    {
-        /* Load the icon from the user's resource DLL. */
-        hInst = dlgAdm->TheInstance;
-        pName = MAKEINTRESOURCE(id);
-        loadFlags = LR_SHARED;
-    }
-
-    return (HICON)LoadImage(hInst, pName, IMAGE_ICON, cx, cy, loadFlags);
 }
 
 
