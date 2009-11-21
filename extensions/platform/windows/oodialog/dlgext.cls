@@ -417,25 +417,12 @@
    return BmpButton(self~adm, "D", hwnd, id, px, py, srcx, srcy, xlen, ylen)
 
 -- Draw the bitmap step by step.
-::method DimBitmap unguarded
-   use arg id, bmp, cx, cy, stepx, stepy, steps
+::method dimBitmap unguarded
+   use arg strict arg id, bmp, cx, cy, stepX = 2, stepY = 2, steps = 10
+   button = self~newPushButton(id)
+   if button == .nil then return -1
+   return button~dimBitmap(bmp, cx, cy, stepX, stepY, steps)
 
-   if arg(5, "o") = 1 then steps = 10
-   if arg(6, "o") = 1 then stepx = 2
-   if arg(7, "o") = 1 then stepy = 2
-
-   dc = self~GetButtonDC(id)
-   br = HandleDC_Obj("B",self~adm, 0, bmp)
-   pen = HandleDC_Obj("P",0, "NULL", 0)
-   obr = self~ObjectToDC(dc, br)
-   open = self~ObjectToDC(dc, pen)
-
-   ret = DCDraw("DIM", dc, cx, cy, stepx, stepy, steps)
-
-   self~ObjectToDC(dc, obr)
-   self~ObjectToDC(dc, open)
-   self~DeleteObject(pen)
-   self~FreeButtonDC(id, dc)
 
 -- Scroll a bitmap from one position to another within a button.
 ::method ScrollBitmapFromTo unguarded

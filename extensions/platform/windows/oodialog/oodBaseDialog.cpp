@@ -793,8 +793,8 @@ error_out:
   return NULLOBJECT;
 }
 
-/** WindowExtension::hScrollPos()
- *  WindowExtension::vScrollPos()
+/** WindowExtensions::hScrollPos()
+ *  WindowExtensions::vScrollPos()
  *
  *  Retrieves the scroll box position for the appropriate scroll bar.
  *
@@ -830,8 +830,8 @@ RexxMethod2(int, winex_getScrollPos, NAME, method, CSELF, pCSelf)
 }
 
 
-/** WindowExtension::setHScrollPos()
- *  WindowExtension::setVScrollPos()
+/** WindowExtensions::setHScrollPos()
+ *  WindowExtensions::setVScrollPos()
  *
  *  Sets the appropriate scroll bar position.
  *
@@ -1059,7 +1059,7 @@ RexxMethod1(RexxObjectPtr, winex_getCursorPos, CSELF, pCSelf)
 }
 
 
-/** WindowExtension::restoreCursorShape()
+/** WindowExtensions::restoreCursorShape()
  *
  *  Sets the cursor to the specified cursor.
  *
@@ -1107,13 +1107,13 @@ RexxMethod4(logical_t, winex_writeDirect, POINTERSTRING, hDC, int32_t, xPos, int
 {
     if ( hDC != NULL )
     {
-       TextOut((HDC)hDC, xPos, yPos, text, (int)strlen(text));
-       return 0;
+        TextOut((HDC)hDC, xPos, yPos, text, (int)strlen(text));
+        return 0;
     }
     return 1;
 }
 
-/** WindowExtension::loadBitmap()
+/** WindowExtensions::loadBitmap()
  *
  *
  *
@@ -1139,6 +1139,690 @@ RexxMethod1(logical_t, winex_removeBitmap, POINTERSTRING, hBitmap)
     return 1;
 }
 
+
+/** WindowExtensions::getDC()
+ *
+ *  Retrieves the device context (DC) for the entire window.  For a dialog, this
+ *  includes title bar, menus, and scroll bars.  A window device context permits
+ *  painting anywhere in a window, because the origin of the device context is
+ *  the upper-left corner of the window instead of the client area.
+ *
+ *  @note  It is possible to retrieve a DC for the entire window, or for the
+ *         client area of the window.  The MSDN docs say this about retrieving
+ *         the DC for the entire window:
+ *
+ *         Getting the DC for the entire window "is intended for special
+ *         painting effects within a window's nonclient area. Painting in
+ *         nonclient areas of any window is not recommended."
+ *
+ *  @param  client  [OPTIONAL]  If this argument is .true, the DC returned is
+ *                  for the client area of the window.
+ *
+ *  @return  A handle to the device context if successful, otherwise a null
+ *           handle.
+ *
+ *  @note  Sets .SystemErrorCode.
+ *
+ *  @remarks  This method was documented as returning 0 on failure.  Need to
+ *            rectify that.  The optional client parameter was added after 4.0.0
+ *            and needs to be documented.
+ */
+RexxMethod2(RexxObjectPtr, winex_getDC, OPTIONAL_logical_t, client, CSELF, pCSelf)
+{
+    HWND hwnd = winExtSetup(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        return 0;
+    }
+
+    HDC hDC;
+    if ( client )
+    {
+        hDC = GetDC(hwnd);
+    }
+    else
+    {
+        hDC = GetWindowDC(hwnd);
+    }
+
+    if ( hDC == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return pointer2string(context, hDC);
+}
+
+
+/** WindowExtensions::freeDC()
+ *
+ *  Releases the device context (DC) for this object that was obtained through
+ *  the getDC() method invoked on this object.
+ *
+ *  It is important to invoke this method using the correct DC.  The DC being
+ *  freed must have been the DC obtained using the getDC() from the same object.
+ *  E.g, this is incorrect:
+ *
+ *  listView = self~newListView(IDC_LV_NAMES)
+ *  hDC = listView~getDC
+ *  ...
+ *  self~freeDC(hDC)
+ *
+ *  This is correct:
+ *
+ *  listView = self~newListView(IDC_LV_NAMES)
+ *  hDC = listView~getDC
+ *  ...
+ *  listView~freeDC(hDC)
+ *
+ *  @param  hDC  The device context to free.
+ *
+ *  @return  True for success, false for failure.
+ */
+RexxMethod2(RexxObjectPtr, winex_freeDC, POINTERSTRING, hDC, CSELF, pCSelf)
+{
+    HWND hwnd = winExtSetup(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        return 0;
+    }
+
+    if ( ReleaseDC(hwnd, (HDC)hDC) == 0 )
+    {
+        return TheFalseObj;
+    }
+    return TheTrueObj;
+}
+
+
+/** WindowExtensions::rectangle()
+ *
+ *  Draws a rectangle, either solid or hollow as specified, within the device
+ *  context.
+ *
+ *  @param  hDC     Handle to the device context.
+ *  @param  left    Left x co-ordinate of the rectangle.
+ *  @param  top     Top y co-ordinate of the point.
+ *  @param  right   Right x co-ordinate of the rectangle.
+ *  @param  bottom  Bottom y co-ordinate of the point.
+ *  @param  fill    [OPTIONAL]  If specified, the rectangle is drawn filled in,
+ *                  or solid, using the current background brush of the device
+ *                  context. If omitted, the outline of the rectangle is drawn.
+ *
+ *  @return  0 on success, 1 for error.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function."  The system may set
+ *         other error codes.
+ *
+ *  @remarks  TODO allow a .Rectange object for the args.
+ */
+RexxMethod6(logical_t, winex_rectangle, POINTERSTRING, _hDC, int32_t, left, int32_t, top, int32_t, right, int32_t, bottom, OPTIONAL_CSTRING, fill)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+
+    if ( hDC != NULL )
+    {
+        if ( argumentExists(6) )
+        {
+            if ( Rectangle(hDC, left, top, right, bottom) == 0 )
+            {
+                goto syserr_out;
+            }
+        }
+        else
+        {
+            if ( MoveToEx(hDC, left, top, NULL) == 0 )
+            {
+                goto syserr_out;
+            }
+            if ( LineTo(hDC, right, top) == 0 )
+            {
+                goto syserr_out;
+            }
+            if ( LineTo(hDC, right, bottom) == 0 )
+            {
+                goto syserr_out;
+            }
+            if ( LineTo(hDC, left, bottom) == 0 )
+            {
+                goto syserr_out;
+            }
+            if ( LineTo(hDC, left, top) == 0 )
+            {
+                goto syserr_out;
+            }
+        }
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto err_out;
+    }
+    return 0;
+
+syserr_out:
+  oodSetSysErrCode(context->threadContext);
+
+err_out:
+    return 1;
+}
+
+
+/** WindowExtensions::drawLine()
+ *
+ *  Draws a line from (x, y) to (x2, y2) within the device context.
+ *
+ *  @param  hDC  Handle to the device context.
+ *  @param  x    [OPTIONAL] x co-ordinate of start point.  If x or y are omitted
+ *                          then the current position in the device context is
+ *                          the start point.
+ *
+ *  @param  y    [OPTIONAL] y co-ordinate of start point.  If x or y
+ *                          are omitted then the current position in the device
+ *                          context is the start point.
+ *  @param  x2              The x co-ordinate of the end point of the line.
+ *  @param  y2              The y co-ordinate of the end point of the line.
+ *
+ *  @return  0 on success, 1 for error.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function"
+ *
+ *  @remarks  TODO allow .Point .Point objects for the args.
+ */
+RexxMethod5(logical_t, winex_drawLine, POINTERSTRING, _hDC, OPTIONAL_int32_t, x, OPTIONAL_int32_t, y, int32_t, x2, int32_t, y2)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+
+    if ( hDC != NULL )
+    {
+        if ( ! (argumentOmitted(1) || argumentOmitted(2)) )
+        {
+            if ( MoveToEx(hDC, x, y, NULL) == 0 )
+            {
+                goto syserr_out;
+            }
+        }
+
+        if ( LineTo(hDC, x2, y2) == 0 )
+        {
+            goto syserr_out;
+        }
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto err_out;
+    }
+    return 0;
+
+syserr_out:
+  oodSetSysErrCode(context->threadContext);
+
+err_out:
+    return 1;
+}
+
+
+/** WindowExtensions::getPixel()
+ *
+ *  Gets the color value of the pixel at the specified point in the device
+ *  context..
+ *
+ *  The returned value is a COLORREF, which contains the RGB (red, green, blue)
+ *  color.  See the .Image class for a discussion of COLORREFs and some methods
+ *  for working with COLORREFs and RGB values.
+ *
+ *  Note that Microsoft says: A bitmap must be selected within the device
+ *  context, otherwise, CLR_INVALID is returned on all pixels.
+ *
+ *  @param  hDC  Handle to the device context.
+ *  @param  x    x co-ordinate of the point.
+ *  @param  y    y co-ordinate of the point.
+ *
+ *  @return  The return value is a COLORREF. If the pixel is outside of the
+ *           current clipping region, the return value is CLR_INVALID.
+ *
+ *  @note  Sets .SystemErrorCode.  The only error code set, is 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function" which is set if the
+ *         device context handle is invalid.  For other errors check if the
+ *         return is CLR_INVALID. You can use the .Image class to do this.  Code
+ *         might be something like:
+ *
+ *         color = self~getPixe(hdc, 10, 10)
+ *         if color == .Image~colorRef(CLR_INVALID) then do
+ *           -- some error recovery
+ *         end
+ *
+ *  @remarks  TODO allow .Point object for the args.
+ */
+RexxMethod3(uint32_t, winex_getPixel, POINTERSTRING, _hDC, int32_t, x, int32_t, y)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+    COLORREF color = CLR_INVALID;
+
+    if ( hDC != NULL )
+    {
+        color = GetPixel(hDC, x, y);
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+    }
+    return color;
+}
+
+
+/** WindowExtensions::drawPixel()
+ *
+ *  Draws a pixel at the specified point using the specified color.
+ *
+ *  @param  x     x co-ordinate of the point.
+ *  @param  y     y co-ordinate of the point.
+ *  @param color  The color of the pixel being drawn.
+ *
+ *  @return  On success, the RGB color (a COLORREF) the system used to
+ *           draw the pixel.  This might not be the color specified, if the
+ *           system could not find an exact match for the color in the device.
+ *           On failure 1 is returned.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function."  Other error codes may
+ *         be set by the system.
+ *
+ *  @remarks  TODO allow .Point object for the args.
+ */
+RexxMethod4(uint32_t, winex_drawPixel, POINTERSTRING, _hDC, int32_t, x, int32_t, y, int32_t, color)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+    COLORREF newColor = 1;
+
+    if ( hDC != NULL )
+    {
+        newColor = SetPixel(hDC, x, y, PALETTEINDEX(color));
+        if ( newColor == 1 )
+        {
+            goto syserr_out;
+        }
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+    }
+    goto done_out;
+
+syserr_out:
+  oodSetSysErrCode(context->threadContext);
+
+done_out:
+    return newColor;
+}
+
+
+/** WindowExtensions::fillDrawing()
+ *
+ *  Fills an area of the display surface with the current brush. The area is
+ *  assumed to be bounded as specified by the fillTo parameter.
+ *
+ *  The area to be filled must be totally bounded by the fillTo color.  The
+ *  system starts filling at the point specified and continues filling outwards
+ *  in all directions until it reaches the boundry.
+ *
+ *  @param  x       x co-ordinate of the starting point.
+ *  @param  y       y co-ordinate of the starting point.
+ *  @param  fillTo  The color of the border of the filled area.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function."  Other error codes may
+ *         be set by the system.
+ *
+ *  @remarks  TODO allow .Point object for the args.   TODO use ExtFloodFill()
+ *            instead.
+ */
+RexxMethod4(logical_t, winex_fillDrawing, POINTERSTRING, _hDC, int32_t, x, int32_t, y, int32_t, color)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+
+    if ( hDC != NULL )
+    {
+        if ( FloodFill(hDC, x, y, PALETTEINDEX(color)) == 0 )
+        {
+            goto syserr_out;
+        }
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto err_out;
+    }
+    return 0;
+
+syserr_out:
+  oodSetSysErrCode(context->threadContext);
+
+err_out:
+    return 1;
+}
+
+
+/** WindowExtensions::drawArc()
+ *  WindowExtensions::drawPie()
+ *
+ *  drawArc() method:
+ *
+ *    Draws an elliptical arc.
+ *
+ *  drawPie() method:
+ *
+ *    Draws a pie-shaped wedge bounded by the intersection of an ellipse and two
+ *    radials. The pie is outlined by using the current pen and filled by using
+ *    the current brush.
+ *
+ *  Both methods take the same arguements:
+ *
+ *  @param  left    x co-ordinate of the top corner of the bounding rectangle.
+ *  @param  top     y co-ordinate of the top corner of the bounding rectangle.
+ *  @param  right   x co-ordinate of the bottom corner of the bounding
+ *                  rectangle.
+ *  @param  bottom  y co-ordinate of the bottom corner of the bounding
+ *                  rectangle.
+ *  @param  startX  [OPTIONAL] x co-ordinate of the first radial ending point.
+ *  @param  startY  [OPTIONAL] y co-ordinate of the first radial ending point.
+ *  @param  endX    [OPTIONAL] x co-ordinate of second radial ending point.
+ *  @param  endY    [OPTIONAL] y co-ordinate of second radial ending point.
+ *
+ *  @note  The optional arguements above all default to 0
+ *
+ *  @return  If the method succeeds, the return is 0.  On failure the return is
+ *           1.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function."  Other error codes may
+ *         be set by the system.
+ *
+ *  @remarks  TODO allow for .Rect and .Point objects for the args.
+ */
+RexxMethod10(logical_t, winex_drawArcOrPie, POINTERSTRING, _hDC, int32_t, left, int32_t, top, int32_t, right, int32_t, bottom,
+            OPTIONAL_int32_t, startX, OPTIONAL_int32_t, startY, OPTIONAL_int32_t, endX, OPTIONAL_int32_t, endY, NAME, method)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+
+    if ( hDC != NULL )
+    {
+        logical_t result;
+        if ( method[4] == 'A' )
+        {
+            result = Arc(hDC, left, top, right, bottom, startX, startY, endX, endY);
+        }
+        else
+        {
+            result = Pie(hDC, left, top, right, bottom, startX, startY, endX, endY);
+        }
+
+        if ( result == 0 )
+        {
+            goto syserr_out;
+        }
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto err_out;
+    }
+    return 0;
+
+syserr_out:
+  oodSetSysErrCode(context->threadContext);
+
+err_out:
+    return 1;
+}
+
+
+/** WindowExtensions::drawAngleArc()
+ *
+ *  Draws a line segment and an arc. The line segment is drawn from the current
+ *  position to the beginning of the arc. The arc is drawn along the perimeter
+ *  of a circle with the given radius and center. The length of the arc is
+ *  defined by the given start and sweep angles.
+ *
+ *  If the optional moveToX and moveToY are both specified, then the current
+ *  positions if first set to the point specified by those values.
+ *
+ *  @param  hDC         Handle to the device context.
+ *  @param  moveToX     [OPTIONAL] x co-ordinate of start point.  If moveToX or
+ *                      moveToY are omitted then the current position in the
+ *                      device context is the start point.
+ *
+ *  @param  moveToY     [OPTIONAL] y co-ordinate of start point.  If moveToX or
+ *                      moveToY  are omitted then the current position in the
+ *                      device context is the start point.
+ *  @param  x           The x co-ordinate of the center point of the circle.
+ *  @param  y           The y co-ordinate of the center point of the circle.
+ *  @param  radius      The radius of the circle.  This must be positive.
+ *  @param  startAngle  Specifies the start angle, in degrees, relative to the
+ *                      x-axis.
+ *  @param  sweepAngle  Specifies the sweep angle, in degrees, relative to the
+ *                      starting angle.
+ *
+ *  @return  0 on success, 1 for error.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function"
+ *
+ *  @remarks  TODO allow .Point .Point objects for the args.
+ */
+RexxMethod8(logical_t, winex_drawAngleArc, POINTERSTRING, _hDC, OPTIONAL_int32_t, moveToX, OPTIONAL_int32_t, moveToY, int32_t, x, int32_t, y,
+            uint32_t, radius, float, startAngle, float, sweepAngle)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+
+    if ( hDC != NULL )
+    {
+        if ( argumentExists(1) && argumentExists(2) )
+        {
+            if ( MoveToEx(hDC, moveToX, moveToY, NULL) == 0 )
+            {
+                goto syserr_out;
+            }
+        }
+
+        if ( AngleArc(hDC, x, y, radius, startAngle, sweepAngle) == 0 )
+        {
+            goto syserr_out;
+        }
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto err_out;
+    }
+    return 0;
+
+syserr_out:
+  oodSetSysErrCode(context->threadContext);
+
+err_out:
+    return 1;
+}
+
+
+/** WindowExtensions::fontColor()
+ *
+ *  Sets the font color in a device context.
+ *
+ *  @param  color  [OPTIONAL] The color index for the font color.  If this is
+ *                 omitted, the index is set to 1.
+ *  @param  hDC    Handle to the device context.
+ *
+ *  @return  0 on success, 1 on failure.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function."  Other error codes may
+ *         be set by the system.
+ */
+RexxMethod2(logical_t, winex_fontColor, OPTIONAL_int32_t, color, POINTERSTRING, _hDC)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+    if ( hDC == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto err_out;
+    }
+
+    if ( SetTextColor(hDC, PALETTEINDEX(color)) == CLR_INVALID )
+    {
+        goto syserr_out;
+    }
+    return 0;
+
+syserr_out:
+  oodSetSysErrCode(context->threadContext);
+
+err_out:
+    return 1;
+}
+
+
+/** WindowExtensions::transparentText()
+ *  WindowExtensions::opaqueText()ext
+ *
+ *  Sets the background mix mode of the specified device context. The background
+ *  mix mode is used with text, hatched brushes, and pen styles that are not
+ *  solid lines.
+ *
+ *  Note that traditionally ooDialog had not documented that the background mix
+ *  mode also affects hatched brushes and some pen styles.  This is the reason
+ *  for the method names.  Nevertheless, this has always been the case.
+ *
+ *  @param  hDC    Handle to the device context.
+ *
+ *  @return  0 on success, 1 on failure.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function."  Other error codes may
+ *         be set by the system.
+ */
+RexxMethod2(logical_t, winex_textBkMode, POINTERSTRING, _hDC, NAME, method)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+    if ( hDC == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto err_out;
+    }
+
+    COLORREF clr;
+    if ( *method == 'T' )
+    {
+        clr = SetBkMode(hDC, TRANSPARENT);
+    }
+    else
+    {
+        clr = SetBkMode(hDC, OPAQUE);
+    }
+
+    if ( clr == CLR_INVALID )
+    {
+        goto syserr_out;
+    }
+    return 0;
+
+syserr_out:
+  oodSetSysErrCode(context->threadContext);
+
+err_out:
+    return 1;
+}
+
+
+/** WindowExtensions::getArcDirection()
+ *
+ *  Gets the drawing direction be used for arc and rectangle functions.
+ *
+ *  @param  hDC    Handle to the device context.
+ *
+ *  @return  A string, CLOCKWISE or COUNTERCLOCKWISE, or the empty string on
+ *           error.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function."  Other error codes may
+ *         be set by the system.
+ *
+ *  -------------------------------------------------------------------
+ *
+ *  WindowExtensions::setArcDirection()
+ *
+ *  Sets the drawing direction to be used for arc and rectangle functions.
+ *
+ *  @param  hDC    Handle to the device context.
+ *
+ *  @return  A string, the old direction, on success, or the empty string on
+ *           error.  On success, the string will be CLOCKWISE or
+ *           COUNTERCLOCKWISE, depending on what the old direction was.
+ *
+ *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
+ *         ERROR_INVALID_FUNCTION "Incorrect function."  Other error codes may
+ *         be set by the system.
+ */
+RexxMethod3(CSTRING, winex_getSetArcDirection, POINTERSTRING, _hDC, OPTIONAL_CSTRING, _direction, NAME, method)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HDC hDC = (HDC)_hDC;
+    if ( hDC == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto err_out;
+    }
+
+    int direction = 0;
+    if ( *method == 'G' )
+    {
+        direction = GetArcDirection(hDC);
+    }
+    else
+    {
+        direction = AD_COUNTERCLOCKWISE;
+        if ( _direction != NULLOBJECT && StrStrI(_direction, "CLOCKWISE") != NULL )
+        {
+            direction = AD_CLOCKWISE;
+        }
+        direction = SetArcDirection(hDC, direction);
+    }
+
+    if ( direction == AD_CLOCKWISE )
+    {
+        return "CLOCKWISE";
+    }
+    else if ( direction == AD_COUNTERCLOCKWISE )
+    {
+        return "COUNTERCLOCKWISE";
+    }
+
+    oodSetSysErrCode(context->threadContext);
+
+err_out:
+    return "";
+}
 
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\

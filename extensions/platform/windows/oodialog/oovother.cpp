@@ -3478,6 +3478,59 @@ err_out:
     return 1;
 }
 
+
+/** ButtonControl::dimBitmap()
+ *
+ *
+ */
+RexxMethod7(RexxObjectPtr, bc_dimBitmap, POINTERSTRING, hBmp, uint32_t, width, uint32_t, height,
+            OPTIONAL_uint32_t, stepX, OPTIONAL_uint32_t, stepY, OPTIONAL_uint32_t, steps, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    stepX = (argumentOmitted(4) ? 2  : stepX);
+    stepY = (argumentOmitted(5) ? 2  : stepY);
+    steps = (argumentOmitted(6) ? 10 : steps);
+
+    HDC hDC = GetWindowDC(hwnd);
+
+    LOGBRUSH logicalBrush;
+    logicalBrush.lbStyle = BS_DIBPATTERNPT;
+    logicalBrush.lbColor = DIB_RGB_COLORS;
+    logicalBrush.lbHatch = (ULONG_PTR)hBmp;
+
+    HBRUSH hBrush = CreateBrushIndirect(&logicalBrush);
+    HPEN hPen = CreatePen(PS_NULL, 0, PALETTEINDEX(0));
+
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hDC, hBrush);
+    HPEN oldPen = (HPEN)SelectObject(hDC, hPen);
+
+    uint32_t diffY = steps * stepY;
+    uint32_t diffX = steps * stepX;
+
+    uint32_t a, i, j, x, y;
+
+    for ( a = 0; a < steps; a++ )
+    {
+       for ( y = a * stepY, i = 0; i < height / steps; y += diffY, i++ )
+       {
+          for ( x = a * stepX, j = 0; j < width / steps; x += diffX, j++ )
+          {
+              Rectangle(hDC, x - a * stepX, y - a * stepY, x + stepX + 1, y + stepY + 1);
+          }
+       }
+    }
+
+    SelectObject(hDC, oldBrush);
+    SelectObject(hDC, oldPen);
+    DeleteObject(oldBrush);
+    DeleteObject(oldPen);
+    ReleaseDC(hwnd, hDC);
+
+    return TheZeroObj;
+}
+
+
 RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst,
             RexxObjectPtr, idLast, RexxObjectPtr, idCheck)
 {
@@ -4813,15 +4866,20 @@ out:
  *
  *  Returns a COLORREF composed from the specified RGB valuses.
  *
- *  @param r  The red component, or special case CLR_DEFAULT / CLR_NONE.
+ *  @param r  The red component, or special case CLR_DEFAULT / CLR_NONE /
+ *            CLR_INVALID.
  *  @param g  The green component
  *  @param b  The blue component
  *
  *  @return The COLORREF.
  *
- *  @note  For any omitted arg, the value of the arg will be 0.  Since 0 is the
- *         default value for the g and b args, we do not need to check for
- *         ommitted args.
+ *  @note  The first argument can also be the string keyword for one of the
+ *         special COLORREF values.  I.e., CLR_DEFAULT, CLR_NONE, or
+ *         CLR_INVALID.  Case is insignificant for the keyword.
+ *
+ *  @remarks  For any omitted arg, the value of the arg will be 0.  Since 0 is
+ *            the default value for the g and b args, we do not need to check
+ *            for ommitted args.
  */
 RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_RexxObjectPtr, rVal,
             OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
@@ -4839,6 +4897,10 @@ RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_RexxObjectPtr, rVal,
             else if ( stricmp(tmp, "CLR_NONE") == 0 )
             {
                 return CLR_NONE;
+            }
+            else if ( stricmp(tmp, "CLR_INVALID") == 0 )
+            {
+                return CLR_INVALID;
             }
             else
             {

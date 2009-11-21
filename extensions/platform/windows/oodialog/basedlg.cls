@@ -72,12 +72,12 @@
 -- createFontEx() is a correct implementation.
 ::method createFont unguarded external "LIBRARY oodialog winex_createFont"
 ::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
-
 ::method getTextSizeScreen  external "LIBRARY oodialog winex_getTextSizeScreen"
 ::method writeDirect unguarded external "LIBRARY oodialog winex_writeDirect"
-
 ::method loadBitmap unguarded external "LIBRARY oodialog winex_loadBitmap"
 ::method removeBitmap unguarded external "LIBRARY oodialog winex_removeBitmap"
+::method getDC unguarded external "LIBRARY oodialog winex_getDC"
+::method freeDC unguarded external "LIBRARY oodialog winex_freeDC"
 
 ::method cursor_Arrow unguarded external "LIBRARY oodialog winex_setCursorShape"
 ::method cursor_AppStarting unguarded external "LIBRARY oodialog winex_setCursorShape"
@@ -93,12 +93,6 @@
    return result~x result~y
 
 
-::method GetDC unguarded
-   return HandleDC_Obj("G", self~hwnd)
-
-::method FreeDC unguarded
-   use arg dc
-   return HandleDC_obj("F", self~hwnd, dc)
 
    /* Deletes a font */
 ::method DeleteFont unguarded
@@ -158,11 +152,6 @@
    /* Set the font color of a device context. */
    /* Use 'createFont' method to get a font handle */
 
-::method FontColor unguarded
-   use arg color, dc
-   if arg(1,'o') = 1 then color = 1
-   return DrawGetSet("COL", dc, color)
-
    /* This method will create a pen in the given color and style */
    /* It returns a handle to a pen object */
 ::method CreatePen unguarded
@@ -172,81 +161,19 @@
    if arg(3, "o") = 1 then color = 0
    return HandleDC_Obj("P", width, style, color)
 
-   /* This method will draw a rectangle to the given device context */
-   /* Use one of the following methods to get a valid DC: */
-   /* 'GetDC', 'GetWindowDC', 'GetButtonDC' */
-
-::method Rectangle unguarded
-   use arg dc, x, y, cx, cy, fill
-   if arg(6, "o") = 1 then fill = ''
-   if fill~left(1)~translate = 'F' then
-        return DCDraw("REC", dc, x, y, cx, cy)
-   ret = DrawGetSet("SDP", dc, x, y)
-   ret = DCDraw("LN", dc, cx, y)
-   ret = DCDraw("LN", dc, cx, cy)
-   ret = DCDraw("LN", dc, x, cy)
-   return DCDraw("LN", dc, x, y)
-
-   /* This method draws a line within the device context */
-
-::method DrawLine unguarded
-   use arg dc, fromX, fromY, toX, toY
-   if arg(2, 'o') = 0 | arg(3, 'o') = 0 then ret = DrawGetSet("SDP",dc, fromX, fromY)
-   return DCDraw("LN",dc, toX, toY)
-
-   /* This method draws a pixel within the device context */
-
-::method DrawPixel unguarded
-   use arg dc, x, y, color
-   return DCDraw("PT",dc, X, Y, color)
-
-   /* This method gets the color of a pixel within the device context */
-
-::method GetPixel unguarded
-   use arg dc, x, y
-   return DrawGetSet("GPT", dc, X, Y)
-
-   /* fill with current brush, border determined by color */
-::method FillDrawing unguarded
-   use arg dc, x, y, color
-   return DCDraw("FL", dc, X, Y, color)
-
-::method TransparentText unguarded
-   use arg dc
-   return DrawGetSet("SBK", dc, "TRANSPARENT")
-
-::method OpaqueText unguarded
-   use arg dc
-   return DrawGetSet("SBK", dc, "OPAQUE")
-
-   /* This method draws an arc / circle  */
-
-::method DrawArc unguarded
-   use arg dc, left, top, right, bottom, startx, starty, endx, endy
-   return DCDraw("ARC",dc, left, top, right, bottom, startx, starty, endx, endy)
-
-   /* This method draws a pie shape */
-
-::method DrawPie unguarded
-   use arg dc, left, top, right, bottom, xrad1, yrad1, xrad2, yrad2
-   return DCDraw("PIE",dc, left, top, right, bottom, xrad1, yrad1, xrad2, yrad2)
-
-   /* This method draws an arc / circle using an angle */
-
-::method DrawAngleArc unguarded
-   use arg dc, movex, movey, x, y, radius, startangle, sweepangle
-   if arg(2, 'o') = 0 | arg(3, 'o') = 0 then ret = DrawGetSet("SDP", dc, movex, movey)
-   return DCDraw("ANG",dc, x, y, radius, startangle, sweepangle)
-
-::method SetArcDirection unguarded
-   use arg dc, direction
-   return DrawGetSet("SAD", dc, (direction~translate~wordpos("CLOCKWISE") > 0))
-
-::method GetArcDirection unguarded
-   use arg dc
-   ret = DrawGetSet("GAD",dc)
-   if ret = 1 then return "CLOCKWISE"
-   else return "COUNTERCLOCKWISE"
+::method rectangle unguarded external "LIBRARY oodialog winex_rectangle"
+::method drawLine unguarded external "LIBRARY oodialog winex_drawLine"
+::method drawPixel unguarded external "LIBRARY oodialog winex_drawPixel"
+::method getPixel unguarded external "LIBRARY oodialog winex_getPixel"
+::method fillDrawing unguarded external "LIBRARY oodialog winex_fillDrawing"
+::method drawArc unguarded external "LIBRARY oodialog winex_drawArcOrPie"
+::method drawPie unguarded external "LIBRARY oodialog winex_drawArcOrPie"
+::method drawAngleArc unguarded external "LIBRARY oodialog winex_drawAngleArc"
+::method FontColor unguarded external "LIBRARY oodialog winex_fontColor"
+::method transparentText unguarded external "LIBRARY oodialog winex_textBkMode"
+::method opaqueText unguarded external "LIBRARY oodialog winex_textBkMode"
+::method setArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
+::method getArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
 
 ::method LogRect2AbsRect unguarded
    parse arg l, t, r, b

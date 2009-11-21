@@ -1250,6 +1250,8 @@
 ::method getImage external "LIBRARY oodialog bc_getImage"
 ::method setImage external "LIBRARY oodialog bc_setImage"
 ::method scroll unguarded external "LIBRARY oodialog bc_scroll"
+::method dimBitmap unguarded external "LIBRARY oodialog bc_dimBitmap"
+
 
 /* For internal testing only, do not use this method */
 ::method test external "LIBRARY oodialog bc_test"
@@ -1295,14 +1297,6 @@
 
 
    /* This method will draw the bitmap step by step */
-
-::method dimBitmap unguarded
-   arga = arg(1,"A")
-   newarg = .array~new(arga~Items+1)
-   newarg[1] = self~id
-   do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
-   forward to (self~oDlg) Arguments (newarg)
-
 
 ::method scrollBitmapFromTo unguarded
    arga = arg(1,"A")

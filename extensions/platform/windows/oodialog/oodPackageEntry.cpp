@@ -97,8 +97,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(DCDraw);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(DrawGetSet);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(ScrollText);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDC_Obj);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleTreeCtrl);
@@ -121,8 +119,6 @@ REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 RexxRoutineEntry oodialog_functions[] =
 {
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),           /* 7  */
-    REXX_CLASSIC_ROUTINE(DCDraw,               DCDraw),              /* 7  */
-    REXX_CLASSIC_ROUTINE(DrawGetSet,           DrawGetSet),          /* 9  */
     REXX_CLASSIC_ROUTINE(ScrollText,           ScrollText),          /* 9  */
     REXX_CLASSIC_ROUTINE(HandleDC_Obj,         HandleDC_Obj),        /* 17  could this benefit from being a DC object ?*/
     REXX_CLASSIC_ROUTINE(HandleTreeCtrl,       HandleTreeCtrl),
@@ -339,6 +335,18 @@ REXX_METHOD_PROTOTYPE(winex_restoreCursorShape);
 REXX_METHOD_PROTOTYPE(winex_writeDirect);
 REXX_METHOD_PROTOTYPE(winex_loadBitmap);
 REXX_METHOD_PROTOTYPE(winex_removeBitmap);
+REXX_METHOD_PROTOTYPE(winex_getDC);
+REXX_METHOD_PROTOTYPE(winex_freeDC);
+REXX_METHOD_PROTOTYPE(winex_rectangle);
+REXX_METHOD_PROTOTYPE(winex_drawLine);
+REXX_METHOD_PROTOTYPE(winex_drawPixel);
+REXX_METHOD_PROTOTYPE(winex_getPixel);
+REXX_METHOD_PROTOTYPE(winex_fillDrawing);
+REXX_METHOD_PROTOTYPE(winex_drawArcOrPie);
+REXX_METHOD_PROTOTYPE(winex_drawAngleArc);
+REXX_METHOD_PROTOTYPE(winex_fontColor);
+REXX_METHOD_PROTOTYPE(winex_textBkMode);
+REXX_METHOD_PROTOTYPE(winex_getSetArcDirection);
 
 REXX_METHOD_PROTOTYPE(ri_init);
 REXX_METHOD_PROTOTYPE(ri_release);
@@ -394,6 +402,39 @@ REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(dlgctrl_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgctrl_setColor);
 
+// Static
+REXX_METHOD_PROTOTYPE(stc_getIcon);
+REXX_METHOD_PROTOTYPE(stc_setIcon);
+REXX_METHOD_PROTOTYPE(stc_getImage);
+REXX_METHOD_PROTOTYPE(stc_setImage);
+
+// Button
+REXX_METHOD_PROTOTYPE(gb_setStyle);
+REXX_METHOD_PROTOTYPE(bc_getState);
+REXX_METHOD_PROTOTYPE(bc_setState);
+REXX_METHOD_PROTOTYPE(bc_setStyle);
+REXX_METHOD_PROTOTYPE(bc_click);
+REXX_METHOD_PROTOTYPE(bc_getIdealSize);
+REXX_METHOD_PROTOTYPE(bc_getTextMargin);
+REXX_METHOD_PROTOTYPE(bc_setTextMargin);
+REXX_METHOD_PROTOTYPE(bc_getImage);
+REXX_METHOD_PROTOTYPE(bc_setImage);
+REXX_METHOD_PROTOTYPE(bc_setImageList);
+REXX_METHOD_PROTOTYPE(bc_getImageList);
+REXX_METHOD_PROTOTYPE(bc_scroll);
+REXX_METHOD_PROTOTYPE(bc_dimBitmap);
+REXX_METHOD_PROTOTYPE(rb_checkInGroup_cls);
+REXX_METHOD_PROTOTYPE(rb_getCheckState);
+REXX_METHOD_PROTOTYPE(rb_checked);
+REXX_METHOD_PROTOTYPE(rb_check);
+REXX_METHOD_PROTOTYPE(rb_uncheck);
+REXX_METHOD_PROTOTYPE(rb_isChecked);
+REXX_METHOD_PROTOTYPE(rb_indeterminate);
+REXX_METHOD_PROTOTYPE(ckbx_isIndeterminate);
+REXX_METHOD_PROTOTYPE(ckbx_setIndeterminate);
+REXX_METHOD_PROTOTYPE(bc_test);
+REXX_METHOD_PROTOTYPE(bc_test_cls);
+
 // Edit
 REXX_METHOD_PROTOTYPE(e_isSingleLine);
 REXX_METHOD_PROTOTYPE(e_selection);
@@ -405,6 +446,43 @@ REXX_METHOD_PROTOTYPE(e_showBallon);
 REXX_METHOD_PROTOTYPE(e_hideBallon);
 REXX_METHOD_PROTOTYPE(e_setCue);
 REXX_METHOD_PROTOTYPE(e_style);
+
+// ComboBox
+REXX_METHOD_PROTOTYPE(cb_getText);
+REXX_METHOD_PROTOTYPE(cb_add);
+REXX_METHOD_PROTOTYPE(cb_insert);
+REXX_METHOD_PROTOTYPE(cb_select);
+REXX_METHOD_PROTOTYPE(cb_find);
+REXX_METHOD_PROTOTYPE(cb_addDirectory);
+
+// ScrollBar
+REXX_METHOD_PROTOTYPE(sb_getRange);
+REXX_METHOD_PROTOTYPE(sb_setRange);
+REXX_METHOD_PROTOTYPE(sb_getPosition);
+REXX_METHOD_PROTOTYPE(sb_setPosition);
+
+// ListBox
+REXX_METHOD_PROTOTYPE(lb_isSingleSelection);
+REXX_METHOD_PROTOTYPE(lb_getText);
+REXX_METHOD_PROTOTYPE(lb_add);
+REXX_METHOD_PROTOTYPE(lb_insert);
+REXX_METHOD_PROTOTYPE(lb_select);
+REXX_METHOD_PROTOTYPE(lb_selectIndex);
+REXX_METHOD_PROTOTYPE(lb_deselectIndex);
+REXX_METHOD_PROTOTYPE(lb_selectedIndex);
+REXX_METHOD_PROTOTYPE(lb_find);
+REXX_METHOD_PROTOTYPE(lb_addDirectory);
+
+// ProgressBar
+REXX_METHOD_PROTOTYPE(pbc_stepIt);
+REXX_METHOD_PROTOTYPE(pbc_getPos);
+REXX_METHOD_PROTOTYPE(pbc_setPos);
+REXX_METHOD_PROTOTYPE(pbc_getRange);
+REXX_METHOD_PROTOTYPE(pbc_setRange);
+REXX_METHOD_PROTOTYPE(pbc_setStep);
+REXX_METHOD_PROTOTYPE(pbc_setMarquee);
+REXX_METHOD_PROTOTYPE(pbc_setBkColor);
+REXX_METHOD_PROTOTYPE(pbc_setBarColor);
 
 // ListView
 REXX_METHOD_PROTOTYPE(lv_setImageList);
@@ -433,75 +511,6 @@ REXX_METHOD_PROTOTYPE(get_mc_date);
 REXX_METHOD_PROTOTYPE(set_mc_date);
 REXX_METHOD_PROTOTYPE(get_mc_usesUnicode);
 REXX_METHOD_PROTOTYPE(set_mc_usesUnicode);
-
-// ProgressBar
-REXX_METHOD_PROTOTYPE(pbc_stepIt);
-REXX_METHOD_PROTOTYPE(pbc_getPos);
-REXX_METHOD_PROTOTYPE(pbc_setPos);
-REXX_METHOD_PROTOTYPE(pbc_getRange);
-REXX_METHOD_PROTOTYPE(pbc_setRange);
-REXX_METHOD_PROTOTYPE(pbc_setStep);
-REXX_METHOD_PROTOTYPE(pbc_setMarquee);
-REXX_METHOD_PROTOTYPE(pbc_setBkColor);
-REXX_METHOD_PROTOTYPE(pbc_setBarColor);
-
-// ScrollBar
-REXX_METHOD_PROTOTYPE(sb_getRange);
-REXX_METHOD_PROTOTYPE(sb_setRange);
-REXX_METHOD_PROTOTYPE(sb_getPosition);
-REXX_METHOD_PROTOTYPE(sb_setPosition);
-
-// Static
-REXX_METHOD_PROTOTYPE(stc_getIcon);
-REXX_METHOD_PROTOTYPE(stc_setIcon);
-REXX_METHOD_PROTOTYPE(stc_getImage);
-REXX_METHOD_PROTOTYPE(stc_setImage);
-
-// Buttons
-REXX_METHOD_PROTOTYPE(gb_setStyle);
-REXX_METHOD_PROTOTYPE(bc_getState);
-REXX_METHOD_PROTOTYPE(bc_setState);
-REXX_METHOD_PROTOTYPE(bc_setStyle);
-REXX_METHOD_PROTOTYPE(bc_click);
-REXX_METHOD_PROTOTYPE(bc_getIdealSize);
-REXX_METHOD_PROTOTYPE(bc_getTextMargin);
-REXX_METHOD_PROTOTYPE(bc_setTextMargin);
-REXX_METHOD_PROTOTYPE(bc_getImage);
-REXX_METHOD_PROTOTYPE(bc_setImage);
-REXX_METHOD_PROTOTYPE(bc_setImageList);
-REXX_METHOD_PROTOTYPE(bc_getImageList);
-REXX_METHOD_PROTOTYPE(bc_scroll);
-REXX_METHOD_PROTOTYPE(rb_checkInGroup_cls);
-REXX_METHOD_PROTOTYPE(rb_getCheckState);
-REXX_METHOD_PROTOTYPE(rb_checked);
-REXX_METHOD_PROTOTYPE(rb_check);
-REXX_METHOD_PROTOTYPE(rb_uncheck);
-REXX_METHOD_PROTOTYPE(rb_isChecked);
-REXX_METHOD_PROTOTYPE(rb_indeterminate);
-REXX_METHOD_PROTOTYPE(ckbx_isIndeterminate);
-REXX_METHOD_PROTOTYPE(ckbx_setIndeterminate);
-REXX_METHOD_PROTOTYPE(bc_test);
-REXX_METHOD_PROTOTYPE(bc_test_cls);
-
-// ListBox
-REXX_METHOD_PROTOTYPE(lb_isSingleSelection);
-REXX_METHOD_PROTOTYPE(lb_getText);
-REXX_METHOD_PROTOTYPE(lb_add);
-REXX_METHOD_PROTOTYPE(lb_insert);
-REXX_METHOD_PROTOTYPE(lb_select);
-REXX_METHOD_PROTOTYPE(lb_selectIndex);
-REXX_METHOD_PROTOTYPE(lb_deselectIndex);
-REXX_METHOD_PROTOTYPE(lb_selectedIndex);
-REXX_METHOD_PROTOTYPE(lb_find);
-REXX_METHOD_PROTOTYPE(lb_addDirectory);
-
-// ComboBox
-REXX_METHOD_PROTOTYPE(cb_getText);
-REXX_METHOD_PROTOTYPE(cb_add);
-REXX_METHOD_PROTOTYPE(cb_insert);
-REXX_METHOD_PROTOTYPE(cb_select);
-REXX_METHOD_PROTOTYPE(cb_find);
-REXX_METHOD_PROTOTYPE(cb_addDirectory);
 
 // .Rect
 REXX_METHOD_PROTOTYPE(rect_init);
@@ -824,6 +833,18 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(winex_writeDirect,              winex_writeDirect),
     REXX_METHOD(winex_loadBitmap,               winex_loadBitmap),
     REXX_METHOD(winex_removeBitmap,             winex_removeBitmap),
+    REXX_METHOD(winex_getDC,                    winex_getDC),
+    REXX_METHOD(winex_freeDC,                   winex_freeDC),
+    REXX_METHOD(winex_rectangle,                winex_rectangle),
+    REXX_METHOD(winex_drawLine,                 winex_drawLine),
+    REXX_METHOD(winex_drawPixel,                winex_drawPixel),
+    REXX_METHOD(winex_getPixel,                 winex_getPixel),
+    REXX_METHOD(winex_fillDrawing,              winex_fillDrawing),
+    REXX_METHOD(winex_drawArcOrPie,             winex_drawArcOrPie),
+    REXX_METHOD(winex_drawAngleArc,             winex_drawAngleArc),
+    REXX_METHOD(winex_fontColor,                winex_fontColor),
+    REXX_METHOD(winex_textBkMode,               winex_textBkMode),
+    REXX_METHOD(winex_getSetArcDirection,       winex_getSetArcDirection),
 
     REXX_METHOD(ri_init,                        ri_init),
     REXX_METHOD(ri_release,                     ri_release),
@@ -917,6 +938,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(stc_getImage,                   stc_getImage),
     REXX_METHOD(stc_setImage,                   stc_setImage),
 
+    // Buttons
+    REXX_METHOD(gb_setStyle,                    gb_setStyle),
     REXX_METHOD(bc_getState,                    bc_getState),
     REXX_METHOD(bc_setState,                    bc_setState),
     REXX_METHOD(bc_setStyle,                    bc_setStyle),
@@ -929,6 +952,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_setImageList,                bc_setImageList),
     REXX_METHOD(bc_getImageList,                bc_getImageList),
     REXX_METHOD(bc_scroll,                      bc_scroll),
+    REXX_METHOD(bc_dimBitmap,                   bc_dimBitmap),
     REXX_METHOD(rb_checkInGroup_cls,            rb_checkInGroup_cls),
     REXX_METHOD(rb_checked,                     rb_checked),
     REXX_METHOD(rb_check,                       rb_check),
@@ -938,7 +962,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(rb_indeterminate,               rb_indeterminate),
     REXX_METHOD(ckbx_isIndeterminate,           ckbx_isIndeterminate),
     REXX_METHOD(ckbx_setIndeterminate,          ckbx_setIndeterminate),
-    REXX_METHOD(gb_setStyle,                    gb_setStyle),
     REXX_METHOD(bc_test,                        bc_test),
     REXX_METHOD(bc_test_cls,                    bc_test_cls),
 
