@@ -203,7 +203,7 @@
 ::method message attribute
 
 ::method init
-   expose message title datas. input. lenx leny
+   expose message title datas. input. lenx leny useVScroll
    use arg message, title, input., lenx, leny, predev
    if arg(4,"o") = 1 then lenx = 0
    if arg(5,"o") = 1 then leny = 0
@@ -213,11 +213,14 @@
    self~sx = s~width
    self~sy = s~height
    self~message = message
+   useVScroll = .false
 
 ::method defineDialog
-   expose message sx sy lenx leny dlgx dlgy
+   expose message sx sy lenx leny dlgx dlgy useVScroll
    self~createStaticText(-1, 10, 10, sx+2, sy, , message)
-   self~createListBox(101, 10, sy+4+10, lenx, leny+4, "DATA")
+   if useVScroll then style = "VSCROLL"
+   else style = "PARTIAL"
+   self~createListBox(101, 10, sy+4+10, lenx, leny+4, style, "DATA")
    self~createPushButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method initDialog
@@ -231,7 +234,7 @@
    /* after execution it will return the value of the selected item */
 
 ::method execute
-   expose message title sx sy datas. input. count lenx leny dlgx dlgy
+   expose message title sx sy datas. input. count lenx leny dlgx dlgy useVScroll
 
    s = self~getTextSizeDlg(message)
    sx = s~width
@@ -244,10 +247,25 @@
       if s~width > ll then ll = s~width
    end
 
+   goodHeight = (count * self~sy) + 1
+
    if self~lenx = 0 then self~lenx = max(self~sx,ll+5)
    if self~leny = 0 then do
-      if count > 15 then self~leny = self~sy*15
-      else self~leny = count*self~sy
+      if count > 15 then do
+         self~leny = self~sy * 15
+         useVScroll = .true
+         self~lenx += self~getScrollBarWidth
+      end
+      else do
+         self~leny = goodHeight
+      end
+   end
+   else do
+      if self~leny < goodHeight then do
+         self~leny = self~sy * 15
+         useVScroll = .true
+         self~lenx += self~getScrollBarWidth
+      end
    end
 
    self~dlgy = self~leny+(self~sy+4)+34
@@ -261,6 +279,13 @@
    if self~initCode = 1 then return datas.101
    else return ""
 
+::method getScrollBarWidth private
+   SM_CXVSCROLL = 20
+   size = .Size~new
+   size~width = .DlgUtil~getSystemMetrics(SM_CXVSCROLL)
+   .DlgUtil~mapPixelToDu(self, size)
+   if size~width > 15 then return size~width + 2
+   else return size~width
 
 
 ::class 'MultiListChoice' subclass ListChoice public
