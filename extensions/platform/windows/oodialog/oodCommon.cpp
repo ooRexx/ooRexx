@@ -1299,7 +1299,7 @@ bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max
  * can use .Point .Point, but not .Point .Size.
  *
  * 2.) A point / size rectangle.  In this case the first two args specify the
- * upper-left corner of the rectangel, and the third and forth args specify the
+ * upper-left corner of the rectangle, and the third and forth args specify the
  * width and height of the rectangle.  In this scenario, the Rexx programmer can
  * use .Point and .Size, but not .Point and .Point
  *

@@ -511,23 +511,6 @@ RexxMethod1(uint32_t, dlgutil_getSystemMetrics_cls, int32_t, index)
     return GetSystemMetrics(index);
 }
 
-// TODO .DlgUtil~mapSizePxToDu       .DlgUtil~mapRectPxToDu  these 3 (or 2) methods
-// should be added to the PlainBaseDialog class.  Do we really need a method for
-// a .Size object and a .Point object ?  Or, just one method, determine at run
-// time if RexxObjectPtr <arg> is a point, a size, or a rectangle.
-RexxMethod2(logical_t, dlgutil_mapPixel2Du_cls, RexxObjectPtr, dlg, RexxObjectPtr, size)
-{
-    SIZE *s = rxGetSize(context, size, 2);
-    if ( s != NULL )
-    {
-        if ( mapPixelToDu(context, dlg, (PPOINT)s) )
-        {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
 /** DlgUtil::screenSize()  [class method]
  *
  *  Retrieves the screen size in either pixels, dialog units, or both.
@@ -582,7 +565,7 @@ RexxMethod2(RexxObjectPtr, dlgutil_screenSize_cls, OPTIONAL_CSTRING, _flag, OPTI
             }
 
             POINT point = {pixelX, pixelY};
-            mapPixelToDu(context, dlgObj, &point);
+            mapPixelToDu(context, dlgObj, &point, 1);
             duX = point.x;
             duY = point.y;
         }

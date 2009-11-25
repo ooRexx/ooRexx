@@ -194,16 +194,17 @@
 
 ::class 'ListChoice' subclass PlainUserDialog public
 
-::method sx attribute
-::method sy attribute
-::method dlgx attribute
-::method dlgy attribute
-::method lenx attribute
-::method leny attribute
-::method message attribute
+::attribute sx
+::attribute sy
+::attribute dlgx
+::attribute dlgy
+::attribute lenx
+::attribute leny
+::attribute message
+::attribute useVScroll
 
 ::method init
-   expose message title datas. input. lenx leny useVScroll
+   expose message title datas. input. lenx leny
    use arg message, title, input., lenx, leny, predev
    if arg(4,"o") = 1 then lenx = 0
    if arg(5,"o") = 1 then leny = 0
@@ -213,12 +214,12 @@
    self~sx = s~width
    self~sy = s~height
    self~message = message
-   useVScroll = .false
+   self~useVScroll = .false
 
 ::method defineDialog
-   expose message sx sy lenx leny dlgx dlgy useVScroll
+   expose message sx sy lenx leny dlgx dlgy
    self~createStaticText(-1, 10, 10, sx+2, sy, , message)
-   if useVScroll then style = "VSCROLL"
+   if self~useVScroll then style = "VSCROLL"
    else style = "PARTIAL"
    self~createListBox(101, 10, sy+4+10, lenx, leny+4, style, "DATA")
    self~createPushButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
@@ -229,7 +230,6 @@
       self~AddListEntry(101, input.i)
    end
    self~setListBoxData(101, "")
-
 
    /* after execution it will return the value of the selected item */
 
@@ -254,7 +254,8 @@
       if count > 15 then do
          self~leny = self~sy * 15
          useVScroll = .true
-         self~lenx += self~getScrollBarWidth
+         self~useVScroll = .true
+         self~recalcListBoxWidth(ll + 5)
       end
       else do
          self~leny = goodHeight
@@ -264,7 +265,7 @@
       if self~leny < goodHeight then do
          self~leny = self~sy * 15
          useVScroll = .true
-         self~lenx += self~getScrollBarWidth
+         self~recalcListBoxWidth(ll + 5)
       end
    end
 
@@ -279,21 +280,28 @@
    if self~initCode = 1 then return datas.101
    else return ""
 
+::method recalcListBoxWidth private
+   use strict arg neededLBWidth
+   sbWidth = self~getScrollBarWidth
+   tmpLenX = neededLBWidth + sbWidth
+   if tmpLenX > self~sx then self~lenx = tmpLenX
+
 ::method getScrollBarWidth private
    SM_CXVSCROLL = 20
    size = .Size~new
    size~width = .DlgUtil~getSystemMetrics(SM_CXVSCROLL)
-   .DlgUtil~mapPixelToDu(self, size)
+   self~pixel2dlgUnit(size)
    if size~width > 15 then return size~width + 2
    else return size~width
 
 
 ::class 'MultiListChoice' subclass ListChoice public
 
-
 ::method defineDialog
+   if self~useVScroll then style = "MULTI VSCROLL TABULATORS"
+   else style = "MULTI PARTIAL TABULATORS"
    self~createStaticText(-1, 10, 10, self~sx+2, self~sy, , self~message)
-   self~createListBox(101, 10, self~sy+4+10, self~lenx, self~leny+4, "MULTI VSCROLL TABULATORS", "DATA")
+   self~createListBox(101, 10, self~sy+4+10, self~lenx, self~leny+4, style, "DATA")
    self~createPushButtonGroup(self~dlgx-100, self~dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 

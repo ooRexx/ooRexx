@@ -182,7 +182,7 @@
    if self~activePtr = 0 then return -2
    id = self~checkID(id)
    if id < 0 then return id
-   if attributeName == "" then attribute = text
+   if attributeName == "" then attributeName = text
    if cy = 0 | cx1 = 0 then do
       size = self~getTextSizeDlg(text)
       if cy = 0 then cy = size~height + 4

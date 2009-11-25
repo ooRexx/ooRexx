@@ -93,15 +93,13 @@
    return result~x result~y
 
 
-
-   /* Deletes a font */
-::method DeleteFont unguarded
-   use arg hFont
-   return self~DeleteObject(hFont)
+::method deleteFont unguarded
+   use strict arg hFont
+   return self~deleteObject(hFont)
 
    /* This method deletes a graphic object */
-::method DeleteObject unguarded
-   use arg obj
+::method deleteObject unguarded
+   use strict arg obj
    return HandleDC_Obj("D", obj)
 
 ::method CreateBrush unguarded

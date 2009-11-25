@@ -58,10 +58,6 @@
 ::method screenSize class external "LIBRARY oodialog dlgutil_screenSize_cls"
 ::method screenArea class external "LIBRARY oodialog dlgutil_screenArea_cls"
 ::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
-
--- .DlgUtil~mapSizePxToDu       .DlgUtil~mapRectPxToDu  TODO although these should maybe belon to a dialog class
-::method mapPixelToDu class external "LIBRARY oodialog dlgutil_mapPixel2Du_cls"
-
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 

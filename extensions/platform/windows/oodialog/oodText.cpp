@@ -298,23 +298,28 @@ HFONT createFontFromName(int logicalPixelsY, CSTRING name, uint32_t size)
  * @param hwnd   Window handle of the dialog.  If this is not a dialog window
  *               handle, this method will fail.
  *
- * @param point  Pointer to a POINT struct.  Not that a SIZE struct and a POINT
- *               struct are binary equivalents.  They both have two fields, each
- *               of which is a long.  Only the field names differ, cx and cy for
- *               a SIZE and x and y for a POINT.  Therefore you can cast a
- *               SIZE pointer to a POINT pointer.
+ * @param point  Pointer to an array of POINT structs.  Not that a SIZE struct
+ *               and a POINT struct are binary equivalents.  They both have two
+ *               fields, each of which is a long.  Only the field names differ,
+ *               cx and cy for a SIZE and x and y for a POINT.  Therefore you
+ *               can cast a SIZE pointer to a POINT pointer.
+ *
+ * @param count  The number of point structs in the array.
  *
  * @return true on success, false otherwise.
  *
  * Dialog class: #32770
  */
-bool screenToDlgUnit(HWND hwnd, POINT *point)
+bool screenToDlgUnit(HWND hwnd, POINT *point, size_t count)
 {
     RECT r = {0, 0, 4, 8};
 
     if ( MapDialogRect(hwnd, &r) )
     {
-        pixel2du(point, r.right, r.bottom);
+        for ( size_t i = 0; i < count; i++ )
+        {
+            pixel2du(point + i, r.right, r.bottom);
+        }
         return true;
     }
     return false;
@@ -331,16 +336,18 @@ bool screenToDlgUnit(HWND hwnd, POINT *point)
  * @param hdc    Handle to a device context with the dialog's font selected into
  *               it.
  *
- * @param point  Pointer to a POINT struct.  Not that a SIZE struct and a POINT
- *               struct are binary equivalents.  They both have two fields, each
- *               of which is a long.  Only the field names differ, cx and cy for
- *               a SIZE and x and y for a POINT.  Therefore you can cast a
- *               SIZE pointer to a POINT pointer.
+ * @param point  Pointer to an array of POINT structs.  Not that a SIZE struct
+ *               and a POINT struct are binary equivalents.  They both have two
+ *               fields, each of which is a long.  Only the field names differ,
+ *               cx and cy for a SIZE and x and y for a POINT.  Therefore you
+ *               can cast a SIZE pointer to a POINT pointer.
+ *
+ * @param count  The number of point structs in the array.
  *
  * @return true on success, false otherwise.
  *
  */
-void screenToDlgUnit(HDC hdc, POINT *point)
+void screenToDlgUnit(HDC hdc, POINT *point, size_t count)
 {
     TEXTMETRIC tm;
     SIZE size;
@@ -350,12 +357,15 @@ void screenToDlgUnit(HDC hdc, POINT *point)
     GetTextExtentPoint32(hdc, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 52, &size);
     int baseUnitX = (size.cx / 26 + 1) / 2;
 
-    pixel2du(point, baseUnitX, baseUnitY);
+    for ( size_t i = 0; i < count; i++ )
+    {
+        pixel2du(point + i, baseUnitX, baseUnitY);
+    }
 }
 
 
 /**
- * Calculates the dialog base units using the handle of the dialog.
+ * Calculates the dialog base units using the window handle of the dialog.
  *
  * @param hDlg       The window handle of the dialog whose base units are to be
  *                   calculated.
@@ -450,22 +460,24 @@ done_out:
 }
 
 /**
- * Given a Rexx dialog object and a point in pixels, maps the point to its
- * dialog unit equivalent.
+ * Given a Rexx dialog object and an array of points in pixels, maps the points
+ * to their dialog unit equivalent.
  *
+ * @param  c      Method context we are operating in.
+ * @param  p      Pointer to the array of points
+ * @param  count  Count of points in the array.
  *
- * @param c
- * @param p
+ * @return  True on success, false on failure.
  *
  * @assumes  The caller has ensured that dlg is indeed a Rexx dialog object.
  */
-bool mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p)
+bool mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p, size_t count)
 {
     pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
 
     if ( pcpbd->hDlg != NULL )
     {
-        return screenToDlgUnit(pcpbd->hDlg, p);
+        return screenToDlgUnit(pcpbd->hDlg, p, count);
     }
 
     int buX, buY;
@@ -474,7 +486,10 @@ bool mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p)
         return false;
     }
 
-    pixel2du(p, buX, buY);
+    for ( size_t i = 0; i < count; i++ )
+    {
+        pixel2du(p + i, buX, buY);
+    }
     return true;
 }
 
@@ -666,7 +681,7 @@ bool getTextSize(RexxMethodContext *context, CSTRING text, CSTRING fontName, uin
     }
 
     // Now, convert the pixel size to dialog unit size, and clean up.
-    screenToDlgUnit(hdc, (POINT *)textSize);
+    screenToDlgUnit(hdc, (POINT *)textSize, 1);
 
     SelectObject(hdc, hOldFont);
     ReleaseDC(hwndForDC, hdc);

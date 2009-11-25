@@ -2943,6 +2943,38 @@ RexxMethod2(RexxObjectPtr, pbdlg_backgroundColor, uint32_t, colorIndex, CSELF, p
     return TheTrueObj;
 }
 
+/** PlainBaseDialog::pbdlg_pixel2dlgUnit()
+ *
+ *  Takes a dimension expressed in pixels and tranforms it to a dimension
+ *  expressed in dialog units of this dialog.
+ *
+ *  @param du  [IN / OUT ]  The object to transform, can be either a .Point,
+ *             .Size, or .Rect.  On input, the unit of measurement is assumed to
+ *             be pixels and on return the the pixels will have been converted
+ *             to dialog units
+ *
+ *  @return  True on success, false on error.
+ *
+ *  @remarks  A point and a size are binary compatible, so they can be treated
+ *            the same by using a cast for a size.
+ */
+RexxMethod2(logical_t, pbdlg_pixel2dlgUnit, RexxObjectPtr, du, OSELF, self)
+{
+    if ( context->IsOfType(du, "POINT") || context->IsOfType(du, "SIZE") )
+    {
+        POINT *p = (PPOINT)context->ObjectToCSelf(du);
+        return mapPixelToDu(context, self, p, 1) ? TRUE : FALSE;
+    }
+    else if ( context->IsOfType(du, "RECT") )
+    {
+        RECT *r = (PRECT)context->ObjectToCSelf(du);
+        return mapPixelToDu(context, self, (PPOINT)r, 2) ? TRUE : FALSE;
+    }
+
+    wrongArgValueException(context->threadContext, 1, "Point, Size, or Rect", du);
+    return FALSE;
+}
+
 /** PlainBaseDialog::getControlText()
  *
  *  Gets the text of the specified control.

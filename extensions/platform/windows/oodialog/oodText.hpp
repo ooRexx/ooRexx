@@ -43,11 +43,11 @@ extern bool  getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, 
 extern bool  textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
 extern bool  textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
 extern bool  getTextExtent(HFONT, HDC, CSTRING, SIZE *);
-extern bool  screenToDlgUnit(HWND hwnd, POINT *point);
-extern void  screenToDlgUnit(HDC hdc, POINT *point);
+extern bool  screenToDlgUnit(HWND hwnd, POINT *point, size_t count);
+extern void  screenToDlgUnit(HDC hdc, POINT *point, size_t count);
 extern HFONT createFontFromName(int logicalPixelsY, CSTRING name, uint32_t size);
 extern HFONT createFontFromName(CSTRING name, uint32_t size);
-extern bool  mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p);
+extern bool  mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p, size_t count);
 
 inline void du2pixel(POINT *point, int baseUnitX, int baseUnitY)
 {

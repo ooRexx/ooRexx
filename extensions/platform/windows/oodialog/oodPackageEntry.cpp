@@ -151,7 +151,6 @@ REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenArea_cls);
-REXX_METHOD_PROTOTYPE(dlgutil_mapPixel2Du_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
@@ -227,6 +226,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_toTheTop);
 REXX_METHOD_PROTOTYPE(pbdlg_getFocus);
 REXX_METHOD_PROTOTYPE(pbdlg_setFocus);
 REXX_METHOD_PROTOTYPE(pbdlg_tabTo);
+REXX_METHOD_PROTOTYPE(pbdlg_pixel2dlgUnit);
 REXX_METHOD_PROTOTYPE(pbdlg_backgroundBitmap);
 REXX_METHOD_PROTOTYPE(pbdlg_tiledBackgroundBitmap);
 REXX_METHOD_PROTOTYPE(pbdlg_backgroundColor);
@@ -631,7 +631,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_makeWPARAM_cls,         dlgutil_makeWPARAM_cls),
     REXX_METHOD(dlgutil_and_cls,                dlgutil_and_cls),
     REXX_METHOD(dlgutil_or_cls,                 dlgutil_or_cls),
-    REXX_METHOD(dlgutil_mapPixel2Du_cls,        dlgutil_mapPixel2Du_cls),
     REXX_METHOD(dlgutil_screenSize_cls,         dlgutil_screenSize_cls),
     REXX_METHOD(dlgutil_screenArea_cls,         dlgutil_screenArea_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls,   dlgutil_getSystemMetrics_cls),
@@ -710,6 +709,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_backgroundBitmap,         pbdlg_backgroundBitmap),
     REXX_METHOD(pbdlg_tiledBackgroundBitmap,    pbdlg_tiledBackgroundBitmap),
     REXX_METHOD(pbdlg_backgroundColor,          pbdlg_backgroundColor),
+    REXX_METHOD(pbdlg_pixel2dlgUnit,            pbdlg_pixel2dlgUnit),
     REXX_METHOD(pbdlg_focusControl,             pbdlg_focusControl),
     REXX_METHOD(pbdlg_showControl,              pbdlg_showControl),
     REXX_METHOD(pbdlg_connect_ControName,       pbdlg_connect_ControName),
