@@ -48,6 +48,7 @@ extern void  screenToDlgUnit(HDC hdc, POINT *point, size_t count);
 extern HFONT createFontFromName(int logicalPixelsY, CSTRING name, uint32_t size);
 extern HFONT createFontFromName(CSTRING name, uint32_t size);
 extern bool  mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p, size_t count);
+extern bool  mapDuToPixel(RexxMethodContext *c, RexxObjectPtr dlg, PRECT r);
 
 inline void du2pixel(POINT *point, int baseUnitX, int baseUnitY)
 {

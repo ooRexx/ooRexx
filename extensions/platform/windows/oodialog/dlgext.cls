@@ -263,6 +263,7 @@
 ::method setForegroundWindow unguarded external "LIBRARY oodialog dlgext_setForgroundWindow"
 
 ::method drawButton unguarded external "LIBRARY oodialog dlgext_drawButton"
+::method createBrush unguarded external "LIBRARY oodialog dlgext_createBrush"
 
 ::method redrawWindow unguarded
    use arg hwnd
@@ -418,7 +419,7 @@
 
 -- Draw the bitmap step by step.
 ::method dimBitmap unguarded
-   use arg strict arg id, bmp, cx, cy, stepX = 2, stepY = 2, steps = 10
+   use strict arg id, bmp, cx, cy, stepX = 2, stepY = 2, steps = 10
    button = self~newPushButton(id)
    if button == .nil then return -1
    return button~dimBitmap(bmp, cx, cy, stepX, stepY, steps)
@@ -558,16 +559,6 @@
    self~RedrawButton(id,0)
    return 0
 
-::method CreateBrush unguarded
-    use arg color = 1, brushSpecifier = ""
-    if arg() = 0 then return HandleDC_Obj("B")
-    if brushSpecifier == "" then return HandleDC_Obj("B", color)
-    brushSpecifier = brushSpecifier~translate
-    if brushSpecifier = "UPDIAGONAL" | brushSpecifier = "DOWNDIAGONAL" | brushSpecifier = "CROSS" | brushSpecifier = "DIAGCROSS",
-    | brushSpecifier = "HORIZONTAL" | brushSpecifier = "VERTICAL" then return HandleDC_Obj("B", color, brushSpecifier)
-    else return HandleDC_Obj("B", self~adm, color, brushSpecifier)  /* brushSpecifier must be filename or resource ID */
-
-
    /* This method scrolls 'text' in the button */
 
 ::method scrollInButton unguarded
@@ -602,29 +593,13 @@
 /******************************************************************************/
 /* Graphics and drawing extensions */
 
-   /* This method allows you to write text to a window in the given font, in */
-   /* the given size, and to the given position */
-   /* argument 'fontStyle' can be one or more off: */
-   /*    "THIN"            "UNDERLINE"    */
-   /*    "EXTRALIGHT"      "ITALIC"       */
-   /*    "LIGHT"           "STRIKEOUT"    */
-   /*    "MEDIUM"                */
-   /*    "SEMIBOLD"              */
-   /*    "EXTRABOLD"             */
-   /*    "BOLD"                  */
-   /*    "HEAVY"                 */
+::method writeToWindow unguarded external "LIBRARY oodialog dlgext_writeToWindow"
 
-::method WriteToWindow unguarded external "LIBRARY oodialog dlgext_writeToWindow"
-
-
-   /* This method allows you to write text to a button in the given font in */
-   /* the given size to the given position. */
-   /* See method WriteToWindow for valid fontStyles */
-
-::method WriteToButton unguarded
-   argarr = arg(1, "A")
-   argarr[1] = self~getControlHandle(argarr[1])  /* transform first argument into window handle */
-   forward message (WriteToWindow) arguments (argarr)
+::method writeToButton unguarded
+   use strict arg id, xPos, yPos, text, fontName = "System", fontSize = 10, fontStyle = "", fgColor = (-1), bkColor = (-1)
+   button = self~newPushButton(arg(1))
+   if button == .nil then return -1
+   else return button~write(xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor)
 
 
 -- This method moves the rectangle within a button.  TODO be sure can take a .Rect for arg
@@ -633,34 +608,20 @@
    newArgs = arg(2, "A")
    button = self~newPushButton(arg(1))
    if button == .nil then return -1
-   return button~sendWith("Scroll", newArgs)
+   return button~sendWith("scroll", newArgs)
 
-   /* This method will return the device context of a window */
+::method getWindowDC unguarded external "LIBRARY oodialog dlgext_getWindowDC"
+::method getButtonDC unguarded
+   use strict arg id
+   return self~getWindowDC(self~getControlHandle(id))
 
-::method GetWindowDC unguarded
-   use arg hwnd
-   return HandleDC_Obj("G", hwnd)
-
-   /* This method will return the device context of a button */
-
-::method GetButtonDC unguarded
-   use arg id
-   return self~GetWindowDC(self~getControlHandle(id))
-
-   /* This method will free the device context of a window */
-
-::method FreeWindowDC unguarded
-   use arg hwnd, dc
-   return HandleDC_Obj("F", hwnd, dc)
-
-   /* This method will free the device context of a button */
-
-::method FreeButtonDC unguarded
-   use arg id, dc
+::method freeWindowDC unguarded external "LIBRARY oodialog dlgext_freeWindowDC"
+::method freeButtonDC unguarded
+   use strict arg id, dc
    hwnd = self~getControlHandle(id)
-   return self~FreeWindowDC(hwnd, dc)
+   return self~freeWindowDC(hwnd, dc)
 
-::method CaptureMouse external "LIBRARY oodialog dlgext_captureMouse"
+::method captureMouse external "LIBRARY oodialog dlgext_captureMouse"
 ::method getMouseCapture external "LIBRARY oodialog dlgext_mouseCapture"
 ::method releaseMouseCapture external "LIBRARY oodialog dlgext_mouseCapture"
 ::method isMouseButtonDown external "LIBRARY oodialog dlgext_isMouseButtonDown"

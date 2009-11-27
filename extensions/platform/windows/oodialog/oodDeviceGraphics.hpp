@@ -42,15 +42,16 @@
 extern uint32_t      parseShowOptions(CSTRING options);
 extern RexxObjectPtr oodGetClientRect(RexxMethodContext *, HWND hwnd, PRECT);
 extern RexxObjectPtr oodGetWindowRect(RexxMethodContext *, HWND hwnd);
+extern logical_t     oodColorTable(RexxMethodContext *, DIALOGADMIN *, uint32_t, int32_t, int32_t, bool);
+extern logical_t     oodWriteToWindow(RexxMethodContext *, HWND, int32_t, int32_t, CSTRING, CSTRING, uint32_t, CSTRING, int32_t, int32_t);
+extern HBRUSH        oodCreateBrush(RexxMethodContext *, uint32_t, CSTRING);
 extern RexxObjectPtr clearRect(RexxMethodContext *, HWND, PRECT);
 extern RexxObjectPtr redrawRect(RexxMethodContext *, HWND, PRECT, bool);
-extern logical_t     oodColorTable(RexxMethodContext *, DIALOGADMIN *, uint32_t, int32_t, int32_t, bool);
 extern int           getHeightFromFontSize(int fontSize);
 extern void          maybeSetColorPalette(RexxMethodContext *, HBITMAP, CSTRING, DIALOGADMIN *, RexxObjectPtr);
-extern LPBITMAPINFO  loadDIB(const char *szFile);
+extern LPBITMAPINFO  loadDIB(const char *szFile, uint32_t *);
 extern WORD          numDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 extern BOOL          DrawBackgroundBmp(pCPlainBaseDialog, HWND, WPARAM, LPARAM);
-extern HPALETTE      CreateDIBPalette(LPBITMAPINFO);
 extern BOOL          DrawBitmapButton(DIALOGADMIN *, pCPlainBaseDialog, WPARAM, LPARAM, bool);
 
 

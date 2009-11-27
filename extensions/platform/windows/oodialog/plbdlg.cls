@@ -478,6 +478,7 @@
 ::method setControlText unguarded external "LIBRARY oodialog pbdlg_setControlText"
 ::method getControlHandle unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
 ::method pixel2dlgUnit external "LIBRARY oodialog pbdlg_pixel2dlgUnit"
+::method dlgUnit2pixel external "LIBRARY oodialog pbdlg_dlgUnit2pixel"
 ::method backgroundBitmap external "LIBRARY oodialog pbdlg_backgroundBitmap"
 ::method tiledBackgroundBitmap external "LIBRARY oodialog pbdlg_tiledBackgroundBitmap"
 ::method backgroundColor external "LIBRARY oodialog pbdlg_backgroundColor"

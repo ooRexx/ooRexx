@@ -133,6 +133,116 @@ static RexxObjectPtr drawButton(HWND hDlg, HWND hCtrl, uint32_t id)
 }
 
 
+static void drawFontToDC(HDC hDC, int32_t x, int32_t y, const char * text, uint32_t fontSize, const char * opts,
+                         const char * fontName, int32_t fgColor, int32_t bkColor)
+{
+   HFONT hFont, oldFont;
+   COLORREF oldFg, oldBk;
+
+   int weight = getWeight(opts);
+   int height = getHeightFromFontSize(fontSize);
+
+   hFont = CreateFont(height, 0, 0, 0, weight, StrStrI(opts, "ITALIC") != NULL, StrStrI(opts, "UNDERLINE") != NULL,
+                      StrStrI(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                      FF_DONTCARE, fontName);
+
+   oldFont = (HFONT)SelectObject(hDC, hFont);
+
+   int oldMode = 0;
+   if ( StrStrI(opts, "TRANSPARENT") != NULL )
+   {
+       oldMode = SetBkMode(hDC, TRANSPARENT);
+   }
+   else if ( StrStrI(opts, "OPAQUE") != NULL )
+   {
+       oldMode = SetBkMode(hDC, OPAQUE);
+   }
+
+   if ( fgColor != -1 )
+   {
+       oldFg = SetTextColor(hDC, PALETTEINDEX(fgColor));
+   }
+   if  (bkColor != -1 )
+   {
+       oldBk = SetBkColor(hDC, PALETTEINDEX(bkColor));
+   }
+
+   TextOut(hDC, x, y, text, (int)strlen(text));
+
+   SelectObject(hDC, oldFont);
+   DeleteObject(hFont);
+   if ( oldMode != 0 )
+   {
+       SetBkMode(hDC, oldMode);
+   }
+   if ( fgColor != -1 )
+   {
+       SetTextColor(hDC, oldFg);
+   }
+   if ( bkColor != -1 )
+   {
+       SetBkColor(hDC, oldBk);
+   }
+}
+
+
+static HPALETTE createDIBPalette(LPBITMAPINFO lpBmpInfo)
+{
+    LPBITMAPINFOHEADER lpBmpInfoHdr;
+    HANDLE hPalMem;
+    LOGPALETTE *pPal;
+    HPALETTE hPal;
+    LPRGBQUAD lpRGB;
+    int iColors, i;
+
+    //
+    // validate the header
+    //
+
+    lpBmpInfoHdr = (LPBITMAPINFOHEADER) lpBmpInfo;
+
+    if (!lpBmpInfoHdr) return NULL;
+
+    //
+    // get a pointer to the RGB quads and the number of colors
+    // in the color table (we don't do 24 bit stuff here)
+    //
+
+    lpRGB = (LPRGBQUAD)((LPSTR)lpBmpInfoHdr + (WORD)lpBmpInfoHdr->biSize);
+
+    iColors = numDIBColorEntries(lpBmpInfo);
+
+    //
+    // Check we got a color table
+    //
+
+    if (!iColors) return NULL;
+
+    //
+    // allocate a log pal and fill it with the color table info
+    //
+
+    hPalMem = LocalAlloc(LMEM_MOVEABLE, sizeof(LOGPALETTE) + iColors * sizeof(PALETTEENTRY));
+    if (!hPalMem) return NULL;
+
+    pPal = (LOGPALETTE *) LocalLock(hPalMem);
+    pPal->palVersion = 0x300; // Windows 3.0
+    pPal->palNumEntries = iColors; // table size
+    for (i=0; i<iColors; i++) {
+        pPal->palPalEntry[i].peRed = lpRGB[i].rgbRed;
+        pPal->palPalEntry[i].peGreen = lpRGB[i].rgbGreen;
+        pPal->palPalEntry[i].peBlue = lpRGB[i].rgbBlue;
+        pPal->palPalEntry[i].peFlags = 0;
+    }
+
+    hPal = CreatePalette(pPal);
+    LocalUnlock(hPalMem);
+    LocalFree(hPalMem);
+
+    return hPal;
+}
+
+
 WORD numDIBColorEntries(LPBITMAPINFO lpBmpInfo)
 {
     LPBITMAPINFOHEADER lpBIH;
@@ -314,6 +424,120 @@ logical_t oodColorTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, uint32_t id,
     return 0;
 }
 
+logical_t oodWriteToWindow(RexxMethodContext *context, HWND hwnd, int32_t xPos, int32_t yPos, CSTRING text,
+                           CSTRING fontName, uint32_t fontSize, CSTRING fontStyle, int32_t fgColor, int32_t bkColor)
+{
+    fontName  = (argumentOmitted(5) ? "System" : fontName);
+    fontSize  = (argumentOmitted(6) ? 10       : fontSize);
+    fontStyle = (argumentOmitted(7) ? ""       : fontStyle);
+    fgColor   = (argumentOmitted(8) ? -1       : fgColor);
+    bkColor   = (argumentOmitted(9) ? -1       : bkColor);
+
+    HDC hDC = NULL;
+    if ( StrStrI(fontStyle, "CLIENT") != NULL )
+    {
+        hDC = GetDC(hwnd);
+    }
+    else
+    {
+        hDC = GetWindowDC(hwnd);
+    }
+    if ( hDC != NULL )
+    {
+        drawFontToDC(hDC, xPos, yPos, text, fontSize, fontStyle, fontName, fgColor, bkColor);
+        ReleaseDC(hwnd, hDC);
+        return 0;
+    }
+    return 1;
+}
+
+/**
+ * Returns a handle to brush.  The type of brush is dependent on the arguments.
+ *
+ * If both args were omitted,then a stock hollow brush is returned.  When only
+ * the color arg is specified, then a solid color brush of the color specified
+ * is returned.
+ *
+ * @param context         Method context we are operating in.
+ * @param color           [OPTIONAL]  The color of the brush.  If omitted, the
+ *                        default is 1.
+ * @param brushSpecifier  [OPTIONAL]  If specified, can be either a keyword for
+ *                        the hatch pattern of a brush, or the name of a bitmap
+ *                        file to use for the brush.
+ *
+ * @return The handle to the brush on success, or null on failure.  Sets the
+ *         .SystemErrorCode on failure.
+ */
+HBRUSH oodCreateBrush(RexxMethodContext *context, uint32_t color, CSTRING brushSpecifier)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HBRUSH hBrush = NULL;
+
+    if ( argumentOmitted(1) && argumentOmitted(2) )
+    {
+        hBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+        goto checkForErr_out;
+    }
+
+    color = (argumentOmitted(1) ? 1 : color);
+
+    if ( argumentOmitted(2) )
+    {
+        hBrush = CreateSolidBrush(PALETTEINDEX(color));
+        goto checkForErr_out;
+    }
+
+    LOGBRUSH logicalBrush;
+
+    logicalBrush.lbStyle = BS_HATCHED;
+    logicalBrush.lbColor = PALETTEINDEX(color);
+    logicalBrush.lbHatch = (ULONG_PTR)-1;
+
+    if (      stricmp(brushSpecifier, "UPDIAGONAL")   == 0 ) logicalBrush.lbHatch = HS_BDIAGONAL;
+    else if ( stricmp(brushSpecifier, "DOWNDIAGONAL") == 0 ) logicalBrush.lbHatch = HS_FDIAGONAL;
+    else if ( stricmp(brushSpecifier, "CROSS")        == 0 ) logicalBrush.lbHatch = HS_CROSS;
+    else if ( stricmp(brushSpecifier, "DIAGCROSS")    == 0 ) logicalBrush.lbHatch = HS_DIAGCROSS;
+    else if ( stricmp(brushSpecifier, "HORIZONTAL")   == 0 ) logicalBrush.lbHatch = HS_HORIZONTAL;
+    else if ( stricmp(brushSpecifier, "VERTICAL")     == 0 ) logicalBrush.lbHatch = HS_VERTICAL;
+
+    if ( logicalBrush.lbHatch == (ULONG_PTR)-1 )
+    {
+        // No keyword was matched, so the brushSpecifier has to be a bitmap file
+        // name.
+
+        uint32_t errCode = 0;
+        HBITMAP hBmp = (HBITMAP)loadDIB(brushSpecifier, &errCode);
+        if ( hBmp == NULL )
+        {
+            oodSetSysErrCode(context->threadContext, errCode);
+            goto done_out;
+        }
+
+        logicalBrush.lbStyle = BS_DIBPATTERNPT;
+        logicalBrush.lbColor = DIB_RGB_COLORS;
+        logicalBrush.lbHatch = (ULONG_PTR)hBmp;
+        hBrush = CreateBrushIndirect(&logicalBrush);
+        if ( hBrush == NULL )
+        {
+            oodSetSysErrCode(context->threadContext);
+        }
+        LocalFree((void *)hBmp);
+        goto done_out;
+    }
+
+    hBrush = CreateBrushIndirect(&logicalBrush);
+
+checkForErr_out:
+    if ( hBrush == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+
+done_out:
+    return hBrush;
+}
+
 /**
  * Invalidates a rectangle in a window and has the window update.  This should
  * cause the window to immediately repaint the rectangle.
@@ -453,7 +677,7 @@ void maybeSetColorPalette(RexxMethodContext *c, HBITMAP hBmp, CSTRING opts, DIAL
             {
                 DeleteObject(dlgAdm->ColorPalette);
             }
-            dlgAdm->ColorPalette = CreateDIBPalette((LPBITMAPINFO)hBmp);
+            dlgAdm->ColorPalette = createDIBPalette((LPBITMAPINFO)hBmp);
             setSysPalColors(dlgAdm->ColorPalette);
         }
         else
@@ -463,7 +687,8 @@ void maybeSetColorPalette(RexxMethodContext *c, HBITMAP hBmp, CSTRING opts, DIAL
     }
 }
 
-LPBITMAPINFO loadDIB(const char *szFile)
+// TODO this function needs to be rewritten, it is based on Win16 obsolete functions
+LPBITMAPINFO loadDIB(const char *szFile, uint32_t *lastError)
 {
     int fd;
     OFSTRUCT os;
@@ -484,7 +709,7 @@ LPBITMAPINFO loadDIB(const char *szFile)
     {
         char *msg;
         char *errBuff;
-        DWORD err = GetLastError();
+        uint32_t err = GetLastError();
 
         msg = (char *)LocalAlloc(LPTR, 512);
         if ( msg )
@@ -498,6 +723,11 @@ LPBITMAPINFO loadDIB(const char *szFile)
 
             LocalFree(msg);
             LocalFree(errBuff);
+        }
+
+        if ( lastError != NULL )
+        {
+            *lastError = err;
         }
         return NULL;
     }
@@ -629,13 +859,24 @@ $abort: // crap out
     if (pBmpInfo) LocalFree(pBmpInfo);
     if (fd >= 1) _lclose(fd);
 
+    if ( lastError != NULL )
+    {
+        *lastError = GetLastError();
+        if ( *lastError == 0 )
+        {
+            *lastError = ERROR_INVALID_FUNCTION;  // Temp catch-all error code.
+        }
+    }
     return NULL;
 }
 
 
-/* draw the part that will not be covered by the bitmap */
-void DrawBmpBackground(DIALOGADMIN * dlgAdm, pCPlainBaseDialog pcpbd, INT id, HDC hDC, RECT * itRect, RECT * bmpRect,
-                       WPARAM wParam, LPARAM lParam, LONG left, LONG top)
+/**
+ * Used to draw the part of a bitmap button that will not be covered by the
+ * bitmap.
+ */
+static void drawBmpBackground(DIALOGADMIN * dlgAdm, pCPlainBaseDialog pcpbd, INT id, HDC hDC, RECT * itRect, RECT * bmpRect,
+                              WPARAM wParam, LPARAM lParam, LONG left, LONG top)
 {
     HBRUSH hbr = NULL, oB;
     HPEN oP, hpen;
@@ -841,7 +1082,7 @@ BOOL DrawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, WPARAM wPara
                 r.bottom = r.top + desth;
           }
 
-           DrawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, wParam, lParam, left, top);
+           drawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, wParam, lParam, left, top);
 
              if (dlgAdm->BmpTab[i].Frame)
           {
@@ -913,7 +1154,7 @@ BOOL DrawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, WPARAM wPara
     r.right = ri.left;
     r.bottom = ri.top;
 
-    DrawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, wParam, lParam, left, top);
+    drawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, wParam, lParam, left, top);
 
     if (dlgAdm->ColorPalette)
         SelectPalette(dis->hDC, hP, 0);
@@ -980,7 +1221,7 @@ BOOL DrawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg, WPARAM wParam, LPARAM
       else \
       { \
          dlgAdm->BmpTab[slot].Loaded  = 1; \
-         dlgAdm->BmpTab[slot].field  = (HBITMAP)loadDIB(buffer[bnr]); \
+         dlgAdm->BmpTab[slot].field  = (HBITMAP)loadDIB(buffer[bnr], NULL); \
       }
 
 /* handle the bitmap buttons that are stored in the bitmap table */
@@ -1060,7 +1301,7 @@ size_t RexxEntry BmpButton(const char *funcname, size_t argc, CONSTRXSTRING *arg
           if (strstr(optb, "USEPAL"))
           {
              if (dlgAdm->ColorPalette) DeleteObject(dlgAdm->ColorPalette);
-             dlgAdm->ColorPalette = CreateDIBPalette((LPBITMAPINFO)dlgAdm->BmpTab[i].bitmapID);
+             dlgAdm->ColorPalette = createDIBPalette((LPBITMAPINFO)dlgAdm->BmpTab[i].bitmapID);
              setSysPalColors(dlgAdm->ColorPalette);
           }
 
@@ -1236,7 +1477,7 @@ size_t RexxEntry BmpButton(const char *funcname, size_t argc, CONSTRXSTRING *arg
           if ((argc > 8) && (strstr(argv[8].strptr, "USEPAL")))
           {
              if (dlgAdm->ColorPalette) DeleteObject(dlgAdm->ColorPalette);
-             dlgAdm->ColorPalette = CreateDIBPalette((LPBITMAPINFO)dlgAdm->BmpTab[dlgAdm->BT_size].bitmapID);
+             dlgAdm->ColorPalette = createDIBPalette((LPBITMAPINFO)dlgAdm->BmpTab[dlgAdm->BT_size].bitmapID);
              setSysPalColors(dlgAdm->ColorPalette);
           }
 
@@ -1290,255 +1531,6 @@ size_t RexxEntry BmpButton(const char *funcname, size_t argc, CONSTRXSTRING *arg
    RETERR
 }
 
-
-
-HPALETTE CreateDIBPalette(LPBITMAPINFO lpBmpInfo)
-{
-    LPBITMAPINFOHEADER lpBmpInfoHdr;
-    HANDLE hPalMem;
-    LOGPALETTE *pPal;
-    HPALETTE hPal;
-    LPRGBQUAD lpRGB;
-    int iColors, i;
-
-    //
-    // validate the header
-    //
-
-    lpBmpInfoHdr = (LPBITMAPINFOHEADER) lpBmpInfo;
-
-    if (!lpBmpInfoHdr) return NULL;
-
-    //
-    // get a pointer to the RGB quads and the number of colors
-    // in the color table (we don't do 24 bit stuff here)
-    //
-
-    lpRGB = (LPRGBQUAD)((LPSTR)lpBmpInfoHdr + (WORD)lpBmpInfoHdr->biSize);
-
-    iColors = numDIBColorEntries(lpBmpInfo);
-
-    //
-    // Check we got a color table
-    //
-
-    if (!iColors) return NULL;
-
-    //
-    // allocate a log pal and fill it with the color table info
-    //
-
-    hPalMem = LocalAlloc(LMEM_MOVEABLE, sizeof(LOGPALETTE) + iColors * sizeof(PALETTEENTRY));
-    if (!hPalMem) return NULL;
-
-    pPal = (LOGPALETTE *) LocalLock(hPalMem);
-    pPal->palVersion = 0x300; // Windows 3.0
-    pPal->palNumEntries = iColors; // table size
-    for (i=0; i<iColors; i++) {
-        pPal->palPalEntry[i].peRed = lpRGB[i].rgbRed;
-        pPal->palPalEntry[i].peGreen = lpRGB[i].rgbGreen;
-        pPal->palPalEntry[i].peBlue = lpRGB[i].rgbBlue;
-        pPal->palPalEntry[i].peFlags = 0;
-    }
-
-    hPal = CreatePalette(pPal);
-    LocalUnlock(hPalMem);
-    LocalFree(hPalMem);
-
-    return hPal;
-}
-
-
-HPALETTE CopyPalette(HPALETTE hSrcPal)
-{
-    HANDLE hPalMem;
-    LOGPALETTE *pPal;
-    HPALETTE hDstPal;
-    int iEntries;
-
-
-    GetObject(hSrcPal, sizeof(iEntries), (LPSTR)&iEntries); // get no. of pal colors
-    if (!iEntries) return NULL;
-
-    hPalMem = LocalAlloc(LMEM_MOVEABLE, sizeof(LOGPALETTE) + iEntries * sizeof(PALETTEENTRY));
-    if (!hPalMem) return NULL;
-
-    pPal = (LOGPALETTE *) LocalLock(hPalMem);
-    pPal->palVersion = 0x300; // Windows 3.0
-    pPal->palNumEntries = iEntries; // table size
-    GetPaletteEntries(hSrcPal, 0, iEntries, pPal->palPalEntry);
-
-    hDstPal = CreatePalette(pPal);
-    LocalUnlock(hPalMem);
-    LocalFree(hPalMem);
-
-    return hDstPal;
-}
-
-
-void drawFontToDC(HDC hDC, int32_t x, int32_t y, const char * text, uint32_t fontSize, const char * opts, const char * fontName,
-                  int32_t fgColor, int32_t bkColor)
-{
-   HFONT hFont, oldFont;
-   COLORREF oldFg, oldBk;
-
-   int weight = getWeight(opts);
-   int height = getHeightFromFontSize(fontSize);
-
-   hFont = CreateFont(height, 0, 0, 0, weight, StrStrI(opts, "ITALIC") != NULL, StrStrI(opts, "UNDERLINE") != NULL,
-                      StrStrI(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                      FF_DONTCARE, fontName);
-
-   oldFont = (HFONT)SelectObject(hDC, hFont);
-
-   int oldMode = 0;
-   if ( StrStrI(opts, "TRANSPARENT") != NULL )
-   {
-       oldMode = SetBkMode(hDC, TRANSPARENT);
-   }
-   else if ( StrStrI(opts, "OPAQUE") != NULL )
-   {
-       oldMode = SetBkMode(hDC, OPAQUE);
-   }
-
-   if ( fgColor != -1 )
-   {
-       oldFg = SetTextColor(hDC, PALETTEINDEX(fgColor));
-   }
-   if  (bkColor != -1 )
-   {
-       oldBk = SetBkColor(hDC, PALETTEINDEX(bkColor));
-   }
-
-   TextOut(hDC, x, y, text, (int)strlen(text));
-
-   SelectObject(hDC, oldFont);
-   DeleteObject(hFont);
-   if ( oldMode != 0 )
-   {
-       SetBkMode(hDC, oldMode);
-   }
-   if ( fgColor != -1 )
-   {
-       SetTextColor(hDC, oldFg);
-   }
-   if ( bkColor != -1 )
-   {
-       SetBkColor(hDC, oldBk);
-   }
-}
-
-
-/* Get and free a device, create pen and brush objects (no font), assign and delete graphic objects */
-size_t RexxEntry HandleDC_Obj(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   HDC hDC;
-   HWND w;
-
-   CHECKARGL(2);
-
-   if (argv[0].strptr[0] == 'G')      /* Get a window dc */
-   {
-       w = GET_HWND(argv[1]);
-       hDC = GetWindowDC(w);
-       RETHANDLE(hDC)
-   }
-   else
-   if (argv[0].strptr[0] == 'F')      /* Free a DC */
-   {
-       CHECKARG(3);
-
-       w = GET_HWND(argv[1]);
-       hDC = (HDC)GET_HANDLE(argv[2]);
-       if (ReleaseDC(w, hDC))
-          RETC(0)
-       else
-          RETC(1)
-   }
-   else
-   if (argv[0].strptr[0] == 'S')      /* assign a graphic object to a DC */
-   {
-
-       CHECKARG(3);
-       hDC = (HDC)GET_HANDLE(argv[1]);
-       HGDIOBJ obj = (HGDIOBJ)GET_HANDLE(argv[2]);
-       RETHANDLE(SelectObject(hDC, obj));
-   }
-   else
-   if (argv[0].strptr[0] == 'D')      /* delete a graphic object (pen, brush, font) */
-   {
-       HGDIOBJ obj = (HGDIOBJ)GET_HANDLE(argv[1]);
-       RETC(!DeleteObject(obj));
-   }
-   else
-   if (argv[0].strptr[0] == 'P')      /* Create a pen */
-   {
-       HPEN hP;
-       UINT style;
-
-       CHECKARG(4);
-
-       if (!strcmp(argv[2].strptr, "DASH")) style = PS_DASH; else
-       if (!strcmp(argv[2].strptr, "DOT")) style = PS_DOT; else
-       if (!strcmp(argv[2].strptr, "DASHDOT")) style = PS_DASHDOT; else
-       if (!strcmp(argv[2].strptr, "DASHDOTDOT")) style = PS_DASHDOTDOT; else
-       if (!strcmp(argv[2].strptr, "NULL")) style = PS_NULL; else
-       style = PS_SOLID;
-
-       hP = CreatePen(style, atoi(argv[1].strptr), PALETTEINDEX(atoi(argv[3].strptr)));
-       RETHANDLE(hP);
-   }
-   else
-   if (argv[0].strptr[0] == 'B')     /* create a brush */
-   {
-       HBRUSH hB;
-       HBITMAP hBmp;
-       LOGBRUSH lb;
-       LONG lbmp;
-
-       if (argc == 4)
-       {
-          if ((lbmp = atol(argv[3].strptr)) != 0 )         /* we have a resource id */
-          {
-             DEF_ADM;
-             dlgAdm = (DIALOGADMIN *)GET_POINTER(argv[1]);
-             if (!dlgAdm) RETC(0)
-
-             hBmp = LoadBitmap(dlgAdm->TheInstance, MAKEINTRESOURCE(lbmp));
-             hB = CreatePatternBrush(hBmp);
-             DeleteObject(hBmp);
-          }
-          else
-          {
-             hBmp = (HBITMAP) loadDIB(argv[3].strptr);     /* we have a file name */
-             lb.lbStyle = BS_DIBPATTERNPT;
-             lb.lbColor = DIB_RGB_COLORS;
-             lb.lbHatch = (ULONG_PTR)hBmp;
-             hB = CreateBrushIndirect(&lb);
-             LocalFree((void *)hBmp);
-          }
-       }
-       else if (argc == 3)                   /* color brush */
-       {
-           lb.lbStyle = BS_HATCHED;
-           lb.lbColor = PALETTEINDEX(atoi(argv[1].strptr));
-           if (!stricmp(argv[2].strptr,"UPDIAGONAL")) lb.lbHatch = HS_BDIAGONAL;
-           else if (!stricmp(argv[2].strptr,"DOWNDIAGONAL")) lb.lbHatch = HS_FDIAGONAL;
-           else if (!stricmp(argv[2].strptr,"CROSS")) lb.lbHatch = HS_CROSS;
-           else if (!stricmp(argv[2].strptr,"DIAGCROSS")) lb.lbHatch = HS_DIAGCROSS;
-           else if (!stricmp(argv[2].strptr,"HORIZONTAL")) lb.lbHatch = HS_HORIZONTAL;
-           else if (!stricmp(argv[2].strptr,"VERTICAL")) lb.lbHatch = HS_VERTICAL;
-           else lb.lbStyle = BS_SOLID;
-           hB = CreateBrushIndirect(&lb);
-       }
-       else if (argc == 2)                   /* color brush */
-          hB = CreateSolidBrush(PALETTEINDEX(atoi(argv[1].strptr)));
-       else hB = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-
-       RETHANDLE(hB)
-   }
-   RETERR
-}
 
 
 /**
@@ -2034,6 +2026,135 @@ RexxMethod2(RexxObjectPtr, dlgext_drawButton, RexxObjectPtr, rxID, OSELF, self)
 }
 
 
+/** DialogExtensions::getWindowDC()
+ *
+ *  Retrieves the device context (DC) for the entire window.  For dialog windows
+ *  this includes the title bar, menus, and scroll bars.
+ *
+ *  A window device context permits painting anywhere in a window, because the
+ *  origin of the device context is the upper-left corner of the window instead
+ *  of the client area.
+ *
+ *  The operating system assigns default attributes to the window device context
+ *  each time it retrieves the device context.  Previous attributes are lost.
+ *
+ *  @param  hwnd  The handle of the window whose device context is to be
+ *                retrieved.
+ *
+ *  @return  The handle of the device context on success, a null handle on
+ *           failure.
+ *
+ *  @note  Sets the .SystemErrorCode on failure.
+ *
+ *         The Microsoft documentation says of the underlying API used in this
+ *         method: [The API] is intended for special painting effects within a
+ *         window's nonclient area.  Painting in nonclient areas of any window
+ *         is not recommended.
+ */
+RexxMethod1(POINTERSTRING, dlgext_getWindowDC, POINTERSTRING, hwnd)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( hwnd == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+        return NULL;
+    }
+
+    HDC hDC = GetWindowDC((HWND)hwnd);
+    if ( hDC == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return hDC;
+}
+
+
+/** DialogExtensions::freeWindowDC()
+ *
+ *
+ * @param hDC
+ *
+ * @remarks  The MSDN docs make no mention of ReleaseDC() setting last error.
+ */
+RexxMethod2(logical_t, dlgext_freeWindowDC, POINTERSTRING, hwnd, POINTERSTRING, hDC)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( hwnd == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+        return FALSE;
+    }
+    return (ReleaseDC((HWND)hwnd, (HDC)hDC) == 1 ? TRUE : FALSE);
+}
+
+
+/** DialogExtensions::createBrush()
+ *
+ *  Retrieves a handle to a graphics brush.  The type of brush is dependent on
+ *  the supplied arguments.
+ *
+ *  This method is exactly the same as the WindowsExtensions createBrush()
+ *  method except that it also allows the brush specifier to be a resource ID of
+ *  a bitmap compiled into the resource DLL of a ResDialog.
+ *
+ * If both args were omitted,then a stock hollow brush is returned.  When only
+ * the color arg is specified, then a solid color brush of the color specified
+ * is returned.
+ *
+ * The second argument can either be a keyword to specify a brush pattern, the
+ * resource ID of a bitmap, or the file name of a bitmap to use as the brush.
+ *
+ * @param color           [OPTIONAL]  The color of the brush.  If omitted, the
+ *                        default is 1.
+ * @param brushSpecifier  [OPTIONAL]  If specified, can be either a keyword for
+ *                        the hatch pattern of a brush, the resource ID of a
+ *                        bitmap compiled into the resource DLL of a ResDialog,
+ *                        or the name of a bitmap file to use for the brush.
+ *
+ * @return The handle to the brush on success, or a null handle on failure.
+ *
+ * @note  Sets the .SystemErrorCode on failure.
+ */
+RexxMethod3(POINTERSTRING, dlgext_createBrush, OPTIONAL_uint32_t, color, OPTIONAL_RexxObjectPtr, specifier, OSELF, self)
+{
+    HBRUSH hBrush = NULL;
+    int32_t resID;
+
+    if ( argumentExists(2) && context->Int32(specifier, &resID) )
+    {
+        pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
+        if ( pcpbd != NULL && pcpbd->dlgAdm != NULL )
+        {
+            HBITMAP hBmp = LoadBitmap(pcpbd->dlgAdm->TheInstance, MAKEINTRESOURCE(resID));
+            if ( hBmp == NULL )
+            {
+                oodSetSysErrCode(context->threadContext);
+                goto done_out;
+            }
+
+            hBrush = CreatePatternBrush(hBmp);
+            if ( hBrush == NULL )
+            {
+                oodSetSysErrCode(context->threadContext);
+            }
+
+            DeleteObject(hBmp);
+            goto done_out;
+        }
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+    }
+    else
+    {
+        return oodCreateBrush(context, color, (argumentExists(2) ? context->ObjectToStringValue(specifier) : ""));
+    }
+
+done_out:
+    return hBrush;
+}
+
+
 /** DialogExtensions::getMouseCapture()
  *
  *  Retrieves a handle to the window (if any) that has captured the mouse.
@@ -2224,32 +2345,16 @@ RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkCol
 }
 
 
+/** DialogExtensions::writeToWindow()
+ *
+ *
+ *  @remarks  This method uses the correct process to create the font.
+ */
 RexxMethod9(logical_t, dlgext_writeToWindow, POINTERSTRING, hwnd, int32_t, xPos, int32_t, yPos, CSTRING, text,
             OPTIONAL_CSTRING, fontName, OPTIONAL_uint32_t, fontSize, OPTIONAL_CSTRING, fontStyle,
             OPTIONAL_int32_t, fgColor, OPTIONAL_int32_t, bkColor)
 {
-    fontName  = (argumentOmitted(5) ? "System" : fontName);
-    fontSize  = (argumentOmitted(6) ? 10       : fontSize);
-    fontStyle = (argumentOmitted(7) ? ""       : fontStyle);
-    fgColor   = (argumentOmitted(8) ? -1       : fgColor);
-    bkColor   = (argumentOmitted(9) ? -1       : bkColor);
-
-    HDC hDC = NULL;
-    if ( StrStrI(fontStyle, "CLIENT") != NULL )
-    {
-        hDC = GetDC((HWND)hwnd);
-    }
-    else
-    {
-        hDC = GetWindowDC((HWND)hwnd);
-    }
-    if ( hDC != NULL )
-    {
-        drawFontToDC(hDC, xPos, yPos, text, fontSize, fontStyle, fontName, fgColor, bkColor);
-        ReleaseDC((HWND)hwnd, hDC);
-        return 0;
-    }
-    return 1;
+    return oodWriteToWindow(context, (HWND)hwnd, xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor);
 }
 
 

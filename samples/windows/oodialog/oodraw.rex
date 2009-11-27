@@ -99,7 +99,7 @@
    dc = self~getButtonDC(100)
    mybrush = self~createbrush(10)         /* white      */
    mypen   = self~createpen(1,'solid',0)  /* thin black */
-   sysFont = self~CreateFontEx("System",10)
+   sysFont = self~createFontEx("System",10)
    oldFont = self~FontToDC(dc,sysFont)
    self~writetobutton(100,45*x,30*y,"Black rectangles","Arial",12,"BOLD")
    self~writetobutton(100,80*x,80*y,"White rectangles","Arial",12,"BOLD")

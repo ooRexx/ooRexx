@@ -49,7 +49,7 @@
 
 /**
  * The class WindowExtensions implements methods that are common to all windows,
- * no matter whether they are dialogs or dialog items.  It's an extension to
+ * no matter whether they are dialogs or dialog controls.  It's an extension to
  * the WindowBase mixin-class.
  *
  * Note that this mixinclass contains many methods that should not be a part of
@@ -92,72 +92,16 @@
    forward message "getCursorPos" continue
    return result~x result~y
 
+::method write unguarded external "LIBRARY oodialog winex_write"
+::method deleteFont unguarded external "LIBRARY oodialog winex_deleteObject"
+::method deleteObject unguarded external "LIBRARY oodialog winex_deleteObject"
+::method createBrush unguarded external "LIBRARY oodialog winex_createBrush"
+::method CreatePen unguarded external "LIBRARY oodialog winex_createPen"
 
-::method deleteFont unguarded
-   use strict arg hFont
-   return self~deleteObject(hFont)
-
-   /* This method deletes a graphic object */
-::method deleteObject unguarded
-   use strict arg obj
-   return HandleDC_Obj("D", obj)
-
-::method CreateBrush unguarded
-    use arg color, brushSpecifier
-    if arg() = 0 then return HandleDC_Obj("B")
-    if arg(1, "o") = 1 then color = 1
-    if arg(2, "o") = 1 then return HandleDC_Obj("B", color)
-    brushSpecifier = brushSpecifier~translate
-    if brushSpecifier = "UPDIAGONAL" | brushSpecifier = "DOWNDIAGONAL" | brushSpecifier = "CROSS" | brushSpecifier = "DIAGCROSS",
-    | brushSpecifier = "HORIZONTAL" | brushSpecifier = "VERTICAL" then return HandleDC_Obj("B", color, brushSpecifier)
-    else return HandleDC_Obj("B", 0 /* NULL adm */, color, brushSpecifier)  /* brushSpecifier must be filename */
-
-   /* This method allows you to write text to a window in the given font, in */
-   /* the given size, and to the given position */
-   /* argument 'fontStyle' can be one or more off: */
-   /*    "THIN"            "UNDERLINE"    */
-   /*    "EXTRALIGHT"      "ITALIC"       */
-   /*    "LIGHT"           "STRIKEOUT"    */
-   /*    "MEDIUM"                */
-   /*    "SEMIBOLD"              */
-   /*    "EXTRABOLD"             */
-   /*    "BOLD"                  */
-   /*    "HEAVY"                 */
-
-::method Write unguarded
-   argarr = arg(1, "A")
-   newarg = .array~new(argarr~Items+1)
-   do i = 1 to arg(); newarg[i+1] = argarr[i]; end
-   newarg[1] = self~hwnd
-   forward message (WriteToWindow) arguments (newarg)
-
-   /* This method allows you to write text to a device context to a given */
-   /* position */
-
-   /* This method loads a graphic object into device context */
-
-::method ObjectToDC unguarded
-   use arg dc, obj
-   return HandleDC_Obj("S", dc, obj)
-
-   /* Loads font into device context of a window. */
-   /* Use 'createFont' method to get a font handle */
-
-::method FontToDC unguarded
-   use arg dc, hFont
-   return self~ObjectToDC(dc, hFont)
-
-   /* Set the font color of a device context. */
-   /* Use 'createFont' method to get a font handle */
-
-   /* This method will create a pen in the given color and style */
-   /* It returns a handle to a pen object */
-::method CreatePen unguarded
-   use arg width, style, color
-   if arg(1, "o") = 1 then width = 1
-   if arg(2, "o") = 1 then style = "SOLID"; else style = style~translate
-   if arg(3, "o") = 1 then color = 0
-   return HandleDC_Obj("P", width, style, color)
+::method objectToDC unguarded external "LIBRARY oodialog winex_objectToDC"
+::method fontToDC unguarded
+   use strict arg dc, hFont
+   return self~objectToDC(dc, hFont)
 
 ::method rectangle unguarded external "LIBRARY oodialog winex_rectangle"
 ::method drawLine unguarded external "LIBRARY oodialog winex_drawLine"
@@ -173,7 +117,9 @@
 ::method setArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
 ::method getArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
 
-::method LogRect2AbsRect unguarded
+
+-- DEPRECATED
+::method logRect2AbsRect unguarded
    parse arg l, t, r, b
    ret.left = l*self~factorX
    ret.right = r*self~factorX
@@ -181,7 +127,7 @@
    ret.bottom = b*self~factorY
    return ret.
 
-::method AbsRect2LogRect unguarded
+::method absRect2LogRect unguarded
    parse arg l, t, r, b
    ret.left = l/self~factorX
    ret.right = r/self~factorX

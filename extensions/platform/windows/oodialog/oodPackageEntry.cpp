@@ -98,7 +98,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(ScrollText);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDC_Obj);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleTreeCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
@@ -120,7 +119,6 @@ RexxRoutineEntry oodialog_functions[] =
 {
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),           /* 7  */
     REXX_CLASSIC_ROUTINE(ScrollText,           ScrollText),          /* 9  */
-    REXX_CLASSIC_ROUTINE(HandleDC_Obj,         HandleDC_Obj),        /* 17  could this benefit from being a DC object ?*/
     REXX_CLASSIC_ROUTINE(HandleTreeCtrl,       HandleTreeCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrl,       HandleListCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
@@ -227,6 +225,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_getFocus);
 REXX_METHOD_PROTOTYPE(pbdlg_setFocus);
 REXX_METHOD_PROTOTYPE(pbdlg_tabTo);
 REXX_METHOD_PROTOTYPE(pbdlg_pixel2dlgUnit);
+REXX_METHOD_PROTOTYPE(pbdlg_dlgUnit2pixel);
 REXX_METHOD_PROTOTYPE(pbdlg_backgroundBitmap);
 REXX_METHOD_PROTOTYPE(pbdlg_tiledBackgroundBitmap);
 REXX_METHOD_PROTOTYPE(pbdlg_backgroundColor);
@@ -267,10 +266,13 @@ REXX_METHOD_PROTOTYPE(dlgext_resizeMoveControl);
 REXX_METHOD_PROTOTYPE(dlgext_setForgroundWindow);
 REXX_METHOD_PROTOTYPE(dlgext_setControlColor);
 REXX_METHOD_PROTOTYPE(dlgext_drawButton);
+REXX_METHOD_PROTOTYPE(dlgext_getWindowDC);
+REXX_METHOD_PROTOTYPE(dlgext_freeWindowDC);
+REXX_METHOD_PROTOTYPE(dlgext_writeToWindow);
+REXX_METHOD_PROTOTYPE(dlgext_createBrush);
 REXX_METHOD_PROTOTYPE(dlgext_mouseCapture);
 REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
-REXX_METHOD_PROTOTYPE(dlgext_writeToWindow);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
 REXX_METHOD_PROTOTYPE(baseDlg_test);
@@ -335,9 +337,14 @@ REXX_METHOD_PROTOTYPE(winex_restoreCursorShape);
 REXX_METHOD_PROTOTYPE(winex_writeDirect);
 REXX_METHOD_PROTOTYPE(winex_loadBitmap);
 REXX_METHOD_PROTOTYPE(winex_removeBitmap);
+REXX_METHOD_PROTOTYPE(winex_write);
+REXX_METHOD_PROTOTYPE(winex_createBrush);
+REXX_METHOD_PROTOTYPE(winex_createPen);
+REXX_METHOD_PROTOTYPE(winex_deleteObject);
 REXX_METHOD_PROTOTYPE(winex_getDC);
 REXX_METHOD_PROTOTYPE(winex_freeDC);
 REXX_METHOD_PROTOTYPE(winex_rectangle);
+REXX_METHOD_PROTOTYPE(winex_objectToDC);
 REXX_METHOD_PROTOTYPE(winex_drawLine);
 REXX_METHOD_PROTOTYPE(winex_drawPixel);
 REXX_METHOD_PROTOTYPE(winex_getPixel);
@@ -710,6 +717,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_tiledBackgroundBitmap,    pbdlg_tiledBackgroundBitmap),
     REXX_METHOD(pbdlg_backgroundColor,          pbdlg_backgroundColor),
     REXX_METHOD(pbdlg_pixel2dlgUnit,            pbdlg_pixel2dlgUnit),
+    REXX_METHOD(pbdlg_dlgUnit2pixel,            pbdlg_dlgUnit2pixel),
     REXX_METHOD(pbdlg_focusControl,             pbdlg_focusControl),
     REXX_METHOD(pbdlg_showControl,              pbdlg_showControl),
     REXX_METHOD(pbdlg_connect_ControName,       pbdlg_connect_ControName),
@@ -750,7 +758,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_mouseCapture,            dlgext_mouseCapture),
     REXX_METHOD(dlgext_captureMouse,            dlgext_captureMouse),
     REXX_METHOD(dlgext_isMouseButtonDown,       dlgext_isMouseButtonDown),
+    REXX_METHOD(dlgext_getWindowDC,             dlgext_getWindowDC),
+    REXX_METHOD(dlgext_freeWindowDC,            dlgext_freeWindowDC),
     REXX_METHOD(dlgext_writeToWindow,           dlgext_writeToWindow),
+    REXX_METHOD(dlgext_createBrush,             dlgext_createBrush),
 
     REXX_METHOD(baseDlg_init,                   baseDlg_init),
     REXX_METHOD(baseDlg_test,                   baseDlg_test),
@@ -833,6 +844,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(winex_writeDirect,              winex_writeDirect),
     REXX_METHOD(winex_loadBitmap,               winex_loadBitmap),
     REXX_METHOD(winex_removeBitmap,             winex_removeBitmap),
+    REXX_METHOD(winex_write,                    winex_write),
+    REXX_METHOD(winex_createBrush,              winex_createBrush),
+    REXX_METHOD(winex_createPen,                winex_createPen),
+    REXX_METHOD(winex_deleteObject,             winex_deleteObject),
+    REXX_METHOD(winex_objectToDC,               winex_objectToDC),
     REXX_METHOD(winex_getDC,                    winex_getDC),
     REXX_METHOD(winex_freeDC,                   winex_freeDC),
     REXX_METHOD(winex_rectangle,                winex_rectangle),

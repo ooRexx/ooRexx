@@ -661,7 +661,7 @@ RexxMethod4(POINTERSTRING, winex_createFont, OPTIONAL_CSTRING, fontName, OPTIONA
 
     if ( argumentExists(3) )
     {
-        italic = StrStrI(fontStyle, "ITALIC") != NULL;
+        italic    = StrStrI(fontStyle, "ITALIC"   ) != NULL;
         underline = StrStrI(fontStyle, "UNDERLINE") != NULL;
         strikeout = StrStrI(fontStyle, "STRIKEOUT") != NULL;
         weight = getWeight(fontStyle);
@@ -1116,6 +1116,7 @@ RexxMethod4(logical_t, winex_writeDirect, POINTERSTRING, hDC, int32_t, xPos, int
 /** WindowExtensions::loadBitmap()
  *
  *
+ *  @note  Sets the .SystemErrorCode.
  *
  *  @remarks  Self could be either a dialog or a dialog control.  If self is a
  *            dialog control, then getDlgAdm() will return null.  That's okay,
@@ -1124,8 +1125,18 @@ RexxMethod4(logical_t, winex_writeDirect, POINTERSTRING, hDC, int32_t, xPos, int
  */
 RexxMethod3(RexxStringObject, winex_loadBitmap, CSTRING, bitmapFile, OPTIONAL_CSTRING, opts, OSELF, self)
 {
-    HBITMAP hBmp = (HBITMAP)loadDIB(bitmapFile);
-    maybeSetColorPalette(context, hBmp, opts, NULL, self);
+    oodResetSysErrCode(context->threadContext);
+    uint32_t errCode = 0;
+
+    HBITMAP hBmp = (HBITMAP)loadDIB(bitmapFile, &errCode);
+    if ( hBmp == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, errCode);
+    }
+    else
+    {
+        maybeSetColorPalette(context, hBmp, opts, NULL, self);
+    }
     return pointer2string(context, hBmp);
 }
 
@@ -1223,11 +1234,161 @@ RexxMethod2(RexxObjectPtr, winex_freeDC, POINTERSTRING, hDC, CSELF, pCSelf)
     HWND hwnd = winExtSetup(context, pCSelf);
     if ( hwnd == NULL )
     {
-        return 0;
+        return TheFalseObj;
     }
 
     if ( ReleaseDC(hwnd, (HDC)hDC) == 0 )
     {
+        return TheFalseObj;
+    }
+    return TheTrueObj;
+}
+
+
+/** WindowExtensions::objectToDC()
+ *
+ *  Selects a graphics object into the specified device context (DC). The new
+ *  object replaces the previous object of the same type.
+ *
+ *  This method should only be used with pen, brush, or font objects.  Although
+ *  the operating system can select some other types of graphic objects into a
+ *  device context, the restrictions placed on using those objects make it
+ *  difficult to provide a correct means of using them through ooDialog.
+ *
+ *  This method returns the previously selected object of the specified type.
+ *  An application should always replace a new object with the original, default
+ *  object after it has finished drawing with the new object.
+ *
+ *  This is done by saving the handle of the returned object and then using
+ *  objectToDC() to select the old object back into the device context.
+ *
+ *  @param  hDC   Handle to the device context receiving the object.
+ *  @param  hObj  Handle to the graphics object.
+ *
+ *  @return  On success a handle to the existing object of the type specified is
+ *           returned.  On failure a null pointer is returned.
+ *
+ *  @note  The operating system does not set the last error code during the
+ *         execution of this method, so the .SystemErrorCode has no information
+ *         if this method fails.
+ *
+ */
+RexxMethod2(POINTERSTRING, winex_objectToDC, POINTERSTRING, hDC, POINTERSTRING, hObj)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HGDIOBJ hOldObj = SelectObject((HDC)hDC, (HGDIOBJ)hObj);
+    if ( hOldObj == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return hOldObj;
+}
+
+
+/** WindowExtensions::createPen()
+ *
+ *  Creates a logical pen that has the specified style, width, and color. The
+ *  pen can subsequently be selected into a device context and used to draw
+ *  lines and curves.
+ *
+ *  @param  width  [OPTIONAL]  Specifies the width of the pen, in pixels. If
+ *                 width is zero, the pen is set to be a single pixel wide.  If
+ *                 omitted the width is set to 1.  If you specify a width
+ *                 greater than one for the following styles: DASH, DOT,
+ *                 DASHDOT, or DASHDOTDOT, the system returns a pen with the
+ *                 specified width, but changes the pen style to SOLID.
+ *
+ *  @param  style  [OPTIONAL]  A keyword that specifies the pen style.  The
+ *                 following keywords are valid: SOLID, NULL, DASH, DOT,
+ *                 DASHDOT, DASHDOTDOT INSIDEFRAME.  Case is not significant. If
+ *                 omitted a solid pen is returned.  Likewise, if the keyword is
+ *                 not recognized, a solid pen is returned.
+ *
+ *  @param  color  [OPTIONAL] Specifies the color for the pen.
+ *
+ *  @return  The pen specified by the arguments on success, a null pointer on
+ *           failure.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(POINTERSTRING, winex_createPen, OPTIONAL_uint32_t, width, OPTIONAL_CSTRING, _style, OPTIONAL_uint32_t, color)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    width = (argumentOmitted(1) ? 1 : width);
+    color = (argumentOmitted(3) ? 0 : color);
+
+    uint32_t style = PS_SOLID;
+    if ( argumentExists(2) )
+    {
+        if (      stricmp(_style, "DASH")        == 0 ) style = PS_DASH;
+        else if ( stricmp(_style, "DOT")         == 0 ) style = PS_DOT;
+        else if ( stricmp(_style, "DASHDOT")     == 0 ) style = PS_DASHDOT;
+        else if ( stricmp(_style, "DASHDOTDOT")  == 0 ) style = PS_DASHDOTDOT;
+        else if ( stricmp(_style, "INSIDEFRAME") == 0 ) style = PS_NULL;
+        else if ( stricmp(_style, "NULL")        == 0 ) style = PS_NULL;
+        else style = PS_SOLID;
+    }
+
+    HPEN hPen = CreatePen(style, width, PALETTEINDEX(color));
+    if ( hPen == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return hPen;
+}
+
+/** WindowExtensions::createBrush()
+ *
+ *  Retrieves a handle to a graphics brush.  The type of brush is dependent on
+ *  the supplied arguments.
+ *
+ * If both args were omitted,then a stock hollow brush is returned.  When only
+ * the color arg is specified, then a solid color brush of the color specified
+ * is returned.
+ *
+ * The second arggument can either be a keyword to specify a brush pattern, or
+ * the file name of a bitmap to use as the brush.
+ *
+ * @param color           [OPTIONAL]  The color of the brush.  If omitted, the
+ *                        default is 1.
+ * @param brushSpecifier  [OPTIONAL]  If specified, can be either a keyword for
+ *                        the hatch pattern of a brush, or the name of a bitmap
+ *                        file to use for the brush.
+ *
+ * @return The handle to the brush on success, or a null handle on failure.
+ *
+ * @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(POINTERSTRING, winex_createBrush, OPTIONAL_uint32_t, color, OPTIONAL_CSTRING, brushSpecifier)
+{
+    return oodCreateBrush(context, color, brushSpecifier);
+}
+
+
+/** WindowExtensions::deleteObject()
+ *
+ *  Deletes a logical pen, brush, font, bitmap, region, or palette, freeing all
+ *  system resources associated with the object.   After the object is deleted,
+ *  the specified handle is no longer valid.
+ *
+ *  @param  hObj  Handle to the graphical object to be deleted.
+ *
+ *  @return  True on success, false on error.
+ *
+ *  @note Sets .SystemErrorCode.  Do not delete a drawing object (pen or brush)
+ *        while it is still selected into a DC.
+ *
+ *        When a pattern brush is deleted, the bitmap associated with the brush
+ *        is not deleted. The bitmap must be deleted independently.
+ */
+RexxMethod1(RexxObjectPtr, winex_deleteObject, POINTERSTRING, hObj)
+{
+    oodResetSysErrCode(context->threadContext);
+    if ( DeleteObject((HGDIOBJ)hObj) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
         return TheFalseObj;
     }
     return TheTrueObj;
@@ -1307,6 +1468,29 @@ syserr_out:
 
 err_out:
     return 1;
+}
+
+
+/** WindowExtensions::write()
+ *
+ *
+ *  @remarks  This method uses the correct process to create the font.
+ *
+ *            Note:  In order for the argument positions to match other methods
+ *            that call the common oodWriteToWindow() function, xPos must be the
+ *            *second* arg.  So, in contrast to most method functions, CSELF is
+ *             placed at the front.
+ */
+RexxMethod9(logical_t, winex_write, CSELF, pCSelf, int32_t, xPos, int32_t, yPos, CSTRING, text,
+            OPTIONAL_CSTRING, fontName, OPTIONAL_uint32_t, fontSize, OPTIONAL_CSTRING, fontStyle,
+            OPTIONAL_int32_t, fgColor, OPTIONAL_int32_t, bkColor)
+{
+    HWND hwnd = winExtSetup(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        return 1;
+    }
+    return oodWriteToWindow(context, (HWND)hwnd, xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor);
 }
 
 

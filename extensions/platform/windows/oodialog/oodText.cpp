@@ -464,6 +464,7 @@ done_out:
  * to their dialog unit equivalent.
  *
  * @param  c      Method context we are operating in.
+ * @param  dlg    The Rexx dialog object.
  * @param  p      Pointer to the array of points
  * @param  count  Count of points in the array.
  *
@@ -490,6 +491,47 @@ bool mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p, size_t coun
     {
         pixel2du(p + i, buX, buY);
     }
+    return true;
+}
+
+/**
+ * Given a Rexx dialog object and a rectangle in dialog units, maps the
+ * rectangle to pixels
+ *
+ * @param  c      Method context we are operating in.
+ * @param  dlg    The Rexx dialog object.
+ * @param  r      Pointer to the rectangle.
+ *
+ * @return  True on success, false on failure.
+ *
+ * @assumes  The caller has ensured that dlg is indeed a Rexx dialog object.
+ */
+bool mapDuToPixel(RexxMethodContext *c, RexxObjectPtr dlg, PRECT r)
+{
+    oodResetSysErrCode(c->threadContext);
+
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
+
+    if ( pcpbd->hDlg != NULL )
+    {
+        if ( MapDialogRect(pcpbd->hDlg, r) == 0 )
+        {
+            oodSetSysErrCode(c->threadContext);
+            return false;
+        }
+        return true;
+    }
+
+    int buX, buY;
+    if ( ! calcDlgBaseUnits(c, pcpbd->fontName, pcpbd->fontSize, &buX, &buY) )
+    {
+        return false;
+    }
+
+    r->left   = MulDiv(r->left,   buX, 4);
+    r->right  = MulDiv(r->right,  buX, 4);
+    r->top    = MulDiv(r->top,    buY, 8);
+    r->bottom = MulDiv(r->bottom, buY, 8);
     return true;
 }
 

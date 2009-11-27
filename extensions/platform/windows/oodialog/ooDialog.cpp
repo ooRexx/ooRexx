@@ -2819,10 +2819,11 @@ RexxMethod3(RexxObjectPtr, pbdlg_backgroundBitmap, CSTRING, bitmapFileName, OPTI
     oodResetSysErrCode(context->threadContext);
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
-    HBITMAP hBitmap = (HBITMAP)loadDIB(bitmapFileName);
+    uint32_t errCode = 0;
+    HBITMAP hBitmap = (HBITMAP)loadDIB(bitmapFileName, &errCode);
     if ( hBitmap == NULL )
     {
-        oodSetSysErrCode(context->threadContext, ERROR_FILE_NOT_FOUND);
+        oodSetSysErrCode(context->threadContext, errCode);
         return TheFalseObj;
     }
     maybeSetColorPalette(context, hBitmap, opts, pcpbd->dlgAdm, NULL);
@@ -2871,10 +2872,11 @@ RexxMethod2(RexxObjectPtr, pbdlg_tiledBackgroundBitmap, CSTRING, bitmapFileName,
     oodResetSysErrCode(context->threadContext);
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
-    HBITMAP hBitmap = (HBITMAP)loadDIB(bitmapFileName);
+    uint32_t errCode = 0;
+    HBITMAP hBitmap = (HBITMAP)loadDIB(bitmapFileName, &errCode);
     if ( hBitmap == NULL )
     {
-        oodSetSysErrCode(context->threadContext, ERROR_FILE_NOT_FOUND);
+        oodSetSysErrCode(context->threadContext, errCode);
         return TheFalseObj;
     }
 
@@ -2884,12 +2886,12 @@ RexxMethod2(RexxObjectPtr, pbdlg_tiledBackgroundBitmap, CSTRING, bitmapFileName,
     logicalBrush.lbHatch = (ULONG_PTR)hBitmap;
 
     HBRUSH hBrush = CreateBrushIndirect(&logicalBrush);
-    uint32_t rc = GetLastError();
+    errCode = GetLastError();
     LocalFree((void *)hBitmap);
 
     if ( hBrush == NULL )
     {
-        oodSetSysErrCode(context->threadContext, rc);
+        oodSetSysErrCode(context->threadContext, errCode);
         return TheFalseObj;
     }
 
@@ -2951,7 +2953,7 @@ RexxMethod2(RexxObjectPtr, pbdlg_backgroundColor, uint32_t, colorIndex, CSELF, p
  *  @param du  [IN / OUT ]  The object to transform, can be either a .Point,
  *             .Size, or .Rect.  On input, the unit of measurement is assumed to
  *             be pixels and on return the the pixels will have been converted
- *             to dialog units
+ *             to dialog units.
  *
  *  @return  True on success, false on error.
  *
@@ -2972,6 +2974,49 @@ RexxMethod2(logical_t, pbdlg_pixel2dlgUnit, RexxObjectPtr, du, OSELF, self)
     }
 
     wrongArgValueException(context->threadContext, 1, "Point, Size, or Rect", du);
+    return FALSE;
+}
+
+/** PlainBaseDialog::pbdlg_dlgUnit2pixel()
+ *
+ *  Takes a dimension expressed in dialog units of this dialog and tranforms it
+ *  to a dimension expressed in pixels.
+ *
+ *  @param pixels  [IN / OUT ]  The object to transform, can be either a .Rect,
+ *                 .Point, or .Size.  On input, the unit of measurement is
+ *                 assumed to be dialog units of this dialog and on return the
+ *                 the dialog units will have been converted to pixels.
+ *
+ *  @return  True on success, false on error.
+ *
+ *  @remarks  A point and a size are binary compatible, so they can be treated
+ *            the same by using a cast for a size.
+ */
+RexxMethod2(logical_t, pbdlg_dlgUnit2pixel, RexxObjectPtr, pixels, OSELF, self)
+{
+    RECT *r = {0};
+
+    if ( context->IsOfType(pixels, "RECT") )
+    {
+        RECT *r = (PRECT)context->ObjectToCSelf(pixels);
+        return mapDuToPixel(context, self, r) ? TRUE : FALSE;
+    }
+    else if ( context->IsOfType(pixels, "POINT") || context->IsOfType(pixels, "SIZE") )
+    {
+        POINT *p = (PPOINT)context->ObjectToCSelf(pixels);
+        r->right  = p->x;
+        r->bottom = p->y;
+
+        if ( mapDuToPixel(context, self, r) )
+        {
+            p->x = r->right;
+            p->y = r->bottom;
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    wrongArgValueException(context->threadContext, 1, "Point, Size, or Rect", pixels);
     return FALSE;
 }
 
