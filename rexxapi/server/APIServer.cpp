@@ -108,7 +108,7 @@ void APIServer::listenForConnections()
 void APIServer::sessionTerminated(APIServerThread *thread)
 {
     // we need to hold the lock while handling this
-    ServerLock(this);
+    ServerLock sl(this);
     // add to the queue for cleanup on the next opportunity
     terminatedThreads.push_back(thread);
 }
@@ -122,7 +122,7 @@ void APIServer::sessionTerminated(APIServerThread *thread)
 void APIServer::cleanupTerminatedSessions()
 {
     // we need to hold the lock while handling this
-    ServerLock(this);
+    ServerLock sl(this);
 
     // clean up the connection pools
     while (!terminatedThreads.empty())
@@ -321,7 +321,7 @@ bool APIServer::isStoppable()
 APIServerInstance *APIServer::getInstance(ServiceMessage &m)
 {
     // synchronize access on this
-    ServerLock(this);
+    ServerLock sl(this);
 
     APIServerInstance *current = instances;
     while (current != NULL)
