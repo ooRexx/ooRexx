@@ -78,23 +78,28 @@
    -- The 102 button height is much larger, it covers most of the lower part of the
    -- dialog.
    --
-   -- Then, the bitmaps for the buttons are displaced (moved from the upper left corner
-   -- of the button) by a large amount.  The 101 button is displaced far to the right,
-   -- and the 102 button is displaced far to the bottom and far to the left.  In the run()
-   -- method, scrollBitmapFromTo() is used to scroll the bitmaps from their displaced positions
-   -- back to the upper left corner of the buttons.  This gives the bitmaps the appearance of
-   -- scrolling from the right to the left, the 101 button, and from the bottom to the top,
-   -- the 102 button.
+   -- Then, the bitmaps for the buttons are positioned (moved from the upper left corner
+   -- of the button) by a large amount.  The 101 button is positioned far to the right,
+   -- and the 102 button is positioned far to the bottom and far to the left.  In the run()
+   -- method, scrollBitmapFromTo() is used to scroll the bitmaps from their positions back
+   -- to the upper left corner of the buttons.  This gives the bitmaps the 101 button the
+   -- appearance of scrolling from the right to the left, and the 102 button the appearance
+   -- of scrolling from the bottom to the top.
 
-   self~createBitmapButton(101, 1, 10, self~SizeX-1, 130 / self~FactorY, "USEPAL", , , "bmp\install.bmp")
-   self~createBitmapButton(102, 20, but2pos, self~SizeX - 20 ,but2size, , , , "bmp\install2.bmp")
-   self~DisplaceBitmap(101,self~SizeX * self~FactorX+10, 0)
-   self~DisplaceBitmap(102, -450, 100)
+   self~createBitmapButton(101, 1, 10, self~sizeX-1, 130 / self~factorY, "USEPAL", , , "bmp\install.bmp")
+   self~createBitmapButton(102, 20, but2pos, self~sizeX - 20, but2size, , , , "bmp\install2.bmp")
+
+   pos = .Point~new(self~sizeX * self~factorX + 10, 0)
+   self~setBitmapPosition(101, pos)
+
+   pos~x = -450
+   pos~y = 100
+   self~setBitmapPosition(102, pos)
 
    -- Add the other controls.
-   self~createWhiteFrame(203, 10, self~SizeY - 52, self~SizeX-20, 28, "HIDDEN")
-   self~createPushButton(103, 12, self~SizeY - 50, self~SizeX-24, 24, "OWNER NOTAB")
-   self~createPushButtonGroup(self~SizeX-220, self~SizeY - 18,60,12, ,
+   self~createWhiteFrame(203, 10, self~SizeY - 52, self~sizeX-20, 28, "HIDDEN")
+   self~createPushButton(103, 12, self~SizeY - 50, self~sizeX-24, 24, "OWNER NOTAB")
+   self~createPushButtonGroup(self~sizeX-220, self~sizeY - 18,60,12, ,
             "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method initDialog
