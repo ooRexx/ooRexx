@@ -86,7 +86,7 @@ RexxMethod3(RexxObjectPtr, baseDlg_init, ARGLIST, args, SUPER, super, OSELF, sel
             return TheOneObj;
         }
 
-        context->SendMessage1(self, "SCROLLNOW=", TheZeroObj);
+        context->SendMessage1(self, "SCROLLNOW=", TheFalseObj);
         context->SendMessage1(self, "MENUBAR=", context->Nil());
         context->SendMessage1(self, "ISLINKED=", TheFalseObj);
     }
@@ -2092,7 +2092,7 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
        sprintf(buffer, "%s.%s", argv[0].strptr, "BmpTab");
        for (i=0; i<dlgAdm->BT_size; i++)
        {
-           itoa(dlgAdm->BmpTab[i].buttonID, data, (dlgAdm->BmpTab[i].Loaded ? 16: 10));
+           itoa(dlgAdm->BmpTab[i].buttonID, data, (dlgAdm->BmpTab[i].loaded ? 16: 10));
            if (!SetRexxStem(buffer, i+1, "ID", data))  { RETERR; }
            pointer2string(data, (void *)dlgAdm->BmpTab[i].bitmapID);
            if (!SetRexxStem(buffer, i+1, "Normal", data))  { RETERR; }

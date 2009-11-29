@@ -51,8 +51,8 @@ extern int           getHeightFromFontSize(int fontSize);
 extern void          maybeSetColorPalette(RexxMethodContext *, HBITMAP, CSTRING, DIALOGADMIN *, RexxObjectPtr);
 extern LPBITMAPINFO  loadDIB(const char *szFile, uint32_t *);
 extern WORD          numDIBColorEntries(LPBITMAPINFO lpBmpInfo);
-extern BOOL          DrawBackgroundBmp(pCPlainBaseDialog, HWND, WPARAM, LPARAM);
-extern BOOL          DrawBitmapButton(DIALOGADMIN *, pCPlainBaseDialog, WPARAM, LPARAM, bool);
+extern BOOL          drawBackgroundBmp(pCPlainBaseDialog, HWND);
+extern BOOL          drawBitmapButton(DIALOGADMIN *, pCPlainBaseDialog, LPARAM, bool);
 
 
 /* macros for searching and checking the bitmap table */

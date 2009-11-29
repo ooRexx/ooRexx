@@ -273,15 +273,15 @@ typedef struct {
 } DATATABLEENTRY;
 
 typedef struct {
-   ULONG buttonID;
-   HBITMAP bitmapID;
-   HBITMAP bmpFocusID;
-   HBITMAP bmpSelectID;
-   HBITMAP bmpDisableID;
-   SHORT Frame;
-   SHORT Loaded;
-   SHORT displacex;
-   SHORT displacey;
+   uint32_t buttonID;
+   HBITMAP  bitmapID;
+   HBITMAP  bmpFocusID;
+   HBITMAP  bmpSelectID;
+   HBITMAP  bmpDisableID;
+   int32_t  displaceX;
+   int32_t  displaceY;
+   uint32_t loaded;
+   bool     frame;
 } BITMAPTABLEENTRY;
 
 typedef struct {
@@ -393,7 +393,7 @@ typedef struct
    DATATABLEENTRY    *DataTab;
    INT                DT_size;
    BITMAPTABLEENTRY  *BmpTab;
-   INT                BT_size;
+   size_t             BT_size;
    COLORTABLEENTRY   *ColorTab;
    uint32_t           CT_size;
    ICONTABLEENTRY    *IconTab;

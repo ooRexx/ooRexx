@@ -265,6 +265,11 @@ REXX_METHOD_PROTOTYPE(dlgext_redrawControl);
 REXX_METHOD_PROTOTYPE(dlgext_resizeMoveControl);
 REXX_METHOD_PROTOTYPE(dlgext_setForgroundWindow);
 REXX_METHOD_PROTOTYPE(dlgext_setControlColor);
+REXX_METHOD_PROTOTYPE(dlgext_installBitmapButton);
+REXX_METHOD_PROTOTYPE(dlgext_changeBitmapButton);
+REXX_METHOD_PROTOTYPE(dlgext_getBitmapPosition);
+REXX_METHOD_PROTOTYPE(dlgext_setBitmapPosition);
+REXX_METHOD_PROTOTYPE(dlgext_getBitmapSize);
 REXX_METHOD_PROTOTYPE(dlgext_drawButton);
 REXX_METHOD_PROTOTYPE(dlgext_getWindowDC);
 REXX_METHOD_PROTOTYPE(dlgext_freeWindowDC);
@@ -754,6 +759,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_resizeMoveControl,       dlgext_resizeMoveControl),
     REXX_METHOD(dlgext_setForgroundWindow,      dlgext_setForgroundWindow),
     REXX_METHOD(dlgext_setControlColor,         dlgext_setControlColor),
+    REXX_METHOD(dlgext_installBitmapButton,     dlgext_installBitmapButton),
+    REXX_METHOD(dlgext_changeBitmapButton,      dlgext_changeBitmapButton),
+    REXX_METHOD(dlgext_getBitmapPosition,       dlgext_getBitmapPosition),
+    REXX_METHOD(dlgext_setBitmapPosition,       dlgext_setBitmapPosition),
+    REXX_METHOD(dlgext_getBitmapSize,           dlgext_getBitmapSize),
     REXX_METHOD(dlgext_drawButton,              dlgext_drawButton),
     REXX_METHOD(dlgext_mouseCapture,            dlgext_mouseCapture),
     REXX_METHOD(dlgext_captureMouse,            dlgext_captureMouse),

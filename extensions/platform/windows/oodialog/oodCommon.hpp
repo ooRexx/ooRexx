@@ -172,7 +172,7 @@ extern char *           strdup_2methodName(const char *str);
 extern DIALOGADMIN *    getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg);
 extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
-extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
+extern BOOL addTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
 extern void          ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);

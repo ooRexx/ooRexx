@@ -170,14 +170,14 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 case WM_PAINT:
                     if ( pcpbd->bkgBitmap != NULL )
                     {
-                        DrawBackgroundBmp(pcpbd, hDlg, wParam, lParam);
+                        drawBackgroundBmp(pcpbd, hDlg);
                     }
                     break;
 
                 case WM_DRAWITEM:
                     if ( lParam != 0 )
                     {
-                        return DrawBitmapButton(addressedTo, pcpbd, wParam, lParam, msgEnabled);
+                        return drawBitmapButton(addressedTo, pcpbd, lParam, msgEnabled);
                     }
                     break;
 
@@ -598,7 +598,7 @@ int32_t DelDialog(DIALOGADMIN * aDlg)
     {
         for (i=0;i<aDlg->BT_size;i++)
         {
-            if ( (aDlg->BmpTab[i].Loaded & 0x1011) == 1 )
+            if ( (aDlg->BmpTab[i].loaded & 0x1011) == 1 )
             {
                 /* otherwise stretched bitmap files are not freed */
                 safeLocalFree((void *)aDlg->BmpTab[i].bitmapID);
@@ -606,7 +606,7 @@ int32_t DelDialog(DIALOGADMIN * aDlg)
                 safeLocalFree((void *)aDlg->BmpTab[i].bmpSelectID);
                 safeLocalFree((void *)aDlg->BmpTab[i].bmpDisableID);
             }
-            else if ( aDlg->BmpTab[i].Loaded == 0 )
+            else if ( aDlg->BmpTab[i].loaded == 0 )
             {
                 safeDeleteObject((HBITMAP)aDlg->BmpTab[i].bitmapID);
                 safeDeleteObject((HBITMAP)aDlg->BmpTab[i].bmpFocusID);
@@ -2122,13 +2122,13 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     context->SetObjectVariable("FINISHED", TheZeroObj);
     context->SetObjectVariable("PROCESSINGLOAD", TheFalseObj);
 
-    // We don't check the return of AddTheMessage() because the message table
+    // We don't check the return of addTheMessage() because the message table
     // can not be full at this point, we are just starting out.  A memory
     // allocation failure, which is highly unlikely, will just be ignored.  If
     // this ooRexx process is out of memory, that will quickly show up.
-    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDOK,     UINTPTR_MAX, 0, 0, "OK", 0);
-    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDCANCEL, UINTPTR_MAX, 0, 0, "Cancel", 0);
-    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDHELP,   UINTPTR_MAX, 0, 0, "Help", 0);
+    addTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDOK,     UINTPTR_MAX, 0, 0, "OK", 0);
+    addTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDCANCEL, UINTPTR_MAX, 0, 0, "Cancel", 0);
+    addTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDHELP,   UINTPTR_MAX, 0, 0, "Help", 0);
 
     // Set our default font to the PlainBaseDialog class default font.
     pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(c);

@@ -543,7 +543,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
  * @remarks  Caller must ensure that 'prog' is not an empty string and that
  *           winMsg, wParam, lParam are not all 0.
  */
-BOOL AddTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam, ULONG_PTR wpFilter,
+BOOL addTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam, ULONG_PTR wpFilter,
                    LPARAM lParam, ULONG_PTR lpFilter, CSTRING prog, ULONG ulTag)
 {
     if ( ! aDlg->MsgTab )
@@ -574,7 +574,7 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam
         aDlg->MsgTab[aDlg->MT_size].filterL = lpFilter;
         aDlg->MsgTab[aDlg->MT_size].tag = ulTag;
 
-        aDlg->MT_size ++;
+        aDlg->MT_size++;
         return TRUE;
     }
     else
@@ -1445,7 +1445,7 @@ RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID,  CSTRING, met
         context->RaiseException1(Rexx_Error_Invalid_argument_null, TheTwoObj);
         return 1;
     }
-    return (AddTheMessage(pcen->dlgAdm, WM_COMMAND, 0xFFFFFFFF, id, 0x0000FFFF, 0, 0, methodName, 0) ? 0 : 1);
+    return (addTheMessage(pcen->dlgAdm, WM_COMMAND, 0xFFFFFFFF, id, 0x0000FFFF, 0, 0, methodName, 0) ? 0 : 1);
 }
 
 
@@ -1577,7 +1577,7 @@ RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIO
     }
     else
     {
-        if ( AddTheMessage(pcen->dlgAdm, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag) )
+        if ( addTheMessage(pcen->dlgAdm, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag) )
         {
             result = 0;
         }

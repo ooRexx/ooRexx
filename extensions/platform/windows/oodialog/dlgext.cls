@@ -78,7 +78,7 @@
    return self~initCode
 
 -- Asynchronously dispatch windows messages.
-::method asyncMessageHandling unguarded private
+::method asyncMessageHandling unguarded
    use strict arg sleepTime = 10
    if \ sleepTime~datatype('W') then sleepTime = 10
 
@@ -153,7 +153,7 @@
    return sb~determinePosition
 
 ::method combineELwithSB
-   use strict arg elid, sbID, step, poscode
+   use strict arg elid, sbID, step = 0, poscode = 0
    sb = self~newScrollBar(sbID)
    if sb == .nil then return -1
    pos = self~getEditData(elid)
@@ -310,29 +310,29 @@
 
 /******************************************************************************/
 /* Bitmap extensions */
+::method installBitmapButton external "LIBRARY oodialog dlgext_installBitmapButton"
+::method changeBitmapButton unguarded external "LIBRARY oodialog dlgext_changeBitmapButton"
+::method getBitmapPosition unguarded external "LIBRARY oodialog dlgext_getBitmapPosition"
+::method setBitmapPosition unguarded external "LIBRARY oodialog dlgext_setBitmapPosition"
+::method getBitmapSizeX unguarded external "LIBRARY oodialog dlgext_getBitmapSize"
+::method getBitmapSizeY unguarded external "LIBRARY oodialog dlgext_getBitmapSize"
+
+::method displaceBitmap unguarded external "LIBRARY oodialog dlgext_setBitmapPosition"
+::method getBmpDisplacement unguarded
+   use strict arg id
+   pos = .Point~new
+   if self~getBmpPosition(id, pos) then return pos~x pos~y
+   else return -1
 
 -- This method will add a method that will be started automatically and run concurrently when
 -- the dialog is executed. That is the  method 'InClass'~'MethodName' will be started, when
 -- the dialog receives the message 'execute' or execute async. You can use this method to animate
 -- buttons.
-
 ::method addAutoStartMethod
    use arg inClass = (self), methodName, parameters
    self~automaticMethods~push(inClass)
    if arg(2,"E") then self~automaticMethods~push(methodName)
    if arg(3,"E") then self~automaticMethods~push(parameters)
-
--- Install a bitmap button.
---
--- The only way to get the bitmaps into the bitmap table is through this method.
--- Therefore, we have to allow an omitted msgToRise.  If msgToRise == "", then
--- in BmpButton() the function skips adding a method to the message table.
-::method installBitmapButton
-   use strict arg id, msgToRise = "", bmpNormal, bmpFocused = "", bmpSelected = "", bmpDisabled = "", styleOptions = ""
-   styleOptions = styleOptions~translate
-   if \ id~datatype("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return BmpButton(self~adm, "A", msgToRise, id, bmpNormal, bmpFocused, bmpSelected, bmpDisabled, styleOptions);
 
 -- Install an animated button and run it concurrently to the main activity.
 --
@@ -364,45 +364,6 @@
 ::method connectBitmapButton
    forward message "INSTALLBITMAPBUTTON"
 
-
--- Change the bitmap of a bitmap button.
-::method ChangeBitmapButton unguarded
-   use arg id, bmpNormal, bmpFocused = "", bmpSelected = "", bmpDisabled = "", styleOptions = ""
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   styleOptions = styleOptions~translate
-   return BmpButton(self~adm, "C", id, bmpNormal, bmpFocused, bmpSelected, bmpDisabled, styleOptions);
-
--- Set the position of a bitmap within a button.
-::method DisplaceBitmap unguarded
-   use arg id, x, y
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return BmpButton(self~adm, "S", id, x, y)
-
--- Get the position of a bitmap within a button.
-::method GetBmpDisplacement unguarded
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return BmpButton(self~adm, "G", id)
-
--- Return the horizontal bitmap extension.
-::method GetBitmapSizeX unguarded
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   parse value BmpButton(self~adm, "E", id) with x .
-   return x
-
--- Return the vertical bitmap extension.
-::method GetBitmapSizeY unguarded
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   parse value BmpButton(self~adm, "E", id) with . y
-   return y
-
 -- Draw the bitmap of a button.  Use this method to move a bitmap or a part of it...
 ::method DrawBitmap unguarded
    use arg hwnd, id, px, py, srcx, srcy, xlen, ylen
@@ -427,23 +388,18 @@
 
 -- Scroll a bitmap from one position to another within a button.
 ::method ScrollBitmapFromTo unguarded
-   use arg id, fromX, fromY, toX, toY, stepX, stepY, delay, displace
+   use arg id, fromX, fromY, toX, toY, stepX = 0, stepY = 0, delay = 0, displace = 1
 
-   if arg(8, "o") = 1 then delay = 0
-   if arg(9, "o") = 1 then displace = 1
-   xl = self~GetBitmapSizeX(id)
-   yl = self~GetBitmapSizeY(id)
+   xl = self~getBitmapSizeX(id)
+   yl = self~getBitmapSizeY(id)
 
    if xl <= 0 | yl <= 0 then return 1
-   if arg(6, "o") = 1 then stepx = 0
-   if arg(7, "o") = 1 then stepy = 0
+   if stepX = 0 & stepY = 0 then return 1
 
-   if stepx = 0 & stepy = 0 then return 1
-
-   curx=fromx
-   cury=fromy
-   if (stepx > 0) then cursx = -curx; else cursx = 0
-   if (stepy > 0) then cursy = -cury; else cursy = 0
+   curX=fromx
+   curY=fromy
+   if (stepx > 0) then cursx = -curX; else cursx = 0
+   if (stepy > 0) then cursy = -curY; else cursy = 0
    if (cursx > xl) then cursx = xl
    if (cursy > yl) then cursy = yl
 
@@ -457,8 +413,7 @@
    drawx = 1
    drawy = 1
 
-   if (stepx >= 0) then
-   do
+   if (stepx >= 0) then do
       left = max(fromx, 0)
       lenx = xl - cursx
    end
@@ -466,8 +421,7 @@
       left = fromx
       lenx = min(r.right-fromx, xl)
    end
-   if (stepy >= 0) then
-   do
+   if (stepy >= 0) then do
       top = max(fromy, 0)
       leny = yl - cursy
    end
@@ -476,7 +430,7 @@
       leny = min(r.bottom-fromy, yl)
    end
 
-   self~DrawBitmap(hwnd, id, left, top, cursx, cursy, lenx, leny)
+   self~drawBitmap(hwnd, id, left, top, cursx, cursy, lenx, leny)
    if (stepx < 0) then cursx = min(lenx, xl); else cursx = cursx-stepx;
    if (stepy < 0) then cursy = min(leny, yl); else cursy = cursy-stepy;
 
@@ -484,13 +438,13 @@
    if (delay > 0) then timer = winTimer("START", delay); else timer = 0
    do while worktodo = 1
 
-      sleft = curx
-      srgt = curx+xl
+      sleft = curX
+      srgt = curX+xl
       if srgt > r.right then srgt = r.right
       if sleft < 0 then sleft = 0
 
-      s_top = cury
-      sbot = cury+yl
+      s_top = curY
+      sbot = curY+yl
       if sbot > r.bottom-stepy then sbot = r.bottom-stepy
       if s_top < 0 then s_top = 0
 
@@ -500,14 +454,14 @@
          return 1
       end
 
-      if (stepx < 0) then left = r.right + stepx; else left = curx
-      rgt = curx+xl
+      if (stepx < 0) then left = r.right + stepx; else left = curX
+      rgt = curX+xl
 
       if rgt > r.right then rgt = r.right
       if left < 0 then left = 0
 
-      if (stepy < 0) then top = r.bottom+stepy; else top = cury
-      bot = cury+yl
+      if (stepy < 0) then top = r.bottom+stepy; else top = curY
+      bot = curY+yl
       if bot > r.bottom then bot = r.bot
       if top < 0 then top = 0
 
@@ -528,7 +482,7 @@
             if cursx > 0 then drawx = 1
          end
       end
-      curx = curx + stepx
+      curX = curX + stepx
 
       drawy = 0
       if (stepy <= 0) then do
@@ -543,20 +497,20 @@
             if cursy > 0 then drawy = 1
          end
       end
-      cury = cury + stepy
+      curY = curY + stepy
 
                  /* so repaint will draw the cursor at the current position */
-      if displace=1 then self~DisplaceBitmap(id, curx, cury);
+      if displace=1 then self~setBitmapPosition(id, trunc(curX), trunc(curY));
 
       worktodo = 0
-      if (stepx>0) & (curx+stepx <= tox) then worktodo = 1
-      if (stepy>0) & (cury+stepy <= toy) then worktodo = 1
-      if (stepx<0) & (curx+stepx >= tox) then worktodo = 1
-      if (stepy<0) & (cury+stepy >= toy) then worktodo = 1
+      if (stepx>0) & (curX+stepx <= tox) then worktodo = 1
+      if (stepy>0) & (curY+stepy <= toy) then worktodo = 1
+      if (stepx<0) & (curX+stepx >= tox) then worktodo = 1
+      if (stepy<0) & (curY+stepy >= toy) then worktodo = 1
    end
    if (timer \== 0) then ret = winTimer("STOP", timer)
-   self~DisplaceBitmap(id, tox, toy);
-   self~RedrawButton(id,0)
+   self~setBitmapPosition(id, tox, toy);
+   self~redrawButton(id,0)
    return 0
 
    /* This method scrolls 'text' in the button */
@@ -565,9 +519,9 @@
    use arg id, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color
    hwnd = self~getControlHandle(id)
    if arg() = 1 then
-      return self~ScrollText(hwnd)
+      return self~scrollText(hwnd)
    else
-      return self~ScrollText(hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
+      return self~scrollText(hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
 
 
 -- This method will scroll text in a window with the given size, font, color. Text will be scrolled from
@@ -576,15 +530,15 @@
    use strict arg hwnd, text = "", fontName = "System", fontSize = 10, fontStyle = "", -
                   displaceY = 0, step = 4, sleep = 10, color = 0
 
-   if self~scrollNow = 0 & arg() > 1 then do
-      self~scrollNow = 1
+   if \ self~scrollNow & arg() > 1 then do
+      self~scrollNow = .true
       ret = ScrollText(self~adm, hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
    end
    else do
       self~sendWinHandleMsg(self~WM_USER_INTERRUPTSCROLL, hwnd, 0)
       ret = 0
    end
-   self~scrollNow = 0
+   self~scrollNow = .false
    return ret
 
 
@@ -603,7 +557,7 @@
 
 
 -- This method moves the rectangle within a button.  TODO be sure can take a .Rect for arg
-::method ScrollButton unguarded
+::method scrollButton unguarded
    -- use arg id, xPos, yPos, left, top, right, bottom
    newArgs = arg(2, "A")
    button = self~newPushButton(arg(1))

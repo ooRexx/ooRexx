@@ -387,8 +387,14 @@
    end
    return 0
 
--- Retrieve, if available, and dispatch one window message.
-::method handleMessages unguarded private
+-- Note: handleMessages() and clearMessages() were two methods that were previously marked protected.
+-- My believe is that there was some confusion in the original developement that led to methods being
+-- marked protected when they were meant to be marked private.  However, changing these 2 methods to
+-- private:  1.) breaks an existing example 2.) the doc on clearMessages() would lead one to think that
+-- it is a public method.  So, the messages are changed to public rather than private.
+
+-- Retrieve and dispatch, if available, one window message.
+::method handleMessages unguarded
    use strict arg sleepTime = 1
    if self~adm = 0 then do
        self~finished = 2
@@ -411,7 +417,7 @@
    end
 
 -- Clear all pending window messages
-::method clearMessages unguarded private
+::method clearMessages unguarded
    if self~adm = 0 then return
    msg = getDlgMsg(self~adm)
    do while msg \= "" & self~adm \= 0

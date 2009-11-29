@@ -152,7 +152,7 @@
         /* self~parentDlg~ClearRect(spritewin, oldpos.x, oldpos.y, (oldpos.x + sprite.sizex), (oldpos.y + sprite.sizey)) */
      end
      if self~parentDlg~finished = 1 then return 1
-     self~parentDlg~DisplaceBitmap(sprite.buttonid, spos.x, spos.y);
+     self~parentDlg~setBitmapPosition(sprite.buttonid, spos.x, spos.y);
 
 
 ::method setpos unguarded
@@ -164,7 +164,7 @@
      self~parentDlg~ClearRect(spritewin, spos.x, spos.y, (spos.x + sprite.sizex), (spos.y + sprite.sizey))
      spos.x = new.x
      spos.y = new.y
-     self~parentDlg~DisplaceBitmap(sprite.buttonid, spos.x, spos.y);
+     self~parentDlg~setBitmapPosition(sprite.buttonid, spos.x, spos.y);
 
 ::method getpos
      expose spos.

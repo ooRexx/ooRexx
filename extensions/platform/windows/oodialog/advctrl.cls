@@ -1266,7 +1266,7 @@
 
 ::method displaceBitmap unguarded
    use arg x, y
-   return self~oDlg~DisplaceBitmap(self~ID, x, y)
+   return self~oDlg~setBitmapPosition(self~ID, x, y)
 
 ::method getBmpDisplacement unguarded
    return self~oDlg~GetBmpDisplacement(self~ID)

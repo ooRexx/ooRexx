@@ -129,9 +129,9 @@ static uint32_t menuConnectItems(HMENU hMenu, DIALOGADMIN *dlgAdm, CSTRING msg, 
 
 
 /**
- * Calls AddTheMessage() to connect a menu item to a method in a dialog.
+ * Calls addTheMessage() to connect a menu item to a method in a dialog.
  *
- * AddTheMessage() only fails if the message table is full, (well also some
+ * addTheMessage() only fails if the message table is full, (well also some
  * other things that are not valid here, like a zero length msg.)  So, if it
  * fails ERROR_NOT_ENOUGH_MEMORY is a good system error code.
  *
@@ -156,7 +156,7 @@ inline BOOL _connectItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg)
 
     //                             Window    msg                wParam             lParam method
     //                             Message   filter      wParam filter      lParam filter name   tag
-    return AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id,    0x0000FFFF,    0,     0,  msg,   0) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id,    0x0000FFFF,    0,     0,  msg,   0) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /* Same as above but connects a System Menu item */
@@ -175,7 +175,7 @@ inline BOOL _connectSysItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg, logic
 
     //                             Window       msg                wParam             lParam method
     //                             Message      filter      wParam filter      lParam filter name   tag
-    return AddTheMessage(dlgAdm, WM_SYSCOMMAND, UINT32_MAX, id,    0x0000FFF0,    0,     0,  msg,   tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addTheMessage(dlgAdm, WM_SYSCOMMAND, UINT32_MAX, id,    0x0000FFF0,    0,     0,  msg,   tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /**
@@ -1442,12 +1442,12 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
             tag |= TAG_CONTEXTMENU;
             if ( hwndFilter != NULL )
             {
-                success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwndFilter, UINTPTR_MAX,
+                success = addTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwndFilter, UINTPTR_MAX,
                                         0, 0, methodName, tag);
             }
             else
             {
-                success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, 0, 0,
+                success = addTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, 0, 0,
                                         0, 0, methodName, tag);
             }
         }
@@ -1455,13 +1455,13 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
 
         case WM_INITMENU :
             tag |= TAG_MENUMESSAGE;
-            success = AddTheMessage(dialogAdm, WM_INITMENU, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX,
+            success = addTheMessage(dialogAdm, WM_INITMENU, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX,
                                     0, 0, methodName, tag);
             break;
 
         case WM_INITMENUPOPUP :
             tag |= TAG_MENUMESSAGE;
-            success = AddTheMessage(dialogAdm, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX,
+            success = addTheMessage(dialogAdm, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX,
                                     0, 0, methodName, tag);
             break;
 
@@ -5465,12 +5465,12 @@ RexxMethod4(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRI
 
     if ( hwnd != NULL )
     {
-        success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwnd, UINTPTR_MAX,
+        success = addTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwnd, UINTPTR_MAX,
                                 0, 0, methodName, tag);
     }
     else
     {
-        success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, 0, 0,
+        success = addTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, 0, 0,
                                 0, 0, methodName, tag);
     }
 
