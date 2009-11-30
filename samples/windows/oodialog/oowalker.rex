@@ -107,7 +107,6 @@
 
    -- Use 'bouncy' operation when hitting edges.
    spriteButton~setSmooth(.false)
-   sb~setstep(1)                  /* size of step through bitmap IDs */
 
    -- Get things set up.
    self~connectButtonEvent(107, "CLICKED", onRestart)
