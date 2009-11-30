@@ -138,38 +138,49 @@
    self~enableControl(2)     /* Enable push buttons */
    self~enableControl(111)
    self~enableControl(112)
-                          /* asynchronuous scroll */
-   m = self~start("ScrollInButton",103,"This OODialog sample demonstrates dynamic dialog creation", ,
-                   "Arial", 36, "BOLD", 0,2,2,6)
+
+   -- Asynchronuous scrolling text.
+   text = "This OODialog sample demonstrates dynamic dialog creation"
+   m = self~start("ScrollInButton", 103, text, "Arial", 36, "BOLD", 0, 2, 2, 6)
    do while self~finished = 0 & m~completed = 0
       self~handleMessages
    end
    if m~completed = 0 then self~scrollInButton(103) /* end scroll */
 
    do while self~finished = 0
-      /* scroll asynchronously so scrolling can be interrupted when button is pressed */
-      m = self~start("scrollInButton", 103, "... please press Bitmap-Viewer or Draw-Color-Demo buttons to run graphical applications ...", ,
-                     "Arial", 32, "SEMIBOLD", 0, 2, 4)
+      -- Scroll asynchronously so scrolling can be interrupted when button is pressed.
+      text = "... please press Bitmap-Viewer or Draw-Color-Demo buttons to run graphical applications ..."
+      m = self~start("scrollInButton", 103, text, "Arial", 32, "SEMIBOLD", 0, 2, 4)
 
       do while self~finished = 0 & m~completed = 0
          self~handleMessages
       end
-      /* if still scrolling, end the scroll */
+      -- If still scrolling, end the scroll.
       if m~completed = 0 then self~scrollInButton(103)
    end
 
-::method BmpView                  /* invoke Bitmap Viewer OOBMPVU.REX */
+-- Invoke the Bitmap Viewer program (oobmpvu.rex.)
+::method BmpView
    expose m
+   -- Pause the scrolling and hide ourself.
    if m~completed = 0 then self~scrollInButton(103)
-   self~hideWindow(self~hwnd)
-   call "oobmpvu.rex"
-   self~~showWindow(self~hwnd)~toTheTop
-   self~scrollInButton(103)       /* restart scrolling */
+   self~hide
 
-::method OODraw                   /* Invoke Color Draw Demo OODRAW.REX */
+   call "oobmpvu.rex"
+
+   -- Show ourself and restart the scrolling.
+   self~~show~toTheTop
+   self~scrollInButton(103)
+
+-- Invoke the Color Draw Demo program (oodraw.rex.)
+::method OODraw
    expose m
+   -- Pause the scrolling and hide ourself.
    if m~completed = 0 then self~scrollInButton(103)
-   self~hideWindow(self~hwnd)
+   self~hide
+
    call "oodraw.rex"
-   self~~showWindow(self~hwnd)~toTheTop
-   self~scrollInButton(103)       /* restart scrolling */
+
+   -- Show ourself and restart the scrolling.
+   self~~show~toTheTop
+   self~scrollInButton(103)
