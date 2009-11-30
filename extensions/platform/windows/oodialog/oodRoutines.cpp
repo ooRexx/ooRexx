@@ -50,7 +50,7 @@
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
-#include "oodText.hpp"
+#include "oodDeviceGraphics.hpp"
 
 
 #define MB_BUTTON_KEYWORDS "ABORTRETRYIGNORE CANCELTRYCONTINUE HELP OK OKCANCEL RETRYCANCEL YESNO YESNOCANCEL"

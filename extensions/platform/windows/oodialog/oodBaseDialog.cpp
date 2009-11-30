@@ -53,7 +53,6 @@
 #include "oodControl.hpp"
 #include "oodData.hpp"
 #include "oodDeviceGraphics.hpp"
-#include "oodText.hpp"
 
 
 class LoopThreadArgs

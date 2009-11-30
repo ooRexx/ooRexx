@@ -53,7 +53,6 @@
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 #include "oodMessaging.hpp"
-#include "oodText.hpp"
 #include "oodData.hpp"
 #include "oodDeviceGraphics.hpp"
 #include "oodResourceIDs.hpp"

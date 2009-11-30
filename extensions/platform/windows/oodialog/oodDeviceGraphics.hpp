@@ -55,6 +55,36 @@ extern BOOL          drawBackgroundBmp(pCPlainBaseDialog, HWND);
 extern BOOL          drawBitmapButton(DIALOGADMIN *, pCPlainBaseDialog, LPARAM, bool);
 
 
+extern int   getWeight(CSTRING opts);
+extern bool  getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, RexxObjectPtr, PSIZE);
+extern bool  textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
+extern bool  textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
+extern bool  getTextExtent(HFONT, HDC, CSTRING, SIZE *);
+extern bool  screenToDlgUnit(HWND hwnd, POINT *point, size_t count);
+extern void  screenToDlgUnit(HDC hdc, POINT *point, size_t count);
+extern HFONT createFontFromName(int logicalPixelsY, CSTRING name, uint32_t size);
+extern HFONT createFontFromName(CSTRING name, uint32_t size);
+extern bool  mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p, size_t count);
+extern bool  mapDuToPixel(RexxMethodContext *c, RexxObjectPtr dlg, PRECT r);
+
+inline void du2pixel(POINT *point, int baseUnitX, int baseUnitY)
+{
+    point->x = MulDiv(point->x, baseUnitX, 4);
+    point->y = MulDiv(point->y, baseUnitY, 8);
+}
+
+inline void pixel2du(POINT *point, int baseUnitX, int baseUnitY)
+{
+    point->x = MulDiv(point->x, 4, baseUnitX);
+    point->y = MulDiv(point->y, 8, baseUnitY);
+}
+
+inline HFONT createFontFromName(HDC hdc, CSTRING name, uint32_t size)
+{
+    return createFontFromName(GetDeviceCaps(hdc, LOGPIXELSY), name, size);
+}
+
+
 /* macros for searching and checking the bitmap table */
 #define SEARCHBMP(addr, ndx, id) \
    {                     \

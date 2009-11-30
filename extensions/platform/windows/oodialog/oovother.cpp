@@ -48,7 +48,6 @@
 #include "oodControl.hpp"
 #include "oodMessaging.hpp"
 #include "oodData.hpp"
-#include "oodText.hpp"
 #include "oodDeviceGraphics.hpp"
 
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);

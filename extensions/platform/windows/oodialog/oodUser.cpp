@@ -56,7 +56,7 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodData.hpp"
-#include "oodText.hpp"
+#include "oodDeviceGraphics.hpp"
 #include "oodControl.hpp"
 #include "oodResourceIDs.hpp"
 
