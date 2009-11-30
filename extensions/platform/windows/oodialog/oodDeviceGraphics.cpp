@@ -132,21 +132,11 @@ static RexxObjectPtr drawButton(HWND hDlg, HWND hCtrl, uint32_t id)
     return result;
 }
 
-
 static void drawFontToDC(HDC hDC, int32_t x, int32_t y, const char * text, uint32_t fontSize, const char * opts,
                          const char * fontName, int32_t fgColor, int32_t bkColor)
 {
-   HFONT hFont, oldFont;
-   COLORREF oldFg, oldBk;
-
-   int weight = getWeight(opts);
-   int height = getHeightFromFontSize(fontSize);
-
-   hFont = CreateFont(height, 0, 0, 0, weight, StrStrI(opts, "ITALIC") != NULL, StrStrI(opts, "UNDERLINE") != NULL,
-                      StrStrI(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                      FF_DONTCARE, fontName);
-
-   oldFont = (HFONT)SelectObject(hDC, hFont);
+   HFONT hFont = oodGenericFont(fontName, fontSize, opts);
+   HFONT oldFont = (HFONT)SelectObject(hDC, hFont);
 
    int oldMode = 0;
    if ( StrStrI(opts, "TRANSPARENT") != NULL )
@@ -158,6 +148,7 @@ static void drawFontToDC(HDC hDC, int32_t x, int32_t y, const char * text, uint3
        oldMode = SetBkMode(hDC, OPAQUE);
    }
 
+   COLORREF oldFg, oldBk;
    if ( fgColor != -1 )
    {
        oldFg = SetTextColor(hDC, PALETTEINDEX(fgColor));
@@ -440,6 +431,18 @@ logical_t oodColorTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, uint32_t id,
     }
     return 0;
 }
+
+
+HFONT oodGenericFont(const char *fontName, uint32_t fontSize, const char *opts)
+{
+    int weight = getWeight(opts);
+    int height = getHeightFromFontSize(fontSize);
+
+    return CreateFont(height, 0, 0, 0, weight, StrStrI(opts, "ITALIC") != NULL, StrStrI(opts, "UNDERLINE") != NULL,
+                      StrStrI(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                      FF_DONTCARE, fontName);
+}
+
 
 logical_t oodWriteToWindow(RexxMethodContext *context, HWND hwnd, int32_t xPos, int32_t yPos, CSTRING text,
                            CSTRING fontName, uint32_t fontSize, CSTRING fontStyle, int32_t fgColor, int32_t bkColor)
@@ -2198,14 +2201,14 @@ RexxMethod3(RexxObjectPtr, dlgext_setBitmapPosition, RexxObjectPtr, rxID, ARGLIS
  *
  *
  */
-RexxMethod3(int32_t, dlgext_getBitmapSize, RexxObjectPtr, rxID, NAME, method, OSELF, self)
+RexxMethod3(RexxObjectPtr, dlgext_getBitmapSize, RexxObjectPtr, rxID, NAME, method, OSELF, self)
 {
     pCPlainBaseDialog pcpbd;
     uint32_t id;
 
     if ( dlgExtControlSetup(context, self, rxID, &pcpbd, &id, NULL) != TheZeroObj )
     {
-        return -1;
+        return TheNegativeOneObj;
     }
 
     DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
@@ -2228,9 +2231,20 @@ RexxMethod3(int32_t, dlgext_getBitmapSize, RexxObjectPtr, rxID, NAME, method, OS
             y = DIB_HEIGHT(dlgAdm->BmpTab[index].bitmapID);
         }
 
-        return (method[13] == 'X' ? x : y);
+        switch ( method[13] )
+        {
+            case '\0' :
+                return rxNewSize(context, x, y);
+            case 'X' :
+                return context->Int32(x);
+            case 'Y' :
+                return context->Int32(y);
+            default :
+                break;
+
+        }
     }
-    return -1;
+    return TheNegativeOneObj;
 }
 
 
@@ -2631,7 +2645,7 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
     HBRUSH oB, hbr;
     RECT r, rs, rclip;
     SIZE s, sone;
-    INT i, rc, sl, step, j, disp, weight;
+    INT i, rc, sl, step, j, disp;
     UINT sleep;
     DEF_ADM;
 
@@ -2646,6 +2660,7 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
     opts = argv[5].strptr;
     disply = atoi(argv[6].strptr);
     col = atoi(argv[9].strptr);
+    CSTRING fontName = argv[3].strptr;
 
     w = GET_HWND(argv[1]);
     step = atoi(argv[7].strptr);
@@ -2655,10 +2670,7 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
     {
         GetWindowRect(w, &r);
 
-        weight = getWeight(opts);
-
-        hFont = CreateFont(size, size, 0, 0, weight, strstr(opts, "ITALIC") != NULL, strstr(opts, "UNDERLINE") != NULL,
-                           strstr(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, FF_DONTCARE, argv[3].strptr);
+        hFont = oodGenericFont(fontName, size, opts);
 
         oldF = (HFONT)SelectObject(hDC, hFont);
 

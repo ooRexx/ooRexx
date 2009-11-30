@@ -321,6 +321,7 @@
 ::method changeBitmapButton unguarded external "LIBRARY oodialog dlgext_changeBitmapButton"
 ::method getBitmapPosition unguarded external "LIBRARY oodialog dlgext_getBitmapPosition"
 ::method setBitmapPosition unguarded external "LIBRARY oodialog dlgext_setBitmapPosition"
+::method getBitmapSize unguarded external "LIBRARY oodialog dlgext_getBitmapSize"
 ::method getBitmapSizeX unguarded external "LIBRARY oodialog dlgext_getBitmapSize"
 ::method getBitmapSizeY unguarded external "LIBRARY oodialog dlgext_getBitmapSize"
 ::method drawBitmap unguarded external "LIBRARY oodialog dlgext_drawBitmap"

@@ -43,6 +43,7 @@ extern uint32_t      parseShowOptions(CSTRING options);
 extern RexxObjectPtr oodGetClientRect(RexxMethodContext *, HWND hwnd, PRECT);
 extern RexxObjectPtr oodGetWindowRect(RexxMethodContext *, HWND hwnd);
 extern logical_t     oodColorTable(RexxMethodContext *, DIALOGADMIN *, uint32_t, int32_t, int32_t, bool);
+extern HFONT         oodGenericFont(const char *, uint32_t, const char *);
 extern logical_t     oodWriteToWindow(RexxMethodContext *, HWND, int32_t, int32_t, CSTRING, CSTRING, uint32_t, CSTRING, int32_t, int32_t);
 extern HBRUSH        oodCreateBrush(RexxMethodContext *, uint32_t, CSTRING);
 extern RexxObjectPtr clearRect(RexxMethodContext *, HWND, PRECT);
