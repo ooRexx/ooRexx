@@ -55,8 +55,8 @@
    exit
  end
 
- d~createCenter(770 / d~FactorX, 440 / d~FactorY, ,
-                "Graphical Demonstration of Open Object Rexx and OODialog Capabilities")
+ title = "Graphical Demonstration of Open Object Rexx and OODialog Capabilities"
+ d~createCenter(trunc(770 / d~FactorX), trunc(470 / d~FactorY), title)
  d~execute("SHOWTOP")
  d~deinstall
  return
@@ -71,8 +71,8 @@
 
 ::method defineDialog
    expose but2size
-   but2pos  = 160 / self~factorY
-   but2size = 300 / self~factorY
+   but2pos  = trunc(170 / self~factorY)
+   but2size = trunc(300 / self~factorY)
 
    -- The two bitmap buttons are created larger than they need to be.  In particular,
    -- The 102 button height is much larger, it covers most of the lower part of the
@@ -86,89 +86,90 @@
    -- appearance of scrolling from the right to the left, and the 102 button the appearance
    -- of scrolling from the bottom to the top.
 
-   self~createBitmapButton(101, 1, 10, self~sizeX-1, 130 / self~factorY, "USEPAL", , , "bmp\install.bmp")
+   self~createBitmapButton(101, 1, 10, self~sizeX-1, trunc(130 / self~factorY), "USEPAL", , , "bmp\install.bmp")
    self~createBitmapButton(102, 20, but2pos, self~sizeX - 20, but2size, , , , "bmp\install2.bmp")
 
-   pos = .Point~new(self~sizeX * self~factorX + 10, 0)
+   pos = .Point~new(trunc(self~sizeX * self~factorX) + 10, 0)
    self~setBitmapPosition(101, pos)
 
-   pos~x = -450
-   pos~y = 100
+   pos~x = 0
+   pos~y = trunc(self~sizeY * self~factorY) + 10
    self~setBitmapPosition(102, pos)
 
    -- Add the other controls.
-   self~createWhiteFrame(203, 10, self~SizeY - 52, self~sizeX-20, 28, "HIDDEN")
-   self~createPushButton(103, 12, self~SizeY - 50, self~sizeX-24, 24, "OWNER NOTAB")
-   self~createPushButtonGroup(self~sizeX-220, self~sizeY - 18,60,12, ,
-            "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createWhiteFrame(203, 10, self~SizeY - 62, self~sizeX - 20, 38, "HIDDEN")
+   self~createPushButton(103, 12, self~SizeY - 60, self~sizeX - 24, 34, "OWNER NOTAB")
+
+   groupArgs = "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL"
+   self~createPushButtonGroup(self~sizeX - 220, self~sizeY - 18, 60, 12, groupArgs, 1, "DEFAULT")
 
 ::method initDialog
 
    -- We set the background color of these buttons to the same backgroud color
    -- as the dialog, so that the buttons blend into the dialog.
    COLOR_BTNFACE = 15
-   self~setItemSysColor(103, COLOR_BTNFACE)
-   self~setItemSysColor(101, COLOR_BTNFACE)
-   self~setItemSysColor(102, COLOR_BTNFACE)
+   self~setControlSysColor(103, COLOR_BTNFACE)
+   self~setControlSysColor(101, COLOR_BTNFACE)
+   self~setControlSysColor(102, COLOR_BTNFACE)
 
 ::method run unguarded
    expose m but2size
-   bmppos = but2size - 125 / self~FactorY
-   self~DisableItem(111)  /* disable push buttons */
-   self~DisableItem(112)
-   self~DisableItem(2)
+   bmppos = trunc(but2size - 125 / self~FactorY)
+   self~disableControl(111)  /* disable push buttons */
+   self~disableControl(112)
+   self~disableControl(2)
 
    ret = play("inst.wav", yes)
 
    -- Scroll the bitmaps from their displaced positions back to the upper left corners
    -- of the buttons.
-   self~ScrollBitmapFromTo(101, self~SizeX * self~FactorX, 5, 12, 5, -12, 0, 1)
-   self~ScrollBitmapFromTo(102, 30, bmppos, 30, 0, 0, -3, 2, 1)
+   self~scrollBitmapFromTo(101, trunc(self~SizeX * self~FactorX), 5, 12, 5, -12, 0, 1)
+   self~scrollBitmapFromTo(102, 30, bmppos, 30, 0, 0, -3, 2, 1)
 
    -- The size of the 102 button actually covers the controls under the button.  If the
    -- user clicks on any portion of the button, the button is repainted in the 'depressed'
    -- state.  Since the other controls are not repainted, this cause them (or parts of
    -- them) to disappear.  To prevent that, we resize the button to only take up the height
    -- needed for the bitamp.
-   self~ResizeItem(102, self~sizeX-40, (120 / self~factorY) + 2, "NOREDRAW")
+   self~resizeControl(102, 450 + 32, 120 + 2, "NOREDRAW")
 
-   self~ShowItem(103)     /* show scroll button */
-   self~ShowItem(203)
-   self~EnableItem(2)     /* Enable push buttons */
-   self~EnableItem(111)
-   self~EnableItem(112)
+   self~showControl(103)     /* show scroll button */
+   self~showControl(203)
+   self~enableControl(2)     /* Enable push buttons */
+   self~enableControl(111)
+   self~enableControl(112)
                           /* asynchronuous scroll */
    m = self~start("ScrollInButton",103,"This OODialog sample demonstrates dynamic dialog creation", ,
                    "Arial", 36, "BOLD", 0,2,2,6)
    do while self~finished = 0 & m~completed = 0
-      self~HandleMessages
+      self~handleMessages
    end
-   if m~completed = 0 then self~ScrollInButton(103) /* end scroll */
+   if m~completed = 0 then self~scrollInButton(103) /* end scroll */
 
    do while self~finished = 0
       /* scroll asynchronously so scrolling can be interrupted when button is pressed */
-      m = self~start("ScrollInButton", 103, "... please press Bitmap-Viewer or Draw-Color-Demo buttons to run graphical applications ...", ,
-                     "Arial", 32, "SEMIBOLD", 0, 2,4)
+      m = self~start("scrollInButton", 103, "... please press Bitmap-Viewer or Draw-Color-Demo buttons to run graphical applications ...", ,
+                     "Arial", 32, "SEMIBOLD", 0, 2, 4)
 
       do while self~finished = 0 & m~completed = 0
-         self~HandleMessages
+         self~handleMessages
       end
       /* if still scrolling, end the scroll */
-      if m~completed = 0 then self~ScrollInButton(103)
+      if m~completed = 0 then self~scrollInButton(103)
    end
 
 ::method BmpView                  /* invoke Bitmap Viewer OOBMPVU.REX */
    expose m
-   if m~completed = 0 then self~ScrollInButton(103)
-   self~hideWindow(self~get)
+   if m~completed = 0 then self~scrollInButton(103)
+   self~hideWindow(self~hwnd)
    call "oobmpvu.rex"
-   self~~showWindow(self~get)~toTheTop
-   self~ScrollInButton(103)       /* restart scrolling */
+   self~~showWindow(self~hwnd)~toTheTop
+   self~scrollInButton(103)       /* restart scrolling */
 
 ::method OODraw                   /* Invoke Color Draw Demo OODRAW.REX */
    expose m
-   if m~completed = 0 then self~ScrollInButton(103)
-   self~hideWindow(self~get)
+   if m~completed = 0 then self~scrollInButton(103)
+   self~hideWindow(self~hwnd)
    call "oodraw.rex"
-   self~~showWindow(self~get)~toTheTop
-   self~ScrollInButton(103)       /* restart scrolling */
+   self~~showWindow(self~hwnd)~toTheTop
+   self~scrollInButton(103)       /* restart scrolling */
