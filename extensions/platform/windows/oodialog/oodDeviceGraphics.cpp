@@ -1280,313 +1280,6 @@ void assignBitmap(DIALOGADMIN *dlgAdm, size_t index, CSTRING bmp, PUSHBUTTONSTAT
 }
 
 
-/* handle the bitmap buttons that are stored in the bitmap table */
-size_t RexxEntry BmpButton(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   DIALOGADMIN * dlgAdm = NULL;
-
-   CHECKARGL(3);
-
-   dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0]);
-   if ( dlgAdm == NULL )
-   {
-       RETERR
-   }
-
-   if (argv[1].strptr[0] == 'C')     /* change a bitmap button */
-   {
-       register INT i, id;
-       const char * buffer[5];
-       const char *optb;
-       BOOL inmem = FALSE;
-
-       CHECKARGL(4);
-
-       id = atoi(argv[2].strptr);   /* buffer[0] not used */
-       buffer[1] = argv[3].strptr;
-       if (argc > 4)
-          buffer[2] = argv[4].strptr;
-       else buffer[2] = "0";
-       if (argc > 5)
-          buffer[3]=argv[5].strptr;
-       else buffer[3] = "0";
-       if (argc > 6)
-          buffer[4]= argv[6].strptr;
-       else buffer[4] = "0";
-
-       if (argc > 7) optb = argv[7].strptr; else optb = "";
-
-       if (strstr(optb, "INMEMORY")) inmem = TRUE; else inmem = FALSE;
-
-       SEARCHBMP(dlgAdm, i, id);
-       if VALIDBMP(dlgAdm, i, id)
-       {
-          if ((dlgAdm->BmpTab[i].loaded & 0x1011) == 1)
-          {
-             if (dlgAdm->BmpTab[i].bitmapID) LocalFree((void *)dlgAdm->BmpTab[i].bitmapID);
-             if (dlgAdm->BmpTab[i].bmpFocusID) LocalFree((void *)dlgAdm->BmpTab[i].bmpFocusID);
-             if (dlgAdm->BmpTab[i].bmpSelectID) LocalFree((void *)dlgAdm->BmpTab[i].bmpSelectID);
-             if (dlgAdm->BmpTab[i].bmpDisableID) LocalFree((void *)dlgAdm->BmpTab[i].bmpDisableID);
-          }
-          else
-          if (dlgAdm->BmpTab[i].loaded == 0)
-          {
-             if (dlgAdm->BmpTab[i].bitmapID) DeleteObject((HBITMAP)dlgAdm->BmpTab[i].bitmapID);
-             if (dlgAdm->BmpTab[i].bmpFocusID) DeleteObject((HBITMAP)dlgAdm->BmpTab[i].bmpFocusID);
-             if (dlgAdm->BmpTab[i].bmpSelectID) DeleteObject((HBITMAP)dlgAdm->BmpTab[i].bmpSelectID);
-             if (dlgAdm->BmpTab[i].bmpDisableID) DeleteObject((HBITMAP)dlgAdm->BmpTab[i].bmpDisableID);
-          }
-
-          dlgAdm->BmpTab[i].loaded = 0;
-
-          ASSIGNBMP(i, bitmapID, 1);
-          ASSIGNBMP(i, bmpFocusID, 2);
-          ASSIGNBMP(i, bmpSelectID, 3);
-          ASSIGNBMP(i, bmpDisableID, 4);
-
-          if (strstr(optb, "FRAME"))
-          {
-             if (isYes(buffer[4]))
-                dlgAdm->BmpTab[i].frame = true;
-             else
-                dlgAdm->BmpTab[i].frame = false;
-          }
-          if (strstr(optb, "STRETCH") && (dlgAdm->BmpTab[i].loaded)) dlgAdm->BmpTab[i].loaded |= 0x0100;
-
-          /* set the palette that fits with the bitmap */
-          if (strstr(optb, "USEPAL"))
-          {
-             if (dlgAdm->ColorPalette) DeleteObject(dlgAdm->ColorPalette);
-             dlgAdm->ColorPalette = createDIBPalette((LPBITMAPINFO)dlgAdm->BmpTab[i].bitmapID);
-             setSysPalColors(dlgAdm->ColorPalette);
-          }
-
-          if ( strstr(optb, "NODRAW") == 0 )
-          {
-              HWND hCtrl = GetDlgItem(dlgAdm->TheDlg, id);
-              if ( hCtrl == NULL )
-              {
-                  RETC(1)
-              }
-              drawButton(dlgAdm->TheDlg, hCtrl, id);
-          }
-          RETC(0)
-       }
-       RETC(1)
-   }
-   else
-   if (argv[1].strptr[0] == 'D')     /* draw a bitmap button */
-   {
-        HDC hDC, hDC2;
-        HBITMAP hBmp = NULL;
-        LONG cid, x, y, xs, ys, xl, yl;
-        register INT i;
-        BITMAP bmpInfo;
-        HPALETTE hP;
-        HWND hW;
-
-        CHECKARG(10);
-
-        cid = atoi(argv[3].strptr);
-
-        SEARCHBMP(dlgAdm, i, cid);
-        if (VALIDBMP(dlgAdm, i, cid))
-        {
-           hBmp = (HBITMAP)dlgAdm->BmpTab[i].bitmapID;
-
-           if (hBmp)
-           {
-              hW = (HWND)GET_HWND(argv[2]);
-              x = atoi(argv[4].strptr);
-              y = atoi(argv[5].strptr);
-              xs = atoi(argv[6].strptr);
-              ys = atoi(argv[7].strptr);
-              xl = atoi(argv[8].strptr);
-              yl = atoi(argv[9].strptr);
-
-              hDC = GetDC(hW);
-              if (dlgAdm->ColorPalette)
-              {
-                 hP = SelectPalette(hDC, dlgAdm->ColorPalette, 0);
-                 RealizePalette(hDC);
-              }
-              if (!dlgAdm->BmpTab[i].loaded)
-              {
-                 hDC2 = CreateCompatibleDC(hDC);
-                 SelectObject(hDC2,hBmp);
-
-                 GetObject(hBmp, sizeof(BITMAP), &bmpInfo);
-                 if (!xl) xl = bmpInfo.bmWidth;
-                 if (!yl) yl = bmpInfo.bmHeight;
-
-                 BitBlt(hDC, x, y, xl, yl, hDC2, xs, ys, SRCCOPY);
-                 DeleteDC(hDC2);
-              }
-              /* this if has been added because of a violation error moving animated button dialogs a lot */
-              else if (dlgAdm->BmpTab[i].bitmapID || dlgAdm->BmpTab[i].bmpFocusID || dlgAdm->BmpTab[i].bmpSelectID)
-              {
-                 if (!xl) xl = DIB_WIDTH(hBmp);
-                 if (!yl) yl = DIB_HEIGHT(hBmp);
-
-                 StretchDIBits(hDC,x,y,xl,yl,xs,ys,xl,yl,
-                    DIB_PBITS(hBmp),        // bits
-                    DIB_PBI(hBmp),          // BITMAPINFO
-                    DIB_RGB_COLORS,
-                    SRCCOPY);               // rop
-              }
-
-              if (dlgAdm->ColorPalette)
-                 SelectPalette(hDC, hP, 0);
-              ReleaseDC(hW, hDC);
-              RETC(0)
-           }
-        }
-        RETC(1)
-   }
-   else
-   if (argv[1].strptr[0] == 'S')     /* set displacement of a bitmap button */
-   {
-       register INT i, id;
-       CHECKARG(5);
-
-       id = atoi(argv[2].strptr);
-
-       SEARCHBMP(dlgAdm, i, id);
-       if VALIDBMP(dlgAdm, i, id)
-       {
-          dlgAdm->BmpTab[i].displaceX = atoi(argv[3].strptr);
-          dlgAdm->BmpTab[i].displaceY = atoi(argv[4].strptr);
-          RETC(0)
-       }
-       RETC(1)
-   }
-   else
-   if (argv[1].strptr[0] == 'G')     /* get displacement of a bitmap button */
-   {
-       register INT i, id;
-
-       id = atoi(argv[2].strptr);
-
-       SEARCHBMP(dlgAdm, i, id);
-       if VALIDBMP(dlgAdm, i, id)
-       {
-          sprintf(retstr->strptr, "%ld %ld", dlgAdm->BmpTab[i].displaceX, dlgAdm->BmpTab[i].displaceY);
-          retstr->strlength = strlen(retstr->strptr);
-          return 0;
-       }
-       RETC(0)
-   }
-   else if (argv[1].strptr[0] == 'A')     /* add a bitmap button */
-   {
-       const char *buffer[5];
-       BOOL frame = FALSE;
-       BOOL inmem = FALSE;
-       BOOL strch = FALSE;
-
-       CHECKARGL(4);
-       if (!dlgAdm->BmpTab)
-       {
-          dlgAdm->BmpTab = (BITMAPTABLEENTRY *)LocalAlloc(LMEM_FIXED, sizeof(BITMAPTABLEENTRY) * MAX_BT_ENTRIES);
-          if (!dlgAdm->BmpTab)
-          {
-             MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
-             return 0;
-          }
-          dlgAdm->BT_size = 0;
-       }
-
-       buffer[0] = argv[3].strptr;
-       buffer[1] = argv[4].strptr;
-       if (argc > 5)
-          buffer[2]=argv[5].strptr;
-       else buffer[2]="0";
-       if (argc > 6)
-          buffer[3]=argv[6].strptr;
-       else buffer[3]="0";
-       if (argc > 7)
-          buffer[4]=argv[7].strptr;
-       else buffer[4]="0";
-
-       if (argc > 8)
-       {
-          if (strstr(argv[8].strptr, "FRAME")) frame = TRUE; else frame = FALSE;
-          if (strstr(argv[8].strptr, "INMEMORY")) inmem = TRUE; else inmem = FALSE;
-          if (strstr(argv[8].strptr, "STRETCH")) strch = TRUE; else strch = FALSE;
-       }
-
-       if (dlgAdm->BT_size < MAX_BT_ENTRIES)
-       {
-          dlgAdm->BmpTab[dlgAdm->BT_size].loaded  = 0;
-          dlgAdm->BmpTab[dlgAdm->BT_size].buttonID  = atoi(buffer[0]);
-          ASSIGNBMP(dlgAdm->BT_size, bitmapID, 1);
-          ASSIGNBMP(dlgAdm->BT_size, bmpFocusID, 2);
-          ASSIGNBMP(dlgAdm->BT_size, bmpSelectID, 3);
-          ASSIGNBMP(dlgAdm->BT_size, bmpDisableID, 4);
-
-          dlgAdm->BmpTab[dlgAdm->BT_size].frame  = frame;
-          dlgAdm->BmpTab[dlgAdm->BT_size].displaceX = 0;
-          dlgAdm->BmpTab[dlgAdm->BT_size].displaceY = 0;
-          if ((strch) && (dlgAdm->BmpTab[dlgAdm->BT_size].loaded)) dlgAdm->BmpTab[dlgAdm->BT_size].loaded |= 0x0100;
-
-          /* set the palette that fits with the bitmap */
-          if ((argc > 8) && (strstr(argv[8].strptr, "USEPAL")))
-          {
-             if (dlgAdm->ColorPalette) DeleteObject(dlgAdm->ColorPalette);
-             dlgAdm->ColorPalette = createDIBPalette((LPBITMAPINFO)dlgAdm->BmpTab[dlgAdm->BT_size].bitmapID);
-             setSysPalColors(dlgAdm->ColorPalette);
-          }
-
-          if ( strlen(argv[2].strptr) == 0 )
-          {
-             dlgAdm->BT_size ++;
-             RETC(0)
-          }
-          else if ( addTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, atoi(buffer[0]), 0x0000FFFF, 0, 0, argv[2].strptr, 0) )
-          {
-             dlgAdm->BT_size ++;
-             RETC(0)
-          }
-       }
-       else
-       {
-          MessageBox(0, "Bitmap buttons have exceeded the maximum number of\n"
-                        "allocated table entries. No bitmap button can be\n"
-                        "added.",
-                     "Error",MB_OK | MB_ICONHAND);
-       }
-   }
-   else if (argv[1].strptr[0] == 'E')      /* get the size of a bitmap button */
-   {
-       register INT i, id;
-
-       id = atoi(argv[2].strptr);
-
-       SEARCHBMP(dlgAdm, i, id);
-       if VALIDBMP(dlgAdm, i, id)
-       {
-          if (!dlgAdm->BmpTab[i].bitmapID) strcpy(retstr->strptr, "0 0");
-          else {
-              if (!dlgAdm->BmpTab[i].loaded)
-              {
-                  BITMAP bmpInfo;
-                 GetObject(dlgAdm->BmpTab[i].bitmapID, sizeof(BITMAP), &bmpInfo);
-                 sprintf(retstr->strptr, "%ld %ld", bmpInfo.bmWidth, bmpInfo.bmHeight);
-              }
-              else
-              {
-                 sprintf(retstr->strptr, "%ld %ld", DIB_WIDTH(dlgAdm->BmpTab[i].bitmapID), DIB_HEIGHT(dlgAdm->BmpTab[i].bitmapID));
-              }
-          }
-          retstr->strlength = strlen(retstr->strptr);
-          return 0;
-       }
-       RETC(0)
-   }
-   RETERR
-}
-
-
-
 /**
  *  Methods for the .DialogExtensions mixin class.
  */
@@ -2360,7 +2053,79 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
 }
 
 
-/** DialogExtensions::getBmpPostion()
+RexxMethod9(RexxObjectPtr, dlgext_drawBitmap, OPTIONAL_RexxObjectPtr, ignored, RexxObjectPtr, rxID,
+            OPTIONAL_int32_t, x,  OPTIONAL_int32_t, y, OPTIONAL_int32_t, xS, OPTIONAL_int32_t, yS,
+            OPTIONAL_int32_t, xL, OPTIONAL_int32_t, yL, OSELF, self)
+{
+    pCPlainBaseDialog pcpbd;
+    uint32_t id;
+    HWND hCtrl;
+
+    RexxObjectPtr result = dlgExtControlSetup(context, self, rxID, &pcpbd, &id, &hCtrl);
+    if ( result != TheZeroObj )
+    {
+        return result;
+    }
+
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+    size_t index;
+
+    if ( findBmpForID(dlgAdm, id, &index) )
+    {
+        HBITMAP hBmp = (HBITMAP)dlgAdm->BmpTab[index].bitmapID;
+
+        if ( hBmp != NULL )
+        {
+            HPALETTE hP;
+
+            HDC hDC = GetDC(hCtrl);
+            if ( dlgAdm->ColorPalette != NULL )
+            {
+               hP = SelectPalette(hDC, dlgAdm->ColorPalette, 0);
+               RealizePalette(hDC);
+            }
+            if ( dlgAdm->BmpTab[index].loaded == 0 )
+            {
+                HDC hDC2 = CreateCompatibleDC(hDC);
+
+                SelectObject(hDC2, hBmp);
+
+                if ( xL == 0 || yL == 0 )
+                {
+                    BITMAP bmpInfo;
+                    GetObject(hBmp, sizeof(BITMAP), &bmpInfo);
+
+                    xL = (xL == 0 ? bmpInfo.bmWidth  : xL);
+                    yL = (yL == 0 ? bmpInfo.bmHeight : yL);
+                }
+
+                BitBlt(hDC, x, y, xL, yL, hDC2, xS, yS, SRCCOPY);
+                DeleteDC(hDC2);
+            }
+            else if (dlgAdm->BmpTab[index].bitmapID || dlgAdm->BmpTab[index].bmpFocusID || dlgAdm->BmpTab[index].bmpSelectID)
+            {
+                // Original comment: This if has been added because of a
+                // violation error moving animated button dialogs a lot
+
+                xL = (xL == 0 ? DIB_WIDTH(hBmp)  : xL);
+                yL = (yL == 0 ? DIB_HEIGHT(hBmp) : yL);
+
+                StretchDIBits(hDC, x, y, xL, yL, xS, yS, xL, yL, DIB_PBITS(hBmp), DIB_PBI(hBmp), DIB_RGB_COLORS, SRCCOPY);
+            }
+
+            if ( dlgAdm->ColorPalette != NULL )
+            {
+               SelectPalette(hDC, hP, 0);
+            }
+            ReleaseDC(hCtrl, hDC);
+            return TheZeroObj;
+        }
+    }
+    return TheOneObj;
+}
+
+
+/** DialogExtensions::getBitmapPostion()
  *
  *  Retrieves the postion, (X,Y) co-ordinates of the upper left corner of a
  *  bitmap within a bitmap button.

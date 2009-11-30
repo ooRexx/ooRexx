@@ -1250,42 +1250,48 @@
 ::method getImage external "LIBRARY oodialog bc_getImage"
 ::method setImage external "LIBRARY oodialog bc_setImage"
 ::method scroll unguarded external "LIBRARY oodialog bc_scroll"
+
+-- Bitmap button methods.
 ::method dimBitmap unguarded external "LIBRARY oodialog bc_dimBitmap"
 
-
-/* For internal testing only, do not use this method */
-::method test external "LIBRARY oodialog bc_test"
-::method test class external "LIBRARY oodialog bc_test_cls"
-
+-- The following methods are implemented in DialogExtensions rather than here
+-- because many of them do not require that that underlying dialog is already
+-- created.  There is no button control until after the dialog is created.
 ::method changeBitmap unguarded
    arga = arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~ID
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
-   forward to (self~oDlg) message "ChangeBitmapButton" Arguments (newarg)
+   forward to (self~oDlg) message "CHANGEBITMAPBUTTON" arguments (newarg)
+
+::method setBitmapPosition unguarded
+   use strict arg x, y = 0
+   if arg(2, "E") then return self~oDlg~setBimapPosition(self~id, x, y)
+   else return self~oDlg~setBimapPosition(self~id, x)
+
+::method getBitmapPosition unguarded
+   use strict arg pos
+   return self~oDlg~getBitmapPosition(self~ID, pos)
 
 ::method displaceBitmap unguarded
-   use arg x, y
+   use strict arg x, y
    return self~oDlg~setBitmapPosition(self~ID, x, y)
 
 ::method getBmpDisplacement unguarded
-   return self~oDlg~GetBmpDisplacement(self~ID)
+   return self~oDlg~getBmpDisplacement(self~ID)
 
 ::method scrollText unguarded
    arga = arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~hwnd
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
-   forward to (self~oDlg) Arguments (newarg)
+   forward to (self~oDlg) arguments (newarg)
 
 ::method getBitmapSizeX unguarded
-   return self~oDlg~GetBitmapSizeX(self~ID)
+   return self~oDlg~getBitmapSizeX(self~ID)
 
 ::method getBitmapSizeY unguarded
-   return self~oDlg~GetBitmapSizeY(self~ID)
-
-   /* This method will draw the bitmap of a button */
-   /* Use this method to move a bitmap or a part of it... */
+   return self~oDlg~getBitmapSizeY(self~ID)
 
 ::method drawBitmap unguarded
    arga = arg(1,"A")
@@ -1293,17 +1299,19 @@
    newarg[1] = self~hwnd
    newarg[2] = self~id
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+2] = arga[i]; end
-   forward to (self~oDlg) Arguments (newarg)
-
-
-   /* This method will draw the bitmap step by step */
+   forward to (self~oDlg) arguments (newarg)
 
 ::method scrollBitmapFromTo unguarded
    arga = arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~id
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
-   forward to (self~oDlg) Arguments (newarg)
+   forward to (self~oDlg) arguments (newarg)
+
+
+/* For internal testing only, do not use this method */
+::method test external "LIBRARY oodialog bc_test"
+::method test class external "LIBRARY oodialog bc_test_cls"
 
 
 ::class 'RadioButton' subclass ButtonControl public

@@ -310,12 +310,20 @@
 
 /******************************************************************************/
 /* Bitmap extensions */
+
+-- DEPRECATED  TODO don't forget to document name change / deprecated
+::method connectAnimatedButton
+   forward message "INSTALLANIMATEDBUTTON"
+::method connectBitmapButton
+   forward message "INSTALLBITMAPBUTTON"
+
 ::method installBitmapButton external "LIBRARY oodialog dlgext_installBitmapButton"
 ::method changeBitmapButton unguarded external "LIBRARY oodialog dlgext_changeBitmapButton"
 ::method getBitmapPosition unguarded external "LIBRARY oodialog dlgext_getBitmapPosition"
 ::method setBitmapPosition unguarded external "LIBRARY oodialog dlgext_setBitmapPosition"
 ::method getBitmapSizeX unguarded external "LIBRARY oodialog dlgext_getBitmapSize"
 ::method getBitmapSizeY unguarded external "LIBRARY oodialog dlgext_getBitmapSize"
+::method drawBitmap unguarded external "LIBRARY oodialog dlgext_drawBitmap"
 
 ::method displaceBitmap unguarded external "LIBRARY oodialog dlgext_setBitmapPosition"
 ::method getBmpDisplacement unguarded
@@ -358,26 +366,6 @@
    self~addAutoStartMethod(autoClass, "RUN", buttonID || "," || bmpFrom ||"," || bmpTo ||"," || moveX    -
      || "," || moveY || "," || sizeX || "," || sizeY || "," || delay || "," || xNow || "," || yNow)
 
--- DEPRECATED  TODO don't forget to document name change / deprecated
-::method connectAnimatedButton
-   forward message "INSTALLANIMATEDBUTTON"
-::method connectBitmapButton
-   forward message "INSTALLBITMAPBUTTON"
-
--- Draw the bitmap of a button.  Use this method to move a bitmap or a part of it...
-::method DrawBitmap unguarded
-   use arg hwnd, id, px, py, srcx, srcy, xlen, ylen
-   if arg(3, "o") = 1 then px = 0
-   if arg(4, "o") = 1 then py = 0
-   if arg(5, "o") = 1 then srcx = 0
-   if arg(6, "o") = 1 then srcy = 0
-   if arg(7, "o") = 1 then xlen = 0
-   if arg(8, "o") = 1 then ylen = 0
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(1, "o") = 1 then hwnd = self~getControlHandle(id)
-   return BmpButton(self~adm, "D", hwnd, id, px, py, srcx, srcy, xlen, ylen)
-
 -- Draw the bitmap step by step.
 ::method dimBitmap unguarded
    use strict arg id, bmp, cx, cy, stepX = 2, stepY = 2, steps = 10
@@ -388,7 +376,7 @@
 
 -- Scroll a bitmap from one position to another within a button.
 ::method ScrollBitmapFromTo unguarded
-   use arg id, fromX, fromY, toX, toY, stepX = 0, stepY = 0, delay = 0, displace = 1
+   use arg id, fromX, fromY, toX, toY, stepX = 0, stepY = 0, delay = 0, displace = .true
 
    xl = self~getBitmapSizeX(id)
    yl = self~getBitmapSizeY(id)
@@ -407,7 +395,7 @@
    if button == .nil then return -1
    hwnd = button~hwnd
 
-   parse value self~GetWindowRect(hwnd) with r.left r.top r.right r.bottom
+   parse value self~getWindowRect(hwnd) with r.left r.top r.right r.bottom
    r.right = r.right - r.left
    r.bottom = r.bottom - r.top
    drawx = 1
@@ -465,8 +453,8 @@
       if bot > r.bottom then bot = r.bot
       if top < 0 then top = 0
 
-      if stepx \= 0 & drawx=1 then self~DrawBitmap(hwnd, id, left, top, cursx, cursy, abs(stepx), yl)
-      if stepy \= 0 & drawy=1 then self~DrawBitmap(hwnd, id, left, top, cursx, cursy, xl, abs(stepy))
+      if stepx \= 0 & drawx=1 then self~drawBitmap(hwnd, id, left, top, cursx, cursy, abs(stepx), yl)
+      if stepy \= 0 & drawy=1 then self~drawBitmap(hwnd, id, left, top, cursx, cursy, xl, abs(stepy))
       if (timer \== 0) then ret = winTimer("WAIT", timer)
 
       drawx = 0
@@ -500,7 +488,7 @@
       curY = curY + stepy
 
                  /* so repaint will draw the cursor at the current position */
-      if displace=1 then self~setBitmapPosition(id, trunc(curX), trunc(curY));
+      if displace then self~setBitmapPosition(id, trunc(curX), trunc(curY));
 
       worktodo = 0
       if (stepx>0) & (curX+stepx <= tox) then worktodo = 1
