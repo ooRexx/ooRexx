@@ -1158,9 +1158,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            TC_ITEM tab;
            CHECKARGL(4);
 
-           if (!strcmp(argv[3].strptr, "GN"))
-               RETVAL(TabCtrl_GetCurSel(h))
-           else if (!strcmp(argv[3].strptr, "GT"))
+           if (!strcmp(argv[3].strptr, "GT"))
            {
                tab.mask = TCIF_TEXT;
 
@@ -1176,60 +1174,22 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            else
            {
                CHECKARG(5);
-               if (!strcmp(argv[3].strptr, "SN"))
-                   RETVAL(TabCtrl_SetCurSel(h, atoi(argv[4].strptr)))
-               else
+
+               LONG cnt, i = 0;
+               cnt = TabCtrl_GetItemCount(h);
+               if (!cnt) RETVAL(-1);
+
+               while (i<cnt)
                {
-                   LONG cnt, i = 0;
-                   cnt = TabCtrl_GetItemCount(h);
-                   if (!cnt) RETVAL(-1);
-
-                   while (i<cnt)
-                   {
-                       tab.mask = TCIF_TEXT;
-                       tab.pszText = retstr->strptr;
-                       tab.cchTextMax = 255;
-                       if (!TabCtrl_GetItem(h, i, &tab)) RETVAL(-1);
-                       if (!stricmp(tab.pszText, argv[4].strptr)) RETVAL(TabCtrl_SetCurSel(h, i));
-                       i++;
-                   }
-                   RETVAL(-1);
+                   tab.mask = TCIF_TEXT;
+                   tab.pszText = retstr->strptr;
+                   tab.cchTextMax = 255;
+                   if (!TabCtrl_GetItem(h, i, &tab)) RETVAL(-1);
+                   if (!stricmp(tab.pszText, argv[4].strptr)) RETVAL(TabCtrl_SetCurSel(h, i));
+                   i++;
                }
+               RETVAL(-1);
            }
-       }
-       else if (!strcmp(argv[1].strptr, "RECT"))
-       {
-           RECT r;
-           CHECKARG(4);
-
-           retstr->strlength = 0;
-           if (TabCtrl_GetItemRect(h, atoi(argv[3].strptr), &r))
-           {
-                sprintf(retstr->strptr, "%d %d %d %d", r.left, r.top, r.right, r.bottom);
-                retstr->strlength = strlen(retstr->strptr);
-           }
-           return 0;
-       }
-       else if (!strcmp(argv[1].strptr, "ADJUST"))
-       {
-           RECT r;
-           BOOL adapt;  /* or only query */
-           CHECKARG(8);
-
-           adapt = isYes(argv[3].strptr);
-
-           r.left = atol(argv[4].strptr);
-           r.top = atol(argv[5].strptr);
-           r.right = atol(argv[6].strptr);
-           r.bottom = atol(argv[7].strptr);
-
-           /* if adapt, the rectangle is adjusted to the given rectangle,
-              if not adapt, the window size that could store the given handle is returned */
-           TabCtrl_AdjustRect(h, adapt, &r);
-
-           sprintf(retstr->strptr, "%d %d %d %d", r.left, r.top, r.right, r.bottom);
-           retstr->strlength = strlen(retstr->strptr);
-           return 0;
        }
    }
    RETC(0)
@@ -2142,6 +2102,72 @@ RexxMethod2(RexxObjectPtr, tab_setPadding, ARGLIST, args, CSELF, pCSelf)
     return TheZeroObj;
 }
 
+
+RexxMethod3(RexxObjectPtr, tab_getRectangle, uint32_t, item, RexxObjectPtr, rect, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    PRECT r = rxGetRect(context, rect, 2);
+    if ( r == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    return (TabCtrl_GetItemRect(hwnd, item, r) == 0 ? TheFalseObj : TheTrueObj);
+}
+
+
+/** TabControl::calcWindowRect()
+ *
+ *  calcWindowRect() takes a display rectangle and adjusts the rectangle to be
+ *  the window rect of the tab control needed for that display size.
+ *
+ *  Therefore, if the display size must be a fixed size, use calcWindowRect() to
+ *  receive the size the tab control needs to be and use it to set the size for
+ *  the control.
+ *
+ *  @param  [IN / OUT] On entry, a .Rect object specifying the display rectangle
+ *                     and on return the corrsponding window rect for the tab.
+ *
+ *  @return  The return is 0 and has no meaning.
+ *
+ *  TabControl::calcDisplayRect()
+ *
+ *  caclDisplayRect() takes the window rect of the tab control, and adjusts the
+ *  rectangle to the size the display will be.
+ *
+ *  So, if the tab control needs to be a fixed size, use calcDisplayRect() to
+ *  get the size the display rect will be for the fixed size of the tab control
+ *  and use that to set the size of the control or dialog set into the tab
+ *  control
+ *
+ *  @param  [IN / OUT] On entry, a .Rect object specifying the window rect of
+ *                     the tab, and on return the corrsponding display rect.
+ *
+ *  @return  The return is 0 and has no meaning.
+ *
+ *  @remarks  MSDN says of the second arg to TabCtrl_AdjustRect():
+ *
+ *            Operation to perform. If this parameter is TRUE, prc specifies a
+ *            display rectangle and receives the corresponding window rectangle.
+ *            If this parameter is FALSE, prc specifies a window rectangle and
+ *            receives the corresponding display area.
+ */
+RexxMethod3(RexxObjectPtr, tab_calcRect, RexxObjectPtr, rect, NAME, method, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    PRECT r = rxGetRect(context, rect, 1);
+    if ( r == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    BOOL calcWindowRect = (method[4] == 'W');
+
+    TabCtrl_AdjustRect(hwnd, calcWindowRect, r);
+    return TheZeroObj;
+}
 
 
 /** TabControl::setImageList()

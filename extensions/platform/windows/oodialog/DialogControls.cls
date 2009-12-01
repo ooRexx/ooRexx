@@ -829,7 +829,7 @@
    self~sendWinIntMsg(self~TCM_SETCURSEL, item, 0)
    return 0
 
-::method Delete
+::method delete
    use strict arg item
    ret = self~sendWinIntMsg(self~TCM_DELETEITEM, item, 0)
    return ret == 0
@@ -839,13 +839,40 @@
    ret = self~sendWinIntMsg(self~TCM_DELETEALLITEMS, 0, 0)
    return ret == 0
 
-::method SetPadding external "LIBRARY oodialog tab_setPadding"
+::method getRectangle external "LIBRARY oodialog tab_getRectangle"
+::method setPadding external "LIBRARY oodialog tab_setPadding"
 ::method setItemSize external "LIBRARY oodialog tab_setItemSize"
 
 ::method setSize
    forward message "setItemSize" continue
    return result~cx result~cy
 
+::method posRectangle
+   use arg strict item
+   r = .Rect~new
+   if self~getRectangle(item, r) then return r~top r~left r~bottom r~right
+   else return ""
+
+-- adjustToRectangle() and requireWindowSize() are the old methods.  This set up
+-- produces the same results as the code did, which seems to be opposite of what
+-- doc says.
+--
+-- calcWindowRect() and calcDisplayRect() are named and documented according to
+-- MSDN documentation.  (Which could be wrong.)
+
+::method calcWindowRect external "LIBRARY oodialog tab_calcRect"
+::method adjustToRectangle
+   use strict arg left, top, right, bottom
+   r = .Rect~new(left, top, right, bottom)
+   self~calcWindowRect(r)
+   return r~left r~top r~right r~bottom
+
+::method calcDisplayRect external "LIBRARY oodialog tab_calcRect"
+::method requiredWindowSize
+   use strict arg left, top, right, bottom
+   r = .Rect~new(left, top, right, bottom)
+   self~calcDisplayRect(r)
+   return r~left r~top r~right r~bottom
 
 
 ::method Insert
@@ -909,18 +936,6 @@
 ::method Select
    use strict arg text
    return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"ST", text)
-
-::method PosRectangle
-   use arg strict item
-   return HandleOtherNewCtrls("TAB","RECT",self~Hwnd, item)
-
-::method AdjustToRectangle
-   use arg left, top, right, bottom
-   return HandleOtherNewCtrls("TAB","ADJUST",self~Hwnd, 1, left, top, right, bottom)
-
-::method RequiredWindowSize
-   use arg left, top, right, bottom
-   return HandleOtherNewCtrls("TAB","ADJUST",self~Hwnd, 0, left, top, right, bottom)
 
 -- DEPRECATED
 ::method setImages external "LIBRARY oodialog tab_setImageList"

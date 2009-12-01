@@ -513,6 +513,8 @@ REXX_METHOD_PROTOTYPE(tv_getImageList);
 // Tab
 REXX_METHOD_PROTOTYPE(tab_setItemSize);
 REXX_METHOD_PROTOTYPE(tab_setPadding);
+REXX_METHOD_PROTOTYPE(tab_getRectangle);
+REXX_METHOD_PROTOTYPE(tab_calcRect);
 REXX_METHOD_PROTOTYPE(tab_setImageList);
 REXX_METHOD_PROTOTYPE(tab_getImageList);
 
@@ -943,6 +945,8 @@ RexxMethodEntry oodialog_methods[] = {
     // Tab
     REXX_METHOD(tab_setItemSize,                tab_setItemSize),
     REXX_METHOD(tab_setPadding,                 tab_setPadding),
+    REXX_METHOD(tab_getRectangle,               tab_getRectangle),
+    REXX_METHOD(tab_calcRect,                   tab_calcRect),
     REXX_METHOD(tab_setImageList,               tab_setImageList),
     REXX_METHOD(tab_getImageList,               tab_getImageList),
 
