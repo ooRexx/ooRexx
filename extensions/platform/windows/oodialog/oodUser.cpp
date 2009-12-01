@@ -424,6 +424,31 @@ uint32_t getCommonButtonStyles(uint32_t style, CSTRING opts, oodControl_t button
 }
 
 
+uint32_t listViewStyle(CSTRING opts, uint32_t style)
+{
+    if ( StrStrI(opts, "VSCROLL"      ) != NULL ) style |= WS_VSCROLL;
+    if ( StrStrI(opts, "HSCROLL"      ) != NULL ) style |= WS_HSCROLL;
+    if ( StrStrI(opts, "EDIT"         ) != NULL ) style |= LVS_EDITLABELS;
+    if ( StrStrI(opts, "SHOWSELALWAYS") != NULL ) style |= LVS_SHOWSELALWAYS;
+    if ( StrStrI(opts, "ALIGNLEFT"    ) != NULL ) style |= LVS_ALIGNLEFT;
+    if ( StrStrI(opts, "ALIGNTOP"     ) != NULL ) style |= LVS_ALIGNTOP;
+    if ( StrStrI(opts, "AUTOARRANGE"  ) != NULL ) style |= LVS_AUTOARRANGE;
+    if ( StrStrI(opts, "ICON"         ) != NULL ) style |= LVS_ICON;
+    if ( StrStrI(opts, "SMALLICON"    ) != NULL ) style |= LVS_SMALLICON;
+    if ( StrStrI(opts, "LIST"         ) != NULL ) style |= LVS_LIST;
+    if ( StrStrI(opts, "REPORT"       ) != NULL ) style |= LVS_REPORT;
+    if ( StrStrI(opts, "NOHEADER"     ) != NULL ) style |= LVS_NOCOLUMNHEADER;
+    if ( StrStrI(opts, "NOWRAP"       ) != NULL ) style |= LVS_NOLABELWRAP;
+    if ( StrStrI(opts, "NOSCROLL"     ) != NULL ) style |= LVS_NOSCROLL;
+    if ( StrStrI(opts, "NOSORTHEADER" ) != NULL ) style |= LVS_NOSORTHEADER;
+    if ( StrStrI(opts, "SHAREIMAGES"  ) != NULL ) style |= LVS_SHAREIMAGELISTS;
+    if ( StrStrI(opts, "SINGLESEL"    ) != NULL ) style |= LVS_SINGLESEL;
+    if ( StrStrI(opts, "ASCENDING"    ) != NULL ) style |= LVS_SORTASCENDING;
+    if ( StrStrI(opts, "DESCENDING"   ) != NULL ) style |= LVS_SORTDESCENDING;
+    return style;
+}
+
+
 uint32_t treeViewStyle(CSTRING opts, uint32_t style)
 {
     if ( StrStrI(opts,"ALL") != NULL )

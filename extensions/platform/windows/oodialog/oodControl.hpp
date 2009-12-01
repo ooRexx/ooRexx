@@ -48,7 +48,7 @@ typedef struct newControlParams {
 } NEWCONTROLPARAMS;
 typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
 
-
+// Defined in oodUser.cpp
 extern uint32_t      listViewStyle(CSTRING opts, uint32_t style);
 
 extern RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlType);
@@ -68,6 +68,7 @@ extern DIALOGADMIN *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc);
 #define ScrollBarAtom        0x0084
 #define ComboBoxAtom         0x0085
 
+#define BS_IMAGEMASK         0x000000c0
 
 /* Determine if an edit control is a single line edit control.  */
 inline bool isSingleLineEdit(HWND hEdit)

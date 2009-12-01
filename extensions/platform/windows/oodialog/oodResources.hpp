@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,102 +36,36 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-/**
- * Purpose: Builds the ooDialog package file: ooDialog.cls from the individual
- *          *.cls files that make up the implementation code.
- *
- * Note that the code for reading the input files assumes that each file starts
- * with the license / copyright header, which is 36 or 37 lines long.
- */
+#ifndef oodResources_Included
+#define oodResources_Included
 
-use arg outdir
-if arg() = 0 then do
-  outdir = value("OR_OUTDIR","","ENVIRONMENT")
-  if outdir \== "" & outdir~right(1) \== '\' then outdir ||= '\'
-end
-else do
-  if outdir~right(1) \== '\' then outdir ||= '\'
-end
+typedef struct _OODIMAGE
+{
+    SIZE     size;
+    HANDLE   hImage;
+    LONG     type;
+    DWORD    flags;
+    DWORD    lastError;
+    CSTRING  typeName;
+    CSTRING  fileName;   // Not currently used, may change to char[256].
 
-parse source . . progname
-inpdir = left(progname, progname~lastpos("\"))
+    bool     srcOOD;     // True - comes from ooDialog code using LoadImage(),
+                         // False comes from a raw retrieved handle.
+    bool     canRelease;
+    bool     isValid;
+} OODIMAGE, *POODIMAGE;
 
-outname = .array~new(3)
-outname[1] = "oodPlain.cls"
-outname[2] = "oodWin32.cls"
-outname[3] = "ooDialog.cls"
 
-do i = 1 to 2
-  ret = writeStubFile(outdir, outname[i])
-  if ret <> 0 then do
-    say 'Error writing' outname[i] 'aborting.'
-    return 9
-  end
-end
+extern POODIMAGE     rxGetOodImage(RexxMethodContext *, RexxObjectPtr, int);
+extern POODIMAGE     rxGetImageIcon(RexxMethodContext *, RexxObjectPtr, int);
+extern RexxObjectPtr oodGetImageAttribute(RexxMethodContext *, RexxObjectPtr, CSTRING, UINT, WPARAM, uint8_t, oodControl_t);
+extern RexxObjectPtr oodSetImageAttribute(RexxMethodContext *, CSTRING, RexxObjectPtr, HWND, HANDLE, uint8_t, oodControl_t);
+extern CSTRING       getImageTypeName(uint8_t);
+extern HIMAGELIST    rxGetImageList(RexxMethodContext *, RexxObjectPtr, int);
+extern RexxObjectPtr oodILFromBMP(RexxMethodContext *, HIMAGELIST *, RexxObjectPtr, int, int, HWND);
 
--- Files are in the order they are read and written out. UtilityClasses.cls must be kept first, otherwise
--- the order should not make any difference.
-srcFiles = .array~of("UtilityClasses.cls", "PlainBaseDialog.cls", "EventNotification.cls", "DynamicDialog.cls", -
-                     "PlainUserDialog.cls", "stddlg.cls", "DialogExtensions.cls", "BaseDialog.cls", "ResDialog.cls", -
-                     "UserDialog.cls", "RcDialog.cls", "dialog.cls", "Menu.cls", "CategoryDialog.cls", "AnimatedButton.cls", -
-                     "dlgarea.cls", "AdvancedControls.cls", "stdext.cls", "MessageExtensions.cls", "PropertySheet.cls")
 
-outFile = .stream~new(outdir || outname[3])
-if outFile~open("WRITE REPLACE") \= "READY:" then return 9
+#define IMAGE_TYPE_LIST            "Bitmap, Icon, Cursor, Enhanced Metafile"
 
-signal on notready
 
-do i = 1 to 37
-  outFile~lineout(sourceLine(i))
-end
-outFile~lineout("")
-outFile~lineout("::requires 'oodialog' LIBRARY")
-outFile~lineout("")
-
-do inFile over srcFiles
-  inputFile = inpdir || inFile
-  say inputFile
-  readFile = .stream~new(inputFile)
-  readFile~open("READ")
-
-  -- Skip the header, with a little leeway.
-  do 35
-    readFile~linein
-  end
-
-  line = readFile~linein~strip
-  do while line~left(2) == '/*', line~right(2) == '*/', readFile~lines() > 0
-    line = readFile~linein
-  end
-
-  outFile~lineout("")
-
-  do while readFile~lines() > 0
-    line = readFile~linein
-    if line~pos('::requires') > 0 then iterate
-    else outFile~lineout(line)
-  end
-  readFile~close
-end
-outFile~close
-
-return 0
-
-notready:
-  say "Stream I/O error while creating ooDialog.cls"
-return 9
-
-::routine writeStubFile
-  use strict arg outDir, outFileName
-
-  stubFile = .stream~new(outdir || outFileName)
-  if stubFile~open("WRITE REPLACE") \= "READY:" then return 9
-
-  do i = 1 to 37
-    stubFile~lineout(sourceLine(i))
-  end
-  stubFile~lineout("")
-  stubFile~lineout("::requires 'ooDialog.cls'")
-  stubFile~close
-
-  return 0
+#endif
