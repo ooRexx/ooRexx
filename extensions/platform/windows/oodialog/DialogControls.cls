@@ -841,50 +841,76 @@
 
 ::class 'SliderControl' subclass DialogControl public
 
+-- TBM_ messages are defined as WM_USER + x
+-- WM_USER == 0x0400
+
+::constant TBM_GETPOS              "0x0400"
+::constant TBM_SETPOS              "0x0405"
+
+::constant TBM_GETRANGEMIN         "0x0401"
+::constant TBM_GETRANGEMAX         "0x0402"
+::constant TBM_SETRANGE            "0x0406"
+::constant TBM_SETRANGEMIN         "0x0407"
+::constant TBM_SETRANGEMAX         "0x0408"
+
+::constant TBM_GETTIC              "0x0403"
+::constant TBM_SETTIC              "0x0404"
+::constant TBM_CLEARTICS           "0x0409"
+::constant TBM_GETNUMTICS          "0x0410"
+::constant TBM_SETTICFREQ          "0x0414"
+
 ::method "pos="
    forward message (setPos)
 
 ::method pos
-   return HandleOtherNewCtrls("SLIDER", "POS", self~hwnd, "G")
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETPOS, 0, 0)
 
 ::method setPos
    use strict arg p, redraw = .false
-   HandleOtherNewCtrls("SLIDER", "POS", self~hwnd, p, redraw)
+   self~sendWinIntMsg(self~TBM_SETPOS, redraw, p)
+   return 0
 
 ::method initRange
    use strict arg min = 0, max = 100, redraw = .false
    if max < min then return -1
-   return HandleOtherNewCtrls("SLIDER", "SETRANGE", self~hwnd, min, max, redraw)
+   self~sendWinIntMsg(self~TBM_SETRANGE, redraw, .DlgUtil~makeLParam(min, max))
+   return 0
 
 ::method setMin
    use strict arg min, redraw = .true
-   return HandleOtherNewCtrls("SLIDER", "SETRANGE", self~hwnd, "L", min, redraw)
+   self~sendWinIntMsg(self~TBM_SETRANGEMIN, redraw, min)
+   return 0
 
 ::method setMax
    use strict arg max, redraw = .true
-   return HandleOtherNewCtrls("SLIDER", "SETRANGE", self~hwnd, "H", max, redraw)
+   self~sendWinIntMsg(self~TBM_SETRANGEMAX, redraw, max)
+   return 0
 
+::method getRange external "LIBRARY oodialog tb_getRange"
 ::method range
-   return HandleOtherNewCtrls("SLIDER", "GETRANGE", self~hwnd)
+   r = self~getRange
+   return r~min r~max
 
 ::method clearTicks
    use strict arg redraw = .true
-   return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "C", redraw)
+   self~sendWinIntMsg(self~TBM_CLEARTICS, redraw, 0)
+   return 0
 
 ::method countTicks
-   return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "N")
+   return self~sendWinIntMsg(self~TBM_GETNUMTICS, 0, 0)
 
 ::method getTick
    use strict arg tic
-   return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "G", tic)
+   return self~sendWinIntMsg(self~TBM_GETTIC, tic, 0)
 
 ::method setTickAt
    use strict arg pos
-   return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "S", pos)
+   return self~sendWinIntMsg(self~TBM_SETTIC, 0, pos)
 
 ::method setTickFrequency
    use strict arg freq
-   return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "F", freq)
+   return self~sendWinIntMsg(self~TBM_SETTICFREQ, freq, 0)
 
 ::method getLineStep
    return HandleOtherNewCtrls("SLIDER", "GETSTEPS", self~hwnd, "L")

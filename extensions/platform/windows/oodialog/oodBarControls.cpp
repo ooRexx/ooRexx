@@ -318,3 +318,30 @@ RexxMethod1(int32_t, sb_getPosition, CSELF, pCSelf)
     }
     return pos;
 }
+
+
+/**
+ * Methods for the TrackBar class.  Note that this is the .Slider class in
+ * ooDialog.  yghr.
+ */
+#define TRACK_BAR_CLASS  "TrackBar"
+#define SLIDER_CLASS     "Slider"
+
+
+/** TrackBar::getRange()
+ *
+ */
+RexxMethod1(RexxObjectPtr, tb_getRange, CSELF, pCSelf)
+{
+    RexxDirectoryObject result = context->NewDirectory();
+    HWND hCtrl = getDCHCtrl(pCSelf);
+
+    context->DirectoryPut(result, context->Intptr((intptr_t)SendMessage(hCtrl, TBM_GETRANGEMIN, 0,0)), "MIN");
+    context->DirectoryPut(result, context->Intptr((intptr_t)SendMessage(hCtrl, TBM_GETRANGEMAX, 0,0)), "MAX");
+
+    return result;
+}
+
+
+
+

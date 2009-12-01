@@ -35,6 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/**
+ * oodViewControls.cpp
+ *
+ * Contains methods for the List-view, Tree-view, DateTimePicker, and
+ * MonthCalendar controls.
+ */
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <commctrl.h>
@@ -1078,62 +1085,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
 
    if (!strcmp(argv[0].strptr, "SLIDER"))
    {
-       if (!strcmp(argv[1].strptr, "POS"))
-       {
-           CHECKARGL(4);
-           if (argc == 4)
-               RETVAL((long)SendMessage(h, TBM_GETPOS, 0, 0))
-           else
-               SendMessage(h, TBM_SETPOS, isYes(argv[4].strptr), atol(argv[3].strptr));
-       }
-       else if (!strcmp(argv[1].strptr, "SETRANGE"))
-       {
-           CHECKARG(6);
-           if (argv[3].strptr[0] == 'L')
-               SendMessage(h, TBM_SETRANGEMIN, isYes(argv[5].strptr), atol(argv[4].strptr));
-           else if (argv[3].strptr[0] == 'H')
-               SendMessage(h, TBM_SETRANGEMAX, isYes(argv[5].strptr), atol(argv[4].strptr));
-           else
-               SendMessage(h, TBM_SETRANGE, isYes(argv[5].strptr), MAKELONG(atol(argv[3].strptr), atol(argv[4].strptr)));
-       }
-       else if (!strcmp(argv[1].strptr, "GETRANGE"))
-       {
-           sprintf(retstr->strptr, "%d %d",SendMessage(h, TBM_GETRANGEMIN, 0,0), SendMessage(h, TBM_GETRANGEMAX, 0,0));
-           retstr->strlength = strlen(retstr->strptr);
-           return 0;
-       }
-       else if (!strcmp(argv[1].strptr, "TICS"))
-       {
-           /*CHECKARG(5); */
-           /* 4 arguments for 'N', 5 for all the others */
-           if (argv[3].strptr[0] == 'C')
-           {
-               CHECKARG(5);
-               SendMessage(h, TBM_CLEARTICS, isYes(argv[4].strptr), 0);
-           }
-           else if (argv[3].strptr[0] == 'N')
-           {
-               CHECKARG(4);
-               RETVAL((long)SendMessage(h, TBM_GETNUMTICS, 0, 0))
-           }
-           else if (argv[3].strptr[0] == 'G')
-           {
-               CHECKARG(5);
-               RETVAL((long)SendMessage(h, TBM_GETTIC, atoi(argv[4].strptr), 0))
-           }
-           else if (argv[3].strptr[0] == 'S')
-           {
-               CHECKARG(5);
-               RETC(!SendMessage(h, TBM_SETTIC, 0, atol(argv[4].strptr)))
-           }
-           else if (argv[3].strptr[0] == 'F')
-           {
-               CHECKARG(5);
-               SendMessage(h, TBM_SETTICFREQ, atoi(argv[4].strptr), 0);
-           }
-           RETC(0);
-       }
-       else if (!strcmp(argv[1].strptr, "GETSTEPS"))
+       if (!strcmp(argv[1].strptr, "GETSTEPS"))
        {
            CHECKARG(4);
            if (argv[3].strptr[0] == 'L')

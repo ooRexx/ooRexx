@@ -492,6 +492,9 @@ REXX_METHOD_PROTOTYPE(pbc_setMarquee);
 REXX_METHOD_PROTOTYPE(pbc_setBkColor);
 REXX_METHOD_PROTOTYPE(pbc_setBarColor);
 
+// TrackBar
+REXX_METHOD_PROTOTYPE(tb_getRange);
+
 // ListView
 REXX_METHOD_PROTOTYPE(lv_setImageList);
 REXX_METHOD_PROTOTYPE(lv_getImageList);
@@ -908,6 +911,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(il_isNull,                      il_isNull),
     REXX_METHOD(il_handle,                      il_handle),
 
+    // List view
     REXX_METHOD(lv_setImageList,                lv_setImageList),
     REXX_METHOD(lv_getImageList,                lv_getImageList),
     REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
@@ -917,6 +921,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
     REXX_METHOD(lv_addRowEx,         	        lv_addRowEx),           // TODO review method name
 
+    // Edit
     REXX_METHOD(e_isSingleLine,                 e_isSingleLine),
     REXX_METHOD(e_selection,                    e_selection),
     REXX_METHOD(e_replaceSelText,               e_replaceSelText),
@@ -928,6 +933,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(e_hideBallon,                   e_hideBallon),
     REXX_METHOD(e_setCue,                       e_setCue),
 
+    // Tree view
     REXX_METHOD(tv_setImageList,                tv_setImageList),
     REXX_METHOD(tv_getImageList,                tv_getImageList),
 
@@ -952,6 +958,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbc_setBkColor,                 pbc_setBkColor),
     REXX_METHOD(pbc_setBarColor,                pbc_setBarColor),
 
+    // TrackBar
+    REXX_METHOD(tb_getRange,                    tb_getRange),
+
+    // ProgressBar
     REXX_METHOD(sb_getRange,                    sb_getRange),
     REXX_METHOD(sb_setRange,                    sb_setRange),
     REXX_METHOD(sb_getPosition,                 sb_getPosition),
