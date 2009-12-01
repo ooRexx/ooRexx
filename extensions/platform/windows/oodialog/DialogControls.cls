@@ -1570,5 +1570,3 @@
 ::attribute usesUnicode external "LIBRARY oodialog _mc_usesUnicode"
 ::attribute date external "LIBRARY oodialog _mc_date"
 
--- DEPRECATED
-::class 'AdvancedControls' Mixinclass Object public

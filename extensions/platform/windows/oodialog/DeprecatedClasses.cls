@@ -37,12 +37,21 @@
 /*----------------------------------------------------------------------------*/
 
 /**
- *  Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
  *
- *  Define a default dialog class.
+ * Contains deprecated classes that contain no methods.  The empty classes are
+ * needed to provide backward compatibility for existing programs where dialogs
+ * have inherited the classes.
+ *
+ * MessageExtensions:  Its functionality is contained in the EventNotification
+ *                     class.
+ *
+ * AdvancedControls:   Its functionality is now contained in the PlainBaseDialog
+ *                     class.
  */
 
-::requires "userdlg.cls"
+-- DEPRECATED
+::class 'MessageExtensions' Mixinclass Object public
 
-/* set default dialog to user dialog */
-::class 'Dialog' subclass UserDialog public
+-- DEPRECATED
+::class 'AdvancedControls' Mixinclass Object public
