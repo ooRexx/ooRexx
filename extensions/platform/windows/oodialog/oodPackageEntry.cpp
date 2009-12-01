@@ -494,6 +494,7 @@ REXX_METHOD_PROTOTYPE(pbc_setBarColor);
 
 // TrackBar
 REXX_METHOD_PROTOTYPE(tb_getRange);
+REXX_METHOD_PROTOTYPE(tb_getSelRange);
 
 // ListView
 REXX_METHOD_PROTOTYPE(lv_setImageList);
@@ -960,6 +961,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     // TrackBar
     REXX_METHOD(tb_getRange,                    tb_getRange),
+    REXX_METHOD(tb_getSelRange,                 tb_getSelRange),
 
     // ProgressBar
     REXX_METHOD(sb_getRange,                    sb_getRange),

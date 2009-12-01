@@ -845,19 +845,27 @@
 -- WM_USER == 0x0400
 
 ::constant TBM_GETPOS              "0x0400"
-::constant TBM_SETPOS              "0x0405"
-
 ::constant TBM_GETRANGEMIN         "0x0401"
 ::constant TBM_GETRANGEMAX         "0x0402"
+::constant TBM_GETTIC              "0x0403"
+::constant TBM_SETTIC              "0x0404"
+::constant TBM_SETPOS              "0x0405"
 ::constant TBM_SETRANGE            "0x0406"
 ::constant TBM_SETRANGEMIN         "0x0407"
 ::constant TBM_SETRANGEMAX         "0x0408"
-
-::constant TBM_GETTIC              "0x0403"
-::constant TBM_SETTIC              "0x0404"
 ::constant TBM_CLEARTICS           "0x0409"
+::constant TBM_SETSEL              "0x040A"
+::constant TBM_SETSELSTART         "0x040B"
+::constant TBM_SETSELEND           "0x040C"
 ::constant TBM_GETNUMTICS          "0x0410"
+::constant TBM_GETSELSTART         "0x0411"
+::constant TBM_GETSELEND           "0x0412"
+::constant TBM_CLEARSEL            "0x0413"
 ::constant TBM_SETTICFREQ          "0x0414"
+::constant TBM_SETPAGESIZE         "0x0415"
+::constant TBM_GETPAGESIZE         "0x0416"
+::constant TBM_SETLINESIZE         "0x0417"
+::constant TBM_GETLINESIZE         "0x0418"
 
 ::method "pos="
    forward message (setPos)
@@ -877,10 +885,17 @@
    self~sendWinIntMsg(self~TBM_SETRANGE, redraw, .DlgUtil~makeLParam(min, max))
    return 0
 
+::method getMin
+   use strict
+   return self~sendWinIntMsg(self~TBM_GETRANGEMIN, 0, 0)
+
 ::method setMin
    use strict arg min, redraw = .true
    self~sendWinIntMsg(self~TBM_SETRANGEMIN, redraw, min)
    return 0
+
+::method getMax
+   return self~sendWinIntMsg(self~TBM_GETRANGEMAX, 0, 0)
 
 ::method setMax
    use strict arg max, redraw = .true
@@ -913,39 +928,55 @@
    return self~sendWinIntMsg(self~TBM_SETTICFREQ, freq, 0)
 
 ::method getLineStep
-   return HandleOtherNewCtrls("SLIDER", "GETSTEPS", self~hwnd, "L")
+   return self~sendWinIntMsg(self~TBM_GETLINESIZE, 0, 0)
 
 ::method getPageStep
-   return HandleOtherNewCtrls("SLIDER", "GETSTEPS", self~hwnd, "P")
+   return self~sendWinIntMsg(self~TBM_GETPAGESIZE, 0, 0)
 
 ::method setLineStep
    use strict arg step
-   return HandleOtherNewCtrls("SLIDER", "SETSTEPS", self~hwnd, "L", step)
+   return self~sendWinIntMsg(self~TBM_SETLINESIZE, 0, step)
 
 ::method setPageStep
    use strict arg step
-   return HandleOtherNewCtrls("SLIDER", "SETSTEPS", self~hwnd, "P", step)
+   return self~sendWinIntMsg(self~TBM_SETPAGESIZE, 0, step)
 
 ::method initSelRange
-   use arg min = 0, max, redraw = .false
-   if arg(2,'o') then parse value self~Range with . max
+   use strict arg min = 0, max = (-1), redraw = .false
+   if arg(2, 'O') then max = self~getMax
    if max < min then return -1
-   return HandleOtherNewCtrls("SLIDER", "SETSEL", self~hwnd, min, max, redraw)
+   self~sendWinIntMsg(self~TBM_SETSEL, redraw, .DlgUtil~makeLParam(min, max))
+   return 0
+
+::method getSelStart
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETSELSTART, 0, 0)
+   return 0
 
 ::method setSelStart
    use strict arg min, redraw = .true
-   return HandleOtherNewCtrls("SLIDER", "SETSEL", self~hwnd, "S", min, redraw)
+   self~sendWinIntMsg(self~TBM_SETSELSTART, redraw, min)
+   return 0
+
+::method getSelEnd
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETSELEND, 0, 0)
+   return 0
 
 ::method setSelEnd
    use strict arg max, redraw = .true
-   return HandleOtherNewCtrls("SLIDER", "SETSEL", self~hwnd, "E", max, redraw)
+   self~sendWinIntMsg(self~TBM_SETSELEND, redraw, min)
+   return 0
 
 ::method clearSelRange
    use strict arg redraw = .true
-   return HandleOtherNewCtrls("SLIDER", "SETSEL", self~hwnd, "C", redraw)
+   self~sendWinIntMsg(self~TBM_CLEARSEL, redraw, 0)
+   return 0
 
+::method getSelRange external "LIBRARY oodialog tb_getSelRange"
 ::method selRange
-   return HandleOtherNewCtrls("SLIDER", "GETSEL", self~hwnd)
+   sr = self~getSelRange
+   return sr~start sr~end
 
 
 /******************* Tab Control Class ****************************************/
@@ -1122,9 +1153,7 @@
 ::constant EC_RIGHTMARGIN          2       -- 0x0002
 ::constant EC_USEFONTINFO          65535   -- 0xFFFF
 
-
 ::method isSingleLine external "LIBRARY oodialog e_isSingleLine"
-
 ::method selection external "LIBRARY oodialog e_selection"
 ::method selected
     s = self~selection

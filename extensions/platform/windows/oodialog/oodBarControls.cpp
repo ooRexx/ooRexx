@@ -343,5 +343,19 @@ RexxMethod1(RexxObjectPtr, tb_getRange, CSELF, pCSelf)
 }
 
 
+/** TrackBar::getSelRange()
+ *
+ */
+RexxMethod1(RexxObjectPtr, tb_getSelRange, CSELF, pCSelf)
+{
+    RexxDirectoryObject result = context->NewDirectory();
+    HWND hCtrl = getDCHCtrl(pCSelf);
+
+    context->DirectoryPut(result, context->Intptr((intptr_t)SendMessage(hCtrl, TBM_GETSELSTART, 0,0)), "START");
+    context->DirectoryPut(result, context->Intptr((intptr_t)SendMessage(hCtrl, TBM_GETSELEND, 0,0)), "END");
+
+    return result;
+}
+
 
 

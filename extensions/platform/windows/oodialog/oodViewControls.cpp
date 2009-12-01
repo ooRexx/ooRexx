@@ -1083,46 +1083,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
    h = GET_HWND(argv[2]);
    if (!h) RETERR;
 
-   if (!strcmp(argv[0].strptr, "SLIDER"))
-   {
-       if (!strcmp(argv[1].strptr, "GETSTEPS"))
-       {
-           CHECKARG(4);
-           if (argv[3].strptr[0] == 'L')
-               RETVAL((long)SendMessage(h, TBM_GETLINESIZE, 0, 0))
-           else RETVAL((long)SendMessage(h, TBM_GETPAGESIZE, 0, 0));
-       }
-       else if (!strcmp(argv[1].strptr, "SETSTEPS"))
-       {
-           CHECKARG(5);
-           if (argv[3].strptr[0] == 'L')
-               RETVAL((long)SendMessage(h, TBM_SETLINESIZE, 0, atol(argv[4].strptr)))
-           else RETVAL((long)SendMessage(h, TBM_SETPAGESIZE, 0, atol(argv[4].strptr)));
-       }
-       else if (!strcmp(argv[1].strptr, "SETSEL"))
-       {
-           CHECKARGL(5);
-           if (argv[3].strptr[0] == 'C')
-           {
-               SendMessage(h, TBM_CLEARSEL, isYes(argv[4].strptr), 0);
-               RETC(0);
-           }
-           CHECKARG(6);
-           if (argv[3].strptr[0] == 'S')
-               SendMessage(h, TBM_SETSELSTART, isYes(argv[5].strptr), atol(argv[4].strptr));
-           else if (argv[3].strptr[0] == 'E')
-               SendMessage(h, TBM_SETSELEND, isYes(argv[5].strptr), atol(argv[4].strptr));
-           else
-               SendMessage(h, TBM_SETSEL, isYes(argv[5].strptr), MAKELONG(atol(argv[3].strptr), atol(argv[4].strptr)));
-       }
-       else if (!strcmp(argv[1].strptr, "GETSEL"))
-       {
-           sprintf(retstr->strptr, "%d %d",SendMessage(h, TBM_GETSELSTART, 0,0), SendMessage(h, TBM_GETSELEND, 0,0));
-           retstr->strlength = strlen(retstr->strptr);
-           return 0;
-       }
-   }
-   else if (!strcmp(argv[0].strptr, "TAB"))
+   if (!strcmp(argv[0].strptr, "TAB"))
    {
        if (!strcmp(argv[1].strptr, "INS"))
        {
