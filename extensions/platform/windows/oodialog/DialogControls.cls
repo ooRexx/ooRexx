@@ -886,7 +886,7 @@
    return 0
 
 ::method getMin
-   use strict
+   use strict arg
    return self~sendWinIntMsg(self~TBM_GETRANGEMIN, 0, 0)
 
 ::method setMin
@@ -942,8 +942,7 @@
    return self~sendWinIntMsg(self~TBM_SETPAGESIZE, 0, step)
 
 ::method initSelRange
-   use strict arg min = 0, max = (-1), redraw = .false
-   if arg(2, 'O') then max = self~getMax
+   use strict arg min = 0, max = (self~getMax), redraw = .false
    if max < min then return -1
    self~sendWinIntMsg(self~TBM_SETSEL, redraw, .DlgUtil~makeLParam(min, max))
    return 0
