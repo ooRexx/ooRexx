@@ -118,1004 +118,6 @@
   return result~width result~height
 
 
-/****************************************************** Tree Control Class *********************************************************/
-
-
-::class 'TreeControl' subclass DialogControl public
-
-::method RootArray attribute private
-
-::method init
-   forward class (super) continue
-   self~RootArray = .array~new(4)
-
-::method Insert
-   use arg parent, after, text, image, selImage, opts, children
-   if arg(1,'o') = 1 then parent = "ROOT"
-   if arg(2,'o') = 1 then after = "LAST"
-   if arg(4,'o') = 1 then image = -1
-   if arg(5,'o') = 1 then selImage = image
-   if arg(6,'o') = 1 then opts = ""
-   if arg(7,'o') = 1 then children = 0
-   return HandleTreeCtrl("INS", self~Hwnd, parent, after, text, image, opts~translate, children, selImage)
-
-::method Add
-   do i = 1 to arg()
-      if arg(i,'E') = 1 then do
-          if arg(i+1,'e') = 1 then image = arg(i+1); else image = -1
-          if arg(i+2,'e') = 1 then selImage = arg(i+2); else selImage = image
-          if arg(i+3,'e') = 1 then opts = arg(i+3); else opts = ""
-          if arg(i+4,'e') = 1 then children = arg(i+4); else children = 0  /* for dynamic children */
-          if i=1 then do
-              self~RootArray[i] = self~Insert("ROOT",,arg(i),image,selimage,opts~translate, children)
-              return self~RootArray[i]
-          end
-          else if self~RootArray~HasIndex(i-1)=1 then do
-              if i=1 then parent = "ROOT"; else parent = self~RootArray[i-1]
-              self~RootArray[i] = self~Insert(parent,,arg(i),image,selimage,opts~translate, children)
-              return self~RootArray[i]
-          end
-          else return 0
-      end
-   end
-
-
-::method Modify
-   use arg hItem, text = "", image = (-1), selImage = (-1), state = "", children = (-1)
-   if arg(1, 'O') then hItem = self~Selected
-   if hitem = 0 then return -1
-
-   return HandleTreeCtrl("SET", self~Hwnd, hItem, text, image, state~translate, children, selImage)
-
-::method ItemInfo
-   use arg hItem
-   if arg(1, 'O') | hItem = 0 then return -1
-   ret = HandleTreeCtrl("GET", self~Hwnd, hItem, "InternalTVItemInfo")
-   return InternalTVItemInfo.
-
-::method MoveItem
-   use arg hItem, hNewParent, redraw = 1, extended = ""
-   if arg(1, 'O') | hItem = 0 then return 0
-   if arg(2, 'O') | hNewParent = 0 then return 0
-
-   extended = extended~translate
-   if hItem = hNewParent | hNewParent = self~Parent(hItem) | self~IsAncestor(hItem, hNewParent) = 1 then return 0
-   iinfo. = self~ItemInfo(hItem)
-   newRoot = self~Insert(hNewParent,,iinfo.!Text, iinfo.!Image, iinfo.!SelectedImage, iinfo.!State, iinfo.!Children)
-   if iinfo.!Children = 1 then do
-       child = self~Child(hItem)
-       if child \= 0 then self~MoveItem(child, newRoot, 0, "SIBLINGS")
-   end
-   if extended = "SIBLINGS" then do
-       sibling = self~next(hItem)
-       do while sibling \= 0
-           self~MoveItem(sibling, hNewParent, 0, "NODELETE")
-           oldsib = sibling
-           sibling = self~next(sibling)
-           self~Delete(oldsib)
-       end
-   end
-   if extended \= "NODELETE" then self~Delete(hItem)
-   if redraw = 1 | redraw~left(1)~translate = "Y" then self~Update
-   return newRoot  /* return new handle */
-
-
-::method IsAncestor
-   use arg hParent, hItem
-   if arg(1, 'O') | hParent = 0 then return 0
-   if arg(2, 'O') | hItem = 0 then return 0
-   if hItem = hParent then return 0
-   act = self~Parent(hItem)
-   do while act \= 0 & act \= hParent
-       act = self~Parent(act)
-   end
-   if act = hParent then return 1
-   else return 0
-
-
-::method Items
-   return HandleTreeCtrl("CNT", self~Hwnd)
-
-::method VisibleItems
-   return HandleTreeCtrl("CNTVIS", self~Hwnd)
-
-::method Root
-   return HandleTreeCtrl("GETHND", self~Hwnd,0,"ROOT")
-
-::method Parent
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PARENT")
-
-::method Child
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "CHILD")
-
-::method Selected
-   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "CARET")
-
-::method DropHighlighted
-   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "DROP")
-
-::method FirstVisible
-   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "FIRSTVISIBLE")
-
-::method Next
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "NEXT")
-
-::method NextVisible
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "NEXTVISIBLE")
-
-::method Previous
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUS")
-
-::method PreviousVisible
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUSVISIBLE")
-
-::method Delete
-   use arg hItem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("DEL",self~hwnd, hItem)
-
-::method DeleteAll
-   return HandleTreeCtrl("DEL", self~Hwnd,"ROOT")
-
-::method Collapse
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE")
-
-::method CollapseAndReset
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE RESET")
-
-::method Expand
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "EXPAND")
-
-::method Toggle
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "TOGGLE")
-
-::method EnsureVisible
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("ENVIS", self~Hwnd, hitem)
-
-::method Indent
-      return HandleTreeCtrl("GETIND", self~Hwnd)
-
-::method "Indent="
-   use arg ind
-   if arg(1, 'O') then return -1
-   ret = HandleTreeCtrl("SETIND", self~Hwnd, ind)
-
-::method Edit
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EDIT", self~Hwnd, hitem)
-
-::method EndEdit
-   use arg cancel
-   if arg(1, 'O') then cancel = 0
-   return HandleTreeCtrl("EEDIT", self~Hwnd, cancel)
-
-::method SubclassEdit
-   return HandleTreeCtrl("SUBCL_EDIT", self~Hwnd)
-
-::method RestoreEditClass
-   return HandleTreeCtrl("RESUB_EDIT", self~Hwnd)
-
-::method Select
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "")
-
-::method MakeFirstVisible
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "FIRSTVIS")
-
-::method DropHighlight
-   use arg hitem
-   if arg(1, 'O') then do
-      if digits() == 9 then
-         hItem = "0x00000000"
-      else
-         hItem = "0x0000000000000000"
-   end
-   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "DROP")
-
-::method SortChildren
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("SORT", self~Hwnd, hitem, 0) /* recursive not yet supported */
-
-
--- DEPRECATED
-::method setImages external "LIBRARY oodialog tv_setImageList"
-
--- DEPRECATED
-::method removeImages
-   return self~setImageList(.nil, 0)
-
-::method setImageList external "LIBRARY oodialog tv_setImageList"
-::method getImageList external "LIBRARY oodialog tv_getImageList"
-
-::method HitTest
-   use arg x, y
-   return HandleTreeCtrl("HIT", self~Hwnd, x, y)
-
-
-/************ List Control Class **********************************************/
-
-::class 'ListControl' subclass DialogControl public
-
--- LVM_FIRST = 0x1000  == 4096
-::constant LVM_GETCOLUMNWIDTH                4125             -- LVM_FIRST + 29
-
-
-::method lastItem attribute
-
-::method Init
-   forward class (super) continue
-   self~LastItem = -1
-
-::method ReplaceStyle
-   use arg oldstyle, newstyle
-   if arg(1,'O') | arg(2,'O') then return 0
-   ret = HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", oldstyle)
-   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "A", newstyle)
-
-::method AddStyle
-   use arg style
-   if arg(1,'O') then return 0
-   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "A", style)
-
-::method RemoveStyle
-   use arg style
-   if arg(1,'O') then return 0
-   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", style)
-
-::method ReplaceExtendedStyle  -- Replace
-   use strict arg oldstyle, newstyle
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "R", oldstyle, newstyle)
-
-::method AddExtendedStyle      -- Set
-   use strict arg style
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "S", style)
-
-::method RemoveExtendedStyle   -- Clear
-   use strict arg style
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "C", style)
-
-::method GetExtendedStyle      -- Get
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "G")
-
-::method GetExtendedStyleRaw   -- Long
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "L")
-
-::method SetHoverTime
-   use arg time
-   if arg(1, 'O') then time = -1
-   if \ time~datatype('W') then raise syntax 93.905 array(1, time)
-   if time < -1 then time = -1
-   return HandleListCtrlEx(self~Hwnd, "M", "HOVER", time)
-
-::method GetHoverTime
-   return HandleListCtrlEx(self~Hwnd, "M", "HOVER")
-
-::method Check
-   use strict arg item
-   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item, .true)
-
-::method CheckAll
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", -1, .true)
-
-::method Uncheck
-   use strict arg item
-   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item, .false)
-
-::method UncheckAll
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", -1, .false)
-
-::method GetCheck
-   use strict arg item
-   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item)
-
-::method IsChecked
-   use strict arg item
-   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
-   return (HandleListCtrlEx(self~Hwnd, "M", "CHK", item) == 1)
-
-
-::method DeleteColumn
-   use arg nr
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("C","DEL", self~Hwnd, nr)
-
-
-::method ModifyColumn
-   use arg nr, text, width, fmt
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then text = ""
-   if arg(3,'o') = 1 then width = -1; else width = width*self~factorX
-   if arg(4,'o') = 1 then fmt = ""
-   return HandleListCtrl("C","SET", self~Hwnd, nr, text, width, fmt~translate)
-
-
-::method ColumnInfo
-   use arg nr
-   if arg(1,'o') = 1 then return -1
-   ret = HandleListCtrl("C","GET", self~Hwnd, nr, "InternalLVColInfo")
-   if InternalLVColInfo.!Width~Datatype('N') = 1 then InternalLVColInfo.!Width = InternalLVColInfo.!Width / self~factorX
-   return InternalLVColInfo.
-
-
-::method stringWidthPx external "LIBRARY oodialog lv_stringWidthPx"
-::method stringWidth  -- Dialog units, not accurate.
-   use strict arg text
-   return self~stringWidthPx(text) / self~factorX
-
-::method columnWidthPx
-   use strict arg column
-  return self~sendWinIntMsg(self~LVM_GETCOLUMNWIDTH, column, 0)
-
-::method columnWidth  -- Dialog units, not accurate.
-   use strict arg colNum
-   return self~columnWidthPx(colNum) / self~factorX
-
-::method insertColumnPx external "LIBRARY oodialog lv_insertColumnPx"
-::method insertColumn -- Dialog units, not accurate.
-   use strict arg nr = 0, text, width, fmt = "L"
-   width = trunc(width * self~factorX)
-   return self~insertColumnPx(nr, text, width, fmt)
-
-::method SetColumnWidth
-   use arg nr, width
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then width = "AUTO"
-   if width~datatype("N") = 1 then width = width * self~factorX
-   return HandleListCtrl("C","SETWIDTH", self~Hwnd, nr, width~translate)
-
-::method getColumnCount external "LIBRARY oodialog lv_getColumnCount"
-::method getColumnOrder external "LIBRARY oodialog lv_getColumnOrder"
-::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
-
-
-::method Insert
-   use arg nr, subnr, text, image
-   if arg(2,'O') then subnr = 0
-   if arg(1,'o') = 1 then do
-        if subnr = 0 then nr = self~LastItem + 1
-        else nr = self~LastItem
-   end
-   if arg(4,'o') = 1 then image = -1
-   if subnr = 0 then do
-       item = HandleListCtrl("I","INS", self~Hwnd, nr, text, image)
-       if item \= -1 then self~LastItem = item
-   end
-   else item = HandleListCtrl("I","SET", self~Hwnd, nr, subnr, text, image)
-   return item
-
-
-::method Modify
-   use arg nr, subnr, text, image
-   if arg(1,'o') = 1 then nr = self~Selected
-   if arg(2,'O') then subnr = 0
-   if arg(4,'o') = 1 then image = -1
-   return HandleListCtrl("I","SET", self~Hwnd, nr, subnr, text, image)
-
-::method SetItemText
-   use arg item, subitem, text
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'O') then subitem = 0
-   return HandleListCtrl("I","SET", self~Hwnd, item, subitem, text,"TXT")
-
-::method SetItemState
-   use arg item, state
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","SET", self~Hwnd, item, 0, state, "STATE")
-
-
-::method Add
-   do i = 1 to arg()
-      if arg(i,'E') = 1 then do
-          if arg(i+1,'e') = 1 then image = arg(i+1); else image = -1
-          if i = 1 then do
-              item = self~Insert(self~LastItem+1,i-1,arg(i),image)
-              if item \= -1 then self~LastItem = item
-          end
-          else do
-             item = self~Insert(self~LastItem,i-1,arg(i),image)
-          end
-          return item
-      end
-   end
-   return -1
-
-
-::method AddRow
-   use arg nr, image, text
-   if arg(1,'o') = 1 then nr = self~LastItem+1
-   if arg(2,'o') = 1 then image = -1
-   if arg(3,'o') = 1 then text = ""
-   item = self~Insert(nr,0,text,image)
-   if item \= -1 then do
-       self~LastItem = item
-       do i = 4 to arg()
-           if arg(i,'E') = 1 then self~Insert(item,i-3,arg(i),-1)
-       end
-   end
-   return item
-
-::method addRowEx external "LIBRARY oodialog lv_addRowEx"  -- TODO review method name
-
-::method Delete
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","DEL",self~hwnd, item)
-
-::method DeleteAll
-   return HandleListCtrl("I","DEL", self~Hwnd,"ALL")
-
-::method Items
-   return HandleListCtrl("M","CNT", self~Hwnd)
-
-::method Last
-   return self~Items - 1
-
-::method Prepare4nItems
-   use arg citems
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("M","SETCNT", self~Hwnd, citems)
-
-
-::method SelectedItems
-   return HandleListCtrl("M","CNTSEL", self~Hwnd)
-
-::method ItemInfo
-   use arg item, subitem
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'O') then subitem = 0
-   ret = HandleListCtrl("I","GET", self~Hwnd, item, subitem, "InternalLVItemInfo", "")
-   return InternalLVItemInfo.
-
-::method ItemText
-   use arg item, subitem
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'O') then subitem = 0
-   return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "TXT")
-
-::method ItemState
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "STATE")
-
-::method Select
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","SET", self~Hwnd, item, 0, "SELECTED", "STATE")
-
-::method Deselect
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","SET", self~Hwnd, item, 0, "NOTSELECTED", "STATE")
-
-::method Selected
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "SELECTED")
-
-::method LastSelected
-   if self~ItemState(self~Last)~wordpos("SELECTED") > 0 then  return self~Last
-   return self~PreviousSelected(self~Last)
-
-::method Focused
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "FOCUSED")
-
-::method Focus
-   use arg item
-   if arg(1,'O') then return -1
-   return HandleListCtrl("I", "SET", self~Hwnd, item, 0, "FOCUSED","STATE")
-
-::method DropHighlighted
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "DROP")
-
-::method FirstVisible
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, 0, "FIRSTVISIBLE")
-
-::method NextSelected
-   use arg startItem
-   if arg(1,'O') then startItem = -1
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT SELECTED")
-
-::method PreviousSelected
-   use arg startItem
-   if arg(1,'O') then startItem = -1
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT SELECTED")
-
-::method Next
-   use arg startItem
-   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
-   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
-   -- a -1 value to mark the iteration end.
-   if self~Items < 2 then return -1
-   if arg(1,'O') then startItem = -1
-   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT")
-
-::method Previous
-   use arg startItem
-   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
-   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
-   -- a -1 value to mark the iteration end.
-   if self~Items < 2 then return -1
-   if arg(1,'o') = 1 then startItem = -1
-   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT")
-
-::method NextLeft
-   use arg startItem
-   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
-   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
-   -- a -1 value to mark the iteration end.
-   if self~Items < 2 then return -1
-   if arg(1,'o') = 1 then startItem = -1
-   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TOLEFT")
-
-::method NextRight
-   use arg startItem
-   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
-   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
-   -- a -1 value to mark the iteration end.
-   if self~Items < 2 then return -1
-   if arg(1,'o') = 1 then startItem = -1
-   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TORIGHT")
-
-::method SmallSpacing
-   return HandleListCtrl("M","GETSPC", self~Hwnd, 1)
-
-::method Spacing
-   return HandleListCtrl("M","GETSPC", self~Hwnd, 0)
-
-::method RedrawItems
-   use arg first, last
-   if arg(1,'o') = 1 then first = 0
-   if arg(2,'o') = 1 then last = self~items
-   return HandleListCtrl("M","REDRAW", self~Hwnd, first, last)
-
-::method UpdateItem
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("M","UPDATE", self~Hwnd, item)
-
-::method EnsureVisible
-   use arg item, partial
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then partial = 0
-   return HandleListCtrl("M", "ENVIS", self~Hwnd, item, partial)
-
--- DEPRECATED
-::method setSmallImages
-   newArgs = arg(1, 'A')
-   newArgs[4] = 1
-   forward message 'setImageList' arguments (newArgs)
-
--- DEPRECATED
-::method setImages external "LIBRARY oodialog lv_setImageList"
-
--- DEPRECATED
-::method RemoveSmallImages
-   return self~removeImageList(.nil, 1)
-
--- DEPRECATED
-::method removeImages
-   return self~removeImageList(.nil, 0)
-
-::method setImageList external "LIBRARY oodialog lv_setImageList"
-::method getImageList external "LIBRARY oodialog lv_getImageList"
-
-::method Find
-   use arg txt, startItem, wrap
-   if arg(2,'o') = 1 then startItem = -1
-   if arg(3,'o') = 1 then wrap = 0
-   if wrap = 1 | wrap~translate = "J" then opt = "WRAP"; else opt = ""
-   return HandleListCtrl("I", "FIND", self~Hwnd, startItem, opt, txt)
-
-::method FindPartial
-   use arg txt, startItem, wrap
-   if arg(2,'o') = 1 then startItem = -1
-   if arg(3,'o') = 1 then wrap = 0
-   if wrap = 1 | wrap~translate = "J" then opt = "PARTIAL WRAP"; else opt = "PARTIAL"
-   return HandleListCtrl("I", "FIND", self~Hwnd, startItem, opt, txt)
-
-::method FindNearestXY
-   use arg x,y, direction
-   if arg(1,'o') = 1 | arg(2,'o') = 1 then return -1
-   if arg(3,'o') = 1 then direction = "DOWN"
-   return HandleListCtrl("I", "FIND", self~Hwnd, -1, "NEAREST", x, y, direction~translate)
-
-::method Arrange
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "DEFAULT")
-
-::method SnapToGrid
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "SNAPTOGRID")
-
-::method AlignLeft
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "LEFT")
-
-::method AlignTop
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "TOP")
-
-::method ItemPos
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("M", "GETPOS", self~Hwnd, item)
-
-::method SetItemPos
-   use arg item, x, y
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then x = 0
-   if arg(3,'o') = 1 then y = 0
-   return HandleListCtrl("M", "SETPOS", self~Hwnd, item, x, y)
-
-::method Edit
-   use arg hitem
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I", "EDIT", self~Hwnd, hitem)
-
-::method EndEdit
-   return HandleListCtrl("I", "EDIT", self~Hwnd, -1)
-
-::method SubclassEdit
-   return HandleListCtrl("I", "SUBCL_EDIT", self~Hwnd)
-
-::method RestoreEditClass
-   return HandleListCtrl("I", "RESUB_EDIT", self~Hwnd)
-
-::method ItemsPerPage
-   return HandleListCtrl("M", "CNTPP", self~Hwnd)
-
-::method Scroll
-   use arg x, y
-   if arg(1,'o') = 1 then x = 0
-   if arg(2,'o') = 1 then y = 0
-   return HandleListCtrl("M", "SCROLL", self~Hwnd, x, y)
-
-::method BkColor
-   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETBK")
-
-::method "BkColor="
-   use arg color
-   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETBK", color
-
-::method TextColor
-   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETTXT")
-
-::method "TextColor="
-   use arg color
-   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETTXT", color
-
-::method TextBkColor
-   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETTXTBK")
-
-::method "TextBkColor="
-   use arg color
-   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETTXTBK", color
-
-
-
-
-/***************** Progress Bar Class *********************************************************/
-
-::class 'ProgressBar' subclass DialogControl public
-
-::method step external "LIBRARY oodialog pbc_stepIt"
-::method setStep external "LIBRARY oodialog pbc_setStep"
-
-::method setPos external "LIBRARY oodialog pbc_setPos"
-::method getPos external "LIBRARY oodialog pbc_getPos"
-
-::method setRange external "LIBRARY oodialog pbc_setRange"
-::method getRange external "LIBRARY oodialog pbc_getRange"
-
-::method setMarquee external "LIBRARY oodialog pbc_setMarquee"
-
-::method barColor external "LIBRARY oodialog pbc_setBarColor"
-::method backgroundColor external "LIBRARY oodialog pbc_setBkColor"
-
-
-/******************** Track Bar Class *********************************************************/
-
-::class 'SliderControl' subclass DialogControl public
-
--- TBM_ messages are defined as WM_USER + x
--- WM_USER == 0x0400
-
-::constant TBM_GETPOS              "0x0400"
-::constant TBM_GETRANGEMIN         "0x0401"
-::constant TBM_GETRANGEMAX         "0x0402"
-::constant TBM_GETTIC              "0x0403"
-::constant TBM_SETTIC              "0x0404"
-::constant TBM_SETPOS              "0x0405"
-::constant TBM_SETRANGE            "0x0406"
-::constant TBM_SETRANGEMIN         "0x0407"
-::constant TBM_SETRANGEMAX         "0x0408"
-::constant TBM_CLEARTICS           "0x0409"
-::constant TBM_SETSEL              "0x040A"
-::constant TBM_SETSELSTART         "0x040B"
-::constant TBM_SETSELEND           "0x040C"
-::constant TBM_GETNUMTICS          "0x0410"
-::constant TBM_GETSELSTART         "0x0411"
-::constant TBM_GETSELEND           "0x0412"
-::constant TBM_CLEARSEL            "0x0413"
-::constant TBM_SETTICFREQ          "0x0414"
-::constant TBM_SETPAGESIZE         "0x0415"
-::constant TBM_GETPAGESIZE         "0x0416"
-::constant TBM_SETLINESIZE         "0x0417"
-::constant TBM_GETLINESIZE         "0x0418"
-
-::method "pos="
-   forward message (setPos)
-
-::method pos
-   use strict arg
-   return self~sendWinIntMsg(self~TBM_GETPOS, 0, 0)
-
-::method setPos
-   use strict arg p, redraw = .false
-   self~sendWinIntMsg(self~TBM_SETPOS, redraw, p)
-   return 0
-
-::method initRange
-   use strict arg min = 0, max = 100, redraw = .false
-   if max < min then return -1
-   self~sendWinIntMsg(self~TBM_SETRANGE, redraw, .DlgUtil~makeLParam(min, max))
-   return 0
-
-::method getMin
-   use strict arg
-   return self~sendWinIntMsg(self~TBM_GETRANGEMIN, 0, 0)
-
-::method setMin
-   use strict arg min, redraw = .true
-   self~sendWinIntMsg(self~TBM_SETRANGEMIN, redraw, min)
-   return 0
-
-::method getMax
-   return self~sendWinIntMsg(self~TBM_GETRANGEMAX, 0, 0)
-
-::method setMax
-   use strict arg max, redraw = .true
-   self~sendWinIntMsg(self~TBM_SETRANGEMAX, redraw, max)
-   return 0
-
-::method getRange external "LIBRARY oodialog tb_getRange"
-::method range
-   r = self~getRange
-   return r~min r~max
-
-::method clearTicks
-   use strict arg redraw = .true
-   self~sendWinIntMsg(self~TBM_CLEARTICS, redraw, 0)
-   return 0
-
-::method countTicks
-   return self~sendWinIntMsg(self~TBM_GETNUMTICS, 0, 0)
-
-::method getTick
-   use strict arg tic
-   return self~sendWinIntMsg(self~TBM_GETTIC, tic, 0)
-
-::method setTickAt
-   use strict arg pos
-   return self~sendWinIntMsg(self~TBM_SETTIC, 0, pos)
-
-::method setTickFrequency
-   use strict arg freq
-   return self~sendWinIntMsg(self~TBM_SETTICFREQ, freq, 0)
-
-::method getLineStep
-   return self~sendWinIntMsg(self~TBM_GETLINESIZE, 0, 0)
-
-::method getPageStep
-   return self~sendWinIntMsg(self~TBM_GETPAGESIZE, 0, 0)
-
-::method setLineStep
-   use strict arg step
-   return self~sendWinIntMsg(self~TBM_SETLINESIZE, 0, step)
-
-::method setPageStep
-   use strict arg step
-   return self~sendWinIntMsg(self~TBM_SETPAGESIZE, 0, step)
-
-::method initSelRange
-   use strict arg min = 0, max = (self~getMax), redraw = .false
-   if max < min then return -1
-   self~sendWinIntMsg(self~TBM_SETSEL, redraw, .DlgUtil~makeLParam(min, max))
-   return 0
-
-::method getSelStart
-   use strict arg
-   return self~sendWinIntMsg(self~TBM_GETSELSTART, 0, 0)
-   return 0
-
-::method setSelStart
-   use strict arg min, redraw = .true
-   self~sendWinIntMsg(self~TBM_SETSELSTART, redraw, min)
-   return 0
-
-::method getSelEnd
-   use strict arg
-   return self~sendWinIntMsg(self~TBM_GETSELEND, 0, 0)
-   return 0
-
-::method setSelEnd
-   use strict arg max, redraw = .true
-   self~sendWinIntMsg(self~TBM_SETSELEND, redraw, min)
-   return 0
-
-::method clearSelRange
-   use strict arg redraw = .true
-   self~sendWinIntMsg(self~TBM_CLEARSEL, redraw, 0)
-   return 0
-
-::method getSelRange external "LIBRARY oodialog tb_getSelRange"
-::method selRange
-   sr = self~getSelRange
-   return sr~start sr~end
-
-
-/******************* Tab Control Class ****************************************/
-
-::class 'TabControl' subclass DialogControl public
-
-::method LastItem attribute
-
-::method Init
-   forward class (super) continue
-   self~LastItem = -1
-
-::method Insert
-   use arg nr, text, image, lparam
-   if arg(1,'o') = 1 then nr = self~LastItem + 1
-   if arg(2,'o') = 1 then text = ""
-   if arg(3,'o') = 1 then image = -1
-   if arg(4,'o') = 1 then item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image)
-   else item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image, lparam)
-   if item \= -1 then self~LastItem = item
-   return item
-
-
-::method Modify
-   use arg nr, text, image, lparam
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then text = ""
-   if arg(3,'o') = 1 then image = -1
-   if arg(4,'o') = 1 then return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image)
-   else return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image, lparam)
-
-
-/* adds text1, text2, text3.... */
-::method AddSequence
-   nr = self~LastItem
-   do i= 1 to arg()
-       nr = nr + 1
-       nr = self~Insert(nr,arg(i))
-       if nr = -1 then return -1    /* error occurred */
-       self~LastItem = nr
-   end
-   return nr
-
-/* adds text1, image1, lparam1, text2, image2, lparam2, text3.... */
-::method AddFullSeq
-   args = arg()
-   nr = self~LastItem
-   i = 1
-   do while i <= args
-       nr = nr + 1
-       if i+2 <= args & arg(i+2,'e') = 1 then do
-           if arg(i+1,'e') = 1 then nr = self~Insert(nr,arg(i), arg(i+1), arg(i+2))
-           else nr = self~Insert(nr,arg(i),, arg(i+2))
-       end
-       else if i+1 <= args & arg(i+1,'e') = 1 then nr = self~Insert(nr,arg(i), arg(i+1))
-       else nr = self~Insert(nr,arg(i))
-       if nr = -1 then return -1   /* error occurred */
-       self~LastItem = nr
-       i = i+3
-   end
-   return nr
-
-::method Items
-   return HandleOtherNewCtrls("TAB","CNT",self~Hwnd)
-
-::method Rows
-   return HandleOtherNewCtrls("TAB","ROWCNT",self~Hwnd)
-
-::method ItemInfo
-   use arg hItem
-   if arg(1,'o') = 1 then return -1
-   ret = HandleOtherNewCtrls("TAB","GET",self~Hwnd, hItem, "InternalTCItemInfo")
-   return InternalTCItemInfo.
-
-::method Delete
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleOtherNewCtrls("TAB","DEL",self~Hwnd, item)
-
-::method DeleteAll
-   return HandleOtherNewCtrls("TAB","DEL",self~Hwnd,"ALL")
-
-::method Last
-   return self~Items - 1
-
-::method Selected
-   return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"GT")
-
-::method SelectedIndex
-   return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"GN")
-
-::method Select
-   use arg text
-   return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"ST", text)
-
-::method SelectIndex
-   use arg item
-   return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"SN", item)
-
-::method Focus
-   use arg item
-   return HandleOtherNewCtrls("TAB","FOCUS",self~Hwnd, item)
-
-::method Focused
-   return HandleOtherNewCtrls("TAB","FOCUS",self~Hwnd, "G")
-
--- DEPRECATED
-::method setImages external "LIBRARY oodialog tab_setImageList"
-
--- DEPRECATED
-::method RemoveImages
-   return self~setImageList(.nil)
-
-::method setImageList external "LIBRARY oodialog tab_setImageList"
-::method getImageList external "LIBRARY oodialog tab_getImageList"
-
-::method SetPadding
-   parse arg cx, cy
-   return HandleOtherNewCtrls("TAB","PADDING",self~Hwnd, cx, cy)
-
-::method SetSize
-   parse arg cx, cy
-   return HandleOtherNewCtrls("TAB","SIZE",self~Hwnd, cx, cy)
-
-::method PosRectangle
-   use arg item
-   if arg(1,'o') = 1 then return ""
-   return HandleOtherNewCtrls("TAB","RECT",self~Hwnd, item)
-
-::method AdjustToRectangle
-   use arg left, top, right, bottom
-   return HandleOtherNewCtrls("TAB","ADJUST",self~Hwnd, 1, left, top, right, bottom)
-
-::method RequiredWindowSize
-   use arg left, top, right, bottom
-   return HandleOtherNewCtrls("TAB","ADJUST",self~Hwnd, 0, left, top, right, bottom)
-
-
-/**********       Old controls                     ****************************/
-
 ::class 'StaticControl' subclass DialogControl public
 
 ::method getIcon external "LIBRARY oodialog stc_getIcon"
@@ -1614,6 +616,1015 @@
    self~setPos(pos)
    return pos
 
+
+/********* Progress Bar Class *************************************************/
+
+::class 'ProgressBar' subclass DialogControl public
+
+::method step external "LIBRARY oodialog pbc_stepIt"
+::method setStep external "LIBRARY oodialog pbc_setStep"
+
+::method setPos external "LIBRARY oodialog pbc_setPos"
+::method getPos external "LIBRARY oodialog pbc_getPos"
+
+::method setRange external "LIBRARY oodialog pbc_setRange"
+::method getRange external "LIBRARY oodialog pbc_getRange"
+
+::method setMarquee external "LIBRARY oodialog pbc_setMarquee"
+
+::method barColor external "LIBRARY oodialog pbc_setBarColor"
+::method backgroundColor external "LIBRARY oodialog pbc_setBkColor"
+
+
+/******** Track Bar Class ******************************************************/
+
+::class 'SliderControl' subclass DialogControl public
+
+-- TBM_ messages are defined as WM_USER + x
+-- WM_USER == 0x0400
+
+::constant TBM_GETPOS              "0x0400"
+::constant TBM_GETRANGEMIN         "0x0401"
+::constant TBM_GETRANGEMAX         "0x0402"
+::constant TBM_GETTIC              "0x0403"
+::constant TBM_SETTIC              "0x0404"
+::constant TBM_SETPOS              "0x0405"
+::constant TBM_SETRANGE            "0x0406"
+::constant TBM_SETRANGEMIN         "0x0407"
+::constant TBM_SETRANGEMAX         "0x0408"
+::constant TBM_CLEARTICS           "0x0409"
+::constant TBM_SETSEL              "0x040A"
+::constant TBM_SETSELSTART         "0x040B"
+::constant TBM_SETSELEND           "0x040C"
+::constant TBM_GETNUMTICS          "0x0410"
+::constant TBM_GETSELSTART         "0x0411"
+::constant TBM_GETSELEND           "0x0412"
+::constant TBM_CLEARSEL            "0x0413"
+::constant TBM_SETTICFREQ          "0x0414"
+::constant TBM_SETPAGESIZE         "0x0415"
+::constant TBM_GETPAGESIZE         "0x0416"
+::constant TBM_SETLINESIZE         "0x0417"
+::constant TBM_GETLINESIZE         "0x0418"
+
+::method "pos="
+   forward message (setPos)
+
+::method pos
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETPOS, 0, 0)
+
+::method setPos
+   use strict arg p, redraw = .false
+   self~sendWinIntMsg(self~TBM_SETPOS, redraw, p)
+   return 0
+
+::method initRange
+   use strict arg min = 0, max = 100, redraw = .false
+   if max < min then return -1
+   self~sendWinIntMsg(self~TBM_SETRANGE, redraw, .DlgUtil~makeLParam(min, max))
+   return 0
+
+::method getMin
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETRANGEMIN, 0, 0)
+
+::method setMin
+   use strict arg min, redraw = .true
+   self~sendWinIntMsg(self~TBM_SETRANGEMIN, redraw, min)
+   return 0
+
+::method getMax
+   return self~sendWinIntMsg(self~TBM_GETRANGEMAX, 0, 0)
+
+::method setMax
+   use strict arg max, redraw = .true
+   self~sendWinIntMsg(self~TBM_SETRANGEMAX, redraw, max)
+   return 0
+
+::method getRange external "LIBRARY oodialog tb_getRange"
+::method range
+   r = self~getRange
+   return r~min r~max
+
+::method clearTicks
+   use strict arg redraw = .true
+   self~sendWinIntMsg(self~TBM_CLEARTICS, redraw, 0)
+   return 0
+
+::method countTicks
+   return self~sendWinIntMsg(self~TBM_GETNUMTICS, 0, 0)
+
+::method getTick
+   use strict arg tic
+   return self~sendWinIntMsg(self~TBM_GETTIC, tic, 0)
+
+::method setTickAt
+   use strict arg pos
+   return self~sendWinIntMsg(self~TBM_SETTIC, 0, pos)
+
+::method setTickFrequency
+   use strict arg freq
+   return self~sendWinIntMsg(self~TBM_SETTICFREQ, freq, 0)
+
+::method getLineStep
+   return self~sendWinIntMsg(self~TBM_GETLINESIZE, 0, 0)
+
+::method getPageStep
+   return self~sendWinIntMsg(self~TBM_GETPAGESIZE, 0, 0)
+
+::method setLineStep
+   use strict arg step
+   return self~sendWinIntMsg(self~TBM_SETLINESIZE, 0, step)
+
+::method setPageStep
+   use strict arg step
+   return self~sendWinIntMsg(self~TBM_SETPAGESIZE, 0, step)
+
+::method initSelRange
+   use strict arg min = 0, max = (self~getMax), redraw = .false
+   if max < min then return -1
+   self~sendWinIntMsg(self~TBM_SETSEL, redraw, .DlgUtil~makeLParam(min, max))
+   return 0
+
+::method getSelStart
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETSELSTART, 0, 0)
+   return 0
+
+::method setSelStart
+   use strict arg min, redraw = .true
+   self~sendWinIntMsg(self~TBM_SETSELSTART, redraw, min)
+   return 0
+
+::method getSelEnd
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETSELEND, 0, 0)
+   return 0
+
+::method setSelEnd
+   use strict arg max, redraw = .true
+   self~sendWinIntMsg(self~TBM_SETSELEND, redraw, min)
+   return 0
+
+::method clearSelRange
+   use strict arg redraw = .true
+   self~sendWinIntMsg(self~TBM_CLEARSEL, redraw, 0)
+   return 0
+
+::method getSelRange external "LIBRARY oodialog tb_getSelRange"
+::method selRange
+   sr = self~getSelRange
+   return sr~start sr~end
+
+
+/******************* Tab Control Class ****************************************/
+
+::class 'TabControl' subclass DialogControl public
+
+-- TCM_FIRST == 0x1300  4864
+::constant TCM_GETITEMCOUNT    "0x1304)"
+::constant TCM_GETROWCOUNT     "0x132C"
+::constant TCM_GETCURSEL       "0x130B"
+::constant TCM_SETCURSEL       "0x130C"
+::constant TCM_SETCURFOCUS     "0x1330"
+::constant TCM_GETCURFOCUS     "0x132F"
+::constant TCM_DELETEALLITEMS  "0x1309"
+::constant TCM_DELETEITEM      "0x1308"
+
+::method LastItem attribute
+
+::method Init
+   forward class (super) continue
+   self~LastItem = -1
+
+::method setImageList external "LIBRARY oodialog tab_setImageList"
+::method getImageList external "LIBRARY oodialog tab_getImageList"
+
+::method items
+   use strict arg
+   return self~sendWinIntMsg(self~TCM_GETITEMCOUNT, 0, 0)
+
+::method rows
+   use strict arg
+   return self~sendWinIntMsg(self~TCM_GETROWCOUNT, 0, 0)
+
+::method last
+   use strict arg
+   return self~items - 1
+
+::method selectedIndex
+   use strict arg
+   return self~sendWinIntMsg(self~TCM_GETCURSEL, 0, 0)
+
+::method selectIndex
+   use strict arg item
+   return self~sendWinIntMsg(self~TCM_SETCURSEL, item, 0)
+
+::method focused
+   use strict arg
+   return self~sendWinIntMsg(self~TCM_GETCURSEL, 0, 0)
+
+::method focus
+   use strict arg item
+   self~sendWinIntMsg(self~TCM_SETCURSEL, item, 0)
+   return 0
+
+::method Delete
+   use strict arg item
+   ret = self~sendWinIntMsg(self~TCM_DELETEITEM, item, 0)
+   return ret == 0
+
+::method deleteAll
+   use strict arg
+   ret = self~sendWinIntMsg(self~TCM_DELETEALLITEMS, 0, 0)
+   return ret == 0
+
+::method SetPadding external "LIBRARY oodialog tab_setPadding"
+::method setItemSize external "LIBRARY oodialog tab_setItemSize"
+
+::method setSize
+   forward message "setItemSize" continue
+   return result~cx result~cy
+
+
+
+::method Insert
+   use arg nr, text, image, lparam
+   if arg(1,'o') = 1 then nr = self~LastItem + 1
+   if arg(2,'o') = 1 then text = ""
+   if arg(3,'o') = 1 then image = -1
+   if arg(4,'o') = 1 then item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image)
+   else item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image, lparam)
+   if item \= -1 then self~LastItem = item
+   return item
+
+
+::method Modify
+   use arg nr, text, image, lparam
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then text = ""
+   if arg(3,'o') = 1 then image = -1
+   if arg(4,'o') = 1 then return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image)
+   else return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image, lparam)
+
+
+/* adds text1, text2, text3.... */
+::method AddSequence
+   nr = self~LastItem
+   do i= 1 to arg()
+       nr = nr + 1
+       nr = self~Insert(nr,arg(i))
+       if nr = -1 then return -1    /* error occurred */
+       self~LastItem = nr
+   end
+   return nr
+
+/* adds text1, image1, lparam1, text2, image2, lparam2, text3.... */
+::method AddFullSeq
+   args = arg()
+   nr = self~LastItem
+   i = 1
+   do while i <= args
+       nr = nr + 1
+       if i+2 <= args & arg(i+2,'e') = 1 then do
+           if arg(i+1,'e') = 1 then nr = self~Insert(nr,arg(i), arg(i+1), arg(i+2))
+           else nr = self~Insert(nr,arg(i),, arg(i+2))
+       end
+       else if i+1 <= args & arg(i+1,'e') = 1 then nr = self~Insert(nr,arg(i), arg(i+1))
+       else nr = self~Insert(nr,arg(i))
+       if nr = -1 then return -1   /* error occurred */
+       self~LastItem = nr
+       i = i+3
+   end
+   return nr
+
+::method ItemInfo
+   use strict arg hItem
+   ret = HandleOtherNewCtrls("TAB","GET",self~Hwnd, hItem, "InternalTCItemInfo")
+   return InternalTCItemInfo.
+
+::method Selected
+   return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"GT")
+
+::method Select
+   use strict arg text
+   return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"ST", text)
+
+::method PosRectangle
+   use arg strict item
+   return HandleOtherNewCtrls("TAB","RECT",self~Hwnd, item)
+
+::method AdjustToRectangle
+   use arg left, top, right, bottom
+   return HandleOtherNewCtrls("TAB","ADJUST",self~Hwnd, 1, left, top, right, bottom)
+
+::method RequiredWindowSize
+   use arg left, top, right, bottom
+   return HandleOtherNewCtrls("TAB","ADJUST",self~Hwnd, 0, left, top, right, bottom)
+
+-- DEPRECATED
+::method setImages external "LIBRARY oodialog tab_setImageList"
+
+-- DEPRECATED
+::method RemoveImages
+   return self~setImageList(.nil)
+
+
+/************ List Control Class **********************************************/
+
+::class 'ListControl' subclass DialogControl public
+
+-- LVM_FIRST = 0x1000  == 4096
+::constant LVM_GETCOLUMNWIDTH                4125             -- LVM_FIRST + 29
+
+
+::method lastItem attribute
+
+::method Init
+   forward class (super) continue
+   self~LastItem = -1
+
+::method ReplaceStyle
+   use arg oldstyle, newstyle
+   if arg(1,'O') | arg(2,'O') then return 0
+   ret = HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", oldstyle)
+   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "A", newstyle)
+
+::method AddStyle
+   use arg style
+   if arg(1,'O') then return 0
+   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "A", style)
+
+::method RemoveStyle
+   use arg style
+   if arg(1,'O') then return 0
+   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", style)
+
+::method ReplaceExtendedStyle  -- Replace
+   use strict arg oldstyle, newstyle
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "R", oldstyle, newstyle)
+
+::method AddExtendedStyle      -- Set
+   use strict arg style
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "S", style)
+
+::method RemoveExtendedStyle   -- Clear
+   use strict arg style
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "C", style)
+
+::method GetExtendedStyle      -- Get
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "G")
+
+::method GetExtendedStyleRaw   -- Long
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "L")
+
+::method SetHoverTime
+   use arg time
+   if arg(1, 'O') then time = -1
+   if \ time~datatype('W') then raise syntax 93.905 array(1, time)
+   if time < -1 then time = -1
+   return HandleListCtrlEx(self~Hwnd, "M", "HOVER", time)
+
+::method GetHoverTime
+   return HandleListCtrlEx(self~Hwnd, "M", "HOVER")
+
+::method Check
+   use strict arg item
+   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item, .true)
+
+::method CheckAll
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", -1, .true)
+
+::method Uncheck
+   use strict arg item
+   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item, .false)
+
+::method UncheckAll
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", -1, .false)
+
+::method GetCheck
+   use strict arg item
+   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item)
+
+::method IsChecked
+   use strict arg item
+   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
+   return (HandleListCtrlEx(self~Hwnd, "M", "CHK", item) == 1)
+
+
+::method DeleteColumn
+   use arg nr
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("C","DEL", self~Hwnd, nr)
+
+
+::method ModifyColumn
+   use arg nr, text, width, fmt
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then text = ""
+   if arg(3,'o') = 1 then width = -1; else width = width*self~factorX
+   if arg(4,'o') = 1 then fmt = ""
+   return HandleListCtrl("C","SET", self~Hwnd, nr, text, width, fmt~translate)
+
+
+::method ColumnInfo
+   use arg nr
+   if arg(1,'o') = 1 then return -1
+   ret = HandleListCtrl("C","GET", self~Hwnd, nr, "InternalLVColInfo")
+   if InternalLVColInfo.!Width~Datatype('N') = 1 then InternalLVColInfo.!Width = InternalLVColInfo.!Width / self~factorX
+   return InternalLVColInfo.
+
+
+::method stringWidthPx external "LIBRARY oodialog lv_stringWidthPx"
+::method stringWidth  -- Dialog units, not accurate.
+   use strict arg text
+   return self~stringWidthPx(text) / self~factorX
+
+::method columnWidthPx
+   use strict arg column
+  return self~sendWinIntMsg(self~LVM_GETCOLUMNWIDTH, column, 0)
+
+::method columnWidth  -- Dialog units, not accurate.
+   use strict arg colNum
+   return self~columnWidthPx(colNum) / self~factorX
+
+::method insertColumnPx external "LIBRARY oodialog lv_insertColumnPx"
+::method insertColumn -- Dialog units, not accurate.
+   use strict arg nr = 0, text, width, fmt = "L"
+   width = trunc(width * self~factorX)
+   return self~insertColumnPx(nr, text, width, fmt)
+
+::method SetColumnWidth
+   use arg nr, width
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then width = "AUTO"
+   if width~datatype("N") = 1 then width = width * self~factorX
+   return HandleListCtrl("C","SETWIDTH", self~Hwnd, nr, width~translate)
+
+::method getColumnCount external "LIBRARY oodialog lv_getColumnCount"
+::method getColumnOrder external "LIBRARY oodialog lv_getColumnOrder"
+::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
+
+
+::method Insert
+   use arg nr, subnr, text, image
+   if arg(2,'O') then subnr = 0
+   if arg(1,'o') = 1 then do
+        if subnr = 0 then nr = self~LastItem + 1
+        else nr = self~LastItem
+   end
+   if arg(4,'o') = 1 then image = -1
+   if subnr = 0 then do
+       item = HandleListCtrl("I","INS", self~Hwnd, nr, text, image)
+       if item \= -1 then self~LastItem = item
+   end
+   else item = HandleListCtrl("I","SET", self~Hwnd, nr, subnr, text, image)
+   return item
+
+
+::method Modify
+   use arg nr, subnr, text, image
+   if arg(1,'o') = 1 then nr = self~Selected
+   if arg(2,'O') then subnr = 0
+   if arg(4,'o') = 1 then image = -1
+   return HandleListCtrl("I","SET", self~Hwnd, nr, subnr, text, image)
+
+::method SetItemText
+   use arg item, subitem, text
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'O') then subitem = 0
+   return HandleListCtrl("I","SET", self~Hwnd, item, subitem, text,"TXT")
+
+::method SetItemState
+   use arg item, state
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("I","SET", self~Hwnd, item, 0, state, "STATE")
+
+
+::method Add
+   do i = 1 to arg()
+      if arg(i,'E') = 1 then do
+          if arg(i+1,'e') = 1 then image = arg(i+1); else image = -1
+          if i = 1 then do
+              item = self~Insert(self~LastItem+1,i-1,arg(i),image)
+              if item \= -1 then self~LastItem = item
+          end
+          else do
+             item = self~Insert(self~LastItem,i-1,arg(i),image)
+          end
+          return item
+      end
+   end
+   return -1
+
+
+::method AddRow
+   use arg nr, image, text
+   if arg(1,'o') = 1 then nr = self~LastItem+1
+   if arg(2,'o') = 1 then image = -1
+   if arg(3,'o') = 1 then text = ""
+   item = self~Insert(nr,0,text,image)
+   if item \= -1 then do
+       self~LastItem = item
+       do i = 4 to arg()
+           if arg(i,'E') = 1 then self~Insert(item,i-3,arg(i),-1)
+       end
+   end
+   return item
+
+::method addRowEx external "LIBRARY oodialog lv_addRowEx"  -- TODO review method name
+
+::method Delete
+   use arg item
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("I","DEL",self~hwnd, item)
+
+::method DeleteAll
+   return HandleListCtrl("I","DEL", self~Hwnd,"ALL")
+
+::method Items
+   return HandleListCtrl("M","CNT", self~Hwnd)
+
+::method Last
+   return self~Items - 1
+
+::method Prepare4nItems
+   use arg citems
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("M","SETCNT", self~Hwnd, citems)
+
+
+::method SelectedItems
+   return HandleListCtrl("M","CNTSEL", self~Hwnd)
+
+::method ItemInfo
+   use arg item, subitem
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'O') then subitem = 0
+   ret = HandleListCtrl("I","GET", self~Hwnd, item, subitem, "InternalLVItemInfo", "")
+   return InternalLVItemInfo.
+
+::method ItemText
+   use arg item, subitem
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'O') then subitem = 0
+   return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "TXT")
+
+::method ItemState
+   use arg item
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "STATE")
+
+::method Select
+   use arg item
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("I","SET", self~Hwnd, item, 0, "SELECTED", "STATE")
+
+::method Deselect
+   use arg item
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("I","SET", self~Hwnd, item, 0, "NOTSELECTED", "STATE")
+
+::method Selected
+   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "SELECTED")
+
+::method LastSelected
+   if self~ItemState(self~Last)~wordpos("SELECTED") > 0 then  return self~Last
+   return self~PreviousSelected(self~Last)
+
+::method Focused
+   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "FOCUSED")
+
+::method Focus
+   use arg item
+   if arg(1,'O') then return -1
+   return HandleListCtrl("I", "SET", self~Hwnd, item, 0, "FOCUSED","STATE")
+
+::method DropHighlighted
+   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "DROP")
+
+::method FirstVisible
+   return HandleListCtrl("I", "GETNEXT", self~Hwnd, 0, "FIRSTVISIBLE")
+
+::method NextSelected
+   use arg startItem
+   if arg(1,'O') then startItem = -1
+   return HandleListCtrl("I", "GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT SELECTED")
+
+::method PreviousSelected
+   use arg startItem
+   if arg(1,'O') then startItem = -1
+   return HandleListCtrl("I", "GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT SELECTED")
+
+::method Next
+   use arg startItem
+   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
+   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
+   -- a -1 value to mark the iteration end.
+   if self~Items < 2 then return -1
+   if arg(1,'O') then startItem = -1
+   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT")
+
+::method Previous
+   use arg startItem
+   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
+   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
+   -- a -1 value to mark the iteration end.
+   if self~Items < 2 then return -1
+   if arg(1,'o') = 1 then startItem = -1
+   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT")
+
+::method NextLeft
+   use arg startItem
+   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
+   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
+   -- a -1 value to mark the iteration end.
+   if self~Items < 2 then return -1
+   if arg(1,'o') = 1 then startItem = -1
+   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TOLEFT")
+
+::method NextRight
+   use arg startItem
+   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
+   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
+   -- a -1 value to mark the iteration end.
+   if self~Items < 2 then return -1
+   if arg(1,'o') = 1 then startItem = -1
+   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TORIGHT")
+
+::method SmallSpacing
+   return HandleListCtrl("M","GETSPC", self~Hwnd, 1)
+
+::method Spacing
+   return HandleListCtrl("M","GETSPC", self~Hwnd, 0)
+
+::method RedrawItems
+   use arg first, last
+   if arg(1,'o') = 1 then first = 0
+   if arg(2,'o') = 1 then last = self~items
+   return HandleListCtrl("M","REDRAW", self~Hwnd, first, last)
+
+::method UpdateItem
+   use arg item
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("M","UPDATE", self~Hwnd, item)
+
+::method EnsureVisible
+   use arg item, partial
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then partial = 0
+   return HandleListCtrl("M", "ENVIS", self~Hwnd, item, partial)
+
+-- DEPRECATED
+::method setSmallImages
+   newArgs = arg(1, 'A')
+   newArgs[4] = 1
+   forward message 'setImageList' arguments (newArgs)
+
+-- DEPRECATED
+::method setImages external "LIBRARY oodialog lv_setImageList"
+
+-- DEPRECATED
+::method RemoveSmallImages
+   return self~removeImageList(.nil, 1)
+
+-- DEPRECATED
+::method removeImages
+   return self~removeImageList(.nil, 0)
+
+::method setImageList external "LIBRARY oodialog lv_setImageList"
+::method getImageList external "LIBRARY oodialog lv_getImageList"
+
+::method Find
+   use arg txt, startItem, wrap
+   if arg(2,'o') = 1 then startItem = -1
+   if arg(3,'o') = 1 then wrap = 0
+   if wrap = 1 | wrap~translate = "J" then opt = "WRAP"; else opt = ""
+   return HandleListCtrl("I", "FIND", self~Hwnd, startItem, opt, txt)
+
+::method FindPartial
+   use arg txt, startItem, wrap
+   if arg(2,'o') = 1 then startItem = -1
+   if arg(3,'o') = 1 then wrap = 0
+   if wrap = 1 | wrap~translate = "J" then opt = "PARTIAL WRAP"; else opt = "PARTIAL"
+   return HandleListCtrl("I", "FIND", self~Hwnd, startItem, opt, txt)
+
+::method FindNearestXY
+   use arg x,y, direction
+   if arg(1,'o') = 1 | arg(2,'o') = 1 then return -1
+   if arg(3,'o') = 1 then direction = "DOWN"
+   return HandleListCtrl("I", "FIND", self~Hwnd, -1, "NEAREST", x, y, direction~translate)
+
+::method Arrange
+   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "DEFAULT")
+
+::method SnapToGrid
+   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "SNAPTOGRID")
+
+::method AlignLeft
+   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "LEFT")
+
+::method AlignTop
+   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "TOP")
+
+::method ItemPos
+   use arg item
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("M", "GETPOS", self~Hwnd, item)
+
+::method SetItemPos
+   use arg item, x, y
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then x = 0
+   if arg(3,'o') = 1 then y = 0
+   return HandleListCtrl("M", "SETPOS", self~Hwnd, item, x, y)
+
+::method Edit
+   use arg hitem
+   if arg(1,'o') = 1 then return -1
+   return HandleListCtrl("I", "EDIT", self~Hwnd, hitem)
+
+::method EndEdit
+   return HandleListCtrl("I", "EDIT", self~Hwnd, -1)
+
+::method SubclassEdit
+   return HandleListCtrl("I", "SUBCL_EDIT", self~Hwnd)
+
+::method RestoreEditClass
+   return HandleListCtrl("I", "RESUB_EDIT", self~Hwnd)
+
+::method ItemsPerPage
+   return HandleListCtrl("M", "CNTPP", self~Hwnd)
+
+::method Scroll
+   use arg x, y
+   if arg(1,'o') = 1 then x = 0
+   if arg(2,'o') = 1 then y = 0
+   return HandleListCtrl("M", "SCROLL", self~Hwnd, x, y)
+
+::method BkColor
+   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETBK")
+
+::method "BkColor="
+   use arg color
+   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETBK", color
+
+::method TextColor
+   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETTXT")
+
+::method "TextColor="
+   use arg color
+   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETTXT", color
+
+::method TextBkColor
+   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETTXTBK")
+
+::method "TextBkColor="
+   use arg color
+   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETTXTBK", color
+
+
+/************* Tree Control Class *********************************************/
+
+::class 'TreeControl' subclass DialogControl public
+
+::method RootArray attribute private
+
+::method init
+   forward class (super) continue
+   self~RootArray = .array~new(4)
+
+::method Insert
+   use arg parent, after, text, image, selImage, opts, children
+   if arg(1,'o') = 1 then parent = "ROOT"
+   if arg(2,'o') = 1 then after = "LAST"
+   if arg(4,'o') = 1 then image = -1
+   if arg(5,'o') = 1 then selImage = image
+   if arg(6,'o') = 1 then opts = ""
+   if arg(7,'o') = 1 then children = 0
+   return HandleTreeCtrl("INS", self~Hwnd, parent, after, text, image, opts~translate, children, selImage)
+
+::method Add
+   do i = 1 to arg()
+      if arg(i,'E') = 1 then do
+          if arg(i+1,'e') = 1 then image = arg(i+1); else image = -1
+          if arg(i+2,'e') = 1 then selImage = arg(i+2); else selImage = image
+          if arg(i+3,'e') = 1 then opts = arg(i+3); else opts = ""
+          if arg(i+4,'e') = 1 then children = arg(i+4); else children = 0  /* for dynamic children */
+          if i=1 then do
+              self~RootArray[i] = self~Insert("ROOT",,arg(i),image,selimage,opts~translate, children)
+              return self~RootArray[i]
+          end
+          else if self~RootArray~HasIndex(i-1)=1 then do
+              if i=1 then parent = "ROOT"; else parent = self~RootArray[i-1]
+              self~RootArray[i] = self~Insert(parent,,arg(i),image,selimage,opts~translate, children)
+              return self~RootArray[i]
+          end
+          else return 0
+      end
+   end
+
+
+::method Modify
+   use arg hItem, text = "", image = (-1), selImage = (-1), state = "", children = (-1)
+   if arg(1, 'O') then hItem = self~Selected
+   if hitem = 0 then return -1
+
+   return HandleTreeCtrl("SET", self~Hwnd, hItem, text, image, state~translate, children, selImage)
+
+::method ItemInfo
+   use arg hItem
+   if arg(1, 'O') | hItem = 0 then return -1
+   ret = HandleTreeCtrl("GET", self~Hwnd, hItem, "InternalTVItemInfo")
+   return InternalTVItemInfo.
+
+::method MoveItem
+   use arg hItem, hNewParent, redraw = 1, extended = ""
+   if arg(1, 'O') | hItem = 0 then return 0
+   if arg(2, 'O') | hNewParent = 0 then return 0
+
+   extended = extended~translate
+   if hItem = hNewParent | hNewParent = self~Parent(hItem) | self~IsAncestor(hItem, hNewParent) = 1 then return 0
+   iinfo. = self~ItemInfo(hItem)
+   newRoot = self~Insert(hNewParent,,iinfo.!Text, iinfo.!Image, iinfo.!SelectedImage, iinfo.!State, iinfo.!Children)
+   if iinfo.!Children = 1 then do
+       child = self~Child(hItem)
+       if child \= 0 then self~MoveItem(child, newRoot, 0, "SIBLINGS")
+   end
+   if extended = "SIBLINGS" then do
+       sibling = self~next(hItem)
+       do while sibling \= 0
+           self~MoveItem(sibling, hNewParent, 0, "NODELETE")
+           oldsib = sibling
+           sibling = self~next(sibling)
+           self~Delete(oldsib)
+       end
+   end
+   if extended \= "NODELETE" then self~Delete(hItem)
+   if redraw = 1 | redraw~left(1)~translate = "Y" then self~Update
+   return newRoot  /* return new handle */
+
+
+::method IsAncestor
+   use arg hParent, hItem
+   if arg(1, 'O') | hParent = 0 then return 0
+   if arg(2, 'O') | hItem = 0 then return 0
+   if hItem = hParent then return 0
+   act = self~Parent(hItem)
+   do while act \= 0 & act \= hParent
+       act = self~Parent(act)
+   end
+   if act = hParent then return 1
+   else return 0
+
+
+::method Items
+   return HandleTreeCtrl("CNT", self~Hwnd)
+
+::method VisibleItems
+   return HandleTreeCtrl("CNTVIS", self~Hwnd)
+
+::method Root
+   return HandleTreeCtrl("GETHND", self~Hwnd,0,"ROOT")
+
+::method Parent
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PARENT")
+
+::method Child
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "CHILD")
+
+::method Selected
+   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "CARET")
+
+::method DropHighlighted
+   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "DROP")
+
+::method FirstVisible
+   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "FIRSTVISIBLE")
+
+::method Next
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "NEXT")
+
+::method NextVisible
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "NEXTVISIBLE")
+
+::method Previous
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUS")
+
+::method PreviousVisible
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUSVISIBLE")
+
+::method Delete
+   use arg hItem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("DEL",self~hwnd, hItem)
+
+::method DeleteAll
+   return HandleTreeCtrl("DEL", self~Hwnd,"ROOT")
+
+::method Collapse
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE")
+
+::method CollapseAndReset
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE RESET")
+
+::method Expand
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "EXPAND")
+
+::method Toggle
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "TOGGLE")
+
+::method EnsureVisible
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("ENVIS", self~Hwnd, hitem)
+
+::method Indent
+      return HandleTreeCtrl("GETIND", self~Hwnd)
+
+::method "Indent="
+   use arg ind
+   if arg(1, 'O') then return -1
+   ret = HandleTreeCtrl("SETIND", self~Hwnd, ind)
+
+::method Edit
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("EDIT", self~Hwnd, hitem)
+
+::method EndEdit
+   use arg cancel
+   if arg(1, 'O') then cancel = 0
+   return HandleTreeCtrl("EEDIT", self~Hwnd, cancel)
+
+::method SubclassEdit
+   return HandleTreeCtrl("SUBCL_EDIT", self~Hwnd)
+
+::method RestoreEditClass
+   return HandleTreeCtrl("RESUB_EDIT", self~Hwnd)
+
+::method Select
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "")
+
+::method MakeFirstVisible
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "FIRSTVIS")
+
+::method DropHighlight
+   use arg hitem
+   if arg(1, 'O') then do
+      if digits() == 9 then
+         hItem = "0x00000000"
+      else
+         hItem = "0x0000000000000000"
+   end
+   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "DROP")
+
+::method SortChildren
+   use arg hitem
+   if arg(1, 'O') | hItem = 0 then return -1
+   return HandleTreeCtrl("SORT", self~Hwnd, hitem, 0) /* recursive not yet supported */
+
+
+-- DEPRECATED
+::method setImages external "LIBRARY oodialog tv_setImageList"
+
+-- DEPRECATED
+::method removeImages
+   return self~setImageList(.nil, 0)
+
+::method setImageList external "LIBRARY oodialog tv_setImageList"
+::method getImageList external "LIBRARY oodialog tv_getImageList"
+
+::method HitTest
+   use arg x, y
+   return HandleTreeCtrl("HIT", self~Hwnd, x, y)
 
 ::class 'DateTimePicker' subclass DialogControl public
 

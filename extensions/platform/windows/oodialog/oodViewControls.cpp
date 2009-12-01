@@ -1197,53 +1197,6 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
                }
            }
        }
-       else if (!strcmp(argv[1].strptr, "FOCUS"))
-       {
-           CHECKARG(4);
-           if (argv[3].strptr[0] == 'G')
-               RETVAL(TabCtrl_GetCurFocus(h))
-           else
-           {
-               TabCtrl_SetCurFocus(h, atoi(argv[3].strptr));
-               RETC(0);
-           }
-       }
-       else if (!strcmp(argv[1].strptr, "DEL"))
-       {
-           INT item;
-           CHECKARG(4);
-           item = atoi(argv[3].strptr);
-           if (!item && !strcmp(argv[3].strptr,"ALL"))
-              RETC(!TabCtrl_DeleteAllItems(h))
-           else if (TabCtrl_GetItemCount(h) >0)
-              RETC(!TabCtrl_DeleteItem(h, item))
-           RETVAL(-1)
-       }
-       else if (!strcmp(argv[1].strptr, "CNT"))
-       {
-           RETVAL(TabCtrl_GetItemCount(h))
-       }
-       else if (!strcmp(argv[1].strptr, "ROWCNT"))
-       {
-           RETVAL(TabCtrl_GetRowCount(h))
-       }
-       else if (!strcmp(argv[1].strptr, "PADDING"))
-       {
-           CHECKARG(5);
-
-           TabCtrl_SetPadding(h, atoi(argv[3].strptr), atoi(argv[4].strptr));
-           RETC(0);
-       }
-       else if (!strcmp(argv[1].strptr, "SIZE"))
-       {
-           LONG prevsize;
-           CHECKARG(5);
-
-           prevsize = TabCtrl_SetItemSize(h, atoi(argv[3].strptr), atoi(argv[4].strptr));
-           sprintf(retstr->strptr, "%d %d", LOWORD(prevsize), HIWORD(prevsize));
-           retstr->strlength = strlen(retstr->strptr);
-           return 0;
-       }
        else if (!strcmp(argv[1].strptr, "RECT"))
        {
            RECT r;
@@ -2114,6 +2067,82 @@ RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
 #define TABCONTROL_CLASS          "TabControl"
 
 #define TABIMAGELIST_ATTRIBUTE    "TAB!IMAGELIST"
+
+
+/** TabControl::setItemSize()
+ *
+ *  Sets the width and height of the tabs.
+ *
+ *  @param  size  The new size (cx, cy), in pixels.  The amount can be specified
+ *                in these formats:
+ *
+ *      Form 1:  A .Size object.
+ *      Form 2:  cx, cy
+ *
+ *  @return  The previous size of the tabs, as a .Size object
+ *
+ *  @note  You can use a .Point object instead of a .Size object to specify the
+ *         new size, although semantically that is incorrect.
+ */
+RexxMethod2(RexxObjectPtr, tab_setItemSize, ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    size_t sizeArray;
+    int    argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
+    {
+        return NULLOBJECT;
+    }
+
+    if ( argsUsed == 1 && sizeArray == 2)
+    {
+        return tooManyArgsException(context->threadContext, 1);
+    }
+
+    uint32_t oldSize = TabCtrl_SetItemSize(hwnd, point.x, point.y);
+    return rxNewSize(context, LOWORD(oldSize), HIWORD(oldSize));
+}
+
+
+/** TabControl::setPadding()
+ *
+ *  Sets the amount of space (padding) around each tab's icon and label.
+ *
+ *  @param  size  The padding size (cx, cy), in pixels.  The amount can be
+ *                specified in these formats:
+ *
+ *      Form 1:  A .Size object.
+ *      Form 2:  cx, cy
+ *
+ *  @return  0, always.
+ *
+ *  @note  You can use a .Point object instead of a .Size object to specify the
+ *         new size, although semantically that is incorrect.
+ */
+RexxMethod2(RexxObjectPtr, tab_setPadding, ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    size_t sizeArray;
+    int    argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
+    {
+        return NULLOBJECT;
+    }
+
+    if ( argsUsed == 1 && sizeArray == 2)
+    {
+        return tooManyArgsException(context->threadContext, 1);
+    }
+
+    TabCtrl_SetPadding(hwnd, point.x, point.y);
+    return TheZeroObj;
+}
+
+
 
 /** TabControl::setImageList()
  *

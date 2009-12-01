@@ -909,6 +909,7 @@ RexxMethod2(RexxObjectPtr, winex_scroll, ARGLIST, args, CSELF, pCSelf)
     }
 
     RexxMethodContext *c = context;
+                                                    // TODO This seems WRONG shouldn't maxArgs be 2 ??
 
     // POINT and SIZE structs are binary compatible.  A POINT is used to return
     // the values, even though the semantics are not quite correct for scroll().
@@ -1014,6 +1015,7 @@ RexxMethod2(RexxObjectPtr, winex_setCursorPos, ARGLIST, args, CSELF, pCSelf)
     size_t sizeArray;
     int    argsUsed;
     POINT  point;
+    // TODO This seems WRONG shouldn't maxArgs be 2 ??
     if ( ! getPointFromArglist(context, args, &point, 1, 3, &sizeArray, &argsUsed) )
     {
         return NULLOBJECT;
