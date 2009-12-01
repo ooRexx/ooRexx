@@ -83,7 +83,7 @@ static HICON getIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, in
     if ( iconSrc & ICON_FILE )
     {
         /* Load the icon from a file, file name should be in the icon table. */
-        INT i;
+        size_t i;
 
         for ( i = 0; i < dlgAdm->IT_size; i++ )
         {
@@ -484,7 +484,7 @@ int32_t DelDialog(DIALOGADMIN * aDlg)
 {
     DIALOGADMIN * current;
     int32_t ret;
-    INT i;
+    size_t i;
     BOOL wasFGW;
     HICON hIconBig = NULL;
     HICON hIconSmall = NULL;
@@ -1521,7 +1521,7 @@ RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
     // A RECT is used to return the values, even though the semantics are not
     // quite correct.  (right will really be cx and bottom will be cy.)
     size_t countArgs;
-    int    argsUsed;
+    size_t argsUsed;
     RECT   rect;
     if ( ! getRectFromArglist(context, args, &rect, false, 1, 5, &countArgs, &argsUsed) )
     {
@@ -2083,12 +2083,11 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     }
 
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->BufferData(cselfBuffer);
+    memset(pcpbd, 0, sizeof(CPlainBaseDialog));
 
     pcpbd->autoDetect = TRUE;
     pcpbd->wndBase = pWB;
-    pcpbd->weCSelf = NULL;
     pcpbd->rexxSelf = self;
-    pcpbd->hDlg = NULL;
     context->SetObjectVariable("CSELF", cselfBuffer);
 
     // The adm attribute needs to be set to whatever the result of allocating

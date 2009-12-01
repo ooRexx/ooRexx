@@ -103,7 +103,7 @@ RexxMethod1(RexxObjectPtr, baseDlg_test, CSELF, pCSelf)
 
     MESSAGETABLEENTRY *m = dlgAdm->MsgTab;
 
-    for ( int i = 0; i < dlgAdm->MT_size; i++ )
+    for ( size_t i = 0; i < dlgAdm->MT_size; i++ )
     {
         printf("method: %s msg=0x%08x msgF=0x%08x\n", m[i].rexxProgram, m[i].msg, m[i].filterM);
         printf("wp=0x%016I64x wpF=0x%016I64x lp=0x%016I64x lpF=0x%016I64x\n",
@@ -2022,12 +2022,12 @@ err_out:
  *
 \*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data)
+LONG SetRexxStem(const char * name, size_t id, const char * secname, const char * data)
 {
    SHVBLOCK shvb;
    CHAR buffer[72];
 
-   if (id == -1)
+   if ( id == SIZE_MAX )
    {
        sprintf(buffer,"%s.%s",name,secname);
    }
@@ -2062,7 +2062,8 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
    CHAR name[64];
    CHAR buffer[128];
    DEF_ADM;
-   INT i, cnt = 0;
+   int cnt = 0;
+   size_t i;
 
    CHECKARGL(1);
 
@@ -2074,20 +2075,20 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
 
        strcpy(name, argv[0].strptr); /* stem name */
        itoa(dlgAdm->TableEntry, data, 10);
-       if (!SetRexxStem(name, -1, "Slot", data)) { RETERR; }
+       if (!SetRexxStem(name, SIZE_MAX, "Slot", data)) { RETERR; }
        pointer2string(data, dlgAdm->TheThread);
-       if (!SetRexxStem(name, -1, "hThread", data))  { RETERR; }
+       if (!SetRexxStem(name, SIZE_MAX, "hThread", data))  { RETERR; }
        pointer2string(data, dlgAdm->TheDlg);
-       if (!SetRexxStem(name, -1, "hDialog", data))  { RETERR; }
+       if (!SetRexxStem(name, SIZE_MAX, "hDialog", data))  { RETERR; }
        itoa(dlgAdm->OnTheTop, data, 10);
-       if (!SetRexxStem(name, -1, "TopMost", data))  { RETERR; }
+       if (!SetRexxStem(name, SIZE_MAX, "TopMost", data))  { RETERR; }
        pointer2string(data, dlgAdm->AktChild);
-       if (!SetRexxStem(name, -1, "CurrentChild", data))  { RETERR; }
+       if (!SetRexxStem(name, SIZE_MAX, "CurrentChild", data))  { RETERR; }
        pointer2string(data, dlgAdm->TheInstance);
-       if (!SetRexxStem(name, -1, "DLL", data))  { RETERR; }
-       if (!SetRexxStem(name, -1, "Queue", dlgAdm->pMessageQueue))  { RETERR; }
-       itoa(dlgAdm->BT_size, data, 10);
-       if (!SetRexxStem(name, -1, "BmpButtons", data))  { RETERR; }
+       if (!SetRexxStem(name, SIZE_MAX, "DLL", data))  { RETERR; }
+       if (!SetRexxStem(name, SIZE_MAX, "Queue", dlgAdm->pMessageQueue))  { RETERR; }
+       _ultoa((uint32_t)dlgAdm->BT_size, data, 10);
+       if (!SetRexxStem(name, SIZE_MAX, "BmpButtons", data))  { RETERR; }
        sprintf(buffer, "%s.%s", argv[0].strptr, "BmpTab");
        for (i=0; i<dlgAdm->BT_size; i++)
        {
@@ -2102,8 +2103,8 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
            pointer2string(data, (void *)dlgAdm->BmpTab[i].bmpDisableID);
            if (!SetRexxStem(buffer, i+1, "Disabled", data))  { RETERR; }
        }
-       itoa(dlgAdm->MT_size, data, 10);
-       if (!SetRexxStem(name, -1, "Messages", data))  { RETERR; }
+       _ultoa((uint32_t)dlgAdm->MT_size, data, 10);
+       if (!SetRexxStem(name, SIZE_MAX, "Messages", data))  { RETERR; }
        sprintf(buffer, "%s.%s", argv[0].strptr, "MsgTab");
        for (i=0; i<dlgAdm->MT_size; i++)
        {
@@ -2116,8 +2117,8 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
            strcpy(data, dlgAdm->MsgTab[i].rexxProgram);
            if (!SetRexxStem(buffer, i+1, "method", data))  { RETERR; }
        }
-       itoa(dlgAdm->DT_size, data, 10);
-       if (!SetRexxStem(name, -1, "DataItems", data))  { RETERR; }
+       _ultoa((uint32_t)dlgAdm->DT_size, data, 10);
+       if (!SetRexxStem(name, SIZE_MAX, "DataItems", data))  { RETERR; }
        sprintf(buffer, "%s.%s", argv[0].strptr, "DataTab");
        for (i=0; i<dlgAdm->DT_size; i++)
        {
@@ -2128,8 +2129,8 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
            itoa(dlgAdm->DataTab[i].category, data, 10);
            if (!SetRexxStem(buffer, i+1, "category", data))  { RETERR; }
        }
-       itoa(dlgAdm->CT_size, data, 10);
-       if (!SetRexxStem(name, -1, "ColorItems", data))  { RETERR; }
+       _ultoa((uint32_t)dlgAdm->CT_size, data, 10);
+       if (!SetRexxStem(name, SIZE_MAX, "ColorItems", data))  { RETERR; }
        sprintf(buffer, "%s.%s", argv[0].strptr, "ColorTab");
        for (i=0; i<dlgAdm->CT_size; i++)
        {
@@ -2164,13 +2165,13 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
                pointer2string(data, DialogTab[i]->TheInstance);
                if (!SetRexxStem(name, cnt, "DLL", data)) { RETERR; }
                if (!SetRexxStem(name, cnt, "Queue", DialogTab[i]->pMessageQueue)) { RETERR; }
-               itoa(DialogTab[i]->BT_size, data, 10);
+               _ultoa((uint32_t)DialogTab[i]->BT_size, data, 10);
                if (!SetRexxStem(name, cnt, "BmpButtons", data)) { RETERR; }
-               itoa(DialogTab[i]->MT_size, data, 10);
+               _ultoa((uint32_t)DialogTab[i]->MT_size, data, 10);
                if (!SetRexxStem(name, cnt, "Messages", data)) { RETERR; }
-               itoa(DialogTab[i]->DT_size, data, 10);
+               _ultoa((uint32_t)DialogTab[i]->DT_size, data, 10);
                if (!SetRexxStem(name, cnt, "DataItems", data)) { RETERR; }
-               itoa(DialogTab[i]->CT_size, data, 10);
+               _ultoa((uint32_t)DialogTab[i]->CT_size, data, 10);
                if (!SetRexxStem(name, cnt, "ColorItems", data)) { RETERR; }
            }
        }

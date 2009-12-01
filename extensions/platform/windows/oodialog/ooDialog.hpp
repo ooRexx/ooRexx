@@ -389,14 +389,14 @@ typedef struct
    void * previous;
    INT TableEntry;
    MESSAGETABLEENTRY *MsgTab;
-   INT                MT_size;
    DATATABLEENTRY    *DataTab;
-   INT                DT_size;
    BITMAPTABLEENTRY  *BmpTab;
-   size_t             BT_size;
    COLORTABLEENTRY   *ColorTab;
-   uint32_t           CT_size;
    ICONTABLEENTRY    *IconTab;
+   size_t             MT_size;
+   size_t             DT_size;
+   size_t             BT_size;
+   size_t             CT_size;
    size_t             IT_size;
    HWND               TheDlg;
    HWND               ChildDlg[MAXCHILDDIALOGS+1];
@@ -426,9 +426,6 @@ extern DIALOGADMIN        *topDlg;
 extern INT                 StoredDialogs;
 extern CRITICAL_SECTION    crit_sec;
 extern DWORD               ComCtl32Version;
-extern HWND                ScrollingButton;
-extern HWND                RedrawScrollingButton;
-
 extern RexxObjectPtr       TheTrueObj;
 extern RexxObjectPtr       TheFalseObj;
 extern RexxObjectPtr       TheNilObj;

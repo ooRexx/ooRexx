@@ -71,7 +71,7 @@ static inline oodControl_t searchDataTable(DIALOGADMIN *dlgAdm, uint32_t id)
 {
     if ( dlgAdm->DataTab != NULL )
     {
-        register int ndx = 0;
+        register size_t ndx = 0;
         while ( ndx < dlgAdm->DT_size && dlgAdm->DataTab[ndx].id != id )
         {
             ndx++;
@@ -116,13 +116,13 @@ inline bool isDataAttributeControl(oodControl_t control)
 }
 
 /* Does the item in the data table have the WS_GROUP style. */
-static inline bool hasGroupStyle(HWND hwnd, DIALOGADMIN *dlgAdm, uint32_t index)
+static inline bool hasGroupStyle(HWND hwnd, DIALOGADMIN *dlgAdm, size_t index)
 {
     return ((GetWindowLong(GetDlgItem(hwnd, dlgAdm->DataTab[index].id), GWL_STYLE) & WS_GROUP) == WS_GROUP);
 }
 
 /* Is control 1 in the same dialog as control 2. Needed for CategoryDialogs. */
-static inline bool isInSameDlg(DIALOGADMIN *dlgAdm, uint32_t control1, uint32_t control2)
+static inline bool isInSameDlg(DIALOGADMIN *dlgAdm, size_t control1, size_t control2)
 {
     return (dlgAdm->DataTab[control1].category == dlgAdm->DataTab[control2].category);
 }
@@ -133,9 +133,9 @@ static inline bool isInSameDlg(DIALOGADMIN *dlgAdm, uint32_t control1, uint32_t 
  */
 static bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULONG value)
 {
-   LONG beg, en, ndx, i;
+   size_t beg, en, i;
    bool rc, ordered;
-   ndx = 0;
+   size_t ndx = 0;
 
    if ( value == 0 )
    {
@@ -1052,9 +1052,9 @@ RexxArrayObject getDataTableIDs(RexxMethodContext *c, pCPlainBaseDialog pcpbd, R
         return NULLOBJECT;
     }
 
-    uint32_t count = pcpbd->dlgAdm->DT_size;
+    size_t count = pcpbd->dlgAdm->DT_size;
     RexxArrayObject result = c->NewArray(count);
-    for ( uint32_t i = 0; i < count; i++ )
+    for ( size_t i = 0; i < count; i++ )
     {
         c->ArrayPut(result, c->UnsignedInt32(pcpbd->dlgAdm->DataTab[i].id), i + 1);
     }

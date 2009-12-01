@@ -326,6 +326,10 @@
 ::method getBitmapSizeY unguarded external "LIBRARY oodialog dlgext_getBitmapSize"
 ::method drawBitmap unguarded external "LIBRARY oodialog dlgext_drawBitmap"
 
+::method scrollText unguarded external "LIBRARY oodialog dlgext_scrollText"
+::method scrollInButton unguarded external "LIBRARY oodialog dlgext_scrollText"
+::method scrollInControl unguarded external "LIBRARY oodialog dlgext_scrollText"
+
 ::method displaceBitmap unguarded external "LIBRARY oodialog dlgext_setBitmapPosition"
 ::method getBmpDisplacement unguarded
    use strict arg id
@@ -503,32 +507,6 @@
    return 0
 
    /* This method scrolls 'text' in the button */
-
-::method scrollInButton unguarded
-   use arg id, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color
-   hwnd = self~getControlHandle(id)
-   if arg() = 1 then
-      return self~scrollText(hwnd)
-   else
-      return self~scrollText(hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
-
-
--- This method will scroll text in a window with the given size, font, color. Text will be scrolled from
--- right to left. Call it twice and the scrolling will stop.  See method WriteToWindow for valid fontStyles.
-::method scrollText unguarded
-   use strict arg hwnd, text = "", fontName = "System", fontSize = 10, fontStyle = "", -
-                  displaceY = 0, step = 4, sleep = 10, color = 0
-
-   if \ self~scrollNow & arg() > 1 then do
-      self~scrollNow = .true
-      ret = ScrollText(self~adm, hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
-   end
-   else do
-      self~sendWinHandleMsg(self~WM_USER_INTERRUPTSCROLL, hwnd, 0)
-      ret = 0
-   end
-   self~scrollNow = .false
-   return ret
 
 
 

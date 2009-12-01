@@ -745,7 +745,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_clearRect, ARGLIST, args, CSELF, pCSelf)
 
     RECT r = {0};
     size_t arraySize;
-    int argsUsed;
+    size_t argsUsed;
 
     if ( ! getRectFromArglist(context, args, &r, true, 1, 4, &arraySize, &argsUsed) )
     {
@@ -782,7 +782,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
     bool doErase = false;
     RECT r = {0};
     size_t arraySize;
-    int argsUsed;
+    size_t argsUsed;
 
     if ( ! getRectFromArglist(context, args, &r, true, 1, 5, &arraySize, &argsUsed) )
     {

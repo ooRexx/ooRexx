@@ -78,7 +78,7 @@ extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, int pos, const
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, int pos, const char *list, const char *actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
-extern RexxObjectPtr notBooleanException(RexxThreadContext *c, int pos, RexxObjectPtr actual);
+extern RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
 extern RexxObjectPtr invalidTypeException(RexxThreadContext *c, int pos, const char *type);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
@@ -110,7 +110,7 @@ extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
  *
  * @return NULLOBJECT
  */
-inline RexxObjectPtr missingArgException(RexxThreadContext *c, int argPos)
+inline RexxObjectPtr missingArgException(RexxThreadContext *c, size_t argPos)
 {
     c->RaiseException1(Rexx_Error_Invalid_argument_noarg, c->WholeNumber(argPos));
     return NULLOBJECT;
@@ -128,7 +128,7 @@ inline RexxObjectPtr missingArgException(RexxThreadContext *c, int argPos)
  *
  * @return NULLOBJECT
  */
-inline RexxObjectPtr tooManyArgsException(RexxThreadContext *c, int max)
+inline RexxObjectPtr tooManyArgsException(RexxThreadContext *c, size_t max)
 {
     c->RaiseException1(Rexx_Error_Invalid_argument_maxarg, c->WholeNumber(max));
     return NULLOBJECT;

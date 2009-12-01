@@ -203,7 +203,7 @@ LRESULT PaletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam,
  */
 MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo)
 {
-   register LONG i = 0;
+   register size_t i = 0;
    MESSAGETABLEENTRY * m = addressedTo->MsgTab;
    static int count = 0;
 
@@ -212,7 +212,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
        return NotMatched;
    }
 
-   for (i=0; i<addressedTo->MT_size; i++)
+   for ( i = 0; i < addressedTo->MT_size; i++ )
       if ( ((message & m[i].filterM) == m[i].msg)  &&
            ((param & m[i].filterP) == m[i].wParam) &&
            ( ((message == WM_NOTIFY) && ((((NMHDR *)lparam)->code & m[i].filterL) == (UINT)m[i].lParam)) ||

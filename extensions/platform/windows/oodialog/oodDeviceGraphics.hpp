@@ -85,45 +85,18 @@ inline HFONT createFontFromName(HDC hdc, CSTRING name, uint32_t size)
     return createFontFromName(GetDeviceCaps(hdc, LOGPIXELSY), name, size);
 }
 
+// Inline function to access BITMAPINFO fields in a DIB.
 
-/* macros for searching and checking the bitmap table */
-#define SEARCHBMP(addr, ndx, id) \
-   {                     \
-      ndx = 0;\
-      if (addr && addr->BmpTab)              \
-      while ((ndx < addr->BT_size) && (addr->BmpTab[ndx].buttonID != (ULONG)id))\
-         ndx++;                                                  \
-   }
+inline int dibWidth(HBITMAP hBmp)  { return (int)((LPBITMAPINFO)hBmp)->bmiHeader.biWidth;  }
+inline int dibHeight(HBITMAP hBmp) { return (int)((LPBITMAPINFO)hBmp)->bmiHeader.biHeight; }
 
-#define VALIDBMP(addr, ndx, id) \
-   (addr && &addr->BmpTab[ndx] && (ndx < addr->BT_size) && (addr->BmpTab[ndx].buttonID == (ULONG)id))
+inline size_t dibBISize(HBITMAP hBmp)
+{
+    return sizeof(BITMAPINFOHEADER) + numDIBColorEntries((LPBITMAPINFO)hBmp) * sizeof(RGBQUAD);
+}
 
-//
-// macros to access the fields in a BITMAPINFO struct
-// field_value = macro(pBitmapInfo)
-//
-
-#define BI_WIDTH(pBI)       (int)((pBI)->bmiHeader.biWidth)
-#define BI_HEIGHT(pBI)      (int)((pBI)->bmiHeader.biHeight)
-#define BI_PLANES(pBI)      ((pBI)->bmiHeader.biPlanes)
-#define BI_BITCOUNT(pBI)    ((pBI)->bmiHeader.biBitCount)
-
-//
-// macros to access BITMAPINFO fields in a DIB
-// field_value = macro(pDIB)
-//
-
-#define DIB_WIDTH(pDIB)     (BI_WIDTH((LPBITMAPINFO)(pDIB)))
-#define DIB_HEIGHT(pDIB)    (BI_HEIGHT((LPBITMAPINFO)(pDIB)))
-#define DIB_PLANES(pDIB)    (BI_PLANES((LPBITMAPINFO)(pDIB)))
-#define DIB_BITCOUNT(pDIB)  (BI_BITCOUNT((LPBITMAPINFO)(pDIB)))
-//#define DIB_COLORS(pDIB)    (((LPBITMAPINFO)pDIB)->bmiHeader.biClrUsed)
-#define DIB_COLORS(pDIB)    (numDIBColorEntries((LPBITMAPINFO)(pDIB)))
-#define DIB_BISIZE(pDIB)    (sizeof(BITMAPINFOHEADER) \
-                            + DIB_COLORS(pDIB) * sizeof(RGBQUAD))
-#define DIB_PBITS(pDIB)     (((LPSTR)((LPBITMAPINFO)(pDIB))) \
-                            + DIB_BISIZE(pDIB))
-#define DIB_PBI(pDIB)       ((LPBITMAPINFO)(pDIB))
+inline void       *dibPBits(HBITMAP hBmp) { return ((LPSTR)((LPBITMAPINFO)(hBmp))) + dibBISize(hBmp); }
+inline BITMAPINFO *dibPBI(HBITMAP hBmp)   { return (LPBITMAPINFO)hBmp; }
 
 
 #endif

@@ -52,8 +52,6 @@ DIALOGADMIN         *topDlg = {NULL};
 INT                  StoredDialogs = 0;
 CRITICAL_SECTION     crit_sec = {0};
 DWORD                ComCtl32Version = 0;
-HWND                 ScrollingButton = NULL;
-HWND                 RedrawScrollingButton = NULL;
 
 // Initialized in dlgutil_init_cls
 RexxObjectPtr       TheTrueObj = NULLOBJECT;
@@ -96,7 +94,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 
-REXX_CLASSIC_ROUTINE_PROTOTYPE(ScrollText);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleTreeCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
@@ -116,7 +113,6 @@ REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(ScrollText,           ScrollText),          /* 9  */
     REXX_CLASSIC_ROUTINE(HandleTreeCtrl,       HandleTreeCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrl,       HandleListCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
@@ -272,6 +268,7 @@ REXX_METHOD_PROTOTYPE(dlgext_setBitmapPosition);
 REXX_METHOD_PROTOTYPE(dlgext_getBitmapSize);
 REXX_METHOD_PROTOTYPE(dlgext_getWindowDC);
 REXX_METHOD_PROTOTYPE(dlgext_freeWindowDC);
+REXX_METHOD_PROTOTYPE(dlgext_scrollText);
 REXX_METHOD_PROTOTYPE(dlgext_writeToWindow);
 REXX_METHOD_PROTOTYPE(dlgext_createBrush);
 REXX_METHOD_PROTOTYPE(dlgext_mouseCapture);
@@ -771,6 +768,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_getWindowDC,             dlgext_getWindowDC),
     REXX_METHOD(dlgext_freeWindowDC,            dlgext_freeWindowDC),
     REXX_METHOD(dlgext_writeToWindow,           dlgext_writeToWindow),
+    REXX_METHOD(dlgext_scrollText,              dlgext_scrollText),
     REXX_METHOD(dlgext_createBrush,             dlgext_createBrush),
 
     REXX_METHOD(baseDlg_init,                   baseDlg_init),

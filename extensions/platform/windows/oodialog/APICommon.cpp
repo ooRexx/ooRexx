@@ -244,7 +244,7 @@ void numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectP
  * @param pos      Argumet position
  * @param actual   Actual Rexx object
  */
-RexxObjectPtr notBooleanException(RexxThreadContext *c, int pos, RexxObjectPtr actual)
+RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Argument %d must be true or false; found \"%s\"",

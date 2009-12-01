@@ -57,6 +57,13 @@
 #include "oodDeviceGraphics.hpp"
 
 
+static HWND      ScrollingButton = NULL;
+static HWND      RedrawScrollingButton = NULL;
+
+static HANDLE    TimerEvent = NULL;
+static uint32_t  TimerCount = 0;
+static ULONG_PTR Timer = 0;
+
 /**
  * Modify a palette to have the system colors in the first and last 10
  * positions.
@@ -314,7 +321,8 @@ WORD numDIBColorEntries(LPBITMAPINFO lpBmpInfo)
  * @param options  The keyword string.  This is a case-insensitive check. More
  *                 than one keyword, or no keyword, is acceptable.
  *
- * @return uint32_t
+ * @return The show window postion flag corresponding to the keywords found, or
+ *         SWP_NOZORDER if no keywords are found.
  */
 uint32_t parseShowOptions(CSTRING options)
 {
@@ -329,6 +337,35 @@ uint32_t parseShowOptions(CSTRING options)
        if ( StrStrI(options, "NOREDRAW"  ) ) opts |= SWP_NOREDRAW;
     }
     return opts;
+}
+
+
+/**
+ * Parses an options string used to set the style of a font, looking for the
+ * option that sets the weight of a font.
+ *
+ * @param opts  The keyword string.  This is a case-insensitive check. More than
+ *              one keyword, or no keyword, is acceptable.
+ *
+ * @return The font weight flag corresponding to the keyword found, or FW_NORMAL
+ *         if there is no font weight flag.
+ */
+int getWeight(CSTRING opts)
+{
+    int weight = FW_NORMAL;
+
+    if ( opts != NULL )
+    {
+        if (      StrStrI(opts, "THIN")       != NULL ) weight = FW_THIN;
+        else if ( StrStrI(opts, "EXTRALIGHT") != NULL ) weight = FW_EXTRALIGHT;
+        else if ( StrStrI(opts, "LIGHT")      != NULL ) weight = FW_LIGHT;
+        else if ( StrStrI(opts, "MEDIUM")     != NULL ) weight = FW_MEDIUM;
+        else if ( StrStrI(opts, "SEMIBOLD")   != NULL ) weight = FW_SEMIBOLD;
+        else if ( StrStrI(opts, "EXTRABOLD")  != NULL ) weight = FW_EXTRABOLD;
+        else if ( StrStrI(opts, "BOLD")       != NULL ) weight = FW_BOLD;
+        else if ( StrStrI(opts, "HEAVY")      != NULL ) weight = FW_HEAVY;
+    }
+    return weight;
 }
 
 
@@ -387,7 +424,7 @@ logical_t oodColorTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, uint32_t id,
 
     if ( dlgAdm->CT_size < MAX_CT_ENTRIES )
     {
-        uint32_t i = 0;
+        size_t i = 0;
 
         // If brush is found, then an entry for this control already exists in
         // the color table.  The value of i is set to the entry index.  In this
@@ -666,7 +703,7 @@ int getHeightFromFontSize(int fontSize)
  *  Sets the color palette of the bitmap as the system color palette, maybe.
  *
  *  A number of methods dealing with device independent bitmaps have an option
- *  that specifies that the patllete of the bitmap be used for the system color
+ *  that specifies that the palette of the bitmap be used for the system color
  *  pallete.  This function implements that.
  *
  *  In general, it is safe to pass anything in, iff all the proper conditions
@@ -967,12 +1004,26 @@ static void drawBmpBackground(DIALOGADMIN * dlgAdm, pCPlainBaseDialog pcpbd, INT
 }
 
 
+inline bool forSureHaveBitmap(DIALOGADMIN *dlgAdm, size_t i)
+{
+    return ( (ULONG_PTR)dlgAdm->BmpTab[i].bmpFocusID  +
+             (ULONG_PTR)dlgAdm->BmpTab[i].bmpSelectID +
+             (ULONG_PTR)dlgAdm->BmpTab[i].bitmapID    +
+             (ULONG_PTR)dlgAdm->BmpTab[i].bmpDisableID
+             > 0 );
+}
+inline bool focusedNotDisabled(uint32_t itemState)
+{
+    return ( (itemState & ODS_FOCUS)    == ODS_FOCUS &&
+             (itemState & ODS_DISABLED) == 0         &&
+             (itemState & ODS_SELECTED) == 0 );
+}
+
 BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lParam, bool msgEnabled)
 {
     DRAWITEMSTRUCT * dis;
     HDC hDC;
     HBITMAP hBmp = NULL;
-    LONG i;
     RECT r, ri;
     LONG rc;
     HPEN oP, nP;
@@ -985,199 +1036,199 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
     dis = (DRAWITEMSTRUCT *)lParam;
 
     RedrawScrollingButton = dis->hwndItem;
-    if (ScrollingButton == dis->hwndItem) return FALSE;
-    if (dlgAdm->ColorPalette)
+    if ( ScrollingButton == dis->hwndItem )
     {
-       hP = SelectPalette(dis->hDC, dlgAdm->ColorPalette, 0);
-       RealizePalette(dis->hDC);
+        return FALSE;
     }
 
-    SEARCHBMP(dlgAdm, i, dis->CtlID);
+    if ( dlgAdm->ColorPalette != NULL )
+    {
+        hP = SelectPalette(dis->hDC, dlgAdm->ColorPalette, 0);
+        RealizePalette(dis->hDC);
+    }
 
     ri = dis->rcItem;
     r = ri;
 
-    /* Don't enable focus or select for inactive dialog */
+    // Don't enable focus or selected for inactive dialog.
     if ( ! msgEnabled )
     {
-       dis->itemState &= ~(ODS_SELECTED | ODS_FOCUS);
+        dis->itemState &= ~(ODS_SELECTED | ODS_FOCUS);
     }
 
-    if (VALIDBMP(dlgAdm, i, dis->CtlID))
+    size_t i;
+
+    if ( findBmpForID(dlgAdm, dis->CtlID, &i) )
     {
-       if ((dis->itemState & ODS_DISABLED) == ODS_DISABLED)
-       {
-          if (dlgAdm->BmpTab[i].bmpDisableID)
-             hBmp = (HBITMAP)dlgAdm->BmpTab[i].bmpDisableID;
-          else
-             hBmp = (HBITMAP)dlgAdm->BmpTab[i].bitmapID;
-       }
-       else
-       if ((dis->itemState & ODS_SELECTED) == ODS_SELECTED)
-       {
-          if (dlgAdm->BmpTab[i].bmpSelectID)
-             hBmp = (HBITMAP)dlgAdm->BmpTab[i].bmpSelectID;
-          else
-             hBmp = (HBITMAP)dlgAdm->BmpTab[i].bitmapID;
-          /* for a 3D effect */
-             if (dlgAdm->BmpTab[i].frame)
-          {
-             r.top += 3;
-              r.left += 3;
-             r.right += 3;
-             r.bottom += 3;
-          }
-       }
-       else
-       if ((dis->itemState & ODS_FOCUS) == ODS_FOCUS)
-       {
-          if (dlgAdm->BmpTab[i].bmpFocusID)
-             hBmp = (HBITMAP)dlgAdm->BmpTab[i].bmpFocusID;
-          else
-             hBmp = (HBITMAP)dlgAdm->BmpTab[i].bitmapID;
-       }
-       else
-          hBmp = (HBITMAP)dlgAdm->BmpTab[i].bitmapID;
+        if ( (dis->itemState & ODS_DISABLED) == ODS_DISABLED )
+        {
+            hBmp = (HBITMAP)(dlgAdm->BmpTab[i].bmpDisableID == NULL ? dlgAdm->BmpTab[i].bitmapID : dlgAdm->BmpTab[i].bmpDisableID);
+        }
+        else if ( (dis->itemState & ODS_SELECTED) == ODS_SELECTED )
+        {
+            hBmp = (HBITMAP)(dlgAdm->BmpTab[i].bmpSelectID == NULL ? dlgAdm->BmpTab[i].bitmapID : dlgAdm->BmpTab[i].bmpSelectID);
 
-       if ((dlgAdm->BmpTab[i].displaceX) || (dlgAdm->BmpTab[i].displaceY))
-       {
-          r.top = r.top + dlgAdm->BmpTab[i].displaceY;
-          r.bottom = r.bottom + dlgAdm->BmpTab[i].displaceY;
-          r.left = r.left + dlgAdm->BmpTab[i].displaceX;
-          r.right = r.right + dlgAdm->BmpTab[i].displaceX;
-          if (r.left<0)
-          {
-             left = abs(r.left);
-             r.left = 0;
-          }
-          if (r.top<0)
-          {
-             top = abs(r.top);
-             r.top = 0;
-          }
-       }
-
-       if (hBmp)
-       {
-          if (!dlgAdm->BmpTab[i].loaded)
-          {
-             hDC = CreateCompatibleDC(dis->hDC);
-             SelectObject(hDC,hBmp);
-
-             GetObject(hBmp, sizeof(BITMAP), &bmpInfo);
-                r.right = r.left + bmpInfo.bmWidth;
-             r.bottom = r.top + bmpInfo.bmHeight;
-
-             BitBlt(dis->hDC, r.left, r.top, r.right, r.bottom, hDC, left, top, SRCCOPY);
-          }
-          /* this if has been added because of a violation error moving animated button dialogs a lot */
-          else if ((ULONG_PTR)dlgAdm->BmpTab[i].bmpFocusID + (ULONG_PTR)dlgAdm->BmpTab[i].bmpSelectID +
-                   (ULONG_PTR)dlgAdm->BmpTab[i].bitmapID + (ULONG_PTR)dlgAdm->BmpTab[i].bmpDisableID > 0)
-          {
-             /* is the stretching activated? */
-             if ((dlgAdm->BmpTab[i].loaded & 0x0100) == 0x0100)
-             {
-                destw = r.right - r.left;
-                desth = r.bottom - r.top;
-             }
-             else
-             {
-                destw = DIB_WIDTH(hBmp);                      // dest width
-                desth = DIB_HEIGHT(hBmp);                      // dest height
-             }
-             StretchDIBits(dis->hDC,
-                r.left,                     // dest x
-                r.top,                     // dest y
-                destw,                      // dest width
-                desth,                      // dest height
-                left,                     // src x
-                top,                     // src y
-                DIB_WIDTH(hBmp),                      // src width
-                DIB_HEIGHT(hBmp),                      // src height
-                DIB_PBITS(hBmp),        // bits
-                DIB_PBI(hBmp),          // BITMAPINFO
-                DIB_RGB_COLORS,
-                SRCCOPY);               // rop
-                r.right = r.left + destw;
-                r.bottom = r.top + desth;
-          }
-
-           drawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, lParam, left, top);
-
-             if (dlgAdm->BmpTab[i].frame)
-          {
-            rc = FrameRect(dis->hDC, (LPRECT)&dis->rcItem, (HBRUSH)GetStockObject(BLACK_BRUSH));
-            /* draw 3D effect */
-            if (((dis->itemState & ODS_SELECTED) == ODS_SELECTED) && !(dis->itemState & ODS_DISABLED))
+            // For a 3D effect.
+            if ( dlgAdm->BmpTab[i].frame )
             {
-               nP = CreatePen(PS_SOLID, 2, RGB(120,120,120));
-               oP = (HPEN)SelectObject(dis->hDC, nP);
-               MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+2, &lp);
-               LineTo(dis->hDC, dis->rcItem.right-2, dis->rcItem.top+2);
-               MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.bottom-2, &lp);
-               LineTo(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+1);
-
-               SelectObject(dis->hDC, oP);
-               DeleteObject(nP);
+                r.top    += 3;
+                r.left   += 3;
+                r.right  += 3;
+                r.bottom += 3;
             }
-            else
+        }
+        else if ( (dis->itemState & ODS_FOCUS) == ODS_FOCUS )
+        {
+            hBmp = (HBITMAP)(dlgAdm->BmpTab[i].bmpFocusID == NULL ? dlgAdm->BmpTab[i].bitmapID : dlgAdm->BmpTab[i].bmpFocusID);
+        }
+        else
+        {
+            hBmp = (HBITMAP)dlgAdm->BmpTab[i].bitmapID;
+        }
+
+        if ( dlgAdm->BmpTab[i].displaceX != 0 || dlgAdm->BmpTab[i].displaceY != 0 )
+        {
+            r.top    = r.top    + dlgAdm->BmpTab[i].displaceY;
+            r.bottom = r.bottom + dlgAdm->BmpTab[i].displaceY;
+            r.left   = r.left   + dlgAdm->BmpTab[i].displaceX;
+            r.right  = r.right  + dlgAdm->BmpTab[i].displaceX;
+            if ( r.left < 0 )
             {
-               /* white line */
-               nP = CreatePen(PS_SOLID, 2, RGB(240,240,240));
-               oP = (HPEN)SelectObject(dis->hDC, nP);
-               MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+2, &lp);
-               LineTo(dis->hDC, dis->rcItem.right-2, dis->rcItem.top+2);
-               MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.bottom-2, &lp);
-               LineTo(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+1);
+                left = abs(r.left);
+                r.left = 0;
+            }
+            if ( r.top < 0 )
+            {
+                top = abs(r.top);
+                r.top = 0;
+            }
+        }
 
-               SelectObject(dis->hDC, oP);
-               DeleteObject(nP);
+        if ( hBmp != NULL )
+        {
+            if ( dlgAdm->BmpTab[i].loaded == 0 )
+            {
+                hDC = CreateCompatibleDC(dis->hDC);
+                SelectObject(hDC, hBmp);
 
-               /* grey line */
-               nP = CreatePen(PS_SOLID, 2, RGB(120,120,120));
-               oP = (HPEN)SelectObject(dis->hDC, nP);
-               MoveToEx(dis->hDC, dis->rcItem.right-2, dis->rcItem.top+2, &lp);
-               LineTo(dis->hDC, dis->rcItem.right-2, dis->rcItem.bottom-2);
-               MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.bottom-2, &lp);
-               LineTo(dis->hDC, dis->rcItem.right-2, dis->rcItem.bottom-2);
+                GetObject(hBmp, sizeof(BITMAP), &bmpInfo);
+                r.right  = r.left + bmpInfo.bmWidth;
+                r.bottom = r.top  + bmpInfo.bmHeight;
 
-               SelectObject(dis->hDC, oP);
-               DeleteObject(nP);
+                BitBlt(dis->hDC, r.left, r.top, r.right, r.bottom, hDC, left, top, SRCCOPY);
+            }
+            else if ( forSureHaveBitmap(dlgAdm, i) )
+            {
+                // Original comment: This if has been added because of a
+                // violation error moving animated button dialogs a lot
+                //
+                // I think what was meant was the 'if' part of the else.
+
+                // Is stretching activated?
+                if ( (dlgAdm->BmpTab[i].loaded & 0x0100) == 0x0100 )
+                {
+                    destw = r.right  - r.left;
+                    desth = r.bottom - r.top;
+                }
+                else
+                {
+                    destw = dibWidth(hBmp);
+                    desth = dibHeight(hBmp);
+                }
+
+                StretchDIBits(dis->hDC, r.left, r.top, destw, desth, left, top, dibWidth(hBmp), dibHeight(hBmp),                      // src height
+                              dibPBits(hBmp), dibPBI(hBmp), DIB_RGB_COLORS, SRCCOPY);
+
+                r.right  = r.left + destw;
+                r.bottom = r.top  + desth;
             }
 
-               if (((dis->itemState & ODS_FOCUS) == ODS_FOCUS)
-               && !(dis->itemState & ODS_DISABLED)
-               && !(dis->itemState & ODS_SELECTED))
+            drawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, lParam, left, top);
+
+            if ( dlgAdm->BmpTab[i].frame )
             {
-               nP = CreatePen(PS_DOT, 1, RGB(0,0,0));
-               oP = (HPEN)SelectObject(dis->hDC, nP);
-               MoveToEx(dis->hDC, dis->rcItem.left+4, dis->rcItem.top+4, &lp);
-               LineTo(dis->hDC, dis->rcItem.right-4, dis->rcItem.top+4);
-               LineTo(dis->hDC, dis->rcItem.right-4, dis->rcItem.bottom-4);
-               LineTo(dis->hDC, dis->rcItem.left+4, dis->rcItem.bottom-4);
-               LineTo(dis->hDC, dis->rcItem.left+4, dis->rcItem.top+4);
-               SelectObject(dis->hDC, oP);
-               DeleteObject(nP);
+                rc = FrameRect(dis->hDC, (LPRECT)&dis->rcItem, (HBRUSH)GetStockObject(BLACK_BRUSH));
+
+                if ( (dis->itemState & ODS_SELECTED) == ODS_SELECTED && ! (dis->itemState & ODS_DISABLED) )
+                {
+                    // Draw a 3D effect.
+                    nP = CreatePen(PS_SOLID, 2, RGB(120,120,120));
+                    oP = (HPEN)SelectObject(dis->hDC, nP);
+
+                    MoveToEx(dis->hDC, dis->rcItem.left  + 2, dis->rcItem.top    + 2, &lp);
+                    LineTo(dis->hDC,   dis->rcItem.right - 2, dis->rcItem.top    + 2);
+                    MoveToEx(dis->hDC, dis->rcItem.left  + 2, dis->rcItem.bottom - 2, &lp);
+                    LineTo(dis->hDC,   dis->rcItem.left  + 2, dis->rcItem.top    + 1);
+
+                    SelectObject(dis->hDC, oP);
+                    DeleteObject(nP);
+                }
+                else
+                {
+                    // Draw a white line.
+                    nP = CreatePen(PS_SOLID, 2, RGB(240,240,240));
+                    oP = (HPEN)SelectObject(dis->hDC, nP);
+
+                    MoveToEx(dis->hDC, dis->rcItem.left  + 2, dis->rcItem.top    + 2, &lp);
+                    LineTo(dis->hDC,   dis->rcItem.right - 2, dis->rcItem.top    + 2);
+                    MoveToEx(dis->hDC, dis->rcItem.left  + 2, dis->rcItem.bottom - 2, &lp);
+                    LineTo(dis->hDC,   dis->rcItem.left  + 2, dis->rcItem.top    + 1);
+
+                    SelectObject(dis->hDC, oP);
+                    DeleteObject(nP);
+
+                    // Draw a grey line.
+                    nP = CreatePen(PS_SOLID, 2, RGB(120,120,120));
+                    oP = (HPEN)SelectObject(dis->hDC, nP);
+
+                    MoveToEx(dis->hDC, dis->rcItem.right - 2, dis->rcItem.top    + 2, &lp);
+                    LineTo(dis->hDC,   dis->rcItem.right - 2, dis->rcItem.bottom - 2);
+                    MoveToEx(dis->hDC, dis->rcItem.left  + 2, dis->rcItem.bottom - 2, &lp);
+                    LineTo(dis->hDC,   dis->rcItem.right - 2, dis->rcItem.bottom - 2);
+
+                    SelectObject(dis->hDC, oP);
+                    DeleteObject(nP);
+                }
+
+                if ( focusedNotDisabled(dis->itemState) )
+                {
+                    nP = CreatePen(PS_DOT, 1, RGB(0,0,0));
+                    oP = (HPEN)SelectObject(dis->hDC, nP);
+
+                    MoveToEx(dis->hDC, dis->rcItem.left  + 4, dis->rcItem.top    + 4, &lp);
+                    LineTo(dis->hDC,   dis->rcItem.right - 4, dis->rcItem.top    + 4);
+                    LineTo(dis->hDC,   dis->rcItem.right - 4, dis->rcItem.bottom - 4);
+                    LineTo(dis->hDC,   dis->rcItem.left  + 4, dis->rcItem.bottom - 4);
+                    LineTo(dis->hDC,   dis->rcItem.left  + 4, dis->rcItem.top    + 4);
+
+                    SelectObject(dis->hDC, oP);
+                    DeleteObject(nP);
+                }
             }
-          }
-          if (!dlgAdm->BmpTab[i].loaded)
-             DeleteDC(hDC);
 
-          if (dlgAdm->ColorPalette)
-             SelectPalette(dis->hDC, hP, 0);
+            if ( dlgAdm->BmpTab[i].loaded == 0 )
+            {
+                DeleteDC(hDC);
+            }
+            if ( dlgAdm->ColorPalette != NULL )
+            {
+                SelectPalette(dis->hDC, hP, 0);
+            }
 
-          return TRUE;
-       }
+            return TRUE;
+        }
     }
-    r.left = 0;
-    r.top = 0;
-    r.right = ri.left;
-    r.bottom = ri.top;
 
+    r.left   = 0;
+    r.top    = 0;
+    r.right  = ri.left;
+    r.bottom = ri.top;
     drawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, lParam, left, top);
 
-    if (dlgAdm->ColorPalette)
+    if ( dlgAdm->ColorPalette != NULL )
+    {
         SelectPalette(dis->hDC, hP, 0);
+    }
     return FALSE;
 }
 
@@ -1202,8 +1253,8 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
 
    GetClientRect(hDlg, &r);
 
-   destw = DIB_WIDTH(pcpbd->bkgBitmap);         // dest width
-   desth = DIB_HEIGHT(pcpbd->bkgBitmap);        // dest height
+   destw = dibWidth(pcpbd->bkgBitmap);         // dest width
+   desth = dibHeight(pcpbd->bkgBitmap);        // dest height
 
 
    if (r.right - r.left > destw)
@@ -1218,31 +1269,16 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
                  desth,
                  0,                             // src x
                  0,                             // src y
-                 DIB_WIDTH(pcpbd->bkgBitmap),   // src width
-                 DIB_HEIGHT(pcpbd->bkgBitmap),  // src height
-                 DIB_PBITS(pcpbd->bkgBitmap),   // bits
-                 DIB_PBI(pcpbd->bkgBitmap),     // BITMAPINFO
+                 dibWidth(pcpbd->bkgBitmap),   // src width
+                 dibHeight(pcpbd->bkgBitmap),  // src height
+                 dibPBits(pcpbd->bkgBitmap),   // bits
+                 dibPBI(pcpbd->bkgBitmap),     // BITMAPINFO
                  DIB_RGB_COLORS,
                  SRCCOPY);                      // rop
 
    return EndPaint(hDlg, &ps);
 }
 
-
-#define ASSIGNBMP(slot, field, bnr) \
-      if (inmem) \
-      { \
-         dlgAdm->BmpTab[slot].field = (HBITMAP)string2pointer(buffer[bnr]); \
-         dlgAdm->BmpTab[slot].loaded = 2; \
-      } \
-      else \
-      if ((atoi(buffer[bnr])) || (buffer[bnr][0] == '0') || (buffer[bnr][0] == '\0')) \
-         dlgAdm->BmpTab[slot].field = LoadBitmap(dlgAdm->TheInstance, MAKEINTRESOURCE(atoi(buffer[bnr]))); \
-      else \
-      { \
-         dlgAdm->BmpTab[slot].loaded  = 1; \
-         dlgAdm->BmpTab[slot].field  = (HBITMAP)loadDIB(buffer[bnr], NULL); \
-      }
 
 void assignBitmap(DIALOGADMIN *dlgAdm, size_t index, CSTRING bmp, PUSHBUTTONSTATES type, bool isInMemory)
 {
@@ -1331,17 +1367,10 @@ RexxObjectPtr dlgExtControlSetup(RexxMethodContext *c, RexxObjectPtr self, RexxO
     uint32_t id;
     if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
     {
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
         return TheNegativeOneObj;
     }
 
-    if ( ppcpbd != NULL )
-    {
-        *ppcpbd = pcpbd;
-    }
-    if ( pID != NULL )
-    {
-        *pID = id;
-    }
     if ( phCtrl != NULL )
     {
         HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
@@ -1351,6 +1380,14 @@ RexxObjectPtr dlgExtControlSetup(RexxMethodContext *c, RexxObjectPtr self, RexxO
             return TheOneObj;
         }
         *phCtrl = hCtrl;
+    }
+    if ( ppcpbd != NULL )
+    {
+        *ppcpbd = pcpbd;
+    }
+    if ( pID != NULL )
+    {
+        *pID = id;
     }
     return TheZeroObj;
 }
@@ -1406,7 +1443,7 @@ RexxMethod3(RexxObjectPtr, dlgext_clearRect, POINTERSTRING, hwnd, ARGLIST, args,
 
     RECT r = {0};
     size_t arraySize;
-    int argsUsed;
+    size_t argsUsed;
 
     if ( ! getRectFromArglist(context, args, &r, true, 2, 5, &arraySize, &argsUsed) )
     {
@@ -1454,7 +1491,7 @@ RexxMethod3(RexxObjectPtr, dlgext_setWindowRect, POINTERSTRING, hwnd, ARGLIST, a
     oodResetSysErrCode(context->threadContext);
 
     size_t countArgs;
-    int    argsUsed;
+    size_t    argsUsed;
     RECT   rect;
     if ( ! getRectFromArglist(context, args, &rect, false, 2, 6, &countArgs, &argsUsed) )
     {
@@ -1565,7 +1602,7 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawRect, OPTIONAL_POINTERSTRING, _hwnd, ARG
 
     RECT r = {0};
     size_t arraySize;
-    int argsUsed;
+    size_t argsUsed;
 
     if ( ! getRectFromArglist(context, args, &r, true, 2, 6, &arraySize, &argsUsed) )
     {
@@ -2104,15 +2141,17 @@ RexxMethod9(RexxObjectPtr, dlgext_drawBitmap, OPTIONAL_RexxObjectPtr, ignored, R
                 BitBlt(hDC, x, y, xL, yL, hDC2, xS, yS, SRCCOPY);
                 DeleteDC(hDC2);
             }
-            else if (dlgAdm->BmpTab[index].bitmapID || dlgAdm->BmpTab[index].bmpFocusID || dlgAdm->BmpTab[index].bmpSelectID)
+            else if ( forSureHaveBitmap(dlgAdm, index) )
             {
                 // Original comment: This if has been added because of a
                 // violation error moving animated button dialogs a lot
+                //
+                // I think what was meant was the 'if' part of the else.
 
-                xL = (xL == 0 ? DIB_WIDTH(hBmp)  : xL);
-                yL = (yL == 0 ? DIB_HEIGHT(hBmp) : yL);
+                xL = (xL == 0 ? dibWidth(hBmp)  : xL);
+                yL = (yL == 0 ? dibHeight(hBmp) : yL);
 
-                StretchDIBits(hDC, x, y, xL, yL, xS, yS, xL, yL, DIB_PBITS(hBmp), DIB_PBI(hBmp), DIB_RGB_COLORS, SRCCOPY);
+                StretchDIBits(hDC, x, y, xL, yL, xS, yS, xL, yL, dibPBits(hBmp), dibPBI(hBmp), DIB_RGB_COLORS, SRCCOPY);
             }
 
             if ( dlgAdm->ColorPalette != NULL )
@@ -2227,8 +2266,8 @@ RexxMethod3(RexxObjectPtr, dlgext_getBitmapSize, RexxObjectPtr, rxID, NAME, meth
         }
         else
         {
-            x = DIB_WIDTH(dlgAdm->BmpTab[index].bitmapID);
-            y = DIB_HEIGHT(dlgAdm->BmpTab[index].bitmapID);
+            x = dibWidth(dlgAdm->BmpTab[index].bitmapID);
+            y = dibHeight(dlgAdm->BmpTab[index].bitmapID);
         }
 
         switch ( method[13] )
@@ -2564,7 +2603,7 @@ RexxMethod1(RexxObjectPtr, dlgext_setForgroundWindow, RexxStringObject, hwnd)
 
 
 /** DialogExtensions::setControlColor()
- *  DialogExtensions::setControlSysColor
+ *  DialogExtensions::setControlSysColor()
  */
 RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkColor, OPTIONAL_int32_t, fgColor,
             NAME, method, OSELF, self)
@@ -2595,204 +2634,262 @@ RexxMethod9(logical_t, dlgext_writeToWindow, POINTERSTRING, hwnd, int32_t, xPos,
 }
 
 
-
-HANDLE TimerEvent = NULL;
-ULONG TimerCount = 0;
-ULONG_PTR Timer = 0;
-
-int getWeight(CSTRING opts)
-{
-    int weight = FW_NORMAL;
-
-    if (StrStrI(opts, "THIN")) weight = FW_THIN; else
-    if (StrStrI(opts, "EXTRALIGHT")) weight = FW_EXTRALIGHT; else
-    if (StrStrI(opts, "LIGHT")) weight = FW_LIGHT; else
-    if (StrStrI(opts, "MEDIUM")) weight = FW_MEDIUM; else
-    if (StrStrI(opts, "SEMIBOLD")) weight = FW_SEMIBOLD; else
-    if (StrStrI(opts, "EXTRABOLD")) weight = FW_EXTRABOLD; else
-    if (StrStrI(opts, "BOLD")) weight = FW_BOLD; else
-    if (StrStrI(opts, "HEAVY")) weight = FW_HEAVY;
-    return weight;
-}
-
-
-
-VOID CALLBACK ScrollTimerProc(
-    HWND  hwnd,    // handle of window for timer messages
-    UINT  uMsg,    // WM_TIMER message
-    UINT  idEvent,    // timer identifier
-    DWORD  dwTime     // current system time
-   )
+VOID CALLBACK scrollTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
     SetEvent(TimerEvent);
 }
 
-
-
-size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+/** DialogExtensions::scrollText()
+ *  DialogExtensions::scrollInButton()
+ *  DialogExtensions::scrollInControl()
+ *
+ *  @param  rxObj  Either a window handle, (for scrollText,) or a dialog control
+ *                 resource ID, (for scrollInButton and scrollInControl.)
+ *
+ *  @note  Sets the .SystemErrorCode, under some circumstances.
+ *
+ *  @remarks  This method uses the correct process to create the font.
+ */
+RexxMethod10(RexxObjectPtr, dlgext_scrollText, RexxObjectPtr, rxObj, OPTIONAL_CSTRING, text, OPTIONAL_CSTRING, fontName,
+            OPTIONAL_uint32_t, fontSize, OPTIONAL_CSTRING, fontStyle, OPTIONAL_uint32_t, displaceY, OPTIONAL_int32_t, step,
+            OPTIONAL_uint32_t, sleep, OPTIONAL_int32_t, color, OSELF, self)
 {
-    INT disply;
-    const char *opts;
-    INT size;
-    const char *text;
-    INT col;
+    pCPlainBaseDialog pcpbd = NULL;
+    HWND hCtrl = NULL;
+    RexxObjectPtr result = TheOneObj;
 
-    const char * tp;
-    HWND w;
-    HDC hDC;
-    HFONT hFont, oldF;
-    HPEN hpen, oP;
-    HBRUSH oB, hbr;
-    RECT r, rs, rclip;
-    SIZE s, sone;
-    INT i, rc, sl, step, j, disp;
-    UINT sleep;
-    DEF_ADM;
-
-    CHECKARG(10);
-
-    GET_ADM;
-
-    if (!dlgAdm) RETERR
-
-    text = argv[2].strptr;
-    size = atoi(argv[4].strptr);
-    opts = argv[5].strptr;
-    disply = atoi(argv[6].strptr);
-    col = atoi(argv[9].strptr);
-    CSTRING fontName = argv[3].strptr;
-
-    w = GET_HWND(argv[1]);
-    step = atoi(argv[7].strptr);
-    tp = text;
-
-    if (NULL != (hDC = GetWindowDC(w)))
+    if ( *(context->GetMessageName() + 6) == 'I' )
     {
-        GetWindowRect(w, &r);
-
-        hFont = oodGenericFont(fontName, size, opts);
-
-        oldF = (HFONT)SelectObject(hDC, hFont);
-
-        hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
-        hbr = GetSysColorBrush(COLOR_BTNFACE);
-
-        SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
-        oP = (HPEN)SelectObject(hDC, hpen);
-        oB = (HBRUSH)SelectObject(hDC, hbr);
-
-        if (col > 0) SetTextColor(hDC, PALETTEINDEX(col));
-        sl = (int)strlen(text);
-        rc = GetTextExtentPoint32(hDC, text, sl, &s);
-
-        r.right = r.right - r.left;
-        r.bottom = r.bottom - r.top + disply;
-        r.top = disply;
-        r.left = 0;
-
-        j = 0;
-        disp = 0;
-        rc = GetTextExtentPoint32(hDC, tp, 1, &sone);
-        rclip= r;
-        rs.top = r.top;
-        rs.bottom = r.top+s.cy+2;
-        rs.right = r.right;
-        rs.left = r.right;
-
-        sleep = atoi(argv[8].strptr);
-        if (sleep)
-        {
-            if (!TimerEvent)
-            {
-                TimerEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
-                Timer = SetTimer(NULL,GetCurrentThreadId(), sleep, (TIMERPROC)ScrollTimerProc);
-                TimerCount++;
-            }
-            else TimerCount++;
-        }
-        else Timer = 0;
-
-        ScrollingButton = w;
-        for (i=step; i<=r.right+s.cx; i+=step)
-        {
-            if (i>=s.cx+step)
-            {
-                Rectangle(hDC, r.right-i+s.cx, r.top, r.right -i+s.cx+step+step, r.top + s.cy + 2);
-            }
-
-            if (j<sl)
-            {
-                if (RedrawScrollingButton == w)
-                {
-                    rc = TextOut(hDC, r.right - i, r.top, text, sl);
-                }
-                else
-                {
-                    rc = TextOut(hDC, r.right - i+disp, r.top, tp, 1);
-                }
-            }
-            if ((j<sl) && (!rc)) break;
-
-            RedrawScrollingButton = NULL;
-
-            if (i-disp>sone.cx)
-            {
-                tp++;
-                j++;
-                disp += sone.cx;
-                rc = GetTextExtentPoint32(hDC, tp, 1, &sone);
-            }
-
-            rs.left -= step;
-            rc = 0;
-
-            if (dlgAdm->StopScroll == (WPARAM) w)
-            {
-                dlgAdm->StopScroll = 0;
-                break;
-            }
-
-            if (!ScrollDC(hDC, -step, 0, &rs, &rclip, NULL, NULL)) break;
-
-            if (Timer)
-            {
-                WaitForSingleObject(TimerEvent, (DWORD)((double)sleep*1.5));
-                ResetEvent(TimerEvent);
-            }
-
-        }
-
-        if (Timer)
-        {
-            if (TimerCount == 1)
-            {
-                KillTimer(NULL, Timer);
-                if (TimerEvent) CloseHandle(TimerEvent);
-                TimerEvent = NULL;
-                TimerCount = 0;
-                Timer = 0;
-            }
-            else TimerCount--;
-        }
-
-        ScrollingButton = NULL;
-
-        if (!dlgAdm || (!IsWindow(dlgAdm->TheDlg)))
-        {
-            RETC(1);
-        }
-        Rectangle(hDC, r.left, r.top, r.right, r.bottom);
-        SelectObject(hDC, oldF);
-        SelectObject(hDC, oP);
-        SelectObject(hDC, oB);
-
-        // Don't delete hbr, its a system cached brush
-        DeleteObject(hpen);
-        DeleteObject(hFont);
-        ReleaseDC(w, hDC);
-        RETC(0);
+        dlgExtControlSetup(context, self, rxObj, &pcpbd, NULL, &hCtrl);
     }
-    RETC(1);
+    else
+    {
+        pcpbd = dlgExtSetup(context, self);
+        hCtrl = (HWND)string2pointer(context->ObjectToStringValue(rxObj));
+    }
+
+    if ( pcpbd == NULL || hCtrl == NULL )
+    {
+        goto quick_out;
+    }
+
+    if ( pcpbd->scrollNow || rxArgCount(context) == 1 )
+    {
+        SendMessage(pcpbd->hDlg, WM_USER_INTERRUPTSCROLL, (WPARAM)hCtrl, 0);
+        result = TheZeroObj;
+        goto quick_out;
+    }
+
+    pcpbd->scrollNow = true;
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+
+    text      = (argumentOmitted(2) ? ""       : text);
+    fontName  = (argumentOmitted(3) ? "System" : fontName);
+    fontSize  = (argumentOmitted(4) ? 10       : fontSize);
+    fontStyle = (argumentOmitted(5) ? ""       : fontStyle);
+    displaceY = (argumentOmitted(6) ? 0        : displaceY);
+    step      = (argumentOmitted(7) ? 4        : step);
+    sleep     = (argumentOmitted(8) ? 10       : sleep);
+    color     = (argumentOmitted(9) ? 0        : color);
+
+    HDC hDC = GetWindowDC(hCtrl);
+    if ( hDC == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto quick_out;
+    }
+
+    RECT r;
+
+    GetWindowRect(hCtrl, &r);
+
+    // The assumption was that all of the following succeed.  Really, the only
+    // thing that might fail is creating the font.
+
+    HFONT hFont = oodGenericFont(fontName, fontSize, fontStyle);
+    if ( hFont == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto quick_out;
+    }
+
+    HPEN hPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
+    if ( hPen == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto quick_out;
+    }
+
+    HBRUSH hBrush = GetSysColorBrush(COLOR_BTNFACE);
+
+    SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
+    HFONT oldFont = (HFONT)SelectObject(hDC, hFont);
+    HPEN oldPen = (HPEN)SelectObject(hDC, hPen);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hDC, hBrush);
+
+    if ( color > 0 )
+    {
+        SetTextColor(hDC, PALETTEINDEX(color));
+    }
+
+    SIZE s;
+    size_t textLength = strlen(text);
+    BOOL rc = GetTextExtentPoint32(hDC, text, (int)textLength, &s);
+    if ( rc == FALSE )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto clean_up_out;
+    }
+
+    r.right  = r.right - r.left;
+    r.bottom = r.bottom - r.top + displaceY;
+    r.top    = displaceY;
+    r.left   = 0;
+
+    CSTRING textPointer = text;
+    size_t j = 0;
+    int32_t displace = 0;
+    SIZE s1;
+
+    rc = GetTextExtentPoint32(hDC, textPointer, 1, &s1);
+    if ( rc == FALSE )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto clean_up_out;
+    }
+
+    RECT rs, rclip;
+    rclip = r;
+    rs.top    = r.top;
+    rs.bottom = r.top + s.cy + 2;
+    rs.right  = r.right;
+    rs.left   = r.right;
+
+    if ( sleep > 0 )
+    {
+        if ( TimerEvent == NULL )
+        {
+            TimerEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
+            Timer = SetTimer(NULL, GetCurrentThreadId(), sleep, (TIMERPROC)scrollTimerProc);
+            TimerCount++;
+        }
+        else
+        {
+            TimerCount++;
+        }
+    }
+    else
+    {
+        Timer = 0;
+    }
+
+    ScrollingButton = hCtrl;
+    int i;
+
+    for ( i = step; i <= r.right + s.cx; i += step )
+    {
+        if ( i >= s.cx + step)
+        {
+            Rectangle(hDC, r.right - i + s.cx, r.top, r.right - i + s.cx + step + step, r.top + s.cy + 2);
+        }
+
+        if ( j < textLength)
+        {
+            if ( RedrawScrollingButton == hCtrl )
+            {
+                rc = TextOut(hDC, r.right - i, r.top, text, (int)textLength);
+            }
+            else
+            {
+                rc = TextOut(hDC, r.right - i+displace, r.top, textPointer, 1);
+            }
+        }
+
+        if ( j < textLength && rc == FALSE )
+        {
+            oodSetSysErrCode(context->threadContext);
+            break;
+        }
+
+        RedrawScrollingButton = NULL;
+
+        if ( i - displace > s1.cx )
+        {
+            textPointer++;
+            j++;
+            displace += s1.cx;
+            rc = GetTextExtentPoint32(hDC, textPointer, 1, &s1);
+        }
+
+        rs.left -= step;
+        rc = FALSE;
+
+        if ( dlgAdm->StopScroll == (WPARAM)hCtrl )
+        {
+            dlgAdm->StopScroll = 0;
+            break;
+        }
+
+        if ( ScrollDC(hDC, -(int)step, 0, &rs, &rclip, NULL, NULL) == 0 )
+        {
+            oodSetSysErrCode(context->threadContext);
+            break;
+        }
+
+        if ( Timer != 0 )
+        {
+            WaitForSingleObject(TimerEvent, (DWORD)((double)sleep*1.5));
+            ResetEvent(TimerEvent);
+        }
+    }
+
+    if ( Timer != 0 )
+    {
+        if ( TimerCount == 1 )
+        {
+            KillTimer(NULL, Timer);
+            if ( TimerEvent != NULL )
+            {
+                CloseHandle(TimerEvent);
+            }
+            TimerEvent = NULL;
+            TimerCount = 0;
+            Timer = 0;
+        }
+        else
+        {
+            TimerCount--;
+        }
+    }
+
+    ScrollingButton = NULL;
+
+    // Dialog could have been closed while we were scrolling.
+    if ( pcpbd->dlgAdm != NULL && ! IsWindow(dlgAdm->TheDlg) )
+    {
+        goto quick_out;
+    }
+
+    Rectangle(hDC, r.left, r.top, r.right, r.bottom);
+    result = TheZeroObj;
+
+clean_up_out:
+
+    SelectObject(hDC, oldFont);
+    SelectObject(hDC, oldPen);
+    SelectObject(hDC, oldBrush);
+
+    // Don't delete hBrush, its a system cached brush
+    safeDeleteObject(hPen);
+    safeDeleteObject(hFont);
+    ReleaseDC(hCtrl, hDC);
+
+quick_out:
+    if ( pcpbd != NULL )
+    {
+        pcpbd->scrollNow = false;
+    }
+    return result;
 }
 
 

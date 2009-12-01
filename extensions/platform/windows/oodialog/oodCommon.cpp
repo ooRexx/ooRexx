@@ -1265,7 +1265,7 @@ int putUnicodeText(LPWORD dest, const char *text)
  * @return True if the check succeeds, otherwise false.  If false, an exception
  *         has been raised.
  */
-bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max, size_t *arraySize)
+bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size_t max, size_t *arraySize)
 {
     *arraySize = c->ArraySize(args);
     if ( *arraySize > max )
@@ -1317,7 +1317,7 @@ bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max
  * @return bool
  */
 bool getRectFromArglist(RexxMethodContext *c, RexxArrayObject args, PRECT rect, bool boundingRect,
-                        int startArg, int maxArgs, size_t *arraySize, int *usedArgs)
+                        int startArg, int maxArgs, size_t *arraySize, size_t *usedArgs)
 {
     if ( ! goodMinMaxArgs(c, args, startArg, maxArgs, arraySize) )
     {

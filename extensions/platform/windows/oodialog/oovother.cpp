@@ -50,7 +50,7 @@
 #include "oodData.hpp"
 #include "oodDeviceGraphics.hpp"
 
-extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
+extern LONG SetRexxStem(const char * name, size_t id, const char * secname, const char * data);
 
 /**
  * Defines and structs for Button controls: .ButtonControl, .GroupBox, etc..
@@ -296,13 +296,13 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
 
        if (TreeView_GetItem(h, &tvi))
        {
-           SetRexxStem(argv[3].strptr, -1, "!Text", tvi.pszText);
+           SetRexxStem(argv[3].strptr, SIZE_MAX, "!Text", tvi.pszText);
            itoa(tvi.cChildren, data, 10);
-           SetRexxStem(argv[3].strptr, -1, "!Children", data);
+           SetRexxStem(argv[3].strptr, SIZE_MAX, "!Children", data);
            itoa(tvi.iImage, data, 10);
-           SetRexxStem(argv[3].strptr, -1, "!Image", data);
+           SetRexxStem(argv[3].strptr, SIZE_MAX, "!Image", data);
            itoa(tvi.iSelectedImage, data, 10);
-           SetRexxStem(argv[3].strptr, -1, "!SelectedImage", data);
+           SetRexxStem(argv[3].strptr, SIZE_MAX, "!SelectedImage", data);
            data[0] = '\0';
            if (tvi.state & TVIS_EXPANDED) strcat(data, "EXPANDED ");
            if (tvi.state & TVIS_BOLD) strcat(data, "BOLD ");
@@ -310,7 +310,7 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            if (tvi.state & TVIS_EXPANDEDONCE) strcat(data, "EXPANDEDONCE ");
            if (tvi.state & TVIS_DROPHILITED) strcat(data, "INDROP ");
            if (tvi.state & TVIS_CUT) strcat(data, "CUT ");
-           SetRexxStem(argv[3].strptr, -1, "!State", data);
+           SetRexxStem(argv[3].strptr, SIZE_MAX, "!State", data);
            RETC(0)
        }
        else RETVAL(-1)
@@ -817,15 +817,15 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            }
            else if (ListView_GetItem(h, &lvi))
            {
-               SetRexxStem(argv[5].strptr, -1, "!Text", lvi.pszText);
+               SetRexxStem(argv[5].strptr, SIZE_MAX, "!Text", lvi.pszText);
                itoa(lvi.iImage, data, 10);
-               SetRexxStem(argv[5].strptr, -1, "!Image", data);
+               SetRexxStem(argv[5].strptr, SIZE_MAX, "!Image", data);
                data[0] = '\0';
                if (lvi.state & LVIS_CUT) strcat(data, "CUT ");
                if (lvi.state & LVIS_DROPHILITED) strcat(data, "DROP ");
                if (lvi.state & LVIS_FOCUSED) strcat(data, "FOCUSED ");
                if (lvi.state & LVIS_SELECTED) strcat(data, "SELECTED ");
-               SetRexxStem(argv[5].strptr, -1, "!State", data);
+               SetRexxStem(argv[5].strptr, SIZE_MAX, "!State", data);
                RETC(0)
            }
            RETVAL(-1);
@@ -1112,11 +1112,11 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
 
            if (ListView_GetColumn(h, nr, &lvi))
            {
-               SetRexxStem(argv[4].strptr, -1, "!Text", lvi.pszText);
+               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Text", lvi.pszText);
                itoa(lvi.iSubItem, data, 10);
-               SetRexxStem(argv[4].strptr, -1, "!Column", data);
+               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Column", data);
                itoa(lvi.cx, data, 10);
-               SetRexxStem(argv[4].strptr, -1, "!Width", data);
+               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Width", data);
 
                data[0] = '\0';
                if ( (LVCFMT_JUSTIFYMASK & lvi.fmt) == LVCFMT_CENTER )
@@ -1131,7 +1131,7 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
                {
                    strcpy(data, "LEFT");
                }
-               SetRexxStem(argv[4].strptr, -1, "!Align", data);
+               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Align", data);
                RETC(0)
            }
            else RETVAL(-1)
@@ -1324,11 +1324,11 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
 
            if (TabCtrl_GetItem(h, item, &tab))
            {
-               SetRexxStem(argv[4].strptr, -1, "!Text", tab.pszText);
+               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Text", tab.pszText);
                itoa(tab.iImage, data, 10);
-               SetRexxStem(argv[4].strptr, -1, "!Image", data);
+               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Image", data);
                itoa((int)tab.lParam, data, 10);
-               SetRexxStem(argv[4].strptr, -1, "!Param", data);
+               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Param", data);
                RETC(0)
            }
            else RETVAL(-1)
@@ -3751,8 +3751,8 @@ RexxObjectPtr oodILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr
             if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == 0 )
             {
                 HDC dc = GetDC(hwnd);
-                hDDB = CreateDIBitmap(dc, (BITMAPINFOHEADER*)hDDB, CBM_INIT, DIB_PBITS(hDDB),
-                                      DIB_PBI(hDDB), DIB_RGB_COLORS);
+                hDDB = CreateDIBitmap(dc, (BITMAPINFOHEADER*)hDDB, CBM_INIT, dibPBits(hDDB),
+                                      dibPBI(hDDB), DIB_RGB_COLORS);
                 if ( hDDB == NULL )
                 {
                     oodSetSysErrCode(c->threadContext);

@@ -126,6 +126,7 @@ typedef struct _pbdCSelf {
     HBITMAP              bkgBitmap;
     logical_t            autoDetect;
     uint32_t             fontSize;
+    bool                 scrollNow;   // For scrolling text in windows.
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
 
@@ -212,8 +213,8 @@ extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING
 extern RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
 extern int           putUnicodeText(LPWORD dest, const char *text);
 extern int           getKeywordValue(String2Int *cMap, const char * str);
-extern bool          goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max, size_t *arraySize);
-extern bool          getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, int *);
+extern bool          goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size_t max, size_t *arraySize);
+extern bool          getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, size_t *);
 extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, int *);
 
 // TODO move to APICommon when ooDialog is converted to use .Pointer instead of
