@@ -72,6 +72,13 @@
 -- Create a "default" dialog class and set it to the user dialog.
 ::class 'Dialog' subclass UserDialog public
 
+::class 'PlainUserDialog' subclass PlainBaseDialog public inherit DynamicDialog
+::method init external "LIBRARY oodialog userdlg_init"
+::method stopIt
+   forward class (super) continue
+   forward message "stopDynamic"
+
+
 ::class 'Rect' public
 ::method init external "LIBRARY oodialog rect_init"
 ::method left external "LIBRARY oodialog rect_left"

@@ -41,7 +41,7 @@
  *
  * Resource Dialog Class.
  */
-::requires "BaseDlg.cls"
+::requires "BaseDialog.cls"
 
 ::class 'ResDialog' subclass BaseDialog public
 

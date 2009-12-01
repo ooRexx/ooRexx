@@ -72,9 +72,8 @@ end
 -- Files are in the order they are read and written out. UtilityClasses.cls must be kept first, otherwise
 -- the order should not make any difference.
 srcFiles = .array~of("UtilityClasses.cls", "PlainBaseDialog.cls", "EventNotification.cls", "DynamicDialog.cls", -
-                     "PlainUserDialog.cls", "DialogExtensions.cls", "BaseDialog.cls", "ResDialog.cls", -
-                     "UserDialog.cls", "RcDialog.cls", "Menu.cls", "CategoryDialog.cls", "AnimatedButton.cls", -
-                     "PropertySheet.cls", "DeprecatedClasses.cls")
+                     "DialogExtensions.cls", "BaseDialog.cls", "ResDialog.cls", "UserDialog.cls", "RcDialog.cls", -
+                     "Menu.cls", "CategoryDialog.cls", "AnimatedButton.cls", "PropertySheet.cls", "DeprecatedClasses.cls")
 
 outFile = .stream~new(outdir || outname[3])
 if outFile~open("WRITE REPLACE") \= "READY:" then return 9

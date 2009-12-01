@@ -43,8 +43,8 @@
  */
 
 /* include the base dialog class */
-::requires "basedlg.cls"
-::requires "dyndlg.cls"
+::requires "BaseDialog.cls"
+::requires "DynamicDialog.cls"
 
 /* This class extends the 'BaseDialog' class */
 ::class 'UserDialog' subclass BaseDialog public inherit DynamicDialog

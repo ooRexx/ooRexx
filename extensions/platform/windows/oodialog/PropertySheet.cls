@@ -41,8 +41,8 @@
  *
  * Property Sheet Dialog Class.
  */
-::requires "CatDlg.cls"
-::requires "AdvCtrl.cls"
+::requires "CategoryDialog.cls"
+::requires "DialogControls.cls"
 
 /* This class creates and controls a dialog that has more than one panel */
 /* using a tab control to select the single pages */

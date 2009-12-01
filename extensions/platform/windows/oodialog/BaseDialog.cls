@@ -44,8 +44,8 @@
  *
  * Some classes related to Windows resources are also included here.
  */
-::requires "plbdlg.cls"
-::requires "dlgext.cls"
+::requires "PlainBaseDialog.cls"
+::requires "DialogExtensions.cls"
 
 /**
  * The class WindowExtensions implements methods that are common to all windows,

@@ -41,7 +41,7 @@
  *
  * The Category Dialog Class.
  */
-::requires "UserDlg.cls"
+::requires "UserDialog.cls"
 
 /* This class creates and controls a dialog that has more than one panel. */
 /* It is similar to the 'notebook' control available in OS/2 or the PropertySheet */
