@@ -849,7 +849,7 @@
 
 ::method setPos
    use strict arg p, redraw = .false
-   call HandleOtherNewCtrls "SLIDER", "POS", self~hwnd, p, redraw
+   HandleOtherNewCtrls("SLIDER", "POS", self~hwnd, p, redraw)
 
 ::method initRange
    use strict arg min = 0, max = 100, redraw = .false
