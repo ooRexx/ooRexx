@@ -960,7 +960,7 @@ static void drawBmpBackground(DIALOGADMIN * dlgAdm, pCPlainBaseDialog pcpbd, INT
     // Check to see if the user has set a color for dialog item background.
     if ( dlgAdm->CT_size != 0 )
     {
-        uint32_t i;
+        size_t i;
         hbr = searchForBrush(dlgAdm, &i, id);
     }
 

@@ -439,7 +439,7 @@ extern RexxPointerObject   TheNullPtrObj;
 extern RexxClassObject ThePlainBaseDialogClass;
 extern RexxClassObject TheDynamicDialogClass;
 
-extern HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, uint32_t *index, uint32_t id);
+extern HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, size_t *index, uint32_t id);
 
 inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
 {

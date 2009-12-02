@@ -411,10 +411,10 @@ done_out:
     return adm;
 }
 
-HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, uint32_t *index, uint32_t id)
+HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, size_t *index, uint32_t id)
 {
     HBRUSH hBrush = NULL;
-    uint32_t i = 0;
+    size_t i = 0;
 
     if ( dlgAdm != NULL && dlgAdm->ColorTab != NULL )
     {
