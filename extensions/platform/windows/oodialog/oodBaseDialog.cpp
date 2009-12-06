@@ -2063,7 +2063,7 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
    /* SHVBLOCK shvb; */
    CHAR name[64];
    CHAR buffer[128];
-   DEF_ADM;
+   DIALOGADMIN * dlgAdm = NULL;
    int cnt = 0;
    size_t i;
 

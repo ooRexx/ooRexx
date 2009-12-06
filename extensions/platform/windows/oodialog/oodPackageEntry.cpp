@@ -166,6 +166,7 @@ REXX_METHOD_PROTOTYPE(wb_init_windowBase);
 REXX_METHOD_PROTOTYPE(wb_sendMessage);
 REXX_METHOD_PROTOTYPE(wb_sendWinIntMsg);
 REXX_METHOD_PROTOTYPE(wb_sendWinHandleMsg);
+REXX_METHOD_PROTOTYPE(wb_sendWinHandle2Msg);
 REXX_METHOD_PROTOTYPE(wb_enable);
 REXX_METHOD_PROTOTYPE(wb_isEnabled);
 REXX_METHOD_PROTOTYPE(wb_isVisible);
@@ -507,6 +508,10 @@ REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
 REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name
 
 // TreeView
+REXX_METHOD_PROTOTYPE(tv_getSpecificItem);
+REXX_METHOD_PROTOTYPE(tv_getNextItem);
+REXX_METHOD_PROTOTYPE(tv_selectItem);
+REXX_METHOD_PROTOTYPE(tv_hitTestInfo);
 REXX_METHOD_PROTOTYPE(tv_setImageList);
 REXX_METHOD_PROTOTYPE(tv_getImageList);
 
@@ -673,6 +678,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_sendMessage,                 wb_sendMessage),
     REXX_METHOD(wb_sendWinIntMsg,               wb_sendWinIntMsg),
     REXX_METHOD(wb_sendWinHandleMsg,            wb_sendWinHandleMsg),
+    REXX_METHOD(wb_sendWinHandle2Msg,           wb_sendWinHandle2Msg),
     REXX_METHOD(wb_enable,                      wb_enable),
     REXX_METHOD(wb_isEnabled,                   wb_isEnabled),
     REXX_METHOD(wb_isVisible,                   wb_isVisible),
@@ -938,7 +944,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(e_hideBallon,                   e_hideBallon),
     REXX_METHOD(e_setCue,                       e_setCue),
 
-    // Tree view
+    // TreeView
+    REXX_METHOD(tv_getSpecificItem,             tv_getSpecificItem),
+    REXX_METHOD(tv_getNextItem,                 tv_getNextItem),
+    REXX_METHOD(tv_selectItem,                  tv_selectItem),
+    REXX_METHOD(tv_hitTestInfo,                 tv_hitTestInfo),
     REXX_METHOD(tv_setImageList,                tv_setImageList),
     REXX_METHOD(tv_getImageList,                tv_getImageList),
 

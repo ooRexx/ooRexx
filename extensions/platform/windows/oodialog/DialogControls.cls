@@ -106,16 +106,16 @@
 
 -- DEPRECATED
 ::method processMessage
-  forward message "sendMessage"
+   forward message "sendMessage"
 
 -- DEPRECATED
 ::method assignWindow
-  return 0
+   return 0
 
 -- DEPRECATED
 ::method getTextSize unguarded
-  forward message "getTextSizeDlg" continue
-  return result~width result~height
+   forward message "getTextSizeDlg" continue
+   return result~width result~height
 
 
 ::class 'StaticControl' subclass DialogControl public
@@ -1412,6 +1412,67 @@
    forward class (super) continue
    self~RootArray = .array~new(4)
 
+::method root external "LIBRARY oodialog tv_getSpecificItem"
+::method selected external "LIBRARY oodialog tv_getSpecificItem"
+::method dropHighlighted external "LIBRARY oodialog tv_getSpecificItem"
+::method firstVisible external "LIBRARY oodialog tv_getSpecificItem"
+::method parent external "LIBRARY oodialog tv_getNextItem"
+::method child external "LIBRARY oodialog tv_getNextItem"
+::method next external "LIBRARY oodialog tv_getNextItem"
+::method nextVisible external "LIBRARY oodialog tv_getNextItem"
+::method previous external "LIBRARY oodialog tv_getNextItem"
+::method previousVisible external "LIBRARY oodialog tv_getNextItem"
+::method select external "LIBRARY oodialog tv_selectItem"
+::method makeFirstVisible external "LIBRARY oodialog tv_selectItem"
+::method dropHighlight external "LIBRARY oodialog tv_selectItem"
+::method setImageList external "LIBRARY oodialog tv_setImageList"
+::method getImageList external "LIBRARY oodialog tv_getImageList"
+
+::method hitTestInfo external "LIBRARY oodialog tv_hitTestInfo"
+::method hitTest
+   forward message "hitTestInfo" continue
+   info = result
+   if info~hItem = 0 then return 0
+   else return info~hItem info~location
+
+
+-- TV_FIRST == 0x1100  (4352)
+::constant TVM_GETCOUNT            "0x1105"
+::constant TVM_GETVISIBLECOUNT     "0x1110"
+::constant TVM_SORTCHILDREN        "0x1113"
+::constant TVM_ENSUREVISIBLE       "0x1114"
+::constant TVM_GETINDENT           "0x1106"
+::constant TVM_SETINDENT           "0x1107"
+
+::method items
+   use strict arg
+   return self~sendWinIntMsg(self~TVM_GETCOUNT, 0, 0)
+
+::method visibleItems
+   use strict arg
+   return self~sendWinIntMsg(self~TVM_GETVISIBLECOUNT, 0, 0)
+
+::method ensureVisible
+   use strict arg hItem
+   return self~sendWinHandle2Msg(self~TVM_ENSUREVISIBLE, 0, hItem)
+
+-- TODO old code did not have recurse arg and had a comment saying "recursive not yet supported"
+-- Not sure what was meant by that, the tree view itself does the sorting, so it should work.  NEED to check.
+::method sortChildren
+   use strict arg hitem, recurse = .false
+   return self~sendWinHandle2Msg(self~TVM_SORTCHILDREN, recurse, hItem)
+
+::method indent
+   use stict arg
+   return self~sendWinIntMsg(self~TVM_GETINDENT, 0, 0)
+
+::method "indent="
+   use strict arg indentAmount
+   return self~sendWinIntMsg(self~TVM_SETINDENT, indentAmount, 0)
+
+
+
+
 ::method Insert
    use arg parent, after, text, image, selImage, opts, children
    if arg(1,'o') = 1 then parent = "ROOT"
@@ -1496,54 +1557,6 @@
    else return 0
 
 
-::method Items
-   return HandleTreeCtrl("CNT", self~Hwnd)
-
-::method VisibleItems
-   return HandleTreeCtrl("CNTVIS", self~Hwnd)
-
-::method Root
-   return HandleTreeCtrl("GETHND", self~Hwnd,0,"ROOT")
-
-::method Parent
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PARENT")
-
-::method Child
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "CHILD")
-
-::method Selected
-   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "CARET")
-
-::method DropHighlighted
-   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "DROP")
-
-::method FirstVisible
-   return HandleTreeCtrl("GETHND", self~Hwnd, 0, "FIRSTVISIBLE")
-
-::method Next
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "NEXT")
-
-::method NextVisible
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "NEXTVISIBLE")
-
-::method Previous
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUS")
-
-::method PreviousVisible
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUSVISIBLE")
-
 ::method Delete
    use arg hItem
    if arg(1, 'O') | hItem = 0 then return -1
@@ -1572,19 +1585,6 @@
    if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "TOGGLE")
 
-::method EnsureVisible
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("ENVIS", self~Hwnd, hitem)
-
-::method Indent
-      return HandleTreeCtrl("GETIND", self~Hwnd)
-
-::method "Indent="
-   use arg ind
-   if arg(1, 'O') then return -1
-   ret = HandleTreeCtrl("SETIND", self~Hwnd, ind)
-
 ::method Edit
    use arg hitem
    if arg(1, 'O') | hItem = 0 then return -1
@@ -1601,45 +1601,12 @@
 ::method RestoreEditClass
    return HandleTreeCtrl("RESUB_EDIT", self~Hwnd)
 
-::method Select
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "")
-
-::method MakeFirstVisible
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "FIRSTVIS")
-
-::method DropHighlight
-   use arg hitem
-   if arg(1, 'O') then do
-      if digits() == 9 then
-         hItem = "0x00000000"
-      else
-         hItem = "0x0000000000000000"
-   end
-   return HandleTreeCtrl("SEL", self~Hwnd, hitem, "DROP")
-
-::method SortChildren
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("SORT", self~Hwnd, hitem, 0) /* recursive not yet supported */
-
-
 -- DEPRECATED
 ::method setImages external "LIBRARY oodialog tv_setImageList"
 
 -- DEPRECATED
 ::method removeImages
    return self~setImageList(.nil, 0)
-
-::method setImageList external "LIBRARY oodialog tv_setImageList"
-::method getImageList external "LIBRARY oodialog tv_getImageList"
-
-::method HitTest
-   use arg x, y
-   return HandleTreeCtrl("HIT", self~Hwnd, x, y)
 
 ::class 'DateTimePicker' subclass DialogControl public
 

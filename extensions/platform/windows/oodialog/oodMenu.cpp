@@ -2894,7 +2894,7 @@ RexxMethod2(logical_t, menu_releaseMenuHandle, RexxObjectPtr, handle, OSELF, sel
     }
     else if ( c->IsString(handle) )
     {
-        hMenu = (HMENU)string2pointer(c->StringData((RexxStringObject)handle));
+        hMenu = (HMENU)string2pointer(c->ObjectToStringValue(handle));
     }
 
     if ( hMenu == NULL )

@@ -1147,7 +1147,7 @@ RexxMethod5(RexxObjectPtr, wb_sendMessage, CSTRING, wm_msg, RexxObjectPtr, _wPar
  *            If we were just casting the number here, that would work.  But,
  *            the interpreter checks the range before invoking and negative
  *            numbers cause a condition to be raised.  So, we use intptr_t for
- *            wParam here.  It may become needed to add a sendWinUintMsg().
+ *            wParam here.  It may become necessary to add a sendWinUintMsg().
  */
 RexxMethod5(intptr_t, wb_sendWinIntMsg, CSTRING, wm_msg, intptr_t, wParam, intptr_t, lParam,
             OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
@@ -1166,8 +1166,8 @@ RexxMethod5(intptr_t, wb_sendWinIntMsg, CSTRING, wm_msg, intptr_t, wParam, intpt
  *  @param  wm_msg  The Windows window message ID.  This can be specified as a
  *                  decimal number, or in "0xFFFF" format.
  *
- *  @param  wParam  The WPARAM value for the message.  The must be in pointer or
- *                  handle format.
+ *  @param  wParam  The WPARAM value for the message.  The argument must be in
+ *                  pointer or handle format.
  *  @param  lParam  The LPARAM value for the message.
  *
  *  @param  _hwnd   [OPTIONAL]  The handle of the window the message is sent to.
@@ -1187,6 +1187,47 @@ RexxMethod6(RexxObjectPtr, wb_sendWinHandleMsg, CSTRING, wm_msg, POINTERSTRING, 
     LRESULT lr = sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
 
     if ( strlen(method) == 16 )
+    {
+        return context->Intptr((intptr_t)lr);
+    }
+    else
+    {
+        return pointer2string(context, (void *)lr);
+    }
+}
+
+
+/** WindowBase::sendWinHandle2Msg()
+ *  WindowBase::sendWinHandle2MsgH()
+ *
+ *  Sends a message to a Windows window where WPARAM is a number and LPARAM is a
+ *  handle.  The result is returned as a number or as a handle, depending on the
+ *  invoking method.
+ *
+ *  @param  wm_msg  The Windows window message ID.  This can be specified as a
+ *                  decimal number, or in "0xFFFF" format.
+ *
+ *  @param  wParam  The WPARAM value for the message.
+ *  @param  lParam  The LPARAM value for the message.  The argument must be in
+ *                  pointer or handle format.
+ *
+ *  @param  _hwnd   [OPTIONAL]  The handle of the window the message is sent to.
+ *                  If omitted, the window handle of this object is used.
+ *
+ *  @return The result of sending the message, as returned by the operating
+ *          system.
+ *
+ *  @note     Sets the .SystemErrorCode.
+ *
+ *  @remarks  This method is not meant to be documented to the user, it is
+ *            intended to be used internally only.
+ */
+RexxMethod6(RexxObjectPtr, wb_sendWinHandle2Msg, CSTRING, wm_msg, intptr_t, wParam, POINTERSTRING, lParam,
+            OPTIONAL_POINTERSTRING, _hwnd, NAME, method, CSELF, pCSelf)
+{
+    LRESULT lr = sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
+
+    if ( strlen(method) == 17 )
     {
         return context->Intptr((intptr_t)lr);
     }

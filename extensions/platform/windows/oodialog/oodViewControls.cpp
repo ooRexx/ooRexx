@@ -229,53 +229,6 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        }
        else RETVAL(-1)
    }
-   else
-   if (!strcmp(argv[0].strptr, "GETHND"))
-   {
-       HTREEITEM hItem;
-       ULONG flag;
-
-       CHECKARG(4);
-
-       hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-
-       if (!strcmp(argv[3].strptr,"CARET")) flag = TVGN_CARET;
-       else if (!strcmp(argv[3].strptr,"CHILD")) flag = TVGN_CHILD;
-       else if (!strcmp(argv[3].strptr,"DROP")) flag = TVGN_DROPHILITE;
-       else if (!strcmp(argv[3].strptr,"FIRSTVISIBLE")) flag = TVGN_FIRSTVISIBLE;
-       else if (!strcmp(argv[3].strptr,"NEXT")) flag = TVGN_NEXT;
-       else if (!strcmp(argv[3].strptr,"NEXTVISIBLE")) flag = TVGN_NEXTVISIBLE;
-       else if (!strcmp(argv[3].strptr,"PARENT")) flag = TVGN_PARENT;
-       else if (!strcmp(argv[3].strptr,"PREVIOUS")) flag = TVGN_PREVIOUS;
-       else if (!strcmp(argv[3].strptr,"PREVIOUSVISIBLE")) flag = TVGN_PREVIOUSVISIBLE;
-       else if (!strcmp(argv[3].strptr,"ROOT")) flag = TVGN_ROOT;
-       RETHANDLE(TreeView_GetNextItem(h, hItem, flag))
-   }
-   else
-   if (!strcmp(argv[0].strptr, "CNT"))
-   {
-       RETVAL(TreeView_GetCount(h))
-   }
-   else
-   if (!strcmp(argv[0].strptr, "CNTVIS"))
-   {
-       RETVAL(TreeView_GetVisibleCount(h))
-   }
-   else
-   if (!strcmp(argv[0].strptr, "SEL"))
-   {
-       HTREEITEM hItem;
-       ULONG flag;
-
-       CHECKARG(4);
-
-       hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-
-       if (!strcmp(argv[3].strptr,"DROP")) flag = TVGN_DROPHILITE;
-       else if (!strcmp(argv[3].strptr,"FIRSTVIS")) flag = TVGN_FIRSTVISIBLE;
-       else flag = TVGN_CARET;
-       RETC(!TreeView_Select(h, hItem, flag))
-   }
    if (!strcmp(argv[0].strptr, "EXPAND"))
    {
        HTREEITEM hItem;
@@ -294,30 +247,6 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        RETC(!TreeView_Expand(h, hItem, flag))
    }
    else
-   if (!strcmp(argv[0].strptr, "ENVIS"))
-   {
-       HTREEITEM hItem;
-
-       CHECKARG(3);
-
-       hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-
-       RETC(!TreeView_EnsureVisible(h, hItem))
-   }
-   else
-   if (!strcmp(argv[0].strptr, "GETIND"))
-   {
-       RETVAL(TreeView_GetIndent(h))
-   }
-   else
-   if (!strcmp(argv[0].strptr, "SETIND"))
-   {
-       CHECKARG(3);
-
-       TreeView_SetIndent(h, atoi(argv[2].strptr));
-       RETC(0)
-   }
-   else
    if (!strcmp(argv[0].strptr, "EDIT"))
    {
        CHECKARG(3);
@@ -331,14 +260,6 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        CHECKARG(3);
 
        RETC(!TreeView_EndEditLabelNow(h, isYes(argv[2].strptr)))
-   }
-   else
-   if (!strcmp(argv[0].strptr, "SORT"))
-   {
-       CHECKARG(4);
-
-       HTREEITEM hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-       RETC(!TreeView_SortChildren(h, (HTREEITEM)hItem, isYes(argv[3].strptr)))
    }
    else
    if (!strcmp(argv[0].strptr, "SUBCL_EDIT"))
@@ -362,36 +283,6 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            RETC(0)
        }
        RETVAL(-1)
-   }
-   else
-   if (!strcmp(argv[0].strptr, "HIT"))
-   {
-       TV_HITTESTINFO hti;
-       HTREEITEM hItem;
-
-       CHECKARG(4);
-       hti.pt.x = atol(argv[2].strptr);
-       hti.pt.y = atol(argv[3].strptr);
-       hItem = TreeView_HitTest(h, &hti);
-       if (hItem)
-       {
-           pointer2string(retstr, (void *)hItem);
-           if (hti.flags & TVHT_ABOVE) strcat(retstr->strptr, " ABOVE");
-           if (hti.flags & TVHT_BELOW) strcat(retstr->strptr, " BELOW");
-           if (hti.flags & TVHT_NOWHERE) strcat(retstr->strptr, " NOWHERE");
-           if (hti.flags & TVHT_ONITEM) strcat(retstr->strptr, " ONITEM");
-           if (hti.flags & TVHT_ONITEMBUTTON) strcat(retstr->strptr, " ONBUTTON");
-           if (hti.flags & TVHT_ONITEMICON) strcat(retstr->strptr, " ONICON");
-           if (hti.flags & TVHT_ONITEMINDENT) strcat(retstr->strptr, " ONINDENT");
-           if (hti.flags & TVHT_ONITEMLABEL) strcat(retstr->strptr, " ONLABEL");
-           if (hti.flags & TVHT_ONITEMRIGHT) strcat(retstr->strptr, " ONRIGHT");
-           if (hti.flags & TVHT_ONITEMSTATEICON) strcat(retstr->strptr, " ONSTATEICON");
-           if (hti.flags & TVHT_TOLEFT) strcat(retstr->strptr, " TOLEFT");
-           if (hti.flags & TVHT_TORIGHT) strcat(retstr->strptr, " TORIGHT");
-           retstr->strlength = strlen(retstr->strptr);
-           return 0;
-       }
-       RETC(0)
    }
    RETC(0)
 }
@@ -1892,7 +1783,7 @@ done_out:
 #define TVSTATE_ATTRIBUTE         "TV!STATEIMAGELIST"
 #define TVNORMAL_ATTRIBUTE        "TV!NORMALIMAGELIST"
 
-CSTRING tvGetAttributeName(uint8_t type)
+static CSTRING tvGetAttributeName(uint8_t type)
 {
     switch ( type )
     {
@@ -1903,6 +1794,122 @@ CSTRING tvGetAttributeName(uint8_t type)
             return TVNORMAL_ATTRIBUTE;
     }
 }
+
+
+RexxMethod2(RexxObjectPtr, tv_getSpecificItem, NAME, method, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+    HTREEITEM result = NULL;
+
+    switch ( *method )
+    {
+        case 'R' :
+            result = TreeView_GetRoot(hwnd);
+            break;
+        case 'S' :
+            result = TreeView_GetSelection(hwnd);
+            break;
+        case 'D' :
+            result = TreeView_GetDropHilight(hwnd);
+            break;
+        case 'F' :
+            result = TreeView_GetFirstVisible(hwnd);
+            break;
+    }
+    return pointer2string(context, result);
+}
+
+
+RexxMethod3(RexxObjectPtr, tv_getNextItem, CSTRING, _hItem, NAME, method, CSELF, pCSelf)
+{
+    HWND      hwnd  = getDCHCtrl(pCSelf);
+    HTREEITEM hItem = (HTREEITEM)string2pointer(_hItem);
+    uint32_t  flag  = TVGN_PARENT;
+
+    if ( strcmp(method, "PARENT")               == 0 ) flag = TVGN_PARENT;
+    else if ( strcmp(method, "CHILD")           == 0 ) flag = TVGN_CHILD;
+    else if ( strcmp(method, "NEXT")            == 0 ) flag = TVGN_NEXT;
+    else if ( strcmp(method, "NEXTVISIBLE")     == 0 ) flag = TVGN_NEXTVISIBLE;
+    else if ( strcmp(method, "PREVIOUS")        == 0 ) flag = TVGN_PREVIOUS;
+    else if ( strcmp(method, "PREVIOUSVISIBLE") == 0 ) flag = TVGN_PREVIOUSVISIBLE;
+
+    return pointer2string(context, TreeView_GetNextItem(hwnd, hItem, flag));
+}
+
+
+/** TreeControl::select()
+ *  TreeControl::makeFirstVisible()
+ *  TreeControl::dropHighLight()
+ */
+RexxMethod3(RexxObjectPtr, tv_selectItem, CSTRING, _hItem, NAME, method, CSELF, pCSelf)
+{
+    HWND      hwnd  = getDCHCtrl(pCSelf);
+    HTREEITEM hItem = (HTREEITEM)string2pointer(_hItem);
+    uint32_t  flag;
+
+    switch ( *method )
+    {
+        case 'S' :
+            flag = TVGN_CARET;
+            break;
+        case 'M' :
+            flag = TVGN_FIRSTVISIBLE;
+            break;
+        default:
+            flag = TVGN_DROPHILITE;
+    }
+    return (TreeView_Select(hwnd, hItem, flag) ? TheZeroObj : TheOneObj);
+}
+
+
+RexxMethod2(RexxObjectPtr, tv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    size_t sizeArray;
+    int    argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
+    {
+        return NULLOBJECT;
+    }
+
+    if ( argsUsed == 1 && sizeArray == 2)
+    {
+        return tooManyArgsException(context->threadContext, 1);
+    }
+
+    TVHITTESTINFO hti;
+    hti.pt.x = point.x;
+    hti.pt.y = point.y;
+
+    HTREEITEM hItem = TreeView_HitTest(hwnd, &hti);
+
+    RexxDirectoryObject result = context->NewDirectory();
+
+    context->DirectoryPut(result, pointer2string(context, TreeView_HitTest(hwnd, &hti)), "HITEM");
+
+    char buf[128];
+    *buf = '\0';
+
+    if ( hti.flags & TVHT_ABOVE          ) strcat(buf, "ABOVE ");
+    if ( hti.flags & TVHT_BELOW          ) strcat(buf, "BELOW ");
+    if ( hti.flags & TVHT_NOWHERE        ) strcat(buf, "NOWHERE ");
+    if ( hti.flags & TVHT_ONITEM         ) strcat(buf, "ONITEM ");
+    if ( hti.flags & TVHT_ONITEMBUTTON   ) strcat(buf, "ONBUTTON ");
+    if ( hti.flags & TVHT_ONITEMICON     ) strcat(buf, "ONICON ");
+    if ( hti.flags & TVHT_ONITEMINDENT   ) strcat(buf, "ONINDENT ");
+    if ( hti.flags & TVHT_ONITEMLABEL    ) strcat(buf, "ONLABEL ");
+    if ( hti.flags & TVHT_ONITEMRIGHT    ) strcat(buf, "ONRIGHT ");
+    if ( hti.flags & TVHT_ONITEMSTATEICON) strcat(buf, "ONSTATEICON ");
+    if ( hti.flags & TVHT_TOLEFT         ) strcat(buf, "TOLEFT ");
+    if ( hti.flags & TVHT_TORIGHT        ) strcat(buf, "TORIGHT ");
+
+    *(buf + strlen(buf) - 1) = '\0';
+    context->DirectoryPut(result, context->String(buf),"LOCATION");
+    return result;
+}
+
 
 /** TreeControl::setImageList()
  *
@@ -1940,10 +1947,10 @@ CSTRING tvGetAttributeName(uint8_t type)
  *         is no way to use the image list for the state image list.
  */
 RexxMethod4(RexxObjectPtr, tv_setImageList, RexxObjectPtr, ilSrc,
-            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OSELF, self)
+            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
     oodResetSysErrCode(context->threadContext);
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     HIMAGELIST himl = NULL;
     int type = TVSIL_NORMAL;

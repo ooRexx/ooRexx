@@ -80,6 +80,8 @@
 ::method sendWinIntMsg unguarded external "LIBRARY oodialog wb_sendWinIntMsg"
 ::method sendWinHandleMsg unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"
 ::method sendWinHandleMsgH unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"
+::method sendWinHandle2Msg unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"
+::method sendWinHandle2MsgH unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"
 
 ::method enable unguarded external "LIBRARY oodialog wb_enable"
 ::method disable unguarded external "LIBRARY oodialog wb_enable"

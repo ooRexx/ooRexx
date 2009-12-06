@@ -456,15 +456,4 @@ inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
     return i < StoredDialogs ? DialogTab[i] : NULL;
 }
 
-#define SEEK_DLGADM_TABLE(hDlg, addressedTo) \
-   if (topDlg && ((topDlg->TheDlg == hDlg) || (topDlg->AktChild == hDlg))) \
-       addressedTo = topDlg; \
-   else { register INT i=0; \
-       while ((i<StoredDialogs) && (DialogTab[i]->TheDlg != hDlg) && (DialogTab[i]->AktChild != hDlg)) i++; \
-       if (i<StoredDialogs) addressedTo = DialogTab[i]; else addressedTo = NULL;   } \
-
-
-#define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
-#define GET_ADM     dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0])
-
 #endif
