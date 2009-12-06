@@ -1463,7 +1463,7 @@
    return self~sendWinHandle2Msg(self~TVM_SORTCHILDREN, recurse, hItem)
 
 ::method indent
-   use stict arg
+   use strict arg
    return self~sendWinIntMsg(self~TVM_GETINDENT, 0, 0)
 
 ::method "indent="
