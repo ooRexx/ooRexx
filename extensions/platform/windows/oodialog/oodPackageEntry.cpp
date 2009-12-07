@@ -511,6 +511,9 @@ REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name
 REXX_METHOD_PROTOTYPE(tv_getSpecificItem);
 REXX_METHOD_PROTOTYPE(tv_getNextItem);
 REXX_METHOD_PROTOTYPE(tv_selectItem);
+REXX_METHOD_PROTOTYPE(tv_expand);
+REXX_METHOD_PROTOTYPE(tv_subclassEdit);
+REXX_METHOD_PROTOTYPE(tv_insert);
 REXX_METHOD_PROTOTYPE(tv_hitTestInfo);
 REXX_METHOD_PROTOTYPE(tv_setImageList);
 REXX_METHOD_PROTOTYPE(tv_getImageList);
@@ -948,6 +951,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tv_getSpecificItem,             tv_getSpecificItem),
     REXX_METHOD(tv_getNextItem,                 tv_getNextItem),
     REXX_METHOD(tv_selectItem,                  tv_selectItem),
+    REXX_METHOD(tv_expand,                      tv_expand),
+    REXX_METHOD(tv_subclassEdit,                tv_subclassEdit),
+    REXX_METHOD(tv_insert,                      tv_insert),
     REXX_METHOD(tv_hitTestInfo,                 tv_hitTestInfo),
     REXX_METHOD(tv_setImageList,                tv_setImageList),
     REXX_METHOD(tv_getImageList,                tv_getImageList),

@@ -163,13 +163,13 @@
 ::method screenToClient unguarded   -- old method returns coordinates as a string
     use strict arg x, y
     p = .Point~new(x, y)
-    if self~screen2client(p) then return p.x p.y
+    if self~screen2client(p) then return p~x p~y
     else return 0 0
 
 ::method clientToScreen unguarded   -- old method returns coordinates as a string
     use strict arg x, y
     p = .Point~new(x, y)
-    if self~client2screen(p) then return p.x p.y
+    if self~client2screen(p) then return p~x p~y
     else return 0 0
 
 ::method unknown unguarded

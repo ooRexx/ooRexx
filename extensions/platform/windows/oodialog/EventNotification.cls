@@ -547,14 +547,14 @@
           else do
              if nocurs = 0 then do
                 nocurs = tc~Cursor_No  /* set no cursor and retrieve current cursor (cross) */
-                tc~DropHighlight  /* remove drop highlight */
+                tc~DropHighlight(newParent)  /* remove drop highlight */
              end
           end
       end
       else do
           if newParent \= 0 then do
               /* necessary to redraw cursor when moving on a valid item again */
-              tc~DropHighlight  /* remove drop highlight */
+              tc~DropHighlight(newParent)  /* remove drop highlight */
               newParent = 0
           end
 

@@ -45,6 +45,7 @@
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <commctrl.h>
+#include <shlwapi.h>
 
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
@@ -76,9 +77,7 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
         default:
             return CallWindowProc(wpOldEditProc, hWnd, uMsg, wParam, lParam);
-            break;
-
-    } /* end switch */
+    }
 }
 
 
@@ -130,22 +129,6 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        if (tvi->iSelectedImage > -1) tvi->mask |= TVIF_SELECTEDIMAGE;
 
        RETHANDLE(TreeView_InsertItem(h, &ins));
-   }
-   else
-   if (!strcmp(argv[0].strptr, "DEL"))
-   {
-       HTREEITEM hItem;
-
-       CHECKARG(3);
-       hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-       if (!hItem && !strcmp(argv[2].strptr,"ROOT"))
-          RETC(!TreeView_DeleteAllItems(h))
-       else if (hItem)
-       {
-           if (TreeView_GetCount(h) >0)
-               RETC(!TreeView_DeleteItem(h, hItem))
-           else RETVAL(-1)
-       }
    }
    else
    if (!strcmp(argv[0].strptr, "SET"))
@@ -228,23 +211,6 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            RETC(0)
        }
        else RETVAL(-1)
-   }
-   if (!strcmp(argv[0].strptr, "EXPAND"))
-   {
-       HTREEITEM hItem;
-       ULONG flag = 0;
-
-       CHECKARG(4);
-
-       hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-
-       if (!strcmp(argv[3].strptr,"EXPAND")) flag = TVE_EXPAND;
-       else if (!strcmp(argv[3].strptr,"TOGGLE")) flag = TVE_TOGGLE;
-       else {
-           if (strstr(argv[3].strptr,"COLLAPSE")) flag |= TVE_COLLAPSE;
-           if (strstr(argv[3].strptr,"RESET")) flag |= TVE_COLLAPSERESET;
-       }
-       RETC(!TreeView_Expand(h, hItem, flag))
    }
    else
    if (!strcmp(argv[0].strptr, "EDIT"))
@@ -1796,6 +1762,85 @@ static CSTRING tvGetAttributeName(uint8_t type)
 }
 
 
+RexxMethod8(RexxObjectPtr, tv_insert, OPTIONAL_CSTRING, _hItem, OPTIONAL_CSTRING, _hAfter, OPTIONAL_CSTRING, label,
+            OPTIONAL_int32_t, imageIndex, OPTIONAL_int32_t, selectedImage, OPTIONAL_CSTRING, opts, OPTIONAL_uint32_t, children,
+            CSELF, pCSelf)
+{
+    HWND hwnd  = getDCHCtrl(pCSelf);
+
+    TVINSERTSTRUCT  ins;
+    TVITEMEX       *tvi = &ins.itemex;
+
+    if ( argumentExists(1) )
+    {
+        if ( stricmp(_hItem, "ROOT") == 0 )
+        {
+            ins.hParent = TVI_ROOT;
+        }
+        else
+        {
+            ins.hParent = (HTREEITEM)string2pointer(_hItem);
+        }
+    }
+    else
+    {
+        ins.hParent = TVI_ROOT;
+    }
+
+    if ( argumentExists(2) )
+    {
+        if ( stricmp(_hAfter,      "FIRST") == 0 ) ins.hInsertAfter = TVI_FIRST;
+        else if ( stricmp(_hAfter, "SORT")  == 0 ) ins.hInsertAfter = TVI_SORT;
+        else if ( stricmp(_hAfter, "LAST")  == 0 ) ins.hInsertAfter = TVI_LAST;
+        else ins.hInsertAfter = (HTREEITEM)string2pointer(_hAfter);
+    }
+    else
+    {
+        ins.hInsertAfter = TVI_LAST;
+    }
+
+    memset(tvi, 0, sizeof(TVITEMEX));
+
+    label         = (argumentOmitted(3) ? "" : label);
+    imageIndex    = (argumentOmitted(4) ? -1 : imageIndex);
+    selectedImage = (argumentOmitted(5) ? -1 : selectedImage);
+
+    tvi->mask = TVIF_TEXT;
+    tvi->pszText = (LPSTR)label;
+    tvi->cchTextMax = (int)strlen(label);
+
+    if ( imageIndex > -1 )
+    {
+        tvi->iImage = imageIndex;
+        tvi->mask |= TVIF_IMAGE;
+    }
+    if ( selectedImage > -1 )
+    {
+        tvi->iSelectedImage = selectedImage;
+        tvi->mask |= TVIF_SELECTEDIMAGE;
+    }
+
+    if ( argumentExists(6) )
+    {
+        if ( StrStrI(opts, "BOLD")     != NULL ) tvi->state |= TVIS_BOLD;
+        if ( StrStrI(opts, "EXPANDED") != NULL ) tvi->state |= TVIS_EXPANDED;
+
+        if ( tvi->state != 0 )
+        {
+            tvi->stateMask = tvi->state;
+            tvi->mask |= TVIF_STATE;
+        }
+    }
+    if ( children > 0 )
+    {
+        tvi->cChildren = children;
+        tvi->mask |= TVIF_CHILDREN;
+    }
+
+    return pointer2string(context, TreeView_InsertItem(hwnd, &ins));
+}
+
+
 RexxMethod2(RexxObjectPtr, tv_getSpecificItem, NAME, method, CSELF, pCSelf)
 {
     HWND hwnd = getDCHCtrl(pCSelf);
@@ -1841,11 +1886,16 @@ RexxMethod3(RexxObjectPtr, tv_getNextItem, CSTRING, _hItem, NAME, method, CSELF,
  *  TreeControl::makeFirstVisible()
  *  TreeControl::dropHighLight()
  */
-RexxMethod3(RexxObjectPtr, tv_selectItem, CSTRING, _hItem, NAME, method, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, tv_selectItem, OPTIONAL_CSTRING, _hItem, NAME, method, CSELF, pCSelf)
 {
     HWND      hwnd  = getDCHCtrl(pCSelf);
-    HTREEITEM hItem = (HTREEITEM)string2pointer(_hItem);
+    HTREEITEM hItem = NULL;
     uint32_t  flag;
+
+    if ( argumentExists(1) )
+    {
+        hItem = (HTREEITEM)string2pointer(_hItem);
+    }
 
     switch ( *method )
     {
@@ -1859,6 +1909,53 @@ RexxMethod3(RexxObjectPtr, tv_selectItem, CSTRING, _hItem, NAME, method, CSELF, 
             flag = TVGN_DROPHILITE;
     }
     return (TreeView_Select(hwnd, hItem, flag) ? TheZeroObj : TheOneObj);
+}
+
+
+/** TreeControl::expand()
+ *  TreeControl::collapse()
+ *  TreeControl::collapseAndReset()
+ *  TreeControl::toggle()
+ */
+RexxMethod3(RexxObjectPtr, tv_expand, CSTRING, _hItem, NAME, method, CSELF, pCSelf)
+{
+    HWND      hwnd  = getDCHCtrl(pCSelf);
+    HTREEITEM hItem = (HTREEITEM)string2pointer(_hItem);
+    uint32_t  flag  = TVE_EXPAND;
+
+    if ( *method == 'C' )
+    {
+        flag = (method[8] == 'A' ? (TVE_COLLAPSERESET | TVE_COLLAPSE) : TVE_COLLAPSE);
+    }
+    else if ( *method == 'T' )
+    {
+        flag = TVE_TOGGLE;
+    }
+    return (TreeView_Expand(hwnd, hItem, flag) ? TheZeroObj : TheOneObj);
+}
+
+
+/** TreeControl::subclassEdit()
+ *  TreeControl::restoreEditClass()
+ */
+RexxMethod2(RexxObjectPtr, tv_subclassEdit, NAME, method, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    if ( *method == 'S' )
+    {
+        WNDPROC oldProc = (WNDPROC)setWindowPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
+        if ( oldProc != (WNDPROC)CatchReturnSubProc )
+        {
+            wpOldEditProc = oldProc;
+        }
+        return pointer2string(context, oldProc);
+    }
+    else
+    {
+        setWindowPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
+    }
+    return TheZeroObj;
 }
 
 

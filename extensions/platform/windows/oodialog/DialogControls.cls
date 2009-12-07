@@ -1406,11 +1406,11 @@
 
 ::class 'TreeControl' subclass DialogControl public
 
-::method RootArray attribute private
+::attribute rootArray private
 
 ::method init
    forward class (super) continue
-   self~RootArray = .array~new(4)
+   self~rootArray = .array~new(4)
 
 ::method root external "LIBRARY oodialog tv_getSpecificItem"
 ::method selected external "LIBRARY oodialog tv_getSpecificItem"
@@ -1422,9 +1422,16 @@
 ::method nextVisible external "LIBRARY oodialog tv_getNextItem"
 ::method previous external "LIBRARY oodialog tv_getNextItem"
 ::method previousVisible external "LIBRARY oodialog tv_getNextItem"
+::method collapse external "LIBRARY oodialog tv_expand"
+::method collapseAndReset external "LIBRARY oodialog tv_expand"
+::method expand external "LIBRARY oodialog tv_expand"
+::method toggle external "LIBRARY oodialog tv_expand"
+::method subclassEdit external "LIBRARY oodialog tv_subclassEdit"
+::method restoreEditClass external "LIBRARY oodialog tv_subclassEdit"
 ::method select external "LIBRARY oodialog tv_selectItem"
 ::method makeFirstVisible external "LIBRARY oodialog tv_selectItem"
 ::method dropHighlight external "LIBRARY oodialog tv_selectItem"
+::method insert external "LIBRARY oodialog tv_insert"
 ::method setImageList external "LIBRARY oodialog tv_setImageList"
 ::method getImageList external "LIBRARY oodialog tv_getImageList"
 
@@ -1437,12 +1444,17 @@
 
 
 -- TV_FIRST == 0x1100  (4352)
+::constant TVM_DELETEITEM          "0x1101"
 ::constant TVM_GETCOUNT            "0x1105"
+::constant TVM_GETINDENT           "0x1106"
+::constant TVM_SETINDENT           "0x1107"
 ::constant TVM_GETVISIBLECOUNT     "0x1110"
 ::constant TVM_SORTCHILDREN        "0x1113"
 ::constant TVM_ENSUREVISIBLE       "0x1114"
-::constant TVM_GETINDENT           "0x1106"
-::constant TVM_SETINDENT           "0x1107"
+::constant TVM_EDITLABELA          "0x110E"
+::constant TVM_EDITLABELW          "0x1141"
+::constant TVM_GETUNICODEFORMAT    "0x2006"
+::constant TVM_ENDEDITLABELNOW     "0x1116"
 
 ::method items
    use strict arg
@@ -1470,45 +1482,32 @@
    use strict arg indentAmount
    return self~sendWinIntMsg(self~TVM_SETINDENT, indentAmount, 0)
 
+::method delete
+   use strict arg hItem
+   return self~sendWinHandle2Msg(self~TVM_DELETEITEM, 0, hItem)
 
+::method deleteAll
+   use strict arg
+   return self~sendWinIntMsg(self~TVM_DELETEITEM, 0, 0)
 
+::method usingUnicode
+   use strict arg
+   return (self~sendWinIntMsg(self~TVM_GETUNICODEFORMAT, 0, 0) <> 0)
 
-::method Insert
-   use arg parent, after, text, image, selImage, opts, children
-   if arg(1,'o') = 1 then parent = "ROOT"
-   if arg(2,'o') = 1 then after = "LAST"
-   if arg(4,'o') = 1 then image = -1
-   if arg(5,'o') = 1 then selImage = image
-   if arg(6,'o') = 1 then opts = ""
-   if arg(7,'o') = 1 then children = 0
-   return HandleTreeCtrl("INS", self~Hwnd, parent, after, text, image, opts~translate, children, selImage)
+::method edit
+   use strict arg hitem
+   if self~usingUnicode then return self~sendWinHandle2MsgH(self~TVM_EDITLABELW, 0, hItem)
+   else return self~sendWinHandle2MsgH(self~TVM_EDITLABELA, 0, hItem)
 
-::method Add
-   do i = 1 to arg()
-      if arg(i,'E') = 1 then do
-          if arg(i+1,'e') = 1 then image = arg(i+1); else image = -1
-          if arg(i+2,'e') = 1 then selImage = arg(i+2); else selImage = image
-          if arg(i+3,'e') = 1 then opts = arg(i+3); else opts = ""
-          if arg(i+4,'e') = 1 then children = arg(i+4); else children = 0  /* for dynamic children */
-          if i=1 then do
-              self~RootArray[i] = self~Insert("ROOT",,arg(i),image,selimage,opts~translate, children)
-              return self~RootArray[i]
-          end
-          else if self~RootArray~HasIndex(i-1)=1 then do
-              if i=1 then parent = "ROOT"; else parent = self~RootArray[i-1]
-              self~RootArray[i] = self~Insert(parent,,arg(i),image,selimage,opts~translate, children)
-              return self~RootArray[i]
-          end
-          else return 0
-      end
-   end
-
+::method endEdit
+   use strict arg cancel = .false
+   if cancel == 1 | cancel~left(1)~translate == 'Y' then cancel = .true
+   else cancel = .false
+   return (self~sendWinIntMsg(self~TVM_ENDEDITLABELNOW , cancel, 0) <> 0)
 
 ::method Modify
-   use arg hItem, text = "", image = (-1), selImage = (-1), state = "", children = (-1)
-   if arg(1, 'O') then hItem = self~Selected
+   use strict arg hItem = (self~selected), text = "", image = (-1), selImage = (-1), state = "", children = (-1)
    if hitem = 0 then return -1
-
    return HandleTreeCtrl("SET", self~Hwnd, hItem, text, image, state~translate, children, selImage)
 
 ::method ItemInfo
@@ -1517,89 +1516,68 @@
    ret = HandleTreeCtrl("GET", self~Hwnd, hItem, "InternalTVItemInfo")
    return InternalTVItemInfo.
 
-::method MoveItem
-   use arg hItem, hNewParent, redraw = 1, extended = ""
-   if arg(1, 'O') | hItem = 0 then return 0
-   if arg(2, 'O') | hNewParent = 0 then return 0
+
+
+::method add
+   do i = 1 to arg()
+      if arg(i, 'E') then do
+          if arg(i + 1, 'E') then image    = arg(i + 1); else image = -1
+          if arg(i + 2, 'E') then selImage = arg(i + 2); else selImage = image
+          if arg(i + 3, 'E') then opts     = arg(i + 3); else opts = ""
+          if arg(i + 4, 'E') then children = arg(i + 4); else children = 0
+          if i = 1 then do
+              self~rootArray[i] = self~insert("ROOT", , arg(i), image, selimage, opts~translate, children)
+              return self~rootArray[i]
+          end
+          else if self~rootArray~hasIndex(i - 1) then do
+              if i = 1 then parent = "ROOT"; else parent = self~rootArray[i - 1]
+              self~rootArray[i] = self~insert(parent, , arg(i), image, selimage, opts~translate, children)
+              return self~rootArray[i]
+          end
+          else return 0
+      end
+   end
+
+::method moveItem
+   use strict arg hItem, hNewParent, redraw = .true, extended = ""
+   if hItem = 0 then return 0
+   if hNewParent = 0 then return 0
 
    extended = extended~translate
-   if hItem = hNewParent | hNewParent = self~Parent(hItem) | self~IsAncestor(hItem, hNewParent) = 1 then return 0
-   iinfo. = self~ItemInfo(hItem)
-   newRoot = self~Insert(hNewParent,,iinfo.!Text, iinfo.!Image, iinfo.!SelectedImage, iinfo.!State, iinfo.!Children)
+   if hItem = hNewParent | hNewParent = self~parent(hItem) | self~isAncestor(hItem, hNewParent) then return 0
+   iinfo. = self~itemInfo(hItem)
+   newRoot = self~insert(hNewParent, , iinfo.!Text, iinfo.!Image, iinfo.!SelectedImage, iinfo.!State, iinfo.!Children)
+
    if iinfo.!Children = 1 then do
-       child = self~Child(hItem)
-       if child \= 0 then self~MoveItem(child, newRoot, 0, "SIBLINGS")
+      child = self~child(hItem)
+      if child \= 0 then self~moveItem(child, newRoot, 0, "SIBLINGS")
    end
+
    if extended = "SIBLINGS" then do
-       sibling = self~next(hItem)
-       do while sibling \= 0
-           self~MoveItem(sibling, hNewParent, 0, "NODELETE")
-           oldsib = sibling
-           sibling = self~next(sibling)
-           self~Delete(oldsib)
-       end
+      sibling = self~next(hItem)
+      do while sibling \= 0
+         self~moveItem(sibling, hNewParent, 0, "NODELETE")
+         oldSib = sibling
+         sibling = self~next(sibling)
+         self~delete(oldSib)
+      end
    end
-   if extended \= "NODELETE" then self~Delete(hItem)
-   if redraw = 1 | redraw~left(1)~translate = "Y" then self~Update
-   return newRoot  /* return new handle */
 
+   if extended \= "NODELETE" then self~delete(hItem)
+   if redraw then self~update
+   return newRoot
 
-::method IsAncestor
-   use arg hParent, hItem
-   if arg(1, 'O') | hParent = 0 then return 0
-   if arg(2, 'O') | hItem = 0 then return 0
-   if hItem = hParent then return 0
-   act = self~Parent(hItem)
-   do while act \= 0 & act \= hParent
-       act = self~Parent(act)
+::method isAncestor
+   use strict arg hParent, hItem
+   if arg(1, 'O') | hParent = 0 then return .false
+   if arg(2, 'O') | hItem = 0 then return .false
+   if hItem = hParent then return .false
+   ancestor = self~parent(hItem)
+   do while ancestor \= 0 & ancestor \= hParent
+       ancestor = self~Parent(ancestor)
    end
-   if act = hParent then return 1
-   else return 0
-
-
-::method Delete
-   use arg hItem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("DEL",self~hwnd, hItem)
-
-::method DeleteAll
-   return HandleTreeCtrl("DEL", self~Hwnd,"ROOT")
-
-::method Collapse
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE")
-
-::method CollapseAndReset
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE RESET")
-
-::method Expand
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "EXPAND")
-
-::method Toggle
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "TOGGLE")
-
-::method Edit
-   use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("EDIT", self~Hwnd, hitem)
-
-::method EndEdit
-   use arg cancel
-   if arg(1, 'O') then cancel = 0
-   return HandleTreeCtrl("EEDIT", self~Hwnd, cancel)
-
-::method SubclassEdit
-   return HandleTreeCtrl("SUBCL_EDIT", self~Hwnd)
-
-::method RestoreEditClass
-   return HandleTreeCtrl("RESUB_EDIT", self~Hwnd)
+   if ancestor = hParent then return .true
+   else return .false
 
 -- DEPRECATED
 ::method setImages external "LIBRARY oodialog tv_setImageList"
@@ -1607,6 +1585,7 @@
 -- DEPRECATED
 ::method removeImages
    return self~setImageList(.nil, 0)
+
 
 ::class 'DateTimePicker' subclass DialogControl public
 
