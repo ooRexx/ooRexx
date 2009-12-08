@@ -40,11 +40,13 @@
 #define oodControl_Included
 
 
-typedef struct newControlParams {
-   HWND           hwnd;
-   uint32_t       id;
-   HWND           hwndDlg;
-   RexxObjectPtr  parentDlg;
+typedef struct newControlParams
+{
+    oodControl_t   controlType;
+    HWND           hwnd;
+    uint32_t       id;
+    HWND           hwndDlg;
+    RexxObjectPtr  parentDlg;
 } NEWCONTROLPARAMS;
 typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
 

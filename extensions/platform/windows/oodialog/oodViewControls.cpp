@@ -52,8 +52,6 @@
 #include "oodControl.hpp"
 #include "oodResources.hpp"
 
-extern LONG SetRexxStem(const char * name, size_t id, const char * secname, const char * data);
-
 /**
  * This is the window procedure used to subclass the edit control for both the
  * ListControl and TreeControl objects.  It would be nice to convert this to use
@@ -78,6 +76,41 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         default:
             return CallWindowProc(wpOldEditProc, hWnd, uMsg, wParam, lParam);
     }
+}
+/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\
+ *  The following function is only used in HandleTreeConrol() and will be
+ *  removed as soon as HandleTreeControl() is converted to the C++ API.
+\*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+static LONG SetRexxStem(const char * name, size_t id, const char * secname, const char * data)
+{
+   SHVBLOCK shvb;
+   CHAR buffer[72];
+
+   if ( id == SIZE_MAX )
+   {
+       sprintf(buffer,"%s.%s",name,secname);
+   }
+   else
+   {
+       if (secname) sprintf(buffer,"%s.%d.%s",name,id, secname);
+       else sprintf(buffer,"%s.%d",name,id);
+   }
+   shvb.shvnext = NULL;
+   shvb.shvname.strptr = buffer;
+   shvb.shvname.strlength = strlen(buffer);
+   shvb.shvnamelen = shvb.shvname.strlength;
+   shvb.shvvalue.strptr = const_cast<char *>(data);
+   shvb.shvvalue.strlength = strlen(data);
+   shvb.shvvaluelen = strlen(data);
+   shvb.shvcode = RXSHV_SYSET;
+   shvb.shvret = 0;
+   if (RexxVariablePool(&shvb) == RXSHV_BADN) {
+       char messageBuffer[265];
+       sprintf(messageBuffer, "Variable %s could not be declared", buffer);
+       MessageBox(0,messageBuffer,"Error",MB_OK | MB_ICONHAND);
+       return FALSE;
+   }
+   return TRUE;
 }
 
 
@@ -261,9 +294,9 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
  * than other window styles.  This function is used only to parse those extended
  * styles.  The normal list-view styles are parsed using EvaluateListStyle.
  */
-DWORD ParseExtendedListStyle(const char * style)
+uint32_t ParseExtendedListStyle(const char * style)
 {
-    DWORD dwStyle = 0;
+    uint32_t dwStyle = 0;
 
     if ( strstr(style, "BORDERSELECT"    ) ) dwStyle |= LVS_EX_BORDERSELECT;
     if ( strstr(style, "CHECKBOXES"      ) ) dwStyle |= LVS_EX_CHECKBOXES;
@@ -300,178 +333,32 @@ DWORD ParseExtendedListStyle(const char * style)
 /**
  * Produce a string representation of a List-View's extended styles.
  */
-DWORD ListExtendedStyleToString(HWND hList, RXSTRING *retstr)
+static RexxStringObject listExtendedStyleToString(RexxMethodContext *c, HWND hList)
 {
+    char buf[256];
     DWORD dwStyle = ListView_GetExtendedListViewStyle(hList);
-    retstr->strptr[0] = '\0';
+    buf[0] = '\0';
 
-    if ( dwStyle & LVS_EX_BORDERSELECT )     strcat(retstr->strptr, "BORDERSELECT ");
-    if ( dwStyle & LVS_EX_CHECKBOXES )       strcat(retstr->strptr, "CHECKBOXES ");
-    if ( dwStyle & LVS_EX_FLATSB )           strcat(retstr->strptr, "FLATSB ");
-    if ( dwStyle & LVS_EX_FULLROWSELECT )    strcat(retstr->strptr, "FULLROWSELECT ");
-    if ( dwStyle & LVS_EX_GRIDLINES )        strcat(retstr->strptr, "GRIDLINES ");
-    if ( dwStyle & LVS_EX_HEADERDRAGDROP )   strcat(retstr->strptr, "HEADERDRAGDROP ");
-    if ( dwStyle & LVS_EX_INFOTIP )          strcat(retstr->strptr, "INFOTIP ");
-    if ( dwStyle & LVS_EX_MULTIWORKAREAS )   strcat(retstr->strptr, "MULTIWORKAREAS ");
-    if ( dwStyle & LVS_EX_ONECLICKACTIVATE ) strcat(retstr->strptr, "ONECLICKACTIVATE ");
-    if ( dwStyle & LVS_EX_REGIONAL )         strcat(retstr->strptr, "REGIONAL ");
-    if ( dwStyle & LVS_EX_SUBITEMIMAGES )    strcat(retstr->strptr, "SUBITEMIMAGES ");
-    if ( dwStyle & LVS_EX_TRACKSELECT )      strcat(retstr->strptr, "TRACKSELECT ");
-    if ( dwStyle & LVS_EX_TWOCLICKACTIVATE ) strcat(retstr->strptr, "TWOCLICKACTIVATE ");
-    if ( dwStyle & LVS_EX_UNDERLINECOLD )    strcat(retstr->strptr, "UNDERLINECOLD ");
-    if ( dwStyle & LVS_EX_UNDERLINEHOT )     strcat(retstr->strptr, "UNDERLINEHOT ");
-    if ( dwStyle & LVS_EX_LABELTIP )         strcat(retstr->strptr, "LABELTIP ");
-    if ( dwStyle & LVS_EX_DOUBLEBUFFER )     strcat(retstr->strptr, "DOUBLEBUFFER ");
-    if ( dwStyle & LVS_EX_SIMPLESELECT )     strcat(retstr->strptr, "SIMPLESELECT ");
+    if ( dwStyle & LVS_EX_BORDERSELECT )     strcat(buf, "BORDERSELECT ");
+    if ( dwStyle & LVS_EX_CHECKBOXES )       strcat(buf, "CHECKBOXES ");
+    if ( dwStyle & LVS_EX_FLATSB )           strcat(buf, "FLATSB ");
+    if ( dwStyle & LVS_EX_FULLROWSELECT )    strcat(buf, "FULLROWSELECT ");
+    if ( dwStyle & LVS_EX_GRIDLINES )        strcat(buf, "GRIDLINES ");
+    if ( dwStyle & LVS_EX_HEADERDRAGDROP )   strcat(buf, "HEADERDRAGDROP ");
+    if ( dwStyle & LVS_EX_INFOTIP )          strcat(buf, "INFOTIP ");
+    if ( dwStyle & LVS_EX_MULTIWORKAREAS )   strcat(buf, "MULTIWORKAREAS ");
+    if ( dwStyle & LVS_EX_ONECLICKACTIVATE ) strcat(buf, "ONECLICKACTIVATE ");
+    if ( dwStyle & LVS_EX_REGIONAL )         strcat(buf, "REGIONAL ");
+    if ( dwStyle & LVS_EX_SUBITEMIMAGES )    strcat(buf, "SUBITEMIMAGES ");
+    if ( dwStyle & LVS_EX_TRACKSELECT )      strcat(buf, "TRACKSELECT ");
+    if ( dwStyle & LVS_EX_TWOCLICKACTIVATE ) strcat(buf, "TWOCLICKACTIVATE ");
+    if ( dwStyle & LVS_EX_UNDERLINECOLD )    strcat(buf, "UNDERLINECOLD ");
+    if ( dwStyle & LVS_EX_UNDERLINEHOT )     strcat(buf, "UNDERLINEHOT ");
+    if ( dwStyle & LVS_EX_LABELTIP )         strcat(buf, "LABELTIP ");
+    if ( dwStyle & LVS_EX_DOUBLEBUFFER )     strcat(buf, "DOUBLEBUFFER ");
+    if ( dwStyle & LVS_EX_SIMPLESELECT )     strcat(buf, "SIMPLESELECT ");
 
-    if ( retstr->strptr[0] != '\0' ) retstr->strptr[strlen(retstr->strptr) - 1] = '\0';
-
-    retstr->strlength = strlen(retstr->strptr);
-    return 0;
-}
-
-/**
- * Extended List-View control functionality.  Implements capabilities not
- * present in the original ooDialog ListControl.  In general, this will be
- * capabilities that Microsoft has added to the control.
- *
- * The parameters sent from ooRexx as an array of RXString:
- *
- * argv[0]  Window handle of list-view control.
- *
- * argv[1]  Major designator:  M for message, etc..  Only the first letter of
- *          the string is tested and it must be capitalized.
- *
- * argv[2]  Minor designator:  STYLE for (extended) list style, etc..  The whole
- *          capitalized word is used.
- *
- * argv[3]  Dependent on function.
- *
- * Return to ooRexx, in general:
- *  < -4 a negated system error code
- *    -4 unsupported ComCtl32 Version
- *    -3 problem with an argument
- *    -2 operation not supported by this list-view control
- *    -1 problem with the list control id or handle
- *     0 the Windows API call succeeds
- *     1 the Windows API call failed
- *  >  1 dependent on the function, usually a returned value not a return code
- */
-size_t RexxEntry HandleListCtrlEx(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    HWND hList;
-
-    /* Minimum of 3 args. */
-    CHECKARGL(3);
-
-    hList = GET_HWND(argv[0]);
-    if ( hList == 0 || ! IsWindow(hList) ) RETVAL(-1);
-
-    /* M - window message related function */
-    if ( argv[1].strptr[0] == 'M' )
-    {
-        if ( !strcmp(argv[2].strptr, "STYLE") )     /* work with extended styles */
-        {
-            DWORD dwMask;
-
-            CHECKARGL(4);
-
-            if ( argv[3].strptr[0] == 'G' )         /* Get style, string representation. */
-            {
-                return ListExtendedStyleToString(hList, retstr);
-            }
-            else if ( argv[3].strptr[0] == 'L' )    /* Get style, as a Long. */
-            {
-                RETVAL(ListView_GetExtendedListViewStyle(hList));
-            }
-
-            CHECKARGL(5);
-            dwMask = ParseExtendedListStyle(argv[4].strptr);
-            if ( ! dwMask ) RETVAL(-3);
-
-            /* No return value from this API, so return 0 to ooRexx. */
-
-            if ( argv[3].strptr[0] == 'C' )         /* Clear (remove) style*/
-            {
-                ListView_SetExtendedListViewStyleEx(hList, dwMask, 0);
-            }
-            else if ( argv[3].strptr[0] == 'S' )    /* Set style */
-            {
-                ListView_SetExtendedListViewStyleEx(hList, dwMask, dwMask);
-            }
-            else if ( argv[3].strptr[0] == 'R' )    /* Replace style */
-            {
-                DWORD dwNew;
-
-                CHECKARGL(6);
-                dwNew = ParseExtendedListStyle(argv[5].strptr);
-                if ( ! dwNew ) RETVAL(-3);
-
-                ListView_SetExtendedListViewStyleEx(hList, dwMask, 0);
-                ListView_SetExtendedListViewStyleEx(hList, dwNew, dwNew);
-            }
-            else RETERR;
-
-            RETVAL(0);
-        }
-        else if ( !strcmp(argv[2].strptr, "HOVER") )    /* Set, get hover time */
-        {
-            if ( argc == 3 )
-            {
-                RETVAL(ListView_GetHoverTime(hList));
-            }
-            else if ( argc == 4 )
-            {
-                RETVAL(ListView_SetHoverTime(hList, atol(argv[3].strptr)));
-            }
-            else RETERR;
-        }
-        else if ( !strcmp(argv[2].strptr, "CHK") )    /* Set, get check box state */
-        {
-            LONG item;
-            if ( ! (ListView_GetExtendedListViewStyle(hList) & LVS_EX_CHECKBOXES) )
-                RETVAL(-2)
-
-            CHECKARGL(4)
-
-            item = atol(argv[3].strptr);
-            if ( item < -1 || item > (ListView_GetItemCount(hList) - 1) ) RETVAL(-3);
-
-            if ( argc == 4 )
-            {
-                if ( item < 0 ) RETVAL(-3);
-                RETVAL(!(ListView_GetCheckState(hList, (UINT)item) == 0));
-            }
-            else if ( argc == 5 )
-            {
-                int check = atol(argv[4].strptr);
-                if ( check != 0 && check != 1 ) RETVAL(-3);
-
-                /* No return value with these APIs. */
-                if ( item == -1 )
-                {
-                    ListView_SetItemState(hList, item, INDEXTOSTATEIMAGEMASK(check + 1), LVIS_STATEIMAGEMASK);
-                }
-                else
-                {
-                    ListView_SetCheckState(hList, (UINT)item, (BOOL)check);
-                }
-                RETVAL(0);
-            }
-            else RETERR;
-        }
-        else if ( !strcmp(argv[2].strptr, "TOOL") )     /* Set tool tip text */
-        {
-            /* Place holder. The user will be able to set the tool tip text for
-             * individual list items.  A generic function will display the tool
-             * tip upon receiving a LVN_GETINFOTIP message. (If the user has
-             * enabled tool tips and the list item has tool tip text set for
-             * it.)
-             */
-            RETVAL(1);  // Return 1 (failed) until this is implemented.
-        }
-    }
-    RETERR;
+    return c->String(buf);
 }
 
 
@@ -931,127 +818,6 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
 }
 
 
-size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   HWND h;
-
-   CHECKARGL(3);
-
-   h = GET_HWND(argv[2]);
-   if (!h) RETERR;
-
-   if (!strcmp(argv[0].strptr, "TAB"))
-   {
-       if (!strcmp(argv[1].strptr, "INS"))
-       {
-           TC_ITEM tab;
-           INT item;
-           CHECKARGL(6);
-
-           item = atoi(argv[3].strptr);
-           tab.mask = TCIF_TEXT;
-
-           tab.pszText = (LPSTR)argv[4].strptr;
-           tab.cchTextMax = (int)argv[4].strlength;
-
-           tab.iImage = atoi(argv[5].strptr);
-           if (tab.iImage >= 0) tab.mask |= TCIF_IMAGE;
-
-           if (argc == 7)
-           {
-               tab.lParam = atol(argv[6].strptr);
-               tab.mask |= TCIF_PARAM;
-           }
-           RETVAL(TabCtrl_InsertItem(h, item, &tab));
-       }
-       else if (!strcmp(argv[1].strptr, "SET"))
-       {
-           TC_ITEM tab;
-           INT item;
-           CHECKARGL(6);
-
-           item = atoi(argv[3].strptr);
-
-           if (strlen(argv[4].strptr)) tab.mask = TCIF_TEXT; else tab.mask = 0;
-           tab.pszText = (LPSTR)argv[4].strptr;
-           tab.cchTextMax = (int)argv[4].strlength;
-
-           tab.iImage = atoi(argv[5].strptr);
-           if (tab.iImage >= 0) tab.mask |= TCIF_IMAGE;
-
-           if (argc == 7)
-           {
-               tab.lParam = atol(argv[6].strptr);
-               tab.mask |= TCIF_PARAM;
-           }
-           RETC(!TabCtrl_SetItem(h, item, &tab));
-       }
-       else if (!strcmp(argv[1].strptr, "GET"))
-       {
-           TC_ITEM tab;
-           INT item;
-           CHAR data[32];
-           CHECKARG(5);
-
-           item = atoi(argv[3].strptr);
-
-           tab.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_PARAM;
-           tab.pszText = retstr->strptr;
-           tab.cchTextMax = 255;
-
-           if (TabCtrl_GetItem(h, item, &tab))
-           {
-               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Text", tab.pszText);
-               itoa(tab.iImage, data, 10);
-               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Image", data);
-               itoa((int)tab.lParam, data, 10);
-               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Param", data);
-               RETC(0)
-           }
-           else RETVAL(-1)
-       }
-       else if (!strcmp(argv[1].strptr, "SEL"))
-       {
-           TC_ITEM tab;
-           CHECKARGL(4);
-
-           if (!strcmp(argv[3].strptr, "GT"))
-           {
-               tab.mask = TCIF_TEXT;
-
-               tab.pszText = retstr->strptr;
-               tab.cchTextMax = 255;
-
-               if (TabCtrl_GetItem(h, TabCtrl_GetCurSel(h), &tab))
-               {
-                   retstr->strlength = strlen(retstr->strptr);
-                   return 0;
-               } else RETC(0);
-           }
-           else
-           {
-               CHECKARG(5);
-
-               LONG cnt, i = 0;
-               cnt = TabCtrl_GetItemCount(h);
-               if (!cnt) RETVAL(-1);
-
-               while (i<cnt)
-               {
-                   tab.mask = TCIF_TEXT;
-                   tab.pszText = retstr->strptr;
-                   tab.cchTextMax = 255;
-                   if (!TabCtrl_GetItem(h, i, &tab)) RETVAL(-1);
-                   if (!stricmp(tab.pszText, argv[4].strptr)) RETVAL(TabCtrl_SetCurSel(h, i));
-                   i++;
-               }
-               RETVAL(-1);
-           }
-       }
-   }
-   RETC(0)
-}
-
 /**
  * Methods for the DateTimePicker class.
  */
@@ -1328,12 +1094,17 @@ RexxMethod2(RexxObjectPtr, set_mc_usesUnicode, logical_t, useUnicode, OSELF, sel
 #define LVSMALL_ATTRIBUTE         "LV!SMALLIMAGELIST"
 #define LVNORMAL_ATTRIBUTE        "LV!NORMALIMAGELIST"
 
-static inline int getLVColumnCount(HWND hList)
+inline bool hasCheckBoxes(HWND hList)
+{
+    return ((ListView_GetExtendedListViewStyle(hList) & LVS_EX_CHECKBOXES) != 0);
+}
+
+inline int getLVColumnCount(HWND hList)
 {
     return Header_GetItemCount(ListView_GetHeader(hList));
 }
 
-static inline CSTRING lvGetAttributeName(uint8_t type)
+inline CSTRING lvGetAttributeName(uint8_t type)
 {
     switch ( type )
     {
@@ -1471,14 +1242,124 @@ RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     return result;
 }
 
-RexxMethod1(int, lv_getColumnCount, OSELF, self)
+RexxMethod3(int32_t, lv_checkUncheck, int32_t, index, NAME, method, CSELF, pCSelf)
 {
-    return getLVColumnCount(rxGetWindowHandle(context, self));
+    HWND hList = getDCHCtrl(pCSelf);
+
+    if ( ! hasCheckBoxes(hList) )
+    {                                       // TODO LOOK HERE LOOK HERE this area is where we left off.
+        return -2;
+    }
+
+    ListView_SetCheckState(hList, index, (*method == 'C'));
+    return 0;
 }
 
-RexxMethod1(RexxObjectPtr, lv_getColumnOrder, OSELF, self)
+RexxMethod2(RexxObjectPtr, lv_isChecked, int32_t, index, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hList = getDCHCtrl(pCSelf);
+
+    if ( hasCheckBoxes(hList) )
+    {
+        if ( index >= 0 && index <= ListView_GetItemCount(hList) - 1 )
+        {
+            if ( ListView_GetCheckState(hList, index) != 0 )
+            {
+                return TheTrueObj;
+            }
+        }
+    }
+    return TheFalseObj;
+}
+
+
+RexxMethod2(int32_t, lv_getCheck, int32_t, index, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    if ( ! hasCheckBoxes(hList) )
+    {
+        return -2;
+    }
+    if ( index < 0 || index > ListView_GetItemCount(hList) - 1 )
+    {
+        return -3;
+    }
+    return (ListView_GetCheckState(hList, index) == 0 ? 0 : 1);
+}
+
+/** ListView::hasCheckBoxes()
+ */
+RexxMethod1(RexxObjectPtr, lv_hasCheckBoxes, CSELF, pCSelf)
+{
+    return (hasCheckBoxes(getDCHCtrl(pCSelf)) ? TheTrueObj : TheFalseObj);
+}
+
+/** ListView::getExtendedStyle()
+ *  ListView::getExtendedStyleRaw()
+ *
+ */
+RexxMethod2(RexxObjectPtr, lv_getExtendedStyle, NAME, method, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+    if ( method[16] == 'R' )
+    {
+        return context->UnsignedInt32(ListView_GetExtendedListViewStyle(hList));
+    }
+    else
+    {
+        return listExtendedStyleToString(context, hList);
+    }
+}
+
+/** ListView::addExtendedStyle()
+ *  ListView::clearExtendedStyle()
+ *
+ */
+RexxMethod3(int32_t, lv_addClearExtendStyle, CSTRING, _style, NAME, method, CSELF, pCSelf)
+{
+    uint32_t style = ParseExtendedListStyle(_style);
+    if ( style == 0  )
+    {
+        return -3;
+    }
+
+    HWND hList = getDCHCtrl(pCSelf);
+
+    if ( *method == 'C' )
+    {
+        ListView_SetExtendedListViewStyleEx(hList, style, 0);
+    }
+    else
+    {
+        ListView_SetExtendedListViewStyleEx(hList, style, style);
+    }
+    return 0;
+}
+
+RexxMethod3(int32_t, lv_replaceExtendStyle, CSTRING, remove, CSTRING, add, CSELF, pCSelf)
+{
+    uint32_t removeStyles = ParseExtendedListStyle(remove);
+    uint32_t addStyles = ParseExtendedListStyle(add);
+    if ( removeStyles == 0 || addStyles == 0  )
+    {
+        return -3;
+    }
+
+    HWND hList = getDCHCtrl(pCSelf);
+    ListView_SetExtendedListViewStyleEx(hList, removeStyles, 0);
+    ListView_SetExtendedListViewStyleEx(hList, addStyles, addStyles);
+    return 0;
+}
+
+RexxMethod1(int, lv_getColumnCount, CSELF, pCSelf)
+{
+    return getLVColumnCount(getDCHCtrl(pCSelf));
+}
+
+RexxMethod1(RexxObjectPtr, lv_getColumnOrder, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     int count = getLVColumnCount(hwnd);
     if ( count == -1 )
@@ -2207,7 +2088,253 @@ RexxMethod2(RexxObjectPtr, tab_setPadding, ARGLIST, args, CSELF, pCSelf)
 }
 
 
-RexxMethod3(RexxObjectPtr, tab_getRectangle, uint32_t, item, RexxObjectPtr, rect, CSELF, pCSelf)
+RexxMethod5(int32_t, tab_insert, OPTIONAL_int32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_ssize_t, imageIndex,
+            OPTIONAL_RexxObjectPtr, userData, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    if ( argumentOmitted(1) )
+    {
+        index = ((pCDialogControl)pCSelf)->lastItem;
+    }
+
+    TCITEM ti = {0};
+    index++;
+
+    ti.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_PARAM;
+    ti.pszText = (argumentOmitted(2) ? "" : label);
+    ti.iImage  = (argumentOmitted(3) ? -1 : imageIndex);
+    ti.lParam  = (LPARAM)(argumentOmitted(4) ? TheZeroObj : userData);
+
+    int32_t ret = TabCtrl_InsertItem(hwnd, index, &ti);
+    if ( ret != -1 )
+    {
+        ((pCDialogControl)pCSelf)->lastItem = ret;
+    }
+    return ret;
+}
+
+
+RexxMethod5(int32_t, tab_modify, int32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_ssize_t, imageIndex,
+            OPTIONAL_RexxObjectPtr, userData, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    TCITEM ti = {0};
+
+    if ( argumentExists(2) )
+    {
+        ti.mask |= TCIF_TEXT;
+        ti.pszText = (LPSTR)label;
+    }
+    if ( argumentExists(3) )
+    {
+        ti.mask |= TCIF_IMAGE;
+        ti.iImage = imageIndex;
+    }
+    if ( argumentExists(4) )
+    {
+        ti.mask |= TCIF_PARAM;
+        ti.lParam = (LPARAM)userData;
+    }
+
+    if ( ti.mask == 0 )
+    {
+        return 1;
+    }
+
+    return (TabCtrl_SetItem(hwnd, index, &ti) ? 0 : 1);
+}
+
+
+RexxMethod2(int32_t, tab_addSequence, ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    TCITEM ti = {0};
+    ti.mask = TCIF_TEXT;
+
+    int32_t ret = -1;
+    ssize_t index = ((pCDialogControl)pCSelf)->lastItem;
+    size_t count = context->ArraySize(args);
+
+    for ( size_t i = 1; i <= count; i++ )
+    {
+        index++;
+        RexxObjectPtr arg = context->ArrayAt(args, i);
+        if ( arg == NULLOBJECT )
+        {
+            missingArgException(context->threadContext, i);
+            goto done_out;
+        }
+
+        ti.pszText = (LPSTR)context->ObjectToStringValue(arg);
+
+        ret = TabCtrl_InsertItem(hwnd, index, &ti);
+        if ( ret == -1 )
+        {
+            goto done_out;
+        }
+
+        ((pCDialogControl)pCSelf)->lastItem = ret;
+    }
+
+done_out:
+    return ret;
+}
+
+
+RexxMethod2(int32_t, tab_addFullSeq, ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    TCITEM ti = {0};
+    ti.mask = TCIF_TEXT;
+
+    int32_t ret = -1;
+    ssize_t index = ((pCDialogControl)pCSelf)->lastItem;
+    size_t count = context->ArraySize(args);
+
+    for ( size_t i = 1; i <= count; i += 3 )
+    {
+        index++;
+        RexxObjectPtr label = context->ArrayAt(args, i);
+        if ( label == NULLOBJECT )
+        {
+            missingArgException(context->threadContext, i);
+            goto done_out;
+        }
+
+        ti.pszText = (LPSTR)context->ObjectToStringValue(label);
+
+        RexxObjectPtr _imageIndex = context->ArrayAt(args, i + 1);
+        RexxObjectPtr userData = context->ArrayAt(args, i + 2);
+
+        RexxMethodContext *c = context;
+        if ( _imageIndex != NULLOBJECT )
+        {
+            int32_t imageIndex;
+            if ( ! c->Int32(_imageIndex, &imageIndex) )
+            {
+                notPositiveArgException(context->threadContext, i + 1, _imageIndex);
+                goto done_out;
+            }
+
+            ti.mask |= TCIF_IMAGE;
+            ti.iImage = imageIndex;
+        }
+        if ( userData != NULLOBJECT )
+        {
+            ti.mask |= TCIF_PARAM;
+            ti.lParam = (LPARAM)userData;
+        }
+
+        int32_t ret = TabCtrl_InsertItem(hwnd, index, &ti);
+        if ( ret == -1 )
+        {
+            goto done_out;
+        }
+
+        ((pCDialogControl)pCSelf)->lastItem = ret;
+    }
+
+done_out:
+    return ret;
+}
+
+
+RexxMethod2(RexxObjectPtr, tab_itemInfo, int32_t, index, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    char buff[256];
+    TCITEM ti;
+
+    ti.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_PARAM;
+    ti.pszText = buff;
+    ti.cchTextMax = 255;
+
+    RexxObjectPtr result = TheNegativeOneObj;
+    RexxMethodContext *c = context;
+
+    if ( TabCtrl_GetItem(hwnd, index, &ti) )
+    {
+        RexxStemObject stem = c->NewStem("ItemInfo");
+        c->SetStemElement(stem, "!TEXT", c->String(ti.pszText));
+        c->SetStemElement(stem, "!IMAGE", c->Int32(ti.iImage));
+        c->SetStemElement(stem, "!PARAM", (ti.lParam == 0 ? TheZeroObj : (RexxObjectPtr)ti.lParam));
+        result = stem;
+    }
+    return result;
+}
+
+
+RexxMethod1(RexxObjectPtr, tab_selected, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    char buff[256];
+    TCITEM ti = {0};
+
+    ti.mask = TCIF_TEXT;
+    ti.pszText = buff;
+    ti.cchTextMax = 255;
+
+    if ( TabCtrl_GetItem(hwnd, TabCtrl_GetCurSel(hwnd), &ti) == 0 )
+    {
+        return TheZeroObj;
+    }
+    return context->String(buff);
+}
+
+
+RexxMethod2(int32_t, tab_select, CSTRING, text, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+    int32_t result = -1;
+
+    char buff[256];
+    TCITEM ti = {0};
+    size_t count;
+
+    count = TabCtrl_GetItemCount(hwnd);
+    if ( count == 0 )
+    {
+        goto done_out;
+    }
+
+    ti.mask = TCIF_TEXT;
+    ti.cchTextMax = 255;
+
+    size_t i = 0;
+    while ( i < count)
+    {
+        // Note that MSDN says: If the TCIF_TEXT flag is set in the mask member
+        // of the TCITEM structure, the control may change the pszText member of
+        // the structure to point to the new text instead of filling the buffer
+        // with the requested text. The control may set the pszText member to
+        // NULL to indicate that no text is associated with the item.
+        ti.pszText = buff;
+
+        if ( TabCtrl_GetItem(hwnd, i, &ti) == 0 )
+        {
+            goto done_out;
+        }
+
+        if ( ti.pszText != NULL && stricmp(ti.pszText, text) == 0 )
+        {
+            result = TabCtrl_SetCurSel(hwnd, i);
+            break;
+        }
+        i++;
+    }
+
+done_out:
+    return result;
+}
+
+
+RexxMethod3(RexxObjectPtr, tab_getItemRect, uint32_t, item, RexxObjectPtr, rect, CSELF, pCSelf)
 {
     HWND hwnd = getDCHCtrl(pCSelf);
 

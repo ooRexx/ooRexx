@@ -134,6 +134,25 @@ inline RexxObjectPtr tooManyArgsException(RexxThreadContext *c, size_t max)
     return NULLOBJECT;
 }
 
+/**
+ *  Method argument argument must be zero or a positive whole number; found
+ *  "value"
+ *
+ *  Method argument 3 must be zero or a positive whole number; found "an Array"
+ *
+ *  Raises 93.906
+ *
+ * @param c    The thread context we are operating under.
+ * @param max  The maximum arguments expected.
+ *
+ * @return NULLOBJECT
+ */
+inline RexxObjectPtr notPositiveArgException(RexxThreadContext *c, size_t argPos, RexxObjectPtr actual)
+{
+    c->RaiseException2(Rexx_Error_Incorrect_method_nonnegative, c->WholeNumber(argPos), actual);
+    return NULLOBJECT;
+}
+
 inline RexxObjectPtr rxNewBag(RexxMethodContext *c)
 {
     return rxNewBuiltinObject(c, "BAG");

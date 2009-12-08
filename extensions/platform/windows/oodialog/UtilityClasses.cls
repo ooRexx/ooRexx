@@ -635,7 +635,7 @@
 ::routine getFileNameWindow public external "LIBRARY oodialog fileNameDlg_rtn"
 ::routine playSoundFile public external "LIBRARY oodialog playSound_rtn"
 ::routine playSoundFileInLoop public external "LIBRARY oodialog playSound_rtn"
-::routine StopSoundFile public external "LIBRARY oodialog playSound_rtn"
+::routine stopSoundFile public external "LIBRARY oodialog playSound_rtn"
 
 ::routine infoMessage public
    use strict arg info

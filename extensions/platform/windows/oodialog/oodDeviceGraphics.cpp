@@ -3383,3 +3383,129 @@ error_out:
 }
 
 
+
+void setNumStrStem(RexxMethodContext *c, RexxStemObject stem, size_t numPart, CSTRING strPart, RexxObjectPtr value)
+{
+    char tailName[64];
+    _snprintf(tailName, sizeof(tailName), "%d.%s", numPart, strPart);
+    c->SetStemElement(stem, tailName, value);
+}
+
+void setStrNumStrStem(RexxMethodContext *c, RexxStemObject stem, CSTRING prefix, size_t numPart, CSTRING strPart, RexxObjectPtr value)
+{
+    char tailName[128];
+    _snprintf(tailName, sizeof(tailName), "%s.%d.%s", prefix, numPart, strPart);
+    c->SetStemElement(stem, tailName, value);
+}
+
+bool dumpAllAdmins(RexxMethodContext *c, RexxStemObject dStem)
+{
+    size_t i;
+    size_t count = 0;
+    DIALOGADMIN *dlgAdm;
+
+    for ( i = 0; i < MAXDIALOGS; i++ )
+    {
+        dlgAdm = DialogTab[i];
+
+        if ( dlgAdm != NULL)
+        {
+            count++;
+            setNumStrStem(c, dStem, count, "ADMBLOCK", pointer2string(c, dlgAdm));
+            setNumStrStem(c, dStem, count, "SLOT", c->StringSize(dlgAdm->TableEntry));
+            setNumStrStem(c, dStem, count, "HTHREAD", pointer2string(c, dlgAdm->TheThread));
+            setNumStrStem(c, dStem, count, "HDIALOG", pointer2string(c, dlgAdm->TheDlg));
+            setNumStrStem(c, dStem, count, "TOPMOST", (dlgAdm->OnTheTop ? TheTrueObj : TheFalseObj));
+            setNumStrStem(c, dStem, count, "CURRENTCHILD", pointer2string(c, dlgAdm->AktChild));
+            setNumStrStem(c, dStem, count, "DLL", pointer2string(c, dlgAdm->TheInstance));
+            setNumStrStem(c, dStem, count, "QUEUE", c->String(dlgAdm->pMessageQueue));
+            setNumStrStem(c, dStem, count, "BMPBUTTONS", c->StringSize(dlgAdm->BT_size));
+            setNumStrStem(c, dStem, count, "MESSAGES", c->StringSize(dlgAdm->MT_size));
+            setNumStrStem(c, dStem, count, "DATAITEMS", c->StringSize(dlgAdm->DT_size));
+            setNumStrStem(c, dStem, count, "COLORITEMS", c->StringSize(dlgAdm->CT_size));
+        }
+    }
+
+    // Set the number of dialog administration blocks.
+    c->SetStemArrayElement(dStem, 0, c->StringSize(count));
+    return true;
+}
+
+
+bool dumpAdmin(RexxMethodContext *c, RexxStemObject dStem, DIALOGADMIN *dlgAdm)
+{
+    if ( dlgAdm == NULL )
+    {
+        return false;
+    }
+
+    c->SetStemElement(dStem, "ADMBLOCK", pointer2string(c, dlgAdm));
+    c->SetStemElement(dStem, "SLOT", c->StringSize(dlgAdm->TableEntry));
+    c->SetStemElement(dStem, "HTHREAD", pointer2string(c, dlgAdm->TheThread));
+    c->SetStemElement(dStem, "HDIALOG", pointer2string(c, dlgAdm->TheDlg));
+    c->SetStemElement(dStem, "TOPMOST", (dlgAdm->OnTheTop ? TheTrueObj : TheFalseObj));
+    c->SetStemElement(dStem, "CURRENTCHILD", pointer2string(c, dlgAdm->AktChild));
+    c->SetStemElement(dStem, "DLL", pointer2string(c, dlgAdm->TheInstance));
+    c->SetStemElement(dStem, "QUEUE", c->String(dlgAdm->pMessageQueue));
+
+    size_t i;
+    size_t numPart;
+
+    c->SetStemElement(dStem, "BMPBUTTONS", c->StringSize(dlgAdm->BT_size));
+    for ( i = 0, numPart = 1; i < dlgAdm->BT_size; i++, numPart++ )
+    {
+        char tmpBuf[64];
+
+        itoa(dlgAdm->BmpTab[i].buttonID, tmpBuf, (dlgAdm->BmpTab[i].loaded ? 16: 10));
+        setStrNumStrStem(c, dStem, "BMPTAB", numPart, "ID", c->String(tmpBuf));
+
+        setStrNumStrStem(c, dStem, "BMPTAB", numPart, "NORMAL",   pointer2string(c, dlgAdm->BmpTab[i].bitmapID));
+        setStrNumStrStem(c, dStem, "BMPTAB", numPart, "FOCUSED",  pointer2string(c, dlgAdm->BmpTab[i].bmpFocusID));
+        setStrNumStrStem(c, dStem, "BMPTAB", numPart, "SELECTED", pointer2string(c, dlgAdm->BmpTab[i].bmpSelectID));
+        setStrNumStrStem(c, dStem, "BMPTAB", numPart, "DISABLED", pointer2string(c, dlgAdm->BmpTab[i].bmpDisableID));
+    }
+
+    c->SetStemElement(dStem, "MESSAGES", c->StringSize(dlgAdm->MT_size));
+    for ( i = 0, numPart = 1; i < dlgAdm->MT_size; i++, numPart++ )
+    {
+        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "MSG",    pointer2string(c, (void *)dlgAdm->MsgTab[i].msg));
+        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "PARAM1", pointer2string(c, (void *)dlgAdm->MsgTab[i].wParam));
+        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "PARAM2", pointer2string(c, (void *)dlgAdm->MsgTab[i].lParam));
+        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "METHOD", c->String(dlgAdm->MsgTab[i].rexxProgram));
+    }
+
+
+    c->SetStemElement(dStem, "DATAITEMS", c->StringSize(dlgAdm->DT_size));
+    for ( i = 0, numPart = 1; i < dlgAdm->DT_size; i++, numPart++ )
+    {
+        setStrNumStrStem(c, dStem, "DATATAB", numPart, "ID", c->UnsignedInt32(dlgAdm->DataTab[i].id));
+        setStrNumStrStem(c, dStem, "DATATAB", numPart, "TYPE", c->UnsignedInt32(dlgAdm->DataTab[i].type));
+        setStrNumStrStem(c, dStem, "DATATAB", numPart, "CATEGORY", c->UnsignedInt32(dlgAdm->DataTab[i].category));
+    }
+
+    c->SetStemElement(dStem, "COLORITEMS", c->StringSize(dlgAdm->CT_size));
+    for ( i = 0, numPart = 1; i < dlgAdm->CT_size; i++, numPart++ )
+    {
+        setStrNumStrStem(c, dStem, "COLORTAB", numPart, "ID", c->UnsignedInt32(dlgAdm->ColorTab[i].itemID));
+        setStrNumStrStem(c, dStem, "COLORTAB", numPart, "BACKGROUND", c->UnsignedInt32(dlgAdm->ColorTab[i].ColorBk));
+        setStrNumStrStem(c, dStem, "COLORTAB", numPart, "FOREGROUND", c->UnsignedInt32(dlgAdm->ColorTab[i].ColorFG));
+    }
+    return true;
+}
+
+
+RexxMethod2(RexxObjectPtr, dlgext_dumpAdmin_pvt, RexxStemObject, dStem, OPTIONAL_POINTERSTRING, dlgAdm)
+{
+    bool success;
+    if ( argumentOmitted(2) )
+    {
+        success = dumpAllAdmins(context, dStem);
+    }
+    else
+    {
+        success = dumpAdmin(context, dStem, (DIALOGADMIN *)dlgAdm);
+    }
+    return (success ? TheTrueObj : TheFalseObj);
+}
+
+

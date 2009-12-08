@@ -51,8 +51,6 @@
 #include "oodDeviceGraphics.hpp"
 #include "oodResources.hpp"
 
-extern LONG SetRexxStem(const char * name, size_t id, const char * secname, const char * data);
-
 /**
  * Defines, structs, etc., for the .ImageList class.
  */

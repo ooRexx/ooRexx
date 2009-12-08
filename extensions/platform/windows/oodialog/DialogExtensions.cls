@@ -548,33 +548,33 @@
 ::method isMouseButtonDown external "LIBRARY oodialog dlgext_isMouseButtonDown"
 
 
-::method Dump
-    use arg adm
+::method dumpAdmin external "LIBRARY oodialog dlgext_dumpAdmin_pvt"
+::method dump
+    use strict arg adm = ""
     if arg() == 1 then do
         say "Dump of current dialog administration"
         say "====================================="
-        call DumpAdmin "ADMDUMP", adm
-        say  "Slot: " admdump.Slot
-        say  "hThread: " admdump.hThread
-        say  "hDialog: " admdump.hDialog
-        say  "hMenu: " admdump.hMenu
-        say  "TopMost: " admdump.TopMost
-        say  "CurrentChild: " admdump.CurrentChild
-        say  "DLL: " admdump.Dll
-        say  "Queue: " admdump.queue
-        say  "BmpButtons: " admdump.BmpButtons
+        self~dumpAdmin(ADMDUMP., adm)
+        say  "Slot:        " admdump.Slot
+        say  "hThread:     " admdump.hThread
+        say  "hDialog:     " admdump.hDialog
+        say  "TopMost:     " admdump.TopMost
+        say  "CurrentChild:" admdump.CurrentChild
+        say  "DLL:         " admdump.Dll
+        say  "Queue:       " admdump.queue
+        say  "BmpButtons:  " admdump.BmpButtons
         do i = 1 to admdump.BmpButtons
             say "    " admdump.BmpTab.i.id "->" admdump.BmpTab.i.normal "," admdump.BmpTab.i.focused "," admdump.BmpTab.i.selected "," admdump.BmpTab.i.disabled
         end
-        say  "Messages: " admdump.Messages
+        say  "Messages:    " admdump.Messages
         do i = 1 to admdump.Messages
             say "    " admdump.MsgTab.i.msg "," admdump.MsgTab.i.param1 "," admdump.MsgTab.i.param2 "==>" admdump.MsgTab.i.method
         end
-        say  "DataItems: " admdump.DataItems
+        say  "DataItems:   " admdump.DataItems
         do i = 1 to admdump.DataItems
             say "    " admdump.DataTab.i.id "("admdump.DataTab.i.type","admdump.DataTab.i.category")"
         end
-        say  "ColorItems: " admdump.ColorItems
+        say  "ColorItems:  " admdump.ColorItems
         do i = 1 to admdump.ColorItems
             say "    " admdump.ColorTab.i.id "(" admdump.ColorTab.i.Foreground "," admdump.ColorTab.i.Background ")"
         end
@@ -582,24 +582,23 @@
     else do
         say "Dump of administration state"
         say "============================"
-        call DumpAdmin "ADMDUMP"
+        self~dumpAdmin(ADMDUMP.)
         d = Digits()
         NUMERIC DIGITS 15
         do i = 1 to admdump.0
-            say  "AdmBlock: " admdump.i.AdmBlock
-            say  "Slot: " admdump.i.Slot
-            say  "hThread: " admdump.i.hThread
-            say  "hDialog: " admdump.i.hDialog
-            if admdump.i.hDialog \=0 then say "Window title:" self~WindowTitle(x2d(admdump.i.hDialog))
-            say  "hMenu: " admdump.i.hMenu
-            say  "TopMost: " admdump.i.TopMost
-            say  "CurrentChild: " admdump.i.CurrentChild
-            say  "DLL: " admdump.i.Dll
-            say  "Queue: " admdump.i.queue
-            say  "BmpButtons: " admdump.i.BmpButtons
-            say  "Messages: " admdump.i.Messages
-            say  "DataItems: " admdump.i.DataItems
-            say  "ColorItems: " admdump.i.ColorItems
+            say  "AdmBlock:    " admdump.i.AdmBlock
+            say  "Slot:        " admdump.i.Slot
+            say  "hThread:     " admdump.i.hThread
+            say  "hDialog:     " admdump.i.hDialog
+            if admdump.i.hDialog \=0 then say "Window title:" self~WindowTitle(admdump.i.hDialog)
+            say  "TopMost:     " admdump.i.TopMost
+            say  "CurrentChild:" admdump.i.CurrentChild
+            say  "DLL:         " admdump.i.Dll
+            say  "Queue:       " admdump.i.queue
+            say  "BmpButtons:  " admdump.i.BmpButtons
+            say  "Messages:    " admdump.i.Messages
+            say  "DataItems:   " admdump.i.DataItems
+            say  "ColorItems:  " admdump.i.ColorItems
             say "--------------------------"
         end
         NUMERIC DIGITS d

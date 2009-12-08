@@ -132,9 +132,11 @@ typedef CPlainBaseDialog *pCPlainBaseDialog;
 
 /* Struct for the DialogControl object CSelf. */
 typedef struct _dcCSelf {
+    uint32_t       id;
+    oodControl_t   controlType;
+    ssize_t        lastItem;
     pCWindowBase   wndBase;
     RexxObjectPtr  rexxSelf;
-    uint32_t       id;
     HWND           hCtrl;    // Handle of the dialog control
     HWND           hDlg;     // Handle of the owner dialog
     RexxObjectPtr  oDlg;     // The Rexx owner dialog object

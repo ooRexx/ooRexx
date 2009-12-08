@@ -96,10 +96,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleTreeCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleControlEx);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
 
 REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(messageDialog_rtn);
@@ -115,9 +111,6 @@ RexxRoutineEntry oodialog_functions[] =
 {
     REXX_CLASSIC_ROUTINE(HandleTreeCtrl,       HandleTreeCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrl,       HandleListCtrl),
-    REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
-    REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
-    REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),           /* 2 */
 
     REXX_TYPED_ROUTINE(getDlgMsg_rtn,          getDlgMsg_rtn),
     REXX_TYPED_ROUTINE(messageDialog_rtn,      messageDialog_rtn),
@@ -275,6 +268,7 @@ REXX_METHOD_PROTOTYPE(dlgext_createBrush);
 REXX_METHOD_PROTOTYPE(dlgext_mouseCapture);
 REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
+REXX_METHOD_PROTOTYPE(dlgext_dumpAdmin_pvt);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
 REXX_METHOD_PROTOTYPE(baseDlg_test);
@@ -500,12 +494,19 @@ REXX_METHOD_PROTOTYPE(tb_getSelRange);
 // ListView
 REXX_METHOD_PROTOTYPE(lv_setImageList);
 REXX_METHOD_PROTOTYPE(lv_getImageList);
-REXX_METHOD_PROTOTYPE(lv_getColumnCount);
 REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
 REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
-REXX_METHOD_PROTOTYPE(lv_insertColumnPx);    // TODO review method name
 REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
+REXX_METHOD_PROTOTYPE(lv_insertColumnPx);    // TODO review method name
 REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name
+REXX_METHOD_PROTOTYPE(lv_getColumnCount);
+REXX_METHOD_PROTOTYPE(lv_getExtendedStyle);
+REXX_METHOD_PROTOTYPE(lv_replaceExtendStyle);
+REXX_METHOD_PROTOTYPE(lv_addClearExtendStyle);
+REXX_METHOD_PROTOTYPE(lv_hasCheckBoxes);
+REXX_METHOD_PROTOTYPE(lv_isChecked);
+REXX_METHOD_PROTOTYPE(lv_getCheck);
+REXX_METHOD_PROTOTYPE(lv_checkUncheck);
 
 // TreeView
 REXX_METHOD_PROTOTYPE(tv_getSpecificItem);
@@ -519,9 +520,16 @@ REXX_METHOD_PROTOTYPE(tv_setImageList);
 REXX_METHOD_PROTOTYPE(tv_getImageList);
 
 // Tab
+REXX_METHOD_PROTOTYPE(tab_select);
+REXX_METHOD_PROTOTYPE(tab_selected);
+REXX_METHOD_PROTOTYPE(tab_insert);
+REXX_METHOD_PROTOTYPE(tab_addSequence);
+REXX_METHOD_PROTOTYPE(tab_addFullSeq);
+REXX_METHOD_PROTOTYPE(tab_modify);
+REXX_METHOD_PROTOTYPE(tab_itemInfo);
 REXX_METHOD_PROTOTYPE(tab_setItemSize);
 REXX_METHOD_PROTOTYPE(tab_setPadding);
-REXX_METHOD_PROTOTYPE(tab_getRectangle);
+REXX_METHOD_PROTOTYPE(tab_getItemRect);
 REXX_METHOD_PROTOTYPE(tab_calcRect);
 REXX_METHOD_PROTOTYPE(tab_setImageList);
 REXX_METHOD_PROTOTYPE(tab_getImageList);
@@ -787,6 +795,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_writeToWindow,           dlgext_writeToWindow),
     REXX_METHOD(dlgext_scrollText,              dlgext_scrollText),
     REXX_METHOD(dlgext_createBrush,             dlgext_createBrush),
+    REXX_METHOD(dlgext_dumpAdmin_pvt,           dlgext_dumpAdmin_pvt),
 
     REXX_METHOD(baseDlg_init,                   baseDlg_init),
     REXX_METHOD(baseDlg_test,                   baseDlg_test),
@@ -925,15 +934,22 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(il_isNull,                      il_isNull),
     REXX_METHOD(il_handle,                      il_handle),
 
-    // List view
+    // ListView
     REXX_METHOD(lv_setImageList,                lv_setImageList),
     REXX_METHOD(lv_getImageList,                lv_getImageList),
-    REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
     REXX_METHOD(lv_getColumnOrder,              lv_getColumnOrder),
     REXX_METHOD(lv_setColumnOrder,              lv_setColumnOrder),
-    REXX_METHOD(lv_insertColumnPx,              lv_insertColumnPx),     // TODO review method name
     REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
+    REXX_METHOD(lv_insertColumnPx,              lv_insertColumnPx),     // TODO review method name
     REXX_METHOD(lv_addRowEx,         	        lv_addRowEx),           // TODO review method name
+    REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
+    REXX_METHOD(lv_getExtendedStyle,            lv_getExtendedStyle),
+    REXX_METHOD(lv_replaceExtendStyle,          lv_replaceExtendStyle),
+    REXX_METHOD(lv_addClearExtendStyle,         lv_addClearExtendStyle),
+    REXX_METHOD(lv_hasCheckBoxes,               lv_hasCheckBoxes),
+    REXX_METHOD(lv_isChecked,                   lv_isChecked),
+    REXX_METHOD(lv_getCheck,                    lv_getCheck),
+    REXX_METHOD(lv_checkUncheck,                lv_checkUncheck),
 
     // Edit
     REXX_METHOD(e_isSingleLine,                 e_isSingleLine),
@@ -959,9 +975,16 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tv_getImageList,                tv_getImageList),
 
     // Tab
+    REXX_METHOD(tab_select,                     tab_select),
+    REXX_METHOD(tab_selected,                   tab_selected),
+    REXX_METHOD(tab_insert,                     tab_insert),
+    REXX_METHOD(tab_addSequence,                tab_addSequence),
+    REXX_METHOD(tab_addFullSeq,                 tab_addFullSeq),
+    REXX_METHOD(tab_itemInfo,                   tab_itemInfo),
+    REXX_METHOD(tab_modify,                     tab_modify),
     REXX_METHOD(tab_setItemSize,                tab_setItemSize),
     REXX_METHOD(tab_setPadding,                 tab_setPadding),
-    REXX_METHOD(tab_getRectangle,               tab_getRectangle),
+    REXX_METHOD(tab_getItemRect,                tab_getItemRect),
     REXX_METHOD(tab_calcRect,                   tab_calcRect),
     REXX_METHOD(tab_setImageList,               tab_setImageList),
     REXX_METHOD(tab_getImageList,               tab_getImageList),

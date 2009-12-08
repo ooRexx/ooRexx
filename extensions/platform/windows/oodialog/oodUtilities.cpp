@@ -682,14 +682,13 @@ RexxMethod1(RexxObjectPtr, dlgutil_test_cls, logical_t, fail)
  */
 RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
 {
-    RexxMethodContext *c = context;
     HWND hControl = NULL;
     int  rc = -1;
     uint32_t id;
     uint32_t *tabs = NULL;
     oodClass_t objects[] = {oodCategoryDialog, oodPlainBaseDialog, oodListBox};
 
-    size_t count = c->ArrayItems((RexxArrayObject) args);
+    size_t count = context->ArrayItems((RexxArrayObject) args);
     size_t tabStart = 1;
 
     // Determine which object has invoked this method and parse the argument
@@ -705,11 +704,11 @@ RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
         {
             if ( count < 1 )
             {
-                c->RaiseException1(Rexx_Error_Incorrect_method_noarg, TheOneObj);
+                missingArgException(context->threadContext, 1);
                 goto done_out;
             }
 
-            RexxObjectPtr resourceID = c->ArrayAt(args, 1);
+            RexxObjectPtr resourceID = context->ArrayAt(args, 1);
             if ( ! oodSafeResolveID(&id, context, self, resourceID, -1, 1) )
             {
                 goto done_out;
@@ -726,11 +725,11 @@ RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
         {
             if ( count < 2 )
             {
-                c->RaiseException1(Rexx_Error_Incorrect_method_noarg, context->WholeNumber(count == 1 ? 2 : 1));
+                missingArgException(context->threadContext, (count == 1 ? 2 : 1));
                 goto done_out;
             }
 
-            RexxObjectPtr resourceID = c->ArrayAt(args, 1);
+            RexxObjectPtr resourceID = context->ArrayAt(args, 1);
             if ( ! oodSafeResolveID(&id, context, self, resourceID, -1, 1) )
             {
                 goto done_out;
@@ -747,22 +746,22 @@ RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
                 goto done_out;
             }
 
-            RexxArrayObject handles = (RexxArrayObject)c->DirectoryAt(catalog, "handles");
-            if ( handles == NULLOBJECT || ! c->IsArray(handles) )
+            RexxArrayObject handles = (RexxArrayObject)context->DirectoryAt(catalog, "handles");
+            if ( handles == NULLOBJECT || ! context->IsArray(handles) )
             {
                 ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
                 goto done_out;
             }
-            RexxObjectPtr categoryID = c->ArrayAt(args, count);
-            RexxObjectPtr rxHwnd = c->SendMessage1(handles, "AT", categoryID);
-            if ( c->CheckCondition() )
+            RexxObjectPtr categoryID = context->ArrayAt(args, count);
+            RexxObjectPtr rxHwnd = context->SendMessage1(handles, "AT", categoryID);
+            if ( context->CheckCondition() )
             {
                 goto done_out;
             }
 
             // From here on out, we might get NULL for window handles.  We just
             // ignore that and let LB_SETTABSTOPS fail;
-            HWND hwnd = (HWND)string2pointer(c->ObjectToStringValue(rxHwnd));
+            HWND hwnd = (HWND)string2pointer(context->ObjectToStringValue(rxHwnd));
 
             hControl = GetDlgItem(hwnd, (int)id);
             tabStart = 2;
@@ -788,11 +787,15 @@ RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
         uint32_t *p = tabs;
         for ( size_t i = 0; i < count; i++, p++, tabStart++ )
         {
-            RexxObjectPtr tab = c->ArrayAt(args, tabStart);
-            if ( tab == NULLOBJECT || ! c->ObjectToUnsignedInt32(tab, p) )
+            RexxObjectPtr tab = context->ArrayAt(args, tabStart);
+            if ( tab == NULLOBJECT )
             {
-                // TODO This WRONG if tab is null this will blow up!
-                c->RaiseException2(Rexx_Error_Incorrect_method_nonnegative, c->WholeNumber(tabStart), tab);
+                missingArgException(context->threadContext, tabStart);
+                goto done_out;
+            }
+            if ( ! context->ObjectToUnsignedInt32(tab, p) )
+            {
+                notPositiveArgException(context->threadContext, tabStart, tab);
                 goto done_out;
             }
         }

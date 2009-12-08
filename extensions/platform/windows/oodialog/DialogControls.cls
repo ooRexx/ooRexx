@@ -782,7 +782,7 @@
 ::class 'TabControl' subclass DialogControl public
 
 -- TCM_FIRST == 0x1300  4864
-::constant TCM_GETITEMCOUNT    "0x1304)"
+::constant TCM_GETITEMCOUNT    "0x1304"
 ::constant TCM_GETROWCOUNT     "0x132C"
 ::constant TCM_GETCURSEL       "0x130B"
 ::constant TCM_SETCURSEL       "0x130C"
@@ -790,15 +790,6 @@
 ::constant TCM_GETCURFOCUS     "0x132F"
 ::constant TCM_DELETEALLITEMS  "0x1309"
 ::constant TCM_DELETEITEM      "0x1308"
-
-::method LastItem attribute
-
-::method Init
-   forward class (super) continue
-   self~LastItem = -1
-
-::method setImageList external "LIBRARY oodialog tab_setImageList"
-::method getImageList external "LIBRARY oodialog tab_getImageList"
 
 ::method items
    use strict arg
@@ -839,9 +830,18 @@
    ret = self~sendWinIntMsg(self~TCM_DELETEALLITEMS, 0, 0)
    return ret == 0
 
-::method getRectangle external "LIBRARY oodialog tab_getRectangle"
+::method getItemRect external "LIBRARY oodialog tab_getItemRect"
 ::method setPadding external "LIBRARY oodialog tab_setPadding"
 ::method setItemSize external "LIBRARY oodialog tab_setItemSize"
+::method selected external "LIBRARY oodialog tab_selected"
+::method select external "LIBRARY oodialog tab_select"
+::method insert external "LIBRARY oodialog tab_insert"
+::method itemInfo external "LIBRARY oodialog tab_itemInfo"
+::method addSequence external "LIBRARY oodialog tab_addSequence"
+::method addFullSeq external "LIBRARY oodialog tab_addFullSeq"
+::method modify external "LIBRARY oodialog tab_modify"
+::method setImageList external "LIBRARY oodialog tab_setImageList"
+::method getImageList external "LIBRARY oodialog tab_getImageList"
 
 ::method setSize
    forward message "setItemSize" continue
@@ -850,7 +850,7 @@
 ::method posRectangle
    use arg strict item
    r = .Rect~new
-   if self~getRectangle(item, r) then return r~top r~left r~bottom r~right
+   if self~getItemRect(item, r) then return r~top r~left r~bottom r~right
    else return ""
 
 -- adjustToRectangle() and requireWindowSize() are the old methods.  This set up
@@ -874,74 +874,11 @@
    self~calcDisplayRect(r)
    return r~left r~top r~right r~bottom
 
-
-::method Insert
-   use arg nr, text, image, lparam
-   if arg(1,'o') = 1 then nr = self~LastItem + 1
-   if arg(2,'o') = 1 then text = ""
-   if arg(3,'o') = 1 then image = -1
-   if arg(4,'o') = 1 then item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image)
-   else item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image, lparam)
-   if item \= -1 then self~LastItem = item
-   return item
-
-
-::method Modify
-   use arg nr, text, image, lparam
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then text = ""
-   if arg(3,'o') = 1 then image = -1
-   if arg(4,'o') = 1 then return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image)
-   else return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image, lparam)
-
-
-/* adds text1, text2, text3.... */
-::method AddSequence
-   nr = self~LastItem
-   do i= 1 to arg()
-       nr = nr + 1
-       nr = self~Insert(nr,arg(i))
-       if nr = -1 then return -1    /* error occurred */
-       self~LastItem = nr
-   end
-   return nr
-
-/* adds text1, image1, lparam1, text2, image2, lparam2, text3.... */
-::method AddFullSeq
-   args = arg()
-   nr = self~LastItem
-   i = 1
-   do while i <= args
-       nr = nr + 1
-       if i+2 <= args & arg(i+2,'e') = 1 then do
-           if arg(i+1,'e') = 1 then nr = self~Insert(nr,arg(i), arg(i+1), arg(i+2))
-           else nr = self~Insert(nr,arg(i),, arg(i+2))
-       end
-       else if i+1 <= args & arg(i+1,'e') = 1 then nr = self~Insert(nr,arg(i), arg(i+1))
-       else nr = self~Insert(nr,arg(i))
-       if nr = -1 then return -1   /* error occurred */
-       self~LastItem = nr
-       i = i+3
-   end
-   return nr
-
-::method ItemInfo
-   use strict arg hItem
-   ret = HandleOtherNewCtrls("TAB","GET",self~Hwnd, hItem, "InternalTCItemInfo")
-   return InternalTCItemInfo.
-
-::method Selected
-   return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"GT")
-
-::method Select
-   use strict arg text
-   return HandleOtherNewCtrls("TAB","SEL",self~Hwnd,"ST", text)
-
 -- DEPRECATED
 ::method setImages external "LIBRARY oodialog tab_setImageList"
 
 -- DEPRECATED
-::method RemoveImages
+::method removeImages
    return self~setImageList(.nil)
 
 
@@ -950,7 +887,17 @@
 ::class 'ListControl' subclass DialogControl public
 
 -- LVM_FIRST = 0x1000  == 4096
-::constant LVM_GETCOLUMNWIDTH                4125             -- LVM_FIRST + 29
+::constant LVM_GETCOLUMNWIDTH  "0x101D"
+::constant LVM_SETHOVERTIME    "0x1047"
+::constant LVM_GETHOVERTIME    "0x1048"
+
+::method setHoverTime
+   use strict arg time = (-1)
+   if time < -1 then time = -1
+   return self~sendWinIntMsg(self~LVM_SETHOVERTIME, 0, time)
+
+::method getHoverTime
+   return self~sendWinIntMsg(self~LVM_GETHOVERTIME, 0, 0)
 
 
 ::method lastItem attribute
@@ -974,60 +921,6 @@
    use arg style
    if arg(1,'O') then return 0
    return HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", style)
-
-::method ReplaceExtendedStyle  -- Replace
-   use strict arg oldstyle, newstyle
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "R", oldstyle, newstyle)
-
-::method AddExtendedStyle      -- Set
-   use strict arg style
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "S", style)
-
-::method RemoveExtendedStyle   -- Clear
-   use strict arg style
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "C", style)
-
-::method GetExtendedStyle      -- Get
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "G")
-
-::method GetExtendedStyleRaw   -- Long
-   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "L")
-
-::method SetHoverTime
-   use arg time
-   if arg(1, 'O') then time = -1
-   if \ time~datatype('W') then raise syntax 93.905 array(1, time)
-   if time < -1 then time = -1
-   return HandleListCtrlEx(self~Hwnd, "M", "HOVER", time)
-
-::method GetHoverTime
-   return HandleListCtrlEx(self~Hwnd, "M", "HOVER")
-
-::method Check
-   use strict arg item
-   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item, .true)
-
-::method CheckAll
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", -1, .true)
-
-::method Uncheck
-   use strict arg item
-   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item, .false)
-
-::method UncheckAll
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", -1, .false)
-
-::method GetCheck
-   use strict arg item
-   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
-   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item)
-
-::method IsChecked
-   use strict arg item
-   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
-   return (HandleListCtrlEx(self~Hwnd, "M", "CHK", item) == 1)
 
 
 ::method DeleteColumn
@@ -1082,7 +975,22 @@
 ::method getColumnCount external "LIBRARY oodialog lv_getColumnCount"
 ::method getColumnOrder external "LIBRARY oodialog lv_getColumnOrder"
 ::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
+::method getExtendedStyle external "LIBRARY oodialog lv_getExtendedStyle"
+::method getExtendedStyleRaw external "LIBRARY oodialog lv_getExtendedStyle"
+::method replaceExtendedStyle external "LIBRARY oodialog lv_replaceExtendStyle"
+::method addExtendedStyle external "LIBRARY oodialog lv_addClearExtendStyle"
+::method removeExtendedStyle external "LIBRARY oodialog lv_addClearExtendStyle"
+::method check external "LIBRARY oodialog lv_checkUncheck"
+::method uncheck external "LIBRARY oodialog lv_checkUncheck"
+::method isChecked external "LIBRARY oodialog lv_isChecked"
+::method hasCheckBoxes external "LIBRARY oodialog lv_hasCheckBoxes"
+::method getCheck external "LIBRARY oodialog lv_getCheck"
 
+::method checkAll
+   return self~check(-1)
+
+::method uncheckAll
+   return self~uncheck(-1)
 
 ::method Insert
    use arg nr, subnr, text, image

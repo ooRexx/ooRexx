@@ -386,8 +386,8 @@ typedef struct {
 
 typedef struct
 {
-   void * previous;
-   INT TableEntry;
+   void              *previous;
+   size_t             TableEntry;
    MESSAGETABLEENTRY *MsgTab;
    DATATABLEENTRY    *DataTab;
    BITMAPTABLEENTRY  *BmpTab;

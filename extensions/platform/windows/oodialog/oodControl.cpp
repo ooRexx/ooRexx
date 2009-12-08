@@ -512,6 +512,8 @@ RexxMethod2(uint32_t, dlgctrl_init, OPTIONAL_POINTER, args, OSELF, self)
     pCDialogControl cdcCSelf = (pCDialogControl)c->BufferData(cdcBuf);
     memset(cdcCSelf, 0, sizeof(CDialogControl));
 
+    cdcCSelf->controlType = params->controlType;
+    cdcCSelf->lastItem = -1;
     cdcCSelf->wndBase = wbCSelf;
     cdcCSelf->rexxSelf = self;
     cdcCSelf->hCtrl = params->hwnd;

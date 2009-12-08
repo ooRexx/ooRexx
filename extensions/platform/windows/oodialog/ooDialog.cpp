@@ -3717,6 +3717,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
         goto out;
     }
 
+    pArgs->controlType = controlType;
     pArgs->hwnd = hControl;
     pArgs->hwndDlg = hDlg;
     pArgs->id = id;
