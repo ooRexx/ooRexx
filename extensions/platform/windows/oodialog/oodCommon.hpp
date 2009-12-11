@@ -67,7 +67,9 @@ typedef map<string, int, less<string> > String2Int;
 #define DEFAULT_FONTSIZE            8
 #define MAX_DEFAULT_FONTNAME        256
 
+// Some int32_t error codes, where -1 and greater is valid.
 #define OOD_ID_EXCEPTION            0xFFFFFFF7   // -9
+#define OOD_BAD_WIDTH_EXCEPTION     0xFFFFFFF8   // -8
 
 // Enum for the type of an ooDialog class.  Types to be added as needed.
 typedef enum

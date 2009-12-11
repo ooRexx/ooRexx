@@ -94,7 +94,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleTreeCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
 
 REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg_rtn);
@@ -109,7 +108,6 @@ REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(HandleTreeCtrl,       HandleTreeCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrl,       HandleListCtrl),
 
     REXX_TYPED_ROUTINE(getDlgMsg_rtn,          getDlgMsg_rtn),
@@ -494,12 +492,20 @@ REXX_METHOD_PROTOTYPE(tb_getSelRange);
 // ListView
 REXX_METHOD_PROTOTYPE(lv_setImageList);
 REXX_METHOD_PROTOTYPE(lv_getImageList);
+REXX_METHOD_PROTOTYPE(lv_getItemInfo);
 REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
-REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
-REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
-REXX_METHOD_PROTOTYPE(lv_insertColumnPx);    // TODO review method name
-REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name
+REXX_METHOD_PROTOTYPE(lv_getColumnInfo);
 REXX_METHOD_PROTOTYPE(lv_getColumnCount);
+REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
+REXX_METHOD_PROTOTYPE(lv_setColumnWidthPx);
+REXX_METHOD_PROTOTYPE(lv_modifyColumnPx);
+REXX_METHOD_PROTOTYPE(lv_insertColumnPx);
+REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
+REXX_METHOD_PROTOTYPE(lv_getItemPos);
+REXX_METHOD_PROTOTYPE(lv_setItemPos);
+REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name, see below in oodialog_methods
+REXX_METHOD_PROTOTYPE(lv_addRemoveStyle);
+REXX_METHOD_PROTOTYPE(lv_replaceStyle);
 REXX_METHOD_PROTOTYPE(lv_getExtendedStyle);
 REXX_METHOD_PROTOTYPE(lv_replaceExtendStyle);
 REXX_METHOD_PROTOTYPE(lv_addClearExtendStyle);
@@ -515,6 +521,8 @@ REXX_METHOD_PROTOTYPE(tv_selectItem);
 REXX_METHOD_PROTOTYPE(tv_expand);
 REXX_METHOD_PROTOTYPE(tv_subclassEdit);
 REXX_METHOD_PROTOTYPE(tv_insert);
+REXX_METHOD_PROTOTYPE(tv_modify);
+REXX_METHOD_PROTOTYPE(tv_itemInfo);
 REXX_METHOD_PROTOTYPE(tv_hitTestInfo);
 REXX_METHOD_PROTOTYPE(tv_setImageList);
 REXX_METHOD_PROTOTYPE(tv_getImageList);
@@ -523,6 +531,7 @@ REXX_METHOD_PROTOTYPE(tv_getImageList);
 REXX_METHOD_PROTOTYPE(tab_select);
 REXX_METHOD_PROTOTYPE(tab_selected);
 REXX_METHOD_PROTOTYPE(tab_insert);
+REXX_METHOD_PROTOTYPE(tv_modify);
 REXX_METHOD_PROTOTYPE(tab_addSequence);
 REXX_METHOD_PROTOTYPE(tab_addFullSeq);
 REXX_METHOD_PROTOTYPE(tab_modify);
@@ -937,12 +946,20 @@ RexxMethodEntry oodialog_methods[] = {
     // ListView
     REXX_METHOD(lv_setImageList,                lv_setImageList),
     REXX_METHOD(lv_getImageList,                lv_getImageList),
+    REXX_METHOD(lv_getItemInfo,                 lv_getItemInfo),
+    REXX_METHOD(lv_getColumnInfo,               lv_getColumnInfo),
     REXX_METHOD(lv_getColumnOrder,              lv_getColumnOrder),
     REXX_METHOD(lv_setColumnOrder,              lv_setColumnOrder),
+    REXX_METHOD(lv_setColumnWidthPx,            lv_setColumnWidthPx),
+    REXX_METHOD(lv_modifyColumnPx,              lv_modifyColumnPx),
+    REXX_METHOD(lv_insertColumnPx,              lv_insertColumnPx),
     REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
-    REXX_METHOD(lv_insertColumnPx,              lv_insertColumnPx),     // TODO review method name
-    REXX_METHOD(lv_addRowEx,         	        lv_addRowEx),           // TODO review method name
+    REXX_METHOD(lv_getItemPos,                  lv_getItemPos),
+    REXX_METHOD(lv_setItemPos,                  lv_setItemPos),
+    REXX_METHOD(lv_addRowEx,         	        lv_addRowEx),           // TODO review method name, maybe addFullRow() addFullItem()
     REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
+    REXX_METHOD(lv_addRemoveStyle,              lv_addRemoveStyle),
+    REXX_METHOD(lv_replaceStyle,                lv_replaceStyle),
     REXX_METHOD(lv_getExtendedStyle,            lv_getExtendedStyle),
     REXX_METHOD(lv_replaceExtendStyle,          lv_replaceExtendStyle),
     REXX_METHOD(lv_addClearExtendStyle,         lv_addClearExtendStyle),
@@ -970,6 +987,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tv_expand,                      tv_expand),
     REXX_METHOD(tv_subclassEdit,                tv_subclassEdit),
     REXX_METHOD(tv_insert,                      tv_insert),
+    REXX_METHOD(tv_modify,                      tv_modify),
+    REXX_METHOD(tv_itemInfo,                    tv_itemInfo),
     REXX_METHOD(tv_hitTestInfo,                 tv_hitTestInfo),
     REXX_METHOD(tv_setImageList,                tv_setImageList),
     REXX_METHOD(tv_getImageList,                tv_getImageList),

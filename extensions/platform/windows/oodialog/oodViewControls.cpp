@@ -77,745 +77,7 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return CallWindowProc(wpOldEditProc, hWnd, uMsg, wParam, lParam);
     }
 }
-/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\
- *  The following function is only used in HandleTreeConrol() and will be
- *  removed as soon as HandleTreeControl() is converted to the C++ API.
-\*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-static LONG SetRexxStem(const char * name, size_t id, const char * secname, const char * data)
-{
-   SHVBLOCK shvb;
-   CHAR buffer[72];
 
-   if ( id == SIZE_MAX )
-   {
-       sprintf(buffer,"%s.%s",name,secname);
-   }
-   else
-   {
-       if (secname) sprintf(buffer,"%s.%d.%s",name,id, secname);
-       else sprintf(buffer,"%s.%d",name,id);
-   }
-   shvb.shvnext = NULL;
-   shvb.shvname.strptr = buffer;
-   shvb.shvname.strlength = strlen(buffer);
-   shvb.shvnamelen = shvb.shvname.strlength;
-   shvb.shvvalue.strptr = const_cast<char *>(data);
-   shvb.shvvalue.strlength = strlen(data);
-   shvb.shvvaluelen = strlen(data);
-   shvb.shvcode = RXSHV_SYSET;
-   shvb.shvret = 0;
-   if (RexxVariablePool(&shvb) == RXSHV_BADN) {
-       char messageBuffer[265];
-       sprintf(messageBuffer, "Variable %s could not be declared", buffer);
-       MessageBox(0,messageBuffer,"Error",MB_OK | MB_ICONHAND);
-       return FALSE;
-   }
-   return TRUE;
-}
-
-
-size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   HWND h;
-
-   CHECKARGL(2);
-
-   h = GET_HWND(argv[1]);
-   if (!h) RETERR;
-
-   if (!strcmp(argv[0].strptr, "INS"))
-   {
-       TV_INSERTSTRUCT ins;
-       TV_ITEM * tvi = &ins.item;
-
-       CHECKARG(9);
-       ins.hParent = (HTREEITEM)GET_HANDLE(argv[2]);
-       if (!ins.hParent && !strcmp(argv[2].strptr,"ROOT")) ins.hParent = TVI_ROOT;
-       ins.hInsertAfter = (HTREEITEM)GET_HANDLE(argv[3]);
-       if (!ins.hInsertAfter)
-       {
-           if (!strcmp(argv[3].strptr,"FIRST")) ins.hInsertAfter = TVI_FIRST;
-           else if (!strcmp(argv[3].strptr,"SORT")) ins.hInsertAfter = TVI_SORT;
-           else ins.hInsertAfter = TVI_LAST;
-       }
-
-       tvi->mask = TVIF_TEXT;
-
-       tvi->pszText = (LPSTR)argv[4].strptr;
-       tvi->cchTextMax = (int)argv[4].strlength;
-
-       tvi->iImage = atoi(argv[5].strptr);
-       if (tvi->iImage >= 0) tvi->mask |= TVIF_IMAGE;
-
-       tvi->state= 0;
-
-       if (strstr(argv[6].strptr,"BOLD")) tvi->state |= TVIS_BOLD;
-       if (strstr(argv[6].strptr,"EXPANDED")) tvi->state |= TVIS_EXPANDED;
-       tvi->stateMask = tvi->state;
-
-       if (tvi->state != 0) tvi->mask |= TVIF_STATE;
-
-       tvi->cChildren = atoi(argv[7].strptr);
-       if (tvi->cChildren > 0) tvi->mask |= TVIF_CHILDREN;
-
-       tvi->iSelectedImage = atoi(argv[8].strptr);
-       if (tvi->iSelectedImage > -1) tvi->mask |= TVIF_SELECTEDIMAGE;
-
-       RETHANDLE(TreeView_InsertItem(h, &ins));
-   }
-   else
-   if (!strcmp(argv[0].strptr, "SET"))
-   {
-       TV_ITEM tvi;
-
-       CHECKARG(8);
-
-       tvi.hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-
-       // tvi.mask = TVIF_HANDLE;
-       tvi.mask = 0;
-
-       if (argv[3].strlength)
-       {
-           tvi.pszText = (LPSTR)argv[3].strptr;
-           tvi.cchTextMax = (int)argv[3].strlength;
-           tvi.mask |= TVIF_TEXT;
-       }
-
-       tvi.iImage = atoi(argv[4].strptr);
-       if (tvi.iImage >= 0) tvi.mask |= TVIF_IMAGE;
-
-       tvi.state= 0;
-       tvi.stateMask= 0;
-
-       if (strstr(argv[5].strptr,"NOTBOLD")) tvi.stateMask |= TVIS_BOLD;
-       else if (strstr(argv[5].strptr,"BOLD")) {tvi.state |= TVIS_BOLD; tvi.stateMask |= TVIS_BOLD;}
-       if (strstr(argv[5].strptr,"NOTDROP")) tvi.stateMask |= TVIS_DROPHILITED;
-       else if (strstr(argv[5].strptr,"DROP")) {tvi.state |= TVIS_DROPHILITED; tvi.stateMask |= TVIS_DROPHILITED;}
-       if (strstr(argv[5].strptr,"NOTSELECTED")) tvi.stateMask |= TVIS_SELECTED;
-       else if (strstr(argv[5].strptr,"SELECTED")) {tvi.state |= TVIS_SELECTED; tvi.stateMask |= TVIS_SELECTED;}
-       if (strstr(argv[5].strptr,"NOTCUT")) tvi.stateMask |= TVIS_CUT;
-       else if (strstr(argv[5].strptr,"CUT")) {tvi.state |= TVIS_CUT; tvi.stateMask |= TVIS_CUT;}
-       if (strstr(argv[5].strptr,"NOTEXPANDEDONCE")) tvi.stateMask |= TVIS_EXPANDEDONCE;
-       else if (strstr(argv[5].strptr,"EXPANDEDONCE")) {tvi.state |= TVIS_EXPANDEDONCE; tvi.stateMask |= TVIS_EXPANDEDONCE;}
-       else if (strstr(argv[5].strptr,"NOTEXPANDED")) tvi.stateMask |= TVIS_EXPANDED;
-       else if (strstr(argv[5].strptr,"EXPANDED")) {tvi.state |= TVIS_EXPANDED; tvi.stateMask |= TVIS_EXPANDED;}
-       if ((tvi.state != 0) || (tvi.stateMask!= 0)) tvi.mask |= TVIF_STATE;
-
-       tvi.cChildren = atoi(argv[6].strptr);
-       if (tvi.cChildren > -1) tvi.mask |= TVIF_CHILDREN;
-
-       tvi.iSelectedImage = atoi(argv[7].strptr);
-       if (tvi.iSelectedImage > -1) tvi.mask |= TVIF_SELECTEDIMAGE;
-
-       RETVAL(TreeView_SetItem(h, &tvi));
-   }
-   else
-   if (!strcmp(argv[0].strptr, "GET"))
-   {
-       TV_ITEM tvi;
-       CHAR data[256];
-
-       CHECKARG(4);
-
-       tvi.hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-       tvi.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_STATE | TVIF_IMAGE | TVIF_CHILDREN | TVIF_SELECTEDIMAGE;
-       tvi.pszText = data;
-       tvi.cchTextMax = 255;
-       tvi.stateMask = TVIS_EXPANDED | TVIS_BOLD | TVIS_SELECTED | TVIS_EXPANDEDONCE | TVIS_DROPHILITED | TVIS_CUT;
-
-       if (TreeView_GetItem(h, &tvi))
-       {
-           SetRexxStem(argv[3].strptr, SIZE_MAX, "!Text", tvi.pszText);
-           itoa(tvi.cChildren, data, 10);
-           SetRexxStem(argv[3].strptr, SIZE_MAX, "!Children", data);
-           itoa(tvi.iImage, data, 10);
-           SetRexxStem(argv[3].strptr, SIZE_MAX, "!Image", data);
-           itoa(tvi.iSelectedImage, data, 10);
-           SetRexxStem(argv[3].strptr, SIZE_MAX, "!SelectedImage", data);
-           data[0] = '\0';
-           if (tvi.state & TVIS_EXPANDED) strcat(data, "EXPANDED ");
-           if (tvi.state & TVIS_BOLD) strcat(data, "BOLD ");
-           if (tvi.state & TVIS_SELECTED) strcat(data, "SELECTED ");
-           if (tvi.state & TVIS_EXPANDEDONCE) strcat(data, "EXPANDEDONCE ");
-           if (tvi.state & TVIS_DROPHILITED) strcat(data, "INDROP ");
-           if (tvi.state & TVIS_CUT) strcat(data, "CUT ");
-           SetRexxStem(argv[3].strptr, SIZE_MAX, "!State", data);
-           RETC(0)
-       }
-       else RETVAL(-1)
-   }
-   else
-   if (!strcmp(argv[0].strptr, "EDIT"))
-   {
-       CHECKARG(3);
-
-       HTREEITEM hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-       RETHANDLE(TreeView_EditLabel(h, (HTREEITEM)hItem));
-   }
-   else
-   if (!strcmp(argv[0].strptr, "EEDIT"))
-   {
-       CHECKARG(3);
-
-       RETC(!TreeView_EndEditLabelNow(h, isYes(argv[2].strptr)))
-   }
-   else
-   if (!strcmp(argv[0].strptr, "SUBCL_EDIT"))
-   {
-       HWND ew = TreeView_GetEditControl(h);
-       if (ew)
-       {
-           WNDPROC oldProc = (WNDPROC)setWindowPtr(ew, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
-           if (oldProc != (WNDPROC)CatchReturnSubProc) wpOldEditProc = oldProc;
-           RETPTR(oldProc)
-       }
-       else RETC(0)
-   }
-   else
-   if (!strcmp(argv[0].strptr, "RESUB_EDIT"))
-   {
-       HWND ew = TreeView_GetEditControl(h);
-       if (ew)
-       {
-           setWindowPtr((HWND)ew, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
-           RETC(0)
-       }
-       RETVAL(-1)
-   }
-   RETC(0)
-}
-
-/**
- * Parse a list-view control extended style string sent from ooDialog into the
- * corresponding style flags.
- *
- * The extended list-view styles are set (and retrieved) in a different manner
- * than other window styles.  This function is used only to parse those extended
- * styles.  The normal list-view styles are parsed using EvaluateListStyle.
- */
-uint32_t ParseExtendedListStyle(const char * style)
-{
-    uint32_t dwStyle = 0;
-
-    if ( strstr(style, "BORDERSELECT"    ) ) dwStyle |= LVS_EX_BORDERSELECT;
-    if ( strstr(style, "CHECKBOXES"      ) ) dwStyle |= LVS_EX_CHECKBOXES;
-    if ( strstr(style, "FLATSB"          ) ) dwStyle |= LVS_EX_FLATSB;
-    if ( strstr(style, "FULLROWSELECT"   ) ) dwStyle |= LVS_EX_FULLROWSELECT;
-    if ( strstr(style, "GRIDLINES"       ) ) dwStyle |= LVS_EX_GRIDLINES;
-    if ( strstr(style, "HEADERDRAGDROP"  ) ) dwStyle |= LVS_EX_HEADERDRAGDROP;
-    if ( strstr(style, "INFOTIP"         ) ) dwStyle |= LVS_EX_INFOTIP;
-    if ( strstr(style, "MULTIWORKAREAS"  ) ) dwStyle |= LVS_EX_MULTIWORKAREAS;
-    if ( strstr(style, "ONECLICKACTIVATE") ) dwStyle |= LVS_EX_ONECLICKACTIVATE;
-    if ( strstr(style, "REGIONAL"        ) ) dwStyle |= LVS_EX_REGIONAL;
-    if ( strstr(style, "SUBITEMIMAGES"   ) ) dwStyle |= LVS_EX_SUBITEMIMAGES;
-    if ( strstr(style, "TRACKSELECT"     ) ) dwStyle |= LVS_EX_TRACKSELECT;
-    if ( strstr(style, "TWOCLICKACTIVATE") ) dwStyle |= LVS_EX_TWOCLICKACTIVATE;
-    if ( strstr(style, "UNDERLINECOLD"   ) ) dwStyle |= LVS_EX_UNDERLINECOLD;
-    if ( strstr(style, "UNDERLINEHOT"    ) ) dwStyle |= LVS_EX_UNDERLINEHOT;
-
-    // Needs Comctl32.dll version 5.8 or higher
-    if ( ComCtl32Version >= COMCTL32_5_8 )
-    {
-      if ( strstr(style, "LABELTIP") ) dwStyle |= LVS_EX_LABELTIP;
-    }
-
-    // Needs Comctl32 version 6.0 or higher
-    if ( ComCtl32Version >= COMCTL32_6_0 )
-    {
-      if ( strstr(style, "DOUBLEBUFFER") ) dwStyle |= LVS_EX_DOUBLEBUFFER;
-      if ( strstr(style, "SIMPLESELECT") ) dwStyle |= LVS_EX_SIMPLESELECT;
-    }
-    return dwStyle;
-}
-
-
-/**
- * Produce a string representation of a List-View's extended styles.
- */
-static RexxStringObject listExtendedStyleToString(RexxMethodContext *c, HWND hList)
-{
-    char buf[256];
-    DWORD dwStyle = ListView_GetExtendedListViewStyle(hList);
-    buf[0] = '\0';
-
-    if ( dwStyle & LVS_EX_BORDERSELECT )     strcat(buf, "BORDERSELECT ");
-    if ( dwStyle & LVS_EX_CHECKBOXES )       strcat(buf, "CHECKBOXES ");
-    if ( dwStyle & LVS_EX_FLATSB )           strcat(buf, "FLATSB ");
-    if ( dwStyle & LVS_EX_FULLROWSELECT )    strcat(buf, "FULLROWSELECT ");
-    if ( dwStyle & LVS_EX_GRIDLINES )        strcat(buf, "GRIDLINES ");
-    if ( dwStyle & LVS_EX_HEADERDRAGDROP )   strcat(buf, "HEADERDRAGDROP ");
-    if ( dwStyle & LVS_EX_INFOTIP )          strcat(buf, "INFOTIP ");
-    if ( dwStyle & LVS_EX_MULTIWORKAREAS )   strcat(buf, "MULTIWORKAREAS ");
-    if ( dwStyle & LVS_EX_ONECLICKACTIVATE ) strcat(buf, "ONECLICKACTIVATE ");
-    if ( dwStyle & LVS_EX_REGIONAL )         strcat(buf, "REGIONAL ");
-    if ( dwStyle & LVS_EX_SUBITEMIMAGES )    strcat(buf, "SUBITEMIMAGES ");
-    if ( dwStyle & LVS_EX_TRACKSELECT )      strcat(buf, "TRACKSELECT ");
-    if ( dwStyle & LVS_EX_TWOCLICKACTIVATE ) strcat(buf, "TWOCLICKACTIVATE ");
-    if ( dwStyle & LVS_EX_UNDERLINECOLD )    strcat(buf, "UNDERLINECOLD ");
-    if ( dwStyle & LVS_EX_UNDERLINEHOT )     strcat(buf, "UNDERLINEHOT ");
-    if ( dwStyle & LVS_EX_LABELTIP )         strcat(buf, "LABELTIP ");
-    if ( dwStyle & LVS_EX_DOUBLEBUFFER )     strcat(buf, "DOUBLEBUFFER ");
-    if ( dwStyle & LVS_EX_SIMPLESELECT )     strcat(buf, "SIMPLESELECT ");
-
-    return c->String(buf);
-}
-
-
-size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   HWND h;
-
-   CHECKARGL(3);
-
-   h = GET_HWND(argv[2]);
-   if (!h) RETERR;
-
-   if (argv[0].strptr[0] == 'I')
-   {
-       if (!strcmp(argv[1].strptr, "INS"))
-       {
-           LV_ITEM lvi;
-
-           CHECKARG(6);
-
-           lvi.mask = LVIF_TEXT;
-
-           lvi.iItem = atoi(argv[3].strptr);
-           lvi.iSubItem = 0;
-
-           lvi.pszText = (LPSTR)argv[4].strptr;
-           lvi.cchTextMax = (int)argv[4].strlength;
-
-           lvi.iImage = atoi(argv[5].strptr);
-           if (lvi.iImage >= 0) lvi.mask |= LVIF_IMAGE;
-
-           RETVAL(ListView_InsertItem(h, &lvi));
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SET"))
-       {
-           LV_ITEM lvi;
-
-           CHECKARG(7);
-
-           lvi.mask = 0;
-
-           lvi.iItem = atoi(argv[3].strptr);
-           lvi.iSubItem = atoi(argv[4].strptr);
-
-           lvi.pszText = (LPSTR)argv[5].strptr;
-           lvi.cchTextMax = (int)argv[5].strlength;
-
-           if (!strcmp(argv[6].strptr,"TXT"))
-           {
-               lvi.mask |= LVIF_TEXT;
-               RETC(!SendMessage(h, LVM_SETITEMTEXT, lvi.iItem, (LPARAM)&lvi));
-           }
-           else if (!strcmp(argv[6].strptr,"STATE"))
-           {
-               lvi.state = 0;
-               lvi.stateMask = 0;
-
-               if (strstr(argv[5].strptr, "NOTCUT"))  lvi.stateMask |= LVIS_CUT;
-               else if (strstr(argv[5].strptr, "CUT"))  {lvi.state |= LVIS_CUT; lvi.stateMask |= LVIS_CUT;}
-               if (strstr(argv[5].strptr, "NOTDROP"))  lvi.stateMask |= LVIS_DROPHILITED;
-               else if (strstr(argv[5].strptr, "DROP"))  {lvi.state |= LVIS_DROPHILITED; lvi.stateMask |= LVIS_DROPHILITED;}
-               if (strstr(argv[5].strptr, "NOTFOCUSED"))  lvi.stateMask |= LVIS_FOCUSED;
-               else if (strstr(argv[5].strptr, "FOCUSED"))  {lvi.state |= LVIS_FOCUSED; lvi.stateMask |= LVIS_FOCUSED;}
-               if (strstr(argv[5].strptr, "NOTSELECTED"))  lvi.stateMask |= LVIS_SELECTED;
-               else if (strstr(argv[5].strptr, "SELECTED"))  {lvi.state |= LVIS_SELECTED; lvi.stateMask |= LVIS_SELECTED;}
-
-               RETC(!SendMessage(h, LVM_SETITEMSTATE, lvi.iItem, (LPARAM)&lvi));
-           }
-           else
-           {
-               if (lvi.cchTextMax) lvi.mask |= LVIF_TEXT;
-
-               lvi.iImage = atoi(argv[6].strptr);
-               if (lvi.iImage >= 0) lvi.mask |= LVIF_IMAGE;
-               RETC(!ListView_SetItem(h, &lvi));
-           }
-       }
-       else
-       if (!strcmp(argv[1].strptr, "GET"))
-       {
-           LV_ITEM lvi;
-           CHAR data[256];
-
-           CHECKARG(7);
-
-           lvi.iItem = atoi(argv[3].strptr);
-           lvi.iSubItem = atoi(argv[4].strptr);
-           lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_STATE;
-           lvi.pszText = data;
-           lvi.cchTextMax = 255;
-           lvi.stateMask = LVIS_CUT | LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED;
-
-           if (!strcmp(argv[6].strptr,"TXT"))
-           {
-               INT len;
-               lvi.pszText = retstr->strptr;
-               len = (int)SendMessage(h, LVM_GETITEMTEXT, lvi.iItem, (LPARAM)&lvi);
-               retstr->strlength = len;
-               return 0;
-           }
-           else if (!strcmp(argv[6].strptr,"STATE"))
-           {
-               UINT state;
-
-               state = ListView_GetItemState(h, lvi.iItem, lvi.stateMask);
-               retstr->strptr[0] = '\0';
-               if (state & LVIS_CUT) strcat(retstr->strptr, "CUT ");
-               if (state & LVIS_DROPHILITED) strcat(retstr->strptr, "DROP ");
-               if (state & LVIS_FOCUSED) strcat(retstr->strptr, "FOCUSED ");
-               if (state & LVIS_SELECTED) strcat(retstr->strptr, "SELECTED ");
-               retstr->strlength = strlen(retstr->strptr);
-               return 0;
-           }
-           else if (ListView_GetItem(h, &lvi))
-           {
-               SetRexxStem(argv[5].strptr, SIZE_MAX, "!Text", lvi.pszText);
-               itoa(lvi.iImage, data, 10);
-               SetRexxStem(argv[5].strptr, SIZE_MAX, "!Image", data);
-               data[0] = '\0';
-               if (lvi.state & LVIS_CUT) strcat(data, "CUT ");
-               if (lvi.state & LVIS_DROPHILITED) strcat(data, "DROP ");
-               if (lvi.state & LVIS_FOCUSED) strcat(data, "FOCUSED ");
-               if (lvi.state & LVIS_SELECTED) strcat(data, "SELECTED ");
-               SetRexxStem(argv[5].strptr, SIZE_MAX, "!State", data);
-               RETC(0)
-           }
-           RETVAL(-1);
-       }
-       else
-       if (!strcmp(argv[1].strptr, "DEL"))
-       {
-           INT item;
-           CHECKARG(4);
-           item = atoi(argv[3].strptr);
-           if (!item && !strcmp(argv[3].strptr,"ALL"))
-              RETC(!ListView_DeleteAllItems(h))
-           else if (ListView_GetItemCount(h) >0)
-              RETC(!ListView_DeleteItem(h, item))
-           RETVAL(-1)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "GETNEXT"))
-       {
-           ULONG flag;
-           LONG startItem;
-
-           CHECKARG(5);
-
-           startItem = atol(argv[3].strptr);
-
-           if (!strcmp(argv[4].strptr, "FIRSTVISIBLE"))
-               RETVAL(ListView_GetTopIndex(h))
-
-           flag = 0;
-           if (strstr(argv[4].strptr,"ABOVE")) flag |= LVNI_ABOVE;
-           if (strstr(argv[4].strptr,"BELOW")) flag |= LVNI_BELOW;
-           if (strstr(argv[4].strptr,"TOLEFT")) flag |= LVNI_TOLEFT;
-           if (strstr(argv[4].strptr,"TORIGHT")) flag |= LVNI_TORIGHT;
-           if (!flag) flag = LVNI_ALL;
-
-           if (strstr(argv[4].strptr,"CUT")) flag |= LVNI_CUT;
-           else if (strstr(argv[4].strptr,"DROP")) flag |= LVNI_DROPHILITED;
-           else if (strstr(argv[4].strptr,"FOCUSED")) flag |= LVNI_FOCUSED;
-           else if (strstr(argv[4].strptr,"SELECTED")) flag |= LVNI_SELECTED;
-
-           RETVAL(ListView_GetNextItem(h, startItem, flag))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "FIND"))
-       {
-           LONG startItem;
-           LV_FINDINFO finfo;
-
-           CHECKARGL(6);
-
-           startItem = atol(argv[3].strptr);
-
-           if (strstr(argv[4].strptr,"NEAREST")) finfo.flags = LVFI_NEARESTXY;
-           else finfo.flags = LVFI_STRING;
-
-           if (strstr(argv[4].strptr,"PARTIAL")) finfo.flags |= LVFI_PARTIAL;
-           if (strstr(argv[4].strptr,"WRAP")) finfo.flags |= LVFI_WRAP;
-
-           if ((finfo.flags & LVFI_STRING) == LVFI_STRING)
-               finfo.psz = argv[5].strptr;
-           else {
-               CHECKARG(8);
-               finfo.pt.x = atol(argv[5].strptr);
-               finfo.pt.y = atol(argv[6].strptr);
-               if (!strcmp(argv[7].strptr,"UP")) finfo.vkDirection = VK_UP;
-               else if (!strcmp(argv[7].strptr,"LEFT")) finfo.vkDirection  = VK_LEFT;
-               else if (!strcmp(argv[7].strptr,"RIGHT")) finfo.vkDirection  = VK_RIGHT;
-               else finfo.vkDirection  = VK_DOWN;
-           }
-
-           RETVAL(ListView_FindItem(h, startItem, &finfo))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "EDIT"))
-       {
-           CHECKARG(4);
-
-           RETHANDLE(ListView_EditLabel(h, atol(argv[3].strptr)))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SUBCL_EDIT"))
-       {
-           HWND ew = ListView_GetEditControl(h);
-           if (ew)
-           {
-               WNDPROC oldProc = (WNDPROC)setWindowPtr(ew, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
-               if (oldProc != (WNDPROC)CatchReturnSubProc) wpOldEditProc = oldProc;
-               RETPTR(oldProc)
-           }
-           else RETC(0)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "RESUB_EDIT"))
-       {
-           HWND ew = ListView_GetEditControl(h);
-           if (ew)
-           {
-               setWindowPtr(ew, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
-               RETC(0)
-           }
-           RETVAL(-1)
-       }
-   }
-   else
-   if (argv[0].strptr[0] == 'M')
-   {
-       if (!strcmp(argv[1].strptr, "CNT"))
-       {
-           RETVAL(ListView_GetItemCount(h))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "CNTSEL"))
-       {
-           RETVAL(ListView_GetSelectedCount(h))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "REDRAW"))
-       {
-           CHECKARG(5);
-
-           RETC(!ListView_RedrawItems(h, atol(argv[3].strptr), atol(argv[4].strptr)));
-       }
-       else
-       if (!strcmp(argv[1].strptr, "UPDATE"))
-       {
-           CHECKARG(4);
-
-           RETC(!ListView_Update(h, atol(argv[3].strptr)));
-       }
-       else
-       if (!strcmp(argv[1].strptr, "ENVIS"))
-       {
-           CHECKARG(5);
-           RETC(!ListView_EnsureVisible(h, atol(argv[3].strptr), isYes(argv[4].strptr)))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "CNTPP"))
-       {
-           RETVAL(ListView_GetCountPerPage(h))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SCROLL"))
-       {
-           CHECKARG(5);
-                                      /* dx */                /* dy */
-           RETC(!ListView_Scroll(h, atoi(argv[3].strptr), atoi(argv[4].strptr)))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "COLOR"))
-       {
-           CHECKARGL(4);
-
-           if (argv[3].strptr[0] == 'G')
-           {
-               COLORREF cr;
-               INT i;
-               if (!strcmp(argv[3].strptr, "GETBK")) cr = ListView_GetBkColor(h);
-               else if (!strcmp(argv[3].strptr, "GETTXT")) cr = ListView_GetTextColor(h);
-               else if (!strcmp(argv[3].strptr, "GETTXTBK")) cr = ListView_GetTextBkColor(h);
-               for (i = 0; i< 256; i++) if (cr == PALETTEINDEX(i)) RETVAL(i);
-               RETVAL(-1);
-           }
-           else
-           {
-               CHECKARG(5);
-               if (!strcmp(argv[3].strptr, "SETBK")) RETC(!ListView_SetBkColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
-               if (!strcmp(argv[3].strptr, "SETTXT")) RETC(!ListView_SetTextColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
-               if (!strcmp(argv[3].strptr, "SETTXTBK")) RETC(!ListView_SetTextBkColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
-           }
-       }
-       else
-       if (!strcmp(argv[1].strptr, "ARRANGE"))
-       {
-           UINT flag;
-
-           CHECKARG(4);
-
-           if (!strcmp(argv[3].strptr,"LEFT")) flag = LVA_ALIGNLEFT;
-           else if (!strcmp(argv[3].strptr,"TOP")) flag = LVA_ALIGNTOP;
-           else if (!strcmp(argv[3].strptr,"SNAPTOGRID")) flag = LVA_SNAPTOGRID;
-           else flag = LVA_DEFAULT;
-
-           RETC(!ListView_Arrange(h, flag))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SETCNT"))
-       {
-           CHECKARG(4);
-           ListView_SetItemCount(h, atol(argv[3].strptr));
-           RETC(0)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "GETPOS"))
-       {
-           POINT pt;
-           CHECKARG(4);
-           if (ListView_GetItemPosition(h, atol(argv[3].strptr), &pt))
-           {
-               sprintf(retstr->strptr, "%d %d",pt.x, pt.y);
-               retstr->strlength = strlen(retstr->strptr);
-               return 0;
-           }
-           else RETC(0);
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SETPOS"))
-       {
-           CHECKARG(6);
-
-           RETC(!SendMessage(h, LVM_SETITEMPOSITION, (WPARAM)atol(argv[3].strptr), \
-               MAKELPARAM((int) atoi(argv[4].strptr), (int) atoi(argv[5].strptr))))
-       }
-       else
-       if (!strcmp(argv[1].strptr,"GETSPC"))
-       {
-           CHECKARG(4);
-           RETVAL(ListView_GetItemSpacing(h, isYes(argv[3].strptr)));
-       }
-       else
-       if (!strcmp(argv[1].strptr,"SETSTYLE"))
-       {
-           uint32_t style;
-           CHECKARG(5);
-
-           style = (uint32_t)GetWindowLong(h, GWL_STYLE);
-           if ( style == 0 ) RETC(0);
-           if (argv[3].strptr[0] == 'A')
-           {
-               style = listViewStyle(argv[4].strptr, style);
-               RETVAL(SetWindowLong(h, GWL_STYLE, style));
-           }
-           else if (argv[3].strptr[0] == 'R')
-           {
-               style &= ~listViewStyle(argv[4].strptr, 0);
-               RETVAL(SetWindowLong(h, GWL_STYLE, style));
-           }
-       }
-   }
-   else
-   if (argv[0].strptr[0] == 'C')
-   {
-       if (!strcmp(argv[1].strptr, "SET"))
-       {
-           LV_COLUMN lvi;
-           LONG nr;
-
-           CHECKARG(7);
-
-           lvi.mask = 0;
-
-           nr = atoi(argv[3].strptr);
-
-           lvi.pszText = (LPSTR)argv[4].strptr;
-           lvi.cchTextMax = (int)argv[4].strlength;
-           if (lvi.cchTextMax) lvi.mask |= LVCF_TEXT;
-
-           lvi.cx = atoi(argv[5].strptr);
-           if (lvi.cx >= 0) lvi.mask |= LVCF_WIDTH;
-
-           if (argv[6].strlength)
-           {
-               if (strstr(argv[6].strptr,"CENTER")) lvi.fmt = LVCFMT_CENTER;
-               else if (strstr(argv[6].strptr,"RIGHT")) lvi.fmt = LVCFMT_RIGHT;
-               else lvi.fmt = LVCFMT_LEFT;
-              lvi.mask |= LVCF_FMT;
-           }
-           RETC(!ListView_SetColumn(h, nr, &lvi));
-       }
-       else
-       if (!strcmp(argv[1].strptr, "GET"))
-       {
-           LV_COLUMN lvi;
-           CHAR data[256];
-           LONG nr;
-
-           CHECKARG(5);
-
-           nr = atoi(argv[3].strptr);
-
-           lvi.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT | LVCF_WIDTH;
-           lvi.pszText = data;
-           lvi.cchTextMax = 255;
-
-           if (ListView_GetColumn(h, nr, &lvi))
-           {
-               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Text", lvi.pszText);
-               itoa(lvi.iSubItem, data, 10);
-               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Column", data);
-               itoa(lvi.cx, data, 10);
-               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Width", data);
-
-               data[0] = '\0';
-               if ( (LVCFMT_JUSTIFYMASK & lvi.fmt) == LVCFMT_CENTER )
-               {
-                   strcpy(data, "CENTER");
-               }
-               else if ( (LVCFMT_JUSTIFYMASK & lvi.fmt) == LVCFMT_RIGHT )
-               {
-                   strcpy(data, "RIGHT");
-               }
-               else
-               {
-                   strcpy(data, "LEFT");
-               }
-               SetRexxStem(argv[4].strptr, SIZE_MAX, "!Align", data);
-               RETC(0)
-           }
-           else RETVAL(-1)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SETWIDTH"))
-       {
-           LONG cx;
-           CHECKARG(5);
-
-           if (!strcmp(argv[4].strptr, "AUTO")) cx = LVSCW_AUTOSIZE;
-           else if (!strcmp(argv[4].strptr, "AUTOHEADER")) cx = LVSCW_AUTOSIZE_USEHEADER;
-           else cx = atoi(argv[4].strptr);
-
-           RETC(!ListView_SetColumnWidth(h, atoi(argv[3].strptr), cx));
-       }
-       else
-       if (!strcmp(argv[1].strptr, "DEL"))
-       {
-           CHECKARG(4);
-
-           RETC(!ListView_DeleteColumn(h, atoi(argv[3].strptr)));
-       }
-   }
-   RETC(0)
-}
 
 
 /**
@@ -1099,12 +361,18 @@ inline bool hasCheckBoxes(HWND hList)
     return ((ListView_GetExtendedListViewStyle(hList) & LVS_EX_CHECKBOXES) != 0);
 }
 
-inline int getLVColumnCount(HWND hList)
+inline bool isInIconView(HWND hList)
+{
+    uint32_t style = (uint32_t)GetWindowLong(hList, GWL_STYLE);
+    return (style & LVS_ICON) || (style & LVS_SMALLICON);
+}
+
+inline int getColumnCount(HWND hList)
 {
     return Header_GetItemCount(ListView_GetHeader(hList));
 }
 
-inline CSTRING lvGetAttributeName(uint8_t type)
+inline CSTRING getLVAttributeName(uint8_t type)
 {
     switch ( type )
     {
@@ -1118,128 +386,491 @@ inline CSTRING lvGetAttributeName(uint8_t type)
     }
 }
 
-/** ListControl::setImageList()
+/**
+ * Parse a list-view control extended style string sent from ooDialog into the
+ * corresponding style flags.
  *
- *  Sets or removes one of a list-view's image lists.
- *
- *  @param ilSrc  The image list source. Either an .ImageList object that
- *                references the image list to be set, or a single bitmap from
- *                which the image list is constructed, or .nil.  If ilSRC is
- *                .nil, an existing image list, if any is removed.
- *
- *  @param width  [optional]  This arg serves two purposes.  If ilSrc is .nil or
- *                an .ImageList object, this arg indentifies which of the
- *                list-views image lists is being set, normal, small, or state.
- *                The default is LVSI_NORMAL.
- *
- *                If ilSrc is a bitmap, then this arg is the width of a single
- *                image.  The default is the height of the actual bitmap.
- *
- *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in
- *                which case it is the height of the bitmap.  The default is the
- *                height of the actual bitmap
- *
- *  @param ilType [optional]  Only used if ilSrc is a bitmap.  In that case it
- *                indentifies which of the list-views image lists is being set,
- *                normal, small, or state. The default is LVSI_NORMAL.
- *
- *  @return       Returns the exsiting .ImageList object if there is one, or
- *                .nil if there is not an existing object.
- *
- *  @note  When the ilSrc is a single bitmap, an image list is created from the
- *         bitmap.  This method is not as flexible as if the programmer created
- *         the image list herself.  The bitmap must be a number of images, all
- *         the same size, side-by-side in the bitmap.  The width of a single
- *         image determines the number of images.  The image list is created
- *         using the ILC_COLOR8 flag, only.  No mask can be used.  No room is
- *         reserved for adding more images to the image list, etc..
+ * The extended list-view styles are set (and retrieved) in a different manner
+ * than other window styles.  This function is used only to parse those extended
+ * styles.  The normal list-view styles are parsed using EvaluateListStyle.
  */
-RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
-            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, OSELF, self)
+static uint32_t parseExtendedStyle(const char * style)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    oodResetSysErrCode(context->threadContext);
+    uint32_t dwStyle = 0;
 
-    HIMAGELIST himl = NULL;
-    RexxObjectPtr imageList = NULL;
-    int type = LVSIL_NORMAL;
+    if ( strstr(style, "BORDERSELECT"    ) ) dwStyle |= LVS_EX_BORDERSELECT;
+    if ( strstr(style, "CHECKBOXES"      ) ) dwStyle |= LVS_EX_CHECKBOXES;
+    if ( strstr(style, "FLATSB"          ) ) dwStyle |= LVS_EX_FLATSB;
+    if ( strstr(style, "FULLROWSELECT"   ) ) dwStyle |= LVS_EX_FULLROWSELECT;
+    if ( strstr(style, "GRIDLINES"       ) ) dwStyle |= LVS_EX_GRIDLINES;
+    if ( strstr(style, "HEADERDRAGDROP"  ) ) dwStyle |= LVS_EX_HEADERDRAGDROP;
+    if ( strstr(style, "INFOTIP"         ) ) dwStyle |= LVS_EX_INFOTIP;
+    if ( strstr(style, "MULTIWORKAREAS"  ) ) dwStyle |= LVS_EX_MULTIWORKAREAS;
+    if ( strstr(style, "ONECLICKACTIVATE") ) dwStyle |= LVS_EX_ONECLICKACTIVATE;
+    if ( strstr(style, "REGIONAL"        ) ) dwStyle |= LVS_EX_REGIONAL;
+    if ( strstr(style, "SUBITEMIMAGES"   ) ) dwStyle |= LVS_EX_SUBITEMIMAGES;
+    if ( strstr(style, "TRACKSELECT"     ) ) dwStyle |= LVS_EX_TRACKSELECT;
+    if ( strstr(style, "TWOCLICKACTIVATE") ) dwStyle |= LVS_EX_TWOCLICKACTIVATE;
+    if ( strstr(style, "UNDERLINECOLD"   ) ) dwStyle |= LVS_EX_UNDERLINECOLD;
+    if ( strstr(style, "UNDERLINEHOT"    ) ) dwStyle |= LVS_EX_UNDERLINEHOT;
 
-    if ( ilSrc == TheNilObj )
+    // Needs Comctl32.dll version 5.8 or higher
+    if ( ComCtl32Version >= COMCTL32_5_8 )
     {
-        imageList = ilSrc;
-        if ( argumentExists(2) )
-        {
-            type = width;
-        }
+      if ( strstr(style, "LABELTIP") ) dwStyle |= LVS_EX_LABELTIP;
     }
-    else if ( context->IsOfType(ilSrc, "ImageList") )
-    {
-        imageList = ilSrc;
-        himl = rxGetImageList(context, imageList, 1);
-        if ( himl == NULL )
-        {
-            goto err_out;
-        }
 
-        if ( argumentExists(2) )
+    // Needs Comctl32 version 6.0 or higher
+    if ( ComCtl32Version >= COMCTL32_6_0 )
+    {
+      if ( strstr(style, "DOUBLEBUFFER") ) dwStyle |= LVS_EX_DOUBLEBUFFER;
+      if ( strstr(style, "SIMPLESELECT") ) dwStyle |= LVS_EX_SIMPLESELECT;
+    }
+    return dwStyle;
+}
+
+
+/**
+ * Change a list-view's style.
+ *
+ * @param c
+ * @param pCSelf
+ * @param _style
+ * @param _additionalStyle
+ * @param remove
+ *
+ * @return uint32_t
+ *
+ *  @remarks  MSDN suggests setting last error to 0 before calling
+ *            GetWindowLong() as the correct way to determine error.
+ */
+static uint32_t changeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTRING _style, CSTRING _additionalStyle, bool remove)
+{
+    oodResetSysErrCode(c->threadContext);
+    SetLastError(0);
+
+    HWND     hList = getDCHCtrl(pCSelf);
+    uint32_t oldStyle = (uint32_t)GetWindowLong(hList, GWL_STYLE);
+
+    if ( oldStyle == 0 && GetLastError() != 0 )
+    {
+        goto err_out;
+    }
+
+    uint32_t newStyle = 0;
+    if ( remove )
+    {
+        newStyle &= ~listViewStyle(_style, 0);
+        if ( _additionalStyle != NULL )
         {
-            type = width;
+            newStyle = listViewStyle(_additionalStyle, newStyle);
         }
     }
     else
     {
-        imageList = oodILFromBMP(context, &himl, ilSrc, width, height, hwnd);
-        if ( imageList == NULLOBJECT )
-        {
-            goto err_out;
-        }
-
-        if ( argumentExists(4) )
-        {
-            type = ilType;
-        }
+        newStyle = listViewStyle(_style, oldStyle);
     }
 
-    if ( type > LVSIL_STATE )
+    if ( SetWindowLong(hList, GWL_STYLE, newStyle) == 0 && GetLastError() != 0 )
     {
-        wrongRangeException(context->threadContext, argumentExists(4) ? 4 : 2, LVSIL_NORMAL, LVSIL_STATE, type);
         goto err_out;
     }
-
-    ListView_SetImageList(hwnd, himl, type);
-    return rxSetObjVar(context, lvGetAttributeName(type), imageList);
+    return oldStyle;
 
 err_out:
-    return NULLOBJECT;
+    oodSetSysErrCode(c->threadContext);
+    return 0;
 }
 
-/** ListControl::getImageList()
- *
- *  Gets the list-view's specifed image list.
- *
- *  @param  type [optional] Identifies which image list to get.  Normal, small,
- *          or state. Normal is the default.
- *
- *  @return  The image list, if it exists, otherwise .nil.
- */
-RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
-{
-    if ( argumentOmitted(1) )
-    {
-        type = LVSIL_NORMAL;
-    }
-    else if ( type > LVSIL_STATE )
-    {
-        wrongRangeException(context->threadContext, 1, LVSIL_NORMAL, LVSIL_STATE, type);
-        return NULLOBJECT;
-    }
 
-    RexxObjectPtr result = context->GetObjectVariable(lvGetAttributeName(type));
-    if ( result == NULLOBJECT )
+/**
+ * Produce a string representation of a List-View's extended styles.
+ */
+static RexxStringObject extendedStyleToString(RexxMethodContext *c, HWND hList)
+{
+    char buf[256];
+    DWORD dwStyle = ListView_GetExtendedListViewStyle(hList);
+    buf[0] = '\0';
+
+    if ( dwStyle & LVS_EX_BORDERSELECT )     strcat(buf, "BORDERSELECT ");
+    if ( dwStyle & LVS_EX_CHECKBOXES )       strcat(buf, "CHECKBOXES ");
+    if ( dwStyle & LVS_EX_FLATSB )           strcat(buf, "FLATSB ");
+    if ( dwStyle & LVS_EX_FULLROWSELECT )    strcat(buf, "FULLROWSELECT ");
+    if ( dwStyle & LVS_EX_GRIDLINES )        strcat(buf, "GRIDLINES ");
+    if ( dwStyle & LVS_EX_HEADERDRAGDROP )   strcat(buf, "HEADERDRAGDROP ");
+    if ( dwStyle & LVS_EX_INFOTIP )          strcat(buf, "INFOTIP ");
+    if ( dwStyle & LVS_EX_MULTIWORKAREAS )   strcat(buf, "MULTIWORKAREAS ");
+    if ( dwStyle & LVS_EX_ONECLICKACTIVATE ) strcat(buf, "ONECLICKACTIVATE ");
+    if ( dwStyle & LVS_EX_REGIONAL )         strcat(buf, "REGIONAL ");
+    if ( dwStyle & LVS_EX_SUBITEMIMAGES )    strcat(buf, "SUBITEMIMAGES ");
+    if ( dwStyle & LVS_EX_TRACKSELECT )      strcat(buf, "TRACKSELECT ");
+    if ( dwStyle & LVS_EX_TWOCLICKACTIVATE ) strcat(buf, "TWOCLICKACTIVATE ");
+    if ( dwStyle & LVS_EX_UNDERLINECOLD )    strcat(buf, "UNDERLINECOLD ");
+    if ( dwStyle & LVS_EX_UNDERLINEHOT )     strcat(buf, "UNDERLINEHOT ");
+    if ( dwStyle & LVS_EX_LABELTIP )         strcat(buf, "LABELTIP ");
+    if ( dwStyle & LVS_EX_DOUBLEBUFFER )     strcat(buf, "DOUBLEBUFFER ");
+    if ( dwStyle & LVS_EX_SIMPLESELECT )     strcat(buf, "SIMPLESELECT ");
+
+    return c->String(buf);
+}
+
+
+static int getColumnWidthArg(RexxMethodContext *context, RexxObjectPtr _width, size_t argPos)
+{
+    int width = OOD_BAD_WIDTH_EXCEPTION;
+
+    if ( argumentOmitted(argPos) )
     {
-        result = TheNilObj;
+        width = LVSCW_AUTOSIZE;
     }
-    return result;
+    else
+    {
+        CSTRING tmpWidth = context->ObjectToStringValue(_width);
+
+        if ( stricmp(tmpWidth, "AUTO") == 0 )
+        {
+            width = LVSCW_AUTOSIZE;
+        }
+        else if ( stricmp(tmpWidth, "AUTOHEADER") == 0 )
+        {
+            width = LVSCW_AUTOSIZE_USEHEADER;
+        }
+        else if ( ! context->Int32(_width, &width) )
+        {
+            wrongArgValueException(context->threadContext, argPos, "AUTO, AUTOHEADER, or a numeric value", _width);
+        }
+    }
+    return width;
+}
+
+
+size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+{
+   HWND h;
+
+   CHECKARGL(3);
+
+   h = GET_HWND(argv[2]);
+   if (!h) RETERR;
+
+   if (argv[0].strptr[0] == 'I')
+   {
+       if (!strcmp(argv[1].strptr, "INS"))
+       {
+           LV_ITEM lvi;
+
+           CHECKARG(6);
+
+           lvi.mask = LVIF_TEXT;
+
+           lvi.iItem = atoi(argv[3].strptr);
+           lvi.iSubItem = 0;
+
+           lvi.pszText = (LPSTR)argv[4].strptr;
+           lvi.cchTextMax = (int)argv[4].strlength;
+
+           lvi.iImage = atoi(argv[5].strptr);
+           if (lvi.iImage >= 0) lvi.mask |= LVIF_IMAGE;
+
+           RETVAL(ListView_InsertItem(h, &lvi));
+       }
+       else
+       if (!strcmp(argv[1].strptr, "SET"))
+       {
+           LV_ITEM lvi;
+
+           CHECKARG(7);
+
+           lvi.mask = 0;
+
+           lvi.iItem = atoi(argv[3].strptr);
+           lvi.iSubItem = atoi(argv[4].strptr);
+
+           lvi.pszText = (LPSTR)argv[5].strptr;
+           lvi.cchTextMax = (int)argv[5].strlength;
+
+           if (!strcmp(argv[6].strptr,"TXT"))
+           {
+               lvi.mask |= LVIF_TEXT;
+               RETC(!SendMessage(h, LVM_SETITEMTEXT, lvi.iItem, (LPARAM)&lvi));
+           }
+           else if (!strcmp(argv[6].strptr,"STATE"))
+           {
+               lvi.state = 0;
+               lvi.stateMask = 0;
+
+               if (strstr(argv[5].strptr, "NOTCUT"))  lvi.stateMask |= LVIS_CUT;
+               else if (strstr(argv[5].strptr, "CUT"))  {lvi.state |= LVIS_CUT; lvi.stateMask |= LVIS_CUT;}
+               if (strstr(argv[5].strptr, "NOTDROP"))  lvi.stateMask |= LVIS_DROPHILITED;
+               else if (strstr(argv[5].strptr, "DROP"))  {lvi.state |= LVIS_DROPHILITED; lvi.stateMask |= LVIS_DROPHILITED;}
+               if (strstr(argv[5].strptr, "NOTFOCUSED"))  lvi.stateMask |= LVIS_FOCUSED;
+               else if (strstr(argv[5].strptr, "FOCUSED"))  {lvi.state |= LVIS_FOCUSED; lvi.stateMask |= LVIS_FOCUSED;}
+               if (strstr(argv[5].strptr, "NOTSELECTED"))  lvi.stateMask |= LVIS_SELECTED;
+               else if (strstr(argv[5].strptr, "SELECTED"))  {lvi.state |= LVIS_SELECTED; lvi.stateMask |= LVIS_SELECTED;}
+
+               RETC(!SendMessage(h, LVM_SETITEMSTATE, lvi.iItem, (LPARAM)&lvi));
+           }
+           else
+           {
+               if (lvi.cchTextMax) lvi.mask |= LVIF_TEXT;
+
+               lvi.iImage = atoi(argv[6].strptr);
+               if (lvi.iImage >= 0) lvi.mask |= LVIF_IMAGE;
+               RETC(!ListView_SetItem(h, &lvi));
+           }
+       }
+       else
+       if (!strcmp(argv[1].strptr, "GET"))
+       {
+           LV_ITEM lvi;
+           CHAR data[256];
+
+           CHECKARG(7);
+
+           lvi.iItem = atoi(argv[3].strptr);
+           lvi.iSubItem = atoi(argv[4].strptr);
+           lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_STATE;
+           lvi.pszText = data;
+           lvi.cchTextMax = 255;
+           lvi.stateMask = LVIS_CUT | LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED;
+
+           if (!strcmp(argv[6].strptr,"TXT"))
+           {
+               INT len;
+               lvi.pszText = retstr->strptr;
+               len = (int)SendMessage(h, LVM_GETITEMTEXT, lvi.iItem, (LPARAM)&lvi);
+               retstr->strlength = len;
+               return 0;
+           }
+           else if (!strcmp(argv[6].strptr,"STATE"))
+           {
+               UINT state;
+
+               state = ListView_GetItemState(h, lvi.iItem, lvi.stateMask);
+               retstr->strptr[0] = '\0';
+               if (state & LVIS_CUT) strcat(retstr->strptr, "CUT ");
+               if (state & LVIS_DROPHILITED) strcat(retstr->strptr, "DROP ");
+               if (state & LVIS_FOCUSED) strcat(retstr->strptr, "FOCUSED ");
+               if (state & LVIS_SELECTED) strcat(retstr->strptr, "SELECTED ");
+               retstr->strlength = strlen(retstr->strptr);
+               return 0;
+           }
+           RETVAL(-1);
+       }
+       else
+       if (!strcmp(argv[1].strptr, "DEL"))
+       {
+           INT item;
+           CHECKARG(4);
+           item = atoi(argv[3].strptr);
+           if (!item && !strcmp(argv[3].strptr,"ALL"))
+              RETC(!ListView_DeleteAllItems(h))
+           else if (ListView_GetItemCount(h) >0)
+              RETC(!ListView_DeleteItem(h, item))
+           RETVAL(-1)
+       }
+       else
+       if (!strcmp(argv[1].strptr, "GETNEXT"))
+       {
+           ULONG flag;
+           LONG startItem;
+
+           CHECKARG(5);
+
+           startItem = atol(argv[3].strptr);
+
+           if (!strcmp(argv[4].strptr, "FIRSTVISIBLE"))
+               RETVAL(ListView_GetTopIndex(h))
+
+           flag = 0;
+           if (strstr(argv[4].strptr,"ABOVE")) flag |= LVNI_ABOVE;
+           if (strstr(argv[4].strptr,"BELOW")) flag |= LVNI_BELOW;
+           if (strstr(argv[4].strptr,"TOLEFT")) flag |= LVNI_TOLEFT;
+           if (strstr(argv[4].strptr,"TORIGHT")) flag |= LVNI_TORIGHT;
+           if (!flag) flag = LVNI_ALL;
+
+           if (strstr(argv[4].strptr,"CUT")) flag |= LVNI_CUT;
+           else if (strstr(argv[4].strptr,"DROP")) flag |= LVNI_DROPHILITED;
+           else if (strstr(argv[4].strptr,"FOCUSED")) flag |= LVNI_FOCUSED;
+           else if (strstr(argv[4].strptr,"SELECTED")) flag |= LVNI_SELECTED;
+
+           RETVAL(ListView_GetNextItem(h, startItem, flag))
+       }
+       else
+       if (!strcmp(argv[1].strptr, "FIND"))
+       {
+           LONG startItem;
+           LV_FINDINFO finfo;
+
+           CHECKARGL(6);
+
+           startItem = atol(argv[3].strptr);
+
+           if (strstr(argv[4].strptr,"NEAREST")) finfo.flags = LVFI_NEARESTXY;
+           else finfo.flags = LVFI_STRING;
+
+           if (strstr(argv[4].strptr,"PARTIAL")) finfo.flags |= LVFI_PARTIAL;
+           if (strstr(argv[4].strptr,"WRAP")) finfo.flags |= LVFI_WRAP;
+
+           if ((finfo.flags & LVFI_STRING) == LVFI_STRING)
+               finfo.psz = argv[5].strptr;
+           else {
+               CHECKARG(8);
+               finfo.pt.x = atol(argv[5].strptr);
+               finfo.pt.y = atol(argv[6].strptr);
+               if (!strcmp(argv[7].strptr,"UP")) finfo.vkDirection = VK_UP;
+               else if (!strcmp(argv[7].strptr,"LEFT")) finfo.vkDirection  = VK_LEFT;
+               else if (!strcmp(argv[7].strptr,"RIGHT")) finfo.vkDirection  = VK_RIGHT;
+               else finfo.vkDirection  = VK_DOWN;
+           }
+
+           RETVAL(ListView_FindItem(h, startItem, &finfo))
+       }
+       else
+       if (!strcmp(argv[1].strptr, "EDIT"))
+       {
+           CHECKARG(4);
+
+           RETHANDLE(ListView_EditLabel(h, atol(argv[3].strptr)))
+       }
+       else
+       if (!strcmp(argv[1].strptr, "SUBCL_EDIT"))
+       {
+           HWND ew = ListView_GetEditControl(h);
+           if (ew)
+           {
+               WNDPROC oldProc = (WNDPROC)setWindowPtr(ew, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
+               if (oldProc != (WNDPROC)CatchReturnSubProc) wpOldEditProc = oldProc;
+               RETPTR(oldProc)
+           }
+           else RETC(0)
+       }
+       else
+       if (!strcmp(argv[1].strptr, "RESUB_EDIT"))
+       {
+           HWND ew = ListView_GetEditControl(h);
+           if (ew)
+           {
+               setWindowPtr(ew, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
+               RETC(0)
+           }
+           RETVAL(-1)
+       }
+   }
+   else
+   if (argv[0].strptr[0] == 'M')
+   {
+       if (!strcmp(argv[1].strptr, "CNT"))
+       {
+           RETVAL(ListView_GetItemCount(h))
+       }
+       else
+       if (!strcmp(argv[1].strptr, "CNTSEL"))
+       {
+           RETVAL(ListView_GetSelectedCount(h))
+       }
+       else
+       if (!strcmp(argv[1].strptr, "REDRAW"))
+       {
+           CHECKARG(5);
+
+           RETC(!ListView_RedrawItems(h, atol(argv[3].strptr), atol(argv[4].strptr)));
+       }
+       else
+       if (!strcmp(argv[1].strptr, "UPDATE"))
+       {
+           CHECKARG(4);
+
+           RETC(!ListView_Update(h, atol(argv[3].strptr)));
+       }
+       else
+       if (!strcmp(argv[1].strptr, "ENVIS"))
+       {
+           CHECKARG(5);
+           RETC(!ListView_EnsureVisible(h, atol(argv[3].strptr), isYes(argv[4].strptr)))
+       }
+       else
+       if (!strcmp(argv[1].strptr, "CNTPP"))
+       {
+           RETVAL(ListView_GetCountPerPage(h))
+       }
+       else
+       if (!strcmp(argv[1].strptr, "SCROLL"))
+       {
+           CHECKARG(5);
+                                      /* dx */                /* dy */
+           RETC(!ListView_Scroll(h, atoi(argv[3].strptr), atoi(argv[4].strptr)))
+       }
+       else
+       if (!strcmp(argv[1].strptr, "COLOR"))
+       {
+           CHECKARGL(4);
+
+           if (argv[3].strptr[0] == 'G')
+           {
+               COLORREF cr;
+               INT i;
+               if (!strcmp(argv[3].strptr, "GETBK")) cr = ListView_GetBkColor(h);
+               else if (!strcmp(argv[3].strptr, "GETTXT")) cr = ListView_GetTextColor(h);
+               else if (!strcmp(argv[3].strptr, "GETTXTBK")) cr = ListView_GetTextBkColor(h);
+               for (i = 0; i< 256; i++) if (cr == PALETTEINDEX(i)) RETVAL(i);
+               RETVAL(-1);
+           }
+           else
+           {
+               CHECKARG(5);
+               if (!strcmp(argv[3].strptr, "SETBK")) RETC(!ListView_SetBkColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
+               if (!strcmp(argv[3].strptr, "SETTXT")) RETC(!ListView_SetTextColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
+               if (!strcmp(argv[3].strptr, "SETTXTBK")) RETC(!ListView_SetTextBkColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
+           }
+       }
+       else
+       if (!strcmp(argv[1].strptr, "ARRANGE"))
+       {
+           UINT flag;
+
+           CHECKARG(4);
+
+           if (!strcmp(argv[3].strptr,"LEFT")) flag = LVA_ALIGNLEFT;
+           else if (!strcmp(argv[3].strptr,"TOP")) flag = LVA_ALIGNTOP;
+           else if (!strcmp(argv[3].strptr,"SNAPTOGRID")) flag = LVA_SNAPTOGRID;
+           else flag = LVA_DEFAULT;
+
+           RETC(!ListView_Arrange(h, flag))
+       }
+   }
+   RETC(0)
+}
+
+
+/** ListView::arran g e()
+ *  ListView::snapt o Grid()
+ *  ListView::align L eft()
+ *  Listview::align T op()
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, lv_arrange, NAME, method, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    int32_t flag = 0;
+    switch ( method[5] )
+    {
+        case 'G' :
+            flag = LVA_DEFAULT;
+            break;
+        case 'O' :
+            flag = LVA_SNAPTOGRID;
+            break;
+        case 'L' :
+            SetWindowLong(hList, GWL_STYLE, (GetWindowLong(hList, GWL_STYLE) & ~LVS_ALIGNTOP) | LVS_ALIGNLEFT);
+            return TheZeroObj;
+        case 'T' :
+            SetWindowLong(hList, GWL_STYLE, (GetWindowLong(hList, GWL_STYLE) & ~LVS_ALIGNLEFT) | LVS_ALIGNTOP);
+            return TheZeroObj;
+    }
+    return (ListView_Arrange(hList, flag) ? TheZeroObj : TheFalseObj);
 }
 
 RexxMethod3(int32_t, lv_checkUncheck, int32_t, index, NAME, method, CSELF, pCSelf)
@@ -1247,7 +878,7 @@ RexxMethod3(int32_t, lv_checkUncheck, int32_t, index, NAME, method, CSELF, pCSel
     HWND hList = getDCHCtrl(pCSelf);
 
     if ( ! hasCheckBoxes(hList) )
-    {                                       // TODO LOOK HERE LOOK HERE this area is where we left off.
+    {
         return -2;
     }
 
@@ -1308,7 +939,7 @@ RexxMethod2(RexxObjectPtr, lv_getExtendedStyle, NAME, method, CSELF, pCSelf)
     }
     else
     {
-        return listExtendedStyleToString(context, hList);
+        return extendedStyleToString(context, hList);
     }
 }
 
@@ -1318,7 +949,7 @@ RexxMethod2(RexxObjectPtr, lv_getExtendedStyle, NAME, method, CSELF, pCSelf)
  */
 RexxMethod3(int32_t, lv_addClearExtendStyle, CSTRING, _style, NAME, method, CSELF, pCSelf)
 {
-    uint32_t style = ParseExtendedListStyle(_style);
+    uint32_t style = parseExtendedStyle(_style);
     if ( style == 0  )
     {
         return -3;
@@ -1339,8 +970,8 @@ RexxMethod3(int32_t, lv_addClearExtendStyle, CSTRING, _style, NAME, method, CSEL
 
 RexxMethod3(int32_t, lv_replaceExtendStyle, CSTRING, remove, CSTRING, add, CSELF, pCSelf)
 {
-    uint32_t removeStyles = ParseExtendedListStyle(remove);
-    uint32_t addStyles = ParseExtendedListStyle(add);
+    uint32_t removeStyles = parseExtendedStyle(remove);
+    uint32_t addStyles = parseExtendedStyle(add);
     if ( removeStyles == 0 || addStyles == 0  )
     {
         return -3;
@@ -1352,16 +983,164 @@ RexxMethod3(int32_t, lv_replaceExtendStyle, CSTRING, remove, CSTRING, add, CSELF
     return 0;
 }
 
+/** ListView::addStyle()
+ *  ListView::removeStyle()
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(uint32_t, lv_addRemoveStyle, CSTRING, style, NAME, method, CSELF, pCSelf)
+{
+    return changeStyle(context, (pCDialogControl)pCSelf, style, NULL, (*method == 'R'));
+}
+
+/** ListView::replaceStyle()
+ *
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(uint32_t, lv_replaceStyle, CSTRING, removeStyle, CSTRING, additionalStyle, CSELF, pCSelf)
+{
+    return changeStyle(context, (pCDialogControl)pCSelf, removeStyle, additionalStyle, true);
+}
+
+RexxMethod3(RexxObjectPtr, lv_getItemInfo, uint32_t, index, OPTIONAL_uint32_t, subItem, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    LVITEM lvi;
+    char buf[256];
+
+    lvi.iItem = index;
+    lvi.iSubItem = subItem;
+    lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_STATE;
+    lvi.pszText = buf;
+    lvi.cchTextMax = 255;
+    lvi.stateMask = LVIS_CUT | LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED;
+
+    if ( ! ListView_GetItem(hList, &lvi) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    RexxStemObject stem = context->NewStem("InternalLVItemInfo");
+
+    context->SetStemElement(stem, "!TEXT", context->String(lvi.pszText));
+    context->SetStemElement(stem, "!IMAGE", context->Int32(lvi.iImage));
+
+    *buf = '\0';
+    if ( lvi.state & LVIS_CUT)         strcat(buf, "CUT ");
+    if ( lvi.state & LVIS_DROPHILITED) strcat(buf, "DROP ");
+    if ( lvi.state & LVIS_FOCUSED)     strcat(buf, "FOCUSED ");
+    if ( lvi.state & LVIS_SELECTED)    strcat(buf, "SELECTED ");
+
+    if ( *buf != '\0' )
+    {
+        *(buf + strlen(buf) - 1) = '\0';
+    }
+    context->SetStemElement(stem, "!STATE", context->String(buf));
+
+    return stem;
+}
+
 RexxMethod1(int, lv_getColumnCount, CSELF, pCSelf)
 {
-    return getLVColumnCount(getDCHCtrl(pCSelf));
+    return getColumnCount(getDCHCtrl(pCSelf));
+}
+
+RexxMethod2(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    LVCOLUMN lvi;
+    char buf[256];
+
+    lvi.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT | LVCF_WIDTH;
+    lvi.pszText = buf;
+    lvi.cchTextMax = 255;
+
+    if ( ! ListView_GetColumn(hList, index, &lvi) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    RexxStemObject stem = context->NewStem("InternalLVColInfo");
+
+    context->SetStemElement(stem, "!TEXT", context->String(lvi.pszText));
+    context->SetStemElement(stem, "!COLUMN", context->Int32(lvi.iSubItem));
+    context->SetStemElement(stem, "!WIDTH", context->Int32(lvi.cx));
+
+    char *align = "LEFT";
+    if ( (LVCFMT_JUSTIFYMASK & lvi.fmt) == LVCFMT_CENTER )
+    {
+        align = "CENTER";
+    }
+    else if ( (LVCFMT_JUSTIFYMASK & lvi.fmt) == LVCFMT_RIGHT )
+    {
+        align = "RIGHT";
+    }
+    context->SetStemElement(stem, "!ALIGN", context->String(align));
+
+    return stem;
+}
+
+RexxMethod3(RexxObjectPtr, lv_setColumnWidthPx, uint32_t, index, OPTIONAL_RexxObjectPtr, _width, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    int width = getColumnWidthArg(context, _width, 2);
+    if ( width == OOD_BAD_WIDTH_EXCEPTION )
+    {
+        return TheOneObj;
+    }
+    return (ListView_SetColumnWidth(hList, index, width) ? TheZeroObj : TheOneObj);
+}
+
+RexxMethod5(RexxObjectPtr, lv_modifyColumnPx, uint32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_RexxObjectPtr, _width,
+            OPTIONAL_CSTRING, align, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    HWND hList = getDCHCtrl(pCSelf);
+    LVCOLUMN lvi = {0};
+
+    if ( argumentExists(2) && *label != '\0' )
+    {
+        lvi.pszText = (LPSTR)label;
+        lvi.cchTextMax = strlen(label);
+        lvi.mask |= LVCF_TEXT;
+    }
+    if ( argumentExists(3) )
+    {
+        lvi.cx = getColumnWidthArg(context, _width, 3);
+        if ( lvi.cx == OOD_BAD_WIDTH_EXCEPTION )
+        {
+            goto err_out;
+        }
+        lvi.mask |= LVCF_WIDTH;
+    }
+    if ( argumentExists(4) && *align != '\0' )
+    {
+        if ( StrStrI(align, "CENTER")     != NULL ) lvi.fmt = LVCFMT_CENTER;
+        else if ( StrStrI(align, "RIGHT") != NULL ) lvi.fmt = LVCFMT_RIGHT;
+        else if ( StrStrI(align, "LEFT")  != NULL ) lvi.fmt = LVCFMT_LEFT;
+        else
+        {
+            wrongArgValueException(context->threadContext, 4, "LEFT, RIGHT, or CENTER", align);
+            goto err_out;
+        }
+        lvi.mask |= LVCF_FMT;
+    }
+
+    return (ListView_SetColumn(hList, index, &lvi) ? TheZeroObj : TheOneObj);
+
+err_out:
+    return TheNegativeOneObj;
 }
 
 RexxMethod1(RexxObjectPtr, lv_getColumnOrder, CSELF, pCSelf)
 {
     HWND hwnd = getDCHCtrl(pCSelf);
 
-    int count = getLVColumnCount(hwnd);
+    int count = getColumnCount(hwnd);
     if ( count == -1 )
     {
         return TheNilObj;
@@ -1407,7 +1186,7 @@ RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, OSELF, self)
     HWND hwnd = rxGetWindowHandle(context, self);
 
     size_t    items   = context->ArrayItems(order);
-    int       count   = getLVColumnCount(hwnd);
+    int       count   = getColumnCount(hwnd);
     int      *pOrder  = NULL;
     logical_t success = FALSE;
 
@@ -1622,6 +1401,209 @@ done_out:
 }
 
 
+RexxMethod2(RexxObjectPtr, lv_getItemPos, uint32_t, index, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    POINT p;
+    if ( ! ListView_GetItemPosition(hList, index, &p) )
+    {
+        return TheZeroObj;
+    }
+    return rxNewPoint(context, p.x, p.y);
+}
+
+/** ListView::setItemPos()
+ *
+ *  Moves a list view item to the specified position, (when the list view is in
+ *  icon or small icon view.)
+ *
+ *  @param  index  The index of the item to move.
+ *
+ *  The other argument(s) specify the new position, and are optional.  If
+ *  omitted the position defaults to (0, 0).  The position can either be
+ *  specified using a .Point object, or using an x and a y co-ordinate.
+ *
+ *  @return  -1 if the list view is not in icon or small icon view, otherwise 0.
+ */
+RexxMethod4(RexxObjectPtr, lv_setItemPos, uint32_t, index, OPTIONAL_RexxObjectPtr, _obj, OPTIONAL_int32_t, y, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    if ( ! isInIconView(hList) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    POINT p = {0};
+    if ( argumentOmitted(2) )
+    {
+        // Doesn't matter if arg 3 is omitted or not, we just use it.  The
+        // default if omitted is 0.
+        p.y = y;
+    }
+    else
+    {
+        if ( argumentExists(3) )
+        {
+            // Arg 2 & arg 3 exist, they must both be integers then.
+            if ( ! context->Int32(_obj, (int32_t *)&(p.x)) )
+            {
+                return wrongRangeException(context->threadContext, 2, INT32_MIN, INT32_MAX, _obj);
+            }
+            p.y = y;
+        }
+        else
+        {
+            // Arg 2 exists and arg 3 doesn't.  Arg 2 can be a .Point or an
+            // integer.
+            if ( context->IsOfType(_obj, "POINT") )
+            {
+                PPOINT tmp = (PPOINT)context->ObjectToCSelf(_obj);
+                p.x = tmp->x;
+                p.y = tmp->y;
+            }
+            else
+            {
+                // Arg 2 has to be an integer, p.y is already set at its
+                // default of 0
+                if ( ! context->Int32(_obj, (int32_t *)&(p.x)) )
+                {
+                    return wrongRangeException(context->threadContext, 2, INT32_MIN, INT32_MAX, _obj);
+                }
+            }
+        }
+    }
+
+    ListView_SetItemPosition32(hList, index, p.x, p.y);
+    return TheZeroObj;
+}
+
+/** ListControl::setImageList()
+ *
+ *  Sets or removes one of a list-view's image lists.
+ *
+ *  @param ilSrc  The image list source. Either an .ImageList object that
+ *                references the image list to be set, or a single bitmap from
+ *                which the image list is constructed, or .nil.  If ilSRC is
+ *                .nil, an existing image list, if any is removed.
+ *
+ *  @param width  [optional]  This arg serves two purposes.  If ilSrc is .nil or
+ *                an .ImageList object, this arg indentifies which of the
+ *                list-views image lists is being set, normal, small, or state.
+ *                The default is LVSI_NORMAL.
+ *
+ *                If ilSrc is a bitmap, then this arg is the width of a single
+ *                image.  The default is the height of the actual bitmap.
+ *
+ *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in
+ *                which case it is the height of the bitmap.  The default is the
+ *                height of the actual bitmap
+ *
+ *  @param ilType [optional]  Only used if ilSrc is a bitmap.  In that case it
+ *                indentifies which of the list-views image lists is being set,
+ *                normal, small, or state. The default is LVSI_NORMAL.
+ *
+ *  @return       Returns the exsiting .ImageList object if there is one, or
+ *                .nil if there is not an existing object.
+ *
+ *  @note  When the ilSrc is a single bitmap, an image list is created from the
+ *         bitmap.  This method is not as flexible as if the programmer created
+ *         the image list herself.  The bitmap must be a number of images, all
+ *         the same size, side-by-side in the bitmap.  The width of a single
+ *         image determines the number of images.  The image list is created
+ *         using the ILC_COLOR8 flag, only.  No mask can be used.  No room is
+ *         reserved for adding more images to the image list, etc..
+ */
+RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
+            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    oodResetSysErrCode(context->threadContext);
+
+    HIMAGELIST himl = NULL;
+    RexxObjectPtr imageList = NULL;
+    int type = LVSIL_NORMAL;
+
+    if ( ilSrc == TheNilObj )
+    {
+        imageList = ilSrc;
+        if ( argumentExists(2) )
+        {
+            type = width;
+        }
+    }
+    else if ( context->IsOfType(ilSrc, "ImageList") )
+    {
+        imageList = ilSrc;
+        himl = rxGetImageList(context, imageList, 1);
+        if ( himl == NULL )
+        {
+            goto err_out;
+        }
+
+        if ( argumentExists(2) )
+        {
+            type = width;
+        }
+    }
+    else
+    {
+        imageList = oodILFromBMP(context, &himl, ilSrc, width, height, hwnd);
+        if ( imageList == NULLOBJECT )
+        {
+            goto err_out;
+        }
+
+        if ( argumentExists(4) )
+        {
+            type = ilType;
+        }
+    }
+
+    if ( type > LVSIL_STATE )
+    {
+        wrongRangeException(context->threadContext, argumentExists(4) ? 4 : 2, LVSIL_NORMAL, LVSIL_STATE, type);
+        goto err_out;
+    }
+
+    ListView_SetImageList(hwnd, himl, type);
+    return rxSetObjVar(context, getLVAttributeName(type), imageList);
+
+err_out:
+    return NULLOBJECT;
+}
+
+/** ListControl::getImageList()
+ *
+ *  Gets the list-view's specifed image list.
+ *
+ *  @param  type [optional] Identifies which image list to get.  Normal, small,
+ *          or state. Normal is the default.
+ *
+ *  @return  The image list, if it exists, otherwise .nil.
+ */
+RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
+{
+    if ( argumentOmitted(1) )
+    {
+        type = LVSIL_NORMAL;
+    }
+    else if ( type > LVSIL_STATE )
+    {
+        wrongRangeException(context->threadContext, 1, LVSIL_NORMAL, LVSIL_STATE, type);
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr result = context->GetObjectVariable(getLVAttributeName(type));
+    if ( result == NULLOBJECT )
+    {
+        result = TheNilObj;
+    }
+    return result;
+}
+
+
 /**
  *  Methods for the .TreeControl class.
  */
@@ -1639,6 +1621,74 @@ static CSTRING tvGetAttributeName(uint8_t type)
         case TVSIL_NORMAL :
         default :
             return TVNORMAL_ATTRIBUTE;
+    }
+}
+
+
+static void parseTvModifyOpts(CSTRING opts, TVITEMEX *tvi)
+{
+    if ( StrStrI(opts, "NOTBOLD") != NULL )
+    {
+        tvi->stateMask |= TVIS_BOLD;
+    }
+    else if ( StrStrI(opts, "BOLD") != NULL )
+    {
+        tvi->state |= TVIS_BOLD;
+        tvi->stateMask |= TVIS_BOLD;
+    }
+
+    if ( StrStrI(opts, "NOTDROP") != NULL )
+    {
+        tvi->stateMask |= TVIS_DROPHILITED;
+    }
+    else if ( StrStrI(opts, "DROP") != NULL )
+    {
+        tvi->state |= TVIS_DROPHILITED;
+        tvi->stateMask |= TVIS_DROPHILITED;
+    }
+
+    if ( StrStrI(opts, "NOTSELECTED") != NULL )
+    {
+        tvi->stateMask |= TVIS_SELECTED;
+    }
+    else if ( StrStrI(opts, "SELECTED") != NULL )
+    {
+        tvi->state |= TVIS_SELECTED;
+        tvi->stateMask |= TVIS_SELECTED;
+    }
+
+    if ( StrStrI(opts, "NOTCUT") != NULL )
+    {
+        tvi->stateMask |= TVIS_CUT;
+    }
+    else if ( StrStrI(opts, "CUT") != NULL )
+    {
+        tvi->state |= TVIS_CUT;
+        tvi->stateMask |= TVIS_CUT;
+    }
+
+    if ( StrStrI(opts, "NOTEXPANDEDONCE") != NULL )
+    {
+        tvi->stateMask |= TVIS_EXPANDEDONCE;
+    }
+    else if ( StrStrI(opts, "EXPANDEDONCE") != NULL )
+    {
+        tvi->state |= TVIS_EXPANDEDONCE;
+        tvi->stateMask |= TVIS_EXPANDEDONCE;
+    }
+    else if ( StrStrI(opts, "NOTEXPANDED") != NULL )
+    {
+        tvi->stateMask |= TVIS_EXPANDED;
+    }
+    else if ( StrStrI(opts, "EXPANDED") != NULL )
+    {
+        tvi->state |= TVIS_EXPANDED;
+        tvi->stateMask |= TVIS_EXPANDED;
+    }
+
+    if ( tvi->state != 0 || tvi->stateMask != 0 )
+    {
+        tvi->mask |= TVIF_STATE;
     }
 }
 
@@ -1719,6 +1769,99 @@ RexxMethod8(RexxObjectPtr, tv_insert, OPTIONAL_CSTRING, _hItem, OPTIONAL_CSTRING
     }
 
     return pointer2string(context, TreeView_InsertItem(hwnd, &ins));
+}
+
+RexxMethod7(int32_t, tv_modify, OPTIONAL_CSTRING, _hItem, OPTIONAL_CSTRING, label, OPTIONAL_int32_t, imageIndex,
+            OPTIONAL_int32_t, selectedImage, OPTIONAL_CSTRING, opts, OPTIONAL_uint32_t, children, CSELF, pCSelf)
+{
+    HWND hwnd  = getDCHCtrl(pCSelf);
+
+    TVITEMEX tvi = {0};
+
+    if ( argumentExists(1) )
+    {
+        tvi.hItem = (HTREEITEM)string2pointer(_hItem);
+    }
+    else
+    {
+        tvi.hItem = TreeView_GetSelection(hwnd);
+    }
+
+    if ( tvi.hItem == NULL )
+    {
+        return -1;
+    }
+    tvi.mask = TVIF_HANDLE;
+
+    if ( argumentExists(2) )
+    {
+        tvi.pszText = (LPSTR)label;
+        tvi.cchTextMax = (int)strlen(label);
+        tvi.mask |= TVIF_TEXT;
+    }
+    if ( argumentExists(3) && imageIndex > -1 )
+    {
+        tvi.iImage = imageIndex;
+        tvi.mask |= TVIF_IMAGE;
+    }
+    if ( argumentExists(4) && imageIndex > -1 )
+    {
+        tvi.iSelectedImage = selectedImage;
+        tvi.mask |= TVIF_SELECTEDIMAGE;
+    }
+    if ( argumentExists(5) && *opts != '\0' )
+    {
+        parseTvModifyOpts(opts, &tvi);
+    }
+    if ( argumentExists(6) )
+    {
+        tvi.cChildren = (children > 0 ? 1 : 0);
+        tvi.mask |= TVIF_CHILDREN;
+    }
+
+    return (TreeView_SetItem(hwnd, &tvi) == 0 ? 1 : 0);
+}
+
+
+RexxMethod2(RexxObjectPtr, tv_itemInfo, CSTRING, _hItem, CSELF, pCSelf)
+{
+    HWND hwnd  = getDCHCtrl(pCSelf);
+
+    TVITEM tvi = {0};
+    char buf[256];
+
+    tvi.hItem = (HTREEITEM)string2pointer(_hItem);
+    tvi.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_STATE | TVIF_IMAGE | TVIF_CHILDREN | TVIF_SELECTEDIMAGE;
+    tvi.pszText = buf;
+    tvi.cchTextMax = 255;
+    tvi.stateMask = TVIS_EXPANDED | TVIS_BOLD | TVIS_SELECTED | TVIS_EXPANDEDONCE | TVIS_DROPHILITED | TVIS_CUT;
+
+    if ( TreeView_GetItem(hwnd, &tvi) == 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    RexxStemObject stem = context->NewStem("InternalTVItemInfo");
+
+    context->SetStemElement(stem, "!TEXT", context->String(tvi.pszText));
+    context->SetStemElement(stem, "!CHILDREN", (tvi.cChildren > 0 ? TheTrueObj : TheFalseObj));
+    context->SetStemElement(stem, "!IMAGE", context->Int32(tvi.iImage));
+    context->SetStemElement(stem, "!SELECTEDIMAGE", context->Int32(tvi.iSelectedImage));
+
+    *buf = '\0';
+    if ( tvi.state & TVIS_EXPANDED     ) strcat(buf, "EXPANDED ");
+    if ( tvi.state & TVIS_BOLD         ) strcat(buf, "BOLD ");
+    if ( tvi.state & TVIS_SELECTED     ) strcat(buf, "SELECTED ");
+    if ( tvi.state & TVIS_EXPANDEDONCE ) strcat(buf, "EXPANDEDONCE ");
+    if ( tvi.state & TVIS_DROPHILITED  ) strcat(buf, "INDROP ");
+    if ( tvi.state & TVIS_CUT          ) strcat(buf, "CUT ");
+    if ( *buf != '\0' )
+    {
+        *(buf + strlen(buf) - 1) = '\0';
+    }
+    context->SetStemElement(stem, "!STATE", context->String(buf));
+
+    return stem;
 }
 
 
@@ -1883,7 +2026,10 @@ RexxMethod2(RexxObjectPtr, tv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
     if ( hti.flags & TVHT_TOLEFT         ) strcat(buf, "TOLEFT ");
     if ( hti.flags & TVHT_TORIGHT        ) strcat(buf, "TORIGHT ");
 
-    *(buf + strlen(buf) - 1) = '\0';
+    if ( *buf != '\0' )
+    {
+        *(buf + strlen(buf) - 1) = '\0';
+    }
     context->DirectoryPut(result, context->String(buf),"LOCATION");
     return result;
 }

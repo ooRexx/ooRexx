@@ -886,10 +886,33 @@
 
 ::class 'ListControl' subclass DialogControl public
 
+::method lastItem attribute
+
+::method Init
+   forward class (super) continue
+   self~LastItem = -1
+
 -- LVM_FIRST = 0x1000  == 4096
 ::constant LVM_GETCOLUMNWIDTH  "0x101D"
 ::constant LVM_SETHOVERTIME    "0x1047"
 ::constant LVM_GETHOVERTIME    "0x1048"
+::constant LVM_DELETECOLUMN    "0x101C"
+::constant LVM_GETITEMSPACING  "0x1033"
+::constant LVM_SETITEMCOUNT    "0x102F"
+
+::method deleteColumn
+   use strict arg index
+   return self~sendWinIntMsg(self~LVM_DELETECOLUMN, index, 0) <> 0
+
+::method columnWidthPx
+   use strict arg column
+   return self~sendWinIntMsg(self~LVM_GETCOLUMNWIDTH, column, 0)
+
+::method smallSpacing
+   return self~sendWinIntMsg(self~LVM_GETITEMSPACING, 1, 0)
+
+::method spacing
+   return self~sendWinIntMsg(self~LVM_GETITEMSPACING, 0, 0)
 
 ::method setHoverTime
    use strict arg time = (-1)
@@ -899,82 +922,64 @@
 ::method getHoverTime
    return self~sendWinIntMsg(self~LVM_GETHOVERTIME, 0, 0)
 
+::method prepare4nItems
+   use strict arg countItems
+   return self~sendWinIntMsg(self~LVM_SETITEMCOUNT, countItems, 0)
 
-::method lastItem attribute
+::method Arrange
+   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "DEFAULT")
 
-::method Init
-   forward class (super) continue
-   self~LastItem = -1
+::method SnapToGrid
+   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "SNAPTOGRID")
 
-::method ReplaceStyle
-   use arg oldstyle, newstyle
-   if arg(1,'O') | arg(2,'O') then return 0
-   ret = HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", oldstyle)
-   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "A", newstyle)
+::method AlignLeft
+   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "LEFT")
 
-::method AddStyle
-   use arg style
-   if arg(1,'O') then return 0
-   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "A", style)
+::method AlignTop
+   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "TOP")
 
-::method RemoveStyle
-   use arg style
-   if arg(1,'O') then return 0
-   return HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", style)
-
-
-::method DeleteColumn
-   use arg nr
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("C","DEL", self~Hwnd, nr)
-
-
-::method ModifyColumn
-   use arg nr, text, width, fmt
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then text = ""
-   if arg(3,'o') = 1 then width = -1; else width = width*self~factorX
-   if arg(4,'o') = 1 then fmt = ""
-   return HandleListCtrl("C","SET", self~Hwnd, nr, text, width, fmt~translate)
-
-
-::method ColumnInfo
-   use arg nr
-   if arg(1,'o') = 1 then return -1
-   ret = HandleListCtrl("C","GET", self~Hwnd, nr, "InternalLVColInfo")
-   if InternalLVColInfo.!Width~Datatype('N') = 1 then InternalLVColInfo.!Width = InternalLVColInfo.!Width / self~factorX
-   return InternalLVColInfo.
-
+::method addStyle external "LIBRARY oodialog lv_addRemoveStyle"
+::method removeStyle external "LIBRARY oodialog lv_addRemoveStyle"
+::method replaceStyle external "LIBRARY oodialog lv_replaceStyle"
 
 ::method stringWidthPx external "LIBRARY oodialog lv_stringWidthPx"
+::method getColumnCount external "LIBRARY oodialog lv_getColumnCount"
+::method getColumnOrder external "LIBRARY oodialog lv_getColumnOrder"
+::method getColumnInfo  external "LIBRARY oodialog lv_getColumnInfo"
+::method insertColumnPx external "LIBRARY oodialog lv_insertColumnPx"
+::method modifyColumnPx external "LIBRARY oodialog lv_modifyColumnPx"
+::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
+::method setColumnWidthPx external "LIBRARY oodialog lv_setColumnWidthPx"
+
 ::method stringWidth  -- Dialog units, not accurate.
    use strict arg text
    return self~stringWidthPx(text) / self~factorX
 
-::method columnWidthPx
-   use strict arg column
-  return self~sendWinIntMsg(self~LVM_GETCOLUMNWIDTH, column, 0)
+::method columnInfo  -- Dialog units, not accurate.
+   use strict arg index
+   InternalLVColInfo. = self~getColumnInfo(index)
+   if InternalLVColInfo.!Width~Datatype('N') = 1 then InternalLVColInfo.!Width = InternalLVColInfo.!Width / self~factorX
+   return InternalLVColInfo.
 
 ::method columnWidth  -- Dialog units, not accurate.
    use strict arg colNum
    return self~columnWidthPx(colNum) / self~factorX
 
-::method insertColumnPx external "LIBRARY oodialog lv_insertColumnPx"
+::method setColumnWidth  -- Dialog units, not accurate.
+   use strict arg index, width = "AUTO"
+   if width~datatype("W") then width = width * self~factorX
+   return self~setColumnWidthPx(index, width)
+
+::method modifyColumn  -- Dialog units, not accurate.
+   use strict arg index, label = "", width = (-8), align = ""
+   if arg(3,'E'), width~datatype('W') then width = width * self~factorX
+   return self~modifyColumnPx(index, label, width, align)
+
 ::method insertColumn -- Dialog units, not accurate.
    use strict arg nr = 0, text, width, fmt = "L"
    width = trunc(width * self~factorX)
    return self~insertColumnPx(nr, text, width, fmt)
 
-::method SetColumnWidth
-   use arg nr, width
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then width = "AUTO"
-   if width~datatype("N") = 1 then width = width * self~factorX
-   return HandleListCtrl("C","SETWIDTH", self~Hwnd, nr, width~translate)
-
-::method getColumnCount external "LIBRARY oodialog lv_getColumnCount"
-::method getColumnOrder external "LIBRARY oodialog lv_getColumnOrder"
-::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
 ::method getExtendedStyle external "LIBRARY oodialog lv_getExtendedStyle"
 ::method getExtendedStyleRaw external "LIBRARY oodialog lv_getExtendedStyle"
 ::method replaceExtendedStyle external "LIBRARY oodialog lv_replaceExtendStyle"
@@ -1074,21 +1079,13 @@
 ::method Last
    return self~Items - 1
 
-::method Prepare4nItems
-   use arg citems
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("M","SETCNT", self~Hwnd, citems)
-
 
 ::method SelectedItems
    return HandleListCtrl("M","CNTSEL", self~Hwnd)
 
-::method ItemInfo
-   use arg item, subitem
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'O') then subitem = 0
-   ret = HandleListCtrl("I","GET", self~Hwnd, item, subitem, "InternalLVItemInfo", "")
-   return InternalLVItemInfo.
+::method getItemInfo external "LIBRARY oodialog lv_getItemInfo"
+::method itemInfo
+   forward message "getItemInfo"
 
 ::method ItemText
    use arg item, subitem
@@ -1178,12 +1175,6 @@
    if arg(1,'o') = 1 then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TORIGHT")
 
-::method SmallSpacing
-   return HandleListCtrl("M","GETSPC", self~Hwnd, 1)
-
-::method Spacing
-   return HandleListCtrl("M","GETSPC", self~Hwnd, 0)
-
 ::method RedrawItems
    use arg first, last
    if arg(1,'o') = 1 then first = 0
@@ -1241,29 +1232,14 @@
    if arg(3,'o') = 1 then direction = "DOWN"
    return HandleListCtrl("I", "FIND", self~Hwnd, -1, "NEAREST", x, y, direction~translate)
 
-::method Arrange
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "DEFAULT")
+::method itemPos
+   use strict arg item
+   p = self~getItemPos(item)
+   if p == 0 then return p
+   else return p~x p~y
 
-::method SnapToGrid
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "SNAPTOGRID")
-
-::method AlignLeft
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "LEFT")
-
-::method AlignTop
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "TOP")
-
-::method ItemPos
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("M", "GETPOS", self~Hwnd, item)
-
-::method SetItemPos
-   use arg item, x, y
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then x = 0
-   if arg(3,'o') = 1 then y = 0
-   return HandleListCtrl("M", "SETPOS", self~Hwnd, item, x, y)
+::method getItemPos external "LIBRARY oodialog lv_getItemPos"
+::method setItemPos external "LIBRARY oodialog lv_setItemPos"
 
 ::method Edit
    use arg hitem
@@ -1320,6 +1296,9 @@
    forward class (super) continue
    self~rootArray = .array~new(4)
 
+::method insert external "LIBRARY oodialog tv_insert"
+::method modify external "LIBRARY oodialog tv_modify"
+::method ItemInfo external "LIBRARY oodialog tv_itemInfo"
 ::method root external "LIBRARY oodialog tv_getSpecificItem"
 ::method selected external "LIBRARY oodialog tv_getSpecificItem"
 ::method dropHighlighted external "LIBRARY oodialog tv_getSpecificItem"
@@ -1339,7 +1318,6 @@
 ::method select external "LIBRARY oodialog tv_selectItem"
 ::method makeFirstVisible external "LIBRARY oodialog tv_selectItem"
 ::method dropHighlight external "LIBRARY oodialog tv_selectItem"
-::method insert external "LIBRARY oodialog tv_insert"
 ::method setImageList external "LIBRARY oodialog tv_setImageList"
 ::method getImageList external "LIBRARY oodialog tv_getImageList"
 
@@ -1412,19 +1390,6 @@
    if cancel == 1 | cancel~left(1)~translate == 'Y' then cancel = .true
    else cancel = .false
    return (self~sendWinIntMsg(self~TVM_ENDEDITLABELNOW , cancel, 0) <> 0)
-
-::method Modify
-   use strict arg hItem = (self~selected), text = "", image = (-1), selImage = (-1), state = "", children = (-1)
-   if hitem = 0 then return -1
-   return HandleTreeCtrl("SET", self~Hwnd, hItem, text, image, state~translate, children, selImage)
-
-::method ItemInfo
-   use arg hItem
-   if arg(1, 'O') | hItem = 0 then return -1
-   ret = HandleTreeCtrl("GET", self~Hwnd, hItem, "InternalTVItemInfo")
-   return InternalTVItemInfo.
-
-
 
 ::method add
    do i = 1 to arg()
