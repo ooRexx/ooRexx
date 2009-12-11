@@ -59,7 +59,7 @@
 // Temp fix for AXI 6.1 problem - will be removed later
 // - switching the daemon to nobody does not work on AIX 6.1
 // - it does work on AIX 5.2 / 5.3
-#ifndef AIX
+#ifndef AIX_REMOVED
 #  define ENABLE_NOBODY
 #endif
 
@@ -290,6 +290,7 @@ int main(int argc, char *argv[])
         printf("Starting request processing loop.\n");
     } else {
         (void) setsid();
+        printf("Starting request processing loop.\n");
 #ifdef ENABLE_NOBODY
         // We start out with root privileges. This is bad from a security perspective. So
         // switch to the nobody user so we do not have previleges we do not need.
