@@ -3468,7 +3468,7 @@ bool dumpAdmin(RexxMethodContext *c, RexxStemObject dStem, DIALOGADMIN *dlgAdm)
     c->SetStemElement(dStem, "MESSAGES", c->StringSize(dlgAdm->MT_size));
     for ( i = 0, numPart = 1; i < dlgAdm->MT_size; i++, numPart++ )
     {
-        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "MSG",    pointer2string(c, (void *)dlgAdm->MsgTab[i].msg));
+        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "MSG",    dword2string(c, dlgAdm->MsgTab[i].msg));
         setStrNumStrStem(c, dStem, "MSGTAB", numPart, "PARAM1", pointer2string(c, (void *)dlgAdm->MsgTab[i].wParam));
         setStrNumStrStem(c, dStem, "MSGTAB", numPart, "PARAM2", pointer2string(c, (void *)dlgAdm->MsgTab[i].lParam));
         setStrNumStrStem(c, dStem, "MSGTAB", numPart, "METHOD", c->String(dlgAdm->MsgTab[i].rexxProgram));

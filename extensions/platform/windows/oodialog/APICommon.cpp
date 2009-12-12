@@ -388,14 +388,14 @@ RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int ma
     return wrongRangeException(c, pos, min, max, c->WholeNumber(actual));
 }
 
-RexxObjectPtr wrongArgValueException(RexxThreadContext *c, int pos, const char *list, RexxObjectPtr actual)
+RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, RexxObjectPtr actual)
 {
     c->RaiseException(Rexx_Error_Invalid_argument_list,
                       c->ArrayOfThree(c->WholeNumber(pos), c->String(list), actual));
     return NULLOBJECT;
 }
 
-RexxObjectPtr wrongArgValueException(RexxThreadContext *c, int pos, const char *list, const char *actual)
+RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, const char *actual)
 {
     return wrongArgValueException(c, pos, list, c->String(actual));
 }

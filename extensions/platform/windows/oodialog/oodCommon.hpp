@@ -136,7 +136,7 @@ typedef CPlainBaseDialog *pCPlainBaseDialog;
 typedef struct _dcCSelf {
     uint32_t       id;
     oodControl_t   controlType;
-    ssize_t        lastItem;
+    int            lastItem;
     pCWindowBase   wndBase;
     RexxObjectPtr  rexxSelf;
     HWND           hCtrl;    // Handle of the dialog control
@@ -169,6 +169,7 @@ extern void *           string2pointer(RexxMethodContext *c, RexxStringObject st
 extern void             pointer2string(char *, void *pointer);
 extern RexxStringObject pointer2string(RexxMethodContext *, void *);
 extern RexxStringObject pointer2string(RexxThreadContext *c, void *pointer);
+extern RexxStringObject dword2string(RexxMethodContext *, uint32_t);
 extern LONG             HandleError(PRXSTRING r, CHAR * text);
 extern char *           strdupupr(const char *str);
 extern char *           strdupupr_nospace(const char *str);

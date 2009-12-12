@@ -258,11 +258,11 @@ inline LONG_PTR getClassPtr(HWND hwnd, int index)
 typedef struct {
    WPARAM    wParam;
    LPARAM    lParam;
-   UINT      msg;
-   UINT      filterM;
+   uint32_t  msg;
+   uint32_t  filterM;
    ULONG_PTR filterP;
    ULONG_PTR filterL;
-   ULONG     tag;
+   uint32_t  tag;
    PCHAR     rexxProgram;
 } MESSAGETABLEENTRY;
 

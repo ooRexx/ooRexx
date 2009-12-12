@@ -74,8 +74,8 @@ extern void nullObjectException(RexxThreadContext *c, CSTRING name);
 extern void nullPointerException(RexxThreadContext *c, int pos);
 
 extern RexxObjectPtr wrongClassException(RexxThreadContext *c, int pos, const char *n);
-extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, int pos, const char *list, RexxObjectPtr actual);
-extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, int pos, const char *list, const char *actual);
+extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, RexxObjectPtr actual);
+extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, const char *actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
 extern RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);

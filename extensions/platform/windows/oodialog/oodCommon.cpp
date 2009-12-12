@@ -685,6 +685,17 @@ RexxStringObject pointer2string(RexxThreadContext *c, void *pointer)
     return c->String(buf);
 }
 
+/**
+ * Formats an unsigned 32 bit number in 'hex' format and returns it as a Rexx
+ * string object.
+ */
+RexxStringObject dword2string(RexxMethodContext *c, uint32_t num)
+{
+    char buf[32];
+    sprintf(buf, "0x%08x", num);
+    return c->String(buf);
+}
+
 LONG HandleError(PRXSTRING r, CHAR * text)
 {
       HWND hW = NULL;

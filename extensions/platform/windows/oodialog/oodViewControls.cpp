@@ -869,8 +869,6 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
 RexxMethod2(RexxObjectPtr, lv_arrange, NAME, method, CSELF, pCSelf)
 {
     HWND hList = getDCHCtrl(pCSelf);
-    uint32_t style;
-    int count = 0;
 
     int32_t flag = 0;
     switch ( method[5] )
@@ -1123,7 +1121,7 @@ RexxMethod5(RexxObjectPtr, lv_modifyColumnPx, uint32_t, index, OPTIONAL_CSTRING,
     if ( argumentExists(2) && *label != '\0' )
     {
         lvi.pszText = (LPSTR)label;
-        lvi.cchTextMax = strlen(label);
+        lvi.cchTextMax = (int)strlen(label);
         lvi.mask |= LVCF_TEXT;
     }
     if ( argumentExists(3) )
@@ -2252,7 +2250,7 @@ RexxMethod2(RexxObjectPtr, tab_setPadding, ARGLIST, args, CSELF, pCSelf)
 }
 
 
-RexxMethod5(int32_t, tab_insert, OPTIONAL_int32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_ssize_t, imageIndex,
+RexxMethod5(int32_t, tab_insert, OPTIONAL_int32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_int32_t, imageIndex,
             OPTIONAL_RexxObjectPtr, userData, CSELF, pCSelf)
 {
     HWND hwnd = getDCHCtrl(pCSelf);
@@ -2279,7 +2277,7 @@ RexxMethod5(int32_t, tab_insert, OPTIONAL_int32_t, index, OPTIONAL_CSTRING, labe
 }
 
 
-RexxMethod5(int32_t, tab_modify, int32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_ssize_t, imageIndex,
+RexxMethod5(int32_t, tab_modify, int32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_int32_t, imageIndex,
             OPTIONAL_RexxObjectPtr, userData, CSELF, pCSelf)
 {
     HWND hwnd = getDCHCtrl(pCSelf);
@@ -2319,7 +2317,7 @@ RexxMethod2(int32_t, tab_addSequence, ARGLIST, args, CSELF, pCSelf)
     ti.mask = TCIF_TEXT;
 
     int32_t ret = -1;
-    ssize_t index = ((pCDialogControl)pCSelf)->lastItem;
+    int32_t index = ((pCDialogControl)pCSelf)->lastItem;
     size_t count = context->ArraySize(args);
 
     for ( size_t i = 1; i <= count; i++ )
@@ -2356,7 +2354,7 @@ RexxMethod2(int32_t, tab_addFullSeq, ARGLIST, args, CSELF, pCSelf)
     ti.mask = TCIF_TEXT;
 
     int32_t ret = -1;
-    ssize_t index = ((pCDialogControl)pCSelf)->lastItem;
+    int32_t index = ((pCDialogControl)pCSelf)->lastItem;
     size_t count = context->ArraySize(args);
 
     for ( size_t i = 1; i <= count; i += 3 )
