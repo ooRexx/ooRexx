@@ -926,18 +926,10 @@
    use strict arg countItems
    return self~sendWinIntMsg(self~LVM_SETITEMCOUNT, countItems, 0)
 
-::method Arrange
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "DEFAULT")
-
-::method SnapToGrid
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "SNAPTOGRID")
-
-::method AlignLeft
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "LEFT")
-
-::method AlignTop
-   return HandleListCtrl("M", "ARRANGE", self~Hwnd, "TOP")
-
+::method arrange external "LIBRARY oodialog lv_arrange"
+::method snapToGrid external "LIBRARY oodialog lv_arrange"
+::method alignLeft external "LIBRARY oodialog lv_arrange"
+::method alignTop external "LIBRARY oodialog lv_arrange"
 ::method addStyle external "LIBRARY oodialog lv_addRemoveStyle"
 ::method removeStyle external "LIBRARY oodialog lv_addRemoveStyle"
 ::method replaceStyle external "LIBRARY oodialog lv_replaceStyle"

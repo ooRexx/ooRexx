@@ -361,10 +361,16 @@ inline bool hasCheckBoxes(HWND hList)
     return ((ListView_GetExtendedListViewStyle(hList) & LVS_EX_CHECKBOXES) != 0);
 }
 
+/**
+ * Checks that the list view is either in icon view, or small icon view.
+ * Certain list view messages and functions are only applicable in those views.
+ *
+ * Note that LVS_ICON == 0 so LVS_TYPEMASK must be used.
+ */
 inline bool isInIconView(HWND hList)
 {
     uint32_t style = (uint32_t)GetWindowLong(hList, GWL_STYLE);
-    return (style & LVS_ICON) || (style & LVS_SMALLICON);
+    return ((style & LVS_TYPEMASK) == LVS_ICON) || ((style & LVS_TYPEMASK) == LVS_SMALLICON);
 }
 
 inline int getColumnCount(HWND hList)
@@ -383,6 +389,25 @@ inline CSTRING getLVAttributeName(uint8_t type)
         case LVSIL_NORMAL :
         default :
             return LVNORMAL_ATTRIBUTE;
+    }
+}
+
+/**
+ * Change the window style of a list view to align left or align top.
+ */
+static void applyAlignStyle(HWND hList, bool doTop)
+{
+    uint32_t flag = (doTop ? LVS_ALIGNTOP : LVS_ALIGNLEFT);
+
+    uint32_t style = (uint32_t)GetWindowLong(hList, GWL_STYLE);
+    SetWindowLong(hList, GWL_STYLE, ((style & ~LVS_ALIGNMASK) | flag));
+
+    int count = ListView_GetItemCount(hList);
+    if ( count > 0 )
+    {
+        count--;
+        ListView_RedrawItems(hList, 0, count);
+        UpdateWindow(hList);
     }
 }
 
@@ -824,35 +849,28 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
                if (!strcmp(argv[3].strptr, "SETTXTBK")) RETC(!ListView_SetTextBkColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
            }
        }
-       else
-       if (!strcmp(argv[1].strptr, "ARRANGE"))
-       {
-           UINT flag;
-
-           CHECKARG(4);
-
-           if (!strcmp(argv[3].strptr,"LEFT")) flag = LVA_ALIGNLEFT;
-           else if (!strcmp(argv[3].strptr,"TOP")) flag = LVA_ALIGNTOP;
-           else if (!strcmp(argv[3].strptr,"SNAPTOGRID")) flag = LVA_SNAPTOGRID;
-           else flag = LVA_DEFAULT;
-
-           RETC(!ListView_Arrange(h, flag))
-       }
    }
    RETC(0)
 }
 
-
-/** ListView::arran g e()
- *  ListView::snapt o Grid()
- *  ListView::align L eft()
- *  Listview::align T op()
+/** ListView::arrange()
+ *  ListView::snaptoGrid()
+ *  ListView::alignLeft()
+ *  Listview::alignTop()
  *
+ *  @remarks  MSDN says of ListView_Arrange():
  *
+ *  LVA_ALIGNLEFT  Not implemented. Apply the LVS_ALIGNLEFT style instead.
+ *  LVA_ALIGNTOP   Not implemented. Apply the LVS_ALIGNTOP style instead.
+ *
+ *  However, I don't see that changing the align style in these two cases really
+ *  does anything.
  */
 RexxMethod2(RexxObjectPtr, lv_arrange, NAME, method, CSELF, pCSelf)
 {
     HWND hList = getDCHCtrl(pCSelf);
+    uint32_t style;
+    int count = 0;
 
     int32_t flag = 0;
     switch ( method[5] )
@@ -864,10 +882,10 @@ RexxMethod2(RexxObjectPtr, lv_arrange, NAME, method, CSELF, pCSelf)
             flag = LVA_SNAPTOGRID;
             break;
         case 'L' :
-            SetWindowLong(hList, GWL_STYLE, (GetWindowLong(hList, GWL_STYLE) & ~LVS_ALIGNTOP) | LVS_ALIGNLEFT);
+            applyAlignStyle(hList, false);
             return TheZeroObj;
         case 'T' :
-            SetWindowLong(hList, GWL_STYLE, (GetWindowLong(hList, GWL_STYLE) & ~LVS_ALIGNLEFT) | LVS_ALIGNTOP);
+            applyAlignStyle(hList, true);
             return TheZeroObj;
     }
     return (ListView_Arrange(hList, flag) ? TheZeroObj : TheFalseObj);

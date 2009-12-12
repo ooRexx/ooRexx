@@ -503,6 +503,7 @@ REXX_METHOD_PROTOTYPE(lv_insertColumnPx);
 REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
 REXX_METHOD_PROTOTYPE(lv_getItemPos);
 REXX_METHOD_PROTOTYPE(lv_setItemPos);
+REXX_METHOD_PROTOTYPE(lv_arrange);
 REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name, see below in oodialog_methods
 REXX_METHOD_PROTOTYPE(lv_addRemoveStyle);
 REXX_METHOD_PROTOTYPE(lv_replaceStyle);
@@ -956,6 +957,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
     REXX_METHOD(lv_getItemPos,                  lv_getItemPos),
     REXX_METHOD(lv_setItemPos,                  lv_setItemPos),
+    REXX_METHOD(lv_arrange,                     lv_arrange),
     REXX_METHOD(lv_addRowEx,         	        lv_addRowEx),           // TODO review method name, maybe addFullRow() addFullItem()
     REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
     REXX_METHOD(lv_addRemoveStyle,              lv_addRemoveStyle),
