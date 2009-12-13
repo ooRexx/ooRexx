@@ -148,13 +148,13 @@ return
 /* initialize third category page */
 ::method Icon
   expose ID_Ic
-  self~createListView( ID_Ic, 5, 5, 370, 140, "ICON") /* Add a icon list to the third category page */
+  self~createListView( ID_Ic, 5, 5, 370, 140, "ICON EDIT") /* Add a icon list to the third category page */
 
 
 /* initialize fourth category page */
 ::method SmallIcon
   expose ID_SIc
-  self~createListView( ID_SIc, 5, 5, 370, 140, "SMALLICON") /* Add a small icon list to the fourth category page */
+  self~createListView( ID_SIc, 5, 5, 370, 140, "SMALLICON EDIT") /* Add a small icon list to the fourth category page */
 
 
 /* initialize list control on first category page */
@@ -183,20 +183,19 @@ return
 ::method InitIcon
   expose ID_Ic normalIcons
   curList = self~newListView(ID_Ic)
-  if curList \= .Nil then
-  do
-    self~connectListViewEvent(ID_Ic,"BEGINDRAG","DefListDragHandler")
+  if curList \= .Nil then do
+    self~connectListViewEvent(ID_Ic, "BEGINDRAG", "DefListDragHandler")
+    self~connectListViewEvent(ID_Ic, "DEFAULTEDIT")
     curList~setImageList(normalIcons, .Image~toID(LVSIL_NORMAL))
   end
-  else
-    return
 
 /* initialize small icon list control on second category page */
 ::method InitSmallIcon
   expose ID_SIc smallIcons
   curList = self~newListView(ID_SIc)
   curList~setImageList(smallIcons, .Image~toID(LVSIL_SMALL))
-  self~connectListViewEvent(ID_SIc,"BEGINDRAG","DefListDragHandler") /* connect default drag handler */
+  self~connectListViewEvent(ID_SIc, "BEGINDRAG", "DefListDragHandler") /* connect default drag handler */
+  self~connectListViewEvent(ID_Ic, "DEFAULTEDIT")
 
 
 /* a column was selected display info about the column */
