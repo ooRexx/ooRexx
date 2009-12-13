@@ -195,7 +195,7 @@ return
   curList = self~newListView(ID_SIc)
   curList~setImageList(smallIcons, .Image~toID(LVSIL_SMALL))
   self~connectListViewEvent(ID_SIc, "BEGINDRAG", "DefListDragHandler") /* connect default drag handler */
-  self~connectListViewEvent(ID_Ic, "DEFAULTEDIT")
+  self~connectListViewEvent(ID_SIc, "DEFAULTEDIT")
 
 
 /* a column was selected display info about the column */
