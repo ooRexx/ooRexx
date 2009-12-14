@@ -107,6 +107,10 @@ inline RexxObjectPtr getDCOwnerDlg(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->oDlg);
 }
+inline uint32_t getDCInsertIndex(void *pCSelf)
+{
+    return (((pCDialogControl)pCSelf)->lastItem + 1);
+}
 
 
 

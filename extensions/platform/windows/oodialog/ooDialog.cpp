@@ -156,7 +156,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             // Do not search message table for WM_PAINT to improve redraw.
             if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
             {
-                MsgReplyType searchReply = SearchMessageTable(uMsg, wParam, lParam, addressedTo);
+                MsgReplyType searchReply = searchMessageTable(uMsg, wParam, lParam, addressedTo);
                 if ( searchReply != NotMatched )
                 {
                     // Note pre 4.0.1, reply was always FALSE, pass on to the system to process.
@@ -260,7 +260,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
                 case WM_QUERYNEWPALETTE:
                 case WM_PALETTECHANGED:
-                    return PaletteMessage(addressedTo, hDlg, uMsg, wParam, lParam);
+                    return paletteMessage(addressedTo, hDlg, uMsg, wParam, lParam);
 
                 case WM_USER_CREATECHILD:
                     /* Create a child dialog of this dialog and return its window
@@ -496,7 +496,7 @@ int32_t DelDialog(DIALOGADMIN * aDlg)
 
     // Add this message, so PlainBaseDialog::handleMessages() knows that
     // PlainBaseDialog::finished() should be set.
-    AddDialogMessage(MSG_TERMINATE, aDlg->pMessageQueue);
+    addDialogMessage(MSG_TERMINATE, aDlg->pMessageQueue);
 
     if ( aDlg->LeaveDialog == 0 )
     {

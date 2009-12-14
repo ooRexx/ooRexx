@@ -422,37 +422,20 @@
    return self~addUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
 
 
-::method DefTreeEditStarter
+::method defListEditStarter
     use arg id, dummy, category
-    if arg(3,'o') = 1 then tc = self~newTreeView(id)
-    else tc = self~newTreeView(id, category)
-    if tc \= .nil then tc~SubclassEdit
-
-
-::method DefTreeEditHandler
-    use arg id, item, newText, category
-    if arg(3,'o') = 1 then return
-    if arg(4,'o') = 1 then tc = self~newTreeView(id)
-    else tc = self~newTreeView(id, category)
-    if tc \= .nil then do
-        tc~Modify(item,newText)
-        tc~RestoreEditClass
-    end
-
-::method DefListEditStarter
-    use arg id, dummy, category
-    if arg(3,'o') = 1 then lc = self~newListView(id)
+    if arg(3, 'O') then lc = self~newListView(id)
     else lc = self~newListView(id, category)
-    if lc \= .nil then lc~SubclassEdit
+    if lc \= .nil then lc~subclassEdit
 
-::method DefListEditHandler
+::method defListEditHandler
     use arg id, item, newText, category
-    if arg(3,'o') = 1 then return
-    if arg(4,'o') = 1 then lc = self~newListView(id)
+    if arg(3, 'O') then return
+    if arg(4, 'O') then lc = self~newListView(id)
     else lc = self~newListView(id, category)
     if lc \= .nil then do
-        lc~Modify(item,0,newText)
-        lc~RestoreEditClass
+        lc~modify(item, 0, newText)
+        lc~restoreEditClass
     end
 
 ::method DefListDragHandler
@@ -510,6 +493,21 @@
    self~SetCursorPos(x+1, y+1)  /* move cursor to force redraw */
 
 
+::method DefTreeEditStarter
+    use arg id, dummy, category
+    if arg(3,'o') = 1 then tc = self~newTreeView(id)
+    else tc = self~newTreeView(id, category)
+    if tc \= .nil then tc~SubclassEdit
+
+::method DefTreeEditHandler
+    use arg id, item, newText, category
+    if arg(3,'o') = 1 then return
+    if arg(4,'o') = 1 then tc = self~newTreeView(id)
+    else tc = self~newTreeView(id, category)
+    if tc \= .nil then do
+        tc~Modify(item,newText)
+        tc~RestoreEditClass
+    end
 
 ::method DefTreeDragHandler
    use arg id, item, pt

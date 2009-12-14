@@ -393,7 +393,7 @@
 -- My believe is that there was some confusion in the original developement that led to methods being
 -- marked protected when they were meant to be marked private.  However, changing these 2 methods to
 -- private:  1.) breaks an existing example 2.) the doc on clearMessages() would lead one to think that
--- it is a public method.  So, the messages are changed to public rather than private.
+-- it is a public method.  So, the methods are changed to public rather than private.
 
 -- Retrieve and dispatch, if available, one window message.
 ::method handleMessages unguarded
@@ -410,7 +410,7 @@
    else do
       if msg \= "" then do
          parse var msg methodName '(' args ')'
-         argList = args~space(0)~makeArray(',')
+         argList = args~makeArray(255~d2c)
          self~sendWith(methodName, argList)
       end
       else do

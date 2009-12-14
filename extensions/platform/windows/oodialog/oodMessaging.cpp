@@ -55,7 +55,45 @@ inline bool isHex(CSTRING c)
     return strlen(c) > 1 && *c == '0' && toupper(c[1]) == 'X';
 }
 
-BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr)
+inline bool selectionDidChange(LPNMLISTVIEW p)
+{
+    return ((p->uNewState & LVIS_SELECTED) != (p->uOldState & LVIS_SELECTED));
+}
+
+inline bool focusDidChange(LPNMLISTVIEW p)
+{
+    return ((p->uNewState & LVIS_FOCUSED) != (p->uOldState & LVIS_FOCUSED));
+}
+
+/* matchSelectFocus
+ * Check that: (a) tag is for select change and focuse change, and (b) that
+ * either the selection or the focus actually changed.
+ */
+inline bool matchSelectFocus(uint32_t tag, LPNMLISTVIEW p)
+{
+    return ((tag & TAG_SELECTCHANGED) && (tag & TAG_FOCUSCHANGED)) && (selectionDidChange(p) || focusDidChange(p));
+}
+
+/* matchSelect
+ * Check that: (a) tag is only for selection change and not focuse change, and (b)
+ * that the selection actually changed.
+ */
+inline bool matchSelect(uint32_t tag, LPNMLISTVIEW p)
+{
+    return ((tag & TAG_SELECTCHANGED) && !(tag & TAG_FOCUSCHANGED)) && (selectionDidChange(p));
+}
+
+/* matchFocus
+ * Check that: (a) tag is only for focus change and not selection change, and (b)
+ * that the focus actually changed.
+ */
+inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
+{
+    return ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (focusDidChange(p));
+}
+
+
+BOOL addDialogMessage(CHAR * msg, CHAR * Qptr)
 {
    if (strlen(Qptr) + strlen(msg) + 1 < MAXLENQUEUE)
    {
@@ -123,7 +161,7 @@ char *getDlgMessage(DIALOGADMIN *addressedTo, char *buffer, bool peek)
  *
  * @return LRESULT
  */
-LRESULT PaletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT paletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch ( msg )
     {
@@ -159,31 +197,6 @@ LRESULT PaletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam,
 }
 
 
-#define SelectionDidChange(p) ((p->uNewState & LVIS_SELECTED) != (p->uOldState & LVIS_SELECTED))
-#define FocusDidChange(p)     ((p->uNewState & LVIS_FOCUSED) != (p->uOldState & LVIS_FOCUSED))
-
-/* MatchSelectFocus
- * Check that: (a) tag is for select change and focuse change, and (b) that
- * either the selection or the focus actually changed.
- */
-#define MatchSelectFocus(tag, p)    \
-( ((tag & TAG_SELECTCHANGED) && (tag & TAG_FOCUSCHANGED)) && (SelectionDidChange(p) || FocusDidChange(p)) )
-
-/* MatchSelect
- * Check that: (a) tag is only for selection change and not focuse change, and (b)
- * that the selection actually changed.
- */
-#define MatchSelect(tag, p)    \
-( ((tag & TAG_SELECTCHANGED) && !(tag & TAG_FOCUSCHANGED)) && (SelectionDidChange(p)) )
-
-/* MatchFocus
- * Check that: (a) tag is only for focus change and not selection change, and (b)
- * that the focus actually changed.
- */
-#define MatchFocus(tag, p)    \
-( ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (FocusDidChange(p)) )
-
-
 /**
  *
  *
@@ -198,10 +211,12 @@ LRESULT PaletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam,
  *           method invocation string such as onEndTrack(101, 0x00CA23F0), was
  *           used in an interpret command.  Therefore, all string arguments were
  *           enclosed in quotes to prevent errors.  Now, the message string is
- *           used with sendWith(), no interpret is involved.  The string
- *           arguments now must not be enclosed in quotes.
+ *           used with sendWith(), no interpret is involved.  Since, some of the
+ *           args are strings, that could include commas, the individual args
+ *           are separated here with ASCII ÿ (0xFF, octal 377) and in the Rexx
+ *           code, handleMessages() separates the args using 255d2c.
  */
-MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo)
+MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo)
 {
    register size_t i = 0;
    MESSAGETABLEENTRY * m = addressedTo->MsgTab;
@@ -258,13 +273,13 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                         }
                         np = tmp;
 
-                        /* Don't drop through, use AddDialogMessage here and
+                        /* Don't drop through, use addDialogMessage here and
                          * return because we need to send 4 args to ooRexx.
                          */
 
-                        _snprintf(msgstr, 511, "%s(%u,%d,%d,%s)", m[i].rexxProgram,
+                        _snprintf(msgstr, 511, "%s(%u\377%d\377%d\377%s)", m[i].rexxProgram,
                                   pIA->hdr.idFrom, pIA->iItem, pIA->iSubItem, np);
-                        AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                        addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                         return ReplyFalse;
                     }
                 }
@@ -284,17 +299,17 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                             {
                                 np = pLV->uNewState == INDEXTOSTATEIMAGEMASK(2) ? "CHECKED" : "UNCHECKED";
                             }
-                            else if ( MatchSelectFocus(m[i].tag, pLV) )
+                            else if ( matchSelectFocus(m[i].tag, pLV) )
                             {
                                 tmp[0] = '\0';
 
-                                if ( SelectionDidChange(pLV) )
+                                if ( selectionDidChange(pLV) )
                                 {
                                     (pLV->uNewState & LVIS_SELECTED) ?
                                         strcpy(tmp, "SELECTED") : strcpy(tmp, "UNSELECTED");
                                 }
 
-                                if ( FocusDidChange(pLV) )
+                                if ( focusDidChange(pLV) )
                                 {
                                     if ( (pLV->uNewState & LVIS_FOCUSED) )
                                         tmp[0] == '\0' ? strcpy(tmp, "FOCUSED") : strcat(tmp, " FOCUSED");
@@ -308,18 +323,18 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                              * user to have separate method connections for
                              * selected and focused.
                              */
-                            else if ( MatchSelect(m[i].tag, pLV) )
+                            else if ( matchSelect(m[i].tag, pLV) )
                             {
                                 np = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
-                                _snprintf(msgstr, 511, "%s(%u,%d,%s)", m[i].rexxProgram, param, item, np);
-                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                _snprintf(msgstr, 511, "%s(%u\377%d\377%s)", m[i].rexxProgram, param, item, np);
+                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 continue;
                             }
-                            else if ( MatchFocus(m[i].tag, pLV) )
+                            else if ( matchFocus(m[i].tag, pLV) )
                             {
                                 np = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
-                                _snprintf(msgstr, 511, "%s(%u,%d,%s)", m[i].rexxProgram, param, item, np);
-                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                _snprintf(msgstr, 511, "%s(%u\377%d\377%s)", m[i].rexxProgram, param, item, np);
+                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 continue;
                             }
                             else
@@ -399,25 +414,25 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                 else
                                     np = "MENU";
 
-                                /* Use AddDialogMessage directely to send 5 args to ooRexx. */
-                                _snprintf(msgstr, 511, "%s(%u,%s,%d,%d,%d)", m[i].rexxProgram,
+                                /* Use addDialogMessage directely to send 5 args to ooRexx. */
+                                _snprintf(msgstr, 511, "%s(%u\377%s\377%d\377%d\377%d)", m[i].rexxProgram,
                                           phi->iCtrlId, np, phi->MousePos.x, phi->MousePos.y, phi->dwContextId);
-                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 return ReplyFalse;
                             }
                                 break;
 
                             case TAG_CONTEXTMENU :
                             {
-                                /* Use AddDialogMessage directely to send 3 args to
+                                /* Use addDialogMessage directely to send 3 args to
                                  * ooRexx. On WM_CONTEXTMENU, if the message is
                                  * generated by the keyboard (say SHIFT-F10) then
                                  * the x and y coordinates are sent as -1 and -1.
                                  * Args to ooRexx: hwnd, x, y
                                  */
-                                _snprintf(msgstr, 511, "%s(0x%p,%d,%d)", m[i].rexxProgram, param,
+                                _snprintf(msgstr, 511, "%s(0x%p\377%d\377%d)", m[i].rexxProgram, param,
                                           ((int)(short)LOWORD(lparam)), ((int)(short)HIWORD(lparam)));
-                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 return ((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
                             }
                                 break;
@@ -426,8 +441,8 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                             {
                                 /* Args to ooRexx: index, hMenu
                                  */
-                                _snprintf(msgstr, 511, "%s(%d,0x%p)", m[i].rexxProgram, param, lparam);
-                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                _snprintf(msgstr, 511, "%s(%d\3770x%p)", m[i].rexxProgram, param, lparam);
+                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 return ReplyFalse;
                             }
                                 break;
@@ -454,8 +469,8 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                     y = ((int)(short)HIWORD(lparam));
                                 }
 
-                                _snprintf(msgstr, 511, "%s(%d,%d,%d,%d)", m[i].rexxProgram, (param & 0xFFF0), x, y, (param & 0x000F));
-                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                _snprintf(msgstr, 511, "%s(%d\377%d\377%d\377%d)", m[i].rexxProgram, (param & 0xFFF0), x, y, (param & 0x000F));
+                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
 
                                 return ((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
                             }
@@ -473,7 +488,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                  */
 
                                 _snprintf(msgstr, 511, "%s(0x%p)", m[i].rexxProgram, param);
-                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
 
                                 return ((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
                             }
@@ -492,8 +507,8 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
             }
             else if ( message == WM_HSCROLL || message == WM_VSCROLL)
             {
-                _snprintf(msgstr, 511, "%s(%u,0x%p)", m[i].rexxProgram, param, lparam);
-                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                _snprintf(msgstr, 511, "%s(%u\3770x%p)", m[i].rexxProgram, param, lparam);
+                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                 return ReplyFalse;
             }
 
@@ -501,22 +516,22 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
             {
                 if ( handle != NULL )
                 {
-                    _snprintf(msgstr, 511, "%s(%u,0x%p,%s)", m[i].rexxProgram, param, handle, np);
+                    _snprintf(msgstr, 511, "%s(%u\3770x%p\377%s)", m[i].rexxProgram, param, handle, np);
                 }
                 else
                 {
-                    _snprintf(msgstr, 511, "%s(%u,%d,%s)", m[i].rexxProgram, param, item, np);
+                    _snprintf(msgstr, 511, "%s(%u\377%d\377%s)", m[i].rexxProgram, param, item, np);
                 }
             }
             else
             {
-                sprintf(msgstr, "%s(%u,%u)", m[i].rexxProgram, param, lparam);
+                _snprintf(msgstr, 511, "%s(%u\377%u)", m[i].rexxProgram, param, lparam);
             }
-            AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+            addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
          }
          else
          {
-             AddDialogMessage((char *)m[i].rexxProgram, addressedTo->pMessageQueue);
+             addDialogMessage((char *)m[i].rexxProgram, addressedTo->pMessageQueue);
          }
          return ReplyFalse;
       }
@@ -907,7 +922,7 @@ void processKeyPress(KEYPRESSDATA *pKeyData, WPARAM wParam, LPARAM lParam, PCHAR
             strcat(info, " scrollOff");
 
         sprintf(oodMsg, "%s(%u,%u,%u,%u,%s)", pMethod, wParam, bShift, bControl, bAlt, info);
-        AddDialogMessage((char *)oodMsg, pMessageQueue);
+        addDialogMessage((char *)oodMsg, pMessageQueue);
     }
 }
 
@@ -1068,7 +1083,7 @@ static BOOL parseKeyToken(PCHAR token, PUINT pFirst, PUINT pLast)
  * @return keyPressErr_t
  *
  * @remarks There has to be a limit on the length of a method name.  The size of
- *          the message being sent to AddDialogMessage() is set at 256 (for the
+ *          the message being sent to addDialogMessage() is set at 256 (for the
  *          key press event.)  Because of the arg string being sent to the
  *          method, this leaves less than that for the method name.
  */

@@ -94,8 +94,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
-
 REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(messageDialog_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(fileNameDlg_rtn);
@@ -108,8 +106,6 @@ REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(HandleListCtrl,       HandleListCtrl),
-
     REXX_TYPED_ROUTINE(getDlgMsg_rtn,          getDlgMsg_rtn),
     REXX_TYPED_ROUTINE(messageDialog_rtn,      messageDialog_rtn),
     REXX_TYPED_ROUTINE(findWindow_rtn,         findWindow_rtn),
@@ -239,6 +235,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_putControl_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
+REXX_METHOD_PROTOTYPE(generic_subclassEdit);
 
 REXX_METHOD_PROTOTYPE(dlgext_setWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_getControlRect);
@@ -490,8 +487,16 @@ REXX_METHOD_PROTOTYPE(tb_getRange);
 REXX_METHOD_PROTOTYPE(tb_getSelRange);
 
 // ListView
-REXX_METHOD_PROTOTYPE(lv_setImageList);
-REXX_METHOD_PROTOTYPE(lv_getImageList);
+REXX_METHOD_PROTOTYPE(lv_insert);
+REXX_METHOD_PROTOTYPE(lv_add);
+REXX_METHOD_PROTOTYPE(lv_addRow);
+REXX_METHOD_PROTOTYPE(lv_addFullRow);
+REXX_METHOD_PROTOTYPE(lv_modify);
+REXX_METHOD_PROTOTYPE(lv_setItemText);
+REXX_METHOD_PROTOTYPE(lv_itemText);
+REXX_METHOD_PROTOTYPE(lv_itemState);
+REXX_METHOD_PROTOTYPE(lv_setItemState);
+REXX_METHOD_PROTOTYPE(lv_setSpecificState);
 REXX_METHOD_PROTOTYPE(lv_getItemInfo);
 REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
 REXX_METHOD_PROTOTYPE(lv_getColumnInfo);
@@ -503,8 +508,13 @@ REXX_METHOD_PROTOTYPE(lv_insertColumnPx);
 REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
 REXX_METHOD_PROTOTYPE(lv_getItemPos);
 REXX_METHOD_PROTOTYPE(lv_setItemPos);
+REXX_METHOD_PROTOTYPE(lv_getNextItem);
+REXX_METHOD_PROTOTYPE(lv_getNextItemWithState);
+REXX_METHOD_PROTOTYPE(lv_find);
+REXX_METHOD_PROTOTYPE(lv_findNearestXY);
 REXX_METHOD_PROTOTYPE(lv_arrange);
-REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name, see below in oodialog_methods
+REXX_METHOD_PROTOTYPE(lv_setColor);
+REXX_METHOD_PROTOTYPE(lv_getColor);
 REXX_METHOD_PROTOTYPE(lv_addRemoveStyle);
 REXX_METHOD_PROTOTYPE(lv_replaceStyle);
 REXX_METHOD_PROTOTYPE(lv_getExtendedStyle);
@@ -514,13 +524,14 @@ REXX_METHOD_PROTOTYPE(lv_hasCheckBoxes);
 REXX_METHOD_PROTOTYPE(lv_isChecked);
 REXX_METHOD_PROTOTYPE(lv_getCheck);
 REXX_METHOD_PROTOTYPE(lv_checkUncheck);
+REXX_METHOD_PROTOTYPE(lv_setImageList);
+REXX_METHOD_PROTOTYPE(lv_getImageList);
 
 // TreeView
 REXX_METHOD_PROTOTYPE(tv_getSpecificItem);
 REXX_METHOD_PROTOTYPE(tv_getNextItem);
 REXX_METHOD_PROTOTYPE(tv_selectItem);
 REXX_METHOD_PROTOTYPE(tv_expand);
-REXX_METHOD_PROTOTYPE(tv_subclassEdit);
 REXX_METHOD_PROTOTYPE(tv_insert);
 REXX_METHOD_PROTOTYPE(tv_modify);
 REXX_METHOD_PROTOTYPE(tv_itemInfo);
@@ -778,6 +789,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_unInit,                   pbdlg_unInit),
 
     REXX_METHOD(generic_setListTabulators,      generic_setListTabulators),
+    REXX_METHOD(generic_subclassEdit,           generic_subclassEdit),
 
     REXX_METHOD(dlgext_setWindowRect,           dlgext_setWindowRect),
     REXX_METHOD(dlgext_clearWindowRect,         dlgext_clearWindowRect),
@@ -955,10 +967,25 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_modifyColumnPx,              lv_modifyColumnPx),
     REXX_METHOD(lv_insertColumnPx,              lv_insertColumnPx),
     REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
+    REXX_METHOD(lv_insert,                      lv_insert),
+    REXX_METHOD(lv_add,                         lv_add),
+    REXX_METHOD(lv_addRow,                      lv_addRow),
+    REXX_METHOD(lv_addFullRow,         	        lv_addFullRow),
+    REXX_METHOD(lv_modify,                      lv_modify),
     REXX_METHOD(lv_getItemPos,                  lv_getItemPos),
     REXX_METHOD(lv_setItemPos,                  lv_setItemPos),
+    REXX_METHOD(lv_setItemText,                 lv_setItemText),
+    REXX_METHOD(lv_itemText,                    lv_itemText),
+    REXX_METHOD(lv_itemState,                   lv_itemState),
+    REXX_METHOD(lv_setItemState,                lv_setItemState),
+    REXX_METHOD(lv_setSpecificState,            lv_setSpecificState),
+    REXX_METHOD(lv_getNextItem,                 lv_getNextItem),
+    REXX_METHOD(lv_getNextItemWithState,        lv_getNextItemWithState),
+    REXX_METHOD(lv_find,                        lv_find),
+    REXX_METHOD(lv_findNearestXY,               lv_findNearestXY),
     REXX_METHOD(lv_arrange,                     lv_arrange),
-    REXX_METHOD(lv_addRowEx,         	        lv_addRowEx),           // TODO review method name, maybe addFullRow() addFullItem()
+    REXX_METHOD(lv_getColor,                    lv_getColor),
+    REXX_METHOD(lv_setColor,                    lv_setColor),
     REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
     REXX_METHOD(lv_addRemoveStyle,              lv_addRemoveStyle),
     REXX_METHOD(lv_replaceStyle,                lv_replaceStyle),
@@ -987,7 +1014,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tv_getNextItem,                 tv_getNextItem),
     REXX_METHOD(tv_selectItem,                  tv_selectItem),
     REXX_METHOD(tv_expand,                      tv_expand),
-    REXX_METHOD(tv_subclassEdit,                tv_subclassEdit),
     REXX_METHOD(tv_insert,                      tv_insert),
     REXX_METHOD(tv_modify,                      tv_modify),
     REXX_METHOD(tv_itemInfo,                    tv_itemInfo),

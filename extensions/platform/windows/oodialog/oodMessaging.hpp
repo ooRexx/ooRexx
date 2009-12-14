@@ -60,8 +60,8 @@ extern void          freeKeyPressData(KEYPRESSDATA *);
 extern uint32_t      seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
 extern void          removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
 
-extern LRESULT      PaletteMessage(DIALOGADMIN *, HWND, UINT, WPARAM, LPARAM);
-extern BOOL         AddDialogMessage(CHAR * msg, CHAR * Qptr);
-extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
+extern LRESULT      paletteMessage(DIALOGADMIN *, HWND, UINT, WPARAM, LPARAM);
+extern BOOL         addDialogMessage(CHAR * msg, CHAR * Qptr);
+extern MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 
 #endif

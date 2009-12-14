@@ -50,13 +50,17 @@
 ::method new class external "LIBRARY oodialog dlgctrl_new_cls"
 
 ::method init external "LIBRARY oodialog dlgctrl_init"
+::method unInit external "LIBRARY oodialog dlgctrl_unInit"
 
 ::attribute id get    -- The numerical resource ID for this control
 ::attribute oDlg get  -- The ooRexx dialog object this control belongs to
 ::attribute hDlg get  -- The window handle of that dialog
 
-::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
-::method unInit external "LIBRARY oodialog dlgctrl_unInit"
+::constant CCM_GETUNICODEFORMAT     "0x2006"
+
+::method usingUnicode
+   use strict arg
+   return (self~sendWinIntMsg(self~CCM_GETUNICODEFORMAT, 0, 0) <> 0)
 
 ::method getFocus unguarded
    forward to (self~oDlg)
@@ -70,6 +74,7 @@
 ::method tabToPrevious unguarded
    forward to (self~oDlg)
 
+::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 ::method assignFocus external "LIBRARY oodialog dlgctrl_assignFocus"
 ::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
@@ -886,19 +891,67 @@
 
 ::class 'ListControl' subclass DialogControl public
 
-::method lastItem attribute
-
-::method Init
-   forward class (super) continue
-   self~LastItem = -1
+::method subclassEdit external "LIBRARY oodialog generic_subclassEdit"
+::method restoreEditClass external "LIBRARY oodialog generic_subclassEdit"
 
 -- LVM_FIRST = 0x1000  == 4096
-::constant LVM_GETCOLUMNWIDTH  "0x101D"
-::constant LVM_SETHOVERTIME    "0x1047"
-::constant LVM_GETHOVERTIME    "0x1048"
-::constant LVM_DELETECOLUMN    "0x101C"
-::constant LVM_GETITEMSPACING  "0x1033"
-::constant LVM_SETITEMCOUNT    "0x102F"
+::constant LVM_GETCOLUMNWIDTH     "0x101D"
+::constant LVM_SETHOVERTIME       "0x1047"
+::constant LVM_GETHOVERTIME       "0x1048"
+::constant LVM_DELETECOLUMN       "0x101C"
+::constant LVM_GETITEMSPACING     "0x1033"
+::constant LVM_SETITEMCOUNT       "0x102F"
+::constant LVM_SCROLL             "0x1014"
+::constant LVM_GETCOUNTPERPAGE    "0x1028"
+::constant LVM_ENSUREVISIBLE      "0x1013"
+::constant LVM_UPDATE             "0x102A"
+::constant LVM_REDRAWITEMS        "0x1015"
+::constant LVM_GETSELECTEDCOUNT   "0x1032"
+::constant LVM_GETITEMCOUNT       "0x1004"
+::constant LVM_EDITLABELA         "0x1017"
+::constant LVM_EDITLABELW         "0x1076"
+::constant LVM_DELETEALLITEMS     "0x1009"
+::constant LVM_DELETEITEM         "0x1008"
+::constant LVM_GETTOPINDEX        "0x1027"
+
+::method firstVisible
+   return self~sendWinIntMsg(self~LVM_GETTOPINDEX , 0, 0)
+
+::method delete
+   use strict arg index
+   return self~sendWinIntMsg(self~LVM_DELETEITEM, index, 0) <> 0
+
+::method deleteAll
+   use strict arg
+   return self~sendWinIntMsg(self~LVM_DELETEALLITEMS, 0, 0) <> 0
+
+::method edit
+   use strict arg index
+   if self~usingUnicode then return self~sendWinHandle2MsgH(self~LVM_EDITLABELW, index, 0)
+   else return self~sendWinHandle2MsgH(self~LVM_EDITLABELA, index, 0)
+
+::method endEdit
+   use strict arg
+   if self~usingUnicode then return self~sendWinHandle2MsgH(self~LVM_EDITLABELW, -1, 0)
+   else return self~sendWinHandle2MsgH(self~LVM_EDITLABELA, -1, 0)
+
+::method items
+   return self~sendWinIntMsg(self~LVM_GETITEMCOUNT , 0, 0)
+
+::method selectedItems
+   return self~sendWinIntMsg(self~LVM_GETSELECTEDCOUNT , 0, 0)
+
+::method redrawItems
+   use strict arg first = 0, last = (self~items)
+   return self~sendWinIntMsg(self~LVM_REDRAWITEMS, first, last) <> 0
+
+::method updateItem
+   use strict arg index
+   return self~sendWinIntMsg(self~LVM_UPDATE, index, 0) <> 0
+
+::method ensureVisible
+   use strict arg index, partial = .false
+   return self~sendWinIntMsg(self~LVM_ENSUREVISIBLE, index, partial) <> 0
 
 ::method deleteColumn
    use strict arg index
@@ -925,6 +978,13 @@
 ::method prepare4nItems
    use strict arg countItems
    return self~sendWinIntMsg(self~LVM_SETITEMCOUNT, countItems, 0)
+
+::method scroll
+   use strict arg x = 0, y = 0
+   return self~sendWinIntMsg(self~LVM_SCROLL, x, y) <> 0
+
+::method itemsPerPage
+   return self~sendWinIntMsg(self~LVM_GETCOUNTPERPAGE, 0, 0)
 
 ::method arrange external "LIBRARY oodialog lv_arrange"
 ::method snapToGrid external "LIBRARY oodialog lv_arrange"
@@ -972,6 +1032,12 @@
    width = trunc(width * self~factorX)
    return self~insertColumnPx(nr, text, width, fmt)
 
+::method insert external "LIBRARY oodialog lv_insert"
+::method add external "LIBRARY oodialog lv_add"
+::method addRow external "LIBRARY oodialog lv_addRow"
+::method addFullRow external "LIBRARY oodialog lv_addFullRow"  -- TODO review implementation before release
+::method modify external "LIBRARY oodialog lv_modify"
+::method setItemState external "LIBRARY oodialog lv_setItemState"
 ::method getExtendedStyle external "LIBRARY oodialog lv_getExtendedStyle"
 ::method getExtendedStyleRaw external "LIBRARY oodialog lv_getExtendedStyle"
 ::method replaceExtendedStyle external "LIBRARY oodialog lv_replaceExtendStyle"
@@ -983,206 +1049,59 @@
 ::method hasCheckBoxes external "LIBRARY oodialog lv_hasCheckBoxes"
 ::method getCheck external "LIBRARY oodialog lv_getCheck"
 
+-- Intent is to return directory item with normal names and in itemInfo convert to old stem return
+::method getItemInfo external "LIBRARY oodialog lv_getItemInfo"
+::method itemInfo
+   forward message "getItemInfo"
+
 ::method checkAll
    return self~check(-1)
 
 ::method uncheckAll
    return self~uncheck(-1)
 
-::method Insert
-   use arg nr, subnr, text, image
-   if arg(2,'O') then subnr = 0
-   if arg(1,'o') = 1 then do
-        if subnr = 0 then nr = self~LastItem + 1
-        else nr = self~LastItem
-   end
-   if arg(4,'o') = 1 then image = -1
-   if subnr = 0 then do
-       item = HandleListCtrl("I","INS", self~Hwnd, nr, text, image)
-       if item \= -1 then self~LastItem = item
-   end
-   else item = HandleListCtrl("I","SET", self~Hwnd, nr, subnr, text, image)
-   return item
+::method last
+   return self~items - 1
 
+::method lastSelected
+   if self~itemState(self~last)~wordpos("SELECTED") > 0 then  return self~last
+   return self~previousSelected(self~last)
 
-::method Modify
-   use arg nr, subnr, text, image
-   if arg(1,'o') = 1 then nr = self~Selected
-   if arg(2,'O') then subnr = 0
-   if arg(4,'o') = 1 then image = -1
-   return HandleListCtrl("I","SET", self~Hwnd, nr, subnr, text, image)
+::method itemPos
+   use strict arg item
+   p = self~getItemPos(item)
+   if p == 0 then return p
+   else return p~x p~y
 
-::method SetItemText
-   use arg item, subitem, text
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'O') then subitem = 0
-   return HandleListCtrl("I","SET", self~Hwnd, item, subitem, text,"TXT")
+::method itemState external "LIBRARY oodialog lv_itemState"
+::method itemText external "LIBRARY oodialog lv_itemText"
+::method setItemText external "LIBRARY oodialog lv_setItemText"
+::method next external "LIBRARY oodialog lv_getNextItem"
+::method nextSelected external "LIBRARY oodialog lv_getNextItem"
+::method nextLeft external "LIBRARY oodialog lv_getNextItem"
+::method nextRight external "LIBRARY oodialog lv_getNextItem"
+::method previous external "LIBRARY oodialog lv_getNextItem"
+::method previousSelected external "LIBRARY oodialog lv_getNextItem"
+::method selected external "LIBRARY oodialog lv_getNextItemWithState"
+::method focused external "LIBRARY oodialog lv_getNextItemWithState"
+::method dropHighlighted external "LIBRARY oodialog lv_getNextItemWithState"
+::method find external "LIBRARY oodialog lv_find"
+::method findPartial external "LIBRARY oodialog lv_find"
+::method findNearestXY external "LIBRARY oodialog lv_findNearestXY"
+::method select external "LIBRARY oodialog lv_setSpecificState"
+::method deselect external "LIBRARY oodialog lv_setSpecificState"
+::method focus external "LIBRARY oodialog lv_setSpecificState"
+::method getItemPos external "LIBRARY oodialog lv_getItemPos"
+::method setItemPos external "LIBRARY oodialog lv_setItemPos"
+::method setImageList external "LIBRARY oodialog lv_setImageList"
+::method getImageList external "LIBRARY oodialog lv_getImageList"
 
-::method SetItemState
-   use arg item, state
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","SET", self~Hwnd, item, 0, state, "STATE")
-
-
-::method Add
-   do i = 1 to arg()
-      if arg(i,'E') = 1 then do
-          if arg(i+1,'e') = 1 then image = arg(i+1); else image = -1
-          if i = 1 then do
-              item = self~Insert(self~LastItem+1,i-1,arg(i),image)
-              if item \= -1 then self~LastItem = item
-          end
-          else do
-             item = self~Insert(self~LastItem,i-1,arg(i),image)
-          end
-          return item
-      end
-   end
-   return -1
-
-
-::method AddRow
-   use arg nr, image, text
-   if arg(1,'o') = 1 then nr = self~LastItem+1
-   if arg(2,'o') = 1 then image = -1
-   if arg(3,'o') = 1 then text = ""
-   item = self~Insert(nr,0,text,image)
-   if item \= -1 then do
-       self~LastItem = item
-       do i = 4 to arg()
-           if arg(i,'E') = 1 then self~Insert(item,i-3,arg(i),-1)
-       end
-   end
-   return item
-
-::method addRowEx external "LIBRARY oodialog lv_addRowEx"  -- TODO review method name
-
-::method Delete
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","DEL",self~hwnd, item)
-
-::method DeleteAll
-   return HandleListCtrl("I","DEL", self~Hwnd,"ALL")
-
-::method Items
-   return HandleListCtrl("M","CNT", self~Hwnd)
-
-::method Last
-   return self~Items - 1
-
-
-::method SelectedItems
-   return HandleListCtrl("M","CNTSEL", self~Hwnd)
-
-::method getItemInfo external "LIBRARY oodialog lv_getItemInfo"
-::method itemInfo
-   forward message "getItemInfo"
-
-::method ItemText
-   use arg item, subitem
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'O') then subitem = 0
-   return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "TXT")
-
-::method ItemState
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "STATE")
-
-::method Select
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","SET", self~Hwnd, item, 0, "SELECTED", "STATE")
-
-::method Deselect
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I","SET", self~Hwnd, item, 0, "NOTSELECTED", "STATE")
-
-::method Selected
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "SELECTED")
-
-::method LastSelected
-   if self~ItemState(self~Last)~wordpos("SELECTED") > 0 then  return self~Last
-   return self~PreviousSelected(self~Last)
-
-::method Focused
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "FOCUSED")
-
-::method Focus
-   use arg item
-   if arg(1,'O') then return -1
-   return HandleListCtrl("I", "SET", self~Hwnd, item, 0, "FOCUSED","STATE")
-
-::method DropHighlighted
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, -1, "DROP")
-
-::method FirstVisible
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, 0, "FIRSTVISIBLE")
-
-::method NextSelected
-   use arg startItem
-   if arg(1,'O') then startItem = -1
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT SELECTED")
-
-::method PreviousSelected
-   use arg startItem
-   if arg(1,'O') then startItem = -1
-   return HandleListCtrl("I", "GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT SELECTED")
-
-::method Next
-   use arg startItem
-   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
-   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
-   -- a -1 value to mark the iteration end.
-   if self~Items < 2 then return -1
-   if arg(1,'O') then startItem = -1
-   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT")
-
-::method Previous
-   use arg startItem
-   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
-   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
-   -- a -1 value to mark the iteration end.
-   if self~Items < 2 then return -1
-   if arg(1,'o') = 1 then startItem = -1
-   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT")
-
-::method NextLeft
-   use arg startItem
-   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
-   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
-   -- a -1 value to mark the iteration end.
-   if self~Items < 2 then return -1
-   if arg(1,'o') = 1 then startItem = -1
-   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TOLEFT")
-
-::method NextRight
-   use arg startItem
-   -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
-   -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
-   -- a -1 value to mark the iteration end.
-   if self~Items < 2 then return -1
-   if arg(1,'o') = 1 then startItem = -1
-   return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TORIGHT")
-
-::method RedrawItems
-   use arg first, last
-   if arg(1,'o') = 1 then first = 0
-   if arg(2,'o') = 1 then last = self~items
-   return HandleListCtrl("M","REDRAW", self~Hwnd, first, last)
-
-::method UpdateItem
-   use arg item
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("M","UPDATE", self~Hwnd, item)
-
-::method EnsureVisible
-   use arg item, partial
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then partial = 0
-   return HandleListCtrl("M", "ENVIS", self~Hwnd, item, partial)
+::method "bkColor=" external "LIBRARY oodialog lv_setColor"
+::method "textColor=" external "LIBRARY oodialog lv_setColor"
+::method "textBkColor=" external "LIBRARY oodialog lv_setColor"
+::method bkColor external "LIBRARY oodialog lv_getColor"
+::method textColor external "LIBRARY oodialog lv_getColor"
+::method textBkColor external "LIBRARY oodialog lv_getColor"
 
 -- DEPRECATED
 ::method setSmallImages
@@ -1194,88 +1113,12 @@
 ::method setImages external "LIBRARY oodialog lv_setImageList"
 
 -- DEPRECATED
-::method RemoveSmallImages
+::method removeSmallImages
    return self~removeImageList(.nil, 1)
 
 -- DEPRECATED
 ::method removeImages
    return self~removeImageList(.nil, 0)
-
-::method setImageList external "LIBRARY oodialog lv_setImageList"
-::method getImageList external "LIBRARY oodialog lv_getImageList"
-
-::method Find
-   use arg txt, startItem, wrap
-   if arg(2,'o') = 1 then startItem = -1
-   if arg(3,'o') = 1 then wrap = 0
-   if wrap = 1 | wrap~translate = "J" then opt = "WRAP"; else opt = ""
-   return HandleListCtrl("I", "FIND", self~Hwnd, startItem, opt, txt)
-
-::method FindPartial
-   use arg txt, startItem, wrap
-   if arg(2,'o') = 1 then startItem = -1
-   if arg(3,'o') = 1 then wrap = 0
-   if wrap = 1 | wrap~translate = "J" then opt = "PARTIAL WRAP"; else opt = "PARTIAL"
-   return HandleListCtrl("I", "FIND", self~Hwnd, startItem, opt, txt)
-
-::method FindNearestXY
-   use arg x,y, direction
-   if arg(1,'o') = 1 | arg(2,'o') = 1 then return -1
-   if arg(3,'o') = 1 then direction = "DOWN"
-   return HandleListCtrl("I", "FIND", self~Hwnd, -1, "NEAREST", x, y, direction~translate)
-
-::method itemPos
-   use strict arg item
-   p = self~getItemPos(item)
-   if p == 0 then return p
-   else return p~x p~y
-
-::method getItemPos external "LIBRARY oodialog lv_getItemPos"
-::method setItemPos external "LIBRARY oodialog lv_setItemPos"
-
-::method Edit
-   use arg hitem
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("I", "EDIT", self~Hwnd, hitem)
-
-::method EndEdit
-   return HandleListCtrl("I", "EDIT", self~Hwnd, -1)
-
-::method SubclassEdit
-   return HandleListCtrl("I", "SUBCL_EDIT", self~Hwnd)
-
-::method RestoreEditClass
-   return HandleListCtrl("I", "RESUB_EDIT", self~Hwnd)
-
-::method ItemsPerPage
-   return HandleListCtrl("M", "CNTPP", self~Hwnd)
-
-::method Scroll
-   use arg x, y
-   if arg(1,'o') = 1 then x = 0
-   if arg(2,'o') = 1 then y = 0
-   return HandleListCtrl("M", "SCROLL", self~Hwnd, x, y)
-
-::method BkColor
-   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETBK")
-
-::method "BkColor="
-   use arg color
-   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETBK", color
-
-::method TextColor
-   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETTXT")
-
-::method "TextColor="
-   use arg color
-   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETTXT", color
-
-::method TextBkColor
-   return HandleListCtrl("M", "COLOR", self~Hwnd, "GETTXTBK")
-
-::method "TextBkColor="
-   use arg color
-   call HandleListCtrl "M", "COLOR", self~Hwnd, "SETTXTBK", color
 
 
 /************* Tree Control Class *********************************************/
@@ -1287,6 +1130,9 @@
 ::method init
    forward class (super) continue
    self~rootArray = .array~new(4)
+
+::method subclassEdit external "LIBRARY oodialog generic_subclassEdit"
+::method restoreEditClass external "LIBRARY oodialog generic_subclassEdit"
 
 ::method insert external "LIBRARY oodialog tv_insert"
 ::method modify external "LIBRARY oodialog tv_modify"
@@ -1305,8 +1151,6 @@
 ::method collapseAndReset external "LIBRARY oodialog tv_expand"
 ::method expand external "LIBRARY oodialog tv_expand"
 ::method toggle external "LIBRARY oodialog tv_expand"
-::method subclassEdit external "LIBRARY oodialog tv_subclassEdit"
-::method restoreEditClass external "LIBRARY oodialog tv_subclassEdit"
 ::method select external "LIBRARY oodialog tv_selectItem"
 ::method makeFirstVisible external "LIBRARY oodialog tv_selectItem"
 ::method dropHighlight external "LIBRARY oodialog tv_selectItem"
@@ -1368,10 +1212,6 @@
    use strict arg
    return self~sendWinIntMsg(self~TVM_DELETEITEM, 0, 0)
 
-::method usingUnicode
-   use strict arg
-   return (self~sendWinIntMsg(self~TVM_GETUNICODEFORMAT, 0, 0) <> 0)
-
 ::method edit
    use strict arg hitem
    if self~usingUnicode then return self~sendWinHandle2MsgH(self~TVM_EDITLABELW, 0, hItem)
@@ -1379,8 +1219,6 @@
 
 ::method endEdit
    use strict arg cancel = .false
-   if cancel == 1 | cancel~left(1)~translate == 'Y' then cancel = .true
-   else cancel = .false
    return (self~sendWinIntMsg(self~TVM_ENDEDITLABELNOW , cancel, 0) <> 0)
 
 ::method add

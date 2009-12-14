@@ -79,6 +79,41 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 }
 
 
+/** TreeControl::subclassEdit()
+ *  TreeControl::restoreEditClass()
+ *  ListControl::subclassEdit()
+ *  ListControl::restoreEditClass()
+ */
+RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    HWND hEdit;
+    if ( ((pCDialogControl)pCSelf)->controlType == winTreeView )
+    {
+        hEdit = TreeView_GetEditControl(hwnd);
+    }
+    else
+    {
+        hEdit = TreeView_GetEditControl(hwnd);
+    }
+
+    if ( *method == 'S' )
+    {
+        WNDPROC oldProc = (WNDPROC)setWindowPtr(hEdit, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
+        if ( oldProc != (WNDPROC)CatchReturnSubProc )
+        {
+            wpOldEditProc = oldProc;
+        }
+        return pointer2string(context, oldProc);
+    }
+    else
+    {
+        setWindowPtr(hEdit, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
+    }
+    return TheZeroObj;
+}
+
 
 /**
  * Methods for the DateTimePicker class.
@@ -373,6 +408,15 @@ inline bool isInIconView(HWND hList)
     return ((style & LVS_TYPEMASK) == LVS_ICON) || ((style & LVS_TYPEMASK) == LVS_SMALLICON);
 }
 
+/**
+ * Returns the index of the first selected item in the list view, or -1 if no
+ * items are selected.
+ */
+inline int32_t getSelected(HWND hList)
+{
+    return ListView_GetNextItem(hList, -1, LVNI_SELECTED);
+}
+
 inline int getColumnCount(HWND hList)
 {
     return Header_GetItemCount(ListView_GetHeader(hList));
@@ -569,288 +613,596 @@ static int getColumnWidthArg(RexxMethodContext *context, RexxObjectPtr _width, s
 }
 
 
-size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+/**
+ * Inserts a new list view item or a new subitem into in an existing list view
+ * item.
+ *
+ * Note that as a byproduct of the way the underlying Windows API works, this
+ * method would also modify an existing subitem.
+ *
+ * @param itemIndex
+ * @param subitemIndex
+ * @param text
+ * @param imageIndex
+ *
+ * @return  -1 on error, othewise the inserted item index.
+ *
+ * @note  If a subitem is being inserted, the returned index will be the index
+ *        of the item the subitem is inserted into.
+ *
+ */
+RexxMethod5(int32_t, lv_insert, OPTIONAL_uint32_t, _itemIndex, OPTIONAL_uint32_t, subitemIndex, CSTRING, text,
+            OPTIONAL_int32_t, imageIndex, CSELF, pCSelf)
 {
-   HWND h;
+    HWND hList = getDCHCtrl(pCSelf);
+    int32_t newItem = -1;
+    int32_t itemIndex = _itemIndex;
+    LVITEM lvi = {0};
 
-   CHECKARGL(3);
+    if ( argumentOmitted(1) )
+    {
+        itemIndex = getDCInsertIndex(pCSelf);
+        if ( subitemIndex > 0 )
+        {
+            itemIndex--;
+            if ( itemIndex > (ListView_GetItemCount(hList) - 1) )
+            {
+                userDefinedMsgException(context->threadContext, 2, "A subitem can not be inserted prior to inserting the item");
+                goto done_out;
+            }
+        }
+    }
 
-   h = GET_HWND(argv[2]);
-   if (!h) RETERR;
+    imageIndex = (argumentOmitted(4) ? -1 : imageIndex);
 
-   if (argv[0].strptr[0] == 'I')
-   {
-       if (!strcmp(argv[1].strptr, "INS"))
-       {
-           LV_ITEM lvi;
+    lvi.mask = LVIF_TEXT;
+    lvi.iItem = itemIndex;
+    lvi.iSubItem = subitemIndex;
+    lvi.pszText = (LPSTR)text;
 
-           CHECKARG(6);
+    if ( imageIndex > -1 )
+    {
+        lvi.iImage = imageIndex;
+        lvi.mask |= LVIF_IMAGE;
+    }
 
-           lvi.mask = LVIF_TEXT;
+    if ( subitemIndex == 0 )
+    {
+        newItem = ListView_InsertItem(hList, &lvi);
+        ((pCDialogControl)pCSelf)->lastItem = newItem;
+    }
+    else
+    {
+        if ( ListView_SetItem(hList, &lvi) )
+        {
+            newItem = itemIndex;
+        }
+    }
 
-           lvi.iItem = atoi(argv[3].strptr);
-           lvi.iSubItem = 0;
+done_out:
+    return newItem;
+}
 
-           lvi.pszText = (LPSTR)argv[4].strptr;
-           lvi.cchTextMax = (int)argv[4].strlength;
 
-           lvi.iImage = atoi(argv[5].strptr);
-           if (lvi.iImage >= 0) lvi.mask |= LVIF_IMAGE;
+RexxMethod5(RexxObjectPtr, lv_modify, OPTIONAL_uint32_t, itemIndex, OPTIONAL_uint32_t, subitemIndex, CSTRING, text,
+            OPTIONAL_int32_t, imageIndex, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
 
-           RETVAL(ListView_InsertItem(h, &lvi));
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SET"))
-       {
-           LV_ITEM lvi;
+    if ( argumentOmitted(1) )
+    {
+        itemIndex = getDCInsertIndex(pCSelf);
+        if ( subitemIndex > 0 )
+        {
+            itemIndex--;
+        }
+    }
+    itemIndex  = (argumentOmitted(1) ? getSelected(hList) : itemIndex);
+    imageIndex = (argumentOmitted(4) ? -1 : imageIndex);
 
-           CHECKARG(7);
+    if ( itemIndex < 0 )
+    {
+        itemIndex = 0;
+    }
 
-           lvi.mask = 0;
+    LVITEM lvi = {0};
+    lvi.mask = LVIF_TEXT;
+    lvi.iItem = itemIndex;
+    lvi.iSubItem = subitemIndex;
+    lvi.pszText = (LPSTR)text;
 
-           lvi.iItem = atoi(argv[3].strptr);
-           lvi.iSubItem = atoi(argv[4].strptr);
+    if ( imageIndex > -1 )
+    {
+        lvi.iImage = imageIndex;
+        lvi.mask |= LVIF_IMAGE;
+    }
 
-           lvi.pszText = (LPSTR)argv[5].strptr;
-           lvi.cchTextMax = (int)argv[5].strlength;
+    return (ListView_SetItem(hList, &lvi) ? TheZeroObj : TheOneObj);
+}
 
-           if (!strcmp(argv[6].strptr,"TXT"))
-           {
-               lvi.mask |= LVIF_TEXT;
-               RETC(!SendMessage(h, LVM_SETITEMTEXT, lvi.iItem, (LPARAM)&lvi));
-           }
-           else if (!strcmp(argv[6].strptr,"STATE"))
-           {
-               lvi.state = 0;
-               lvi.stateMask = 0;
 
-               if (strstr(argv[5].strptr, "NOTCUT"))  lvi.stateMask |= LVIS_CUT;
-               else if (strstr(argv[5].strptr, "CUT"))  {lvi.state |= LVIS_CUT; lvi.stateMask |= LVIS_CUT;}
-               if (strstr(argv[5].strptr, "NOTDROP"))  lvi.stateMask |= LVIS_DROPHILITED;
-               else if (strstr(argv[5].strptr, "DROP"))  {lvi.state |= LVIS_DROPHILITED; lvi.stateMask |= LVIS_DROPHILITED;}
-               if (strstr(argv[5].strptr, "NOTFOCUSED"))  lvi.stateMask |= LVIS_FOCUSED;
-               else if (strstr(argv[5].strptr, "FOCUSED"))  {lvi.state |= LVIS_FOCUSED; lvi.stateMask |= LVIS_FOCUSED;}
-               if (strstr(argv[5].strptr, "NOTSELECTED"))  lvi.stateMask |= LVIS_SELECTED;
-               else if (strstr(argv[5].strptr, "SELECTED"))  {lvi.state |= LVIS_SELECTED; lvi.stateMask |= LVIS_SELECTED;}
+RexxMethod2(int32_t, lv_add, ARGLIST, args, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    HWND hList = getDCHCtrl(pCSelf);
 
-               RETC(!SendMessage(h, LVM_SETITEMSTATE, lvi.iItem, (LPARAM)&lvi));
-           }
-           else
-           {
-               if (lvi.cchTextMax) lvi.mask |= LVIF_TEXT;
+    uint32_t itemIndex = getDCInsertIndex(pCSelf);
+    int32_t imageIndex = -1;
+    int32_t result = -1;
 
-               lvi.iImage = atoi(argv[6].strptr);
-               if (lvi.iImage >= 0) lvi.mask |= LVIF_IMAGE;
-               RETC(!ListView_SetItem(h, &lvi));
-           }
-       }
-       else
-       if (!strcmp(argv[1].strptr, "GET"))
-       {
-           LV_ITEM lvi;
-           CHAR data[256];
+    LVITEM lvi = {0};
+    lvi.mask = LVIF_TEXT;
 
-           CHECKARG(7);
+    size_t argCount = context->ArraySize(args);
+    for ( size_t i = 1; i <= argCount; i++ )
+    {
+        RexxObjectPtr _text = c->ArrayAt(args, i);
+        if ( _text == NULLOBJECT )
+        {
+            continue;
+        }
 
-           lvi.iItem = atoi(argv[3].strptr);
-           lvi.iSubItem = atoi(argv[4].strptr);
-           lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_STATE;
-           lvi.pszText = data;
-           lvi.cchTextMax = 255;
-           lvi.stateMask = LVIS_CUT | LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED;
+        lvi.pszText = (LPSTR)context->ObjectToStringValue(_text);
 
-           if (!strcmp(argv[6].strptr,"TXT"))
-           {
-               INT len;
-               lvi.pszText = retstr->strptr;
-               len = (int)SendMessage(h, LVM_GETITEMTEXT, lvi.iItem, (LPARAM)&lvi);
-               retstr->strlength = len;
-               return 0;
-           }
-           else if (!strcmp(argv[6].strptr,"STATE"))
-           {
-               UINT state;
+        if ( i < argCount )
+        {
+            RexxObjectPtr _imageIndex = c->ArrayAt(args, i + 1);
+            if ( _imageIndex != NULLOBJECT )
+            {
+                if ( ! c->Int32(_imageIndex, &imageIndex) )
+                {
+                    wrongRangeException(context->threadContext, (int)(i + 1), INT32_MIN, INT32_MAX, _imageIndex);
+                    result = -1;
+                    goto done_out;
+                }
+            }
+        }
 
-               state = ListView_GetItemState(h, lvi.iItem, lvi.stateMask);
-               retstr->strptr[0] = '\0';
-               if (state & LVIS_CUT) strcat(retstr->strptr, "CUT ");
-               if (state & LVIS_DROPHILITED) strcat(retstr->strptr, "DROP ");
-               if (state & LVIS_FOCUSED) strcat(retstr->strptr, "FOCUSED ");
-               if (state & LVIS_SELECTED) strcat(retstr->strptr, "SELECTED ");
-               retstr->strlength = strlen(retstr->strptr);
-               return 0;
-           }
-           RETVAL(-1);
-       }
-       else
-       if (!strcmp(argv[1].strptr, "DEL"))
-       {
-           INT item;
-           CHECKARG(4);
-           item = atoi(argv[3].strptr);
-           if (!item && !strcmp(argv[3].strptr,"ALL"))
-              RETC(!ListView_DeleteAllItems(h))
-           else if (ListView_GetItemCount(h) >0)
-              RETC(!ListView_DeleteItem(h, item))
-           RETVAL(-1)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "GETNEXT"))
-       {
-           ULONG flag;
-           LONG startItem;
+        if ( imageIndex > -1 )
+        {
+            lvi.iImage = imageIndex;
+            lvi.mask |= LVIF_IMAGE;
+        }
 
-           CHECKARG(5);
+        if ( i == 1 )
+        {
+            lvi.iItem = itemIndex;
+            lvi.iSubItem = 0;
 
-           startItem = atol(argv[3].strptr);
+            result = ListView_InsertItem(hList, &lvi);
 
-           if (!strcmp(argv[4].strptr, "FIRSTVISIBLE"))
-               RETVAL(ListView_GetTopIndex(h))
+            if ( result != -1 )
+            {
+                ((pCDialogControl)pCSelf)->lastItem = result;
+            }
+        }
+        else
+        {
+            lvi.iItem = itemIndex - 1;
+            lvi.iSubItem = (int)(i - 1);
 
-           flag = 0;
-           if (strstr(argv[4].strptr,"ABOVE")) flag |= LVNI_ABOVE;
-           if (strstr(argv[4].strptr,"BELOW")) flag |= LVNI_BELOW;
-           if (strstr(argv[4].strptr,"TOLEFT")) flag |= LVNI_TOLEFT;
-           if (strstr(argv[4].strptr,"TORIGHT")) flag |= LVNI_TORIGHT;
-           if (!flag) flag = LVNI_ALL;
+            if ( ListView_SetItem(hList, &lvi) )
+            {
+                result = lvi.iItem;
+            }
+        }
 
-           if (strstr(argv[4].strptr,"CUT")) flag |= LVNI_CUT;
-           else if (strstr(argv[4].strptr,"DROP")) flag |= LVNI_DROPHILITED;
-           else if (strstr(argv[4].strptr,"FOCUSED")) flag |= LVNI_FOCUSED;
-           else if (strstr(argv[4].strptr,"SELECTED")) flag |= LVNI_SELECTED;
+        // As soon as we find a non-omitted arg, we quit.  That is / was the
+        // behaviour prior to the conversion to the C++ API.
+        break;
+    }
 
-           RETVAL(ListView_GetNextItem(h, startItem, flag))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "FIND"))
-       {
-           LONG startItem;
-           LV_FINDINFO finfo;
+done_out:
+    return result;
+}
 
-           CHECKARGL(6);
 
-           startItem = atol(argv[3].strptr);
+RexxMethod5(int32_t, lv_addRow, OPTIONAL_uint32_t, index, OPTIONAL_int32_t, imageIndex, OPTIONAL_CSTRING, text,
+            ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
 
-           if (strstr(argv[4].strptr,"NEAREST")) finfo.flags = LVFI_NEARESTXY;
-           else finfo.flags = LVFI_STRING;
+    index      = (argumentOmitted(1) ? getDCInsertIndex(pCSelf) : index);
+    imageIndex = (argumentOmitted(2) ? -1 : imageIndex);
+    text       = (argumentOmitted(3) ? "" : text);
 
-           if (strstr(argv[4].strptr,"PARTIAL")) finfo.flags |= LVFI_PARTIAL;
-           if (strstr(argv[4].strptr,"WRAP")) finfo.flags |= LVFI_WRAP;
+    LVITEM lvi = {0};
+    lvi.mask = LVIF_TEXT;
+    lvi.iItem = index;
+    lvi.iSubItem = 0;
+    lvi.pszText = (LPSTR)text;
 
-           if ((finfo.flags & LVFI_STRING) == LVFI_STRING)
-               finfo.psz = argv[5].strptr;
-           else {
-               CHECKARG(8);
-               finfo.pt.x = atol(argv[5].strptr);
-               finfo.pt.y = atol(argv[6].strptr);
-               if (!strcmp(argv[7].strptr,"UP")) finfo.vkDirection = VK_UP;
-               else if (!strcmp(argv[7].strptr,"LEFT")) finfo.vkDirection  = VK_LEFT;
-               else if (!strcmp(argv[7].strptr,"RIGHT")) finfo.vkDirection  = VK_RIGHT;
-               else finfo.vkDirection  = VK_DOWN;
-           }
+    if ( imageIndex > -1 )
+    {
+        lvi.iImage = imageIndex;
+        lvi.mask |= LVIF_IMAGE;
+    }
 
-           RETVAL(ListView_FindItem(h, startItem, &finfo))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "EDIT"))
-       {
-           CHECKARG(4);
+    int32_t itemIndex = ListView_InsertItem(hList, &lvi);
 
-           RETHANDLE(ListView_EditLabel(h, atol(argv[3].strptr)))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SUBCL_EDIT"))
-       {
-           HWND ew = ListView_GetEditControl(h);
-           if (ew)
-           {
-               WNDPROC oldProc = (WNDPROC)setWindowPtr(ew, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
-               if (oldProc != (WNDPROC)CatchReturnSubProc) wpOldEditProc = oldProc;
-               RETPTR(oldProc)
-           }
-           else RETC(0)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "RESUB_EDIT"))
-       {
-           HWND ew = ListView_GetEditControl(h);
-           if (ew)
-           {
-               setWindowPtr(ew, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
-               RETC(0)
-           }
-           RETVAL(-1)
-       }
-   }
-   else
-   if (argv[0].strptr[0] == 'M')
-   {
-       if (!strcmp(argv[1].strptr, "CNT"))
-       {
-           RETVAL(ListView_GetItemCount(h))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "CNTSEL"))
-       {
-           RETVAL(ListView_GetSelectedCount(h))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "REDRAW"))
-       {
-           CHECKARG(5);
+    if ( itemIndex == -1 )
+    {
+        goto done_out;
+    }
+    ((pCDialogControl)pCSelf)->lastItem = itemIndex;
 
-           RETC(!ListView_RedrawItems(h, atol(argv[3].strptr), atol(argv[4].strptr)));
-       }
-       else
-       if (!strcmp(argv[1].strptr, "UPDATE"))
-       {
-           CHECKARG(4);
+    size_t argCount = context->ArraySize(args);
 
-           RETC(!ListView_Update(h, atol(argv[3].strptr)));
-       }
-       else
-       if (!strcmp(argv[1].strptr, "ENVIS"))
-       {
-           CHECKARG(5);
-           RETC(!ListView_EnsureVisible(h, atol(argv[3].strptr), isYes(argv[4].strptr)))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "CNTPP"))
-       {
-           RETVAL(ListView_GetCountPerPage(h))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SCROLL"))
-       {
-           CHECKARG(5);
-                                      /* dx */                /* dy */
-           RETC(!ListView_Scroll(h, atoi(argv[3].strptr), atoi(argv[4].strptr)))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "COLOR"))
-       {
-           CHECKARGL(4);
+    for ( size_t i = 4; i <= argCount; i++ )
+    {
+        RexxObjectPtr _columnText = context->ArrayAt(args, i);
+        if ( _columnText == NULLOBJECT )
+        {
+            continue;
+        }
 
-           if (argv[3].strptr[0] == 'G')
-           {
-               COLORREF cr;
-               INT i;
-               if (!strcmp(argv[3].strptr, "GETBK")) cr = ListView_GetBkColor(h);
-               else if (!strcmp(argv[3].strptr, "GETTXT")) cr = ListView_GetTextColor(h);
-               else if (!strcmp(argv[3].strptr, "GETTXTBK")) cr = ListView_GetTextBkColor(h);
-               for (i = 0; i< 256; i++) if (cr == PALETTEINDEX(i)) RETVAL(i);
-               RETVAL(-1);
-           }
-           else
-           {
-               CHECKARG(5);
-               if (!strcmp(argv[3].strptr, "SETBK")) RETC(!ListView_SetBkColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
-               if (!strcmp(argv[3].strptr, "SETTXT")) RETC(!ListView_SetTextColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
-               if (!strcmp(argv[3].strptr, "SETTXTBK")) RETC(!ListView_SetTextBkColor(h, PALETTEINDEX(atoi(argv[4].strptr))));
-           }
-       }
-   }
-   RETC(0)
+        ListView_SetItemText(hList, itemIndex, (int)(i - 3), (LPSTR)context->ObjectToStringValue(_columnText));
+    }
+
+done_out:
+    return itemIndex;
+}
+
+/** ListView::next()
+ *  ListView::nextSelected()
+ *  ListView::nextLeft()
+ *  ListView::nextRight()
+ *  ListView::previous()
+ *  ListView::previousSelected()
+ *
+ *
+ *  @remarks  For the next(), nextLeft(), nextRight(), and previous() methods,
+ *            we had this comment:
+ *
+ *            The Windows API appears to have a bug when the list contains a
+ *            single item, insisting on returning 0.  This, rather
+ *            unfortunately, can cause some infinite loops because iterating
+ *            code is looking for a -1 value to mark the iteration end.
+ *
+ *            And in the method did: if self~Items < 2 then return -1
+ *
+ *            In this code, that check is not added yet, and the whole premise
+ *            needs to be tested.  I find no mention of this bug in any Google
+ *            searches I have done, and it seems odd that we are the only people
+ *            that know about the bug?
+ */
+RexxMethod3(int32_t, lv_getNextItem, OPTIONAL_int32_t, startItem, NAME, method, CSELF, pCSelf)
+{
+    uint32_t flag;
+
+    if ( *method == 'N' )
+    {
+        switch ( method[4] )
+        {
+            case '\0' :
+                flag = LVNI_BELOW | LVNI_TORIGHT;
+                break;
+            case 'S' :
+                flag = LVNI_BELOW | LVNI_TORIGHT | LVNI_SELECTED;
+                break;
+            case 'L' :
+                flag = LVNI_TOLEFT;
+                break;
+            default :
+                flag = LVNI_TORIGHT;
+                break;
+        }
+    }
+    else
+    {
+        flag = (method[8] == 'S' ? LVNI_ABOVE | LVNI_TOLEFT | LVNI_SELECTED : LVNI_ABOVE | LVNI_TOLEFT);
+    }
+
+    if ( argumentOmitted(1) )
+    {
+        startItem = -1;
+    }
+    return ListView_GetNextItem(getDCHCtrl(pCSelf), startItem, flag);
+}
+
+/** ListView::selected()
+ *  ListView::focused()
+ *  ListView::dropHighlighted()
+ *
+ *
+ */
+RexxMethod2(int32_t, lv_getNextItemWithState, NAME, method, CSELF, pCSelf)
+{
+    uint32_t flag;
+
+    if ( *method == 'S' )
+    {
+        flag = LVNI_SELECTED;
+    }
+    else if ( *method == 'F' )
+    {
+        flag = LVNI_FOCUSED;
+    }
+    else
+    {
+        flag = LVNI_DROPHILITED;
+    }
+    return ListView_GetNextItem(getDCHCtrl(pCSelf), -1, flag);
+}
+
+/** ListView::find()
+ *  ListView::findPartial()
+ *
+ */
+RexxMethod5(int32_t, lv_find, CSTRING, text, OPTIONAL_int32_t, startItem, OPTIONAL_logical_t, wrap, NAME, method, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    if ( argumentOmitted(2) )
+    {
+        startItem = -1;
+    }
+
+    LVFINDINFO finfo = {0};
+    finfo.psz = text;
+    finfo.flags = LVFI_STRING;
+    if ( wrap )
+    {
+        finfo.flags = LVFI_STRING | LVFI_WRAP;
+    }
+    if ( method[4] == 'P' )
+    {
+        finfo.flags |= LVFI_PARTIAL;
+    }
+
+    return ListView_FindItem(hList, startItem, &finfo);
+}
+
+/** ListView::findNearestXY()
+ *
+ *  Finds the item nearest to the position specified by startPoint.  This method
+ *  is only valid if the list view is in icon or small icon view.
+ *
+ *  @param  startPoint  The position, x and y co-ordinates of the starting point
+ *                       for the search.  This can be specified in two forms.
+ *
+ *      Form 1:  arg 1 is a .Point object.
+ *      Form 2:  arg 1 is the x co-ordinate and arg2 is the y co-ordinate.
+ *
+ *  @param  direction   [OPTIONAL] Keyword that controls the direction of the
+ *                      search from the start position.  The default is DOWN,
+ *                      the keywords are DOWN, UP, LEFT, and RIGHT.
+ *
+ *
+ */
+RexxMethod2(int32_t, lv_findNearestXY, ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+    LVFINDINFO finfo = {0};
+
+    if ( ! isInIconView(hList) )
+    {
+        goto err_out;
+    }
+
+    size_t arraySize;
+    int    argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 3, &arraySize, &argsUsed) )
+    {
+        goto err_out;
+    }
+
+    if ( arraySize > (argsUsed + 1) )
+    {
+        tooManyArgsException(context->threadContext, argsUsed + 1);
+        goto err_out;
+    }
+
+    finfo.flags = LVFI_NEARESTXY;
+
+    if ( argsUsed == arraySize )
+    {
+        finfo.vkDirection = VK_DOWN;
+    }
+    else
+    {
+        RexxObjectPtr _direction = context->ArrayAt(args, argsUsed + 1);
+        CSTRING direction = context->ObjectToStringValue(_direction);
+
+        if ( StrStrI(direction,      "UP")    != NULL ) finfo.vkDirection = VK_UP;
+        else if ( StrStrI(direction, "LEFT")  != NULL ) finfo.vkDirection  = VK_LEFT;
+        else if ( StrStrI(direction, "RIGHT") != NULL ) finfo.vkDirection  = VK_RIGHT;
+        else if ( StrStrI(direction, "DOWN")  != NULL ) finfo.vkDirection  = VK_DOWN;
+        else
+        {
+            wrongArgValueException(context->threadContext, argsUsed + 1, "DOWN, UP, LEFT, or RIGHT", _direction);
+            goto err_out;
+        }
+    }
+
+    finfo.pt.x = point.x;
+    finfo.pt.y = point.y;
+    return ListView_FindItem(hList, -1, &finfo);  // TODO what should startItem be????  old code used -1.
+
+err_out:
+    return -1;
+}
+
+RexxMethod4(RexxObjectPtr, lv_setItemText, uint32_t, index, OPTIONAL_uint32_t, subitem, CSTRING, text, CSELF, pCSelf)
+{
+    ListView_SetItemText(getDCHCtrl(pCSelf), index, subitem, (LPSTR)text);
+    return TheZeroObj;
+}
+
+RexxMethod3(RexxStringObject, lv_itemText, uint32_t, index, OPTIONAL_uint32_t, subitem, CSELF, pCSelf)
+{
+    char buf[256];
+    ListView_GetItemText(getDCHCtrl(pCSelf), index, subitem, buf, sizeof(buf));
+    return context->String(buf);
+}
+
+RexxMethod2(RexxStringObject, lv_itemState, uint32_t, index, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    uint32_t state = ListView_GetItemState(hList, index, LVIS_CUT | LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED);
+
+    char buf[64];
+    *buf = '\0';
+
+    if ( state & LVIS_CUT )         strcat(buf, "CUT ");
+    if ( state & LVIS_DROPHILITED ) strcat(buf, "DROP ");
+    if ( state & LVIS_FOCUSED )     strcat(buf, "FOCUSED ");
+    if ( state & LVIS_SELECTED )    strcat(buf, "SELECTED ");
+
+    if ( *buf != '\0' )
+    {
+        *(buf + strlen(buf) - 1) = '\0';
+    }
+    return context->String(buf);
+}
+
+
+/** ListView::select()
+ *  ListView::deselect()
+ *  ListView::focus()
+ *
+ *
+ */
+RexxMethod3(RexxObjectPtr, lv_setSpecificState, uint32_t, index, NAME, method, CSELF, pCSelf)
+{
+    uint32_t state = 0;
+    uint32_t mask = 0;
+
+    if ( *method == 'S' )
+    {
+        mask |= LVIS_SELECTED;
+        state |= LVIS_SELECTED;
+    }
+    else if ( *method == 'D' )
+    {
+        mask |= LVIS_SELECTED;
+    }
+    else
+    {
+        mask |= LVIS_FOCUSED;
+        state |= LVIS_FOCUSED;
+    }
+    ListView_SetItemState(getDCHCtrl(pCSelf), index, state, mask);
+    return TheZeroObj;
+}
+
+RexxMethod3(RexxObjectPtr, lv_setItemState, uint32_t, index, CSTRING, _state, CSELF, pCSelf)
+{
+    uint32_t state = 0;
+    uint32_t mask = 0;
+
+    if ( StrStrI(_state, "NOTCUT") != NULL )
+    {
+        mask |= LVIS_CUT;
+    }
+    else if ( StrStrI(_state, "CUT") != NULL )
+    {
+        mask |= LVIS_CUT;
+        state |= LVIS_CUT;
+    }
+
+    if ( StrStrI(_state, "NOTDROP") != NULL )
+    {
+        mask |= LVIS_DROPHILITED;
+    }
+    else if ( StrStrI(_state, "DROP") != NULL )
+    {
+        mask |= LVIS_DROPHILITED;
+        state |= LVIS_DROPHILITED;
+    }
+
+    if ( StrStrI(_state, "NOTFOCUSED") != NULL )
+    {
+        mask |= LVIS_FOCUSED;
+    }
+    else if ( StrStrI(_state, "FOCUSED") != NULL )
+    {
+        mask |= LVIS_FOCUSED;
+        state |= LVIS_FOCUSED;
+    }
+
+    if ( StrStrI(_state, "NOTSELECTED") != NULL )
+    {
+        mask |= LVIS_SELECTED;
+    }
+    else if ( StrStrI(_state, "SELECTED") != NULL )
+    {
+        mask |= LVIS_SELECTED;
+        state |= LVIS_SELECTED;
+    }
+
+    ListView_SetItemState(getDCHCtrl(pCSelf), index, state, mask);
+    return TheZeroObj;
+}
+
+/** ListView::BkColor=
+ *  ListView::TextColor=
+ *  ListView::TextBkColor=
+ *
+ *
+ *  @remarks.  This method is hopelessly outdated.  It should take a COLORREF so
+ *             that the user has access to all available colors rather than be
+ *             limited to 18 colors out of a 256 color display.
+ */
+RexxMethod3(RexxObjectPtr, lv_setColor, uint32_t, color, NAME, method, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    COLORREF ref = PALETTEINDEX(color);
+
+    if ( *method == 'B' )
+    {
+        ListView_SetBkColor(hList, ref);
+    }
+    else if ( method[4] == 'C' )
+    {
+        ListView_SetTextColor(hList, ref);
+    }
+    else
+    {
+        ListView_SetTextBkColor(hList, ref);
+    }
+    return NULLOBJECT;
+}
+
+/** ListView::BkColor
+ *  ListView::TextColor
+ *  ListView::TextBkColor
+ *
+ *
+ *  @remarks.  This method is hopelessly outdated.  It should return a COLORREF
+ *             so that the user has access to all available colors rather than
+ *             be limited to 18 colors out of a 256 color display.
+ */
+RexxMethod2(int32_t, lv_getColor, NAME, method, CSELF, pCSelf)
+{
+    HWND hList = getDCHCtrl(pCSelf);
+
+    COLORREF ref;
+
+    if ( *method == 'B' )
+    {
+        ref = ListView_GetBkColor(hList);
+    }
+    else if ( method[4] == 'C' )
+    {
+        ref = ListView_GetTextColor(hList);
+    }
+    else
+    {
+        ref = ListView_GetTextBkColor(hList);
+    }
+
+    for ( int32_t i = 0; i < 256; i++ )
+    {
+        if ( ref == PALETTEINDEX(i) )
+        {
+            return i;
+        }
+    }
+    return -1;
 }
 
 /** ListView::arrange()
@@ -1321,32 +1673,22 @@ RexxMethod2(int, lv_stringWidthPx, CSTRING, text, CSELF, pCSelf)
     return ListView_GetStringWidth(getDCHCtrl(pCSelf), text);
 }
 
-// TODO review method name
-RexxMethod6(int, lv_addRowEx, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL_int, imageIndex,
+// TODO Review Implementation before release.  Maybe add / use a .ListViewItem or .LVItem
+RexxMethod6(int, lv_addFullRow, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL_int, imageIndex,
             OPTIONAL_RexxObjectPtr, subItems, OSELF, self, CSELF, pCSelf)
 {
     HWND hwnd = getDCHCtrl(pCSelf);
 
     if ( argumentOmitted(2) )
     {
-        RexxObjectPtr last = context->SendMessage0(self, "LASTITEM");
-        if ( last != NULLOBJECT )
-        {
-            context->Int32(last, &itemIndex);
-            itemIndex++;
-        }
-        else
-        {
-            itemIndex = 0;
-        }
+        itemIndex = getDCInsertIndex(pCSelf);
     }
-
     if ( argumentOmitted(3) )
     {
         imageIndex = -1;
     }
 
-    LV_ITEM lvi;
+    LVITEM lvi;
     lvi.mask = LVIF_TEXT;
 
     lvi.iItem = itemIndex;
@@ -1972,30 +2314,6 @@ RexxMethod3(RexxObjectPtr, tv_expand, CSTRING, _hItem, NAME, method, CSELF, pCSe
         flag = TVE_TOGGLE;
     }
     return (TreeView_Expand(hwnd, hItem, flag) ? TheZeroObj : TheOneObj);
-}
-
-
-/** TreeControl::subclassEdit()
- *  TreeControl::restoreEditClass()
- */
-RexxMethod2(RexxObjectPtr, tv_subclassEdit, NAME, method, CSELF, pCSelf)
-{
-    HWND hwnd = getDCHCtrl(pCSelf);
-
-    if ( *method == 'S' )
-    {
-        WNDPROC oldProc = (WNDPROC)setWindowPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
-        if ( oldProc != (WNDPROC)CatchReturnSubProc )
-        {
-            wpOldEditProc = oldProc;
-        }
-        return pointer2string(context, oldProc);
-    }
-    else
-    {
-        setWindowPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
-    }
-    return TheZeroObj;
 }
 
 
