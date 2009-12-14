@@ -161,8 +161,6 @@ extern bool             InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING libra
 extern int32_t          stopDialog(HWND hDlg);
 extern int32_t          DelDialog(DIALOGADMIN * aDlg);
 extern BOOL             GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
-extern void             rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
-extern void             rxdatacpy(CHAR * tar, RXSTRING &src);
 extern bool             isYes(const char *s);
 extern void *           string2pointer(const char *string);
 extern void *           string2pointer(RexxMethodContext *c, RexxStringObject string);
@@ -170,7 +168,6 @@ extern void             pointer2string(char *, void *pointer);
 extern RexxStringObject pointer2string(RexxMethodContext *, void *);
 extern RexxStringObject pointer2string(RexxThreadContext *c, void *pointer);
 extern RexxStringObject dword2string(RexxMethodContext *, uint32_t);
-extern LONG             HandleError(PRXSTRING r, CHAR * text);
 extern char *           strdupupr(const char *str);
 extern char *           strdupupr_nospace(const char *str);
 extern char *           strdup_nospace(const char *str);
@@ -248,15 +245,6 @@ typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONT
 typedef enum {def, autoCheck, threeState, autoThreeState, noSubtype } BUTTONSUBTYPE, *PBUTTONSUBTYPE;
 
 extern BUTTONTYPE getButtonInfo(HWND, PBUTTONSUBTYPE, DWORD *);
-
-#define GET_HANDLE(p) string2pointer(p)
-#define GET_HWND(p)   ((HWND)string2pointer(p))
-#define GET_POINTER(p) string2pointer(p)
-
-inline void *string2pointer(CONSTRXSTRING *string) { return string2pointer(string->strptr); }
-inline void *string2pointer(CONSTRXSTRING &string) { return string2pointer(string.strptr); }
-
-// TODO check whether these functions are really inlined.
 
 inline void pointer2string(PRXSTRING result, void *pointer)
 {
@@ -379,10 +367,30 @@ inline pCPlainBaseDialogClass getPBDClass_CSelf(RexxMethodContext *c)
  * @param dlg  The dialog object whose CSelf pointer is needed.
  *
  * @return A pointer to the CSelf of the dlg object.
+ *
+ * @assumes  The caller has ensured dlg is in fact a ooDialog Rexx dialog
+ *           object.
  */
 inline pCPlainBaseDialog dlgToCSelf(RexxMethodContext *c, RexxObjectPtr dlg)
 {
     return (pCPlainBaseDialog)c->ObjectToCSelf(dlg, ThePlainBaseDialogClass);
+}
+
+/**
+ * Retrieves the dialog admin block from an ooDialog dialog object.
+ *
+ * @param c    The method context we are operating in.
+ * @param dlg  The dialog object whose dialog admin block is needed.
+ *
+ * @return A pointer to dialog admin block for the dialog.
+ *
+ * @assumes  The caller has ensured dlg is in fact a ooDialog Rexx dialog
+ *           object.
+ */
+inline DIALOGADMIN *dlgToDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg)
+{
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
+    return pcpbd->dlgAdm;
 }
 
 /**

@@ -239,7 +239,7 @@ RexxObjectPtr oodILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr
         CSTRING bitmap = c->ObjectToStringValue(ilSrc);
 
         // See if the user passed in the handle to an already loaded bitmap.
-        hDDB = (HBITMAP)GET_HANDLE(bitmap);
+        hDDB = (HBITMAP)string2pointer(bitmap);
         if ( hDDB != NULL )
         {
             if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == 0 )
@@ -1555,12 +1555,7 @@ RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
                 goto err_out;
             }
 
-            DIALOGADMIN *adm = rxGetDlgAdm(context, dlg);
-            if ( adm == NULL )
-            {
-                goto err_out;
-            }
-
+            DIALOGADMIN *adm = dlgToDlgAdm(context, dlg);
             ri->hMod = adm->TheInstance;
             ri->isValid = true;
         }

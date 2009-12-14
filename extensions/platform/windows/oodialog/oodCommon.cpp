@@ -696,32 +696,6 @@ RexxStringObject dword2string(RexxMethodContext *c, uint32_t num)
     return c->String(buf);
 }
 
-LONG HandleError(PRXSTRING r, CHAR * text)
-{
-      HWND hW = NULL;
-      if ((topDlg) && (topDlg->TheDlg)) hW = topDlg->TheDlg;
-      MessageBox(hW,text,"Error",MB_OK | MB_ICONHAND);
-      r->strlength = 2;
-      r->strptr[0] = '4';
-      r->strptr[1] = '0';
-      r->strptr[2] = '\0';
-      return 40;
-}
-
-void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src)
-{
-   register UINT i;
-   for (i=0; (i<src.strlength) && (i<STR_BUFFER-1);i++) tar[i] = src.strptr[i];
-   tar[i] = '\0';
-}
-
-void rxdatacpy(CHAR * tar, RXSTRING &src)
-{
-   register UINT i;
-   for (i=0; (i<src.strlength) && (i<DATA_BUFFER-1);i++) tar[i] = src.strptr[i];
-   tar[i] = '\0';
-}
-
 /**
  * Returns an upper-cased copy of the string.
  *

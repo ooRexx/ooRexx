@@ -49,13 +49,9 @@
 #include <windows.h>
 #include "oorexxapi.h"
 
-#define MAXREXXNAME        128
 #define MAXLENQUEUE       2056
 #define NR_BUFFER           15
-#define STR_BUFFER         256
-#define LONGSTR_BUFFER    1024
 #define DATA_BUFFER       8192
-#define MAX_P               64
 #define MAX_MT_ENTRIES     500
 #define MAX_BT_ENTRIES     300
 #define MAX_DT_ENTRIES     750
@@ -172,55 +168,6 @@ typedef enum
     winUnknown             = 55
 } oodControl_t;
 
-
-/* macros to check the number of arguments */
-#define CHECKARG(argexpct) { \
-   if (argc != argexpct) \
-      return HandleError(retstr, "Wrong number of arguments"); }
-
-
-#define CHECKARGL(argexpct) { \
-   if (argc < argexpct) \
-      return HandleError(retstr, "Too few arguments"); }
-
-
-#define CHECKARGLH(argexpctl, argexpcth) { \
-   if (argc < argexpctl) return HandleError(retstr, "Too few arguments"); \
-   if (argc > argexpcth) return HandleError(retstr, "Too many arguments"); }
-
-
-/* macros for a easier return code */
-#define RETC(retcode) { \
-                   retstr->strlength = 1;\
-                   if (retcode) retstr->strptr[0] = '1'; else retstr->strptr[0] = '0'; \
-                   retstr->strptr[1] = '\0'; \
-                   return 0; \
-                }
-
-#define RETERR  { \
-                   retstr->strlength = 1;\
-                   retstr->strptr[0] = '1'; \
-                   retstr->strptr[1] = '\0'; \
-                   return 40; \
-                }
-
-
-#define RETVAL(retvalue)  { \
-                   ltoa(retvalue, retstr->strptr, 10); \
-                   retstr->strlength = strlen(retstr->strptr);\
-                   return 0; \
-                }
-
-
-#define RETPTR(retvalue)  { \
-                   pointer2string(retstr, (void *)retvalue); \
-                   return 0; \
-                }
-
-#define RETHANDLE(retvalue)  { \
-                   pointer2string(retstr, (void *)retvalue); \
-                   return 0; \
-                }
 
 inline LONG_PTR setWindowPtr(HWND hwnd, int index, LONG_PTR newPtr)
 {
