@@ -49,6 +49,10 @@ available on Microsoft's website here:
 [Required] Microsoft Platform SDK February 2003, or later.  A later version
 of the SDK is preferable.
 
+Note:  Microsoft has switched from calling the SDK the "Platform SDK" to the
+"Windows SDK."  In the following text, substitute Windows SDK for Platform SDK
+if needed.
+
 The environment variables for the C++ compiler and the Platform SDK *MUST*
 be set correctly to build ooRexx.  See the Environment set up section below
 for details.
@@ -165,6 +169,22 @@ exact steps for her specific system, but as an example:
 
 F:\>call F:\Tools\MsVisualStudio.2005\VC\vcvarsall.bat x86
 F:\>call F:\Tools\MsPlatformSDK\SetEnv.cmd  /XP32 /RETAIL
+
+Important:
+----------
+
+Later versions of Visual C++ and the Windows SDK use a feature called delayed
+environment expansion in their set up scripts.  But, often delayed expansion
+is turned off.  This causes problems, the set up scripts do not work.  The
+easist way to fix this is to edit the registry:
+
+Using regedit, edit the following REG_DWORD value in the registry:
+
+   HKEY_LOCAL_MACHINE\Software\Microsoft\Command Processor\DelayedExpansion
+
+set it to 0x1
+
+If the DelayedExpansion value is not already there then just add it.
 
 NOTE - Building 64-bit ooRexx:
 -----------------------------
