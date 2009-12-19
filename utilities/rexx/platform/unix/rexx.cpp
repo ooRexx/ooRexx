@@ -106,7 +106,7 @@ int main (int argc, char **argv)
           instore[1].strptr = NULL;
           instore[1].strlength = 0;
           real_argument = false;
-          return 0;
+          break;
 
         case 'v': case 'V':            /* display version string            */
           ptr = RexxGetVersionInformation();
