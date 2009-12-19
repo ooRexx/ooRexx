@@ -2615,7 +2615,7 @@ size_t RexxEntry SysLoadFuncs(const char *name, size_t numargs, CONSTRXSTRING ar
 
 RexxRoutine1(int, SysMkDir, CSTRING, dir)
 {
-    return CreateDirectory(dir, NULL) == 0 ? 0 : GetLastError();
+    return CreateDirectory(dir, NULL) != 0 ? 0 : GetLastError();
 }
 
 
@@ -5824,7 +5824,7 @@ RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRI
     UTF8       Windows NT 4.0 and Windows 2000: Translate using UTF-8.
                When this is set, dwFlags must be zero.
 
-    PRECOMPOSED       Always use precomposed characters—that is, characters
+    PRECOMPOSED       Always use precomposed charactersï¿½that is, characters
                       in which a base character and a nonspacing character
                       have a single character value.
                       This is the default translation option.
