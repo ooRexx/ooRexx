@@ -697,8 +697,9 @@ RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
     switch ( oodClass(context, self, objects, sizeof(objects) / sizeof(oodClass_t))  )
     {
         case oodListBox :
-            hControl = rxGetWindowHandle(context, self);
-            break;
+        {
+            hControl = controlToHCtrl(context, self);
+        } break;
 
         case oodPlainBaseDialog :
         {
@@ -714,8 +715,8 @@ RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
                 goto done_out;
             }
 
-            HWND hwnd = rxGetWindowHandle(context, self);
-            hControl = GetDlgItem(hwnd, (int)id);
+            pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+            hControl = GetDlgItem(pcpbd->hDlg, (int)id);
             tabStart = 2;
             count--;
 

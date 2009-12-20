@@ -853,10 +853,8 @@ char *strdup_2methodName(const char *str)
  * Convenience function to retrieve the dialog admin block from a generic
  * ooDialog Rexx object.
  *
- * Normally this function would be used when the Rexx object is known to be a
- * PlainBaseDialog or a DialogControl object.  But, it could be called for any
- * Rexx object.  It will fail for any object that is not a dialog or a dialog
- * control object.
+ * This function is safe to call for any object, including NULLOBJECT.  It will
+ * fail for any object that is not a dialog or a dialog control object.
  *
  * @param c      Method context we are operating in.
  * @param self   The Rexx object.
@@ -868,26 +866,17 @@ char *strdup_2methodName(const char *str)
 DIALOGADMIN *getDlgAdm(RexxMethodContext *c, RexxObjectPtr self)
 {
     DIALOGADMIN *dlgAdm = NULL;
-    pCPlainBaseDialog pcpbd = NULL;
 
-    if ( c->IsOfType(self, "PLAINBASEDIALOG") )
+    if ( self != NULLOBJECT )
     {
-        pcpbd = dlgToCSelf(c, self);
-    }
-    else if ( c->IsOfType(self, "DIALOGCONTROL") )
-    {
-        pCDialogControl pcdc = (pCDialogControl)c->GetCSelf();  // TODO need to test that this works!
-        if ( pcdc != NULL )
+        if ( c->IsOfType(self, "PLAINBASEDIALOG") )
         {
-            pcpbd = dlgToCSelf(c, pcdc->oDlg);
+            dlgAdm = dlgToDlgAdm(c, self);
         }
-    }
-
-    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
-    {
-        if ( self == NULLOBJECT )
+        else if ( c->IsOfType(self, "DIALOGCONTROL") )
         {
-            failedToRetrieveDlgAdmException(c->threadContext);
+            pCDialogControl pcdc = controlToCSelf(c, self);
+            dlgAdm = dlgToDlgAdm(c, pcdc->oDlg);
         }
         else
         {
@@ -896,20 +885,10 @@ DIALOGADMIN *getDlgAdm(RexxMethodContext *c, RexxObjectPtr self)
     }
     else
     {
-        dlgAdm = pcpbd->dlgAdm;
+        failedToRetrieveDlgAdmException(c->threadContext);
     }
-    return dlgAdm;
-}
 
-/* TODO This function can probably be eliminated now that we are useing CSELF */
-DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
-{
-    DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");
-    if ( adm == NULL )
-    {
-        failedToRetrieveDlgAdmException(context->threadContext, dlg);
-    }
-    return adm;
+    return dlgAdm;
 }
 
 
@@ -1005,28 +984,6 @@ RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy)
 }
 
 
-// TODO move to APICommon when ooDialog is converted to use .Pointer instead of
-// pointer strings.
-//
-// NOTE: this function won't crash, but it can easily return null.
-//
-// NOTE 2: be sure to return the raw pointer, not .Pointer, that way calling do
-// not need to unwrap things.
-POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
-{
-    CSTRING value = "";
-    if ( obj != NULLOBJECT )
-    {
-        RexxObjectPtr rxString = context->SendMessage0(obj, name);
-        if ( rxString != NULLOBJECT )
-        {
-            value = context->ObjectToStringValue(rxString);
-        }
-    }
-    return string2pointer(value);
-}
-
-
 bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj)
 {
     oodResetSysErrCode(c->threadContext);
@@ -1067,10 +1024,17 @@ bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringO
 
 
 bool rxLogicalFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
-                            BOOL *logical, int argPos)
+                            BOOL *logical, int argPos, bool required)
 {
     logical_t value;
     RexxObjectPtr obj = context->DirectoryAt(d, index);
+
+    if ( required && obj == NULLOBJECT )
+    {
+        missingIndexInDirectoryException(context->threadContext, argPos, index);
+        return false;
+    }
+
     if ( obj != NULLOBJECT )
     {
         if ( ! context->Logical(obj, &value) )
@@ -1084,10 +1048,17 @@ bool rxLogicalFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, C
 }
 
 bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
-                           DWORD *number, int argPos)
+                           DWORD *number, int argPos, bool required)
 {
     DWORD value;
     RexxObjectPtr obj = context->DirectoryAt(d, index);
+
+    if ( required && obj == NULLOBJECT )
+    {
+        missingIndexInDirectoryException(context->threadContext, argPos, index);
+        return false;
+    }
+
     if ( obj != NULLOBJECT )
     {
         if ( ! context->UnsignedInt32(obj, (uint32_t*)&value) )
@@ -1101,10 +1072,17 @@ bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CS
 }
 
 bool rxIntFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
-                        int *number, int argPos)
+                        int *number, int argPos, bool required)
 {
     int value;
     RexxObjectPtr obj = context->DirectoryAt(d, index);
+
+    if ( required && obj == NULLOBJECT )
+    {
+        missingIndexInDirectoryException(context->threadContext, argPos, index);
+        return false;
+    }
+
     if ( obj != NULLOBJECT )
     {
         if ( ! context->Int32(obj, &value) )
@@ -1418,7 +1396,7 @@ err_out:
 }
 
 bool getPointFromArglist(RexxMethodContext *c, RexxArrayObject args, PPOINT point, int startArg, int maxArgs,
-                         size_t *arraySize, int *usedArgs)
+                         size_t *arraySize, size_t *usedArgs)
 {
     if ( ! goodMinMaxArgs(c, args, startArg, maxArgs, arraySize) )
     {

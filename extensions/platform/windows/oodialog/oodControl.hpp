@@ -42,6 +42,7 @@
 
 typedef struct newControlParams
 {
+    bool           isCatDlg;
     oodControl_t   controlType;
     HWND           hwnd;
     uint32_t       id;

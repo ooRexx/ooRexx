@@ -70,6 +70,9 @@ RexxClassObject     ThePlainBaseDialogClass = NULLOBJECT;
 // Initialized in the DynamicDialog class init method (dyndlg_init_cls).
 RexxClassObject     TheDynamicDialogClass = NULLOBJECT;
 
+// Initialized in the DialogControl class init method (dlgctrl_init_cls).
+RexxClassObject     TheDialogControlClass = NULLOBJECT;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -152,6 +155,7 @@ REXX_METHOD_PROTOTYPE(wb_getPixelY);
 REXX_METHOD_PROTOTYPE(wb_init_windowBase);
 REXX_METHOD_PROTOTYPE(wb_sendMessage);
 REXX_METHOD_PROTOTYPE(wb_sendWinIntMsg);
+REXX_METHOD_PROTOTYPE(wb_sendWinUintMsg);
 REXX_METHOD_PROTOTYPE(wb_sendWinHandleMsg);
 REXX_METHOD_PROTOTYPE(wb_sendWinHandle2Msg);
 REXX_METHOD_PROTOTYPE(wb_enable);
@@ -274,7 +278,6 @@ REXX_METHOD_PROTOTYPE(catdlg_createCategoryDialog);
 REXX_METHOD_PROTOTYPE(catdlg_getControlDataPage);
 REXX_METHOD_PROTOTYPE(catdlg_setControlDataPage);
 REXX_METHOD_PROTOTYPE(catdlg_sendMessageToCategoryControl);
-REXX_METHOD_PROTOTYPE(catdlg_getCategoryComboEntry);
 
 REXX_METHOD_PROTOTYPE(dyndlg_init_cls);
 REXX_METHOD_PROTOTYPE(dyndlg_getBasePtr);
@@ -386,6 +389,7 @@ REXX_METHOD_PROTOTYPE(il_isNull);
 REXX_METHOD_PROTOTYPE(il_handle);
 
 REXX_METHOD_PROTOTYPE(dlgctrl_new_cls);
+REXX_METHOD_PROTOTYPE(dlgctrl_init_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init);
 REXX_METHOD_PROTOTYPE(dlgctrl_unInit);
 REXX_METHOD_PROTOTYPE(dlgctrl_connectKeyPress);
@@ -399,6 +403,8 @@ REXX_METHOD_PROTOTYPE(dlgctrl_clearRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(dlgctrl_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgctrl_setColor);
+REXX_METHOD_PROTOTYPE(dlgctrl_value);
+REXX_METHOD_PROTOTYPE(dlgctrl_valueEquals);
 
 // Static
 REXX_METHOD_PROTOTYPE(stc_getIcon);
@@ -411,7 +417,6 @@ REXX_METHOD_PROTOTYPE(gb_setStyle);
 REXX_METHOD_PROTOTYPE(bc_getState);
 REXX_METHOD_PROTOTYPE(bc_setState);
 REXX_METHOD_PROTOTYPE(bc_setStyle);
-REXX_METHOD_PROTOTYPE(bc_click);
 REXX_METHOD_PROTOTYPE(bc_getIdealSize);
 REXX_METHOD_PROTOTYPE(bc_getTextMargin);
 REXX_METHOD_PROTOTYPE(bc_setTextMargin);
@@ -472,15 +477,9 @@ REXX_METHOD_PROTOTYPE(lb_find);
 REXX_METHOD_PROTOTYPE(lb_addDirectory);
 
 // ProgressBar
-REXX_METHOD_PROTOTYPE(pbc_stepIt);
-REXX_METHOD_PROTOTYPE(pbc_getPos);
-REXX_METHOD_PROTOTYPE(pbc_setPos);
-REXX_METHOD_PROTOTYPE(pbc_getRange);
-REXX_METHOD_PROTOTYPE(pbc_setRange);
-REXX_METHOD_PROTOTYPE(pbc_setStep);
+REXX_METHOD_PROTOTYPE(pbc_getFullRange);
+REXX_METHOD_PROTOTYPE(pbc_setFullRange);
 REXX_METHOD_PROTOTYPE(pbc_setMarquee);
-REXX_METHOD_PROTOTYPE(pbc_setBkColor);
-REXX_METHOD_PROTOTYPE(pbc_setBarColor);
 
 // TrackBar
 REXX_METHOD_PROTOTYPE(tb_getRange);
@@ -562,8 +561,6 @@ REXX_METHOD_PROTOTYPE(set_dtp_dateTime);
 // MonthCalendar
 REXX_METHOD_PROTOTYPE(get_mc_date);
 REXX_METHOD_PROTOTYPE(set_mc_date);
-REXX_METHOD_PROTOTYPE(get_mc_usesUnicode);
-REXX_METHOD_PROTOTYPE(set_mc_usesUnicode);
 
 // .Rect
 REXX_METHOD_PROTOTYPE(rect_init);
@@ -709,6 +706,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_getPixelY,                   wb_getPixelY),
     REXX_METHOD(wb_sendMessage,                 wb_sendMessage),
     REXX_METHOD(wb_sendWinIntMsg,               wb_sendWinIntMsg),
+    REXX_METHOD(wb_sendWinUintMsg,              wb_sendWinUintMsg),
     REXX_METHOD(wb_sendWinHandleMsg,            wb_sendWinHandleMsg),
     REXX_METHOD(wb_sendWinHandle2Msg,           wb_sendWinHandle2Msg),
     REXX_METHOD(wb_enable,                      wb_enable),
@@ -827,7 +825,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(catdlg_createCategoryDialog,           catdlg_createCategoryDialog),
     REXX_METHOD(catdlg_getControlDataPage,             catdlg_getControlDataPage),
     REXX_METHOD(catdlg_setControlDataPage,             catdlg_setControlDataPage),
-    REXX_METHOD(catdlg_getCategoryComboEntry,          catdlg_getCategoryComboEntry),
     REXX_METHOD(catdlg_sendMessageToCategoryControl,   catdlg_sendMessageToCategoryControl),
 
     REXX_METHOD(dyndlg_init_cls,                dyndlg_init_cls),
@@ -864,6 +861,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_stopDynamic_pvt,         dyndlg_stopDynamic_pvt),
 
     REXX_METHOD(dlgctrl_new_cls,                dlgctrl_new_cls),
+    REXX_METHOD(dlgctrl_init_cls,               dlgctrl_init_cls),
     REXX_METHOD(dlgctrl_init,                   dlgctrl_init),
     REXX_METHOD(dlgctrl_unInit,                 dlgctrl_unInit),
     REXX_METHOD(dlgctrl_connectKeyPress,        dlgctrl_connectKeyPress),
@@ -877,6 +875,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
     REXX_METHOD(dlgctrl_captureMouse,           dlgctrl_captureMouse),
     REXX_METHOD(dlgctrl_setColor,               dlgctrl_setColor),
+    REXX_METHOD(dlgctrl_value,                  dlgctrl_value),
+    REXX_METHOD(dlgctrl_valueEquals,            dlgctrl_valueEquals),
 
     REXX_METHOD(window_init,                    window_init),
     REXX_METHOD(window_unInit,                  window_unInit),
@@ -1041,18 +1041,10 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(get_mc_date,                    get_mc_date),
     REXX_METHOD(set_mc_date,                    set_mc_date),
-    REXX_METHOD(get_mc_usesUnicode,             get_mc_usesUnicode),
-    REXX_METHOD(set_mc_usesUnicode,             set_mc_usesUnicode),
 
-    REXX_METHOD(pbc_stepIt,                     pbc_stepIt),
-    REXX_METHOD(pbc_getPos,                     pbc_getPos),
-    REXX_METHOD(pbc_setPos,                     pbc_setPos),
-    REXX_METHOD(pbc_getRange,                   pbc_getRange),
-    REXX_METHOD(pbc_setRange,                   pbc_setRange),
-    REXX_METHOD(pbc_setStep,                    pbc_setStep),
+    REXX_METHOD(pbc_getFullRange,               pbc_getFullRange),
+    REXX_METHOD(pbc_setFullRange,               pbc_setFullRange),
     REXX_METHOD(pbc_setMarquee,                 pbc_setMarquee),
-    REXX_METHOD(pbc_setBkColor,                 pbc_setBkColor),
-    REXX_METHOD(pbc_setBarColor,                pbc_setBarColor),
 
     // TrackBar
     REXX_METHOD(tb_getRange,                    tb_getRange),
@@ -1074,7 +1066,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_getState,                    bc_getState),
     REXX_METHOD(bc_setState,                    bc_setState),
     REXX_METHOD(bc_setStyle,                    bc_setStyle),
-    REXX_METHOD(bc_click,                       bc_click),
     REXX_METHOD(bc_getIdealSize,                bc_getIdealSize),
     REXX_METHOD(bc_getTextMargin,               bc_getTextMargin),
     REXX_METHOD(bc_setTextMargin,               bc_setTextMargin),
@@ -1102,7 +1093,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lb_add,                         lb_add),
     REXX_METHOD(lb_insert,                      lb_insert),
     REXX_METHOD(lb_select,                      lb_select),
-    REXX_METHOD(lb_selectIndex,               lb_selectIndex),
+    REXX_METHOD(lb_selectIndex,                 lb_selectIndex),
     REXX_METHOD(lb_deselectIndex,               lb_deselectIndex),
     REXX_METHOD(lb_selectedIndex,               lb_selectedIndex),
     REXX_METHOD(lb_find,                        lb_find),

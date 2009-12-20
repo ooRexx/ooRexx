@@ -412,7 +412,11 @@
    if arg(2, 'O') then return comboBox~insert( , string)
    else return comboBox~insert(index, string)
 
-::method getCategoryComboEntry unguarded external "LIBRARY oodialog catdlg_getCategoryComboEntry"
+::method getCategoryComboEntry unguarded
+   use strict arg id, index, pageID = (-1)
+   comboBox = self~categoyComboBox(id, pageID)
+   if comboBox == .nil then return -1
+   return comboBox~getText(index)
 
 ::method findCategoryComboEntry unguarded
    use strict arg id, string, pageID = (-1)

@@ -1730,7 +1730,7 @@ RexxMethod4(RexxObjectPtr, dlgext_resizeMoveControl, RexxObjectPtr, rxID, ARGLIS
     }
 
     size_t arraySize;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 2, 4, &arraySize, &argsUsed) )
     {
@@ -2215,7 +2215,7 @@ RexxMethod3(RexxObjectPtr, dlgext_setBitmapPosition, RexxObjectPtr, rxID, ARGLIS
     }
 
     size_t arraySize;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 2, 3, &arraySize, &argsUsed) )
     {

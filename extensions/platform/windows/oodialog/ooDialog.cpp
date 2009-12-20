@@ -1147,12 +1147,45 @@ RexxMethod5(RexxObjectPtr, wb_sendMessage, CSTRING, wm_msg, RexxObjectPtr, _wPar
  *            If we were just casting the number here, that would work.  But,
  *            the interpreter checks the range before invoking and negative
  *            numbers cause a condition to be raised.  So, we use intptr_t for
- *            wParam here.  It may become necessary to add a sendWinUintMsg().
+ *            wParam here.  sendWinUintMsg() has been added for the case where
+ *            WPARAM and LPARAM need an unsigned range.
  */
 RexxMethod5(intptr_t, wb_sendWinIntMsg, CSTRING, wm_msg, intptr_t, wParam, intptr_t, lParam,
             OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
 {
     return (intptr_t)sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
+}
+
+
+/** WindowBase::sendWinUintMsg()
+ *
+ *  Sends a message to a Windows window where WPARAM and LPARAM are both
+ *  unsigned numbers and the return is also unsigned.  I.e., neither param is a
+ *  handle and the return is not a string or a handle.
+ *
+ *  @param  wm_msg  The Windows window message ID.  This can be specified in
+ *                  "0xFFFF" format or numeric format.
+ *
+ *  @param  wParam  The WPARAM value for the message.
+ *  @param  lParam  The LPARAM value for the message.
+ *
+ *  @param  _hwnd   [OPTIONAL]  The handle of the window the message is sent to.
+ *                  If omitted, the window handle of this object is used.
+ *
+ *  @return The result of sending the message, as returned by the operating
+ *          system.
+ *
+ *  @remarks  Sets the .SystemErrorCode.
+ *
+ *            This method is not meant to be documented for the user, it is
+ *            intended to be used internally only.  Currently, all uses of this
+ *            function have a return of a number.  If a need comes up to return
+ *            a handle, then add sendWinUintMsgH().
+ */
+RexxMethod5(uintptr_t, wb_sendWinUintMsg, CSTRING, wm_msg, uintptr_t, wParam, uintptr_t, lParam,
+            OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
+{
+    return (uintptr_t)sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
 }
 
 
@@ -1650,7 +1683,7 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
     // the values, even though the semantics are not quite correct for
     // resizeTo(). (x will really be cx and y will be cy.)
     size_t countArgs;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 1, 3, &countArgs, &argsUsed) )
     {
@@ -3675,6 +3708,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
         // It could be that this is a control in the parent dialog of the
         // category dialog.  So, try once more.  If this still fails, then we
         // give up.
+        hDlg = ((pCPlainBaseDialog)pCSelf)->hDlg;
         hControl = GetDlgItem(((pCPlainBaseDialog)pCSelf)->hDlg, (int)id);
     }
 
@@ -3717,6 +3751,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
         goto out;
     }
 
+    pArgs->isCatDlg = isCategoryDlg;
     pArgs->controlType = controlType;
     pArgs->hwnd = hControl;
     pArgs->hwndDlg = hDlg;

@@ -422,42 +422,59 @@ static bool getTreeViewData(HWND hW, char * ldat, INT item)
    return false;
 }
 
-// TODO this seems like it might be missing a return true.
-static bool setTreeViewData(HWND hW, const char * ldat, INT item)
+static bool setTreeViewData(HWND hDlg, const char * ldat, uint32_t ctrlID)
 {
-   TV_ITEM tvi;
+   TVITEM tvi = {0};
    CHAR data[DATA_BUFFER];
 
-   HWND iW = GetDlgItem(hW, item);
-   if (iW && strlen(ldat)) {
-       HTREEITEM it, root = TreeView_GetRoot(iW);
+   HWND hCtrl = GetDlgItem(hDlg, ctrlID);
+   if ( hCtrl != NULL && *ldat != '\0' )
+   {
+       HTREEITEM hTreeItem, root = TreeView_GetRoot(hCtrl);
        tvi.hItem = root;
-       while (tvi.hItem)
+       while ( tvi.hItem != NULL )
        {
             tvi.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_CHILDREN;
             tvi.pszText = data;
-            tvi.cchTextMax = DATA_BUFFER-1;
-            if (TreeView_GetItem(iW, &tvi))
+            tvi.cchTextMax = DATA_BUFFER - 1;
+            if ( TreeView_GetItem(hCtrl, &tvi) )
             {
-                if (!stricmp(tvi.pszText, ldat))
+                if ( stricmp(tvi.pszText, ldat) == 0 )
                 {
-                    if (TreeView_SelectItem(iW, tvi.hItem)) return true;
+                    return (TreeView_SelectItem(hCtrl, tvi.hItem) ? true : false);
                 }
                 else
                 {
-                    if (tvi.cChildren) it = TreeView_GetChild(iW, tvi.hItem);
-                    else it = TreeView_GetNextSibling(iW, tvi.hItem);
-                    while (!it && tvi.hItem)
+                    if ( tvi.cChildren > 0 )
                     {
-                        tvi.hItem = TreeView_GetParent(iW, tvi.hItem);
-                        it = TreeView_GetNextSibling(iW, tvi.hItem);
-                        if (it == root) return false;
+                        hTreeItem = TreeView_GetChild(hCtrl, tvi.hItem);
                     }
-                    if (!tvi.hItem) return false;
-                    tvi.hItem = it;
+                    else
+                    {
+                        hTreeItem = TreeView_GetNextSibling(hCtrl, tvi.hItem);
+                    }
+
+                    while ( hTreeItem == NULL && tvi.hItem != NULL )
+                    {
+                        tvi.hItem = TreeView_GetParent(hCtrl, tvi.hItem);
+                        hTreeItem = TreeView_GetNextSibling(hCtrl, tvi.hItem);
+                        if ( hTreeItem == root )
+                        {
+                            return false;
+                        }
+                    }
+
+                    if ( tvi.hItem == NULL )
+                    {
+                        return false;
+                    }
+                    tvi.hItem = hTreeItem;
                 }
             }
-            else tvi.hItem = NULL;
+            else
+            {
+                tvi.hItem = NULL;
+            }
        }
    }
    return false;

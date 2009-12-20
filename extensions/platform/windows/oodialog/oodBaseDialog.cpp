@@ -729,51 +729,51 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
         }
         RexxDirectoryObject d = (RexxDirectoryObject)args;
 
-        if ( ! rxNumberFromDirectory(context, d, "WIDTH", (DWORD *)&width, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "WIDTH", (DWORD *)&width, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (DWORD *)&escapement, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (DWORD *)&escapement, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (DWORD *)&orientation, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (DWORD *)&orientation, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (DWORD *)&weight, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (DWORD *)&weight, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxLogicalFromDirectory(context, d, "ITALIC", &italic, 3) )
+        if ( ! rxLogicalFromDirectory(context, d, "ITALIC", &italic, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxLogicalFromDirectory(context, d, "UNDERLINE", &underline, 3) )
+        if ( ! rxLogicalFromDirectory(context, d, "UNDERLINE", &underline, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxLogicalFromDirectory(context, d, "STRIKEOUT", &strikeOut, 3) )
+        if ( ! rxLogicalFromDirectory(context, d, "STRIKEOUT", &strikeOut, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "CHARSET", &charSet, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "CHARSET", &charSet, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "OUTPUTPRECISION", &outputPrecision, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "OUTPUTPRECISION", &outputPrecision, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "CLIPPRECISION", &clipPrecision, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "CLIPPRECISION", &clipPrecision, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "QUALITY", &quality, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "QUALITY", &quality, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "PITCHANDFAMILY", &pitchAndFamily, 3) )
+        if ( ! rxNumberFromDirectory(context, d, "PITCHANDFAMILY", &pitchAndFamily, 3, false) )
         {
             goto error_out;
         }
@@ -913,7 +913,7 @@ RexxMethod2(RexxObjectPtr, winex_scroll, ARGLIST, args, CSELF, pCSelf)
     // POINT and SIZE structs are binary compatible.  A POINT is used to return
     // the values, even though the semantics are not quite correct for scroll().
     size_t sizeArray;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
     {
@@ -1011,8 +1011,11 @@ RexxMethod2(RexxObjectPtr, winex_setCursorPos, ARGLIST, args, CSELF, pCSelf)
         return NULLOBJECT;
     }
 
+    RexxMethodContext *c = context;
+    c->ObjectToUnsignedInt32()
+
     size_t sizeArray;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 1, 3, &sizeArray, &argsUsed) )
     {

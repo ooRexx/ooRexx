@@ -125,7 +125,7 @@ RexxObjectPtr oodGetImageAttribute(RexxMethodContext *c, RexxObjectPtr self, CST
     RexxObjectPtr result = c->GetObjectVariable(varName);
     if ( result == NULLOBJECT )
     {
-        HWND hwnd = rxGetWindowHandle(c, self);
+        HWND hwnd = controlToHCtrl(c, self);
         HANDLE hImage = (HANDLE)SendMessage(hwnd, msg, wParam, 0);
 
         if ( hImage == NULL )

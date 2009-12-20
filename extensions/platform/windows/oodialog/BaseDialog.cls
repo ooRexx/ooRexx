@@ -147,15 +147,12 @@
 
 ::method baseDlgTest unguarded external "LIBRARY oodialog baseDlg_test"
 
--- TODO needs doc
 ::method getMenuBar
   return self~menuBar
 
--- TODO needs doc
 ::method hasMenuBar
   return self~menuBar \== .nil & self~isLinked
 
--- DEPRECATED
 
 ::class 'ResourceImage' public
 

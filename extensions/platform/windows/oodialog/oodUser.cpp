@@ -2378,45 +2378,6 @@ RexxMethod6(RexxObjectPtr, catdlg_sendMessageToCategoryControl, RexxObjectPtr, r
 }
 
 
-/** CategoryDialog::getCategoryComboEntry()
- *
- *  Gets the text of the combo box item at the specified index, on the specified
- *  category page.
- *
- *  @param  rxID    The resource ID of the dialog control.  Can be numeric or
- *                  symbolic.
- *
- *  @param  index   The 1-based item index.  (The underlying combo box uses
- *                  0-based indexes.)
- *
- *  @param  pageID  [OPTIONAL] The page ID for the page the combo box is on.  If
- *                  this argument is omitted, it is assumed that the page is the
- *                  current category page.  Best practice would be to explicity
- *                  name the page by using the page ID.
- *
- *  @return  The item's text or the empty string on error.
- *
- *  @remarks  This function works correctly and is retained as an example.
- *            However, at this point in time the approach with CategoryDialog
- *            and combo boxes, list boxes, etc., is going to be:
- *
- *            In the Rexx code, get the control object itself and invoke the
- *            proper method on that control.
- *
- */
-RexxMethod4(RexxStringObject, catdlg_getCategoryComboEntry, RexxObjectPtr, rxID, uint32_t, index,  OPTIONAL_uint32_t, pageID,
-            CSELF, pCSelf)
-{
-    RexxStringObject result = context->NullString();
-
-    HWND hCtrl = getCategoryHCtrl(context, (pCPlainBaseDialog)pCSelf, rxID, pageID);
-    if ( hCtrl != NULL )
-    {
-        result = cbLbGetText(context, hCtrl, index, winComboBox);
-    }
-    return result;
-}
-
 #ifndef USE_DS_CONTROL
 
 extern BOOL SHIFTkey = FALSE;

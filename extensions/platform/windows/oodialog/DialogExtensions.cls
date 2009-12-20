@@ -378,7 +378,6 @@
    if button == .nil then return -1
    return button~dimBitmap(bmp, cx, cy, stepX, stepY, steps)
 
-
 -- Scroll a bitmap from one position to another within a button.
 ::method ScrollBitmapFromTo unguarded
    use arg id, fromX, fromY, toX, toY, stepX = 0, stepY = 0, delay = 0, displace = .true
@@ -506,10 +505,6 @@
    self~redrawButton(id,0)
    return 0
 
-   /* This method scrolls 'text' in the button */
-
-
-
 
 /******************************************************************************/
 /* Graphics and drawing extensions */
@@ -521,7 +516,6 @@
    button = self~newPushButton(arg(1))
    if button == .nil then return -1
    else return button~write(xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor)
-
 
 -- This method moves the rectangle within a button.  TODO be sure can take a .Rect for arg
 ::method scrollButton unguarded
@@ -747,4 +741,3 @@ syntax:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   End deprecated menu bar methods.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-

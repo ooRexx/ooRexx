@@ -132,16 +132,21 @@ typedef struct _pbdCSelf {
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
 
-/* Struct for the DialogControl object CSelf. */
+// Struct for the DialogControl object CSelf.
+//
+// Note that for a control in a category dialog page, the hDlg is the handle of
+// the actual dialog the control resides in.  This is differnent than the dialog
+// handle of the Rexx owner dialog.
 typedef struct _dcCSelf {
+    bool           isInCategoryDlg;
     uint32_t       id;
     oodControl_t   controlType;
     int            lastItem;
     pCWindowBase   wndBase;
     RexxObjectPtr  rexxSelf;
     HWND           hCtrl;    // Handle of the dialog control
-    HWND           hDlg;     // Handle of the owner dialog
     RexxObjectPtr  oDlg;     // The Rexx owner dialog object
+    HWND           hDlg;     // Handle of the dialog the control is in.
 } CDialogControl;
 typedef CDialogControl *pCDialogControl;
 
@@ -173,7 +178,6 @@ extern char *           strdupupr_nospace(const char *str);
 extern char *           strdup_nospace(const char *str);
 extern char *           strdup_2methodName(const char *str);
 extern DIALOGADMIN *    getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg);
-extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 extern BOOL addTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
@@ -208,20 +212,16 @@ extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int 
 extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 
 extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj);
-extern bool rxLogicalFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, BOOL *, int);
-extern bool rxNumberFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, DWORD *, int);
-extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, int *, int);
+extern bool rxLogicalFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, BOOL *, int, bool);
+extern bool rxNumberFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, DWORD *, int, bool);
+extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, int *, int, bool);
 
 extern RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
 extern int           putUnicodeText(LPWORD dest, const char *text);
 extern int           getKeywordValue(String2Int *cMap, const char * str);
 extern bool          goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size_t max, size_t *arraySize);
 extern bool          getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, size_t *);
-extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, int *);
-
-// TODO move to APICommon when ooDialog is converted to use .Pointer instead of
-// pointer strings.
-extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
+extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, size_t *);
 
 // These functions are defined in oodUser.cpp.
 extern bool getCategoryHDlg(RexxMethodContext *, RexxObjectPtr, uint32_t *, HWND *, int);
@@ -245,12 +245,6 @@ typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONT
 typedef enum {def, autoCheck, threeState, autoThreeState, noSubtype } BUTTONSUBTYPE, *PBUTTONSUBTYPE;
 
 extern BUTTONTYPE getButtonInfo(HWND, PBUTTONSUBTYPE, DWORD *);
-
-inline void pointer2string(PRXSTRING result, void *pointer)
-{
-    pointer2string(result->strptr, pointer);
-    result->strlength = strlen(result->strptr);
-}
 
 inline void safeLocalFree(void *p)
 {
@@ -280,12 +274,6 @@ inline void oodSetSysErrCode(RexxThreadContext *context)
 {
     oodSetSysErrCode(context, GetLastError());
 }
-
-inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr windowObject)
-{
-    return (HWND)rxGetPointerAttribute(context, windowObject, "HWND");
-}
-
 
 inline LPWORD lpwAlign(LPWORD lpIn)
 {
@@ -391,6 +379,61 @@ inline DIALOGADMIN *dlgToDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg)
 {
     pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
     return pcpbd->dlgAdm;
+}
+
+/**
+ * Retrieves the dialog window handle from an ooDialog dialog object.
+ *
+ * @param c    The method context we are operating in.
+ * @param dlg  The dialog object whose window handle is needed.
+ *
+ * @return The window handle of the dialog.  Note that this will be null if the
+ *         underlying Windows dialog has not yet been created.
+ *
+ * @assumes  The caller has ensured dlg is in fact a ooDialog Rexx dialog
+ *           object.
+ */
+inline HWND dlgToHDlg(RexxMethodContext *c, RexxObjectPtr dlg)
+{
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
+    return pcpbd->hDlg;
+}
+
+/**
+ * Retrieves the CSelf pointer for a dialog control object when the control
+ * object is not the direct object the method was invoked on.  This performs a
+ * scoped CSelf lookup.
+ *
+ * @param c     The method context we are operating in.
+ * @param ctrl  The control object whose CSelf pointer is needed.
+ *
+ * @return A pointer to the CSelf of the control object.
+ *
+ * @assumes  The caller has ensured ctrl is in fact a ooDialog Rexx dialog
+ *           control object.
+ */
+inline pCDialogControl controlToCSelf(RexxMethodContext *c, RexxObjectPtr ctrl)
+{
+    return (pCDialogControl)c->ObjectToCSelf(ctrl, TheDialogControlClass);
+}
+
+/**
+ * Retrieves the window handle for a dialog control object when the control
+ * object is not the direct object the method was invoked on.  This performs a
+ * scoped CSelf lookup.
+ *
+ * @param c     The method context we are operating in.
+ * @param ctrl  The control object whose window handle is needed.
+ *
+ * @return The window handle of the dialog control.
+ *
+ * @assumes  The caller has ensured ctrl is in fact a ooDialog Rexx dialog
+ *           control object.
+ */
+inline HWND controlToHCtrl(RexxMethodContext *c, RexxObjectPtr ctrl)
+{
+    pCDialogControl pcdc = (pCDialogControl)c->ObjectToCSelf(ctrl, TheDialogControlClass);
+    return pcdc->hCtrl;
 }
 
 /**

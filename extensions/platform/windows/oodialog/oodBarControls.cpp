@@ -49,6 +49,7 @@
 #include <dlgs.h>
 #include <malloc.h>
 #include <limits.h>
+#include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 
@@ -58,116 +59,116 @@
  */
 #define PROGRESSBAR_CLASS   "ProgressBar"
 
+// TODO - most of the progress bar methods can be implemented using
+// sendWinIntMsg()  REDO them.
 
-/**
- * Step the progress bar by the step increment or do a delta position.  A delta
- * position moves the progress bar from its current position by the specified
- * amount.
- *
- * Note this difference between stepping and doing a delta.  When the progress
- * bar is stepped and the step amount results in a position past the end of the
- * progress bar, the progress bar restarts at the minimum position.  When a
- * delta position is done, if the end of the progress bar is reached, it will
- * just stay at the end.
- *
- * @param  delta [Optional]  If present a delta position is done using this
- *               values.  If absent, then a step is done.
- *
- * @return  For both cases the previous position is returned.
- */
-RexxMethod2(int, pbc_stepIt, OPTIONAL_int32_t, delta, OSELF, self)
-{
-    HWND hwnd = rxGetWindowHandle(context, self);
-
-    if ( argumentOmitted(1) )
-    {
-        return (int)SendMessage(hwnd, PBM_STEPIT, 0, 0);
-    }
-    else
-    {
-        return (int)SendMessage(hwnd, PBM_DELTAPOS, delta, 0);
-    }
-}
-
-/**
- * Set the position of the progress bar.
- *
- * @param newPos  Set the position to this value.
- *
- * @return The the old progress bar position.
- */
-RexxMethod2(int, pbc_setPos, int32_t, newPos, OSELF, self)
-{
-    return (int)SendMessage(rxGetWindowHandle(context, self), PBM_SETPOS, newPos, 0);
-}
-
-RexxMethod1(int, pbc_getPos, OSELF, self)
-{
-    return (int)SendMessage(rxGetWindowHandle(context, self), PBM_GETPOS, 0, 0);
-}
-
-/** ProgressBar::setRange()
- *
- *  Sets the range for the progress bar using the full 32-bit numbers for the
- *  range.
- *
- *  @param min   Optional.  The low end of the range.  0 is the default.
- *  @param max   Optional.  The high end of the range.  100 is the default.
- *
- *  @return  The previous range in the form of a string with word(1) being the
- *           low end of the previous range and word(2) being the previous high
- *           end of the range.
- *
- *  @note    The returned range is not necessarily correct if the previous range
- *           has been set using the full 32-bit numbers now allowed by the
- *           progress bar control.  The returned numbers are restricted to
- *           0xFFFF.
- *
- *           The range is returned as a string because that was the way it was
- *           previously documented.
- *
- *           Use the getRange() method to get the correct range.
- *
- */
-RexxMethod3(RexxStringObject, pbc_setRange, OPTIONAL_int32_t, min, OPTIONAL_int32_t, max, OSELF, self)
-{
-    TCHAR buf[64];
-    HWND hwnd = rxGetWindowHandle(context, self);
-
-    if ( argumentOmitted(1) )
-    {
-        min = 0;
-    }
-    if ( argumentOmitted(2) )
-    {
-        max = 100;
-    }
-
-    DWORD range = (DWORD)SendMessage(hwnd, PBM_SETRANGE32, min, max);
-    _snprintf(buf, sizeof(buf), "%d %d", LOWORD(range), HIWORD(range));
-
-    return context->String(buf);
-}
-
-RexxMethod1(RexxObjectPtr, pbc_getRange, OSELF, self)
+static RexxDirectoryObject pbGetFullRange(RexxMethodContext *c, HWND hPB)
 {
     PBRANGE pbr;
-    SendMessage(rxGetWindowHandle(context, self), PBM_GETRANGE, TRUE, (LPARAM)&pbr);
+    SendMessage(hPB, PBM_GETRANGE, TRUE, (LPARAM)&pbr);
 
-    RexxDirectoryObject d = context->NewDirectory();
-    context->DirectoryPut(d, context->Int32(pbr.iLow), "MIN");
-    context->DirectoryPut(d, context->Int32(pbr.iHigh), "MAX");
+    RexxDirectoryObject d = c->NewDirectory();
+    c->DirectoryPut(d, c->Int32(pbr.iLow), "MIN");
+    c->DirectoryPut(d, c->Int32(pbr.iHigh), "MAX");
 
     return d;
 }
 
-RexxMethod2(int, pbc_setStep, OPTIONAL_int32_t, newStep, OSELF, self)
+
+/** ProgressBar::setFullRange()
+ *
+ *  Sets the range for the progress bar using the full 32-bit numbers for the
+ *  range.
+ *
+ *  The range can be specified using one argument, a directory object, or two
+ *  arguments
+ *
+ *  Form 1:
+ *
+ *  @param   aDirectory  [OPTIONAL]  The directory indexes "min" and "max" are
+ *                       used to set the range.  The min index specifies the low
+ *                       end of the range and the max index specifies the high
+ *                       end of the range.  If either, (or both,) indexes are
+ *                       omitted, the low end of the range is set to 0 and the
+ *                       high end is set to 100, as appropriate to the missing
+ *                       index(es).
+ *
+ *  Form 2:
+ *
+ *  @param   min   [OPTIONAL]  The low end of the range.  0 is the default.
+ *  @param   max   [OPTIONAL]  The high end of the range.  100 is the default.
+ *
+ *  @return  The previous range as a directory object with the indexes min and
+ *           max.
+ *
+ *  @remarks The getRange() method is maintained for backwards compatibility. it
+ *           returns the range as a string.  For that method, the returned range
+ *           is not necessarily correct if the previous range has been set using
+ *           the full 32-bit numbers now allowed by the progress bar control.
+ *           The returned numbers are restricted to 0xFFFF.
+ *
+ *           Use the getFullRange() method to get the correct range.
+ */
+RexxMethod4(RexxObjectPtr, pbc_setFullRange, OPTIONAL_RexxObjectPtr, minObj, OPTIONAL_int32_t, max, NAME, method, CSELF, pCSelf)
 {
-    if ( argumentOmitted(1) )
+    RexxMethodContext *c = context;
+    HWND hwnd = getDCHCtrl(pCSelf);
+    int32_t min = 0;
+
+    RexxDirectoryObject result = NULLOBJECT;
+    bool usingDirectory = false;
+    bool fullRange = method[3] == 'F';
+
+    if ( argumentExists(1) )
     {
-        newStep = 10;
+        if ( c->IsOfType(minObj, "DIRECTORY") )
+        {
+            usingDirectory = true;
+            if ( ! rxIntFromDirectory(context, (RexxDirectoryObject)minObj, "MIN", &min, 1, false) )
+            {
+                goto done_out;
+            }
+            max = 100
+            if ( ! rxIntFromDirectory(context, (RexxDirectoryObject)minObj, "MAX", &max, 1, false) )
+            {
+                goto done_out;
+            }
+        }
+        else
+        {
+            if ( ! context->Int32(minObj, &min) )
+            {
+                wrongRangeException(context->threadContext, 1,  INT32_MIN, INT32_MAX, minObj);
+            }
+        }
     }
-    return (int)SendMessage(rxGetWindowHandle(context, self), PBM_SETSTEP, newStep, 0);
+
+    if ( ! usingDirectory && argumentOmitted(2) )
+    {
+        max = 100;
+    }
+
+    if ( fullRange )
+    {
+        result = pbGetFullRange(context, hwnd);
+    }
+
+    uint32_t range = (uint32_t)SendMessage(hwnd, PBM_SETRANGE32, min, max);
+
+    if ( ! fullRange )
+    {
+        result = context->NewDirectory();
+        context->DirectoryPut(result, context->Int32(LOWORD(range)), "MIN");
+        context->DirectoryPut(result, context->Int32(HIWORD(range)), "MAX");
+    }
+
+done_out:
+    return result;
+}
+
+RexxMethod1(RexxObjectPtr, pbc_getFullRange, CSELF, pCSelf)
+{
+    return pbGetFullRange(context, getDCHCtrl(pCSelf));
 }
 
 /**
@@ -183,14 +184,14 @@ RexxMethod2(int, pbc_setStep, OPTIONAL_int32_t, newStep, OSELF, self)
  *
  *  Requires XP Common Controls version 6.0 or greater.
  */
-RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t, pause, OSELF, self)
+RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t, pause, CSELF, pCSelf)
 {
     if ( ! requiredComCtl32Version(context, "setMarquee", COMCTL32_6_0) )
     {
         return 0;
     }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     if ( ! hasStyle(hwnd, PBS_MARQUEE) )
     {
@@ -211,43 +212,6 @@ RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t
     SendMessage(hwnd, PBM_SETMARQUEE, on, pause);
     return 1;
 }
-
-/**
- *  ProgressBar::backgroundColor()
- *
- *  Sets the background color of the progress bar.
- *
- *  @param   colorRef  [Required]  A COLOREF, the new background color.
- *
- *  @return  The previous background color, or CLR_DEFAULT if the previous color
- *           was the defualt.  This is returned as a COLORREF number.
- *
- *  The progress bar control only supports this function under Windows Classic
- *  Theme.
- */
-RexxMethod2(uint32_t, pbc_setBkColor, uint32_t, colorRef, OSELF, self)
-{
-    return (uint32_t)SendMessage(rxGetWindowHandle(context, self), PBM_SETBKCOLOR, 0, colorRef);
-}
-
-/**
- *  ProgressBar::barColor()
- *
- *  Sets the bar color of the progress bar.
- *
- *  @param   colorRef  [Required]  A COLOREF, the new bar color.
- *
- *  @return  The previous bar color, or CLR_DEFAULT if the previous color
- *           was the defualt.  This is returned as a COLORREF number.
- *
- *  The progress bar control only supports this function under Windows Classic
- *  Theme.
- */
-RexxMethod2(uint32_t, pbc_setBarColor, uint32_t, colorRef, OSELF, self)
-{
-    return (uint32_t)SendMessage(rxGetWindowHandle(context, self), PBM_SETBARCOLOR, 0, colorRef);
-}
-
 
 /**
  * Methods for the ScrollBar class.  TODO these methods use the old

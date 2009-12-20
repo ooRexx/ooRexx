@@ -258,13 +258,12 @@ static void sysTime2dt(RexxMethodContext *c, SYSTEMTIME *sysTime, RexxObjectPtr 
  *            the control, or the .NullHandle object if the control is in the
  *            'no date' state.
  */
-RexxMethod1(RexxObjectPtr, get_dtp_dateTime, OSELF, self)
+RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
     SYSTEMTIME sysTime = {0};
     RexxObjectPtr dateTime = NULLOBJECT;
 
-    switch ( DateTime_GetSystemtime(rxGetWindowHandle(context, self), &sysTime) )
+    switch ( DateTime_GetSystemtime(getDCHCtrl(pCSelf), &sysTime) )
     {
         case GDT_VALID:
             sysTime2dt(context, &sysTime, &dateTime, dtFull);
@@ -274,7 +273,7 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, OSELF, self)
             // This is valid.  It means the DTP is using the DTS_SHOWNONE  style
             // and that the user has the check box is not checked.  We return a
             // null pointer object.
-            dateTime = c->NewPointer(NULL);
+            dateTime = context->NewPointer(NULL);
             break;
 
         case GDT_ERROR:
@@ -302,13 +301,12 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, OSELF, self)
  *         raised.
  *
  */
-RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, OSELF, self)
+RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
     SYSTEMTIME sysTime = {0};
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
 
-    if ( c->IsOfType(dateTime, "POINTER") )
+    if ( context->IsOfType(dateTime, "POINTER") )
     {
         DateTime_SetSystemtime(hwnd, GDT_NONE, &sysTime);
     }
@@ -316,7 +314,7 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, OSELF, sel
     {
         if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
         {
-            if ( dt2sysTime(c, dateTime, &sysTime, dtFull) )
+            if ( dt2sysTime(context, dateTime, &sysTime, dtFull) )
             {
                 if ( DateTime_SetSystemtime(hwnd, GDT_VALID, &sysTime) == 0 )
                 {
@@ -335,13 +333,12 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, OSELF, sel
 #define MONTHCALENDAR_CLASS    "MonthCalendar"
 #define MONTHCALENDAR_WINNAME  "Month Calendar"
 
-RexxMethod1(RexxObjectPtr, get_mc_date, OSELF, self)
+RexxMethod1(RexxObjectPtr, get_mc_date, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
     SYSTEMTIME sysTime = {0};
     RexxObjectPtr dateTime = NULLOBJECT;
 
-    if ( MonthCal_GetCurSel(rxGetWindowHandle(context, self), &sysTime) == 0 )
+    if ( MonthCal_GetCurSel(getDCHCtrl(pCSelf), &sysTime) == 0 )
     {
         controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "MonthCal_GetCurSel", MONTHCALENDAR_WINNAME);
     }
@@ -352,32 +349,20 @@ RexxMethod1(RexxObjectPtr, get_mc_date, OSELF, self)
     return dateTime;
 }
 
-RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, OSELF, self)
+RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
     SYSTEMTIME sysTime = {0};
 
     if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
     {
         if ( dt2sysTime(context, dateTime, &sysTime, dtDate) )
         {
-            if ( MonthCal_SetCurSel(rxGetWindowHandle(context, self), &sysTime) == 0 )
+            if ( MonthCal_SetCurSel(getDCHCtrl(pCSelf), &sysTime) == 0 )
             {
                 controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "MonthCal_SetCurSel", MONTHCALENDAR_WINNAME);
             }
         }
     }
-    return NULLOBJECT;
-}
-
-RexxMethod1(logical_t, get_mc_usesUnicode, OSELF, self)
-{
-    return MonthCal_GetUnicodeFormat(rxGetWindowHandle(context, self)) ? 1 : 0;
-}
-
-RexxMethod2(RexxObjectPtr, set_mc_usesUnicode, logical_t, useUnicode, OSELF, self)
-{
-    MonthCal_SetUnicodeFormat(rxGetWindowHandle(context, self), useUnicode);
     return NULLOBJECT;
 }
 
@@ -981,7 +966,7 @@ RexxMethod2(int32_t, lv_findNearestXY, ARGLIST, args, CSELF, pCSelf)
     }
 
     size_t arraySize;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 1, 3, &arraySize, &argsUsed) )
     {
@@ -1549,9 +1534,9 @@ RexxMethod1(RexxObjectPtr, lv_getColumnOrder, CSELF, pCSelf)
     return result;
 }
 
-RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, OSELF, self)
+RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     size_t    items   = context->ArrayItems(order);
     int       count   = getColumnCount(hwnd);
@@ -1674,8 +1659,8 @@ RexxMethod2(int, lv_stringWidthPx, CSTRING, text, CSELF, pCSelf)
 }
 
 // TODO Review Implementation before release.  Maybe add / use a .ListViewItem or .LVItem
-RexxMethod6(int, lv_addFullRow, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL_int, imageIndex,
-            OPTIONAL_RexxObjectPtr, subItems, OSELF, self, CSELF, pCSelf)
+RexxMethod5(int32_t, lv_addFullRow, CSTRING, text, OPTIONAL_int32_t, itemIndex, OPTIONAL_int32_t, imageIndex,
+            OPTIONAL_RexxObjectPtr, subItems, CSELF, pCSelf)
 {
     HWND hwnd = getDCHCtrl(pCSelf);
 
@@ -1707,7 +1692,7 @@ RexxMethod6(int, lv_addFullRow, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL
     {
         goto done_out;
     }
-    context->SendMessage1(self, "LASTITEM=", context->Int32(itemIndex));
+    ((pCDialogControl)pCSelf)->lastItem = itemIndex;
 
     if ( argumentOmitted(4) )
     {
@@ -1736,7 +1721,7 @@ RexxMethod6(int, lv_addFullRow, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL
             goto done_out;
         }
         imageIndex = -1;
-        if ( ! rxIntFromDirectory(context, subItem, "ICON", &imageIndex, 4) )
+        if ( ! rxIntFromDirectory(context, subItem, "ICON", &imageIndex, 4, false) )
         {
             goto done_out;
         }
@@ -1874,9 +1859,9 @@ RexxMethod4(RexxObjectPtr, lv_setItemPos, uint32_t, index, OPTIONAL_RexxObjectPt
  *         reserved for adding more images to the image list, etc..
  */
 RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
-            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, OSELF, self)
+            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     oodResetSysErrCode(context->threadContext);
 
     HIMAGELIST himl = NULL;
@@ -2322,7 +2307,7 @@ RexxMethod2(RexxObjectPtr, tv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
     HWND hwnd = getDCHCtrl(pCSelf);
 
     size_t sizeArray;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
     {
@@ -2514,7 +2499,7 @@ RexxMethod2(RexxObjectPtr, tab_setItemSize, ARGLIST, args, CSELF, pCSelf)
     HWND hwnd = getDCHCtrl(pCSelf);
 
     size_t sizeArray;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
     {
@@ -2551,7 +2536,7 @@ RexxMethod2(RexxObjectPtr, tab_setPadding, ARGLIST, args, CSELF, pCSelf)
     HWND hwnd = getDCHCtrl(pCSelf);
 
     size_t sizeArray;
-    int    argsUsed;
+    size_t argsUsed;
     POINT  point;
     if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
     {
@@ -2910,9 +2895,9 @@ RexxMethod3(RexxObjectPtr, tab_calcRect, RexxObjectPtr, rect, NAME, method, CSEL
  *         reserved for adding more images to the image list, etc..
  */
 RexxMethod4(RexxObjectPtr, tab_setImageList, RexxObjectPtr, ilSrc,
-            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OSELF, self)
+            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     oodResetSysErrCode(context->threadContext);
 
     HIMAGELIST himl = NULL;

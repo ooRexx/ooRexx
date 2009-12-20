@@ -111,7 +111,7 @@ RexxMethod1(RexxObjectPtr, stc_getIcon, OSELF, self)
  *
  * @return  The old image, if there is one, otherwise .nil.
  */
-RexxMethod2(RexxObjectPtr, stc_setImage, RexxObjectPtr, rxNewImage, OSELF, self)
+RexxMethod2(RexxObjectPtr, stc_setImage, RexxObjectPtr, rxNewImage, CSELF, pCSelf)
 {
     RexxObjectPtr result = NULLOBJECT;
 
@@ -129,7 +129,7 @@ RexxMethod2(RexxObjectPtr, stc_setImage, RexxObjectPtr, rxNewImage, OSELF, self)
         hImage = oi->hImage;
     }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     HANDLE oldHandle = (HANDLE)SendMessage(hwnd, STM_SETIMAGE, (WPARAM)type, (LPARAM)hImage);
 
     result = oodSetImageAttribute(context, STATICIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, winStatic);
@@ -233,7 +233,7 @@ static HWND changeDefPushButton(HWND hCtrl)
  * image list itself, the image alignment, and the margin around the image.
  *
  * @param c     The method context we are executing in.
- * @param self  The ButtonControl object.
+ * @param hwnd  The ButtonControl window handle.
  *
  * @return  A directory object containing the image list information, if there
  *          is an image list.  Otherwise .nil.
@@ -243,14 +243,13 @@ static HWND changeDefPushButton(HWND hCtrl)
  *          Meaning, if there is not an image list in the object variable, then
  *          this button does not have an image list.
  */
-static RexxObjectPtr bcGetImageList(RexxMethodContext *c, RexxObjectPtr self)
+static RexxObjectPtr bcGetImageList(RexxMethodContext *c, HWND hwnd)
 {
     RexxObjectPtr result = TheNilObj;
 
     RexxObjectPtr imageList = c->GetObjectVariable(BUTTONIMAGELIST_ATTRIBUTE);
     if ( imageList != NULLOBJECT && imageList != TheNilObj )
     {
-        HWND hwnd = rxGetWindowHandle(c, self);
         BUTTON_IMAGELIST biml;
 
         Button_GetImageList(hwnd, &biml);
@@ -277,13 +276,12 @@ static RexxObjectPtr bcGetImageList(RexxMethodContext *c, RexxObjectPtr self)
     return result;
 }
 
-static RexxObjectPtr bcRemoveImageList(RexxMethodContext *c, RexxObjectPtr self)
+static RexxObjectPtr bcRemoveImageList(RexxMethodContext *c, HWND hwnd)
 {
-    RexxObjectPtr result = bcGetImageList(c, self);
+    RexxObjectPtr result = bcGetImageList(c, hwnd);
 
     if ( result != TheNilObj )
     {
-        HWND hwnd = rxGetWindowHandle(c, self);
         BUTTON_IMAGELIST biml = {0};
         biml.himl = ImageList_Create(32, 32, ILC_COLOR8, 2, 0);
 
@@ -546,9 +544,9 @@ RexxMethod2(RexxObjectPtr, bc_setState, CSTRING, opts, CSELF, pCSelf)
     return NULLOBJECT;
 }
 
-RexxMethod1(RexxStringObject, bc_getState, OSELF, self)
+RexxMethod1(RexxStringObject, bc_getState, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     BUTTONTYPE type = getButtonInfo(hwnd, NULL, NULL);
 
     TCHAR buf[64] = {'\0'};
@@ -585,9 +583,9 @@ RexxMethod1(RexxStringObject, bc_getState, OSELF, self)
 }
 
 
-RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
+RexxMethod2(RexxObjectPtr, bc_setStyle, CSTRING, opts, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     BUTTONSUBTYPE sub;
     DWORD style, oldStyle;
@@ -795,21 +793,14 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
     return NULLOBJECT;
 }
 
-RexxMethod1(RexxObjectPtr, bc_click, OSELF, self)
-{
-    HWND hwnd = rxGetWindowHandle(context, self);
-    SendMessage(hwnd, BM_CLICK, 0, 0);
-    return NULLOBJECT;
-}
-
-RexxMethod1(RexxObjectPtr, bc_getTextMargin, OSELF, self)
+RexxMethod1(RexxObjectPtr, bc_getTextMargin, CSELF, pCSelf)
 {
     if ( ! requiredComCtl32Version(context, "getTextMargin", COMCTL32_6_0) )
     {
         return NULLOBJECT;
     }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     RexxObjectPtr result = NULLOBJECT;
 
     RECT r;
@@ -820,14 +811,14 @@ RexxMethod1(RexxObjectPtr, bc_getTextMargin, OSELF, self)
     return (result == NULL) ? TheNilObj : result;
 }
 
-RexxMethod2(logical_t, bc_setTextMargin, OSELF, self, RexxObjectPtr, r)
+RexxMethod2(logical_t, bc_setTextMargin, RexxObjectPtr, r, CSELF, pCSelf)
 {
     if ( ! requiredComCtl32Version(context, "setTextMargin", COMCTL32_6_0) )
     {
         return 0;
     }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     PRECT pRect = rxGetRect(context, r, 1);
     if ( pRect != NULL )
@@ -840,14 +831,14 @@ RexxMethod2(logical_t, bc_setTextMargin, OSELF, self, RexxObjectPtr, r)
     return 0;
 }
 
-RexxMethod1(RexxObjectPtr, bc_getIdealSize, OSELF, self)
+RexxMethod1(RexxObjectPtr, bc_getIdealSize, CSELF, pCSelf)
 {
     if ( ! requiredComCtl32Version(context, "getIdealSize", COMCTL32_6_0) )
     {
         return NULLOBJECT;
     }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     RexxObjectPtr result = NULLOBJECT;
 
     SIZE size;
@@ -884,7 +875,7 @@ RexxMethod2(RexxObjectPtr, bc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
  *
  *  @note  Only bitmap, icon, or cursor images are valid.
  */
-RexxMethod2(RexxObjectPtr, bc_setImage, RexxObjectPtr, rxNewImage, OSELF, self)
+RexxMethod2(RexxObjectPtr, bc_setImage, RexxObjectPtr, rxNewImage, CSELF, pCSelf)
 {
     RexxObjectPtr result = NULLOBJECT;
 
@@ -908,7 +899,7 @@ RexxMethod2(RexxObjectPtr, bc_setImage, RexxObjectPtr, rxNewImage, OSELF, self)
         type = oi->type == IMAGE_BITMAP ? IMAGE_BITMAP : IMAGE_ICON;
     }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
     HANDLE oldHandle = (HANDLE)SendMessage(hwnd, BM_SETIMAGE, (WPARAM)type, (LPARAM)hImage);
 
     result = oodSetImageAttribute(context, BUTTONIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, winPushButton);
@@ -938,13 +929,13 @@ out:
  *        attribute of the ButtonControl ojbect.  That stored object is the
  *        object returned.
  */
-RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
+RexxMethod1(RexxObjectPtr, bc_getImageList, CSELF, pCSelf)
 {
     if ( ! requiredComCtl32Version(context, "getImageList", COMCTL32_6_0) )
     {
         return NULLOBJECT;
     }
-    return bcGetImageList(context, self);
+    return bcGetImageList(context, getDCHCtrl(pCSelf));
 
 }
 
@@ -976,11 +967,13 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
  * @see bcGetImageList() for the format of the returned image list information.
  */
 RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_RexxObjectPtr, margin,
-            OPTIONAL_uint8_t, align, OSELF, self)
+            OPTIONAL_uint8_t, align, CSELF, pCSelf)
 {
-    BUTTON_IMAGELIST biml = {0};
     oodResetSysErrCode(context->threadContext);
     RexxObjectPtr result = NULLOBJECT;
+
+    BUTTON_IMAGELIST biml = {0};
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     if ( ! requiredComCtl32Version(context, "setImageList", COMCTL32_6_0) )
     {
@@ -990,7 +983,7 @@ RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_R
     if ( imageList == TheNilObj )
     {
         // This is a request to remove the image list.
-        result = bcRemoveImageList(context, self);
+        result = bcRemoveImageList(context, hwnd);
         goto good_out;
     }
 
@@ -1029,8 +1022,7 @@ RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_R
         biml.uAlign = BUTTON_IMAGELIST_ALIGN_CENTER;
     }
 
-    result = bcGetImageList(context, self);
-    HWND hwnd = rxGetWindowHandle(context, self);
+    result = bcGetImageList(context, hwnd);
 
     if ( Button_SetImageList(hwnd, &biml) == 0 )
     {
@@ -1211,7 +1203,7 @@ RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst
     int result = 0;
     if ( requiredClass(context->threadContext, dlg, "PlainBaseDialog", 1) )
     {
-        HWND hwnd = rxGetWindowHandle(context, dlg);
+        HWND hwnd = dlgToHDlg(context, dlg);
 
         int first = oodResolveSymbolicID(context, dlg, idFirst, -1, 2);
         int last = oodResolveSymbolicID(context, dlg, idLast, -1, 3);
@@ -1231,7 +1223,7 @@ RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst
 
 RexxMethod1(logical_t, rb_checked, CSELF, pCSelf)
 {
-    return (SendMessage(((pCDialogControl)pCSelf)->hCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
+    return (SendMessage(getDCHCtrl(pCSelf), BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
 }
 
 RexxMethod1(CSTRING, rb_getCheckState, CSELF, pCSelf)
@@ -2217,7 +2209,7 @@ RexxMethod2(int32_t, lb_deselectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
  *
  *  @remarks  Pre 4.0.1, for multiple selection list boxes, this method returned
  *            the index of the item with the focus rectangle.  This has nothing
- *            to do with the selected item.  In addition, the MSDN docs say fro
+ *            to do with the selected item.  In addition, the MSDN docs say for
  *            the window message being used: "Do not send this message to a
  *            multiple-selection list box."  This resulted in non-deterministic
  *            behavior if the Rexx programmer used this method for a multiple
@@ -2229,22 +2221,29 @@ RexxMethod2(int32_t, lb_deselectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
 RexxMethod1(int32_t, lb_selectedIndex, CSELF, pCSelf)
 {
     HWND hCtrl = getDCHCtrl(pCSelf);
-    int32_t *items = NULL;
 
-    int32_t index = (int32_t)SendMessage(hCtrl, LB_GETCURSEL, 0, 0);
+    int32_t *items = NULL;
+    int32_t index = index = (int32_t)SendMessage(hCtrl, LB_GETCURSEL, 0, 0);
 
     if ( ! isSingleSelectionListBox(hCtrl) )
     {
-        if ( index == 0 )
+        // For a multi-selection list box, index should be the item that has the
+        // focus rectangle.  If index is LB_ERR, it is an error of course.
+        if ( index == LB_ERR )
         {
-            index = LB_ERR;
             goto done_out;
         }
+
+        // We get all the selected items.  If only 1 item, we use it.  Otherwise
+        // we try to match a selected item with the focuse rectangle.  If no
+        // match, we use the first selected item.  (First by index.)
 
         int32_t count;
         items = getLBSelectedItems(hCtrl, &count);
         if ( items == NULL || count < 1 )
         {
+            // Doubt that this could happen, except for a malloc error.
+            index = LB_ERR;
             goto done_out;
         }
         if ( count == 1 )
@@ -2265,7 +2264,7 @@ RexxMethod1(int32_t, lb_selectedIndex, CSELF, pCSelf)
 
 done_out:
     safeFree(items);
-    return (index > 0 ? 0 : index + 1);
+    return (index >= 0 ? index + 1 : 0);
 }
 
 

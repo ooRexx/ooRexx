@@ -147,7 +147,7 @@ static uint32_t menuConnectItems(HMENU hMenu, DIALOGADMIN *dlgAdm, CSTRING msg, 
  *
  * @return 0 on success, ERROR_NOT_ENOUGH_MEMORY on failure.
  */
-inline BOOL _connectItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg)
+inline uint32_t _connectItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg)
 {
     if ( id < 3 || id == 9 )
     {
@@ -187,10 +187,9 @@ inline BOOL _connectSysItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg, logic
  * @return A pointer to the dialog admin block for the specified dialog on
  *         success, null on failure.
  *
- * @note   On failure, if dialog is not a BaseDialog then the .SystemErrorCode
- *         is set, but no condition is raised.  On the other hand, if dialog is
- *         a BaseDialog, and we can't get the admin block, something is
- *         seriously wrong and a condition has been raised.
+ * @note   This function fails if dialog is not a BaseDialog or one of its
+ *         subclasses.  In this case the .SystemErrorCode is set, but no
+ *         condition is raised.
  */
 DIALOGADMIN *_getAdminBlock(RexxMethodContext *c, RexxObjectPtr dialog)
 {
@@ -202,8 +201,7 @@ DIALOGADMIN *_getAdminBlock(RexxMethodContext *c, RexxObjectPtr dialog)
         return NULL;
     }
 
-    // This will raise an exception and return NULL on error.
-    return rxGetDlgAdm(c, dialog);
+    return dlgToDlgAdm(c, dialog);
 }
 
 
@@ -895,58 +893,56 @@ void CppMenu::releaseConnectionQ()
 logical_t CppMenu::attachToDlg(RexxObjectPtr dialog)
 {
     oodResetSysErrCode(c->threadContext);
-    logical_t success = FALSE;
 
     // Check all of our required conditions.
     if ( hMenu == NULL )
     {
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
-        goto done_out;
+        goto no_change;
     }
     if ( ! c->IsOfType(dialog, "BASEDIALOG") )
     {
         oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
-        goto done_out;
+        goto no_change;
     }
     if ( dlg != TheNilObj )
     {
         // Already attached to a dialog.
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
-        goto done_out;
+        goto no_change;
     }
 
-    dlgAdm = rxGetDlgAdm(c, dialog);
-    if ( dlgAdm == NULL )
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dialog);
+
+    if ( pcpbd->hDlg == NULL )
     {
-        // This raised an exception, which is what we want.
-        goto done_out;
+        // Underlying Windows dialog has not been created.
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+        goto no_change;
     }
 
-    dlgHwnd = rxGetWindowHandle(c, dialog);
-    if ( dlgHwnd == NULL || c->SendMessage0(dialog, "HASMENUBAR") == TheTrueObj || GetMenu(dlgHwnd) != NULL )
+    if ( c->SendMessage0(dialog, "HASMENUBAR") == TheTrueObj || GetMenu(pcpbd->hDlg) != NULL )
     {
+        // Dialog already has a menu attached.  User needs to remove it first.
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_STYLE);
-        goto done_out;
+        goto no_change;
     }
 
-    success = SetMenu(dlgHwnd, hMenu);
-    if ( ! success )
+    if ( SetMenu(pcpbd->hDlg, hMenu) == 0 )
     {
         oodSetSysErrCode(c->threadContext);
-        goto done_out;
+        goto no_change;
     }
 
     dlg = dialog;
-    c->SendMessage1(dlg, "LINKMENU", self);
-    success = checkPendingConnections();
+    dlgAdm = pcpbd->dlgAdm;
+    dlgHwnd = pcpbd->hDlg;
 
-done_out:
-    if ( ! success && dlg != TheNilObj )
-    {
-        dlgAdm = NULL;
-        dlgHwnd = NULL;
-    }
-    return success;
+    c->SendMessage1(dlg, "LINKMENU", self);
+    return checkPendingConnections();
+
+no_change:
+    return FALSE;
 }
 
 
@@ -969,22 +965,18 @@ logical_t CppMenu::assignToDlg(RexxObjectPtr dialog, logical_t _autoConnect, CST
     // We don't care if there is already an assigned dialog, we just replace it.
     // But, we want to be sure we don't half way replace it.
 
-    DIALOGADMIN *tmpAdm = rxGetDlgAdm(c, dialog);
-    if ( tmpAdm == NULL )
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dialog);
+
+    if ( pcpbd->hDlg == NULL )
     {
-        // This raised an exception, which is what we want.
-        goto done_out;
-    }
-    HWND tmpHwnd = rxGetWindowHandle(c, dialog);
-    if ( tmpHwnd == NULL )
-    {
-        oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_STYLE);
+        // Underlying Windows dialog has not been created.
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
         goto done_out;
     }
 
     dlg = dialog;
-    dlgAdm = tmpAdm;
-    dlgHwnd = tmpHwnd;
+    dlgAdm = pcpbd->dlgAdm;
+    dlgHwnd = pcpbd->hDlg;
 
     // _autoConnect could be 0 if it was omitted, or if the programmer actually
     // passed in .false.
@@ -1140,43 +1132,47 @@ void CppMenu::putSysCommands()
     c->DirectoryPut(constDir, c->UnsignedInt32(0xF00F), "SC_SEPARATOR");
 }
 
+/**
+ * Finishes up the .SystemMenu init().
+ *
+ * @param dialog  The Rexx dialog object.
+ *
+ * @return bool
+ *
+ * @remarks  The caller has ensured that dialog is a .BaseDialog.  We ensure
+ *           that the underlying Windows dialog has been created.
+ */
 bool CppMenu::setUpSysMenu(RexxObjectPtr dialog)
 {
     oodResetSysErrCode(c->threadContext);
     bool success = false;
 
-    dlgAdm = rxGetDlgAdm(c, dialog);
-    if ( dlgAdm == NULL )
-    {
-        goto done_out;
-    }
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dialog);
 
-    dlgHwnd = rxGetWindowHandle(c, dialog);
-    if ( dlgHwnd == NULL )
+    if ( pcpbd->hDlg == NULL )
     {
         failedToRetrieveException(c->threadContext, "window handle", dialog);
         goto done_out;
     }
 
-    hMenu = GetSystemMenu(dlgHwnd, FALSE);
+    hMenu = GetSystemMenu(pcpbd->hDlg, FALSE);
     if ( hMenu == NULL || ! IsMenu(hMenu) )
     {
+        hMenu = NULL;
         failedToRetrieveException(c->threadContext, "system menu", dialog);
         goto done_out;
     }
+
     dlg = dialog;
+    dlgAdm = pcpbd->dlgAdm;
+    dlgHwnd = pcpbd->hDlg;
+
     putSysCommands();
     success = true;
 
     // TODO need to think about putting this Rexx object in the data word of the menu.
 
 done_out:
-    if ( ! success )
-    {
-        dlgAdm = NULL;
-        dlgHwnd = NULL;
-        hMenu = NULL;
-    }
     return success;
 }
 
@@ -1677,7 +1673,8 @@ RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CS
             goto done_out;
         }
 
-        ownerWindow = rxGetWindowHandle(c, _dlg);
+        pCPlainBaseDialog pcpbd = dlgToCSelf(c, _dlg);
+        ownerWindow = pcpbd->hDlg;
         if ( ownerWindow == NULL )
         {
             oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
@@ -2610,7 +2607,7 @@ bool menuData(RexxMethodContext *c, HMENU hMenu, RexxObjectPtr *data)
  */
 static uint32_t menuConnectItems(HMENU hMenu, DIALOGADMIN *dlgAdm, CSTRING msg, bool isSysMenu, logical_t handles)
 {
-    DWORD rc = 0;
+    uint32_t rc = 0;
     int count = GetMenuItemCount(hMenu);
 
     MENUITEMINFO mii = {0};
@@ -4772,7 +4769,8 @@ RexxMethod1(logical_t, menuBar_detach, CSELF, cMenuPtr)
  *  @return  True on success, false on failure.
  *
  *  @note  Sets .SystemErrorCode on failure.  In addition to error codes set by
- *            the operating system, the following error codes may be set:
+ *         the operating system, the following error codes may be set by
+ *         ooDialog:
  *
  *            ERROR_INVALID_MENU_HANDLE (1401) this menu has been destroyed
  *
@@ -4780,8 +4778,19 @@ RexxMethod1(logical_t, menuBar_detach, CSELF, cMenuPtr)
  *
  *            ERROR_WINDOW_NOT_DIALOG (1420) dlg is not a .BaseDialog
  *
- *            ERROR_INVALID_WINDOW_STYLE 2002) dlg already attached to a menu
+ *            ERROR_INVALID_WINDOW_HANDLE (1400) dlg has no underlying Windows
+ *            dialog
+ *
+ *            ERROR_INVALID_WINDOW_STYLE (2002) dlg already attached to a menu
  *            bar
+ *
+ *            ERROR_NOT_ENOUGH_MEMORY (8) some menu items were not connected
+ *            because the message table is full.
+ *
+ *         When this method returns false, the menu is not attached to a dialog,
+ *         except in one circumstance.  If the .SystemErrorCode is
+ *         ERROR_NOT_ENOUGH_MEMORY, then the menu is attached to the dialog, but
+ *         some menu items were not connected.
  */
 RexxMethod2(logical_t, menuBar_attachTo, RexxObjectPtr, dlg, CSELF, cMenuPtr)
 {
@@ -5043,7 +5052,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
     HMENU hMenu = NULL;
     bool isResDialog = false;
-    bool isPointer = true;
+    bool isPointer = false;
 
     if ( argumentOmitted(1) || src == TheNilObj )
     {
@@ -5054,22 +5063,22 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
             goto done_out;
         }
     }
-    else if ( c->IsPointer(src) )
+    else if ( context->IsPointer(src) )
     {
         isPointer = true; // Do not destroy this menu if we fail.
 
-        hMenu = (HMENU)c->PointerValue((RexxPointerObject)src);
+        hMenu = (HMENU)context->PointerValue((RexxPointerObject)src);
         if ( ! IsMenu(hMenu) )
         {
             invalidTypeException(context->threadContext, 1, INVALID_MENU_HANDLE_MSG);
             goto done_out;
         }
     }
-    else if ( c->IsOfType(src, "ResDialog") )
+    else if ( context->IsOfType(src, "ResDialog") )
     {
         isResDialog = true;
     }
-    else if ( c->IsString(src) )
+    else if ( context->IsString(src) )
     {
         ;  // Purposively do nothing.
     }
@@ -5091,16 +5100,12 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
         if ( isResDialog )
         {
-            DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, src);
-            if ( dlgAdm == NULL )
-            {
-                goto done_out;
-            }
+            DIALOGADMIN *dlgAdm = dlgToDlgAdm(context, src);
             hinst = dlgAdm->TheInstance;
         }
         else
         {
-            CSTRING fileName = c->StringData((RexxStringObject)src);
+            CSTRING fileName = c->ObjectToStringValue(src);
             hinst = LoadLibrary(TEXT(fileName));
             if ( hinst == NULL )
             {

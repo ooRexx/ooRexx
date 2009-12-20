@@ -48,6 +48,7 @@
 ::class 'DialogControl' public inherit WindowBase WindowExtensions
 
 ::method new class external "LIBRARY oodialog dlgctrl_new_cls"
+::method init class external "LIBRARY oodialog dlgctrl_init_cls"
 
 ::method init external "LIBRARY oodialog dlgctrl_init"
 ::method unInit external "LIBRARY oodialog dlgctrl_unInit"
@@ -56,7 +57,12 @@
 ::attribute oDlg get  -- The ooRexx dialog object this control belongs to
 ::attribute hDlg get  -- The window handle of that dialog
 
+::constant CCM_SETUNICODEFORMAT     "0x2005"
 ::constant CCM_GETUNICODEFORMAT     "0x2006"
+
+::method useUnicode
+   use strict arg doUseUnicode
+   return self~sendWinIntMsg(self~CCM_SETUNICODEFORMAT, doUseUnicode, 0)
 
 ::method usingUnicode
    use strict arg
@@ -82,17 +88,8 @@
 ::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
 ::method setColor external "LIBRARY oodialog dlgctrl_setColor"
 ::method setSysColor external "LIBRARY oodialog dlgctrl_setColor"
-
-::method value unguarded  -- TODO this method won't work if this control is on a category page.
-                          -- Implement in native code
-    --return self~oDlg~getControlData(self~id, self~hDlg)
-    return self~oDlg~getControlData(self~id)
-
-::method "value=" unguarded  -- TODO same as a above
-    use strict arg data
-    --self~oDlg~setControlData(self~Id, data, self~hDlg)
-    self~oDlg~setControlData(self~Id, data)
-
+::method value unguarded external "LIBRARY oodialog dlgctrl_value"
+::method "value=" unguarded external "LIBRARY oodialog dlgctrl_valueEquals"
 
 ::method getMouseCapture
    forward to (self~oDlg)
@@ -297,12 +294,17 @@
 
 ::class 'ButtonControl' subclass DialogControl public
 
+::constant BM_CLICK              "0x00F5"
+
 ::method state external "LIBRARY oodialog bc_getState"
 ::method "state=" external "LIBRARY oodialog bc_setState"
 ::method "style=" external "LIBRARY oodialog bc_setStyle"
 
-::method push external "LIBRARY oodialog bc_click"
-::method click external "LIBRARY oodialog bc_click"
+::method push
+   return self~sendWinIntMsg(self~BM_CLICK, 0, 0)
+
+::method click
+   forward message "push"
 
 ::method getIdealSize external "LIBRARY oodialog bc_getIdealSize"
 ::method getTextMargin external "LIBRARY oodialog bc_getTextMargin"
@@ -626,19 +628,49 @@
 
 ::class 'ProgressBar' subclass DialogControl public
 
-::method step external "LIBRARY oodialog pbc_stepIt"
-::method setStep external "LIBRARY oodialog pbc_setStep"
+-- WM_USER == 0x400 -> 1024
+::constant PBM_SETPOS          "0x0402"
+::constant PBM_DELTAPOS        "0x0403"
+::constant PBM_SETSTEP         "0x0404"
+::constant PBM_STEPIT          "0x0405"
+::constant PBM_GETPOS          "0x0408"
+::constant PBM_SETBARCOLOR     "0x0409"
+::constant PBM_SETBKCOLOR      "0x2001"
 
-::method setPos external "LIBRARY oodialog pbc_setPos"
-::method getPos external "LIBRARY oodialog pbc_getPos"
+::method step
+   use strict arg delta = 0
+   msg = self~PBM_STEPIT
+   if arg(1, 'E') then msg = self~PBM_DELTAPOS
+   return self~sendWinIntMsg(msg, delta, 0)
 
-::method setRange external "LIBRARY oodialog pbc_setRange"
-::method getRange external "LIBRARY oodialog pbc_getRange"
+::method setPos
+   use strict arg position
+   return self~sendWinIntMsg(self~PBM_SETPOS, position, 0)
 
+::method getPos
+   use strict arg
+   return self~sendWinIntMsg(self~PBM_GETPOS, 0, 0)
+
+::method setStep
+  use strict arg newStep = 10
+   return self~sendWinIntMsg(self~PBM_SETSTEP, newStep, 0)
+
+::method barColor
+   use strict arg newColor
+   return self~sendWinUintMsg(self~PBM_SETBARCOLOR, 0, newColor)
+
+::method backgroundColor
+   use strict arg newColor
+   return self~sendWinUintMsg(self~PBM_SETBKCOLOR, 0, newColor)
+
+::method getFullRange external "LIBRARY oodialog pbc_getFullRange"
+::method getRange external "LIBRARY oodialog pbc_getFullRange"
 ::method setMarquee external "LIBRARY oodialog pbc_setMarquee"
+::method setFullRange external "LIBRARY oodialog pbc_setFullRange"
 
-::method barColor external "LIBRARY oodialog pbc_setBarColor"
-::method backgroundColor external "LIBRARY oodialog pbc_setBkColor"
+::method setRange
+   forward message "setFullRange" continue
+   return result~min result~max
 
 
 /******** Track Bar Class ******************************************************/
@@ -672,7 +704,7 @@
 ::constant TBM_GETLINESIZE         "0x0418"
 
 ::method "pos="
-   forward message (setPos)
+   forward message "setPos"
 
 ::method pos
    use strict arg
@@ -1190,8 +1222,9 @@
    use strict arg hItem
    return self~sendWinHandle2Msg(self~TVM_ENSUREVISIBLE, 0, hItem)
 
--- TODO old code did not have recurse arg and had a comment saying "recursive not yet supported"
--- Not sure what was meant by that, the tree view itself does the sorting, so it should work.  NEED to check.
+-- The old code did not have recurse arg and had a comment saying "recursive not yet supported"
+-- Although MSDN documents this message as recursively sorting the children if WPARAM is true,
+-- it doesn't seem to work.
 ::method sortChildren
    use strict arg hitem, recurse = .false
    return self~sendWinHandle2Msg(self~TVM_SORTCHILDREN, recurse, hItem)
@@ -1297,6 +1330,5 @@
 
 ::class 'MonthCalendar' subclass DialogControl public
 
-::attribute usesUnicode external "LIBRARY oodialog _mc_usesUnicode"
 ::attribute date external "LIBRARY oodialog _mc_date"
 

@@ -50,6 +50,7 @@
 #include "oodCommon.hpp"
 #include "oodMessaging.hpp"
 #include "oodDeviceGraphics.hpp"
+#include "oodData.hpp"
 #include "oodControl.hpp"
 
 const char *controlType2winName(oodControl_t control)
@@ -445,6 +446,17 @@ done_out:
 }
 
 
+RexxMethod1(RexxObjectPtr, dlgctrl_init_cls, OSELF, self)
+{
+    if ( isOfClassType(context, self, DIALOGCONTROL_CLASS) )
+    {
+        TheDialogControlClass = (RexxClassObject)self;
+        context->RequestGlobalReference(TheDialogControlClass);
+    }
+    return NULLOBJECT;
+}
+
+
 /** DialogControl::new()
  *
  *
@@ -520,6 +532,7 @@ RexxMethod2(uint32_t, dlgctrl_init, OPTIONAL_POINTER, args, OSELF, self)
     cdcCSelf->id = params->id;
     cdcCSelf->hDlg = params->hwndDlg;
     cdcCSelf->oDlg = params->parentDlg;
+    cdcCSelf->isInCategoryDlg = params->isCatDlg;
 
     context->SetObjectVariable("CSELF", cdcBuf);
 
@@ -877,6 +890,46 @@ RexxMethod4(logical_t, dlgctrl_setColor, int32_t, bkColor, OPTIONAL_int32_t, fgC
     }
     return oodColorTable(context, dlgAdm, ((pCDialogControl)pCSelf)->id, bkColor,
                          (argumentOmitted(2) ? -1 : fgColor), (method[3] == 'S'));
+}
+
+/** DialogControl::value()
+ *
+ *  Gets the "value" of the dialog control.
+ *
+ *  @return  The 'value' or 'data' of the control.
+ *
+ *  @remarks  The original ooDialog code used the abstraction that there were
+ *            only two objects involved.  The ooDialog object and the underlying
+ *            Windows dialog.  The dialog controls were considered to be the
+ *            'data' of the underlying Windows dialog.  In this abstraction, an
+ *            edit control was part of the 'data' of the dialog and its 'value'
+ *            was the edit control's text.  For a check box the 'value' is
+ *            checked or not, etc..
+ *
+ */
+RexxMethod1(RexxObjectPtr, dlgctrl_value, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    return getControlData(context, dlgToCSelf(context, pcdc->oDlg), pcdc->id, pcdc->hDlg, pcdc->controlType);
+}
+
+/** DialogControl::"value="
+ *
+ *  Sets the "value" of the dialog control.
+ *
+ *  @param  data  What to set the value of the dialog control to.  Its meaning
+ *                and format are dependent on the type of control.
+ *
+ *  @return  0 on success, 1 on error.
+ *
+ *  @remarks  See the remarks in dlgctrl_value above.
+ */
+RexxMethod2(int32_t, dlgctrl_valueEquals, CSTRING, data, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    return setControlData(context, dlgToCSelf(context, pcdc->oDlg), pcdc->id, data, pcdc->hDlg, pcdc->controlType);
 }
 
 
