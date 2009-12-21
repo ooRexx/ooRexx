@@ -59,9 +59,6 @@
  */
 #define PROGRESSBAR_CLASS   "ProgressBar"
 
-// TODO - most of the progress bar methods can be implemented using
-// sendWinIntMsg()  REDO them.
-
 static RexxDirectoryObject pbGetFullRange(RexxMethodContext *c, HWND hPB)
 {
     PBRANGE pbr;
