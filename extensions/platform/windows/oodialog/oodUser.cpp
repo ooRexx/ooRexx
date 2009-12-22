@@ -555,6 +555,23 @@ uint32_t monthCalendarStyle(CSTRING opts, uint32_t style)
 }
 
 
+uint32_t upDownStyle(CSTRING opts, uint32_t style)
+{
+    if ( StrStrI(opts,      "LEFT" ) != NULL ) style |= UDS_ALIGNLEFT;
+    else if ( StrStrI(opts, "RIGHT") != NULL ) style |= UDS_ALIGNRIGHT;
+    else style |= UDS_ALIGNRIGHT;
+
+    if ( StrStrI(opts, ""       ) != NULL ) style |= TCS_FIXEDWIDTH;
+    if ( StrStrI(opts, "FOCUSNEVER"  ) != NULL ) style |= TCS_FOCUSNEVER;
+    if ( StrStrI(opts, "FOCUSONDOWN" ) != NULL ) style |= TCS_FOCUSONBUTTONDOWN;
+    if ( StrStrI(opts, "ICONLEFT"    ) != NULL ) style |= TCS_FORCEICONLEFT;
+    if ( StrStrI(opts, "LABELLEFT"   ) != NULL ) style |= TCS_FORCELABELLEFT;
+    if ( StrStrI(opts, "ALIGNRIGHT"  ) != NULL ) style |= TCS_RIGHTJUSTIFY;
+    if ( StrStrI(opts, "CLIPSIBLINGS") != NULL ) style |= WS_CLIPSIBLINGS;
+    return style;
+}
+
+
 uint32_t getControlStyle(oodControl_t ctrl, CSTRING opts)
 {
     uint32_t style = WS_CHILD;

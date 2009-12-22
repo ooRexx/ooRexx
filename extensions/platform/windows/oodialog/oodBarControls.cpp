@@ -125,7 +125,7 @@ RexxMethod4(RexxObjectPtr, pbc_setFullRange, OPTIONAL_RexxObjectPtr, minObj, OPT
             {
                 goto done_out;
             }
-            max = 100
+            max = 100;
             if ( ! rxIntFromDirectory(context, (RexxDirectoryObject)minObj, "MAX", &max, 1, false) )
             {
                 goto done_out;

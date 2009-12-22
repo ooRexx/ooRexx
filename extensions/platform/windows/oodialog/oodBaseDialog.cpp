@@ -1011,9 +1011,6 @@ RexxMethod2(RexxObjectPtr, winex_setCursorPos, ARGLIST, args, CSELF, pCSelf)
         return NULLOBJECT;
     }
 
-    RexxMethodContext *c = context;
-    c->ObjectToUnsignedInt32()
-
     size_t sizeArray;
     size_t argsUsed;
     POINT  point;
