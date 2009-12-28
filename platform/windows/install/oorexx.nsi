@@ -386,6 +386,13 @@ Section "${LONGNAME} Samples" SecDemo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "*.bmp"
   ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\controls
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\controls\" "*.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\controls\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\controls\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\controls\" "*.txt"
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\examples
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.rex"
@@ -405,6 +412,10 @@ Section "${LONGNAME} Samples" SecDemo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\res\" "*.res"
   ${File} "${SRCDIR}\samples\windows\oodialog\res\" "*.dll"
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\simple
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\simple\" "*.rex"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\wav
   ; Distribution files...
