@@ -664,10 +664,11 @@
    return self~sendWinUintMsg(self~PBM_SETBKCOLOR, 0, newColor)
 
 ::method getFullRange external "LIBRARY oodialog pbc_getFullRange"
-::method getRange external "LIBRARY oodialog pbc_getFullRange"
 ::method setMarquee external "LIBRARY oodialog pbc_setMarquee"
 ::method setFullRange external "LIBRARY oodialog pbc_setFullRange"
 
+-- DEPRECATED
+::method getRange external "LIBRARY oodialog pbc_getFullRange"
 ::method setRange
    forward message "setFullRange" continue
    return result~min result~max
@@ -1332,3 +1333,38 @@
 
 ::attribute date external "LIBRARY oodialog _mc_date"
 
+
+::class 'UpDown' subclass DialogControl public
+
+-- WM_USER == 0x400 -> 1024
+::constant UDM_SETBUDDY            "0x0469"
+::constant UDM_GETBUDDY            "0x046A"
+::constant UDM_SETBASE             "0x046D"
+::constant UDM_GETBASE             "0x046E"
+::constant UDM_SETPOS32            "0x0471"
+
+::method getBase
+   use strict arg
+   return self~sendWinIntMsg(self~UDM_GETBASE, 0, 0)
+
+::method setBase
+   use strict arg newBase
+   return self~sendWinIntMsg(self~UDM_SETBASE, newBase, 0)
+
+::method getBuddy
+   use strict arg
+   return self~sendWinIntMsgH(self~UDM_GETBUDDY, 0, 0)
+
+::method setBuddy
+   use strict arg hwndBuddy
+   return self~sendWinHandleMsgH(self~UDM_SETBUDDY, hwndBuddy, 0)
+
+::method getPosition external "LIBRARY oodialog ud_getPosition"
+::method setPosition
+   use strict arg newPos
+   return self~sendWinIntMsg(self~UDM_SETPOS32, 0, newPos)
+
+::method getRange external "LIBRARY oodialog ud_getRange"
+::method setRange external "LIBRARY oodialog ud_setRange"
+::method getAcceleration external "LIBRARY oodialog ud_getAcceleration"
+::method setAcceleration external "LIBRARY oodialog ud_setAcceleration"

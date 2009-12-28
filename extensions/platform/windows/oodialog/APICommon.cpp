@@ -172,7 +172,7 @@ RexxObjectPtr wrongClassException(RexxThreadContext *c, int pos, const char *n)
  * @note  There is no space after 'valid' the caller must provide it in msg if
  *        it is needed
  */
-RexxObjectPtr invalidTypeException(RexxThreadContext *c, int pos, const char *type)
+RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char *type)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Argument %d is not a valid%s", pos, type);
@@ -253,7 +253,7 @@ RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPt
     return NULLOBJECT;
 }
 
-void wrongObjInArrayException(RexxThreadContext *c, int argPos, size_t index, CSTRING obj)
+void wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING obj)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Argument %d is an array and index %d is not a %s", argPos, index, obj);
@@ -282,6 +282,13 @@ void emptyArrayException(RexxThreadContext *c, int argPos)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Argument %d must be a non-empty array", argPos);
+    userDefinedMsgException(c, buffer);
+}
+
+void sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Argument %d must be a non-sparse array, index %d is missing", argPos, index);
     userDefinedMsgException(c, buffer);
 }
 
@@ -511,7 +518,7 @@ size_t rxArgCount(RexxMethodContext * context)
  *        number and an error.  The function simply assumes a return of
  *        _UI64_MAX is an error signal.
  */
-bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos)
+bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t pos)
 {
     char *end;
     *number = _strtoui64(str, &end, 0);
@@ -528,7 +535,7 @@ bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos)
  * numbers, and ERANGE can differentiate between a valid ULONG_MAX and an error
  * return.
  */
-bool rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, int pos)
+bool rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, size_t pos)
 {
     char *end;
     *number = strtoul(str, &end, 0);

@@ -62,13 +62,14 @@ extern void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, C
 extern void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen);
 extern void numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
 extern void notNonNegativeException(RexxThreadContext *c, int pos, RexxObjectPtr actual);
-extern void wrongObjInArrayException(RexxThreadContext *c, int argPos, size_t index, CSTRING obj);
+extern void wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING obj);
 extern void wrongObjInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);
 extern void executionErrorException(RexxThreadContext *c, CSTRING msg);
 extern void doOverException(RexxThreadContext *c, RexxObjectPtr obj);
 extern void failedToRetrieveException(RexxThreadContext *c, CSTRING item, RexxObjectPtr source);
 extern void missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index);
 extern void emptyArrayException(RexxThreadContext *c, int argPos);
+extern void sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index);
 extern void nullObjectException(RexxThreadContext *c, CSTRING name, int pos);
 extern void nullObjectException(RexxThreadContext *c, CSTRING name);
 extern void nullPointerException(RexxThreadContext *c, int pos);
@@ -79,7 +80,7 @@ extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, co
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
 extern RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
-extern RexxObjectPtr invalidTypeException(RexxThreadContext *c, int pos, const char *type);
+extern RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char *type);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber);
@@ -88,8 +89,8 @@ extern bool    rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr ob
 
 extern bool            requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, int pos);
 extern size_t          rxArgCount(RexxMethodContext * context);
-extern bool            rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos);
-extern bool            rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, int pos);
+extern bool            rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t pos);
+extern bool            rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, size_t pos);
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);

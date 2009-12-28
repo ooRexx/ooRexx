@@ -108,6 +108,7 @@ inline bool isDataAttributeControl(oodControl_t control)
         case winTab :
         case winDateTimePicker :
         case winMonthCalendar :
+        case winUpDown :
             return true;
 
         default :
@@ -547,6 +548,26 @@ static bool setTrackBarData(HWND hW, const char * ldat, INT item)
 }
 
 
+static bool getUpDownData(HWND hDlg, char * buffer, uint32_t ctrlID)
+{
+    BOOL error;
+    int32_t pos = (int32_t)SendMessage(GetDlgItem(hDlg, ctrlID), UDM_GETPOS32, 0, (LPARAM)&error);
+    if ( ! error )
+    {
+        itoa(pos, buffer, 10);
+        return true;
+    }
+   return false;
+}
+
+
+static bool setUpDownData(HWND hDlg, const char * data, uint32_t ctrlID)
+{
+   SendMessage(GetDlgItem(hDlg, ctrlID), UDM_SETPOS32, 0, atoi(data));
+   return true;
+}
+
+
 static bool getTabData(HWND hW, char * ldat, INT item)
 {
    TC_ITEM tab;
@@ -684,42 +705,18 @@ RexxObjectPtr getControlData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint
             }
             break;
 
+        case winUpDown:
+            if ( ! getUpDownData(hDlg, data, id) )
+            {
+                return result;
+            }
+            break;
+
         default:
             return result;
     }
 
     return c->String(data);
-}
-
-/**
- * Retrieves the dialog administration block
- *
- *           TODO THIS FUNCTION MUST BE RETHOUGHT.
- *  The original code needed to find the correct admin block from classic
- *  external functions, which had limited information available to them.  Now,
- *  the admin block is placed in the CSelf of each dialog object.  There can be
- *  no mistake about which admin block goes with which dialog object.
- *
- * @param c
- * @param pcpbd
- *
- * @return DIALOGADMIN*
- */
-DIALOGADMIN *getDialogAdminBlock(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
-{
-    if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
-    {
-        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return NULL;
-    }
-
-    DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return NULL;
-    }
-    return dlgAdm;
 }
 
 /**
@@ -770,6 +767,8 @@ int32_t setControlData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t i
             return (setDateTimeData(hDlg, data, id) ? 0 : 1);
         case winMonthCalendar:
             return (setMonthCalendarData(hDlg, data, id) ? 0 : 1);
+        case winUpDown:
+            return (setUpDownData(hDlg, data, id) ? 0 : 1);
         default:
             return 1;
     }
@@ -867,6 +866,10 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
         else if ( controlType == winMonthCalendar )
         {
             setMonthCalendarData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+        }
+        else if ( controlType == winUpDown )
+        {
+            setUpDownData(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
     }
     return 0;
@@ -967,6 +970,13 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
         else if ( controlType == winMonthCalendar )
         {
             if ( ! getMonthCalendarData(hwnd, data, itemID) )
+            {
+                data[0] = '\0';
+            }
+        }
+        else if ( controlType == winUpDown )
+        {
+            if ( ! getUpDownData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }

@@ -395,6 +395,7 @@
    end
    return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
+::method connectUpDownEvent external "LIBRARY oodialog en_connectUpDownEvent"
 
 ::method connectTrackBarEvent   /* can only be called in initDialog */
    use strict arg id, type, msgToRise = "", categoryHDlg = .NullHandle

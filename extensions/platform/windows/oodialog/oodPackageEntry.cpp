@@ -183,6 +183,7 @@ REXX_METHOD_PROTOTYPE(en_connectKeyPress);
 REXX_METHOD_PROTOTYPE(en_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(en_disconnectKeyPress);
 REXX_METHOD_PROTOTYPE(en_hasKeyPressConnection);
+REXX_METHOD_PROTOTYPE(en_connectUpDownEvent);
 REXX_METHOD_PROTOTYPE(en_connectCommandEvents);
 REXX_METHOD_PROTOTYPE(en_addUserMessage);
 
@@ -485,6 +486,13 @@ REXX_METHOD_PROTOTYPE(pbc_setMarquee);
 REXX_METHOD_PROTOTYPE(tb_getRange);
 REXX_METHOD_PROTOTYPE(tb_getSelRange);
 
+// UpDown
+REXX_METHOD_PROTOTYPE(ud_getRange);
+REXX_METHOD_PROTOTYPE(ud_setRange);
+REXX_METHOD_PROTOTYPE(ud_getPosition);
+REXX_METHOD_PROTOTYPE(ud_getAcceleration);
+REXX_METHOD_PROTOTYPE(ud_setAcceleration);
+
 // ListView
 REXX_METHOD_PROTOTYPE(lv_insert);
 REXX_METHOD_PROTOTYPE(lv_add);
@@ -734,6 +742,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(en_connectFKeyPress,            en_connectFKeyPress),
     REXX_METHOD(en_disconnectKeyPress,          en_disconnectKeyPress),
     REXX_METHOD(en_hasKeyPressConnection,       en_hasKeyPressConnection),
+    REXX_METHOD(en_connectUpDownEvent,          en_connectUpDownEvent),
     REXX_METHOD(en_connectCommandEvents,        en_connectCommandEvents),
     REXX_METHOD(en_addUserMessage,              en_addUserMessage),
 
@@ -1049,6 +1058,13 @@ RexxMethodEntry oodialog_methods[] = {
     // TrackBar
     REXX_METHOD(tb_getRange,                    tb_getRange),
     REXX_METHOD(tb_getSelRange,                 tb_getSelRange),
+
+    // UpDown
+    REXX_METHOD(ud_getRange,                    ud_getRange),
+    REXX_METHOD(ud_setRange,                    ud_setRange),
+    REXX_METHOD(ud_getPosition,                 ud_getPosition),
+    REXX_METHOD(ud_getAcceleration,             ud_getAcceleration),
+    REXX_METHOD(ud_setAcceleration,             ud_setAcceleration),
 
     // ProgressBar
     REXX_METHOD(sb_getRange,                    sb_getRange),

@@ -124,6 +124,7 @@
 ::method createTab external "LIBRARY oodialog dyndlg_createNamedControl"
 ::method createDateTimePicker external "LIBRARY oodialog dyndlg_createNamedControl"
 ::method createMonthCalendar external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createUpDown external "LIBRARY oodialog dyndlg_createNamedControl"
 
 ::method createRadioButtonGroup
    arr = arg(1,"A")
@@ -667,6 +668,9 @@
             when class = 'MONTHCAL_CLASS' then
                self~createMonthCalendar(id, x, y, w, h, self~getNamedCtrlStyle(style, "MONTH"), name)
 
+            when class = 'UPDOWN_CLASS' then
+               self~createUpDown(id, x, y, w, h, self~getNamedCtrlStyle(style, "UPDOWN"), name)
+
             otherwise do
                self~errorFile(f, s)
                return 1
@@ -944,6 +948,17 @@
         if style~wordpos("MCS_NOTODAYCIRCLE")  > 0 then ret = ret || " NOCIRCLE"
         if style~wordpos("MCS_WEEKNUMBERS")  > 0 then ret = ret || " WEEKNUMBERS"
         if style~wordpos("WS_BORDER")  > 0 then ret = ret || " BORDER"
+   end
+   else if kind = "UPDOWN" then do
+        if style~wordpos("UDS_ALIGNLEFT")  > 0 then ret = ret || " LEFT"
+        if style~wordpos("UDS_ALIGNRIGHT")  > 0 then ret = ret || " RIGHT"
+        if style~wordpos("UDS_ARROWKEYS")  > 0 then ret = ret || " ARROWKEYS"
+        if style~wordpos("UDS_AUTOBUDDY")  > 0 then ret = ret || " AUTOBUDDY"
+        if style~wordpos("UDS_HORZ")  > 0 then ret = ret || " HORIZONTAL"
+        if style~wordpos("UDS_HOTTRACK")  > 0 then ret = ret || " HOTTRACK"
+        if style~wordpos("UDS_NOTHOUSANDS")  > 0 then ret = ret || " NOTHOUSANDS"
+        if style~wordpos("UDS_SETBUDDYINT")  > 0 then ret = ret || " BUDDYINT"
+        if style~wordpos("UDS_WRAP")  > 0 then ret = ret || " WRAP"
    end
    if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
    if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"

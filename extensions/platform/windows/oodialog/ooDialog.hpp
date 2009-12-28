@@ -122,6 +122,7 @@ extern DWORD ComCtl32Version;
 #define TAG_LISTVIEW              0x00000007
 #define TAG_TRACKBAR              0x00000008
 #define TAG_TAB                   0x00000009
+#define TAG_UPDOWN                0x0000000A
 
 #define TAG_CTRLMASK              0x000000FF
 #define TAG_FLAGMASK              0x00FFFF00
@@ -161,6 +162,7 @@ typedef enum
     winTab                 = 14,
     winDateTimePicker      = 15,
     winMonthCalendar       = 16,
+    winUpDown              = 17,
 
     // A special value used by the data table / data table connection functions.
     winNotAControl         = 42,

@@ -194,8 +194,8 @@ extern bool          oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjec
 extern DWORD         oodGetSysErrCode(RexxThreadContext *);
 extern void          oodSetSysErrCode(RexxThreadContext *, DWORD);
 extern void          oodResetSysErrCode(RexxThreadContext *context);
-extern bool          oodGetWParam(RexxMethodContext *, RexxObjectPtr, WPARAM *, int);
-extern bool          oodGetLParam(RexxMethodContext *, RexxObjectPtr, LPARAM *, int);
+extern bool          oodGetWParam(RexxMethodContext *, RexxObjectPtr, WPARAM *, size_t, bool);
+extern bool          oodGetLParam(RexxMethodContext *, RexxObjectPtr, LPARAM *, size_t, bool);
 
 extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
@@ -212,8 +212,9 @@ extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int 
 extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 
 extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj);
+extern bool rxDirectoryFromArray(RexxMethodContext *c, RexxArrayObject a, size_t index, RexxDirectoryObject *d, size_t argPos);
 extern bool rxLogicalFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, BOOL *, int, bool);
-extern bool rxNumberFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, DWORD *, int, bool);
+extern bool rxNumberFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, uint32_t *, int, bool);
 extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, int *, int, bool);
 
 extern RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
@@ -235,7 +236,7 @@ extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObje
 extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hDlg);
 extern RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd);
 extern RexxObjectPtr oodGetFocus(RexxMethodContext *c, HWND hDlg);
-extern RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *, HWND, CSTRING, RexxObjectPtr, RexxObjectPtr, int, bool);
+extern RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *, HWND, CSTRING, RexxObjectPtr, RexxObjectPtr, size_t, bool);
 
 // These functions are defined in oodBaseDialog.cpp
 extern bool initWindowExtensions(RexxMethodContext *, RexxObjectPtr, HWND, pCWindowBase, pCPlainBaseDialog);

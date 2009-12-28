@@ -40,7 +40,7 @@
  * oodBarControls.cpp
  *
  * Contains methods for the ScrollBar, TrackBar, and ProgressBar dialog
- * controls.
+ * controls.  Also the misc control UpDown
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
@@ -210,6 +210,7 @@ RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t
     return 1;
 }
 
+
 /**
  * Methods for the ScrollBar class.  TODO these methods use the old
  * compatibility functions, they should be brought up to date.
@@ -229,6 +230,7 @@ RexxMethod4(logical_t, sb_setRange, int32_t, min, int32_t, max, OPTIONAL_logical
     }
     return 0;
 }
+
 
 RexxMethod1(RexxObjectPtr, sb_getRange, CSELF, pCSelf)
 {
@@ -319,4 +321,203 @@ RexxMethod1(RexxObjectPtr, tb_getSelRange, CSELF, pCSelf)
 }
 
 
+/**
+ * Methods for the UpDown class.
+ */
+#define UP_DOWN_CLASS      "UpDown"
+
+
+/** UpDown::setRange()
+ *
+ *  Sets the range, (minimum and maximum,) for the up down control.
+ *
+ *  Unlike other some other controls, the maximum position may be less than the
+ *  minimum, and in that case clicking the up arrow button decreases the current
+ *  position. To put it another way, up means moving towards the maximum
+ *  position.
+ *
+ *  The range can be specified using one argument, a directory object, or two
+ *  arguments
+ *
+ *  Form 1:
+ *
+ *  @param   aDirectory  [OPTIONAL]  The directory indexes "min" and "max" are
+ *                       used to set the range.  The min index specifies the
+ *                       minium postition and the max index specifies the
+ *                       maximum position.  If an index is omitted, the
+ *                       corresponding default for that index is set.  0 for the
+ *                       minimum position and 100 for the maximum.
+ *
+ *  Form 2:
+ *
+ *  @param   min   [OPTIONAL]  The minimum position.  0 is the default.
+ *  @param   max   [OPTIONAL]  The maximum.  100 is the default.
+ *
+ *  @return  0 always.
+ *
+ */
+RexxMethod3(RexxObjectPtr, ud_setRange, OPTIONAL_RexxObjectPtr, minObj, OPTIONAL_int32_t, max, CSELF, pCSelf)
+{
+    HWND hwnd = getDCHCtrl(pCSelf);
+
+    int32_t min = 0;
+    bool usingDirectory = false;
+
+    if ( argumentExists(1) )
+    {
+        if ( context->IsOfType(minObj, "DIRECTORY") )
+        {
+            usingDirectory = true;
+            if ( ! rxIntFromDirectory(context, (RexxDirectoryObject)minObj, "MIN", &min, 1, false) )
+            {
+                goto done_out;
+            }
+            max = 100;
+            if ( ! rxIntFromDirectory(context, (RexxDirectoryObject)minObj, "MAX", &max, 1, false) )
+            {
+                goto done_out;
+            }
+        }
+        else
+        {
+            if ( ! context->Int32(minObj, &min) )
+            {
+                wrongRangeException(context->threadContext, 1,  INT32_MIN, INT32_MAX, minObj);
+            }
+        }
+    }
+
+    if ( ! usingDirectory && argumentOmitted(2) )
+    {
+        max = 100;
+    }
+    SendMessage(hwnd, UDM_SETRANGE32, min, max);
+
+done_out:
+    return TheZeroObj;
+}
+
+
+/** UpDown::getRange()
+ *
+ *
+ */
+RexxMethod1(RexxObjectPtr, ud_getRange, CSELF, pCSelf)
+{
+    RexxDirectoryObject result = context->NewDirectory();
+    HWND hCtrl = getDCHCtrl(pCSelf);
+
+    int32_t min, max;
+    SendMessage(hCtrl, UDM_GETRANGE32, (WPARAM)&min, (LPARAM)&max);
+
+    RexxMethodContext *c = context;
+    context->DirectoryPut(result, context->Int32(min), "MIN");
+    context->DirectoryPut(result, context->Int32(max), "MAX");
+
+    return result;
+}
+
+
+/** UpDown::getPosition()
+ *
+ *
+ *  @note  Sets the .SystemErrorCode.  If the returned position is not correct,
+ *         the .SystemErrorCode is set to
+ *
+ *         ERROR_INVALID_DATA (13)  "The data is invalid"
+
+ */
+RexxMethod1(int32_t, ud_getPosition, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    HWND hCtrl = getDCHCtrl(pCSelf);
+
+    BOOL error;
+    int32_t pos = (int32_t)SendMessage(hCtrl, UDM_GETPOS32, 0, (LPARAM)&error);
+    if ( error )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_DATA);
+    }
+   return pos;
+}
+
+
+RexxMethod1(RexxArrayObject, ud_getAcceleration, CSELF, pCSelf)
+{
+    HWND hCtrl = getDCHCtrl(pCSelf);
+    LPUDACCEL pUDA = NULL;
+
+    size_t count = (size_t)SendMessage(hCtrl, UDM_GETACCEL, 0, NULL);
+    RexxArrayObject result = context->NewArray(count);
+
+    pUDA = (LPUDACCEL)malloc(count * sizeof(UDACCEL));
+    if ( pUDA == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        goto done_out;
+    }
+
+    SendMessage(hCtrl, UDM_GETACCEL, count, (LPARAM)pUDA);
+    for ( size_t i = 0; i < count; i++ )
+    {
+        RexxDirectoryObject d = context->NewDirectory();
+        context->DirectoryPut(d, context->UnsignedInt32(pUDA[i].nSec), "SECONDS");
+        context->DirectoryPut(d, context->UnsignedInt32(pUDA[i].nInc), "INCREMENT");
+        context->ArrayPut(result, d, i + 1);
+    }
+
+done_out:
+    safeFree(pUDA);
+    return result;
+}
+
+
+RexxMethod2(logical_t, ud_setAcceleration, RexxArrayObject, vals, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    HWND hCtrl = getDCHCtrl(pCSelf);
+    LPUDACCEL pUDA = NULL;
+
+    size_t count = c->ArrayItems(vals);
+    if ( count < 1 )
+    {
+        emptyArrayException(c->threadContext, 1);
+        goto done_out;
+    }
+
+    pUDA = (LPUDACCEL)malloc(count * sizeof(UDACCEL));
+    if ( pUDA == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        goto done_out;
+    }
+
+    RexxDirectoryObject d;
+    uint32_t secs, incr;
+
+    for ( size_t i = 1; i <= count; i++ )
+    {
+        if ( ! rxDirectoryFromArray(context, vals, i, &d, 1) )
+        {
+            goto done_out;
+        }
+        if ( ! rxNumberFromDirectory(context, (RexxDirectoryObject)d, "SECONDS", &secs, 1, true) )
+        {
+            goto done_out;
+        }
+        if ( ! rxNumberFromDirectory(context, (RexxDirectoryObject)d, "INCREMENT", &incr, 1, true) )
+        {
+            goto done_out;
+        }
+
+        pUDA[i - 1].nInc = incr;
+        pUDA[i - 1].nSec = secs;
+    }
+
+    SendMessage(hCtrl, UDM_SETACCEL, count, (LPARAM)pUDA);
+
+done_out:
+    safeFree(pUDA);
+    return 0;
+}
 

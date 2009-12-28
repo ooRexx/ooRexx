@@ -393,10 +393,20 @@ void oodResetSysErrCode(RexxThreadContext *context)
 }
 
 
-bool oodGetWParam(RexxMethodContext *c, RexxObjectPtr wp, WPARAM *wParam, int argPos)
+bool oodGetWParam(RexxMethodContext *c, RexxObjectPtr wp, WPARAM *wParam, size_t argPos, bool required)
 {
     WPARAM result = 0;
     bool success = true;
+
+    if ( wp == NULLOBJECT )
+    {
+        if ( required )
+        {
+            success = false;
+            missingArgException(c->threadContext, argPos);
+        }
+        goto done_out;
+    }
 
     if ( c->Uintptr(wp, (uintptr_t *)&result) )
     {
@@ -430,6 +440,7 @@ bool oodGetWParam(RexxMethodContext *c, RexxObjectPtr wp, WPARAM *wParam, int ar
     }
 
     wrongArgValueException(c->threadContext, argPos, "whole number, pointer object, hex string", wp);
+    success = false;
 
 done_out:
     *wParam = result;
@@ -437,10 +448,20 @@ done_out:
 }
 
 
-bool oodGetLParam(RexxMethodContext *c, RexxObjectPtr lp, LPARAM *lParam, int argPos)
+bool oodGetLParam(RexxMethodContext *c, RexxObjectPtr lp, LPARAM *lParam, size_t argPos, bool required)
 {
     LPARAM result = 0;
     bool success = true;
+
+    if ( lp == NULLOBJECT )
+    {
+        if ( required )
+        {
+            success = false;
+            missingArgException(c->threadContext, argPos);
+        }
+        goto done_out;
+    }
 
     if ( c->Intptr(lp, (intptr_t *)&result) )
     {
@@ -1023,6 +1044,29 @@ bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringO
 }
 
 
+bool rxDirectoryFromArray(RexxMethodContext *c, RexxArrayObject a, size_t index, RexxDirectoryObject *d, size_t argPos)
+{
+    RexxObjectPtr _d = c->ArrayAt(a, index);
+
+    if ( _d == NULLOBJECT )
+    {
+        sparseArrayException(c->threadContext, argPos, index);
+        goto err_out;
+    }
+    if ( ! c->IsOfType(_d, "DIRECTORY") )
+    {
+        wrongObjInArrayException(c->threadContext, argPos, index, "Directory");
+        goto err_out;
+    }
+
+    *d = (RexxDirectoryObject)_d;
+    return true;
+
+err_out:
+    return false;
+}
+
+
 bool rxLogicalFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
                             BOOL *logical, int argPos, bool required)
 {
@@ -1048,9 +1092,9 @@ bool rxLogicalFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, C
 }
 
 bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
-                           DWORD *number, int argPos, bool required)
+                           uint32_t *number, int argPos, bool required)
 {
-    DWORD value;
+    uint32_t value;
     RexxObjectPtr obj = context->DirectoryAt(d, index);
 
     if ( required && obj == NULLOBJECT )
@@ -1061,9 +1105,9 @@ bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CS
 
     if ( obj != NULLOBJECT )
     {
-        if ( ! context->UnsignedInt32(obj, (uint32_t*)&value) )
+        if ( ! context->UnsignedInt32(obj, &value) )
         {
-            wrongObjInDirectoryException(context->threadContext, argPos, index, "a positive whole number", obj);
+            wrongObjInDirectoryException(context->threadContext, argPos, index, "a non-negative whole number", obj);
             return false;
         }
         *number = value;

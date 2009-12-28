@@ -379,7 +379,7 @@
    return button~dimBitmap(bmp, cx, cy, stepX, stepY, steps)
 
 -- Scroll a bitmap from one position to another within a button.
-::method ScrollBitmapFromTo unguarded
+::method scrollBitmapFromTo unguarded
    use arg id, fromX, fromY, toX, toY, stepX = 0, stepY = 0, delay = 0, displace = .true
 
    xl = self~getBitmapSizeX(id)

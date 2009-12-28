@@ -807,7 +807,7 @@ static LRESULT sendWinMsg(RexxMethodContext *context, CSTRING wm_msg, WPARAM wPa
 }
 
 RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *c, HWND hwnd, CSTRING wm_msg, RexxObjectPtr _wParam,
-                                RexxObjectPtr _lParam, int argPos, bool doIntReturn)
+                                RexxObjectPtr _lParam, size_t argPos, bool doIntReturn)
 {
     oodResetSysErrCode(c->threadContext);
 
@@ -819,14 +819,14 @@ RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *c, HWND hwnd, CSTRING wm_msg,
     argPos++;
 
     WPARAM wParam;
-    if ( ! oodGetWParam(c, _wParam, &wParam, argPos) )
+    if ( ! oodGetWParam(c, _wParam, &wParam, argPos, true) )
     {
         return TheZeroObj;
     }
     argPos++;
 
     LPARAM lParam;
-    if ( ! oodGetLParam(c, _lParam, &lParam, argPos) )
+    if ( ! oodGetLParam(c, _lParam, &lParam, argPos, true) )
     {
         return TheZeroObj;
     }
@@ -1118,10 +1118,11 @@ RexxMethod5(RexxObjectPtr, wb_sendMessage, CSTRING, wm_msg, RexxObjectPtr, _wPar
 }
 
 /** WindowBase::sendWinIntMsg()
+ *  WindowBase::sendWinIntMsgH()
  *
  *  Sends a message to a Windows window where WPARAM and LPARAM are both numbers
- *  and the return is a number.  I.e., neither param is a handle and the return
- *  is not a string or a handle.
+ *  and the return is a number or a handle.  I.e., neither param is a handle and
+ *  the return is not a string.
  *
  *  @param  wm_msg  The Windows window message ID.  This can be specified in
  *                  "0xFFFF" format or numeric format.
@@ -1138,9 +1139,7 @@ RexxMethod5(RexxObjectPtr, wb_sendMessage, CSTRING, wm_msg, RexxObjectPtr, _wPar
  *  @remarks  Sets the .SystemErrorCode.
  *
  *            This method is not meant to be documented for the user, it is
- *            intended to be used internally only.  Currently, all uses of this
- *            function have a return of a number.  If a need comes up to return
- *            a handle, then add sendWinIntMsgH().
+ *            intended to be used internally only.
  *
  *            In addition, wParam should really be uintptr_t.  However, some,
  *            many?, control messages use / accept negative nubmers for wParam.
@@ -1150,10 +1149,19 @@ RexxMethod5(RexxObjectPtr, wb_sendMessage, CSTRING, wm_msg, RexxObjectPtr, _wPar
  *            wParam here.  sendWinUintMsg() has been added for the case where
  *            WPARAM and LPARAM need an unsigned range.
  */
-RexxMethod5(intptr_t, wb_sendWinIntMsg, CSTRING, wm_msg, intptr_t, wParam, intptr_t, lParam,
-            OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
+RexxMethod6(RexxObjectPtr, wb_sendWinIntMsg, CSTRING, wm_msg, intptr_t, wParam, intptr_t, lParam,
+            OPTIONAL_POINTERSTRING, _hwnd, NAME, method, CSELF, pCSelf)
 {
-    return (intptr_t)sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
+    LRESULT lr = sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
+
+    if ( method[13] == '\0' )
+    {
+        return context->Intptr((intptr_t)lr);
+    }
+    else
+    {
+        return pointer2string(context, (void *)lr);
+    }
 }
 
 
@@ -1219,7 +1227,7 @@ RexxMethod6(RexxObjectPtr, wb_sendWinHandleMsg, CSTRING, wm_msg, POINTERSTRING, 
 {
     LRESULT lr = sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
 
-    if ( strlen(method) == 16 )
+    if ( method[16] == '\0' )
     {
         return context->Intptr((intptr_t)lr);
     }

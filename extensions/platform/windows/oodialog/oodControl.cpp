@@ -73,6 +73,7 @@ const char *controlType2winName(oodControl_t control)
         case winTrackBar :             return TRACKBAR_CLASS;
         case winMonthCalendar :        return MONTHCAL_CLASS;
         case winDateTimePicker :       return DATETIMEPICK_CLASS;
+        case winUpDown :               return UPDOWN_CLASS;
         default :                      return "";
     }
 }
@@ -98,6 +99,7 @@ const char *controlType2className(oodControl_t control)
         case winTrackBar :             return "SLIDERCONTROL";
         case winMonthCalendar :        return "MONTHCALENDAR";
         case winDateTimePicker :       return "DATETIMEPICKER";
+        case winUpDown :               return "UPDOWN";
         default :                      return "";
     }
 }
@@ -118,6 +120,7 @@ oodControl_t winName2controlType(const char *className)
     else if ( strcmp(className, TRACKBAR_CLASS    ) == 0 ) return winTrackBar;
     else if ( strcmp(className, MONTHCAL_CLASS    ) == 0 ) return winMonthCalendar;
     else if ( strcmp(className, DATETIMEPICK_CLASS) == 0 ) return winDateTimePicker;
+    else if ( strcmp(className, UPDOWN_CLASS      ) == 0 ) return winUpDown;
     else
     {
         return winUnknown;
@@ -239,6 +242,7 @@ oodControl_t oodName2controlType(CSTRING name)
     else if ( StrCmpN(name, "TAB", 3           ) == 0 ) return winTab;
     else if ( StrCmpN(name, "TRACKBAR", 3      ) == 0 ) return winTrackBar;
     else if ( StrCmpN(name, "TREEVIEW", 3      ) == 0 ) return winTreeView;
+    else if ( StrCmpN(name, "UPDOWN", 1        ) == 0 ) return winUpDown;
     else return winUnknown;
 }
 

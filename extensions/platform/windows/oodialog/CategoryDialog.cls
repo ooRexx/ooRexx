@@ -40,14 +40,14 @@
  * Windows Dialog Interface for Open Object Rexx (ooRexx.)
  *
  * The Category Dialog Class.
+ *
+ * This class creates and controls a dialog that has more than one panel. It is
+ * similar to the 'notebook' control available in OS/2 or the PropertySheet
+ * available in the Windows 95 user interface. You can switch among diferent
+ * pages by clicking radio buttons. Each page has its own window controls. You
+ * can setup a page out of a dialog resource script.
  */
 ::requires "UserDialog.cls"
-
-/* This class creates and controls a dialog that has more than one panel. */
-/* It is similar to the 'notebook' control available in OS/2 or the PropertySheet */
-/* available in the Windows 95 user interface. You can switch among */
-/* diferent pages by clicking radio buttons. Each page has its own */
-/* window controls. You can setup a page out of a dialog resource script. */
 
 ::class 'CategoryDialog' subclass UserDialog public
 
@@ -391,9 +391,6 @@
 
 
 ::method sendMessageToCategoryControl unguarded external "LIBRARY oodialog catdlg_sendMessageToCategoryControl"
-::method sendMessageToCategoryItem unguarded
-   forward message "sendMessageToCategoryControl"
-
 ::method categoryComboBox unguarded private
    use strict arg id, pageID
    if pageID == -1 then pageID = self~catalog['category']
@@ -755,29 +752,24 @@
    forward message 'setControlDataPage'
 ::method setCategoryAttrib unguarded
    forward message 'setControlDataAttribute'
-
--- DEPRECATED (maybe?)
+::method sendMessageToCategoryItem unguarded
+   forward message "sendMessageToCategoryControl"
 ::method getItem unguarded
    forward message 'getControlHandle'
-
 ::method enableCategoryItem unguarded
    forward message 'enableCategoryControl'
-
 ::method disableCategoryItem unguarded
    forward message 'disableCategoryControl'
-
 ::method hideCategoryItem unguarded
    forward message 'hideCategoryControl'
-
 ::method showCategoryItem unguarded
    forward message 'showCategoryControl'
-
 ::method setCategoryItemFont unguarded
    forward message "setCategoryControlFont"
-
 ::method focusCategoryItem unguarded
    forward message "focusCategoryControl"
 
+-- DEPRECATED (maybe?)
 ::method resizeCategoryItem unguarded            -- Old method using dialog units, this is not accurate
    use strict arg id, width, height, showOptions = "", category = ""
    if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']
@@ -822,6 +814,5 @@
    use strict arg id, dlgunits, pageID = (-1)
    pixels = dlgunits * self~factorY
    return self~setCategoryItemHeightPx(id, pixels, pageID)
-
 
 -- End DEPRECATED (maybe ?)

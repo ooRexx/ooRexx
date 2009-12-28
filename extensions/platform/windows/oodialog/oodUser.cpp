@@ -385,7 +385,7 @@ uint32_t getCommonWindowStyles(CSTRING opts, bool defaultBorder, bool defaultTab
     }
     else
     {
-        if ( StrStrI(opts, "BORDER")   != NULL ) style |= WS_BORDER;
+        if ( StrStrI(opts, "BORDER") != NULL && StrStrI(opts, "NOBORDER") == NULL ) style |= WS_BORDER;
     }
 
     if ( defaultTab )
@@ -394,7 +394,7 @@ uint32_t getCommonWindowStyles(CSTRING opts, bool defaultBorder, bool defaultTab
     }
     else
     {
-        if ( StrStrI(opts, "TAB")   != NULL ) style |= WS_TABSTOP;
+        if ( StrStrI(opts, "TAB") != NULL && StrStrI(opts, "NOTAB") == NULL ) style |= WS_TABSTOP;
     }
     return style;
 }
@@ -561,13 +561,13 @@ uint32_t upDownStyle(CSTRING opts, uint32_t style)
     else if ( StrStrI(opts, "RIGHT") != NULL ) style |= UDS_ALIGNRIGHT;
     else style |= UDS_ALIGNRIGHT;
 
-    if ( StrStrI(opts, ""       ) != NULL ) style |= TCS_FIXEDWIDTH;
-    if ( StrStrI(opts, "FOCUSNEVER"  ) != NULL ) style |= TCS_FOCUSNEVER;
-    if ( StrStrI(opts, "FOCUSONDOWN" ) != NULL ) style |= TCS_FOCUSONBUTTONDOWN;
-    if ( StrStrI(opts, "ICONLEFT"    ) != NULL ) style |= TCS_FORCEICONLEFT;
-    if ( StrStrI(opts, "LABELLEFT"   ) != NULL ) style |= TCS_FORCELABELLEFT;
-    if ( StrStrI(opts, "ALIGNRIGHT"  ) != NULL ) style |= TCS_RIGHTJUSTIFY;
-    if ( StrStrI(opts, "CLIPSIBLINGS") != NULL ) style |= WS_CLIPSIBLINGS;
+    if ( StrStrI(opts, "ARROWKEYS"  ) != NULL ) style |= UDS_ARROWKEYS;
+    if ( StrStrI(opts, "AUTOBUDDY"  ) != NULL ) style |= UDS_AUTOBUDDY;
+    if ( StrStrI(opts, "HORIZONTAL" ) != NULL ) style |= UDS_HORZ;
+    if ( StrStrI(opts, "HOTTRACK"   ) != NULL ) style |= UDS_HOTTRACK;
+    if ( StrStrI(opts, "NOTHOUSANDS") != NULL ) style |= UDS_NOTHOUSANDS;
+    if ( StrStrI(opts, "BUDDYINT"   ) != NULL ) style |= UDS_SETBUDDYINT;
+    if ( StrStrI(opts, "WRAP"       ) != NULL ) style |= UDS_WRAP;
     return style;
 }
 
@@ -611,6 +611,11 @@ uint32_t getControlStyle(oodControl_t ctrl, CSTRING opts)
         case winMonthCalendar :
             style |= getCommonWindowStyles(opts, false, true);
             style = monthCalendarStyle(opts, style);
+            break;
+
+        case winUpDown :
+            style |= getCommonWindowStyles(opts, false, false);
+            style = upDownStyle(opts, style);
             break;
 
         default :
@@ -895,7 +900,7 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
 {
     RexxMethodContext *c = context;
 
-    uint32_t style = DS_SETFONT | WS_CAPTION;
+    uint32_t style = DS_SETFONT | WS_CAPTION | WS_SYSMENU;
     dlgClass = NULL;        // The dialog class is always ignored, at this time.
 
     if ( argumentExists(6) )
@@ -903,7 +908,7 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
         CSTRING opts = c->StringData(c->StringUpper(_opts));
 
         if ( strstr(opts, "VISIBLE")     != 0 ) style |= WS_VISIBLE;
-        if ( strstr(opts, "NOMENU")      == 0 ) style |= WS_SYSMENU;
+        if ( strstr(opts, "NOMENU")      != 0 ) style &= ~WS_SYSMENU;
         if ( strstr(opts, "NOTMODAL")    == 0 ) style |= DS_MODALFRAME;
         if ( strstr(opts, "SYSTEMMODAL") != 0 ) style |= DS_SYSMODAL;
         if ( strstr(opts, "CENTER")      != 0 ) style |= DS_CENTER;

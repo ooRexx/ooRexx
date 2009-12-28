@@ -78,6 +78,7 @@
 ::method sendMessageHandle unguarded external "LIBRARY oodialog wb_sendMessage"
 
 ::method sendWinIntMsg unguarded external "LIBRARY oodialog wb_sendWinIntMsg"
+::method sendWinIntMsgH unguarded external "LIBRARY oodialog wb_sendWinIntMsg"
 ::method sendWinUintMsg unguarded external "LIBRARY oodialog wb_sendWinUintMsg"
 ::method sendWinHandleMsg unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"
 ::method sendWinHandleMsgH unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"
@@ -893,6 +894,7 @@
 ::method newTrackBar unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newMonthCalendar unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newDateTimePicker unguarded external "LIBRARY oodialog pbdlg_newControl"
+::method newUpDown unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method putControl private unguarded external "LIBRARY oodialog pbdlg_putControl_pvt"
 
 

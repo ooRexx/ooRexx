@@ -347,6 +347,16 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                         }
                     }
                 }
+                else if ( code == UDN_DELTAPOS )
+                {
+                    LPNMUPDOWN pUPD = (LPNMUPDOWN)lparam;
+
+                    _snprintf(msgstr, 511, "%s(%d\377%d\377%u)", m[i].rexxProgram,
+                              pUPD->iPos, pUPD->iDelta, pUPD->hdr.idFrom);
+
+                    addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                    return ReplyFalse;
+                }
                 /* do we have an end label edit for tree or list view? */
                 else if ((code == TVN_ENDLABELEDIT) && ((TV_DISPINFO *)lparam)->item.pszText)
                 {
@@ -1271,23 +1281,6 @@ done_out:
 }
 
 
-bool convert2PointerSize(RexxMethodContext *c, RexxObjectPtr obj, uint64_t *number, int argPos)
-{
-    if ( obj == NULLOBJECT )
-    {
-        *number = 0;
-        return true;
-    }
-
-    if ( c->IsPointer(obj) )
-    {
-        *number = (uint64_t)c->PointerValue((RexxPointerObject)obj);
-        return true;
-    }
-
-    return rxStr2Number(c, c->ObjectToStringValue(obj), number, argPos);
-}
-
 /** EventNotification::init_eventNotification()
  *
  *  Private method whose sole purpose is to set the cSelf buffer.
@@ -1446,7 +1439,7 @@ RexxMethod2(logical_t, en_hasKeyPressConnection, OPTIONAL_CSTRING, methodName, C
  *            the low word.  The second argument is the window handle of the
  *            control.
  */
-RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID,  CSTRING, methodName, CSELF, pCSelf)
+RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID, CSTRING, methodName, CSELF, pCSelf)
 {
     pCEventNotification pcen = (pCEventNotification)pCSelf;
 
@@ -1461,6 +1454,81 @@ RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID,  CSTRING, met
         return 1;
     }
     return (addTheMessage(pcen->dlgAdm, WM_COMMAND, 0xFFFFFFFF, id, 0x0000FFFF, 0, 0, methodName, 0) ? 0 : 1);
+}
+
+
+/** EventNotification::connectUpDownEvent()
+ *
+ *  Connects a Rexx dialog method with an up down control event.
+ *
+ *  @param  rxID        The resource ID of the dialog control.  Can be numeric
+ *                      or symbolic.
+ *
+ *  @param  event       Keyword specifying which event to connect.  Only one at
+ *                      this time:
+ *
+ *                      DELTAPOS
+ *
+ *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
+ *                      Rexx dialog.  If this argument is omitted then the
+ *                      method name is constructed by prefixing the event
+ *                      keyword with 'on'.  For instance onDeltaPos.
+ *
+ *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
+ *          number an exception is raised.
+ *
+ *  @remarks  This method is new since the 4.0.0 release, therefore an exception
+ *            is raised for a bad resource ID rather than returning -1.
+ *
+ *            MSDN docs say that the up-down control also sends the
+ *            NM_RELEASEDCAPTURE message.  I see no evidence it is ever sent.
+ *            And there is this from a news group:
+ *
+ *            Christian ASTOR    View profile
+ *
+ *            Alexander Grigoriev wrote:
+ *            > I need to handle NM_RELEASEDCAPTURE notification from an up-down
+ *            > control in a dialog. But they don't seem to send it, no matter
+ *            > how I'm trying.
+ *
+ *            Up-Down control doesn't send NM_RELEASEDCAPTURE notification.
+ *            (docs are wrong...)
+ */
+RexxMethod4(RexxObjectPtr, en_connectUpDownEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
+{
+    pCEventNotification pcen = (pCEventNotification)pCSelf;
+
+    uint32_t id = oodResolveSymbolicID(context, pcen->rexxSelf, rxID, -1, 1);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto err_out;
+    }
+
+    uint32_t notificationCode;
+
+    if ( StrStrI(event, "DELTAPOS") != NULL )
+    {
+        notificationCode = UDN_DELTAPOS;
+    }
+    else
+    {
+        wrongArgValueException(context->threadContext, 2, "DeltaPos", event);
+        goto err_out;
+    }
+
+    if ( argumentOmitted(3) || *methodName == '\0' )
+    {
+        methodName = "onDeltaPos";
+    }
+
+    if ( addTheMessage(pcen->dlgAdm, WM_NOTIFY, 0xFFFFFFFF, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, 0) )
+    {
+        return TheTrueObj;
+    }
+
+err_out:
+    return TheFalseObj;
 }
 
 
@@ -1528,62 +1596,55 @@ RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIO
         }
     }
 
-    uint64_t number;  // TODO redo this function using oodGetWParam() / oodGetLParam()
-                      // Fix those 2 functions to handle optional args. Throw
-                      // convert2PointerSize() away
-
+    uint64_t  filter;
     WPARAM    wParam;
     ULONG_PTR wpFilter;
 
-    if ( ! convert2PointerSize(context, wp, &number, 4) )
+    if ( ! oodGetWParam(context, wp, &wParam, 4, false) )
     {
         goto done_out;
     }
-    wParam = (WPARAM)number;
-
     if ( argumentOmitted(5) )
     {
         wpFilter = 0;
     }
     else
     {
-        if ( ! rxStr2Number(context, _wpFilter, &number, 5) )
+        if ( ! rxStr2Number(context, _wpFilter, &filter, 5) )
         {
             goto done_out;
         }
-        wpFilter = (number == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)number);
+        wpFilter = (filter == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)filter);
     }
 
     LPARAM    lParam;
     ULONG_PTR lpFilter;
 
-    if ( ! convert2PointerSize(context, lp, &number, 6) )
+    if ( ! oodGetLParam(context, lp, &lParam, 6, false) )
     {
         goto done_out;
     }
-    lParam = (WPARAM)number;
-
     if ( argumentOmitted(7) )
     {
         lpFilter = 0;
     }
     else
     {
-        if ( ! rxStr2Number(context, _lpFilter, &number, 7) )
+        if ( ! rxStr2Number(context, _lpFilter, &filter, 7) )
         {
             goto done_out;
         }
-        lpFilter = (number == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)number);
+        lpFilter = (filter == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)filter);
     }
 
     ULONG tag = 0;
     if ( argumentExists(8) )
     {
-        if ( ! rxStr2Number(context, _tag, &number, 8) )
+        if ( ! rxStr2Number(context, _tag, &filter, 8) )
         {
             goto done_out;
         }
-        tag = (ULONG)number;
+        tag = (ULONG)filter;
     }
 
     if ( (winMessage | wParam | lParam) == 0 )

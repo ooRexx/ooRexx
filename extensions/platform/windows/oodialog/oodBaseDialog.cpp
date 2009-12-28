@@ -706,11 +706,11 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
     BOOL  italic = FALSE;                         // italic attribute option
     BOOL  underline = FALSE;                      // underline attribute option
     BOOL  strikeOut = FALSE;                      // strikeout attribute option
-    DWORD charSet = DEFAULT_CHARSET;              // character set identifier
-    DWORD outputPrecision = OUT_TT_PRECIS;        // output precision
-    DWORD clipPrecision = CLIP_DEFAULT_PRECIS;    // clipping precision
-    DWORD quality = DEFAULT_QUALITY;              // output quality
-    DWORD pitchAndFamily = FF_DONTCARE;           // pitch and family
+    uint32_t charSet = DEFAULT_CHARSET;           // character set identifier
+    uint32_t outputPrecision = OUT_TT_PRECIS;     // output precision
+    uint32_t clipPrecision = CLIP_DEFAULT_PRECIS; // clipping precision
+    uint32_t quality = DEFAULT_QUALITY;           // output quality
+    uint32_t pitchAndFamily = FF_DONTCARE;        // pitch and family
 
     oodResetSysErrCode(context->threadContext);
 
@@ -729,19 +729,19 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
         }
         RexxDirectoryObject d = (RexxDirectoryObject)args;
 
-        if ( ! rxNumberFromDirectory(context, d, "WIDTH", (DWORD *)&width, 3, false) )
+        if ( ! rxNumberFromDirectory(context, d, "WIDTH", (uint32_t *)&width, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (DWORD *)&escapement, 3, false) )
+        if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (uint32_t *)&escapement, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (DWORD *)&orientation, 3, false) )
+        if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (uint32_t *)&orientation, 3, false) )
         {
             goto error_out;
         }
-        if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (DWORD *)&weight, 3, false) )
+        if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (uint32_t *)&weight, 3, false) )
         {
             goto error_out;
         }
