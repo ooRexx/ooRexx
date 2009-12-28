@@ -189,6 +189,8 @@
 *       SysWait             -- CREXX for AIX function support         *
 *       SysCreatePipe       -- CREXX for AIX function support         *
 *                                                                     *
+*       SysFileCopy         -- Copy files on the file system          *
+*       SysFileMove         -- Move / Rename files or directories     *
 *       SysIsFile           -- does file exist?                       *
 *       SysIsFileDirectory  -- is file a subdirectory?                *
 *       SysIsFileLink       -- is file a link?                        *
@@ -5070,6 +5072,123 @@ size_t RexxEntry SysUtilVersion(const char *name, size_t numargs, CONSTRXSTRING 
 
 
 /*************************************************************************
+* Function:  SysFileCopy                                                 *
+*                                                                        *
+* Syntax:    call SysFileCopy FROMfile TOfile                            *
+*                                                                        *
+* Params:    FROMfile - file to be copied.                               *
+*            TOfile - target file of copy operation.                     *
+*                                                                        *
+* Return:    Return 0 if no error, or error code.                        *
+*************************************************************************/
+
+/*
+If the source file is a symbolic link, the actual file copied is the target of the symbolic link.
+If the destination file already exists and is a symbolic link, the target of the symbolic link is overwritten by the source file.
+If the destination file does not exist then it is created with the access mode of the source file (if possible).
+*/
+int CopyFile(CSTRING fromFile, CSTRING toFile, bool preserveTimestamps, bool preserveMode, bool *timestampsPreserved=NULL, bool *modePreserved=NULL)
+{
+    // initialize output arguments
+    if (timestampsPreserved != NULL) *timestampsPreserved = false;
+    if (modePreserved != NULL) *modePreserved = false;
+    
+    int fromHandle = 0;
+    int toHandle = 0;
+    bool toFileCreated = false;
+
+    struct stat64 fromStat;
+    if (stat64(fromFile, &fromStat) == -1) goto error;
+    fromHandle = open64(fromFile, O_RDONLY);
+    if (fromHandle == -1) goto error;
+
+    struct stat64 toStat;
+    toFileCreated = (stat64(toFile, &toStat) == -1); // if created then the access mode of fromFile will be used
+    toHandle = open64(toFile, O_WRONLY | O_CREAT | O_TRUNC, 0666); // default access mode for the moment (like fopen)
+    if (toHandle == -1) goto error;
+
+    char buffer[IBUF_LEN];
+    while(1)
+    {
+        int count = read(fromHandle, &buffer, IBUF_LEN);
+        if (count == -1) goto error;
+        if (count == 0) break; // EOF
+        if (write(toHandle, buffer, count) == -1) goto error;
+    }
+
+    fromHandle = close(fromHandle);
+    if (fromHandle == -1) goto error;
+    toHandle = close(toHandle);
+    if (toHandle == -1) goto error;
+
+    if (preserveTimestamps)
+    {
+        struct utimbuf timebuf;
+        timebuf.actime = fromStat.st_atime;
+        timebuf.modtime = fromStat.st_mtime;
+        if (utime(toFile, &timebuf) == 0) 
+        {
+            if (timestampsPreserved != NULL) *timestampsPreserved = true;
+        }
+    }
+    if (toFileCreated || preserveMode)
+    {
+        if (chmod(toFile, fromStat.st_mode) == 0) 
+        {
+            if (modePreserved != NULL) *modePreserved = true;
+        }
+    }
+    return 0;
+error:
+    int errInfo = errno;
+    if (fromHandle > 0) close(fromHandle);
+    if (toHandle > 0) close(toHandle);
+    return errInfo;
+}
+
+RexxRoutine2(int, SysFileCopy, CSTRING, fromFile, CSTRING, toFile)
+{
+    return CopyFile(fromFile, toFile, true, false);
+    // Note : no error returned if timestamps not preserved
+}
+
+/*************************************************************************
+* Function:  SysFileMove                                                 *
+*                                                                        *
+* Syntax:    call SysFileMove FROMfile TOfile                            *
+*                                                                        *
+* Params:    FROMfile - file to be moved.                                *
+*            TOfile - target file of move operation.                     *
+*                                                                        *
+* Return:    Return code from MoveFile() function.                       *
+*************************************************************************/
+
+int MoveFile(CSTRING fromFile, CSTRING toFile)
+{
+    if (rename(fromFile, toFile) == 0)  return 0; // move done
+
+    if (errno != EXDEV) return errno; // move ko, no fallbak
+    
+    // The files are on different file systems and the implementation does not support that.
+    // Try to copy then unlink
+    // Not sure that copy+unlink is the right technique in case of symbolic link...
+    // Remember : lstat, readlink, symlink
+    if (CopyFile(fromFile, toFile, true, true) != 0) return EXDEV; // fallback ko
+    // Note : no error returned if timestamps or mode not preserved
+
+    // copy to is ok, now unlink from
+    if (unlink(fromFile) == 0) return 0; // fallback done
+    // Can't unlink fromFile, undo the copy
+    unlink(toFile);
+    return EXDEV;
+}
+
+RexxRoutine2(int, SysFileMove, CSTRING, fromFile, CSTRING, toFile)
+{
+    return MoveFile(fromFile, toFile);
+}
+
+/*************************************************************************
 * Function:  SysIsFile                                                   *
 *                                                                        *
 * Syntax:    call SysIsFile file                                         *
@@ -5209,6 +5328,8 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysQueryProcess,        SysQueryProcess),
     REXX_CLASSIC_ROUTINE(SysGetErrortext,        SysGetErrortext),
     REXX_CLASSIC_ROUTINE(SysUtilVersion,         SysUtilVersion),
+    REXX_TYPED_ROUTINE(SysFileCopy,              SysFileCopy),
+    REXX_TYPED_ROUTINE(SysFileMove,              SysFileMove),
     REXX_TYPED_ROUTINE(SysIsFile,                SysIsFile),
     REXX_TYPED_ROUTINE(SysIsFileDirectory,       SysIsFileDirectory),
     REXX_TYPED_ROUTINE(SysIsFileLink,            SysIsFileLink),
