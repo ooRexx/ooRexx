@@ -813,6 +813,109 @@ done_out:
 
 
 /**
+ *  Methods for the .OS class.
+ */
+#define OS_CLASS        "OS"
+
+bool _is32on64Bit(void)
+{
+    if ( _isAtLeastXP() )
+    {
+        BOOL isWow64 = FALSE;
+        typedef BOOL (WINAPI *PFNISWOW)(HANDLE, PBOOL);
+
+        PFNISWOW fnIsWow64Process = (PFNISWOW)GetProcAddress(GetModuleHandle("kernel32"), "IsWow64Process");
+
+        if ( fnIsWow64Process != NULL)
+        {
+            if ( fnIsWow64Process(GetCurrentProcess(), &isWow64) && isWow64 )
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool _isVersion(DWORD major, DWORD minor, unsigned int sp, unsigned int type, unsigned int condition)
+{
+    OSVERSIONINFOEX ver;
+    DWORDLONG       mask = 0;
+    DWORD           testForMask = VER_MAJORVERSION | VER_MINORVERSION;
+
+    ZeroMemory(&ver, sizeof(OSVERSIONINFOEX));
+
+    ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    ver.dwMajorVersion = major;
+    ver.dwMinorVersion = minor;
+
+    VER_SET_CONDITION(mask, VER_MAJORVERSION, condition);
+    VER_SET_CONDITION(mask, VER_MINORVERSION, condition);
+
+    if ( condition != VER_EQUAL )
+    {
+        ver.wServicePackMajor = sp;
+        testForMask |= VER_SERVICEPACKMAJOR;
+        VER_SET_CONDITION(mask, VER_SERVICEPACKMAJOR, condition);
+    }
+
+    if ( type != 0 )
+    {
+        ver.wProductType = type;
+        testForMask |= VER_PRODUCT_TYPE;
+        VER_SET_CONDITION(mask, VER_PRODUCT_TYPE, condition);
+    }
+
+    if ( VerifyVersionInfo(&ver, testForMask, mask) )
+        return true;
+    else
+        return false;
+}
+
+
+RexxMethod0(RexxObjectPtr, os_is64bit)
+{
+    return (_is64Bit() ? TheTrueObj : TheFalseObj);
+}
+
+RexxMethod0(RexxObjectPtr, os_is32on64bit)
+{
+    return (_is32on64Bit() ? TheTrueObj : TheFalseObj);
+}
+
+RexxMethod1(RexxObjectPtr, os_isVersion, NAME, method)
+{
+    bool isVersion = false;
+    CSTRING p;
+
+    if ( method[2] == 'A' )
+    {
+        p = method + 9;
+        if (      strcmp(p, "W2K") == 0      ) isVersion = _isAtLeastW2K();
+        else if ( strcmp(p, "XP") == 0       ) isVersion = _isAtLeastXP();
+        else if ( strcmp(p, "W2K3") == 0     ) isVersion = _isAtLeastW2K3();
+        else if ( strcmp(p, "VISTA") == 0    ) isVersion = _isAtLeastVista();
+        else if ( strcmp(p, "WINDOWS7") == 0 ) isVersion = _isAtLeastWindows7();
+    }
+    else
+    {
+        p = method + 2;
+        if (      strcmp(p, "W2K") == 0          ) isVersion = _isW2K();
+        else if ( strcmp(p, "XP") == 0           ) isVersion = _isXP();
+        else if ( strcmp(p, "XP32") == 0         ) isVersion = _isXP32();
+        else if ( strcmp(p, "XP64") == 0         ) isVersion = _isXP64();
+        else if ( strcmp(p, "W2K3") == 0         ) isVersion = _isW2K3();
+        else if ( strcmp(p, "VISTA") == 0        ) isVersion = _isVista();
+        else if ( strcmp(p, "SERVER2008") == 0   ) isVersion = _isServer2008();
+        else if ( strcmp(p, "WINDOWS7") == 0     ) isVersion = _isWindows7();
+        else if ( strcmp(p, "SERVER2008R2") == 0 ) isVersion = _isServer2008R2();
+    }
+
+    return (isVersion ? TheTrueObj : TheFalseObj);
+}
+
+
+/**
  *  Methods for the .ResourceUtils mixin class.
  */
 #define RESOURCEUTILS_CLASS        "ResourceUtils"

@@ -1333,6 +1333,27 @@
 
 ::attribute date external "LIBRARY oodialog _mc_date"
 
+-- MCM_FIRST == 0x1000 -> 4096
+::constant MCM_GETMAXSELCOUNT      "0x1003"
+::constant MCM_SETMAXSELCOUNT      "0x1004"
+
+::method getMaxSelection
+   use strict arg
+   return self~sendWinIntMsg(self~MCM_GETMAXSELCOUNT, 0, 0)
+
+::method setMaxSelection
+   use strict arg count
+   return self~sendWinIntMsg(self~MCM_SETMAXSELCOUNT, count, 0) <> 0
+
+::method getBorder external "LIBRARY oodialog mc_getBorder"
+::method getCount external "LIBRARY oodialog mc_getCount"
+::method getCALID external "LIBRARY oodialog mc_getCALID"
+::method getColor external "LIBRARY oodialog mc_getColor"
+::method getCurrentView external "LIBRARY oodialog mc_getCurrentView"
+::method getSelectionRange external "LIBRARY oodialog mc_getSelectionRange"
+::method setBorder external "LIBRARY oodialog mc_setBorder"
+::method setSelectionRange external "LIBRARY oodialog mc_setSelectionRange"
+
 
 ::class 'UpDown' subclass DialogControl public
 

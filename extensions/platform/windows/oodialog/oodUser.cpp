@@ -550,6 +550,13 @@ uint32_t monthCalendarStyle(CSTRING opts, uint32_t style)
     if ( StrStrI(opts, "NOTODAY"    ) != NULL ) style |= MCS_NOTODAY;
     if ( StrStrI(opts, "NOCIRCLE"   ) != NULL ) style |= MCS_NOTODAYCIRCLE;
     if ( StrStrI(opts, "WEEKNUMBERS") != NULL ) style |= MCS_WEEKNUMBERS;
+
+    if ( _isAtLeastVista() )
+    {
+        if ( StrStrI(opts, "NOTRAILING" ) != NULL ) style |= MCS_NOTRAILINGDATES;
+        if ( StrStrI(opts, "SHORTDAYS"  ) != NULL ) style |= MCS_SHORTDAYSOFWEEK;
+        if ( StrStrI(opts, "NOSELCHANGE") != NULL ) style |= MCS_NOSELCHANGEONNAV;
+    }
     return style;
 
 }

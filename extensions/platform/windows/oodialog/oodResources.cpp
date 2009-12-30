@@ -1411,7 +1411,8 @@ RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_RexxObjectPtr, rVal,
     return RGB(r, g, b);
 
 error_out:
-    wrongArgValueException(context->threadContext, 1, "CLR_DEFAULT, CLR_NONE, or a number from 0 through 255", rVal);
+    wrongArgValueException(context->threadContext, 1,
+                           "CLR_DEFAULT, CLR_NONE, CLR_INVALID, or a number from 0 through 255", rVal);
     return 0;
 }
 

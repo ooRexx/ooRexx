@@ -140,6 +140,15 @@ void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char
     userDefinedMsgException(c->threadContext, msg);
 }
 
+RexxObjectPtr wrongWindowsVersionException(RexxMethodContext *context, const char *methodName, const char *windows)
+{
+    char msg[256];
+    _snprintf(msg, sizeof(msg), "The %s() method requires Windows %s or later", methodName, windows);
+    context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(msg));
+    return NULLOBJECT;
+}
+
+
 
 inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
 {

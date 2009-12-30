@@ -69,14 +69,36 @@
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
+
 -- Create a "default" dialog class and set it to the user dialog.
 ::class 'Dialog' subclass UserDialog public
+
 
 ::class 'PlainUserDialog' subclass PlainBaseDialog public inherit DynamicDialog
 ::method init external "LIBRARY oodialog userdlg_init"
 ::method stopIt
    forward class (super) continue
    forward message "stopDynamic"
+
+
+::class 'OS' public
+::method is64bit class external "LIBRARY oodialog os_is64bit"
+::method is32on64bit class external "LIBRARY oodialog os_is32on64bit"
+::method isWow64 class external "LIBRARY oodialog os_is32on64bit"
+::method isW2K class external "LIBRARY oodialog os_isVersion"
+::method isXP class external "LIBRARY oodialog os_isVersion"
+::method isXP32 class external "LIBRARY oodialog os_isVersion"
+::method isXP64 class external "LIBRARY oodialog os_isVersion"
+::method isW2K3 class external "LIBRARY oodialog os_isVersion"
+::method isVista class external "LIBRARY oodialog os_isVersion"
+::method isServer2008 class external "LIBRARY oodialog os_isVersion"
+::method isWindows7 class external "LIBRARY oodialog os_isVersion"
+::method isServer2008R2 class external "LIBRARY oodialog os_isVersion"
+::method isAtLeastW2K class external "LIBRARY oodialog os_isVersion"
+::method isAtLeastXP class external "LIBRARY oodialog os_isVersion"
+::method isAtLeastW2K3 class external "LIBRARY oodialog os_isVersion"
+::method isAtLeastVista class external "LIBRARY oodialog os_isVersion"
+::method isAtLeastWindows7 class external "LIBRARY oodialog os_isVersion"
 
 
 ::class 'Rect' public

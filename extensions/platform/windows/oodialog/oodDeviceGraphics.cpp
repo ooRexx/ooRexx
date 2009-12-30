@@ -51,7 +51,7 @@
 #include <stdio.h>
 #include <dlgs.h>
 #include <shlwapi.h>
-#include <Tmschema.h>
+#include <vssym32.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodDeviceGraphics.hpp"

@@ -136,6 +136,10 @@ REXX_METHOD_PROTOTYPE(dlgutil_screenArea_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
+REXX_METHOD_PROTOTYPE(os_is64bit);
+REXX_METHOD_PROTOTYPE(os_is32on64bit);
+REXX_METHOD_PROTOTYPE(os_isVersion);
+
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveIconID_pvt);
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveResourceID);
 REXX_METHOD_PROTOTYPE(rsrcUtils_idError);
@@ -569,6 +573,14 @@ REXX_METHOD_PROTOTYPE(set_dtp_dateTime);
 // MonthCalendar
 REXX_METHOD_PROTOTYPE(get_mc_date);
 REXX_METHOD_PROTOTYPE(set_mc_date);
+REXX_METHOD_PROTOTYPE(mc_getBorder);
+REXX_METHOD_PROTOTYPE(mc_getSelectionRange);
+REXX_METHOD_PROTOTYPE(mc_setSelectionRange);
+REXX_METHOD_PROTOTYPE(mc_getCount);
+REXX_METHOD_PROTOTYPE(mc_getCALID);
+REXX_METHOD_PROTOTYPE(mc_getColor);
+REXX_METHOD_PROTOTYPE(mc_getCurrentView);
+REXX_METHOD_PROTOTYPE(mc_setBorder);
 
 // .Rect
 REXX_METHOD_PROTOTYPE(rect_init);
@@ -694,6 +706,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_getSystemMetrics_cls,   dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls,    dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_test_cls,               dlgutil_test_cls),
+
+    REXX_METHOD(os_is64bit,                     os_is64bit),
+    REXX_METHOD(os_is32on64bit,                 os_is32on64bit),
+    REXX_METHOD(os_isVersion,                   os_isVersion),
 
     REXX_METHOD(rsrcUtils_resolveIconID_pvt,    rsrcUtils_resolveIconID_pvt),
     REXX_METHOD(rsrcUtils_resolveResourceID,    rsrcUtils_resolveResourceID),
@@ -965,6 +981,70 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(il_isNull,                      il_isNull),
     REXX_METHOD(il_handle,                      il_handle),
 
+    // Static
+    REXX_METHOD(stc_getIcon,                    stc_getIcon),
+    REXX_METHOD(stc_setIcon,                    stc_setIcon),
+    REXX_METHOD(stc_getImage,                   stc_getImage),
+    REXX_METHOD(stc_setImage,                   stc_setImage),
+
+    // Buttons
+    REXX_METHOD(gb_setStyle,                    gb_setStyle),
+    REXX_METHOD(bc_getState,                    bc_getState),
+    REXX_METHOD(bc_setState,                    bc_setState),
+    REXX_METHOD(bc_setStyle,                    bc_setStyle),
+    REXX_METHOD(bc_getIdealSize,                bc_getIdealSize),
+    REXX_METHOD(bc_getTextMargin,               bc_getTextMargin),
+    REXX_METHOD(bc_setTextMargin,               bc_setTextMargin),
+    REXX_METHOD(bc_getImage,                    bc_getImage),
+    REXX_METHOD(bc_setImage,                    bc_setImage),
+    REXX_METHOD(bc_setImageList,                bc_setImageList),
+    REXX_METHOD(bc_getImageList,                bc_getImageList),
+    REXX_METHOD(bc_scroll,                      bc_scroll),
+    REXX_METHOD(bc_dimBitmap,                   bc_dimBitmap),
+    REXX_METHOD(rb_checkInGroup_cls,            rb_checkInGroup_cls),
+    REXX_METHOD(rb_checked,                     rb_checked),
+    REXX_METHOD(rb_check,                       rb_check),
+    REXX_METHOD(rb_uncheck,                     rb_uncheck),
+    REXX_METHOD(rb_getCheckState,               rb_getCheckState),
+    REXX_METHOD(rb_isChecked,                   rb_isChecked),
+    REXX_METHOD(rb_indeterminate,               rb_indeterminate),
+    REXX_METHOD(ckbx_isIndeterminate,           ckbx_isIndeterminate),
+    REXX_METHOD(ckbx_setIndeterminate,          ckbx_setIndeterminate),
+    REXX_METHOD(bc_test,                        bc_test),
+    REXX_METHOD(bc_test_cls,                    bc_test_cls),
+
+    // Edit
+    REXX_METHOD(e_isSingleLine,                 e_isSingleLine),
+    REXX_METHOD(e_selection,                    e_selection),
+    REXX_METHOD(e_replaceSelText,               e_replaceSelText),
+    REXX_METHOD(e_getLine,                      e_getLine),
+    REXX_METHOD(e_lineIndex,                    e_lineIndex),
+    REXX_METHOD(e_setTabStops,                  e_setTabStops),
+    REXX_METHOD(e_style,                        e_style),
+    REXX_METHOD(e_showBallon,                   e_showBallon),
+    REXX_METHOD(e_hideBallon,                   e_hideBallon),
+    REXX_METHOD(e_setCue,                       e_setCue),
+
+    // ComboBox
+    REXX_METHOD(cb_getText,                     cb_getText),
+    REXX_METHOD(cb_add,                         cb_add),
+    REXX_METHOD(cb_insert,                      cb_insert),
+    REXX_METHOD(cb_select,                      cb_select),
+    REXX_METHOD(cb_find,                        cb_find),
+    REXX_METHOD(cb_addDirectory,                cb_addDirectory),
+
+    // ListBox
+    REXX_METHOD(lb_isSingleSelection,           lb_isSingleSelection),
+    REXX_METHOD(lb_getText,                     lb_getText),
+    REXX_METHOD(lb_add,                         lb_add),
+    REXX_METHOD(lb_insert,                      lb_insert),
+    REXX_METHOD(lb_select,                      lb_select),
+    REXX_METHOD(lb_selectIndex,                 lb_selectIndex),
+    REXX_METHOD(lb_deselectIndex,               lb_deselectIndex),
+    REXX_METHOD(lb_selectedIndex,               lb_selectedIndex),
+    REXX_METHOD(lb_find,                        lb_find),
+    REXX_METHOD(lb_addDirectory,                lb_addDirectory),
+
     // ListView
     REXX_METHOD(lv_setImageList,                lv_setImageList),
     REXX_METHOD(lv_getImageList,                lv_getImageList),
@@ -1006,18 +1086,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_getCheck,                    lv_getCheck),
     REXX_METHOD(lv_checkUncheck,                lv_checkUncheck),
 
-    // Edit
-    REXX_METHOD(e_isSingleLine,                 e_isSingleLine),
-    REXX_METHOD(e_selection,                    e_selection),
-    REXX_METHOD(e_replaceSelText,               e_replaceSelText),
-    REXX_METHOD(e_getLine,                      e_getLine),
-    REXX_METHOD(e_lineIndex,                    e_lineIndex),
-    REXX_METHOD(e_setTabStops,                  e_setTabStops),
-    REXX_METHOD(e_style,                        e_style),
-    REXX_METHOD(e_showBallon,                   e_showBallon),
-    REXX_METHOD(e_hideBallon,                   e_hideBallon),
-    REXX_METHOD(e_setCue,                       e_setCue),
-
     // TreeView
     REXX_METHOD(tv_getSpecificItem,             tv_getSpecificItem),
     REXX_METHOD(tv_getNextItem,                 tv_getNextItem),
@@ -1045,12 +1113,23 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tab_setImageList,               tab_setImageList),
     REXX_METHOD(tab_getImageList,               tab_getImageList),
 
+    // DateTimePicker
     REXX_METHOD(get_dtp_dateTime,               get_dtp_dateTime),
     REXX_METHOD(set_dtp_dateTime,               set_dtp_dateTime),
 
+    // MonthCalendar
     REXX_METHOD(get_mc_date,                    get_mc_date),
     REXX_METHOD(set_mc_date,                    set_mc_date),
+    REXX_METHOD(mc_getBorder,                   mc_getBorder),
+    REXX_METHOD(mc_getSelectionRange,           mc_getSelectionRange),
+    REXX_METHOD(mc_setSelectionRange,           mc_setSelectionRange),
+    REXX_METHOD(mc_getCount,                    mc_getCount),
+    REXX_METHOD(mc_getCALID,                    mc_getCALID),
+    REXX_METHOD(mc_getColor,                    mc_getColor),
+    REXX_METHOD(mc_getCurrentView,              mc_getCurrentView),
+    REXX_METHOD(mc_setBorder,                   mc_setBorder),
 
+    // ProgressBar
     REXX_METHOD(pbc_getFullRange,               pbc_getFullRange),
     REXX_METHOD(pbc_setFullRange,               pbc_setFullRange),
     REXX_METHOD(pbc_setMarquee,                 pbc_setMarquee),
@@ -1066,62 +1145,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(ud_getAcceleration,             ud_getAcceleration),
     REXX_METHOD(ud_setAcceleration,             ud_setAcceleration),
 
-    // ProgressBar
+    // ScrollBar
     REXX_METHOD(sb_getRange,                    sb_getRange),
     REXX_METHOD(sb_setRange,                    sb_setRange),
     REXX_METHOD(sb_getPosition,                 sb_getPosition),
     REXX_METHOD(sb_setPosition,                 sb_setPosition),
-
-    REXX_METHOD(stc_getIcon,                    stc_getIcon),
-    REXX_METHOD(stc_setIcon,                    stc_setIcon),
-    REXX_METHOD(stc_getImage,                   stc_getImage),
-    REXX_METHOD(stc_setImage,                   stc_setImage),
-
-    // Buttons
-    REXX_METHOD(gb_setStyle,                    gb_setStyle),
-    REXX_METHOD(bc_getState,                    bc_getState),
-    REXX_METHOD(bc_setState,                    bc_setState),
-    REXX_METHOD(bc_setStyle,                    bc_setStyle),
-    REXX_METHOD(bc_getIdealSize,                bc_getIdealSize),
-    REXX_METHOD(bc_getTextMargin,               bc_getTextMargin),
-    REXX_METHOD(bc_setTextMargin,               bc_setTextMargin),
-    REXX_METHOD(bc_getImage,                    bc_getImage),
-    REXX_METHOD(bc_setImage,                    bc_setImage),
-    REXX_METHOD(bc_setImageList,                bc_setImageList),
-    REXX_METHOD(bc_getImageList,                bc_getImageList),
-    REXX_METHOD(bc_scroll,                      bc_scroll),
-    REXX_METHOD(bc_dimBitmap,                   bc_dimBitmap),
-    REXX_METHOD(rb_checkInGroup_cls,            rb_checkInGroup_cls),
-    REXX_METHOD(rb_checked,                     rb_checked),
-    REXX_METHOD(rb_check,                       rb_check),
-    REXX_METHOD(rb_uncheck,                     rb_uncheck),
-    REXX_METHOD(rb_getCheckState,               rb_getCheckState),
-    REXX_METHOD(rb_isChecked,                   rb_isChecked),
-    REXX_METHOD(rb_indeterminate,               rb_indeterminate),
-    REXX_METHOD(ckbx_isIndeterminate,           ckbx_isIndeterminate),
-    REXX_METHOD(ckbx_setIndeterminate,          ckbx_setIndeterminate),
-    REXX_METHOD(bc_test,                        bc_test),
-    REXX_METHOD(bc_test_cls,                    bc_test_cls),
-
-    // ListBox
-    REXX_METHOD(lb_isSingleSelection,           lb_isSingleSelection),
-    REXX_METHOD(lb_getText,                     lb_getText),
-    REXX_METHOD(lb_add,                         lb_add),
-    REXX_METHOD(lb_insert,                      lb_insert),
-    REXX_METHOD(lb_select,                      lb_select),
-    REXX_METHOD(lb_selectIndex,                 lb_selectIndex),
-    REXX_METHOD(lb_deselectIndex,               lb_deselectIndex),
-    REXX_METHOD(lb_selectedIndex,               lb_selectedIndex),
-    REXX_METHOD(lb_find,                        lb_find),
-    REXX_METHOD(lb_addDirectory,                lb_addDirectory),
-
-    // ComboBox
-    REXX_METHOD(cb_getText,                     cb_getText),
-    REXX_METHOD(cb_add,                         cb_add),
-    REXX_METHOD(cb_insert,                      cb_insert),
-    REXX_METHOD(cb_select,                      cb_select),
-    REXX_METHOD(cb_find,                        cb_find),
-    REXX_METHOD(cb_addDirectory,                cb_addDirectory),
 
     REXX_METHOD(rect_init,                      rect_init),
     REXX_METHOD(rect_left,                      rect_left),

@@ -333,37 +333,293 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCS
 #define MONTHCALENDAR_CLASS    "MonthCalendar"
 #define MONTHCALENDAR_WINNAME  "Month Calendar"
 
+
+/* Determine if a month calendar is a multi-selection month calendar. */
+inline bool isMultiSelectionMonthCalendar(HWND hCtrl)
+{
+    return ((GetWindowLong(hCtrl, GWL_STYLE) & MCS_MULTISELECT) == MCS_MULTISELECT);
+}
+
+
+/** MonthCalendar::date  [Attribute Get]
+ *
+ *  Returns the currently selected date for the month calendar.
+ *
+ *  @note  This attribute was not originally meant for month calendars with the
+ *         multi-selection style.  When used for multi-selection, the value will
+ *         be the first selected date in the selection range for the calendar.
+ *
+ *         Use the getSelectionRange() method for multi-selection calendars.
+ */
 RexxMethod1(RexxObjectPtr, get_mc_date, CSELF, pCSelf)
 {
-    SYSTEMTIME sysTime = {0};
+    HWND hMC = getDCHCtrl(pCSelf);
     RexxObjectPtr dateTime = NULLOBJECT;
 
-    if ( MonthCal_GetCurSel(getDCHCtrl(pCSelf), &sysTime) == 0 )
+    SYSTEMTIME sysTime[2];
+    LRESULT result = 0;
+    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
+
+    if ( isMultiSelectionMonthCalendar(hMC) )
+    {
+        result = MonthCal_GetSelRange(hMC, &sysTime);
+    }
+    else
+    {
+        result = MonthCal_GetCurSel(hMC, &sysTime);
+    }
+
+    if ( result == 0 )
     {
         controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "MonthCal_GetCurSel", MONTHCALENDAR_WINNAME);
     }
     else
     {
-        sysTime2dt(context, &sysTime, &dateTime, dtDate);
+        sysTime2dt(context, (SYSTEMTIME *)&sysTime, &dateTime, dtDate);
     }
     return dateTime;
 }
 
+/** MonthCalendar::date  [Attribute Set]
+ *
+ *  Sets the currently selected date for the month calendar.
+ *
+ *  @param dateTime  A DateTime object used to set the selected date.  The time
+ *                   portion of the object is ignored.
+ *
+ *  @note  This attribute was not originally meant for month calendars with the
+ *         multi-selection style.  When used for multi-selection, the first and
+ *         last date of the selection is set to the same date.
+ *
+ *         Use the setSelectionRange() method for multi-selection calendars to
+ *         set a full range.
+ */
 RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, CSELF, pCSelf)
 {
-    SYSTEMTIME sysTime = {0};
+    HWND hMC = getDCHCtrl(pCSelf);
+
+    SYSTEMTIME sysTime[2];
+    LRESULT result = FALSE;
+    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
 
     if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
     {
-        if ( dt2sysTime(context, dateTime, &sysTime, dtDate) )
+        if ( dt2sysTime(context, dateTime, (SYSTEMTIME *)&sysTime, dtDate) )
         {
-            if ( MonthCal_SetCurSel(getDCHCtrl(pCSelf), &sysTime) == 0 )
+            if ( isMultiSelectionMonthCalendar(hMC) )
             {
-                controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "MonthCal_SetCurSel", MONTHCALENDAR_WINNAME);
+                sysTime[1].wDay   = sysTime[0].wDay;
+                sysTime[1].wMonth = sysTime[0].wMonth;
+                sysTime[1].wYear  = sysTime[0].wYear;
+
+                result = MonthCal_SetSelRange(hMC, &sysTime);
+            }
+            else
+            {
+                result = MonthCal_SetCurSel(hMC, &sysTime);
+            }
+
+            if ( result == 0 )
+            {
+                controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG,
+                                       "MonthCal_SetCurSel", MONTHCALENDAR_WINNAME);
             }
         }
     }
     return NULLOBJECT;
+}
+
+
+RexxMethod2(RexxObjectPtr, mc_getSelectionRange, RexxArrayObject, range, CSELF, pCSelf)
+{
+    HWND hMC = getDCHCtrl(pCSelf);
+
+    if ( ! isMultiSelectionMonthCalendar(hMC) )
+    {
+        goto err_out;
+    }
+
+    SYSTEMTIME sysTime[2];
+    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
+
+    if ( MonthCal_GetSelRange(hMC, &sysTime) == 0 )
+    {
+        goto err_out;
+    }
+
+    RexxObjectPtr startDate;
+    sysTime2dt(context, (SYSTEMTIME *)&sysTime, &startDate, dtDate);
+    context->ArrayPut(range, startDate, 1);
+
+    RexxObjectPtr endDate;
+    sysTime2dt(context, (SYSTEMTIME *)&sysTime + 1, &endDate, dtDate);
+    context->ArrayPut(range, endDate, 2);
+
+    return TheTrueObj;
+
+err_out:
+    return TheFalseObj;
+}
+
+RexxMethod2(RexxObjectPtr, mc_setSelectionRange, RexxArrayObject, dateTimes, CSELF, pCSelf)
+{
+    HWND hMC = getDCHCtrl(pCSelf);
+
+    SYSTEMTIME sysTime[2];
+    BOOL success = FALSE;
+    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
+
+    RexxObjectPtr startDate = context->ArrayAt(dateTimes, 1);
+    RexxObjectPtr endDate = context->ArrayAt(dateTimes, 2);
+    if ( startDate == NULLOBJECT || endDate == NULLOBJECT )
+    {
+        sparseArrayException(context->threadContext, 1, (startDate == NULLOBJECT ? 1 : 2));
+        goto err_out;
+    }
+
+    if ( ! context->IsOfType(startDate, "DATETIME") )
+    {
+        wrongObjInArrayException(context->threadContext, 1, 1, "DateTime");
+        goto err_out;
+    }
+    if ( ! context->IsOfType(endDate, "DATETIME") )
+    {
+        wrongObjInArrayException(context->threadContext, 1, 2, "DateTime");
+        goto err_out;
+    }
+
+    if ( dt2sysTime(context, startDate, (SYSTEMTIME *)&sysTime, dtDate) &&
+         dt2sysTime(context, endDate, (SYSTEMTIME *)&sysTime + 1, dtDate) )
+    {
+        return  (MonthCal_SetSelRange(hMC, &sysTime) == 0 ? TheFalseObj : TheTrueObj);
+    }
+
+err_out:
+    return TheFalseObj;
+}
+
+
+RexxMethod1(uint32_t, mc_getBorder, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        wrongWindowsVersionException(context, "getBorder", "Vista");
+        return 0;
+    }
+    return MonthCal_GetCalendarBorder(getDCHCtrl(pCSelf));
+}
+
+
+RexxMethod1(uint32_t, mc_getCount, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        wrongWindowsVersionException(context, "getCount", "Vista");
+        return 0;
+    }
+    return MonthCal_GetCalendarCount(getDCHCtrl(pCSelf));
+}
+
+
+RexxMethod1(RexxObjectPtr, mc_getCALID, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "getBorder", "Vista");
+    }
+
+    CSTRING id = "";
+    switch( MonthCal_GetCALID(getDCHCtrl(pCSelf)) )
+    {
+        case CAL_GREGORIAN              : id = "GREGORIAN"; break;
+        case CAL_GREGORIAN_US           : id = "GREGORIAN_US"; break;
+        case CAL_JAPAN                  : id = "JAPAN"; break;
+        case CAL_TAIWAN                 : id = "TAIWAN"; break;
+        case CAL_KOREA                  : id = "KOREA"; break;
+        case CAL_HIJRI                  : id = "HIJRI"; break;
+        case CAL_THAI                   : id = "THAI"; break;
+        case CAL_HEBREW                 : id = "HEBREW"; break;
+        case CAL_GREGORIAN_ME_FRENCH    : id = "GREGORIAN_ME_FRENCH"; break;
+        case CAL_GREGORIAN_ARABIC       : id = "GREGORIAN_ARABIC"; break;
+        case CAL_GREGORIAN_XLIT_ENGLISH : id = "CAL_GREGORIAN_XLIT_ENGLISH"; break;
+        case CAL_GREGORIAN_XLIT_FRENCH  : id = "CAL_GREGORIAN_XLIT_FRENCH"; break;
+        case CAL_UMALQURA               : id = "UMALQURA"; break;
+    }
+
+    return context->String(id);
+}
+
+
+/** MonthCalendar::getColor()
+ *
+ *  Retrieves the color for a given portion of a month calendar control.
+ *
+ *  @param  part  Specifies which portion to get the color for.
+ *
+ *  @return  The color for the portion of the month calendar specified, or
+ *           CLR_INVALID on error.
+ *
+ *  @notes  You can use .Image~colorRef(CLR_INVALID) to test for error.  (An
+ *          error is not very likely.)  I.e.:
+ *
+ *          color = monthCalendar~getColor("TRAILINGTEXT")
+ *          if color == .Image~colorRef(CLR_INVALID) then do
+ *            -- some error routine
+ *          end
+ *
+ */
+RexxMethod2(uint32_t, mc_getColor, CSTRING, which, CSELF, pCSelf)
+{
+    int32_t color = MCSC_BACKGROUND;
+
+    if (      StrStrI(which, "BACKGROUND"  ) != NULL ) color = MCSC_BACKGROUND;
+    else if ( StrStrI(which, "MONTHBK"     ) != NULL ) color = MCSC_MONTHBK;
+    else if ( StrStrI(which, "TEXT"        ) != NULL ) color = MCSC_TEXT;
+    else if ( StrStrI(which, "TITLEBK"     ) != NULL ) color = MCSC_TITLEBK ;
+    else if ( StrStrI(which, "TITLETEXT"   ) != NULL ) color = MCSC_TITLETEXT;
+    else if ( StrStrI(which, "TRAILINGTEXT") != NULL ) color = MCSC_TRAILINGTEXT;
+
+    return (COLORREF)MonthCal_GetColor(getDCHCtrl(pCSelf), color);
+}
+
+
+RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "getBorder", "Vista");
+    }
+
+    CSTRING id = "";
+    switch( MonthCal_GetCurrentView(getDCHCtrl(pCSelf)) )
+    {
+        case MCMV_MONTH   : id = "Monthly"; break;
+        case MCMV_YEAR    : id = "Annual"; break;
+        case MCMV_DECADE  : id = "Decade"; break;
+        case MCMV_CENTURY : id = "Century"; break;
+    }
+
+    return context->String(id);
+}
+
+
+RexxMethod2(RexxObjectPtr, mc_setBorder, OPTIONAL_uint32_t, border, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "setBorder", "Vista");
+    }
+
+    HWND hCtrl = getDCHCtrl(pCSelf);
+    if ( argumentExists(1) )
+    {
+        MonthCal_SetCalendarBorder(hCtrl, TRUE, border);
+    }
+    else
+    {
+        MonthCal_SetCalendarBorder(hCtrl, FALSE, 0);
+    }
+    return TheZeroObj;
 }
 
 

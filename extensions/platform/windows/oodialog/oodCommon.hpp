@@ -187,6 +187,7 @@ extern RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int, int
 extern inline void   failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
 extern void          controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
 extern void          wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
+extern RexxObjectPtr wrongWindowsVersionException(RexxMethodContext *, const char *, const char *);
 
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern uint32_t      oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);

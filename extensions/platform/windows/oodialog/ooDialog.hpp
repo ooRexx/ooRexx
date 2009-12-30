@@ -39,8 +39,8 @@
 #ifndef oodDialog_Included
 #define oodDialog_Included
 
-#define NTDDI_VERSION   NTDDI_WINXPSP2
-#define _WIN32_WINNT    0x0501
+#define NTDDI_VERSION   NTDDI_LONGHORN
+#define _WIN32_WINNT    0x0600
 #define WINVER          0x0501
 
 #define STRICT
@@ -404,6 +404,93 @@ inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
         i++;
     }
     return i < StoredDialogs ? DialogTab[i] : NULL;
+}
+
+
+extern bool _isVersion(DWORD, DWORD, unsigned int, unsigned int, unsigned int);
+extern bool _is32on64Bit(void);
+
+inline bool _is64Bit(void)
+{
+#if defined(_WIN64)
+    return true;
+#else
+    return false;
+#endif
+}
+
+inline bool _isW2K(void)
+{
+    return _isVersion(5, 0, 0, 0, VER_EQUAL);
+}
+
+inline bool _isAtLeastW2K(void)
+{
+    return _isVersion(5, 0, 4, 0, VER_GREATER_EQUAL);
+}
+
+inline bool _isXP(void)
+{
+    return (_isVersion(5, 1, 0, 0, VER_EQUAL) || _isVersion(5, 2, 0, VER_NT_WORKSTATION, VER_EQUAL));
+}
+
+inline bool _isXP32(void)
+{
+    return _isVersion(5, 1, 0, 0, VER_EQUAL);
+}
+
+inline bool _isXP64(void)
+{
+    return _isVersion(5, 2, 0, VER_NT_WORKSTATION, VER_EQUAL);
+}
+
+inline bool _isAtLeastXP(void)
+{
+    return _isVersion(5, 1, 2, 0, VER_GREATER_EQUAL);
+}
+
+inline bool _isW2K3(void)
+{
+    return (_isVersion(5, 2, 0, VER_NT_DOMAIN_CONTROLLER, VER_EQUAL) ||
+            _isVersion(5, 2, 0, VER_NT_SERVER, VER_EQUAL));
+}
+
+inline bool _isAtLeastW2K3(void)
+{
+    return (_isVersion(5, 2, 1, VER_NT_DOMAIN_CONTROLLER, VER_EQUAL) ||
+            _isVersion(5, 2, 1, VER_NT_SERVER, VER_EQUAL));
+}
+
+inline bool _isVista(void)
+{
+    return _isVersion(6, 0, 0, VER_NT_WORKSTATION, VER_EQUAL);
+}
+
+inline bool _isServer2008(void)
+{
+    return (_isVersion(6, 0, 0, VER_NT_DOMAIN_CONTROLLER, VER_EQUAL) ||
+            _isVersion(6, 0, 0, VER_NT_SERVER, VER_EQUAL));
+}
+
+inline bool _isAtLeastVista(void)
+{
+    return _isVersion(6, 0, 0, 0, VER_GREATER_EQUAL);
+}
+
+inline bool _isWindows7(void)
+{
+    return _isVersion(6, 1, 0, VER_NT_WORKSTATION, VER_EQUAL);
+}
+
+inline bool _isServer2008R2(void)
+{
+    return (_isVersion(6, 1, 0, VER_NT_DOMAIN_CONTROLLER, VER_EQUAL) ||
+            _isVersion(6, 1, 0, VER_NT_SERVER, VER_EQUAL));
+}
+
+inline bool _isAtLeastWindows7(void)
+{
+    return _isVersion(6, 1, 0, 0, VER_GREATER_EQUAL);
 }
 
 #endif
