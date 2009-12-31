@@ -51,7 +51,19 @@
 #include <stdio.h>
 #include <dlgs.h>
 #include <shlwapi.h>
-#include <vssym32.h>
+
+/** Note:
+ *  When building for Vista or later, tmschema.h is obsolete and vssym32.h
+ *  should be used.  However, vssym32.h is not present in Windows SDKs prior to
+ *  the Vista one.  Since, tmschema.h is only used for the PUSBHBUTTONSTATES
+ *  enum, that enum has been replaced by a PUSHBUTTON_STATES enum defined in
+ *  oodDeviceGraphics.hpp.  This is fine, for now.  In the future if more work
+ *  is done using the updated features of Vista, it may be better to require a
+ *  later version of the SDK.
+ */
+//#include <vssym32.h>
+//#include <tmschema.h>
+
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodDeviceGraphics.hpp"
@@ -1280,7 +1292,7 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
 }
 
 
-void assignBitmap(DIALOGADMIN *dlgAdm, size_t index, CSTRING bmp, PUSHBUTTONSTATES type, bool isInMemory)
+void assignBitmap(DIALOGADMIN *dlgAdm, size_t index, CSTRING bmp, PUSHBUTTON_STATES type, bool isInMemory)
 {
     HBITMAP hBmp = NULL;
     BITMAPTABLEENTRY *bitmapEntry = dlgAdm->BmpTab + index;
@@ -1302,16 +1314,16 @@ void assignBitmap(DIALOGADMIN *dlgAdm, size_t index, CSTRING bmp, PUSHBUTTONSTAT
 
     switch ( type )
     {
-        case PBS_NORMAL :
+        case PBSS_NORMAL :
             bitmapEntry->bitmapID = hBmp;
             break;
-        case PBS_PRESSED :
+        case PBSS_PRESSED :
             bitmapEntry->bmpSelectID = hBmp;
             break;
-        case PBS_DISABLED :
+        case PBSS_DISABLED :
             bitmapEntry->bmpDisableID = hBmp;
             break;
-        case PBS_DEFAULTED :
+        case PBSS_DEFAULTED :
             bitmapEntry->bmpFocusID = hBmp;
             break;
     }
@@ -1897,19 +1909,19 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
         dlgAdm->BmpTab[index].buttonID = id;
         dlgAdm->BmpTab[index].frame  = frame;
 
-        assignBitmap(dlgAdm, index, bmpNormal, PBS_NORMAL, inMemory);
+        assignBitmap(dlgAdm, index, bmpNormal, PBSS_NORMAL, inMemory);
 
         if ( argumentExists(4) )
         {
-            assignBitmap(dlgAdm, index, bmpFocused, PBS_DEFAULTED, inMemory);
+            assignBitmap(dlgAdm, index, bmpFocused, PBSS_DEFAULTED, inMemory);
         }
         if ( argumentExists(5) )
         {
-            assignBitmap(dlgAdm, index, bmpSelected, PBS_PRESSED, inMemory);
+            assignBitmap(dlgAdm, index, bmpSelected, PBSS_PRESSED, inMemory);
         }
         if ( argumentExists(6) )
         {
-            assignBitmap(dlgAdm, index, bmpDisabled, PBS_DISABLED, inMemory);
+            assignBitmap(dlgAdm, index, bmpDisabled, PBSS_DISABLED, inMemory);
         }
 
         if ( stretch && dlgAdm->BmpTab[index].loaded )
@@ -2050,19 +2062,19 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
         dlgAdm->BmpTab[i].frame  = frame;
         dlgAdm->BmpTab[i].loaded = 0;
 
-        assignBitmap(dlgAdm, i, bmpNormal, PBS_NORMAL, inMemory);
+        assignBitmap(dlgAdm, i, bmpNormal, PBSS_NORMAL, inMemory);
 
         if ( argumentExists(3) )
         {
-            assignBitmap(dlgAdm, i, bmpFocused, PBS_DEFAULTED, inMemory);
+            assignBitmap(dlgAdm, i, bmpFocused, PBSS_DEFAULTED, inMemory);
         }
         if ( argumentExists(4) )
         {
-            assignBitmap(dlgAdm, i, bmpSelected, PBS_PRESSED, inMemory);
+            assignBitmap(dlgAdm, i, bmpSelected, PBSS_PRESSED, inMemory);
         }
         if ( argumentExists(5) )
         {
-            assignBitmap(dlgAdm, i, bmpDisabled, PBS_DISABLED, inMemory);
+            assignBitmap(dlgAdm, i, bmpDisabled, PBSS_DISABLED, inMemory);
         }
 
         if ( stretch && dlgAdm->BmpTab[i].loaded )

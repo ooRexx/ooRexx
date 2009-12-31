@@ -39,6 +39,18 @@
 #ifndef oodDeviceGraphics_Included
 #define oodDeviceGraphics_Included
 
+// Our own define to avoid including tmschema.h or vssym32.h, see note in the
+// includes at top of oodDeviceGraphics.cpp.
+typedef enum
+{
+    PBSS_NORMAL    = 1,
+    PBSS_HOT       = 2,
+    PBSS_PRESSED   = 3,
+    PBSS_DISABLED  = 4,
+    PBSS_DEFAULTED  = 5,
+} PUSHBUTTON_STATES;
+
+
 extern uint32_t      parseShowOptions(CSTRING options);
 extern RexxObjectPtr oodGetClientRect(RexxMethodContext *, HWND hwnd, PRECT);
 extern RexxObjectPtr oodGetWindowRect(RexxMethodContext *, HWND hwnd);
