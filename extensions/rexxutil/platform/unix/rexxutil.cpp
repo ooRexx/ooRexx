@@ -278,6 +278,7 @@
 
 #include <termios.h>                   /* needed for SysGetKey       */
 #include <fnmatch.h>                   /* fnmatch()                  */
+#include <libgen.h>                    /* dirname, basename          */
 
 #if !defined( HAVE_UNION_SEMUN )
 union semun {
@@ -5082,44 +5083,105 @@ size_t RexxEntry SysUtilVersion(const char *name, size_t numargs, CONSTRXSTRING 
 * Return:    Return 0 if no error, or error code.                        *
 *************************************************************************/
 
+class AutoClose
+{
+public:
+    AutoClose() : value(0) {};
+    AutoClose(int fd) : value(fd) {}
+    ~AutoClose() { if (value > 0) close(value); value=0; }
+    AutoClose& operator=(int fd) { if (value > 0) close(value); value=fd; return *this; }
+    operator int() const { return value; }
+    int operator==(int fd) { return value == fd; }
+private:
+    int value; // -1 if error, 0 if closed, other if still opened
+};
+
+class AutoFree
+{
+public:
+    AutoFree() : value(NULL) {};
+    AutoFree(char *p) : value(p) {}
+    ~AutoFree() { if (value != NULL) free(value); value=NULL; }
+    AutoFree& operator=(char *p) { if (value != NULL) free(value); value=p; return *this; }
+    operator char *() const { return value; }
+    int operator==(char *p) { return value == p; }
+private:
+    char *value;
+};
+
 /*
-If the source file is a symbolic link, the actual file copied is the target of the symbolic link.
-If the destination file already exists and is a symbolic link, the target of the symbolic link is overwritten by the source file.
+ Remember : realpath will fail if the file does not exist.
+ See normalizePathName in SysFileSystem.cpp.
+ */
+bool SamePaths(CSTRING path1, CSTRING path2)
+{
+    char actualpath1[PATH_MAX+1];
+    char actualpath2[PATH_MAX+1];
+    if (realpath(path1, actualpath1) == NULL) return false;
+    if (realpath(path2, actualpath2) == NULL) return false;
+    return strcmp(actualpath1, actualpath2) == 0;
+}
+
+/*
+Returns a new filename whose directory path is the same as filename's directory
+and that is not the same as the name of an existing file in this directory.
+Used to temporarily rename a file in place (i.e. in its directory).
+This new filename must be freed when no longer needed.
+*/
+char *TemporaryFilename(CSTRING filename, int &errInfo)
+{
+    errInfo = 0;
+    AutoFree filenameCopy = strdup(filename); // dirname wants a writable string
+    if (filenameCopy != NULL)
+    {
+        AutoFree directory = strdup(dirname(filenameCopy)); // Dup because not clear from standard if filenameCopy can be freed just after the call
+        if (directory != NULL)
+        {
+            char *newFilename = tempnam(directory, NULL);
+            if (newFilename != NULL) return newFilename;
+        }
+    }
+    errInfo = errno;
+    return NULL;
+}
+
+/*  
+The symbolic links are dereferenced :
+- If the source file is a symbolic link, the actual file copied is the target of the symbolic link.
+- If the destination file already exists and is a symbolic link, the target of the symbolic link is overwritten by the source file.
 If the destination file does not exist then it is created with the access mode of the source file (if possible).
 */
-int CopyFile(CSTRING fromFile, CSTRING toFile, bool preserveTimestamps, bool preserveMode, bool *timestampsPreserved=NULL, bool *modePreserved=NULL)
+int CopyFile_DereferenceSymbolicLinks(CSTRING fromFile, CSTRING toFile, bool preserveTimestamps, bool preserveMode, bool *timestampsPreserved=NULL, bool *modePreserved=NULL)
 {
     // initialize output arguments
     if (timestampsPreserved != NULL) *timestampsPreserved = false;
     if (modePreserved != NULL) *modePreserved = false;
     
-    int fromHandle = 0;
-    int toHandle = 0;
-    bool toFileCreated = false;
-
+    if (SamePaths(fromFile, toFile)) return EEXIST; // did not find a better error code to return
+    
     struct stat64 fromStat;
-    if (stat64(fromFile, &fromStat) == -1) goto error;
-    fromHandle = open64(fromFile, O_RDONLY);
-    if (fromHandle == -1) goto error;
+    if (stat64(fromFile, &fromStat) == -1) return errno;
+    AutoClose fromHandle = open64(fromFile, O_RDONLY);
+    if (fromHandle == -1) return errno;
 
     struct stat64 toStat;
-    toFileCreated = (stat64(toFile, &toStat) == -1); // if created then the access mode of fromFile will be used
-    toHandle = open64(toFile, O_WRONLY | O_CREAT | O_TRUNC, 0666); // default access mode for the moment (like fopen)
-    if (toHandle == -1) goto error;
+    bool toFileCreated = (stat64(toFile, &toStat) == -1);
+    AutoClose toHandle = open64(toFile, O_WRONLY | O_CREAT | O_TRUNC, 0666); // default access mode for the moment (like fopen)
+    if (toHandle == -1) return errno;
 
     char buffer[IBUF_LEN];
     while(1)
     {
         int count = read(fromHandle, &buffer, IBUF_LEN);
-        if (count == -1) goto error;
+        if (count == -1) return errno;
         if (count == 0) break; // EOF
-        if (write(toHandle, buffer, count) == -1) goto error;
+        if (write(toHandle, buffer, count) == -1) return errno;
     }
 
     fromHandle = close(fromHandle);
-    if (fromHandle == -1) goto error;
+    if (fromHandle == -1) return errno;
     toHandle = close(toHandle);
-    if (toHandle == -1) goto error;
+    if (toHandle == -1) return errno;
 
     if (preserveTimestamps)
     {
@@ -5131,6 +5193,7 @@ int CopyFile(CSTRING fromFile, CSTRING toFile, bool preserveTimestamps, bool pre
             if (timestampsPreserved != NULL) *timestampsPreserved = true;
         }
     }
+    
     if (toFileCreated || preserveMode)
     {
         if (chmod(toFile, fromStat.st_mode) == 0) 
@@ -5139,16 +5202,78 @@ int CopyFile(CSTRING fromFile, CSTRING toFile, bool preserveTimestamps, bool pre
         }
     }
     return 0;
-error:
-    int errInfo = errno;
-    if (fromHandle > 0) close(fromHandle);
-    if (toHandle > 0) close(toHandle);
-    return errInfo;
+}
+
+/*
+The symbolic links are not dereferenced :
+- If the source file is a symbolic link, the actual file copied is the symbolic link itself.
+- If the destination file already exists and is a symbolic link, the target of the symbolic link is not overwritten by the source file.
+*/
+int CopyFile_DontDereferenceSymbolicLinks(CSTRING fromFile, CSTRING toFile, bool force, bool preserveTimestamps, bool preserveMode, bool *timestampsPreserved=NULL, bool *modePreserved=NULL)
+{
+    // initialize output arguments
+    if (timestampsPreserved != NULL) *timestampsPreserved = false;
+    if (modePreserved != NULL) *modePreserved = false;
+    
+    if (SamePaths(fromFile, toFile)) return EEXIST; // did not find a better error code to return
+
+    struct stat64 fromStat;
+    if (lstat64(fromFile, &fromStat) == -1) return errno;
+    bool fromFileIsSymbolicLink = S_ISLNK(fromStat.st_mode);
+
+    struct stat64 toStat;
+    bool toFileExists = (lstat64(toFile, &toStat) == 0);
+    bool toFileIsSymbolicLink = (toFileExists && S_ISLNK(toStat.st_mode));
+
+    AutoFree toFileNewname;
+    if (toFileExists && (fromFileIsSymbolicLink || toFileIsSymbolicLink))
+    {
+        // Must remove toFile when fromFile is a symbolic link, to let copy the link.
+        // Must remove toFile when toFile is a symbolic link, to not follow the link.
+        // But do that safely : first rename toFile, then do the copy and finally remove the renamed toFile.
+        if (force == false) return EEXIST; // Not allowed by caller to remove it
+        int errInfo;
+        toFileNewname = TemporaryFilename(toFile, errInfo);
+        if (errInfo != 0) return errInfo;
+    }
+    
+    if (fromFileIsSymbolicLink)
+    {
+        off_t pathSize = fromStat.st_size; // The length in bytes of the pathname contained in the symbolic link
+        AutoFree pathBuffer = (char *)malloc(pathSize+1);
+        if (pathBuffer == NULL) return errno;
+        if (readlink(fromFile, pathBuffer, pathSize) == -1) return errno;
+        pathBuffer[pathSize] = '\0';
+        if (toFileNewname != NULL && rename(toFile, toFileNewname) == -1) return errno;
+        if (symlink(pathBuffer, toFile) == -1) 
+        {
+            int errInfo = errno;
+            // Undo the renaming
+            if (toFileNewname != NULL) rename(toFileNewname, toFile);
+            return errInfo;
+        }
+        // Note : there is no API to preserve the timestamps and mode of a symbolic link
+    }
+    else
+    {
+        if (toFileNewname != NULL && rename(toFile, toFileNewname) == -1) return errno;
+        if (CopyFile_DereferenceSymbolicLinks(fromFile, toFile, preserveTimestamps, preserveMode, timestampsPreserved, modePreserved) != 0)
+        {
+            int errInfo = errno;
+            // Undo the renaming
+            if (toFileNewname != NULL) rename(toFileNewname, toFile);
+            return errInfo;
+        }
+    }
+    // The copy has been done, now can remove the backup
+    if (toFileNewname != NULL) unlink(toFileNewname);
+    return 0;
+
 }
 
 RexxRoutine2(int, SysFileCopy, CSTRING, fromFile, CSTRING, toFile)
 {
-    return CopyFile(fromFile, toFile, true, false);
+    return CopyFile_DereferenceSymbolicLinks(fromFile, toFile, true, false);
     // Note : no error returned if timestamps not preserved
 }
 
@@ -5165,22 +5290,30 @@ RexxRoutine2(int, SysFileCopy, CSTRING, fromFile, CSTRING, toFile)
 
 int MoveFile(CSTRING fromFile, CSTRING toFile)
 {
+    // rename does not return an error if both files resolve to the same file
+    // but we want to return an error in this case, to follow the behavior of mv
+    if (SamePaths(fromFile, toFile)) return EEXIST; // did not find a better error code to return
     if (rename(fromFile, toFile) == 0)  return 0; // move done
-
     if (errno != EXDEV) return errno; // move ko, no fallbak
+    
+    // Before trying the fallback copy+unlink, ensure that we can unlink fromFile.
+    // If we can rename it in place, then we can unlink it.
+    int errInfo;
+    AutoFree fromFileNewname = TemporaryFilename(fromFile, errInfo);
+    if (errInfo != 0) return errInfo;
+    if (rename(fromFile, fromFileNewname) == -1) return errno;
+    // Good, here we know we can unlink fromFile, undo the rename
+    if (rename(fromFileNewname, fromFile) == -1) return errno; // should not happen, but...
     
     // The files are on different file systems and the implementation does not support that.
     // Try to copy then unlink
-    // Not sure that copy+unlink is the right technique in case of symbolic link...
-    // Remember : lstat, readlink, symlink
-    if (CopyFile(fromFile, toFile, true, true) != 0) return EXDEV; // fallback ko
+    int copyStatus = CopyFile_DontDereferenceSymbolicLinks(fromFile, toFile, false, true, true); // 3rd arg=false : dont't force (good choice ?)
+    if (copyStatus != 0) return copyStatus; // fallback ko
     // Note : no error returned if timestamps or mode not preserved
 
     // copy to is ok, now unlink from
-    if (unlink(fromFile) == 0) return 0; // fallback done
-    // Can't unlink fromFile, undo the copy
-    unlink(toFile);
-    return EXDEV;
+    // in case of error, don't remove toFile, it's a bad idea !
+    return unlink(fromFile);
 }
 
 RexxRoutine2(int, SysFileMove, CSTRING, fromFile, CSTRING, toFile)
