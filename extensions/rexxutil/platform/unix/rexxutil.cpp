@@ -5086,15 +5086,37 @@ size_t RexxEntry SysUtilVersion(const char *name, size_t numargs, CONSTRXSTRING 
 class AutoClose
 {
 public:
-    AutoClose() : value(0) {};
+    AutoClose() : value(-1) {};
     AutoClose(int fd) : value(fd) {}
-    ~AutoClose() { if (value > 0) close(value); value=0; }
-    AutoClose& operator=(int fd) { if (value > 0) close(value); value=fd; return *this; }
+    ~AutoClose() {  close(false); }
+    AutoClose& operator=(int fd) { close(false); value=fd; return *this; }
     operator int() const { return value; }
     int operator==(int fd) { return value == fd; }
+    int close(bool returnError=true);
 private:
-    int value; // -1 if error, 0 if closed, other if still opened
+    int value; // >= 0 if opened
 };
+
+// Returns 0 if no error, -1 otherwise (in this case, errno contains the error code)
+int AutoClose::close(bool returnError) 
+{ 
+    int closeStatus = 0;
+    if (returnError)
+    {
+        if (value >= 0) closeStatus = ::close(value);
+    }
+    else 
+    {
+        if (value >= 0)
+        {
+            int backup = errno;
+            ::close(value);
+            errno = backup;
+        }
+    }
+    value = -1;
+    return closeStatus;
+}
 
 class AutoFree
 {
@@ -5178,10 +5200,8 @@ int CopyFile_DereferenceSymbolicLinks(CSTRING fromFile, CSTRING toFile, bool pre
         if (write(toHandle, buffer, count) == -1) return errno;
     }
 
-    fromHandle = close(fromHandle);
-    if (fromHandle == -1) return errno;
-    toHandle = close(toHandle);
-    if (toHandle == -1) return errno;
+    if (fromHandle.close() == -1) return errno;
+    if (toHandle.close() == -1) return errno;
 
     if (preserveTimestamps)
     {
@@ -5257,9 +5277,9 @@ int CopyFile_DontDereferenceSymbolicLinks(CSTRING fromFile, CSTRING toFile, bool
     else
     {
         if (toFileNewname != NULL && rename(toFile, toFileNewname) == -1) return errno;
-        if (CopyFile_DereferenceSymbolicLinks(fromFile, toFile, preserveTimestamps, preserveMode, timestampsPreserved, modePreserved) != 0)
+        int errInfo = CopyFile_DereferenceSymbolicLinks(fromFile, toFile, preserveTimestamps, preserveMode, timestampsPreserved, modePreserved);
+        if (errInfo != 0)
         {
-            int errInfo = errno;
             // Undo the renaming
             if (toFileNewname != NULL) rename(toFileNewname, toFile);
             return errInfo;
