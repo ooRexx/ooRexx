@@ -373,7 +373,7 @@ optvals = .array~of('SO_BROADCAST', 'SO_DEBUG', 'SO_DONTROUTE', 'SO_ERROR',,
 if optvals~hasItem(name) = .false then ,
  raise syntax 93.914 array (1, optvals~toString, name)
 -- get the value
-retc = SockGetSendOpt(s, 'SOL_SOCKET', name, 'xxx')
+retc = SockGetSockOpt(s, 'SOL_SOCKET', name, 'xxx')
 -- some values may not be gettable
 if retc = -1 then do
    errno = self~convert_err_number(SockSock_errno())
@@ -408,7 +408,7 @@ return .InetAddress~new(stem.!addr, stem.!port, self~convert_address_family(stem
 ::method getSockName
 expose s errno
 use strict arg
-retc = SockGetSockName(s, cmd, 'stem.!')
+retc = SockGetSockName(s, 'stem.!')
 if retc = -1 then do
    errno = self~convert_err_number(SockSock_errno())
    return .nil
