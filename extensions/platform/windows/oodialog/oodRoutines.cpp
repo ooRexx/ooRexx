@@ -47,6 +47,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <dlgs.h>
+#include <commctrl.h>
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"

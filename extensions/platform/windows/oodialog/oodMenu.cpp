@@ -38,6 +38,7 @@
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 #include <stdio.h>
 #include <dlgs.h>
+#include <commctrl.h>
 #include <malloc.h>
 #include <limits.h>
 #include "APICommon.hpp"
@@ -115,7 +116,7 @@
 
 
 // Local function prototypes.
-static uint32_t resolveItemID(RexxMethodContext *, RexxObjectPtr, logical_t, RexxObjectPtr, int);
+static uint32_t resolveItemID(RexxMethodContext *, RexxObjectPtr, logical_t, RexxObjectPtr, size_t);
 static bool getMII(CppMenu *, RexxObjectPtr, BOOL, uint32_t, uint32_t *, UINT, MENUITEMINFO *);
 static UINT getPopupTypeOpts(const char *, UINT);
 static UINT getPopupStateOpts(const char *, UINT);
@@ -2033,7 +2034,8 @@ done_out:
  *             does not matter what is returned.  So, the return need not be
  *             checked.
  */
-static uint32_t resolveItemID(RexxMethodContext *c, RexxObjectPtr rxItemID, logical_t byPosition, RexxObjectPtr self, int argPos)
+static uint32_t resolveItemID(RexxMethodContext *c, RexxObjectPtr rxItemID, logical_t byPosition,
+                              RexxObjectPtr self, size_t argPos)
 {
     uint32_t itemID = OOD_ID_EXCEPTION;
 

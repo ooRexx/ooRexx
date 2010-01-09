@@ -396,6 +396,7 @@
    return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
 ::method connectUpDownEvent external "LIBRARY oodialog en_connectUpDownEvent"
+::method connectMonthCalendarEvent external "LIBRARY oodialog en_connectMonthCalendarEvent"
 
 ::method connectTrackBarEvent   /* can only be called in initDialog */
    use strict arg id, type, msgToRise = "", categoryHDlg = .NullHandle
@@ -439,7 +440,7 @@
         lc~restoreEditClass
     end
 
-::method DefListDragHandler
+::method defListDragHandler
    use arg id, item, pt
    lc = self~newListView(id)
    hc = lc~Cursor_Cross   /* change cursor and store current */
@@ -494,13 +495,13 @@
    self~SetCursorPos(x+1, y+1)  /* move cursor to force redraw */
 
 
-::method DefTreeEditStarter
+::method defTreeEditStarter
     use arg id, dummy, category
     if arg(3,'o') = 1 then tc = self~newTreeView(id)
     else tc = self~newTreeView(id, category)
     if tc \= .nil then tc~SubclassEdit
 
-::method DefTreeEditHandler
+::method defTreeEditHandler
     use arg id, item, newText, category
     if arg(3,'o') = 1 then return
     if arg(4,'o') = 1 then tc = self~newTreeView(id)
@@ -510,7 +511,7 @@
         tc~RestoreEditClass
     end
 
-::method DefTreeDragHandler
+::method defTreeDragHandler
    use arg id, item, pt
    tc = self~newTreeView(id)
    hc = tc~Cursor_Cross   /* change cursor and store current */

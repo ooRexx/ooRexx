@@ -47,6 +47,7 @@
 
 #include <stdio.h>
 #include <dlgs.h>
+#include <commctrl.h>
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
@@ -60,7 +61,6 @@ class LoopThreadArgs
 public:
     RexxMethodContext *context;       // Used for data autodetection only.
     pCPlainBaseDialog  pcpbd;
-    DIALOGADMIN       *dlgAdmin;
     uint32_t           resourceId;
     bool               autoDetect;
     bool              *release;       // Used for a return value
@@ -135,19 +135,19 @@ RexxMethod1(RexxObjectPtr, baseDlg_test, CSELF, pCSelf)
 DWORD WINAPI WindowLoopThread(void *arg)
 {
     MSG msg;
-    DIALOGADMIN * dlgAdm;
-    bool * release;
     ULONG ret;
 
     LoopThreadArgs *args = (LoopThreadArgs *)arg;
-    dlgAdm = args->dlgAdmin;
+
+    pCPlainBaseDialog pcpbd = args->pcpbd;
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+    bool *release = args->release;
 
     // Pass the pointer to the CSelf for this dialog to WM_INITDIALOG.
     dlgAdm->TheDlg = CreateDialogParam(dlgAdm->TheInstance, MAKEINTRESOURCE(args->resourceId), 0,
-                                       (DLGPROC)RexxDlgProc, (LPARAM)args->pcpbd);
+                                       (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
     dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
 
-    release = args->release;
     if ( dlgAdm->TheDlg )
     {
         if ( args->autoDetect )
@@ -159,10 +159,13 @@ DWORD WINAPI WindowLoopThread(void *arg)
             }
         }
 
-        *release = true;  /* Release wait in startDialog()  */
+        // Release wait in startDialog() and mark the dialog as active.
+        *release = true;
+        pcpbd->isActive = true;
+
         do
         {
-            if ( GetMessage(&msg,NULL, 0,0) )
+            if ( GetMessage(&msg, NULL, 0, 0) )
             {
                 if ( ! IsDialogMessage(dlgAdm->TheDlg, &msg) )
                 {
@@ -170,15 +173,19 @@ DWORD WINAPI WindowLoopThread(void *arg)
                 }
             }
         } while ( dlgAdm && dialogInAdminTable(dlgAdm) && ! dlgAdm->LeaveDialog );
+        printf("Dropped out of message loop, WindowLoopThread\n");
     }
     else
     {
         *release = true;
     }
+
+    // Need to synchronize here, otherwise dlgAdm might still be in the table
+    // but DelDialog is already running.
     EnterCriticalSection(&crit_sec);
     if ( dialogInAdminTable(dlgAdm) )
     {
-        ret = DelDialog(dlgAdm);
+        ret = DelDialog(pcpbd);
         dlgAdm->TheThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
@@ -240,6 +247,11 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
     DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
+        return FALSE;
+    }
 
     ULONG thID;
     bool Release = false;
@@ -249,12 +261,7 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
     {
         if ( dlgAdm )
         {
-            // TODO why is DelDialog() used here, but not below ??
-            DelDialog(dlgAdm);
-
-            // Note: The message queue and dialog administration block are /
-            // must be freed from PlainBaseDialog::deInstall() or
-            // PlainBaseDialog::unInit().
+            DelDialog(pcpbd);
         }
         LeaveCriticalSection(&crit_sec);
         return FALSE;
@@ -263,7 +270,6 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
     LoopThreadArgs threadArgs;
     threadArgs.context = context;
     threadArgs.pcpbd = pcpbd;
-    threadArgs.dlgAdmin = dlgAdm;
     threadArgs.resourceId = dlgID;
     threadArgs.autoDetect = autoDetect ? true : false;
     threadArgs.release = &Release;
@@ -277,55 +283,51 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
     }
     LeaveCriticalSection(&crit_sec);
 
-    if (dlgAdm)
+    if ( dlgAdm->TheDlg )
     {
-        if (dlgAdm->TheDlg)
+        // Set the thread priority higher for faster drawing.
+        SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
+        dlgAdm->OnTheTop = TRUE;
+        dlgAdm->threadID = thID;
+
+        // Is this to be a modal dialog?
+        if ( dlgAdm->previous && ! modeless && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
         {
-            HICON hBig = NULL;
-            HICON hSmall = NULL;
-
-            // Set the thread priority higher for faster drawing.
-            SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
-            dlgAdm->OnTheTop = TRUE;
-            dlgAdm->threadID = thID;
-
-            // Is this to be a modal dialog?
-            if ( dlgAdm->previous && ! modeless && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
-            {
-                EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
-            }
-
-            if ( GetDialogIcons(dlgAdm, iconID, ICON_DLL, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
-            {
-                dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
-                dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
-                dlgAdm->DidChangeIcon = TRUE;
-
-                SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
-            }
-
-                RexxMethodContext *c = context;
-
-            setDlgHandle(context, pcpbd, dlgAdm->TheDlg);
-            setFontAttrib(context, pcpbd);
-            return TRUE;
+            EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
         }
 
-        // The dialog creation failed, so clean up.  For now, with the
-        // mixture of old and new native APIs, the freeing of the dialog
-        // administration block must be done in the deInstall() or
-        // unInit() methods.
+        HICON hBig = NULL;
+        HICON hSmall = NULL;
+        if ( GetDialogIcons(dlgAdm, iconID, ICON_DLL, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
+        {
+            dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
+            dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
+            dlgAdm->DidChangeIcon = TRUE;
 
-        // TODO this seems very wrong.  Why isn't a DelDialog() done here???
-        dlgAdm->OnTheTop = FALSE;
-        if (dlgAdm->previous)
-        {
-            ((DIALOGADMIN *)(dlgAdm->previous))->OnTheTop = TRUE;
+            SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
         }
-        if ((dlgAdm->previous) && !IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg))
-        {
-            EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, TRUE);
-        }
+
+        setDlgHandle(context, pcpbd, dlgAdm->TheDlg);
+        setFontAttrib(context, pcpbd);
+        return TRUE;
+    }
+
+    // The dialog creation failed, do some final clean up.
+    //
+    // When the dialog creation fails in the WindowLoop thread, DelDialog()
+    // is done immediately, as it skips entering the message processing
+    // loop.
+    //
+    // Note also, because of the code below, the dialog admin block can not
+    // be freed in DelDialog().
+    dlgAdm->OnTheTop = FALSE;
+    if (dlgAdm->previous)
+    {
+        ((DIALOGADMIN *)(dlgAdm->previous))->OnTheTop = TRUE;
+    }
+    if ((dlgAdm->previous) && !IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg))
+    {
+        EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, TRUE);
     }
     return FALSE;
 }

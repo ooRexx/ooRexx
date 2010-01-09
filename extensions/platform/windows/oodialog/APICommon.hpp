@@ -61,7 +61,7 @@ extern void userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg);
 extern void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual);
 extern void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen);
 extern void numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
-extern void notNonNegativeException(RexxThreadContext *c, int pos, RexxObjectPtr actual);
+extern void notNonNegativeException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
 extern void wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING obj);
 extern void wrongObjInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);
 extern void executionErrorException(RexxThreadContext *c, CSTRING msg);
@@ -77,9 +77,11 @@ extern void nullPointerException(RexxThreadContext *c, int pos);
 extern RexxObjectPtr wrongClassException(RexxThreadContext *c, int pos, const char *n);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, const char *actual);
-extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
-extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
+extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, RexxObjectPtr actual);
+extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, int actual);
 extern RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
+extern RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual);
+extern RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual);
 extern RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char *type);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
@@ -94,8 +96,11 @@ extern bool            rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);
+extern bool            checkForCondition(RexxThreadContext *c);
+extern void            standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition);
 extern bool            isInt(int, RexxObjectPtr, RexxMethodContext *);
 extern bool            isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
+extern void            dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
 extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
 
@@ -152,6 +157,15 @@ inline RexxObjectPtr notPositiveArgException(RexxThreadContext *c, size_t argPos
 {
     c->RaiseException2(Rexx_Error_Incorrect_method_nonnegative, c->WholeNumber(argPos), actual);
     return NULLOBJECT;
+}
+
+/**
+ * Given a condition object, extracts and returns as a whole number the subcode
+ * of the condition.
+ */
+inline wholenumber_t conditionSubCode(RexxCondition *condition)
+{
+    return (condition->code - (condition->rc * 1000));
 }
 
 inline RexxObjectPtr rxNewBag(RexxMethodContext *c)

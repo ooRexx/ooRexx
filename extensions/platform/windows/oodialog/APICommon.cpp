@@ -378,19 +378,19 @@ void nullPointerException(RexxThreadContext *c, int pos)
     c->RaiseException1(Rexx_Error_Invalid_argument_null, c->WholeNumber(pos));
 }
 
-void notNonNegativeException(RexxThreadContext *c, int pos, RexxObjectPtr actual)
+void notNonNegativeException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual)
 {
-    c->RaiseException2(Rexx_Error_Invalid_argument_nonnegative, c->Int32(pos), actual);
+    c->RaiseException2(Rexx_Error_Invalid_argument_nonnegative, c->StringSize(pos), actual);
 }
 
-RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual)
+RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, RexxObjectPtr actual)
 {
     c->RaiseException(Rexx_Error_Invalid_argument_range,
                       c->ArrayOfFour(c->WholeNumber(pos), c->WholeNumber(min), c->WholeNumber(max), actual));
     return NULLOBJECT;
 }
 
-RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual)
+RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, int actual)
 {
     return wrongRangeException(c, pos, min, max, c->WholeNumber(actual));
 }
@@ -405,6 +405,20 @@ RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const cha
 RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, const char *actual)
 {
     return wrongArgValueException(c, pos, list, c->String(actual));
+}
+
+RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual)
+{
+    c->RaiseException(Rexx_Error_Incorrect_method_option,
+                      c->ArrayOfThree(c->WholeNumber(pos), c->String(list), actual));
+    return NULLOBJECT;
+}
+
+RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual)
+{
+    c->RaiseException(Rexx_Error_Incorrect_method_option,
+                      c->ArrayOfThree(c->WholeNumber(pos), c->String(list), c->String(actual)));
+    return NULLOBJECT;
 }
 
 CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
@@ -611,6 +625,76 @@ RexxObjectPtr rxNewBuiltinObject(RexxMethodContext *c, CSTRING className)
 
 
 /**
+ * Outputs the typical condition message.  For example:
+ *
+ *      4 *-* say dt~number
+ * Error 97 running C:\work\qTest.rex line 4:  Object method not found
+ * Error 97.1:  Object "a DateTime" does not understand message "NUMBER"
+ *
+ * @param c          The thread context we are operating in.
+ * @param condObj    The condition information object.  The object returned from
+ *                   the C++ API GetConditionInfo()
+ * @param condition  The RexxCondition struct.  The filled in struct from the
+ *                   C++ API DecodeConditionInfo().
+ *
+ * @assumes  There is a condition and that condObje and condition are valid.
+ */
+void standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition)
+{
+    RexxObjectPtr list = c->SendMessage0(condObj, "TRACEBACK");
+    if ( list != NULLOBJECT )
+    {
+        RexxArrayObject a = (RexxArrayObject)c->SendMessage0(list, "ALLITEMS");
+        if ( a != NULLOBJECT )
+        {
+            size_t count = c->ArrayItems(a);
+            for ( size_t i = 1; i <= count; i++ )
+            {
+                RexxObjectPtr o = c->ArrayAt(a, i);
+                if ( o != NULLOBJECT )
+                {
+                    printf("%s\n", c->ObjectToStringValue(o));
+                }
+            }
+        }
+    }
+    printf("Error %d running %s line %d: %s\n", condition->rc, c->CString(condition->program),
+           condition->position, c->CString(condition->errortext));
+
+    printf("Error %d.%03d:  %s\n", condition->rc, conditionSubCode(condition), c->CString(condition->message));
+}
+
+
+/**
+ * Given a thread context, checks for a raised condition, and prints out the
+ * standard condition message if there is a condition.
+ *
+ * @param c            Thread context we are operating in.
+ *
+ * @return True if there was a condition, otherwsie false.
+ *
+ * @remarks.  This function could maybe take a second argument, true / false,
+ *            whether to clear or not clear the condition.
+ */
+bool checkForCondition(RexxThreadContext *c)
+{
+    if ( c->CheckCondition() )
+    {
+        RexxCondition condition;
+        RexxDirectoryObject condObj = c->GetConditionInfo();
+
+        if ( condObj != NULLOBJECT )
+        {
+            c->DecodeConditionInfo(condObj, &condition);
+            standardConditionMsg(c, condObj, &condition);
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
  * Test if a generic Rexx object is exactly some int.
  *
  * @param testFor  The int value being tested for.
@@ -663,7 +747,7 @@ bool isOfClassType(RexxMethodContext *c, RexxObjectPtr obj, CSTRING classID)
  * @param c    The method context we are operating in.
  * @param obj  The object to identify.
  */
-void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj)
+void dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj)
 {
     if ( ! c->IsOfType(obj, "CLASS") )
     {
@@ -682,3 +766,8 @@ void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj)
     printf("Class: %s\n", name);
 }
 
+
+void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj)
+{
+    dbgPrintClassID(c->threadContext, obj);
+}

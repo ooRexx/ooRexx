@@ -51,6 +51,8 @@ typedef struct newControlParams
 } NEWCONTROLPARAMS;
 typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
 
+enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
+
 // Defined in oodUser.cpp
 extern uint32_t      listViewStyle(CSTRING opts, uint32_t style);
 
@@ -63,6 +65,8 @@ extern bool            isControlMatch(HWND, oodControl_t);
 
 extern RexxStringObject cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
 extern DIALOGADMIN *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc);
+extern void sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part);
+
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081
@@ -96,19 +100,19 @@ inline bool isSingleSelectionListBox(HWND hDlg, uint32_t id)
 }
 
 /* Retrieve specific fields / information from the CDialogControl struct. */
-inline HWND getDCHCtrl(void *pCSelf)
+inline HWND getDChCtrl(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->hCtrl);
 }
-inline HWND getDCHDlg(void *pCSelf)
+inline HWND getDChDlg(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->hDlg);
 }
-inline RexxObjectPtr getDCOwnerDlg(void *pCSelf)
+inline RexxObjectPtr getDCownerDlg(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->oDlg);
 }
-inline uint32_t getDCInsertIndex(void *pCSelf)
+inline uint32_t getDCinsertIndex(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->lastItem + 1);
 }

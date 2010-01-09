@@ -118,6 +118,8 @@ typedef CWindowExtensions *pCWindowExtensions;
 /* Struct for the PlainBaseDialog object CSelf. */
 typedef struct _pbdCSelf {
     char                 fontName[MAX_DEFAULT_FONTNAME];
+    RexxInstance         *interpreter;
+    RexxThreadContext    *dlgProcContext;
     pCWindowBase         wndBase;
     pCEventNotification  enCSelf;
     pCWindowExtensions   weCSelf;
@@ -128,6 +130,7 @@ typedef struct _pbdCSelf {
     HBITMAP              bkgBitmap;
     logical_t            autoDetect;
     uint32_t             fontSize;
+    bool                 isActive;
     bool                 scrollNow;   // For scrolling text in windows.
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
@@ -163,8 +166,8 @@ typedef CDynamicDialog *pCDynamicDialog;
 extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 extern bool             dialogInAdminTable(DIALOGADMIN * Dlg);
 extern bool             InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING library);
-extern int32_t          stopDialog(HWND hDlg);
-extern int32_t          DelDialog(DIALOGADMIN * aDlg);
+extern int32_t          stopDialog(pCPlainBaseDialog);
+extern int32_t          DelDialog(pCPlainBaseDialog);
 extern BOOL             GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
 extern bool             isYes(const char *s);
 extern void *           string2pointer(const char *string);
@@ -190,8 +193,8 @@ extern void          wrongWindowStyleException(RexxMethodContext *c, CSTRING, CS
 extern RexxObjectPtr wrongWindowsVersionException(RexxMethodContext *, const char *, const char *);
 
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
-extern uint32_t      oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
-extern bool          oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern uint32_t      oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, size_t);
+extern bool          oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, size_t);
 extern DWORD         oodGetSysErrCode(RexxThreadContext *);
 extern void          oodSetSysErrCode(RexxThreadContext *, DWORD);
 extern void          oodResetSysErrCode(RexxThreadContext *context);
@@ -231,6 +234,8 @@ extern uint32_t getCategoryNumber(RexxMethodContext *, RexxObjectPtr);
 
 // These functions are defined in oodUtilities.cpp
 extern const char *comctl32VersionPart(DWORD id, DWORD type);
+extern RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, size_t count, LPMONTHDAYSTATE *ppmds);
+extern RexxObjectPtr quickDayStateBuffer(RexxMethodContext *c, uint32_t ds1, uint32_t ds2, uint32_t ds3, LPMONTHDAYSTATE *ppmds);
 
 // These functions are defined in ooDialog.cpp
 extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);

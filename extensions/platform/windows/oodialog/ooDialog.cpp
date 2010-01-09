@@ -58,6 +58,33 @@
 #include "oodResourceIDs.hpp"
 
 
+static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
+{
+    char buf[256];
+
+    switch ( t )
+    {
+        case NoPCPBDpased :
+            _snprintf(buf, sizeof(buf), NO_PCPBD_PASSED_MSG, pcpbd, hDlg);
+            break;
+        case NoThreadAttach :
+            _snprintf(buf, sizeof(buf), NO_THREAD_ATTACH_MSG, pcpbd, hDlg);
+            break;
+        case NoThreadContext :
+            _snprintf(buf, sizeof(buf), NO_THREAD_CONTEXT_MSG, pcpbd->dlgAdm, pcpbd->dlgProcContext, hDlg);
+            break;
+    }
+
+    internalErrorMsgBox(buf, "ooDialog Dialog Procedure Error");
+
+    // DestroyWindow() will cause the message processing loop to end.  When it
+    // drops out of the loop, DelDialog() is called and the admin block will be
+    // cleaned up.
+    DestroyWindow(hDlg);
+
+    return FALSE;
+}
+
 /**
  * Loads and returns the handle to an icon for the specified ID, of the
  * specified size.
@@ -117,7 +144,6 @@ static HICON getIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, in
     return (HICON)LoadImage(hInst, pName, IMAGE_ICON, cx, cy, loadFlags);
 }
 
-
 /**
  * The dialog procedure function for all ooDialog dialogs.
  *
@@ -127,246 +153,279 @@ static HICON getIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, in
  * @param lParam
  *
  * @return LRESULT CALLBACK
+ *
+ * @remarks  The WM_INITDIALOG message.
+ *
+ *           In CreateDialogParam() / CreateDialogIndirectParam() we pass the
+ *           pointer to the PlainBaseDialog CSelf as the param.  The OS then
+ *           sends us this value as the LPARAM argument in the WM_INITDIALOG
+ *           message. The pointer is stored in the user data field of the window
+ *           words for this dialog.  We do the same thing for the child dialogs,
+ *           see the WM_USER_CREATECHILD message.
+ *
+ *           The WM_USER_CREATECHILD message.
+ *
+ *           This user message's purpose is to create a child dialog of this
+ *           dialog and return its window handle. Child dialogs are only created
+ *           to implement the CategoryDialog and at this time are always created
+ *           dynamically (from an in-memory template.) The dialog template
+ *           pointer is passed here as the LPARAM arg from
+ *           DynamicDialog::startChildDialog().
+ *
+ *           These child dialogs do not have a backing Rexx dialog. There is no
+ *           unique CPlainBaseDialog struct for them.  Instead, at this time,
+ *           all interaction with the child dialogs is done through the
+ *           CPlainBaseDialog struct of the parent.  For each child dialog, we
+ *           set the CPlainBaseDialog struct of the parent in the window words
+ *           of the child dialog.  Prior to the conversion of ooDialog to the
+ *           C++ API, when a message came in for a child dialog, a search was
+ *           made through the DialogTab to try and find the dialog admin block
+ *           of the parent.  This has been disposed of and the CPlainBaseDialog
+ *           struct is just pulled out of the window words.
  */
 LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-    HBRUSH hbrush = NULL;
-    HWND hW;
 
-    if ( uMsg != WM_INITDIALOG )
+    if ( uMsg == WM_INITDIALOG )
     {
-        DIALOGADMIN *addressedTo = seekDlgAdm(hDlg);
-
-        if ( addressedTo == NULL && topDlg != NULL && dialogInAdminTable(topDlg) && topDlg->TheDlg != NULL )
+        pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)lParam;
+        if ( pcpbd == NULL )
         {
-            addressedTo = topDlg;
+            // Theoretically impossible.  But ... if it should happen, abort.
+            return endDialogPremature(pcpbd, hDlg, NoPCPBDpased);
         }
 
-        if ( addressedTo != NULL )
+        RexxThreadContext *context;
+        if ( ! pcpbd->interpreter->AttachThread(&context) )
         {
-            pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(addressedTo->TheDlg, GWLP_USERDATA);
-            if ( pcpbd == NULL )
-            {
-                printf("RexxDlgProc() ERROR no dialog CSelf. addressedTo=%p pcpdb=%p hDlg=%p\n", addressedTo, pcpbd, hDlg);
-                return FALSE;
-            }
-
-            bool msgEnabled = IsWindowEnabled(hDlg) && dialogInAdminTable(addressedTo);
-
-            // Do not search message table for WM_PAINT to improve redraw.
-            if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
-            {
-                MsgReplyType searchReply = searchMessageTable(uMsg, wParam, lParam, addressedTo);
-                if ( searchReply != NotMatched )
-                {
-                    // Note pre 4.0.1, reply was always FALSE, pass on to the system to process.
-                    return(searchReply == ReplyTrue ? TRUE : FALSE);
-                }
-            }
-
-            switch ( uMsg )
-            {
-                case WM_PAINT:
-                    if ( pcpbd->bkgBitmap != NULL )
-                    {
-                        drawBackgroundBmp(pcpbd, hDlg);
-                    }
-                    break;
-
-                case WM_DRAWITEM:
-                    if ( lParam != 0 )
-                    {
-                        return drawBitmapButton(addressedTo, pcpbd, lParam, msgEnabled);
-                    }
-                    break;
-
-                case WM_CTLCOLORDLG:
-                    if ( pcpbd->bkgBrush )
-                    {
-                        return(LRESULT)pcpbd->bkgBrush;
-                    }
-                    break;
-
-                case WM_CTLCOLORSTATIC:
-                case WM_CTLCOLORBTN:
-                case WM_CTLCOLOREDIT:
-                case WM_CTLCOLORLISTBOX:
-                case WM_CTLCOLORMSGBOX:
-                case WM_CTLCOLORSCROLLBAR:
-                    if ( addressedTo->CT_size > 0 )
-                    {
-                        // See of the user has set the dialog item with a different
-                        // color.
-                        long id = GetWindowLong((HWND)lParam, GWL_ID);
-                        if ( id > 0 )
-                        {
-                            register size_t i = 0;
-                            while ( i < addressedTo->CT_size && addressedTo->ColorTab[i].itemID != id )
-                            {
-                                i++;
-                            }
-                            if ( i < addressedTo->CT_size )
-                            {
-                                hbrush = addressedTo->ColorTab[i].ColorBrush;
-                            }
-
-                            if ( hbrush )
-                            {
-                                if ( addressedTo->ColorTab[i].isSysBrush )
-                                {
-                                    SetBkColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorBk));
-                                    if ( addressedTo->ColorTab[i].ColorFG != -1 )
-                                    {
-                                        SetTextColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorFG));
-                                    }
-                                }
-                                else
-                                {
-                                    SetBkColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorBk));
-                                    if ( addressedTo->ColorTab[i].ColorFG != -1 )
-                                    {
-                                        SetTextColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorFG));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if ( hbrush )
-                        return(LRESULT)hbrush;
-                    else
-                        return DefWindowProc(hDlg, uMsg, wParam, lParam);
-
-
-                case WM_COMMAND:
-                    switch ( LOWORD(wParam) )
-                    {
-                        // For both IDOK and IDCANCEL, the notification code (the high
-                        // word value,) must be 0.
-                        case IDOK:
-                            if ( HIWORD(wParam) == 0 )
-                            {
-                                addressedTo->LeaveDialog = 1;
-                            }
-                            return TRUE;
-
-                        case IDCANCEL:
-                            if ( HIWORD(wParam) == 0 )
-                            {
-                                addressedTo->LeaveDialog = 2;
-                            }
-                            return TRUE;
-                    }
-                    break;
-
-                case WM_QUERYNEWPALETTE:
-                case WM_PALETTECHANGED:
-                    return paletteMessage(addressedTo, hDlg, uMsg, wParam, lParam);
-
-                case WM_USER_CREATECHILD:
-                    /* Create a child dialog of this dialog and return its window
-                     * handle. The dialog template pointer is passed here as the
-                     * LPARAM arg from DynamicDialog::startChildDialog().
-                     *
-                     * Note that child dialogs do not have a backing Rexx dialog.
-                     * There is no CPlainBaseDialog struct.  We pass NULL as the
-                     * indirect param to indicate that.
-                     */
-                    hW = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc, NULL);
-                    ReplyMessage((LRESULT)hW);
-                    return TRUE;
-
-                case WM_USER_INTERRUPTSCROLL:
-                    addressedTo->StopScroll = wParam;
-                    return TRUE;
-
-                case WM_USER_GETFOCUS:
-                    ReplyMessage((LRESULT)GetFocus());
-                    return TRUE;
-
-                case WM_USER_GETSETCAPTURE:
-                    if ( wParam == 0 )
-                    {
-                        ReplyMessage((LRESULT)GetCapture());
-                    }
-                    else if ( wParam == 2 )
-                    {
-                        uint32_t rc = 0;
-                        if ( ReleaseCapture == 0 )
-                        {
-                            rc = GetLastError();
-                        }
-                        ReplyMessage((LRESULT)rc);
-                    }
-                    else
-                    {
-                        ReplyMessage((LRESULT)SetCapture((HWND)lParam));
-                    }
-                    return TRUE;
-
-                case WM_USER_GETKEYSTATE:
-                    ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
-                    return TRUE;
-
-                case WM_USER_SUBCLASS:
-                    {
-                        SUBCLASSDATA * pData = (SUBCLASSDATA *)lParam;
-                        BOOL success = FALSE;
-
-                        if ( pData )
-                        {
-                            success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
-                        }
-                        ReplyMessage((LRESULT)success);
-                        return TRUE;
-                    }
-
-                case WM_USER_SUBCLASS_REMOVE:
-                    ReplyMessage((LRESULT)RemoveWindowSubclass(GetDlgItem(hDlg, (int)lParam), (SUBCLASSPROC)wParam, (int)lParam));
-                    return TRUE;
-
-                case WM_USER_HOOK:
-                    ReplyMessage((LRESULT)SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)wParam, NULL, GetCurrentThreadId()));
-                    return TRUE;
-
-                case WM_USER_CONTEXT_MENU:
-                    {
-                        PTRACKPOP ptp = (PTRACKPOP)wParam;
-                        uint32_t cmd;
-
-                        SetLastError(0);
-                        cmd = (uint32_t)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
-                                                         ptp->hWnd, ptp->lptpm);
-
-                        // If TPM_RETURNCMD is specified, the return is the menu item
-                        // selected.  Otherwise, the return is 0 for failure and
-                        // non-zero for success.
-                        if ( ! (ptp->flags & TPM_RETURNCMD) )
-                        {
-                            cmd = (cmd == 0 ? FALSE : TRUE);
-                            if ( cmd == FALSE )
-                            {
-                                ptp->dwErr = GetLastError();
-                            }
-                        }
-                        ReplyMessage((LRESULT)cmd);
-                        return TRUE;
-                    }
-            }
+            // Again, this shouldn't happen ... but
+            return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
         }
-    }
-    else
-    {
-        // In CreateDialogParam() / CreateDialogIndirectParam() we pass the
-        // pointer to the PlainBaseDialog CSelf as the param, unless we created a
-        // child dialog. The OS then sends us this value as the LPARAM argument
-        // in the WM_INITDIALOG message. The pointer is stored in the user data
-        // field of the window words for this dialog.
-        if ( lParam != NULL )
-        {
-            setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)lParam);
-        }
+
+        pcpbd->dlgProcContext = context;
+        setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
+
         return TRUE;
     }
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(hDlg, GWLP_USERDATA);
+    if ( pcpbd == NULL )
+    {
+        // A number of messages arrive before WM_INITDIALOG, we just ignore them.
+        return FALSE;
+    }
+
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+    if ( dlgAdm == NULL || pcpbd->dlgProcContext == NULL )
+    {
+        // Once again, theoretically impossible ...
+        return endDialogPremature(pcpbd, hDlg, NoThreadContext);
+    }
+
+    bool msgEnabled = (IsWindowEnabled(hDlg) && pcpbd->dlgProcContext != NULL);
+
+    // Do not search message table for WM_PAINT to improve redraw.
+    if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
+    {
+        MsgReplyType searchReply = searchMessageTable(uMsg, wParam, lParam, pcpbd);
+        if ( searchReply != ContinueProcessing )
+        {
+            // Note pre 4.0.1, we always returned FALSE, (pass on to the system
+            // to process.) But, post 4.0.1 we sometimes reply TRUE, the message
+            // has been handled.
+            return (searchReply == ReplyTrue ? TRUE : FALSE);
+        }
+    }
+
+    switch ( uMsg )
+    {
+        case WM_PAINT:
+            if ( pcpbd->bkgBitmap != NULL )
+            {
+                drawBackgroundBmp(pcpbd, hDlg);
+            }
+            break;
+
+        case WM_DRAWITEM:
+            if ( lParam != 0 )
+            {
+                return drawBitmapButton(dlgAdm, pcpbd, lParam, msgEnabled);
+            }
+            break;
+
+        case WM_CTLCOLORDLG:
+            if ( pcpbd->bkgBrush )
+            {
+                return(LRESULT)pcpbd->bkgBrush;
+            }
+            break;
+
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLORBTN:
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORMSGBOX:
+        case WM_CTLCOLORSCROLLBAR:
+        {
+            HBRUSH hbrush = NULL;
+
+            if ( dlgAdm->CT_size > 0 )
+            {
+                // See of the user has set the dialog item with a different
+                // color.
+                long id = GetWindowLong((HWND)lParam, GWL_ID);
+                if ( id > 0 )
+                {
+                    register size_t i = 0;
+                    while ( i < dlgAdm->CT_size && dlgAdm->ColorTab[i].itemID != id )
+                    {
+                        i++;
+                    }
+                    if ( i < dlgAdm->CT_size )
+                    {
+                        hbrush = dlgAdm->ColorTab[i].ColorBrush;
+                    }
+
+                    if ( hbrush )
+                    {
+                        if ( dlgAdm->ColorTab[i].isSysBrush )
+                        {
+                            SetBkColor((HDC)wParam, GetSysColor(dlgAdm->ColorTab[i].ColorBk));
+                            if ( dlgAdm->ColorTab[i].ColorFG != -1 )
+                            {
+                                SetTextColor((HDC)wParam, GetSysColor(dlgAdm->ColorTab[i].ColorFG));
+                            }
+                        }
+                        else
+                        {
+                            SetBkColor((HDC)wParam, PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
+                            if ( dlgAdm->ColorTab[i].ColorFG != -1 )
+                            {
+                                SetTextColor((HDC)wParam, PALETTEINDEX(dlgAdm->ColorTab[i].ColorFG));
+                            }
+                        }
+                    }
+                }
+            }
+            if ( hbrush )
+                return(LRESULT)hbrush;
+            else
+                return DefWindowProc(hDlg, uMsg, wParam, lParam);
+        }
+
+        case WM_COMMAND:
+            switch ( LOWORD(wParam) )
+            {
+                // For both IDOK and IDCANCEL, the notification code
+                // (the high word value,) must be 0.
+                case IDOK:
+                    printf("Got IDOK, but how?\n");
+                    if ( HIWORD(wParam) == 0 )
+                    {
+                        dlgAdm->LeaveDialog = 1;
+                    }
+                    return TRUE;
+
+                case IDCANCEL:
+                    printf("Got IDCANCEL, but how?\n");
+                    if ( HIWORD(wParam) == 0 )
+                    {
+                        dlgAdm->LeaveDialog = 2;
+                    }
+                    return TRUE;
+            }
+            break;
+
+        case WM_QUERYNEWPALETTE:
+        case WM_PALETTECHANGED:
+            return paletteMessage(dlgAdm, hDlg, uMsg, wParam, lParam);
+
+        case WM_USER_CREATECHILD:
+        {
+            HWND hChild = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc,
+                                                    (LPARAM)pcpbd);
+            ReplyMessage((LRESULT)hChild);
+            return TRUE;
+        }
+
+        case WM_USER_INTERRUPTSCROLL:
+            dlgAdm->StopScroll = wParam;
+            return TRUE;
+
+        case WM_USER_GETFOCUS:
+            ReplyMessage((LRESULT)GetFocus());
+            return TRUE;
+
+        case WM_USER_GETSETCAPTURE:
+            if ( wParam == 0 )
+            {
+                ReplyMessage((LRESULT)GetCapture());
+            }
+            else if ( wParam == 2 )
+            {
+                uint32_t rc = 0;
+                if ( ReleaseCapture() == 0 )
+                {
+                    rc = GetLastError();
+                }
+                ReplyMessage((LRESULT)rc);
+            }
+            else
+            {
+                ReplyMessage((LRESULT)SetCapture((HWND)lParam));
+            }
+            return TRUE;
+
+        case WM_USER_GETKEYSTATE:
+            ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
+            return TRUE;
+
+        case WM_USER_SUBCLASS:
+        {
+            SUBCLASSDATA * pData = (SUBCLASSDATA *)lParam;
+            BOOL success = FALSE;
+
+            if ( pData )
+            {
+                success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
+            }
+            ReplyMessage((LRESULT)success);
+            return TRUE;
+        }
+
+        case WM_USER_SUBCLASS_REMOVE:
+            ReplyMessage((LRESULT)RemoveWindowSubclass(GetDlgItem(hDlg, (int)lParam), (SUBCLASSPROC)wParam, (int)lParam));
+            return TRUE;
+
+        case WM_USER_HOOK:
+            ReplyMessage((LRESULT)SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)wParam, NULL, GetCurrentThreadId()));
+            return TRUE;
+
+        case WM_USER_CONTEXT_MENU:
+        {
+            PTRACKPOP ptp = (PTRACKPOP)wParam;
+            uint32_t cmd;
+
+            SetLastError(0);
+            cmd = (uint32_t)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
+                                             ptp->hWnd, ptp->lptpm);
+
+            // If TPM_RETURNCMD is specified, the return is the menu item
+            // selected.  Otherwise, the return is 0 for failure and
+            // non-zero for success.
+            if ( ! (ptp->flags & TPM_RETURNCMD) )
+            {
+                cmd = (cmd == 0 ? FALSE : TRUE);
+                if ( cmd == FALSE )
+                {
+                    ptp->dwErr = GetLastError();
+                }
+            }
+            ReplyMessage((LRESULT)cmd);
+            return TRUE;
+        }
+    }
+
     return FALSE;
 }
 
@@ -374,40 +433,47 @@ static DIALOGADMIN * allocDlgAdmin(RexxMethodContext *c)
 {
     DIALOGADMIN *adm = NULL;
 
+    if ( StoredDialogs >= MAXDIALOGS )
+    {
+        // This condition should have been intercepted by PlainBaseDialog::new()
+        // But if it hasn't, we'll try to end everything.
+        char buf[128];
+        _snprintf(buf, sizeof(buf), "The number of active dialogs has reached the maximum (%d) allowed", MAXDIALOGS);
+
+        userDefinedMsgException(c->threadContext, buf);
+        goto too_many_out;
+    }
+
     EnterCriticalSection(&crit_sec);
 
-    if ( StoredDialogs < MAXDIALOGS )
+    adm = (DIALOGADMIN *)LocalAlloc(LPTR, sizeof(DIALOGADMIN));
+    if ( adm == NULL )
     {
-        adm = (DIALOGADMIN *)LocalAlloc(LPTR, sizeof(DIALOGADMIN));
-        if ( adm == NULL )
-        {
-            goto err_out;
-        }
-
-        adm->pMessageQueue = (char *)LocalAlloc(LPTR, MAXLENQUEUE);
-        if ( adm->pMessageQueue == NULL )
-        {
-            goto err_out;
-        }
-
-        adm->previous = topDlg;
-        adm->TableEntry = StoredDialogs;
-        StoredDialogs++;
-        DialogTab[adm->TableEntry] = adm;
-        goto done_out;
+        goto err_out;
     }
-    else
+
+    adm->pMessageQueue = (char *)LocalAlloc(LPTR, MAXLENQUEUE);
+    if ( adm->pMessageQueue == NULL )
     {
-        MessageBox(0, "Too many active Dialogs","Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
-        goto done_out;
+        goto err_out;
     }
+
+    adm->previous = topDlg;
+    adm->TableEntry = StoredDialogs;
+    StoredDialogs++;
+    DialogTab[adm->TableEntry] = adm;
+    goto done_out;
 
 err_out:
     safeLocalFree(adm);
-    MessageBox(0, "Out of system resources", "Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+    adm = NULL;
+    MessageBox(0, "Out of system resources, memory allocation failed.", "ooDialog Error",
+               MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+    outOfMemoryException(c->threadContext);
 
 done_out:
     LeaveCriticalSection(&crit_sec);
+too_many_out:
     return adm;
 }
 
@@ -473,24 +539,35 @@ bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING library)
         dlgAdm->TheInstance = MyInstance;
     }
 
-    dlgAdm->Use3DControls = FALSE;
     return true;
 }
 
 
-
-/* end a dialog and remove installed components */
-int32_t DelDialog(DIALOGADMIN * aDlg)
+/**
+ * Ends a running dialog and cleans up some (most) of the dialog admin block.
+ *
+ * Note that this function is at times called when the underlying Windows dialog
+ * was not created, and therefore there is no dialog handle.  The original
+ * ooDialog code always just seemed to ignore this, except for the DestroyWindow
+ * section.  For now that is just carried on.
+ *
+ * @param aDlg
+ *
+ * @return int32_t
+ */
+int32_t DelDialog(pCPlainBaseDialog pcpbd)
 {
     DIALOGADMIN * current;
     int32_t ret;
     size_t i;
-    BOOL wasFGW;
     HICON hIconBig = NULL;
     HICON hIconSmall = NULL;
 
+    DIALOGADMIN *aDlg = pcpbd->dlgAdm;
+    printf("DelDialog() hDlg=%p threadContext=%p\n", pcpbd->hDlg, pcpbd->dlgProcContext);
+
     EnterCriticalSection(&crit_sec);
-    wasFGW = (aDlg->TheDlg == GetForegroundWindow());
+    bool wasFGW = (aDlg->TheDlg == GetForegroundWindow());
 
     ret = aDlg->LeaveDialog;
 
@@ -522,15 +599,23 @@ int32_t DelDialog(DIALOGADMIN * aDlg)
     }
     StoredDialogs--;
 
-    // Post the WM_QUIT message to exit the Windows message loop.
+    // Post the WM_QUIT message to exit the Windows message loop.  (This is
+    // useless, the message never gets to RexxDlgProc().)
     PostMessage(aDlg->TheDlg, WM_QUIT, 0, 0);
 
     if ( aDlg->TheDlg )
     {
         // The Windows documentation states: "must not use EndDialog for
         // non-modal dialogs"
+        printf("Going to DestroyWindow(dlg)\n");
         DestroyWindow(aDlg->TheDlg);
     }
+    pcpbd->isActive = false;
+    if ( pcpbd->dlgProcContext != NULL )
+    {
+        pcpbd->dlgProcContext->DetachThread();
+    }
+    pcpbd->dlgProcContext = NULL;
 
     /* Swap back the saved icons. If not shared, the icon was loaded from a file
      * and needs to be freed, otherwise the OS handles the free.  The title bar
@@ -1951,25 +2036,28 @@ HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObje
     return hCtrl;
 }
 
-int32_t stopDialog(HWND hDlg)
+/**
+ * Used to end the Windows dialog and clean up the dialog admin block.
+ *
+ * Can also be used to clean up the dialog admin block when an error happens
+ * during the creation of the underlying Windows dialog.
+ *
+ * @param pcpbd  Pointer to the PlainBaseDialog CSelf struct.
+ *
+ * @return -1 if the dialog admin block has already been cleaned up.  Otherwise,
+ *         0, 1, or 2 which indicates the state of the dialog being ended.
+ *
+ * @remarks  Prior to the conversion to the C++ APIs, this function was passed
+ *           the dialog window handle and did a seekDlgAdm using that handle.
+ *           It was also possible that it would be called when the creation of
+ *           the underlying dialog failed, passing in a null handle.  In that
+ *           case, it erroneously deleted the 'topDlg.'
+ */
+int32_t stopDialog(pCPlainBaseDialog pcpbd)
 {
-    if ( hDlg != NULL )
+    if ( pcpbd->dlgAdm != NULL )
     {
-        DIALOGADMIN * dlgAdm = seekDlgAdm(hDlg);
-        if ( dlgAdm != NULL)
-        {
-            return DelDialog(dlgAdm);
-        }
-        else
-        {
-            return -1;
-        }
-    }
-    else if ( hDlg == NULL && topDlg != NULL )
-    {
-        // Remove the top most.  This scenario is invoked from the DynamicDialog
-        // class when create() or load() fail.
-        return DelDialog(topDlg);
+        return DelDialog(pcpbd);
     }
     return -1;
 }
@@ -2129,12 +2217,136 @@ RexxMethod1(uint32_t, pbdlg_getFontSize_cls, CSELF, pCSelf)
     return pcpbdc->fontSize;
 }
 
+
+/** PlainBaseDialog::new()
+ *
+ *  The new() method is implemented to provide a clean way to prevent more than
+ *  MAXDIALOGS dialog objects from being instantiated.
+ *
+ *  If we try to enforce this in PlaingBaseDialog::init() we run into the
+ *  problem of having to either:
+ *
+ *  Raise an error condition and have the other dialog threads pretty much hang.
+ *
+ *  Raise an error condition and issue an interpreter halt, pretty much shutting
+ *  everything down.
+ *
+ *  Here we intercept the too many dialogs condition and return a proxy object
+ *  that has only 1 method, the initCode.  For the proxy object, initCode always
+ *  returns 1.  If the programmer checks the init code, they will know the
+ *  dialog is not vaild.  If they try to use it, it won't work.
+ *
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_new_cls, ARGLIST, args, SUPER, superClass)
+{
+    RexxObjectPtr dlgObj = TheNilObj;
+
+    if ( StoredDialogs >= MAXDIALOGS )
+    {
+        char buf[128];
+        _snprintf(buf, sizeof(buf),
+                  "The number of active dialogs has\n"
+                  "reached the maximum (%d) allowed\n\n"
+                  "No more dialogs can be instantiated", MAXDIALOGS);
+        MessageBox(NULL, buf, "ooDialog Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+
+        RexxClassObject proxyClass = rxGetContextClass(context, "DIALOGPROXY");
+        if ( proxyClass != NULLOBJECT )
+        {
+            dlgObj = context->SendMessage0(proxyClass, "NEW");
+        }
+        goto done_out;
+    }
+
+    dlgObj = context->ForwardMessage(NULLOBJECT, NULL, superClass, NULL);
+
+done_out:
+    return dlgObj;
+}
+
+
+/** PlainBaseDialog::init()
+ *
+ *  The initialization of the base dialog.
+ *
+ *
+ *  @remarks  Prior to 4.0.1, if something failed here, the 'init code' was set
+ *            to non-zero.  One problem with this is that it relies on the user
+ *            checking the init code and *not* using the dialog object if it is
+ *            an error code.  Since we can not rely on that, in order to prevent
+ *            a crash, the internal code would need to constantly check that the
+ *            CSELF pointer was not null.
+ *
+ *            Rather than do that, the code now raises an error condition if
+ *            something fails.  (This seems to be the right thing to do anyway.)
+ *            That works fine if there is only one dialog running.  But, if more
+ *            than one dialog is running, the other threads just hang.  Not real
+ *            clean for the user.  So, in addition, we use the interpreter
+ *            instance to do a Halt(), which pretty much shuts everything down.
+ *
+ *            As ooDialog was being converted to the C++ APIs, the initCode
+ *            attribute came to have less and less meaning.  With this change,
+ *            it is mostly not needed.  The one exception is when the maximum
+ *            number of active dialogs has been reached.  (See
+ *            PlainBaseDialog::new().)
+ */
 RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, resource,
             OPTIONAL_RexxObjectPtr, dlgDataStem, OPTIONAL_RexxObjectPtr, hFile, OSELF, self)
 {
-    RexxMethodContext *c = context;
+    // This is an error return, but see remarks.
+    RexxObjectPtr result = TheOneObj;
 
-    RexxObjectPtr result = TheOneObj;  // This is an error return.
+    // Before processing the arguments, do everything that might raise an error
+    // condition.
+
+    // Get a buffer for the PlainBaseDialog CSelf.
+    RexxBufferObject cselfBuffer = context->NewBuffer(sizeof(CPlainBaseDialog));
+    if ( cselfBuffer == NULLOBJECT )
+    {
+        goto terminate_out;
+    }
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->BufferData(cselfBuffer);
+    memset(pcpbd, 0, sizeof(CPlainBaseDialog));
+
+    // The adm attribute is slowly being phased out.  But to be on the safe
+    // side, we still set it to 0 if there is an error.  However, eventually
+    // this attribute will disappear.
+    DIALOGADMIN *dlgAdm = allocDlgAdmin(context);
+
+    context->SetObjectVariable("ADM", pointer2string(context, dlgAdm));
+    if ( dlgAdm == NULL )
+    {
+        goto terminate_out;
+    }
+
+    // Initialize the window base.
+    pCWindowBase pWB;
+    if ( ! initWindowBase(context, NULL, self, &pWB) )
+    {
+        goto terminate_out;
+    }
+
+    pcpbd->interpreter = context->threadContext->instance;
+    pcpbd->dlgAdm = dlgAdm;
+    pcpbd->autoDetect = TRUE;
+    pcpbd->wndBase = pWB;
+    pcpbd->rexxSelf = self;
+    context->SetObjectVariable("CSELF", cselfBuffer);
+
+    dlgAdm->pcpbd = pcpbd;
+
+    // Initialize the event notification mixin class.  The only thing that could
+    // fail is getting a buffer from the interpreter kernel.
+    pCEventNotification pEN = NULL;
+    if ( ! initEventNotification(context, dlgAdm, self, &pEN) )
+    {
+        goto terminate_out;
+    }
+    pcpbd->enCSelf = pEN;
+
+    // Now process the arguments and do the rest of the initialization.
+    result = TheZeroObj;
 
     context->SetObjectVariable("LIBRARY", library);
     context->SetObjectVariable("RESOURCE", resource);
@@ -2150,54 +2362,6 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
         context->SetObjectVariable("USESTEM", TheFalseObj);
     }
 
-    // Get a buffer for the PlainBaseDialog CSelf.
-    RexxBufferObject cselfBuffer = context->NewBuffer(sizeof(CPlainBaseDialog));
-    if ( cselfBuffer == NULLOBJECT )
-    {
-        goto err_out;
-    }
-
-    // Initialize the window base.
-    pCWindowBase pWB;
-    if ( ! initWindowBase(context, NULL, self, &pWB) )
-    {
-        goto done_out;
-    }
-
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->BufferData(cselfBuffer);
-    memset(pcpbd, 0, sizeof(CPlainBaseDialog));
-
-    pcpbd->autoDetect = TRUE;
-    pcpbd->wndBase = pWB;
-    pcpbd->rexxSelf = self;
-    context->SetObjectVariable("CSELF", cselfBuffer);
-
-    // The adm attribute needs to be set to whatever the result of allocating
-    // the dialog administration block is.  If it is null, then the attribute
-    // will be set to 0, which is what most of the existing ooDialog code
-    // expects.
-
-    DIALOGADMIN *dlgAdm = allocDlgAdmin(context);
-
-    pcpbd->dlgAdm = dlgAdm;
-    context->SetObjectVariable("ADM", pointer2string(context, dlgAdm));
-    if ( dlgAdm == NULL )
-    {
-        goto done_out;
-    }
-
-    // Initialize the event notification mixin class.  The only thing that could
-    // fail is getting a buffer from the interpreter kernel.  If that happens an
-    // exceptions is raised and we should not need to do any clean up.
-    pCEventNotification pEN = NULL;
-    if ( ! initEventNotification(context, dlgAdm, self, &pEN) )
-    {
-        goto done_out;
-    }
-    pcpbd->enCSelf = pEN;
-
-    result = TheZeroObj;
-
     context->SetObjectVariable("PARENTDLG", TheNilObj);
     context->SetObjectVariable("FINISHED", TheZeroObj);
     context->SetObjectVariable("PROCESSINGLOAD", TheFalseObj);
@@ -2211,38 +2375,41 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     addTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDHELP,   UINTPTR_MAX, 0, 0, "Help", 0);
 
     // Set our default font to the PlainBaseDialog class default font.
-    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(c);
+    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(context);
     strcpy(pcpbd->fontName, pcpbdc->fontName);
     pcpbd->fontSize = pcpbdc->fontSize;
 
     // TODO at this point calculate the true dialog base units and set them into CPlainBaseDialog.
 
-    c->SendMessage1(self, "CHILDDIALOGS=", rxNewList(context));       // self~childDialogs = .list~new
-    c->SendMessage0(self, "INITAUTODETECTION");                       // self~initAutoDetection
-    c->SendMessage1(self, "DATACONNECTION=", c->NewArray(50));        // self~dataConnection = .array~new(50)
-    c->SendMessage1(self, "AUTOMATICMETHODS=", rxNewQueue(context));  // self~autoMaticMethods = .queue~new
+    context->SendMessage1(self, "CHILDDIALOGS=", rxNewList(context));       // self~childDialogs = .list~new
+    context->SendMessage0(self, "INITAUTODETECTION");                       // self~initAutoDetection
+    context->SendMessage1(self, "DATACONNECTION=", context->NewArray(50));  // self~dataConnection = .array~new(50)
+    context->SendMessage1(self, "AUTOMATICMETHODS=", rxNewQueue(context));  // self~autoMaticMethods = .queue~new
 
-    RexxDirectoryObject constDir = c->NewDirectory();
-    c->SendMessage1(self, "CONSTDIR=", constDir);                     // self~constDir = .directory~new
+    RexxDirectoryObject constDir = context->NewDirectory();
+    context->SendMessage1(self, "CONSTDIR=", constDir);                     // self~constDir = .directory~new
 
-    c->DirectoryPut(constDir, c->Int32(IDOK),             "IDOK");
-    c->DirectoryPut(constDir, c->Int32(IDCANCEL),         "IDCANCEL");
-    c->DirectoryPut(constDir, c->Int32(IDHELP),           "IDHELP");
-    c->DirectoryPut(constDir, c->Int32(IDC_STATIC),       "IDC_STATIC");
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OODIALOG), "IDI_DLG_OODIALOG");
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON),  "IDI_DLG_APPICON");
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON2), "IDI_DLG_APPICON2");
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OOREXX),   "IDI_DLG_OOREXX");
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
+    context->DirectoryPut(constDir, context->Int32(IDOK),             "IDOK");
+    context->DirectoryPut(constDir, context->Int32(IDCANCEL),         "IDCANCEL");
+    context->DirectoryPut(constDir, context->Int32(IDHELP),           "IDHELP");
+    context->DirectoryPut(constDir, context->Int32(IDC_STATIC),       "IDC_STATIC");
+    context->DirectoryPut(constDir, context->Int32(IDI_DLG_OODIALOG), "IDI_DLG_OODIALOG");
+    context->DirectoryPut(constDir, context->Int32(IDI_DLG_APPICON),  "IDI_DLG_APPICON");
+    context->DirectoryPut(constDir, context->Int32(IDI_DLG_APPICON2), "IDI_DLG_APPICON2");
+    context->DirectoryPut(constDir, context->Int32(IDI_DLG_OOREXX),   "IDI_DLG_OOREXX");
+    context->DirectoryPut(constDir, context->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
 
     if ( argumentExists(4) )
     {
-        c->SendMessage1(self, "PARSEINCLUDEFILE", hFile);
+        context->SendMessage1(self, "PARSEINCLUDEFILE", hFile);
     }
+    goto done_out;
+
+terminate_out:
+    context->threadContext->instance->Halt();
 
 done_out:
-    c->SendMessage1(self, "INITCODE=", result);
-err_out:
+    context->SendMessage1(self, "INITCODE=", result);
     return result;
 }
 
@@ -2259,7 +2426,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
 
             if ( dialogInAdminTable(adm) )
             {
-                DelDialog(adm);
+                DelDialog(pcpbd);
             }
             safeLocalFree(adm->pMessageQueue);
             LocalFree(adm);
@@ -3362,17 +3529,21 @@ RexxMethod4(RexxObjectPtr, pbdlg_setTabGroup, RexxObjectPtr, rxID, OPTIONAL_logi
  *  @return  True if the underlying Windows dialog is active, otherwise false.
  *
  *  @remarks  The original ooDialog code checked if the dlgAdm was still in the
- *            DialogAdmin table.  ??  This would be true for a dialog in a
- *            CategoryDialog, if the dialog was the active child, and false if
- *            it was a good dialog, but for one of the other pages.  That may
- *            have been the point of the method.
- *
- *            Since the DialogTable will be going away, this method will need to
- *            be re-thought.
+ *            DialogAdmin table.  ??  Not really sure what was the point of
+ *            that.  Internally, ooDialog no longer invokes isDialogActive()
+ *            anywhere. The method was documented and thereofore needs to be
+ *            maintained.  The test now checks that this Rexx dialog has a valid
+ *            Windows dialog.  (Maybe that was always the purpose of the method
+ *            and it was just implemented in an odd way.)
  */
-RexxMethod1(logical_t, pbdlg_isDialogActive, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, pbdlg_isDialogActive, CSELF, pCSelf)
 {
-    return seekDlgAdm(((pCPlainBaseDialog)pCSelf)->hDlg) != NULL;
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->hDlg != NULL && IsWindow(pcpbd->hDlg) && pcpbd->isActive )
+    {
+        return TheTrueObj;
+    }
+    return TheFalseObj;
 }
 
 
@@ -3545,7 +3716,7 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
     // ridden by the Rexx programmer to do whatever she would want.
     context->SendMessage0(pcpbd->rexxSelf, "LEAVING");
 
-    int32_t result = stopDialog(pcpbd->hDlg);
+    int32_t result = stopDialog(pcpbd);
 
     pcpbd->hDlg = NULL;
     pcpbd->wndBase->hwnd = NULL;

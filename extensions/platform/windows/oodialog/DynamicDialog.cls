@@ -405,10 +405,10 @@
 
 -- This method creates a dialog from a resource script file (usually with extension of '.rc'.)
 -- It calls loadFrame() and loadItems() The argument 'loadOptions' can be one or more of:e
---    "CENTER"         : this will create the dialog on a centered position */
---    "CONNECTBUTTONS" :
---    "CONNECTRADIOS"
---    "CONNECTCHECKS"
+--    "CENTER"         : this will create the dialog on a centered position
+--    "CONNECTBUTTONS" : automatically connect all push buttons to a method
+--    "CONNECTRADIOS"  : automatically connect all raidio buttons to a method
+--    "CONNECTCHECKS"  : automatically connect all check boxes to a method
 ::method load
    forward message "loadFrame" continue
    ret = result

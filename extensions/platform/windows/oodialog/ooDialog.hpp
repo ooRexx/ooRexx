@@ -103,44 +103,77 @@ extern DWORD ComCtl32Version;
  *  defined methods.  It allows the user mapping to dictate different processing
  *  of a Windows message based on the tag.
  *
- *  The least significant 2 bytes are used to define the type of control.  These
- *  bytes can be isolated using TAG_CTRLMASK.
+ *  The least significant byte is used to define the type of control.  This byte
+ *  can be isolated using TAG_CTRLMASK.
  */
+#define TAG_CTRLMASK              0x000000FF
+
 #define TAG_DIALOG                0x00000001
-#define TAG_HELP                  0x00000100
-#define TAG_CONTEXTMENU           0x00000200
-#define TAG_MENUCOMMAND           0x00000400
-#define TAG_SYSMENUCOMMAND        0x00000800
-#define TAG_MENUMESSAGE           0x00001000
-
-// Reply TRUE in dialog procedure, not FALSE.  Reply FALSE passes message on to
-// the system for processing.  TRUE indicates the message was handled.
-#define TAG_MSGHANDLED            0x01000000
-
 #define TAG_BUTTON                0x00000004
 #define TAG_TREEVIEW              0x00000006
 #define TAG_LISTVIEW              0x00000007
 #define TAG_TRACKBAR              0x00000008
 #define TAG_TAB                   0x00000009
 #define TAG_UPDOWN                0x0000000A
+#define TAG_MONTHCALENDAR         0x0000000B
 
-#define TAG_CTRLMASK              0x000000FF
+/**
+ * The next 2 bytes are generic 'flags' that can be isolated using TAG_FLAGMASK.
+ * The individual flags are not necessarily unique, but rather are unique when
+ * combined with a specific CTRL byte.  For instance, the help and menu related
+ * flags are only used with TAG_DIALOG.  So, it doesn't matter that TAG_HELP has
+ * the same value as TAG_STATECHANGED.
+ */
 #define TAG_FLAGMASK              0x00FFFF00
-#define TAG_EXTRAMASK             0xFF000000
+
+#define TAG_HELP                  0x00000100
+#define TAG_CONTEXTMENU           0x00000200
+#define TAG_MENUCOMMAND           0x00000400
+#define TAG_SYSMENUCOMMAND        0x00000800
+#define TAG_MENUMESSAGE           0x00001000
 
 #define TAG_STATECHANGED          0x00000100
 #define TAG_CHECKBOXCHANGED       0x00000200
 #define TAG_SELECTCHANGED         0x00000400
 #define TAG_FOCUSCHANGED          0x00000800
 
+/**
+ * The last byte is for, well 'extra' information.  Use TAG_EXTRAMASK to
+ * isolate the byte.
+ */
+#define TAG_EXTRAMASK             0xFF000000
+
+// Reply TRUE in dialog procedure, not FALSE.  Reply FALSE passes message on to
+// the system for processing.  TRUE indicates the message was handled.
+#define TAG_MSGHANDLED            0x01000000
+
+// The message reply comes from Rexx.  I.e., from the programmer.  The return
+// will be a .Pointer, unwrap it and use it as the message reply.  (This is a
+// first cut at this, may change.)
+#define TAG_REPLYFROMREXX         0x02000000
+
 // Describes how a message searched for in the message table should be handled
 // by RexxDlgProc() after the search.
 typedef enum
 {
-    NotMatched    = 0,    // Message not matched.
-    ReplyFalse    = 1,    // Message matched and handled return FALSE to the system
-    ReplyTrue     = 2,    // Message matched and handled return TRUE to the system
+    ContinueProcessing   = 0,    // Message not matched.
+    ReplyFalse           = 1,    // Message matched and handled return FALSE to the system
+    ReplyTrue            = 2,    // Message matched and handled return TRUE to the system
 } MsgReplyType;
+
+
+// Identifies an error, that should never happen, discovered in RexxDlgProc().
+// Used in endDialogPremature() to determine what message to display.
+typedef enum
+{
+    NoPCPBDpased    = 0,    // pCPlainBaseDialog not passed in the WM_INITDIALOG message
+    NoThreadAttach  = 1,    // Failed to attach the thread context.
+    NoThreadContext = 2,    // Thread context (or admin block) pointer is null.
+} DlgProcErrType;
+
+#define NO_PCPBD_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PlainBaseDialog\nCSELF is null.\n\n\tpcpdb=%p\n\thDlg=%p\n"
+#define NO_THREAD_ATTACH_MSG   "RexxDlgProc() ERROR in WM_INITDIALOG.  Failed to attach\nthread context.\n\n\tpcpdb=%p\n\thDlg=%p\n"
+#define NO_THREAD_CONTEXT_MSG  "RexxDlgProc() ERROR.  Admin block pointer\nor thread context is null.\n\n\tdlgAdm=%p\n\tdlgProcContext=%p\n\thDlg=%pn"
 
 
 // Enum for the type of Windows dialog control.
@@ -336,6 +369,7 @@ typedef struct {
 typedef struct
 {
    void              *previous;
+   void              *pcpbd;  // maybe temp.
    size_t             TableEntry;
    MESSAGETABLEENTRY *MsgTab;
    DATATABLEENTRY    *DataTab;
@@ -354,7 +388,6 @@ typedef struct
    HANDLE             TheThread;
    BOOL               OnTheTop;
    ULONG              LeaveDialog;
-   BOOL               Use3DControls;
    HPALETTE           ColorPalette;
    HICON              SysMenuIcon;
    HICON              TitleBarIcon;
@@ -390,22 +423,6 @@ extern RexxClassObject TheDynamicDialogClass;
 extern RexxClassObject TheDialogControlClass;
 
 extern HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, size_t *index, uint32_t id);
-
-inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
-{
-    if (topDlg && ((topDlg->TheDlg == hDlg) || (topDlg->AktChild == hDlg)))
-    {
-        return topDlg;
-    }
-
-    register INT i = 0;
-    while ( (i < StoredDialogs) && (DialogTab[i]->TheDlg != hDlg) && (DialogTab[i]->AktChild != hDlg) )
-    {
-        i++;
-    }
-    return i < StoredDialogs ? DialogTab[i] : NULL;
-}
-
 
 extern bool _isVersion(DWORD, DWORD, unsigned int, unsigned int, unsigned int);
 extern bool _is32on64Bit(void);

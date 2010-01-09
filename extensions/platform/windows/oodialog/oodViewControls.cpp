@@ -86,7 +86,7 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
  */
 RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     HWND hEdit;
     if ( ((pCDialogControl)pCSelf)->controlType == winTreeView )
@@ -124,7 +124,6 @@ RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
 // This is used for MonthCalendar also
 #define SYSTEMTIME_MIN_YEAR    1601
 
-enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
 
 /**
  * Converts a DateTime object to a SYSTEMTIME structure.  The fields of the
@@ -211,7 +210,7 @@ failed_out:
  * @param sysTime
  * @param dateTime  [in/out]
  */
-static void sysTime2dt(RexxMethodContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part)
+void sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part)
 {
     RexxClassObject dtClass = c->FindClass("DATETIME");
 
@@ -263,10 +262,10 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
     SYSTEMTIME sysTime = {0};
     RexxObjectPtr dateTime = NULLOBJECT;
 
-    switch ( DateTime_GetSystemtime(getDCHCtrl(pCSelf), &sysTime) )
+    switch ( DateTime_GetSystemtime(getDChCtrl(pCSelf), &sysTime) )
     {
         case GDT_VALID:
-            sysTime2dt(context, &sysTime, &dateTime, dtFull);
+            sysTime2dt(context->threadContext, &sysTime, &dateTime, dtFull);
             break;
 
         case GDT_NONE:
@@ -304,7 +303,7 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
 RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCSelf)
 {
     SYSTEMTIME sysTime = {0};
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     if ( context->IsOfType(dateTime, "POINTER") )
     {
@@ -340,6 +339,80 @@ inline bool isMultiSelectionMonthCalendar(HWND hCtrl)
     return ((GetWindowLong(hCtrl, GWL_STYLE) & MCS_MULTISELECT) == MCS_MULTISELECT);
 }
 
+inline RexxObjectPtr setDayState(HWND hMC, LPMONTHDAYSTATE pmds, int count, RexxObjectPtr result)
+{
+    if ( result != TheFalseObj )
+    {
+        result = (MonthCal_SetDayState(hMC, count, pmds) == 0 ? TheFalseObj : TheTrueObj);
+    }
+    return result;
+}
+
+/* Convert Month Calendar integer day to its string name. */
+inline CSTRING day2dayName(int32_t iDay)
+{
+    switch ( iDay )
+    {
+        case 0 : return "Monday";
+            break;
+        case 1 : return "Tuesday";
+            break;
+        case 2 : return "Wednesday";
+            break;
+        case 3 : return "Thursday";
+            break;
+        case 4 : return "Friday";
+            break;
+        case 5 : return "Saturday";
+            break;
+        case 6 : return "Sunday";
+            break;
+        default : return  "";
+            break;
+    }
+}
+
+
+static int32_t dayName2day(CSTRING day)
+{
+    if (      StrStrI(day, "MONDAY"   ) != NULL ) return 0;
+    else if ( StrStrI(day, "TUESDAY"  ) != NULL ) return 1;
+    else if ( StrStrI(day, "WEDNESDAY") != NULL ) return 2;
+    else if ( StrStrI(day, "THURSDAY" ) != NULL ) return 3;
+    else if ( StrStrI(day, "FRIDAY"   ) != NULL ) return 4;
+    else if ( StrStrI(day, "SATURDAY" ) != NULL ) return 5;
+    else if ( StrStrI(day, "SUNDAY"   ) != NULL ) return 6;
+    else return -1;
+}
+
+
+static void firstDay2directory(RexxMethodContext *c, uint32_t firstDay, RexxDirectoryObject *pDirectory)
+{
+    int32_t       iDay = LOWORD(firstDay);
+    RexxObjectPtr usesLocale = HIWORD(firstDay) == 0 ? TheTrueObj : TheFalseObj;
+    CSTRING       dayName = day2dayName(iDay);
+
+    RexxDirectoryObject result = *pDirectory;
+
+    c->DirectoryPut(result, c->Int32(iDay), "DAY");
+    c->DirectoryPut(result, usesLocale, "USINGLOCALE");
+    c->DirectoryPut(result, c->String(dayName), "DAYNAME");
+}
+
+
+static COLORREF calPart2flag(CSTRING part)
+{
+    COLORREF color = MCSC_BACKGROUND;
+
+    if (      StrStrI(part, "BACKGROUND"  ) != NULL ) color = MCSC_BACKGROUND;
+    else if ( StrStrI(part, "MONTHBK"     ) != NULL ) color = MCSC_MONTHBK;
+    else if ( StrStrI(part, "TEXT"        ) != NULL ) color = MCSC_TEXT;
+    else if ( StrStrI(part, "TITLEBK"     ) != NULL ) color = MCSC_TITLEBK ;
+    else if ( StrStrI(part, "TITLETEXT"   ) != NULL ) color = MCSC_TITLETEXT;
+    else if ( StrStrI(part, "TRAILINGTEXT") != NULL ) color = MCSC_TRAILINGTEXT;
+    return color;
+}
+
 
 /** MonthCalendar::date  [Attribute Get]
  *
@@ -353,7 +426,7 @@ inline bool isMultiSelectionMonthCalendar(HWND hCtrl)
  */
 RexxMethod1(RexxObjectPtr, get_mc_date, CSELF, pCSelf)
 {
-    HWND hMC = getDCHCtrl(pCSelf);
+    HWND hMC = getDChCtrl(pCSelf);
     RexxObjectPtr dateTime = NULLOBJECT;
 
     SYSTEMTIME sysTime[2];
@@ -375,7 +448,7 @@ RexxMethod1(RexxObjectPtr, get_mc_date, CSELF, pCSelf)
     }
     else
     {
-        sysTime2dt(context, (SYSTEMTIME *)&sysTime, &dateTime, dtDate);
+        sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime, &dateTime, dtDate);
     }
     return dateTime;
 }
@@ -396,7 +469,7 @@ RexxMethod1(RexxObjectPtr, get_mc_date, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, CSELF, pCSelf)
 {
-    HWND hMC = getDCHCtrl(pCSelf);
+    HWND hMC = getDChCtrl(pCSelf);
 
     SYSTEMTIME sysTime[2];
     LRESULT result = FALSE;
@@ -430,9 +503,266 @@ RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, CSELF, pCSelf)
 }
 
 
+RexxMethod1(uint32_t, mc_getCalendarBorder, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        wrongWindowsVersionException(context, "getBorder", "Vista");
+        return 0;
+    }
+    return MonthCal_GetCalendarBorder(getDChCtrl(pCSelf));
+}
+
+
+RexxMethod1(uint32_t, mc_getCalendarCount, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        wrongWindowsVersionException(context, "getCount", "Vista");
+        return 0;
+    }
+    return MonthCal_GetCalendarCount(getDChCtrl(pCSelf));
+}
+
+
+RexxMethod1(RexxObjectPtr, mc_getCALID, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "getCALID", "Vista");
+    }
+
+    CSTRING id = "";
+    switch( MonthCal_GetCALID(getDChCtrl(pCSelf)) )
+    {
+        case CAL_GREGORIAN              : id = "GREGORIAN"; break;
+        case CAL_GREGORIAN_US           : id = "GREGORIAN_US"; break;
+        case CAL_JAPAN                  : id = "JAPAN"; break;
+        case CAL_TAIWAN                 : id = "TAIWAN"; break;
+        case CAL_KOREA                  : id = "KOREA"; break;
+        case CAL_HIJRI                  : id = "HIJRI"; break;
+        case CAL_THAI                   : id = "THAI"; break;
+        case CAL_HEBREW                 : id = "HEBREW"; break;
+        case CAL_GREGORIAN_ME_FRENCH    : id = "GREGORIAN_ME_FRENCH"; break;
+        case CAL_GREGORIAN_ARABIC       : id = "GREGORIAN_ARABIC"; break;
+        case CAL_GREGORIAN_XLIT_ENGLISH : id = "CAL_GREGORIAN_XLIT_ENGLISH"; break;
+        case CAL_GREGORIAN_XLIT_FRENCH  : id = "CAL_GREGORIAN_XLIT_FRENCH"; break;
+        case CAL_UMALQURA               : id = "UMALQURA"; break;
+    }
+
+    return context->String(id);
+}
+
+
+/** MonthCalendar::getColor()
+ *
+ *  Retrieves the color for a given portion of a month calendar control.
+ *
+ *  @param  which  Specifies which portion to get the color for.
+ *
+ *  @return  The color for the portion of the month calendar specified, or
+ *           CLR_INVALID on error.
+ *
+ *  @notes  You can use .Image~colorRef(CLR_INVALID) to test for error.  (An
+ *          error is not very likely.)  I.e.:
+ *
+ *          color = monthCalendar~getColor("TRAILINGTEXT")
+ *          if color == .Image~colorRef(CLR_INVALID) then do
+ *            -- some error routine
+ *          end
+ *
+ */
+RexxMethod2(uint32_t, mc_getColor, CSTRING, which, CSELF, pCSelf)
+{
+    COLORREF color = calPart2flag(which);
+    return (COLORREF)MonthCal_GetColor(getDChCtrl(pCSelf), color);
+}
+
+RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "getBorder", "Vista");
+    }
+
+    CSTRING id = "";
+    switch( MonthCal_GetCurrentView(getDChCtrl(pCSelf)) )
+    {
+        case MCMV_MONTH   : id = "Monthly"; break;
+        case MCMV_YEAR    : id = "Annual"; break;
+        case MCMV_DECADE  : id = "Decade"; break;
+        case MCMV_CENTURY : id = "Century"; break;
+    }
+
+    return context->String(id);
+}
+
+
+/** MonthCalendar::getFirstDayOfWeek()
+ *
+ *  Retrieves the first day of the week for the month calendar control.
+ *
+ *  @param  info  [OPTIONAL]  A directory object which will be filled with more
+ *                detailed information than just the first day.
+ *
+ *  @return  A number specifying the first day of the week.  0 for Monday, 1 for
+ *           Tuesday, etc..
+ *
+ *  @note  If the optional directory object is passed to the method, on return
+ *         it will contain these indexes:
+ *
+ *         day          The number specifying the first day of the week.  This
+ *                      is the same number as the return.
+ *
+ *         usingLocale  True or false, specifying whether if the first day of
+ *                      the week is set to the LOCALE_IFIRSTDAYOFWEEK.
+ *
+ *         dayName      The string name of the day, Monday, Tuesday, etc..
+ */
+RexxMethod2(int32_t, mc_getFirstDayOfWeek, OPTIONAL_RexxObjectPtr, result, CSELF, pCSelf)
+{
+    HWND hMC = getDChCtrl(pCSelf);
+
+    uint32_t ret = MonthCal_GetFirstDayOfWeek(hMC);
+
+    int32_t       iDay = LOWORD(ret);
+    RexxObjectPtr usesLocale = HIWORD(ret) == 0 ? TheTrueObj : TheFalseObj;
+    CSTRING       dayName = day2dayName(iDay);
+
+    if ( argumentExists(1) )
+    {
+        if ( ! context->IsOfType(result, "DIRECTORY") )
+        {
+            wrongClassException(context->threadContext, 1, "Directory");
+        }
+        else
+        {
+            firstDay2directory(context, ret, (RexxDirectoryObject *)&result);
+        }
+    }
+    return LOWORD(ret);
+}
+
+RexxMethod2(RexxObjectPtr, mc_getMinRect, RexxObjectPtr, _rect, CSELF, pCSelf)
+{
+    HWND hMC = getDChCtrl(pCSelf);
+
+    PRECT r = rxGetRect(context, _rect, 1);
+    if ( r != NULL )
+    {
+        return (MonthCal_GetMinReqRect(hMC, r) == 0 ? TheFalseObj : TheTrueObj);
+    }
+    return TheFalseObj;
+}
+
+
+/** MonthCalendar::getMonthRange()
+ *
+ *  Retrieves date information (using DateTime objects) that represents the
+ *  high and low limits of a month calendar control's display.
+ *
+ *  @param  range  [IN / OUT] An array object in which the range is returned.
+ *                 The lower limit (a DateTime object) will be returned at index
+ *                 1 and the upper limit (a DateTime object) will be returned at
+ *                 index 2.
+ *
+ *  @param  span   [OPTIONAL]  A keyword specifying whether the range should
+ *                 include only months that are ENTIRELY displayed or to include
+ *                 trailing and following months that are only PARTIALLY
+ *                 displayed.  The default if omitted is PARTIALLY.  Only the
+ *                 first letter of ENTIRELY or PARTIALLY are required and case
+ *                 is insignificant.
+ *
+ *  @return  The number of months in the range.
+ */
+RexxMethod3(int32_t, mc_getMonthRange, RexxArrayObject, range, OPTIONAL_CSTRING, span, CSELF, pCSelf)
+{
+    HWND hMC = getDChCtrl(pCSelf);
+
+    uint32_t flag = GMR_DAYSTATE;
+    if ( argumentExists(2) )
+    {
+        switch ( toupper(*span) )
+        {
+            case 'E' : flag = GMR_VISIBLE;
+                break;
+            case 'P' : flag = GMR_DAYSTATE;
+                break;
+            default :
+                goto err_out;
+        }
+    }
+
+    SYSTEMTIME sysTime[2];
+    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
+
+    int32_t ret = MonthCal_GetMonthRange(hMC, flag, &sysTime);
+
+    RexxObjectPtr lowMonth, highMonth;
+    sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime, &lowMonth, dtDate);
+    sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime + 1, &highMonth, dtDate);
+
+    context->ArrayPut(range, lowMonth, 1);
+    context->ArrayPut(range, highMonth, 2);
+
+    return ret;
+
+err_out:
+    wrongArgOptionException(context->threadContext, 2, "'P' (partially), or 'E' (entirely)", span);
+    return -1;
+}
+
+RexxMethod2(CSTRING, mc_getRange, RexxArrayObject, range, CSELF, pCSelf)
+{
+    HWND hMC = getDChCtrl(pCSelf);
+
+    SYSTEMTIME sysTime[2];
+    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
+
+    uint32_t ret = MonthCal_GetRange(hMC, &sysTime);
+
+    RexxObjectPtr minDate;
+    RexxObjectPtr maxDate;
+
+    CSTRING result;
+    switch ( ret )
+    {
+        case 0 :
+            result = "none";
+            minDate = TheZeroObj;
+            maxDate = TheZeroObj;
+            break;
+        case (GDTR_MIN | GDTR_MAX) :
+            sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime, &minDate, dtDate);
+            sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime + 1, &maxDate, dtDate);
+            result = "both";
+            break;
+        case GDTR_MIN :
+            result = "min";
+            sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime, &minDate, dtDate);
+            maxDate = TheZeroObj;
+            break;
+        case GDTR_MAX :
+            result = "max";
+            minDate = TheZeroObj;
+            sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime + 1, &maxDate, dtDate);
+            break;
+        default :
+            result = "error";  // I don'think this is possible.
+            minDate = TheZeroObj;
+            maxDate = TheZeroObj;
+            break;
+    }
+
+    context->ArrayPut(range, minDate, 1);
+    context->ArrayPut(range, maxDate, 2);
+
+    return result;
+}
+
 RexxMethod2(RexxObjectPtr, mc_getSelectionRange, RexxArrayObject, range, CSELF, pCSelf)
 {
-    HWND hMC = getDCHCtrl(pCSelf);
+    HWND hMC = getDChCtrl(pCSelf);
 
     if ( ! isMultiSelectionMonthCalendar(hMC) )
     {
@@ -448,11 +778,11 @@ RexxMethod2(RexxObjectPtr, mc_getSelectionRange, RexxArrayObject, range, CSELF, 
     }
 
     RexxObjectPtr startDate;
-    sysTime2dt(context, (SYSTEMTIME *)&sysTime, &startDate, dtDate);
+    sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime, &startDate, dtDate);
     context->ArrayPut(range, startDate, 1);
 
     RexxObjectPtr endDate;
-    sysTime2dt(context, (SYSTEMTIME *)&sysTime + 1, &endDate, dtDate);
+    sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime + 1, &endDate, dtDate);
     context->ArrayPut(range, endDate, 2);
 
     return TheTrueObj;
@@ -461,9 +791,228 @@ err_out:
     return TheFalseObj;
 }
 
+
+/** MonthCalendar::getToday()
+ *
+ *  Retrieves the date information for the date specified as "today" for a month
+ *  calendar control.
+ *
+ *  @return  The "today" date as a DateTime object or .nil on error.
+ */
+RexxMethod1(RexxObjectPtr, mc_getToday, CSELF, pCSelf)
+{
+    HWND hMC = getDChCtrl(pCSelf);
+
+    RexxObjectPtr result = TheNilObj;
+    SYSTEMTIME sysTime = {0};
+
+    if ( MonthCal_GetToday(hMC, &sysTime) != 0 )
+    {
+        sysTime2dt(context->threadContext, &sysTime, &result, dtDate);
+    }
+    return result;
+}
+
+
+RexxMethod2(RexxObjectPtr, mc_setCalendarBorder, OPTIONAL_uint32_t, border, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "setBorder", "Vista");
+    }
+
+    HWND hCtrl = getDChCtrl(pCSelf);
+    if ( argumentExists(1) )
+    {
+        MonthCal_SetCalendarBorder(hCtrl, TRUE, border);
+    }
+    else
+    {
+        MonthCal_SetCalendarBorder(hCtrl, FALSE, 0);
+    }
+    return TheZeroObj;
+}
+
+
+/** MonthCalendar::setCALID()
+ *
+ *  Sets the calendar ID for the month calendar control.
+ *
+ * @param id  Keyword specifying which calendar ID to use.
+ *
+ * @return  0, always.
+ */
+RexxMethod2(RexxObjectPtr, mc_setCALID, CSTRING, id, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "setCALID", "Vista");
+    }
+
+    uint32_t calID = CAL_GREGORIAN;
+
+    if (      StrStrI(id, "GREGORIAN"                 ) != NULL ) calID = CAL_GREGORIAN ;
+    else if ( StrStrI(id, "GREGORIAN_US"              ) != NULL ) calID = CAL_GREGORIAN_US;
+    else if ( StrStrI(id, "JAPAN"                     ) != NULL ) calID = CAL_JAPAN;
+    else if ( StrStrI(id, "TAIWAN"                    ) != NULL ) calID = CAL_TAIWAN;
+    else if ( StrStrI(id, "KOREA"                     ) != NULL ) calID = CAL_KOREA;
+    else if ( StrStrI(id, "HIJRI"                     ) != NULL ) calID = CAL_HIJRI;
+    else if ( StrStrI(id, "THAI"                      ) != NULL ) calID = CAL_THAI;
+    else if ( StrStrI(id, "HEBREW"                    ) != NULL ) calID = CAL_HEBREW;
+    else if ( StrStrI(id, "GREGORIAN_ME_FRENCH"       ) != NULL ) calID = CAL_GREGORIAN_ME_FRENCH;
+    else if ( StrStrI(id, "GREGORIAN_ARABIC"          ) != NULL ) calID = CAL_GREGORIAN_ARABIC;
+    else if ( StrStrI(id, "CAL_GREGORIAN_XLIT_ENGLISH") != NULL ) calID = CAL_GREGORIAN_XLIT_ENGLISH;
+    else if ( StrStrI(id, "CAL_GREGORIAN_XLIT_FRENCH" ) != NULL ) calID = CAL_GREGORIAN_XLIT_FRENCH;
+    else if ( StrStrI(id, "UMALQURA"                  ) != NULL ) calID = CAL_UMALQURA;
+
+    MonthCal_SetCALID(getDChCtrl(pCSelf), calID);
+    return TheZeroObj;
+}
+
+
+/** MonthCalendar::setColor()
+ *
+ *  Sets the color for a given part of a month calendar control.
+ *
+ *  @param  which  Specifies which portion will have its color set.
+ *  @param  color  A COLORREF specifying the color for the calendar part.
+ *
+ *  @return  The previous color for the part of the month calendar specified,
+ *           or CLR_INVALID on error.
+ *
+ *  @notes  You can use .Image~colorRef(CLR_INVALID) to test for error.  (An
+ *          error is not very likely.)  I.e.:
+ *
+ *          oldColor = monthCalendar~setColor("TRAILINGTEXT", color)
+ *          if oldColor == .Image~colorRef(CLR_INVALID) then do
+ *            -- some error routine
+ *          end
+ *
+ */
+RexxMethod3(uint32_t, mc_setColor, CSTRING, which, uint32_t, color, CSELF, pCSelf)
+{
+    uint32_t flag = calPart2flag(which);
+    return (COLORREF)MonthCal_SetColor(getDChCtrl(pCSelf), flag, color);
+}
+
+
+RexxMethod2(RexxObjectPtr, mc_setCurrentView, CSTRING, view, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "getBorder", "Vista");
+    }
+
+    uint32_t mcmv = MCMV_MONTH;
+
+    if (      StrStrI(view, "MONTHLY") != NULL ) mcmv = MCMV_MONTH;
+    else if ( StrStrI(view, "ANNUAL")  != NULL ) mcmv = MCMV_YEAR;
+    else if ( StrStrI(view, "DECADE")  != NULL ) mcmv = MCMV_DECADE;
+    else if ( StrStrI(view, "CENTURY") != NULL ) mcmv = MCMV_CENTURY;
+
+    return (MonthCal_SetCurrentView(getDChCtrl(pCSelf), mcmv) ? TheTrueObj : TheFalseObj);
+}
+
+RexxMethod2(RexxObjectPtr, mc_setDayState, RexxArrayObject, list, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    LPMONTHDAYSTATE pmds;
+    size_t count = c->ArrayItems(list);
+
+    RexxObjectPtr result = makeDayStateBuffer(context, list, count, &pmds);
+    return setDayState(getDChCtrl(pCSelf), pmds, (int)count, result);
+}
+
+RexxMethod4(RexxObjectPtr, mc_setDayStateQuick, uint32_t, ds1, uint32_t, ds2, uint32_t, ds3, CSELF, pCSelf)
+{
+    LPMONTHDAYSTATE pmds;
+    RexxObjectPtr result = quickDayStateBuffer(context, ds1, ds2, ds3, &pmds);
+    return setDayState(getDChCtrl(pCSelf), pmds, 3, result);
+}
+
+/** MonthCalendar::setFirstDayOfWeek()
+ *
+ *  Sets the first day of the week for the month calendar control.
+ *
+ *  @param  firstDay  Which day is to be the first day of the week.  This can
+ *                    either be the name of the day (Monday, Tuesday, etc., case
+ *                    insignificant) or the number of the day (0 for Monday, 1
+ *                    for Tuesday, etc..)
+ *
+ *  @return  A directory object with information concerning the previous first
+ *           day of the week. @see <getfirstDayOfWeek>
+ *
+ *  @note  The returned directory object will contain these indexes with the
+ *         information for the previous first day of the week:
+ *
+ *         day          The number specifying the first day of the week. 0 for
+ *                      Monday, etc..
+ *
+ *         usingLocale  True or false, specifying if the first day of the week
+ *                      is set to the LOCALE_IFIRSTDAYOFWEEK.
+ *
+ *         dayName      The string name of the day, Monday, Tuesday, etc..
+ */
+RexxMethod2(RexxObjectPtr, mc_setFirstDayOfWeek, RexxObjectPtr, firstDay, CSELF, pCSelf)
+{
+    HWND hMC = getDChCtrl(pCSelf);
+
+    int32_t iDay = -1;
+    if ( ! context->Int32(firstDay, &iDay) )
+    {
+        iDay = dayName2day(context->ObjectToStringValue(firstDay));
+    }
+
+    if ( iDay < 0 || iDay > 6 )
+    {
+        return wrongArgValueException(context->threadContext, 1, "name of the day or a nubmer from 0 to 6", firstDay);
+    }
+
+    uint32_t ret = (uint32_t)MonthCal_SetFirstDayOfWeek(hMC, iDay);
+
+    RexxDirectoryObject result = context->NewDirectory();
+    firstDay2directory(context, ret, &result);
+
+    return result;
+}
+
+RexxMethod2(RexxObjectPtr, mc_setRange, RexxArrayObject, dateTimes, CSELF, pCSelf)
+{
+    HWND hMC = getDChCtrl(pCSelf);
+
+    SYSTEMTIME sysTime[2];
+    BOOL success = FALSE;
+    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
+
+    uint32_t which = 0;
+
+    RexxObjectPtr minDate = context->ArrayAt(dateTimes, 1);
+    RexxObjectPtr maxDate = context->ArrayAt(dateTimes, 2);
+
+    if ( minDate != NULLOBJECT && context->IsOfType(minDate, "DATETIME") )
+    {
+        which = GDTR_MIN;
+        dt2sysTime(context, minDate, (SYSTEMTIME *)&sysTime, dtDate);
+    }
+
+    if ( maxDate != NULLOBJECT && context->IsOfType(maxDate, "DATETIME") )
+    {
+        which |= GDTR_MAX;
+        dt2sysTime(context, maxDate, (SYSTEMTIME *)&sysTime + 1, dtDate);
+    }
+
+    if ( which == 0 )
+    {
+        return TheFalseObj;
+    }
+
+    return  (MonthCal_SetRange(hMC, which, &sysTime) == 0 ? TheFalseObj : TheTrueObj);
+}
+
+
 RexxMethod2(RexxObjectPtr, mc_setSelectionRange, RexxArrayObject, dateTimes, CSELF, pCSelf)
 {
-    HWND hMC = getDCHCtrl(pCSelf);
+    HWND hMC = getDChCtrl(pCSelf);
 
     SYSTEMTIME sysTime[2];
     BOOL success = FALSE;
@@ -499,126 +1048,72 @@ err_out:
 }
 
 
-RexxMethod1(uint32_t, mc_getBorder, CSELF, pCSelf)
-{
-    if ( ! _isAtLeastVista() )
-    {
-        wrongWindowsVersionException(context, "getBorder", "Vista");
-        return 0;
-    }
-    return MonthCal_GetCalendarBorder(getDCHCtrl(pCSelf));
-}
-
-
-RexxMethod1(uint32_t, mc_getCount, CSELF, pCSelf)
-{
-    if ( ! _isAtLeastVista() )
-    {
-        wrongWindowsVersionException(context, "getCount", "Vista");
-        return 0;
-    }
-    return MonthCal_GetCalendarCount(getDCHCtrl(pCSelf));
-}
-
-
-RexxMethod1(RexxObjectPtr, mc_getCALID, CSELF, pCSelf)
-{
-    if ( ! _isAtLeastVista() )
-    {
-        return wrongWindowsVersionException(context, "getBorder", "Vista");
-    }
-
-    CSTRING id = "";
-    switch( MonthCal_GetCALID(getDCHCtrl(pCSelf)) )
-    {
-        case CAL_GREGORIAN              : id = "GREGORIAN"; break;
-        case CAL_GREGORIAN_US           : id = "GREGORIAN_US"; break;
-        case CAL_JAPAN                  : id = "JAPAN"; break;
-        case CAL_TAIWAN                 : id = "TAIWAN"; break;
-        case CAL_KOREA                  : id = "KOREA"; break;
-        case CAL_HIJRI                  : id = "HIJRI"; break;
-        case CAL_THAI                   : id = "THAI"; break;
-        case CAL_HEBREW                 : id = "HEBREW"; break;
-        case CAL_GREGORIAN_ME_FRENCH    : id = "GREGORIAN_ME_FRENCH"; break;
-        case CAL_GREGORIAN_ARABIC       : id = "GREGORIAN_ARABIC"; break;
-        case CAL_GREGORIAN_XLIT_ENGLISH : id = "CAL_GREGORIAN_XLIT_ENGLISH"; break;
-        case CAL_GREGORIAN_XLIT_FRENCH  : id = "CAL_GREGORIAN_XLIT_FRENCH"; break;
-        case CAL_UMALQURA               : id = "UMALQURA"; break;
-    }
-
-    return context->String(id);
-}
-
-
-/** MonthCalendar::getColor()
+/** MonthCalendar::setToday()
  *
- *  Retrieves the color for a given portion of a month calendar control.
+ *  Sets the "today" selection for a month calendar control.
  *
- *  @param  part  Specifies which portion to get the color for.
+ *  @param date  [OPTIONAL]  A DateTime object specifying the "today" date.  If
+ *               this argument is omitted, then  the control returns to the
+ *               default setting.
  *
- *  @return  The color for the portion of the month calendar specified, or
- *           CLR_INVALID on error.
- *
- *  @notes  You can use .Image~colorRef(CLR_INVALID) to test for error.  (An
- *          error is not very likely.)  I.e.:
- *
- *          color = monthCalendar~getColor("TRAILINGTEXT")
- *          if color == .Image~colorRef(CLR_INVALID) then do
- *            -- some error routine
- *          end
- *
+ *  @return  0 always.  The return has no meaning.
  */
-RexxMethod2(uint32_t, mc_getColor, CSTRING, which, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, mc_setToday, OPTIONAL_RexxObjectPtr, date, CSELF, pCSelf)
 {
-    int32_t color = MCSC_BACKGROUND;
+    HWND hMC = getDChCtrl(pCSelf);
 
-    if (      StrStrI(which, "BACKGROUND"  ) != NULL ) color = MCSC_BACKGROUND;
-    else if ( StrStrI(which, "MONTHBK"     ) != NULL ) color = MCSC_MONTHBK;
-    else if ( StrStrI(which, "TEXT"        ) != NULL ) color = MCSC_TEXT;
-    else if ( StrStrI(which, "TITLEBK"     ) != NULL ) color = MCSC_TITLEBK ;
-    else if ( StrStrI(which, "TITLETEXT"   ) != NULL ) color = MCSC_TITLETEXT;
-    else if ( StrStrI(which, "TRAILINGTEXT") != NULL ) color = MCSC_TRAILINGTEXT;
-
-    return (COLORREF)MonthCal_GetColor(getDCHCtrl(pCSelf), color);
-}
-
-
-RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
-{
-    if ( ! _isAtLeastVista() )
-    {
-        return wrongWindowsVersionException(context, "getBorder", "Vista");
-    }
-
-    CSTRING id = "";
-    switch( MonthCal_GetCurrentView(getDCHCtrl(pCSelf)) )
-    {
-        case MCMV_MONTH   : id = "Monthly"; break;
-        case MCMV_YEAR    : id = "Annual"; break;
-        case MCMV_DECADE  : id = "Decade"; break;
-        case MCMV_CENTURY : id = "Century"; break;
-    }
-
-    return context->String(id);
-}
-
-
-RexxMethod2(RexxObjectPtr, mc_setBorder, OPTIONAL_uint32_t, border, CSELF, pCSelf)
-{
-    if ( ! _isAtLeastVista() )
-    {
-        return wrongWindowsVersionException(context, "setBorder", "Vista");
-    }
-
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    SYSTEMTIME sysTime = {0};
+    SYSTEMTIME *pSysTime = NULL;
+    RexxMethodContext *c = context;
     if ( argumentExists(1) )
     {
-        MonthCal_SetCalendarBorder(hCtrl, TRUE, border);
+        if ( ! c->IsOfType(date, "DATETIME") )
+        {
+            wrongClassException(context->threadContext, 1, "DateTime");
+            goto done_out;
+        }
+        dt2sysTime(context, date, &sysTime, dtDate);
     }
-    else
+
+    MonthCal_SetToday(hMC, &sysTime);
+
+done_out:
+    return TheZeroObj;
+}
+
+
+/** MonthCalendar::sizeRectToMin()
+ *
+ *  Calculates how many calendars will fit in the given rectangle, and then
+ *  returns the minimum size that a rectangle needs to be to fit that number of
+ *  calendars.
+ *
+ *  @parm  _rect  [IN / OUT]  On entry, contains a .Rect object that describes a
+ *         region that is greater than or equal to the size necessary to fit the
+ *         desired number of calendars. When this method returns, the .Rect
+ *         object will contains the minimum size needed for this number of
+ *         calendars.
+ *
+ *  @return  0, always.  The return has no meaning.
+ *
+ */
+RexxMethod2(RexxObjectPtr, mc_sizeRectToMin, RexxObjectPtr, _rect, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
     {
-        MonthCal_SetCalendarBorder(hCtrl, FALSE, 0);
+        wrongWindowsVersionException(context, "sizeRectToMin", "Vista");
+        goto done_out;
     }
+
+    HWND hMC = getDChCtrl(pCSelf);
+
+    PRECT r = rxGetRect(context, _rect, 1);
+    if ( r != NULL )
+    {
+        MonthCal_SizeRectToMin(hMC, r);
+    }
+
+done_out:
     return TheZeroObj;
 }
 
@@ -759,7 +1254,7 @@ static uint32_t changeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTRIN
     oodResetSysErrCode(c->threadContext);
     SetLastError(0);
 
-    HWND     hList = getDCHCtrl(pCSelf);
+    HWND     hList = getDChCtrl(pCSelf);
     uint32_t oldStyle = (uint32_t)GetWindowLong(hList, GWL_STYLE);
 
     if ( oldStyle == 0 && GetLastError() != 0 )
@@ -875,14 +1370,14 @@ static int getColumnWidthArg(RexxMethodContext *context, RexxObjectPtr _width, s
 RexxMethod5(int32_t, lv_insert, OPTIONAL_uint32_t, _itemIndex, OPTIONAL_uint32_t, subitemIndex, CSTRING, text,
             OPTIONAL_int32_t, imageIndex, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
     int32_t newItem = -1;
     int32_t itemIndex = _itemIndex;
     LVITEM lvi = {0};
 
     if ( argumentOmitted(1) )
     {
-        itemIndex = getDCInsertIndex(pCSelf);
+        itemIndex = getDCinsertIndex(pCSelf);
         if ( subitemIndex > 0 )
         {
             itemIndex--;
@@ -928,11 +1423,11 @@ done_out:
 RexxMethod5(RexxObjectPtr, lv_modify, OPTIONAL_uint32_t, itemIndex, OPTIONAL_uint32_t, subitemIndex, CSTRING, text,
             OPTIONAL_int32_t, imageIndex, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     if ( argumentOmitted(1) )
     {
-        itemIndex = getDCInsertIndex(pCSelf);
+        itemIndex = getDCinsertIndex(pCSelf);
         if ( subitemIndex > 0 )
         {
             itemIndex--;
@@ -965,9 +1460,9 @@ RexxMethod5(RexxObjectPtr, lv_modify, OPTIONAL_uint32_t, itemIndex, OPTIONAL_uin
 RexxMethod2(int32_t, lv_add, ARGLIST, args, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
-    uint32_t itemIndex = getDCInsertIndex(pCSelf);
+    uint32_t itemIndex = getDCinsertIndex(pCSelf);
     int32_t imageIndex = -1;
     int32_t result = -1;
 
@@ -1041,9 +1536,9 @@ done_out:
 RexxMethod5(int32_t, lv_addRow, OPTIONAL_uint32_t, index, OPTIONAL_int32_t, imageIndex, OPTIONAL_CSTRING, text,
             ARGLIST, args, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
-    index      = (argumentOmitted(1) ? getDCInsertIndex(pCSelf) : index);
+    index      = (argumentOmitted(1) ? getDCinsertIndex(pCSelf) : index);
     imageIndex = (argumentOmitted(2) ? -1 : imageIndex);
     text       = (argumentOmitted(3) ? "" : text);
 
@@ -1138,7 +1633,7 @@ RexxMethod3(int32_t, lv_getNextItem, OPTIONAL_int32_t, startItem, NAME, method, 
     {
         startItem = -1;
     }
-    return ListView_GetNextItem(getDCHCtrl(pCSelf), startItem, flag);
+    return ListView_GetNextItem(getDChCtrl(pCSelf), startItem, flag);
 }
 
 /** ListView::selected()
@@ -1163,7 +1658,7 @@ RexxMethod2(int32_t, lv_getNextItemWithState, NAME, method, CSELF, pCSelf)
     {
         flag = LVNI_DROPHILITED;
     }
-    return ListView_GetNextItem(getDCHCtrl(pCSelf), -1, flag);
+    return ListView_GetNextItem(getDChCtrl(pCSelf), -1, flag);
 }
 
 /** ListView::find()
@@ -1172,7 +1667,7 @@ RexxMethod2(int32_t, lv_getNextItemWithState, NAME, method, CSELF, pCSelf)
  */
 RexxMethod5(int32_t, lv_find, CSTRING, text, OPTIONAL_int32_t, startItem, OPTIONAL_logical_t, wrap, NAME, method, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     if ( argumentOmitted(2) )
     {
@@ -1213,7 +1708,7 @@ RexxMethod5(int32_t, lv_find, CSTRING, text, OPTIONAL_int32_t, startItem, OPTION
  */
 RexxMethod2(int32_t, lv_findNearestXY, ARGLIST, args, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
     LVFINDINFO finfo = {0};
 
     if ( ! isInIconView(hList) )
@@ -1267,20 +1762,20 @@ err_out:
 
 RexxMethod4(RexxObjectPtr, lv_setItemText, uint32_t, index, OPTIONAL_uint32_t, subitem, CSTRING, text, CSELF, pCSelf)
 {
-    ListView_SetItemText(getDCHCtrl(pCSelf), index, subitem, (LPSTR)text);
+    ListView_SetItemText(getDChCtrl(pCSelf), index, subitem, (LPSTR)text);
     return TheZeroObj;
 }
 
 RexxMethod3(RexxStringObject, lv_itemText, uint32_t, index, OPTIONAL_uint32_t, subitem, CSELF, pCSelf)
 {
     char buf[256];
-    ListView_GetItemText(getDCHCtrl(pCSelf), index, subitem, buf, sizeof(buf));
+    ListView_GetItemText(getDChCtrl(pCSelf), index, subitem, buf, sizeof(buf));
     return context->String(buf);
 }
 
 RexxMethod2(RexxStringObject, lv_itemState, uint32_t, index, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     uint32_t state = ListView_GetItemState(hList, index, LVIS_CUT | LVIS_DROPHILITED | LVIS_FOCUSED | LVIS_SELECTED);
 
@@ -1325,7 +1820,7 @@ RexxMethod3(RexxObjectPtr, lv_setSpecificState, uint32_t, index, NAME, method, C
         mask |= LVIS_FOCUSED;
         state |= LVIS_FOCUSED;
     }
-    ListView_SetItemState(getDCHCtrl(pCSelf), index, state, mask);
+    ListView_SetItemState(getDChCtrl(pCSelf), index, state, mask);
     return TheZeroObj;
 }
 
@@ -1374,7 +1869,7 @@ RexxMethod3(RexxObjectPtr, lv_setItemState, uint32_t, index, CSTRING, _state, CS
         state |= LVIS_SELECTED;
     }
 
-    ListView_SetItemState(getDCHCtrl(pCSelf), index, state, mask);
+    ListView_SetItemState(getDChCtrl(pCSelf), index, state, mask);
     return TheZeroObj;
 }
 
@@ -1389,7 +1884,7 @@ RexxMethod3(RexxObjectPtr, lv_setItemState, uint32_t, index, CSTRING, _state, CS
  */
 RexxMethod3(RexxObjectPtr, lv_setColor, uint32_t, color, NAME, method, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     COLORREF ref = PALETTEINDEX(color);
 
@@ -1419,7 +1914,7 @@ RexxMethod3(RexxObjectPtr, lv_setColor, uint32_t, color, NAME, method, CSELF, pC
  */
 RexxMethod2(int32_t, lv_getColor, NAME, method, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     COLORREF ref;
 
@@ -1461,7 +1956,7 @@ RexxMethod2(int32_t, lv_getColor, NAME, method, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, lv_arrange, NAME, method, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     int32_t flag = 0;
     switch ( method[5] )
@@ -1484,7 +1979,7 @@ RexxMethod2(RexxObjectPtr, lv_arrange, NAME, method, CSELF, pCSelf)
 
 RexxMethod3(int32_t, lv_checkUncheck, int32_t, index, NAME, method, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     if ( ! hasCheckBoxes(hList) )
     {
@@ -1497,7 +1992,7 @@ RexxMethod3(int32_t, lv_checkUncheck, int32_t, index, NAME, method, CSELF, pCSel
 
 RexxMethod2(RexxObjectPtr, lv_isChecked, int32_t, index, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     if ( hasCheckBoxes(hList) )
     {
@@ -1515,7 +2010,7 @@ RexxMethod2(RexxObjectPtr, lv_isChecked, int32_t, index, CSELF, pCSelf)
 
 RexxMethod2(int32_t, lv_getCheck, int32_t, index, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     if ( ! hasCheckBoxes(hList) )
     {
@@ -1532,7 +2027,7 @@ RexxMethod2(int32_t, lv_getCheck, int32_t, index, CSELF, pCSelf)
  */
 RexxMethod1(RexxObjectPtr, lv_hasCheckBoxes, CSELF, pCSelf)
 {
-    return (hasCheckBoxes(getDCHCtrl(pCSelf)) ? TheTrueObj : TheFalseObj);
+    return (hasCheckBoxes(getDChCtrl(pCSelf)) ? TheTrueObj : TheFalseObj);
 }
 
 /** ListView::getExtendedStyle()
@@ -1541,7 +2036,7 @@ RexxMethod1(RexxObjectPtr, lv_hasCheckBoxes, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, lv_getExtendedStyle, NAME, method, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
     if ( method[16] == 'R' )
     {
         return context->UnsignedInt32(ListView_GetExtendedListViewStyle(hList));
@@ -1564,7 +2059,7 @@ RexxMethod3(int32_t, lv_addClearExtendStyle, CSTRING, _style, NAME, method, CSEL
         return -3;
     }
 
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     if ( *method == 'C' )
     {
@@ -1586,7 +2081,7 @@ RexxMethod3(int32_t, lv_replaceExtendStyle, CSTRING, remove, CSTRING, add, CSELF
         return -3;
     }
 
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
     ListView_SetExtendedListViewStyleEx(hList, removeStyles, 0);
     ListView_SetExtendedListViewStyleEx(hList, addStyles, addStyles);
     return 0;
@@ -1614,7 +2109,7 @@ RexxMethod3(uint32_t, lv_replaceStyle, CSTRING, removeStyle, CSTRING, additional
 
 RexxMethod3(RexxObjectPtr, lv_getItemInfo, uint32_t, index, OPTIONAL_uint32_t, subItem, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     LVITEM lvi;
     char buf[256];
@@ -1653,12 +2148,12 @@ RexxMethod3(RexxObjectPtr, lv_getItemInfo, uint32_t, index, OPTIONAL_uint32_t, s
 
 RexxMethod1(int, lv_getColumnCount, CSELF, pCSelf)
 {
-    return getColumnCount(getDCHCtrl(pCSelf));
+    return getColumnCount(getDChCtrl(pCSelf));
 }
 
 RexxMethod2(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     LVCOLUMN lvi;
     char buf[256];
@@ -1694,7 +2189,7 @@ RexxMethod2(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, CSELF, pCSelf)
 
 RexxMethod3(RexxObjectPtr, lv_setColumnWidthPx, uint32_t, index, OPTIONAL_RexxObjectPtr, _width, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     int width = getColumnWidthArg(context, _width, 2);
     if ( width == OOD_BAD_WIDTH_EXCEPTION )
@@ -1708,7 +2203,7 @@ RexxMethod5(RexxObjectPtr, lv_modifyColumnPx, uint32_t, index, OPTIONAL_CSTRING,
             OPTIONAL_CSTRING, align, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
     LVCOLUMN lvi = {0};
 
     if ( argumentExists(2) && *label != '\0' )
@@ -1747,7 +2242,7 @@ err_out:
 
 RexxMethod1(RexxObjectPtr, lv_getColumnOrder, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     int count = getColumnCount(hwnd);
     if ( count == -1 )
@@ -1792,7 +2287,7 @@ RexxMethod1(RexxObjectPtr, lv_getColumnOrder, CSELF, pCSelf)
 
 RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     size_t    items   = context->ArrayItems(order);
     int       count   = getColumnCount(hwnd);
@@ -1859,7 +2354,7 @@ done:
 RexxMethod5(int, lv_insertColumnPx, OPTIONAL_uint16_t, column, CSTRING, text, uint16_t, width,
             OPTIONAL_CSTRING, fmt, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     LVCOLUMN lvi = {0};
     int retVal = 0;
@@ -1911,18 +2406,18 @@ RexxMethod5(int, lv_insertColumnPx, OPTIONAL_uint16_t, column, CSTRING, text, ui
 
 RexxMethod2(int, lv_stringWidthPx, CSTRING, text, CSELF, pCSelf)
 {
-    return ListView_GetStringWidth(getDCHCtrl(pCSelf), text);
+    return ListView_GetStringWidth(getDChCtrl(pCSelf), text);
 }
 
 // TODO Review Implementation before release.  Maybe add / use a .ListViewItem or .LVItem
 RexxMethod5(int32_t, lv_addFullRow, CSTRING, text, OPTIONAL_int32_t, itemIndex, OPTIONAL_int32_t, imageIndex,
             OPTIONAL_RexxObjectPtr, subItems, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     if ( argumentOmitted(2) )
     {
-        itemIndex = getDCInsertIndex(pCSelf);
+        itemIndex = getDCinsertIndex(pCSelf);
     }
     if ( argumentOmitted(3) )
     {
@@ -2002,7 +2497,7 @@ done_out:
 
 RexxMethod2(RexxObjectPtr, lv_getItemPos, uint32_t, index, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     POINT p;
     if ( ! ListView_GetItemPosition(hList, index, &p) )
@@ -2027,7 +2522,7 @@ RexxMethod2(RexxObjectPtr, lv_getItemPos, uint32_t, index, CSELF, pCSelf)
  */
 RexxMethod4(RexxObjectPtr, lv_setItemPos, uint32_t, index, OPTIONAL_RexxObjectPtr, _obj, OPTIONAL_int32_t, y, CSELF, pCSelf)
 {
-    HWND hList = getDCHCtrl(pCSelf);
+    HWND hList = getDChCtrl(pCSelf);
 
     if ( ! isInIconView(hList) )
     {
@@ -2117,7 +2612,7 @@ RexxMethod4(RexxObjectPtr, lv_setItemPos, uint32_t, index, OPTIONAL_RexxObjectPt
 RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
             OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     oodResetSysErrCode(context->threadContext);
 
     HIMAGELIST himl = NULL;
@@ -2296,7 +2791,7 @@ RexxMethod8(RexxObjectPtr, tv_insert, OPTIONAL_CSTRING, _hItem, OPTIONAL_CSTRING
             OPTIONAL_int32_t, imageIndex, OPTIONAL_int32_t, selectedImage, OPTIONAL_CSTRING, opts, OPTIONAL_uint32_t, children,
             CSELF, pCSelf)
 {
-    HWND hwnd  = getDCHCtrl(pCSelf);
+    HWND hwnd  = getDChCtrl(pCSelf);
 
     TVINSERTSTRUCT  ins;
     TVITEMEX       *tvi = &ins.itemex;
@@ -2373,7 +2868,7 @@ RexxMethod8(RexxObjectPtr, tv_insert, OPTIONAL_CSTRING, _hItem, OPTIONAL_CSTRING
 RexxMethod7(int32_t, tv_modify, OPTIONAL_CSTRING, _hItem, OPTIONAL_CSTRING, label, OPTIONAL_int32_t, imageIndex,
             OPTIONAL_int32_t, selectedImage, OPTIONAL_CSTRING, opts, OPTIONAL_uint32_t, children, CSELF, pCSelf)
 {
-    HWND hwnd  = getDCHCtrl(pCSelf);
+    HWND hwnd  = getDChCtrl(pCSelf);
 
     TVITEMEX tvi = {0};
 
@@ -2424,7 +2919,7 @@ RexxMethod7(int32_t, tv_modify, OPTIONAL_CSTRING, _hItem, OPTIONAL_CSTRING, labe
 
 RexxMethod2(RexxObjectPtr, tv_itemInfo, CSTRING, _hItem, CSELF, pCSelf)
 {
-    HWND hwnd  = getDCHCtrl(pCSelf);
+    HWND hwnd  = getDChCtrl(pCSelf);
 
     TVITEM tvi = {0};
     char buf[256];
@@ -2466,7 +2961,7 @@ RexxMethod2(RexxObjectPtr, tv_itemInfo, CSTRING, _hItem, CSELF, pCSelf)
 
 RexxMethod2(RexxObjectPtr, tv_getSpecificItem, NAME, method, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     HTREEITEM result = NULL;
 
     switch ( *method )
@@ -2490,7 +2985,7 @@ RexxMethod2(RexxObjectPtr, tv_getSpecificItem, NAME, method, CSELF, pCSelf)
 
 RexxMethod3(RexxObjectPtr, tv_getNextItem, CSTRING, _hItem, NAME, method, CSELF, pCSelf)
 {
-    HWND      hwnd  = getDCHCtrl(pCSelf);
+    HWND      hwnd  = getDChCtrl(pCSelf);
     HTREEITEM hItem = (HTREEITEM)string2pointer(_hItem);
     uint32_t  flag  = TVGN_PARENT;
 
@@ -2511,7 +3006,7 @@ RexxMethod3(RexxObjectPtr, tv_getNextItem, CSTRING, _hItem, NAME, method, CSELF,
  */
 RexxMethod3(RexxObjectPtr, tv_selectItem, OPTIONAL_CSTRING, _hItem, NAME, method, CSELF, pCSelf)
 {
-    HWND      hwnd  = getDCHCtrl(pCSelf);
+    HWND      hwnd  = getDChCtrl(pCSelf);
     HTREEITEM hItem = NULL;
     uint32_t  flag;
 
@@ -2542,7 +3037,7 @@ RexxMethod3(RexxObjectPtr, tv_selectItem, OPTIONAL_CSTRING, _hItem, NAME, method
  */
 RexxMethod3(RexxObjectPtr, tv_expand, CSTRING, _hItem, NAME, method, CSELF, pCSelf)
 {
-    HWND      hwnd  = getDCHCtrl(pCSelf);
+    HWND      hwnd  = getDChCtrl(pCSelf);
     HTREEITEM hItem = (HTREEITEM)string2pointer(_hItem);
     uint32_t  flag  = TVE_EXPAND;
 
@@ -2560,7 +3055,7 @@ RexxMethod3(RexxObjectPtr, tv_expand, CSTRING, _hItem, NAME, method, CSELF, pCSe
 
 RexxMethod2(RexxObjectPtr, tv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     size_t sizeArray;
     size_t argsUsed;
@@ -2649,7 +3144,7 @@ RexxMethod4(RexxObjectPtr, tv_setImageList, RexxObjectPtr, ilSrc,
             OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     HIMAGELIST himl = NULL;
     int type = TVSIL_NORMAL;
@@ -2752,7 +3247,7 @@ RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
  */
 RexxMethod2(RexxObjectPtr, tab_setItemSize, ARGLIST, args, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     size_t sizeArray;
     size_t argsUsed;
@@ -2789,7 +3284,7 @@ RexxMethod2(RexxObjectPtr, tab_setItemSize, ARGLIST, args, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, tab_setPadding, ARGLIST, args, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     size_t sizeArray;
     size_t argsUsed;
@@ -2812,7 +3307,7 @@ RexxMethod2(RexxObjectPtr, tab_setPadding, ARGLIST, args, CSELF, pCSelf)
 RexxMethod5(int32_t, tab_insert, OPTIONAL_int32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_int32_t, imageIndex,
             OPTIONAL_RexxObjectPtr, userData, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     if ( argumentOmitted(1) )
     {
@@ -2839,7 +3334,7 @@ RexxMethod5(int32_t, tab_insert, OPTIONAL_int32_t, index, OPTIONAL_CSTRING, labe
 RexxMethod5(int32_t, tab_modify, int32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_int32_t, imageIndex,
             OPTIONAL_RexxObjectPtr, userData, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     TCITEM ti = {0};
 
@@ -2870,7 +3365,7 @@ RexxMethod5(int32_t, tab_modify, int32_t, index, OPTIONAL_CSTRING, label, OPTION
 
 RexxMethod2(int32_t, tab_addSequence, ARGLIST, args, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     TCITEM ti = {0};
     ti.mask = TCIF_TEXT;
@@ -2907,7 +3402,7 @@ done_out:
 
 RexxMethod2(int32_t, tab_addFullSeq, ARGLIST, args, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     TCITEM ti = {0};
     ti.mask = TCIF_TEXT;
@@ -2966,7 +3461,7 @@ done_out:
 
 RexxMethod2(RexxObjectPtr, tab_itemInfo, int32_t, index, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     char buff[256];
     TCITEM ti;
@@ -2992,7 +3487,7 @@ RexxMethod2(RexxObjectPtr, tab_itemInfo, int32_t, index, CSELF, pCSelf)
 
 RexxMethod1(RexxObjectPtr, tab_selected, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     char buff[256];
     TCITEM ti = {0};
@@ -3011,7 +3506,7 @@ RexxMethod1(RexxObjectPtr, tab_selected, CSELF, pCSelf)
 
 RexxMethod2(int32_t, tab_select, CSTRING, text, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     int32_t result = -1;
 
     char buff[256];
@@ -3057,7 +3552,7 @@ done_out:
 
 RexxMethod3(RexxObjectPtr, tab_getItemRect, uint32_t, item, RexxObjectPtr, rect, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     PRECT r = rxGetRect(context, rect, 2);
     if ( r == NULL )
@@ -3107,7 +3602,7 @@ RexxMethod3(RexxObjectPtr, tab_getItemRect, uint32_t, item, RexxObjectPtr, rect,
  */
 RexxMethod3(RexxObjectPtr, tab_calcRect, RexxObjectPtr, rect, NAME, method, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     PRECT r = rxGetRect(context, rect, 1);
     if ( r == NULL )
@@ -3153,7 +3648,7 @@ RexxMethod3(RexxObjectPtr, tab_calcRect, RexxObjectPtr, rect, NAME, method, CSEL
 RexxMethod4(RexxObjectPtr, tab_setImageList, RexxObjectPtr, ilSrc,
             OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     oodResetSysErrCode(context->threadContext);
 
     HIMAGELIST himl = NULL;

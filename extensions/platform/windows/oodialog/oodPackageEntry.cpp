@@ -187,8 +187,9 @@ REXX_METHOD_PROTOTYPE(en_connectKeyPress);
 REXX_METHOD_PROTOTYPE(en_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(en_disconnectKeyPress);
 REXX_METHOD_PROTOTYPE(en_hasKeyPressConnection);
-REXX_METHOD_PROTOTYPE(en_connectUpDownEvent);
 REXX_METHOD_PROTOTYPE(en_connectCommandEvents);
+REXX_METHOD_PROTOTYPE(en_connectUpDownEvent);
+REXX_METHOD_PROTOTYPE(en_connectMonthCalendarEvent);
 REXX_METHOD_PROTOTYPE(en_addUserMessage);
 
 REXX_METHOD_PROTOTYPE(window_init);
@@ -198,6 +199,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_init_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_setDefaultFont_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontSize_cls);
+REXX_METHOD_PROTOTYPE(pbdlg_new_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_init);
 REXX_METHOD_PROTOTYPE(pbdlg_setDlgFont);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName);
@@ -573,14 +575,37 @@ REXX_METHOD_PROTOTYPE(set_dtp_dateTime);
 // MonthCalendar
 REXX_METHOD_PROTOTYPE(get_mc_date);
 REXX_METHOD_PROTOTYPE(set_mc_date);
-REXX_METHOD_PROTOTYPE(mc_getBorder);
-REXX_METHOD_PROTOTYPE(mc_getSelectionRange);
-REXX_METHOD_PROTOTYPE(mc_setSelectionRange);
-REXX_METHOD_PROTOTYPE(mc_getCount);
+REXX_METHOD_PROTOTYPE(mc_getCalendarBorder);
+REXX_METHOD_PROTOTYPE(mc_getCalendarCount);
 REXX_METHOD_PROTOTYPE(mc_getCALID);
 REXX_METHOD_PROTOTYPE(mc_getColor);
 REXX_METHOD_PROTOTYPE(mc_getCurrentView);
-REXX_METHOD_PROTOTYPE(mc_setBorder);
+REXX_METHOD_PROTOTYPE(mc_getFirstDayOfWeek);
+REXX_METHOD_PROTOTYPE(mc_getMinRect);
+REXX_METHOD_PROTOTYPE(mc_getMonthRange);
+REXX_METHOD_PROTOTYPE(mc_getRange);
+REXX_METHOD_PROTOTYPE(mc_getSelectionRange);
+REXX_METHOD_PROTOTYPE(mc_getToday);
+REXX_METHOD_PROTOTYPE(mc_setCalendarBorder);
+REXX_METHOD_PROTOTYPE(mc_setCALID);
+REXX_METHOD_PROTOTYPE(mc_setColor);
+REXX_METHOD_PROTOTYPE(mc_setCurrentView);
+REXX_METHOD_PROTOTYPE(mc_setDayState);
+REXX_METHOD_PROTOTYPE(mc_setDayStateQuick);
+REXX_METHOD_PROTOTYPE(mc_setFirstDayOfWeek);
+REXX_METHOD_PROTOTYPE(mc_setRange);
+REXX_METHOD_PROTOTYPE(mc_setSelectionRange);
+REXX_METHOD_PROTOTYPE(mc_setToday);
+REXX_METHOD_PROTOTYPE(mc_sizeRectToMin);
+
+// .DayStates
+REXX_METHOD_PROTOTYPE(dss_makeDayStateBuffer);
+REXX_METHOD_PROTOTYPE(dss_quickDayStateBuffer);
+
+// .DayState
+REXX_METHOD_PROTOTYPE(ds_init);
+REXX_METHOD_PROTOTYPE(ds_dayStateValue);
+
 
 // .Rect
 REXX_METHOD_PROTOTYPE(rect_init);
@@ -758,14 +783,16 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(en_connectFKeyPress,            en_connectFKeyPress),
     REXX_METHOD(en_disconnectKeyPress,          en_disconnectKeyPress),
     REXX_METHOD(en_hasKeyPressConnection,       en_hasKeyPressConnection),
-    REXX_METHOD(en_connectUpDownEvent,          en_connectUpDownEvent),
     REXX_METHOD(en_connectCommandEvents,        en_connectCommandEvents),
+    REXX_METHOD(en_connectUpDownEvent,          en_connectUpDownEvent),
+    REXX_METHOD(en_connectMonthCalendarEvent,   en_connectMonthCalendarEvent),
     REXX_METHOD(en_addUserMessage,              en_addUserMessage),
 
     REXX_METHOD(pbdlg_init_cls,                 pbdlg_init_cls),
     REXX_METHOD(pbdlg_setDefaultFont_cls,       pbdlg_setDefaultFont_cls),
     REXX_METHOD(pbdlg_getFontName_cls,          pbdlg_getFontName_cls),
     REXX_METHOD(pbdlg_getFontSize_cls,          pbdlg_getFontSize_cls),
+    REXX_METHOD(pbdlg_new_cls,                  pbdlg_new_cls),
     REXX_METHOD(pbdlg_init,                     pbdlg_init),
     REXX_METHOD(pbdlg_getFontName,              pbdlg_getFontName),
     REXX_METHOD(pbdlg_getFontSize,              pbdlg_getFontSize),
@@ -1120,14 +1147,28 @@ RexxMethodEntry oodialog_methods[] = {
     // MonthCalendar
     REXX_METHOD(get_mc_date,                    get_mc_date),
     REXX_METHOD(set_mc_date,                    set_mc_date),
-    REXX_METHOD(mc_getBorder,                   mc_getBorder),
-    REXX_METHOD(mc_getSelectionRange,           mc_getSelectionRange),
-    REXX_METHOD(mc_setSelectionRange,           mc_setSelectionRange),
-    REXX_METHOD(mc_getCount,                    mc_getCount),
+    REXX_METHOD(mc_getCalendarBorder,           mc_getCalendarBorder),
+    REXX_METHOD(mc_getCalendarCount,            mc_getCalendarCount),
     REXX_METHOD(mc_getCALID,                    mc_getCALID),
     REXX_METHOD(mc_getColor,                    mc_getColor),
     REXX_METHOD(mc_getCurrentView,              mc_getCurrentView),
-    REXX_METHOD(mc_setBorder,                   mc_setBorder),
+    REXX_METHOD(mc_getFirstDayOfWeek,           mc_getFirstDayOfWeek),
+    REXX_METHOD(mc_getMinRect,                  mc_getMinRect),
+    REXX_METHOD(mc_getMonthRange,               mc_getMonthRange),
+    REXX_METHOD(mc_getRange,                    mc_getRange),
+    REXX_METHOD(mc_getSelectionRange,           mc_getSelectionRange),
+    REXX_METHOD(mc_getToday,                    mc_getToday),
+    REXX_METHOD(mc_setCalendarBorder,           mc_setCalendarBorder),
+    REXX_METHOD(mc_setCALID,                    mc_setCALID),
+    REXX_METHOD(mc_setColor,                    mc_setColor),
+    REXX_METHOD(mc_setCurrentView,              mc_setCurrentView),
+    REXX_METHOD(mc_setDayState,                 mc_setDayState),
+    REXX_METHOD(mc_setDayStateQuick,            mc_setDayStateQuick),
+    REXX_METHOD(mc_setFirstDayOfWeek,           mc_setFirstDayOfWeek),
+    REXX_METHOD(mc_setRange,                    mc_setRange),
+    REXX_METHOD(mc_setSelectionRange,           mc_setSelectionRange),
+    REXX_METHOD(mc_setToday,                    mc_setToday),
+    REXX_METHOD(mc_sizeRectToMin,               mc_sizeRectToMin),
 
     // ProgressBar
     REXX_METHOD(pbc_getFullRange,               pbc_getFullRange),
@@ -1151,6 +1192,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(sb_getPosition,                 sb_getPosition),
     REXX_METHOD(sb_setPosition,                 sb_setPosition),
 
+    REXX_METHOD(dss_makeDayStateBuffer,         dss_makeDayStateBuffer),
+    REXX_METHOD(dss_quickDayStateBuffer,        dss_quickDayStateBuffer),
+    REXX_METHOD(ds_init,                        ds_init),
+    REXX_METHOD(ds_dayStateValue,               ds_dayStateValue),
     REXX_METHOD(rect_init,                      rect_init),
     REXX_METHOD(rect_left,                      rect_left),
     REXX_METHOD(rect_top,                       rect_top),

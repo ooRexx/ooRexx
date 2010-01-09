@@ -109,7 +109,7 @@ static RexxDirectoryObject pbGetFullRange(RexxMethodContext *c, HWND hPB)
 RexxMethod4(RexxObjectPtr, pbc_setFullRange, OPTIONAL_RexxObjectPtr, minObj, OPTIONAL_int32_t, max, NAME, method, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     int32_t min = 0;
 
     RexxDirectoryObject result = NULLOBJECT;
@@ -165,7 +165,7 @@ done_out:
 
 RexxMethod1(RexxObjectPtr, pbc_getFullRange, CSELF, pCSelf)
 {
-    return pbGetFullRange(context, getDCHCtrl(pCSelf));
+    return pbGetFullRange(context, getDChCtrl(pCSelf));
 }
 
 /**
@@ -188,7 +188,7 @@ RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t
         return 0;
     }
 
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     if ( ! hasStyle(hwnd, PBS_MARQUEE) )
     {
@@ -223,7 +223,7 @@ RexxMethod4(logical_t, sb_setRange, int32_t, min, int32_t, max, OPTIONAL_logical
     oodResetSysErrCode(context->threadContext);
     redraw = (argumentOmitted(3) ? TRUE : redraw);
 
-    if ( SetScrollRange(getDCHCtrl(pCSelf), SB_CTL, min, max, (BOOL)redraw) == 0 )
+    if ( SetScrollRange(getDChCtrl(pCSelf), SB_CTL, min, max, (BOOL)redraw) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return 1;
@@ -241,7 +241,7 @@ RexxMethod1(RexxObjectPtr, sb_getRange, CSELF, pCSelf)
     context->DirectoryPut(result, TheNegativeOneObj, "MAX");
 
     int32_t min, max;
-    if ( GetScrollRange(getDCHCtrl(pCSelf), SB_CTL, &min, &max) == 0 )
+    if ( GetScrollRange(getDChCtrl(pCSelf), SB_CTL, &min, &max) == 0 )
     {
         uint32_t rc = GetLastError();
         if ( rc == 0 )
@@ -263,7 +263,7 @@ RexxMethod3(logical_t, sb_setPosition, int32_t, pos, OPTIONAL_logical_t, redraw,
     oodResetSysErrCode(context->threadContext);
     redraw = (argumentOmitted(3) ? TRUE : redraw);
 
-    if ( SetScrollPos(getDCHCtrl(pCSelf), SB_CTL, pos, (BOOL)redraw) == 0 )
+    if ( SetScrollPos(getDChCtrl(pCSelf), SB_CTL, pos, (BOOL)redraw) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return 0;
@@ -274,7 +274,7 @@ RexxMethod3(logical_t, sb_setPosition, int32_t, pos, OPTIONAL_logical_t, redraw,
 RexxMethod1(int32_t, sb_getPosition, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    int32_t pos = GetScrollPos(getDCHCtrl(pCSelf), SB_CTL);
+    int32_t pos = GetScrollPos(getDChCtrl(pCSelf), SB_CTL);
     if ( pos == 0 )
     {
         oodSetSysErrCode(context->threadContext);
@@ -297,7 +297,7 @@ RexxMethod1(int32_t, sb_getPosition, CSELF, pCSelf)
 RexxMethod1(RexxObjectPtr, tb_getRange, CSELF, pCSelf)
 {
     RexxDirectoryObject result = context->NewDirectory();
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
 
     context->DirectoryPut(result, context->Intptr((intptr_t)SendMessage(hCtrl, TBM_GETRANGEMIN, 0,0)), "MIN");
     context->DirectoryPut(result, context->Intptr((intptr_t)SendMessage(hCtrl, TBM_GETRANGEMAX, 0,0)), "MAX");
@@ -312,7 +312,7 @@ RexxMethod1(RexxObjectPtr, tb_getRange, CSELF, pCSelf)
 RexxMethod1(RexxObjectPtr, tb_getSelRange, CSELF, pCSelf)
 {
     RexxDirectoryObject result = context->NewDirectory();
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
 
     context->DirectoryPut(result, context->Intptr((intptr_t)SendMessage(hCtrl, TBM_GETSELSTART, 0,0)), "START");
     context->DirectoryPut(result, context->Intptr((intptr_t)SendMessage(hCtrl, TBM_GETSELEND, 0,0)), "END");
@@ -358,7 +358,7 @@ RexxMethod1(RexxObjectPtr, tb_getSelRange, CSELF, pCSelf)
  */
 RexxMethod3(RexxObjectPtr, ud_setRange, OPTIONAL_RexxObjectPtr, minObj, OPTIONAL_int32_t, max, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     int32_t min = 0;
     bool usingDirectory = false;
@@ -405,7 +405,7 @@ done_out:
 RexxMethod1(RexxObjectPtr, ud_getRange, CSELF, pCSelf)
 {
     RexxDirectoryObject result = context->NewDirectory();
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
 
     int32_t min, max;
     SendMessage(hCtrl, UDM_GETRANGE32, (WPARAM)&min, (LPARAM)&max);
@@ -430,7 +430,7 @@ RexxMethod1(RexxObjectPtr, ud_getRange, CSELF, pCSelf)
 RexxMethod1(int32_t, ud_getPosition, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
 
     BOOL error;
     int32_t pos = (int32_t)SendMessage(hCtrl, UDM_GETPOS32, 0, (LPARAM)&error);
@@ -444,7 +444,7 @@ RexxMethod1(int32_t, ud_getPosition, CSELF, pCSelf)
 
 RexxMethod1(RexxArrayObject, ud_getAcceleration, CSELF, pCSelf)
 {
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
     LPUDACCEL pUDA = NULL;
 
     size_t count = (size_t)SendMessage(hCtrl, UDM_GETACCEL, 0, NULL);
@@ -475,7 +475,7 @@ done_out:
 RexxMethod2(logical_t, ud_setAcceleration, RexxArrayObject, vals, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
     LPUDACCEL pUDA = NULL;
 
     size_t count = c->ArrayItems(vals);

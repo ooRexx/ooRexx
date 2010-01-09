@@ -50,6 +50,7 @@
 
 #include <stdio.h>
 #include <dlgs.h>
+#include <commctrl.h>
 #include <shlwapi.h>
 
 /** Note:

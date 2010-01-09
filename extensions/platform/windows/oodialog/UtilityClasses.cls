@@ -70,17 +70,6 @@
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
 
--- Create a "default" dialog class and set it to the user dialog.
-::class 'Dialog' subclass UserDialog public
-
-
-::class 'PlainUserDialog' subclass PlainBaseDialog public inherit DynamicDialog
-::method init external "LIBRARY oodialog userdlg_init"
-::method stopIt
-   forward class (super) continue
-   forward message "stopDynamic"
-
-
 ::class 'OS' public
 ::method is64bit class external "LIBRARY oodialog os_is64bit"
 ::method is32on64bit class external "LIBRARY oodialog os_is32on64bit"
@@ -127,9 +116,139 @@
 ::method 'height=' external "LIBRARY oodialog point_setY"
 
 
+::class 'DayState' public
+::method init external "LIBRARY oodialog ds_init"
+::method dayStateValue external "LIBRARY oodialog ds_dayStateValue"
+
+
+::class 'DayStates' public
+
+::method makeDayStateBuffer class external "LIBRARY oodialog dss_makeDayStateBuffer"
+::method quickDayStateBuffer class external "LIBRARY oodialog dss_quickDayStateBuffer"
+
+::attribute years private
+
+::attribute startMonth get
+::attribute startMonth set private
+
+::attribute endMonth get
+::attribute endMonth set private
+
+::method init
+    expose years startMonth endMonth
+    use strict arg year = (.DateTime~today~year - 2), count = 3
+
+    startMonth = .DateTime~fromStandardDate(year || '0101')
+    endMonth = .DateTime~fromStandardDate((year + count) || '0101')
+
+    years = .table~new
+    do i = year to year + count
+        years[i] = self~generateEmptyYear
+    end
+
+::method getDayStateBuffer
+    expose startMonth years
+    use strict arg startDate, count
+
+    year = startDate~year
+    month = startDate~month
+
+    resultArray = .array~new(count)
+
+    aYear = years[year]
+    if aYear == .nil then do
+        do i = 1 to count
+            resultArray[i] = .DayState~new
+        end
+        return .DayStates~makeDayStateBuffer(resultArray, count)
+    end
+
+    do i = 1 to count
+        resultArray[i] = aYear[month]
+        month += 1
+        if month > 12 then do
+            month = 1
+            year += 1
+            aYear = years[year]
+            if aYear == .nil then leave
+        end
+    end
+
+    if resultArray~items < count then do i = (resultArray~items + 1) to count
+        resultArray[i] = .DayState~new
+    end
+
+    return .DayStates~makeDayStateBuffer(resultArray, count)
+
+::method addYear
+    expose startMonth endMonth years
+    use strict arg year, values
+
+    newYear = .DateTime~fromStandardDate(year || '0101')
+    months = .array~new(12)
+    do i = 1 to 12
+        if values[i] == .nil then months[i] = .DayState~new
+        else months[i] = values[i]
+    end
+
+    years[year] = months
+
+    needFill = .false
+    if newYear < startMonth then do
+        startMonth = newYear
+        if years[year + 1] == .nil then needFill = .true
+    end
+    else if newYear > endMonth then do
+        endMonth = newYear
+        if years[year - 1] == .nil then needFill = .true
+    end
+
+    if needFill then self~doFill
+
+::method addMonth
+    expose startMonth endMonth years
+    use strict arg year, month, dayState
+
+    yearArray = years[year]
+    if yearArray == .nil then do
+        yearArray = .array~new(12)
+        yearArray[month] = dayState
+        self~addYear(year, yearArray)
+    end
+    else do
+        yearArray[month] = dayState
+    end
+
+::method generateEmptyYear private
+    empty = .array~new(12)
+    do i = 1 to 12
+        empty[i] = .DayState~new
+    end
+    return empty
+
+::method needFill private
+    expose startMonth endMonth years
+
+    do i = startMonth~year to endMonth~year
+        if years[i] == .nil then years[i] = self~generateEmptyYear
+    end
+
+
+
 /**
  * Standard Dialog Control Classes.  Some simple short cut dialogs.
  */
+
+-- Create a "default" dialog class and set it to the user dialog.
+::class 'Dialog' subclass UserDialog public
+
+
+::class 'PlainUserDialog' subclass PlainBaseDialog public inherit DynamicDialog
+::method init external "LIBRARY oodialog userdlg_init"
+::method stopIt
+   forward class (super) continue
+   forward message "stopDynamic"
+
 
 -- This class shows a message window for a defined duration
 ::class 'TimedMessage' subclass PlainUserDialog public

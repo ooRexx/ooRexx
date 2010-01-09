@@ -47,6 +47,7 @@
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodControl.hpp"
 #include "oodMessaging.hpp"
 
 
@@ -109,14 +110,14 @@ BOOL addDialogMessage(CHAR * msg, CHAR * Qptr)
 }
 
 
-char *getDlgMessage(DIALOGADMIN *addressedTo, char *buffer, bool peek)
+char *getDlgMessage(DIALOGADMIN *dlgAdm, char *buffer, bool peek)
 {
    size_t i = 0, l;
    MSG msg;
 
-   if ( addressedTo->pMessageQueue )
+   if ( dlgAdm->pMessageQueue )
    {
-       char * pMsgQ = addressedTo->pMessageQueue;
+       char * pMsgQ = dlgAdm->pMessageQueue;
        l = strlen(pMsgQ);
 
        // Don't sleep for just a peek.
@@ -203,7 +204,7 @@ LRESULT paletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam,
  * @param message
  * @param param
  * @param lparam
- * @param addressedTo
+ * @param pcpbd
  *
  * @return MsgReplyType
  *
@@ -216,18 +217,19 @@ LRESULT paletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam,
  *           are separated here with ASCII ÿ (0xFF, octal 377) and in the Rexx
  *           code, handleMessages() separates the args using 255d2c.
  */
-MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo)
+MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog pcpbd)
 {
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+
+    MESSAGETABLEENTRY *m = dlgAdm->MsgTab;
+    if ( m == NULL )
+    {
+        return ContinueProcessing;
+    }
+
    register size_t i = 0;
-   MESSAGETABLEENTRY * m = addressedTo->MsgTab;
-   static int count = 0;
 
-   if ( m == NULL )
-   {
-       return NotMatched;
-   }
-
-   for ( i = 0; i < addressedTo->MT_size; i++ )
+   for ( i = 0; i < dlgAdm->MT_size; i++ )
       if ( ((message & m[i].filterM) == m[i].msg)  &&
            ((param & m[i].filterP) == m[i].wParam) &&
            ( ((message == WM_NOTIFY) && ((((NMHDR *)lparam)->code & m[i].filterL) == (UINT)m[i].lParam)) ||
@@ -242,6 +244,7 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
             PCHAR np = NULL;
             int item;
             HANDLE handle = NULL;
+
 
             /* do we have a notification where we have to extract some information ? */
             if (message == WM_NOTIFY)
@@ -279,7 +282,7 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
 
                         _snprintf(msgstr, 511, "%s(%u\377%d\377%d\377%s)", m[i].rexxProgram,
                                   pIA->hdr.idFrom, pIA->iItem, pIA->iSubItem, np);
-                        addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                        addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
                         return ReplyFalse;
                     }
                 }
@@ -327,14 +330,14 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                             {
                                 np = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
                                 _snprintf(msgstr, 511, "%s(%u\377%d\377%s)", m[i].rexxProgram, param, item, np);
-                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
                                 continue;
                             }
                             else if ( matchFocus(m[i].tag, pLV) )
                             {
                                 np = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
                                 _snprintf(msgstr, 511, "%s(%u\377%d\377%s)", m[i].rexxProgram, param, item, np);
-                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
                                 continue;
                             }
                             else
@@ -354,7 +357,34 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                     _snprintf(msgstr, 511, "%s(%d\377%d\377%u)", m[i].rexxProgram,
                               pUPD->iPos, pUPD->iDelta, pUPD->hdr.idFrom);
 
-                    addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                    addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
+                    return ReplyFalse;
+                }
+                else if ( code == MCN_GETDAYSTATE )
+                {
+                    LPNMDAYSTATE pDayState = (LPNMDAYSTATE)lparam;
+                    RexxThreadContext *c = pcpbd->dlgProcContext;
+
+                    RexxObjectPtr dt = NULLOBJECT;
+                    sysTime2dt(c, &(pDayState->stStart), &dt, dtFull);
+
+                    RexxObjectPtr dayState = c->SendMessage2(pcpbd->rexxSelf, m[i].rexxProgram, dt, c->Int32(pDayState->cDayState));
+
+                    if ( checkForCondition(c) )
+                    {
+                        // TODO We had an unhandled exception in the Rexx method
+                        // we just invoked, we printed out the error message.
+                        // But, at this point everything just keeps going.
+                        // Should we clear the exception?  Should we terminate
+                        // everything?
+                        return ReplyFalse;
+                    }
+
+                    if ( dayState != NULLOBJECT && c->IsOfType(dayState, "BUFFER") )
+                    {
+                        pDayState->prgDayState = (MONTHDAYSTATE *)c->BufferData((RexxBufferObject)dayState);
+                        return ReplyTrue;
+                    }
                     return ReplyFalse;
                 }
                 /* do we have an end label edit for tree or list view? */
@@ -427,7 +457,7 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                 /* Use addDialogMessage directely to send 5 args to ooRexx. */
                                 _snprintf(msgstr, 511, "%s(%u\377%s\377%d\377%d\377%d)", m[i].rexxProgram,
                                           phi->iCtrlId, np, phi->MousePos.x, phi->MousePos.y, phi->dwContextId);
-                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
                                 return ReplyFalse;
                             }
                                 break;
@@ -442,7 +472,7 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                  */
                                 _snprintf(msgstr, 511, "%s(0x%p\377%d\377%d)", m[i].rexxProgram, param,
                                           ((int)(short)LOWORD(lparam)), ((int)(short)HIWORD(lparam)));
-                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
                                 return ((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
                             }
                                 break;
@@ -452,7 +482,7 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                 /* Args to ooRexx: index, hMenu
                                  */
                                 _snprintf(msgstr, 511, "%s(%d\3770x%p)", m[i].rexxProgram, param, lparam);
-                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
                                 return ReplyFalse;
                             }
                                 break;
@@ -480,7 +510,7 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                 }
 
                                 _snprintf(msgstr, 511, "%s(%d\377%d\377%d\377%d)", m[i].rexxProgram, (param & 0xFFF0), x, y, (param & 0x000F));
-                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
 
                                 return ((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
                             }
@@ -491,14 +521,14 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
                                 // Right now there is only WM_INITMENU and WM_INITMENUPOPUP,
                                 // but in the future there could be more.  Both
                                 // of these messages are handled the exact same
-                                // wasy as far as what is sent to ooRexx.
+                                // way as far as what is sent to ooRexx.
 
                                 /* Args to ooRexx: hMenu as a pointer.  Drat !
                                  * we don't have a context. ;-(
                                  */
 
                                 _snprintf(msgstr, 511, "%s(0x%p)", m[i].rexxProgram, param);
-                                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
 
                                 return ((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
                             }
@@ -518,7 +548,7 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
             else if ( message == WM_HSCROLL || message == WM_VSCROLL)
             {
                 _snprintf(msgstr, 511, "%s(%u\3770x%p)", m[i].rexxProgram, param, lparam);
-                addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
                 return ReplyFalse;
             }
 
@@ -537,15 +567,15 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
             {
                 _snprintf(msgstr, 511, "%s(%u\377%u)", m[i].rexxProgram, param, lparam);
             }
-            addDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+            addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
          }
          else
          {
-             addDialogMessage((char *)m[i].rexxProgram, addressedTo->pMessageQueue);
+             addDialogMessage((char *)m[i].rexxProgram, dlgAdm->pMessageQueue);
          }
          return ReplyFalse;
       }
-   return NotMatched;
+   return ContinueProcessing;
 }
 
 
@@ -679,6 +709,46 @@ RexxRoutine2(RexxStringObject, getDlgMsg_rtn, CSTRING, adm, OPTIONAL_logical_t, 
 
 
 /**
+ * Convert a month calendar notification code to a method name.
+ */
+inline CSTRING mcn2name(uint32_t mcn)
+{
+    switch ( mcn )
+    {
+        case MCN_GETDAYSTATE : return "onGetDayState";
+        case MCN_SELCHANGE   : return "onSelChange";
+        case MCN_SELECT      : return "onSelect";
+        case MCN_VIEWCHANGE  : return "onViewChange";
+    }
+    return "onMCN";
+}
+
+
+/**
+ * Convert a keyword to the proper month calendar notification code.
+ *
+ * We know the keyword arg position is 2.  The MonthCalendar control is new to
+ * ooDialog so we raise an exception on error.
+ */
+static bool keyword2mcn(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
+{
+    uint32_t mcn;
+
+    if ( StrStrI(keyword,      "GETDAYSTATE") != NULL ) mcn = MCN_GETDAYSTATE;
+    else if ( StrStrI(keyword, "SELCHANGE")   != NULL ) mcn = MCN_SELCHANGE;
+    else if ( StrStrI(keyword, "SELECT")      != NULL ) mcn = MCN_SELECT;
+    else if ( StrStrI(keyword, "VIEWCHANGE")  != NULL ) mcn = MCN_VIEWCHANGE;
+    else
+    {
+        wrongArgValueException(c->threadContext, 2, "GetDayState, SelChange, Select, or ViewChange", keyword);
+        return false;
+    }
+    *flag = mcn;
+    return true;
+}
+
+
+/**
  * The keyboard hook procedure.
  *
  * This is a thread specific hook, not a global hook. This function executes in
@@ -692,7 +762,7 @@ RexxRoutine2(RexxStringObject, getDlgMsg_rtn, CSTRING, adm, OPTIONAL_logical_t, 
  * the user has also set a filter, there may be no method invocation after all.
  *
  */
-LRESULT CALLBACK KeyboardHookProc(int code, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK keyboardHookProc(int code, WPARAM wParam, LPARAM lParam)
 {
     register int i;
     DWORD id = GetCurrentThreadId();
@@ -739,7 +809,7 @@ LRESULT CALLBACK KeyboardHookProc(int code, WPARAM wParam, LPARAM lParam)
  */
 static keyPressErr_t setKBHook(DIALOGADMIN *dlgAdm, HWND hDlg)
 {
-    dlgAdm->hHook = (HHOOK)SendMessage(hDlg, WM_USER_HOOK, (WPARAM)&KeyboardHookProc, (LPARAM)0);
+    dlgAdm->hHook = (HHOOK)SendMessage(hDlg, WM_USER_HOOK, (WPARAM)&keyboardHookProc, (LPARAM)0);
     if ( ! dlgAdm->hHook )
     {
         freeKeyPressData(dlgAdm->pKeyPressData);
@@ -1531,6 +1601,75 @@ err_out:
     return TheFalseObj;
 }
 
+
+/** EventNotification::connectMonthCalendarEvent()
+ *
+ *  Connects a Rexx dialog method with a month calendar control event.
+ *
+ *  @param  rxID        The resource ID of the dialog control.  Can be numeric
+ *                      or symbolic.
+ *
+ *  @param  event       Keyword specifying which event to connect.  Keywords at
+ *                      this time:
+ *
+ *                      GETDAYSTATE
+ *                      SELCHANGE
+ *                      SELECT
+ *                      VIEWCHANGE
+ *
+ *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
+ *                      Rexx dialog.  If this argument is omitted then the
+ *                      method name is constructed by prefixing the event
+ *                      keyword with 'on'.  For instance onGetDayState.
+ *
+ *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
+ *          number an exception is raised.
+ *
+ *  @remarks  This method is new since the 4.0.0 release, therefore an exception
+ *            is raised for a bad resource ID rather than returning -1.
+ *
+ */
+RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
+{
+    pCEventNotification pcen = (pCEventNotification)pCSelf;
+
+    uint32_t id = oodResolveSymbolicID(context, pcen->rexxSelf, rxID, -1, 1);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto err_out;
+    }
+
+    uint32_t notificationCode;
+    if ( ! keyword2mcn(context, event, &notificationCode) )
+    {
+        goto err_out;
+    }
+    if ( notificationCode == MCN_VIEWCHANGE && ! _isAtLeastVista() )
+    {
+        wrongWindowsVersionException(context, "connectMonthCalendar", "Vista");
+        goto err_out;
+    }
+
+    if ( argumentOmitted(3) || *methodName == '\0' )
+    {
+        methodName = mcn2name(notificationCode);
+    }
+
+    uint32_t tag = TAG_MONTHCALENDAR;
+    if ( notificationCode == MCN_GETDAYSTATE )
+    {
+        tag |= (TAG_MSGHANDLED | TAG_REPLYFROMREXX);
+    }
+
+    if ( addTheMessage(pcen->dlgAdm, WM_NOTIFY, 0xFFFFFFFF, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
+    {
+        return TheTrueObj;
+    }
+
+err_out:
+    return TheFalseObj;
+}
 
 /** EventNotification::addUserMessage()
  *

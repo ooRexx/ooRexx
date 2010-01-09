@@ -296,6 +296,10 @@
 ::method init  external "LIBRARY oodialog window_init"
 ::method unInit  external "LIBRARY oodialog window_unInit"
 
+::class 'DialogProxy' public
+::attribute initCode get
+  return 1
+
 /**
  *  The PlainBaseDialog class is the base class of all ooDialog dialogs.  It
  *  implements those methods that are common to all dialogs, whether the dialog
@@ -314,6 +318,7 @@
 ::method setDefaultFont class external "LIBRARY oodialog pbdlg_setDefaultFont_cls"
 ::method getFontName class external "LIBRARY oodialog pbdlg_getFontName_cls"
 ::method getFontSize class external "LIBRARY oodialog pbdlg_getFontSize_cls"
+::method new class external "LIBRARY oodialog pbdlg_new_cls"
 
 -- External adminstration buffer. Get can not be private for now see MenuBar::attachTo()
 ::attribute adm get
@@ -446,7 +451,7 @@
    if self~childDialogs \= .nil then do
        if self~childDialogs~items > 0 then
        do child over self~childDialogs
-          child~Stopit("PARENT")
+          child~stopit("PARENT")
        end
        self~childDialogs = .nil
    end

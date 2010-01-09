@@ -129,7 +129,7 @@ RexxMethod2(RexxObjectPtr, stc_setImage, RexxObjectPtr, rxNewImage, CSELF, pCSel
         hImage = oi->hImage;
     }
 
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     HANDLE oldHandle = (HANDLE)SendMessage(hwnd, STM_SETIMAGE, (WPARAM)type, (LPARAM)hImage);
 
     result = oodSetImageAttribute(context, STATICIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, winStatic);
@@ -546,7 +546,7 @@ RexxMethod2(RexxObjectPtr, bc_setState, CSTRING, opts, CSELF, pCSelf)
 
 RexxMethod1(RexxStringObject, bc_getState, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     BUTTONTYPE type = getButtonInfo(hwnd, NULL, NULL);
 
     TCHAR buf[64] = {'\0'};
@@ -585,7 +585,7 @@ RexxMethod1(RexxStringObject, bc_getState, CSELF, pCSelf)
 
 RexxMethod2(RexxObjectPtr, bc_setStyle, CSTRING, opts, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     BUTTONSUBTYPE sub;
     DWORD style, oldStyle;
@@ -800,7 +800,7 @@ RexxMethod1(RexxObjectPtr, bc_getTextMargin, CSELF, pCSelf)
         return NULLOBJECT;
     }
 
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     RexxObjectPtr result = NULLOBJECT;
 
     RECT r;
@@ -818,7 +818,7 @@ RexxMethod2(logical_t, bc_setTextMargin, RexxObjectPtr, r, CSELF, pCSelf)
         return 0;
     }
 
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     PRECT pRect = rxGetRect(context, r, 1);
     if ( pRect != NULL )
@@ -838,7 +838,7 @@ RexxMethod1(RexxObjectPtr, bc_getIdealSize, CSELF, pCSelf)
         return NULLOBJECT;
     }
 
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     RexxObjectPtr result = NULLOBJECT;
 
     SIZE size;
@@ -899,7 +899,7 @@ RexxMethod2(RexxObjectPtr, bc_setImage, RexxObjectPtr, rxNewImage, CSELF, pCSelf
         type = oi->type == IMAGE_BITMAP ? IMAGE_BITMAP : IMAGE_ICON;
     }
 
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     HANDLE oldHandle = (HANDLE)SendMessage(hwnd, BM_SETIMAGE, (WPARAM)type, (LPARAM)hImage);
 
     result = oodSetImageAttribute(context, BUTTONIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, winPushButton);
@@ -935,7 +935,7 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, CSELF, pCSelf)
     {
         return NULLOBJECT;
     }
-    return bcGetImageList(context, getDCHCtrl(pCSelf));
+    return bcGetImageList(context, getDChCtrl(pCSelf));
 
 }
 
@@ -973,7 +973,7 @@ RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_R
     RexxObjectPtr result = NULLOBJECT;
 
     BUTTON_IMAGELIST biml = {0};
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     if ( ! requiredComCtl32Version(context, "setImageList", COMCTL32_6_0) )
     {
@@ -1152,7 +1152,7 @@ err_out:
 RexxMethod7(RexxObjectPtr, bc_dimBitmap, POINTERSTRING, hBmp, uint32_t, width, uint32_t, height,
             OPTIONAL_uint32_t, stepX, OPTIONAL_uint32_t, stepY, OPTIONAL_uint32_t, steps, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
 
     stepX = (argumentOmitted(4) ? 2  : stepX);
     stepY = (argumentOmitted(5) ? 2  : stepY);
@@ -1223,41 +1223,41 @@ RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst
 
 RexxMethod1(logical_t, rb_checked, CSELF, pCSelf)
 {
-    return (SendMessage(getDCHCtrl(pCSelf), BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
+    return (SendMessage(getDChCtrl(pCSelf), BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
 }
 
 RexxMethod1(CSTRING, rb_getCheckState, CSELF, pCSelf)
 {
-    return getIsChecked(getDCHCtrl(pCSelf));
+    return getIsChecked(getDChCtrl(pCSelf));
 }
 RexxMethod1(int, rb_check, CSELF, pCSelf)
 {
-    SendMessage(getDCHCtrl(pCSelf), BM_SETCHECK, BST_CHECKED, 0);
+    SendMessage(getDChCtrl(pCSelf), BM_SETCHECK, BST_CHECKED, 0);
     return 0;
 }
 
 RexxMethod1(int, rb_uncheck, CSELF, pCSelf)
 {
-    SendMessage(getDCHCtrl(pCSelf), BM_SETCHECK, BST_UNCHECKED, 0);
+    SendMessage(getDChCtrl(pCSelf), BM_SETCHECK, BST_UNCHECKED, 0);
     return 0;
 }
 
 /* DEPRECATED */
 RexxMethod1(CSTRING, rb_isChecked, CSELF, pCSelf)
 {
-    return getIsChecked(getDCHCtrl(pCSelf));
+    return getIsChecked(getDChCtrl(pCSelf));
 }
 
 /* DEPRECATED */
 RexxMethod1(int, rb_indeterminate, CSELF, pCSelf)
 {
-    SendMessage(getDCHCtrl(pCSelf), BM_SETCHECK, BST_INDETERMINATE, 0);
+    SendMessage(getDChCtrl(pCSelf), BM_SETCHECK, BST_INDETERMINATE, 0);
     return 0;
 }
 
 RexxMethod1(logical_t, ckbx_isIndeterminate, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     if ( getButtonInfo(hwnd, NULL, NULL) == check  )
     {
         return (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_INDETERMINATE ? 1 : 0);
@@ -1267,7 +1267,7 @@ RexxMethod1(logical_t, ckbx_isIndeterminate, CSELF, pCSelf)
 
 RexxMethod1(int, ckbx_setIndeterminate, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     if ( getButtonInfo(hwnd, NULL, NULL) == check  )
     {
         SendMessage(hwnd, BM_SETCHECK, BST_INDETERMINATE, 0);
@@ -1386,7 +1386,7 @@ uint32_t parseEditStyle(CSTRING keyWords)
 
 RexxMethod1(logical_t, e_isSingleLine, CSELF, pCSelf)
 {
-    return isSingleLineEdit(getDCHCtrl(pCSelf));
+    return isSingleLineEdit(getDChCtrl(pCSelf));
 }
 
 
@@ -1455,7 +1455,7 @@ RexxMethod2(RexxObjectPtr, e_lineIndex, int32_t, lineNumber, CSELF, pCSelf)
     RexxObjectPtr result = TheNegativeOneObj;
     if ( lineNumber != 0 )
     {
-        HWND hCtrl = getDCHCtrl(pCSelf);
+        HWND hCtrl = getDChCtrl(pCSelf);
 
         if ( isSingleLineEdit(hCtrl) )
         {
@@ -1501,7 +1501,7 @@ RexxMethod2(RexxObjectPtr, e_lineIndex, int32_t, lineNumber, CSELF, pCSelf)
  */
 RexxMethod3(RexxStringObject, e_getLine, int32_t, lineNumber, OPTIONAL_RexxObjectPtr, ignored, CSELF, pCSelf)
 {
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     char *buf = NULL;
     RexxStringObject result = context->NullString();
 
@@ -1597,7 +1597,7 @@ RexxMethod2(logical_t, e_setTabStops, RexxArrayObject, tabStops, CSELF, pCSelf)
     RexxMethodContext *c = context;
 
     logical_t result = 0;
-    HWND hwnd = getDCHCtrl(pCSelf);
+    HWND hwnd = getDChCtrl(pCSelf);
     uint32_t *buf = NULL;
 
     if ( isSingleLineEdit(hwnd) )
@@ -1731,7 +1731,7 @@ RexxMethod2(RexxObjectPtr, e_setCue, CSTRING, text, CSELF, pCSelf)
     }
 
     putUnicodeText((LPWORD)wszCue, text);
-    return (Edit_SetCueBannerText(getDCHCtrl(pCSelf), wszCue) ? TheZeroObj : TheOneObj);
+    return (Edit_SetCueBannerText(getDChCtrl(pCSelf), wszCue) ? TheZeroObj : TheOneObj);
 }
 
 
@@ -1999,7 +1999,7 @@ static int32_t cbLbAddDirectory(HWND hCtrl, CSTRING drivePath, CSTRING fileAttri
 
 RexxMethod1(RexxObjectPtr, lb_isSingleSelection, CSELF, pCSelf)
 {
-    return (isSingleSelectionListBox(getDCHCtrl(pCSelf)) ? TheTrueObj : TheFalseObj);
+    return (isSingleSelectionListBox(getDChCtrl(pCSelf)) ? TheTrueObj : TheFalseObj);
 }
 
 /** ListBox::getText()
@@ -2134,7 +2134,7 @@ RexxMethod2(int32_t, lb_select, CSTRING, text, CSELF, pCSelf)
  */
 RexxMethod2(int32_t, lb_selectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
 {
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
     int32_t ret;
 
     bool backwardCompat = (argumentOmitted(1) || index == 0 ? true : false);
@@ -2179,7 +2179,7 @@ RexxMethod2(int32_t, lb_selectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
  */
 RexxMethod2(int32_t, lb_deselectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
 {
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
     int32_t ret;
 
     if ( isSingleSelectionListBox(hCtrl) )
@@ -2220,7 +2220,7 @@ RexxMethod2(int32_t, lb_deselectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
  */
 RexxMethod1(int32_t, lb_selectedIndex, CSELF, pCSelf)
 {
-    HWND hCtrl = getDCHCtrl(pCSelf);
+    HWND hCtrl = getDChCtrl(pCSelf);
 
     int32_t *items = NULL;
     int32_t index = index = (int32_t)SendMessage(hCtrl, LB_GETCURSEL, 0, 0);

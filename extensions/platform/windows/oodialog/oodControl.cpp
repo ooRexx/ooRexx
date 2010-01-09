@@ -748,7 +748,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_clearRect, ARGLIST, args, CSELF, pCSelf)
         return tooManyArgsException(context->threadContext, argsUsed);
     }
 
-    return clearRect(context, getDCHCtrl(pCSelf), &r);
+    return clearRect(context, getDChCtrl(pCSelf), &r);
 }
 
 /** DialogControl::redrawRect()
@@ -799,7 +799,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
         doErase = erase ? true : false;
     }
 
-    return redrawRect(context, getDCHCtrl(pCSelf), &r, doErase);
+    return redrawRect(context, getDChCtrl(pCSelf), &r, doErase);
 }
 
 /** DialogControl::getTextSizeDlg()
@@ -854,7 +854,7 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
     }
 
     SIZE textSize = {0};
-    if ( getTextSize(context, text, fontName, fontSize, hwndSrc, getDCOwnerDlg(pCSelf), &textSize) )
+    if ( getTextSize(context, text, fontName, fontSize, hwndSrc, getDCownerDlg(pCSelf), &textSize) )
     {
         return rxNewSize(context, textSize.cx, textSize.cy);
     }
@@ -878,7 +878,7 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
  */
 RexxMethod1(RexxObjectPtr, dlgctrl_captureMouse, CSELF, pCSelf)
 {
-    HWND oldCapture = (HWND)SendMessage(getDCHDlg(pCSelf), WM_USER_GETSETCAPTURE, 1, (LPARAM)getDCHCtrl(pCSelf));
+    HWND oldCapture = (HWND)SendMessage(getDChDlg(pCSelf), WM_USER_GETSETCAPTURE, 1, (LPARAM)getDChCtrl(pCSelf));
     return pointer2string(context, oldCapture);
 }
 

@@ -295,7 +295,7 @@ static bool isStaticID(RexxMethodContext *c, RexxObjectPtr id)
  *           being preserved.  Use oodSafeResolveID() for those cases.
  */
 uint32_t oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr oodObj, RexxObjectPtr id,
-                              int argPosObj, int argPosID)
+                              int argPosObj, size_t argPosID)
 {
     uint32_t result = OOD_ID_EXCEPTION;
 
@@ -369,7 +369,7 @@ done_out:
  *        an exception is raised, it is cleared and false returned.
  */
 bool oodSafeResolveID(uint32_t *pID, RexxMethodContext *context, RexxObjectPtr oodObj, RexxObjectPtr id,
-                   int argPosObj, int argPosID)
+                   int argPosObj, size_t argPosID)
 {
     uint32_t tmp = oodResolveSymbolicID(context, oodObj, id, argPosObj, argPosID);
     if ( tmp == OOD_ID_EXCEPTION )

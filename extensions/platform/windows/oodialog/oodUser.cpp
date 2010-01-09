@@ -71,7 +71,6 @@ class LoopThreadArgs
 {
 public:
     DLGTEMPLATE       *dlgTemplate;
-    DIALOGADMIN       *dlgAdmin;
     pCPlainBaseDialog  pcpbd;
     bool              *release;
 };
@@ -85,15 +84,17 @@ public:
  */
 DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
 {
-    MSG msg;
     bool *release = args->release;
-    DIALOGADMIN *dlgAdm = args->dlgAdmin;
+    pCPlainBaseDialog pcpbd = args->pcpbd;
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
 
-    dlgAdm->TheDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, (LPARAM)args->pcpbd);
+    dlgAdm->TheDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
     dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
 
     if ( dlgAdm->TheDlg )
     {
+        MSG msg;
+        pcpbd->isActive = true;
         *release = true;
 
         while ( GetMessage(&msg,NULL, 0,0) && dialogInAdminTable(dlgAdm) && (!dlgAdm->LeaveDialog) )
@@ -106,6 +107,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
 #endif
                 DispatchMessage(&msg);
         }
+        printf("Dropped out of message loop, WindowUsrLoopThread\n");
     }
     else
     {
@@ -117,7 +119,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     EnterCriticalSection(&crit_sec);
     if ( dialogInAdminTable(dlgAdm) )
     {
-        DelDialog(dlgAdm);
+        DelDialog(pcpbd);
         dlgAdm->TheThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
@@ -370,6 +372,11 @@ RexxMethod4(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
  */
 #define DYNAMICDIALOG_CLASS  "DynamicDialog"
 
+
+inline pCPlainBaseDialog getDDpcpbd(void *pCSelf)
+{
+    return (((pCDynamicDialog)pCSelf)->pcpbd);
+}
 
 uint32_t getCommonWindowStyles(CSTRING opts, bool defaultBorder, bool defaultTab)
 {
@@ -802,7 +809,7 @@ int32_t connectCreatedControl(RexxMethodContext *c, pCPlainBaseDialog pcpbd, Rex
     }
 
     char buf[64];
-    if ( attributeName == NULL )
+    if ( attributeName == NULL || *attributeName == '\0' )
     {
         _snprintf(buf, sizeof(buf), "DATA%d", id);
         attributeName = buf;
@@ -932,15 +939,13 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
 
     if ( ! adjustDialogFont(context, args, pcpbd) )
     {
-        // See comment below, do we need to do a stop()?
-        return FALSE;
+        goto err_out;
     }
 
     uint32_t expected = getExpectedCount(context, args);
     if ( expected == 0 )
     {
-        // See comment below, do we need to do a stop()?
-        return FALSE;
+        goto err_out;
     }
 
     // We need to pass in and set the base address separately because the
@@ -951,12 +956,6 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     if ( ! startDialogTemplate(context, &pBase, pcdd, expected, x, y, cx, cy, dlgClass, title,
                                pcpbd->fontName, pcpbd->fontSize, style) )
     {
-        // TODO an exception has been raised, so I don't think we need to do any
-        // clean up ?  For a regular dialog, the original code did a
-        // DynamicDialog::stop(), which does a stopDialog().  For a
-        // CategoryDialog, things were just ignored.  Within ooDialog, this
-        // exception is not trapped, so the interpreter should just end.  But,
-        // what happens if the user traps syntax errors?
         return FALSE;
     }
     pcdd->base = pBase;
@@ -965,6 +964,23 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
 
     c->SendMessage0(pcdd->rexxSelf, "DEFINEDIALOG");
     return pcdd->active != NULL;
+
+err_out:
+    // TODO an exception has been raised, so I don't think we need to do any
+    // clean up ? (We do need to do clean up.)  For a regular dialog, the
+    // original code did a DynamicDialog::stop(), which does a stopDialog().
+    // For a CategoryDialog, things were just ignored.  Within ooDialog, this
+    // exception is not trapped, so the interpreter should just end.  But,
+    // what happens if the user traps syntax errors?
+
+    // This is the answer to the TODO question: No underlying windows dialog is
+    // created, but we still need to clean up the admin block, which was
+    // allocated when the Rexx dialog object was instantiated.  This admin
+    // block is now in the DialogTab.
+
+    //DelDialog(NULL, pcpbd);
+    return FALSE;
+
 }
 
 /** DyamicDialog::startParentDialog()
@@ -1007,7 +1023,6 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
 
     LoopThreadArgs threadArgs;
     threadArgs.dlgTemplate = p;
-    threadArgs.dlgAdmin = dlgAdm;
     threadArgs.pcpbd = pcpbd;
     threadArgs.release = &Release;
 
@@ -1026,59 +1041,57 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     pcdd->active = NULL;
     pcdd->count = 0;
 
-    if ( dlgAdm )   // TODO not sure why this check was done in the original code?  dlgAdm can not be null at this point.
+    if ( dlgAdm->TheDlg )
     {
-        if ( dlgAdm->TheDlg )
-        {
-            // Set the thread priority higher for faster drawing.
-            SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
-            dlgAdm->OnTheTop = TRUE;
-            dlgAdm->threadID = thID;
+        // Set the thread priority higher for faster drawing.
+        SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
+        dlgAdm->OnTheTop = TRUE;
+        dlgAdm->threadID = thID;
 
-            // Do we have a modal dialog?
-            if ( ! modeless )
+        // Do we have a modal dialog?
+        if ( ! modeless )
+        {
+            if ( dlgAdm->previous && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
             {
-                if ( dlgAdm->previous && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
-                {
-                    EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
-                }
+                EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
             }
+        }
 
-            if ( GetWindowLong(dlgAdm->TheDlg, GWL_STYLE) & WS_SYSMENU )
+        if ( GetWindowLong(dlgAdm->TheDlg, GWL_STYLE) & WS_SYSMENU )
+        {
+            HICON hBig = NULL;
+            HICON hSmall = NULL;
+
+            if ( GetDialogIcons(dlgAdm, iconID, ICON_FILE, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
             {
-                HICON hBig = NULL;
-                HICON hSmall = NULL;
+                dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
+                dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
+                dlgAdm->DidChangeIcon = TRUE;
 
-                if ( GetDialogIcons(dlgAdm, iconID, ICON_FILE, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
-                {
-                    dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
-                    dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
-                    dlgAdm->DidChangeIcon = TRUE;
-
-                    SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
-                }
+                SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
             }
-
-            setDlgHandle(context, pcdd->pcpbd, dlgAdm->TheDlg);
-            return TRUE;
         }
 
-        // The dialog creation failed, so clean up.  For now, with the
-        // mixture of old and new native APIs, the freeing of the dialog
-        // administration block must be done in the deInstall() or
-        // unInit() methods.
-
-        // TODO this seems very wrong.  Why isn't a DelDialog() done here???
-        dlgAdm->OnTheTop = FALSE;
-        if ( dlgAdm->previous )
-        {
-            ((DIALOGADMIN *)(dlgAdm->previous))->OnTheTop = TRUE;
-        }
-        if ( dlgAdm->previous && !IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
-        {
-            EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, TRUE);
-        }
+        setDlgHandle(context, pcdd->pcpbd, dlgAdm->TheDlg);
+        return TRUE;
     }
+
+    // The dialog creation failed, so do some final clean up.  Note that the
+    // dialog admin block can not be freed in DelDialog() because of its use
+    // here.
+    //
+    // When the dialog creation fails in the WindowUsrLoop thread a DelDialog()
+    // is immediately done, as it fails to enter the message processing loop.
+    dlgAdm->OnTheTop = FALSE;
+    if ( dlgAdm->previous )
+    {
+        ((DIALOGADMIN *)(dlgAdm->previous))->OnTheTop = TRUE;
+    }
+    if ( dlgAdm->previous && !IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
+    {
+        EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, TRUE);
+    }
+
     return FALSE;
 }
 
@@ -2049,9 +2062,9 @@ done_out:
 
 /** DynamicDialog::stop()  [private]
  */
-RexxMethod0(RexxObjectPtr, dyndlg_stop)
+RexxMethod1(RexxObjectPtr, dyndlg_stop, CSELF, pCSelf)
 {
-    stopDialog(NULL);
+    stopDialog(getDDpcpbd(pCSelf));
     return NULLOBJECT;
 }
 
