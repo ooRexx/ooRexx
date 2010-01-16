@@ -1266,6 +1266,91 @@ int putUnicodeText(LPWORD dest, const char *text)
 
 
 /**
+ *
+ *
+ *
+ * @param wstr
+ * @param len     The length, including the terminating null, of the wide string
+ *                to convert.  If this length does not include the terminating
+ *                null, the returned string will not include a terminating
+ *                string.
+ *
+ *                If -1 is passed for this parameter, the length will be
+ *                calculated and assumed the terminating null is desired.
+ *
+ * @return The converted string, or null on error.
+ *
+ * @note  The caller is responsible for freeing the returned string.  Memory is
+ *        allocated using malloc.
+ */
+char *unicode2Ansi(PWSTR wstr, int32_t len)
+{
+    if (wstr == NULL)
+    {
+        return NULL;
+    }
+
+    if ( len == -1 )
+    {
+        len = (int)wcslen(wstr) + 1;
+    }
+
+    char *ansiStr = NULL;
+    int32_t neededLen = WideCharToMultiByte(CP_ACP, 0, wstr, len, NULL, 0, NULL, NULL);
+
+    if ( neededLen != 0 )
+    {
+        ansiStr = (char *)malloc(neededLen);
+        if ( ansiStr != NULL )
+        {
+            if ( WideCharToMultiByte(CP_ACP, 0, wstr, len, ansiStr, neededLen, NULL, NULL) == 0 )
+            {
+                /* conversion failed */
+                free(ansiStr);
+                ansiStr = NULL;
+            }
+        }
+    }
+
+    return ansiStr;
+}
+
+/**
+ * Converts a wide character (Unicode) string to a Rexx string object.
+ *
+ *
+ * @param c
+ * @param wstr
+ * @param len
+ *
+ * @return RexxStringObject
+ *
+ * @remarks  TODO  should an out of memeory exception be raised for a null
+ *           return from unicode2Ansi?
+ */
+RexxStringObject unicode2String(RexxMethodContext *c, PWSTR wstr, int32_t len)
+{
+    RexxStringObject result = c->NullString();
+    if ( wstr == NULL )
+    {
+        goto done_out;
+    }
+
+    char *str = unicode2Ansi(wstr, len);
+    if ( str == NULL )
+    {
+        goto done_out;
+    }
+
+    result = c->String(str);
+    free(str);
+
+done_out:
+    return result;
+}
+
+
+/**
  * Checks that an argument array contains the minimum, and not more than the
  * maximum, number of arguments.  Raises the appropriate exception if the check
  * fails.

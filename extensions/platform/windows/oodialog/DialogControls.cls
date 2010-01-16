@@ -1331,72 +1331,72 @@
 
 ::class 'MonthCalendar' subclass DialogControl public
 
-::attribute date external "LIBRARY oodialog _mc_date"
-
--- MCM_FIRST == 0x1000 -> 4096
 ::constant MCM_GETMAXSELCOUNT      "0x1003"
 ::constant MCM_SETMAXSELCOUNT      "0x1004"
 ::constant MCM_GETMAXTODAYWIDTH    "0x1015"
 ::constant MCM_GETMONTHDELTA       "0x1013"
 ::constant MCM_SETMONTHDELTA       "0x1014"
 
+::attribute date external "LIBRARY oodialog _mc_date"
 
+::method getCalendarBorder external "LIBRARY oodialog mc_getCalendarBorder"
+::method getCalendarCount external "LIBRARY oodialog mc_getCalendarCount"
+::method getCALID external "LIBRARY oodialog mc_getCALID"
+::method getColor external "LIBRARY oodialog mc_getColor"
+::method getCurrentView external "LIBRARY oodialog mc_getCurrentView"
+::method getFirstDayOfWeek external "LIBRARY oodialog mc_getFirstDayOfWeek"
+::method getGridInfo external "LIBRARY oodialog mc_getGridInfo"
 
-
-
-
-::method getCalendarBorder external "LIBRARY oodialog mc_getCalendarBorder"     -- MonthCalendar_GetCalendarBorder
-::method getCalendarCount external "LIBRARY oodialog mc_getCalendarCount"       -- MonthCalendar_GetCalendarCount
-                                                                                -- MonthCal_GetCalendarGridInfo     ***
-::method getCALID external "LIBRARY oodialog mc_getCALID"                       -- MonthCal_GetCALID
-::method getColor external "LIBRARY oodialog mc_getColor"                       -- MonthCal_GetColor
-::method getCurrentView external "LIBRARY oodialog mc_getCurrentView"           -- MonthCal_GetCurrentView
-                                                                                -- MonthCal_GetCurSel                        This is ::attribute date
-::method getFirstDayOfWeek external "LIBRARY oodialog mc_getFirstDayOfWeek"     -- MonthCal_GetFirstDayOfWeek
-::method getMaxSelection                                                        -- MonthCal_GetMaxSelCount
+::method getMaxSelection
    use strict arg
    return self~sendWinIntMsg(self~MCM_GETMAXSELCOUNT, 0, 0)
-::method getMaxTodayWidth                                                       -- MonthCal_GetMaxTodayWidth
+
+::method getMaxTodayWidth
    use strict arg
    return self~sendWinIntMsg(self~MCM_GETMAXTODAYWIDTH, 0, 0)
-::method getMinRect external "LIBRARY oodialog mc_getMinRect"                   -- MonthCal_GetMinReqRect
-::method getMonthDelta                                                          -- MonthCal_GetMonthDelta
+
+::method getMinRect external "LIBRARY oodialog mc_getMinRect"
+
+::method getMonthDelta
    use strict arg
    return self~sendWinIntMsg(self~MCM_GETMONTHDELTA, 0, 0)
-::method getMonthRange external "LIBRARY oodialog mc_getMonthRange"             -- MonthCal_GetMonthRange
-::method getRange external "LIBRARY oodialog mc_getRange"                       -- MonthCal_GetRange
-::method getSelectionRange external "LIBRARY oodialog mc_getSelectionRange"     -- MonthCal_GetSelRange
-::method getToday external "LIBRARY oodialog mc_getToday"                       -- MonthCal_GetToday
-                                                                                -- MonthCal_GetUnicodeFormat                 Handled by DialogControl::usingUnicode()
-                                                                                -- MonthCal_HitTest                 ***
-::method setCalendarBorder external "LIBRARY oodialog mc_setCalendarBorder"     -- MonthCal_SetCalendarBorder
-::method setCALID external "LIBRARY oodialog mc_setCALID"                       -- MonthCal_SetCALID
-::method setColor external "LIBRARY oodialog mc_setColor"                       -- MonthCal_SetColor
-::method setCurrentView external "LIBRARY oodialog mc_setCurrentView"           -- MonthCal_SetCurrentView
-                                                                                -- MonthCal_SetCurSel                        This is ::attribute date
-::method setDayState external "LIBRARY oodialog mc_setDayState"                 -- MonthCal_SetDayState
-::method setDayStateQuick external "LIBRARY oodialog mc_setDayStateQuick"       -- MonthCal_SetDayState
-::method setFirstDayOfWeek external "LIBRARY oodialog mc_setFirstDayOfWeek"     -- MonthCal_SetFirstDayOfWeek
-::method setMaxSelection                                                        -- MonthCal_SetMaxSelCount
+
+::method getMonthRange external "LIBRARY oodialog mc_getMonthRange"
+::method getRange external "LIBRARY oodialog mc_getRange"
+::method getSelectionRange external "LIBRARY oodialog mc_getSelectionRange"
+::method getToday external "LIBRARY oodialog mc_getToday"
+::method hitTest external "LIBRARY oodialog mc_hitTest"
+::method setCalendarBorder external "LIBRARY oodialog mc_setCalendarBorder"
+::method setCALID external "LIBRARY oodialog mc_setCALID"
+::method setColor external "LIBRARY oodialog mc_setColor"
+::method setCurrentView external "LIBRARY oodialog mc_setCurrentView"
+::method setDayState external "LIBRARY oodialog mc_setDayState"
+::method setDayStateQuick external "LIBRARY oodialog mc_setDayStateQuick"
+::method setFirstDayOfWeek external "LIBRARY oodialog mc_setFirstDayOfWeek"
+
+::method setMaxSelection
    use strict arg count
    return self~sendWinIntMsg(self~MCM_SETMAXSELCOUNT, count, 0) <> 0
-::method setMonthDelta                                                          -- MonthCal_SetMonthDelta
+
+::method setMonthDelta
    use strict arg amount
    return self~sendWinIntMsg(self~MCM_SETMAXTODAYWIDTH, amount, 0)
-::method setRange external "LIBRARY oodialog mc_setRange"                       -- MonthCal_SetRange
-::method setSelectionRange external "LIBRARY oodialog mc_setSelectionRange"     -- MonthCal_SetSelRange
-::method setToday external "LIBRARY oodialog mc_setToday"                       -- MonthCal_SetToday
-                                                                                -- MonthCal_SetUnicodeFormat                 Handled by DialogControl::useUnicode()
-::method sizeRectToMin external "LIBRARY oodialog mc_sizeRectToMin"             -- MonthCal_SizeRectToMin
+
+::method setRange external "LIBRARY oodialog mc_setRange"
+::method setSelectionRange external "LIBRARY oodialog mc_setSelectionRange"
+::method setToday external "LIBRARY oodialog mc_setToday"
+::method sizeRectToMin external "LIBRARY oodialog mc_sizeRectToMin"
+
 
 ::class 'UpDown' subclass DialogControl public
 
--- WM_USER == 0x400 -> 1024
 ::constant UDM_SETBUDDY            "0x0469"
 ::constant UDM_GETBUDDY            "0x046A"
 ::constant UDM_SETBASE             "0x046D"
 ::constant UDM_GETBASE             "0x046E"
 ::constant UDM_SETPOS32            "0x0471"
+
+::method deltaPosReply class external "LIBRARY oodialog ud_deltaPosReply_cls"
 
 ::method getBase
    use strict arg

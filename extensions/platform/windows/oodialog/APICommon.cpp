@@ -278,6 +278,52 @@ void missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING 
     userDefinedMsgException(c, buffer);
 }
 
+/**
+ * Index, <index>, of argument <pos> must be one of <list>; found "<actual>"
+ *
+ * Index, PART, of argument 1 must be one of calendar, next, prev, or none;
+ * found "today"
+ *
+ * @param c
+ * @param pos
+ * @param index
+ * @param list
+ * @param actual
+ *
+ * @return RexxObjectPtr
+ */
+void wrongValueAtDirectoryIndexException(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING list, RexxObjectPtr actual)
+{
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer),
+              "Index, %s, of argument %d, must be one of %s; found \"%s\"",
+              index, pos, list, c->ObjectToStringValue(actual));
+    userDefinedMsgException(c, buffer);
+}
+
+/**
+ * Index, <index>, of argument <pos> <msg>; found "<actual>"
+ *
+ * Index, PART, of argument 1 must contain one or more of the keywords calendar,
+ * next, prev, or none; found "today"
+ *
+ * @param c
+ * @param pos
+ * @param index
+ * @param list
+ * @param actual
+ *
+ * @return RexxObjectPtr
+ */
+void directoryIndexException(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, RexxObjectPtr actual)
+{
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer),
+              "Index, %s, of argument %d, must be one of %s; found \"%s\"",
+              index, pos, msg, c->ObjectToStringValue(actual));
+    userDefinedMsgException(c, buffer);
+}
+
 void emptyArrayException(RexxThreadContext *c, int argPos)
 {
     TCHAR buffer[256];
@@ -407,18 +453,32 @@ RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const cha
     return wrongArgValueException(c, pos, list, c->String(actual));
 }
 
-RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual)
+/**
+ * Similar to 93.915 and 93.914  (actually a combination of the two.)
+ *
+ * Method argument <pos>, option must be one of <list>; found "<actual>"
+ *
+ * Method argument 2 must be one of [P]artially, or [E]ntirely; found "G"
+ *
+ * @param c
+ * @param pos
+ * @param list
+ * @param actual
+ *
+ * @return RexxObjectPtr
+ */
+RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual)
 {
-    c->RaiseException(Rexx_Error_Incorrect_method_option,
-                      c->ArrayOfThree(c->WholeNumber(pos), c->String(list), actual));
+
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer), "Method argument %d, option must be one of %s; found \"%s\"", pos, list, actual);
+    userDefinedMsgException(c, buffer);
     return NULLOBJECT;
 }
 
-RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual)
+RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual)
 {
-    c->RaiseException(Rexx_Error_Incorrect_method_option,
-                      c->ArrayOfThree(c->WholeNumber(pos), c->String(list), c->String(actual)));
-    return NULLOBJECT;
+    return wrongArgOptionException(c, pos, list, c->ObjectToStringValue(actual));
 }
 
 CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)

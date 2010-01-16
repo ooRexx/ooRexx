@@ -321,10 +321,36 @@ RexxMethod1(RexxObjectPtr, tb_getSelRange, CSELF, pCSelf)
 }
 
 
+
 /**
  * Methods for the UpDown class.
  */
 #define UP_DOWN_CLASS      "UpDown"
+
+
+RexxMethod3(RexxObjectPtr, ud_deltaPosReply_cls, OPTIONAL_logical_t, change, OPTIONAL_logical_t, cancel, OPTIONAL_int32_t, newDelta)
+{
+    if ( ! change )
+    {
+        return TheFalseObj;
+    }
+
+    RexxBufferObject _dpr = context->NewBuffer(sizeof(DELTAPOSREPLY));
+    if ( _dpr == NULLOBJECT )
+    {
+        return TheFalseObj;
+    }
+
+    PDELTAPOSREPLY pdpr = (PDELTAPOSREPLY)context->BufferData(_dpr);
+    pdpr->change = true;
+    pdpr->cancel = cancel ? true : false;
+
+    if ( ! pdpr->cancel )
+    {
+        pdpr->newDelta = newDelta;
+    }
+    return _dpr;
+}
 
 
 /** UpDown::setRange()

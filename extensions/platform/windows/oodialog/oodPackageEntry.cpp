@@ -493,6 +493,7 @@ REXX_METHOD_PROTOTYPE(tb_getRange);
 REXX_METHOD_PROTOTYPE(tb_getSelRange);
 
 // UpDown
+REXX_METHOD_PROTOTYPE(ud_deltaPosReply_cls);
 REXX_METHOD_PROTOTYPE(ud_getRange);
 REXX_METHOD_PROTOTYPE(ud_setRange);
 REXX_METHOD_PROTOTYPE(ud_getPosition);
@@ -581,11 +582,13 @@ REXX_METHOD_PROTOTYPE(mc_getCALID);
 REXX_METHOD_PROTOTYPE(mc_getColor);
 REXX_METHOD_PROTOTYPE(mc_getCurrentView);
 REXX_METHOD_PROTOTYPE(mc_getFirstDayOfWeek);
+REXX_METHOD_PROTOTYPE(mc_getGridInfo);
 REXX_METHOD_PROTOTYPE(mc_getMinRect);
 REXX_METHOD_PROTOTYPE(mc_getMonthRange);
 REXX_METHOD_PROTOTYPE(mc_getRange);
 REXX_METHOD_PROTOTYPE(mc_getSelectionRange);
 REXX_METHOD_PROTOTYPE(mc_getToday);
+REXX_METHOD_PROTOTYPE(mc_hitTest);
 REXX_METHOD_PROTOTYPE(mc_setCalendarBorder);
 REXX_METHOD_PROTOTYPE(mc_setCALID);
 REXX_METHOD_PROTOTYPE(mc_setColor);
@@ -1153,11 +1156,13 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(mc_getColor,                    mc_getColor),
     REXX_METHOD(mc_getCurrentView,              mc_getCurrentView),
     REXX_METHOD(mc_getFirstDayOfWeek,           mc_getFirstDayOfWeek),
+    REXX_METHOD(mc_getGridInfo,                 mc_getGridInfo),
     REXX_METHOD(mc_getMinRect,                  mc_getMinRect),
     REXX_METHOD(mc_getMonthRange,               mc_getMonthRange),
     REXX_METHOD(mc_getRange,                    mc_getRange),
     REXX_METHOD(mc_getSelectionRange,           mc_getSelectionRange),
     REXX_METHOD(mc_getToday,                    mc_getToday),
+    REXX_METHOD(mc_hitTest,                     mc_hitTest),
     REXX_METHOD(mc_setCalendarBorder,           mc_setCalendarBorder),
     REXX_METHOD(mc_setCALID,                    mc_setCALID),
     REXX_METHOD(mc_setColor,                    mc_setColor),
@@ -1180,6 +1185,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tb_getSelRange,                 tb_getSelRange),
 
     // UpDown
+    REXX_METHOD(ud_deltaPosReply_cls,           ud_deltaPosReply_cls),
     REXX_METHOD(ud_getRange,                    ud_getRange),
     REXX_METHOD(ud_setRange,                    ud_setRange),
     REXX_METHOD(ud_getPosition,                 ud_getPosition),

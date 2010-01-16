@@ -163,6 +163,16 @@ typedef struct _ddCSelf {
 } CDynamicDialog;
 typedef CDynamicDialog *pCDynamicDialog;
 
+
+/* Struct for a reply to the UDN_DELTAPOS notification message. (Up-down control.) */
+typedef struct _DELTAPOS_REPLY {
+    bool      change;
+    bool      cancel;
+    int32_t   newDelta;
+} DELTAPOSREPLY;
+typedef DELTAPOSREPLY *PDELTAPOSREPLY;
+
+
 extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 extern bool             dialogInAdminTable(DIALOGADMIN * Dlg);
 extern bool             InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING library);
@@ -221,19 +231,21 @@ extern bool rxLogicalFromDirectory(RexxMethodContext *, RexxDirectoryObject, CST
 extern bool rxNumberFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, uint32_t *, int, bool);
 extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, int *, int, bool);
 
-extern RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
-extern int           putUnicodeText(LPWORD dest, const char *text);
-extern int           getKeywordValue(String2Int *cMap, const char * str);
-extern bool          goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size_t max, size_t *arraySize);
-extern bool          getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, size_t *);
-extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, size_t *);
+extern RexxObjectPtr     setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
+extern int               putUnicodeText(LPWORD dest, const char *text);
+extern RexxStringObject  unicode2String(RexxMethodContext *c, PWSTR wstr, int32_t len);
+extern char *            unicode2Ansi(PWSTR wstr, int32_t len);
+extern int               getKeywordValue(String2Int *cMap, const char * str);
+extern bool              goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size_t max, size_t *arraySize);
+extern bool              getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, size_t *);
+extern bool              getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, size_t *);
 
 // These functions are defined in oodUser.cpp.
 extern bool getCategoryHDlg(RexxMethodContext *, RexxObjectPtr, uint32_t *, HWND *, int);
 extern uint32_t getCategoryNumber(RexxMethodContext *, RexxObjectPtr);
 
 // These functions are defined in oodUtilities.cpp
-extern const char *comctl32VersionPart(DWORD id, DWORD type);
+extern const char *  comctl32VersionPart(DWORD id, DWORD type);
 extern RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, size_t count, LPMONTHDAYSTATE *ppmds);
 extern RexxObjectPtr quickDayStateBuffer(RexxMethodContext *c, uint32_t ds1, uint32_t ds2, uint32_t ds3, LPMONTHDAYSTATE *ppmds);
 

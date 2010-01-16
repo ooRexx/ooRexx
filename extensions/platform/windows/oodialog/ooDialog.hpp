@@ -108,6 +108,7 @@ extern DWORD ComCtl32Version;
  */
 #define TAG_CTRLMASK              0x000000FF
 
+#define TAG_NOTHING               0x00000000
 #define TAG_DIALOG                0x00000001
 #define TAG_BUTTON                0x00000004
 #define TAG_TREEVIEW              0x00000006

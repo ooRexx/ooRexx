@@ -333,6 +333,9 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCS
 #define MONTHCALENDAR_WINNAME  "Month Calendar"
 
 
+#define MC_GRIDINFO_PART_NAMES             "control, next, prev, footer, calendard, header, body, row, cell"
+#define MC_GRIDINFO_WHAT_FLAG_ERR_MSG      "must contain at least one of the keywords: date, rect, or name"
+
 /* Determine if a month calendar is a multi-selection month calendar. */
 inline bool isMultiSelectionMonthCalendar(HWND hCtrl)
 {
@@ -411,6 +414,100 @@ static COLORREF calPart2flag(CSTRING part)
     else if ( StrStrI(part, "TITLETEXT"   ) != NULL ) color = MCSC_TITLETEXT;
     else if ( StrStrI(part, "TRAILINGTEXT") != NULL ) color = MCSC_TRAILINGTEXT;
     return color;
+}
+
+
+bool putHitInfo(RexxMethodContext *c, RexxDirectoryObject hitInfo, MCHITTESTINFO *info)
+{
+    bool done = true;
+    bool needDate = false;
+
+    switch ( info->uHit )
+    {
+        case MCHT_CALENDARBK :
+            c->DirectoryPut(hitInfo, c->String("CalendarBackground"), "HIT");
+            break;
+
+        case MCHT_CALENDARCONTROL :
+            c->DirectoryPut(hitInfo, c->String("CalendarControl"), "HIT");
+            break;
+
+        case MCHT_CALENDARDATE :
+            c->DirectoryPut(hitInfo, c->String("CalendarDate"), "HIT");
+            needDate = true;
+            break;
+
+        case MCHT_CALENDARDATEMIN :
+            c->DirectoryPut(hitInfo, c->String("CalendarDateMin"), "HIT");
+            break;
+
+        case MCHT_CALENDARDATEMAX :
+            c->DirectoryPut(hitInfo, c->String("CalendarDateMax"), "HIT");
+            break;
+
+        case MCHT_CALENDARDATENEXT :
+            c->DirectoryPut(hitInfo, c->String("CalendarDateNext"), "HIT");
+            break;
+
+        case MCHT_CALENDARDATEPREV :
+            c->DirectoryPut(hitInfo, c->String("CalendarDatePrev"), "HIT");
+            break;
+
+        case MCHT_CALENDARDAY :
+            c->DirectoryPut(hitInfo, c->String("CalendarDay"), "HIT");
+            needDate = true;
+            break;
+
+        case MCHT_CALENDARWEEKNUM :
+            c->DirectoryPut(hitInfo, c->String("CalendarWeekNum"), "HIT");
+            needDate = true;
+            break;
+
+        case MCHT_NOWHERE :
+            c->DirectoryPut(hitInfo, c->String("NoWhere"), "HIT");
+            done = false;
+            break;
+
+        case MCHT_TITLEBK :
+            c->DirectoryPut(hitInfo, c->String("TitleBackground"), "HIT");
+            break;
+
+        case MCHT_TITLEBTNNEXT :
+            c->DirectoryPut(hitInfo, c->String("TitleButtonNext"), "HIT");
+            break;
+
+        case MCHT_TITLEBTNPREV :
+            c->DirectoryPut(hitInfo, c->String("TitleButtonPrev"), "HIT");
+            break;
+
+        case MCHT_TITLEMONTH :
+            c->DirectoryPut(hitInfo, c->String("TitleMonth"), "HIT");
+            break;
+
+        case MCHT_TITLEYEAR :
+            c->DirectoryPut(hitInfo, c->String("TitleYear"), "HIT");
+            break;
+
+        case MCHT_TODAYLINK :
+            // Not documented, so not sure if this is ever returned.
+            c->DirectoryPut(hitInfo, c->String("TodayLink"), "HIT");
+            break;
+
+        default :
+            // Shouldn't happen, but if it does this is okay, the HIT index is
+            // already the empty string and we are done.
+            done = true;
+            break;
+    }
+
+    if ( needDate )
+    {
+        RexxObjectPtr date;
+
+        sysTime2dt(c->threadContext, &(info->st), &date, dtDate);
+        c->DirectoryPut(hitInfo, date, "DATE");
+    }
+    return done;
 }
 
 
@@ -643,6 +740,161 @@ RexxMethod2(int32_t, mc_getFirstDayOfWeek, OPTIONAL_RexxObjectPtr, result, CSELF
     return LOWORD(ret);
 }
 
+
+/** MonthCalendar::getGridInfo()
+ *
+ *
+ *  @note  Indexes for row, column, and calendar offset are 1-based.
+ *
+ */
+RexxMethod2(RexxObjectPtr, mc_getGridInfo, RexxObjectPtr, _gridInfo, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "getGridInfo", "Vista");
+    }
+
+    MCGRIDINFO info = {0};
+    info.cbSize = sizeof(MCGRIDINFO);
+
+    if ( ! context->IsOfType(_gridInfo, "DIRECTORY") )
+    {
+        wrongClassException(context->threadContext, 1, "Directory");
+        goto err_out;
+    }
+    RexxDirectoryObject gridInfo = (RexxDirectoryObject)_gridInfo;
+    int32_t num;
+
+    RexxObjectPtr _part = context->DirectoryAt(gridInfo, "PART");
+    RexxObjectPtr _what = context->DirectoryAt(gridInfo, "WHAT");
+    RexxObjectPtr _calIndex = context->DirectoryAt(gridInfo, "INDEX");
+
+    if ( _part == NULLOBJECT )
+    {
+        missingIndexInDirectoryException(context->threadContext, 1, "PART");
+        goto err_out;
+    }
+    if ( _what == NULLOBJECT )
+    {
+        missingIndexInDirectoryException(context->threadContext, 1, "WHAT");
+        goto err_out;
+    }
+
+    if ( _calIndex == NULLOBJECT )
+    {
+        // TODO MSDN doc does not say if this is 0-based or 1-based. ???
+        info.iCalendar = 0;
+        context->DirectoryPut(gridInfo, TheOneObj, "INDEX");
+    }
+    else
+    {
+        if ( ! context->Int32(_calIndex, &num) )
+        {
+            wrongObjInDirectoryException(context->threadContext, 1, "INDEX", "whole number", _calIndex);
+            goto err_out;
+        }
+        info.iCalendar = num - 1;
+    }
+
+    CSTRING partName = context->ObjectToStringValue(_part);
+    CSTRING whatFlag = context->ObjectToStringValue(_what);
+
+    if ( stricmp(partName,      "CONTROL")  == 0 ) info.dwPart = MCGIP_CALENDARCONTROL;
+    else if ( stricmp(partName, "NEXT")     == 0 ) info.dwPart = MCGIP_NEXT;
+    else if ( stricmp(partName, "PREV")     == 0 ) info.dwPart = MCGIP_PREV;
+    else if ( stricmp(partName, "FOOTER")   == 0 ) info.dwPart = MCGIP_FOOTER;
+    else if ( stricmp(partName, "CALENDAR") == 0 ) info.dwPart = MCGIP_CALENDAR;
+    else if ( stricmp(partName, "HEADER")   == 0 ) info.dwPart = MCGIP_CALENDARHEADER;
+    else if ( stricmp(partName, "BODY")     == 0 ) info.dwPart = MCGIP_CALENDARBODY;
+    else if ( stricmp(partName, "ROW")      == 0 ) info.dwPart = MCGIP_CALENDARROW;
+    else if ( stricmp(partName, "CELL")     == 0 ) info.dwPart = MCGIP_CALENDARCELL;
+    else
+    {
+        wrongValueAtDirectoryIndexException(context->threadContext, 1, "PART", MC_GRIDINFO_PART_NAMES, _part);
+        goto err_out;
+    }
+
+    if ( StrStrI(whatFlag,      "DATE") != NULL ) info.dwFlags |= MCGIF_DATE;
+    else if ( stricmp(whatFlag, "RECT") != NULL ) info.dwFlags |= MCGIF_RECT;
+    else if ( stricmp(whatFlag, "NAME") != NULL ) info.dwFlags |= MCGIF_NAME;
+
+    if ( info.dwFlags == 0 )
+    {
+        directoryIndexException(context->threadContext, 1, "WHAT", MC_GRIDINFO_WHAT_FLAG_ERR_MSG, _what);
+        goto err_out;
+    }
+
+    if ( info.dwPart == MCGIP_CALENDARROW || info.dwPart == MCGIP_CALENDARCELL )
+    {
+        RexxObjectPtr row = context->DirectoryAt(gridInfo, "ROW");
+        if ( row == NULLOBJECT )
+        {
+            missingIndexInDirectoryException(context->threadContext, 1, "ROW");
+            goto err_out;
+        }
+        if ( ! context->Int32(row, &num) )
+        {
+            wrongObjInDirectoryException(context->threadContext, 1, "ROW", "whole number", row);
+            goto err_out;
+        }
+        info.iRow = num - 1;
+
+        if ( info.dwPart == MCGIP_CALENDARCELL )
+        {
+            RexxObjectPtr col = context->DirectoryAt(gridInfo, "COL");
+            if ( col == NULLOBJECT )
+            {
+                missingIndexInDirectoryException(context->threadContext, 1, "COL");
+                goto err_out;
+            }
+            if ( ! context->Int32(col, &num) )
+            {
+                wrongObjInDirectoryException(context->threadContext, 1, "COL", "whole number", col);
+                goto err_out;
+            }
+            info.iCol = num - 1;
+        }
+    }
+
+    if ( ! MonthCal_GetCalendarGridInfo(getDChCtrl(pCSelf), &info) )
+    {
+        goto err_out;
+    }
+
+    if ( info.dwPart == MCGIP_CALENDARCELL )
+    {
+        context->DirectoryPut(gridInfo, (info.bSelected ? TheTrueObj : TheFalseObj), "SELECTED");
+    }
+
+    if ( info.dwFlags & MCGIF_DATE )
+    {
+        RexxObjectPtr startDate;
+        RexxObjectPtr endDate;
+        sysTime2dt(context->threadContext, &info.stStart, &startDate, dtDate);
+        sysTime2dt(context->threadContext, &info.stEnd, &endDate, dtDate);
+
+        context->DirectoryPut(gridInfo, startDate, "STARTDATE");
+        context->DirectoryPut(gridInfo, endDate, "ENDDATE");
+    }
+
+    if ( info.dwFlags & MCGIF_RECT )
+    {
+        context->DirectoryPut(gridInfo, rxNewRect(context, &info.rc), "RECT");
+    }
+
+    if ( (info.dwFlags & MCGIF_NAME) && (info.dwPart == MCGIP_CALENDAR || info.dwPart == MCGIP_CALENDARCELL || info.dwPart == MCGIP_CALENDARHEADER) )
+    {
+        info.cchName++;
+        context->DirectoryPut(gridInfo, unicode2String(context, info.pszName, (int)info.cchName), "NAME");
+    }
+
+    return TheTrueObj;
+
+err_out:
+    return TheFalseObj;
+}
+
+
 RexxMethod2(RexxObjectPtr, mc_getMinRect, RexxObjectPtr, _rect, CSELF, pCSelf)
 {
     HWND hMC = getDChCtrl(pCSelf);
@@ -708,7 +960,7 @@ RexxMethod3(int32_t, mc_getMonthRange, RexxArrayObject, range, OPTIONAL_CSTRING,
     return ret;
 
 err_out:
-    wrongArgOptionException(context->threadContext, 2, "'P' (partially), or 'E' (entirely)", span);
+    wrongArgOptionException(context->threadContext, 2, "[P]artially, or [E]ntirely", span);
     return -1;
 }
 
@@ -814,6 +1066,47 @@ RexxMethod1(RexxObjectPtr, mc_getToday, CSELF, pCSelf)
 }
 
 
+/** MonthCalendar::hitTest()
+ *
+ *
+ *  @note  Indexes for row, column, and calendar offset are 1-based.
+ *
+ */
+RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
+{
+    RexxDirectoryObject hitInfo = context->NewDirectory();
+
+    MCHITTESTINFO info = {0};
+    info.cbSize = sizeof(MCHITTESTINFO);
+
+    PPOINT pt = rxGetPoint(context, _pt, 1);
+    if ( pt == NULL )
+    {
+        goto done_out;
+    }
+    context->DirectoryPut(hitInfo, _pt, "POINT");
+
+    info.pt.x = pt->x;
+    info.pt.y = pt->y;
+
+    MonthCal_HitTest(getDChCtrl(pCSelf), &info);
+
+    bool done = putHitInfo(context, hitInfo, &info);
+
+    if ( info.cbSize > MCHITTESTINFO_V1_SIZE && ! done )
+    {
+        context->DirectoryPut(hitInfo, rxNewRect(context, &info.rc), "RECT");
+
+        context->DirectoryPut(hitInfo, context->WholeNumber(info.iOffset + 1), "OFFSET");
+        context->DirectoryPut(hitInfo, context->WholeNumber(info.iRow + 1), "ROW");
+        context->DirectoryPut(hitInfo, context->WholeNumber(info.iCol + 1), "COLUMN");
+    }
+
+done_out:
+    return hitInfo;
+}
+
+
 RexxMethod2(RexxObjectPtr, mc_setCalendarBorder, OPTIONAL_uint32_t, border, CSELF, pCSelf)
 {
     if ( ! _isAtLeastVista() )
@@ -915,9 +1208,8 @@ RexxMethod2(RexxObjectPtr, mc_setCurrentView, CSTRING, view, CSELF, pCSelf)
 
 RexxMethod2(RexxObjectPtr, mc_setDayState, RexxArrayObject, list, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
     LPMONTHDAYSTATE pmds;
-    size_t count = c->ArrayItems(list);
+    size_t count = context->ArrayItems(list);
 
     RexxObjectPtr result = makeDayStateBuffer(context, list, count, &pmds);
     return setDayState(getDChCtrl(pCSelf), pmds, (int)count, result);

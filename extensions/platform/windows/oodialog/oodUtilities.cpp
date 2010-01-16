@@ -1110,7 +1110,7 @@ RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, siz
     RexxBufferObject _mds = c->NewBuffer(count * sizeof(MONTHDAYSTATE));
     if ( _mds == NULLOBJECT )
     {
-        return TheFalseObj;  // Need to think about this.
+        return TheFalseObj;
     }
 
     MONTHDAYSTATE *pmds = (MONTHDAYSTATE *)c->BufferData(_mds);
