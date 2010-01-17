@@ -75,6 +75,7 @@
 #include "CommandHandler.hpp"
 #include "ActivationFrame.hpp"
 #include "StackFrameClass.hpp"
+#include "InterpreterInstance.hpp"
 
 /* max instructions without a yield */
 #define MAX_INSTRUCTIONS  100
@@ -199,7 +200,7 @@ RexxActivation::RexxActivation(RexxActivity* _activity, RexxMethod * _method, Re
     this->activity->allocateLocalVariableFrame(&settings.local_variables);
                                        /* set the initial and initial       */
                                        /* alternate address settings        */
-    this->settings.current_env = SystemInterpreter::getDefaultAddressName();
+    this->settings.current_env = activity->getInstance()->getDefaultEnvironment();
     this->settings.alternate_env = this->settings.current_env;
                                        /* get initial random seed value     */
     this->random_seed = this->activity->getRandomSeed();
@@ -338,7 +339,7 @@ RexxActivation::RexxActivation(RexxActivity *_activity, RoutineClass *_routine, 
     this->activity->allocateLocalVariableFrame(&settings.local_variables);
     /* set the initial and initial       */
     /* alternate address settings        */
-    this->settings.current_env = SystemInterpreter::getDefaultAddressName();
+    this->settings.current_env = activity->getInstance()->getDefaultEnvironment();
     this->settings.alternate_env = this->settings.current_env;
     /* get initial random seed value     */
     this->random_seed = this->activity->getRandomSeed();
