@@ -198,19 +198,39 @@ QueueHandle LocalQueueManager::createSessionQueue(SessionID session)
  */
 RexxReturnCode LocalQueueManager::createNamedQueue(const char *name, size_t size, char *createdName, size_t *dup)
 {
-    if (!validateQueueName(name))            // make sure this is a valid name
+    // validation and copying of the request name only is necessary if given.
+    if (name != NULL)
     {
-        return RXQUEUE_BADQNAME;
+        if (!validateQueueName(name))            // make sure this is a valid name
+        {
+            return RXQUEUE_BADQNAME;
+        }
+
+        ClientMessage message(QueueManager, CREATE_NAMED_QUEUE, name);
+        // the session id is used for creating unique queue names
+        message.parameter1 = localManager->getSession();
+
+        message.send();
+        strncpy(createdName, message.nameArg, size);
+        // return the dup name indicator
+        *dup = message.result == DUPLICATE_QUEUE_NAME;
+        // everything worked here.
+        return RXQUEUE_OK;
     }
+    else
+    {
+        // always returning a generated name
+        ClientMessage message(QueueManager, CREATE_NAMED_QUEUE, "");
+        // the session id is used for creating unique queue names
+        message.parameter1 = localManager->getSession();
 
-    ClientMessage message(QueueManager, CREATE_NAMED_QUEUE, name);
-
-    message.send();
-    strncpy(createdName, message.nameArg, size);
-    // return the dup name indicator
-    *dup = message.result == DUPLICATE_QUEUE_NAME;
-    // everything worked here.
-    return RXQUEUE_OK;
+        message.send();
+        strncpy(createdName, message.nameArg, size);
+        // by definition, this is not a duplicate
+        *dup = false;
+        // everything worked here.
+        return RXQUEUE_OK;
+    }
 }
 
 

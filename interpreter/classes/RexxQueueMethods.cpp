@@ -179,7 +179,7 @@ RexxMethod1(wholenumber_t, rexx_queue_queue,
 /* Rexx_create_queue                                                                        */
 /********************************************************************************************/
 RexxMethod1(RexxStringObject, rexx_create_queue,
-  CSTRING, queue_name)                 /* current queue name                */
+  OPTIONAL_CSTRING, queue_name)        /* current queue name                */
 {
    char buf[MAX_QUEUE_NAME_LENGTH+1];  /* creation buffer                   */
    RexxReturnCode rc;                  /* creation return code              */

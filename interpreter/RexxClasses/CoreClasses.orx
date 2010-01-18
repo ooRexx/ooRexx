@@ -3541,8 +3541,9 @@ Output:
     if symbol(queue_name) = 'BAD' then
       raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
     if (Arg(2,'o') = 1) then
-      queue_name = 'S00001Q0000000001'
-    return .RexxQueue~create(queue_name)
+      return .RexxQueue~create
+    else
+      return .RexxQueue~create(queue_name)
   end
 
   if substr(keyword,1,1) = 'O' then do

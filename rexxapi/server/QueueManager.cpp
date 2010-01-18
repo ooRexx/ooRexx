@@ -562,8 +562,17 @@ void ServerQueueManager::createUniqueQueue(ServiceMessage &message)
     uintptr_t tag = (uintptr_t)queue;
     for (;;)                   // we need to loop until we get a unique one.
     {
+        char session[32];
+        char tagstring[32];
+
+        // linux uses a 0x prefix for pointers, Windows doesn't.  Just pull off
+        // the address characters without any "0x" prefix.
+        sprintf(session, "%p", (void *)message.parameter1);
+        sprintf(tagstring, "%p", (void *)tag);
+
         // message parameter1 is the session identifier.
-        sprintf(message.nameArg, "S%pQ%p", (void *)message.parameter1, (void *)tag);
+        sprintf(message.nameArg, "S%sQ%s", (void *)(session[1] == 'x' ? session + 2 : session),
+            (void *)(tagstring[1] == 'x' ? tagstring + 2 : tagstring));
         if (namedQueues.locate(message.nameArg) == 0)
         {
             // set the name
