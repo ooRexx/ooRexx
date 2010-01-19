@@ -1590,7 +1590,7 @@ $ Error_Logical_value_logical_list
 659 Value of logical list expression element must be exactly "0" or "1"; found "&2"
 
 $ Error_Invalid_expression_logical_list
-660 Missing expression in logical_expression_list
+660 Missing expression in logical expression list
 
 $ Error_Translation_use_strict_ellipsis
 663 The "..." argument marker can only appear at the end of the argument list
@@ -1750,6 +1750,12 @@ $ Error_Symbol_or_string_trace_value
 
 $ Error_Execution_invalid_thread
 716 Execution thread does not match API thread context.
+
+$ Error_Invalid_expression_parse
+717 Missing expression following ( of parse template
+
+$ Error_Invalid_expression_call
+718 Missing expression for calculated CALL name
 
 
 $ * -------------------------------------------------------------------------- */

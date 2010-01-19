@@ -4259,7 +4259,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
 
     if ((numargs == 7) && RXVALIDSTRING(args[6])) /* last column to sort */
     {
-      if (!string1size_t(args[6].strptr, &lastCol))
+      if (!string2size_t(args[6].strptr, &lastCol))
         return INVALID_ROUTINE;
       lastCol--;
       if (lastCol < firstCol)
