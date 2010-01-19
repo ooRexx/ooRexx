@@ -448,6 +448,48 @@ static bool isWindowsVersion(DWORD major, DWORD minor, unsigned int sp, unsigned
     }
 }
 
+/********************************************************************
+* Function:  string2size_t(string, number)                          *
+*                                                                   *
+* Purpose:   Validates and converts an ASCII-Z string from string   *
+*            form to an unsigned long.  Returns false if the number *
+*            is not valid, true if the number was successfully      *
+*            converted.                                             *
+*                                                                   *
+* RC:        true - Good number converted                           *
+*            false - Invalid number supplied.                       *
+*********************************************************************/
+bool string2size_t(
+    const char *string,                  /* string to convert          */
+    size_t *number)                      /* converted number           */
+{
+    size_t   accumulator;                /* converted number           */
+    size_t   length;                     /* length of number           */
+
+    length = strlen(string);             /* get length of string       */
+    if (length == 0 ||                   /* if null string             */
+        length > MAX_DIGITS + 1)         /* or too long                */
+    {
+        return false;                    /* not valid                  */
+    }
+
+    accumulator = 0;                     /* start with zero            */
+
+    while (length)                       /* while more digits          */
+    {
+        if (!isdigit(*string))             /* not a digit?               */
+        {
+            return false;                    /* tell caller                */
+        }
+                                             /* add to accumulator         */
+        accumulator = accumulator * 10 + (*string - '0');
+        length--;                          /* reduce length              */
+        string++;                          /* step pointer               */
+    }
+    *number = accumulator;               /* return the value           */
+    return true;                         /* good number                */
+}
+
 inline bool isAtLeastVista(void)
 {
     return isWindowsVersion(6, 0, 0, 0, VER_GREATER_EQUAL);
@@ -5167,7 +5209,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
     // first element to sort
     if ( (numargs >= 4) && RXVALIDSTRING(args[3]) )
     {
-        if ( sscanf(args[3].strptr, "%Iu", &first) != 1 )
+        if (!string2size_t(args[3].strptr, &first))
         {
             return INVALID_ROUTINE;
         }
@@ -5179,7 +5221,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
     // last element to sort
     if ( (numargs >= 5) && RXVALIDSTRING(args[4]) )
     {
-        if ( sscanf(args[4].strptr, "%Iu", &last) != 1 )
+        if (!string2size_t(args[4].strptr, &last))
             return INVALID_ROUTINE;
         if ( last < first )
             return INVALID_ROUTINE;
@@ -5187,7 +5229,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
     // first column to sort
     if ( (numargs >= 6) && RXVALIDSTRING(args[5]) )
     {
-        if ( sscanf(args[5].strptr, "%Iu", &firstCol) != 1 )
+        if (!string2size_t(args[5].strptr, &firstCol))
         {
             return INVALID_ROUTINE;
         }
@@ -5196,7 +5238,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
     // last column to sort
     if ( (numargs == 7) && RXVALIDSTRING(args[6]) )
     {
-        if ( sscanf(args[6].strptr, "%Iu", &lastCol) != 1 )
+        if (!string2size_t(args[6].strptr, &lastCol))
         {
             return INVALID_ROUTINE;
         }
