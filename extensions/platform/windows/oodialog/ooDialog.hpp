@@ -52,13 +52,18 @@
 #define MAXLENQUEUE       2056
 #define NR_BUFFER           15
 #define DATA_BUFFER       8192
-#define MAX_MT_ENTRIES     500
 #define MAX_BT_ENTRIES     300
 #define MAX_DT_ENTRIES     750
 #define MAX_CT_ENTRIES    1000
 #define MAX_IT_ENTRIES      20
 #define MAXCHILDDIALOGS     20
 #define MAXDIALOGS          20
+
+
+#define MAX_MT_ENTRIES     500
+#define MAX_NOTIFY_MSGS    200
+#define MAX_COMMAND_MSGS   200
+#define MAX_MISC_MSGS      100
 
 /* User defined window messages used for RexxDlgProc() */
 #define WM_USER_CREATECHILD         WM_USER + 0x0601
@@ -239,14 +244,14 @@ inline LONG_PTR getClassPtr(HWND hwnd, int index)
 
 /* structures to manage the dialogs */
 typedef struct {
-   WPARAM    wParam;
-   LPARAM    lParam;
-   uint32_t  msg;
-   uint32_t  filterM;
-   ULONG_PTR filterP;
-   ULONG_PTR filterL;
-   uint32_t  tag;
-   PCHAR     rexxProgram;
+    PCHAR     rexxMethod;
+   WPARAM     wParam;
+   ULONG_PTR  wpFilter;
+   LPARAM     lParam;
+   ULONG_PTR  lpfilter;
+   uint32_t   msg;
+   uint32_t   msgFilter;
+   uint32_t   tag;
 } MESSAGETABLEENTRY;
 
 typedef struct {
@@ -372,12 +377,10 @@ typedef struct
    void              *previous;
    void              *pcpbd;  // maybe temp.
    size_t             TableEntry;
-   MESSAGETABLEENTRY *MsgTab;
    DATATABLEENTRY    *DataTab;
    BITMAPTABLEENTRY  *BmpTab;
    COLORTABLEENTRY   *ColorTab;
    ICONTABLEENTRY    *IconTab;
-   size_t             MT_size;
    size_t             DT_size;
    size_t             BT_size;
    size_t             CT_size;

@@ -58,6 +58,7 @@
 #include "oodData.hpp"
 #include "oodDeviceGraphics.hpp"
 #include "oodControl.hpp"
+#include "oodMessaging.hpp"
 #include "oodResourceIDs.hpp"
 
 //#define USE_DS_CONTROL
@@ -115,11 +116,11 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     }
 
     // Need to synchronize here, otherwise dlgAdm might still be in the table
-    // but DelDialog is already running.
+    // but delDialog is already running.
     EnterCriticalSection(&crit_sec);
     if ( dialogInAdminTable(dlgAdm) )
     {
-        DelDialog(pcpbd);
+        delDialog(pcpbd);
         dlgAdm->TheThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
@@ -966,19 +967,12 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     return pcdd->active != NULL;
 
 err_out:
-    // TODO an exception has been raised, so I don't think we need to do any
-    // clean up ? (We do need to do clean up.)  For a regular dialog, the
-    // original code did a DynamicDialog::stop(), which does a stopDialog().
-    // For a CategoryDialog, things were just ignored.  Within ooDialog, this
-    // exception is not trapped, so the interpreter should just end.  But,
-    // what happens if the user traps syntax errors?
+    // No underlying windows dialog is created, but we still need to clean up
+    // the admin block, which was allocated when the Rexx dialog object was
+    // instantiated.  This admin block is now in the DialogTab.  TODO, still
+    // need to recheck this logic.
 
-    // This is the answer to the TODO question: No underlying windows dialog is
-    // created, but we still need to clean up the admin block, which was
-    // allocated when the Rexx dialog object was instantiated.  This admin
-    // block is now in the DialogTab.
-
-    //DelDialog(NULL, pcpbd);
+    delDialog(pcpbd);
     return FALSE;
 
 }
@@ -1077,10 +1071,10 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     }
 
     // The dialog creation failed, so do some final clean up.  Note that the
-    // dialog admin block can not be freed in DelDialog() because of its use
+    // dialog admin block can not be freed in delDialog() because of its use
     // here.
     //
-    // When the dialog creation fails in the WindowUsrLoop thread a DelDialog()
+    // When the dialog creation fails in the WindowUsrLoop thread a delDialog()
     // is immediately done, as it fails to enter the message processing loop.
     dlgAdm->OnTheTop = FALSE;
     if ( dlgAdm->previous )
@@ -1289,13 +1283,6 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
         return -2;
     }
 
-    DIALOGADMIN * dlgAdm = pcdd->pcpbd->dlgAdm;
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(context->threadContext, pcdd->rexxSelf);
-        return -2;
-    }
-
     int32_t id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
     if ( id < 1 )
     {
@@ -1336,7 +1323,7 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
 
     if ( methName != NULL && strlen(methName) != 0 )
     {
-        result = addTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, UINTPTR_MAX, 0, 0, methName, 0) ? 0 : 1;
+        result = addCommandMessage(pcdd->pcpbd->enCSelf, id, UINTPTR_MAX, 0, 0, methName, 0) ? 0 : 1;
     }
 
     safeFree((void *)methName);
@@ -1421,13 +1408,6 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
 
     int32_t result = 0;
 
-    DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
-        return -2;
-    }
-
     if ( argumentExists(9) && (StrStrI(loadOptions, "CONNECTRADIOS") != NULL || StrStrI(loadOptions, "CONNECTCHECKS") != NULL) )
     {
         CSTRING methName = strdup_2methodName(label);
@@ -1446,7 +1426,7 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
         strcpy(finalName, "ID");
         strcat(finalName, methName);
 
-        result = addTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, UINTPTR_MAX, 0, 0, finalName, 0) ? 0 : 1;
+        result = addCommandMessage(pcpbd->enCSelf, id, UINTPTR_MAX, 0, 0, finalName, 0) ? 0 : 1;
         free((void *)methName);
         free((void *)finalName);
     }

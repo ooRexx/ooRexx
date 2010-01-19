@@ -53,6 +53,7 @@
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 #include "oodData.hpp"
+#include "oodMessaging.hpp"
 #include "oodDeviceGraphics.hpp"
 
 
@@ -96,21 +97,6 @@ RexxMethod3(RexxObjectPtr, baseDlg_init, ARGLIST, args, SUPER, super, OSELF, sel
 
 RexxMethod1(RexxObjectPtr, baseDlg_test, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-
-    MESSAGETABLEENTRY *m = dlgAdm->MsgTab;
-
-    for ( size_t i = 0; i < dlgAdm->MT_size; i++ )
-    {
-        printf("method: %s msg=0x%08x msgF=0x%08x\n", m[i].rexxProgram, m[i].msg, m[i].filterM);
-        printf("wp=0x%016I64x wpF=0x%016I64x lp=0x%016I64x lpF=0x%016I64x\n",
-               m[i].wParam, m[i].filterP, m[i].lParam, m[i].filterL);
-
-    }
-
     return TheTrueObj;
 }
 
@@ -181,11 +167,11 @@ DWORD WINAPI WindowLoopThread(void *arg)
     }
 
     // Need to synchronize here, otherwise dlgAdm might still be in the table
-    // but DelDialog is already running.
+    // but delDialog is already running.
     EnterCriticalSection(&crit_sec);
     if ( dialogInAdminTable(dlgAdm) )
     {
-        ret = DelDialog(pcpbd);
+        ret = delDialog(pcpbd);
         dlgAdm->TheThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
@@ -261,7 +247,7 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
     {
         if ( dlgAdm )
         {
-            DelDialog(pcpbd);
+            delDialog(pcpbd);
         }
         LeaveCriticalSection(&crit_sec);
         return FALSE;
@@ -314,12 +300,12 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
 
     // The dialog creation failed, do some final clean up.
     //
-    // When the dialog creation fails in the WindowLoop thread, DelDialog()
+    // When the dialog creation fails in the WindowLoop thread, delDialog()
     // is done immediately, as it skips entering the message processing
     // loop.
     //
     // Note also, because of the code below, the dialog admin block can not
-    // be freed in DelDialog().
+    // be freed in delDialog().
     dlgAdm->OnTheTop = FALSE;
     if (dlgAdm->previous)
     {

@@ -67,6 +67,7 @@
 
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodMessaging.hpp"
 #include "oodDeviceGraphics.hpp"
 
 
@@ -1948,7 +1949,7 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
            dlgAdm->BT_size++;
            return TheZeroObj;
         }
-        else if ( addTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, 0x0000FFFF, 0, 0, msgToRaise, 0) )
+        else if ( addCommandMessage(pcpbd->enCSelf, id, 0x0000FFFF, 0, 0, msgToRaise, TAG_NOTHING) )
         {
            dlgAdm->BT_size++;
            return TheZeroObj;
@@ -3433,7 +3434,6 @@ bool dumpAllAdmins(RexxMethodContext *c, RexxStemObject dStem)
             setNumStrStem(c, dStem, count, "DLL", pointer2string(c, dlgAdm->TheInstance));
             setNumStrStem(c, dStem, count, "QUEUE", c->String(dlgAdm->pMessageQueue));
             setNumStrStem(c, dStem, count, "BMPBUTTONS", c->StringSize(dlgAdm->BT_size));
-            setNumStrStem(c, dStem, count, "MESSAGES", c->StringSize(dlgAdm->MT_size));
             setNumStrStem(c, dStem, count, "DATAITEMS", c->StringSize(dlgAdm->DT_size));
             setNumStrStem(c, dStem, count, "COLORITEMS", c->StringSize(dlgAdm->CT_size));
         }
@@ -3477,16 +3477,6 @@ bool dumpAdmin(RexxMethodContext *c, RexxStemObject dStem, DIALOGADMIN *dlgAdm)
         setStrNumStrStem(c, dStem, "BMPTAB", numPart, "SELECTED", pointer2string(c, dlgAdm->BmpTab[i].bmpSelectID));
         setStrNumStrStem(c, dStem, "BMPTAB", numPart, "DISABLED", pointer2string(c, dlgAdm->BmpTab[i].bmpDisableID));
     }
-
-    c->SetStemElement(dStem, "MESSAGES", c->StringSize(dlgAdm->MT_size));
-    for ( i = 0, numPart = 1; i < dlgAdm->MT_size; i++, numPart++ )
-    {
-        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "MSG",    dword2string(c, dlgAdm->MsgTab[i].msg));
-        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "PARAM1", pointer2string(c, (void *)dlgAdm->MsgTab[i].wParam));
-        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "PARAM2", pointer2string(c, (void *)dlgAdm->MsgTab[i].lParam));
-        setStrNumStrStem(c, dStem, "MSGTAB", numPart, "METHOD", c->String(dlgAdm->MsgTab[i].rexxProgram));
-    }
-
 
     c->SetStemElement(dStem, "DATAITEMS", c->StringSize(dlgAdm->DT_size));
     for ( i = 0, numPart = 1; i < dlgAdm->DT_size; i++, numPart++ )

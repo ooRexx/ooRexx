@@ -48,13 +48,299 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
+#include "oodDeviceGraphics.hpp"
 #include "oodMessaging.hpp"
 
 
-inline bool isHex(CSTRING c)
+static BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
+
+
+/**
+ * The dialog procedure function for all ooDialog dialogs.  Handles and
+ * processes all window messages for the dialog.
+ *
+ * @param hDlg
+ * @param uMsg
+ * @param wParam
+ * @param lParam
+ *
+ * @return LRESULT CALLBACK
+ *
+ * @remarks  The WM_INITDIALOG message.
+ *
+ *           In CreateDialogParam() / CreateDialogIndirectParam() we pass the
+ *           pointer to the PlainBaseDialog CSelf as the param.  The OS then
+ *           sends us this value as the LPARAM argument in the WM_INITDIALOG
+ *           message. The pointer is stored in the user data field of the window
+ *           words for this dialog.  We do the same thing for the child dialogs,
+ *           see the WM_USER_CREATECHILD message.
+ *
+ *           The WM_USER_CREATECHILD message.
+ *
+ *           This user message's purpose is to create a child dialog of this
+ *           dialog and return its window handle. Child dialogs are only created
+ *           to implement the CategoryDialog and at this time are always created
+ *           dynamically (from an in-memory template.) The dialog template
+ *           pointer is passed here as the LPARAM arg from
+ *           DynamicDialog::startChildDialog().
+ *
+ *           These child dialogs do not have a backing Rexx dialog. There is no
+ *           unique CPlainBaseDialog struct for them.  Instead, at this time,
+ *           all interaction with the child dialogs is done through the
+ *           CPlainBaseDialog struct of the parent.  For each child dialog, we
+ *           set the CPlainBaseDialog struct of the parent in the window words
+ *           of the child dialog.  Prior to the conversion of ooDialog to the
+ *           C++ API, when a message came in for a child dialog, a search was
+ *           made through the DialogTab to try and find the dialog admin block
+ *           of the parent.  This has been disposed of and the CPlainBaseDialog
+ *           struct is just pulled out of the window words.
+ */
+LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-    return strlen(c) > 1 && *c == '0' && toupper(c[1]) == 'X';
+
+    if ( uMsg == WM_INITDIALOG )
+    {
+        pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)lParam;
+        if ( pcpbd == NULL )
+        {
+            // Theoretically impossible.  But ... if it should happen, abort.
+            return endDialogPremature(pcpbd, hDlg, NoPCPBDpased);
+        }
+
+        RexxThreadContext *context;
+        if ( ! pcpbd->interpreter->AttachThread(&context) )
+        {
+            // Again, this shouldn't happen ... but
+            return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
+        }
+
+        pcpbd->dlgProcContext = context;
+        setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
+
+        return TRUE;
+    }
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(hDlg, GWLP_USERDATA);
+    if ( pcpbd == NULL )
+    {
+        // A number of messages arrive before WM_INITDIALOG, we just ignore them.
+        return FALSE;
+    }
+
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+    if ( dlgAdm == NULL || pcpbd->dlgProcContext == NULL )
+    {
+        // Once again, theoretically impossible ...
+        return endDialogPremature(pcpbd, hDlg, NoThreadContext);
+    }
+
+    bool msgEnabled = (IsWindowEnabled(hDlg) && pcpbd->dlgProcContext != NULL);
+
+    // Do not search message table for WM_PAINT to improve redraw.
+    if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
+    {
+        MsgReplyType searchReply = searchMessageTables(uMsg, wParam, lParam, pcpbd);
+        if ( searchReply != ContinueProcessing )
+        {
+            // Note pre 4.0.1, we always returned FALSE, (pass on to the system
+            // to process.) But, post 4.0.1 we sometimes reply TRUE, the message
+            // has been handled.
+            return (searchReply == ReplyTrue ? TRUE : FALSE);
+        }
+    }
+
+    switch ( uMsg )
+    {
+        case WM_PAINT:
+            if ( pcpbd->bkgBitmap != NULL )
+            {
+                drawBackgroundBmp(pcpbd, hDlg);
+            }
+            break;
+
+        case WM_DRAWITEM:
+            if ( lParam != 0 )
+            {
+                return drawBitmapButton(dlgAdm, pcpbd, lParam, msgEnabled);
+            }
+            break;
+
+        case WM_CTLCOLORDLG:
+            if ( pcpbd->bkgBrush )
+            {
+                return(LRESULT)pcpbd->bkgBrush;
+            }
+            break;
+
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLORBTN:
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORMSGBOX:
+        case WM_CTLCOLORSCROLLBAR:
+        {
+            HBRUSH hbrush = NULL;
+
+            if ( dlgAdm->CT_size > 0 )
+            {
+                // See of the user has set the dialog item with a different
+                // color.
+                long id = GetWindowLong((HWND)lParam, GWL_ID);
+                if ( id > 0 )
+                {
+                    register size_t i = 0;
+                    while ( i < dlgAdm->CT_size && dlgAdm->ColorTab[i].itemID != id )
+                    {
+                        i++;
+                    }
+                    if ( i < dlgAdm->CT_size )
+                    {
+                        hbrush = dlgAdm->ColorTab[i].ColorBrush;
+                    }
+
+                    if ( hbrush )
+                    {
+                        if ( dlgAdm->ColorTab[i].isSysBrush )
+                        {
+                            SetBkColor((HDC)wParam, GetSysColor(dlgAdm->ColorTab[i].ColorBk));
+                            if ( dlgAdm->ColorTab[i].ColorFG != -1 )
+                            {
+                                SetTextColor((HDC)wParam, GetSysColor(dlgAdm->ColorTab[i].ColorFG));
+                            }
+                        }
+                        else
+                        {
+                            SetBkColor((HDC)wParam, PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
+                            if ( dlgAdm->ColorTab[i].ColorFG != -1 )
+                            {
+                                SetTextColor((HDC)wParam, PALETTEINDEX(dlgAdm->ColorTab[i].ColorFG));
+                            }
+                        }
+                    }
+                }
+            }
+            if ( hbrush )
+                return(LRESULT)hbrush;
+            else
+                return DefWindowProc(hDlg, uMsg, wParam, lParam);
+        }
+
+        case WM_COMMAND:
+            switch ( LOWORD(wParam) )
+            {
+                // For both IDOK and IDCANCEL, the notification code
+                // (the high word value,) must be 0.
+                case IDOK:
+                    printf("Got IDOK, but how?\n");
+                    if ( HIWORD(wParam) == 0 )
+                    {
+                        dlgAdm->LeaveDialog = 1;
+                    }
+                    return TRUE;
+
+                case IDCANCEL:
+                    printf("Got IDCANCEL, but how?\n");
+                    if ( HIWORD(wParam) == 0 )
+                    {
+                        dlgAdm->LeaveDialog = 2;
+                    }
+                    return TRUE;
+            }
+            break;
+
+        case WM_QUERYNEWPALETTE:
+        case WM_PALETTECHANGED:
+            return paletteMessage(dlgAdm, hDlg, uMsg, wParam, lParam);
+
+        case WM_USER_CREATECHILD:
+        {
+            HWND hChild = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc,
+                                                    (LPARAM)pcpbd);
+            ReplyMessage((LRESULT)hChild);
+            return TRUE;
+        }
+
+        case WM_USER_INTERRUPTSCROLL:
+            dlgAdm->StopScroll = wParam;
+            return TRUE;
+
+        case WM_USER_GETFOCUS:
+            ReplyMessage((LRESULT)GetFocus());
+            return TRUE;
+
+        case WM_USER_GETSETCAPTURE:
+            if ( wParam == 0 )
+            {
+                ReplyMessage((LRESULT)GetCapture());
+            }
+            else if ( wParam == 2 )
+            {
+                uint32_t rc = 0;
+                if ( ReleaseCapture() == 0 )
+                {
+                    rc = GetLastError();
+                }
+                ReplyMessage((LRESULT)rc);
+            }
+            else
+            {
+                ReplyMessage((LRESULT)SetCapture((HWND)lParam));
+            }
+            return TRUE;
+
+        case WM_USER_GETKEYSTATE:
+            ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
+            return TRUE;
+
+        case WM_USER_SUBCLASS:
+        {
+            SUBCLASSDATA * pData = (SUBCLASSDATA *)lParam;
+            BOOL success = FALSE;
+
+            if ( pData )
+            {
+                success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
+            }
+            ReplyMessage((LRESULT)success);
+            return TRUE;
+        }
+
+        case WM_USER_SUBCLASS_REMOVE:
+            ReplyMessage((LRESULT)RemoveWindowSubclass(GetDlgItem(hDlg, (int)lParam), (SUBCLASSPROC)wParam, (int)lParam));
+            return TRUE;
+
+        case WM_USER_HOOK:
+            ReplyMessage((LRESULT)SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)wParam, NULL, GetCurrentThreadId()));
+            return TRUE;
+
+        case WM_USER_CONTEXT_MENU:
+        {
+            PTRACKPOP ptp = (PTRACKPOP)wParam;
+            uint32_t cmd;
+
+            SetLastError(0);
+            cmd = (uint32_t)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
+                                             ptp->hWnd, ptp->lptpm);
+
+            // If TPM_RETURNCMD is specified, the return is the menu item
+            // selected.  Otherwise, the return is 0 for failure and
+            // non-zero for success.
+            if ( ! (ptp->flags & TPM_RETURNCMD) )
+            {
+                cmd = (cmd == 0 ? FALSE : TRUE);
+                if ( cmd == FALSE )
+                {
+                    ptp->dwErr = GetLastError();
+                }
+            }
+            ReplyMessage((LRESULT)cmd);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
+
 
 inline bool selectionDidChange(LPNMLISTVIEW p)
 {
@@ -91,6 +377,34 @@ inline bool matchSelect(uint32_t tag, LPNMLISTVIEW p)
 inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
 {
     return ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (focusDidChange(p));
+}
+
+
+static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
+{
+    char buf[256];
+
+    switch ( t )
+    {
+        case NoPCPBDpased :
+            _snprintf(buf, sizeof(buf), NO_PCPBD_PASSED_MSG, pcpbd, hDlg);
+            break;
+        case NoThreadAttach :
+            _snprintf(buf, sizeof(buf), NO_THREAD_ATTACH_MSG, pcpbd, hDlg);
+            break;
+        case NoThreadContext :
+            _snprintf(buf, sizeof(buf), NO_THREAD_CONTEXT_MSG, pcpbd->dlgAdm, pcpbd->dlgProcContext, hDlg);
+            break;
+    }
+
+    internalErrorMsgBox(buf, "ooDialog Dialog Procedure Error");
+
+    // DestroyWindow() will cause the message processing loop to end.  When it
+    // drops out of the loop, delDialog() is called and the admin block will be
+    // cleaned up.
+    DestroyWindow(hDlg);
+
+    return FALSE;
 }
 
 
@@ -197,7 +511,29 @@ LRESULT paletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam,
     return FALSE;
 }
 
-
+/**
+ *
+ *
+ *
+ * @param pMessageQueue
+ * @param rexxMethod
+ * @param wParam
+ * @param lParam
+ * @param np
+ * @param handle
+ * @param item
+ *
+ * @return MsgReplyType
+ *
+ * @remarks  Pre 4.0.1 the "message" put into the message queue, i.e., the
+ *           method invocation string such as onEndTrack(101, 0x00CA23F0), was
+ *           used in an interpret command.  Therefore, all string arguments were
+ *           enclosed in quotes to prevent errors.  Now, the message string is
+ *           used with sendWith(), no interpret is involved.  Since, some of the
+ *           args are strings, that could include commas, the individual args
+ *           are separated here with ASCII ÿ (255, 0xFF, octal 377) and in the
+ *           Rexx code, handleMessages() separates the args using 255~d2c.
+ */
 MsgReplyType genericAddDialogMessage(char *pMessageQueue,  char *rexxMethod, WPARAM wParam, LPARAM lParam, char *np, HANDLE handle, int item)
 {
     if ( wParam == NULL && lParam == 0 )
@@ -260,15 +596,63 @@ inline RexxObjectPtr hwndFrom2rexxArg(RexxThreadContext *c, LPARAM lParam)
     return pointer2string(c, ((NMHDR *)lParam)->hwndFrom);
 }
 
+
 /**
+ * Searches through the command (WM_COMMAND) message table for a table entry
+ * that matches the parameters of a WM_COMMAND.
  *
+ * @param wParam  The WPARAM parameter of the WM_COMMAND message.
+ * @param lParam  The LPARAM parameter of the WM_COMMAND message.
+ * @param pcpbd   The PlainBaseDialog CSelf for the dialog the WM_COMMAND was
+ *                directed to.
  *
- * @param message
- * @param param
- * @param lparam
- * @param pcpbd
+ * @return The result of the search.  Either no entry was found, an entry was
+ *         found reply true in the dialog procedure, or an entry was found reply
+ *         false in the dialog procedure.
  *
- * @return MsgReplyType
+ * @remarks  The command message table is always allocated, so we shouldn't need
+ *           to check that commandMsgs is null.  But, it might be possible that
+ *           it was freed by delDialog() and we don't as yet have adequate
+ *           checks for that.
+ *
+ *           At this time, there is no special processing for any WM_COMMAND
+ *           message.  So, if we find a match in the command message table there
+ *           is not much to do.
+ */
+MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    MESSAGETABLEENTRY *m = pcpbd->enCSelf->commandMsgs;
+    if ( m == NULL )
+    {
+        return ContinueProcessing;
+    }
+
+    size_t tableSize = pcpbd->enCSelf->cmSize;
+    register size_t i = 0;
+
+    for ( i = 0; i < tableSize; i++ )
+    {
+        if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((lParam & m[i].lpfilter) == (uint32_t)m[i].lParam) )
+        {
+            return genericAddDialogMessage(pcpbd->dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, NULL, NULL, -5);
+        }
+    }
+    return ContinueProcessing;
+}
+
+
+/**
+ * Searches through the notify (WM_NOTIFY) message table for a table entry that
+ * matches the parameters of a WM_NOTIFY.
+ *
+ * @param wParam  The WPARAM parameter of the WM_NOTIFY message.
+ * @param lParam  The LPARAM parameter of the WM_NOTIFY message.
+ * @param pcpbd   The PlainBaseDialog CSelf for the dialog the WM_NOTIFY was
+ *                directed to.
+ *
+ * @return The result of the search.  Either no entry was found, an entry was
+ *         found reply true in the dialog procedure, or an entry was found reply
+ *         false in the dialog procedure.
  *
  * @remarks  Pre 4.0.1 the "message" put into the message queue, i.e., the
  *           method invocation string such as onEndTrack(101, 0x00CA23F0), was
@@ -276,228 +660,145 @@ inline RexxObjectPtr hwndFrom2rexxArg(RexxThreadContext *c, LPARAM lParam)
  *           enclosed in quotes to prevent errors.  Now, the message string is
  *           used with sendWith(), no interpret is involved.  Since, some of the
  *           args are strings, that could include commas, the individual args
- *           are separated here with ASCII ÿ (0xFF, octal 377) and in the Rexx
- *           code, handleMessages() separates the args using 255d2c.
+ *           are separated here with ASCII ÿ (255, 0xFF, octal 377) and in the
+ *           Rexx code, handleMessages() separates the args using 255~d2c.
  */
-MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog pcpbd)
+MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog pcpbd)
 {
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-
-    MESSAGETABLEENTRY *m = dlgAdm->MsgTab;
+    MESSAGETABLEENTRY *m = pcpbd->enCSelf->notifyMsgs;
     if ( m == NULL )
     {
         return ContinueProcessing;
     }
 
+    uint32_t code = ((NMHDR *)lParam)->code;
+    size_t tableSize = pcpbd->enCSelf->nmSize;
     register size_t i = 0;
 
-    for ( i = 0; i < dlgAdm->MT_size; i++ )
+    for ( i = 0; i < tableSize; i++ )
     {
-        if ( ((message & m[i].filterM) == m[i].msg)  &&
-             ((param & m[i].filterP) == m[i].wParam) &&
-             ( ((message == WM_NOTIFY) && ((((NMHDR *)lparam)->code & m[i].filterL) == (UINT)m[i].lParam)) ||
-               ((message != WM_NOTIFY) && ((lparam & m[i].filterL) == m[i].lParam))
-             )
-           )
+        if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((code & m[i].lpfilter) == (uint32_t)m[i].lParam) )
         {
-            char msgstr[512];
-            CHAR tmp[20];
-            PCHAR np = NULL;
-            int item = -5;
+            DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+            RexxThreadContext *c = pcpbd->dlgProcContext;
+
+            char   msgBuffer[512];
+            char   tmpBuffer[20];
+            char  *np = NULL;
+            int    item = -5;
             HANDLE handle = NULL;
 
-            if ( param == NULL && lparam == NULL )
+            switch ( m[i].tag & TAG_CTRLMASK )
             {
-                goto generic_match_out;
-            }
+                case TAG_NOTHING :
+                    break;
 
-            /* do we have a notification where we have to extract some information ? */
-            if ( message == WM_NOTIFY )
-            {
-                UINT code = ((NMHDR *)lparam)->code;
-                RexxThreadContext *c = pcpbd->dlgProcContext;
-
-                switch ( m[i].tag & TAG_CTRLMASK )
+                case TAG_LISTVIEW :
                 {
-                    case TAG_NOTHING :
-                        break;
-
-                    case TAG_LISTVIEW :
+                    if ( code == NM_CLICK )
                     {
-                        if ( code == NM_CLICK )
-                        {
-                            LPNMITEMACTIVATE pIA = (LPNMITEMACTIVATE)lparam;
+                        LPNMITEMACTIVATE pIA = (LPNMITEMACTIVATE)lParam;
 
-                            if ( pIA->uKeyFlags == 0 )
+                        if ( pIA->uKeyFlags == 0 )
+                        {
+                            strcpy(tmpBuffer, "NONE");
+                        }
+                        else
+                        {
+                            tmpBuffer[0] = '\0';
+
+                            if ( pIA->uKeyFlags & LVKF_SHIFT )
+                                strcpy(tmpBuffer, "SHIFT");
+                            if ( pIA->uKeyFlags & LVKF_CONTROL )
+                                tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "CONTROL") : strcat(tmpBuffer, " CONTROL");
+                            if ( pIA->uKeyFlags & LVKF_ALT )
+                                tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "ALT") : strcat(tmpBuffer, " ALT");
+                        }
+                        np = tmpBuffer;
+
+                        _snprintf(msgBuffer, 511, "%s(%u\377%d\377%d\377%s)", m[i].rexxMethod,
+                                  pIA->hdr.idFrom, pIA->iItem, pIA->iSubItem, np);
+                        addDialogMessage(msgBuffer, dlgAdm->pMessageQueue);
+                        return ReplyFalse;
+                    }
+                    else if ( code == LVN_ITEMCHANGED )
+                    {
+                        LPNMLISTVIEW pLV = (LPNMLISTVIEW)lParam;
+
+                        /* The use of the tag field allows a finer degree of control as to exactly which event
+                         * the user wants to be notified of, then does the initial message match above.  Because
+                         * of that, this specific LVN_ITEMCHANGED notification may not match the tag.  So, if we
+                         * do not match here, we continue the search through the message table because this
+                         * notification may match some latter entry in the table.
+                         */
+                        if ( (m[i].tag & TAG_STATECHANGED) && (pLV->uChanged == LVIF_STATE) )
+                        {
+                            item = pLV->iItem;
+                            wParam = pLV->hdr.idFrom;
+
+                            if ( (m[i].tag & TAG_CHECKBOXCHANGED) && (pLV->uNewState & LVIS_STATEIMAGEMASK) )
                             {
-                                strcpy(tmp, "NONE");
+                                np = pLV->uNewState == INDEXTOSTATEIMAGEMASK(2) ? "CHECKED" : "UNCHECKED";
+                            }
+                            else if ( matchSelectFocus(m[i].tag, pLV) )
+                            {
+                                tmpBuffer[0] = '\0';
+
+                                if ( selectionDidChange(pLV) )
+                                {
+                                    (pLV->uNewState & LVIS_SELECTED) ?
+                                    strcpy(tmpBuffer, "SELECTED") : strcpy(tmpBuffer, "UNSELECTED");
+                                }
+
+                                if ( focusDidChange(pLV) )
+                                {
+                                    if ( (pLV->uNewState & LVIS_FOCUSED) )
+                                        tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "FOCUSED") : strcat(tmpBuffer, " FOCUSED");
+                                    else
+                                        tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "UNFOCUSED") : strcat(tmpBuffer, " UNFOCUSED");
+                                }
+                                np = tmpBuffer;
+                            }
+                            else if ( matchSelect(m[i].tag, pLV) )
+                            {
+                                np = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
+                                _snprintf(msgBuffer, 511, "%s(%u\377%d\377%s)", m[i].rexxMethod, wParam, item, np);
+                                addDialogMessage((char *)msgBuffer, dlgAdm->pMessageQueue);
+                                continue;
+                            }
+                            else if ( matchFocus(m[i].tag, pLV) )
+                            {
+                                np = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
+                                _snprintf(msgBuffer, 511, "%s(%u\377%d\377%s)", m[i].rexxMethod, wParam, item, np);
+                                addDialogMessage(msgBuffer, dlgAdm->pMessageQueue);
+                                continue;
                             }
                             else
                             {
-                                tmp[0] = '\0';
-
-                                if ( pIA->uKeyFlags & LVKF_SHIFT )
-                                    strcpy(tmp, "SHIFT");
-                                if ( pIA->uKeyFlags & LVKF_CONTROL )
-                                    tmp[0] == '\0' ? strcpy(tmp, "CONTROL") : strcat(tmp, " CONTROL");
-                                if ( pIA->uKeyFlags & LVKF_ALT )
-                                    tmp[0] == '\0' ? strcpy(tmp, "ALT") : strcat(tmp, " ALT");
-                            }
-                            np = tmp;
-
-                            _snprintf(msgstr, 511, "%s(%u\377%d\377%d\377%s)", m[i].rexxProgram,
-                                      pIA->hdr.idFrom, pIA->iItem, pIA->iSubItem, np);
-                            addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
-                            return ReplyFalse;
-                        }
-                        else if ( code == LVN_ITEMCHANGED )
-                        {
-                            LPNMLISTVIEW pLV = (LPNMLISTVIEW)lparam;
-
-                            /* The use of the tag field allows a finer degree of control as to exactly which event
-                             * the user wants to be notified of, then does the initial message match above.  Because
-                             * of that, this specific LVN_ITEMCHANGED notification may not match the tag.  So, if we
-                             * do not match here, we continue the search through the message table because this
-                             * notification may match some latter entry in the table.
-                             */
-                            if ( (m[i].tag & TAG_STATECHANGED) && (pLV->uChanged == LVIF_STATE) )
-                            {
-                                item = pLV->iItem;
-                                param = pLV->hdr.idFrom;
-
-                                if ( (m[i].tag & TAG_CHECKBOXCHANGED) && (pLV->uNewState & LVIS_STATEIMAGEMASK) )
-                                {
-                                    np = pLV->uNewState == INDEXTOSTATEIMAGEMASK(2) ? "CHECKED" : "UNCHECKED";
-                                }
-                                else if ( matchSelectFocus(m[i].tag, pLV) )
-                                {
-                                    tmp[0] = '\0';
-
-                                    if ( selectionDidChange(pLV) )
-                                    {
-                                        (pLV->uNewState & LVIS_SELECTED) ?
-                                        strcpy(tmp, "SELECTED") : strcpy(tmp, "UNSELECTED");
-                                    }
-
-                                    if ( focusDidChange(pLV) )
-                                    {
-                                        if ( (pLV->uNewState & LVIS_FOCUSED) )
-                                            tmp[0] == '\0' ? strcpy(tmp, "FOCUSED") : strcat(tmp, " FOCUSED");
-                                        else
-                                            tmp[0] == '\0' ? strcpy(tmp, "UNFOCUSED") : strcat(tmp, " UNFOCUSED");
-                                    }
-                                    np = tmp;
-                                }
-                                else if ( matchSelect(m[i].tag, pLV) )
-                                {
-                                    np = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
-                                    _snprintf(msgstr, 511, "%s(%u\377%d\377%s)", m[i].rexxProgram, param, item, np);
-                                    addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
-                                    continue;
-                                }
-                                else if ( matchFocus(m[i].tag, pLV) )
-                                {
-                                    np = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
-                                    _snprintf(msgstr, 511, "%s(%u\377%d\377%s)", m[i].rexxProgram, param, item, np);
-                                    addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
-                                    continue;
-                                }
-                                else
-                                {
-                                    // This message in the message table does not match, keep searching.
-                                    continue;
-                                }
+                                // This message in the message table does not match, keep searching.
+                                continue;
                             }
                         }
-                        goto generic_match_out;
-                    } break;
-                    // TODO SHOULD ALL NEW EVENT MESSAGES USE c->SendMessagex() ?????
-                    // TODO should we check for conditions everytime we use c->SendMessage() ????
-                    case TAG_MONTHCALENDAR :
-                    {
-                        RexxObjectPtr rexxReply;
-
-                        if ( code == MCN_GETDAYSTATE )
-                        {
-                            LPNMDAYSTATE pDayState = (LPNMDAYSTATE)lparam;
-
-                            RexxObjectPtr dt = NULLOBJECT;
-                            sysTime2dt(c, &(pDayState->stStart), &dt, dtFull);
-
-                            RexxArrayObject args = c->ArrayOfFour(dt, c->Int32(pDayState->cDayState), idFrom2rexxArg(c, lparam),
-                                                                  hwndFrom2rexxArg(c, lparam));
-
-                            RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxProgram, args);
-
-                            if ( checkForCondition(c) )
-                            {
-                                // TODO We had an unhandled exception in the Rexx method
-                                // we just invoked, we printed out the error message.
-                                // But, at this point everything just keeps going.
-                                // Should we clear the exception?  Should we terminate
-                                // everything?
-                                return ReplyFalse;
-                            }
-
-                            if ( rexxReply != NULLOBJECT && c->IsOfType(rexxReply, "BUFFER") )
-                            {
-                                pDayState->prgDayState = (MONTHDAYSTATE *)c->BufferData((RexxBufferObject)rexxReply);
-                                return ReplyTrue;
-                            }
-                            return ReplyFalse;
-                        }
-                        else if ( code == NM_RELEASEDCAPTURE )
-                        {
-                            rexxReply = c->SendMessage2(pcpbd->rexxSelf, m[i].rexxProgram, idFrom2rexxArg(c, lparam), hwndFrom2rexxArg(c, lparam));
-                            return ReplyTrue;
-                        }
-                        else if ( code == MCN_SELECT || code == MCN_SELCHANGE )
-                        {
-                            LPNMSELCHANGE pSelChange = (LPNMSELCHANGE)lparam;
-
-                            RexxObjectPtr dtStart;
-                            sysTime2dt(c, &(pSelChange->stSelStart), &dtStart, dtFull);
-
-                            RexxObjectPtr dtEnd;
-                            sysTime2dt(c, &(pSelChange->stSelEnd), &dtEnd, dtFull);
-
-                            RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom2rexxArg(c, lparam),
-                                                                  hwndFrom2rexxArg(c, lparam));
-
-                            rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxProgram, args);
-                            return ReplyTrue;
-                        }
-                        else if ( code == MCN_VIEWCHANGE )
-                        {
-                            LPNMVIEWCHANGE pViewChange = (LPNMVIEWCHANGE)lparam;
-
-                            RexxStringObject newView = mcnViewChange2rexxString(c, pViewChange->dwNewView);
-                            RexxStringObject oldView = mcnViewChange2rexxString(c, pViewChange->dwOldView);
-
-                            RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom2rexxArg(c, lparam),
-                                                                  hwndFrom2rexxArg(c, lparam));
-
-                            rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxProgram, args);
-                            return ReplyTrue;
-                        }
-
-                        // Theoretically we can not get here because all month
-                        // calendar notification codes that have a tag are
-                        // accounted for.
-                        return ReplyFalse;
                     }
-                    break;
+                    goto generic_match_out;
+                } break;
+                // TODO SHOULD ALL NEW EVENT MESSAGES USE c->SendMessagex() ?????
+                // TODO should we check for conditions everytime we use c->SendMessage() ????
+                case TAG_MONTHCALENDAR :
+                {
+                    RexxObjectPtr rexxReply;
 
-                    case TAG_UPDOWN :
+                    if ( code == MCN_GETDAYSTATE )
                     {
-                        // There is currently only one notify message for an up-down; UDN_DELTAPOS
-                        LPNMUPDOWN pUPD = (LPNMUPDOWN)lparam;
+                        LPNMDAYSTATE pDayState = (LPNMDAYSTATE)lParam;
 
-                        RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxProgram,
-                                                                c->ArrayOfFour(c->Int32(pUPD->iPos),
-                                                                               c->Int32(pUPD->iDelta),
-                                                                               idFrom2rexxArg(c, lparam),
-                                                                               hwndFrom2rexxArg(c, lparam)));
+                        RexxObjectPtr dt = NULLOBJECT;
+                        sysTime2dt(c, &(pDayState->stStart), &dt, dtFull);
+
+                        RexxArrayObject args = c->ArrayOfFour(dt, c->Int32(pDayState->cDayState), idFrom2rexxArg(c, lParam),
+                                                              hwndFrom2rexxArg(c, lParam));
+
+                        RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
 
                         if ( checkForCondition(c) )
                         {
@@ -506,81 +807,205 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, pCPl
                             // But, at this point everything just keeps going.
                             // Should we clear the exception?  Should we terminate
                             // everything?
+                            return ReplyFalse;
                         }
-                        else if ( msgReply != TheFalseObj && msgReply != NULLOBJECT && c->IsOfType(msgReply, "BUFFER") )
-                        {
-                            PDELTAPOSREPLY pdpr = (PDELTAPOSREPLY)c->BufferData((RexxBufferObject)msgReply);
-                            if ( pdpr->cancel )
-                            {
-                                setWindowPtr(GetParent(pUPD->hdr.hwndFrom), DWLP_MSGRESULT, 1);
-                            }
-                            else
-                            {
-                                pUPD->iDelta = pdpr->newDelta;
 
-                            }
+                        if ( rexxReply != NULLOBJECT && c->IsOfType(rexxReply, "BUFFER") )
+                        {
+                            pDayState->prgDayState = (MONTHDAYSTATE *)c->BufferData((RexxBufferObject)rexxReply);
+                            return ReplyTrue;
                         }
+                        return ReplyFalse;
+                    }
+                    else if ( code == NM_RELEASEDCAPTURE )
+                    {
+                        rexxReply = c->SendMessage2(pcpbd->rexxSelf, m[i].rexxMethod, idFrom2rexxArg(c, lParam), hwndFrom2rexxArg(c, lParam));
                         return ReplyTrue;
                     }
+                    else if ( code == MCN_SELECT || code == MCN_SELCHANGE )
+                    {
+                        LPNMSELCHANGE pSelChange = (LPNMSELCHANGE)lParam;
+
+                        RexxObjectPtr dtStart;
+                        sysTime2dt(c, &(pSelChange->stSelStart), &dtStart, dtFull);
+
+                        RexxObjectPtr dtEnd;
+                        sysTime2dt(c, &(pSelChange->stSelEnd), &dtEnd, dtFull);
+
+                        RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom2rexxArg(c, lParam),
+                                                              hwndFrom2rexxArg(c, lParam));
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                        return ReplyTrue;
+                    }
+                    else if ( code == MCN_VIEWCHANGE )
+                    {
+                        LPNMVIEWCHANGE pViewChange = (LPNMVIEWCHANGE)lParam;
+
+                        RexxStringObject newView = mcnViewChange2rexxString(c, pViewChange->dwNewView);
+                        RexxStringObject oldView = mcnViewChange2rexxString(c, pViewChange->dwOldView);
+
+                        RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom2rexxArg(c, lParam),
+                                                              hwndFrom2rexxArg(c, lParam));
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                        return ReplyTrue;
+                    }
+
+                    // Theoretically we can not get here because all month
+                    // calendar notification codes that have a tag are
+                    // accounted for.
+                    return ReplyFalse;
+                }
+                break;
+
+                case TAG_UPDOWN :
+                {
+                    // There is currently only one notify message for an up-down; UDN_DELTAPOS
+                    LPNMUPDOWN pUPD = (LPNMUPDOWN)lParam;
+
+                    RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod,
+                                                            c->ArrayOfFour(c->Int32(pUPD->iPos),
+                                                                           c->Int32(pUPD->iDelta),
+                                                                           idFrom2rexxArg(c, lParam),
+                                                                           hwndFrom2rexxArg(c, lParam)));
+
+                    if ( checkForCondition(c) )
+                    {
+                        // TODO We had an unhandled exception in the Rexx method
+                        // we just invoked, we printed out the error message.
+                        // But, at this point everything just keeps going.
+                        // Should we clear the exception?  Should we terminate
+                        // everything?
+                    }
+                    else if ( msgReply != TheFalseObj && msgReply != NULLOBJECT && c->IsOfType(msgReply, "BUFFER") )
+                    {
+                        PDELTAPOSREPLY pdpr = (PDELTAPOSREPLY)c->BufferData((RexxBufferObject)msgReply);
+                        if ( pdpr->cancel )
+                        {
+                            setWindowPtr(GetParent(pUPD->hdr.hwndFrom), DWLP_MSGRESULT, 1);
+                        }
+                        else
+                        {
+                            pUPD->iDelta = pdpr->newDelta;
+
+                        }
+                    }
+                    return ReplyTrue;
+                }
+                break;
+
+                default :
                     break;
 
-                    default :
-                        break;
-
-                }
-
-                /* do we have an end label edit for tree or list view? */
-                if ( (code == TVN_ENDLABELEDIT) && ((TV_DISPINFO *)lparam)->item.pszText )
-                {
-                    np = ((TV_DISPINFO *)lparam)->item.pszText;
-                    handle = ((TV_DISPINFO *)lparam)->item.hItem;
-                }
-                else if ( (code == LVN_ENDLABELEDIT) && ((LV_DISPINFO *)lparam)->item.pszText )
-                {
-                    np = ((LV_DISPINFO *)lparam)->item.pszText;
-                    item = ((LV_DISPINFO *)lparam)->item.iItem;
-                }
-                /* do we have a tree expand/collapse? */
-                else if ( (code == TVN_ITEMEXPANDED) || (code == TVN_ITEMEXPANDING) )
-                {
-                    handle = ((NM_TREEVIEW *)lparam)->itemNew.hItem;
-                    if ( ((NM_TREEVIEW *)lparam)->itemNew.state & TVIS_EXPANDED ) np = "EXPANDED";
-                    else np = "COLLAPSED";
-                }
-                /* do we have a key_down? */
-                else if ( (code == TVN_KEYDOWN) || (code == LVN_KEYDOWN) || (code == TCN_KEYDOWN) )
-                {
-                    lparam = (ULONG)((TV_KEYDOWN *)lparam)->wVKey;
-                }
-                /* do we have a list drag and drop? */
-                else if ( (code == LVN_BEGINDRAG) || (code == LVN_BEGINRDRAG) )
-                {
-                    item = ((NM_LISTVIEW *)lparam)->iItem;
-                    param = ((NMHDR *)lparam)->idFrom;
-                    sprintf(tmp, "%d %d", ((NM_LISTVIEW *)lparam)->ptAction.x, ((NM_LISTVIEW *)lparam)->ptAction.y);
-                    np = tmp;
-                }
-                /* do we have a tree drag and drop? */
-                else if ( (code == TVN_BEGINDRAG) || (code == TVN_BEGINRDRAG) )
-                {
-                    handle = ((NM_TREEVIEW *)lparam)->itemNew.hItem;
-                    param = ((NMHDR *)lparam)->idFrom;
-                    sprintf(tmp, "%d %d", ((NM_TREEVIEW *)lparam)->ptDrag.x, ((NM_TREEVIEW *)lparam)->ptDrag.y);
-                    np = tmp;
-                }
-                /* do we have a column click in a report? */
-                else if ( code == LVN_COLUMNCLICK )
-                {
-                    param = ((NMHDR *)lparam)->idFrom;
-                    lparam = (ULONG)((NM_LISTVIEW *)lparam)->iSubItem;  /* which column is pressed */
-                }
-                else if ( code == BCN_HOTITEMCHANGE )
-                {
-                    /* Args to ooRexx will be the control ID, entering = true or false. */
-                    lparam = (((NMBCHOTITEM *)lparam)->dwFlags & HICF_ENTERING) ? 1 : 0;
-                }
             }
-            else if ( m[i].tag )
+
+            /* do we have an end label edit for tree or list view? */
+            if ( (code == TVN_ENDLABELEDIT) && ((TV_DISPINFO *)lParam)->item.pszText )
+            {
+                np = ((TV_DISPINFO *)lParam)->item.pszText;
+                handle = ((TV_DISPINFO *)lParam)->item.hItem;
+            }
+            else if ( (code == LVN_ENDLABELEDIT) && ((LV_DISPINFO *)lParam)->item.pszText )
+            {
+                np = ((LV_DISPINFO *)lParam)->item.pszText;
+                item = ((LV_DISPINFO *)lParam)->item.iItem;
+            }
+            /* do we have a tree expand/collapse? */
+            else if ( (code == TVN_ITEMEXPANDED) || (code == TVN_ITEMEXPANDING) )
+            {
+                handle = ((NM_TREEVIEW *)lParam)->itemNew.hItem;
+                if ( ((NM_TREEVIEW *)lParam)->itemNew.state & TVIS_EXPANDED ) np = "EXPANDED";
+                else np = "COLLAPSED";
+            }
+            /* do we have a key_down? */
+            else if ( (code == TVN_KEYDOWN) || (code == LVN_KEYDOWN) || (code == TCN_KEYDOWN) )
+            {
+                lParam = (ULONG)((TV_KEYDOWN *)lParam)->wVKey;
+            }
+            /* do we have a list drag and drop? */
+            else if ( (code == LVN_BEGINDRAG) || (code == LVN_BEGINRDRAG) )
+            {
+                item = ((NM_LISTVIEW *)lParam)->iItem;
+                wParam = ((NMHDR *)lParam)->idFrom;
+                sprintf(tmpBuffer, "%d %d", ((NM_LISTVIEW *)lParam)->ptAction.x, ((NM_LISTVIEW *)lParam)->ptAction.y);
+                np = tmpBuffer;
+            }
+            /* do we have a tree drag and drop? */
+            else if ( (code == TVN_BEGINDRAG) || (code == TVN_BEGINRDRAG) )
+            {
+                handle = ((NM_TREEVIEW *)lParam)->itemNew.hItem;
+                wParam = ((NMHDR *)lParam)->idFrom;
+                sprintf(tmpBuffer, "%d %d", ((NM_TREEVIEW *)lParam)->ptDrag.x, ((NM_TREEVIEW *)lParam)->ptDrag.y);
+                np = tmpBuffer;
+            }
+            /* do we have a column click in a report? */
+            else if ( code == LVN_COLUMNCLICK )
+            {
+                wParam = ((NMHDR *)lParam)->idFrom;
+                lParam = (ULONG)((NM_LISTVIEW *)lParam)->iSubItem;  /* which column is pressed */
+            }
+            else if ( code == BCN_HOTITEMCHANGE )
+            {
+                /* Args to ooRexx will be the control ID, entering = true or false. */
+                lParam = (((NMBCHOTITEM *)lParam)->dwFlags & HICF_ENTERING) ? 1 : 0;
+            }
+
+generic_match_out:
+            return genericAddDialogMessage(dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, np, handle, item);
+        }
+    }
+    return ContinueProcessing;
+}
+
+
+/**
+ * Searches through the miscellaneous (anything not WM_COMMAND or WM_NOTIFY)
+ * message table for a table entry that matches the message and its parameters.
+ *
+ * @param msg     The windows message.
+ * @param wParam  The WPARAM parameter of the message.
+ * @param lParam  The LPARAM parameter of the message.
+ * @param pcpbd   The PlainBaseDialog CSelf for the dialog the message was
+ *                directed to.
+ *
+ * @return The result of the search.  Either no entry was found, an entry was
+ *         found reply true in the dialog procedure, or an entry was found reply
+ *         false in the dialog procedure.
+ *
+ * @remarks  Pre 4.0.1 the "message" put into the message queue, i.e., the
+ *           method invocation string such as onEndTrack(101, 0x00CA23F0), was
+ *           used in an interpret command.  Therefore, all string arguments were
+ *           enclosed in quotes to prevent errors.  Now, the message string is
+ *           used with sendWith(), no interpret is involved.  Since, some of the
+ *           args are strings, that could include commas, the individual args
+ *           are separated here with ASCII ÿ (255, 0xFF, octal 377) and in the
+ *           Rexx code, handleMessages() separates the args using 255~d2c.
+ */
+MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    MESSAGETABLEENTRY *m = pcpbd->enCSelf->miscMsgs;
+    if ( m == NULL )
+    {
+        return ContinueProcessing;
+    }
+
+    size_t tableSize = pcpbd->enCSelf->mmSize;
+    register size_t i = 0;
+
+    for ( i = 0; i < tableSize; i++ )
+    {
+        if ( (msg & m[i].msgFilter) == m[i].msg && (wParam & m[i].wpFilter) == m[i].wParam && (lParam & m[i].lpfilter) == (uint32_t)m[i].lParam )
+        {
+            DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+            RexxThreadContext *c = pcpbd->dlgProcContext;
+
+            char   msgBuffer[512];
+            char  *np = NULL;
+            int    item = -5;
+            HANDLE handle = NULL;
+
+            if ( m[i].tag )
             {
                 switch ( m[i].tag & TAG_CTRLMASK )
                 {
@@ -589,42 +1014,42 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, pCPl
                         {
                             case TAG_HELP :
                             {
-                                LPHELPINFO phi = (LPHELPINFO)lparam;
+                                LPHELPINFO phi = (LPHELPINFO)lParam;
 
-                                if ( phi->iContextType == HELPINFO_WINDOW )
-                                    np = "WINDOW";
-                                else
-                                    np = "MENU";
+                                np = (phi->iContextType == HELPINFO_WINDOW ? "WINDOW" : "MENU");
 
-                                /* Use addDialogMessage directely to send 5 args to ooRexx. */
-                                _snprintf(msgstr, 511, "%s(%u\377%s\377%d\377%d\377%d)", m[i].rexxProgram,
+                                _snprintf(msgBuffer, 511, "%s(%u\377%s\377%d\377%d\377%d)", m[i].rexxMethod,
                                           phi->iCtrlId, np, phi->MousePos.x, phi->MousePos.y, phi->dwContextId);
-                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
+
+                                addDialogMessage(msgBuffer, dlgAdm->pMessageQueue);
                                 return ReplyFalse;
-                            } break;
+                            }
+                            break;
 
                             case TAG_CONTEXTMENU :
                             {
-                                /* Use addDialogMessage directely to send 3 args to
-                                 * ooRexx. On WM_CONTEXTMENU, if the message is
-                                 * generated by the keyboard (say SHIFT-F10) then
-                                 * the x and y coordinates are sent as -1 and -1.
-                                 * Args to ooRexx: hwnd, x, y
+                                /* On WM_CONTEXTMENU, if the message is
+                                 * generated by the keyboard (say SHIFT-F10)
+                                 * then the x and y coordinates are sent as -1
+                                 * and -1. Args to ooRexx: hwnd, x, y
                                  */
-                                _snprintf(msgstr, 511, "%s(0x%p\377%d\377%d)", m[i].rexxProgram, param,
-                                          ((int)(short)LOWORD(lparam)), ((int)(short)HIWORD(lparam)));
-                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
+                                _snprintf(msgBuffer, 511, "%s(0x%p\377%d\377%d)", m[i].rexxMethod, wParam,
+                                          ((int)(short)LOWORD(lParam)), ((int)(short)HIWORD(lParam)));
+
+                                addDialogMessage((char *)msgBuffer, dlgAdm->pMessageQueue);
                                 return((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
-                            } break;
+                            }
+                            break;
 
                             case TAG_MENUCOMMAND :
                             {
                                 /* Args to ooRexx: index, hMenu
                                  */
-                                _snprintf(msgstr, 511, "%s(%d\3770x%p)", m[i].rexxProgram, param, lparam);
-                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
+                                _snprintf(msgBuffer, 511, "%s(%d\3770x%p)", m[i].rexxMethod, wParam, lParam);
+                                addDialogMessage((char *)msgBuffer, dlgAdm->pMessageQueue);
                                 return ReplyFalse;
-                            } break;
+                            }
+                            break;
 
                             case TAG_SYSMENUCOMMAND :
                             {
@@ -632,27 +1057,28 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, pCPl
                                  */
                                 int x, y;
 
-                                if ( lparam == -1 )
+                                if ( lParam == -1 )
                                 {
                                     x = -1;
                                     y = -1;
                                 }
-                                else if ( lparam == 0 )
+                                else if ( lParam == 0 )
                                 {
                                     x = 0;
                                     y = 0;
                                 }
                                 else
                                 {
-                                    x = ((int)(short)LOWORD(lparam));
-                                    y = ((int)(short)HIWORD(lparam));
+                                    x = ((int)(short)LOWORD(lParam));
+                                    y = ((int)(short)HIWORD(lParam));
                                 }
 
-                                _snprintf(msgstr, 511, "%s(%d\377%d\377%d\377%d)", m[i].rexxProgram, (param & 0xFFF0), x, y, (param & 0x000F));
-                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
+                                _snprintf(msgBuffer, 511, "%s(%d\377%d\377%d\377%d)", m[i].rexxMethod, (wParam & 0xFFF0), x, y, (wParam & 0x000F));
+                                addDialogMessage((char *)msgBuffer, dlgAdm->pMessageQueue);
 
                                 return((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
-                            } break;
+                            }
+                            break;
 
                             case TAG_MENUMESSAGE :
                             {
@@ -661,98 +1087,280 @@ MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, pCPl
                                 // of these messages are handled the exact same
                                 // way as far as what is sent to ooRexx.
 
-                                /* Args to ooRexx: hMenu as a pointer.  Drat !
-                                 * we don't have a context. ;-(
-                                 */
+                                // Args to ooRexx: hMenu as a pointer.
 
-                                _snprintf(msgstr, 511, "%s(0x%p)", m[i].rexxProgram, param);
-                                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
+                                _snprintf(msgBuffer, 511, "%s(0x%p)", m[i].rexxMethod, wParam);
+                                addDialogMessage((char *)msgBuffer, dlgAdm->pMessageQueue);
 
                                 return((m[i].tag & TAG_MSGHANDLED) ? ReplyTrue : ReplyFalse);
                             } break;
 
                             default :
                                 break;
-                        } break;
+                        }
+                        break;
 
                     default :
                         break;
                 }
             }
-            else if ( message == WM_HSCROLL || message == WM_VSCROLL )
+            else if ( msg == WM_HSCROLL || msg == WM_VSCROLL )
             {
-                _snprintf(msgstr, 511, "%s(%u\3770x%p)", m[i].rexxProgram, param, lparam);
-                addDialogMessage((char *)msgstr, dlgAdm->pMessageQueue);
-                return ReplyFalse;
+                handle = (HANDLE)lParam;
             }
 
-generic_match_out:
-            return genericAddDialogMessage(dlgAdm->pMessageQueue, m[i].rexxProgram, param, lparam, np, handle, item);
+            return genericAddDialogMessage(dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, np, handle, item);
         }
     }
     return ContinueProcessing;
 }
 
+
+MsgReplyType searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog pcpbd)
+{
+    switch ( message )
+    {
+        case WM_COMMAND : return searchCommandTable(param, lparam, pcpbd);
+        case WM_NOTIFY  : return searchNotifyTable(param, lparam, pcpbd);
+        default         : return searchMiscTable(message, param, lparam, pcpbd);
+    }
+}
+
 /**
+ * Adds an event connection for a command (WM_COMMAND) message to the table.
  *
+ * @param pcen
+ * @param wParam
+ * @param wpFilter
+ * @param lParam
+ * @param lpFilter
+ * @param method
+ * @param tag
  *
+ * @return True on success, false if the message table is full, or for a memory
+ *         allocation error.
  *
- * @param aDlg
+ * @remarks  The command message table is allocated during the plain base dialog
+ *           init process, so we do not need to check that it has been
+ *           allocated.
+ *
+ *           Caller must ensure that 'prog' is not an empty string and that
+ *           winMsg, wParam, lParam are not all 0.  TODO need to recheck this.
+ */
+bool addCommandMessage(pCEventNotification pcen, WPARAM wParam, ULONG_PTR wpFilter, LPARAM lParam, ULONG_PTR lpFilter,
+                       CSTRING method, uint32_t tag)
+{
+    size_t index = pcen->cmSize;
+    if ( index < MAX_COMMAND_MSGS )
+    {
+        pcen->commandMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+        if ( pcen->commandMsgs[index].rexxMethod == NULL )
+        {
+            return false;
+        }
+        strcpy(pcen->commandMsgs[index].rexxMethod, method);
+
+        pcen->commandMsgs[index].msg = WM_COMMAND;
+        pcen->commandMsgs[index].msgFilter = 0xFFFFFFFF;
+        pcen->commandMsgs[index].wParam = wParam;
+        pcen->commandMsgs[index].wpFilter = wpFilter;
+        pcen->commandMsgs[index].lParam = lParam;
+        pcen->commandMsgs[index].lpfilter = lpFilter;
+        pcen->commandMsgs[index].tag = tag;
+
+        pcen->cmSize++;
+        return true;
+    }
+    else
+    {
+        MessageBox(0, "Command message connections have exceeded the maximum\n"
+                      "number of allocated table entries.  No more command\n"
+                      "message connections can be added.\n",
+                   "Error", MB_OK | MB_ICONHAND);
+    }
+    return false;
+}
+
+
+/**
+ * Adds an event connection for a notification (WM_NOTIFY) message to the
+ * table.
+ *
+ * @param pcen
+ * @param wParam
+ * @param wpFilter
+ * @param lParam
+ * @param lpFilter
+ * @param method
+ * @param tag
+ *
+ * @return True on success, false if the message table is full, or for a memory
+ *         allocation error.
+ *
+ * @remarks  Caller must ensure that 'prog' is not an empty string and that
+ *           winMsg, wParam, lParam are not all 0.  TODO need to recheck this.
+ */
+bool addNotifyMessage(pCEventNotification pcen, WPARAM wParam, ULONG_PTR wpFilter, LPARAM lParam, ULONG_PTR lpFilter,
+                      CSTRING method, uint32_t tag)
+{
+    if ( pcen->notifyMsgs == NULL )
+    {
+        pcen->notifyMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_NOTIFY_MSGS);
+        if ( pcen->notifyMsgs == NULL )
+        {
+            // TODO pass in context and raise a condition instead of this.
+            MessageBox(0, "No memory available", "Error", MB_OK | MB_ICONHAND);
+            return false;
+        }
+        pcen->nmSize = 0;
+    }
+
+    size_t index = pcen->nmSize;
+
+    if ( index < MAX_NOTIFY_MSGS )
+    {
+        pcen->notifyMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+        if ( pcen->notifyMsgs[index].rexxMethod == NULL )
+        {
+            return false;
+        }
+        strcpy(pcen->notifyMsgs[index].rexxMethod, method);
+
+        pcen->notifyMsgs[index].msg = WM_NOTIFY;
+        pcen->notifyMsgs[index].msgFilter = 0xFFFFFFFF;
+        pcen->notifyMsgs[index].wParam = wParam;
+        pcen->notifyMsgs[index].wpFilter = wpFilter;
+        pcen->notifyMsgs[index].lParam = lParam;
+        pcen->notifyMsgs[index].lpfilter = lpFilter;
+        pcen->notifyMsgs[index].tag = tag;
+
+        pcen->nmSize++;
+        return true;
+    }
+    else
+    {
+        MessageBox(0, "Notify message connections have exceeded the maximum\n"
+                      "number of allocated table entries.  No more notify\n"
+                      "message connections can be added.\n",
+                   "Error", MB_OK | MB_ICONHAND);
+    }
+    return false;
+}
+
+
+/**
+ * Adds an event connection for any Windows message that is not a WM_COMMAND or
+ * WM_NOTIFY message to the table.
+ *
+ * @param pcen
  * @param winMsg
  * @param wmFilter
  * @param wParam
  * @param wpFilter
  * @param lParam
  * @param lpFilter
- * @param prog
- * @param ulTag
+ * @param method
+ * @param tag
  *
- * @return BOOL
+ * @return True on success, false if the message table is full, or for a memory
+ *         allocation error.
  *
  * @remarks  Caller must ensure that 'prog' is not an empty string and that
- *           winMsg, wParam, lParam are not all 0.
+ *           winMsg, wParam, lParam are not all 0.  TODO need to recheck this.
  */
-BOOL addTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam, ULONG_PTR wpFilter,
-                   LPARAM lParam, ULONG_PTR lpFilter, CSTRING prog, ULONG ulTag)
+bool addMiscMessage(pCEventNotification pcen, uint32_t winMsg, uint32_t wmFilter,
+                    WPARAM wParam, ULONG_PTR wpFilter, LPARAM lParam, ULONG_PTR lpFilter,
+                    CSTRING method, uint32_t tag)
 {
-    if ( ! aDlg->MsgTab )
+    if ( pcen->miscMsgs == NULL )
     {
-        aDlg->MsgTab = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_MT_ENTRIES);
-        if ( ! aDlg->MsgTab )
+        pcen->miscMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_MISC_MSGS);
+        if ( pcen->miscMsgs == NULL )
         {
-            MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
-            return 0;
+            // TODO pass in context and raise a condition instead of this.
+            MessageBox(0, "No memory available", "Error", MB_OK | MB_ICONHAND);
+            return false;
         }
-        aDlg->MT_size = 0;
+        pcen->mmSize = 0;
     }
 
-    if ( aDlg->MT_size < MAX_MT_ENTRIES )
+    size_t index = pcen->mmSize;
+
+    if ( index < MAX_NOTIFY_MSGS )
     {
-        aDlg->MsgTab[aDlg->MT_size].rexxProgram = (PCHAR)LocalAlloc(LMEM_FIXED, strlen(prog) + 1);
-        if ( aDlg->MsgTab[aDlg->MT_size].rexxProgram == NULL )
+        pcen->miscMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+        if ( pcen->miscMsgs[index].rexxMethod == NULL )
         {
-            return FALSE;
+            return false;
         }
-        strcpy(aDlg->MsgTab[aDlg->MT_size].rexxProgram, prog);
+        strcpy(pcen->miscMsgs[index].rexxMethod, method);
 
-        aDlg->MsgTab[aDlg->MT_size].msg = winMsg;
-        aDlg->MsgTab[aDlg->MT_size].filterM = wmFilter;
-        aDlg->MsgTab[aDlg->MT_size].wParam = wParam;
-        aDlg->MsgTab[aDlg->MT_size].filterP = wpFilter;
-        aDlg->MsgTab[aDlg->MT_size].lParam = lParam;
-        aDlg->MsgTab[aDlg->MT_size].filterL = lpFilter;
-        aDlg->MsgTab[aDlg->MT_size].tag = ulTag;
+        pcen->miscMsgs[index].msg = winMsg;
+        pcen->miscMsgs[index].msgFilter = 0xFFFFFFFF;
+        pcen->miscMsgs[index].wParam = wParam;
+        pcen->miscMsgs[index].wpFilter = wpFilter;
+        pcen->miscMsgs[index].lParam = lParam;
+        pcen->miscMsgs[index].lpfilter = lpFilter;
+        pcen->miscMsgs[index].tag = tag;
 
-        aDlg->MT_size++;
-        return TRUE;
+        pcen->mmSize++;
+        return true;
     }
     else
     {
-        MessageBox(0, "Messages have exceeded the maximum number of allocated\n"
-                   "table entries. No message can be added.\n",
+        MessageBox(0, "Miscellaneous message connections have exceeded the\n"
+                      "maximum number of allocated table entries.  No more\n"
+                      "miscellaneous message connections can be added.\n",
                    "Error", MB_OK | MB_ICONHAND);
     }
-    return FALSE;
+    return false;
+}
+
+
+bool initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen)
+{
+    pcen->commandMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_COMMAND_MSGS);
+    if ( ! pcen->commandMsgs )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+    pcen->cmSize = 0;
+
+    // We don't check the return of addCommandMessage() because the message
+    // table can not be full at this point, we are just starting out.  A memory
+    // allocation failure, which is highly unlikely, will just be ignored.  If
+    // this ooRexx process is out of memory, that will quickly show up.
+    addCommandMessage(pcen, IDOK,     UINTPTR_MAX, 0, 0, "OK",     TAG_NOTHING);
+    addCommandMessage(pcen, IDCANCEL, UINTPTR_MAX, 0, 0, "Cancel", TAG_NOTHING);
+    addCommandMessage(pcen, IDHELP,   UINTPTR_MAX, 0, 0, "Help",   TAG_NOTHING);
+
+    return true;
+}
+
+bool initEventNotification(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObjectPtr self, pCEventNotification *ppCEN)
+{
+    RexxBufferObject obj = c->NewBuffer(sizeof(CEventNotification));
+    if ( obj == NULLOBJECT )
+    {
+        return false;
+    }
+
+    pCEventNotification pcen = (pCEventNotification)c->BufferData(obj);
+    memset(pcen, 0, sizeof(pCEventNotification));
+
+    pcen->dlgAdm = dlgAdm;
+    pcen->rexxSelf = self;
+
+    if ( ! initCommandMessagesTable(c, pcen) )
+    {
+        return false;
+    }
+
+    // This can not fail, init_eventNotification only fails if called from Rexx.
+    c->SendMessage1(self, "INIT_EVENTNOTIFICATION", obj);
+    *ppCEN = pcen;
+    return true;
 }
 
 
@@ -773,7 +1381,7 @@ BOOL addTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam
  *
  *  On the Rexx side, the Rexx dialog object periodically checks the message
  *  queue using this routine.  If a message is waiting, it is then dispatched to
- *  the Rexx dialog method using interpret.
+ *  the Rexx dialog method using sendWith().
  *
  *  @param  adm    Pointer to the dialog administration block for the Rexx
  *                 dialog.
@@ -1638,7 +2246,7 @@ RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID, CSTRING, meth
         context->RaiseException1(Rexx_Error_Invalid_argument_null, TheTwoObj);
         return 1;
     }
-    return (addTheMessage(pcen->dlgAdm, WM_COMMAND, 0xFFFFFFFF, id, 0x0000FFFF, 0, 0, methodName, 0) ? 0 : 1);
+    return (addCommandMessage(pcen, id, 0x0000FFFF, 0, 0, methodName, 0) ? 0 : 1);
 }
 
 
@@ -1707,7 +2315,7 @@ RexxMethod4(RexxObjectPtr, en_connectUpDownEvent, RexxObjectPtr, rxID, CSTRING, 
         methodName = "onDeltaPos";
     }
 
-    if ( addTheMessage(pcen->dlgAdm, WM_NOTIFY, 0xFFFFFFFF, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, TAG_UPDOWN) )
+    if ( addNotifyMessage(pcen, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, TAG_UPDOWN) )
     {
         return TheTrueObj;
     }
@@ -1777,7 +2385,7 @@ RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
         tag |= (TAG_MSGHANDLED | TAG_REPLYFROMREXX);
     }
 
-    if ( addTheMessage(pcen->dlgAdm, WM_NOTIFY, 0xFFFFFFFF, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
+    if ( addNotifyMessage(pcen, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
     {
         return TheTrueObj;
     }
@@ -1907,10 +2515,21 @@ RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIO
     }
     else
     {
-        if ( addTheMessage(pcen->dlgAdm, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag) )
+        bool success;
+        if ( (winMessage & wmFilter) == WM_COMMAND )
         {
-            result = 0;
+            success = addCommandMessage(pcen, wParam, wpFilter, lParam, lpFilter, methodName, tag);
         }
+        else if ( (winMessage & wmFilter) == WM_NOTIFY )
+        {
+            success = addNotifyMessage(pcen, wParam, wpFilter, lParam, lpFilter, methodName, tag);
+        }
+        else
+        {
+            success = addMiscMessage(pcen, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag);
+        }
+
+        result = (success ? 0 : 1);
     }
 
 done_out:

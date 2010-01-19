@@ -150,7 +150,7 @@ public:
     logical_t assignToDlg(RexxObjectPtr dialog, logical_t autoConnect, CSTRING methodName);
     bool addToConnectionQ(uint32_t id, CSTRING methodName);
     BOOL checkPendingConnections();
-    BOOL checkAutoConnect();
+    BOOL checkAutoConnect(pCEventNotification pcen);
     void releaseConnectionQ();
     BOOL detach(bool skipChecks);
     BOOL destroy();
@@ -161,8 +161,7 @@ public:
     logical_t connectMenuMessage(CSTRING, CSTRING, HWND, RexxObjectPtr, logical_t);
     uint32_t string2WM(CSTRING keyWord);
 
-    DIALOGADMIN *getAdminBlock(RexxObjectPtr dialog);
-    DIALOGADMIN *basicConnectSetup(RexxObjectPtr dialog);
+    pCEventNotification basicConnectSetup(RexxObjectPtr dialog);
     uint32_t *getAllIDs(RexxObjectPtr rxItemIDs, size_t *items, logical_t byPosition);
     RexxObjectPtr trackPopup(RexxObjectPtr, RexxObjectPtr, CSTRING, logical_t, RexxObjectPtr, bool);
     logical_t getItemText(uint32_t id, logical_t byPosition, char *text, uint32_t cch, MENUITEMINFO *mii);
@@ -186,7 +185,6 @@ protected:
 
    HMENU hMenu;
    RexxObjectPtr dlg;
-   DIALOGADMIN *dlgAdm;
    HWND dlgHwnd;
 
    HANDLE hTemplateMemory;        // Handle to allocated template memory. ("MEMHANDLE")

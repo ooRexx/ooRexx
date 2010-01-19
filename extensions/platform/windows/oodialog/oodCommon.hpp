@@ -93,9 +93,15 @@ typedef CWindowBase *pCWindowBase;
 
 /* Struct for the EventNotification object CSelf. */
 typedef struct _enCSelf {
-    RexxObjectPtr  rexxSelf;
-    HWND           hDlg;
-    DIALOGADMIN    *dlgAdm;
+    MESSAGETABLEENTRY  *notifyMsgs;
+    MESSAGETABLEENTRY  *commandMsgs;
+    MESSAGETABLEENTRY  *miscMsgs;
+    size_t              nmSize;
+    size_t              cmSize;
+    size_t              mmSize;
+    RexxObjectPtr       rexxSelf;
+    HWND                hDlg;
+    DIALOGADMIN        *dlgAdm;
 } CEventNotification;
 typedef CEventNotification *pCEventNotification;
 
@@ -173,11 +179,10 @@ typedef struct _DELTAPOS_REPLY {
 typedef DELTAPOSREPLY *PDELTAPOSREPLY;
 
 
-extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 extern bool             dialogInAdminTable(DIALOGADMIN * Dlg);
 extern bool             InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING library);
 extern int32_t          stopDialog(pCPlainBaseDialog);
-extern int32_t          DelDialog(pCPlainBaseDialog);
+extern int32_t          delDialog(pCPlainBaseDialog);
 extern BOOL             GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
 extern bool             isYes(const char *s);
 extern void *           string2pointer(const char *string);
@@ -191,8 +196,6 @@ extern char *           strdupupr_nospace(const char *str);
 extern char *           strdup_nospace(const char *str);
 extern char *           strdup_2methodName(const char *str);
 extern DIALOGADMIN *    getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg);
-
-extern BOOL addTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
 extern void          ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
@@ -398,6 +401,23 @@ inline DIALOGADMIN *dlgToDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg)
 {
     pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
     return pcpbd->dlgAdm;
+}
+
+/**
+ * Retrieves the EventNotification CSelf from an ooDialog dialog object.
+ *
+ * @param c    The method context we are operating in.
+ * @param dlg  The dialog object whose EventNotification CSelf is needed.
+ *
+ * @return A pointer to CEventNotification struct for the dialog.
+ *
+ * @assumes  The caller has ensured dlg is in fact a ooDialog Rexx dialog
+ *           object.
+ */
+inline pCEventNotification dlgToEventNotificationCSelf(RexxMethodContext *c, RexxObjectPtr dlg)
+{
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
+    return pcpbd->enCSelf;
 }
 
 /**

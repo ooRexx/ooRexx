@@ -52,6 +52,17 @@ typedef enum
     keyMapErr     = 9   // Some or all of the keys did not get mapped.
 } keyPressErr_t;
 
+extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+
+extern LRESULT      paletteMessage(DIALOGADMIN *, HWND, UINT, WPARAM, LPARAM);
+extern MsgReplyType searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog);
+extern bool         initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen);
+extern bool         initEventNotification(RexxMethodContext *, DIALOGADMIN *, RexxObjectPtr, pCEventNotification *);
+extern BOOL         addDialogMessage(CHAR * msg, CHAR * Qptr);
+extern bool         addCommandMessage(pCEventNotification, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
+extern bool         addNotifyMessage(pCEventNotification, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
+extern bool         addMiscMessage(pCEventNotification, uint32_t, uint32_t, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
+
 // Shared functions for keyboard hooks and key press subclassing.
 extern void          removeKBHook(DIALOGADMIN *dlgAdm);
 extern keyPressErr_t setKeyPressData(KEYPRESSDATA *, CSTRING, CSTRING, CSTRING);
@@ -60,8 +71,5 @@ extern void          freeKeyPressData(KEYPRESSDATA *);
 extern uint32_t      seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
 extern void          removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
 
-extern LRESULT      paletteMessage(DIALOGADMIN *, HWND, UINT, WPARAM, LPARAM);
-extern BOOL         addDialogMessage(CHAR * msg, CHAR * Qptr);
-extern MsgReplyType searchMessageTable(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog);
 
 #endif

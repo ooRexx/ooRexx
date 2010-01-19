@@ -43,6 +43,7 @@
 #include <limits.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodMessaging.hpp"
 #include "oodMenu.hpp"
 
 
@@ -126,83 +127,73 @@ static UINT getSeparatorTypeOpts(const char *opts, UINT type);
 static UINT getTrackFlags(const char *);
 static uint32_t deleteSeparatorByID(HMENU, uint32_t);
 static uint32_t menuHelpID(HMENU hMenu, DWORD helpID, BOOL recurse, uint32_t *id);
-static uint32_t menuConnectItems(HMENU hMenu, DIALOGADMIN *dlgAdm, CSTRING msg, bool isSysMenu, logical_t handles);
+static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING msg, bool isSysMenu, logical_t handles);
 
 
 /**
- * Calls addTheMessage() to connect a menu item to a method in a dialog.
+ * Calls addCommandMessage() to connect a menu item to a method in a dialog.
  *
- * addTheMessage() only fails if the message table is full, (well also some
+ * addCommandMessage() only fails if the message table is full, (well also some
  * other things that are not valid here, like a zero length msg.)  So, if it
  * fails ERROR_NOT_ENOUGH_MEMORY is a good system error code.
  *
  * Note that resource IDs, 1, 2, and 9 are connected automaticaly when a dialog
  * is initialized.
  *
- * @param dlgAdm  Pointer to the dialog admin block for the dialog we are adding
- *                the method connection to.
+ * @param pcen  EventNotification CSelf for the dialog we are adding the method
+ *              connection to.
  *
- * @param id      Menu ID to connect.
+ * @param id    Menu ID to connect.
  *
- * @param msg     Method name we are connecting to.
+ * @param msg   Method name we are connecting to.
  *
  * @return 0 on success, ERROR_NOT_ENOUGH_MEMORY on failure.
  */
-inline uint32_t _connectItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg)
+inline uint32_t _connectItem(pCEventNotification pcen, uint32_t id, CSTRING msg)
 {
     if ( id < 3 || id == 9 )
     {
         return 0;
     }
-
-    //                             Window    msg                wParam             lParam method
-    //                             Message   filter      wParam filter      lParam filter name   tag
-    return addTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id,    0x0000FFFF,    0,     0,  msg,   0) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addCommandMessage(pcen, id, 0x0000FFFF, 0, 0,  msg, TAG_NOTHING) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /* Same as above but connects a System Menu item */
-inline BOOL _connectSysItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg, logical_t isHandled)
+inline BOOL _connectSysItem(pCEventNotification pcen, uint32_t id, CSTRING msg, logical_t isHandled)
 {
-    if ( id < 3 || id == 9 )
-    {
-        return 0;
-    }
-
     uint32_t tag = TAG_DIALOG | TAG_SYSMENUCOMMAND;
     if ( isHandled )
     {
         tag |= TAG_MSGHANDLED;
     }
-
-    //                             Window       msg                wParam             lParam method
-    //                             Message      filter      wParam filter      lParam filter name   tag
-    return addTheMessage(dlgAdm, WM_SYSCOMMAND, UINT32_MAX, id,    0x0000FFF0,    0,     0,  msg,   tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addMiscMessage(pcen, WM_SYSCOMMAND, UINT32_MAX, id, 0x0000FFF0, 0, 0,  msg, tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /**
- * Tries to get a pointer to a dialog admin block through the specified dialog.
+ * Tries to get a pointer to the EventNotification CSelf from the specified
+ * dialog.
  *
  * @param c       Method context we are operating in.
  * @param dialog  A presumed ooDialog dialog object.
  *
- * @return A pointer to the dialog admin block for the specified dialog on
- *         success, null on failure.
+ * @return The EventNotification CSelf for the specified dialog on success, null
+ *         on failure.
  *
  * @note   This function fails if dialog is not a BaseDialog or one of its
  *         subclasses.  In this case the .SystemErrorCode is set, but no
  *         condition is raised.
  */
-DIALOGADMIN *_getAdminBlock(RexxMethodContext *c, RexxObjectPtr dialog)
+pCEventNotification _getPCEN(RexxMethodContext *c, RexxObjectPtr dialog)
 {
     oodResetSysErrCode(c->threadContext);
 
-    if ( ! c->IsOfType(dialog, "BASEDIALOG") )
+    if ( dialog != NULLOBJECT && c->IsOfType(dialog, "BASEDIALOG") )
     {
-        oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
-        return NULL;
+        return dlgToEventNotificationCSelf(c, dialog);
     }
 
-    return dlgToDlgAdm(c, dialog);
+    oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
+    return NULL;
 }
 
 
@@ -584,7 +575,6 @@ CppMenu::CppMenu(RexxObjectPtr s, MenuType t, RexxMethodContext *context) : self
     hMenu = NULL;
     wID = -1;
     dlg = TheNilObj;
-    dlgAdm = NULL;
     dlgHwnd = NULL;
 
     connectionRequested = false;
@@ -740,6 +730,16 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
     success = FALSE;
     uint32_t rc = 0;
 
+    // TODO why? if we do doAutoConnection, why do we also do connect ??  I
+    // think it may have been for backwards compatiblity, but it doesn't make
+    // sense.
+
+    pCPlainBaseDialog pcpbd = NULL;
+    if ( dlg != TheNilObj )
+    {
+        pcpbd = dlgToCSelf(c, dlg);
+    }
+
     if ( doAutoConnection )
     {
         if ( connectionMethod == NULL )
@@ -752,7 +752,7 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
             }
         }
 
-        rc = _connectItem(dlgAdm, id, connectionMethod == NULL ? _methodName : connectionMethod);
+        rc = _connectItem(pcpbd->enCSelf, id, connectionMethod == NULL ? _methodName : connectionMethod);
         if ( rc != 0 )
         {
             oodSetSysErrCode(c->threadContext, rc);
@@ -779,9 +779,9 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
 
         // If we have an owner dialog, connect the menu item now, otherwise
         // add it to the connection queue.
-        if ( dlg != TheNilObj )
+        if ( pcpbd != NULL )
         {
-            rc = _connectItem(dlgAdm, id, _methodName);
+            rc = _connectItem(pcpbd->enCSelf, id, _methodName);
             if ( rc != 0 )
             {
                 oodSetSysErrCode(c->threadContext, rc);
@@ -936,7 +936,6 @@ logical_t CppMenu::attachToDlg(RexxObjectPtr dialog)
     }
 
     dlg = dialog;
-    dlgAdm = pcpbd->dlgAdm;
     dlgHwnd = pcpbd->hDlg;
 
     c->SendMessage1(dlg, "LINKMENU", self);
@@ -976,7 +975,6 @@ logical_t CppMenu::assignToDlg(RexxObjectPtr dialog, logical_t _autoConnect, CST
     }
 
     dlg = dialog;
-    dlgAdm = pcpbd->dlgAdm;
     dlgHwnd = pcpbd->hDlg;
 
     // _autoConnect could be 0 if it was omitted, or if the programmer actually
@@ -990,7 +988,7 @@ logical_t CppMenu::assignToDlg(RexxObjectPtr dialog, logical_t _autoConnect, CST
         }
     }
 
-    success = checkAutoConnect();
+    success = checkAutoConnect(pcpbd->enCSelf);
 
 done_out:
     return success;
@@ -1165,7 +1163,6 @@ bool CppMenu::setUpSysMenu(RexxObjectPtr dialog)
     }
 
     dlg = dialog;
-    dlgAdm = pcpbd->dlgAdm;
     dlgHwnd = pcpbd->hDlg;
 
     putSysCommands();
@@ -1196,7 +1193,6 @@ done_out:
     hMenu = NULL;
     dlg = TheNilObj;
     dlgHwnd = NULL;
-    dlgAdm = NULL;
 
     return success;
 }
@@ -1241,8 +1237,8 @@ logical_t CppMenu::connectItem(RexxObjectPtr rxID, CSTRING methodName, RexxObjec
 {
     logical_t success = FALSE;
 
-    DIALOGADMIN *dialogAdm = basicConnectSetup(dialog);
-    if ( dialogAdm == NULL )
+    pCEventNotification pcen = basicConnectSetup(dialog);
+    if ( pcen == NULL )
     {
         goto done_out;
     }
@@ -1256,11 +1252,11 @@ logical_t CppMenu::connectItem(RexxObjectPtr rxID, CSTRING methodName, RexxObjec
     uint32_t rc;
     if ( isSystemMenu() )
     {
-        rc = _connectSysItem(dialogAdm, id, methodName, handles);
+        rc = _connectSysItem(pcen, id, methodName, handles);
     }
     else
     {
-        rc = _connectItem(dialogAdm, id, methodName);
+        rc = _connectItem(pcen, id, methodName);
     }
     if ( rc == 0 )
     {
@@ -1280,15 +1276,15 @@ logical_t CppMenu::connectAllSelects(CSTRING methodName, RexxObjectPtr dialog, l
 {
     logical_t success = FALSE;
 
-    DIALOGADMIN *dialogAdm = basicConnectSetup(dialog);
-    if ( dialogAdm == NULL )
+    pCEventNotification pcen = basicConnectSetup(dialog);
+    if ( pcen == NULL )
     {
         goto done_out;
     }
 
     // We can just pass methodName along.  If it was omitted, it is NULL, and
     // menuConnectItems() handles that correctly.
-    uint32_t rc = menuConnectItems(hMenu, dialogAdm, methodName, isSystemMenu(), handles);
+    uint32_t rc = menuConnectItems(hMenu, pcen, methodName, isSystemMenu(), handles);
     if ( rc == 0 )
     {
         success = TRUE;
@@ -1309,8 +1305,8 @@ logical_t CppMenu::connectSomeSelects(RexxObjectPtr rxItemIds, CSTRING method, l
     uint32_t *ids = NULL;
     char *name = NULL;
 
-    DIALOGADMIN *dialogAdm = basicConnectSetup(_dlg);
-    if ( dialogAdm == NULL )
+    pCEventNotification pcen = basicConnectSetup(_dlg);
+    if ( pcen == NULL )
     {
         goto done_out;
     }
@@ -1363,23 +1359,17 @@ logical_t CppMenu::connectSomeSelects(RexxObjectPtr rxItemIds, CSTRING method, l
 
         if ( isSystemMenu() )
         {
-            rc = _connectSysItem(dialogAdm, id, method == NULL ? name : method, handles);
+            rc = _connectSysItem(pcen, id, method == NULL ? name : method, handles);
         }
         else
         {
-            rc = _connectItem(dialogAdm, id, method == NULL ? name : method);
+            rc = _connectItem(pcen, id, method == NULL ? name : method);
         }
 
         if ( rc != 0 )
         {
             oodSetSysErrCode(c->threadContext, rc);
             goto done_out;
-        }
-
-        if ( name != NULL )
-        {
-            free(name);
-            name = NULL;
         }
     }
 
@@ -1413,8 +1403,8 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
 {
     logical_t success = FALSE;
 
-    DIALOGADMIN *dialogAdm = basicConnectSetup(dialog);
-    if ( dialogAdm == NULL )
+    pCEventNotification pcen = basicConnectSetup(dialog);
+    if ( pcen == NULL )
     {
         goto done_out;
     }
@@ -1439,27 +1429,23 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
             tag |= TAG_CONTEXTMENU;
             if ( hwndFilter != NULL )
             {
-                success = addTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwndFilter, UINTPTR_MAX,
-                                        0, 0, methodName, tag);
+                success = addMiscMessage(pcen, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwndFilter, UINTPTR_MAX, 0, 0, methodName, tag);
             }
             else
             {
-                success = addTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, 0, 0,
-                                        0, 0, methodName, tag);
+                success = addMiscMessage(pcen, WM_CONTEXTMENU, UINT32_MAX, 0, 0, 0, 0, methodName, tag);
             }
         }
             break;
 
         case WM_INITMENU :
             tag |= TAG_MENUMESSAGE;
-            success = addTheMessage(dialogAdm, WM_INITMENU, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX,
-                                    0, 0, methodName, tag);
+            success = addMiscMessage(pcen, WM_INITMENU, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX, 0, 0, methodName, tag);
             break;
 
         case WM_INITMENUPOPUP :
             tag |= TAG_MENUMESSAGE;
-            success = addTheMessage(dialogAdm, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX,
-                                    0, 0, methodName, tag);
+            success = addMiscMessage(pcen, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX, 0, 0, methodName, tag);
             break;
 
         default :
@@ -1476,39 +1462,16 @@ done_out:
     return success;
 }
 
-DIALOGADMIN *CppMenu::basicConnectSetup(RexxObjectPtr dialog)
+pCEventNotification CppMenu::basicConnectSetup(RexxObjectPtr dialog)
 {
     oodResetSysErrCode(c->threadContext);
-    DIALOGADMIN *dialogAdm = NULL;
+    pCEventNotification pcen = NULL;
 
     if ( hMenu == NULL )
     {
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto done_out;
     }
-
-    dialogAdm = getAdminBlock(dialog);
-    if ( dialogAdm == NULL )
-    {
-        goto done_out;
-    }
-
-done_out:
-    return dialogAdm;
-}
-
-/**
- *  Gets the correct dialog admin struct and returns it.  dialog could have been
- *  an omitted argument, in which case we use our internal dialog, if there is
- *  one.
- *
- *  @param dialog  A possible dialog object to get the admin block from.
- *
- * @return A pointer to an admin block on success, NULL on error.
- */
-DIALOGADMIN *CppMenu::getAdminBlock(RexxObjectPtr dialog)
-{
-    DIALOGADMIN *dialogAdm = NULL;
 
     if ( dialog == NULLOBJECT  )
     {
@@ -1517,17 +1480,13 @@ DIALOGADMIN *CppMenu::getAdminBlock(RexxObjectPtr dialog)
             oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
             goto done_out;
         }
-        dialogAdm = dlgAdm;
+        dialog = dlg;
     }
-    else
-    {
-        dialogAdm = _getAdminBlock(c, dialog);
-    }
+    pcen = dlgToEventNotificationCSelf(c, dialog);
 
 done_out:
-    return dialogAdm;
+    return pcen;
 }
-
 
 logical_t CppMenu::getItemText(uint32_t id, logical_t byPosition, char *text, uint32_t cch, MENUITEMINFO *mii)
 {
@@ -1563,6 +1522,7 @@ BOOL CppMenu::checkPendingConnections()
 {
     BOOL result = FALSE;
     uint32_t rc = 0;
+    pCEventNotification pcen = dlgToEventNotificationCSelf(c, dlg);
 
     if ( connectionRequested )
     {
@@ -1572,7 +1532,7 @@ BOOL CppMenu::checkPendingConnections()
             m = connectionQ[i];
 
             // We could run out of message table entries.
-            rc = _connectItem(dlgAdm, m->id, m->methodName);
+            rc = _connectItem(pcen, m->id, m->methodName);
             if ( rc != 0 )
             {
                 oodSetSysErrCode(c->threadContext, rc);
@@ -1586,18 +1546,18 @@ BOOL CppMenu::checkPendingConnections()
             goto done_out;
         }
     }
-    result = checkAutoConnect();
+    result = checkAutoConnect(pcen);
 
 done_out:
     return result;
 }
 
 
-BOOL CppMenu::checkAutoConnect()
+BOOL CppMenu::checkAutoConnect(pCEventNotification pcen)
 {
     if ( autoConnect )
     {
-        uint32_t rc = menuConnectItems(hMenu, dlgAdm, connectionMethod, isSystemMenu(), FALSE);
+        uint32_t rc = menuConnectItems(hMenu, pcen, connectionMethod, isSystemMenu(), FALSE);
         if ( rc != 0 )
         {
             oodSetSysErrCode(c->threadContext, rc);
@@ -2597,7 +2557,7 @@ bool menuData(RexxMethodContext *c, HMENU hMenu, RexxObjectPtr *data)
  * the text of the command item, or to the single method name specified by msg.
  *
  * @param hMenu      Handle of menu to connect command items.
- * @param dlgAdm     Dialog admin block of the dialog.
+ * @param pcen       EventNotification CSelf for the dialog.
  * @param msg        Name of the method to connect.  When this is null, each
  *                   item is connected to a method name composed from the text
  *                   of the item.
@@ -2607,7 +2567,7 @@ bool menuData(RexxMethodContext *c, HMENU hMenu, RexxObjectPtr *data)
  *
  * @return 0 on success, the system error code on failure.
  */
-static uint32_t menuConnectItems(HMENU hMenu, DIALOGADMIN *dlgAdm, CSTRING msg, bool isSysMenu, logical_t handles)
+static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING msg, bool isSysMenu, logical_t handles)
 {
     uint32_t rc = 0;
     int count = GetMenuItemCount(hMenu);
@@ -2629,7 +2589,7 @@ static uint32_t menuConnectItems(HMENU hMenu, DIALOGADMIN *dlgAdm, CSTRING msg, 
 
         if ( _isSubMenu(&mii) )
         {
-            rc = menuConnectItems(mii.hSubMenu, dlgAdm, msg, isSysMenu, handles);
+            rc = menuConnectItems(mii.hSubMenu, pcen, msg, isSysMenu, handles);
             if ( rc != 0 )
             {
                 return rc;
@@ -2661,11 +2621,11 @@ static uint32_t menuConnectItems(HMENU hMenu, DIALOGADMIN *dlgAdm, CSTRING msg, 
 
             if ( isSysMenu )
             {
-                rc = _connectSysItem(dlgAdm, mii.wID, pMsg, handles);
+                rc = _connectSysItem(pcen, mii.wID, pMsg, handles);
             }
             else
             {
-                rc = _connectItem(dlgAdm, mii.wID, pMsg);
+                rc = _connectItem(pcen, mii.wID, pMsg);
             }
 
             if ( pMsg != msg )
@@ -2768,8 +2728,8 @@ RexxMethod5(logical_t, menu_connectSelect_cls, RexxObjectPtr, rxID, CSTRING, met
     logical_t success = FALSE;
     bool isSystemMenu = isOfClassType(context, self, "SystemMenu");
 
-    DIALOGADMIN *dialogAdm = _getAdminBlock(context, dlg);
-    if ( dialogAdm == NULL )
+    pCEventNotification pcen = _getPCEN(context, dlg);
+    if ( pcen == NULL )
     {
         goto done_out;
     }
@@ -2783,11 +2743,11 @@ RexxMethod5(logical_t, menu_connectSelect_cls, RexxObjectPtr, rxID, CSTRING, met
     uint32_t rc;
     if ( isSystemMenu )
     {
-        rc = _connectSysItem(dialogAdm, id, methodName, isHandled);
+        rc = _connectSysItem(pcen, id, methodName, isHandled);
     }
     else
     {
-        rc = _connectItem(dialogAdm, id, methodName);
+        rc = _connectItem(pcen, id, methodName);
     }
 
     (rc == 0) ? success = TRUE : oodSetSysErrCode(context->threadContext, rc);
@@ -5458,8 +5418,8 @@ RexxMethod4(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRI
 {
     BOOL success = FALSE;
 
-    DIALOGADMIN *dialogAdm = _getAdminBlock(context, dlg);
-    if ( dialogAdm == NULL )
+    pCEventNotification pcen = _getPCEN(context, dlg);
+    if ( pcen == NULL )
     {
         goto done_out;
     }
@@ -5472,13 +5432,11 @@ RexxMethod4(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRI
 
     if ( hwnd != NULL )
     {
-        success = addTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwnd, UINTPTR_MAX,
-                                0, 0, methodName, tag);
+        success = addMiscMessage(pcen, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwnd, UINTPTR_MAX, 0, 0, methodName, tag);
     }
     else
     {
-        success = addTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, 0, 0,
-                                0, 0, methodName, tag);
+        success = addMiscMessage(pcen, WM_CONTEXTMENU, UINT32_MAX, 0, 0, 0, 0, methodName, tag);
     }
 
     if ( ! success )
