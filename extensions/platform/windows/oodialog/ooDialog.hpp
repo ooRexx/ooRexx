@@ -121,7 +121,8 @@ extern DWORD ComCtl32Version;
 #define TAG_TRACKBAR              0x00000008
 #define TAG_TAB                   0x00000009
 #define TAG_UPDOWN                0x0000000A
-#define TAG_MONTHCALENDAR         0x0000000B
+#define TAG_DATETIMEPICKER        0x0000000B
+#define TAG_MONTHCALENDAR         0x0000000C
 
 /**
  * The next 2 bytes are generic 'flags' that can be isolated using TAG_FLAGMASK.

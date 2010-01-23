@@ -326,12 +326,80 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCS
 }
 
 
+/** DateTimePicker::getMonthCal()
+ *
+ *  Gets the MonthCalendar object for a date and time picker's (DTP) child month
+ *  calendar control.
+ *
+ *  One reason for gettng the MonthCalendar object is to customize the dropdown
+ *  month-calendar control. For instance, if you don't want the "Go To Today,"
+ *  you need to set the control's NOTODAY style.  Use this method to retrieve
+ *  the MonthCalendar object.  You can then use this object to set the desired
+ *  month-calendar style, or otherwise customize the control.
+ *
+ *  @return  A MonthCalendar object for the underlying child month calendar, if
+ *           the child control exists, otherwise the .nil object.
+ *
+ *  @note  DTP controls create a child month calendar control when the user
+ *         clicks the drop-down arrow.  When the month calendar is no longer
+ *         needed, it is destroyed.  So your program must not rely on a using a
+ *         single MonthCalendar object for the DTP's child month calendar.
+ *
+ *         Rather, you should instantiate a new MonthCalendar, if you need one,
+ *         each time the user clicks the drop-down arrow.  Connect the DROPDOWN
+ *         event to know when a new month calendar control is created.  After
+ *         the month calendar is created, use this method to instantiate a new
+ *         MonthCalendar object.  Connect the CLOSEUP event to know when the
+ *         month calendar control is destroyed. Once the close up event is
+ *         received, the MonthCalendar object will no longer be valid.  Invoking
+ *         methods on the object will raise a syntax condition.
+ */
+RexxMethod1(RexxObjectPtr, dtp_getMonthCal, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+
+    RexxObjectPtr result = TheNilObj;
+
+    HWND hDTP = getDChCtrl(pCSelf);
+    HWND hMC = DateTime_GetMonthCal(hDTP);
+    if ( hMC == NULL )
+    {
+        goto done_out;
+    }
+
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    bool     isCategoryDlg = (c->IsOfType(pcdc->rexxSelf, "CATEGORYDIALOG") ? true : false);
+    uint32_t id = (uint32_t)GetDlgCtrlID(hMC);
+
+    result = createRexxControl(context, hMC, hDTP, id, winMonthCalendar, pcdc->oDlg, isCategoryDlg, false);
+
+done_out:
+    return result;
+}
+
+
 /**
  * Methods for the MonthCalendar class.
+ *
+ * Note that a MonthCalendar object can be created from a DateTimePicker when
+ * the date time picker displays the month calendar.  The underlying month
+ * calendar control is destroyed when the date time picker closes it up.  For
+ * this reason, extra care is used in the MonthCalendar class to ensure the
+ * window handle for the control is still valid.
  */
 #define MONTHCALENDAR_CLASS    "MonthCalendar"
 #define MONTHCALENDAR_WINNAME  "Month Calendar"
 
+inline HWND getMonthCalendar(RexxMethodContext *c, void *pCSelf)
+{
+    HWND hMC = getDChCtrl(pCSelf);
+    if ( hMC == NULL )
+    {
+        invalidWindowException(c, getDCrexxSelf(pCSelf));
+    }
+    return hMC;
+}
 
 #define MC_GRIDINFO_PART_NAMES             "control, next, prev, footer, calendard, header, body, row, cell"
 #define MC_GRIDINFO_WHAT_FLAG_ERR_MSG      "must contain at least one of the keywords: date, rect, or name"
@@ -386,6 +454,64 @@ static int32_t dayName2day(CSTRING day)
     else if ( StrStrI(day, "SATURDAY" ) != NULL ) return 5;
     else if ( StrStrI(day, "SUNDAY"   ) != NULL ) return 6;
     else return -1;
+}
+
+
+/**
+ * Change a month calendar's style.
+ *
+ * @param c
+ * @param pCSelf
+ * @param _style
+ * @param _additionalStyle
+ * @param remove
+ *
+ * @return uint32_t
+ *
+ *  @remarks  MSDN suggests setting last error to 0 before calling
+ *            GetWindowLong() as the correct way to determine error.
+ */
+static uint32_t mcChangeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTRING _style, CSTRING _additionalStyle, bool remove)
+{
+    oodResetSysErrCode(c->threadContext);
+    SetLastError(0);
+
+    HWND hMC = getMonthCalendar(c, pCSelf);
+    if ( hMC == NULL )
+    {
+        return 0;
+    }
+
+    uint32_t newStyle = 0;
+    uint32_t oldStyle = (uint32_t)GetWindowLong(hMC, GWL_STYLE);
+
+    if ( oldStyle == 0 && GetLastError() != 0 )
+    {
+        goto err_out;
+    }
+
+    if ( remove )
+    {
+        newStyle &= ~monthCalendarStyle(_style, 0);
+        if ( _additionalStyle != NULL )
+        {
+            newStyle = monthCalendarStyle(_additionalStyle, newStyle);
+        }
+    }
+    else
+    {
+        newStyle = monthCalendarStyle(_style, oldStyle);
+    }
+
+    if ( SetWindowLong(hMC, GWL_STYLE, newStyle) == 0 && GetLastError() != 0 )
+    {
+        goto err_out;
+    }
+    return oldStyle;
+
+err_out:
+    oodSetSysErrCode(c->threadContext);
+    return 0;
 }
 
 
@@ -523,7 +649,12 @@ bool putHitInfo(RexxMethodContext *c, RexxDirectoryObject hitInfo, MCHITTESTINFO
  */
 RexxMethod1(RexxObjectPtr, get_mc_date, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     RexxObjectPtr dateTime = NULLOBJECT;
 
     SYSTEMTIME sysTime[2];
@@ -566,7 +697,11 @@ RexxMethod1(RexxObjectPtr, get_mc_date, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     SYSTEMTIME sysTime[2];
     LRESULT result = FALSE;
@@ -600,6 +735,27 @@ RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, CSELF, pCSelf)
 }
 
 
+/** MonthCalendar::addStyle()
+ *  MonthCalendar::removeStyle()
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(uint32_t, mc_addRemoveStyle, CSTRING, style, NAME, method, CSELF, pCSelf)
+{
+    return mcChangeStyle(context, (pCDialogControl)pCSelf, style, NULL, (*method == 'R'));
+}
+
+/** MonthCalendar::replaceStyle()
+ *
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(uint32_t, mc_replaceStyle, CSTRING, removeStyle, CSTRING, additionalStyle, CSELF, pCSelf)
+{
+    return mcChangeStyle(context, (pCDialogControl)pCSelf, removeStyle, additionalStyle, true);
+}
+
+
 RexxMethod1(uint32_t, mc_getCalendarBorder, CSELF, pCSelf)
 {
     if ( ! _isAtLeastVista() )
@@ -607,7 +763,14 @@ RexxMethod1(uint32_t, mc_getCalendarBorder, CSELF, pCSelf)
         wrongWindowsVersionException(context, "getBorder", "Vista");
         return 0;
     }
-    return MonthCal_GetCalendarBorder(getDChCtrl(pCSelf));
+
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return 0;
+    }
+
+    return MonthCal_GetCalendarBorder(hMC);
 }
 
 
@@ -618,7 +781,14 @@ RexxMethod1(uint32_t, mc_getCalendarCount, CSELF, pCSelf)
         wrongWindowsVersionException(context, "getCount", "Vista");
         return 0;
     }
-    return MonthCal_GetCalendarCount(getDChCtrl(pCSelf));
+
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return 0;
+    }
+
+    return MonthCal_GetCalendarCount(hMC);
 }
 
 
@@ -629,8 +799,14 @@ RexxMethod1(RexxObjectPtr, mc_getCALID, CSELF, pCSelf)
         return wrongWindowsVersionException(context, "getCALID", "Vista");
     }
 
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     CSTRING id = "";
-    switch( MonthCal_GetCALID(getDChCtrl(pCSelf)) )
+    switch( MonthCal_GetCALID(hMC) )
     {
         case CAL_GREGORIAN              : id = "GREGORIAN"; break;
         case CAL_GREGORIAN_US           : id = "GREGORIAN_US"; break;
@@ -671,8 +847,14 @@ RexxMethod1(RexxObjectPtr, mc_getCALID, CSELF, pCSelf)
  */
 RexxMethod2(uint32_t, mc_getColor, CSTRING, which, CSELF, pCSelf)
 {
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return 0;
+    }
+
     COLORREF color = calPart2flag(which);
-    return (COLORREF)MonthCal_GetColor(getDChCtrl(pCSelf), color);
+    return (COLORREF)MonthCal_GetColor(hMC, color);
 }
 
 RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
@@ -682,8 +864,14 @@ RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
         return wrongWindowsVersionException(context, "getBorder", "Vista");
     }
 
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     CSTRING id = "";
-    switch( MonthCal_GetCurrentView(getDChCtrl(pCSelf)) )
+    switch( MonthCal_GetCurrentView(hMC) )
     {
         case MCMV_MONTH   : id = "Monthly"; break;
         case MCMV_YEAR    : id = "Annual"; break;
@@ -718,7 +906,11 @@ RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
  */
 RexxMethod2(int32_t, mc_getFirstDayOfWeek, OPTIONAL_RexxObjectPtr, result, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return 0;
+    }
 
     uint32_t ret = MonthCal_GetFirstDayOfWeek(hMC);
 
@@ -752,6 +944,12 @@ RexxMethod2(RexxObjectPtr, mc_getGridInfo, RexxObjectPtr, _gridInfo, CSELF, pCSe
     if ( ! _isAtLeastVista() )
     {
         return wrongWindowsVersionException(context, "getGridInfo", "Vista");
+    }
+
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
     }
 
     MCGRIDINFO info = {0};
@@ -856,7 +1054,7 @@ RexxMethod2(RexxObjectPtr, mc_getGridInfo, RexxObjectPtr, _gridInfo, CSELF, pCSe
         }
     }
 
-    if ( ! MonthCal_GetCalendarGridInfo(getDChCtrl(pCSelf), &info) )
+    if ( ! MonthCal_GetCalendarGridInfo(hMC, &info) )
     {
         goto err_out;
     }
@@ -897,7 +1095,11 @@ err_out:
 
 RexxMethod2(RexxObjectPtr, mc_getMinRect, RexxObjectPtr, _rect, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     PRECT r = rxGetRect(context, _rect, 1);
     if ( r != NULL )
@@ -929,7 +1131,11 @@ RexxMethod2(RexxObjectPtr, mc_getMinRect, RexxObjectPtr, _rect, CSELF, pCSelf)
  */
 RexxMethod3(int32_t, mc_getMonthRange, RexxArrayObject, range, OPTIONAL_CSTRING, span, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return 0;
+    }
 
     uint32_t flag = GMR_DAYSTATE;
     if ( argumentExists(2) )
@@ -966,7 +1172,11 @@ err_out:
 
 RexxMethod2(CSTRING, mc_getRange, RexxArrayObject, range, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return "";
+    }
 
     SYSTEMTIME sysTime[2];
     memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
@@ -1014,7 +1224,11 @@ RexxMethod2(CSTRING, mc_getRange, RexxArrayObject, range, CSELF, pCSelf)
 
 RexxMethod2(RexxObjectPtr, mc_getSelectionRange, RexxArrayObject, range, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     if ( ! isMultiSelectionMonthCalendar(hMC) )
     {
@@ -1053,7 +1267,11 @@ err_out:
  */
 RexxMethod1(RexxObjectPtr, mc_getToday, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     RexxObjectPtr result = TheNilObj;
     SYSTEMTIME sysTime = {0};
@@ -1074,6 +1292,12 @@ RexxMethod1(RexxObjectPtr, mc_getToday, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
 {
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     RexxDirectoryObject hitInfo = context->NewDirectory();
 
     MCHITTESTINFO info = {0};
@@ -1089,7 +1313,7 @@ RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
     info.pt.x = pt->x;
     info.pt.y = pt->y;
 
-    MonthCal_HitTest(getDChCtrl(pCSelf), &info);
+    MonthCal_HitTest(hMC, &info);
 
     bool done = putHitInfo(context, hitInfo, &info);
 
@@ -1114,14 +1338,19 @@ RexxMethod2(RexxObjectPtr, mc_setCalendarBorder, OPTIONAL_uint32_t, border, CSEL
         return wrongWindowsVersionException(context, "setBorder", "Vista");
     }
 
-    HWND hCtrl = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     if ( argumentExists(1) )
     {
-        MonthCal_SetCalendarBorder(hCtrl, TRUE, border);
+        MonthCal_SetCalendarBorder(hMC, TRUE, border);
     }
     else
     {
-        MonthCal_SetCalendarBorder(hCtrl, FALSE, 0);
+        MonthCal_SetCalendarBorder(hMC, FALSE, 0);
     }
     return TheZeroObj;
 }
@@ -1142,6 +1371,12 @@ RexxMethod2(RexxObjectPtr, mc_setCALID, CSTRING, id, CSELF, pCSelf)
         return wrongWindowsVersionException(context, "setCALID", "Vista");
     }
 
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     uint32_t calID = CAL_GREGORIAN;
 
     if (      StrStrI(id, "GREGORIAN"                 ) != NULL ) calID = CAL_GREGORIAN ;
@@ -1158,7 +1393,7 @@ RexxMethod2(RexxObjectPtr, mc_setCALID, CSTRING, id, CSELF, pCSelf)
     else if ( StrStrI(id, "CAL_GREGORIAN_XLIT_FRENCH" ) != NULL ) calID = CAL_GREGORIAN_XLIT_FRENCH;
     else if ( StrStrI(id, "UMALQURA"                  ) != NULL ) calID = CAL_UMALQURA;
 
-    MonthCal_SetCALID(getDChCtrl(pCSelf), calID);
+    MonthCal_SetCALID(hMC, calID);
     return TheZeroObj;
 }
 
@@ -1184,8 +1419,14 @@ RexxMethod2(RexxObjectPtr, mc_setCALID, CSTRING, id, CSELF, pCSelf)
  */
 RexxMethod3(uint32_t, mc_setColor, CSTRING, which, uint32_t, color, CSELF, pCSelf)
 {
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return 0;
+    }
+
     uint32_t flag = calPart2flag(which);
-    return (COLORREF)MonthCal_SetColor(getDChCtrl(pCSelf), flag, color);
+    return (COLORREF)MonthCal_SetColor(hMC, flag, color);
 }
 
 
@@ -1196,6 +1437,12 @@ RexxMethod2(RexxObjectPtr, mc_setCurrentView, CSTRING, view, CSELF, pCSelf)
         return wrongWindowsVersionException(context, "getBorder", "Vista");
     }
 
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     uint32_t mcmv = MCMV_MONTH;
 
     if (      StrStrI(view, "MONTHLY") != NULL ) mcmv = MCMV_MONTH;
@@ -1203,23 +1450,35 @@ RexxMethod2(RexxObjectPtr, mc_setCurrentView, CSTRING, view, CSELF, pCSelf)
     else if ( StrStrI(view, "DECADE")  != NULL ) mcmv = MCMV_DECADE;
     else if ( StrStrI(view, "CENTURY") != NULL ) mcmv = MCMV_CENTURY;
 
-    return (MonthCal_SetCurrentView(getDChCtrl(pCSelf), mcmv) ? TheTrueObj : TheFalseObj);
+    return (MonthCal_SetCurrentView(hMC, mcmv) ? TheTrueObj : TheFalseObj);
 }
 
 RexxMethod2(RexxObjectPtr, mc_setDayState, RexxArrayObject, list, CSELF, pCSelf)
 {
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     LPMONTHDAYSTATE pmds;
     size_t count = context->ArrayItems(list);
 
     RexxObjectPtr result = makeDayStateBuffer(context, list, count, &pmds);
-    return setDayState(getDChCtrl(pCSelf), pmds, (int)count, result);
+    return setDayState(hMC, pmds, (int)count, result);
 }
 
 RexxMethod4(RexxObjectPtr, mc_setDayStateQuick, uint32_t, ds1, uint32_t, ds2, uint32_t, ds3, CSELF, pCSelf)
 {
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
+
     LPMONTHDAYSTATE pmds;
     RexxObjectPtr result = quickDayStateBuffer(context, ds1, ds2, ds3, &pmds);
-    return setDayState(getDChCtrl(pCSelf), pmds, 3, result);
+    return setDayState(hMC, pmds, 3, result);
 }
 
 /** MonthCalendar::setFirstDayOfWeek()
@@ -1247,7 +1506,11 @@ RexxMethod4(RexxObjectPtr, mc_setDayStateQuick, uint32_t, ds1, uint32_t, ds2, ui
  */
 RexxMethod2(RexxObjectPtr, mc_setFirstDayOfWeek, RexxObjectPtr, firstDay, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     int32_t iDay = -1;
     if ( ! context->Int32(firstDay, &iDay) )
@@ -1270,7 +1533,11 @@ RexxMethod2(RexxObjectPtr, mc_setFirstDayOfWeek, RexxObjectPtr, firstDay, CSELF,
 
 RexxMethod2(RexxObjectPtr, mc_setRange, RexxArrayObject, dateTimes, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     SYSTEMTIME sysTime[2];
     BOOL success = FALSE;
@@ -1304,7 +1571,11 @@ RexxMethod2(RexxObjectPtr, mc_setRange, RexxArrayObject, dateTimes, CSELF, pCSel
 
 RexxMethod2(RexxObjectPtr, mc_setSelectionRange, RexxArrayObject, dateTimes, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     SYSTEMTIME sysTime[2];
     BOOL success = FALSE;
@@ -1352,7 +1623,11 @@ err_out:
  */
 RexxMethod2(RexxObjectPtr, mc_setToday, OPTIONAL_RexxObjectPtr, date, CSELF, pCSelf)
 {
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     SYSTEMTIME sysTime = {0};
     SYSTEMTIME *pSysTime = NULL;
@@ -1397,7 +1672,11 @@ RexxMethod2(RexxObjectPtr, mc_sizeRectToMin, RexxObjectPtr, _rect, CSELF, pCSelf
         goto done_out;
     }
 
-    HWND hMC = getDChCtrl(pCSelf);
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     PRECT r = rxGetRect(context, _rect, 1);
     if ( r != NULL )

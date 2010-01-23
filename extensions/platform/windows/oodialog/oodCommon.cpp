@@ -109,6 +109,30 @@ RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg
  *        The specified method, built-in function, or external routine exists,
  *        but you used it incorrectly.
  *
+ *  The "methName" method can not be invoked on "objectName" when the window
+ *  handle is not valid.
+ *
+ *  The getMaxSelection method can not be invoked on a MontnCalendar when the
+ *  window handle is not valid.
+ *
+ * @param c
+ * @param rxObj
+ */
+RexxObjectPtr invalidWindowException(RexxMethodContext *c, RexxObjectPtr rxObj)
+{
+    TCHAR buf[512];
+    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the window handle is not valid.",
+              c->GetMessageName(), c->ObjectToStringValue(rxObj));
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
+    return NULLOBJECT;
+}
+
+/**
+ *  93.900
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
  *  Argument "position" is not a valid category page number; found "num"
  *
  *  Arguemnt 2 is not a valid category page number; found 0

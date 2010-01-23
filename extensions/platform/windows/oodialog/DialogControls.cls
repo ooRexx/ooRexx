@@ -1328,6 +1328,7 @@
 
 ::attribute dateTime external "LIBRARY oodialog _dtp_dateTime"
 
+::method getMonthCal external "LIBRARY oodialog dtp_getMonthCal"
 
 ::class 'MonthCalendar' subclass DialogControl public
 
@@ -1338,6 +1339,10 @@
 ::constant MCM_SETMONTHDELTA       "0x1014"
 
 ::attribute date external "LIBRARY oodialog _mc_date"
+
+::method addStyle external "LIBRARY oodialog mc_addRemoveStyle"
+::method removeStyle external "LIBRARY oodialog mc_addRemoveStyle"
+::method replaceStyle external "LIBRARY oodialog mc_replaceStyle"
 
 ::method getCalendarBorder external "LIBRARY oodialog mc_getCalendarBorder"
 ::method getCalendarCount external "LIBRARY oodialog mc_getCalendarCount"

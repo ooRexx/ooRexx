@@ -131,6 +131,10 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
     if ( dlgAdm == NULL || pcpbd->dlgProcContext == NULL )
     {
         // Once again, theoretically impossible ...
+        if ( ! pcpbd->isActive )
+        {
+            return FALSE;
+        }
         return endDialogPremature(pcpbd, hDlg, NoThreadContext);
     }
 
@@ -379,7 +383,6 @@ inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
     return ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (focusDidChange(p));
 }
 
-
 static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
 {
     char buf[256];
@@ -509,6 +512,32 @@ LRESULT paletteMessage(DIALOGADMIN * dlgAdm, HWND hDlg, UINT msg, WPARAM wParam,
     }
 
     return FALSE;
+}
+
+/* genericNotifyInvoke
+ *
+ * The simplest form of invoking the Rexx method connected to a WM_NOTIFY
+ * message.  The Rexx method is invoked with two arguments, the resource ID of
+ * the control and the HWND of the control.
+ */
+inline MsgReplyType genericNotifyInvoke(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName,
+                                        RexxObjectPtr idFrom, RexxObjectPtr hwndFrom)
+{
+    RexxObjectPtr rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, idFrom, hwndFrom);
+    return ReplyTrue;
+}
+
+/* genericNotifyInvoke
+ *
+ * The simplest form of invoking the Rexx method connected to a WM_NOTIFY
+ * message.  The Rexx method is invoked with two arguments, the resource ID of
+ * the control and the HWND of the control.
+ */
+inline MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName,
+                                         WPARAM wParam, LPARAM lParam)
+{
+    RexxObjectPtr rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, c->Uintptr(wParam), c->Uintptr(lParam));
+    return ReplyFalse;
 }
 
 /**
@@ -784,81 +813,6 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 } break;
                 // TODO SHOULD ALL NEW EVENT MESSAGES USE c->SendMessagex() ?????
                 // TODO should we check for conditions everytime we use c->SendMessage() ????
-                case TAG_MONTHCALENDAR :
-                {
-                    RexxObjectPtr rexxReply;
-
-                    if ( code == MCN_GETDAYSTATE )
-                    {
-                        LPNMDAYSTATE pDayState = (LPNMDAYSTATE)lParam;
-
-                        RexxObjectPtr dt = NULLOBJECT;
-                        sysTime2dt(c, &(pDayState->stStart), &dt, dtFull);
-
-                        RexxArrayObject args = c->ArrayOfFour(dt, c->Int32(pDayState->cDayState), idFrom2rexxArg(c, lParam),
-                                                              hwndFrom2rexxArg(c, lParam));
-
-                        RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-
-                        if ( checkForCondition(c) )
-                        {
-                            // TODO We had an unhandled exception in the Rexx method
-                            // we just invoked, we printed out the error message.
-                            // But, at this point everything just keeps going.
-                            // Should we clear the exception?  Should we terminate
-                            // everything?
-                            return ReplyFalse;
-                        }
-
-                        if ( rexxReply != NULLOBJECT && c->IsOfType(rexxReply, "BUFFER") )
-                        {
-                            pDayState->prgDayState = (MONTHDAYSTATE *)c->BufferData((RexxBufferObject)rexxReply);
-                            return ReplyTrue;
-                        }
-                        return ReplyFalse;
-                    }
-                    else if ( code == NM_RELEASEDCAPTURE )
-                    {
-                        rexxReply = c->SendMessage2(pcpbd->rexxSelf, m[i].rexxMethod, idFrom2rexxArg(c, lParam), hwndFrom2rexxArg(c, lParam));
-                        return ReplyTrue;
-                    }
-                    else if ( code == MCN_SELECT || code == MCN_SELCHANGE )
-                    {
-                        LPNMSELCHANGE pSelChange = (LPNMSELCHANGE)lParam;
-
-                        RexxObjectPtr dtStart;
-                        sysTime2dt(c, &(pSelChange->stSelStart), &dtStart, dtFull);
-
-                        RexxObjectPtr dtEnd;
-                        sysTime2dt(c, &(pSelChange->stSelEnd), &dtEnd, dtFull);
-
-                        RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom2rexxArg(c, lParam),
-                                                              hwndFrom2rexxArg(c, lParam));
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-                        return ReplyTrue;
-                    }
-                    else if ( code == MCN_VIEWCHANGE )
-                    {
-                        LPNMVIEWCHANGE pViewChange = (LPNMVIEWCHANGE)lParam;
-
-                        RexxStringObject newView = mcnViewChange2rexxString(c, pViewChange->dwNewView);
-                        RexxStringObject oldView = mcnViewChange2rexxString(c, pViewChange->dwOldView);
-
-                        RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom2rexxArg(c, lParam),
-                                                              hwndFrom2rexxArg(c, lParam));
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-                        return ReplyTrue;
-                    }
-
-                    // Theoretically we can not get here because all month
-                    // calendar notification codes that have a tag are
-                    // accounted for.
-                    return ReplyFalse;
-                }
-                break;
-
                 case TAG_UPDOWN :
                 {
                     // There is currently only one notify message for an up-down; UDN_DELTAPOS
@@ -892,6 +846,158 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                         }
                     }
                     return ReplyTrue;
+                }
+                break;
+
+                case TAG_MONTHCALENDAR :
+                {
+                    RexxObjectPtr rexxReply;
+                    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+                    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
+
+                    if ( code == MCN_GETDAYSTATE )
+                    {
+                        LPNMDAYSTATE pDayState = (LPNMDAYSTATE)lParam;
+
+                        RexxObjectPtr dt = NULLOBJECT;
+                        sysTime2dt(c, &(pDayState->stStart), &dt, dtDate);
+
+                        RexxArrayObject args = c->ArrayOfFour(dt, c->Int32(pDayState->cDayState), idFrom, hwndFrom);
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+
+                        if ( checkForCondition(c) )
+                        {
+                            // TODO We had an unhandled exception in the Rexx method
+                            // we just invoked, we printed out the error message.
+                            // But, at this point everything just keeps going.
+                            // Should we clear the exception?  Should we terminate
+                            // everything?
+                            return ReplyFalse;
+                        }
+
+                        if ( rexxReply != NULLOBJECT && c->IsOfType(rexxReply, "BUFFER") )
+                        {
+                            pDayState->prgDayState = (MONTHDAYSTATE *)c->BufferData((RexxBufferObject)rexxReply);
+                            return ReplyTrue;
+                        }
+                        return ReplyFalse;
+                    }
+                    else if ( code == NM_RELEASEDCAPTURE )
+                    {
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+                    else if ( code == MCN_SELECT || code == MCN_SELCHANGE )
+                    {
+                        LPNMSELCHANGE pSelChange = (LPNMSELCHANGE)lParam;
+
+                        RexxObjectPtr dtStart;
+                        sysTime2dt(c, &(pSelChange->stSelStart), &dtStart, dtDate);
+
+                        RexxObjectPtr dtEnd;
+                        sysTime2dt(c, &(pSelChange->stSelEnd), &dtEnd, dtDate);
+
+                        RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom, hwndFrom);
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                        return ReplyTrue;
+                    }
+                    else if ( code == MCN_VIEWCHANGE )
+                    {
+                        LPNMVIEWCHANGE pViewChange = (LPNMVIEWCHANGE)lParam;
+
+                        RexxStringObject newView = mcnViewChange2rexxString(c, pViewChange->dwNewView);
+                        RexxStringObject oldView = mcnViewChange2rexxString(c, pViewChange->dwOldView);
+
+                        RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom, hwndFrom);
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                        return ReplyTrue;
+                    }
+
+                    // Theoretically we can not get here because all month
+                    // calendar notification codes that have a tag are
+                    // accounted for.
+                    return ReplyFalse;
+                }
+                break;
+
+                case TAG_DATETIMEPICKER :
+                {
+                    RexxObjectPtr rexxReply;
+                    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+                    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
+
+                    if ( code == DTN_CLOSEUP )
+                    {
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+                    else if ( code == DTN_DATETIMECHANGE  )
+                    {
+                        LPNMDATETIMECHANGE pChange = (LPNMDATETIMECHANGE)lParam;
+
+                        RexxObjectPtr dt;
+                        RexxObjectPtr valid;
+
+                        if ( pChange->dwFlags == GDT_VALID )
+                        {
+                            sysTime2dt(c, &(pChange->st), &dt, dtFull);
+                            valid = TheTrueObj;
+                        }
+                        else
+                        {
+                            sysTime2dt(c, NULL, &dt, dtNow);
+                            valid = TheFalseObj;
+                        }
+
+                        RexxArrayObject args = c->ArrayOfFour(dt, valid, idFrom, hwndFrom);
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+
+                        setWindowPtr(GetParent(pChange->nmhdr.hwndFrom), DWLP_MSGRESULT, 0);
+                        return ReplyTrue;
+                    }
+                    else if ( code == DTN_DROPDOWN )
+                    {
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+                    else if ( code == DTN_FORMAT )
+                    {
+                        LPNMDATETIMEFORMAT pFormat = (LPNMDATETIMEFORMAT)lParam;
+
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+                    else if ( code == DTN_FORMATQUERY )
+                    {
+                        LPNMDATETIMEFORMATQUERY pQuery = (LPNMDATETIMEFORMATQUERY)lParam;
+
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+                    else if ( code == DTN_USERSTRING )
+                    {
+                        LPNMDATETIMESTRING pStr = (LPNMDATETIMESTRING)lParam;
+
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+                    else if ( code == DTN_WMKEYDOWN )
+                    {
+                        LPNMDATETIMEWMKEYDOWN pQuery = (LPNMDATETIMEWMKEYDOWN)lParam;
+
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+                    else if ( code == NM_KILLFOCUS  )
+                    {
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+                    else if ( code == NM_SETFOCUS  )
+                    {
+                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                    }
+
+                    // Theoretically we can not get here because all date time
+                    // picker notification codes that have a tag are accounted
+                    // for.
+                    return ReplyFalse;
                 }
                 break;
 
@@ -1430,6 +1536,9 @@ RexxRoutine2(RexxStringObject, getDlgMsg_rtn, CSTRING, adm, OPTIONAL_logical_t, 
 #define EVENTNOTIFICATION_CLASS       "EventNotification"
 
 
+#define DTPN_KEYWORDS                 "CloseUp, DateTimeChange, DropDown, FormatQuery, Format, KillFocus, SetFocus, UserString, or WmKeyDown"
+#define MCN_KEYWORDS                  "GetDayState, Released, SelChange, Select, or ViewChange"
+
 /**
  * Convert a month calendar notification code to a method name.
  */
@@ -1437,10 +1546,11 @@ inline CSTRING mcn2name(uint32_t mcn)
 {
     switch ( mcn )
     {
-        case MCN_GETDAYSTATE : return "onGetDayState";
-        case MCN_SELCHANGE   : return "onSelChange";
-        case MCN_SELECT      : return "onSelect";
-        case MCN_VIEWCHANGE  : return "onViewChange";
+        case MCN_GETDAYSTATE    : return "onGetDayState";
+        case NM_RELEASEDCAPTURE : return "onReleased";
+        case MCN_SELCHANGE      : return "onSelChange";
+        case MCN_SELECT         : return "onSelect";
+        case MCN_VIEWCHANGE     : return "onViewChange";
     }
     return "onMCN";
 }
@@ -1449,8 +1559,8 @@ inline CSTRING mcn2name(uint32_t mcn)
 /**
  * Convert a keyword to the proper month calendar notification code.
  *
- * We know the keyword arg position is 2.  The MonthCalendar control is new to
- * ooDialog so we raise an exception on error.
+ * We know the keyword arg position is 2.  The MonthCalendar control is post
+ * ooRexx 4.0.1 so we raise an exception on error.
  */
 static bool keyword2mcn(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
 {
@@ -1463,10 +1573,60 @@ static bool keyword2mcn(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
     else if ( StrStrI(keyword, "VIEWCHANGE")  != NULL ) mcn = MCN_VIEWCHANGE;
     else
     {
-        wrongArgValueException(c->threadContext, 2, "GetDayState, Released, SelChange, Select, or ViewChange", keyword);
+        wrongArgValueException(c->threadContext, 2, MCN_KEYWORDS, keyword);
         return false;
     }
     *flag = mcn;
+    return true;
+}
+
+
+/**
+ * Convert a date time pickeer notification code to a method name.
+ */
+inline CSTRING dtpn2name(uint32_t dtpn)
+{
+    switch ( dtpn )
+    {
+        case DTN_CLOSEUP        : return "onCloseUp";
+        case DTN_DATETIMECHANGE : return "onDateTimeChange";
+        case DTN_DROPDOWN       : return "onDropDown";
+        case DTN_FORMAT         : return "onFormat";
+        case DTN_FORMATQUERY    : return "onFormatQuery";
+        case DTN_USERSTRING     : return "onUserString";
+        case DTN_WMKEYDOWN      : return "onWmKeyDown";
+        case NM_KILLFOCUS       : return "onKillFocus";
+        case NM_SETFOCUS        : return "onSetFocus";
+    }
+    return "onDTPN";
+}
+
+
+/**
+ * Convert a keyword to the proper date time picker notification code.
+ *
+ * We know the keyword arg position is 2.  The DateTimePicker control is post
+ * ooRexx 4.0.1 so we raise an exception on error.
+ */
+static bool keyword2dtpn(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
+{
+    uint32_t dtpn;
+
+    if ( StrStrI(keyword,      "CLOSEUP")        != NULL ) dtpn = DTN_CLOSEUP;
+    else if ( StrStrI(keyword, "DATETIMECHANGE") != NULL ) dtpn = DTN_DATETIMECHANGE;
+    else if ( StrStrI(keyword, "DROPDOWN")       != NULL ) dtpn = DTN_DROPDOWN;
+    else if ( StrStrI(keyword, "FORMATQUERY")    != NULL ) dtpn = DTN_FORMATQUERY;
+    else if ( StrStrI(keyword, "FORMAT")         != NULL ) dtpn = DTN_FORMAT;
+    else if ( StrStrI(keyword, "KILLFOCUS")      != NULL ) dtpn = NM_KILLFOCUS;
+    else if ( StrStrI(keyword, "SETFOCUS")       != NULL ) dtpn = NM_SETFOCUS;
+    else if ( StrStrI(keyword, "USERSTRING")     != NULL ) dtpn = DTN_USERSTRING;
+    else if ( StrStrI(keyword, "WMKEYDOWN")      != NULL ) dtpn = DTN_WMKEYDOWN;
+    else
+    {
+        wrongArgValueException(c->threadContext, 2, DTPN_KEYWORDS, keyword);
+        return false;
+    }
+    *flag = dtpn;
     return true;
 }
 
@@ -2325,6 +2485,71 @@ err_out:
 }
 
 
+/** EventNotification::connectDateTimePickerEvent()
+ *
+ *  Connects a Rexx dialog method with a date time picker control event.
+ *
+ *  @param  rxID        The resource ID of the dialog control.  Can be numeric
+ *                      or symbolic.
+ *
+ *  @param  event       Keyword specifying which event to connect.  Keywords at
+ *                      this time:
+ *
+ *                      CLOSEUP
+ *                      DATETIMECHANGE
+ *                      DROPDOWN
+ *                      FORMAT
+ *                      FORMATQUERY
+ *                      USERSTRING
+ *                      WMKEYDOWN
+ *                      KILLFOCUS
+ *                      SETFOCUS
+ *
+ *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
+ *                      Rexx dialog.  If this argument is omitted then the
+ *                      method name is constructed by prefixing the event
+ *                      keyword with 'on'.  For instance onUserString.
+ *
+ *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
+ *          number an exception is raised.
+ *
+ *  @remarks  This method is new since the 4.0.0 release, therefore an exception
+ *            is raised for a bad resource ID rather than returning -1.
+ */
+RexxMethod4(RexxObjectPtr, en_connectDateTimePickerEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
+{
+    pCEventNotification pcen = (pCEventNotification)pCSelf;
+
+    uint32_t id = oodResolveSymbolicID(context, pcen->rexxSelf, rxID, -1, 1);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto err_out;
+    }
+
+    uint32_t notificationCode;
+    if ( ! keyword2dtpn(context, event, &notificationCode) )
+    {
+        goto err_out;
+    }
+
+    if ( argumentOmitted(3) || *methodName == '\0' )
+    {
+        methodName = dtpn2name(notificationCode);
+    }
+
+    uint32_t tag = TAG_DATETIMEPICKER | TAG_REPLYFROMREXX;
+
+    if ( addNotifyMessage(pcen, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
+    {
+        return TheTrueObj;
+    }
+
+err_out:
+    return TheFalseObj;
+}
+
+
 /** EventNotification::connectMonthCalendarEvent()
  *
  *  Connects a Rexx dialog method with a month calendar control event.
@@ -2350,7 +2575,6 @@ err_out:
  *
  *  @remarks  This method is new since the 4.0.0 release, therefore an exception
  *            is raised for a bad resource ID rather than returning -1.
- *
  */
 RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CSTRING, event,
             OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
@@ -2370,7 +2594,7 @@ RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
     }
     if ( notificationCode == MCN_VIEWCHANGE && ! _isAtLeastVista() )
     {
-        wrongWindowsVersionException(context, "connectMonthCalendar", "Vista");
+        wrongWindowsVersionException(context, "connectMonthCalendarEvent", "Vista");
         goto err_out;
     }
 
@@ -2380,7 +2604,7 @@ RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
     }
 
     uint32_t tag = TAG_MONTHCALENDAR;
-    if ( notificationCode == MCN_GETDAYSTATE )
+    if ( notificationCode == MCN_GETDAYSTATE )  // TODO rethink this if
     {
         tag |= (TAG_MSGHANDLED | TAG_REPLYFROMREXX);
     }
@@ -2393,6 +2617,7 @@ RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
 err_out:
     return TheFalseObj;
 }
+
 
 /** EventNotification::addUserMessage()
  *

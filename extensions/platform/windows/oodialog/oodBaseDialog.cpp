@@ -159,7 +159,6 @@ DWORD WINAPI WindowLoopThread(void *arg)
                 }
             }
         } while ( dlgAdm && dialogInAdminTable(dlgAdm) && ! dlgAdm->LeaveDialog );
-        printf("Dropped out of message loop, WindowLoopThread\n");
     }
     else
     {
@@ -175,6 +174,12 @@ DWORD WINAPI WindowLoopThread(void *arg)
         dlgAdm->TheThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
+
+    if ( pcpbd->dlgProcContext != NULL )
+    {
+        pcpbd->dlgProcContext->DetachThread();
+        pcpbd->dlgProcContext = NULL;
+    }
     return ret;
 }
 

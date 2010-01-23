@@ -636,17 +636,9 @@ RexxMethod1(POINTER, dlgutil_handleToPointer_cls, POINTERSTRING, handle)
  *
  *  Simple method to use for testing.
  */
-RexxMethod1(RexxObjectPtr, dlgutil_test_cls, logical_t, fail)
+RexxMethod1(uint32_t, dlgutil_test_cls, logical_t, fail)
 {
-    oodResetSysErrCode(context->threadContext);
-    RexxMethodContext *c = context;
-    RECT r = {0};
-    if ( ! SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0) )
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
-
-    return rxNewRect(context, &r);
+    return GetCurrentThreadId();
 }
 
 /** ListBox::setTabulators()

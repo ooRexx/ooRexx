@@ -262,6 +262,82 @@ RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlT
 
 
 /**
+ * Creates the Rexx control object that represents the underlying Windows
+ * control.
+ *
+ * The control object can, almost, be created entirely from within the C / C++
+ * environment.  A method context and the Rexx parent dialog are needed.
+ *
+ * @param c
+ * @param hControl
+ * @param hDlg
+ * @param id
+ * @param controlType
+ * @param self
+ * @param isCategoryDlg
+ * @param putInBag
+ *
+ * @return RexxObjectPtr
+ */
+RexxObjectPtr createRexxControl(RexxMethodContext *c, HWND hControl, HWND hDlg, uint32_t id, oodControl_t controlType,
+                                RexxObjectPtr self, bool isCategoryDlg, bool putInBag)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    // Check if the Rexx control object has already been instantiated.
+    RexxObjectPtr rxControl = (RexxObjectPtr)getWindowPtr(hControl, GWLP_USERDATA);
+    if ( rxControl != NULLOBJECT )
+    {
+        // Okay, this specific control has already had a control object
+        // instantiated to represent it.  We return this object.
+        result = rxControl;
+        goto out;
+    }
+
+    // No pointer is stored in the user data area, so no control object has been
+    // instantiated for this specific control, yet.  We instantiate one now and
+    // then store the object in the user data area of the control window.
+
+    PNEWCONTROLPARAMS pArgs = (PNEWCONTROLPARAMS)malloc(sizeof(NEWCONTROLPARAMS));
+    if ( pArgs == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        goto out;
+    }
+
+    RexxClassObject controlCls = oodClass4controlType(c, controlType);
+    if ( controlCls == NULLOBJECT )
+    {
+        goto out;
+    }
+
+    pArgs->isCatDlg = isCategoryDlg;
+    pArgs->controlType = controlType;
+    pArgs->hwnd = hControl;
+    pArgs->hwndDlg = hDlg;
+    pArgs->id = id;
+    pArgs->parentDlg = self;
+
+    rxControl = c->SendMessage1(controlCls, "NEW", c->NewPointer(pArgs));
+    free(pArgs);
+
+    if ( rxControl != NULLOBJECT && rxControl != TheNilObj )
+    {
+        result = rxControl;
+        setWindowPtr(hControl, GWLP_USERDATA, (LONG_PTR)result);
+
+        if ( putInBag )
+        {
+            c->SendMessage1(self, "PUTCONTROL", result);
+        }
+    }
+
+out:
+    return result;
+}
+
+
+/**
  *  Methods for the .DialogControl class.
  */
 #define DIALOGCONTROL_CLASS        "DialogControl"

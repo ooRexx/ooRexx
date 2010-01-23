@@ -55,6 +55,7 @@ enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
 
 // Defined in oodUser.cpp
 extern uint32_t      listViewStyle(CSTRING opts, uint32_t style);
+extern uint32_t      monthCalendarStyle(CSTRING opts, uint32_t style);
 
 extern RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlType);
 extern oodControl_t    control2controlType(HWND hControl);
@@ -63,10 +64,11 @@ extern const char     *controlType2winName(oodControl_t control);
 extern oodControl_t    oodName2controlType(CSTRING name);
 extern bool            isControlMatch(HWND, oodControl_t);
 
-extern RexxStringObject cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
-extern DIALOGADMIN *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc);
-extern void sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part);
+extern RexxStringObject  cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
+extern DIALOGADMIN      *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc);
+extern void              sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part);
 
+extern RexxObjectPtr     createRexxControl(RexxMethodContext *, HWND, HWND, uint32_t, oodControl_t, RexxObjectPtr, bool, bool);
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081
@@ -103,6 +105,10 @@ inline bool isSingleSelectionListBox(HWND hDlg, uint32_t id)
 inline HWND getDChCtrl(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->hCtrl);
+}
+inline RexxObjectPtr getDCrexxSelf(void *pCSelf)
+{
+    return (((pCDialogControl)pCSelf)->rexxSelf);
 }
 inline HWND getDChDlg(void *pCSelf)
 {

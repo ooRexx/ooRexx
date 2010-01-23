@@ -121,6 +121,7 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_LAST_ROUTINE()
 };
 
+// DlgUtil
 REXX_METHOD_PROTOTYPE(dlgutil_init_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_comctl32Version_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_version_cls);
@@ -136,15 +137,18 @@ REXX_METHOD_PROTOTYPE(dlgutil_screenArea_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
+// OS
 REXX_METHOD_PROTOTYPE(os_is64bit);
 REXX_METHOD_PROTOTYPE(os_is32on64bit);
 REXX_METHOD_PROTOTYPE(os_isVersion);
 
+// ResourceUtils
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveIconID_pvt);
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveResourceID);
 REXX_METHOD_PROTOTYPE(rsrcUtils_idError);
 REXX_METHOD_PROTOTYPE(rsrcUtils_checkID);
 
+// WindowBase
 REXX_METHOD_PROTOTYPE(wb_getHwnd);
 REXX_METHOD_PROTOTYPE(wb_getFactorX);
 REXX_METHOD_PROTOTYPE(wb_setFactorX);
@@ -182,19 +186,23 @@ REXX_METHOD_PROTOTYPE(wb_foreGroundWindow);
 REXX_METHOD_PROTOTYPE(wb_screenClient);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 
+// EventNotification
 REXX_METHOD_PROTOTYPE(en_init_eventNotification);
 REXX_METHOD_PROTOTYPE(en_connectKeyPress);
 REXX_METHOD_PROTOTYPE(en_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(en_disconnectKeyPress);
 REXX_METHOD_PROTOTYPE(en_hasKeyPressConnection);
 REXX_METHOD_PROTOTYPE(en_connectCommandEvents);
-REXX_METHOD_PROTOTYPE(en_connectUpDownEvent);
+REXX_METHOD_PROTOTYPE(en_connectDateTimePickerEvent);
 REXX_METHOD_PROTOTYPE(en_connectMonthCalendarEvent);
+REXX_METHOD_PROTOTYPE(en_connectUpDownEvent);
 REXX_METHOD_PROTOTYPE(en_addUserMessage);
 
+// Window
 REXX_METHOD_PROTOTYPE(window_init);
 REXX_METHOD_PROTOTYPE(window_unInit);
 
+// PlainBaseDialog
 REXX_METHOD_PROTOTYPE(pbdlg_init_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_setDefaultFont_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName_cls);
@@ -248,6 +256,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 REXX_METHOD_PROTOTYPE(generic_subclassEdit);
 
+// DialogExtensions
 REXX_METHOD_PROTOTYPE(dlgext_setWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_getControlRect);
 REXX_METHOD_PROTOTYPE(dlgext_clearWindowRect);
@@ -276,16 +285,20 @@ REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
 REXX_METHOD_PROTOTYPE(dlgext_dumpAdmin_pvt);
 
+// BaseDialog
 REXX_METHOD_PROTOTYPE(baseDlg_init);
 REXX_METHOD_PROTOTYPE(baseDlg_test);
 
+// UserDialog
 REXX_METHOD_PROTOTYPE(userdlg_init);
 
+// CategoryDialog
 REXX_METHOD_PROTOTYPE(catdlg_createCategoryDialog);
 REXX_METHOD_PROTOTYPE(catdlg_getControlDataPage);
 REXX_METHOD_PROTOTYPE(catdlg_setControlDataPage);
 REXX_METHOD_PROTOTYPE(catdlg_sendMessageToCategoryControl);
 
+// DynamicDialog
 REXX_METHOD_PROTOTYPE(dyndlg_init_cls);
 REXX_METHOD_PROTOTYPE(dyndlg_getBasePtr);
 REXX_METHOD_PROTOTYPE(dyndlg_setBasePtr);
@@ -319,9 +332,11 @@ REXX_METHOD_PROTOTYPE(dyndlg_addIconResource);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 REXX_METHOD_PROTOTYPE(dyndlg_stopDynamic_pvt);
 
+// ResourceDialog
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
 REXX_METHOD_PROTOTYPE(resdlg_startDialog_pvt);
 
+// WindowExtensions
 REXX_METHOD_PROTOTYPE(winex_initWindowExtensions);
 REXX_METHOD_PROTOTYPE(winex_getTextSizeScreen);
 REXX_METHOD_PROTOTYPE(winex_getFont);
@@ -356,6 +371,7 @@ REXX_METHOD_PROTOTYPE(winex_fontColor);
 REXX_METHOD_PROTOTYPE(winex_textBkMode);
 REXX_METHOD_PROTOTYPE(winex_getSetArcDirection);
 
+// ResourceImage
 REXX_METHOD_PROTOTYPE(ri_init);
 REXX_METHOD_PROTOTYPE(ri_release);
 REXX_METHOD_PROTOTYPE(ri_handle);
@@ -364,6 +380,7 @@ REXX_METHOD_PROTOTYPE(ri_systemErrorCode);
 REXX_METHOD_PROTOTYPE(ri_getImage);
 REXX_METHOD_PROTOTYPE(ri_getImages);
 
+// Image
 REXX_METHOD_PROTOTYPE(image_toID_cls);
 REXX_METHOD_PROTOTYPE(image_getImage_cls);
 REXX_METHOD_PROTOTYPE(image_fromFiles_cls);
@@ -379,6 +396,7 @@ REXX_METHOD_PROTOTYPE(image_isNull);
 REXX_METHOD_PROTOTYPE(image_handle);
 REXX_METHOD_PROTOTYPE(image_systemErrorCode);
 
+// ImageList
 REXX_METHOD_PROTOTYPE(il_create_cls);
 REXX_METHOD_PROTOTYPE(il_init);
 REXX_METHOD_PROTOTYPE(il_release);
@@ -395,6 +413,7 @@ REXX_METHOD_PROTOTYPE(il_removeAll);
 REXX_METHOD_PROTOTYPE(il_isNull);
 REXX_METHOD_PROTOTYPE(il_handle);
 
+// DialogControl
 REXX_METHOD_PROTOTYPE(dlgctrl_new_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init);
@@ -572,10 +591,13 @@ REXX_METHOD_PROTOTYPE(tab_getImageList);
 // DateTimePicker
 REXX_METHOD_PROTOTYPE(get_dtp_dateTime);
 REXX_METHOD_PROTOTYPE(set_dtp_dateTime);
+REXX_METHOD_PROTOTYPE(dtp_getMonthCal);
 
 // MonthCalendar
 REXX_METHOD_PROTOTYPE(get_mc_date);
 REXX_METHOD_PROTOTYPE(set_mc_date);
+REXX_METHOD_PROTOTYPE(mc_addRemoveStyle);
+REXX_METHOD_PROTOTYPE(mc_replaceStyle);
 REXX_METHOD_PROTOTYPE(mc_getCalendarBorder);
 REXX_METHOD_PROTOTYPE(mc_getCalendarCount);
 REXX_METHOD_PROTOTYPE(mc_getCALID);
@@ -787,8 +809,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(en_disconnectKeyPress,          en_disconnectKeyPress),
     REXX_METHOD(en_hasKeyPressConnection,       en_hasKeyPressConnection),
     REXX_METHOD(en_connectCommandEvents,        en_connectCommandEvents),
-    REXX_METHOD(en_connectUpDownEvent,          en_connectUpDownEvent),
+    REXX_METHOD(en_connectDateTimePickerEvent,  en_connectDateTimePickerEvent),
     REXX_METHOD(en_connectMonthCalendarEvent,   en_connectMonthCalendarEvent),
+    REXX_METHOD(en_connectUpDownEvent,          en_connectUpDownEvent),
     REXX_METHOD(en_addUserMessage,              en_addUserMessage),
 
     REXX_METHOD(pbdlg_init_cls,                 pbdlg_init_cls),
@@ -1146,10 +1169,13 @@ RexxMethodEntry oodialog_methods[] = {
     // DateTimePicker
     REXX_METHOD(get_dtp_dateTime,               get_dtp_dateTime),
     REXX_METHOD(set_dtp_dateTime,               set_dtp_dateTime),
+    REXX_METHOD(dtp_getMonthCal,                dtp_getMonthCal),
 
     // MonthCalendar
     REXX_METHOD(get_mc_date,                    get_mc_date),
     REXX_METHOD(set_mc_date,                    set_mc_date),
+    REXX_METHOD(mc_addRemoveStyle,              mc_addRemoveStyle),
+    REXX_METHOD(mc_replaceStyle,                mc_replaceStyle),
     REXX_METHOD(mc_getCalendarBorder,           mc_getCalendarBorder),
     REXX_METHOD(mc_getCalendarCount,            mc_getCalendarCount),
     REXX_METHOD(mc_getCALID,                    mc_getCALID),

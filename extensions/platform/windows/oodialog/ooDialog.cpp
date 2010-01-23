@@ -288,7 +288,6 @@ int32_t delDialog(pCPlainBaseDialog pcpbd)
     HICON hIconSmall = NULL;
 
     DIALOGADMIN *aDlg = pcpbd->dlgAdm;
-    printf("delDialog() hDlg=%p threadContext=%p\n", pcpbd->hDlg, pcpbd->dlgProcContext);
 
     EnterCriticalSection(&crit_sec);
     bool wasFGW = (aDlg->TheDlg == GetForegroundWindow());
@@ -323,23 +322,16 @@ int32_t delDialog(pCPlainBaseDialog pcpbd)
     }
     StoredDialogs--;
 
-    // Post the WM_QUIT message to exit the Windows message loop.  (This is
-    // useless, the message never gets to RexxDlgProc().)
-    PostMessage(aDlg->TheDlg, WM_QUIT, 0, 0);
 
     if ( aDlg->TheDlg )
     {
+        PostMessage(aDlg->TheDlg, WM_QUIT, 0, 0);
+
         // The Windows documentation states: "must not use EndDialog for
         // non-modal dialogs"
-        printf("Going to DestroyWindow(dlg)\n");
         DestroyWindow(aDlg->TheDlg);
     }
     pcpbd->isActive = false;
-    if ( pcpbd->dlgProcContext != NULL )
-    {
-        pcpbd->dlgProcContext->DetachThread();
-    }
-    pcpbd->dlgProcContext = NULL;
 
     /* Swap back the saved icons. If not shared, the icon was loaded from a file
      * and needs to be freed, otherwise the OS handles the free.  The title bar
@@ -458,7 +450,7 @@ int32_t delDialog(pCPlainBaseDialog pcpbd)
     {
         if ( dialogInAdminTable(topDlg) )
         {
-            if (!IsWindowEnabled(topDlg->TheDlg))
+            if ( ! IsWindowEnabled(topDlg->TheDlg) )
             {
                 EnableWindow(topDlg->TheDlg, TRUE);
             }
@@ -581,6 +573,31 @@ static inline HWND getWBWindow(void *pCSelf)
     return ((pCWindowBase)pCSelf)->hwnd;
 }
 
+/**
+ * Interface to the Windows API: SendMessage().
+ *
+ * @param context
+ * @param wm_msg
+ * @param wParam
+ * @param lParam
+ * @param _hwnd
+ * @param pcwb
+ *
+ * @return LRESULT
+ *
+ * @remarks   This function is used for most of the internally generated send
+ *            message functions.  The assumption is that internally the code is
+ *            correct in calling the function, but the programmer may be calling
+ *            a method incorrectly.
+ *
+ *            Easier to describe by example:  Many of the dialog methods are
+ *            only valid after the underlying dialog has been created, because a
+ *            valid window handle is needed.  But, the programmer may invoke the
+ *            method at the wrong time, say in the defineDialog().  Therefore,
+ *            this function will raise a syntax condition if the window handle,
+ *            for any reason is not valid.  Contrast this with
+ *            sendWinMsgGeneric().
+ */
 static LRESULT sendWinMsg(RexxMethodContext *context, CSTRING wm_msg, WPARAM wParam, LPARAM lParam,
                           HWND _hwnd, pCWindowBase pcwb)
 {
@@ -592,19 +609,11 @@ static LRESULT sendWinMsg(RexxMethodContext *context, CSTRING wm_msg, WPARAM wPa
         return 0;
     }
 
-    HWND hwnd;
-    if ( argumentOmitted(4) )
+    HWND hwnd = (argumentOmitted(4) ? pcwb->hwnd : (HWND)_hwnd);
+    if ( ! IsWindow(hwnd) )
     {
-        if ( pcwb->hwnd == NULL )
-        {
-            noWindowsDialogException(context, pcwb->rexxSelf);
-            return 0;
-        }
-        hwnd = pcwb->hwnd;
-    }
-    else
-    {
-        hwnd = (HWND)_hwnd;
+        invalidWindowException(context, pcwb->rexxSelf);
+        return 0;
     }
 
     LRESULT result = SendMessage(hwnd, msgID, wParam, lParam);
@@ -612,6 +621,28 @@ static LRESULT sendWinMsg(RexxMethodContext *context, CSTRING wm_msg, WPARAM wPa
     return result;
 }
 
+/**
+ * Generic interface to the Windows API: SendMessage().
+ *
+ * @param c
+ * @param hwnd
+ * @param wm_msg
+ * @param _wParam
+ * @param _lParam
+ * @param argPos
+ * @param doIntReturn
+ *
+ * @return RexxObjectPtr
+ *
+ * @remarks   This function is used mostly for the implementation of previously
+ *            documented ooDialog methods, such as
+ *            DialogControl::processMessage(), or
+ *            CategoryDialog::sendMessageToCategoryItem().  These functions did
+ *            not raise syntax conditions, so, in an effort to retain backwards
+ *            compatibility, an exception is not raised for an invalid window
+ *            handle.  Rather, the .SystemErrorCode is set.  Contrast this to
+ *            sendWinMessage().
+ */
 RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *c, HWND hwnd, CSTRING wm_msg, RexxObjectPtr _wParam,
                                 RexxObjectPtr _lParam, size_t argPos, bool doIntReturn)
 {
@@ -2125,7 +2156,13 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
             }
             safeLocalFree(adm->pMessageQueue);
             LocalFree(adm);
-            ((pCPlainBaseDialog)pCSelf)->dlgAdm = NULL;
+            pcpbd->dlgAdm = NULL;
+
+            if ( pcpbd->dlgProcContext != NULL )
+            {
+                pcpbd->dlgProcContext->DetachThread();
+                pcpbd->dlgProcContext = NULL;
+            }
 
             LeaveCriticalSection(&crit_sec);
         }
@@ -3414,8 +3451,13 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
     int32_t result = stopDialog(pcpbd);
 
     pcpbd->hDlg = NULL;
+
     pcpbd->wndBase->hwnd = NULL;
-    pcpbd->wndBase->rexxHwnd = TheZeroObj;
+    if ( pcpbd->wndBase->rexxHwnd != TheZeroObj )
+    {
+        context->ReleaseGlobalReference(pcpbd->wndBase->rexxHwnd);
+        pcpbd->wndBase->rexxHwnd = TheZeroObj;
+    }
 
     if ( pcpbd->bkgBitmap != NULL )
     {
@@ -3531,10 +3573,10 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
  *          It goes without saying that the intent here is to exactly preserve
  *          pre 4.0.0 behavior.  With category dialogs, it is somewhat hard to
  *          be sure the behavior is preserved. Prior to 4.0.0, getControl(id,
- *          catPage) would assign the parent dialog as the oDlg of controls on
- *          one of the pages.  This seems technically wrong, but the same thing
- *          is done here. Need to investigate whether this ever makes a
- *          difference?
+ *          catPage) would assign the parent dialog as the oDlg (owner dialog)
+ *          of dialog controls on any of the category pages.  This seems
+ *          technically wrong, but the same thing is done here. Need to
+ *          investigate whether this ever makes a difference?
  */
 RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint32_t, categoryPageID,
             NAME, msgName, OSELF, self, CSELF, pCSelf)
@@ -3599,48 +3641,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
         goto out;
     }
 
-    RexxObjectPtr rxControl = (RexxObjectPtr)getWindowPtr(hControl, GWLP_USERDATA);
-    if ( rxControl != NULLOBJECT )
-    {
-        // Okay, this specific control has already had a control object
-        // instantiated to represent it.  We return this object.
-        result = rxControl;
-        goto out;
-    }
-
-    // No pointer is stored in the user data area, so no control object has been
-    // instantiated for this specific control, yet.  We instantiate one now and
-    // then store the object in the user data area of the control window.
-
-    PNEWCONTROLPARAMS pArgs = (PNEWCONTROLPARAMS)malloc(sizeof(NEWCONTROLPARAMS));
-    if ( pArgs == NULL )
-    {
-        outOfMemoryException(context->threadContext);
-        goto out;
-    }
-
-    RexxClassObject controlCls = oodClass4controlType(context, controlType);
-    if ( controlCls == NULLOBJECT )
-    {
-        goto out;
-    }
-
-    pArgs->isCatDlg = isCategoryDlg;
-    pArgs->controlType = controlType;
-    pArgs->hwnd = hControl;
-    pArgs->hwndDlg = hDlg;
-    pArgs->id = id;
-    pArgs->parentDlg = self;
-
-    rxControl = c->SendMessage1(controlCls, "NEW", c->NewPointer(pArgs));
-    free(pArgs);
-
-    if ( rxControl != NULLOBJECT && rxControl != TheNilObj )
-    {
-        result = rxControl;
-        setWindowPtr(hControl, GWLP_USERDATA, (LONG_PTR)result);
-        c->SendMessage1(self, "PUTCONTROL", result);
-    }
+    result = createRexxControl(context, hControl, hDlg, id, controlType, self, isCategoryDlg, true);
 
 out:
     return result;

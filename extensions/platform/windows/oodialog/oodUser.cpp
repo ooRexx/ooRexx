@@ -108,7 +108,6 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
 #endif
                 DispatchMessage(&msg);
         }
-        printf("Dropped out of message loop, WindowUsrLoopThread\n");
     }
     else
     {
@@ -124,6 +123,13 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
         dlgAdm->TheThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
+
+    if ( pcpbd->dlgProcContext != NULL )
+    {
+        pcpbd->dlgProcContext->DetachThread();
+        pcpbd->dlgProcContext = NULL;
+    }
+
     return 0;
 }
 
@@ -566,7 +572,6 @@ uint32_t monthCalendarStyle(CSTRING opts, uint32_t style)
         if ( StrStrI(opts, "NOSELCHANGE") != NULL ) style |= MCS_NOSELCHANGEONNAV;
     }
     return style;
-
 }
 
 

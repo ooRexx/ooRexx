@@ -199,6 +199,7 @@ extern DIALOGADMIN *    getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg);
 
 extern void          ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
+extern RexxObjectPtr invalidWindowException(RexxMethodContext *c, RexxObjectPtr rxObj);
 extern RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int, int);
 extern inline void   failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
 extern void          controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
