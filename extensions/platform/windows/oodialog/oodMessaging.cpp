@@ -527,11 +527,11 @@ inline MsgReplyType genericNotifyInvoke(RexxThreadContext *c, pCPlainBaseDialog 
     return ReplyTrue;
 }
 
-/* genericNotifyInvoke
+/* genericCommandInvoke
  *
- * The simplest form of invoking the Rexx method connected to a WM_NOTIFY
- * message.  The Rexx method is invoked with two arguments, the resource ID of
- * the control and the HWND of the control.
+ * The simplest form of invoking the Rexx method connected to a WM_COMMAND
+ * message.  The Rexx method is invoked with two arguments, the WPARAM and
+ * LPARAM paramters of the WM_COMMAND message.
  */
 inline MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName,
                                          WPARAM wParam, LPARAM lParam)
