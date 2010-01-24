@@ -451,12 +451,14 @@ AC_CONFIG_FILES([
         samples/windows/ole/wmi/sysinfo/Makefile
         samples/windows/oodialog/Makefile
         samples/windows/oodialog/bmp/Makefile
+        samples/windows/oodialog/controls/Makefile
         samples/windows/oodialog/examples/Makefile
         samples/windows/oodialog/examples/resources/Makefile
         samples/windows/oodialog/ooRexxTry/Makefile
         samples/windows/oodialog/ooRexxTry/doc/Makefile
         samples/windows/oodialog/rc/Makefile
         samples/windows/oodialog/res/Makefile
+        samples/windows/oodialog/simple/Makefile
         samples/windows/oodialog/tutorial/Makefile
         samples/windows/oodialog/wav/Makefile
         samples/windows/rexutils/Makefile
