@@ -140,19 +140,17 @@ void SysThread::createThread(void)
     /* message object do not work properly without an enhanced priority */
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
 
-#ifdef _POSIX_PRIORITY_SCHEDULING
-    maxpri = sched_get_priority_max(schedpolicy);
-    minpri = sched_get_priority_min(schedpolicy);
-    schedparam.sched_priority = (minpri + maxpri) / 2;
-#endif
-
 #if defined(AIX)
   // Starting with AIX 5.3 the priority for a thread created by
-  // a non root user can not be higher then 59.
-  if (geteuid() != 0 && schedparam.sched_priority > 59)
-  {
-    schedparam.sched_priority = 59;
-  }
+  // a non root user can not be higher then 59. The priority
+  // of a user prog should not be higher then 59 (IBM AIX development).
+  schedparam.sched_priority = 59;
+#else
+#   ifdef _POSIX_PRIORITY_SCHEDULING
+        maxpri = sched_get_priority_max(schedpolicy);
+        minpri = sched_get_priority_min(schedpolicy);
+        schedparam.sched_priority = (minpri + maxpri) / 2;
+#   endif
 #endif
 
 #if defined(OPSYS_SUN)
@@ -163,6 +161,7 @@ void SysThread::createThread(void)
     /* using Round Robin scheduling instead of FIFO scheduling               */
     pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR);
 #endif
+
 #if defined(AIX)
     /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object */
     pthread_attr_setinheritsched(&newThreadAttr, PTHREAD_EXPLICIT_SCHED);
@@ -173,6 +172,7 @@ void SysThread::createThread(void)
     /* different.                                                            */
     pthread_attr_setschedpolicy(&newThreadAttr, SCHED_OTHER);
 #endif
+
     pthread_attr_setschedparam(&newThreadAttr, &schedparam);
 #endif
 
