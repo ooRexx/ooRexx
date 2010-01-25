@@ -249,16 +249,25 @@ bool Interpreter::lastInstance()
  */
 int Interpreter::createInstance(RexxInstance *&instance, RexxThreadContext *&threadContext, RexxOption *options)
 {
-    // create the instance
-    InterpreterInstance *newInstance = createInterpreterInstance(options);
-    instance = newInstance->getInstanceContext();
-    threadContext = newInstance->getRootThreadContext();
-    // we need to ensure we release the kernel lock before returning
-    RexxActivity *activity = newInstance->getRootActivity();
-    activity->releaseAccess();
-    // the activity needs to be in a deactivated state when we return.
-    activity->deactivate();
-    return 0;
+    try
+    {
+        // create the instance
+        InterpreterInstance *newInstance = createInterpreterInstance(options);
+        instance = newInstance->getInstanceContext();
+        threadContext = newInstance->getRootThreadContext();
+        // we need to ensure we release the kernel lock before returning
+        RexxActivity *activity = newInstance->getRootActivity();
+        activity->releaseAccess();
+        // the activity needs to be in a deactivated state when we return.
+        activity->deactivate();
+        return 0;
+    } catch (ActivityException)
+    {
+        // not everything works until an instance is actually created, so
+        // it's possible we'll see a true failure here, so give back an
+        // error condition.
+        return RXAPI_MEMFAIL;
+    }
 }
 
 
