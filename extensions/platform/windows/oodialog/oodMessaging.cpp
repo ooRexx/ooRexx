@@ -586,7 +586,7 @@ MsgReplyType genericAddDialogMessage(char *pMessageQueue,  char *rexxMethod, WPA
         }
         else if ( handle != NULL )
         {
-            if ( item > -5 )
+            if ( item > OOD_INVALID_ITEM_ID )
             {
                 _snprintf(msgBuffer, 511, "%s(%d\3770x%p)", rexxMethod, item, handle);
             }
@@ -663,7 +663,7 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
     {
         if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((lParam & m[i].lpfilter) == (uint32_t)m[i].lParam) )
         {
-            return genericAddDialogMessage(pcpbd->dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, NULL, NULL, -5);
+            return genericAddDialogMessage(pcpbd->dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, NULL, NULL, OOD_INVALID_ITEM_ID);
         }
     }
     return ContinueProcessing;
@@ -714,7 +714,7 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
             char   msgBuffer[512];
             char   tmpBuffer[20];
             char  *np = NULL;
-            int    item = -5;
+            int    item = OOD_INVALID_ITEM_ID;
             HANDLE handle = NULL;
 
             switch ( m[i].tag & TAG_CTRLMASK )
@@ -1108,7 +1108,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
             char   msgBuffer[512];
             char  *np = NULL;
-            int    item = -5;
+            int    item = OOD_INVALID_ITEM_ID;
             HANDLE handle = NULL;
 
             if ( m[i].tag )

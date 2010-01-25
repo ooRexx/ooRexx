@@ -103,10 +103,13 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
 #ifdef USE_DS_CONTROL
             if ( dlgAdm && !IsDialogMessage(dlgAdm->TheDlg, &msg)
                  && !IsDialogMessage(dlgAdm->AktChild, &msg) )
+            {
 #else
             if ( dlgAdm && (!IsNestedDialogMessage(dlgAdm, &msg)) )
+            {
 #endif
                 DispatchMessage(&msg);
+            }
         }
     }
     else
