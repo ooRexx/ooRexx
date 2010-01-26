@@ -2314,13 +2314,15 @@ Output:
 
 -- Create a DateTime object from a ISO date/time string.
 ::METHOD fromIsoDate class
-  use strict arg time, offset=(time('O')/60000000)
-  parse var time date 'T' time
+  use strict arg _date, offset=(time('O')/60000000)
+  parse var _date date 'T' time
   numeric digits 18
 
   signal on syntax
   return self~new(date('F', date, 'S',,"-") + time("F", time, "L"), offset)
 
+  syntax:
+  raise syntax 88.918 array("date", _date)
 
 -- Create a DateTime object from a UTC ISO date/time string.
 ::METHOD fromUtcIsoDate class
