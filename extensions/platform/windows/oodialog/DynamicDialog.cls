@@ -932,9 +932,9 @@
    end
    else if kind = "DTP" then do
         if style~wordpos("DTS_APPCANPARSE") > 0 then ret = ret || " PARSE"
-        if style~wordpos("DTS_RIGHTALIGN;") > 0 then ret = ret || " RIGHT"
-        if style~wordpos("DTS_SHOWNONE;  ") > 0 then ret = ret || " NONE"
-        if style~wordpos("DTS_UPDOWN;    ") > 0 then ret = ret || " UPDOWN"
+        if style~wordpos("DTS_RIGHTALIGN") > 0 then ret = ret || " RIGHT"
+        if style~wordpos("DTS_SHOWNONE  ") > 0 then ret = ret || " NONE"
+        if style~wordpos("DTS_UPDOWN    ") > 0 then ret = ret || " UPDOWN"
         if style~wordpos("DTS_LONGDATEFORMAT") > 0 then ret = ret || " LONG"
         if style~wordpos("DTS_SHORTDATEFORMAT") > 0 then ret = ret || " SHORT"
         if style~wordpos("DTS_SHORTDATECENTURYFORMAT") > 0 then ret = ret || " CENTURY"

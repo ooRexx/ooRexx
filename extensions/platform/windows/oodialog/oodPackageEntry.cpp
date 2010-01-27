@@ -592,6 +592,8 @@ REXX_METHOD_PROTOTYPE(tab_getImageList);
 REXX_METHOD_PROTOTYPE(get_dtp_dateTime);
 REXX_METHOD_PROTOTYPE(set_dtp_dateTime);
 REXX_METHOD_PROTOTYPE(dtp_getMonthCal);
+REXX_METHOD_PROTOTYPE(dtp_setFormat);
+REXX_METHOD_PROTOTYPE(dtp_setRange);
 
 // MonthCalendar
 REXX_METHOD_PROTOTYPE(get_mc_date);
@@ -1170,6 +1172,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(get_dtp_dateTime,               get_dtp_dateTime),
     REXX_METHOD(set_dtp_dateTime,               set_dtp_dateTime),
     REXX_METHOD(dtp_getMonthCal,                dtp_getMonthCal),
+    REXX_METHOD(dtp_setFormat,                  dtp_setFormat),
+    REXX_METHOD(dtp_setRange,                   dtp_setRange),
 
     // MonthCalendar
     REXX_METHOD(get_mc_date,                    get_mc_date),

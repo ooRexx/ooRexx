@@ -1329,6 +1329,9 @@
 ::attribute dateTime external "LIBRARY oodialog _dtp_dateTime"
 
 ::method getMonthCal external "LIBRARY oodialog dtp_getMonthCal"
+::method setFormat external "LIBRARY oodialog dtp_setFormat"
+::method setRange external "LIBRARY oodialog dtp_setRange"
+
 
 ::class 'MonthCalendar' subclass DialogControl public
 

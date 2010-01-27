@@ -123,6 +123,7 @@ RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
 
 // This is used for MonthCalendar also
 #define SYSTEMTIME_MIN_YEAR    1601
+#define SYSTEMTIME_RANGE_EXCEPTION_MSG    "indexes 1 and 2 of argument 1, the array object, can not both be missing"
 
 
 /**
@@ -145,7 +146,7 @@ RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
  *       object is 9999 and of a SYSTEMTIME 30827, so we only check the lower
  *       range.  An exception is raised if out of range.
  */
-static bool dt2sysTime(RexxMethodContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part)
+bool dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part)
 {
     if ( part == dtNow )
     {
@@ -166,7 +167,7 @@ static bool dt2sysTime(RexxMethodContext *c, RexxObjectPtr dateTime, SYSTEMTIME 
 
         if ( st.wYear < SYSTEMTIME_MIN_YEAR )
         {
-            userDefinedMsgException(c->threadContext, "The DateTime object can not represent a year prior to 1601");
+            userDefinedMsgException(c, "The DateTime object can not represent a year prior to 1601");
             goto failed_out;
         }
 
@@ -201,6 +202,90 @@ static bool dt2sysTime(RexxMethodContext *c, RexxObjectPtr dateTime, SYSTEMTIME 
 failed_out:
     return false;
 }
+
+
+/**
+ * Given an array of DateTime objects, converts them to an an array of
+ * SYSTEMTIME structs.
+ *
+ * The array is assumed to be argument 1 of a method and only the first two
+ * indexes are converted.
+ *
+ * @param c          The method context we are operating in.
+ * @param dateTimes  The Rexx array of DateTime objects.
+ * @param sysTimes   [IN/OUT] On entry an array of 2 SYSTEMTIMEs, on return the
+ *                   SYSTEMTIME structs will be filled in according to the other
+ *                   arguments.
+ * @param part       Should the conversion be just the time portion, just the
+ *                   date portion, or both.
+ * @param needBoth   Are both index 1 and index 2 in the Rexx array required.
+ * @param gdtr       [IN/OUT] Pointer to a variable to receive the GDTR_xxx
+ *                   flags for the conversion.  This is ignored if NULL.
+ *
+ * @return True on success, false otherwise.  If false, an exceptions has been
+ *         raised.
+ */
+bool dt2sysTimeRange(RexxMethodContext *c, RexxArrayObject dateTimes, SYSTEMTIME *sysTimes,
+                     DateTimePart part, bool needBoth, uint32_t *gdtr)
+{
+    memset(sysTimes, 0, 2 * sizeof(SYSTEMTIME));
+
+    RexxObjectPtr startDate = c->ArrayAt(dateTimes, 1);
+    RexxObjectPtr endDate = c->ArrayAt(dateTimes, 2);
+
+    if ( needBoth && (startDate == NULLOBJECT || endDate == NULLOBJECT) )
+    {
+        sparseArrayException(c->threadContext, 1, (startDate == NULLOBJECT ? 1 : 2));
+        goto err_out;
+    }
+
+    uint32_t gdtrVal = 0;
+
+    if ( startDate != NULLOBJECT )
+    {
+        if ( ! c->IsOfType(startDate, "DATETIME") )
+        {
+            wrongObjInArrayException(c->threadContext, 1, 1, "DateTime");
+            goto err_out;
+        }
+
+        if ( ! dt2sysTime(c->threadContext, startDate, sysTimes, part) )
+        {
+            goto err_out;
+        }
+        gdtrVal |= GDTR_MIN;
+    }
+
+    if ( endDate != NULLOBJECT )
+    {
+        if ( ! c->IsOfType(endDate, "DATETIME") )
+        {
+            wrongObjInArrayException(c->threadContext, 1, 2, "DateTime");
+            goto err_out;
+        }
+
+        if ( ! dt2sysTime(c->threadContext, endDate, sysTimes + 1, part) )
+        {
+            goto err_out;
+        }
+        gdtrVal |= GDTR_MAX;
+    }
+
+    if ( gdtrVal == 0 )
+    {
+        userDefinedMsgException(c->threadContext, SYSTEMTIME_RANGE_EXCEPTION_MSG);
+    }
+
+    if ( gdtr != NULL )
+    {
+        *gdtr = gdtrVal;
+    }
+    return true;
+
+err_out:
+    return false;
+}
+
 
 /**
  * Creates a DateTime object that represents the time set in a SYSTEMTIME
@@ -244,17 +329,17 @@ void sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTi
     }
 }
 
-/** DateTimePicker::dateTime  (attribute)
+/** DateTimePicker::dateTime   [Attribute Get]
  *
  *  Retrieves the current selected system time of the date time picker and
  *  returns it as a DateTime object.
  *
  *  If the date time picker has the DTS_SHOWNONE style, it can also be set to
  *  "no date" when the user has unchecked the check box.  If the control is in
- *  this state, the .NullHandle object is returned to the user.
+ *  this state, the .nil object is returned to the user.
  *
  *  @returns  A DateTime object representing the current selected system time of
- *            the control, or the .NullHandle object if the control is in the
+ *            the control, or the .nil object if the control is in the
  *            'no date' state.
  */
 RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
@@ -272,7 +357,7 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
             // This is valid.  It means the DTP is using the DTS_SHOWNONE  style
             // and that the user has the check box is not checked.  We return a
             // null pointer object.
-            dateTime = context->NewPointer(NULL);
+            dateTime = TheNilObj;
             break;
 
         case GDT_ERROR:
@@ -284,12 +369,12 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
     return dateTime;
 }
 
-/** DateTimePicker::dateTime=  (attribute)
+/** DateTimePicker::dateTime=  [Attribute Set]
  *
  *  Sets the system time for the date time picker to the time represented by the
  *  DateTime object.  If, and only if, the date time picker has the DTS_SHOWNONE
  *  style, it can also be set to "no date."  The Rexx user can set this state by
- *  passing in the .NullHandle object.
+ *  passing in the .nil object.
  *
  *  @param dateTime  The date and time to set the control to.
  *
@@ -305,7 +390,7 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCS
     SYSTEMTIME sysTime = {0};
     HWND hwnd = getDChCtrl(pCSelf);
 
-    if ( context->IsOfType(dateTime, "POINTER") )
+    if ( isShowNoneDTP(hwnd) && dateTime == TheNilObj )
     {
         DateTime_SetSystemtime(hwnd, GDT_NONE, &sysTime);
     }
@@ -313,7 +398,7 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCS
     {
         if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
         {
-            if ( dt2sysTime(context, dateTime, &sysTime, dtFull) )
+            if ( dt2sysTime(context->threadContext, dateTime, &sysTime, dtFull) )
             {
                 if ( DateTime_SetSystemtime(hwnd, GDT_VALID, &sysTime) == 0 )
                 {
@@ -376,6 +461,64 @@ RexxMethod1(RexxObjectPtr, dtp_getMonthCal, CSELF, pCSelf)
 
 done_out:
     return result;
+}
+
+
+/** DateTimePicker::setFormat()
+ *
+ *  Sets the display of the date and time picker (DTP) control based on the
+ *  given format string.
+ *
+ *  @param  format  The format string that the DTP should use.
+ *
+ *  @return  Returns true on success, otherwise false.
+ *
+ *  @note  It is acceptable to include extra characters within the format string
+ *         to produce a more rich display. However, any nonformat characters
+ *         must be enclosed within single quotes. For example, the format string
+ *         "'Today is: 'hh':'m':'s ddddMMMdd', 'yyy" would produce output like
+ *         "Today is: 04:22:31 Tuesday Mar 23, 1996".
+ *
+ *         A DTP control tracks locale changes when it is using the default
+ *         format string. If you set a custom format string, it will not be
+ *         updated in response to locale changes.
+ *
+ *         <for docs @see point reader to section on format strings>
+ */
+RexxMethod2(logical_t, dtp_setFormat, CSTRING, format, CSELF, pCSelf)
+{
+    return DateTime_SetFormat(getDChCtrl(pCSelf), format);
+}
+
+
+/** DateTimePicker::setRange()
+ *
+ *  Sets the minimum and maximum allowable dates / times for the date time
+ *  picker control.
+ *
+ *  @param dateTimes  An array of DateTime objects used to set the minimum and
+ *                    maximum dates.  The DateTime object at index 1 sets the
+ *                    minimum date and the DateTime object at index 2 sets the
+ *                    maximum date.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @note  The array must contain at least one of the indexes.  If it contains
+ *         neither, an exception is raised. If one of the array indexes is
+ *         empty, then the corresponding date is not set.
+ *
+ *         Exceptions are raised for invalid arguments.
+ */
+RexxMethod2(RexxObjectPtr, dtp_setRange, RexxArrayObject, dateTimes, CSELF, pCSelf)
+{
+    SYSTEMTIME sysTime[2];
+    uint32_t which = 0;
+
+    if ( dt2sysTimeRange(context, dateTimes, (SYSTEMTIME *)&sysTime, dtDate, false, &which) )
+    {
+        return  (DateTime_SetRange(getDChCtrl(pCSelf), which, &sysTime) == 0 ? TheFalseObj : TheTrueObj);
+    }
+    return TheFalseObj;
 }
 
 
@@ -637,7 +780,7 @@ bool putHitInfo(RexxMethodContext *c, RexxDirectoryObject hitInfo, MCHITTESTINFO
 }
 
 
-/** MonthCalendar::date  [Attribute Get]
+/** MonthCalendar::date   [Attribute Get]
  *
  *  Returns the currently selected date for the month calendar.
  *
@@ -681,7 +824,7 @@ RexxMethod1(RexxObjectPtr, get_mc_date, CSELF, pCSelf)
     return dateTime;
 }
 
-/** MonthCalendar::date  [Attribute Set]
+/** MonthCalendar::date=  [Attribute Set]
  *
  *  Sets the currently selected date for the month calendar.
  *
@@ -709,7 +852,7 @@ RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, CSELF, pCSelf)
 
     if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
     {
-        if ( dt2sysTime(context, dateTime, (SYSTEMTIME *)&sysTime, dtDate) )
+        if ( dt2sysTime(context->threadContext, dateTime, (SYSTEMTIME *)&sysTime, dtDate) )
         {
             if ( isMultiSelectionMonthCalendar(hMC) )
             {
@@ -1531,82 +1674,71 @@ RexxMethod2(RexxObjectPtr, mc_setFirstDayOfWeek, RexxObjectPtr, firstDay, CSELF,
     return result;
 }
 
+/** MonthCalendar::setRange()
+ *
+ *  Sets the minimum and maximum allowable dates for the month calendar control.
+ *
+ *  @param dateTimes  An array of DateTime objects used to set the minimum and
+ *                    maximum dates.  The DateTime object at index 1 sets the
+ *                    minimum date and the DateTime object at index 2 sets the
+ *                    maximum date.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @note  The array must contain at least one of the indexes.  If it contains
+ *         neither, and exceptions is raised. If one of the array indexes is
+ *         empty, then the corresponding date is not set.  The time portion of
+ *         the DateTime object(s) is ignored.
+ *
+ *         Exceptions are raised for invalid arguments.
+ */
 RexxMethod2(RexxObjectPtr, mc_setRange, RexxArrayObject, dateTimes, CSELF, pCSelf)
 {
     HWND hMC = getMonthCalendar(context, pCSelf);
-    if ( hMC == NULL )
+    if ( hMC != NULL )
     {
-        return NULLOBJECT;
+        SYSTEMTIME sysTime[2];
+        uint32_t which = 0;
+
+        if ( dt2sysTimeRange(context, dateTimes, (SYSTEMTIME *)&sysTime, dtDate, false, &which) )
+        {
+            return  (MonthCal_SetRange(hMC, which, &sysTime) == 0 ? TheFalseObj : TheTrueObj);
+        }
     }
-
-    SYSTEMTIME sysTime[2];
-    BOOL success = FALSE;
-    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
-
-    uint32_t which = 0;
-
-    RexxObjectPtr minDate = context->ArrayAt(dateTimes, 1);
-    RexxObjectPtr maxDate = context->ArrayAt(dateTimes, 2);
-
-    if ( minDate != NULLOBJECT && context->IsOfType(minDate, "DATETIME") )
-    {
-        which = GDTR_MIN;
-        dt2sysTime(context, minDate, (SYSTEMTIME *)&sysTime, dtDate);
-    }
-
-    if ( maxDate != NULLOBJECT && context->IsOfType(maxDate, "DATETIME") )
-    {
-        which |= GDTR_MAX;
-        dt2sysTime(context, maxDate, (SYSTEMTIME *)&sysTime + 1, dtDate);
-    }
-
-    if ( which == 0 )
-    {
-        return TheFalseObj;
-    }
-
-    return  (MonthCal_SetRange(hMC, which, &sysTime) == 0 ? TheFalseObj : TheTrueObj);
+    return TheFalseObj;
 }
 
 
+/** MonthCalendar::setSelectionRange()
+ *
+ *  Sets the selection for a month calendar control to a given date range.
+ *
+ *  @param dateTimes  An array of DateTime objects used to set the minimum and
+ *                    maximum dates.  The DateTime oject at index 1 must be the
+ *                    first date in the selection, and the DateTime object at
+ *                    index 2 must be the last date in the selection.  Both
+ *                    indexes are required.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @note  The time portion of the DateTime object(s) is ignored.  Exceptions
+ *         are raised for invalid arguments.
+ *
+ *         This method will fail if applied to a month calendar control that
+ *         does not have the MULTI (MCS_MULTISELECT) style.
+ */
 RexxMethod2(RexxObjectPtr, mc_setSelectionRange, RexxArrayObject, dateTimes, CSELF, pCSelf)
 {
     HWND hMC = getMonthCalendar(context, pCSelf);
-    if ( hMC == NULL )
+    if ( hMC != NULL )
     {
-        return NULLOBJECT;
-    }
+        SYSTEMTIME sysTime[2];
 
-    SYSTEMTIME sysTime[2];
-    BOOL success = FALSE;
-    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
-
-    RexxObjectPtr startDate = context->ArrayAt(dateTimes, 1);
-    RexxObjectPtr endDate = context->ArrayAt(dateTimes, 2);
-    if ( startDate == NULLOBJECT || endDate == NULLOBJECT )
-    {
-        sparseArrayException(context->threadContext, 1, (startDate == NULLOBJECT ? 1 : 2));
-        goto err_out;
+        if ( dt2sysTimeRange(context, dateTimes, (SYSTEMTIME *)&sysTime, dtDate, true, NULL) )
+        {
+            return  (MonthCal_SetSelRange(hMC, &sysTime) == 0 ? TheFalseObj : TheTrueObj);
+        }
     }
-
-    if ( ! context->IsOfType(startDate, "DATETIME") )
-    {
-        wrongObjInArrayException(context->threadContext, 1, 1, "DateTime");
-        goto err_out;
-    }
-    if ( ! context->IsOfType(endDate, "DATETIME") )
-    {
-        wrongObjInArrayException(context->threadContext, 1, 2, "DateTime");
-        goto err_out;
-    }
-
-    if ( dt2sysTime(context, startDate, (SYSTEMTIME *)&sysTime, dtDate) &&
-         dt2sysTime(context, endDate, (SYSTEMTIME *)&sysTime + 1, dtDate) )
-    {
-        return  (MonthCal_SetSelRange(hMC, &sysTime) == 0 ? TheFalseObj : TheTrueObj);
-    }
-
-err_out:
     return TheFalseObj;
 }
 
@@ -1639,7 +1771,7 @@ RexxMethod2(RexxObjectPtr, mc_setToday, OPTIONAL_RexxObjectPtr, date, CSELF, pCS
             wrongClassException(context->threadContext, 1, "DateTime");
             goto done_out;
         }
-        dt2sysTime(context, date, &sysTime, dtDate);
+        dt2sysTime(context->threadContext, date, &sysTime, dtDate);
     }
 
     MonthCal_SetToday(hMC, &sysTime);

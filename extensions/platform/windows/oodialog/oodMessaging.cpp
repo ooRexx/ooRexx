@@ -663,7 +663,8 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
     {
         if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((lParam & m[i].lpfilter) == (uint32_t)m[i].lParam) )
         {
-            return genericAddDialogMessage(pcpbd->dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, NULL, NULL, OOD_INVALID_ITEM_ID);
+            // return genericAddDialogMessage(pcpbd->dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, NULL, NULL, OOD_INVALID_ITEM_ID);
+            return genericCommandInvoke(pcpbd->dlgProcContext, pcpbd, m[i].rexxMethod, wParam, lParam);
         }
     }
     return ContinueProcessing;
@@ -953,9 +954,9 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                         RexxArrayObject args = c->ArrayOfFour(dt, valid, idFrom, hwndFrom);
 
                         rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                        checkForCondition(c);
 
-                        setWindowPtr(GetParent(pChange->nmhdr.hwndFrom), DWLP_MSGRESULT, 0);
-                        return ReplyTrue;
+                        return ReplyFalse;
                     }
                     else if ( code == DTN_DROPDOWN )
                     {
@@ -975,9 +976,56 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                     }
                     else if ( code == DTN_USERSTRING )
                     {
-                        LPNMDATETIMESTRING pStr = (LPNMDATETIMESTRING)lParam;
+                        LPNMDATETIMESTRING pdts = (LPNMDATETIMESTRING)lParam;
 
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                        RexxDirectoryObject d = (RexxDirectoryObject)rxNewBuiltinObject(c, "DIRECTORY");
+                        c->DirectoryPut(d, c->String(pdts->pszUserString), "USERSTRING");
+                        c->DirectoryPut(d, TheNilObj, "DATETIME");
+                        c->DirectoryPut(d, TheFalseObj, "VALID");
+
+                        // Fill in the date time string struct with error values.
+                        dt2sysTime(c, NULLOBJECT, &(pdts->st), dtNow);
+                        pdts->dwFlags = GDT_ERROR;
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, c->ArrayOfThree(d, idFrom, hwndFrom));
+
+                        if ( checkForCondition(c) )
+                        {
+                            return ReplyFalse;
+                        }
+
+                        RexxObjectPtr dt = c->DirectoryAt(d, "DATETIME");
+                        if ( ! c->IsOfType(dt, "DATETIME") )
+                        {
+                            wrongObjInDirectoryException(c, 1, "DATETIME", "a DateTime object", dt);
+                            checkForCondition(c);
+                            return ReplyFalse;
+                        }
+
+                        if ( ! dt2sysTime(c, dt, &(pdts->st), dtFull) )
+                        {
+                            checkForCondition(c);
+                            return ReplyFalse;
+                        }
+
+                        if ( isShowNoneDTP(pdts->nmhdr.hwndFrom) )
+                        {
+                            RexxObjectPtr _valid = c->DirectoryAt(d, "VALID");
+                            int32_t val = getLogical(c, _valid);
+
+                            if ( val == -1 )
+                            {
+                                wrongObjInDirectoryException(c, 1, "VALID", "Logical", _valid);
+                                checkForCondition(c);
+                                return ReplyFalse;
+                            }
+                            pdts->dwFlags = (val == 1 ? GDT_VALID : GDT_NONE);
+                        }
+                        else
+                        {
+                            pdts->dwFlags = GDT_VALID;
+                        }
+                        return ReplyFalse;
                     }
                     else if ( code == DTN_WMKEYDOWN )
                     {

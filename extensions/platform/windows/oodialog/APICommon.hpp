@@ -92,12 +92,14 @@ extern bool    rxGetUIntPtrAttribute(RexxMethodContext *context, RexxObjectPtr o
 extern bool    rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uint32_t *pNumber);
 
 extern bool            requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, int pos);
+extern int32_t         getLogical(RexxThreadContext *c, RexxObjectPtr obj);
 extern size_t          rxArgCount(RexxMethodContext * context);
 extern bool            rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t pos);
 extern bool            rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, size_t pos);
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);
+extern RexxObjectPtr   rxNewBuiltinObject(RexxThreadContext *c, CSTRING className);
 extern bool            checkForCondition(RexxThreadContext *c);
 extern void            standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition);
 extern bool            isInt(int, RexxObjectPtr, RexxMethodContext *);

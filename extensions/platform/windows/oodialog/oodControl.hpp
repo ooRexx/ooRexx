@@ -67,6 +67,7 @@ extern bool            isControlMatch(HWND, oodControl_t);
 extern RexxStringObject  cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
 extern DIALOGADMIN      *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc);
 extern void              sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part);
+extern bool              dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part);
 
 extern RexxObjectPtr     createRexxControl(RexxMethodContext *, HWND, HWND, uint32_t, oodControl_t, RexxObjectPtr, bool, bool);
 
@@ -99,6 +100,12 @@ inline bool isSingleSelectionListBox(HWND hListBox)
 inline bool isSingleSelectionListBox(HWND hDlg, uint32_t id)
 {
     return isSingleSelectionListBox(GetDlgItem(hDlg, id));
+}
+
+/* Determine if a date time picker (DTP) control is a show none control.  */
+inline bool isShowNoneDTP(HWND hDTP)
+{
+    return ((GetWindowLong(hDTP, GWL_STYLE) & DTS_SHOWNONE) == DTS_SHOWNONE);
 }
 
 /* Retrieve specific fields / information from the CDialogControl struct. */

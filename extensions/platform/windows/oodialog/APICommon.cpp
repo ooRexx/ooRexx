@@ -551,6 +551,38 @@ bool requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, in
 }
 
 /**
+ * Converts a Rexx object to a logical value, 0 or 1.  Returns -1 if the object
+ * can not be converted.
+ *
+ * @param c    Thread context we are operating in.
+ * @param obj  The object to convert.
+ *
+ * @return On success return 0 or 1 depending on what obj is.  Otherwise return
+ *         -1 to signal failure.
+ */
+int32_t getLogical(RexxThreadContext *c, RexxObjectPtr obj)
+{
+    if ( obj != NULLOBJECT )
+    {
+        if ( obj == TheTrueObj )
+        {
+            return 1;
+        }
+        if ( obj == TheFalseObj )
+        {
+            return 0;
+        }
+
+        logical_t val;
+        if ( c->Logical(obj, &val) )
+        {
+            return (val == 0 ? 0 : 1);
+        }
+    }
+    return -1;
+}
+
+/**
  * Return the number of existing arguments in an ooRexx method invocation.  In
  * others words, it is intended to count neither the omitted args in the ooRexx
  * method, nor the pseudo-arguments to the native API function, like OSELF,
@@ -675,12 +707,17 @@ RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr v
 }
 
 
-RexxObjectPtr rxNewBuiltinObject(RexxMethodContext *c, CSTRING className)
+RexxObjectPtr rxNewBuiltinObject(RexxThreadContext *c, CSTRING className)
 {
     // This should never fail, provided the caller sends the right class name,
     // do we need an exception if it does?
     RexxClassObject classObj = c->FindClass(className);
     return c->SendMessage0(classObj, "NEW");
+}
+
+RexxObjectPtr rxNewBuiltinObject(RexxMethodContext *c, CSTRING className)
+{
+    return rxNewBuiltinObject(c->threadContext, className);
 }
 
 
