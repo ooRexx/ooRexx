@@ -1026,17 +1026,15 @@ PSIZE rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos)
 }
 
 
-RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy)
+RexxObjectPtr rxNewSize(RexxThreadContext *c, long cx, long cy)
 {
-    RexxObjectPtr size = NULL;
-    RexxClassObject SizeClass = rxGetContextClass(c, "SIZE");
-    if ( SizeClass != NULL )
-    {
-        size = c->SendMessage2(SizeClass, "NEW", c->WholeNumber(cx), c->WholeNumber(cy));
-    }
-    return size;
+    return c->SendMessage2(TheSizeClass, "NEW", c->WholeNumber(cx), c->WholeNumber(cy));
 }
 
+RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy)
+{
+    return rxNewSize(c->threadContext, cx, cy);
+}
 
 bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj)
 {

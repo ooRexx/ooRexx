@@ -228,6 +228,7 @@ extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int 
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b);
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r);
 extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos);
+extern RexxObjectPtr rxNewSize(RexxThreadContext *c, long cx, long cy);
 extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 
 extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj);

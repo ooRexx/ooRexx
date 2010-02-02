@@ -660,7 +660,7 @@ bool rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, size_t 
  * .BaseDialog, or .Rect.  Use c->FindClass() to directly get classes from the
  * environment like .Bag or .Directory.
  *
- * @param c     The thread context we are operating in.
+ * @param c     The method context we are operating in.
  * @param name  The name of the class to try and find.
  *
  * @return The class object or null on failure.
@@ -768,7 +768,7 @@ void standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, Rex
  *
  * @param c            Thread context we are operating in.
  *
- * @return True if there was a condition, otherwsie false.
+ * @return True if there was a condition, otherwise false.
  *
  * @remarks.  This function could maybe take a second argument, true / false,
  *            whether to clear or not clear the condition.

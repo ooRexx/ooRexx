@@ -878,6 +878,60 @@ RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
     return redrawRect(context, getDChCtrl(pCSelf), &r, doErase);
 }
 
+
+/** DialogControl::textSize()
+ *
+ *  Computes the width and height in pixels of the specified string of text when
+ *  displayed by this control.
+ *
+ *  @param text  The text whose size is needed.
+ *  @param size  [IN/OUT]  A .Size object, the calculated size is returned here.
+ *
+ *  @return  True on success, otherwise false.  It is unlikely that this
+ *           function would fail.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(RexxObjectPtr, dlgctrl_textSize, CSTRING, text, RexxObjectPtr, _size, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    RexxObjectPtr result = TheFalseObj;
+
+    PSIZE size = rxGetSize(context, _size, 2);
+    if ( size == NULL )
+    {
+        return result;
+    }
+
+    HWND hCtrl = getDChCtrl(pCSelf);
+    HDC  hdc = GetDC(hCtrl);
+    if ( hdc == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return result;
+    }
+
+    HFONT hFont = (HFONT)SendMessage(hCtrl, WM_GETFONT, 0, 0);
+    if ( hFont == NULL )
+    {
+        // Font has not been set.
+        hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    }
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+
+    if ( GetTextExtentPoint32(hdc, text, (int)strlen(text), size) != 0 )
+    {
+        result = TheTrueObj;
+    }
+
+    // Clean up.
+    SelectObject(hdc, hOldFont);
+    ReleaseDC(hCtrl, hdc);
+
+    return result;
+}
+
 /** DialogControl::getTextSizeDlg()
  *
  *  Gets the size (width and height) in dialog units for any given string.

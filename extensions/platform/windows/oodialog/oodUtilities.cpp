@@ -997,7 +997,17 @@ RexxMethod2(RexxObjectPtr, point_setY, CSELF, p, int32_t, y) { ((POINT *)p)->y =
 /**
  * Methods for the ooDialog .Size class.
  */
-#define SIZE_CLASE  "Size"
+#define SIZE_CLASS  "Size"
+
+RexxMethod1(RexxObjectPtr, size_init_cls, OSELF, self)
+{
+    if ( isOfClassType(context, self, SIZE_CLASS) )
+    {
+        TheSizeClass = (RexxClassObject)self;
+        context->RequestGlobalReference(TheSizeClass);
+    }
+    return NULLOBJECT;
+}
 
 RexxMethod2(RexxObjectPtr, size_init, OPTIONAL_int32_t, cx, OPTIONAL_int32_t, cy)
 {

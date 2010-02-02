@@ -80,10 +80,10 @@
 ::method tabToPrevious unguarded
    forward to (self~oDlg)
 
-::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 ::method assignFocus external "LIBRARY oodialog dlgctrl_assignFocus"
 ::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
+::method textSize unguarded external "LIBRARY oodialog dlgctrl_textSize"
 ::method redrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
 ::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
 ::method setColor external "LIBRARY oodialog dlgctrl_setColor"
@@ -105,6 +105,7 @@
 ::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
 ::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
 ::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
+::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 
 -- DEPRECATED
 ::method processMessage

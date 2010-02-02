@@ -413,6 +413,7 @@ extern DIALOGADMIN        *topDlg;
 extern INT                 StoredDialogs;
 extern CRITICAL_SECTION    crit_sec;
 extern DWORD               ComCtl32Version;
+
 extern RexxObjectPtr       TheTrueObj;
 extern RexxObjectPtr       TheFalseObj;
 extern RexxObjectPtr       TheNilObj;
@@ -426,6 +427,7 @@ extern RexxPointerObject   TheNullPtrObj;
 extern RexxClassObject ThePlainBaseDialogClass;
 extern RexxClassObject TheDynamicDialogClass;
 extern RexxClassObject TheDialogControlClass;
+extern RexxClassObject TheSizeClass;
 
 extern HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, size_t *index, uint32_t id);
 

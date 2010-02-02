@@ -410,7 +410,7 @@
        return
    end
 
-   msg = getDlgMsg(self~adm)
+   msg = self~getDlgMsg
    if msg~pos("1DLGDELETED1") > 0 then do
       if self~finished = 0 then self~finished = 2
    end
@@ -428,14 +428,15 @@
 -- Clear all pending window messages
 ::method clearMessages unguarded
    if self~adm = 0 then return
-   msg = getDlgMsg(self~adm)
+   msg = self~getDlgMsg
    do while msg \= "" & self~adm \= 0
        if msg~pos("1DLGDELETED1") > 0 then do
           if self~finished = 0 then self~finished = 2
        end
-       msg = getDlgMsg(self~adm)
+       msg = self~getDlgMsg
    end
 
+::method getDlgMsg external "LIBRARY oodialog pbdlg_getDlgMsg"
 ::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
 ::method stopIt external "LIBRARY oodialog pbdlg_stopIt"
 ::method finalStopIt private
@@ -1010,7 +1011,6 @@
    forward message 'newProgressBar'
 ::method getSliderControl unguarded
    forward message 'newTrackBar'
-
 
 ::method getTextSize unguarded
    forward message "getTextSizeDlg" continue

@@ -109,6 +109,7 @@
 ::method 'y=' external "LIBRARY oodialog point_setY"
 
 ::class 'Size' public
+::method init class external "LIBRARY oodialog size_init_cls"
 ::method init external "LIBRARY oodialog size_init"
 ::method width external "LIBRARY oodialog size_cx"
 ::method 'width=' external "LIBRARY oodialog size_setCX"
@@ -730,9 +731,6 @@
 ::method "message="
    forward class (super) continue
    self~resizeItem(101,  self~sizex-10, 14)
-
-/* - - - - - - - - - - - - - Private routines- - - - - - - - - - - - - - - - -*/
-::routine getDlgMsg external "LIBRARY oodialog getDlgMsg_rtn"
 
 
 /* - - - - - - - - - - - - - Public routines - - - - - - - - - - - - - - - - -*/

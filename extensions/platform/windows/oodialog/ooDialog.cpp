@@ -1767,6 +1767,11 @@ static inline HWND getPBDWindow(void *pCSelf)
     return ((pCPlainBaseDialog)pCSelf)->hDlg;
 }
 
+static inline DIALOGADMIN *getPBDDlgAdm(void *pCSelf)
+{
+    return ((pCPlainBaseDialog)pCSelf)->dlgAdm;
+}
+
 HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID)
 {
     HWND hCtrl = NULL;
@@ -3253,6 +3258,68 @@ RexxMethod4(RexxObjectPtr, pbdlg_setTabGroup, RexxObjectPtr, rxID, OPTIONAL_logi
     }
     return setWindowStyle(context, hCtrl, style);
 }
+
+
+/** PlainBaseDialog::getDlgMsg()
+ *
+ *  Retrieves a windows event message from the message queue buffer.
+ *
+ *  Each Rexx dialog object has a C/C++ string buffer used to store strings
+ *  representing window event messages.  The Rexx programmer "connects" a
+ *  windows event by supplying a filter to apply to window messages and the name
+ *  of a method in the Rexx dialog to invoke when / if the window message is
+ *  sent to the underlying Windows dialog.
+ *
+ *  Each window message sent to the underlying Windows dialog is checked against
+ *  the set of message filters.  If a match is found, a string event message is
+ *  constructed using the method name and the parameters of the window message.
+ *  This string is then placed in the message queue buffer.
+ *
+ *  On the Rexx side, the Rexx dialog object periodically checks the message
+ *  queue using this routine.  If a message is waiting, it is then dispatched to
+ *  the Rexx dialog method using sendWith().
+ *
+ *  @param  peek   [optional]  Whether to just do a message "peek" which returns
+ *                 the message but does not remove it.  The default is false.
+ *
+ *  @return  The next message in the queue, or the empty string if the queue is
+ *           empty.
+ *
+ *  @remarks  Prior to 4.0.1 the message queue was the only way to invoke the
+ *            Rexx method.  With ooRexx 4.0.0 and the the C++ API, it became
+ *            possible to directly invoke the Rexx method from RexxDlgProc.  The
+ *            use of the message queue is in a transition stage and may be
+ *            eliminated altogether.
+ */
+RexxMethod2(RexxStringObject, pbdlg_getDlgMsg, OPTIONAL_logical_t, doPeek, CSELF, pCSelf)
+{
+    DIALOGADMIN *dlgAdm = getPBDDlgAdm(pCSelf);
+
+    char msg[256];
+    RexxStringObject result;
+    bool peek = doPeek != 0 ? true : false;
+
+    *msg = '\0';
+
+    EnterCriticalSection(&crit_sec);
+
+    // Is the dialog admin valid?
+    if ( dialogInAdminTable(dlgAdm) )
+    {
+        getDlgMessage(dlgAdm, msg, peek);
+        result = context->String(msg);
+    }
+    else
+    {
+        result = context->String(MSG_TERMINATE);
+    }
+
+    LeaveCriticalSection(&crit_sec);
+
+    return result;
+}
+
+
 
 /** PlainBaseDialog::isDialogActive()
  *

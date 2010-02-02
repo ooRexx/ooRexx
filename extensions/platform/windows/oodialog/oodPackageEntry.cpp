@@ -64,14 +64,17 @@ RexxObjectPtr       TheOneObj = NULLOBJECT;
 RexxObjectPtr       TheTwoObj = NULLOBJECT;
 RexxObjectPtr       TheNegativeOneObj = NULLOBJECT;
 
-// Initialized in the PlainBaseDialog class init method (pbdlg_init_cls).
+// Initialized in the PlainBaseDialog class init method (pbdlg_init_cls.)
 RexxClassObject     ThePlainBaseDialogClass = NULLOBJECT;
 
-// Initialized in the DynamicDialog class init method (dyndlg_init_cls).
+// Initialized in the DynamicDialog class init method (dyndlg_init_cls.)
 RexxClassObject     TheDynamicDialogClass = NULLOBJECT;
 
-// Initialized in the DialogControl class init method (dlgctrl_init_cls).
+// Initialized in the DialogControl class init method (dlgctrl_init_cls.)
 RexxClassObject     TheDialogControlClass = NULLOBJECT;
+
+// Initialize in the Size class init method (size_init_cls.)
+RexxClassObject     TheSizeClass = NULLOBJECT;;
 
 #ifdef __cplusplus
 extern "C" {
@@ -97,7 +100,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 
-REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(messageDialog_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(fileNameDlg_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(findWindow_rtn);
@@ -109,7 +111,6 @@ REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
-    REXX_TYPED_ROUTINE(getDlgMsg_rtn,          getDlgMsg_rtn),
     REXX_TYPED_ROUTINE(messageDialog_rtn,      messageDialog_rtn),
     REXX_TYPED_ROUTINE(findWindow_rtn,         findWindow_rtn),
     REXX_TYPED_ROUTINE(fileNameDlg_rtn,        fileNameDlg_rtn),
@@ -218,6 +219,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToControl);
 REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToWindow);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
+REXX_METHOD_PROTOTYPE(pbdlg_getDlgMsg);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
 REXX_METHOD_PROTOTYPE(pbdlg_show);
@@ -426,6 +428,7 @@ REXX_METHOD_PROTOTYPE(dlgctrl_assignFocus);
 REXX_METHOD_PROTOTYPE(dlgctrl_tabGroup);
 REXX_METHOD_PROTOTYPE(dlgctrl_redrawRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_clearRect);
+REXX_METHOD_PROTOTYPE(dlgctrl_textSize);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(dlgctrl_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgctrl_setColor);
@@ -653,6 +656,7 @@ REXX_METHOD_PROTOTYPE(point_y);
 REXX_METHOD_PROTOTYPE(point_setY);
 
 // .Size
+REXX_METHOD_PROTOTYPE(size_init_cls);
 REXX_METHOD_PROTOTYPE(size_init);
 REXX_METHOD_PROTOTYPE(size_cx);
 REXX_METHOD_PROTOTYPE(size_setCX);
@@ -831,6 +835,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_sendMessageToWindow,      pbdlg_sendMessageToWindow),
     REXX_METHOD(pbdlg_get,                      pbdlg_get),
     REXX_METHOD(pbdlg_getDlgHandle,             pbdlg_getDlgHandle),
+    REXX_METHOD(pbdlg_getDlgMsg,                pbdlg_getDlgMsg),
     REXX_METHOD(pbdlg_isDialogActive,           pbdlg_isDialogActive),
     REXX_METHOD(pbdlg_show,                     pbdlg_show),
     REXX_METHOD(pbdlg_showWindow,               pbdlg_showWindow),
@@ -952,6 +957,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_tabGroup,               dlgctrl_tabGroup),
     REXX_METHOD(dlgctrl_clearRect,              dlgctrl_clearRect),
     REXX_METHOD(dlgctrl_redrawRect,             dlgctrl_redrawRect),
+    REXX_METHOD(dlgctrl_textSize,               dlgctrl_textSize),
     REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
     REXX_METHOD(dlgctrl_captureMouse,           dlgctrl_captureMouse),
     REXX_METHOD(dlgctrl_setColor,               dlgctrl_setColor),
@@ -1246,6 +1252,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(point_setX,                     point_setX),
     REXX_METHOD(point_y,                        point_y),
     REXX_METHOD(point_setY,                     point_setY),
+    REXX_METHOD(size_init_cls,                  size_init_cls),
     REXX_METHOD(size_init,                      size_init),
     REXX_METHOD(size_cx,                        size_cx),
     REXX_METHOD(size_setCX,                     size_setCX),

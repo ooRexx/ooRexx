@@ -83,14 +83,14 @@
    if \ sleepTime~datatype('W') then sleepTime = 10
 
    do while self~finished = 0 & self~adm \= 0
-      msg = getDlgMsg(self~adm)
+      msg = self~getDlgMsg
       if msg~pos("1DLGDELETED1") > 0 then do
          if self~finished = 0 then self~finished = 2
       end
       else do
          if msg \= "" then do
             parse var msg methodName '(' args ')'
-            argList = args~space(0)~makeArray(',')
+            argList = args~space(0)~makeArray(255~d2c)
             self~sendWith(methodName, argList)
          end
          else do
@@ -120,7 +120,7 @@
    self~start("execute", sh, icon, sleeptime, .true)
 
 ::method peekDialogMessage unguarded
-   return getDlgMsg(self~adm, .true)
+   return self~getDlgMsg(.true)
 
 ::method setSBRange unguarded
    use strict arg id, min, max, redraw = .true

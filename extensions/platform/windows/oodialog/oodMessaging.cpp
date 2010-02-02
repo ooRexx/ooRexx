@@ -113,8 +113,8 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             // Again, this shouldn't happen ... but
             return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
         }
-
         pcpbd->dlgProcContext = context;
+
         setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
 
         return TRUE;
@@ -138,7 +138,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         return endDialogPremature(pcpbd, hDlg, NoThreadContext);
     }
 
-    bool msgEnabled = (IsWindowEnabled(hDlg) && pcpbd->dlgProcContext != NULL);
+    bool msgEnabled = IsWindowEnabled(hDlg) ? true : false;
 
     // Do not search message table for WM_PAINT to improve redraw.
     if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
@@ -411,19 +411,19 @@ static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrTyp
 }
 
 
-BOOL addDialogMessage(CHAR * msg, CHAR * Qptr)
+BOOL addDialogMessage(CHAR *msg, CHAR *Qptr)
 {
-   if (strlen(Qptr) + strlen(msg) + 1 < MAXLENQUEUE)
-   {
-      strcat(Qptr, msg);
-      strcat(Qptr, ";");
-      return 1;
-   }
-   else
-   {
-       printf("MESSAGE QUEUE OVERFLOW\n");
-   }
-   return 0;
+    if ( strlen(Qptr) + strlen(msg) + 1 < MAXLENQUEUE )
+    {
+        strcat(Qptr, msg);
+        strcat(Qptr, ";");
+        return 1;
+    }
+    else
+    {
+        printf("MESSAGE QUEUE OVERFLOW\n");
+    }
+    return 0;
 }
 
 
@@ -524,6 +524,7 @@ inline MsgReplyType genericNotifyInvoke(RexxThreadContext *c, pCPlainBaseDialog 
                                         RexxObjectPtr idFrom, RexxObjectPtr hwndFrom)
 {
     RexxObjectPtr rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, idFrom, hwndFrom);
+    checkForCondition(c);
     return ReplyTrue;
 }
 
@@ -537,6 +538,7 @@ inline MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog
                                          WPARAM wParam, LPARAM lParam)
 {
     RexxObjectPtr rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, c->Uintptr(wParam), c->Uintptr(lParam));
+    checkForCondition(c);
     return ReplyFalse;
 }
 
@@ -812,38 +814,34 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                     }
                     goto generic_match_out;
                 } break;
-                // TODO SHOULD ALL NEW EVENT MESSAGES USE c->SendMessagex() ?????
-                // TODO should we check for conditions everytime we use c->SendMessage() ????
+
+                // TODO should we terminate the interpreter if checkForCondition() returns true??
                 case TAG_UPDOWN :
                 {
+                    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+                    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
+
                     // There is currently only one notify message for an up-down; UDN_DELTAPOS
                     LPNMUPDOWN pUPD = (LPNMUPDOWN)lParam;
 
-                    RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod,
-                                                            c->ArrayOfFour(c->Int32(pUPD->iPos),
-                                                                           c->Int32(pUPD->iDelta),
-                                                                           idFrom2rexxArg(c, lParam),
-                                                                           hwndFrom2rexxArg(c, lParam)));
+                    RexxArrayObject args = c->ArrayOfFour(c->Int32(pUPD->iPos), c->Int32(pUPD->iDelta), idFrom, hwndFrom);
 
-                    if ( checkForCondition(c) )
-                    {
-                        // TODO We had an unhandled exception in the Rexx method
-                        // we just invoked, we printed out the error message.
-                        // But, at this point everything just keeps going.
-                        // Should we clear the exception?  Should we terminate
-                        // everything?
-                    }
-                    else if ( msgReply != TheFalseObj && msgReply != NULLOBJECT && c->IsOfType(msgReply, "BUFFER") )
-                    {
-                        PDELTAPOSREPLY pdpr = (PDELTAPOSREPLY)c->BufferData((RexxBufferObject)msgReply);
-                        if ( pdpr->cancel )
-                        {
-                            setWindowPtr(GetParent(pUPD->hdr.hwndFrom), DWLP_MSGRESULT, 1);
-                        }
-                        else
-                        {
-                            pUPD->iDelta = pdpr->newDelta;
+                    RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
 
+                    if ( ! checkForCondition(c) )
+                    {
+                        if ( msgReply != NULLOBJECT && msgReply != TheFalseObj && c->IsOfType(msgReply, "BUFFER") )
+                        {
+                            PDELTAPOSREPLY pdpr = (PDELTAPOSREPLY)c->BufferData((RexxBufferObject)msgReply);
+                            if ( pdpr->cancel )
+                            {
+                                setWindowPtr(GetParent(pUPD->hdr.hwndFrom), DWLP_MSGRESULT, 1);
+                            }
+                            else
+                            {
+                                pUPD->iDelta = pdpr->newDelta;
+
+                            }
                         }
                     }
                     return ReplyTrue;
@@ -869,11 +867,6 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
 
                         if ( checkForCondition(c) )
                         {
-                            // TODO We had an unhandled exception in the Rexx method
-                            // we just invoked, we printed out the error message.
-                            // But, at this point everything just keeps going.
-                            // Should we clear the exception?  Should we terminate
-                            // everything?
                             return ReplyFalse;
                         }
 
@@ -901,6 +894,7 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                         RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom, hwndFrom);
 
                         rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                        checkForCondition(c);
                         return ReplyTrue;
                     }
                     else if ( code == MCN_VIEWCHANGE )
@@ -913,6 +907,7 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                         RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom, hwndFrom);
 
                         rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                        checkForCondition(c);
                         return ReplyTrue;
                     }
 
@@ -966,13 +961,46 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                     {
                         LPNMDATETIMEFORMAT pFormat = (LPNMDATETIMEFORMAT)lParam;
 
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                        RexxObjectPtr dt;
+                        sysTime2dt(c, &(pFormat->st), &dt, dtFull);
+
+                        RexxArrayObject args = c->ArrayOfFour(c->String(pFormat->pszFormat), dt, idFrom, hwndFrom);
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+
+                        if ( ! checkForCondition(c) )
+                        {
+                            CSTRING display = c->ObjectToStringValue(rexxReply);
+                            if ( strlen(display) < 64 )
+                            {
+                                strcpy(pFormat->szDisplay, display);
+                            }
+                            else
+                            {
+                                stringTooLongException(c, 1, 63, strlen(display));
+                                checkForCondition(c);
+                            }
+                        }
+
+                        return ReplyFalse;
                     }
                     else if ( code == DTN_FORMATQUERY )
                     {
                         LPNMDATETIMEFORMATQUERY pQuery = (LPNMDATETIMEFORMATQUERY)lParam;
 
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
+                        RexxObjectPtr _size = rxNewSize(c, 0, 0);
+
+                        RexxArrayObject args = c->ArrayOfFour(c->String(pQuery->pszFormat), _size, idFrom, hwndFrom);
+
+                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                        checkForCondition(c);
+
+                        PSIZE size = (PSIZE)c->ObjectToCSelf(_size);
+
+                        pQuery->szMax.cx = size->cx;
+                        pQuery->szMax.cy = size->cy;
+
+                        return ReplyFalse;
                     }
                     else if ( code == DTN_USERSTRING )
                     {
@@ -1515,66 +1543,6 @@ bool initEventNotification(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObject
     c->SendMessage1(self, "INIT_EVENTNOTIFICATION", obj);
     *ppCEN = pcen;
     return true;
-}
-
-
-/** getDlgMsg()
- *
- *  Retrieves a windows event message from the message queue buffer.
- *
- *  Each Rexx dialog object has a C/C++ string buffer used to store strings
- *  representing window event messages.  The Rexx programmer "connects" a
- *  windows event by supplying a filter to apply to window messages and the name
- *  of a method in the Rexx dialog to invoke when / if the window message is
- *  sent to the underlying Windows dialog.
- *
- *  Each window message sent to the underlying Windows dialog is checked against
- *  the set of message filters.  If a match is found, a string event message is
- *  constructed using the method name and the parameters of the window message.
- *  This string is then placed in the message queue buffer.
- *
- *  On the Rexx side, the Rexx dialog object periodically checks the message
- *  queue using this routine.  If a message is waiting, it is then dispatched to
- *  the Rexx dialog method using sendWith().
- *
- *  @param  adm    Pointer to the dialog administration block for the Rexx
- *                 dialog.
- *  @param  peek   [optional]  Whether to just do a message "peek" which returns
- *                 the message but does not remove it.  The default is false.
- *
- *  @return  The next message in the queue, or the empty string if the queue is
- *           empty.
- *
- */
-RexxRoutine2(RexxStringObject, getDlgMsg_rtn, CSTRING, adm, OPTIONAL_logical_t, doPeek)
-{
-    DIALOGADMIN * dlgAdm = (DIALOGADMIN *)string2pointer(adm);
-    if ( dlgAdm == NULL )
-    {
-        context->RaiseException1(Rexx_Error_Incorrect_call_user_defined,
-                                 context->String("getDlgMsg() argument 1 must not be a null Pointer"));
-        return NULLOBJECT;
-    }
-
-    char msg[256];
-    RexxStringObject result;
-    bool peek = doPeek != 0 ? true : false;
-
-    EnterCriticalSection(&crit_sec);
-
-    // Is the dialog admin valid?
-    if ( dialogInAdminTable(dlgAdm) )
-    {
-        getDlgMessage(dlgAdm, msg, peek);
-        result = context->String(msg);
-    }
-    else
-    {
-        result = context->String(MSG_TERMINATE);
-    }
-    LeaveCriticalSection(&crit_sec);
-
-    return result;
 }
 
 
