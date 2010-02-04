@@ -353,7 +353,7 @@ void RexxMessage::sendNotification(void)
         {
             /* get the first item                */
             RexxActivity *waitingActivity = (RexxActivity *)this->waitingActivities->removeFirst();
-            waitingActivity->postRelease();  /* go wake it up                     */
+            waitingActivity->postDispatch();  /* go wake it up                     */
         }
     }
     /* now traverse the list of Iterested*/

@@ -399,7 +399,7 @@ void RexxVariableDictionary::release(
                 OrefSet(this, this->reservingActivity, newActivity);
                 this->reserveCount = 1;        /* back to one lock again            */
                                                /* wake up the waiting activity      */
-                newActivity->postRelease();
+                newActivity->postDispatch();
             }
         }
     }

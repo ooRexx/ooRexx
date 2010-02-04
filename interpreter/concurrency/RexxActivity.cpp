@@ -1282,7 +1282,6 @@ void RexxActivity::live(size_t liveMark)
   memory_mark(this->currentRexxFrame);
   memory_mark(this->conditionobj);
   memory_mark(this->requiresTable);
-  memory_mark(this->nextWaitingActivity);
   memory_mark(this->waitingObject);
   memory_mark(this->dispatchMessage);
 
@@ -1307,7 +1306,6 @@ void RexxActivity::liveGeneral(int reason)
   memory_mark_general(this->currentRexxFrame);
   memory_mark_general(this->conditionobj);
   memory_mark_general(this->requiresTable);
-  memory_mark_general(this->nextWaitingActivity);
   memory_mark_general(this->waitingObject);
   memory_mark_general(this->dispatchMessage);
 
@@ -1787,7 +1785,7 @@ void RexxActivity::guardSet()
     guardsem.reset();               /* set up for guard call             */
 }
 
-void RexxActivity::postRelease()
+void RexxActivity::postDispatch()
 /******************************************************************************/
 /* Function:  Post an activities run semaphore                                */
 /******************************************************************************/

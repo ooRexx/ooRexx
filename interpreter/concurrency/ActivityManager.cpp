@@ -59,11 +59,7 @@ RexxList *ActivityManager::availableActivities = OREF_NULL;
 // table of all activities
 RexxList *ActivityManager::allActivities = OREF_NULL;
 
-// this is the head of the waiting activity chain
-RexxActivity * volatile ActivityManager::firstWaitingActivity = OREF_NULL;
-
-// tail of the waiting activity chain
-RexxActivity * volatile ActivityManager::lastWaitingActivity = OREF_NULL;
+std::deque<RexxActivity *>ActivityManager::waitingActivities;   // queue of waiting activities
 
 // process shutting down flag
 bool ActivityManager::processTerminating = false;
@@ -100,8 +96,6 @@ void ActivityManager::live(size_t liveMark)
 {
   memory_mark(availableActivities);
   memory_mark(allActivities);
-  memory_mark(firstWaitingActivity);
-  memory_mark(lastWaitingActivity);
 }
 
 void ActivityManager::liveGeneral(int reason)
@@ -118,99 +112,75 @@ void ActivityManager::liveGeneral(int reason)
   {
       memory_mark_general(availableActivities);
       memory_mark_general(allActivities);
-      memory_mark_general(firstWaitingActivity);
-      memory_mark_general(lastWaitingActivity);
   }
 }
 
 
-void ActivityManager::addWaitingActivity(
-    RexxActivity *waitingAct,          /* new activity to add to the queue  */
-    bool          release )            /* need to release the run semaphore */
-/******************************************************************************/
-/* Function:  Add an activity to the round robin wait queue                   */
-/******************************************************************************/
+/**
+ * Add a waiting activity to the waiting queue.
+ *
+ * @param waitingAct The activity to queue up.
+ * @param release    If true, the kernel lock should be released on completion.
+ */
+void ActivityManager::addWaitingActivity(RexxActivity *waitingAct, bool release )
 {
     ResourceSection lock;                // need the control block locks
 
-    sentinel = true;
-                                         /* NOTE:  The following assignments  */
-                                         /* do not use OrefSet intentionally. */
-                                         /* because we do have yet have kernel*/
-                                         /* access, we can't allow memory to  */
-                                         /* allocate a new counter object for */
-                                         /* this.  This leads to memory       */
-                                         /* corruption and unpredictable traps*/
-                                         /* nobody waiting yet?               */
-    if (firstWaitingActivity == OREF_NULL)
+    // nobody waiting yet?  If the release flag is true, we already have the
+    // kernel lock, but nobody is waiting.  In theory, this can't really
+    // happen, but we can return immediately if that is true.
+    if (waitingActivities.empty())
     {
-        /* this is the head of the chain     */
-        firstWaitingActivity = waitingAct;
-        /* and the tail                      */
-        lastWaitingActivity = waitingAct;
-        // this will ensure these are set before the lock is released
+        // we're done if we already have the lock and the queue is empty.
+        if (release)
+        {
+            return;
+        }
+        // add to the end
+        waitingActivities.push_back(waitingAct);
+        // this will ensure this happens before the lock is released
         sentinel = false;
+        // we should end up getting the lock immediately, but you never know.
         lock.release();                  // release the lock now
     }
     else
-    {                                    /* move to the end of the line       */
-                                         /* chain off of the existing one     */
-        lastWaitingActivity->setNextWaitingActivity(waitingAct);
-        /* this is the new last one          */
-        lastWaitingActivity = waitingAct;
-        sentinel = false;                  // another synchronization point
-        waitingAct->clearWait();           /* clear the run semaphore           */
+    {
+        // add to the end
+        waitingActivities.push_back(waitingAct);
+        // this will ensure this happens before the lock is released
+        sentinel = false;
+        // we're going to wait until posted, so make sure the run semaphore is cleared
+        waitingAct->clearWait();
         sentinel = true;
         lock.release();                    // release the lock now
         sentinel = false;
-        if (release)                       /* current semaphore owner?          */
+        // if we are the current kernel semaphore owner, time to release this
+        // so other waiters can
+        if (release)
         {
             unlockKernel();
         }
-        SysActivity::yield();            /* yield the thread                  */
-        SysActivity::relinquish();       /* now allow system stuff to run     */
-        waitingAct->waitKernel();        /* and wait for permission           */
+        SysActivity::yield();            // yield the thread
+        SysActivity::relinquish();       // now allow system stuff to run
+        waitingAct->waitForDispatch();   // wait for this thread to get dispatched again
     }
+
     sentinel = true;
     lockKernel();                        // get the kernel lock now
     sentinel = false;
     lock.reacquire();                    // get the resource lock back
-                                         /* NOTE:  The following assignments  */
-                                         /* do not use OrefSet intentionally. */
-                                         /* because we do have yet have kernel*/
-                                         /* access, we can't allow memory to  */
-                                         /* allocate a new counter object for */
-                                         /* this.  This leads to memory       */
-                                         /* corruption and unpredictable traps*/
-                                         /* dechain the activity              */
-
     sentinel = false;                    // another memory barrier
 
-    /* firstWaitingActivity will be released, so set first to next of first
-       The original outcommented code was setting the first to the next of the
-       activity that got the semaphore. This could corrupt the list if threads
-       are not released in fifo */
-
-    if (firstWaitingActivity != OREF_NULL)
-    {
-        firstWaitingActivity = firstWaitingActivity->getNextWaitingActivity();
-    }
-    /* clear out the chain               */
-    /* if we are here, newActivity must have been firstWaitingActivity sometime
-       before and therefore we can set next pointer to NULL without disturbing
-       the linked list */
-
-    waitingAct->setNextWaitingActivity(OREF_NULL);
+    // We only get dispatched if we end up at the front of the queue again,
+    // so just pop the front element.
+    waitingActivities.pop_front();
     sentinel = true;
-    /* was this the only one?            */
-    if (firstWaitingActivity == OREF_NULL)
+    // if there's something else in the queue, then post the run semaphore of
+    // the head element so that it wakes up next and starts waiting on the
+    // run semaphore
+    if (hasWaiters())
     {
-        /* clear out the last one            */
-        lastWaitingActivity = OREF_NULL;
-    }
-    else                                 /* release the next one to run       */
-    {
-        firstWaitingActivity->postRelease();
+        waitingActivities.front()->postDispatch();
     }
     // the setting of the sentinel variables acts as a memory barrier to
     // ensure that the assignment of currentActivitiy occurs precisely at this point.
@@ -618,11 +588,12 @@ void ActivityManager::closeLocks()
  */
 bool ActivityManager::lockKernelImmediate()
 {
-    if (firstWaitingActivity == OREF_NULL)
+    // don't give this up if we have activities in the
+    // dispatch queue
+    if (waitingActivities.empty())
     {
         return kernelSemaphore.requestImmediate();
     }
-    // don't give this up if somebody is waiting
     return false;
 }
 
@@ -822,7 +793,9 @@ RexxActivity *ActivityManager::getActivity()
  */
 void ActivityManager::relinquish(RexxActivity *activity)
 {
-    if (firstWaitingActivity != OREF_NULL)
+    // if we have waiting activities, then let one of them
+    // in next.
+    if (hasWaiters())
     {
         addWaitingActivity(activity, true);
     }

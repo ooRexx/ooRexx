@@ -194,7 +194,7 @@ typedef enum
    void        guardPost();
    void        guardSet();
    void        checkDeadLock(RexxActivity *);
-   void        postRelease();
+   void        postDispatch();
    void        kill(RexxDirectory *);
    void        joinKernelQueue();
    void        relinquish();
@@ -282,9 +282,7 @@ typedef enum
    inline void        removeRunningRequires(RexxObject *program) {this->requiresTable->remove(program);}
    inline void        resetRunningRequires() {this->requiresTable->reset();}
    inline bool        checkRequires(RexxString *n) { return runningRequires(n) != OREF_NULL; }
-   inline void        setNextWaitingActivity(RexxActivity *next) { this->nextWaitingActivity = next; }
-   inline RexxActivity *getNextWaitingActivity() { return nextWaitingActivity; }
-   inline void        waitKernel() { runsem.wait(); }
+   inline void        waitForDispatch() { runsem.wait(); }
    inline void        clearWait()  { runsem.reset(); }
    inline uint64_t    getRandomSeed() { return randomSeed; }
    inline void setRandomSeed(uint64_t seed) { randomSeed = seed; };
@@ -362,8 +360,6 @@ typedef enum
    // made the callout and the currentRexxFrame will be the predecessor frame.
    RexxActivation     *currentRexxFrame;
    RexxActivationBase *topStackFrame;
-                                       /* next element in the wait queue    */
-   RexxActivity       *nextWaitingActivity;
    RexxString         *currentExit;    /* current executing system exit     */
    RexxObject         *waitingObject;  /* object activity is waiting on     */
    SysSemaphore        runsem;         /* activity run control semaphore    */

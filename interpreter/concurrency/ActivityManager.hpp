@@ -38,6 +38,8 @@
 #ifndef Included_ActivityManager
 #define Included_ActivityManager
 
+#include <deque>
+
 class RexxIdentityTable;
 class RexxStack;
 class RexxCode;
@@ -51,8 +53,7 @@ public:
     static void liveGeneral(int reason);
 
     static void addWaitingActivity(RexxActivity *a, bool release);
-    static inline bool hasWaiters() { return firstWaitingActivity != OREF_NULL; }
-    static inline RexxActivity *waitingActivity() { return firstWaitingActivity; }
+    static inline bool hasWaiters() { return !waitingActivities.empty(); }
     static RexxActivity *findActivity();
     static RexxActivity *findActivity(thread_id_t);
     static RexxActivity *getActivity();
@@ -116,17 +117,13 @@ protected:
                                         /* table of all localact             */
     static RexxList         *allActivities;
     static RexxIdentityTable  *subClasses;   /* SubClasses...one per system       */
-                                        /* head of the waiting activity queue*/
-    static RexxActivity     * volatile firstWaitingActivity;
-                                        /* tail of the waiting activity queue*/
-    static RexxActivity     * volatile lastWaitingActivity;
-    static size_t            waitingActivities; /* number of waiting activities      */
     static bool              processTerminating;  // shutdown processing started
     static size_t            interpreterInstances;  // number of times an interpreter has been created.
 
     static SysMutex          kernelSemaphore;       // global kernel semaphore lock
     static SysSemaphore      terminationSem;    // used to signal that everything has shutdown
     static volatile bool sentinel;  // used to ensure proper ordering of updates
+    static std::deque<RexxActivity *>waitingActivities;   // queue of waiting activities
 };
 
 
