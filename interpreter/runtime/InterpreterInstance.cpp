@@ -206,9 +206,7 @@ RexxActivity *InterpreterInstance::attachThread()
 
     // we need to get a new activity set up for this particular thread
     activity = ActivityManager::attachThread();
-    // this is still attached, but we'll release it once it is detached.  We start with
-    // a count of 1 and cleanup once we hit zero.
-    activity->nestAttach();
+
     // resource lock must come AFTER we attach the thread, otherwise
     // we can create a deadlock situation when we attempt to get the kernel
     // lock
@@ -258,7 +256,7 @@ bool InterpreterInstance::detachThread(RexxActivity *activity)
     ActivityManager::returnActivity(activity);
 
     // Was this the last detach of an thread?  Signal the shutdown event
-    if (allActivities->items() == 0 && terminating)
+    if (allActivities->items() <= 1 && terminating)
     {
         terminationSem.post();
     }
