@@ -44,6 +44,7 @@
 #include <stdlib.h>                         /* Get system, max_path etc...    */
 #include "RexxCore.h"
 #include "SystemInterpreter.hpp"
+#include "SysSemaphore.hpp"
 
 /*
  */
@@ -74,12 +75,21 @@ BOOL WINAPI DllMain(
 {
    if (fdwReason == DLL_PROCESS_ATTACH)
    {
+       // SysSemaphore uses a thread local storage index, it's best to allocate from DllMain()
+       if ( ! SysSemaphore::allocTlsIndex() )
+       {
+           return FALSE;
+       }
+
        // perform the interpreter start up
        SystemInterpreter::processStartup(hinstDll);
    }
    else if (fdwReason == DLL_PROCESS_DETACH)
    {
        SystemInterpreter::processShutdown();
+
+       // Free the thread local storage index
+       SysSemaphore::deallocTlsIndex();
    }
    return TRUE;
 }

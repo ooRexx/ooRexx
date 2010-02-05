@@ -200,12 +200,22 @@ void SystemInterpreter::validateAddressName(RexxString *name )
 
 /**
  * This was an undocumented API prior to 4.0, but is known to have been used by
- * some IBM applications. This is maintained solely for binary compatibility.
+ * some IBM applications. Therefore this was maintained solely for binary
+ * compatibility.
+ *
+ * However, it is now also used to turn off processing Windows messages in a
+ * special case situation.  See the SysSemaphore::waitHandle() comments for more
+ * info. This is done on a per-thread basis, RexxSetProcessMessages() must be
+ * invoked while executing on the proper thread.
  *
  * @return TRUE always.
  */
-BOOL APIENTRY RexxSetProcessMessages(BOOL onoff)
+BOOL APIENTRY RexxSetProcessMessages(BOOL turnOn)
 {
-   return TRUE;
+    if ( ! turnOn )
+    {
+        SysSemaphore::setNoMessageLoop();
+    }
+    return TRUE;
 }
 

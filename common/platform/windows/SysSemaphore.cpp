@@ -44,6 +44,9 @@
 
 #include "SysSemaphore.hpp"
 
+bool SysSemaphore::usingTls = false;
+DWORD SysSemaphore::tlsNoMessageLoopIndex = TLS_OUT_OF_INDEXES;
+
 /**
  * Create a semaphore with potential creation-time
  * initialization.
