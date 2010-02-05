@@ -138,19 +138,5 @@ char *SysActivity::getStackBase(size_t stackSize)
  */
 void SysActivity::relinquish()
 {
-    MSG msg;
-
-    /*  If there is a msg in the message queue, dispatch it to the appropriate
-     *  window proc.
-     */
-
-    if (PeekMessage (&msg,   // message structure
-                     NULL,                  // handle of window receiving the message
-                     0,                     // lowest message to examine
-                     0,
-                     PM_REMOVE))            // highest message to examine
-    {
-        TranslateMessage(&msg);// Translates virtual key codes
-        DispatchMessage(&msg); // Dispatches message to window
-    }
+    Sleep(1);
 }
