@@ -202,6 +202,7 @@ extern void          ooDialogInternalException(RexxMethodContext *, char *, int,
 extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
 extern RexxObjectPtr invalidWindowException(RexxMethodContext *c, RexxObjectPtr rxObj);
 extern RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int, int);
+extern RexxObjectPtr wrongClassReplyException(RexxThreadContext *c, const char *n);
 extern inline void   failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
 extern void          controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
 extern void          wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);

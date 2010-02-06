@@ -149,6 +149,33 @@ RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int pageNum, in
 }
 
 
+/**
+ *  Error 98.900
+ *
+ *  98 The language processor detected a specific error during execution. The
+ *  associated error gives the reason for the error.
+ *
+ *  900 User message.
+ *
+ *  The windows message reply must be of the 'class' class
+ *
+ *  The windows message reply must be of the DateTime class
+ *
+ * @param c    The thread context we are operating under.
+ * @param n    The name of the class expected.
+ *
+ * @return Pointer to void, could be used in the return statement of a method
+ *         to return NULLOBJECT after the exeception is raised.
+ */
+RexxObjectPtr wrongClassReplyException(RexxThreadContext *c, const char *n)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "The windows message reply must be of the %s class", n);
+    executionErrorException(c, buffer);
+
+    return NULLOBJECT;
+}
+
 void controlFailedException(RexxThreadContext *c, const char *msg, const char *func, const char *control)
 {
     TCHAR buffer[256];

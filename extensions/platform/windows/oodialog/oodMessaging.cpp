@@ -51,6 +51,7 @@
 #include "oodDeviceGraphics.hpp"
 #include "oodMessaging.hpp"
 
+extern BOOL APIENTRY RexxSetProcessMessages(BOOL onoff);
 
 static BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
 
@@ -114,6 +115,8 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
         }
         pcpbd->dlgProcContext = context;
+
+        RexxSetProcessMessages(FALSE);
 
         setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
 
@@ -673,6 +676,461 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
 }
 
 
+MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    RexxObjectPtr rexxReply;
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
+
+    switch ( code )
+    {
+        case DTN_DATETIMECHANGE:
+        {
+            LPNMDATETIMECHANGE pChange = (LPNMDATETIMECHANGE)lParam;
+
+            RexxObjectPtr dt;
+            RexxObjectPtr valid;
+
+            if ( pChange->dwFlags == GDT_VALID )
+            {
+                sysTime2dt(c, &(pChange->st), &dt, dtFull);
+                valid = TheTrueObj;
+            }
+            else
+            {
+                sysTime2dt(c, NULL, &dt, dtNow);
+                valid = TheFalseObj;
+            }
+
+            RexxArrayObject args = c->ArrayOfFour(dt, valid, idFrom, hwndFrom);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+            checkForCondition(c);
+
+            return ReplyFalse;
+        }
+
+        case DTN_FORMAT:
+        {
+            LPNMDATETIMEFORMAT pFormat = (LPNMDATETIMEFORMAT)lParam;
+
+            RexxObjectPtr dt;
+            sysTime2dt(c, &(pFormat->st), &dt, dtFull);
+
+            RexxArrayObject args = c->ArrayOfFour(c->String(pFormat->pszFormat), dt, idFrom, hwndFrom);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+            if ( ! checkForCondition(c) )
+            {
+                CSTRING display = c->ObjectToStringValue(rexxReply);
+                if ( strlen(display) < 64 )
+                {
+                    strcpy(pFormat->szDisplay, display);
+                }
+                else
+                {
+                    stringTooLongException(c, 1, 63, strlen(display));
+                    checkForCondition(c);
+                }
+            }
+
+            return ReplyFalse;
+        }
+
+        case DTN_FORMATQUERY:
+        {
+            LPNMDATETIMEFORMATQUERY pQuery = (LPNMDATETIMEFORMATQUERY)lParam;
+
+            RexxObjectPtr _size = rxNewSize(c, 0, 0);
+
+            RexxArrayObject args = c->ArrayOfFour(c->String(pQuery->pszFormat), _size, idFrom, hwndFrom);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+            checkForCondition(c);
+
+            PSIZE size = (PSIZE)c->ObjectToCSelf(_size);
+
+            pQuery->szMax.cx = size->cx;
+            pQuery->szMax.cy = size->cy;
+
+            return ReplyFalse;
+        }
+
+        case DTN_USERSTRING:
+        {
+            LPNMDATETIMESTRING pdts = (LPNMDATETIMESTRING)lParam;
+
+            RexxDirectoryObject d = (RexxDirectoryObject)rxNewBuiltinObject(c, "DIRECTORY");
+            c->DirectoryPut(d, c->String(pdts->pszUserString), "USERSTRING");
+            c->DirectoryPut(d, TheNilObj, "DATETIME");
+            c->DirectoryPut(d, TheFalseObj, "VALID");
+
+            // Fill in the date time string struct with error values.
+            dt2sysTime(c, NULLOBJECT, &(pdts->st), dtNow);
+            pdts->dwFlags = GDT_ERROR;
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, c->ArrayOfThree(d, idFrom, hwndFrom));
+
+            if ( checkForCondition(c) )
+            {
+                return ReplyFalse;
+            }
+
+            RexxObjectPtr dt = c->DirectoryAt(d, "DATETIME");
+            if ( ! c->IsOfType(dt, "DATETIME") )
+            {
+                wrongObjInDirectoryException(c, 1, "DATETIME", "a DateTime object", dt);
+                checkForCondition(c);
+                return ReplyFalse;
+            }
+
+            if ( ! dt2sysTime(c, dt, &(pdts->st), dtFull) )
+            {
+                checkForCondition(c);
+                return ReplyFalse;
+            }
+
+            if ( isShowNoneDTP(pdts->nmhdr.hwndFrom) )
+            {
+                RexxObjectPtr _valid = c->DirectoryAt(d, "VALID");
+                int32_t val = getLogical(c, _valid);
+
+                if ( val == -1 )
+                {
+                    wrongObjInDirectoryException(c, 1, "VALID", "Logical", _valid);
+                    checkForCondition(c);
+                    return ReplyFalse;
+                }
+                pdts->dwFlags = (val == 1 ? GDT_VALID : GDT_NONE);
+            }
+            else
+            {
+                pdts->dwFlags = GDT_VALID;
+            }
+            return ReplyFalse;
+        }
+
+        case DTN_WMKEYDOWN:
+        {
+            LPNMDATETIMEWMKEYDOWN pQuery = (LPNMDATETIMEWMKEYDOWN)lParam;
+
+            RexxObjectPtr dt;
+            sysTime2dt(c, &(pQuery->st), &dt, dtFull);
+
+            RexxArrayObject args = c->NewArray(5);
+            c->ArrayPut(args, c->String(pQuery->pszFormat), 1);
+            c->ArrayPut(args, dt, 2);
+            c->ArrayPut(args, c->Int32(pQuery->nVirtKey), 3);
+            c->ArrayPut(args, idFrom, 4);
+            c->ArrayPut(args, hwndFrom, 5);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+            if ( ! checkForCondition(c) )
+            {
+                if ( rexxReply != dt )
+                {
+                    if ( c->IsOfType(rexxReply, "DATETIME") )
+                    {
+                        dt2sysTime(c, rexxReply, &(pQuery->st), dtFull);
+                    }
+                    else
+                    {
+                        wrongClassReplyException(c, "DateTime");
+                    }
+                    checkForCondition(c);
+                }
+            }
+
+            return ReplyFalse;
+        }
+
+        case DTN_CLOSEUP:
+        case DTN_DROPDOWN:
+        case NM_KILLFOCUS:
+        case NM_SETFOCUS:
+        {
+            return genericNotifyInvoke(c, pcpbd, methodName, idFrom, hwndFrom);
+        }
+
+        default :
+            // Theoretically we can not get here because all date time
+            // picker notification codes that have a tag are accounted
+            // for.
+            break;
+    }
+
+    return ReplyFalse;
+}
+
+
+MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    char          tmpBuffer[20];
+    RexxObjectPtr rexxReply;
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+
+    switch ( code )
+    {
+        case NM_CLICK:
+        {
+            LPNMITEMACTIVATE pIA = (LPNMITEMACTIVATE)lParam;
+
+            if ( pIA->uKeyFlags == 0 )
+            {
+                strcpy(tmpBuffer, "NONE");
+            }
+            else
+            {
+                tmpBuffer[0] = '\0';
+
+                if ( pIA->uKeyFlags & LVKF_SHIFT )
+                    strcpy(tmpBuffer, "SHIFT");
+                if ( pIA->uKeyFlags & LVKF_CONTROL )
+                    tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "CONTROL") : strcat(tmpBuffer, " CONTROL");
+                if ( pIA->uKeyFlags & LVKF_ALT )
+                    tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "ALT") : strcat(tmpBuffer, " ALT");
+            }
+
+            RexxArrayObject args = c->ArrayOfFour(idFrom, c->Int32(pIA->iItem), c->Int32(pIA->iSubItem), c->String(tmpBuffer));
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+            checkForCondition(c);
+
+            return ReplyFalse;
+        }
+
+        case LVN_ITEMCHANGED:
+        {
+            LPNMLISTVIEW pLV = (LPNMLISTVIEW)lParam;
+
+            RexxObjectPtr item = c->Int32(pLV->iItem);
+            char *p;
+
+            /* The use of the tag field allows a finer degree of control as to exactly which event
+             * the user wants to be notified of, then does the initial message match above.  Because
+             * of that, this specific LVN_ITEMCHANGED notification may not match the tag.  So, if we
+             * do not match here, we continue the search through the message table because this
+             * notification may match some latter entry in the table.
+             */
+            if ( (tag & TAG_STATECHANGED) && (pLV->uChanged == LVIF_STATE) )
+            {
+                if ( (tag & TAG_CHECKBOXCHANGED) && (pLV->uNewState & LVIS_STATEIMAGEMASK) )
+                {
+                    p = (pLV->uNewState == INDEXTOSTATEIMAGEMASK(2) ? "CHECKED" : "UNCHECKED");
+
+                    RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(p));
+
+                    rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+                    checkForCondition(c);
+
+                    return ReplyFalse;
+                }
+                else if ( matchSelectFocus(tag, pLV) )
+                {
+                    tmpBuffer[0] = '\0';
+
+                    if ( selectionDidChange(pLV) )
+                    {
+                        if ( pLV->uNewState & LVIS_SELECTED )
+                        {
+                            strcpy(tmpBuffer, "SELECTED");
+                        }
+                        else
+                        {
+                            strcpy(tmpBuffer, "UNSELECTED");
+                        }
+                    }
+
+                    if ( focusDidChange(pLV) )
+                    {
+                        if ( pLV->uNewState & LVIS_FOCUSED )
+                        {
+                            tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "FOCUSED") : strcat(tmpBuffer, " FOCUSED");
+                        }
+                        else
+                        {
+                            tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "UNFOCUSED") : strcat(tmpBuffer, " UNFOCUSED");
+                        }
+                    }
+
+                    RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(tmpBuffer));
+
+                    rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+                    checkForCondition(c);
+
+                    return ReplyFalse;
+                }
+                else if ( matchSelect(tag, pLV) )
+                {
+                    p = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
+
+                    RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(p));
+
+                    rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+                    if ( checkForCondition(c) )
+                    {
+                        return ReplyFalse;
+                    }
+
+                    return ContinueSearching;  // Not sure if this is wise with the C++ API
+                }
+                else if ( matchFocus(tag, pLV) )
+                {
+                    p = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
+
+                    RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(p));
+
+                    rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+                    if ( checkForCondition(c) )
+                    {
+                        return ReplyFalse;
+                    }
+
+                    return ContinueSearching;  // Not sure if this is wise with the C++ API
+                }
+                else
+                {
+                    // This message in the message table does not match, keep searching.
+                    return ContinueSearching;
+                }
+            }
+
+            break;
+        }
+
+        default :
+            break;
+    }
+
+    return ReplyFalse;
+}
+
+MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    RexxObjectPtr rexxReply;
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
+
+    switch ( code )
+    {
+        case MCN_GETDAYSTATE :
+        {
+            LPNMDAYSTATE pDayState = (LPNMDAYSTATE)lParam;
+
+            RexxObjectPtr dt = NULLOBJECT;
+            sysTime2dt(c, &(pDayState->stStart), &dt, dtDate);
+
+            RexxArrayObject args = c->ArrayOfFour(dt, c->Int32(pDayState->cDayState), idFrom, hwndFrom);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+            if ( checkForCondition(c) )
+            {
+                return ReplyFalse;
+            }
+
+            if ( rexxReply != NULLOBJECT && c->IsOfType(rexxReply, "BUFFER") )
+            {
+                pDayState->prgDayState = (MONTHDAYSTATE *)c->BufferData((RexxBufferObject)rexxReply);
+                return ReplyTrue;
+            }
+            return ReplyFalse;
+        }
+
+        case MCN_SELECT :
+        case MCN_SELCHANGE :
+        {
+            LPNMSELCHANGE pSelChange = (LPNMSELCHANGE)lParam;
+
+            RexxObjectPtr dtStart;
+            sysTime2dt(c, &(pSelChange->stSelStart), &dtStart, dtDate);
+
+            RexxObjectPtr dtEnd;
+            sysTime2dt(c, &(pSelChange->stSelEnd), &dtEnd, dtDate);
+
+            RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom, hwndFrom);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+            checkForCondition(c);
+            return ReplyTrue;
+        }
+
+        case MCN_VIEWCHANGE :
+        {
+            LPNMVIEWCHANGE pViewChange = (LPNMVIEWCHANGE)lParam;
+
+            RexxStringObject newView = mcnViewChange2rexxString(c, pViewChange->dwNewView);
+            RexxStringObject oldView = mcnViewChange2rexxString(c, pViewChange->dwOldView);
+
+            RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom, hwndFrom);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+            checkForCondition(c);
+            return ReplyTrue;
+        }
+
+        case NM_RELEASEDCAPTURE :
+        {
+            return genericNotifyInvoke(c, pcpbd, methodName, idFrom, hwndFrom);
+        }
+
+        default :
+            // Theoretically we can not get here because all month
+            // calendar notification codes that have a tag are
+            // accounted for.
+            break;
+    }
+
+    return ReplyFalse;
+}
+
+/**
+ * Handles the WM_NOTIFY messages for an up down control that the Rexx
+ * programmer has connected.
+ *
+ * There is currently only one notify message for an up-down; UDN_DELTAPOS, so
+ * the processing is straight forward.
+ *
+ * @param c
+ * @param methodName
+ * @param lParam
+ * @param pcpbd
+ *
+ * @return MsgReplyType
+ */
+MsgReplyType processUDN(RexxThreadContext *c, CSTRING methodName, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    LPNMUPDOWN    pUPD = (LPNMUPDOWN)lParam;
+
+    RexxArrayObject args = c->ArrayOfFour(c->Int32(pUPD->iPos), c->Int32(pUPD->iDelta),
+                                          idFrom2rexxArg(c, lParam), hwndFrom2rexxArg(c, lParam));
+
+    RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+    if ( ! checkForCondition(c) )
+    {
+        if ( msgReply != NULLOBJECT && msgReply != TheFalseObj && c->IsOfType(msgReply, "BUFFER") )
+        {
+            PDELTAPOSREPLY pdpr = (PDELTAPOSREPLY)c->BufferData((RexxBufferObject)msgReply);
+            if ( pdpr->cancel )
+            {
+                setWindowPtr(GetParent(pUPD->hdr.hwndFrom), DWLP_MSGRESULT, 1);
+            }
+            else
+            {
+                pUPD->iDelta = pdpr->newDelta;
+
+            }
+        }
+    }
+    return ReplyTrue;
+}
+
+
 /**
  * Searches through the notify (WM_NOTIFY) message table for a table entry that
  * matches the parameters of a WM_NOTIFY.
@@ -714,7 +1172,6 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
             DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
             RexxThreadContext *c = pcpbd->dlgProcContext;
 
-            char   msgBuffer[512];
             char   tmpBuffer[20];
             char  *np = NULL;
             int    item = OOD_INVALID_ITEM_ID;
@@ -727,359 +1184,27 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
 
                 case TAG_LISTVIEW :
                 {
-                    if ( code == NM_CLICK )
+                    MsgReplyType ret = processLVN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
+                    if ( ret == ContinueSearching )
                     {
-                        LPNMITEMACTIVATE pIA = (LPNMITEMACTIVATE)lParam;
-
-                        if ( pIA->uKeyFlags == 0 )
-                        {
-                            strcpy(tmpBuffer, "NONE");
-                        }
-                        else
-                        {
-                            tmpBuffer[0] = '\0';
-
-                            if ( pIA->uKeyFlags & LVKF_SHIFT )
-                                strcpy(tmpBuffer, "SHIFT");
-                            if ( pIA->uKeyFlags & LVKF_CONTROL )
-                                tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "CONTROL") : strcat(tmpBuffer, " CONTROL");
-                            if ( pIA->uKeyFlags & LVKF_ALT )
-                                tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "ALT") : strcat(tmpBuffer, " ALT");
-                        }
-                        np = tmpBuffer;
-
-                        _snprintf(msgBuffer, 511, "%s(%u\377%d\377%d\377%s)", m[i].rexxMethod,
-                                  pIA->hdr.idFrom, pIA->iItem, pIA->iSubItem, np);
-                        addDialogMessage(msgBuffer, dlgAdm->pMessageQueue);
-                        return ReplyFalse;
+                        continue;
                     }
-                    else if ( code == LVN_ITEMCHANGED )
-                    {
-                        LPNMLISTVIEW pLV = (LPNMLISTVIEW)lParam;
-
-                        /* The use of the tag field allows a finer degree of control as to exactly which event
-                         * the user wants to be notified of, then does the initial message match above.  Because
-                         * of that, this specific LVN_ITEMCHANGED notification may not match the tag.  So, if we
-                         * do not match here, we continue the search through the message table because this
-                         * notification may match some latter entry in the table.
-                         */
-                        if ( (m[i].tag & TAG_STATECHANGED) && (pLV->uChanged == LVIF_STATE) )
-                        {
-                            item = pLV->iItem;
-                            wParam = pLV->hdr.idFrom;
-
-                            if ( (m[i].tag & TAG_CHECKBOXCHANGED) && (pLV->uNewState & LVIS_STATEIMAGEMASK) )
-                            {
-                                np = pLV->uNewState == INDEXTOSTATEIMAGEMASK(2) ? "CHECKED" : "UNCHECKED";
-                            }
-                            else if ( matchSelectFocus(m[i].tag, pLV) )
-                            {
-                                tmpBuffer[0] = '\0';
-
-                                if ( selectionDidChange(pLV) )
-                                {
-                                    (pLV->uNewState & LVIS_SELECTED) ?
-                                    strcpy(tmpBuffer, "SELECTED") : strcpy(tmpBuffer, "UNSELECTED");
-                                }
-
-                                if ( focusDidChange(pLV) )
-                                {
-                                    if ( (pLV->uNewState & LVIS_FOCUSED) )
-                                        tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "FOCUSED") : strcat(tmpBuffer, " FOCUSED");
-                                    else
-                                        tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "UNFOCUSED") : strcat(tmpBuffer, " UNFOCUSED");
-                                }
-                                np = tmpBuffer;
-                            }
-                            else if ( matchSelect(m[i].tag, pLV) )
-                            {
-                                np = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
-                                _snprintf(msgBuffer, 511, "%s(%u\377%d\377%s)", m[i].rexxMethod, wParam, item, np);
-                                addDialogMessage((char *)msgBuffer, dlgAdm->pMessageQueue);
-                                continue;
-                            }
-                            else if ( matchFocus(m[i].tag, pLV) )
-                            {
-                                np = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
-                                _snprintf(msgBuffer, 511, "%s(%u\377%d\377%s)", m[i].rexxMethod, wParam, item, np);
-                                addDialogMessage(msgBuffer, dlgAdm->pMessageQueue);
-                                continue;
-                            }
-                            else
-                            {
-                                // This message in the message table does not match, keep searching.
-                                continue;
-                            }
-                        }
-                    }
-                    goto generic_match_out;
-                } break;
+                    return ret;
+                }
 
                 // TODO should we terminate the interpreter if checkForCondition() returns true??
+
                 case TAG_UPDOWN :
-                {
-                    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
-                    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
-
-                    // There is currently only one notify message for an up-down; UDN_DELTAPOS
-                    LPNMUPDOWN pUPD = (LPNMUPDOWN)lParam;
-
-                    RexxArrayObject args = c->ArrayOfFour(c->Int32(pUPD->iPos), c->Int32(pUPD->iDelta), idFrom, hwndFrom);
-
-                    RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-
-                    if ( ! checkForCondition(c) )
-                    {
-                        if ( msgReply != NULLOBJECT && msgReply != TheFalseObj && c->IsOfType(msgReply, "BUFFER") )
-                        {
-                            PDELTAPOSREPLY pdpr = (PDELTAPOSREPLY)c->BufferData((RexxBufferObject)msgReply);
-                            if ( pdpr->cancel )
-                            {
-                                setWindowPtr(GetParent(pUPD->hdr.hwndFrom), DWLP_MSGRESULT, 1);
-                            }
-                            else
-                            {
-                                pUPD->iDelta = pdpr->newDelta;
-
-                            }
-                        }
-                    }
-                    return ReplyTrue;
-                }
-                break;
+                    return processUDN(c, m[i].rexxMethod, lParam, pcpbd);
 
                 case TAG_MONTHCALENDAR :
-                {
-                    RexxObjectPtr rexxReply;
-                    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
-                    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
-
-                    if ( code == MCN_GETDAYSTATE )
-                    {
-                        LPNMDAYSTATE pDayState = (LPNMDAYSTATE)lParam;
-
-                        RexxObjectPtr dt = NULLOBJECT;
-                        sysTime2dt(c, &(pDayState->stStart), &dt, dtDate);
-
-                        RexxArrayObject args = c->ArrayOfFour(dt, c->Int32(pDayState->cDayState), idFrom, hwndFrom);
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-
-                        if ( checkForCondition(c) )
-                        {
-                            return ReplyFalse;
-                        }
-
-                        if ( rexxReply != NULLOBJECT && c->IsOfType(rexxReply, "BUFFER") )
-                        {
-                            pDayState->prgDayState = (MONTHDAYSTATE *)c->BufferData((RexxBufferObject)rexxReply);
-                            return ReplyTrue;
-                        }
-                        return ReplyFalse;
-                    }
-                    else if ( code == NM_RELEASEDCAPTURE )
-                    {
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
-                    }
-                    else if ( code == MCN_SELECT || code == MCN_SELCHANGE )
-                    {
-                        LPNMSELCHANGE pSelChange = (LPNMSELCHANGE)lParam;
-
-                        RexxObjectPtr dtStart;
-                        sysTime2dt(c, &(pSelChange->stSelStart), &dtStart, dtDate);
-
-                        RexxObjectPtr dtEnd;
-                        sysTime2dt(c, &(pSelChange->stSelEnd), &dtEnd, dtDate);
-
-                        RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom, hwndFrom);
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-                        checkForCondition(c);
-                        return ReplyTrue;
-                    }
-                    else if ( code == MCN_VIEWCHANGE )
-                    {
-                        LPNMVIEWCHANGE pViewChange = (LPNMVIEWCHANGE)lParam;
-
-                        RexxStringObject newView = mcnViewChange2rexxString(c, pViewChange->dwNewView);
-                        RexxStringObject oldView = mcnViewChange2rexxString(c, pViewChange->dwOldView);
-
-                        RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom, hwndFrom);
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-                        checkForCondition(c);
-                        return ReplyTrue;
-                    }
-
-                    // Theoretically we can not get here because all month
-                    // calendar notification codes that have a tag are
-                    // accounted for.
-                    return ReplyFalse;
-                }
-                break;
+                    return processMCN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
 
                 case TAG_DATETIMEPICKER :
-                {
-                    RexxObjectPtr rexxReply;
-                    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
-                    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
-
-                    if ( code == DTN_CLOSEUP )
-                    {
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
-                    }
-                    else if ( code == DTN_DATETIMECHANGE  )
-                    {
-                        LPNMDATETIMECHANGE pChange = (LPNMDATETIMECHANGE)lParam;
-
-                        RexxObjectPtr dt;
-                        RexxObjectPtr valid;
-
-                        if ( pChange->dwFlags == GDT_VALID )
-                        {
-                            sysTime2dt(c, &(pChange->st), &dt, dtFull);
-                            valid = TheTrueObj;
-                        }
-                        else
-                        {
-                            sysTime2dt(c, NULL, &dt, dtNow);
-                            valid = TheFalseObj;
-                        }
-
-                        RexxArrayObject args = c->ArrayOfFour(dt, valid, idFrom, hwndFrom);
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-                        checkForCondition(c);
-
-                        return ReplyFalse;
-                    }
-                    else if ( code == DTN_DROPDOWN )
-                    {
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
-                    }
-                    else if ( code == DTN_FORMAT )
-                    {
-                        LPNMDATETIMEFORMAT pFormat = (LPNMDATETIMEFORMAT)lParam;
-
-                        RexxObjectPtr dt;
-                        sysTime2dt(c, &(pFormat->st), &dt, dtFull);
-
-                        RexxArrayObject args = c->ArrayOfFour(c->String(pFormat->pszFormat), dt, idFrom, hwndFrom);
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-
-                        if ( ! checkForCondition(c) )
-                        {
-                            CSTRING display = c->ObjectToStringValue(rexxReply);
-                            if ( strlen(display) < 64 )
-                            {
-                                strcpy(pFormat->szDisplay, display);
-                            }
-                            else
-                            {
-                                stringTooLongException(c, 1, 63, strlen(display));
-                                checkForCondition(c);
-                            }
-                        }
-
-                        return ReplyFalse;
-                    }
-                    else if ( code == DTN_FORMATQUERY )
-                    {
-                        LPNMDATETIMEFORMATQUERY pQuery = (LPNMDATETIMEFORMATQUERY)lParam;
-
-                        RexxObjectPtr _size = rxNewSize(c, 0, 0);
-
-                        RexxArrayObject args = c->ArrayOfFour(c->String(pQuery->pszFormat), _size, idFrom, hwndFrom);
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
-                        checkForCondition(c);
-
-                        PSIZE size = (PSIZE)c->ObjectToCSelf(_size);
-
-                        pQuery->szMax.cx = size->cx;
-                        pQuery->szMax.cy = size->cy;
-
-                        return ReplyFalse;
-                    }
-                    else if ( code == DTN_USERSTRING )
-                    {
-                        LPNMDATETIMESTRING pdts = (LPNMDATETIMESTRING)lParam;
-
-                        RexxDirectoryObject d = (RexxDirectoryObject)rxNewBuiltinObject(c, "DIRECTORY");
-                        c->DirectoryPut(d, c->String(pdts->pszUserString), "USERSTRING");
-                        c->DirectoryPut(d, TheNilObj, "DATETIME");
-                        c->DirectoryPut(d, TheFalseObj, "VALID");
-
-                        // Fill in the date time string struct with error values.
-                        dt2sysTime(c, NULLOBJECT, &(pdts->st), dtNow);
-                        pdts->dwFlags = GDT_ERROR;
-
-                        rexxReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, c->ArrayOfThree(d, idFrom, hwndFrom));
-
-                        if ( checkForCondition(c) )
-                        {
-                            return ReplyFalse;
-                        }
-
-                        RexxObjectPtr dt = c->DirectoryAt(d, "DATETIME");
-                        if ( ! c->IsOfType(dt, "DATETIME") )
-                        {
-                            wrongObjInDirectoryException(c, 1, "DATETIME", "a DateTime object", dt);
-                            checkForCondition(c);
-                            return ReplyFalse;
-                        }
-
-                        if ( ! dt2sysTime(c, dt, &(pdts->st), dtFull) )
-                        {
-                            checkForCondition(c);
-                            return ReplyFalse;
-                        }
-
-                        if ( isShowNoneDTP(pdts->nmhdr.hwndFrom) )
-                        {
-                            RexxObjectPtr _valid = c->DirectoryAt(d, "VALID");
-                            int32_t val = getLogical(c, _valid);
-
-                            if ( val == -1 )
-                            {
-                                wrongObjInDirectoryException(c, 1, "VALID", "Logical", _valid);
-                                checkForCondition(c);
-                                return ReplyFalse;
-                            }
-                            pdts->dwFlags = (val == 1 ? GDT_VALID : GDT_NONE);
-                        }
-                        else
-                        {
-                            pdts->dwFlags = GDT_VALID;
-                        }
-                        return ReplyFalse;
-                    }
-                    else if ( code == DTN_WMKEYDOWN )
-                    {
-                        LPNMDATETIMEWMKEYDOWN pQuery = (LPNMDATETIMEWMKEYDOWN)lParam;
-
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
-                    }
-                    else if ( code == NM_KILLFOCUS  )
-                    {
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
-                    }
-                    else if ( code == NM_SETFOCUS  )
-                    {
-                        return genericNotifyInvoke(c, pcpbd, m[i].rexxMethod, idFrom, hwndFrom);
-                    }
-
-                    // Theoretically we can not get here because all date time
-                    // picker notification codes that have a tag are accounted
-                    // for.
-                    return ReplyFalse;
-                }
-                break;
+                    return processDTN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
 
                 default :
                     break;
-
             }
 
             /* do we have an end label edit for tree or list view? */
@@ -1133,7 +1258,6 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 lParam = (((NMBCHOTITEM *)lParam)->dwFlags & HICF_ENTERING) ? 1 : 0;
             }
 
-generic_match_out:
             return genericAddDialogMessage(dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, np, handle, item);
         }
     }

@@ -159,13 +159,13 @@ extern DWORD ComCtl32Version;
 // first cut at this, may change.)
 #define TAG_REPLYFROMREXX         0x02000000
 
-// Describes how a message searched for in the message table should be handled
-// by RexxDlgProc() after the search.
+// Describes how a message searched for in the message table should be handled.
 typedef enum
 {
-    ContinueProcessing   = 0,    // Message not matched.
-    ReplyFalse           = 1,    // Message matched and handled return FALSE to the system
-    ReplyTrue            = 2,    // Message matched and handled return TRUE to the system
+    ContinueProcessing   = 0,    // Message not matched, continue in RexxDlgProc()
+    ReplyFalse           = 1,    // Message matched and handled return FALSE to the system from RexxDlgProc()
+    ReplyTrue            = 2,    // Message matched and handled return TRUE to the system from RexxDlgProc()
+    ContinueSearching    = 3     // Continue searching message table before returning to RexxDlgProc()
 } MsgReplyType;
 
 
