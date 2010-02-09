@@ -2155,19 +2155,13 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
         {
             EnterCriticalSection(&crit_sec);
 
-            if ( dialogInAdminTable(adm) )
+            if ( pcpbd->isActive )
             {
                 delDialog(pcpbd);
             }
             safeLocalFree(adm->pMessageQueue);
             LocalFree(adm);
             pcpbd->dlgAdm = NULL;
-
-            if ( pcpbd->dlgProcContext != NULL )
-            {
-                pcpbd->dlgProcContext->DetachThread();
-                pcpbd->dlgProcContext = NULL;
-            }
 
             LeaveCriticalSection(&crit_sec);
         }
@@ -2178,11 +2172,14 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
             context->ReleaseGlobalReference(pcwb->rexxHwnd);
             pcwb->rexxHwnd = TheZeroObj;
         }
-    }
 
-    // Set the adm attribute to null here, to be sure it reflects that, no
-    // matter what, dlgAdm is null at this point.
-    context->SetObjectVariable("ADM", TheZeroObj);
+        // It is tempting to think dlgProcContext should be checked here, and,
+        // if not null do a DetachThread().  However, the DetachThread() is, and
+        // should be, done from the message loop thread, not here.  The only
+        // time dlgProcContext is not null is if the interpreter is being
+        // abruptly terminated (Ctrl-C, syntax condition, etc..)  And in this
+        // case the DetachThread() is not needed.
+    }
 
     return TheZeroObj;
 }

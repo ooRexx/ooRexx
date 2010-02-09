@@ -554,7 +554,7 @@ uint32_t dateTimePickerStyle(CSTRING opts, uint32_t style)
 
     if ( StrStrI(opts, "PARSE" ) != NULL ) style |= DTS_APPCANPARSE;
     if ( StrStrI(opts, "RIGHT" ) != NULL ) style |= DTS_RIGHTALIGN;
-    if ( StrStrI(opts, "NONE"  ) != NULL ) style |= DTS_SHOWNONE;
+    if ( StrStrI(opts, "SHOWNONE"  ) != NULL ) style |= DTS_SHOWNONE;
     if ( StrStrI(opts, "UPDOWN") != NULL ) style |= DTS_UPDOWN;
     return style;
 }
@@ -965,7 +965,7 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     if ( ! startDialogTemplate(context, &pBase, pcdd, expected, x, y, cx, cy, dlgClass, title,
                                pcpbd->fontName, pcpbd->fontSize, style) )
     {
-        return FALSE;
+       goto err_out;
     }
     pcdd->base = pBase;
     pcpbd->wndBase->sizeX = cx;
@@ -977,8 +977,7 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
 err_out:
     // No underlying windows dialog is created, but we still need to clean up
     // the admin block, which was allocated when the Rexx dialog object was
-    // instantiated.  This admin block is now in the DialogTab.  TODO, still
-    // need to recheck this logic.
+    // instantiated.  This admin block is now in the DialogTab.
 
     delDialog(pcpbd);
     return FALSE;
@@ -2073,8 +2072,6 @@ RexxMethod2(RexxObjectPtr, dyndlg_stopDynamic_pvt, OPTIONAL_RexxObjectPtr, ignor
 
     if ( pcdd->base != NULL )
     {
-        // TODO remove this printf before release.
-        printf("DynamicDialog::stopDynamic() base pointer not null! base=%p\n", pcdd->base);
         LocalFree(pcdd->base);
     }
 

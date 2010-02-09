@@ -1591,6 +1591,9 @@ done_out:
  *         Under normal circumstances there is no way for a user to enter a tab
  *         character by typing in a multi-line edit control.  The edit control
  *         would need to be sub-classed and this is not provided by ooDialog.
+ *         However, the user could use copy and paste to paste in text with
+ *         tabs.  And, text placed in the edit control by the programmer can
+ *         also contain tabs.
  */
 RexxMethod2(logical_t, e_setTabStops, RexxArrayObject, tabStops, CSELF, pCSelf)
 {

@@ -212,8 +212,7 @@ RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t
 
 
 /**
- * Methods for the ScrollBar class.  TODO these methods use the old
- * compatibility functions, they should be brought up to date.
+ * Methods for the ScrollBar class.
  */
 #define SCROLLBAR_CLASS   "ScrollBar"
 
@@ -223,7 +222,13 @@ RexxMethod4(logical_t, sb_setRange, int32_t, min, int32_t, max, OPTIONAL_logical
     oodResetSysErrCode(context->threadContext);
     redraw = (argumentOmitted(3) ? TRUE : redraw);
 
-    if ( SetScrollRange(getDChCtrl(pCSelf), SB_CTL, min, max, (BOOL)redraw) == 0 )
+    SCROLLINFO si = {0};
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_RANGE;
+    si.nMax = max;
+    si.nMin = min;
+
+    if ( SetScrollInfo(getDChCtrl(pCSelf), SB_CTL, &si, (BOOL)redraw) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return 1;
@@ -240,20 +245,18 @@ RexxMethod1(RexxObjectPtr, sb_getRange, CSELF, pCSelf)
     context->DirectoryPut(result, TheNegativeOneObj, "MIN");
     context->DirectoryPut(result, TheNegativeOneObj, "MAX");
 
-    int32_t min, max;
-    if ( GetScrollRange(getDChCtrl(pCSelf), SB_CTL, &min, &max) == 0 )
+    SCROLLINFO si = {0};
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_RANGE;
+
+    if ( GetScrollInfo(getDChCtrl(pCSelf), SB_CTL, &si) == 0 )
     {
-        uint32_t rc = GetLastError();
-        if ( rc == 0 )
-        {
-            rc = ERROR_INVALID_FUNCTION;  // To be sure system error code is not 0;
-        }
-        oodSetSysErrCode(context->threadContext, rc);
+        oodSetSysErrCode(context->threadContext);
     }
     else
     {
-        context->DirectoryPut(result, context->Int32(min), "MIN");
-        context->DirectoryPut(result, context->Int32(max), "MAX");
+        context->DirectoryPut(result, context->Int32(si.nMin), "MIN");
+        context->DirectoryPut(result, context->Int32(si.nMax), "MAX");
     }
     return result;
 }
@@ -263,7 +266,12 @@ RexxMethod3(logical_t, sb_setPosition, int32_t, pos, OPTIONAL_logical_t, redraw,
     oodResetSysErrCode(context->threadContext);
     redraw = (argumentOmitted(3) ? TRUE : redraw);
 
-    if ( SetScrollPos(getDChCtrl(pCSelf), SB_CTL, pos, (BOOL)redraw) == 0 )
+    SCROLLINFO si = {0};
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_POS;
+    si.nPos = pos;
+
+    if ( SetScrollInfo(getDChCtrl(pCSelf), SB_CTL, &si, (BOOL)redraw) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return 0;
@@ -274,12 +282,16 @@ RexxMethod3(logical_t, sb_setPosition, int32_t, pos, OPTIONAL_logical_t, redraw,
 RexxMethod1(int32_t, sb_getPosition, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    int32_t pos = GetScrollPos(getDChCtrl(pCSelf), SB_CTL);
-    if ( pos == 0 )
+
+    SCROLLINFO si = {0};
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_POS;
+
+    if ( GetScrollInfo(getDChCtrl(pCSelf), SB_CTL, &si) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
     }
-    return pos;
+    return si.nPos;
 }
 
 

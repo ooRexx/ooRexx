@@ -46,6 +46,7 @@
 
 #include <commctrl.h>
 #include <shlwapi.h>
+#include <OleAcc.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodMessaging.hpp"
@@ -262,8 +263,59 @@ RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlT
 
 
 /**
- * Creates the Rexx control object that represents the underlying Windows
- * control.
+ * Produce a string representation of an "object state."
+ *
+ * Windows Accessibility uses "Object State Constants" to describe the states of
+ * objects. An object is associated with one or more of these state values at
+ * any time.
+ *
+ * This is used in a few places in ooDialog.  MSDN is not explicit in describing
+ * what state constants are valid in these places.  So this function includes
+ * all the valid state contstants, even though most of them are probably not
+ * used.
+ */
+RexxStringObject objectStateToString(RexxMethodContext *c, uint32_t state)
+{
+    char buf[512];
+    buf[0] = '\0';
+
+    if ( state & STATE_SYSTEM_ANIMATED)        strcat(buf, "ANIMATED ");
+    if ( state & STATE_SYSTEM_BUSY)            strcat(buf, "BUSY ");
+    if ( state & STATE_SYSTEM_CHECKED)         strcat(buf, "CHECKED ");
+    if ( state & STATE_SYSTEM_COLLAPSED)       strcat(buf, "COLLAPSED ");
+    if ( state & STATE_SYSTEM_DEFAULT)         strcat(buf, "DEFAULT ");
+    if ( state & STATE_SYSTEM_EXPANDED)        strcat(buf, "EXPANDED ");
+    if ( state & STATE_SYSTEM_EXTSELECTABLE)   strcat(buf, "EXTSELECTABLE ");
+    if ( state & STATE_SYSTEM_FLOATING)        strcat(buf, "FLOATING ");
+    if ( state & STATE_SYSTEM_FOCUSABLE)       strcat(buf, "FOCUSABLE ");
+    if ( state & STATE_SYSTEM_FOCUSED)         strcat(buf, "FOCUSED ");
+    if ( state & STATE_SYSTEM_HASPOPUP)        strcat(buf, "HASPOPUP ");
+    if ( state & STATE_SYSTEM_HOTTRACKED)      strcat(buf, "HOTTRACKED ");
+    if ( state & STATE_SYSTEM_INDETERMINATE)   strcat(buf, "INDETERMINATE ");
+    if ( state & STATE_SYSTEM_INVISIBLE)       strcat(buf, "INVISIBLE ");
+    if ( state & STATE_SYSTEM_LINKED)          strcat(buf, "LINKED ");
+    if ( state & STATE_SYSTEM_MARQUEED)        strcat(buf, "MARQUEED ");
+    if ( state & STATE_SYSTEM_MOVEABLE)        strcat(buf, "MOVEABLE ");
+    if ( state & STATE_SYSTEM_MULTISELECTABLE) strcat(buf, "MULTISELECTABLE ");
+    if ( state & STATE_SYSTEM_OFFSCREEN)       strcat(buf, "OFFSCREEN ");
+    if ( state & STATE_SYSTEM_PRESSED)         strcat(buf, "PRESSED ");
+    if ( state & STATE_SYSTEM_PROTECTED)       strcat(buf, "PROTECTED ");
+    if ( state & STATE_SYSTEM_READONLY)        strcat(buf, "READONLY ");
+    if ( state & STATE_SYSTEM_SELECTABLE)      strcat(buf, "SELECTABLE ");
+    if ( state & STATE_SYSTEM_SELECTED)        strcat(buf, "SELECTED ");
+    if ( state & STATE_SYSTEM_SELFVOICING)     strcat(buf, "SELFVOICING ");
+    if ( state & STATE_SYSTEM_SIZEABLE)        strcat(buf, "SIZEABLE ");
+    if ( state & STATE_SYSTEM_TRAVERSED)       strcat(buf, "TRAVERSED ");
+    if ( state & STATE_SYSTEM_UNAVAILABLE)     strcat(buf, "UNAVAILABLE ");
+
+    *(buf + strlen(buf)) = '\0';
+    return c->String(buf);
+}
+
+
+/**
+ * Creates the Rexx dialog control object that represents the underlying Windows
+ * dialog control.
  *
  * The control object can, almost, be created entirely from within the C / C++
  * environment.  A method context and the Rexx parent dialog are needed.
@@ -333,6 +385,47 @@ RexxObjectPtr createRexxControl(RexxMethodContext *c, HWND hControl, HWND hDlg, 
     }
 
 out:
+    return result;
+}
+
+
+/**
+ * Creates a Rexx dialog control from within a dialog control method, using a
+ * window handle of another control.
+ *
+ * In the Windows API for dialog controls, it is often possible to obtain the
+ * handle of a "buddy" or "companion" control of a control.  For instance, with
+ * the date time picker control, it is possible to obtain the window handle of
+ * the drop down month calendar control. The 'originating' control is the date
+ * time picker and the companion control is the month calendar.
+ *
+ * In these cases, this function will convert the window handle to a Rexx dialog
+ * control object.
+ *
+ * @param c      The method context we are operating in.
+ * @param pcdc   The CSelf struct of the originating control.
+ * @param hCtrl  The window handle of the companion control.  This can be null,
+ *               in which case .nil is returned.
+ * @param type   The type of the companion control.
+ *
+ * @return A Rexx dialog control object that represents the companion control,
+ *         or .nil if the object is not instantiated.
+ */
+RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCDialogControl pcdc, HWND hCtrl, oodControl_t type)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    if ( hCtrl == NULL )
+    {
+        goto done_out;
+    }
+
+    bool     isCategoryDlg = (c->IsOfType(pcdc->rexxSelf, "CATEGORYDIALOG") ? true : false);
+    uint32_t id = (uint32_t)GetDlgCtrlID(hCtrl);
+
+    result = createRexxControl(c, hCtrl, pcdc->hDlg, id, type, pcdc->oDlg, isCategoryDlg, false);
+
+done_out:
     return result;
 }
 

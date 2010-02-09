@@ -39,8 +39,8 @@
 /**
  * oodViewControls.cpp
  *
- * Contains methods for the List-view, Tree-view, DateTimePicker, and
- * MonthCalendar controls.
+ * Contains methods for the DateTimePicker, List-view, MonthCalendar, Tab, and
+ * Tree-view controls.
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
@@ -122,7 +122,7 @@ RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
 #define DATETIMEPICKER_WINNAME   "Date and Time Picker"
 
 // This is used for MonthCalendar also
-#define SYSTEMTIME_MIN_YEAR    1601
+#define SYSTEMTIME_MIN_YEAR               1601
 #define SYSTEMTIME_RANGE_EXCEPTION_MSG    "indexes 1 and 2 of argument 1, the array object, can not both be missing"
 
 
@@ -286,6 +286,75 @@ err_out:
     return false;
 }
 
+/**
+ * Gets the time range (minimum and maximum allowable times) for a MonthCalendar
+ * or a DateTimePicker control
+ *
+ * @param c
+ * @param range
+ * @param hCtrl
+ * @param ctrlType
+ *
+ * @return CSTRING
+ */
+CSTRING getTimeRange(RexxMethodContext *c, RexxArrayObject range, HWND hCtrl, oodControl_t ctrlType)
+{
+    SYSTEMTIME sysTime[2];
+    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
+
+    DateTimePart dtPart;
+    uint32_t ret;
+
+    if ( ctrlType == winMonthCalendar )
+    {
+        dtPart = dtDate;
+        ret =  MonthCal_GetRange(hCtrl, &sysTime);
+    }
+    else
+    {
+        dtPart = dtFull;
+        ret =  DateTime_GetRange(hCtrl, &sysTime);
+    }
+
+    RexxObjectPtr minDate;
+    RexxObjectPtr maxDate;
+
+    CSTRING result;
+    switch ( ret )
+    {
+        case 0 :
+            result = "none";
+            minDate = TheZeroObj;
+            maxDate = TheZeroObj;
+            break;
+        case (GDTR_MIN | GDTR_MAX) :
+            sysTime2dt(c->threadContext, (SYSTEMTIME *)&sysTime, &minDate, dtPart);
+            sysTime2dt(c->threadContext, (SYSTEMTIME *)&sysTime + 1, &maxDate, dtPart);
+            result = "both";
+            break;
+        case GDTR_MIN :
+            result = "min";
+            sysTime2dt(c->threadContext, (SYSTEMTIME *)&sysTime, &minDate, dtPart);
+            maxDate = TheZeroObj;
+            break;
+        case GDTR_MAX :
+            result = "max";
+            minDate = TheZeroObj;
+            sysTime2dt(c->threadContext, (SYSTEMTIME *)&sysTime + 1, &maxDate, dtPart);
+            break;
+        default :
+            result = "error";  // I don'think this is possible.
+            minDate = TheZeroObj;
+            maxDate = TheZeroObj;
+            break;
+    }
+
+    c->ArrayPut(range, minDate, 1);
+    c->ArrayPut(range, maxDate, 2);
+
+    return result;
+}
+
 
 /**
  * Creates a DateTime object that represents the time set in a SYSTEMTIME
@@ -329,7 +398,90 @@ void sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTi
     }
 }
 
-/** DateTimePicker::dateTime   [Attribute Get]
+
+static uint32_t calPart2flag(CSTRING part)
+{
+    // This is an invalid flag.  When used in the DateTime_xx or MonthCalenddar_XX
+    // macros, the macros then return the error code.
+    uint32_t flag = (uint32_t)-1;
+
+    if (      StrStrI(part, "BACKGROUND"  ) != NULL ) flag = MCSC_BACKGROUND;
+    else if ( StrStrI(part, "MONTHBK"     ) != NULL ) flag = MCSC_MONTHBK;
+    else if ( StrStrI(part, "TEXT"        ) != NULL ) flag = MCSC_TEXT;
+    else if ( StrStrI(part, "TITLEBK"     ) != NULL ) flag = MCSC_TITLEBK;
+    else if ( StrStrI(part, "TITLETEXT"   ) != NULL ) flag = MCSC_TITLETEXT;
+    else if ( StrStrI(part, "TRAILINGTEXT") != NULL ) flag = MCSC_TRAILINGTEXT;
+    return flag;
+}
+
+
+/**
+ * Produce a string representation of a Month Calendar's style.
+ */
+static RexxStringObject mcStyle2String(RexxMethodContext *c, uint32_t style)
+{
+    char buf[256];
+    buf[0] = '\0';
+
+    if ( style & MCS_DAYSTATE )         strcat(buf, "DAYSTATE"   );
+    if ( style & MCS_MULTISELECT )      strcat(buf, "MULTI"      );
+    if ( style & MCS_NOTODAY )          strcat(buf, "NOTODAY"    );
+    if ( style & MCS_NOTODAYCIRCLE )    strcat(buf, "NOCIRCLE"   );
+    if ( style & MCS_WEEKNUMBERS )      strcat(buf, "WEEKNUMBERS");
+    if ( style & MCS_NOTRAILINGDATES )  strcat(buf, "NOTRAILING" );
+    if ( style & MCS_SHORTDAYSOFWEEK )  strcat(buf, "SHORTDAYS"  );
+    if ( style & MCS_NOSELCHANGEONNAV ) strcat(buf, "NOSELCHANGE");
+
+    *(buf + strlen(buf)) = '\0';
+    return c->String(buf);
+}
+
+
+/**
+ * Produce a Month Calendar's style from a string of keywords.
+ */
+static uint32_t string2mcStyle(CSTRING style)
+{
+    uint32_t flags = 0;
+
+    if ( StrStrI(style, "DAYSTATE"   ) != NULL ) flags |= MCS_DAYSTATE;
+    if ( StrStrI(style, "MULTI"      ) != NULL ) flags |= MCS_MULTISELECT;
+    if ( StrStrI(style, "NOTODAY"    ) != NULL ) flags |= MCS_NOTODAY;
+    if ( StrStrI(style, "NOCIRCLE"   ) != NULL ) flags |= MCS_NOTODAYCIRCLE;
+    if ( StrStrI(style, "WEEKNUMBERS") != NULL ) flags |= MCS_WEEKNUMBERS;
+    if ( StrStrI(style, "NOTRAILING" ) != NULL ) flags |= MCS_NOTRAILINGDATES;
+    if ( StrStrI(style, "SHORTDAYS"  ) != NULL ) flags |= MCS_SHORTDAYSOFWEEK;
+    if ( StrStrI(style, "NOSELCHANGE") != NULL ) flags |= MCS_NOSELCHANGEONNAV;
+
+    return flags;
+}
+
+
+/** DateTimePicker::closeMonthCal()
+ *
+ *  Closes the drop down month calendar control of the date time picker.
+ *
+ *  @return  This method always returns zero
+ *
+ *  @note    Requires Vista or later.  This method causes the date time picker
+ *           to destroy the month calendar control and to send a DTN_CLOSEUP
+ *           notification (the CLOSEUP event notification) that the control is
+ *           closing.
+ */
+RexxMethod2(RexxObjectPtr, dtp_closeMonthCal, RexxObjectPtr, _size, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        wrongWindowsVersionException(context, "getIdelaSize", "Vista");
+        return TheZeroObj;
+    }
+
+    DateTime_CloseMonthCal(getDChCtrl(pCSelf));
+    return TheZeroObj;
+}
+
+
+/** DateTimePicker::getDateTime()
  *
  *  Retrieves the current selected system time of the date time picker and
  *  returns it as a DateTime object.
@@ -342,10 +494,10 @@ void sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTi
  *            the control, or the .nil object if the control is in the
  *            'no date' state.
  */
-RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, dtp_getDateTime, CSELF, pCSelf)
 {
     SYSTEMTIME sysTime = {0};
-    RexxObjectPtr dateTime = NULLOBJECT;
+    RexxObjectPtr dateTime = TheNilObj;
 
     switch ( DateTime_GetSystemtime(getDChCtrl(pCSelf), &sysTime) )
     {
@@ -355,9 +507,8 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
 
         case GDT_NONE:
             // This is valid.  It means the DTP is using the DTS_SHOWNONE  style
-            // and that the user has the check box is not checked.  We return a
-            // null pointer object.
-            dateTime = TheNilObj;
+            // and that the user has the check box is not checked.  We return
+            // the .nil object.
             break;
 
         case GDT_ERROR:
@@ -369,45 +520,96 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, CSELF, pCSelf)
     return dateTime;
 }
 
-/** DateTimePicker::dateTime=  [Attribute Set]
+/** DateTimePicker::getInfo()
  *
- *  Sets the system time for the date time picker to the time represented by the
- *  DateTime object.  If, and only if, the date time picker has the DTS_SHOWNONE
- *  style, it can also be set to "no date."  The Rexx user can set this state by
- *  passing in the .nil object.
+ *  Returns a Directory object with information about the date time picker.
  *
- *  @param dateTime  The date and time to set the control to.
+ *  @note  The directory object will contain the following indexes:
  *
- *  @return   This is an attribute, there is no return.
+ *         CHECKRECT:  A .Rect object describing location of the checkbox, if
+ *         the date time picker has the SHOWNONE style.  If a checkbox is
+ *         displayed and checked, an edit control should be available to update
+ *         the selected date-time value.
  *
- *  @note  The minimum year a date time picker can be set to is 1601.  If the
- *         DateTime object represents a year prior to 1601, an exception is
- *         raised.
+ *         CHECKSTATE:  A list of <object state> keywords describing the state
+ *         of the check box.
  *
+ *         BUTTONRECT:  A RECT structure describing the location of the
+ *         drop-down grid or the up/down control.
+ *
+ *         BUTTONSTATE:  A list of <object state> keywords describing the state
+ *         of the check box.
+ *
+ *         EDIT:  The Edit control object.
+ *
+ *         DROPDOWN:  The MonthCalendar control object.
+ *
+ *         UPDOWN:  The UpDown control object.
  */
-RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, dtp_getInfo, CSELF, pCSelf)
 {
-    SYSTEMTIME sysTime = {0};
-    HWND hwnd = getDChCtrl(pCSelf);
+    if ( ! _isAtLeastVista() )
+    {
+        return wrongWindowsVersionException(context, "getInfo", "Vista");
+    }
 
-    if ( isShowNoneDTP(hwnd) && dateTime == TheNilObj )
+    HWND hDTP = getDChCtrl(pCSelf);
+    RexxDirectoryObject result = context->NewDirectory();
+
+    DATETIMEPICKERINFO info = {0};
+    info.cbSize = sizeof(DATETIMEPICKERINFO);
+
+    DateTime_GetDateTimePickerInfo(hDTP, &info);
+
+    // TODO need to test this on Vista and see what the actual values are
+    // depending on the style of the DTP.
+
+    context->DirectoryPut(result, rxNewRect(context, &(info.rcCheck)), "CHECKRECT");
+    context->DirectoryPut(result, objectStateToString(context, info.stateCheck), "CHECKSTATE");
+
+    context->DirectoryPut(result, rxNewRect(context, &(info.rcButton)), "BUTTONRECT");
+    context->DirectoryPut(result, objectStateToString(context, info.stateButton), "BUTTONSTATE");
+
+    RexxObjectPtr ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndDropDown, winMonthCalendar);
+    context->DirectoryPut(result, ctrl, "DROPDOWN");
+
+    ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndEdit, winEdit);
+    context->DirectoryPut(result, ctrl, "EDIT");
+
+    ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndUD, winUpDown);
+    context->DirectoryPut(result, ctrl, "UPDOWN");
+
+    return result;
+}
+
+
+/** DateTimePicker::getIdealSize()
+ *
+ *  Gets the size needed to display the date time picker without clipping.
+ *
+ *  @param  size  [IN/OUT] A .Size object, on return the object will be set to
+ *                the ideal size.
+ *
+ *  @return  This method always returns true, becuase it will always succeed.
+ *           However, if the size argument is not a .Size object, a syntax
+ *           condition is raised.
+ *
+ *  @note    Requires Vista or later.
+ */
+RexxMethod2(RexxObjectPtr, dtp_getIdealSize, RexxObjectPtr, _size, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
     {
-        DateTime_SetSystemtime(hwnd, GDT_NONE, &sysTime);
+        wrongWindowsVersionException(context, "getIdelaSize", "Vista");
+        return TheZeroObj;
     }
-    else
+
+    PSIZE s = rxGetSize(context, _size, 1);
+    if ( s != NULL )
     {
-        if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
-        {
-            if ( dt2sysTime(context->threadContext, dateTime, &sysTime, dtFull) )
-            {
-                if ( DateTime_SetSystemtime(hwnd, GDT_VALID, &sysTime) == 0 )
-                {
-                    controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "DateTime_SetSystemtime", DATETIMEPICKER_WINNAME);
-                }
-            }
-        }
+        DateTime_GetIdealSize(getDChCtrl(pCSelf), s);
     }
-    return NULLOBJECT;
+    return TheTrueObj;
 }
 
 
@@ -441,26 +643,118 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, CSELF, pCS
  */
 RexxMethod1(RexxObjectPtr, dtp_getMonthCal, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-
-    RexxObjectPtr result = TheNilObj;
-
     HWND hDTP = getDChCtrl(pCSelf);
-    HWND hMC = DateTime_GetMonthCal(hDTP);
-    if ( hMC == NULL )
+    return createControlFromHwnd(context, (pCDialogControl)pCSelf, DateTime_GetMonthCal(hDTP), winMonthCalendar);
+}
+
+
+/** DateTimePicker::getMonthCalColor()
+ *
+ *  Gets the color for a given portion of the month calendar within a date and
+ *  time picker (DTP) control.
+ *
+ *  @param  calPart  Keyword specifying which part of the month calendar to get
+ *                   the color for.
+ *
+ *  @return  The color for the part specified as a COLORREF, or CLR_NONE on
+ *           error.
+ *
+ *  @note  Using the wrong keyword, mispelled, etc., will result in CLR_NONE
+ *         being returned.
+ */
+RexxMethod2(uint32_t, dtp_getMonthCalColor, CSTRING, calPart, CSELF, pCSelf)
+{
+    return (COLORREF)DateTime_GetMonthCalColor(getDChCtrl(pCSelf), calPart2flag(calPart));
+}
+
+
+/** DateTimePicker::getMonthCalStyle()
+ *
+ *  Gets the month calendar style for the date and time picker.
+ *
+ *  @return  A string of keywords that consist of the style of the month
+ *           calendar control used by the date time picker.
+ *
+ *  @note  See <LINK to DynamicDialog::createMonthCalendar> for the month
+ *         calendar style keywords.
+ *
+ *         Vista or later only.
+ */
+RexxMethod1(RexxObjectPtr, dtp_getMonthCalStyle, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
     {
-        goto done_out;
+        wrongWindowsVersionException(context, "getMonthCalStyle", "Vista");
+        return TheZeroObj;
     }
 
-    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+    uint32_t style = (uint32_t)DateTime_GetMonthCalStyle(getDChCtrl(pCSelf));
+    return mcStyle2String(context, style);
+}
 
-    bool     isCategoryDlg = (c->IsOfType(pcdc->rexxSelf, "CATEGORYDIALOG") ? true : false);
-    uint32_t id = (uint32_t)GetDlgCtrlID(hMC);
 
-    result = createRexxControl(context, hMC, hDTP, id, winMonthCalendar, pcdc->oDlg, isCategoryDlg, false);
+/** DateTimePicker::getRange()
+ *
+ *  Gets the current minimum and maximum allowable system times for a date and
+ *  time picker (DTP) control.
+ *
+ *  @param  range  [IN/OUT] An array in which the minimum and maximum times are
+ *                 returned as .DateTime objects.  The minimum time will be at
+ *                 index 1 and the maximum at index 2.  If either index is set
+ *                 to zero, then no corresponding limit is set for the date time
+ *                 picker control.
+ *
+ *  @return  A keyword indicating the result.  See below for the possible
+ *           keywords
+ *
+ *  @note  The returned keyword indicates whether a minimum or maximum limit has
+ *         been set for the DTP.  The keyword will be one of: none, min, max,
+ *         both, or possibly error.  (An error is unlikely.)
+ */
+RexxMethod2(CSTRING, dtp_getRange, RexxArrayObject, range, CSELF, pCSelf)
+{
+    return getTimeRange(context, range, getDChCtrl(pCSelf), winDateTimePicker);
+}
 
-done_out:
-    return result;
+/** DateTimePicker::setDateTime()
+ *
+ *  Sets the system time for the date time picker to the time represented by the
+ *  DateTime object.  If, and only if, the date time picker has the DTS_SHOWNONE
+ *  style, it can also be set to "no date."  The Rexx user can set this state by
+ *  passing in the .nil object.
+ *
+ *  @param dateTime  The date and time to set the control to.
+ *
+ *  @return   Returns 0, always
+ *
+ *  @note  The minimum year a date time picker can be set to is 1601.  If the
+ *         DateTime object represents a year prior to 1601, an exception is
+ *         raised.
+ *
+ */
+RexxMethod2(RexxObjectPtr, dtp_setDateTime, RexxObjectPtr, dateTime, CSELF, pCSelf)
+{
+    SYSTEMTIME sysTime = {0};
+    HWND hwnd = getDChCtrl(pCSelf);
+
+    if ( isShowNoneDTP(hwnd) && dateTime == TheNilObj )
+    {
+        DateTime_SetSystemtime(hwnd, GDT_NONE, &sysTime);
+    }
+    else
+    {
+        if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
+        {
+            if ( dt2sysTime(context->threadContext, dateTime, &sysTime, dtFull) )
+            {
+                if ( DateTime_SetSystemtime(hwnd, GDT_VALID, &sysTime) == 0 )
+                {
+                    controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "DateTime_SetSystemtime", DATETIMEPICKER_WINNAME);
+                }
+            }
+        }
+    }
+    return TheZeroObj;
 }
 
 
@@ -488,6 +782,51 @@ done_out:
 RexxMethod2(logical_t, dtp_setFormat, CSTRING, format, CSELF, pCSelf)
 {
     return DateTime_SetFormat(getDChCtrl(pCSelf), format);
+}
+
+
+/** DateTimePicker::setMonthCalColor()
+ *
+ *  Sets the color for a given portion of the month calendar within a date and
+ *  time picker (DTP) control.
+ *
+ *  @param  calPart  Keyword specifying which part of the month calendar to set
+ *                   the color.
+ *
+ *  @param  color    The color, as a COLORREF, to use for the specified part of
+ *                   the month calendar.
+ *
+ *  @return  The previous color for the part specified as a COLORREF, or
+ *           CLR_NONE on error.
+ */
+RexxMethod3(uint32_t, dtp_setMonthCalColor, CSTRING, calPart, uint32_t, color, CSELF, pCSelf)
+{
+    return (COLORREF)DateTime_SetMonthCalColor(getDChCtrl(pCSelf), calPart2flag(calPart), color);
+}
+
+
+/** DateTimePicker::setMonthCalStyle()
+ *
+ *  Sets the month calendar style for the date and time picker.
+ *
+ *  @return  A string of keywords that consist of the style of the month
+ *           calendar control used by the date time picker.
+ *
+ *  @note  See <LINK to DynamicDialog::createMonthCalendar> for the month
+ *         calendar style keywords.
+ *
+ *         Vista or later only.
+ */
+RexxMethod2(RexxObjectPtr, dtp_setMonthCalStyle, CSTRING, newStyle, CSELF, pCSelf)
+{
+    if ( ! _isAtLeastVista() )
+    {
+        wrongWindowsVersionException(context, "setMonthCalStyle", "Vista");
+        return TheZeroObj;
+    }
+
+    uint32_t style = (uint32_t)DateTime_SetMonthCalStyle(getDChCtrl(pCSelf), string2mcStyle(newStyle));
+    return mcStyle2String(context, style);
 }
 
 
@@ -669,20 +1008,6 @@ static void firstDay2directory(RexxMethodContext *c, uint32_t firstDay, RexxDire
     c->DirectoryPut(result, c->Int32(iDay), "DAY");
     c->DirectoryPut(result, usesLocale, "USINGLOCALE");
     c->DirectoryPut(result, c->String(dayName), "DAYNAME");
-}
-
-
-static COLORREF calPart2flag(CSTRING part)
-{
-    COLORREF color = MCSC_BACKGROUND;
-
-    if (      StrStrI(part, "BACKGROUND"  ) != NULL ) color = MCSC_BACKGROUND;
-    else if ( StrStrI(part, "MONTHBK"     ) != NULL ) color = MCSC_MONTHBK;
-    else if ( StrStrI(part, "TEXT"        ) != NULL ) color = MCSC_TEXT;
-    else if ( StrStrI(part, "TITLEBK"     ) != NULL ) color = MCSC_TITLEBK ;
-    else if ( StrStrI(part, "TITLETEXT"   ) != NULL ) color = MCSC_TITLETEXT;
-    else if ( StrStrI(part, "TRAILINGTEXT") != NULL ) color = MCSC_TRAILINGTEXT;
-    return color;
 }
 
 
@@ -974,7 +1299,7 @@ RexxMethod1(RexxObjectPtr, mc_getCALID, CSELF, pCSelf)
  *
  *  Retrieves the color for a given portion of a month calendar control.
  *
- *  @param  which  Specifies which portion to get the color for.
+ *  @param  calPart  Specifies which part of the calendar to get the color for.
  *
  *  @return  The color for the portion of the month calendar specified, or
  *           CLR_INVALID on error.
@@ -988,7 +1313,7 @@ RexxMethod1(RexxObjectPtr, mc_getCALID, CSELF, pCSelf)
  *          end
  *
  */
-RexxMethod2(uint32_t, mc_getColor, CSTRING, which, CSELF, pCSelf)
+RexxMethod2(uint32_t, mc_getColor, CSTRING, calPart, CSELF, pCSelf)
 {
     HWND hMC = getMonthCalendar(context, pCSelf);
     if ( hMC == NULL )
@@ -996,8 +1321,8 @@ RexxMethod2(uint32_t, mc_getColor, CSTRING, which, CSELF, pCSelf)
         return 0;
     }
 
-    COLORREF color = calPart2flag(which);
-    return (COLORREF)MonthCal_GetColor(hMC, color);
+    uint32_t part = calPart2flag(calPart);
+    return (COLORREF)MonthCal_GetColor(hMC, part);
 }
 
 RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
@@ -1313,6 +1638,25 @@ err_out:
     return -1;
 }
 
+
+/** MonthCalendar::getRange()
+ *
+ *  Gets the current minimum and maximum allowable dates for a month calendar
+ *  control.
+ *
+ *  @param  range  [IN/OUT] An array in which the minimum and maximum dates are
+ *                 returned as .DateTime objects.  The minimum date will be at
+ *                 index 1 and the maximum at index 2.  If either index is set
+ *                 to zero, then no corresponding limit is set for the month
+ *                 calendar control.
+ *
+ *  @return  A keyword indicating the result.  See below for the possible
+ *           keywords.
+ *
+ *  @note  The returned keyword indicates whether a minimum or maximum limit has
+ *         been set for the month calendar control.  The keyword will be one of:
+ *         none, min, max, both, or possibly error.  (An error is unlikely.)
+ */
 RexxMethod2(CSTRING, mc_getRange, RexxArrayObject, range, CSELF, pCSelf)
 {
     HWND hMC = getMonthCalendar(context, pCSelf);
@@ -1320,49 +1664,8 @@ RexxMethod2(CSTRING, mc_getRange, RexxArrayObject, range, CSELF, pCSelf)
     {
         return "";
     }
+    return getTimeRange(context, range, hMC, winMonthCalendar);
 
-    SYSTEMTIME sysTime[2];
-    memset(&sysTime, 0, 2 * sizeof(SYSTEMTIME));
-
-    uint32_t ret = MonthCal_GetRange(hMC, &sysTime);
-
-    RexxObjectPtr minDate;
-    RexxObjectPtr maxDate;
-
-    CSTRING result;
-    switch ( ret )
-    {
-        case 0 :
-            result = "none";
-            minDate = TheZeroObj;
-            maxDate = TheZeroObj;
-            break;
-        case (GDTR_MIN | GDTR_MAX) :
-            sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime, &minDate, dtDate);
-            sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime + 1, &maxDate, dtDate);
-            result = "both";
-            break;
-        case GDTR_MIN :
-            result = "min";
-            sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime, &minDate, dtDate);
-            maxDate = TheZeroObj;
-            break;
-        case GDTR_MAX :
-            result = "max";
-            minDate = TheZeroObj;
-            sysTime2dt(context->threadContext, (SYSTEMTIME *)&sysTime + 1, &maxDate, dtDate);
-            break;
-        default :
-            result = "error";  // I don'think this is possible.
-            minDate = TheZeroObj;
-            maxDate = TheZeroObj;
-            break;
-    }
-
-    context->ArrayPut(range, minDate, 1);
-    context->ArrayPut(range, maxDate, 2);
-
-    return result;
 }
 
 RexxMethod2(RexxObjectPtr, mc_getSelectionRange, RexxArrayObject, range, CSELF, pCSelf)
@@ -1763,10 +2066,10 @@ RexxMethod2(RexxObjectPtr, mc_setToday, OPTIONAL_RexxObjectPtr, date, CSELF, pCS
 
     SYSTEMTIME sysTime = {0};
     SYSTEMTIME *pSysTime = NULL;
-    RexxMethodContext *c = context;
+
     if ( argumentExists(1) )
     {
-        if ( ! c->IsOfType(date, "DATETIME") )
+        if ( ! context->IsOfType(date, "DATETIME") )
         {
             wrongClassException(context->threadContext, 1, "DateTime");
             goto done_out;
@@ -2162,7 +2465,6 @@ RexxMethod5(RexxObjectPtr, lv_modify, OPTIONAL_uint32_t, itemIndex, OPTIONAL_uin
 
 RexxMethod2(int32_t, lv_add, ARGLIST, args, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
     HWND hList = getDChCtrl(pCSelf);
 
     uint32_t itemIndex = getDCinsertIndex(pCSelf);
@@ -2175,7 +2477,7 @@ RexxMethod2(int32_t, lv_add, ARGLIST, args, CSELF, pCSelf)
     size_t argCount = context->ArraySize(args);
     for ( size_t i = 1; i <= argCount; i++ )
     {
-        RexxObjectPtr _text = c->ArrayAt(args, i);
+        RexxObjectPtr _text = context->ArrayAt(args, i);
         if ( _text == NULLOBJECT )
         {
             continue;
@@ -2185,10 +2487,10 @@ RexxMethod2(int32_t, lv_add, ARGLIST, args, CSELF, pCSelf)
 
         if ( i < argCount )
         {
-            RexxObjectPtr _imageIndex = c->ArrayAt(args, i + 1);
+            RexxObjectPtr _imageIndex = context->ArrayAt(args, i + 1);
             if ( _imageIndex != NULLOBJECT )
             {
-                if ( ! c->Int32(_imageIndex, &imageIndex) )
+                if ( ! context->Int32(_imageIndex, &imageIndex) )
                 {
                     wrongRangeException(context->threadContext, (int)(i + 1), INT32_MIN, INT32_MAX, _imageIndex);
                     result = -1;
@@ -2905,7 +3207,6 @@ RexxMethod3(RexxObjectPtr, lv_setColumnWidthPx, uint32_t, index, OPTIONAL_RexxOb
 RexxMethod5(RexxObjectPtr, lv_modifyColumnPx, uint32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_RexxObjectPtr, _width,
             OPTIONAL_CSTRING, align, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
     HWND hList = getDChCtrl(pCSelf);
     LVCOLUMN lvi = {0};
 
@@ -4129,11 +4430,10 @@ RexxMethod2(int32_t, tab_addFullSeq, ARGLIST, args, CSELF, pCSelf)
         RexxObjectPtr _imageIndex = context->ArrayAt(args, i + 1);
         RexxObjectPtr userData = context->ArrayAt(args, i + 2);
 
-        RexxMethodContext *c = context;
         if ( _imageIndex != NULLOBJECT )
         {
             int32_t imageIndex;
-            if ( ! c->Int32(_imageIndex, &imageIndex) )
+            if ( ! context->Int32(_imageIndex, &imageIndex) )
             {
                 notPositiveArgException(context->threadContext, i + 1, _imageIndex);
                 goto done_out;
@@ -4174,14 +4474,13 @@ RexxMethod2(RexxObjectPtr, tab_itemInfo, int32_t, index, CSELF, pCSelf)
     ti.cchTextMax = 255;
 
     RexxObjectPtr result = TheNegativeOneObj;
-    RexxMethodContext *c = context;
 
     if ( TabCtrl_GetItem(hwnd, index, &ti) )
     {
-        RexxStemObject stem = c->NewStem("ItemInfo");
-        c->SetStemElement(stem, "!TEXT", c->String(ti.pszText));
-        c->SetStemElement(stem, "!IMAGE", c->Int32(ti.iImage));
-        c->SetStemElement(stem, "!PARAM", (ti.lParam == 0 ? TheZeroObj : (RexxObjectPtr)ti.lParam));
+        RexxStemObject stem = context->NewStem("ItemInfo");
+        context->SetStemElement(stem, "!TEXT", context->String(ti.pszText));
+        context->SetStemElement(stem, "!IMAGE", context->Int32(ti.iImage));
+        context->SetStemElement(stem, "!PARAM", (ti.lParam == 0 ? TheZeroObj : (RexxObjectPtr)ti.lParam));
         result = stem;
     }
     return result;

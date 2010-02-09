@@ -68,8 +68,9 @@ extern RexxStringObject  cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t 
 extern DIALOGADMIN      *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc);
 extern void              sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part);
 extern bool              dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part);
-
+extern RexxStringObject  objectStateToString(RexxMethodContext *c, uint32_t state);
 extern RexxObjectPtr     createRexxControl(RexxMethodContext *, HWND, HWND, uint32_t, oodControl_t, RexxObjectPtr, bool, bool);
+extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *c, pCDialogControl pcdc, HWND hCtrl, oodControl_t type);
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081

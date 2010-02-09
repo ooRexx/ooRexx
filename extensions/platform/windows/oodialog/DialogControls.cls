@@ -175,7 +175,7 @@
 ::method getStyle external "LIBRARY oodialog e_style"
 
 ::method setTabStops external "LIBRARY oodialog e_setTabStops"
-::method "Tab="
+::method "tab="
     use strict arg dlgunits
     self~setTabStops(.array~of(dlgunits))
 
@@ -284,8 +284,6 @@
 ::method margins
     m = self~getMargins
     return m~left m~right
-
--- TODO Tab= never seems to have been documented.  setTabStops() has been added.
 
 
 /******************* ButtonControl Classes ************************************/
@@ -1327,10 +1325,32 @@
 
 ::class 'DateTimePicker' subclass DialogControl public
 
-::attribute dateTime external "LIBRARY oodialog _dtp_dateTime"
+::constant DTM_GETMCFONT           "0x100A"
+::constant DTM_SETMCFONT           "0x1009"
 
+::method closeMonthCal external "LIBRARY oodialog dtp_closeMonthCal"
+::method getDateTime external "LIBRARY oodialog dtp_getDateTime"
+::method getInfo external "LIBRARY oodialog dtp_getInfo"
+::method getIdealSize external "LIBRARY oodialog dtp_getIdealSize"
 ::method getMonthCal external "LIBRARY oodialog dtp_getMonthCal"
+::method getMonthCalColor external "LIBRARY oodialog dtp_getMonthCalColor"
+
+::method getMonthCalFont
+   use strict arg
+   return self~sendWinIntMsgH(self~DTM_GETMCFONT, 0, 0)
+
+::method getMonthCalStyle external "LIBRARY oodialog dtp_getMonthCalStyle"
+::method getRange external "LIBRARY oodialog dtp_getRange"
+
+::method setDateTime external "LIBRARY oodialog dtp_setDateTime"
 ::method setFormat external "LIBRARY oodialog dtp_setFormat"
+::method setMonthCalColor external "LIBRARY oodialog dtp_setMonthCalColor"
+
+::method setMonthCalFont
+   use strict arg hFont, redraw = .true
+   return self~sendWinHandleMsg(self~DTM_SETMCFONT, hFont, redraw)
+
+::method setMonthCalStyle external "LIBRARY oodialog dtp_setMonthCalStyle"
 ::method setRange external "LIBRARY oodialog dtp_setRange"
 
 

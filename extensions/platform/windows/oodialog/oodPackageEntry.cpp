@@ -592,10 +592,18 @@ REXX_METHOD_PROTOTYPE(tab_setImageList);
 REXX_METHOD_PROTOTYPE(tab_getImageList);
 
 // DateTimePicker
-REXX_METHOD_PROTOTYPE(get_dtp_dateTime);
-REXX_METHOD_PROTOTYPE(set_dtp_dateTime);
+REXX_METHOD_PROTOTYPE(dtp_getDateTime);
+REXX_METHOD_PROTOTYPE(dtp_closeMonthCal);
+REXX_METHOD_PROTOTYPE(dtp_getInfo);
+REXX_METHOD_PROTOTYPE(dtp_getIdealSize);
 REXX_METHOD_PROTOTYPE(dtp_getMonthCal);
+REXX_METHOD_PROTOTYPE(dtp_getMonthCalColor);
+REXX_METHOD_PROTOTYPE(dtp_getMonthCalStyle);
+REXX_METHOD_PROTOTYPE(dtp_getRange);
+REXX_METHOD_PROTOTYPE(dtp_setDateTime);
 REXX_METHOD_PROTOTYPE(dtp_setFormat);
+REXX_METHOD_PROTOTYPE(dtp_setMonthCalStyle);
+REXX_METHOD_PROTOTYPE(dtp_setMonthCalColor);
 REXX_METHOD_PROTOTYPE(dtp_setRange);
 
 // MonthCalendar
@@ -1175,9 +1183,17 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tab_getImageList,               tab_getImageList),
 
     // DateTimePicker
-    REXX_METHOD(get_dtp_dateTime,               get_dtp_dateTime),
-    REXX_METHOD(set_dtp_dateTime,               set_dtp_dateTime),
+    REXX_METHOD(dtp_getDateTime,                dtp_getDateTime),
+    REXX_METHOD(dtp_setDateTime,                dtp_setDateTime),
+    REXX_METHOD(dtp_closeMonthCal,              dtp_closeMonthCal),
+    REXX_METHOD(dtp_getInfo,                    dtp_getInfo),
+    REXX_METHOD(dtp_getIdealSize,               dtp_getIdealSize),
     REXX_METHOD(dtp_getMonthCal,                dtp_getMonthCal),
+    REXX_METHOD(dtp_getMonthCalColor,           dtp_getMonthCalColor),
+    REXX_METHOD(dtp_getMonthCalStyle,           dtp_getMonthCalStyle),
+    REXX_METHOD(dtp_getRange,                   dtp_getRange),
+    REXX_METHOD(dtp_setMonthCalColor,           dtp_setMonthCalColor),
+    REXX_METHOD(dtp_setMonthCalStyle,           dtp_setMonthCalStyle),
     REXX_METHOD(dtp_setFormat,                  dtp_setFormat),
     REXX_METHOD(dtp_setRange,                   dtp_setRange),
 
