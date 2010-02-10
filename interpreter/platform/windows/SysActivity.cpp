@@ -131,12 +131,3 @@ char *SysActivity::getStackBase(size_t stackSize)
     size_t temp;
     return(char *)&temp - stackSize;
 }
-
-
-/**
- * Have this thread reliniquish control
- */
-void SysActivity::relinquish()
-{
-    Sleep(1);
-}

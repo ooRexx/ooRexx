@@ -2503,8 +2503,8 @@ RexxInstruction *RexxSource::useNew()
             }
             else
             {
-                // we need a more defaults marker
-                defaults_list->push(OREF_NULL);
+                // if not an assignment, this needs to be a comma.
+                syntaxError(Error_Variable_reference_use, token);
             }
         }
     }

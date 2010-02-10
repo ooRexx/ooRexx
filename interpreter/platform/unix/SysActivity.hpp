@@ -85,7 +85,6 @@ public:
 
     static thread_id_t queryThreadID();
     // the following os a NOP on unix platforms
-    static inline void relinquish() { }
     static inline void yield()
     {
         sched_yield();

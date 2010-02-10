@@ -161,12 +161,16 @@ void ActivityManager::addWaitingActivity(RexxActivity *waitingAct, bool release 
             unlockKernel();
         }
         SysActivity::yield();            // yield the thread
-        SysActivity::relinquish();       // now allow system stuff to run
         waitingAct->waitForDispatch();   // wait for this thread to get dispatched again
     }
 
     sentinel = true;
     lockKernel();                        // get the kernel lock now
+    // belt and braces.  it is possible the dispatcher was
+    // reentered on the same thread, in which case we have an
+    // earlier stack frame waiting on the same semaphore.  Clear it so it
+    // get get reposted later.
+    waitingAct->clearWait();
     sentinel = false;
     lock.reacquire();                    // get the resource lock back
     sentinel = false;                    // another memory barrier
