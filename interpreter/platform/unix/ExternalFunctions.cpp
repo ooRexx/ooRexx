@@ -226,26 +226,36 @@ char *resolve_tilde(const char *path)
 /****************************************************************************/
 RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 {
-  RexxReturnCode rc;
-  char  *rdir;                         /* resolved path */
+    RexxReturnCode rc;
+    char  *rdir;                         /* resolved path */
 
-  rc = 0;
-  if (dir != NO_CSTRING)               /* if new directory is not null,     */
-  {
-    if(*dir == '~')
+    rc = 0;
+    if (dir != NO_CSTRING)               /* if new directory is not null,     */
     {
-      rdir = resolve_tilde(dir);
-      rc = chdir(rdir);
-      free(rdir);
+        if (*dir == '~')
+        {
+            rdir = resolve_tilde(dir);
+            rc = chdir(rdir);
+            free(rdir);
+        }
+        else
+        {
+            rc = chdir(dir);                   /* change to the new directory     */
+        }
+    }
+
+    // if we couldn't change the directory, return a null string
+    if (rc != 0)
+    {
+        return context->NullString();
     }
     else
-      rc = chdir(dir);                   /* change to the new directory     */
-  }
-
-  // get the current working directory and return it
-  char temp[PATH_MAX + 3];
-  SystemInterpreter::getCurrentWorkingDirectory(temp);
-  return context->NewStringFromAsciiz(temp);
+    {
+        // get the current working directory and return it
+        char temp[PATH_MAX + 3];
+        SystemInterpreter::getCurrentWorkingDirectory(temp);
+        return context->NewStringFromAsciiz(temp);
+    }
 }
 
 
