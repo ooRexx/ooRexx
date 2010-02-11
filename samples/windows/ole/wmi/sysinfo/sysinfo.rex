@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,13 +37,11 @@
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
 /* Name: sysinfo.rex                                                        */
-/* Type: Object REXX Script using OODialog and OLE                          */
+/* Type: Open Object REXX Script using ooDialog and OLE                     */
 /* Resource: sysinfo.rc                                                     */
 /*                                                                          */
 /* Description:                                                             */
 /* Demo application for inspecting some system properties using WMI         */
-/*                                                                          */
-/* Attention: You need the IBM Object REXX Development Edition to run this. */
 /*                                                                          */
 /* Note:                                                                    */
 /* Windows 2000 has WMI pre-installed, on WinNT/98 it has to be installed   */

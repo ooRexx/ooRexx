@@ -35,14 +35,14 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* OODialog\Samples\rc\sample.rc       OODialog Samples Main          */
+/* ooDialog\Samples\rc\sample.rc       ooDialog Samples Main          */
 /*--------------------------------------------------------------------*/
 
 #include <windows.h>
 
 100 DIALOG 4, 32, 465, 281
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Open Object Rexx OODialog Samples"
+CAPTION "Open Object Rexx ooDialog Samples"
 FONT 8, "MS Sans Serif"
 {
  PUSHBUTTON "E&xit", 2, 8, 254, 50, 14

@@ -41,7 +41,7 @@
 /* Resource: CALCULATOR                                                     */
 /*                                                                          */
 /* Description:                                                             */
-/* Sample that demonstrates the usage of RxMath and OODialog                */
+/* Sample that demonstrates the usage of RxMath and ooDialog                */
 /*                                                                          */
 /****************************************************************************/
 

@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* OODialog\Samples\rc\walker.rc       Animation demo                 */
+/* ooDialog\Samples\rc\walker.rc       Animation demo                 */
 /*--------------------------------------------------------------------*/
 
 #include <windows.h>

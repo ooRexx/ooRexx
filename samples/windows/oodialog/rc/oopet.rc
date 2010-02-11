@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* OODialog\Samples\rc\oopet.rc        Animal Riddle                  */
+/* ooDialog\Samples\rc\oopet.rc        Animal Riddle                  */
 /*--------------------------------------------------------------------*/
 
 #include <windows.h>

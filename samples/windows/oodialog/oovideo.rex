@@ -98,7 +98,7 @@
 
 /*--------------------------------- dialog class --------------------*/
 
-::class mydialog subclass PlainUserDialog
+::class mydialog subclass UserDialog
 
 ::method init
    use arg st.

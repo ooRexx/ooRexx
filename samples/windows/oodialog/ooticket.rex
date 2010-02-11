@@ -37,7 +37,7 @@
 /*----------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 /*                                                                          */
-/* OODialog\Samples\ooticket.rex  Let's go to the movies - Cat.dialog       */
+/* ooDialog\Samples\ooticket.rex  Let's go to the movies - Cat.dialog       */
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
 
@@ -264,7 +264,7 @@
 /* -------------------------------------------------------------------------- */
 /* PageHasChanged:                                                            */
 /* this method will be called every time the category page is changed         */
-/* if this method is ommited the one from OOdialog is called instead          */
+/* if this method is ommited the one from ooDialog is called instead          */
 /* -------------------------------------------------------------------------- */
 
 ::method PageHasChanged

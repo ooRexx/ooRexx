@@ -39,7 +39,7 @@
 /* Name: EMP_MENU.REX                                                       */
 /* Type: Object REXX Script                                                 */
 /*                                                                          */
-/* Description: Sample to demonstrate OODialog menus.                       */
+/* Description: Sample to demonstrate ooDialog menus.                       */
 /*                                                                          */
 /****************************************************************************/
 
@@ -174,7 +174,7 @@ CleanUp:
    end
 
 ::method About
-   call infoDialog "Sample to demonstrate OODialog menus."
+   call infoDialog "Sample to demonstrate ooDialog menus."
 
 
 ::class EmployeeListClass subclass UserDialog

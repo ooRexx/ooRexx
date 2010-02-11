@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* OODialog\Samples\rc\oophil2.rc      Philosophers' Forks Animation  */
+/* ooDialog\Samples\rc\oophil2.rc      Philosophers' Forks Animation  */
 /*--------------------------------------------------------------------*/
 
 #include <windows.h>

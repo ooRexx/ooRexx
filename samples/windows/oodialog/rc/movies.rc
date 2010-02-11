@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* OODialog\Samples\rc\movies.rc       Let's go to the movies         */
+/* ooDialog\Samples\rc\movies.rc       Let's go to the movies         */
 /*--------------------------------------------------------------------*/
 
 #include <windows.h>

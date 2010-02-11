@@ -111,7 +111,7 @@ FONT 8, "MS Sans Serif"
  PUSHBUTTON "ArcSin", BArcSin, 20, 176, 27, 14
  PUSHBUTTON "ArcCos", BArcCos, 60, 176, 27, 14
  PUSHBUTTON "ArcTan", BArcTan, 100, 176, 27, 14
- LTEXT "ooRexx OODialog Demo Calculator", -1, 152, 152, 50, 41
+ LTEXT "ooRexx ooDialog Demo Calculator", -1, 152, 152, 50, 41
  CONTROL "", -1, "static", SS_GRAYFRAME | WS_CHILD | WS_VISIBLE, 13, 33, 81, 106
  CONTROL "", -1, "static", SS_BLACKFRAME | WS_CHILD | WS_VISIBLE, 6, 7, 210, 197
 }

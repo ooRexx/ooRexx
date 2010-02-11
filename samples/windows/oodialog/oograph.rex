@@ -55,7 +55,7 @@
    exit
  end
 
- title = "Graphical Demonstration of Open Object Rexx and OODialog Capabilities"
+ title = "Graphical Demonstration of Open Object Rexx and ooDialog Capabilities"
  d~createCenter(trunc(770 / d~FactorX), trunc(470 / d~FactorY), title)
  d~execute("SHOWTOP")
  d~deinstall
@@ -140,7 +140,7 @@
    self~enableControl(112)
 
    -- Asynchronuous scrolling text.
-   text = "This OODialog sample demonstrates dynamic dialog creation"
+   text = "This ooDialog sample demonstrates dynamic dialog creation"
    m = self~start("ScrollInButton", 103, text, "Arial", 36, "BOLD", 0, 2, 2, 6)
    do while self~finished = 0 & m~completed = 0
       self~handleMessages

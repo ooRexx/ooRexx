@@ -49,7 +49,7 @@ produced by VisualAge Resource Workshop
 
 100 DIALOG 6, 15, 187, 135
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "OODialog Drawings"
+CAPTION "ooDialog Drawings"
 FONT 8, "System"
 {
  DEFPUSHBUTTON "Leave", 1, 129, 115, 50, 14

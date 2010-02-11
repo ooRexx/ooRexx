@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2007 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,7 +43,7 @@
 /* This script reads the registry entries for the Ftype REXXScript OPEN     */
 /* type and allows to change it between REXX.EXE and REXXHIDE.EXE.          */
 /*                                                                          */
-/* It uses the WindowsRegistry Class and the PlainUserDialog Class.         */
+/* It uses the WindowsRegistry Class and the UserDialog Class.         */
 /*                                                                          */
 /****************************************************************************/
 
@@ -51,12 +51,12 @@
 /* See, if user gaves directions */
 parse arg Interface
 
-/* The user may decide between Windowed or OODIALOG Version */
-/* Default is OODIALOG Version */
+/* The user may decide between Windowed or ooDialog Version */
+/* Default is ooDialog Version */
 /* If the Ftype Setting is to rexxhide, the WINDOWED Version will NOT work */
 /* Verify if the given parm starts with "W", TRANSLATE changes it to UPPER CASE */
 if Interface~LEFT(1)~TRANSLATE = "C" then Interface = "CONSOLE"
-else Interface = "OODIALOG"
+else Interface = "ooDialog"
 
 
 /* create a new registry object */
@@ -119,7 +119,7 @@ end
 if Interface = "CONSOLE" then do
   /* Test, if rexxhide was set. In this case, show Message Box */
   if was = "rexxhide.exe" then do
-     call errorDialog "Ftype is curently set to rexxhide.exe. You must use the OODIALOG interface."
+     call errorDialog "Ftype is curently set to rexxhide.exe. You must use the ooDialog interface."
      exit
   end
   /* The next lines use an plain text interface */

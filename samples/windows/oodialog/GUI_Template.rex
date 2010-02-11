@@ -36,12 +36,12 @@
 /*----------------------------------------------------------------------------*/
 /* How to use this template:                                                 */
 /*                                                                           */
-/* This template allows you to create dialogs with OODialog without need     */
+/* This template allows you to create dialogs with ooDialog without need     */
 /* for the resource workshop.                                                */
 /*                                                                           */
 /* It sets out the class directive and the basic methods for a dialog        */
 /*                                                                           */
-/* OODialog is very fully featured and it would not be useful to try to      */
+/* ooDialog is very fully featured and it would not be useful to try to      */
 /* anticipate and include every possible activity.                           */
 /*                                                                           */
 /* Category dialogs & Property sheets subclass differently -see the Manual.  */
@@ -69,7 +69,7 @@ signal on any name any          /* error handling if you want                */
                         /* a.20=[default] presets it                         */
                         /* ------------------------------------------------- */
 
-MyDialog=.MyDlgClass~new /*(a.)*/          /* Create OODialog Class instance */
+MyDialog=.MyDlgClass~new /*(a.)*/          /* Create ooDialog Class instance */
 
                         /* ------------------------------------------------- */
                         /* Here you can initialise attributes that you       */
@@ -80,13 +80,13 @@ MyDialog=.MyDlgClass~new /*(a.)*/          /* Create OODialog Class instance */
                         /* If you want to create a non-modal dialog or have  */
                         /* it start minimised etc. then change the following */
                         /* clause.  See Show, Execute, ExecuteAsync, Popup&  */
-                        /* PopupasChild in the OODialog Reference            */
+                        /* PopupasChild in the ooDialog Reference            */
 MyDialog~Execute('ShowTop')     /* Create, show and run the Windows Object   */
                         /* ------------------------------------------------- */
 
                         /* ------------------------------------------------- */
                         /* Here you have access to methods & Attributes of   */
-                        /* the OODialog Object after OK/Cancel has been      */
+                        /* the ooDialog Object after OK/Cancel has been      */
                         /* pressed.  ie: MyDialog~Attribute                  */
                         /* ------------------------------------------------- */
 
@@ -105,7 +105,7 @@ exit
 /* Error Handling routine - returns full information to console              */
 /*                                                                           */
 /* All error information available is written to STDOUT (usually the console)*/
-/* As this may not be present (running a GUI with REXXHIDE) a OODialog       */
+/* As this may not be present (running a GUI with REXXHIDE) a ooDialog       */
 /* errorDialog popup is also presented                                      */
 /* ========================================================================= */
 any:
@@ -211,7 +211,7 @@ exit -1
 ::method defineDialog
 /* ------------------------------------------------------------------------- */
 /* This is where we lay out the controls (widgets) in our dialog             */
-/* Refer to the OODialog manual for the create methods and their parameters  */
+/* Refer to the ooDialog manual for the create methods and their parameters  */
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 /* DlgArea is a class of imaginary rectangles with an inner margin that      */

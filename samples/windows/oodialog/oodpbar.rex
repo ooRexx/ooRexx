@@ -37,11 +37,11 @@
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
 /* Name: oodpbar.rex                                                        */
-/* Type: Object REXX Script using OODialog                                  */
+/* Type: Object REXX Script using ooDialog                                  */
 /* Resource: oodpbar.rc                                                     */
 /*                                                                          */
 /* Description:                                                             */
-/* This file has been created by the Object REXX Workbench OODIALOG         */
+/* This file has been created by the Object REXX Workbench ooDialog         */
 /* template generator.                                                      */
 /*                                                                          */
 /****************************************************************************/
@@ -67,7 +67,7 @@ CleanUp:
    if MyDialog~IsDialogActive then MyDialog~StopIt
 
 
-::requires "ooDialog.cls"    /* This file contains the OODIALOG classes */
+::requires "ooDialog.cls"    /* This file contains the ooDialog classes */
 
 /* ---------------------------- Directives ---------------------------------*/
 

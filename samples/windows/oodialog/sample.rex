@@ -37,7 +37,7 @@
 /*----------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 /*                                                                          */
-/* OODialog\Samples\sample.rex    OODialog Samples - Main                   */
+/* ooDialog\Samples\sample.rex    ooDialog Samples - Main                   */
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
 
@@ -134,8 +134,8 @@
 
 ::method help                               /* About button */
    call Play "sample.wav","YES"
-   d = .TimedMessage~new("Illustration of OODialog Function", ,
-                         "Open Object Rexx OODialog Samples", 5000)
+   d = .TimedMessage~new("Illustration of ooDialog Function", ,
+                         "Open Object Rexx ooDialog Samples", 5000)
    d~execute
    return 0
 

@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* OODialog\Samples\rc\oophil1.rc      Philosophers' Forks Setup      */
+/* ooDialog\Samples\rc\oophil1.rc      Philosophers' Forks Setup      */
 /*--------------------------------------------------------------------*/
 
 #include <windows.h>

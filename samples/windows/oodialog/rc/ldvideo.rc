@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* OODialog\Samples\rc\ldvideo.rc      Video archive                  */
+/* ooDialog\Samples\rc\ldvideo.rc      Video archive                  */
 /*--------------------------------------------------------------------*/
 
 #include <windows.h>

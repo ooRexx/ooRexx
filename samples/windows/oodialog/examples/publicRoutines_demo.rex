@@ -371,7 +371,7 @@ return
 -- Requires directive to use the Public Routines
 ::requires "ooDialog.cls"
 
-::class SimpleDialog subclass PlainUserDialog public
+::class SimpleDialog subclass UserDialog public
 ::method Execute
     self~Create(0,0,290,40, .helperDlgTitle)
     self~execute:super("SHOWTOP")

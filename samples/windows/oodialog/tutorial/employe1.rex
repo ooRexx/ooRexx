@@ -41,7 +41,7 @@
 /*                                                                          */
 /****************************************************************************/
 
-dlg = .PlainUserDialog~new
+dlg = .UserDialog~new
 if dlg~InitCode <> 0 then exit
 if dlg~Load("EMPLOYE1.RC", 100) \= 0 then exit
 if dlg~Execute("SHOWTOP") = 1 then do

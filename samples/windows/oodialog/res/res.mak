@@ -35,7 +35,7 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
-# NMAKE-compatible MAKE file for OODialog resource DLLs
+# NMAKE-compatible MAKE file for ooDialog resource DLLs
 
 rcflags_common = /DWIN32 /v
 

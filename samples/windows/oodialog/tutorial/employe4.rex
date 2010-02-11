@@ -48,7 +48,7 @@ dlg~Execute("SHOWTOP")
 dlg~deinstall
 ::requires "ooDialog.cls"
 
-::class MyDialogClass subclass PlainUserDialog
+::class MyDialogClass subclass UserDialog
 ::method InitDialog
     self~City = "New York"
     self~Male = 1

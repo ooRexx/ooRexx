@@ -37,14 +37,14 @@
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
 /* Name: oodtree.rex                                                        */
-/* Type: Object REXX Script using OODialog                                  */
+/* Type: Object REXX Script using ooDialog                                  */
 /* Resource: oodtree.rc                                                     */
 /*                                                                          */
 /* Description:                                                             */
 /*                                                                          */
 /* Demonstration of a tree control using the Object REXX TreeControl class. */
 /*                                                                          */
-/* This file has been created by the Object REXX Workbench OODIALOG         */
+/* This file has been created by the Object REXX Workbench ooDialog         */
 /* template generator.                                                      */
 /*                                                                          */
 /****************************************************************************/

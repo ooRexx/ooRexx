@@ -45,7 +45,7 @@
 /* Demonstration of the various list controls using the                     */
 /* Object REXX ListControl and PropertySheet class.                         */
 /*                                                                          */
-/* This file has been created by the Object REXX Workbench OODIALOG         */
+/* This file has been created by the Object REXX Workbench ooDialog         */
 /* template generator.                                                      */
 /*                                                                          */
 /****************************************************************************/

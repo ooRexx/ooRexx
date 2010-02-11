@@ -199,7 +199,7 @@ CleanUp:
    end
 
 ::method About
-   call infoDialog "This sample demonstrates OODialog menus."
+   call infoDialog "This sample demonstrates ooDialog menus."
 
 
 ::class EmployeeListClass subclass UserDialog

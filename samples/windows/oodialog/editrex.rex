@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,14 +37,15 @@
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
 /* Name: EditRex.rex                                                        */
-/* Type: Open Object Rexx OODialog Script                                   */
+/* Type: Open Object Rexx ooDialog Script                                   */
 /*                                                                          */
 /* Description:                                                             */
 /* This script reads the registry entries for the ftype REXXScript EDIT     */
 /* type and allows to change it between Notepad.EXE and any                 */
 /* given EDITOR                                                             */
 /*                                                                          */
-/* It uses the WindowsRegistry Class and the PlainUserDialog Class.         */
+/* It uses the WindowsRegistry Class and classes from the ooDialog          */
+/* framework.                                                               */
 /*                                                                          */
 /*                                                                          */
 /****************************************************************************/
@@ -52,12 +53,12 @@
 /* See if user gave directions */
 parse arg Interface
 
-/* The user may decide between Console or OODIALOG Version */
-/* Default is OODIALOG Version */
+/* The user may decide between Console or ooDialog Version */
+/* Default is ooDialog Version */
 /* If the ftype Open Command Setting is to rexxhide, the Console Version will NOT work */
 /* Verify if the given parm starts with "C", TRANSLATE changes it to UPPER CASE */
 if Interface~LEFT(1)~TRANSLATE = "C" then Interface = "CONSOLE"
-else Interface = "OODIALOG"
+else Interface = "ooDialog"
 
 /* create a new registry object */
 r = .WindowsRegistry~new
@@ -125,7 +126,8 @@ else do
   sel.1 = "EDIT it with NOTEPAD.EXE"
   sel.2 = "SELECT another program, currently set to : " || program
   /* prepare the dialog */
-  dlg = .SingleSelection~new("Please select what to do","Ftype EDIT setting for ooRexx",sel.,answer,,answer)
+  --dlg = .SingleSelection~new("Please select what to do","Ftype EDIT setting for ooRexx",sel.,answer,,answer)
+  dlg = .SingleSelection~new("Please select what to do","Ftype EDIT setting for ooRexx",sel.,answer)
   /* show the dialog */
   answer = dlg~execute
 

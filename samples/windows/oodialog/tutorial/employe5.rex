@@ -58,7 +58,7 @@ CleanUp:
 
 ::requires "ooDialog.cls"
 
-::class MyDialogClass subclass PlainUserDialog
+::class MyDialogClass subclass UserDialog
 
 ::method Employees attribute
 ::method Emp_count attribute
