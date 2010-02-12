@@ -208,6 +208,7 @@
    do i = 1 to films~items
       self~addCategoryListEntry(31, films[i], 1)
    end
+
    sel.1.32 = "Paramount";      sel.1.33 = "Kim Novak";         sel.1.34 = "Alfred Hitchcock"
    sel.1.35 = "James Stewart"
    sel.2.32 = "Universal";      sel.2.33 = "Robert De Niro";    sel.2.34 = "Martin Scorsese"
@@ -232,18 +233,30 @@
 ::method MovieClick
    expose sel.
    f = self~getCurrentCategoryListIndex(31,1)
-   self~setEditDataPage(32,sel.f.32,1)
-   self~setEditDataPage(33,sel.f.33,1)
-   self~setEditDataPage(34,sel.f.34,1)
-   self~CategoryComboDrop(35,1)
-   txt = sel.f.35
-   do until txt = ''
-      parse var txt actor ',' txt
-      self~addCategoryComboEntry(35,actor,1)
-   end
-   self~setCurrentCategoryComboIndex(35,1,1)
 
-::method run unguarded
+   -- If no movie in the list box is selected, set eveything blank, otherwise,
+   -- set everything to match the selected movie.
+   if f == 0 then do
+     self~setEditDataPage(32, "", 1)
+     self~setEditDataPage(33, "", 1)
+     self~setEditDataPage(34, "", 1)
+     self~CategoryComboDrop(35,1)
+     self~addCategoryComboEntry(35, "", 1)
+   end
+   else do
+     self~setEditDataPage(32,sel.f.32,1)
+     self~setEditDataPage(33,sel.f.33,1)
+     self~setEditDataPage(34,sel.f.34,1)
+     self~CategoryComboDrop(35,1)
+     txt = sel.f.35
+     do until txt = ''
+        parse var txt actor ',' txt
+        self~addCategoryComboEntry(35,actor,1)
+     end
+     self~setCurrentCategoryComboIndex(35,1,1)
+   end
+
+::method InitMovies
    expose films daynames today
    self~setListBoxDataPage(31,'1',1)
    self~MovieClick
