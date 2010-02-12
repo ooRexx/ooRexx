@@ -54,7 +54,16 @@
        /* 1ms fast, 500ms slow, 200ms start, equals random every 25th */
  d = .banditdlg~new(1,500,200,25)
  d~Execute("SHOWTOP")
- d~deinstall
+
+ -- You can not remove the bitmap handles while the dialog is still displayed
+ -- on the screen.  As long as the dialog is showing, the os will try to repaint
+ -- the dialog when needed.  If the bitmaps are destroyed, the program will
+ -- crash.
+ bmp. = d~getBitmapHandles
+ do i = 1 to 8
+   d~removeBitmap(bmp.i)
+ end
+
  ret = directory(curdir)
  return
 
@@ -109,7 +118,7 @@
    self~InitDialog:super
    self~connectEachSBEvent(1206,'FASTER','SLOWER','DRAG',minspeed,maxspeed,self~speed)
 
-::method Run
+::method Run unguarded
    expose x y z bmp. kind3 cycle maxcycle equal misses
    rand =  random(1,8,time('S')*7) /* init random */
    ret = play("WHISTLE.WAV")
@@ -194,8 +203,9 @@
 
 ::method cancel
    call Play "byebye.wav"
-   do i = 1 to 8
-      self~RemoveBitmap(bmp.i)
-   end
    self~finished = 1
    return 1
+
+::method getBitmapHandles
+  expose bmp.
+  return bmp.

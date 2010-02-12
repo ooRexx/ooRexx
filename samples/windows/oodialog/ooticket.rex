@@ -243,7 +243,7 @@
    end
    self~setCurrentCategoryComboIndex(35,1,1)
 
-::method run
+::method run unguarded
    expose films daynames today
    self~setListBoxDataPage(31,'1',1)
    self~MovieClick
@@ -254,7 +254,6 @@
          leave
       end
    end
-   self~run:super
 
 ::method OK
    page = self~CurrentCategory

@@ -128,20 +128,8 @@ any:
   return InitRet
 
 ::method InitDialog
-  InitDlgRet = self~InitDialog:super
-
-  /* Initialization Code (e.g. fill list and combo boxes) */
-  return InitDlgRet
-
-::method run
-  /* The run message is not automatically generated.      */
-  /* If you override it you have to call self~run:super.  */
-  /* It is the place for things that can't be done in the */
-  /* init method, e.g. SetCurrentComboIndex.              */
-
   expose tl
   tl = self~newEdit(TLine) /* get the EditControl object */
-  self~run:super
 
 ::method getLine
   /* Return the current text-line content, */
