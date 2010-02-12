@@ -48,6 +48,9 @@
  *
  * AdvancedControls:   Its functionality is now contained in the PlainBaseDialog
  *                     class.
+ *
+ * PlainUserDialog:    The plain user dialog is no different than the UserDialog
+ *                     class.
  */
 
 -- DEPRECATED
@@ -55,3 +58,8 @@
 
 -- DEPRECATED
 ::class 'AdvancedControls' Mixinclass Object public
+
+-- DEPRECATED
+::class 'PlainUserDialog' subclass UserDialog public
+
+

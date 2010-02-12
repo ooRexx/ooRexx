@@ -41,9 +41,9 @@
  *
  * Resource Dialog Class.
  */
-::requires "BaseDialog.cls"
+::requires "PlainBaseDialog.cls"
 
-::class 'ResDialog' subclass BaseDialog public
+::class 'ResDialog' subclass PlainBaseDialog public
 
 ::method init
    expose library resource dlgData.

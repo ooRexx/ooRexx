@@ -39,9 +39,9 @@
 /**
  * oodBaseDialog.cpp
  *
- * The base classes for all non-trival dialogs in the ooDialog package.
- * Contains the method implmentations for the BaseDialog, ResDialog, and
- * WindowExtensions classes.
+ * Some of the base classes for all non-trival dialogs in the ooDialog package.
+ * Contains the method implmentations for the ResDialog and WindowExtensions
+ * classes.
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
@@ -67,38 +67,6 @@ public:
     bool              *release;       // Used for a return value
 };
 
-/**
- *  Methods for the .BaseDialog class.
- */
-#define BASEDIALOG_CLASS              "BaseDialog"
-
-/** BaseDialog::init()
- */
-RexxMethod3(RexxObjectPtr, baseDlg_init, ARGLIST, args, SUPER, super, OSELF, self)
-{
-    RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, NULL);
-
-    if ( isInt(0, result, context) )
-    {
-        pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->GetCSelf();
-        if ( ! initWindowExtensions(context, self, NULL, pcpbd->wndBase, pcpbd) )
-        {
-            return TheOneObj;
-        }
-
-        context->SendMessage1(self, "SCROLLNOW=", TheFalseObj);
-        context->SendMessage1(self, "MENUBAR=", context->Nil());
-        context->SendMessage1(self, "ISLINKED=", TheFalseObj);
-    }
-
-    return result;
-}
-
-
-RexxMethod1(RexxObjectPtr, baseDlg_test, CSELF, pCSelf)
-{
-    return TheTrueObj;
-}
 
 
 /**

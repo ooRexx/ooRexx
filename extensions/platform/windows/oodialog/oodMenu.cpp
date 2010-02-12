@@ -179,7 +179,7 @@ inline BOOL _connectSysItem(pCEventNotification pcen, uint32_t id, CSTRING msg, 
  * @return The EventNotification CSelf for the specified dialog on success, null
  *         on failure.
  *
- * @note   This function fails if dialog is not a BaseDialog or one of its
+ * @note   This function fails if dialog is not a PlainBaseDialog or one of its
  *         subclasses.  In this case the .SystemErrorCode is set, but no
  *         condition is raised.
  */
@@ -187,7 +187,7 @@ pCEventNotification _getPCEN(RexxMethodContext *c, RexxObjectPtr dialog)
 {
     oodResetSysErrCode(c->threadContext);
 
-    if ( dialog != NULLOBJECT && c->IsOfType(dialog, "BASEDIALOG") )
+    if ( dialog != NULLOBJECT && c->IsOfType(dialog, "PLAINBASEDIALOG") )
     {
         return dlgToEventNotificationCSelf(c, dialog);
     }
@@ -901,7 +901,7 @@ logical_t CppMenu::attachToDlg(RexxObjectPtr dialog)
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto no_change;
     }
-    if ( ! c->IsOfType(dialog, "BASEDIALOG") )
+    if ( ! c->IsOfType(dialog, "PLAINBASEDIALOG") )
     {
         oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
         goto no_change;
@@ -956,7 +956,7 @@ logical_t CppMenu::assignToDlg(RexxObjectPtr dialog, logical_t _autoConnect, CST
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto done_out;
     }
-    if ( ! c->IsOfType(dialog, "BASEDIALOG") )
+    if ( ! c->IsOfType(dialog, "PLAINBASEDIALOG") )
     {
         oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
         goto done_out;
@@ -1138,8 +1138,8 @@ void CppMenu::putSysCommands()
  *
  * @return bool
  *
- * @remarks  The caller has ensured that dialog is a .BaseDialog.  We ensure
- *           that the underlying Windows dialog has been created.
+ * @remarks  The caller has ensured that dialog is a .PlainBaseDialog.  We
+ *           ensure that the underlying Windows dialog has been created.
  */
 bool CppMenu::setUpSysMenu(RexxObjectPtr dialog)
 {
@@ -1628,7 +1628,7 @@ RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CS
     }
     else
     {
-        if ( ! c->IsOfType(_dlg, "BASEDIALOG") )
+        if ( ! c->IsOfType(_dlg, "PLAINBASEDIALOG") )
         {
             oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
             goto done_out;
@@ -2718,7 +2718,7 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
  *        set:
  *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument is not a
- *        .BaseDialog, (or subclass of course.)
+ *        .PlainBaseDialog, (or subclass of course.)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
@@ -4517,7 +4517,7 @@ RexxMethod2(RexxStringObject, menu_itemTextToMethodName, CSTRING, text, OSELF, s
  *        menu does not have an assigned dialog.
  *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument was not
- *        ommitted, but the object is not a .BaseDialog, (or subclass of
+ *        ommitted, but the object is not a .PlainBaseDialog, (or subclass of
  *        course.)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
@@ -4557,7 +4557,7 @@ RexxMethod5(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyW
  *        menu does not have an assigned dialog.
  *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument was not
- *        ommitted, but the object is not a .BaseDialog, (or subclass of
+ *        ommitted, but the object is not a .PlainBaseDialog, (or subclass of
  *        course.)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
@@ -4595,7 +4595,7 @@ RexxMethod4(logical_t, menu_connectSelect, RexxObjectPtr, rxID, CSTRING, methodN
  *        menu does not have an assigned dialog.
  *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument was not
- *        ommitted, but the object is not a .BaseDialog, (or subclass of
+ *        ommitted, but the object is not a .PlainBaseDialog, (or subclass of
  *        course.)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
@@ -4641,7 +4641,7 @@ RexxMethod3(logical_t, menu_connectAllSelects, OPTIONAL_CSTRING, msg, OPTIONAL_R
  *        menu does not have an assigned dialog.
  *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument was not
- *        ommitted, but the object is not a .BaseDialog, (or subclass of
+ *        ommitted, but the object is not a .PlainBaseDialog, (or subclass of
  *        course.)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
@@ -4723,8 +4723,8 @@ RexxMethod1(logical_t, menuBar_detach, CSELF, cMenuPtr)
  * 1.) Use the .MenuBar~replace() method
  *
  * 2a.) If you have a reference to the menu bar it is attached to, simply use
- * the detach() method.  Otherwise, use the .BaseDialog~getMenuBar() method to
- * get a reference to the attached menu bar, then use detach().
+ * the detach() method.  Otherwise, use the .PlainBaseDialog~getMenuBar() method
+ * to get a reference to the attached menu bar, then use detach().
  *
  *  @param  dlg  The dialog to attach to.
  *
@@ -4738,7 +4738,7 @@ RexxMethod1(logical_t, menuBar_detach, CSELF, cMenuPtr)
  *
  *            ERROR_INVALID_FUNCTION (1) this menu is already attached to a dlg
  *
- *            ERROR_WINDOW_NOT_DIALOG (1420) dlg is not a .BaseDialog
+ *            ERROR_WINDOW_NOT_DIALOG (1420) dlg is not a .PlainBaseDialog
  *
  *            ERROR_INVALID_WINDOW_HANDLE (1400) dlg has no underlying Windows
  *            dialog
@@ -4966,8 +4966,8 @@ RexxMethod1(logical_t, menuTemplate_isComplete, OSELF, self)
  *  @param  attach       [optional]  If true attach this menu to a dialog
  *                       specified as one of the other arguments.  The default
  *                       is false.  If specified, either src has to be a
- *                       .ResDialog, or symbolSrc has to be a .BaseDialog or
- *                       subclass.  If not, an exception is raised. src is
+ *                       .ResDialog, or symbolSrc has to be a .PlainBaseDialog
+ *                       or subclass.  If not, an exception is raised. src is
  *                       checked first, then symbolSrc.
  *
  *  @param  autoConnect  [optional]  Turn on auto connection if true.  Default
@@ -5113,7 +5113,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         {
             cMenu->attachToDlg(src);
         }
-        else if ( symbolSrc != NULLOBJECT && c->IsOfType(symbolSrc, "BASEDIALOG") )
+        else if ( symbolSrc != NULLOBJECT && c->IsOfType(symbolSrc, "PLAINBASEDIALOG") )
         {
             cMenu->attachToDlg(symbolSrc);
         }
@@ -5176,7 +5176,7 @@ RexxMethod3(RexxObjectPtr, sysMenu_init, RexxObjectPtr, dialog, OPTIONAL_RexxObj
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
-    if ( ! requiredClass(context->threadContext, dialog, "BASEDIALOG", 1) )
+    if ( ! requiredClass(context->threadContext, dialog, "PLAINBASEDIALOG", 1) )
     {
         goto done_out;
     }
@@ -5408,8 +5408,8 @@ RexxMethod5(logical_t, sysMenu_connectSomeSelects, RexxObjectPtr, rxItemIDs, log
  *        The system error code is set this way in addition to what the OS might
  *        set:
  *
- *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dlg argument not a .BaseDialog,
- *        (or subclass of course.)
+ *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dlg argument not a
+ *        .PlainBaseDialog, (or subclass of course.)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
@@ -5584,7 +5584,7 @@ done_out:
  *        menu does not have an assigned dialog.
  *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument was not
- *        ommitted, but the object is not a .BaseDialog, (or subclass of
+ *        ommitted, but the object is not a .PlainBaseDialog, (or subclass of
  *        course.)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
@@ -5642,7 +5642,7 @@ RexxMethod1(logical_t, popMenu_isAssigned, CSELF, cMenuPtr)
  *
  *            ERROR_INVALID_MENU_HANDLE (1401) this menu has been destroyed
  *
- *            ERROR_WINDOW_NOT_DIALOG (1420) dlg is not a .BaseDialog
+ *            ERROR_WINDOW_NOT_DIALOG (1420) dlg is not a .PlainBaseDialog
  */
 RexxMethod4(logical_t, popMenu_assignTo, RexxObjectPtr, dlg, OPTIONAL_logical_t, autoConnect,
             OPTIONAL_CSTRING, methodName, CSELF, cMenuPtr)
@@ -5688,7 +5688,7 @@ RexxMethod4(logical_t, popMenu_assignTo, RexxObjectPtr, dlg, OPTIONAL_logical_t,
  *         menu does not have an assigned dialog.
  *
  *         ERROR_WINDOW_NOT_DIALOG (1420) The dialog argument was specified, but
- *         the object is not a .BaseDialog, (or subclass of course.)
+ *         the object is not a .PlainBaseDialog, (or subclass of course.)
  *
  *         ERROR_INVALID_MENU_HANDLE (1401) This menu has been destroyed, or is
  *         no longer valid for some reason.
@@ -5739,7 +5739,7 @@ RexxMethod6(RexxObjectPtr, popMenu_track, RexxObjectPtr, location, OPTIONAL_Rexx
  *           the menu does not have an assigned dialog.
  *
  *           ERROR_WINDOW_NOT_DIALOG (1420) The dialog argument was specified,
- *           but the object is not a .BaseDialog, (or subclass of course.)
+ *           but the object is not a .PlainBaseDialog, (or subclass of course.)
  *
  *           ERROR_INVALID_MENU_HANDLE (1401) This menu has been destroyed, or
  *           is no longer valid for some reason.
@@ -5794,7 +5794,7 @@ RexxMethod6(RexxObjectPtr, popMenu_show, RexxObjectPtr, location, OPTIONAL_RexxO
  *
  *  @param  attach       [optional]  If true attach this menu to the dialog
  *                       specified as symbolSrc.  The default is false.  If
- *                       specified, symbolSrc has to be a .BaseDialog or
+ *                       specified, symbolSrc has to be a .PlainBaseDialog or
  *                       subclass.  If not, an exception is raised.
  *
  *  @return  No return.
@@ -5880,7 +5880,7 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
 
     if ( attach )
     {
-        if ( symbolSrc != NULLOBJECT && context->IsOfType(symbolSrc, "BASEDIALOG") )
+        if ( symbolSrc != NULLOBJECT && context->IsOfType(symbolSrc, "PLAINBASEDIALOG") )
         {
             cMenu->attachToDlg(symbolSrc);
         }

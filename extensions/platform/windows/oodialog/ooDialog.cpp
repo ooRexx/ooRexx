@@ -2073,6 +2073,11 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     pcpbd->rexxSelf = self;
     context->SetObjectVariable("CSELF", cselfBuffer);
 
+    if ( ! initWindowExtensions(context, self, NULL, pcpbd->wndBase, pcpbd) )
+    {
+        goto terminate_out;
+    }
+
     dlgAdm->pcpbd = pcpbd;
 
     // Initialize the event notification mixin class.  The only thing that could
@@ -2116,6 +2121,10 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     context->SendMessage0(self, "INITAUTODETECTION");                       // self~initAutoDetection
     context->SendMessage1(self, "DATACONNECTION=", context->NewArray(50));  // self~dataConnection = .array~new(50)
     context->SendMessage1(self, "AUTOMATICMETHODS=", rxNewQueue(context));  // self~autoMaticMethods = .queue~new
+
+    context->SendMessage1(self, "SCROLLNOW=", TheFalseObj);
+    context->SendMessage1(self, "MENUBAR=", context->Nil());
+    context->SendMessage1(self, "ISLINKED=", TheFalseObj);
 
     RexxDirectoryObject constDir = context->NewDirectory();
     context->SendMessage1(self, "CONSTDIR=", constDir);                     // self~constDir = .directory~new

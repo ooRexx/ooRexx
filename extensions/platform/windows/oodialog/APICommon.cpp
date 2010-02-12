@@ -381,7 +381,7 @@ void doOverException(RexxThreadContext *c, RexxObjectPtr obj)
  *
  * Could not retrieve the "value" information for "object"
  *
- * Could not retrive the window handle information for a BaseDialog object.
+ * Could not retrive the window handle information for a PlainBaseDialog object.
  *
  * similar to old 98.921
  *
@@ -657,8 +657,8 @@ bool rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, size_t 
  * Gets a Class object.
  *
  * This is for use for classes visible within the scope of the context, like say
- * .BaseDialog, or .Rect.  Use c->FindClass() to directly get classes from the
- * environment like .Bag or .Directory.
+ * .PlainBaseDialog, or .Rect.  Use c->FindClass() to directly get classes from
+ * the environment like .Bag or .Directory.
  *
  * @param c     The method context we are operating in.
  * @param name  The name of the class to try and find.

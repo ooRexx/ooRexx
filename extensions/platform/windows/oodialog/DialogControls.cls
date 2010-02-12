@@ -42,6 +42,7 @@
  * Dialog Control Classes.
  */
 
+::requires "PlainBaseDialog.cls"
 ::requires "BaseDialog.cls"
 
 -- Base class for all dialog controls
@@ -110,10 +111,6 @@
 -- DEPRECATED
 ::method processMessage
    forward message "sendMessage"
-
--- DEPRECATED
-::method assignWindow
-   return 0
 
 -- DEPRECATED
 ::method getTextSize unguarded
@@ -885,7 +882,7 @@
    return result~cx result~cy
 
 ::method posRectangle
-   use arg strict item
+   use strict arg item
    r = .Rect~new
    if self~getItemRect(item, r) then return r~top r~left r~bottom r~right
    else return ""

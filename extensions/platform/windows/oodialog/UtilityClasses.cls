@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -244,15 +244,8 @@
 ::class 'Dialog' subclass UserDialog public
 
 
-::class 'PlainUserDialog' subclass PlainBaseDialog public inherit DynamicDialog
-::method init external "LIBRARY oodialog userdlg_init"
-::method stopIt
-   forward class (super) continue
-   forward message "stopDynamic"
-
-
 -- This class shows a message window for a defined duration
-::class 'TimedMessage' subclass PlainUserDialog public
+::class 'TimedMessage' subclass UserDialog public
 
 ::method init
    expose message title sleeping earlyReply
@@ -286,7 +279,7 @@
 
 -- This class provides a simple dialog with a title, a message, one entry line,
 -- an OK and a Cancel push button.
-::class 'InputBox' subclass PlainUserDialog public
+::class 'InputBox' subclass UserDialog public
 
 ::method sx attribute
 ::method sy attribute
@@ -348,7 +341,7 @@
    else return 1
 
 
-::class 'MultiInputBox' subclass PlainUserDialog public
+::class 'MultiInputBox' subclass UserDialog public
 
 ::method init
    expose message title datas. entries. len
@@ -389,7 +382,7 @@
    return self~initCode
 
 
-::class 'ListChoice' subclass PlainUserDialog public
+::class 'ListChoice' subclass UserDialog public
 
 ::attribute sx
 ::attribute sy
@@ -500,7 +493,7 @@
    self~createPushButtonGroup(self~dlgx-100, self~dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 
-::class 'CheckList' subclass PlainUserDialog public
+::class 'CheckList' subclass UserDialog public
 
   /* Entries is a stem variable with all the titles for the check boxes */
   /* Datas is a stem variable you can use to preselect the check boxes */
@@ -550,7 +543,7 @@
    return self~initCode
 
 
-::class 'SingleSelection' subclass PlainUserDialog public
+::class 'SingleSelection' subclass UserDialog public
 
 ::method Init
    expose message title entries. len datas. prev max
@@ -665,7 +658,6 @@
 
 ::method Destroy
    self~stopit
-   self~Deinstall
 
 ::method "Message="
    parse arg message

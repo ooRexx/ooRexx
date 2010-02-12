@@ -806,7 +806,7 @@
    else return pixels / self~factorX
 
 ::method setCategoryListColumnWidth unguarded    -- Old method using dialog units, this is not accurate
-   use arg strict id, dlgunits, pageID = (-1)
+   use strict arg id, dlgunits, pageID = (-1)
    pixels = dlgunits * self~factorX
    return self~setCategoryListColumnWidthPx(id, pixels, pageID)
 

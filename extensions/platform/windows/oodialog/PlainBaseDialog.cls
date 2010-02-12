@@ -183,6 +183,10 @@
    use strict arg index
    return .DlgUtil~getSystemMetrics(index)
 
+-- DEPRECATED
+::method assignWindow
+   return 0
+
 
 ::class 'ResourceUtils' public mixinclass object
 
@@ -296,6 +300,10 @@
 ::method init  external "LIBRARY oodialog window_init"
 ::method unInit  external "LIBRARY oodialog window_unInit"
 
+/**
+ * Used to return an object that is not a dialog object.  See the
+ * PlainBaseDialog::new() class method for details (pbdlg_new_cls.)
+ */
 ::class 'DialogProxy' public
 ::attribute initCode get
   return 1
@@ -306,7 +314,7 @@
  *  template comes from a binary resource, a resource script file, or is con-
  *  structed dynamically.
  */
-::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils EventNotification
+::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils EventNotification DialogExtensions WindowExtensions
 
 ::constant DM_REPOSITION                 "0x0402"
 ::constant WM_SETFONT                    "0x0030"
@@ -326,6 +334,8 @@
 -- Automatic data field detection on/off
 ::attribute autoDetect get external "LIBRARY oodialog pbdlg_getAutoDetect"
 ::attribute autoDetect set external "LIBRARY oodialog pbdlg_setAutoDetect"
+
+::attribute scrollNow               -- Indicator whether or not scrolling is active
 
 ::attribute dataConnection private  -- store connections between ids and class attributes
 ::attribute useStem private         -- flag whether to use a stem to set/get data or not
@@ -848,6 +858,12 @@
 
 ::method autoDetection
    self~autoDetect = .true       -- enable autodetection
+
+::method getMenuBar
+  return self~menuBar
+
+::method hasMenuBar
+  return self~menuBar \== .nil & self~isLinked
 
  /* The following methods are abstract methods that will be called */
  /* whenever the push buttons 1, 2, or 9 will be pressed */

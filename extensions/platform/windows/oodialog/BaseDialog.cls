@@ -39,8 +39,9 @@
 /**
  * Windows Dialog Interface for Open Object Rexx (ooRexx.)
  *
- * This module contains the WindowsExtensions mixinclass and the BaseDialog
- * class.  These two classes form the foundation of all non-trivial dialogs.
+ * This module contains the WindowsExtensions mixinclass. This class is
+ * inherited by the PlainBaseDialog class and helps form the foundation of all
+ * non-trivial dialogs.
  *
  * Some classes related to Windows resources are also included here.
  */
@@ -134,24 +135,6 @@
    ret.top = t/self~factorY
    ret.bottom = b/self~factorY
    return ret.
-
-/** class: BaseDialog
- * Implements methods that are common to all 3 types of dialogs, ResDialog,
- * RcDialog, and UserDialog.
- */
-::class 'BaseDialog' public subclass PlainBaseDialog inherit DialogExtensions WindowExtensions
-
-::attribute scrollNow     -- Indicator whether or not scrolling is active
-
-::method init external "LIBRARY oodialog baseDlg_init"
-
-::method baseDlgTest unguarded external "LIBRARY oodialog baseDlg_test"
-
-::method getMenuBar
-  return self~menuBar
-
-::method hasMenuBar
-  return self~menuBar \== .nil & self~isLinked
 
 
 ::class 'ResourceImage' public

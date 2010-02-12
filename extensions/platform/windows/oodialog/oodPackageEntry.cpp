@@ -287,10 +287,6 @@ REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
 REXX_METHOD_PROTOTYPE(dlgext_dumpAdmin_pvt);
 
-// BaseDialog
-REXX_METHOD_PROTOTYPE(baseDlg_init);
-REXX_METHOD_PROTOTYPE(baseDlg_test);
-
 // UserDialog
 REXX_METHOD_PROTOTYPE(userdlg_init);
 
@@ -909,9 +905,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_scrollText,              dlgext_scrollText),
     REXX_METHOD(dlgext_createBrush,             dlgext_createBrush),
     REXX_METHOD(dlgext_dumpAdmin_pvt,           dlgext_dumpAdmin_pvt),
-
-    REXX_METHOD(baseDlg_init,                   baseDlg_init),
-    REXX_METHOD(baseDlg_test,                   baseDlg_test),
 
     REXX_METHOD(userdlg_init,                   userdlg_init),
 

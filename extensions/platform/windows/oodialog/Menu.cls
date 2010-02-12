@@ -142,7 +142,7 @@
 
 ::method replace
   use strict arg dlg
-  if \ dlg~isA(.BaseDialog) then return -3
+  if \ dlg~isA(.PlainBaseDialog) then return -3
 
 ::method isAttached external "LIBRARY oodialog menuBar_isAttached"
 ::method redraw external "LIBRARY oodialog menuBar_redraw"
