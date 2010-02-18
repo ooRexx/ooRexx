@@ -647,6 +647,7 @@ REXX_TYPED_ROUTINE_PROTOTYPE(SockConnect);
 REXX_TYPED_ROUTINE_PROTOTYPE(SockGetHostByAddr);
 REXX_TYPED_ROUTINE_PROTOTYPE(SockGetHostByName);
 REXX_TYPED_ROUTINE_PROTOTYPE(SockGetHostId);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockGetHostName);
 REXX_TYPED_ROUTINE_PROTOTYPE(SockGetPeerName);
 REXX_TYPED_ROUTINE_PROTOTYPE(SockGetSockName);
 REXX_TYPED_ROUTINE_PROTOTYPE(SockGetSockOpt);
@@ -678,6 +679,7 @@ RexxRoutineEntry rxsock_functions[] =
     REXX_TYPED_ROUTINE( SockGetHostByAddr,  SockGetHostByAddr),
     REXX_TYPED_ROUTINE( SockGetHostByName,  SockGetHostByName),
     REXX_TYPED_ROUTINE( SockGetHostId,      SockGetHostId),
+    REXX_TYPED_ROUTINE( SockGetHostName,    SockGetHostName),
     REXX_TYPED_ROUTINE( SockGetPeerName,    SockGetPeerName),
     REXX_TYPED_ROUTINE( SockGetSockName,    SockGetSockName),
     REXX_TYPED_ROUTINE( SockGetSockOpt,     SockGetSockOpt),

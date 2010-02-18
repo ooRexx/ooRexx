@@ -89,6 +89,16 @@ use strict arg
 return SockGetHostID()
 
 /*----------------------------------------------------------------------------*/
+/* Method: gethostname                                                        */
+/* Description: get the local host name                                       */
+/* Arguments: none                                                            */
+/*----------------------------------------------------------------------------*/
+
+::method gethostname class
+use strict arg
+return SockGetHostName()
+
+/*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 /* Class: Socket                                                              */
 /*        Private methods                                                     */

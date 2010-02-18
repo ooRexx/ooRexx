@@ -390,6 +390,28 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
 /*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
 
 /*------------------------------------------------------------------
+ *  gethostname()
+ *------------------------------------------------------------------*/
+RexxRoutine0(RexxStringObject, SockGetHostName)
+{
+    char     pszBuff[64];                    /* buffer for name */
+    /*
+     *   Assuming the hosts file in
+     *   in %systemroot%/system/drivers/etc/hosts contains my computer name.
+     */                                      //get our name
+    if (gethostname(pszBuff, sizeof(pszBuff)))
+    {
+        // set the errno information
+        cleanup(context);
+        return context->String("");
+    }
+    return context->String(pszBuff);
+}
+
+/*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
+/*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
+
+/*------------------------------------------------------------------
  * getpeername()
  *------------------------------------------------------------------*/
 RexxRoutine2(int, SockGetPeerName, int, sock, RexxObjectPtr, stemSource)
