@@ -2359,7 +2359,7 @@ RexxMethod0(RexxObjectPtr, pbdlg_get)
  *  @param  fontSize  [optional]  The point size of the font, for instance 10.
  *                    The default if this argument is omitted is 8.
  *
- *  @return  This method does not return a value.
+ *  @return  0, always.
  */
 RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_t, fontSize, CSELF, pCSelf)
 {
@@ -2381,7 +2381,7 @@ RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_
         // TODO at this point calculate the true dialog base units from the font
         // and set them into CPlainBaseDialog.
     }
-    return NULLOBJECT;
+    return TheZeroObj;
 }
 
 
