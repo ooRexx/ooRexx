@@ -1148,14 +1148,20 @@ RexxString *RexxObject::requestString()
         ProtectedObject string_value;
 
         this->sendMessage(OREF_REQUEST, OREF_STRINGSYM, string_value);
+        // The returned value might be an Integer or NumberString value.  We need to
+        // force this to be a real string value.
+        string_value = ((RexxObject *)string_value)->primitiveMakeString();
         if (string_value == TheNilObject)
         {/* didn't convert?                   */
          /* get the final string value        */
             this->sendMessage(OREF_STRINGSYM, string_value);
+            // The returned value might be an Integer or NumberString value.  We need to
+            // force this to be a real string value.
+            string_value = ((RexxObject *)string_value)->primitiveMakeString();
             /* raise a NOSTRING condition        */
             ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, (RexxString *)string_value, this, OREF_NULL);
         }
-        return(RexxString *)string_value;   /* return the converted form         */
+        return (RexxString *)string_value;   /* return the converted form         */
     }
 }
 
