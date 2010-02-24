@@ -5,7 +5,7 @@ configure.ac
 CHANGES
 windows-build.txt
 unix-like-build.txt
-rexutils/rxftp.cls
+extensions/rxftp/rxftp.cls
 platform/unix/oorexx-config.1
 platform/unix/oorexx.spec.in
 platform/unix/rexx.1

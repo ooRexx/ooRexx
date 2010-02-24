@@ -24,7 +24,7 @@ The 'interpreter' at the end of the command will be the root directory of
 the source tree.  This directory can be given any name.
 
 Release Source File Archive:  Download from SourceForge the archive desired,
-for instance, ooRexx-3.2.0.zip or ooRexx-4.0.0.zip, and unzip it in a work
+for instance, ooRexx-4.0.0.zip or ooRexx-4.0.1.zip, and unzip it in a work
 directory.
 
 Build Requirements
@@ -219,9 +219,9 @@ check out.)
 For example:
 
 F:\>e:
-E:\>cd \interpreter-3.x
-E:\interpreter-3.x>touchheaders
-E:\interpreter-3.x>makeorx NODEBUG
+E:\>cd \main\trunk
+E:\trunk>touchheaders
+E:\trunk>makeorx NODEBUG
 
 Build Notes and Caveats
 =======================

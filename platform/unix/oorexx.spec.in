@@ -54,11 +54,12 @@
 # Specify the package version
 %define orx_major 4
 %define orx_minor 0
-%define orx_mod_lvl 0
+%define orx_mod_lvl 1
 
 # Specify the libtool library version
 %define orx_current 4
 %define orx_revision 0
+# orx_age should ALWAYS remain 0 so the linker can always use the latest version
 %define orx_age 0
 # the order of these looks wrong, but that is how it comes out!
 %define orx_libversion %{orx_current}.%{orx_age}.%{orx_revision}
@@ -195,29 +196,29 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/bin/mime.cls                         /usr/bin/mime.cls
    ln -sf %{_prefix}/bin/smtp.cls                         /usr/bin/smtp.cls
    ln -sf %{_prefix}/bin/oorexx-config                    /usr/bin/oorexx-config
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so
-   ln -sf %{_prefix}/lib/ooRexx/librexx.la                       /usr/lib/librexx.la
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.la                    /usr/lib/librexxapi.la
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.la                     /usr/lib/librxsock.la
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.la                     /usr/lib/librxmath.la
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.la                   /usr/lib/librxregexp.la
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.la                   /usr/lib/librexxutil.la
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so
+   ln -sf %{_prefix}/lib/ooRexx/librexx.la                       /usr/%{_lib}/librexx.la
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.la                    /usr/%{_lib}/librexxapi.la
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.la                     /usr/%{_lib}/librxsock.la
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/%{_lib}/librxmath.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/%{_lib}/librxmath.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.la                     /usr/%{_lib}/librxmath.la
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.la                   /usr/%{_lib}/librxregexp.la
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.la                   /usr/%{_lib}/librexxutil.la
    ln -sf %{_prefix}/include/rexx.h                       /usr/include/rexx.h
    ln -sf %{_prefix}/include/rexxapidefs.h                /usr/include/rexxapidefs.h
    ln -sf %{_prefix}/include/rexxapitypes.h               /usr/include/rexxapitypes.h
@@ -232,18 +233,18 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
    ln -sf %{_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 # allow backwards compatibility to previous versions
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/%{_lib}/librxmath.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/%{_lib}/librxmath.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.3
 fi
 if [ -d /etc/rc.d/init.d ]; then
    # Red Hat

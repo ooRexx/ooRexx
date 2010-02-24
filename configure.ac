@@ -34,7 +34,7 @@ dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 
 dnl Process this file with autoconf to produce a configure script
-AC_INIT(oorexx, 4.0.0)
+AC_INIT(oorexx, 4.0.1)
 AC_PREFIX_DEFAULT(/opt/ooRexx)
 
 dnl This is to fix a problem with distribution prior to Fedora 7. Fedora 7
@@ -45,7 +45,7 @@ dnl older distributions are happy.
 mandir="\$(prefix)/share/man"
 
 PACKAGE=ooRexx
-VERSION=4.0.0
+VERSION=4.0.1
 
 AC_CANONICAL_SYSTEM
 
