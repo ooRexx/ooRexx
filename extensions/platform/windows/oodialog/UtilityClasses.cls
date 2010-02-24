@@ -264,7 +264,7 @@
 ::method execute
    expose message title sleeping earlyReply sx sy
 
-   s = self~getTextSizeDlg(message)
+   s = self~getTextSizeDu(message)
    sx = s~width
    sy = s~height
    self~createCenter(sx+20, sy + 20, title,"NOMENU", , , , 1)
@@ -306,7 +306,7 @@
 ::method execute
    expose message title datas. dlgy size
 
-   s = self~getTextSizeDlg(message)
+   s = self~getTextSizeDu(message)
    self~sx = max(s~width,100,size)
    self~sy = s~height
 
@@ -358,14 +358,14 @@
 ::method execute
    expose message title sx sy datas. dlgx dlgy len entries. maxlen
 
-   s = self~getTextSizeDlg(message)
+   s = self~getTextSizeDu(message)
    sx = s~width
    sy = s~height
    ll = 0; count = 0
 
    do while var("entries."count+1) = 1
       count = count + 1
-      s = self~getTextSizeDlg(entries.count)
+      s = self~getTextSizeDu(entries.count)
       if s~width > ll then ll = s~width
    end
 
@@ -400,7 +400,7 @@
    if arg(5,"o") = 1 then leny = 0
    if arg(6,"o") = 0 then datas.101 = predev; else datas.101 = ""
    self~init:super(datas.)
-   s = self~getTextSizeDlg(message)
+   s = self~getTextSizeDu(message)
    self~sx = s~width
    self~sy = s~height
    self~message = message
@@ -424,14 +424,14 @@
 ::method execute
    expose message title sx sy datas. input. count lenx leny dlgx dlgy useVScroll
 
-   s = self~getTextSizeDlg(message)
+   s = self~getTextSizeDu(message)
    sx = s~width
    sy = s~height
 
    ll = 0; count = 0
    do while var("input."count+1) = 1
       count = count + 1
-      s = self~getTextSizeDlg(input.count)
+      s = self~getTextSizeDu(input.count)
       if s~width > ll then ll = s~width
    end
 
@@ -514,13 +514,13 @@
 ::method execute
    expose message title sx sy datas. dlgx dlgy len entries. placex max
 
-   s = self~getTextSizeDlg(message)
+   s = self~getTextSizeDu(message)
    sx = s~width
    sy = s~height
    ll = 0; count = 0
    do while var("entries."count+1) = 1
       count = count + 1
-      s = self~getTextSizeDlg(entries.count)
+      s = self~getTextSizeDu(entries.count)
       if s~width > ll then ll = s~width
    end
 
@@ -562,13 +562,13 @@
 ::method execute
    expose message title sx sy datas. dlgx dlgy len entries. placex prev max
 
-   s = self~getTextSizeDlg(message)
+   s = self~getTextSizeDu(message)
    sx = s~width
    sy = s~height
    ll = 0; count = 0
    do while var("entries."count+1) = 1
       count = count + 1
-      s = self~getTextSizeDlg(entries.count)
+      s = self~getTextSizeDu(entries.count)
       if s~width > ll then ll = s~width
    end
 
@@ -628,7 +628,7 @@
    self~noAutoDetection
 
 ::method CalcSize
-   size = self~getTextSizeDlg(self~msg)
+   size = self~getTextSizeDu(self~msg)
    scrSize = screenSize()
    self~dims["sx"] = size~width
    self~dims["sy"] = size~height

@@ -72,7 +72,7 @@
 
    self~catalog['category'] = 0
 
-   size = self~getTextSizeDlg("Hg")
+   size = self~getTextSizeDu("Hg")
 
    self~catalog['page']['x'] = self~catx
    self~catalog['page']['y'] = self~caty

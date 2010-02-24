@@ -165,7 +165,7 @@
 
    if self~catalog['page']['h'] = .nil then self~catalog['page']['h'] = self~sizeY - 40
 
-   size = self~getTextSizeDlg("Hg")
+   size = self~getTextSizeDu("Hg")
    textHeight = size~height
 
    if self~catCX = 0 & n = 0 then  /* dropdown or none */
@@ -174,7 +174,7 @@
          if self~catalog['page']['font'] <> "" then
               size = self~getTextSizeDlg(catnames.i,self~catalog['page']['font'],self~catalog['page']['fsize'])
          else
-              size = self~getTextSizeDlg(catnames.i)
+              size = self~getTextSizeDu(catnames.i)
          self~catCX = max(self~catCX,size~width)
       end
       if n = 0 then self~catCX = self~catCX + 20
@@ -255,7 +255,7 @@
 -- the child dialogs that make up the pages of the CategoryDialog.
 ::method categoryPage protected
 
-   size = self~getTextSizeDlg("Hg")
+   size = self~getTextSizeDu("Hg")
    textHeight = size~height
 
    if self~catStyle~wordpos("TOPLINE") > 0 then

@@ -73,7 +73,6 @@
 -- createFontEx() is a correct implementation.
 ::method createFont unguarded external "LIBRARY oodialog winex_createFont"
 ::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
-::method getTextSizeScreen  external "LIBRARY oodialog winex_getTextSizeScreen"
 ::method writeDirect unguarded external "LIBRARY oodialog winex_writeDirect"
 ::method loadBitmap unguarded external "LIBRARY oodialog winex_loadBitmap"
 ::method removeBitmap unguarded external "LIBRARY oodialog winex_removeBitmap"

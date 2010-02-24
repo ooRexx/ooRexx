@@ -146,7 +146,7 @@
    if startid < 0 then return startid
    if arg(4, 'o') = 1 then cx = 0
    parse var inp rb inp
-   size = self~getTextSizeDlg(rb)
+   size = self~getTextSizeDu(rb)
    len = size~width
    stepy = size~height
    lastlen = len; oldy = stepy; stepy = trunc(stepy * 1.5)
@@ -168,7 +168,7 @@
       my = my + stepy; i = i + 1
       parse var inp rb inp
       if cx = 0 then do
-         s = self~getTextSizeDlg(rb)
+         s = self~getTextSizeDu(rb)
          len = s~width
          if len > lastlen then lastlen = len
       end
@@ -185,7 +185,7 @@
    if id < 0 then return id
    if attributeName == "" then attributeName = text
    if cy = 0 | cx1 = 0 then do
-      size = self~getTextSizeDlg(text)
+      size = self~getTextSizeDu(text)
       if cy = 0 then cy = size~height + 4
       if cx1 = 0 then cx1 = size~width + 4
    end
@@ -208,7 +208,7 @@
       count = count + 1
       data.count = rb
       if cx1 = 0 then do
-         size = self~getTextSizeDlg(rb)
+         size = self~getTextSizeDu(rb)
          if size~width > ll then ll = size~width
       end
       parse var inp rb inp
@@ -216,7 +216,7 @@
    if cx1 = 0 then cx1 = ll+4
    is = idstat
 
-   s = self~getTextSizeDlg("Tg")
+   s = self~getTextSizeDu("Tg")
    stepy = s~height
    opts = opts~translate
    nob = opts~wordpos("NOBORDER")
@@ -241,14 +241,14 @@
    do while var("inp."count+1) = 1
       count = count + 1
       if cx1 = 0 then do
-         s = self~getTextSizeDlg(inp.count)
+         s = self~getTextSizeDu(inp.count)
          if s~width > ll then ll = s~width
       end
    end
    if cx1 = 0 then cx1 = ll+4
 
    is = idstat
-   s = self~getTextSizeDlg("Tg")
+   s = self~getTextSizeDu("Tg")
    stepy = s~height
 
    opts = opts~translate
@@ -271,7 +271,7 @@
    if id < 0 then return id
    if attributeName == "" then attributeName = text
 
-   s = self~getTextSizeDlg(text)
+   s = self~getTextSizeDu(text)
    cy = s~height + 4
    if cx1 = 0 then cx1 = s~width + 4
    opts = opts~translate
@@ -304,14 +304,14 @@
    do while var("inp."count+1) = 1
       count = count + 1
       if cxx = 0 then do
-         s = self~getTextSizeDlg(inp.count)
+         s = self~getTextSizeDu(inp.count)
          if s~width > ll then ll = s~width
       end
    end
    if var("max") = 0 | max = 0 then max = count
    if cxx = 0 & max \= 1 then cx = ll+20; else cx = cxx
    if arg(8, 'o') = 1 then idstat = self~STATIC_ID
-   s = self~getTextSizeDlg("Tg")
+   s = self~getTextSizeDu("Tg")
    stepx = s~width
    oldy = s~height
    mx = 0; highy = 0
@@ -334,7 +334,7 @@
          mx = mx + cx
       end
       if max=1 & cxx=0 then do
-         s = self~getTextSizeDlg(inp.i)
+         s = self~getTextSizeDu(inp.i)
          cx = s~width + 24
       end
       if kind = "R" then do

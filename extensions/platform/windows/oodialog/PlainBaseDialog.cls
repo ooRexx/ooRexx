@@ -116,6 +116,8 @@
 ::method title unguarded external "LIBRARY oodialog wb_getText"
 ::method setText unguarded external "LIBRARY oodialog wb_setText"
 ::method getText unguarded external "LIBRARY oodialog wb_getText"
+::method getTextSizePx unguarded external "LIBRARY oodialog wb_getTextSizePx"
+::method getTextSizeScreen unguarded external "LIBRARY oodialog wb_getTextSizeScreen"
 
 ::method setRect unguarded external "LIBRARY oodialog wb_setRect"
 ::method resizeTo unguarded external "LIBRARY oodialog wb_resizeMove"
@@ -348,9 +350,11 @@
 ::attribute parentDlg private
 ::attribute childDialogs
 
-::attribute fontName get external "LIBRARY oodialog pbdlg_getFontName"
-::attribute fontSize get external "LIBRARY oodialog pbdlg_getFontSize"
 ::attribute dlgHandle get unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
+::attribute fontName get external "LIBRARY oodialog pbdlg_getFontNameSize"
+::attribute fontName set private external "LIBRARY oodialog pbdlg_setFontName_pvt"
+::attribute fontSize get external "LIBRARY oodialog pbdlg_getFontNameSize"
+::attribute fontSize set private external "LIBRARY oodialog pbdlg_setFontSize_pvt"
 
 -- A queue containing the methods that will be started concurrently before execution of the dialog
 ::attribute automaticMethods private
@@ -503,6 +507,8 @@
 ::method getControlText unguarded external "LIBRARY oodialog pbdlg_getControlText"
 ::method setControlText unguarded external "LIBRARY oodialog pbdlg_setControlText"
 ::method getControlHandle unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
+::method getTextSizeDu unguarded external "LIBRARY oodialog pbdlg_getTextSizeDu"
+::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
 ::method pixel2dlgUnit external "LIBRARY oodialog pbdlg_pixel2dlgUnit"
 ::method dlgUnit2pixel external "LIBRARY oodialog pbdlg_dlgUnit2pixel"
 ::method backgroundBitmap external "LIBRARY oodialog pbdlg_backgroundBitmap"
@@ -843,7 +849,6 @@
 ::method tabToPrevious unguarded external "LIBRARY oodialog pbdlg_tabTo"
 ::method setFocus unguarded external "LIBRARY oodialog pbdlg_setFocus"
 ::method getFocus unguarded external "LIBRARY oodialog pbdlg_getFocus"
-::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
 ::method setTabStop unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 ::method setGroup unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 ::method center unguarded external "LIBRARY oodialog pbdlg_center"

@@ -573,6 +573,19 @@ static inline HWND getWBWindow(void *pCSelf)
     return ((pCWindowBase)pCSelf)->hwnd;
 }
 
+static HWND wbSetUp(RexxMethodContext *c, void *pCSelf)
+{
+    oodResetSysErrCode(c->threadContext);
+    HWND hwnd = getWBWindow(pCSelf);
+
+    if ( hwnd == NULL )
+    {
+        noWindowsDialogException(c, ((pCWindowBase)pCSelf)->rexxSelf);
+    }
+    return hwnd;
+}
+
+
 /**
  * Interface to the Windows API: SendMessage().
  *
@@ -1335,6 +1348,178 @@ RexxMethod2(wholenumber_t, wb_setText, CSTRING, text, CSELF, pCSelf)
     }
     return 0;
 }
+
+
+/** WindowBase::getTextSizePx()
+ *
+ *  Gets the size, (width and height,) in pixels, needed to display a string.
+ *
+ *  @param text      The string to calculate the size of.
+ *
+ *  @return  A .Size object containg the width and height for the text in
+ *           pixels.
+ */
+RexxMethod2(RexxObjectPtr, wb_getTextSizePx, CSTRING, text, CSELF, pCSelf)
+{
+    SIZE size = {0};
+
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        goto error_out;
+    }
+
+    if ( ! textSizeFromWindow(context, text, &size, hwnd) )
+    {
+        goto error_out;
+    }
+
+    return rxNewSize(context, size.cx, size.cy);
+
+error_out:
+    return NULLOBJECT;
+}
+
+
+/** WindowBase::getTextSizeScreen()
+ *
+ *  Gets the size, width and height, in pixels, needed to display a string in a
+ *  specific font.
+ *
+ *  @param text      The text to calculate the size of.  If this is the only
+ *                   argument then the font of this object is used for the
+ *                   calculation.
+ *
+ *  @param type      Optional.  If the text arg is not the only argument, then
+ *                   type is required.  It signals what fontSrc is.  The allowed
+ *                   types are:
+ *
+ *                   Indirect -> fontSrc is a font name and fontSize is the size
+ *                   of the font.  The calculation is done indirectly by
+ *                   temporarily obtaining a logical font.
+ *
+ *                   DC -> fontSrc is a handle to a device context.  The correct
+ *                   font for the calculation must already be selected into this
+ *                   device context.  fontSize is ignored.
+ *
+ *                   Font -> fontSrc is a handle to a font.  fontSize is
+ *                   ignored.
+ *
+ *                   Only the first letter of type is needed and case is not
+ *                   significant.
+ *
+ *  @param fontSrc   Optional.  An object to use for calculating the size of
+ *                   text.  The type argument determines how this object is
+ *                   interpreted.
+ *
+ *  @param fontSize  Optional.  The size of the font.  This argument is always
+ *                   ignored unless the type argument is Indirect.  If type is
+ *                   Indirect and this argument is omitted then the defualt font
+ *                   size is used.  (Currently the default size is 8.)
+ *
+ *  @return  A .Size object containg the width and height for the text in
+ *           pixels.
+ *
+ *  @remarks  This method is needed to provide backward compatibility for the
+ *            deprecated getTextSize().  That is why the arguments are so
+ *            convoluted.  Users are advised to use getTextSizePx()
+ */
+RexxMethod5(RexxObjectPtr, wb_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTRING, type,
+            OPTIONAL_CSTRING, fontSrc, OPTIONAL_uint32_t, fontSize, CSELF, pCSelf)
+{
+    SIZE size = {0};
+
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        goto error_out;
+    }
+
+    if ( rxArgCount(context) == 1 )
+    {
+        if ( ! textSizeFromWindow(context, text, &size, hwnd) )
+        {
+            goto error_out;
+        }
+    }
+    else if ( argumentOmitted(2) )
+    {
+        missingArgException(context->threadContext, 2);
+        goto error_out;
+    }
+    else
+    {
+        if ( argumentOmitted(3) )
+        {
+            missingArgException(context->threadContext, 3);
+            goto error_out;
+        }
+
+        char m = toupper(*type);
+        if ( m == 'I' )
+        {
+            if ( argumentOmitted(4) )
+            {
+                fontSize = DEFAULT_FONTSIZE;
+            }
+            if ( ! textSizeIndirect(context, text, fontSrc, fontSize, &size, hwnd) )
+            {
+                goto error_out;
+            }
+        }
+        else if ( m == 'D' )
+        {
+            HDC hdc = (HDC)string2pointer(fontSrc);
+            if ( hdc == NULL )
+            {
+                invalidTypeException(context->threadContext, 3, " handle to a device context");
+                goto error_out;
+            }
+            GetTextExtentPoint32(hdc, text, (int)strlen(text), &size);
+        }
+        else if ( m == 'F' )
+        {
+            HFONT hFont = (HFONT)string2pointer(fontSrc);
+            if ( hFont == NULL )
+            {
+                invalidTypeException(context->threadContext, 3, " handle to a font");
+                goto error_out;
+            }
+
+            HDC hdc = GetDC(hwnd);
+            if ( hdc == NULL )
+            {
+                systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetDC");
+                goto error_out;
+            }
+
+            bool success = true;
+            if ( ! getTextExtent(hFont, hdc, text, &size) )
+            {
+                systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetTextExtentPoint32");
+                success = false;
+            }
+
+            ReleaseDC(hwnd, hdc);
+            if ( ! success )
+            {
+                goto error_out;
+            }
+        }
+        else
+        {
+            context->RaiseException2(Rexx_Error_Incorrect_method_option, context->String("I, D, F"),
+                                     context->String(type));
+            goto error_out;
+        }
+    }
+
+    return rxNewSize(context, size.cx, size.cy);
+
+error_out:
+    return NULLOBJECT;
+}
+
 
 /** WindowBase::windowRect()
  *
@@ -2193,6 +2378,13 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     return TheZeroObj;
 }
 
+/** PlainBaseDialog::dlgHandle  [attribute get] / PlainBaseDialog::getSelf()
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
+{
+    return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
+}
+
 /** PlainBaseDialog::autoDetect  [attribute get]
  */
 RexxMethod1(RexxObjectPtr, pbdlg_getAutoDetect, CSELF, pCSelf)
@@ -2208,24 +2400,99 @@ RexxMethod2(CSTRING, pbdlg_setAutoDetect, logical_t, on, CSELF, pCSelf)
 }
 
 /** PlainBaseDialog::fontName  [attribute get]
+ *  PlainBaseDialog::fontSize  [attribute get]
  */
-RexxMethod1(CSTRING, pbdlg_getFontName, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, pbdlg_getFontNameSize, NAME, method, CSELF, pCSelf)
 {
-    return ( ((pCPlainBaseDialog)pCSelf)->fontName );
-}
-/** PlainBaseDialog::fontSize  [attribute get]
- */
-RexxMethod1(uint32_t, pbdlg_getFontSize, CSELF, pCSelf)
-{
-    return ( ((pCPlainBaseDialog)pCSelf)->fontSize );
+    RexxObjectPtr result;
+    if ( *(method + 4) == 'N' )
+    {
+        result =  context->String(((pCPlainBaseDialog)pCSelf)->fontName);
+    }
+    else
+    {
+        result = context->UnsignedInt32(((pCPlainBaseDialog)pCSelf)->fontSize);
+    }
+    return result;
 }
 
-/** PlainBaseDialog::dlgHandle  [attribute get] / PlainBaseDialog::getSelf()
+/** PlainBaseDialog::fontName  [attribute set private]
  */
-RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, pbdlg_setFontName_pvt, CSTRING, name, CSELF, pCSelf)
 {
-    return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
+    if ( strlen(name) > (MAX_DEFAULT_FONTNAME - 1) )
+    {
+        stringTooLongException(context->threadContext, 1, MAX_DEFAULT_FONTNAME, strlen(name));
+    }
+    else
+    {
+        strcpy(((pCPlainBaseDialog)pCSelf)->fontName, name);
+    }
+    return NULLOBJECT;
 }
+
+/** PlainBaseDialog::fontSize  [attribute set private]
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_setFontSize_pvt, uint32_t, size, CSELF, pCSelf)
+{
+    ((pCPlainBaseDialog)pCSelf)->fontSize = size;
+    return NULLOBJECT;
+}
+
+/** PlaingBaseDialog::setDlgFont()
+ *
+ *  Sets the font that will be used for the font of the underlying Windows
+ *  dialog, when it is created.  This is primarily of use in a UserDialog or a
+ *  subclasses of a UserDialog.
+ *
+ *  In a ResDialog, the font of the compiled binary resource will be used and
+ *  the font set by this method has no bearing.  In a RcDialog, if the resource
+ *  script file specifies the font, that font will be used.
+ *
+ *  Likewise, in a UserDialog, if the programmer specifies a font in the create
+ *  method call (or createCenter() method call) the specified font over-rides
+ *  what is set by this method.
+ *
+ *  However, setting the font through the setDlgFont() method allows the true
+ *  dialog unit values to be correctly calculated.  That is the primary use for
+ *  this method.  A typical sequence might be:
+ *
+ *  dlg = .MyDialog~new
+ *  dlg~setFont("Tahoma", 12)
+ *  ...
+ *  ::method defineDialog
+ *  ...
+ *
+ *  @param  fontName  The font name, such as Tahoma.  The name must be less than
+ *                    256 characters in length.
+ *  @param  fontSize  [optional]  The point size of the font, for instance 10.
+ *                    The default if this argument is omitted is 8.
+ *
+ *  @return  0, always.
+ */
+RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_t, fontSize, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    if ( strlen(fontName) > (MAX_DEFAULT_FONTNAME - 1) )
+    {
+        stringTooLongException(context->threadContext, 1, MAX_DEFAULT_FONTNAME, strlen(fontName));
+    }
+    else
+    {
+        if ( argumentOmitted(2) )
+        {
+            fontSize = DEFAULT_FONTSIZE;
+        }
+        strcpy(pcpbd->fontName, fontName);
+        pcpbd->fontSize = fontSize;
+
+        // TODO at this point calculate the true dialog base units from the font
+        // and set them into CPlainBaseDialog.
+    }
+    return TheZeroObj;
+}
+
 
 /** PlainBaseDialog::sendMessageToControl()
  *  PlainBaseDialog::sendMessageToControlH()
@@ -2330,61 +2597,6 @@ RexxMethod0(RexxObjectPtr, pbdlg_get)
     }
 }
 
-/** PlaingBaseDialog::setDlgFont()
- *
- *  Sets the font that will be used for the font of the underlying Windows
- *  dialog, when it is created.  This is primarily of use in a UserDialog or a
- *  subclasses of a UserDialog.
- *
- *  In a ResDialog, the font of the compiled binary resource will be used and
- *  the font set by this method has no bearing.  In a RcDialog, if the resource
- *  script file specifies the font, that font will be used.
- *
- *  Likewise, in a UserDialog, if the programmer specifies a font in the create
- *  method call (or createCenter() method call) the specified font over-rides
- *  what is set by this method.
- *
- *  However, setting the font through the setDlgFont() method allows the true
- *  dialog unit values to be correctly calculated.  That is the primary use for
- *  this method.  A typical sequence might be:
- *
- *  dlg = .MyDialog~new
- *  dlg~setFont("Tahoma", 12)
- *  ...
- *  ::method defineDialog
- *  ...
- *
- *  @param  fontName  The font name, such as Tahoma.  The name must be less than
- *                    256 characters in length.
- *  @param  fontSize  [optional]  The point size of the font, for instance 10.
- *                    The default if this argument is omitted is 8.
- *
- *  @return  0, always.
- */
-RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_t, fontSize, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-
-    if ( strlen(fontName) > (MAX_DEFAULT_FONTNAME - 1) )
-    {
-        stringTooLongException(context->threadContext, 1, MAX_DEFAULT_FONTNAME, strlen(fontName));
-    }
-    else
-    {
-        if ( argumentOmitted(2) )
-        {
-            fontSize = DEFAULT_FONTSIZE;
-        }
-        strcpy(pcpbd->fontName, fontName);
-        pcpbd->fontSize = fontSize;
-
-        // TODO at this point calculate the true dialog base units from the font
-        // and set them into CPlainBaseDialog.
-    }
-    return TheZeroObj;
-}
-
-
 /** PlainBaseDialog::getWindowText()
  *
  *  Gets the text of the specified window.
@@ -2407,6 +2619,142 @@ RexxMethod1(RexxStringObject, pbdlg_getWindowText, POINTERSTRING, hwnd)
     rxGetWindowText(context, (HWND)hwnd, &result);
     return result;
 }
+
+/** PlainBaseDialog::getTextSizeDu()
+ *
+ *  Gets the size (width and height) in dialog units for any given string.
+ *
+ *  @param  text  The string whose size is needed.
+ *
+ *  @return  The size needed for the string in a .Size object.
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_getTextSizeDu, CSTRING, text, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    HWND hDlg     = pcpbd->hDlg;
+    SIZE textSize = {0};
+
+    // If hwnd is null, this will get a DC for the entire screen and that should be ok.
+    HDC hdc = GetDC(hDlg);
+    if ( hdc == NULL )
+    {
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetDC");
+        goto error_out;
+    }
+
+    HFONT dlgFont = NULL;
+    bool createdFont = false;
+
+    if ( hDlg == NULL )
+    {
+        dlgFont = createFontFromName(hdc, pcpbd->fontName, pcpbd->fontSize);
+        if ( dlgFont != NULL )
+        {
+            createdFont = true;
+        }
+    }
+    else
+    {
+        dlgFont = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
+    }
+
+    // If the font is still null we use the stock system font.  Even if we have
+    // the dialog handle, the font could be null if WM_SETFONT was not used.  In
+    // this case the stock system font will be correct.  If the
+    // createFontFromName() failed, well that is unlikely.  Just use the stock
+    // system font in that case.
+    if ( dlgFont == NULL )
+    {
+        dlgFont = (HFONT)GetStockObject(SYSTEM_FONT);
+    }
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, dlgFont);
+
+    GetTextExtentPoint32(hdc, text, (int)strlen(text), &textSize);
+    screenToDlgUnit(hdc, (POINT *)&textSize, 1);
+
+    SelectObject(hdc, hOldFont);
+    ReleaseDC(hDlg, hdc);
+
+    if ( createdFont )
+    {
+        DeleteObject(dlgFont);
+    }
+    return rxNewSize(context, textSize.cx, textSize.cy);
+
+error_out:
+    return NULLOBJECT;
+}
+
+
+/** PlainBaseDialog::getTextSizeDlg()
+ *
+ *  Gets the size (width and height) in dialog units for any given string.
+ *
+ *  Since dialog units only have meaning for a specific dialog, normally the
+ *  dialog units are calculated using the font of the dialog.  Optionally, this
+ *  method will calculate the dialog units using a specified font.
+ *
+ *  @param  text         The string whose size is needed.
+ *
+ *  @param  fontName     Optional. If specified, use this font to calculate the
+ *                       size.
+ *
+ *  @param  fontSize     Optional. If specified, use this font size with
+ *                       fontName to calculate the size.  The default if omitted
+ *                       is 8.  This arg is ignored if fontName is omitted.
+ *
+ *  @param  hwndFontSrc  Optional. Use this window's font to calculate the size.
+ *                       This arg is always ignored if fontName is specified.
+ *
+ *  @note The normal useage for this method would be, before the underlying
+ *        dialog is created:
+ *
+ *          dlg~setDlgFont("fontName", fontSize)
+ *          dlg~getTextSizeDlg("some text")
+ *
+ *        or, after the underlying dialog is created, just:
+ *
+ *          dlg~getTextSizeDlg("some text")
+ *
+ *        The convoluted use of the optional arguments are needed to maintain
+ *        backwards compatibility with the pre 4.0.0 ooDialog, the Rexx
+ *        programmer should be strongly discouraged from using them.
+ *
+ *        In addition, a version of this method is mapped to the DialogControl
+ *        class.  This also is done only for backwards compatibility.  There is
+ *        no logical reason for this to be a method of a dialog control.
+ */
+RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING, fontName,
+            OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, OSELF, self)
+{
+    HWND hwndSrc = NULL;
+    if ( argumentExists(2) )
+    {
+        if ( argumentOmitted(3) )
+        {
+            fontSize = DEFAULT_FONTSIZE;
+        }
+    }
+    else if ( argumentExists(4) )
+    {
+        if ( hwndFontSrc == NULL )
+        {
+            nullObjectException(context->threadContext, "window handle", 4);
+            return NULLOBJECT;
+        }
+        hwndSrc = (HWND)hwndFontSrc;
+    }
+
+    SIZE textSize = {0};
+    if ( getTextSize(context, text, fontName, fontSize, hwndSrc, self, &textSize) )
+    {
+        return rxNewSize(context, textSize.cx, textSize.cy);
+    }
+    return NULLOBJECT;
+}
+
 
 /** PlainBaseDialog::show()
  *
@@ -2935,7 +3283,7 @@ RexxMethod2(RexxObjectPtr, pbdlg_backgroundColor, uint32_t, colorIndex, CSELF, p
     return TheTrueObj;
 }
 
-/** PlainBaseDialog::pbdlg_pixel2dlgUnit()
+/** PlainBaseDialog::pixel2dlgUnit()
  *
  *  Takes a dimension expressed in pixels and tranforms it to a dimension
  *  expressed in dialog units of this dialog.
@@ -2967,7 +3315,7 @@ RexxMethod2(logical_t, pbdlg_pixel2dlgUnit, RexxObjectPtr, du, OSELF, self)
     return FALSE;
 }
 
-/** PlainBaseDialog::pbdlg_dlgUnit2pixel()
+/** PlainBaseDialog::dlgUnit2pixel()
  *
  *  Takes a dimension expressed in dialog units of this dialog and tranforms it
  *  to a dimension expressed in pixels.
@@ -3551,74 +3899,6 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
     }
     return result;
 }
-
-/** PlainBaseDialog::getTextSizeDlg()
- *
- *  Gets the size (width and height) in dialog units for any given string.
- *
- *  Since dialog units only have meaning for a specific dialog, normally the
- *  dialog units are calculated using the font of the dialog.  Optionally, this
- *  method will calculate the dialog units using a specified font.
- *
- *  @param  text         The string whose size is needed.
- *
- *  @param  fontName     Optional. If specified, use this font to calculate the
- *                       size.
- *
- *  @param  fontSize     Optional. If specified, use this font size with
- *                       fontName to calculate the size.  The default if omitted
- *                       is 8.  This arg is ignored if fontName is omitted.
- *
- *  @param  hwndFontSrc  Optional. Use this window's font to calculate the size.
- *                       This arg is always ignored if fontName is specified.
- *
- *  @note The normal useage for this method would be, before the underlying
- *        dialog is created:
- *
- *          dlg~setDlgFont("fontName", fontSize)
- *          dlg~getTextSizeDlg("some text")
- *
- *        or, after the underlying dialog is created, just:
- *
- *          dlg~getTextSizeDlg("some text")
- *
- *        The convoluted use of the optional arguments are needed to maintain
- *        backwards compatibility with the pre 4.0.0 ooDialog, the Rexx
- *        programmer should be strongly discouraged from using them.
- *
- *        In addition, a version of this method is mapped to the DialogControl
- *        class.  This also is done only for backwards compatibility.  There is
- *        no logical reason for this to be a method of a dialog control.
- */
-RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING, fontName,
-            OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, OSELF, self)
-{
-    HWND hwndSrc = NULL;
-    if ( argumentExists(2) )
-    {
-        if ( argumentOmitted(3) )
-        {
-            fontSize = DEFAULT_FONTSIZE;
-        }
-    }
-    else if ( argumentExists(4) )
-    {
-        if ( hwndFontSrc == NULL )
-        {
-            nullObjectException(context->threadContext, "window handle", 4);
-            return NULLOBJECT;
-        }
-        hwndSrc = (HWND)hwndFontSrc;
-    }
-
-    SIZE textSize = {0};
-    if ( getTextSize(context, text, fontName, fontSize, hwndSrc, self, &textSize) )
-    {
-        return rxNewSize(context, textSize.cx, textSize.cy);
-    }
-    return NULLOBJECT;
-}
-
 
 /** PlainBaseDialog::new<DialogControl>()
  *
