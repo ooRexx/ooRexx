@@ -152,36 +152,6 @@
    if sb == .nil then return -1
    return sb~determinePosition
 
-::method combineELwithSB
-   use strict arg elid, sbID, step = 0, poscode = 0
-   sb = self~newScrollBar(sbID)
-   if sb == .nil then return -1
-   pos = self~getEditData(elid)
-   if \ pos~DataType("W") then return -1
-
-   r = sb~getRange
-   if .SystemErrorCode <> 0 then return -1
-
-   if arg(4, "E") then do
-       sbc = .DlgUtil~loWord(poscode)
-       if sbc = 0 & step > 0 then step = -step
-       else if sbc = 1 & step < 0 then step = +step
-   end
-
-   if step > 0 then do
-      if pos < r~max then pos = pos + step
-   end
-   else if step < 0 then do
-      if pos > r~min then pos = pos + step
-   end
-   else if arg(4, 'E') then do
-      /* calc the position returned by message */
-      pos = .DlgUtil~hiWord(poscode)
-   end
-   sb~setPos(pos)
-   self~setEditData(elid, pos)
-   return 0
-
 ::method setListWidthPx unguarded
    use strict arg id, pixels
    listBox = self~newListBox(id)
@@ -305,6 +275,37 @@
 
 ::method setItemSysColor
    forward message "setControlSysColor"
+
+::method combineELwithSB  -- Use UpDown control
+   use strict arg elid, sbID, step = 0, poscode = 0
+   sb = self~newScrollBar(sbID)
+   if sb == .nil then return -1
+   pos = self~getEditData(elid)
+   if \ pos~DataType("W") then return -1
+
+   r = sb~getRange
+   if .SystemErrorCode <> 0 then return -1
+
+   if arg(4, "E") then do
+       sbc = .DlgUtil~loWord(poscode)
+       if sbc = 0 & step > 0 then step = -step
+       else if sbc = 1 & step < 0 then step = +step
+   end
+
+   if step > 0 then do
+      if pos < r~max then pos = pos + step
+   end
+   else if step < 0 then do
+      if pos > r~min then pos = pos + step
+   end
+   else if arg(4, 'E') then do
+      /* calc the position returned by message */
+      pos = .DlgUtil~hiWord(poscode)
+   end
+   sb~setPos(pos)
+   self~setEditData(elid, pos)
+   return 0
+
 -- END DEPRECATED
 
 
