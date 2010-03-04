@@ -56,6 +56,8 @@
  * This is the window procedure used to subclass the edit control for both the
  * ListControl and TreeControl objects.  It would be nice to convert this to use
  * the better API: SetWindowSubclass / RemoveWindowSubclass.
+ *
+ * TODO this whole subclassing thing is no longer needed.
  */
 WNDPROC wpOldEditProc = NULL;
 
@@ -64,14 +66,18 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     switch ( uMsg )
     {
         case WM_GETDLGCODE:
-            return (DLGC_WANTALLKEYS | CallWindowProc(wpOldEditProc, hWnd, uMsg, wParam, lParam));
+            return(DLGC_WANTALLKEYS | CallWindowProc(wpOldEditProc, hWnd, uMsg, wParam, lParam));
 
         case WM_CHAR:
-             //Process this message to avoid message beeps.
-            if ((wParam == VK_RETURN) || (wParam == VK_ESCAPE))
+            //Process this message to avoid message beeps.
+            if ( (wParam == VK_RETURN) || (wParam == VK_ESCAPE) )
+            {
                 return 0;
+            }
             else
+            {
                 return CallWindowProc(wpOldEditProc, hWnd,uMsg, wParam, lParam);
+            }
 
         default:
             return CallWindowProc(wpOldEditProc, hWnd, uMsg, wParam, lParam);
@@ -95,7 +101,7 @@ RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
     }
     else
     {
-        hEdit = TreeView_GetEditControl(hwnd);
+        hEdit = ListView_GetEditControl(hwnd);
     }
 
     if ( *method == 'S' )
