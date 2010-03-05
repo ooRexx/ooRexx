@@ -58,17 +58,17 @@
 -- WM_SIZE
 ::method connectResize
    use strict arg msgToRise
-   self~addUserMsg(msgToRise, 0x00000005, 0xFFFFFFFF, 0, 0, 0, 0)
+   return self~addUserMsg(msgToRise, 0x00000005, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- WM_MOVE
 ::method connectMove
    use strict arg msgToRise
-   self~addUserMsg(msgToRise, 0x00000003, 0xFFFFFFFF, 0, 0, 0, 0)
+   return self~addUserMsg(msgToRise, 0x00000003, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- WM_WINDOWPOSCHANGED
 ::method connectPosChanged
    use strict arg msgToRise
-   self~addUserMsg(msgToRise, 0x00000047, 0xFFFFFFFF, 0, 0, 0, 0)
+   return self~addUserMsg(msgToRise, 0x00000047, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- WM_DRAWITEM
 ::method connectDraw
@@ -83,7 +83,7 @@
 -- WM_CAPTURECHANGED
 ::method connectMouseCapture
    use strict arg msgToRise
-   self~addUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
+   return self~addUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- These methods map or unmap keyboard events to a method, or query if the mapping exists.
 ::method connectKeyPress unguarded external "LIBRARY oodialog en_connectKeyPress"
@@ -395,9 +395,6 @@
    end
    return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
-::method connectDateTimePickerEvent external "LIBRARY oodialog en_connectDateTimePickerEvent"
-::method connectMonthCalendarEvent external "LIBRARY oodialog en_connectMonthCalendarEvent"
-::method connectUpDownEvent external "LIBRARY oodialog en_connectUpDownEvent"
 
 ::method connectTrackBarEvent   /* can only be called in initDialog */
    use strict arg id, type, msgToRise = "", categoryHDlg = .NullHandle
@@ -424,6 +421,10 @@
    if ret <> 0 then return ret
    return self~addUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
 
+
+::method connectDateTimePickerEvent external "LIBRARY oodialog en_connectDateTimePickerEvent"
+::method connectMonthCalendarEvent external "LIBRARY oodialog en_connectMonthCalendarEvent"
+::method connectUpDownEvent external "LIBRARY oodialog en_connectUpDownEvent"
 
 ::method defListEditStarter
     use arg id, dummy, category

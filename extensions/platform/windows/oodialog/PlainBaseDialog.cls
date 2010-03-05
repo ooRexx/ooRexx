@@ -903,7 +903,7 @@
  * values are invalid.
  */
 ::method validate unguarded
-   return 1
+   return .true
 
 ::method newStatic unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newPushButton unguarded external "LIBRARY oodialog pbdlg_newControl"
