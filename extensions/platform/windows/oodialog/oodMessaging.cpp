@@ -536,11 +536,16 @@ inline MsgReplyType genericNotifyInvoke(RexxThreadContext *c, pCPlainBaseDialog 
  * The simplest form of invoking the Rexx method connected to a WM_COMMAND
  * message.  The Rexx method is invoked with two arguments, the WPARAM and
  * LPARAM paramters of the WM_COMMAND message.
+ *
+ * Note that for WM_COMMAND messages, lParam is always the window handle of the
+ * dialog control, if a control iniated the message.  For menu items and
+ * accelerators, it is always 0. So, converting to a pseudo pointer is always
+ * the correct thing to do.
  */
 inline MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName,
                                          WPARAM wParam, LPARAM lParam)
 {
-    RexxObjectPtr rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, c->Uintptr(wParam), c->Uintptr(lParam));
+    RexxObjectPtr rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, c->Uintptr(wParam), pointer2string(c, (void *)lParam));
     checkForCondition(c);
     return ReplyFalse;
 }
@@ -567,45 +572,48 @@ inline MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog
  *           args are strings, that could include commas, the individual args
  *           are separated here with ASCII ÿ (255, 0xFF, octal 377) and in the
  *           Rexx code, handleMessages() separates the args using 255~d2c.
+ *
+ *           This generic version of adding a message to the message queue is a
+ *           hold over from the orignal ooDialog implementation. It is a little
+ *           problematic as to whether wParam and lParam are getting converted
+ *           properly.
  */
 MsgReplyType genericAddDialogMessage(char *pMessageQueue,  char *rexxMethod, WPARAM wParam, LPARAM lParam, char *np, HANDLE handle, int item)
 {
+    char msgBuffer[512];
+
     if ( wParam == NULL && lParam == 0 )
     {
-        addDialogMessage(rexxMethod, pMessageQueue);
+        _snprintf(msgBuffer, 511, "%s(0\3770)", rexxMethod);
     }
-    else
+    else if ( np != NULL )
     {
-        char msgBuffer[512];
-
-        if ( np != NULL )
+        if ( handle != NULL )
         {
-            if ( handle != NULL )
-            {
-                _snprintf(msgBuffer, 511, "%s(%u\3770x%p\377%s)", rexxMethod, wParam, handle, np);
-            }
-            else
-            {
-                _snprintf(msgBuffer, 511, "%s(%u\377%d\377%s)", rexxMethod, wParam, item, np);
-            }
-        }
-        else if ( handle != NULL )
-        {
-            if ( item > OOD_INVALID_ITEM_ID )
-            {
-                _snprintf(msgBuffer, 511, "%s(%d\3770x%p)", rexxMethod, item, handle);
-            }
-            else
-            {
-                _snprintf(msgBuffer, 511, "%s(%u\3770x%p)", rexxMethod, wParam, handle);
-            }
+            _snprintf(msgBuffer, 511, "%s(%Iu\3770x%p\377%s)", rexxMethod, wParam, handle, np);
         }
         else
         {
-            _snprintf(msgBuffer, 511, "%s(%u\377%u)", rexxMethod, wParam, lParam);
+            _snprintf(msgBuffer, 511, "%s(%Iu\377%d\377%s)", rexxMethod, wParam, item, np);
         }
-        addDialogMessage(msgBuffer, pMessageQueue);
     }
+    else if ( handle != NULL )
+    {
+        if ( item > OOD_INVALID_ITEM_ID )
+        {
+            _snprintf(msgBuffer, 511, "%s(%d\3770x%p)", rexxMethod, item, handle);
+        }
+        else
+        {
+            _snprintf(msgBuffer, 511, "%s(%Iu\3770x%p)", rexxMethod, wParam, handle);
+        }
+    }
+    else
+    {
+        _snprintf(msgBuffer, 511, "%s(%Iu\377%Iu)", rexxMethod, wParam, lParam);
+    }
+
+    addDialogMessage(msgBuffer, pMessageQueue);
 
     return ReplyFalse;
 }
@@ -652,6 +660,11 @@ inline RexxObjectPtr hwndFrom2rexxArg(RexxThreadContext *c, LPARAM lParam)
  *           At this time, there is no special processing for any WM_COMMAND
  *           message.  So, if we find a match in the command message table there
  *           is not much to do.
+ *
+ *           Note however, that for WM_COMMAND messages, lParam is always the
+ *           window handle of the dialog control, if a control iniated the
+ *           message. For menu items and accelerators, it is always 0. So,
+ *           converting to a pseudo pointer is always the correct thing to do.
  */
 MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog pcpbd)
 {
@@ -668,7 +681,14 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
     {
         if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((lParam & m[i].lpfilter) == (uint32_t)m[i].lParam) )
         {
-            // return genericAddDialogMessage(pcpbd->dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, NULL, NULL, OOD_INVALID_ITEM_ID);
+            /**
+             * lParam is either a handle, or 0.  So, we send lParam as the
+             * handle argument also.  If it is not null or 0, then
+             * genericAddDialogMessage() will convert it to a pointer string.
+             * If it is null or 0, then it will be sent as 0, which is exactly
+             * what we want.
+             */
+            //return genericAddDialogMessage(pcpbd->dlgAdm->pMessageQueue, m[i].rexxMethod, wParam, lParam, NULL, lParam, OOD_INVALID_ITEM_ID);
             return genericCommandInvoke(pcpbd->dlgProcContext, pcpbd, m[i].rexxMethod, wParam, lParam);
         }
     }

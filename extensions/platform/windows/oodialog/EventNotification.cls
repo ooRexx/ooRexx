@@ -75,7 +75,7 @@
    use strict arg id = 0, msgToRaise = ""
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if msgToRaise == "" then msgToRaise = "OnDraw"
+   if msgToRaise == "" then msgToRaise = "onDraw"
 
    if id == 0 then return self~addUserMsg(msgToRaise, 0x0000002B, 0xFFFFFFFF, 0, 0, 0, 0)
    else return self~addUserMsg(msgToRaise, 0x0000002B, 0xFFFFFFFF, '0x0000'||id~d2x(4), 0xFFFFFFFF, 0, 0)
