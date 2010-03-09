@@ -340,6 +340,7 @@ return retc
 ::method close
 expose s errno
 use strict arg
+call SockShutDown s, 2
 retc = SockClose(s)
 if retc = -1 then errno = self~convert_err_number(SockSock_errno())
 else errno = ''
