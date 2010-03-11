@@ -71,8 +71,8 @@
 ::attribute factorY set external "LIBRARY oodialog wb_setFactorY"
 
 -- True size in pixels
-::attribute pixelX get external "LIBRARY oodialog wb_getPixelX"
-::attribute pixelY get external "LIBRARY oodialog wb_getPixelY"
+::attribute pixelCX get external "LIBRARY oodialog wb_getPixelCX"
+::attribute pixelCY get external "LIBRARY oodialog wb_getPixelCY"
 
 ::method sendMessage unguarded external "LIBRARY oodialog wb_sendMessage"
 ::method sendMessageHandle unguarded external "LIBRARY oodialog wb_sendMessage"

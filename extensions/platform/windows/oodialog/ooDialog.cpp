@@ -893,11 +893,11 @@ RexxMethod2(RexxObjectPtr, wb_setSizeX, uint32_t, xSize, CSELF, pCSelf) { ((pCWi
 RexxMethod1(uint32_t, wb_getSizeY, CSELF, pCSelf) { return ((pCWindowBase)pCSelf)->sizeY; }
 RexxMethod2(RexxObjectPtr, wb_setSizeY, uint32_t, ySize, CSELF, pCSelf) { ((pCWindowBase)pCSelf)->sizeY = ySize; return NULLOBJECT; }
 
-/** WindowBase::pixelX  [attribute]
+/** WindowBase::pixelCX  [attribute]
  *
  *  Returns the width of the window in pixels.  This is a 'get' only attribute.
  */
-RexxMethod1(uint32_t, wb_getPixelX, CSELF, pCSelf)
+RexxMethod1(uint32_t, wb_getPixelCX, CSELF, pCSelf)
 {
     pCWindowBase pcs = (pCWindowBase)pCSelf;
     if ( pcs->hwnd == NULL )
@@ -914,7 +914,7 @@ RexxMethod1(uint32_t, wb_getPixelX, CSELF, pCSelf)
  *
  *  Returns the height of the window in pixels.  This is a 'get' only attribute.
  */
-RexxMethod1(uint32_t, wb_getPixelY, CSELF, pCSelf)
+RexxMethod1(uint32_t, wb_getPixelCY, CSELF, pCSelf)
 {
     pCWindowBase pcs = (pCWindowBase)pCSelf;
     if ( pcs->hwnd == NULL )
@@ -3288,10 +3288,10 @@ RexxMethod2(RexxObjectPtr, pbdlg_backgroundColor, uint32_t, colorIndex, CSELF, p
  *  Takes a dimension expressed in pixels and tranforms it to a dimension
  *  expressed in dialog units of this dialog.
  *
- *  @param du  [IN / OUT ]  The object to transform, can be either a .Point,
- *             .Size, or .Rect.  On input, the unit of measurement is assumed to
- *             be pixels and on return the the pixels will have been converted
- *             to dialog units.
+ *  @param  pixels  [IN / OUT ]  The object to transform, can be either a
+ *                  .Point, .Size, or .Rect.  On input, the unit of measurement
+ *                  is assumed to be pixels and on return the pixels will have
+ *                  been converted to dialog units.
  *
  *  @return  True on success, false on error.
  *
@@ -3320,10 +3320,10 @@ RexxMethod2(logical_t, pbdlg_pixel2dlgUnit, RexxObjectPtr, du, OSELF, self)
  *  Takes a dimension expressed in dialog units of this dialog and tranforms it
  *  to a dimension expressed in pixels.
  *
- *  @param pixels  [IN / OUT ]  The object to transform, can be either a .Rect,
- *                 .Point, or .Size.  On input, the unit of measurement is
- *                 assumed to be dialog units of this dialog and on return the
- *                 the dialog units will have been converted to pixels.
+ *  @param  du  [IN / OUT ]  The object to transform, can be either a .Rect,
+ *              .Point, or .Size.  On input, the unit of measurement is assumed
+ *              to be dialog units of this dialog and on return the dialog units
+ *              will have been converted to pixels.
  *
  *  @return  True on success, false on error.
  *

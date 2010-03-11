@@ -159,8 +159,8 @@ REXX_METHOD_PROTOTYPE(wb_getSizeX);
 REXX_METHOD_PROTOTYPE(wb_setSizeX);
 REXX_METHOD_PROTOTYPE(wb_getSizeY);
 REXX_METHOD_PROTOTYPE(wb_setSizeY);
-REXX_METHOD_PROTOTYPE(wb_getPixelX);
-REXX_METHOD_PROTOTYPE(wb_getPixelY);
+REXX_METHOD_PROTOTYPE(wb_getPixelCX);
+REXX_METHOD_PROTOTYPE(wb_getPixelCY);
 REXX_METHOD_PROTOTYPE(wb_init_windowBase);
 REXX_METHOD_PROTOTYPE(wb_sendMessage);
 REXX_METHOD_PROTOTYPE(wb_sendWinIntMsg);
@@ -789,8 +789,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_setSizeX,                    wb_setSizeX),
     REXX_METHOD(wb_getSizeY,                    wb_getSizeY),
     REXX_METHOD(wb_setSizeY,                    wb_setSizeY),
-    REXX_METHOD(wb_getPixelX,                   wb_getPixelX),
-    REXX_METHOD(wb_getPixelY,                   wb_getPixelY),
+    REXX_METHOD(wb_getPixelCX,                  wb_getPixelCX),
+    REXX_METHOD(wb_getPixelCY,                  wb_getPixelCY),
     REXX_METHOD(wb_sendMessage,                 wb_sendMessage),
     REXX_METHOD(wb_sendWinIntMsg,               wb_sendWinIntMsg),
     REXX_METHOD(wb_sendWinUintMsg,              wb_sendWinUintMsg),

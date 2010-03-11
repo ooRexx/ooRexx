@@ -1276,6 +1276,45 @@ RexxMethod8(int32_t, dyndlg_createStaticFrame, OPTIONAL_RexxObjectPtr, rxID, int
     return createStaticFrame(context, rxID, x, y, cx, cy, opts, msgName + 6, 0, (pCDynamicDialog)pCSelf);
 }
 
+/**
+ * Used by create push buttons, radio buttons, and check boxes to determine if
+ * an automatic event connection is desired.
+ *
+ * @param opts
+ * @param ctrl
+ *
+ * @return bool
+ */
+inline bool needButtonConnect(CSTRING opts, oodControl_t ctrl)
+{
+    if ( opts != NULL )
+    {
+        switch ( ctrl )
+        {
+            case winCheckBox :
+                if ( StrStrI(opts, "CONNECTCHECKS") != NULL )
+                {
+                    return true;
+                }
+                break;
+            case winRadioButton :
+                if ( StrStrI(opts, "CONNECTRADIOS") != NULL )
+                {
+                    return true;
+                }
+                break;
+            case winPushButton :
+                if ( StrStrI(opts, "CONNECTBUTTONS") != NULL )
+                {
+                    return true;
+                }
+                break;
+            default :
+                break;
+        }
+    }
+    return false;
+}
 
 /** DynamicDialog::createPushButton()
  *
@@ -1319,7 +1358,7 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
     CSTRING methName = NULL;
     int32_t result   = 0;
 
-    if ( argumentExists(9)  && StrStrI(loadOptions, "CONNECTBUTTONS") != NULL )
+    if ( needButtonConnect(loadOptions, winPushButton) )
     {
         methName = strdup_2methodName(label);
     }
@@ -1415,7 +1454,7 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
 
     int32_t result = 0;
 
-    if ( argumentExists(9) && (StrStrI(loadOptions, "CONNECTRADIOS") != NULL || StrStrI(loadOptions, "CONNECTCHECKS") != NULL) )
+    if ( needButtonConnect(loadOptions, ctrl) )
     {
         CSTRING methName = strdup_2methodName(label);
         if ( methName == NULL )
@@ -1445,7 +1484,6 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
     }
     return result;
 }
-
 
 /** DynamicDialog::createGroupBox()
  *

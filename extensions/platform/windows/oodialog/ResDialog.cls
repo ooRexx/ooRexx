@@ -71,7 +71,7 @@
          ids = self~getDataTableIDs
          do id over ids
             text = self~getControlText(id)
-            self~addAttribute(id, txt)
+            self~addAttribute(id, text)
          end
       end
       self~initDialog
