@@ -1119,44 +1119,45 @@ RexxMethod4(logical_t, dlgctrl_setColor, int32_t, bkColor, OPTIONAL_int32_t, fgC
                          (argumentOmitted(2) ? -1 : fgColor), (method[3] == 'S'));
 }
 
-/** DialogControl::value()
+/** DialogControl::data()
  *
- *  Gets the "value" of the dialog control.
+ *  Gets the "data" of the dialog control.
  *
- *  @return  The 'value' or 'data' of the control.
+ *  @return  The 'data' of the control.
  *
  *  @remarks  The original ooDialog code used the abstraction that there were
  *            only two objects involved.  The ooDialog object and the underlying
  *            Windows dialog.  The dialog controls were considered to be the
  *            'data' of the underlying Windows dialog.  In this abstraction, an
- *            edit control was part of the 'data' of the dialog and its 'value'
- *            was the edit control's text.  For a check box the 'value' is
+ *            edit control was part of the 'data' of the dialog and its 'data'
+ *            was the edit control's text.  For a check box the 'data' is
  *            checked or not, etc..
  *
  */
-RexxMethod1(RexxObjectPtr, dlgctrl_value, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, dlgctrl_data, CSELF, pCSelf)
 {
     pCDialogControl pcdc = (pCDialogControl)pCSelf;
 
     return getControlData(context, dlgToCSelf(context, pcdc->oDlg), pcdc->id, pcdc->hDlg, pcdc->controlType);
 }
 
-/** DialogControl::"value="
+/** DialogControl::"data="
  *
- *  Sets the "value" of the dialog control.
+ *  Sets the "data" of the dialog control.
  *
- *  @param  data  What to set the value of the dialog control to.  Its meaning
+ *  @param  data  What to set the 'data' of the dialog control to.  Its meaning
  *                and format are dependent on the type of control.
  *
- *  @return  0 on success, 1 on error.
+ *  @return  No return for "=" methods.
  *
- *  @remarks  See the remarks in dlgctrl_value above.
+ *  @remarks  See the remarks in dlgctrl_data above.
  */
-RexxMethod2(int32_t, dlgctrl_valueEquals, CSTRING, data, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, dlgctrl_dataEquals, CSTRING, data, CSELF, pCSelf)
 {
     pCDialogControl pcdc = (pCDialogControl)pCSelf;
 
-    return setControlData(context, dlgToCSelf(context, pcdc->oDlg), pcdc->id, data, pcdc->hDlg, pcdc->controlType);
+    setControlData(context, dlgToCSelf(context, pcdc->oDlg), pcdc->id, data, pcdc->hDlg, pcdc->controlType);
+    return NULLOBJECT;
 }
 
 

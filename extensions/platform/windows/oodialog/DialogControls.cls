@@ -89,8 +89,8 @@
 ::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
 ::method setColor external "LIBRARY oodialog dlgctrl_setColor"
 ::method setSysColor external "LIBRARY oodialog dlgctrl_setColor"
-::method value unguarded external "LIBRARY oodialog dlgctrl_value"
-::method "value=" unguarded external "LIBRARY oodialog dlgctrl_valueEquals"
+::method data unguarded external "LIBRARY oodialog dlgctrl_data"
+::method "data=" unguarded external "LIBRARY oodialog dlgctrl_dataEquals"
 
 ::method getMouseCapture
    forward to (self~oDlg)
@@ -108,14 +108,17 @@
 ::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 
--- DEPRECATED
+-- DEPRECATED START
 ::method processMessage
    forward message "sendMessage"
 
--- DEPRECATED
 ::method getTextSize unguarded
    forward message "getTextSizeDlg" continue
    return result~width result~height
+
+::method value unguarded external "LIBRARY oodialog dlgctrl_data"
+::method "value=" unguarded external "LIBRARY oodialog dlgctrl_dataEquals"
+-- DEPRECATED END
 
 
 ::class 'StaticControl' subclass DialogControl public

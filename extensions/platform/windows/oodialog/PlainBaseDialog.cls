@@ -540,6 +540,7 @@
 ::method connectMonthCalendar unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 ::method connectSeparator unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 
+-- Internal use only, do not document.
 ::method addAttribute private
    use arg id, attributeName
    if arg(2,'o') = 1 then attributeName = "DATA"id~space(0)
