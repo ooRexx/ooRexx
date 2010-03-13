@@ -542,19 +542,18 @@
 
 -- Internal use only, do not document.
 ::method addAttribute private
-   use arg id, attributeName
-   if arg(2,'o') = 1 then attributeName = "DATA"id~space(0)
-   if id~DataType("N") = 0 then do
-       if self~ProcessingLoad = 1 then attributeName = id
+   use strict arg id, attributeName = ("DATA"id~space(0))
+
+   if \ id~dataType("W") then do
+       if self~processingLoad = 1 then attributeName = id
        id = self~resolveSymbolicId(id)
    end
    if id < 1 then return -1
-   if attributeName~space(0) = "" | self~HasMethod(attributeName) = 1 then
+
+   -- Remove any possible spaces, &, and :, then check for a valid name
+   attributeName = attributeName~space(0)~changestr('&','')~changestr(':','')
+   if attributeName == "" | self~HasMethod(attributeName) | \ attributeName~datatype('V') then
        attributeName = "DATA"id~space(0)
-   else do
-      attributeName = attributeName~space(0)~changestr('&','')~changestr(':','') /* remove blanks, &, and : */
-      if attributeName~datatype('V')=0 then attributeName = "DATA"id~space(0)
-   end
 
    self~dataConnection[id] = attributeName
    self~setmethod(attributeName, "expose "attributeName"; return "attributeName)
@@ -563,6 +562,7 @@
    return id
 
 
+-- Internal use only, do not document.
 ::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"
 ::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"
 
