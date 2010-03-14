@@ -650,7 +650,7 @@
 -- associated with the dialog control through one of the connectXXX methods.  I.e., connectEdit(),
 -- connectListBox(), etc..  It returns nothing to the caller, the action is setting the value of the
 -- associated attribute.
-::method getControlDataAttribute unguarded
+::method getDataAttribute unguarded
    use strict arg attributeName
    id = self~dataConnection~First
    do while (id \= .nil)
@@ -678,7 +678,7 @@
 
 -- This method sets the 'data' of a dialog control using the value of the attribute associated with
 -- the dialog control through one of the connectXXX methods.  I.e., connectEdit(), connectListBox()
-::method setControlDataAttribute unguarded
+::method setDataAttribute unguarded
    use strict arg attributeName
    id = self~dataConnection~first
    do while (id \= .nil)
@@ -958,7 +958,7 @@
 ::method getValue unguarded
    forward message 'getControlData'
 ::method getAttrib unguarded
-   forward message 'getControlDataAttribute'
+   forward message 'getDataAttribute'
 
 ::method setStaticText unguarded
    forward message 'setStaticData'
@@ -977,7 +977,7 @@
 ::method setValue unguarded
    forward message 'setControlData'
 ::method setAttrib unguarded
-   forward message 'setControlDataAttribute'
+   forward message 'setDataAttribute'
 
 ::method setWindowTitle unguarded
    forward message 'setWindowText'

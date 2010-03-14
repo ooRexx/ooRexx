@@ -162,7 +162,7 @@
    self~getControlDataAttribute('speed')
    if self~speed < minspeed then self~speed = minspeed
    if self~speed > maxspeed then self~speed = maxspeed
-   self~setControlDataAttribute('speed')
+   self~setDataAttribute('speed')
    jackpot = trunc(cycle * initpot / self~speed)
    /*self~write(jackx,jacky,"Jackpot $$$" right(jackpot,6,'_'),"Arial",24,'BOLD')*/
    self~setEditData(1200,right(jackpot,9))

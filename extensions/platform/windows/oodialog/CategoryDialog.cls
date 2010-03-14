@@ -690,7 +690,7 @@
 ::method setListBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
 ::method setComboBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
 
-::method getControlDataAttribute unguarded
+::method getDataAttribute unguarded
    use arg attributeName, category
    if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
    id = self~dataConnection~first
@@ -703,7 +703,7 @@
       i = self~dataConnection~Next(i)
    end
 
-::method setControlDataAttribute unguarded
+::method setDataAttribute unguarded
    use arg attributeName, category
    if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current category page */
    id = self~dataConnection~first
@@ -733,7 +733,7 @@
 ::method getCategoryValue unguarded
    forward message 'getControlDataPage'
 ::method getCategoryAttrib unguarded
-   forward message 'getControlDataAttribute'
+   forward message 'getDataAttribute'
 ::method setCategoryStaticText unguarded
    forward message 'setStaticDataPage'
 ::method setCategoryEntryLine unguarded
@@ -751,7 +751,7 @@
 ::method setCategoryValue unguarded
    forward message 'setControlDataPage'
 ::method setCategoryAttrib unguarded
-   forward message 'setControlDataAttribute'
+   forward message 'setDataAttribute'
 ::method sendMessageToCategoryItem unguarded
    forward message "sendMessageToCategoryControl"
 ::method getItem unguarded
