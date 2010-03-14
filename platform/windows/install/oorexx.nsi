@@ -21,7 +21,7 @@
 
 Name "${LONGNAME} ${VERSION}"
 
-!include "MUI.nsh"
+!include "MUI2.nsh"
 !include "Library.nsh"
 
 !define MUI_CUSTOMPAGECOMMANDS
@@ -96,9 +96,6 @@ SectionEnd
 
   ;Folder-select dialog
   InstallDir "$PROGRAMFILES\${SHORTNAME}"
-
-  LangString TEXT_IO_PAGETITLE_RXAPI ${LANG_ENGLISH} "The ooRexx rxapi process"
-  LangString TEXT_IO_SUBTITLE_RXAPI ${LANG_ENGLISH} "Install rxapi as a Windows Service"
 ;--------------------------------
 ;Pages
 
@@ -109,7 +106,7 @@ SectionEnd
   !insertmacro MUI_PAGE_DIRECTORY
 ;  Page custom SetCustomAssoc
 ;  Page custom SetCustomLanguage
-  Page custom SetCustomRxAPI
+  Page custom SetCustomRxAPI SetCustomRxAPILeave
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
 
@@ -125,13 +122,16 @@ SectionEnd
 ;--------------------------------
 ;Reserved files
 
-  ReserveFile "oorexx_ss.ini"
-  !insertmacro MUI_RESERVEFILE_INSTALLOPTIONS
-
 ;--------------------------------
 ; Variables
 Var rxapichk
 Var IsAdminUser
+Var RxAPIDialog
+Var RxAPILabel
+Var RxAPICheckBoxInstall
+Var RxAPIInstall
+Var RxAPICheckBoxStart
+Var RxAPIStart
 
 ;========================================================================
 ;Installer Sections
@@ -251,10 +251,7 @@ Section "${LONGNAME} Core (required)" SecMain
 
   ; read the result of the custom rxapi page if an administrator
   StrCmp $IsAdminUser "false" NotAdmin
-  ReadIniStr $R0 "$PLUGINSDIR\oorexx_ss.ini" "Field 2" State
-  ReadIniStr $R1 "$PLUGINSDIR\oorexx_ss.ini" "Field 3" State
-  Push $R0
-  Push $R1
+
   Call Installrxapi
   NotAdmin:
 SectionEnd
@@ -609,10 +606,6 @@ SectionEnd
 ;Installer Functions
 
 Function .onInit
-;  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "oorexx_fa.ini"
-  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "oorexx_ss.ini"
-;  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "oorexx_mt.ini"
-
   StrCmp ${CPU} "x86_64" 0 +2
     strcpy $INSTDIR "$PROGRAMFILES64\${SHORTNAME}"
 
@@ -662,11 +655,40 @@ FunctionEnd
 
 ; checks if the user is an admin and skips the page if not
 Function SetCustomRxAPI
+  StrCpy $RxAPIInstall 0
+  StrCpy $RxAPIStart 0
+
   StrCmp $IsAdminUser "true" NoAbort
   Abort
   NoAbort:
-  !insertmacro MUI_HEADER_TEXT "$(TEXT_IO_PAGETITLE_RXAPI)" "$(TEXT_IO_SUBTITLE_RXAPI)"
-  !insertmacro MUI_INSTALLOPTIONS_DISPLAY "oorexx_ss.ini"
+  StrCpy $RxAPIInstall 1
+  StrCpy $RxAPIStart 1
+
+  !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process" "Install rxapi as a Windows Service"
+  nsDialogs::Create /NOUNLOAD 1018
+  Pop $RxAPIDialog
+
+  ${If} $RxAPIDialog == error
+    Abort
+  ${EndIf}
+
+  ${NSD_CreateLabel} 0 0 100% 25u "ooRexx starts a process, rxapi.exe, the first time a Rexx program executes.$\r$\nTo speed up execution of Rexx programs, rxapi.exe can be installed as a Windows Service$\r$\n and started automatically when the system boots up."
+  Pop $RxAPILabel
+
+  ${NSD_CreateCheckBox} 0 30u 100% 15u "Install rxapi as a Service"
+  Pop $RxAPICheckBoxInstall
+  ${NSD_Check} $RxAPICheckBoxInstall
+
+  ${NSD_CreateCheckBox} 0 50u 100% 15u "Start the rxapi Service"
+  Pop $RxAPICheckBoxStart
+  ${NSD_Check} $RxAPICheckBoxStart
+
+  nsDialogs::Show
+FunctionEnd
+
+Function SetCustomRxAPILeave
+  ${NSD_GetState} $RxAPICheckBoxInstall $RxAPIInstall
+  ${NSD_GetState} $RxAPICheckBoxStart $RxAPIStart
 FunctionEnd
 
 Function CheckForRxAPI
@@ -765,11 +787,7 @@ Function DoFileAssociation
 FunctionEnd
 
 Function Installrxapi
-  ; $R1 is start flag
-  ; $R0 is install flag
-  Pop $R1
-  Pop $R0
-  Strcmp $R0 0 exitss
+  Strcmp $RxAPIInstall 0 exitss
     ; do the install of rxapi
     DetailPrint "Installing rxapi as a Windows Service"
     nsExec::ExecToLog "$INSTDIR\rxapi /i /s"
@@ -779,7 +797,7 @@ Function Installrxapi
       Goto exitss
     dostart:
     DetailPrint "rxapi successfully installed as a Windows Service"
-    StrCmp $R1 0 exitss
+    StrCmp $RxAPIStart 0 exitss
       ; start the service
       Services::SendServiceCommand 'start' 'RXAPI'
       Pop $R0
