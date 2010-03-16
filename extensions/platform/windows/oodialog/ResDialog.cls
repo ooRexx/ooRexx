@@ -83,7 +83,7 @@
 ::method startDialog private external "LIBRARY oodialog resdlg_startDialog_pvt"
 ::method getDataTableIDs private external "LIBRARY oodialog resdlg_getDataTableIDs_pvt"
 
--- This method is deprecated, instead use the Menu classes directly.
+-- DEPRECATED
 ::method setMenu
   use strict arg id
   menuBar = .BinaryMenuBar~new(self, id, self, 0, .true)
