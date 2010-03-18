@@ -57,7 +57,7 @@
 
    return self~initCode
 
--- Create a Windows dialog out of the resource stored in Library.
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::method startIt
    expose library resource dlgData.
    use strict arg icon = 0, modeless = .false

@@ -77,7 +77,7 @@
    if self~adm \= 0 then self~stopit
    return self~initCode
 
--- Asynchronously dispatch windows messages.
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::method asyncMessageHandling unguarded
    use strict arg sleepTime = 10
    if \ sleepTime~datatype('W') then sleepTime = 10

@@ -355,7 +355,7 @@ RexxMethod4(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
 {
     RexxArrayObject newArgs = context->NewArray(4);
 
-    context->ArrayPut(newArgs, context->NullString, 1);
+    context->ArrayPut(newArgs, context->NullString(), 1);
     context->ArrayPut(newArgs, TheZeroObj, 2);
     if ( argumentExists(1) )
     {

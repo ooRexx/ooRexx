@@ -2308,7 +2308,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     context->SendMessage1(self, "AUTOMATICMETHODS=", rxNewQueue(context));  // self~autoMaticMethods = .queue~new
 
     context->SendMessage1(self, "SCROLLNOW=", TheFalseObj);
-    context->SendMessage1(self, "MENUBAR=", context->Nil());
+    context->SendMessage1(self, "MENUBAR=", TheNilObj);
     context->SendMessage1(self, "ISLINKED=", TheFalseObj);
 
     RexxDirectoryObject constDir = context->NewDirectory();

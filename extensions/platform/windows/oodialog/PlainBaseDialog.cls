@@ -452,6 +452,8 @@
 
 ::method getDlgMsg external "LIBRARY oodialog pbdlg_getDlgMsg"
 ::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
+
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::method stopIt external "LIBRARY oodialog pbdlg_stopIt"
 ::method finalStopIt private
    use arg caller
@@ -540,7 +542,7 @@
 ::method connectMonthCalendar unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 ::method connectSeparator unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 
--- Internal use only, do not document.
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::method addAttribute private
    use strict arg id, attributeName = ("DATA"id~space(0))
 
@@ -562,7 +564,7 @@
    return id
 
 
--- Internal use only, do not document.
+-- Internal use only. - Do not document.
 ::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"
 ::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"
 
@@ -669,7 +671,6 @@
 -- if it has been 'connected' previously, i.e. connectTreeView(), connectTab(), etc..
 ::method setControlData unguarded external "LIBRARY oodialog pbdlg_setControlData"
 
-::method setStaticData unguarded external "LIBRARY oodialog pbdlg_setControlData"
 ::method setCheckBoxData unguarded external "LIBRARY oodialog pbdlg_setControlData"
 ::method setRadioButtonData unguarded external "LIBRARY oodialog pbdlg_setControlData"
 ::method setEditData unguarded external "LIBRARY oodialog pbdlg_setControlData"
@@ -960,8 +961,6 @@
 ::method getAttrib unguarded
    forward message 'getDataAttribute'
 
-::method setStaticText unguarded
-   forward message 'setStaticData'
 ::method setEntryLine unguarded
    forward message 'setEditData'
 ::method setListLine unguarded
@@ -983,12 +982,14 @@
    forward message 'setWindowText'
 ::method windowTitle unguarded
    forward message 'getWindowText'
+::method setStaticText unguarded
+   forward message 'setControlText'
 
 ::method sendMessageToItem unguarded
    forward message "sendMessageToControl"
 ::method getItem unguarded
    forward message "getControlHandle"
-::method itemTitle unguarded
+::method itemTitle unguarded  -- Present but never documented in early ooDialog
    forward message 'getControlText'
 ::method enableItem unguarded
    forward message 'enableControl'

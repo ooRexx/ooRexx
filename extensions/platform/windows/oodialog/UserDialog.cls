@@ -51,6 +51,7 @@
 
 ::method init external "LIBRARY oodialog userdlg_init"
 
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::method stopIt
    forward class (super) continue
    forward message "stopDynamic"

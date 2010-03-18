@@ -48,12 +48,15 @@
 
 ::method init class external "LIBRARY oodialog dyndlg_init_cls"
 
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::attribute basePtr get private external "LIBRARY oodialog dyndlg_getBasePtr"
 ::attribute basePtr set private external "LIBRARY oodialog dyndlg_setBasePtr"
 
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::attribute activePtr get private external "LIBRARY oodialog dyndlg_getActivePtr"
 ::attribute activePtr set private external "LIBRARY oodialog dyndlg_setActivePtr"
 
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::attribute dialogItemCount get private external "LIBRARY oodialog dyndlg_getDialogItemCount"
 ::attribute dialogItemCount set private external "LIBRARY oodialog dyndlg_setDialogItemCount"
 
@@ -388,6 +391,7 @@
 
 ::method addIconResource external "LIBRARY oodialog dyndlg_addIconResource"
 
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::method startIt
    use arg icon = 0, modeless = .false
    if self~basePtr = 0 then return 0

@@ -131,14 +131,17 @@
    end
    else self~wizard = 0
 
+-- Documented "internal use only" in 3.2.0 - Do not document.
    self~catalog['id'] = .array~new(self~catalog['count'],100)
    self~catalog['base'] = .array~new(self~catalog['count'])
    self~catalog['handles'] = .array~new(self~catalog['count'])
+
    self~staticID = 9600
 
    return 0
 
 
+-- Documented "internal use only" in 3.2.0 - Do not document.
 ::method startIt   /* don't call parent startIt */
    if self~dlgHandle = 0 then return 0
    self~initDialog
@@ -156,7 +159,10 @@
       catnames.i = self~catalog['names'][i]
    end
 
+
+-- Documented "internal use only" in 3.2.0 - Do not document.
    self~catalog['category'] = 0
+
    n = self~catStyle~wordpos("TOPLINE")
    if n > 0 then self~catMax = 1
    m = self~catStyle~wordpos("DROPDOWN")
