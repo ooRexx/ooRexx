@@ -68,7 +68,7 @@
 ::method InitCategories
    expose threadstarted
    threadstarted = 0
-   self~catalog['names'] = .array~of("List View", "Tree View", "Progress Bar", "Slider Control", "Tab Control")
+   self~catalog['names'] = .array~of("List View", "Tree View", "Progress Bar", "Track Bar", "Tab Control")
    self~catalog['page']['font'] = "Arial"   /* use 9pt Arial for the pages as well */
    self~catalog['page']['fsize'] = 9
    /* change wizard button labels and set button width  */
@@ -100,7 +100,7 @@
 ::method ProgressBar                                     /* page 3 */
    self~loaditems("rc\propdemo.rc", "ProgressDialog")
 
-::method SliderControl                                   /* page 4 */
+::method TrackBar                                        /* page 4 */
    self~loaditems("rc\propdemo.rc", "SliderDialog")
 
 ::method TabControl                                      /* page 5 */
@@ -206,7 +206,7 @@
    tc~Add(,"Luxury")
 
 
-::method InitSliderControl
+::method InitTrackBar
    expose font1
    /* set the initial slider positions (using the associated object attributes) */
    self~Slider1 = 20
