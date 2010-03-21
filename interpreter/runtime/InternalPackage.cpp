@@ -82,7 +82,7 @@ RexxRoutineEntry rexx_routines[] =
 RexxPackageEntry rexx_package_entry =
 {
     STANDARD_PACKAGE_HEADER
-    REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
+    REXX_CURRENT_INTERPRETER_VERSION,    // always make this the current version
     "REXX",                              // name of the package
     "4.0",                               // package information
     NULL,                                // no load/unload functions

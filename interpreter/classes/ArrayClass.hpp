@@ -64,6 +64,38 @@ typedef struct copyElelmentParm {
    RexxObject **startOld;
 } COPYELEMENTPARM;
 
+ class PartitionBounds {
+ public:
+     enum {
+         SmallRange = 10   // the size where we revert to an insertion sort
+     };
+
+     PartitionBounds(size_t l, size_t r) : left(l), right(r) {}
+     PartitionBounds() : left(0), right(0) {}
+
+     inline boolean isSmall() { return (right - left) <= SmallRange; }
+     inline size_t midPoint() { return (left + right) / 2; }
+
+     size_t left;       // start of the range
+     size_t right;
+ };
+
+
+ class BaseSortComparator {
+ public:
+     inline BaseSortComparator() { }
+
+     virtual wholenumber_t compare(RexxObject *first, RexxObject *second);
+ };
+
+ class WithSortComparator : public BaseSortComparator {
+ public:
+     inline WithSortComparator(RexxObject *c) : comparator(c) { }
+     virtual wholenumber_t compare(RexxObject *first, RexxObject *second);
+ protected:
+     RexxObject *comparator;
+ };
+
 
  class RexxArray : public RexxObject {
   public:
@@ -153,12 +185,6 @@ typedef struct copyElelmentParm {
    RexxObject  *index(RexxObject *);
    RexxObject  *hasItem(RexxObject *);
    RexxObject  *removeItem(RexxObject *);
-   void         mergeSort(RexxArray *working, size_t left, size_t right);
-   void         merge(RexxArray *working, size_t left, size_t mid, size_t right);
-   void         mergeSort(RexxObject *comparator, RexxArray *working, size_t left, size_t right);
-   void         merge(RexxObject *comparator, RexxArray *working, size_t left, size_t mid, size_t right);
-   void         quickSort(size_t left, size_t right);
-   void         quickSort(RexxObject *comparator, size_t left, size_t right);
    wholenumber_t sortCompare(RexxObject *comparator, RexxObject *left, RexxObject *right);
    RexxArray   *sortRexx();
    RexxArray   *sortWithRexx(RexxObject *comparator);
@@ -186,6 +212,13 @@ typedef struct copyElelmentParm {
    static const size_t ARRAY_DEFAULT_SIZE;   // default size for ooRexx allocation
 
  protected:
+
+   void         mergeSort(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t right);
+   void         merge(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t mid, size_t right);
+   void         quickSort(BaseSortComparator &comparator, size_t left, size_t right);
+   void         interchange(size_t i1, size_t i2);
+   void         insertionSort(BaseSortComparator &comparator, PartitionBounds &bounds);
+   size_t       split(BaseSortComparator &comparator, PartitionBounds &bounds);
 
    static const size_t MAX_FIXEDARRAY_SIZE;
 

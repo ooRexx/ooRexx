@@ -218,7 +218,7 @@ RexxPackageEntry *LibraryPackage::getPackageTable()
 void LibraryPackage::loadPackage()
 {
     // verify that this library is compatible
-    if (package->requiredVersion != 0 && package->requiredVersion < REXX_CURRENT_INTERPRETER_VERSION)
+    if (package->requiredVersion != 0 && package->requiredVersion > REXX_CURRENT_INTERPRETER_VERSION)
     {
         reportException(Error_Execution_library_version, libraryName);
     }
