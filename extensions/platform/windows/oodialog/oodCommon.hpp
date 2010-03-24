@@ -164,9 +164,10 @@ typedef CDialogControl *pCDialogControl;
 typedef struct _ddCSelf {
     pCPlainBaseDialog  pcpbd;
     RexxObjectPtr      rexxSelf;
-    DLGTEMPLATE       *base;    // Base pointer to dialog template (basePtr)
-    void              *active;  // Pointer to current location in dialog template (activePtr)
-    uint32_t           count;   // Dialog item count (dialogItemCount)
+    DLGTEMPLATE       *base;          // Base pointer to dialog template (basePtr)
+    void              *active;        // Pointer to current location in dialog template (activePtr)
+    void              *endOfTemplate; // Pointer to end of allocated memory for the template
+    uint32_t           count;         // Dialog item count (dialogItemCount)
 } CDynamicDialog;
 typedef CDynamicDialog *pCDynamicDialog;
 

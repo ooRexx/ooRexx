@@ -431,7 +431,7 @@
 -- It is usually called from the load() method.  The return was not documented prior to
 -- 4.1.0, but it returned 0 for success and 1 for error.  Need to preserve that, I guess,
 -- although .true and .false make much more sense.
-::method loadFrame protected
+::method loadFrame private
    use arg resfile, dialogid, options, expected
    if arg(4,"o") | expected = 0 then expected = 200
    if options~translate~wordpos("CENTER") > 0 then internopts = "CENTER "
@@ -525,7 +525,7 @@
 
 -- This method creates the dialog's controls from a resource script file. It is usuall called by the load() method.
 -- Although its return was not documented prior to 4.1.0, it has returned 0 for success and non-zero for failure.
-::method loadItems protected
+::method loadItems private
    use arg resfile, dialogid, loadOptions
    if self~activePtr = 0 then return -2
 

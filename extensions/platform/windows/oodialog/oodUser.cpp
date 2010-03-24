@@ -215,6 +215,77 @@ static uint32_t getExpectedCount(RexxMethodContext *c, RexxArrayObject args)
     return expected;
 }
 
+// Minimum size of the dialog template header, in bytes. All strings would be
+// the empty string.
+#define DLGTEMPLATE_HEADER_BASE_SIZE 30
+
+// Minimum size of a control in the dialog template, in bytes. All strings would
+// be the empty string. Assumes an atom is used, not a class name.
+#define DLGTEMPLATE_CONTROL_BASE_SIZE 28
+
+// Average size of a dialog control item in the dialog template.  This figure is
+// simply the figure the old ooDialog code used.  How accurate it is, who knows.
+#define DLGTMEPLATE_CONTROL_AVG_SIZE  256
+
+// Number added to the dialog item count to give a little extra room.  Like the
+// average control size this is just an arbitrary number from the old ooDialog
+// code.
+#define DLGTEMPLATE_EXTRA_FACTOR        3
+
+#define DLGTEMPLATE_TOO_SMALL_MSG       "the storage allocated for the dialog template is too small"
+
+inline size_t calcTemplateSize(uint32_t count)
+{
+    return (count + DLGTEMPLATE_EXTRA_FACTOR) * DLGTEMPLATE_CONTROL_BASE_SIZE;
+}
+
+/**
+ * Calculate the actual size the dialog template header is going to use, in
+ * bytes.
+ *
+ * @param title
+ * @param fontName
+ *
+ * @return size_t
+ *
+ * @remarks title and fontName should never be null, but we'll pretend they
+ *          could be.
+ *
+ *          The base size already includes the terminating null for strings, so
+ *          we don't need to add that in.
+ *
+ *          The dialog class argument is never used, so we don't need to
+ *          calculate a string size for that.
+ */
+inline size_t calcHeaderSize(const char *title , const char *fontName)
+{
+    size_t s = DLGTEMPLATE_HEADER_BASE_SIZE;
+
+    s += (title == NULL ? 0 : strlen(title) * 2);
+    s += (fontName == NULL ? 0 : strlen(fontName) * 2);
+    return s;
+}
+
+inline size_t calcControlSize(const char *className , const char *txt)
+{
+    size_t s = DLGTEMPLATE_CONTROL_BASE_SIZE;
+
+    s += (className == NULL ? 0 : strlen(className) * 2);
+    s += (txt == NULL ? 0 : strlen(txt) * 2);
+    return s;
+}
+
+void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd)
+{
+    if ( pDlgTemplate != NULL )
+    {
+        LocalFree(pcdd->base);
+    }
+    pcdd->base = NULL;
+    pcdd->active = NULL;
+    pcdd->endOfTemplate = 0;
+    pcdd->count = 0;
+}
 
 /**
  * Starts the in-memory dialog template.  This uses the older DLGTEMPLTE
@@ -244,13 +315,26 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
                          int x, int y, int cx, int cy, const char * dlgClass, const char * title,
                          const char * fontName, int fontSize, uint32_t style)
 {
-    WORD *p = (PWORD)LocalAlloc(LPTR, (count+3)*256);
+    size_t s = calcTemplateSize(count);
+
+    WORD *p = (PWORD)LocalAlloc(LPTR, s);
     if ( p == NULL )
     {
         outOfMemoryException(c->threadContext);
         return false;
     }
+
+    if ( calcHeaderSize(title, fontName) >  s )
+    {
+        cleanUpDialogTemplate(p, pcdd);
+        executionErrorException(c->threadContext, DLGTEMPLATE_TOO_SMALL_MSG);
+        return false;
+    }
+
     *ppBase = (DLGTEMPLATE *)p;
+
+    pcdd->base = (DLGTEMPLATE *)p;
+    pcdd->endOfTemplate = (BYTE *)p + s;
 
     // Start to fill in the dlgtemplate information.  Addressing is by WORDs.
     *p++ = LOWORD(style);           // Style (DWORD in size.)
@@ -285,7 +369,6 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
     return true;
 }
 
-
 /**
  *  Adds a dialog control item to the in-memory dialog template.  We are using
  *  the DLGITEMTEMPLATE structure here, not the extended structure.
@@ -307,10 +390,17 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
  *        because that is how we determine if the control is being identified
  *        by the control atom or by the class name.
  */
-void addToDialogTemplate(pCDynamicDialog pcdd, SHORT kind, const char *className, int id, int x, int y, int cx, int cy,
-                         const char * txt, uint32_t style)
+bool addToDialogTemplate(RexxMethodContext *c, pCDynamicDialog pcdd, SHORT kind, const char *className, int id,
+                         int x, int y, int cx, int cy, const char * txt, uint32_t style)
 {
    WORD *p = (WORD *)pcdd->active;
+
+   if ( ((BYTE *)p + calcControlSize(className, txt)) > pcdd->endOfTemplate )
+   {
+       cleanUpDialogTemplate(p, pcdd);
+       executionErrorException(c->threadContext, DLGTEMPLATE_TOO_SMALL_MSG);
+       return false;
+   }
 
    *p++ = LOWORD(style);
    *p++ = HIWORD(style);
@@ -342,6 +432,8 @@ void addToDialogTemplate(pCDynamicDialog pcdd, SHORT kind, const char *className
    // Update the active pointer and the number of dialog items so far.
    pcdd->active = p;
    pcdd->count++;
+
+   return true;
 }
 
 
@@ -552,10 +644,10 @@ uint32_t dateTimePickerStyle(CSTRING opts, uint32_t style)
         style |= DTS_TIMEFORMAT;
     }
 
-    if ( StrStrI(opts, "PARSE" ) != NULL ) style |= DTS_APPCANPARSE;
-    if ( StrStrI(opts, "RIGHT" ) != NULL ) style |= DTS_RIGHTALIGN;
-    if ( StrStrI(opts, "SHOWNONE"  ) != NULL ) style |= DTS_SHOWNONE;
-    if ( StrStrI(opts, "UPDOWN") != NULL ) style |= DTS_UPDOWN;
+    if ( StrStrI(opts, "PARSE"   ) != NULL ) style |= DTS_APPCANPARSE;
+    if ( StrStrI(opts, "RIGHT"   ) != NULL ) style |= DTS_RIGHTALIGN;
+    if ( StrStrI(opts, "SHOWNONE") != NULL ) style |= DTS_SHOWNONE;
+    if ( StrStrI(opts, "UPDOWN"  ) != NULL ) style |= DTS_UPDOWN;
     return style;
 }
 
@@ -710,7 +802,10 @@ int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y,
         if ( StrStrI(opts, "WORDELLIPSIS") != NULL ) style |= SS_WORDELLIPSIS;
     }
 
-    addToDialogTemplate(pcdd, StaticAtom, NULL, id, x, y, cx, cy, text, style);
+    if ( ! addToDialogTemplate(c, pcdd, StaticAtom, NULL, id, x, y, cx, cy, text, style) )
+    {
+        return -2;
+    }
     return 0;
 }
 
@@ -745,7 +840,10 @@ int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
     if ( StrStrI(opts, "SIZECONTROL" )  != NULL ) style |= SS_REALSIZECONTROL;
     if ( StrStrI(opts, "SIZEIMGE"    )  != NULL ) style |= SS_REALSIZEIMAGE;
 
-    addToDialogTemplate(pcdd, StaticAtom, NULL, id, x, y, cx, cy, NULL, style);
+    if ( ! addToDialogTemplate(c, pcdd, StaticAtom, NULL, id, x, y, cx, cy, NULL, style) )
+    {
+        return -2;
+    }
     return 0;
 }
 
@@ -802,7 +900,10 @@ int32_t createStaticFrame(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
     if ( StrStrI(opts, "NOTIFY") != NULL ) style |= SS_NOTIFY;
     if ( StrStrI(opts, "SUNKEN") != NULL ) style |= SS_SUNKEN;
 
-    addToDialogTemplate(pcdd, StaticAtom, NULL, id, x, y, cx, cy, NULL, style);
+    if ( ! addToDialogTemplate(c, pcdd, StaticAtom, NULL, id, x, y, cx, cy, NULL, style) )
+    {
+        return -2;
+    }
     return 0;
 }
 
@@ -967,7 +1068,7 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     {
        goto err_out;
     }
-    pcdd->base = pBase;
+
     pcpbd->wndBase->sizeX = cx;
     pcpbd->wndBase->sizeY = cy;
 
@@ -1037,10 +1138,7 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     LeaveCriticalSection(&crit_sec);
 
     // Free the memory allocated for template.
-    LocalFree(p);
-    pcdd->base = NULL;
-    pcdd->active = NULL;
-    pcdd->count = 0;
+    cleanUpDialogTemplate(p, pcdd);
 
     if ( dlgAdm->TheDlg )
     {
@@ -1158,9 +1256,7 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
     HWND hChild = (HWND)SendMessage(pcpbd->hDlg, WM_USER_CREATECHILD, 0, (LPARAM)p);
 
     // Free the memory allocated for template.
-    LocalFree(p);
-    pcdd->active = NULL;
-    pcdd->count = 0;
+    cleanUpDialogTemplate(p, pcdd);
 
     // The child dialog may not have been created.
     if ( hChild == NULL )
@@ -1348,7 +1444,10 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
     style |= ( StrStrI(opts, "DEFAULT") != NULL ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON );
     style = getCommonButtonStyles(style, opts, winPushButton);
 
-    addToDialogTemplate(pcdd, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
+    if ( ! addToDialogTemplate(context, pcdd, ButtonAtom, NULL, id, x, y, cx, cy, label, style) )
+    {
+        return -2;
+    }
 
     if ( id < IDCANCEL || id == IDHELP )
     {
@@ -1450,7 +1549,10 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
     }
     style = getCommonButtonStyles(style, opts, ctrl);
 
-    addToDialogTemplate(pcdd, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
+    if ( ! addToDialogTemplate(context, pcdd, ButtonAtom, NULL, id, x, y, cx, cy, label, style) )
+    {
+        return -2;
+    }
 
     int32_t result = 0;
 
@@ -1525,7 +1627,10 @@ RexxMethod8(int32_t, dyndlg_createGroupBox, OPTIONAL_RexxObjectPtr, rxID, int, x
         style |= BS_RIGHT;
     }
 
-    addToDialogTemplate(pcdd, ButtonAtom, NULL, id, x, y, cx, cy, text, style);
+    if ( ! addToDialogTemplate(context, pcdd, ButtonAtom, NULL, id, x, y, cx, cy, text, style) )
+    {
+        return -2;
+    }
     return 0;
 }
 
@@ -1603,7 +1708,10 @@ RexxMethod8(int32_t, dyndlg_createEdit, RexxObjectPtr, rxID, int, x, int, y, uin
         style |= ES_PASSWORD;
     }
 
-    addToDialogTemplate(pcdd, EditAtom, NULL, id, x, y, cx, cy, NULL, style);
+    if ( ! addToDialogTemplate(context, pcdd, EditAtom, NULL, id, x, y, cx, cy, NULL, style) )
+    {
+        return -2;
+    }
 
     int32_t result = 0;
 
@@ -1645,7 +1753,10 @@ RexxMethod7(int32_t, dyndlg_createScrollBar, RexxObjectPtr, rxID, int, x, int, y
     if ( StrStrI(opts, "TOPLEFT")    != NULL ) style |= SBS_TOPALIGN;
     if ( StrStrI(opts, "BOTTOMRIGH") != NULL ) style |= SBS_BOTTOMALIGN;
 
-    addToDialogTemplate(pcdd, ScrollBarAtom, NULL, id, x, y, cx, cy, NULL, style);
+    if ( ! addToDialogTemplate(context, pcdd, ScrollBarAtom, NULL, id, x, y, cx, cy, NULL, style) )
+    {
+        return -2;
+    }
     return 0;
 }
 
@@ -1689,7 +1800,10 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
     if ( StrStrI(opts, "KEYINPUT") != NULL ) style |= LBS_WANTKEYBOARDINPUT;
     if ( StrStrI(opts, "EXTSEL"  ) != NULL ) style |= LBS_EXTENDEDSEL;
 
-    addToDialogTemplate(pcdd, ListBoxAtom, NULL, id, x, y, cx, cy, NULL, style);
+    if ( ! addToDialogTemplate(context, pcdd, ListBoxAtom, NULL, id, x, y, cx, cy, NULL, style) )
+    {
+        return -2;
+    }
 
     int32_t result = 0;
 
@@ -1738,7 +1852,10 @@ RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y,
     if ( StrStrI(opts, "SORT"      ) != NULL ) style |= CBS_SORT;
     if ( StrStrI(opts, "PARTIAL"   ) != NULL ) style |= CBS_NOINTEGRALHEIGHT;
 
-    addToDialogTemplate(pcdd, ComboBoxAtom, NULL, id, x, y, cx, cy, NULL, style);
+    if ( ! addToDialogTemplate(context, pcdd, ComboBoxAtom, NULL, id, x, y, cx, cy, NULL, style) )
+    {
+        return -2;
+    }
 
     int32_t result = 0;
 
@@ -1776,7 +1893,10 @@ RexxMethod7(int32_t, dyndlg_createProgressBar, RexxObjectPtr, rxID, int, x, int,
 
     uint32_t style = getControlStyle(winProgressBar, opts);
 
-    addToDialogTemplate(pcdd, 0, PROGRESS_CLASS, id, x, y, cx, cy, NULL, style);
+    if ( ! addToDialogTemplate(context, pcdd, 0, PROGRESS_CLASS, id, x, y, cx, cy, NULL, style) )
+    {
+        return -2;
+    }
     return 0;
 }
 
@@ -1810,7 +1930,10 @@ RexxMethod9(int32_t, dyndlg_createNamedControl, RexxObjectPtr, rxID, int, x, int
 
     uint32_t style = getControlStyle(ctrl, opts);
 
-    addToDialogTemplate(pcdd, 0, windowClass, id, x, y, cx, cy, NULL, style);
+    if ( ! addToDialogTemplate(context, pcdd, 0, windowClass, id, x, y, cx, cy, NULL, style) )
+    {
+        return -2;
+    }
 
     int32_t result = 0;
 
