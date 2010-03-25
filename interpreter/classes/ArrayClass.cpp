@@ -2264,7 +2264,7 @@ size_t RexxArray::split(BaseSortComparator &comparator, PartitionBounds &bounds)
     {
         x = s;
     }
-    if (comparator.compare(get(bounds.right), get(g)) <= 0)
+    else if (comparator.compare(get(bounds.right), get(g)) <= 0)
     {
         x = bounds.right;
     }
@@ -2287,10 +2287,10 @@ size_t RexxArray::split(BaseSortComparator &comparator, PartitionBounds &bounds)
         do {                                 // find j
             j--;
         }
-        while (comparator.compare(get(j), pivot) > 0);
+        while (i < j && comparator.compare(get(j), pivot) > 0);
         do {
             i++;                             // find i
-        } while (comparator.compare(get(i), pivot) < 0);
+        } while (i < j && comparator.compare(get(i), pivot) < 0);
         interchange(i, j);
     }
     interchange(i, j);                       // undo the extra swap
@@ -2327,7 +2327,7 @@ void RexxArray::quickSort(BaseSortComparator &comparator, size_t left, size_t ri
                 // go find the new pivot point
                 size_t splitpoint = split(comparator, bounds);
                 // push the smaller list
-                if (bounds.right - splitpoint < splitpoint - bounds.left)
+                if (bounds.right - splitpoint < bounds.left - splitpoint)
                 {
                     stack.push_front(PartitionBounds(bounds.left, splitpoint - 1));
                     bounds.left = splitpoint + 1;
