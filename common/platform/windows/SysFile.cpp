@@ -977,7 +977,7 @@ bool SysFile::getSize(int64_t &size)
         if (_fstati64(fileHandle, &fileInfo) == 0)
         {
             // regular file?  return the defined size
-            if ((fileInfo.st_mode & _S_IFREG) != 0)
+            if (fileInfo.st_dev == 0)
             {
                 size = fileInfo.st_size;
             }
@@ -1111,6 +1111,11 @@ void SysFile::getStreamTypeInfo()
         {
             readable = true;
         }
+        // tagged as FIFO, then this is also a transient
+        if ((fileInfo.st_mode & _S_IFIFO) != 0)
+        {
+            transient = true;
+        }
     }
 }
 
@@ -1182,5 +1187,5 @@ bool SysFile::hasData()
 
     // we might have something buffered, but also check the
     // actual stream.
-    return atEof();
+    return !atEof();
 }
