@@ -77,6 +77,7 @@
 ::method sendMessage unguarded external "LIBRARY oodialog wb_sendMessage"
 ::method sendMessageHandle unguarded external "LIBRARY oodialog wb_sendMessage"
 
+-- These shortcut methods are for internal use, do not document.
 ::method sendWinIntMsg unguarded external "LIBRARY oodialog wb_sendWinIntMsg"
 ::method sendWinIntMsgH unguarded external "LIBRARY oodialog wb_sendWinIntMsg"
 ::method sendWinUintMsg unguarded external "LIBRARY oodialog wb_sendWinUintMsg"

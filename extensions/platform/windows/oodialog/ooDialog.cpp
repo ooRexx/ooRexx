@@ -568,6 +568,8 @@ BOOL GetDialogIcons(DIALOGADMIN *dlgAdm, INT id, UINT iconSrc, PHANDLE phBig, PH
  */
 #define WINDOWBASE_CLASS       "WindowBase"
 
+#define DISPLAY_METHOD_OPTIONS "'NORMAL', 'NORMAL FAST', 'DEFAULT', 'DEFAULT FAST', 'HIDE', 'HIDE FAST', or 'INACTIVE'"
+
 static inline HWND getWBWindow(void *pCSelf)
 {
     return ((pCWindowBase)pCSelf)->hwnd;
@@ -711,7 +713,6 @@ logical_t showWindow(HWND hwnd, char type)
     {
         case 'D' :
         case 'N' :
-        case 'S' :
             flag = SW_NORMAL;
             break;
 
@@ -735,6 +736,7 @@ logical_t showWindow(HWND hwnd, char type)
             flag = SW_SHOWMAXIMIZED;
             break;
 
+        case 'S' :
         default :
             flag = SW_SHOW;
             break;
@@ -1167,10 +1169,15 @@ RexxMethod1(logical_t, wb_isVisible, CSELF, pCSelf)
  *
  *  @return  True if the window was previously visible.  Return false if the
  *           window was previously hidden.
+ *
+ *  @remarks Note that early versions of ooDialog use SW_SHOWNORMAL for the
+ *           flag, not SW_SHOW. We need to preserve that because of the
+ *           differences in SW_SHOW and SW_SHOWNORMAL when the window is
+ *           maximized or minimized.
  */
-RexxMethod1(logical_t, wb_show, CSELF, pCSelf)
+RexxMethod2(logical_t, wb_show, NAME, method, CSELF, pCSelf)
 {
-    return showWindow(getWBWindow(pCSelf), msgAbbrev(context));
+    return showWindow(getWBWindow(pCSelf), (*method == 'S' ? 'N' : 'H'));
 }
 
 /** WindowBase::showFast() / WindowBase::hideFast()
@@ -1192,6 +1199,17 @@ RexxMethod1(uint32_t, wb_showFast, CSELF, pCSelf)
  *
  *
  *  @return  0 for success, 1 for error.  An error is highly unlikely.
+ *
+ *  @remarks display() is a method that was originally in WindowExtentions,
+ *           making it a method of both a dialog and a dialog object. It is one
+ *           of those methods that makes little sense for a dialog control
+ *           because the SW_SHOWxxx flags used have no effect on dialog
+ *           controls, other than to make them visible or invisible.
+ *
+ *           If the options keyword was omitted or wrong, then SW_SHOW was used
+ *           as the flag, (really by accident.)  This is changed in 4.1.0 to
+ *           cause a syntax condition.
+ *
  */
 RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
 {
@@ -1205,9 +1223,9 @@ RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
         doFast = true;
     }
 
-    if ( opts == NULL ) {type = 'S';}
-    else if ( StrStrI(opts, "NORMAL"  ) != NULL ) {type = 'S';}
-    else if ( StrStrI(opts, "DEFAULT" ) != NULL ) {type = 'S';}
+    if ( opts == NULL ) {type = 'N';}
+    else if ( StrStrI(opts, "NORMAL"  ) != NULL ) {type = 'N';}
+    else if ( StrStrI(opts, "DEFAULT" ) != NULL ) {type = 'N';}
     else if ( StrStrI(opts, "HIDE"    ) != NULL ) {type = 'H';}
     else if ( StrStrI(opts, "INACTIVE") != NULL )
     {
@@ -1220,11 +1238,14 @@ RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
     }
     else
     {
-        type = 'S';
+        wrongArgValueException(context->threadContext, 1, DISPLAY_METHOD_OPTIONS, opts);
+        return 1;
     }
 
     if ( doFast )
     {
+        // showFast() needs S or H
+        type = (type == 'N' ? 'S' : type);
         ret = showFast(hwnd, type);
     }
     else
@@ -1945,7 +1966,6 @@ RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
  */
 #define PLAINBASEDIALOG_CLASS    "PlainBaseDialog"
 #define CONTROLBAG_ATTRIBUTE     "PlainBaseDialogControlBag"
-
 
 static inline HWND getPBDWindow(void *pCSelf)
 {
@@ -2768,8 +2788,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
  *           window was previously hidden.  Note that this is not a success or
  *           failure return, rather it is what the Windows API returns.
  *
- *  @note  The SHOWTOP DEFAULT NORMAL keywords are all equivalent to
- *         SW_SHOWNORMAL.
+ *  @note  The DEFAULT and NORMAL keywords are both equivalent to SW_SHOWNORMAL.
  *
  *         Key words are NORMAL DEFAULT SHOWTOP RESTORE MIN MAX HIDE INACTIVE
  *
@@ -2786,12 +2805,22 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
  *
  *            PlainBaseDialog::restore() also maps to this function.  restore()
  *            takes no options.
+ *
+ *            Older ooDialog did this: SHOWTOP used the SW_SHOW flag after
+ *            bringing the dialog to the foreground.  If there was a keyword,
+ *            but no keyword match, then SW_SHOW was used.  If the keyword was
+ *            omitted, then SW_SHOWNORMAL was used.  This bevavior is preserved.
  */
 RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSELF, pCSelf)
 {
     HWND hwnd = getPBDWindow(pCSelf);
+    if ( hwnd == NULL )
+    {
+        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
+        return FALSE;
+    }
 
-    char flag = (*method == 'R' ? 'R' : 'S')  ;
+    char flag = (*method == 'R' ? 'R' : 'N')  ;
 
     if ( options != NULL && *options != '\0' && flag != 'R' )
     {
@@ -2799,6 +2828,7 @@ RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSEL
         {
             case 'S' :
                 SetForegroundWindow(hwnd);
+                flag = 'S';
                 break;
 
             case 'M' :
@@ -2818,8 +2848,15 @@ RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSEL
                 break;
 
             case 'D' :
+                flag = 'D';
+                break;
+
             case 'N' :
+                flag = 'N';
+                break;
+
             default  :
+                flag = 'S';
                 break;
 
         }
