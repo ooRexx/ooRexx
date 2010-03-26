@@ -73,7 +73,7 @@ typedef struct copyElelmentParm {
      PartitionBounds(size_t l, size_t r) : left(l), right(r) {}
      PartitionBounds() : left(0), right(0) {}
 
-     inline boolean isSmall() { return (right - left) <= SmallRange; }
+     inline bool isSmall() { return (right - left) <= SmallRange; }
      inline size_t midPoint() { return (left + right) / 2; }
 
      size_t left;       // start of the range
