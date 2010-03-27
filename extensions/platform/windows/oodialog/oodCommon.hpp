@@ -340,7 +340,7 @@ inline bool isYes(const char * s)
 {
    if ( s == NULL || strlen(s) == 0 )
    {
-       return FALSE;
+       return false;
    }
 
    char c = toupper(s[0]);

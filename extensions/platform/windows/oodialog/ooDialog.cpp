@@ -1263,11 +1263,19 @@ done_out:
  *
  *  This method maps to the draw(), update() and the redrawClient() methods.
  *  The implementation preserves existing behavior prior to ooRexx 4.0.1.  That
- *  is: the draw() method takes no argument and always uses false for the erase
- *  background arg. The update() method takes no argument and always uses true
- *  for the erase background arg, The redrawClient() method takes an argument to
- *  set the erase background arg. The argument can be either .true / .false (1
- *  or 0), or yes / no, or ja / nein.
+ *  is:
+ *
+ *  The draw() method takes no argument and always uses false for the erase
+ *  background arg.
+ *
+ *  The update() method takes no argument and always uses true for the erase
+ *  background arg,
+ *
+ *  The redrawClient() method takes an argument to set the erase background arg.
+ *  The argument can be either .true / .false (1 or 0), or yes / no, or ja /
+ *  nein. Note however, the redrawClient() has always been documented as taking
+ *  1 or Y to erase the background and implemented so that if the arg was
+ *  omitted it would be .false.
  *
  *  @param  erase  [optional]  Whether the redrawClient operation should erase
  *                 the window background.  Can be true / false or yes / no.  The
@@ -1283,7 +1291,7 @@ RexxMethod2(RexxObjectPtr, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSe
     char flag = msgAbbrev(context);
     bool doErase;
 
-    if ( flag == 'R' )
+    if ( flag == 'D' )
     {
         doErase = false;
     }
@@ -2832,7 +2840,7 @@ RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSEL
                 break;
 
             case 'M' :
-                flag = (stricmp("MIN", options) == 0 ? 'M' : 'X');
+                flag = (StrCmpNI("MIN", options, 3) == 0 ? 'M' : 'X');
                 break;
 
             case 'H' :
@@ -2866,7 +2874,7 @@ RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSEL
 
 
 /** PlainBaseDialog::showWindow() / PlainBaseDialog::hideWindow()
- *  PlainBaseDialog::showWindow() / PlainBaseDialog::hideWindow()
+ *  PlainBaseDialog::showWindowFast() / PlainBaseDialog::hideWindowFast()
  *
  *  Hides or shows the specified window, normally, or 'fast'.  "Fast" means
  *  the visible flag is set, but the window is not forced to update.
