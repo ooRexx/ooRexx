@@ -54,7 +54,7 @@
 
 /**
  * This is the window procedure used to subclass the edit control for both the
- * ListControl and TreeControl objects.  It would be nice to convert this to use
+ * ListView and TreeControl objects.  It would be nice to convert this to use
  * the better API: SetWindowSubclass / RemoveWindowSubclass.
  *
  * TODO this whole subclassing thing is no longer needed.
@@ -87,8 +87,8 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 /** TreeControl::subclassEdit()
  *  TreeControl::restoreEditClass()
- *  ListControl::subclassEdit()
- *  ListControl::restoreEditClass()
+ *  ListView::subclassEdit()
+ *  ListView::restoreEditClass()
  */
 RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
 {
@@ -2131,9 +2131,9 @@ done_out:
 
 
 /**
- *  Methods for the .ListControl class.
+ *  Methods for the .ListView class.
  */
-#define LISTCONTROL_CLASS         "ListControl"
+#define LISTVIEW_CLASS            "ListView"
 
 #define LVSTATE_ATTRIBUTE         "LV!STATEIMAGELIST"
 #define LVSMALL_ATTRIBUTE         "LV!SMALLIMAGELIST"
@@ -3348,7 +3348,7 @@ done:
     return success;
 }
 
-/** ListControl::insertColumnPx()
+/** ListView::insertColumnPx()
  *
  *
  *  @param column
@@ -3583,7 +3583,7 @@ RexxMethod4(RexxObjectPtr, lv_setItemPos, uint32_t, index, OPTIONAL_RexxObjectPt
     return TheZeroObj;
 }
 
-/** ListControl::setImageList()
+/** ListView::setImageList()
  *
  *  Sets or removes one of a list-view's image lists.
  *
@@ -3678,7 +3678,7 @@ err_out:
     return NULLOBJECT;
 }
 
-/** ListControl::getImageList()
+/** ListView::getImageList()
  *
  *  Gets the list-view's specifed image list.
  *

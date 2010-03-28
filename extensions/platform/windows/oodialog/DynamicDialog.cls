@@ -457,7 +457,7 @@
                -- ICON RESOURCE statement as opposed to an ICON CONTROL statement.
                -- filename could have spaces and *should* be in quotes.
                parse var s nameID ic fileName
-               self~addIcon(nameID, fileName)
+               self~addIconResource(nameID, fileName)
             end
             /* premission: #define only at the top of the RC and separated by a tab or a blank */
             when s~wordpos("#define") > 0 then do

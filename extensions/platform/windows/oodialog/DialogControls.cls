@@ -922,6 +922,7 @@
 /************ List Control Class **********************************************/
 
 ::class 'ListControl' subclass DialogControl public
+::class 'ListView' subclass ListControl public
 
 ::method subclassEdit external "LIBRARY oodialog generic_subclassEdit"
 ::method restoreEditClass external "LIBRARY oodialog generic_subclassEdit"

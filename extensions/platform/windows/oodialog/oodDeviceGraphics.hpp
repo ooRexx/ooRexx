@@ -59,7 +59,7 @@ extern HFONT         oodGenericFont(const char *, uint32_t, const char *);
 extern logical_t     oodWriteToWindow(RexxMethodContext *, HWND, int32_t, int32_t, CSTRING, CSTRING, uint32_t, CSTRING, int32_t, int32_t);
 extern HBRUSH        oodCreateBrush(RexxMethodContext *, uint32_t, CSTRING);
 extern RexxObjectPtr clearRect(RexxMethodContext *, HWND, PRECT);
-extern RexxObjectPtr redrawRect(RexxMethodContext *, HWND, PRECT, bool);
+extern RexxObjectPtr redrawRect(RexxMethodContext *, HWND, PRECT, bool, bool);
 extern int           getHeightFromFontSize(int fontSize);
 extern void          maybeSetColorPalette(RexxMethodContext *, HBITMAP, CSTRING, DIALOGADMIN *, RexxObjectPtr);
 extern LPBITMAPINFO  loadDIB(const char *szFile, uint32_t *);

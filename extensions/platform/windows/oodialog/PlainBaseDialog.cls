@@ -97,6 +97,11 @@
 ::method hideFast unguarded external "LIBRARY oodialog wb_showFast"
 ::method display unguarded external "LIBRARY oodialog wb_display"
 
+::method update unguarded external "LIBRARY oodialog wb_redrawClient"
+::method draw unguarded external "LIBRARY oodialog wb_redrawClient"
+::method redrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
+::method redraw unguarded external "LIBRARY oodialog wb_redraw"
+
 ::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt"
 ::method getID unguarded
   return self~getWindowLong(-12)
@@ -106,11 +111,6 @@
 
 ::method getExStyleRaw unguarded
   return self~getWindowLong(-20)
-
-::method update unguarded external "LIBRARY oodialog wb_redrawClient"
-::method draw unguarded external "LIBRARY oodialog wb_redrawClient"
-::method redrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
-::method redraw unguarded external "LIBRARY oodialog wb_redraw"
 
 ::method "title=" unguarded external "LIBRARY oodialog wb_setText"
 ::method setTitle unguarded external "LIBRARY oodialog wb_setText"

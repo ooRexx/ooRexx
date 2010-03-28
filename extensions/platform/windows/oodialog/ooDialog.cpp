@@ -1209,7 +1209,6 @@ RexxMethod1(uint32_t, wb_showFast, CSELF, pCSelf)
  *           If the options keyword was omitted or wrong, then SW_SHOW was used
  *           as the flag, (really by accident.)  This is changed in 4.1.0 to
  *           cause a syntax condition.
- *
  */
 RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
 {
@@ -1257,9 +1256,12 @@ done_out:
     return ret;
 }
 
-/** WindowsBase::draw() / WindowsBase::redrawClient() / WindowsBase::update()
+/** WindowsBase::draw()
+ *  WindowsBase::redrawClient()
+ *  WindowsBase::update()
  *
- *  Causes the entire client area of the the window to be redrawn.
+ *  Invalidates the entire client area of the the window. draw() and
+ *  redrawClient() then forces the window to repaint.
  *
  *  This method maps to the draw(), update() and the redrawClient() methods.
  *  The implementation preserves existing behavior prior to ooRexx 4.0.1.  That
@@ -1269,7 +1271,9 @@ done_out:
  *  background arg.
  *
  *  The update() method takes no argument and always uses true for the erase
- *  background arg,
+ *  background arg. This method invalidates the client area only, does not call
+ *  UpdateWindow().  The Rexx method name of 'update' was poorly choosen,
+ *  because it does not do an update, only an invalidate.
  *
  *  The redrawClient() method takes an argument to set the erase background arg.
  *  The argument can be either .true / .false (1 or 0), or yes / no, or ja /
@@ -1290,6 +1294,7 @@ RexxMethod2(RexxObjectPtr, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSe
     HWND hwnd = getWBWindow(pCSelf);
     char flag = msgAbbrev(context);
     bool doErase;
+    bool doUpdate = true;
 
     if ( flag == 'D' )
     {
@@ -1298,12 +1303,13 @@ RexxMethod2(RexxObjectPtr, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSe
     else if ( flag == 'U' )
     {
         doErase = true;
+        doUpdate = false;
     }
     else
     {
         doErase = isYes(erase);
     }
-    return redrawRect(context, hwnd, NULL, doErase);
+    return redrawRect(context, hwnd, NULL, doErase, doUpdate);
 }
 
 /** WindowsBase::redraw()

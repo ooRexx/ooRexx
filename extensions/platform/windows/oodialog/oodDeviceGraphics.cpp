@@ -610,8 +610,8 @@ done_out:
 }
 
 /**
- * Invalidates a rectangle in a window and has the window update.  This should
- * cause the window to immediately repaint the rectangle.
+ * Invalidates a rectangle in a window and, usually, has the window update.
+ * Update should cause the window to immediately repaint the rectangle.
  *
  * @param c                 Method context we are operating in.
  * @param hwnd              Handle to the window to be redrawn.
@@ -620,6 +620,7 @@ done_out:
  *                          area is redrawn.
  * @param eraseBackground   Should the background of the window be redrawn
  *                          during the repaint.
+ * @param udate             Should UpdateWindow() be called.
  *
  * @return The zero object on success, the one object on failure.
  *
@@ -628,7 +629,7 @@ done_out:
  *           invalidated.  Because of this there is no need to call
  *           GetClientRect() to fill in a RECT stucture.
  */
-RexxObjectPtr redrawRect(RexxMethodContext *c, HWND hwnd, PRECT pr, bool eraseBackground)
+RexxObjectPtr redrawRect(RexxMethodContext *c, HWND hwnd, PRECT pr, bool eraseBackground, bool update)
 {
     oodResetSysErrCode(c->threadContext);
 
@@ -638,10 +639,13 @@ RexxObjectPtr redrawRect(RexxMethodContext *c, HWND hwnd, PRECT pr, bool eraseBa
         return TheOneObj;
     }
 
-    if ( UpdateWindow(hwnd) == 0 )
+    if ( update )
     {
-        oodSetSysErrCode(c->threadContext);
-        return TheOneObj;
+        if ( UpdateWindow(hwnd) == 0 )
+        {
+            oodSetSysErrCode(c->threadContext);
+            return TheOneObj;
+        }
     }
     return TheZeroObj;
 }
@@ -1580,7 +1584,7 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawWindowRect, OPTIONAL_POINTERSTRING, _hwn
 
     HWND hwnd    = argumentExists(1) ? (HWND)_hwnd : pcpbd->hDlg;
     bool doErase = argumentExists(2) ? (erase ? true : false) : false;
-    return redrawRect(context, hwnd, NULL, doErase);
+    return redrawRect(context, hwnd, NULL, doErase, true);
 }
 
 
@@ -1643,7 +1647,7 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawRect, OPTIONAL_POINTERSTRING, _hwnd, ARG
         doErase = erase ? true : false;
     }
 
-    return redrawRect(context, hwnd, &r, doErase);
+    return redrawRect(context, hwnd, &r, doErase, true);
 }
 
 /** DialogExtensions::getControlRect()
@@ -1825,7 +1829,7 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawControl, RexxObjectPtr, rxID, OPTIONAL_l
     }
 
     bool doErase = argumentExists(2) ? (erase ? true : false) : false;
-    return redrawRect(context, hCtrl, NULL, doErase);
+    return redrawRect(context, hCtrl, NULL, doErase, true);
 }
 
 

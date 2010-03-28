@@ -94,7 +94,7 @@ const char *controlType2className(oodControl_t control)
         case winComboBox :             return "COMBOBOX";
         case winScrollBar :            return "SCROLLBAR";
         case winTreeView :             return "TREECONTROL";
-        case winListView :             return "LISTCONTROL";
+        case winListView :             return "LISTVIEW";
         case winTab :                  return "TABCONTROL";
         case winProgressBar :          return "PROGRESSBAR";
         case winTrackBar :             return "SLIDERCONTROL";
@@ -968,7 +968,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
         doErase = erase ? true : false;
     }
 
-    return redrawRect(context, getDChCtrl(pCSelf), &r, doErase);
+    return redrawRect(context, getDChCtrl(pCSelf), &r, doErase, true);
 }
 
 
