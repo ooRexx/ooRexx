@@ -254,7 +254,7 @@
     else return ""
 
 ::method firstVisibleLine
-    return self~sendWinIntMsg(EM_GETFIRSTVISIBLELINE, 0, 0) + 1
+    return self~sendWinIntMsg(self~EM_GETFIRSTVISIBLELINE, 0, 0) + 1
 
 ::method setReadOnly
     use strict arg bool = .true

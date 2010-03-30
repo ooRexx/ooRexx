@@ -102,6 +102,7 @@
 ::method redrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
 ::method redraw unguarded external "LIBRARY oodialog wb_redraw"
 
+-- Not intending to document getWindowLong, at this point
 ::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt"
 ::method getID unguarded
   return self~getWindowLong(-12)
@@ -112,11 +113,11 @@
 ::method getExStyleRaw unguarded
   return self~getWindowLong(-20)
 
+::method setText unguarded external "LIBRARY oodialog wb_setText"
+::method getText unguarded external "LIBRARY oodialog wb_getText"
 ::method "title=" unguarded external "LIBRARY oodialog wb_setText"
 ::method setTitle unguarded external "LIBRARY oodialog wb_setText"
 ::method title unguarded external "LIBRARY oodialog wb_getText"
-::method setText unguarded external "LIBRARY oodialog wb_setText"
-::method getText unguarded external "LIBRARY oodialog wb_getText"
 ::method getTextSizePx unguarded external "LIBRARY oodialog wb_getTextSizePx"
 ::method getTextSizeScreen unguarded external "LIBRARY oodialog wb_getTextSizeScreen"
 
