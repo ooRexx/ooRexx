@@ -394,18 +394,38 @@ bool SysFileSystem::primitiveSearchName(const char *name, const char *path, cons
         strncat(tempName, extension, sizeof(tempName));
     }
 
-    // check the file as is first
-    if (checkCurrentFile(tempName, resolvedName))
+    *resolvedName = '\0';
+    // if this appears to be a fully qualified name, then check it as-is and
+    // quit.  The path searches might give incorrect results if performed with such
+    // a name and this should only check on the raw name.
+    if (hasDirectory(tempName))
     {
-        return true;
+        // check the file as is first
+        return checkCurrentFile(tempName, resolvedName);
     }
 
-    *resolvedName = '\0';
     if (searchPath(name, path, extension, resolvedName))
     {
         return true;
     }
     return false;
+}
+
+
+/**
+ * Test if a filename has a directory portion
+ *
+ * @param name   The name to check.
+ *
+ * @return true if a directory was found on the file, false if
+ *         there is no directory.
+ */
+bool SysFileSystem::hasDirectory(const char *name)
+{
+    // hasDirectory() means we have enough absolute directory
+    // information at the beginning to bypass performing path searches.
+    // We really only need to look at the first character.
+    return name[0] == '\\' || name[0] == '.' || name[2] == ':';
 }
 
 

@@ -416,28 +416,37 @@ bool SysFileSystem::primitiveSearchName(const char *name, const char *path, cons
         strncat(tempName, extension, sizeof(tempName));
     }
 
-    // for each name, check in both the provided case and lower case.
-    for (int i = 0; i < 2; i++)
+    // only do the direct search if this is qualified enough that
+    // it should not be located on the path
+    if (hasDirectory(tempName))
     {
-        // check the file as is first
-        if (checkCurrentFile(tempName, resolvedName))
+        for (int i = 0; i < 2; i++)
         {
-            return true;
+            // check the file as is first
+            if (checkCurrentFile(tempName, resolvedName))
+            {
+                return true;
+            }
+            // try again in lower case
+            Utilities::strlower(tempName);
         }
-
-        // we don't do path searches if there's directory information in the name
-        if (!hasDirectory(tempName))
+        return false;
+    }
+    else
+    {
+        // for each name, check in both the provided case and lower case.
+        for (int i = 0; i < 2; i++)
         {
             // go search along the path
             if (searchPath(tempName, path, resolvedName))
             {
                 return true;
             }
+            // try again in lower case
+            Utilities::strlower(tempName);
         }
-        // try again in lower case
-        Utilities::strlower(tempName);
+        return false;
     }
-    return false;
 }
 
 

@@ -73,6 +73,7 @@ public:
     static void  qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize);
     static bool  fileExists(const char *name);
     static bool  hasExtension(const char *name);
+    static bool  hasDirectory(const char *name);
     static RexxString *extractDirectory(RexxString *file);
     static RexxString *extractExtension(RexxString *file);
     static RexxString *extractFile(RexxString *file);
