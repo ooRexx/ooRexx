@@ -1651,6 +1651,13 @@ RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, 
  *  @remarks  Microsoft says: If the SWP_SHOWWINDOW or SWP_HIDEWINDOW flag is
  *            set, the window cannot be moved or sized.  But, that does not
  *            appear to be true.
+ *
+ *            The processing of the flags argument is exactly the same as what
+ *            the original ooDialog code did. I.e., the flags start with
+ *            SWP_NOZORDER and then the string is checked for each possible
+ *            keyword, if found, that flag is added.  If the user had both
+ *            NOMOVE and NOSIZE, both flags ared added. If the user had both
+ *            SHOW and HIDE, then both flags are added, etc..
  */
 RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
 {
@@ -1738,6 +1745,13 @@ RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
  *
  *  @remarks  No effort is made to ensure that only a .Size object is used for
  *            resizeTo() and only a .Point object for moveTo().
+ *
+ *            The processing of the flags argument is exactly the same as what
+ *            the original ooDialog code did. I.e., the flags start with
+ *            SWP_NOZORDER and then the string is checked for each possible
+ *            keyword, if found, that flag is added.  For resize and move then,
+ *            if the user did have NOMOVE or NOSIZE, the flag is added. If the
+ *            user had both SHOW and HIDE, then both flags are added, etc..
  */
 RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pCSelf)
 {
