@@ -53,8 +53,10 @@
 // Add signal handler for SIGTERM
 #define ENABLE_SIGTERM
 
-// Enable AIX SRC
+// If compiling on AIX, enable AIX SRC
+#ifdef AIX
 #define ENABLE_AIX_SRC
+#endif
 
 // Temp fix for AXI 6.1 problem - will be removed later
 // - switching the daemon to nobody does not work on AIX 6.1
@@ -250,7 +252,7 @@ int main(int argc, char *argv[])
     close(pfile);
 
     // make ourselves a daemon
-    // - if this is AIX we check if the rxapi daemon was sarted via SRC 
+    // - if this is AIX we check if the rxapi daemon was sarted via SRC
     //   - if the daemon was started via SRC we do not morph - the SRC handles this
     //
     // - add to AIX SRC without auto restart:
