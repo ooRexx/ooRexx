@@ -61,6 +61,12 @@
 #if defined( HAVE_SYS_FILIO_H )
 # include <sys/filio.h>
 #endif
+
+#ifdef __APPLE__ & __MACH__
+# define lseek64 lseek
+# define open64 open
+#endif
+
 #include "SysFile.hpp"
 
 // This is all the static stuff
