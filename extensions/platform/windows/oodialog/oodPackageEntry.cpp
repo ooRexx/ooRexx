@@ -467,6 +467,7 @@ REXX_METHOD_PROTOTYPE(bc_test);
 REXX_METHOD_PROTOTYPE(bc_test_cls);
 
 // Edit
+REXX_METHOD_PROTOTYPE(e_noContextMenu);
 REXX_METHOD_PROTOTYPE(e_isSingleLine);
 REXX_METHOD_PROTOTYPE(e_selection);
 REXX_METHOD_PROTOTYPE(e_replaceSelText);
@@ -672,7 +673,7 @@ REXX_METHOD_PROTOTYPE(size_setCY);
 
 // Menu classes methods
 REXX_METHOD_PROTOTYPE(menu_menuInit_pvt);
-REXX_METHOD_PROTOTYPE(menu_connectSelect_cls);
+REXX_METHOD_PROTOTYPE(menu_connectCommandEvent_cls);
 REXX_METHOD_PROTOTYPE(menu_getHMenu);
 REXX_METHOD_PROTOTYPE(menu_wID);
 REXX_METHOD_PROTOTYPE(menu_isValidItemID);
@@ -716,9 +717,9 @@ REXX_METHOD_PROTOTYPE(menu_getText);
 REXX_METHOD_PROTOTYPE(menu_setAutoConnection);
 REXX_METHOD_PROTOTYPE(menu_getAutoConnectStatus);
 REXX_METHOD_PROTOTYPE(menu_connectMenuEvent);
-REXX_METHOD_PROTOTYPE(menu_connectSelect);
-REXX_METHOD_PROTOTYPE(menu_connectAllSelects);
-REXX_METHOD_PROTOTYPE(menu_connectSomeSelects);
+REXX_METHOD_PROTOTYPE(menu_connectCommandEvent);
+REXX_METHOD_PROTOTYPE(menu_connectAllCommandEvents);
+REXX_METHOD_PROTOTYPE(menu_connectSomeCommandEvents);
 REXX_METHOD_PROTOTYPE(menu_itemTextToMethodName);
 REXX_METHOD_PROTOTYPE(menu_test);
 
@@ -731,9 +732,9 @@ REXX_METHOD_PROTOTYPE(binMenu_init);
 
 REXX_METHOD_PROTOTYPE(sysMenu_init);
 REXX_METHOD_PROTOTYPE(sysMenu_revert);
-REXX_METHOD_PROTOTYPE(sysMenu_connectSelect);
-REXX_METHOD_PROTOTYPE(sysMenu_connectAllSelects);
-REXX_METHOD_PROTOTYPE(sysMenu_connectSomeSelects);
+REXX_METHOD_PROTOTYPE(sysMenu_connectCommandEvent);
+REXX_METHOD_PROTOTYPE(sysMenu_connectAllCommandEvents);
+REXX_METHOD_PROTOTYPE(sysMenu_connectSomeCommandEvents);
 
 REXX_METHOD_PROTOTYPE(popMenu_connectContextMenu_cls);
 REXX_METHOD_PROTOTYPE(popMenu_init);
@@ -1082,6 +1083,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_test_cls,                    bc_test_cls),
 
     // Edit
+    REXX_METHOD(e_noContextMenu,                e_noContextMenu),
     REXX_METHOD(e_isSingleLine,                 e_isSingleLine),
     REXX_METHOD(e_selection,                    e_selection),
     REXX_METHOD(e_replaceSelText,               e_replaceSelText),
@@ -1276,7 +1278,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     // Menu classes methods
     REXX_METHOD(menu_menuInit_pvt,              menu_menuInit_pvt),
-    REXX_METHOD(menu_connectSelect_cls,         menu_connectSelect_cls),
+    REXX_METHOD(menu_connectCommandEvent_cls,   menu_connectCommandEvent_cls),
     REXX_METHOD(menu_getHMenu,                  menu_getHMenu),
     REXX_METHOD(menu_wID,                       menu_wID),
     REXX_METHOD(menu_isValidItemID,             menu_isValidItemID),
@@ -1320,9 +1322,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(menu_getAutoConnectStatus,      menu_getAutoConnectStatus),
     REXX_METHOD(menu_setAutoConnection,         menu_setAutoConnection),
     REXX_METHOD(menu_connectMenuEvent,          menu_connectMenuEvent),
-    REXX_METHOD(menu_connectSelect,             menu_connectSelect),
-    REXX_METHOD(menu_connectSomeSelects,        menu_connectSomeSelects),
-    REXX_METHOD(menu_connectAllSelects,         menu_connectAllSelects),
+    REXX_METHOD(menu_connectCommandEvent,       menu_connectCommandEvent),
+    REXX_METHOD(menu_connectSomeCommandEvents,  menu_connectSomeCommandEvents),
+    REXX_METHOD(menu_connectAllCommandEvents,   menu_connectAllCommandEvents),
     REXX_METHOD(menu_itemTextToMethodName,      menu_itemTextToMethodName),
     REXX_METHOD(menu_test,                      menu_test),
 
@@ -1333,11 +1335,11 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(binMenu_init,                   binMenu_init),
 
-    REXX_METHOD(sysMenu_init,                   sysMenu_init),
-    REXX_METHOD(sysMenu_revert,                 sysMenu_revert),
-    REXX_METHOD(sysMenu_connectSelect,          sysMenu_connectSelect),
-    REXX_METHOD(sysMenu_connectSomeSelects,     sysMenu_connectSomeSelects),
-    REXX_METHOD(sysMenu_connectAllSelects,      sysMenu_connectAllSelects),
+    REXX_METHOD(sysMenu_init,                     sysMenu_init),
+    REXX_METHOD(sysMenu_revert,                   sysMenu_revert),
+    REXX_METHOD(sysMenu_connectCommandEvent,      sysMenu_connectCommandEvent),
+    REXX_METHOD(sysMenu_connectSomeCommandEvents, sysMenu_connectSomeCommandEvents),
+    REXX_METHOD(sysMenu_connectAllCommandEvents,  sysMenu_connectAllCommandEvents),
 
     REXX_METHOD(popMenu_connectContextMenu_cls, popMenu_connectContextMenu_cls),
     REXX_METHOD(popMenu_init,                   popMenu_init),

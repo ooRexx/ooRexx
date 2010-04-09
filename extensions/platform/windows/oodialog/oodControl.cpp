@@ -456,11 +456,11 @@ DIALOGADMIN *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc)
 /**
  * If there is subclass data, free it.
  */
-static void freeSubclassData(SUBCLASSDATA * pData)
+static void freeSubclassData(SUBCLASSDATA *pData)
 {
     if ( pData )
     {
-        freeKeyPressData(pData->pKeyPressData);
+        freeKeyPressData((KEYPRESSDATA *)pData->pData);
         LocalFree((void *)pData);
     }
 }
@@ -483,7 +483,7 @@ LRESULT CALLBACK KeyPressSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
     SUBCLASSDATA *pData = (SUBCLASSDATA *)dwData;
     if ( ! pData ) return DefSubclassProc(hwnd, msg, wParam, lParam);
 
-    pKeyData = pData->pKeyPressData;
+    pKeyData = (KEYPRESSDATA *)pData->pData;
 
     switch ( msg )
     {
@@ -499,7 +499,7 @@ LRESULT CALLBACK KeyPressSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
              */
             if (  pKeyData->key[wParam] && !(lParam & KEY_REALEASE) && !(lParam & KEY_WASDOWN) )
             {
-                processKeyPress(pKeyData, wParam, lParam, pData->pMessageQueue);
+                processKeyPress(pKeyData, wParam, lParam, pKeyData->pMessageQueue);
             }
             break;
 
@@ -507,7 +507,7 @@ LRESULT CALLBACK KeyPressSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
             /* WM_KEYDOWN will never have KEY_RELEASE set. */
             if (  pKeyData->key[wParam] && !(lParam & KEY_WASDOWN) )
             {
-                processKeyPress(pKeyData, wParam, lParam, pData->pMessageQueue);
+                processKeyPress(pKeyData, wParam, lParam, pKeyData->pMessageQueue);
             }
             break;
 
@@ -575,8 +575,8 @@ static keyPressErr_t connectKeyPressSubclass(RexxMethodContext *c, CSTRING metho
             goto done_out;
         }
 
-        pData->pKeyPressData = (KEYPRESSDATA *)LocalAlloc(LPTR, sizeof(KEYPRESSDATA));
-        if ( pData->pKeyPressData == NULL )
+        KEYPRESSDATA *pKeyPressData = (KEYPRESSDATA *)LocalAlloc(LPTR, sizeof(KEYPRESSDATA));
+        if ( pKeyPressData == NULL )
         {
             LocalFree(pData);
             result = memoryErr;
@@ -587,9 +587,9 @@ static keyPressErr_t connectKeyPressSubclass(RexxMethodContext *c, CSTRING metho
 
         pData->hCtrl = pcdc->hCtrl;
         pData->uID = pcdc->id;
-        pData->pMessageQueue = pcpbd->dlgAdm->pMessageQueue;
+        pKeyPressData->pMessageQueue = pcpbd->dlgAdm->pMessageQueue;
 
-        result = setKeyPressData(pData->pKeyPressData, methodName, keys, filter);
+        result = setKeyPressData(pKeyPressData, methodName, keys, filter);
         if ( result == noErr || result == badFilterErr || result == keyMapErr )
         {
             if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pData) == 0 )
@@ -606,7 +606,7 @@ static keyPressErr_t connectKeyPressSubclass(RexxMethodContext *c, CSTRING metho
     {
         if ( success )
         {
-            result = setKeyPressData(pData->pKeyPressData, methodName, keys, filter);
+            result = setKeyPressData((KEYPRESSDATA *)pData->pData, methodName, keys, filter);
         }
         else
         {
@@ -798,7 +798,9 @@ RexxMethod2(int32_t, dlgctrl_disconnectKeyPress, OPTIONAL_CSTRING, methodName, C
         }
 
         success = FALSE;  // Reuse the success variable.
-        uint32_t index = seekKeyPressMethod(pData->pKeyPressData, tmpName);
+        KEYPRESSDATA *pKeyPressData = (KEYPRESSDATA *)pData->pData;
+
+        uint32_t index = seekKeyPressMethod(pKeyPressData, tmpName);
         if ( index == 0 )
         {
             result = nameErr;
@@ -808,7 +810,7 @@ RexxMethod2(int32_t, dlgctrl_disconnectKeyPress, OPTIONAL_CSTRING, methodName, C
         // If only 1 method left, remove the subclass entirely.  Otherwise,
         // remove the subclass, fix up the subclass data block, then reinstall
         // the subclass.
-        if ( pData->pKeyPressData->usedMethods == 1 )
+        if ( pKeyPressData->usedMethods == 1 )
         {
             success = removeKeyPressSubclass(pData, pcdc->hDlg, pcdc->id);
         }
@@ -816,7 +818,7 @@ RexxMethod2(int32_t, dlgctrl_disconnectKeyPress, OPTIONAL_CSTRING, methodName, C
         {
             if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)KeyPressSubclassProc, (LPARAM)pcdc->id) )
             {
-                removeKeyPressMethod(pData->pKeyPressData, index);
+                removeKeyPressMethod(pKeyPressData, index);
                 success = (BOOL)SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pData);
             }
         }
@@ -857,7 +859,7 @@ RexxMethod2(logical_t, dlgctrl_hasKeyPressConnection, OPTIONAL_CSTRING, methodNa
         return FALSE;
     }
 
-    BOOL exists = (seekKeyPressMethod(pData->pKeyPressData, tmpName) > 0);
+    BOOL exists = (seekKeyPressMethod((KEYPRESSDATA *)pData->pData, tmpName) > 0);
     free(tmpName);
     return exists;
 }

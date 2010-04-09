@@ -1272,7 +1272,7 @@ done_out:
 }
 
 
-logical_t CppMenu::connectAllSelects(CSTRING methodName, RexxObjectPtr dialog, logical_t handles)
+logical_t CppMenu::connectAllCommandEvents(CSTRING methodName, RexxObjectPtr dialog, logical_t handles)
 {
     logical_t success = FALSE;
 
@@ -1298,7 +1298,7 @@ done_out:
     return success;
 }
 
-logical_t CppMenu::connectSomeSelects(RexxObjectPtr rxItemIds, CSTRING method, logical_t byPosition,
+logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING method, logical_t byPosition,
                                     RexxObjectPtr _dlg, logical_t handles)
 {
     logical_t success = FALSE;
@@ -2722,7 +2722,7 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod5(logical_t, menu_connectSelect_cls, RexxObjectPtr, rxID, CSTRING, methodName,
+RexxMethod5(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRING, methodName,
             RexxObjectPtr, dlg, OPTIONAL_logical_t, isHandled, OSELF, self)
 {
     logical_t success = FALSE;
@@ -4531,7 +4531,7 @@ RexxMethod5(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyW
     return cMenu->connectMenuMessage(methodName, keyWord, (HWND)NULL, _dlg, handles);
 }
 
-/** Menu::connectSelect()
+/** Menu::connectCommandEvent()
  *
  * <link linkend="miConnections">Directly connects</link> the menu item select
  * event with a method in the specified dialog.
@@ -4562,7 +4562,7 @@ RexxMethod5(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyW
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod4(logical_t, menu_connectSelect, RexxObjectPtr, rxID, CSTRING, methodName,
+RexxMethod4(logical_t, menu_connectCommandEvent, RexxObjectPtr, rxID, CSTRING, methodName,
             OPTIONAL_RexxObjectPtr, _dlg, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
@@ -4572,7 +4572,7 @@ RexxMethod4(logical_t, menu_connectSelect, RexxObjectPtr, rxID, CSTRING, methodN
 }
 
 
-/** Menu::connectAllSelects()
+/** Menu::connectAllCommandEvents()
  *
  * Connects all menu command items in this menu to a method.
  *
@@ -4600,15 +4600,15 @@ RexxMethod4(logical_t, menu_connectSelect, RexxObjectPtr, rxID, CSTRING, methodN
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod3(logical_t, menu_connectAllSelects, OPTIONAL_CSTRING, msg, OPTIONAL_RexxObjectPtr, _dlg, CSELF, cMenuPtr)
+RexxMethod3(logical_t, menu_connectAllCommandEvents, OPTIONAL_CSTRING, msg, OPTIONAL_RexxObjectPtr, _dlg, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectAllSelects(msg, _dlg, FALSE);
+    return cMenu->connectAllCommandEvents(msg, _dlg, FALSE);
 }
 
-/** Menu::connectSomeSelects()
+/** Menu::connectSomeCommandEvents()
  *
  * Connects a collection of menu command items to the single specified method.
 
@@ -4653,13 +4653,13 @@ RexxMethod3(logical_t, menu_connectAllSelects, OPTIONAL_CSTRING, msg, OPTIONAL_R
  *        items processed before the error will be connected and menu items that
  *        would be processed after the error will not be connected.
  */
-RexxMethod5(logical_t, menu_connectSomeSelects, RexxObjectPtr, rxItemIDs, OPTIONAL_CSTRING, msg,
+RexxMethod5(logical_t, menu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, OPTIONAL_CSTRING, msg,
             OPTIONAL_logical_t, byPosition, OPTIONAL_RexxObjectPtr, _dlg, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectSomeSelects(rxItemIDs, msg, byPosition, _dlg, FALSE);
+    return cMenu->connectSomeCommandEvents(rxItemIDs, msg, byPosition, _dlg, FALSE);
 }
 
 
@@ -5268,7 +5268,7 @@ RexxMethod1(logical_t, sysMenu_revert, CSELF, cMenuPtr)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod4(logical_t, sysMenu_connectSelect, RexxObjectPtr, rxID, logical_t, handles,
+RexxMethod4(logical_t, sysMenu_connectCommandEvent, RexxObjectPtr, rxID, logical_t, handles,
             CSTRING, methodName, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
@@ -5278,7 +5278,7 @@ RexxMethod4(logical_t, sysMenu_connectSelect, RexxObjectPtr, rxID, logical_t, ha
 }
 
 
-/** SystemMenu::connectAllSelects()
+/** SystemMenu::connectAllCommandEvents()
  *
  * Connects all system menu command items in this menu to a method.
  *
@@ -5310,15 +5310,15 @@ RexxMethod4(logical_t, sysMenu_connectSelect, RexxObjectPtr, rxID, logical_t, ha
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod3(logical_t, sysMenu_connectAllSelects, logical_t, handles, OPTIONAL_CSTRING, msg, CSELF, cMenuPtr)
+RexxMethod3(logical_t, sysMenu_connectAllCommandEvents, logical_t, handles, OPTIONAL_CSTRING, msg, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectAllSelects(msg, NULLOBJECT, handles);
+    return cMenu->connectAllCommandEvents(msg, NULLOBJECT, handles);
 }
 
-/** SystemMenu::connectSomeSelects()
+/** SystemMenu::connectSomeCommandEvents()
  *
  * Connects a collection of system menu command items to the single specified
  * method.
@@ -5368,13 +5368,13 @@ RexxMethod3(logical_t, sysMenu_connectAllSelects, logical_t, handles, OPTIONAL_C
  *        items processed before the error will be connected and menu items that
  *        would be processed after the error will not be connected.
  */
-RexxMethod5(logical_t, sysMenu_connectSomeSelects, RexxObjectPtr, rxItemIDs, logical_t, handles, OPTIONAL_CSTRING, msg,
+RexxMethod5(logical_t, sysMenu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, logical_t, handles, OPTIONAL_CSTRING, msg,
             OPTIONAL_logical_t, byPosition, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectSomeSelects(rxItemIDs, msg, byPosition, NULLOBJECT, handles);
+    return cMenu->connectSomeCommandEvents(rxItemIDs, msg, byPosition, NULLOBJECT, handles);
 }
 
 
@@ -5551,12 +5551,6 @@ done_out:
  *
  * @param methodName  The method name of the method being connected.
  *
- * @param handles     Whether the method handles completely the Windows message,
- *                    or not.  If true the message is NOT passed on to the
- *                    system for further processing, if false it is passed on.
- *                    TODO - figure out if there is one value that should always
- *                    be used and remove this extra parameter.
- *
  * @param hwnd        [optional] A window handle to filter the right-clicks on.
  *                    This can be the window handle of any control in the dialog
  *                    being connnected, or even the dialog window handle itself.
@@ -5572,6 +5566,14 @@ done_out:
  *
  *                    If omitted and there is no assigned dialog, then a
  *                    condition is raised.
+ *
+ * @param handles     [Not Implemented] Whether the method handles completely
+ *                    the Windows message, or not.  If true the message is NOT
+ *                    passed on to the system for further processing, if false
+ *                    it is passed on. TODO - figure out if there is one value
+ *                    that should always be used and remove this extra
+ *                    parameter.
+ *
  *
  * @return  True on success, false on error.
  *

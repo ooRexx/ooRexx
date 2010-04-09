@@ -295,6 +295,14 @@ typedef struct {
     DWORD       dwErr;
 } TRACKPOP, *PTRACKPOP;
 
+// A generic structure used for subclassing controls with the Windows
+// subclassing helper functions.
+typedef struct {
+    UINT       uID;
+    HWND       hCtrl;
+    void      *pData;
+} SUBCLASSDATA;
+
 /* Stuff for key press subclassing and keyboard hooks */
 #define MAX_KEYPRESS_METHODS  63
 #define COUNT_KEYPRESS_KEYS   256
@@ -358,6 +366,7 @@ typedef struct {
 } KEYFILTER, *PKEYFILTER;
 
 typedef struct {
+    PCHAR      pMessageQueue;                       /* Message queue for method invocation      */
     BYTE       key[COUNT_KEYPRESS_KEYS];            /* Value of key[x] is index to pMethods[]   */
     UINT       usedMethods;                         /* Count of used slots in  pMethods[]       */
     UINT       topOfQ;                              /* Top of next free queue, 0 if empty       */
@@ -365,13 +374,6 @@ typedef struct {
     KEYFILTER *pFilters[MAX_KEYPRESS_METHODS + 1];  /* If null, no filter                       */
     UINT       nextFreeQ[MAX_KEYPRESS_METHODS];     /* Used only if existing connection removed */
 } KEYPRESSDATA;
-
-typedef struct {
-    UINT          uID;
-    HWND          hCtrl;
-    PCHAR         pMessageQueue;
-    KEYPRESSDATA *pKeyPressData;
-} SUBCLASSDATA;
 
 typedef struct
 {

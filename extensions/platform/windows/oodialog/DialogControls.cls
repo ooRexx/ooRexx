@@ -142,6 +142,8 @@
 ::constant EM_GETLINECOUNT         "0x00BA"
 ::constant EM_LINELENGTH           "0x00C1"
 ::constant EM_LIMITTEXT            "0x00C5"
+::constant EM_CANUNDO              "0x00C6"
+::constant EM_UNDO                 "0x00C7"
 ::constant EM_LINEFROMCHAR         "0x00C9"
 ::constant EM_SETTABSTOPS          "0x00CB"
 ::constant EM_SETPASSWORDCHAR      "0x00CC"
@@ -156,6 +158,11 @@
 ::constant EC_LEFTMARGIN           1       -- 0x0001
 ::constant EC_RIGHTMARGIN          2       -- 0x0002
 ::constant EC_USEFONTINFO          65535   -- 0xFFFF
+
+::constant WM_CUT                  "0x0300"
+::constant WM_COPY                 "0x0301"
+::constant WM_PASTE                "0x0302"
+::constant WM_CLEAR                "0x0303"
 
 ::method isSingleLine external "LIBRARY oodialog e_isSingleLine"
 ::method selection external "LIBRARY oodialog e_selection"
@@ -173,6 +180,35 @@
 ::method addStyle external "LIBRARY oodialog e_style"
 ::method removeStyle external "LIBRARY oodialog e_style"
 ::method getStyle external "LIBRARY oodialog e_style"
+::method noContextMenu external "LIBRARY oodialog e_noContextMenu"
+
+::method canUndo
+    use strict arg
+    return self~sendWinIntMsg(self~EM_CANUNDO, 0, 0) != 0
+
+::method undo
+    use strict arg
+    return self~sendWinIntMsg(self~EM_UNDO, 0, 0) != 0
+
+::method cutText
+    use strict arg
+    self~sendWinIntMsg(self~WM_CUT, 0, 0)
+    return 0
+
+::method copyText
+    use strict arg
+    self~sendWinIntMsg(self~WM_COPY, 0, 0)
+    return 0
+
+::method pasteText
+    use strict arg
+    self~sendWinIntMsg(self~WM_PASTE, 0, 0)
+    return 0
+
+::method clearText
+    use strict arg
+    self~sendWinIntMsg(self~WM_CLEAR, 0, 0)
+    return 0
 
 ::method setTabStops external "LIBRARY oodialog e_setTabStops"
 ::method "tab="

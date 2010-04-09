@@ -620,7 +620,7 @@
 
 ::method connectMenuItem
    use strict arg id, msgToRaise
-   return .Menu~connectSelect(id, msgToRaise, self)
+   return .Menu~connectCommandEvent(id, msgToRaise, self)
 
 ::method connectButton
    use strict arg id, msgToRaise

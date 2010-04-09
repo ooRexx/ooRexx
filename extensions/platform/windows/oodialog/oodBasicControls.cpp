@@ -1384,6 +1384,134 @@ uint32_t parseEditStyle(CSTRING keyWords)
 }
 
 
+/**
+ * Subclass procedure for an edit control that intercepts the WM_CONTEXTMENU
+ * message and passes it on to the owner dialog rather than the edit control.
+ */
+LRESULT CALLBACK NoEditContextMenu(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
+{
+    // TODO SUBCLASSDATA needs to be turned into a generic struct.
+    SUBCLASSDATA *pData = (SUBCLASSDATA *)dwData;
+
+    switch ( msg )
+    {
+        case WM_CONTEXTMENU:
+            if ( pData )
+            {
+                return SendMessage((HWND)pData->pData, msg, wParam, lParam);
+            }
+            break;
+
+        case WM_NCDESTROY:
+            /* The window is being destroyed, remove the subclass, clean up
+             * memory.
+             */
+            RemoveWindowSubclass(hwnd, NoEditContextMenu, id);
+            if ( pData )
+            {
+                LocalFree(pData);
+            }
+            break;
+    }
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+
+/** Edit::noContextMenu()
+ *
+ * Suppresses, or removes the suppression of, the default edit control's context
+ * menu.
+ *
+ * The primary purpose of this would be to allow the Rexx programmer to put up a
+ * substitute context menu using the PopupMenu class.  If the programer does not
+ * connect a context menu to the edit control, then no context menu is
+ * displayed.
+ *
+ * If the Rexx programmer previously suppressed the context menu, then that
+ * suppression can be removed.
+ *
+ * @arg  undo  [OPTIONAL] If true, the suppression of the context menu is
+ *             removed.
+ *
+ * @return  True on success, false on error.
+ *
+ * @notes  Sets the .SystemErrorCode.  These codes may be set, by us, the OS
+ *         does not set any:
+ *
+ * ERROR_NOT_SUPPORTED   The request is not supported.
+ * ERROR_SIGNAL_REFUSED  The recipient process has refused the signal.
+ *
+ */
+RexxMethod2(RexxObjectPtr, e_noContextMenu, OPTIONAL_logical_t, undo, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr result = TheFalseObj;
+    if ( ! requiredComCtl32Version(context, "noContextMenu", COMCTL32_6_0) )
+    {
+        goto done_out;
+    }
+
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    SUBCLASSDATA *pData = NULL;
+    BOOL success = GetWindowSubclass(pcdc->hCtrl, NoEditContextMenu, pcdc->id, (DWORD_PTR *)&pData);
+
+    if ( undo )
+    {
+        if ( pData == NULL )
+        {
+            // The subclass is not installed, we call this an error.
+            oodSetSysErrCode(context->threadContext, ERROR_NOT_SUPPORTED);
+            goto done_out;
+        }
+
+        if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)NoEditContextMenu, (LPARAM)pcdc->id) == 0 )
+        {
+            // The subclass is not removed, we can't free pData because the
+            // subclass procedure may (will) still access it.
+            oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        }
+        else
+        {
+            LocalFree(pData);
+            result = TheTrueObj;
+        }
+        goto done_out;
+    }
+
+    if ( pData != NULL )
+    {
+        // The subclass is already installed, we call this an error.
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_SUPPORTED);
+        goto done_out;
+    }
+
+    pData = (SUBCLASSDATA *)LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
+    if ( pData == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        goto done_out;
+    }
+
+    pData->hCtrl = pcdc->hCtrl;
+    pData->uID = pcdc->id;
+    pData->pData = (void *)pcdc->hDlg;
+
+    if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)NoEditContextMenu, (LPARAM)pData) == 0 )
+    {
+        // The subclass was not installed, free memeory, set error code.
+        LocalFree(pData);
+        oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        goto done_out;
+    }
+
+    result = TheTrueObj;
+
+done_out:
+    return result;
+}
+
+
 RexxMethod1(logical_t, e_isSingleLine, CSELF, pCSelf)
 {
     return isSingleLineEdit(getDChCtrl(pCSelf));
