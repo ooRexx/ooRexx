@@ -2694,10 +2694,10 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
     return 0;
 }
 
-/** Menu::connectItem() [class]
+/** Menu::connectCommandEvent() [class]
  *
- * This class method connects a menu command item with a method in the specified
- * dialog.
+ * This class method connects a menu command item event with a method in the
+ * specified dialog.
  *
  * @param id          The resource ID of the menu item to be connected.
  *
