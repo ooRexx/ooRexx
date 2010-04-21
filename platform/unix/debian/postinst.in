@@ -99,18 +99,18 @@ if [ -d /opt/ooRexx ]; then
    ln -sf ${orx_prefix}/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
    ln -sf ${orx_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 # allow backwards compatibility to previous versions
-   ln -sf %{orx_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.2
-   ln -sf %{orx_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.3
-   ln -sf %{orx_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.2
-   ln -sf %{orx_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.3
-   ln -sf %{orx_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.2
-   ln -sf %{orx_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.3
-   ln -sf %{orx_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.2
-   ln -sf %{orx_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.3
-   ln -sf %{orx_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.2
-   ln -sf %{orx_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.3
-   ln -sf %{orx_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.2
-   ln -sf %{orx_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.3
+   ln -sf ${orx_prefix}/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.2
+   ln -sf ${orx_prefix}/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.3
+   ln -sf ${orx_prefix}/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.2
+   ln -sf ${orx_prefix}/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.3
+   ln -sf ${orx_prefix}/lib/ooRexx/librxsock.so.${orx_libversion}   /usr/lib/librxsock.so.2
+   ln -sf ${orx_prefix}/lib/ooRexx/librxsock.so.${orx_libversion}   /usr/lib/librxsock.so.3
+   ln -sf ${orx_prefix}/lib/ooRexx/librxmath.so.${orx_libversion}   /usr/lib/librxmath.so.2
+   ln -sf ${orx_prefix}/lib/ooRexx/librxmath.so.${orx_libversion}   /usr/lib/librxmath.so.3
+   ln -sf ${orx_prefix}/lib/ooRexx/librxregexp.so.${orx_libversion} /usr/lib/librxregexp.so.2
+   ln -sf ${orx_prefix}/lib/ooRexx/librxregexp.so.${orx_libversion} /usr/lib/librxregexp.so.3
+   ln -sf ${orx_prefix}/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so.2
+   ln -sf ${orx_prefix}/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so.3
 fi
 
 # Debian specific set up for rxapid
