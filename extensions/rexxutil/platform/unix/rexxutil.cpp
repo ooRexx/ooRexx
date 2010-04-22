@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -38,15 +38,15 @@
 /******************************************************************************/
 /* REXX AIX/LINUX Support                                                     */
 /*                                                                            */
-/* AIX  system utility functions                                              */
+/* AIX/Linux system utility functions                                         */
 /*                                                                            */
 /******************************************************************************/
 /**********************************************************************
-*   LRXUTIL.C                                                         *
+*   rexxutil.c                                                        *
 *                                                                     *
 *   This program extends the REXX language by providing many          *
 *   REXX external functions.                                          *
-*   These functions are:                                              *
+*   These are a partial list of functions included:                   *
 *       SysCls              -- Clear the screen in an OS/2 fullscreen *
 *                              or windowed command prompt session.    *
 *       SysCurPos           -- Set and/or Query the cursor position   *
@@ -95,25 +95,8 @@
 *                              rows and columns,                      *
 *                              in an OS/2 fullscreen or windowed      *
 *                              command prompt session.                *
-*EX     SysGetEA            -- Reads an extended attribute            *
 *                              for a file.                            *
-*EX     SysPutEA            -- Writes an extended attribute           *
 *                              for a file.                            *
-*EX     SysWaitNamedPipe    -- Wait on a named pipe.                  *
-*EX     SysSetIcon          -- Set a file icon                        *
-*EX     SysRegisterObjectClass -- Register a new object class         *
-*EX     SysDeregisterObjectClass -- Remove class registration         *
-*EX     SysQueryClassList   -- Get list of registered classes         *
-*EX     SysCreateObject     -- Create an object instance              *
-*EX     SysDestroyObject    -- Delete an object instance              *
-*EX     SysSetObjectData    -- Change object settings data            *
-*EX     SysElapsedTime      -- Return the OS/2 elapsed time count     *
-*EX     SysBootDrive        -- Return the OS/2 boot drive             *
-*EX     SysQueryEAList      -- Return list of file EA names           *
-*EX     SysWildCard         -- Perform file wild card editting        *
-*EX     SysFileSystemType   -- Return drive file system type          *
-*EX     SysAddFileHandle    -- Add file handles to a process          *
-*EX     SysSetFileHandle    -- Set file handles for a process         *
 *       SysCreateMutexSem   -- Create a Mutex semaphore               *
 *       SysOpenMutexSem     -- Open a Mutex semaphore                 *
 *       SysCloseMutexSem    -- Close a Mutex semaphore                *
@@ -125,13 +108,6 @@
 *       SysPostEventSem     -- Post an Event semaphore                *
 *       SysResetEventSem    -- Reset an Event semaphore               *
 *       SysWaitEventSem     -- Wait on an Event semaphore             *
-*EX     SysProcessType      -- Return type of process                 *
-*EX     SysSetPriority      -- Set current thread priority            *
-*EX     SysGetCollate       -- Get country/codepage collating sequence*
-*EX     SysNationalLanguageCompare -- NLS strict compare              *
-*EX     SysMapCase          -- NLS uppercasing                        *
-*EX     SysSetProcessCodePage -- Set current code page                *
-*EX     SysQueryProcessCodePage -- Get current code page              *
 *       SysAddRexxMacro     -- Load program into macro space          *
 *       SysDropRexxMacro    -- Drop program from macro space          *
 *       SysReorderRexxMacro -- Reorder program in macro space         *
@@ -139,35 +115,9 @@
 *       SysClearRexxMacroSpace -- Remove all programs from macro space*
 *       SysLoadRexxMacroSpace  -- Load a Rexx macro space             *
 *       SysSaveRexxMacroSpace  -- Save a Rexx macro space             *
-*EX     SysShutDownSystem   -- Shutdown the system                    *
-*EX     SysSwitchSession    -- Switch to a named session              *
-*EX     SysDropLibrary      -- Drop a function package                *
-*  EX   SysPi               -- Return Pi to given precision           *
-*  EX   SysSqrt             -- Calculate a square root                *
-*  EX   SysExp              -- Calculate an exponent                  *
-*  EX   SysLog              -- Return natural log of a number         *
-*  EX   SysLog10            -- Return log base 10 of a number         *
-*  EX   SysSinh             -- Hyperbolic sine function               *
-*  EX   SysCosh             -- Hyperbolic cosine function             *
-*  EX   SysTanh             -- Hyperbolic tangent function            *
-*  EX   SysPower            -- raise number to non-integer power      *
-*  EX   SysSin              -- Sine function                          *
-*  EX   SysCos              -- Cosine function                        *
-*  EX   SysTan              -- Tangent function                       *
-*  EX   SysCotan            -- Cotangent function                     *
-*  EX   SysArcSin           -- ArcSine function                       *
-*  EX   SysArcCos           -- ArcCosine function                     *
-*  EX   SysArcTan           -- ArcTangent function                    *
-*EX     SysSaveObject       -- Save an object either Async or Sync    *
-*EX     SysOpenObject       -- Open a view of an object               *
-*EX     SysMoveObject       -- Move an object from the existing folder*
 *                              to the destination folder              *
-*EX     SysCopyObject       -- Copy an object from the existing folder*
 *                              to the destination folder              *
-*EX     SysCreateShadow     -- Create a shadow of an object           *
-*EX     SysWaitForShell     -- Wait for WPS initialization            *
 *                              (Merlin only).                         *
-*EX     SysQuerySwitchList  -- query the entries of the switch list   *
 *                              (for SysSwitchSession)                 *
 *       SysDumpVariables    -- Dump current variables to a file       *
 *       SysSetFileDateTime  -- Set the last modified date of a file   *
@@ -230,9 +180,21 @@
 #include <errno.h>                     /* get the errno variable     */
 #include <stddef.h>
 #include <sys/types.h>
+#include <sys/syscall.h>
+#include <sys/utsname.h>
 #include <sys/ipc.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
+#include <netdb.h>
+#include <wordexp.h>
+#include <alloca.h>
+#ifndef AIX
+#include <attr/xattr.h>
+#endif
 
 
 #if defined( HAVE_SYS_SEM_H )
@@ -1234,7 +1196,7 @@ size_t FormatFile(
                                        /* Place new string in Stem   */
   ldp->vlen = strlen(ldp->Temp);
   ldp->count++;
-  sprintf(ldp->varname+ldp->stemlen, "%d", ldp->count);
+  sprintf(ldp->varname+ldp->stemlen, "%d", (int)ldp->count);
   ldp->shvb.shvnext = NULL;
   ldp->shvb.shvname.strptr = ldp->varname;
   ldp->shvb.shvname.strlength = strlen(ldp->varname);
@@ -1888,7 +1850,7 @@ size_t RexxEntry SysMkDir(const char *name, size_t numargs, CONSTRXSTRING args[]
 //rc = mkdir(path, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
   rc = mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO);
   if(!rc){                             /* if worked well             */
-    sprintf(retstr->strptr, "%d", rc); /* result is return code      */
+    sprintf(retstr->strptr, "%d", (int)rc); /* result is return code      */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }
@@ -1962,7 +1924,7 @@ size_t RexxEntry SysRmDir(const char *name, size_t numargs, CONSTRXSTRING args[]
 
   rc = rmdir(path);                    /* Remove the directory       */
   if(!rc){                             /* if worked well             */
-    sprintf(retstr->strptr, "%d", rc); /* result is return code      */
+    sprintf(retstr->strptr, "%d", (int)rc); /* result is return code      */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }
@@ -2048,7 +2010,7 @@ size_t RexxEntry SysFileDelete(const char *name, size_t numargs, CONSTRXSTRING a
 
   rc = remove(path);                   /* Remove the file            */
   if(!rc){                             /* if worked well             */
-    sprintf(retstr->strptr, "%d", rc); /* result is return code      */
+    sprintf(retstr->strptr, "%d", (int)rc); /* result is return code      */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }
@@ -2168,7 +2130,7 @@ size_t RexxEntry SysFileSearch(const char *name, size_t numargs, CONSTRXSTRING a
     ptr = mystrstr(line, target, len, args[0].strlength, sensitive);
     if (ptr != '\0') {
       if (linenums) {
-        sprintf(ldp.ibuf, "%d ", num);
+        sprintf(ldp.ibuf, "%d ", (int)num);
         len2 = strlen(ldp.ibuf);
         memcpy(ldp.ibuf+len2, line, len < IBUF_LEN-len2 ? len : IBUF_LEN-len2);
         ldp.vlen = IBUF_LEN < len+len2 ? IBUF_LEN : len + len2;
@@ -2178,7 +2140,7 @@ size_t RexxEntry SysFileSearch(const char *name, size_t numargs, CONSTRXSTRING a
         ldp.vlen = len;
       }
       ldp.count++;
-      sprintf(ldp.varname+ldp.stemlen, "%d", ldp.count);
+      sprintf(ldp.varname+ldp.stemlen, "%d", (int)ldp.count);
       if (ldp.ibuf[ldp.vlen-1] == '\n')
         ldp.vlen--;
       ldp.shvb.shvnext = NULL;
@@ -2202,7 +2164,7 @@ size_t RexxEntry SysFileSearch(const char *name, size_t numargs, CONSTRXSTRING a
   free(line);
   CloseFile(&filedata);                /* Close that file            */
                                        /* set stem.0 to lines read   */
-  sprintf(ldp.ibuf, "%d", ldp.count);
+  sprintf(ldp.ibuf, "%d", (int)ldp.count);
   ldp.varname[ldp.stemlen] = '0';
   ldp.varname[ldp.stemlen+1] = 0;
   ldp.shvb.shvnext = NULL;
@@ -2883,7 +2845,7 @@ size_t RexxEntry SysFileTree(const char *name, size_t numargs, CONSTRXSTRING arg
   if (RecursiveFindFile(FileSpec, path, &ldp, smask, dmask, options))
     return INVALID_ROUTINE;
                                        /* return lines read          */
-  sprintf(ldp.Temp, "%d", ldp.count);
+  sprintf(ldp.Temp, "%d", (int)ldp.count);
   ldp.varname[ldp.stemlen] = '0';
   ldp.varname[ldp.stemlen+1] = 0;
   ldp.shvb.shvnext = NULL;
@@ -2978,19 +2940,19 @@ size_t RexxEntry SysTempFileName(const char *name, size_t numargs, CONSTRXSTRING
     switch (j)
     {
        case 1:
-              sprintf(numstr, "%01u", num);
+              sprintf(numstr, "%01u", (int)num);
               break;
        case 2:
-              sprintf(numstr, "%02u", num);
+              sprintf(numstr, "%02u", (int)num);
               break;
        case 3:
-              sprintf(numstr, "%03u", num);
+              sprintf(numstr, "%03u", (int)num);
               break;
        case 4:
-              sprintf(numstr, "%04u", num);
+              sprintf(numstr, "%04u", (int)num);
               break;
        case 5:
-              sprintf(numstr, "%05u", num);
+              sprintf(numstr, "%05u", (int)num);
               break;
        default:
               return INVALID_ROUTINE;            /* raise error condition */
@@ -3778,31 +3740,1079 @@ size_t RexxEntry SysDropCmdPkg(const char *name, size_t numargs, CONSTRXSTRING a
 }
 #endif                                 /* CREXX funcs                */
 
-#ifdef AIX
-/*************************************************************************
-* Function:  SysGetpid                                                   *
-*                                                                        *
-* Description:   Function to migrate CREXX for AIX procedures.           *
-*                                                                        *
-* Syntax:    call SysGetpid()                                            *
-*                                                                        *
-* Return:    Process_ID                                                  *
-*************************************************************************/
-
-size_t RexxEntry SysGetpid(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+/**
+ * Function:      SysSignal
+ *
+ * Change a signal behavior.
+ *
+ * @param signum  The signal number.
+ *
+ * @param sigact  The new signal action.
+ *
+ * @return        Function return code
+ */
+RexxRoutine2(int,
+             SysSignal,
+             int, signum,
+             CSTRING, sigact)
 {
-  retstr->strlength = 0;               /* set return value           */
-                                       /* check arguments            */
-  if (numargs != 0)                    /* Must have no  argument     */
-    return INVALID_ROUTINE;
-  else
-  {
-    sprintf(retstr->strptr, "%d", getpid());
-    retstr->strlength = strlen(retstr->strptr);
-  }
-  return VALID_ROUTINE;                /* no error on call           */
+
+    if (strlen(sigact) == 0) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysSignal"));
+        return 0;
+    }
+    // According to POSIX we should only allow the following values for this function
+    else if (*sigact == 'D' || *sigact == 'd') {
+        signal(signum, SIG_DFL);
+        return 0;
+    }
+    else if (*sigact == 'I' || *sigact == 'i') {
+        signal(signum, SIG_IGN);
+        return 0;
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysSignal"));
+    return 0;
 }
-#endif                                 /* CREXX funcs                */
+
+/**
+ * Method:        SysUname
+ *
+ * Return the uname information.
+ *
+ * @param ichar   The option string.
+ *
+ * @return        Option information
+ */
+RexxRoutine1(RexxObjectPtr,
+             SysUname,
+             OPTIONAL_CSTRING, ichar)
+{
+    struct utsname name;
+
+    uname(&name);
+    if (ichar == NULL || *ichar == 'S' || *ichar == 's') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(name.sysname);
+    }
+    else if (*ichar == 'N' || *ichar == 'n') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(name.nodename);
+    }
+    else if (*ichar == 'R' || *ichar == 'r') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(name.release);
+    }
+    else if (*ichar == 'V' || *ichar == 'v') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(name.version);
+    }
+    else if (*ichar == 'M' || *ichar == 'm') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(name.machine);
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysUname"));
+    return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+}
+
+/**
+ * Method:        SysSetsid
+ *
+ * Set the Session id.
+ *
+ * @return        Process id
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysSetsid)
+{
+    pid_t pid;
+
+    pid = setsid();
+    return context->WholeNumberToObject((wholenumber_t)pid);
+}
+
+/**
+ * Method:        SysGetsid
+ *
+ * Get the Session id.
+ *
+ * @param pid     The pid.
+ *
+ * @return        Session id
+ */
+RexxRoutine1(RexxObjectPtr,          
+             SysGetsid,
+             int, pid)
+{
+    pid = getsid((pid_t)pid);
+    return context->WholeNumberToObject((wholenumber_t)pid);
+}
+
+/**
+ * Method:        SysSetuid
+ *
+ * Set the userid.
+ *
+ * @param uid     The userid.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine1(RexxObjectPtr,          
+             SysSetuid,
+             int, uid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)setuid((uid_t)uid));
+}
+
+/**
+ * Method:        SysGetuid
+ *
+ * Get the userid.
+ *
+ * @return        uid
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysGetuid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)getuid());
+}
+
+/**
+ * Method:        SysSeteuid
+ *
+ * Set the effective userid.
+ *
+ * @param uid     The userid.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine1(RexxObjectPtr,          
+             SysSeteuid,
+             int, uid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)seteuid((uid_t)uid));
+}
+
+/**
+ * Method:        SysGeteuid
+ *
+ * Get the effective userid.
+ *
+ * @return        uid
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysGeteuid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)geteuid());
+}
+
+/**
+ * Method:        SysSetgid
+ *
+ * Set the groupid.
+ *
+ * @param gid     The groupid.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine1(RexxObjectPtr,          
+             SysSetgid,
+             int, gid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)setgid((gid_t)gid));
+}
+
+/**
+ * Method:        SysGetgid
+ *
+ * Get the groupid.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysGetgid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)getgid());
+}
+
+/**
+ * Method:        SysSetegid
+ *
+ * Set the effective groupid.
+ *
+ * @param gid     The groupid.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine1(RexxObjectPtr,          
+             SysSetegid,
+             int, gid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)setegid((gid_t)gid));
+}
+
+/**
+ * Method:        SysGetegid
+ *
+ * Get the effective groupid.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysGetegid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)getegid());
+}
+
+/**
+ * Method:        SysSetpgrp
+ *
+ * Set the pgrp.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysSetpgrp)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)setpgrp());
+}
+
+/**
+ * Method:        SysGetpgrp
+ *
+ * Get the pgrp.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysGetpgrp)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)getpgrp());
+}
+
+/**
+ * Method:        SysSetpgid
+ *
+ * Set the pgid.
+ *
+ * @param pid1    The pid to set.
+ *
+ * @param pid2    The new pid.
+ *
+ * @return        0 or -1
+ */
+RexxRoutine2(RexxObjectPtr,          
+             SysSetpgid,
+             int, pid1,
+             int, pid2)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)setpgid((pid_t)pid1, (pid_t)pid2));
+}
+
+/**
+ * Method:        SysGetpgid
+ *
+ * Get the pgid.
+ *
+ * @param pid1    The pid to query.
+ *
+ * @return        The pid.
+ */
+RexxRoutine1(RexxObjectPtr,          
+             SysGetpgid,
+             int, pid)
+{
+
+    return context->WholeNumberToObject((wholenumber_t)getpgid((pid_t)pid));
+}
+
+/**
+ * Method:        SysGetpid
+ *
+ * Get the pid.
+ *
+ * @return        pid
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysGetpid)
+{
+    pid_t pid = getpid();
+    return context->WholeNumberToObject((wholenumber_t)pid);
+}
+
+/**
+ * Method:        SysGetppid
+ *
+ * Get the ppid.
+ *
+ * @return        pid
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysGetppid)
+{
+    pid_t pid = getppid();
+    return context->WholeNumberToObject((wholenumber_t)pid);
+}
+
+/**
+ * Method:        SysGettid
+ *
+ * Get the tid.
+ *
+ * @return        tid
+ */
+RexxRoutine0(RexxObjectPtr,          
+             SysGettid)
+{
+    pid_t tid = syscall(SYS_gettid);
+    return context->WholeNumberToObject((wholenumber_t)tid);
+}
+
+/**
+ * Method:        SysSymlink
+ *
+ * Create a symbolic link.
+ *
+ * @param path1   The source path.
+ *
+ * @param path2   The target path.
+ *
+ * @return        int error code
+ */
+RexxRoutine2(int,          
+             SysSymlink,
+             CSTRING, path1,
+             CSTRING, path2)
+{
+    return symlink(path1, path2);
+}
+
+/**
+ * Method:        SysLink
+ *
+ * Create a hard link.
+ *
+ * @param path1   The source path.
+ *
+ * @param path2   The target path.
+ *
+ * @return        int error code
+ */
+RexxRoutine2(int,          
+             SysLink,
+             CSTRING, path1,
+             CSTRING, path2)
+{
+    return link(path1, path2);
+}
+
+/**
+ * Method:        SysUnlink
+ *
+ * Remove a hard or soft link.
+ *
+ * @param path1   The source path.
+ *
+ * @return        int error code
+ */
+RexxRoutine1(int,          
+             SysUnlink,
+             CSTRING, path1)
+{
+    return unlink(path1);
+}
+
+/**
+ * Method:        SysChown
+ *
+ * Change the owner and group of a file.
+ *
+ * @param path1   The file path.
+ *
+ * @param uid     The new userid. 
+ *
+ * @param gid     The new groupid.
+ *
+ * @return        int error code
+ */
+RexxRoutine3(int,          
+             SysChown,
+             CSTRING, path1,
+             int, uid,
+             int, gid)
+{
+    return chown(path1, (uid_t)uid, (gid_t)gid);
+}
+
+/**
+ * Method:        SysChroot
+ *
+ * Changes the root directory of the calling process.
+ *
+ * @param path1   The new root path.
+ *
+ * @return        int error code
+ */
+RexxRoutine1(int,          
+             SysChroot,
+             CSTRING, path1)
+{
+    return chroot(path1);
+}
+
+/**
+ * Method:        SysUmask
+ *
+ * Sets the calling process umask.
+ *
+ * @param nmask   The new umask.
+ *
+ * @return        the old umansk value
+ */
+RexxRoutine1(int,          
+             SysUmask,
+             int, nmask)
+{
+    return umask((mode_t)nmask);
+}
+
+/**
+ * Method:        SysGetpwnam
+ *
+ * Return user name information from the passwd file.
+ *
+ * @param user    The user name.
+ *
+ * @param ichar   The option string.
+ *
+ * @return        Option information
+ */
+RexxRoutine2(RexxObjectPtr,
+             SysGetpwnam,
+             CSTRING, user,
+             CSTRING, ichar)
+{
+    if (strlen(user) == 0 || strlen(ichar) != 1) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetpwnam"));
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    struct passwd *pw = getpwnam(user);
+    if (pw == NULL) {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    else if (*ichar == 'N' || *ichar == 'n') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(pw->pw_name);
+    }
+    else if (*ichar == 'U' || *ichar == 'u') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)pw->pw_uid);
+    }
+    else if (*ichar == 'G' || *ichar == 'g') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)pw->pw_gid);
+    }
+    else if (*ichar == 'R' || *ichar == 'r') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(pw->pw_gecos);
+    }
+    else if (*ichar == 'D' || *ichar == 'd') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(pw->pw_dir);
+    }
+    else if (*ichar == 'S' || *ichar == 's') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(pw->pw_shell);
+    }
+    else if (*ichar == 'P' || *ichar == 'p') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetpwnam"));
+    return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+}
+
+/**
+ * Method:        SysGetpwuid
+ *
+ * Return user name information from the passwd file.
+ *
+ * @param user    The uid.
+ *
+ * @param ichar   The option string.
+ *
+ * @return        Option information
+ */
+RexxRoutine2(RexxObjectPtr,
+             SysGetpwuid,
+             int, uid,
+             CSTRING, ichar)
+{
+    if (strlen(ichar) != 1) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetpwuid"));
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    struct passwd *pw = getpwuid((uid_t)uid);
+    if (pw == NULL) {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    else if (*ichar == 'N' || *ichar == 'n') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(pw->pw_name);
+    }
+    else if (*ichar == 'U' || *ichar == 'u') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)pw->pw_uid);
+    }
+    else if (*ichar == 'G' || *ichar == 'g') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)pw->pw_gid);
+    }
+    else if (*ichar == 'R' || *ichar == 'r') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(pw->pw_gecos);
+    }
+    else if (*ichar == 'D' || *ichar == 'd') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(pw->pw_dir);
+    }
+    else if (*ichar == 'S' || *ichar == 's') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(pw->pw_shell);
+    }
+    else if (*ichar == 'P' || *ichar == 'p') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetpwnam"));
+    return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+}
+
+/**
+ * Method:        SysGetgrnam
+ *
+ * Return group name information from the group file.
+ *
+ * @param user    The group name.
+ *
+ * @param ichar   The option string.
+ *
+ * @return        Option information
+ */
+RexxRoutine2(RexxObjectPtr,
+             SysGetgrnam,
+             CSTRING, grpname,
+             CSTRING, ichar)
+{
+    if (strlen(grpname) == 0 || strlen(ichar) != 1) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetgrnam"));
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    struct group *gr = getgrnam(grpname);
+    if (*ichar == 'N' || *ichar == 'n') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(gr->gr_name);
+    }
+    else if (*ichar == 'P' || *ichar == 'p') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    else if (*ichar == 'G' || *ichar == 'g') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)gr->gr_gid);
+    }
+    else if (*ichar == 'M' || *ichar == 'm') {
+        RexxArrayObject arr = context->NewArray(1);
+        char **members = gr->gr_mem;
+        while (*members != NULL) {
+           context->ArrayAppendString(arr, *members, strlen(*members));
+           members++;
+        }
+        return (RexxObjectPtr)arr;
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetgrnam"));
+    return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+}
+
+/**
+ * Method:        SysGetgrgid
+ *
+ * Return group name information from the group file.
+ *
+ * @param user    The gid.
+ *
+ * @param ichar   The option string.
+ *
+ * @return        Option information
+ */
+RexxRoutine2(RexxObjectPtr,
+             SysGetgrgid,
+             int, gid,
+             CSTRING, ichar)
+{
+    if (strlen(ichar) != 1) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetgrgid"));
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    struct group *gr = getgrgid(gid);
+    if (*ichar == 'N' || *ichar == 'n') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(gr->gr_name);
+    }
+    else if (*ichar == 'P' || *ichar == 'p') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    else if (*ichar == 'G' || *ichar == 'g') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)gr->gr_gid);
+    }
+    else if (*ichar == 'M' || *ichar == 'm') {
+        RexxArrayObject arr = context->NewArray(1);
+        char **members = gr->gr_mem;
+        while (*members != NULL) {
+           context->ArrayAppendString(arr, *members, strlen(*members));
+           members++;
+        }
+        return (RexxObjectPtr)arr;
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetgrnam"));
+    return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+}
+
+/**
+ * Method:        SysStat
+ *
+ * Return information from the stat API.
+ *
+ * @param user    The file name.
+ *
+ * @param ichar   The option string.
+ *
+ * @return        Option information
+ */
+RexxRoutine2(RexxObjectPtr,
+             SysStat,
+             CSTRING, fname,
+             CSTRING, ichar)
+{
+    struct tm *ftime;
+    struct stat64 mystat;
+    char buf[32];  // used for both the file times and the permissions
+
+    if (strlen(fname) == 0 || strlen(ichar) != 1) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysStat"));
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    int retc = stat64(fname, &mystat);
+    if (retc != 0) {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    else if (*ichar == 'D' || *ichar == 'd') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_dev);
+    }
+    else if (*ichar == 'I' || *ichar == 'i') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_ino);
+    }
+    else if (*ichar == 'P' || *ichar == 'p') {
+        // 1- file type
+        if ((S_IFDIR & mystat.st_mode) == S_IFDIR) {
+            strcpy(buf, "d");
+        }
+        else if ((S_IFCHR & mystat.st_mode) == S_IFCHR) {
+            strcpy(buf, "c");
+        }
+        else if ((S_IFBLK & mystat.st_mode) == S_IFBLK) {
+            strcpy(buf, "b");
+        }
+        else if ((S_IFIFO & mystat.st_mode) == S_IFIFO) {
+            strcpy(buf, "p");
+        }
+        else if ((S_IFREG & mystat.st_mode) == S_IFREG) {
+            strcpy(buf, "-");
+        }
+        else if ((S_IFLNK & mystat.st_mode) == S_IFLNK) {
+            strcpy(buf, "l");
+        }
+        else if ((S_IFSOCK & mystat.st_mode) == S_IFSOCK) {
+            strcpy(buf, "s");
+        }
+        else strcpy(buf, "-");  
+        // 2 - user read
+        if (S_IRUSR & mystat.st_mode) {
+            strcat(buf, "r");
+        }
+        else strcat(buf, "-");
+        // 3 - user write
+        if (S_IWUSR & mystat.st_mode) {
+            strcat(buf, "w");
+        }
+        else strcat(buf, "-");
+        // 4 - user execute
+        if ((S_IXUSR & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
+            (S_ISGID & mystat.st_mode)) {
+            strcat(buf, "s");
+        }
+        else if (!(S_IXUSR & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
+                 (S_ISGID & mystat.st_mode)) {
+            strcat(buf, "S");
+        }
+        else if ((S_IXUSR & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
+            strcat(buf, "t");
+        }
+        else if (!(S_IXUSR & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
+            strcat(buf, "T");
+        }
+        else if (S_IXUSR & mystat.st_mode) {
+            strcat(buf, "x");
+        }
+        else strcat(buf, "-");
+        // 5 -group read
+        if (S_IRGRP & mystat.st_mode) {
+            strcat(buf, "r");
+        }
+        else strcat(buf, "-");
+        // 6 - group write
+        if (S_IWGRP & mystat.st_mode) {
+            strcat(buf, "w");
+        }
+        else strcat(buf, "-");
+        // 7 - group execute
+        if ((S_IXGRP & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
+            (S_ISGID & mystat.st_mode)) {
+            strcat(buf, "s");
+        }
+        else if (!(S_IXGRP & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
+                 (S_ISGID & mystat.st_mode)) {
+            strcat(buf, "S");
+        }
+        else if ((S_IXGRP & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
+            strcat(buf, "t");
+        }
+        else if (!(S_IXGRP & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
+            strcat(buf, "T");
+        }
+        else if (S_IXGRP & mystat.st_mode) {
+            strcat(buf, "x");
+        }
+        else strcat(buf, "-");
+        // 8 - other read
+        if (S_IROTH & mystat.st_mode) {
+            strcat(buf, "r");
+        }
+        else strcat(buf, "-");
+        // 9 - other write
+        if (S_IWOTH & mystat.st_mode) {
+            strcat(buf, "w");
+        }
+        else strcat(buf, "-");
+        // 10 - other execute
+        if ((S_IXOTH & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
+            (S_ISGID & mystat.st_mode)) {
+            strcat(buf, "s");
+        }
+        else if (!(S_IXOTH & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
+                 (S_ISGID & mystat.st_mode)) {
+            strcat(buf, "S");
+        }
+        else if ((S_IXOTH & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
+            strcat(buf, "t");
+        }
+        else if (!(S_IXOTH & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
+            strcat(buf, "T");
+        }
+        else if (S_IXOTH & mystat.st_mode) {
+            strcat(buf, "x");
+        }
+        else strcat(buf, "-");
+        return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
+    }
+    else if (*ichar == 'N' || *ichar == 'n') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_nlink);
+    }
+    else if (*ichar == 'U' || *ichar == 'u') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_uid);
+    }
+    else if (*ichar == 'G' || *ichar == 'g') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_gid);
+    }
+    else if (*ichar == 'R' || *ichar == 'r') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_rdev);
+    }
+    else if (*ichar == 'S' || *ichar == 's') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_size);
+    }
+    else if (*ichar == 'A' || *ichar == 'a') {
+        ftime = localtime(&mystat.st_atime);
+        strftime(buf, sizeof(buf), "%F %T", ftime);
+        return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
+    }
+    else if (*ichar == 'M' || *ichar == 'm') {
+        ftime = localtime(&mystat.st_mtime);
+        strftime(buf, sizeof(buf), "%F %T", ftime);
+        return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
+    }
+    else if (*ichar == 'C' || *ichar == 'c') {
+        ftime = localtime(&mystat.st_ctime);
+        strftime(buf, sizeof(buf), "%F %T", ftime);
+        return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysStat"));
+    return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+}
+
+/**
+ * Method:        SysAccess
+ *
+ * Return access information.
+ *
+ * @param file    The file specification.
+ *
+ * @param ichar   The integer option.
+ *
+ * @return        0 = access allowed.
+ */
+RexxRoutine2(int,
+             SysAccess,
+             CSTRING, file,
+             int, option)
+{
+
+    return access(file, option);
+}
+
+/**
+ * Method:        SysEuidaccess
+ *
+ * Return access information using the effective userid.
+ *
+ * @param file    The file specification.
+ *
+ * @param ichar   The integer option.
+ *
+ * @return        0 = access allowed.
+ */
+RexxRoutine2(int,
+             SysEuidaccess,
+             CSTRING, file,
+             int, option)
+{
+
+    return euidaccess(file, option);
+}
+
+/**
+ * Method:        SysGetservbyname
+ *
+ * Return service information from the services file.
+ *
+ * @param name    The service name.
+ *
+ * @param proto   The service protocol.
+ *
+ * @param option  The option string.
+ *
+ * @return        Option information
+ */
+RexxRoutine3(RexxObjectPtr,
+             SysGetservbyname,
+             CSTRING, name,
+             CSTRING, proto,
+             CSTRING, ichar)
+{
+    if (strlen(name) == 0 || strlen(proto) == 0 || strlen(ichar) != 1) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetservbyname"));
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    struct servent *se = getservbyname(name, proto);
+    if (*ichar == 'N' || *ichar == 'n') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(se->s_name);
+    }
+    else if (*ichar == 'P' || *ichar == 'p') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)se->s_port);
+    }
+    else if (*ichar == 'A' || *ichar == 'a') {
+        RexxArrayObject arr = context->NewArray(1);
+        char **members = se->s_aliases;
+        while (*members != NULL) {
+           context->ArrayAppendString(arr, *members, strlen(*members));
+           members++;
+        }
+        return (RexxObjectPtr)arr;
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetservbyname"));
+    return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+}
+
+/**
+ * Method:        SysGetservbyport
+ *
+ * Return service information from the services file.
+ *
+ * @param port    The service port.
+ *
+ * @param proto   The service protocol.
+ *
+ * @param option  The option string.
+ *
+ * @return        Option information
+ */
+RexxRoutine3(RexxObjectPtr,
+             SysGetservbyport,
+             int, port,
+             CSTRING, proto,
+             CSTRING, ichar)
+{
+    if (port == 0 || strlen(proto) == 0 || strlen(ichar) != 1) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetservbyname"));
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    struct servent *se = getservbyport(port, proto);
+    if (ichar == NULL) {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    else if (*ichar == 'N' || *ichar == 'n') {
+        return (RexxObjectPtr)context->NewStringFromAsciiz(se->s_name);
+    }
+    else if (*ichar == 'P' || *ichar == 'p') {
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)se->s_port);
+    }
+    else if (*ichar == 'A' || *ichar == 'a') {
+        RexxArrayObject arr = context->NewArray(1);
+        char **members = se->s_aliases;
+        while (*members != NULL) {
+           context->ArrayAppendString(arr, *members, strlen(*members));
+           members++;
+        }
+        return (RexxObjectPtr)arr;
+    }
+    context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysGetservbyname"));
+    return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+}
+
+/**
+ * Method:        SysWordexp
+ *
+ * Return an array of files matching the input expression.
+ *
+ * @param inexp   The input expression.
+ *
+ * @return        Array of file names.
+ */
+RexxRoutine1(RexxObjectPtr,
+             SysWordexp,
+             CSTRING, inexp)
+{
+    wordexp_t p;
+    char **w;
+    if (strlen(inexp) == 0) {
+        context->RaiseException1(40001, (RexxObjectPtr) context->NewStringFromAsciiz("SysWordexp"));
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    RexxArrayObject arr = context->NewArray(1);
+
+    wordexp(inexp, &p, 0);
+
+    w = p.we_wordv;
+    for (unsigned int i = 0; i < p.we_wordc; i++) {
+       context->ArrayAppendString(arr, w[i], strlen(w[i]));
+    }
+    wordfree(&p);
+    return (RexxObjectPtr)arr;
+}
+
+#ifndef AIX
+/**
+ * Method:        SysSetxattr
+ *
+ * Set a file extended attribute.
+ *
+ * @param fname   The file name.
+ *
+ * @param name    The extended attribute name.
+ *
+ * @param val     The extended attribute value.
+ *
+ * @return        0 or -1.
+ */
+RexxRoutine3(int,
+             SysSetxattr,
+             CSTRING, fname,
+             CSTRING, name,
+             CSTRING, val)
+{
+    return setxattr(fname, name, val, strlen(val) + 1, 0);
+}
+
+/**
+ * Method:        SysGetxattr
+ *
+ * Get a file extended attribute.
+ *
+ * @param fname   The file name.
+ *
+ * @param name    The extended attribute name.
+ *
+ * @return        0 or -1.
+ */
+RexxRoutine2(RexxObjectPtr,
+             SysGetxattr,
+             CSTRING, fname,
+             CSTRING, name)
+{
+    ssize_t sz;
+    char *buf;
+
+    sz = getxattr(fname, name, NULL, 0);
+    if (sz == -1) {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    buf = (char *)alloca(sz);
+    getxattr(fname, name, buf, sz);
+
+    return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
+}
+
+/**
+ * Method:        SysListxattr
+ *
+ * List a file's extended attribute(s).
+ *
+ * @param fname   The file name.
+ *
+ * @return        0 or -1.
+ */
+RexxRoutine1(RexxObjectPtr,
+             SysListxattr,
+             CSTRING, fname)
+{
+    ssize_t sz;
+    char *buf, *name;
+    
+    sz = listxattr(fname, NULL, 0);
+    if (sz == -1) {
+        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
+    }
+    buf = (char *)alloca(sz);
+    listxattr(fname, buf, sz);
+
+    // create a Rexx array of the xattr names
+    RexxArrayObject arr = context->NewArray(1);
+    while (sz > 0) {
+        context->ArrayAppendString(arr, buf, strlen(buf));
+        sz -= strlen(buf) + 1;
+        buf += strlen(buf) + 1;
+    }
+
+    return (RexxObjectPtr)arr;
+}
+
+/**
+ * Method:        SysRemovexattr
+ *
+ * Remove an extended attribute.
+ *
+ * @param fname   The file name.
+ *
+ * @param name    The extended attribute name.
+ *
+ * @return        0 or -1.
+ */
+RexxRoutine2(int,
+             SysRemovexattr,
+             CSTRING, fname,
+             CSTRING, name)
+{
+    
+
+    return removexattr(fname, name);
+}
+#endif
 
 /*************************************************************************
 * Function:  SysFork                                                     *
@@ -5101,14 +6111,52 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysClearRexxMacroSpace, SysClearRexxMacroSpace),
     REXX_CLASSIC_ROUTINE(SysLoadRexxMacroSpace,  SysLoadRexxMacroSpace),
     REXX_CLASSIC_ROUTINE(SysSaveRexxMacroSpace,  SysSaveRexxMacroSpace),
-#if defined(AIX_DISABLED)
+#ifdef AIX_DISABLED
     REXX_CLASSIC_ROUTINE(SysAddFuncPkg,          SysAddFuncPkg),
     REXX_CLASSIC_ROUTINE(SysAddCmdPkg,           SysAddCmdPkg),
     REXX_CLASSIC_ROUTINE(SysDropFuncPkg,         SysDropFuncPkg),
     REXX_CLASSIC_ROUTINE(SysDropCmdPkg,          SysDropCmdPkg),
 #endif
-#if defined(AIX)
-    REXX_CLASSIC_ROUTINE(SysGetpid,              SysGetpid),
+    REXX_TYPED_ROUTINE(SysSignal, SysSignal),
+    REXX_TYPED_ROUTINE(SysUname, SysUname),
+    REXX_TYPED_ROUTINE(SysSetsid, SysSetsid),
+    REXX_TYPED_ROUTINE(SysGetsid, SysGetsid),
+    REXX_TYPED_ROUTINE(SysSetuid, SysSetuid),
+    REXX_TYPED_ROUTINE(SysGetuid, SysGetuid),
+    REXX_TYPED_ROUTINE(SysSeteuid, SysSeteuid),
+    REXX_TYPED_ROUTINE(SysGeteuid, SysGeteuid),
+    REXX_TYPED_ROUTINE(SysSetgid, SysSetgid),
+    REXX_TYPED_ROUTINE(SysGetgid, SysGetgid),
+    REXX_TYPED_ROUTINE(SysSetegid, SysSetegid),
+    REXX_TYPED_ROUTINE(SysGetegid, SysGetegid),
+    REXX_TYPED_ROUTINE(SysSetpgrp, SysSetpgrp),
+    REXX_TYPED_ROUTINE(SysGetpgrp, SysGetpgrp),
+    REXX_TYPED_ROUTINE(SysSetpgid, SysSetpgid),
+    REXX_TYPED_ROUTINE(SysGetpgid, SysGetpgid),
+    REXX_TYPED_ROUTINE(SysGetpid, SysGetpid),
+    REXX_TYPED_ROUTINE(SysGetppid, SysGetppid),
+    REXX_TYPED_ROUTINE(SysGettid, SysGettid),
+    REXX_TYPED_ROUTINE(SysSymlink, SysSymlink),
+    REXX_TYPED_ROUTINE(SysLink, SysLink),
+    REXX_TYPED_ROUTINE(SysUnlink, SysUnlink),
+    REXX_TYPED_ROUTINE(SysChown, SysChown),
+    REXX_TYPED_ROUTINE(SysChroot, SysChroot),
+    REXX_TYPED_ROUTINE(SysUmask, SysUmask),
+    REXX_TYPED_ROUTINE(SysGetpwnam, SysGetpwnam),
+    REXX_TYPED_ROUTINE(SysGetpwuid, SysGetpwuid),
+    REXX_TYPED_ROUTINE(SysGetgrnam, SysGetgrnam),
+    REXX_TYPED_ROUTINE(SysGetgrgid, SysGetgrgid),
+    REXX_TYPED_ROUTINE(SysStat, SysStat),
+    REXX_TYPED_ROUTINE(SysAccess, SysAccess),
+    REXX_TYPED_ROUTINE(SysEuidaccess, SysEuidaccess),
+    REXX_TYPED_ROUTINE(SysGetservbyname, SysGetservbyname),
+    REXX_TYPED_ROUTINE(SysGetservbyport, SysGetservbyport),
+    REXX_TYPED_ROUTINE(SysWordexp, SysWordexp),
+#ifndef AIX
+    REXX_TYPED_ROUTINE(SysSetxattr, SysSetxattr),
+    REXX_TYPED_ROUTINE(SysGetxattr, SysGetxattr),
+    REXX_TYPED_ROUTINE(SysListxattr, SysListxattr),
+    REXX_TYPED_ROUTINE(SysRemovexattr, SysRemovexattr),
 #endif
     REXX_CLASSIC_ROUTINE(SysFork,                SysFork),
     REXX_CLASSIC_ROUTINE(SysWait,                SysWait),
