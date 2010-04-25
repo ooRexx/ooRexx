@@ -121,6 +121,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/bin/rexx.cat
 %{_prefix}/bin/rxregexp.cls
 %{_prefix}/bin/rxftp.cls
+%{_prefix}/bin/csvStream.cls
 %{_prefix}/bin/socket.cls
 %{_prefix}/bin/streamsocket.cls
 %{_prefix}/bin/mime.cls
@@ -191,6 +192,7 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/bin/rexx.cat                         /usr/bin/rexx.cat
    ln -sf %{_prefix}/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
    ln -sf %{_prefix}/bin/rxftp.cls                        /usr/bin/rxftp.cls
+   ln -sf %{_prefix}/bin/csvStream.cls                    /usr/bin/csvStream.cls
    ln -sf %{_prefix}/bin/socket.cls                       /usr/bin/socket.cls
    ln -sf %{_prefix}/bin/streamsocket.cls                 /usr/bin/streamsocket.cls
    ln -sf %{_prefix}/bin/mime.cls                         /usr/bin/mime.cls
@@ -273,6 +275,7 @@ rm -f /usr/bin/rexx.img
 rm -f /usr/bin/rexx.cat
 rm -f /usr/bin/rxregexp.cls
 rm -f /usr/bin/rxftp.cls
+rm -f /usr/bin/csvStream.cls
 rm -f /usr/bin/socket.cls
 rm -f /usr/bin/streamsocket.cls
 rm -f /usr/bin/mime.cls
