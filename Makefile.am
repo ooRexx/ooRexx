@@ -376,7 +376,7 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(top_srcdir)/unix-like-build.txt \
                   $(top_srcdir)/windows-build.txt \
                   $(top_srcdir)/oorexx.ver \
-                  $(build_extensions_hostemu_dir)/csvStream.cls \
+                  $(build_extensions_csvstream_dir)/csvStream.cls \
                   $(build_extensions_rxftp_dir)/rxftp.cls \
                   $(build_extensions_csvstream_dir)/csvStream.cls \
                   $(build_extensions_rxsock_dir)/socket.cls \
@@ -933,8 +933,8 @@ librxregexp_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 libhostemu_la_SOURCES = $(extensions_hostemu_unix_dir)/hostemu.cpp \
                         $(build_extensions_hostemu_dir)/hostemu.h \
-                        $(build_extensions_hostemu_dir)/cmdparse.cpp \
-                        $(build_extensions_hostemu_dir)/cmdparse.y
+                        $(build_extensions_hostemu_dir)/cmdparse.cpp
+#                        $(build_extensions_hostemu_dir)/cmdparse.y
 #
 # Preprocessor flags for libhostemu.so
 #
@@ -951,8 +951,9 @@ libhostemu_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 # explicit targets:
 #
-$(build_extensions_hostemu_dir)/cmdparse.cpp: $(build_extensions_hostemu_dir)/cmdparse.y
-	yacc -o $(build_extensions_hostemu_dir)/cmdparse.cpp $(build_extensions_hostemu_dir)/cmdparse.y
+#$(build_extensions_hostemu_dir)/cmdparse.cpp: $(build_extensions_hostemu_dir)/cmdparse.y
+#	cd  $(build_extensions_hostemu_dir)
+#	yacc -o $(build_extensions_hostemu_dir)/cmdparse.cpp $(build_extensions_hostemu_dir)/cmdparse.y
 
 rexx.cat: $(build_messages_dir)/gencat.inp
 	-gencat $(@) $(build_messages_dir)/gencat.inp
