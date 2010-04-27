@@ -87,6 +87,7 @@ build_extensions_csvstream_dir = $(build_extensions_dir)/csvStream
 build_extensions_rxmath_dir = $(build_extensions_dir)/rxmath
 build_extensions_rxregexp_dir = $(build_extensions_dir)/rxregexp
 build_extensions_rxsock_dir = $(build_extensions_dir)/rxsock
+build_extensions_hostemu_dir = $(build_extensions_dir)/hostemu
 build_utilities_dir = $(top_srcdir)/utilities
 build_utilities_rexximage_dir = $(build_utilities_dir)/rexximage
 build_api_dir = $(top_srcdir)/api
@@ -101,6 +102,7 @@ rexxapi_common_unix_dir = $(build_rexxapi_common_dir)/platform/unix
 interpreter_unix_dir = $(build_interpreter_dir)/platform/unix
 extensions_unix_dir = $(build_extensions_dir)/platform/unix
 extensions_rexutils_unix_dir = $(build_extensions_rexutils_dir)/platform/unix
+extensions_hostemu_unix_dir = $(build_extensions_hostemu_dir)/platform/unix
 utilities_rexx_unix_dir = $(build_utilities_dir)/rexx/platform/unix
 utilities_rexxc_unix_dir = $(build_utilities_dir)/rexxc/platform/unix
 utilities_rxqueue_unix_dir = $(build_utilities_dir)/rxqueue/platform/unix
@@ -355,6 +357,7 @@ rxregexpHeaders = $(build_extensions_rxregexp_dir)/automaton.hpp \
                   $(build_extensions_rxregexp_dir)/dblqueue.hpp \
                   $(build_extensions_rxregexp_dir)/regexp.hpp
 rxsockHeaders = $(build_extensions_rxsock_dir)/rxsock.h
+hostemuHeaders = $(build_extensions_hostemu_dir)/hostemy.h
 # Platform specific files
 windowsMiscFiles =
 unixMiscFiles = $(interpreter_unix_dir)/*.cat \
@@ -409,7 +412,8 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(rexxapiCommonHeaders) \
                   $(rexxapiServerHeaders) \
                   $(rxregexpHeaders) \
-                  $(rxsockHeaders)
+                  $(rxsockHeaders) \
+                  $(hostemuHeaders)
 
 #
 # These error message files are built BEFORE any other target
@@ -424,7 +428,7 @@ bin_PROGRAMS = rxapi rexximage rexx rexxc rxqueue rxsubcom
 #
 # Shared library targets
 #
-pkglib_LTLIBRARIES = librexxapi.la librexx.la librexxutil.la librxmath.la librxregexp.la librxsock.la
+pkglib_LTLIBRARIES = librexxapi.la librexx.la librexxutil.la librxmath.la librxregexp.la librxsock.la libhostemu.la
 
 #
 # Scripts to install
@@ -922,9 +926,31 @@ librxregexp_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
 librxregexp_la_LIBADD  = @ORX_LIBADD_LIBRARY@
 librxregexp_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 
+#################### libhostemu.so ################
+#
+# Sources for libhostemu.so
+#
+libhostemu_la_SOURCES = $(extensions_hostemu_unix_dir)/hostemu.cpp \
+                        $(build_extensions_hostemu_dir)/cmdparse.cpp
+#
+# Preprocessor flags for libhostemu.so
+#
+libhostemu_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
+                        -I$(build_api_dir) \
+                        -I$(build_api_platform_dir) \
+                        -I$(build_extensions_hostemu_dir)
+#
+# Extra libraries for libhostemu.so (maybe)
+#
+libhostemu_la_LIBADD  = @ORX_LIBADD_LIBRARY@
+libhostemu_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
+
 #
 # explicit targets:
 #
+$(build_extensions_hostemu_dir)/cmdparse.cpp: $(build_extensions_hostemu_dir)/cmdparse.y
+	yacc -o $(build_extensions_hostemu_dir)/cmdparse.cpp $(build_extensions_hostemu_dir)/cmdparse.y
+
 rexx.cat: $(build_messages_dir)/gencat.inp
 	-gencat $(@) $(build_messages_dir)/gencat.inp
 
