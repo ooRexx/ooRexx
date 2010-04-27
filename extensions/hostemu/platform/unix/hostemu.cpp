@@ -385,7 +385,7 @@ RexxReturnCode GrxHost(PCONSTRXSTRING command,
 
    pthread_mutex_unlock(&hmtxExecIO);
 
-   sprintf(retc->strptr, "%u", rc);
+   sprintf(retc->strptr, "%ld", rc);
    retc->strlength = strlen(retc->strptr);
    #ifdef HOSTEMU_DEBUG
    printf("HOSTEMU: Subcom return code = %u.\n", rc);
@@ -438,7 +438,7 @@ static unsigned long ExecIO_Write_From_Stem (
       elements = atoi(rxVal.strptr);
       RexxFreeMemory(rxVal.strptr);
       while (ExecIO_Options.lStartRcd <= elements) {
-         sprintf(Index, "%d", ExecIO_Options.lStartRcd);
+         sprintf(Index, "%ld", ExecIO_Options.lStartRcd);
          FetchRexxVar(Stem, &rxVal);
          fputs(rxVal.strptr, pll -> pFile);
          fputs("\n", pll -> pFile);
@@ -449,7 +449,7 @@ static unsigned long ExecIO_Write_From_Stem (
    else {
       /* process a specific record count */
       while (ExecIO_Options.lStartRcd <= ExecIO_Options.lRcdCnt) {
-         sprintf(Index, "%u", ExecIO_Options.lStartRcd);
+         sprintf(Index, "%ld", ExecIO_Options.lStartRcd);
          FetchRexxVar(Stem, &rxVal);
          fputs(rxVal.strptr, pll -> pFile);
          fputs("\n", pll -> pFile);
@@ -583,7 +583,7 @@ static unsigned long ExecIO_Read_To_Stem (
       while (fgets(szInline, sizeof (szInline), pll -> pFile)) {
          if (*(szInline + strlen(szInline) - 1) == '\n')
             *(szInline + strlen(szInline) - 1) = '\0';
-         sprintf(Index, "%u", ExecIO_Options.lStartRcd);
+         sprintf(Index, "%ld", ExecIO_Options.lStartRcd);
          SetRexxVar(Stem, szInline, strlen(szInline));
          ExecIO_Options.lStartRcd++;
          }
@@ -595,7 +595,7 @@ static unsigned long ExecIO_Read_To_Stem (
             if (*(szInline + strlen(szInline) - 1) == '\n') {
                *(szInline + strlen(szInline) - 1) = '\0';
                }
-            sprintf(Index, "%u", ExecIO_Options.lStartRcd);
+            sprintf(Index, "%ld", ExecIO_Options.lStartRcd);
             SetRexxVar(Stem, szInline, strlen(szInline));
             ExecIO_Options.lStartRcd++;
             }
@@ -607,8 +607,8 @@ static unsigned long ExecIO_Read_To_Stem (
          }
       }
    ExecIO_Options.lStartRcd--;
-   sprintf(szInline, "%u", ExecIO_Options.lStartRcd);
-   sprintf(Index, "%u", 0);
+   sprintf(szInline, "%ld", ExecIO_Options.lStartRcd);
+   sprintf(Index, "%d", 0);
    SetRexxVar(Stem, szInline, strlen (szInline));
    free(Stem);
 

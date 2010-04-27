@@ -357,7 +357,7 @@ rxregexpHeaders = $(build_extensions_rxregexp_dir)/automaton.hpp \
                   $(build_extensions_rxregexp_dir)/dblqueue.hpp \
                   $(build_extensions_rxregexp_dir)/regexp.hpp
 rxsockHeaders = $(build_extensions_rxsock_dir)/rxsock.h
-hostemuHeaders = $(build_extensions_hostemu_dir)/hostemy.h
+hostemuHeaders = $(build_extensions_hostemu_dir)/hostemu.h
 # Platform specific files
 windowsMiscFiles =
 unixMiscFiles = $(interpreter_unix_dir)/*.cat \
@@ -376,6 +376,7 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(top_srcdir)/unix-like-build.txt \
                   $(top_srcdir)/windows-build.txt \
                   $(top_srcdir)/oorexx.ver \
+                  $(build_extensions_hostemu_dir)/csvStream.cls \
                   $(build_extensions_rxftp_dir)/rxftp.cls \
                   $(build_extensions_csvstream_dir)/csvStream.cls \
                   $(build_extensions_rxsock_dir)/socket.cls \
@@ -931,7 +932,9 @@ librxregexp_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 # Sources for libhostemu.so
 #
 libhostemu_la_SOURCES = $(extensions_hostemu_unix_dir)/hostemu.cpp \
-                        $(build_extensions_hostemu_dir)/cmdparse.cpp
+                        $(build_extensions_hostemu_dir)/hostemu.h \
+                        $(build_extensions_hostemu_dir)/cmdparse.cpp \
+                        $(build_extensions_hostemu_dir)/cmdparse.y
 #
 # Preprocessor flags for libhostemu.so
 #

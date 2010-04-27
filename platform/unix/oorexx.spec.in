@@ -151,6 +151,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_current}
 %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librexxutil.la
+%{_prefix}/lib/ooRexx/libhostemu.so
+%{_prefix}/lib/ooRexx/libhostemu.so.%{orx_current}
+%{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}
+%{_prefix}/lib/ooRexx/libhostemu.la
 %{_prefix}/include/rexx.h
 %{_prefix}/include/rexxapidefs.h
 %{_prefix}/include/rexxapitypes.h
@@ -221,6 +225,10 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.%{orx_current}
    ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so
    ln -sf %{_prefix}/lib/ooRexx/librexxutil.la                   /usr/%{_lib}/librexxutil.la
+   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so
+   ln -sf %{_prefix}/lib/ooRexx/libhostemu.la                    /usr/%{_lib}/libhostemu.la
    ln -sf %{_prefix}/include/rexx.h                       /usr/include/rexx.h
    ln -sf %{_prefix}/include/rexxapidefs.h                /usr/include/rexxapidefs.h
    ln -sf %{_prefix}/include/rexxapitypes.h               /usr/include/rexxapitypes.h
@@ -247,6 +255,8 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.3
    ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.2
    ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.3
+   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.2
+   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.3
 fi
 if [ -d /etc/rc.d/init.d ]; then
    # Red Hat
@@ -282,23 +292,33 @@ rm -f /usr/bin/mime.cls
 rm -f /usr/bin/smtp.cls
 rm -f /usr/bin/oorexx-config
 rm -f /usr/%{_lib}/librexx.so
+rm -f /usr/%{_lib}/librexx.la
 rm -f /usr/%{_lib}/librexx.%{orx_libversion}
 rm -f /usr/%{_lib}/librexx.%{orx_current}
 rm -f /usr/%{_lib}/librexxapi.so
+rm -f /usr/%{_lib}/librexxapi.la
 rm -f /usr/%{_lib}/librexxapi.%{orx_libversion}
 rm -f /usr/%{_lib}/librexxapi.%{orx_current}
 rm -f /usr/%{_lib}/librxsock.so
+rm -f /usr/%{_lib}/librxsock.la
 rm -f /usr/%{_lib}/librxsock.%{orx_libversion}
 rm -f /usr/%{_lib}/librxsock.%{orx_current}
 rm -f /usr/%{_lib}/librxmath.so
+rm -f /usr/%{_lib}/librxmath.la
 rm -f /usr/%{_lib}/librxmath.%{orx_libversion}
 rm -f /usr/%{_lib}/librxmath.%{orx_current}
 rm -f /usr/%{_lib}/librxregexp.so
+rm -f /usr/%{_lib}/librxregexp.la
 rm -f /usr/%{_lib}/librxregexp.%{orx_libversion}
 rm -f /usr/%{_lib}/librxregexp.%{orx_current}
 rm -f /usr/%{_lib}/librexxutil.so
+rm -f /usr/%{_lib}/librexxutil.la
 rm -f /usr/%{_lib}/librexxutil.%{orx_libversion}
 rm -f /usr/%{_lib}/librexxutil.%{orx_current}
+rm -f /usr/%{_lib}/libhostemu.so
+rm -f /usr/%{_lib}/libhostemu.la
+rm -f /usr/%{_lib}/libhostemu.%{orx_libversion}
+rm -f /usr/%{_lib}/libhostemu.%{orx_current}
 rm -f /usr/share/man/man1/oorexx-config.1
 rm -f /usr/share/man/man1/rexx.1
 rm -f /usr/share/man/man1/rexxc.1
