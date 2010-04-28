@@ -1767,13 +1767,13 @@ BUILTIN(FORMAT)
     return number->format(before, after, expp, expt);
 }
 
-#define MAX_MIN 1
-#define MAX_MAX argcount
+#define ORXMAX_MIN 1
+#define ORXMAX_MAX argcount
 #define MAX_target 1
 
 BUILTIN(MAX)
 {
-    check_args(MAX);                     /* check on required args            */
+    check_args(ORXMAX);                     /* check on required args            */
     /* get the argument in question      */
     RexxObject *argument = get_arg(MAX, target);
     if (isOfClass(NumberString, argument))
@@ -1787,13 +1787,13 @@ BUILTIN(MAX)
     return target->Max(stack->arguments(argcount - 1), argcount - 1);
 }
 
-#define MIN_MIN 1
-#define MIN_MAX argcount
+#define ORXMIN_MIN 1
+#define ORXMIN_MAX argcount
 #define MIN_target 1
 
 BUILTIN(MIN)
 {
-    check_args(MIN);                     /* check on required args            */
+    check_args(ORXMIN);                     /* check on required args            */
     /* get the argument in question      */
     RexxObject *argument = get_arg(MIN, target);
     if (isOfClass(NumberString, argument))

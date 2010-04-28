@@ -91,11 +91,11 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
             CurrentActivation->setFuzz(saveFuzz);
             if (operation == OT_MAX)            /*  doing a MAX operation?           */
             {
-                reportException(Error_Incorrect_call_noarg, CHAR_MAX, arg + 1);
+                reportException(Error_Incorrect_call_noarg, CHAR_ORXMAX, arg + 1);
             }
             else                                /*  nope must be min.                */
             {
-                reportException(Error_Incorrect_call_noarg, CHAR_MIN, arg + 1);
+                reportException(Error_Incorrect_call_noarg, CHAR_ORXMIN, arg + 1);
             }
         }
 

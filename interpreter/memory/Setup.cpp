@@ -878,8 +878,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_DECODEBASE64                 ,TheStringBehaviour, CPPM(RexxString::decodeBase64), 0);
   defineKernelMethod(CHAR_MAKESTRING                   ,TheStringBehaviour, CPPM(RexxObject::makeStringRexx), 0);
   defineKernelMethod(CHAR_ABS                          ,TheStringBehaviour, CPPM(RexxString::abs), 0);
-  defineKernelMethod(CHAR_MAX                          ,TheStringBehaviour, CPPM(RexxString::Max), A_COUNT);
-  defineKernelMethod(CHAR_MIN                          ,TheStringBehaviour, CPPM(RexxString::Min), A_COUNT);
+  defineKernelMethod(CHAR_ORXMAX                          ,TheStringBehaviour, CPPM(RexxString::Max), A_COUNT);
+  defineKernelMethod(CHAR_ORXMIN                          ,TheStringBehaviour, CPPM(RexxString::Min), A_COUNT);
   defineKernelMethod(CHAR_SIGN                         ,TheStringBehaviour, CPPM(RexxString::sign), 0);
   defineKernelMethod(CHAR_EQUAL                        ,TheStringBehaviour, CPPM(RexxString::equal), 1);
   defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,TheStringBehaviour, CPPM(RexxString::notEqual), 1);
@@ -1021,8 +1021,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_D2C                          ,TheIntegerBehaviour, CPPM(RexxInteger::d2c), 1);
   defineKernelMethod(CHAR_D2X                          ,TheIntegerBehaviour, CPPM(RexxInteger::d2x), 1);
   defineKernelMethod(CHAR_ABS                          ,TheIntegerBehaviour, CPPM(RexxInteger::abs), 0);
-  defineKernelMethod(CHAR_MAX                          ,TheIntegerBehaviour, CPPM(RexxInteger::Max), A_COUNT);
-  defineKernelMethod(CHAR_MIN                          ,TheIntegerBehaviour, CPPM(RexxInteger::Min), A_COUNT);
+  defineKernelMethod(CHAR_ORXMAX                          ,TheIntegerBehaviour, CPPM(RexxInteger::Max), A_COUNT);
+  defineKernelMethod(CHAR_ORXMIN                          ,TheIntegerBehaviour, CPPM(RexxInteger::Min), A_COUNT);
   defineKernelMethod(CHAR_SIGN                         ,TheIntegerBehaviour, CPPM(RexxInteger::sign), 0);
   defineKernelMethod(CHAR_EQUAL                        ,TheIntegerBehaviour, CPPM(RexxInteger::equal), 1);
   defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,TheIntegerBehaviour, CPPM(RexxInteger::notEqual), 1);
@@ -1073,8 +1073,8 @@ void RexxMemory::createImage()
                                        /* instance behaviour mdict          */
   defineKernelMethod(CHAR_UNKNOWN                      ,TheNumberStringBehaviour, CPPM(RexxObject::unknownRexx), 2);
   defineKernelMethod(CHAR_ABS                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::abs), 0);
-  defineKernelMethod(CHAR_MAX                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::Max), A_COUNT);
-  defineKernelMethod(CHAR_MIN                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::Min), A_COUNT);
+  defineKernelMethod(CHAR_ORXMAX                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::Max), A_COUNT);
+  defineKernelMethod(CHAR_ORXMIN                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::Min), A_COUNT);
   defineKernelMethod(CHAR_SIGN                         ,TheNumberStringBehaviour, CPPM(RexxNumberString::Sign), 0);
   defineKernelMethod(CHAR_D2C                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::d2c), 1);
   defineKernelMethod(CHAR_D2X                          ,TheNumberStringBehaviour, CPPM(RexxNumberString::d2x), 1);

@@ -879,7 +879,7 @@ RexxObject *RexxString::Max(RexxObject **arguments, size_t argCount)
     if ((numstr = this->fastNumberString()) == OREF_NULL)
     {
         /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, CHAR_MAX, this);
+        reportException(Error_Incorrect_method_string_nonumber, CHAR_ORXMAX, this);
     }
     /* have numberstring do this         */
     return numstr->Max(arguments, argCount);
@@ -896,7 +896,7 @@ RexxObject *RexxString::Min(RexxObject **arguments, size_t argCount)
     if ((numstr = this->fastNumberString()) == OREF_NULL)
     {
         /* this is a conversion error        */
-        reportException(Error_Incorrect_method_string_nonumber, CHAR_MIN, this);
+        reportException(Error_Incorrect_method_string_nonumber, CHAR_ORXMIN, this);
     }
     /* have numberstring do this         */
     return numstr->Min(arguments, argCount);
