@@ -934,7 +934,6 @@ librxregexp_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 libhostemu_la_SOURCES = $(extensions_hostemu_unix_dir)/hostemu.cpp \
                         $(build_extensions_hostemu_dir)/hostemu.h \
                         $(build_extensions_hostemu_dir)/cmdparse.ypp
-libhostemu_la_BUILTSOURCES = $(build_extensions_hostemu_dir)/cmdparse.cpp
 #
 # Preprocessor flags for libhostemu.so
 #
