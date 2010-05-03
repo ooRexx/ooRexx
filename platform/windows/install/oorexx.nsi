@@ -167,6 +167,7 @@ Section "${LONGNAME} Core (required)" SecMain
   ${File} "${BINDIR}\" "rxwinsys.dll"
   ${File} "${BINDIR}\" "oodialog.dll"
   ${File} "${BINDIR}\" "orexxole.dll"
+  ${File} "${BINDIR}\" "hostemu.dll"
   ; CLASS files...
   ${File} "${BINDIR}\" "winsystm.cls"
   ${File} "${BINDIR}\" "socket.cls"
