@@ -75,15 +75,7 @@ REM
 :OREXXOLE
 @ECHO Building OREXXOLE..
 CD  %OR_OLEOBJECTSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F HOSTEMU.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F HOSTEMU.MAK )
-if ERRORLEVEL 1 goto error
-
-REM *** hostemu
-REM
-:HOSTEMU
-@ECHO Building HOSTEMU..
-CD  %OR_HOSTEMUSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F HOSTEMU.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F HOSTEMU.MAK )
+IF %USELOGFILE% equ 1 ( NMAKE /F OREXXOLE.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F OREXXOLE.MAK )
 if ERRORLEVEL 1 goto error
 
 
@@ -160,6 +152,14 @@ REM
 @ECHO Building RXREGEXP...
 CD  %OR_REGEXPSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rxregexp.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxregexp.mak )
+if ERRORLEVEL 1 goto error
+
+REM *** hostemu
+REM
+:HOSTEMU
+@ECHO Building HOSTEMU..
+CD  %OR_HOSTEMUSRC%
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\hostemu.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\hostemu.mak )
 if ERRORLEVEL 1 goto error
 
 
