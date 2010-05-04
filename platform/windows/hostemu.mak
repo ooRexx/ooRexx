@@ -47,7 +47,7 @@ all: $(OR_OUTDIR)\hostemu.dll
 
 SOURCE_DIR = $(OR_EXTENSIONS)\hostemu
 
-OBJS   = $(OR_OUTDIR)\hostemu.obj $(OR_OUTDIR)\cmdparse.obj
+OBJS   = $(OR_OUTDIR)\platform\windows\hostemu.obj $(OR_OUTDIR)\platform\windows\cmdparse.obj
 
 # Following for hostemu.DLL
 #
