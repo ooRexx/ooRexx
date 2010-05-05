@@ -180,7 +180,9 @@
 #include <errno.h>                     /* get the errno variable     */
 #include <stddef.h>
 #include <sys/types.h>
-#include <sys/syscall.h>
+#if defined ( HAVE_SYS_SYSCALL_H )
+#  include <sys/syscall.h>
+#endif
 #include <sys/utsname.h>
 #include <sys/ipc.h>
 #include <pthread.h>
@@ -4059,6 +4061,7 @@ RexxRoutine0(RexxObjectPtr,
     return context->WholeNumberToObject((wholenumber_t)pid);
 }
 
+#ifndef AIX
 /**
  * Method:        SysGettid
  *
@@ -4072,6 +4075,7 @@ RexxRoutine0(RexxObjectPtr,
     pid_t tid = syscall(SYS_gettid);
     return context->WholeNumberToObject((wholenumber_t)tid);
 }
+#endif
 
 /**
  * Method:        SysSymlink
@@ -4566,6 +4570,7 @@ RexxRoutine2(int,
     return access(file, option);
 }
 
+#ifndef AIX
 /**
  * Method:        SysEuidaccess
  *
@@ -4585,6 +4590,7 @@ RexxRoutine2(int,
 
     return euidaccess(file, option);
 }
+#endif
 
 /**
  * Method:        SysGetservbyname
@@ -6135,7 +6141,9 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_TYPED_ROUTINE(SysGetpgid, SysGetpgid),
     REXX_TYPED_ROUTINE(SysGetpid, SysGetpid),
     REXX_TYPED_ROUTINE(SysGetppid, SysGetppid),
+#ifndef AIX
     REXX_TYPED_ROUTINE(SysGettid, SysGettid),
+#endif
     REXX_TYPED_ROUTINE(SysSymlink, SysSymlink),
     REXX_TYPED_ROUTINE(SysLink, SysLink),
     REXX_TYPED_ROUTINE(SysUnlink, SysUnlink),
@@ -6148,7 +6156,9 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_TYPED_ROUTINE(SysGetgrgid, SysGetgrgid),
     REXX_TYPED_ROUTINE(SysStat, SysStat),
     REXX_TYPED_ROUTINE(SysAccess, SysAccess),
+#ifndef AIX
     REXX_TYPED_ROUTINE(SysEuidaccess, SysEuidaccess),
+#endif
     REXX_TYPED_ROUTINE(SysGetservbyname, SysGetservbyname),
     REXX_TYPED_ROUTINE(SysGetservbyport, SysGetservbyport),
     REXX_TYPED_ROUTINE(SysWordexp, SysWordexp),
