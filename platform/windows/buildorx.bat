@@ -78,19 +78,11 @@ CD  %OR_OLEOBJECTSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F OREXXOLE.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F OREXXOLE.MAK )
 if ERRORLEVEL 1 goto error
 
-
 REM
 REM *** Rexxutil. Note that RexxUtil needs to be built before rexx.img is created.
 REM
 @ECHO Building Rexxutil..
 IF %USELOGFILE% equ 1 ( NMAKE /F %OR_EXTENSIONS%\rexxutil\platform\windows\rexxutil.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_EXTENSIONS%\rexxutil\platform\windows\rexxutil.mak )
-if ERRORLEVEL 1 goto error
-
-REM
-REM *** rxftp
-REM
-@ECHO Building rxftp
-IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak )
 if ERRORLEVEL 1 goto error
 
 REM
@@ -160,6 +152,18 @@ REM
 @ECHO Building HOSTEMU..
 CD  %OR_HOSTEMUSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\hostemu.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\hostemu.mak )
+if ERRORLEVEL 1 goto error
+
+
+REM
+REM *** Miscellaneous extensions that consist of class files only.  The files
+REM     are copied to the build directory so that they are all in a central
+REM     location.
+REM
+REM     rxftp, cvsStream
+REM
+@ECHO Building miscellaneous extensions
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\misc.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\misc.mak )
 if ERRORLEVEL 1 goto error
 
 

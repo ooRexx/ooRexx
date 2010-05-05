@@ -75,7 +75,8 @@ set OR_APISAMPLESRC=%SRC_DRV%%SRC_DIR%\samples\windows\api
 set OR_OODIALOGSAMPLES=%SRC_DRV%%SRC_DIR%\samples\windows\oodialog
 set OR_UTILITIES=%SRC_DRV%%SRC_DIR%\utilities
 set OR_EXTENSIONS=%SRC_DRV%%SRC_DIR%\extensions
-set OR_HOSTEMUSRC=%SRC_DRV%%SRC_DIR%\extensions\hostemu
+set OR_HOSTEMUSRC=%OR_EXTENSIONS%\hostemu
+set OR_HOSTEMUWINSRC=%OR_HOSTEMUSRC%\platform\windows
 
 set INTERPRETER=%OR_INTERPRETER_SRC%
 set INTERPRETER_CLASSES=%INTERPRETER%\classes

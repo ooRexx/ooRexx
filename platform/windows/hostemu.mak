@@ -45,9 +45,11 @@ all: $(OR_OUTDIR)\hostemu.dll
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
-SOURCE_DIR = $(OR_EXTENSIONS)\hostemu
+!IFNDEF OR_HOSTEMUSRC
+!ERROR Build error, OR_REGEXPSRC not set
+!ENDIF
 
-OBJS   = $(OR_OUTDIR)\platform\windows\hostemu.obj $(OR_OUTDIR)\platform\windows\cmdparse.obj
+OBJS   = $(OR_OUTDIR)\hostemu.obj $(OR_OUTDIR)\cmdparse.obj
 
 # Following for hostemu.DLL
 #
@@ -79,19 +81,19 @@ $(OR_OUTDIR)\hostemu.dll : $(OBJS) $(OR_OUTDIR)\hostemu.lib \
 # *** cmdparse.obj
 #
 
-$(OR_OUTDIR)\cmdparse.obj:  $(SOURCE_DIR)\cmdparse.cpp
+$(OR_OUTDIR)\cmdparse.obj:  $(OR_HOSTEMUSRC)\cmdparse.cpp
     @ECHO .
     @ECHO Compiling cmdparse.cpp
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\cmdparse.obj $(OR_ORYXINCL)  $(SOURCE_DIR)\cmdparse.cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\cmdparse.obj $(OR_ORYXINCL)  $(OR_HOSTEMUSRC)\cmdparse.cpp
 
 #
 # *** hostemu.obj
 #
 
-$(OR_OUTDIR)\platform\windows\hostemu.obj:  $(SOURCE_DIR)\platform\windows\hostemu.cpp
+$(OR_OUTDIR)\hostemu.obj:  $(OR_HOSTEMUWINSRC)\hostemu.cpp
     @ECHO .
     @ECHO Compiling hostemu.cpp
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\hostemu.obj $(OR_ORYXINCL)  $(SOURCE_DIR)\platform\windows\hostemu.cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\hostemu.obj $(OR_ORYXINCL) $(OR_HOSTEMUWINSRC)\hostemu.cpp
 
 
 

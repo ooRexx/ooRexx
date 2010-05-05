@@ -1,12 +1,12 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
 #/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-#/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
 #/* distribution. A copy is also available at the following address:           */
-#/* http://www.oorexx.org/license.html                          */
+#/* http://www.oorexx.org/license.html                                         */
 #/*                                                                            */
 #/* Redistribution and use in source and binary forms, with or                 */
 #/* without modification, are permitted provided that the following            */
@@ -35,25 +35,31 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
-#------------------------
-# RXFTP.MAK make file
-#------------------------
-all: $(OR_OUTDIR)\rxftp.cls
+
+#-------------------------------------------------------------------------------
+# Make file for miscellaneous extensions.  These are extensions that consist
+# of class files only.  The files are copied to the buid directory.
+#-------------------------------------------------------------------------------
+
+all: $(OR_OUTDIR)\rxftp.cls $(OR_OUTDIR)\csvStream.cls
     @ECHO .
-    @ECHO All done rxftp.cls
+    @ECHO All done rxftp.cls csvStream.cls
     @ECHO .
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
-SOURCE_DIR = $(OR_EXTENSIONS)\rxftp
-
 #
-# Copy rxftp.cls to the build directory so the test suite can be run directly
-# from that location without doing an install.
+# Copy all the class files to the build directory so that they are all in a
+# central location for packaging.  This also allows the test suite to be run
+# directly from that location without doing an install.
 #
-$(OR_OUTDIR)\rxftp.cls : $(SOURCE_DIR)\rxftp.cls
+$(OR_OUTDIR)\rxftp.cls : $(OR_EXTENSIONS)\rxftp\rxftp.cls
     @ECHO .
-    @ECHO Copying $(SOURCEDIR)\rxftp.cls
-    copy $(SOURCE_DIR)\rxftp.cls $(OR_OUTDIR)
+    @ECHO Copying $(OR_EXTENSIONS)\rxftp\rxftp.cls
+    copy $(OR_EXTENSIONS)\rxftp\rxftp.cls $(OR_OUTDIR)
 
+$(OR_OUTDIR)\csvStream.cls : $(OR_EXTENSIONS)\csvStream\csvStream.cls
+    @ECHO .
+    @ECHO Copying $(OR_EXTENSIONS)\csvStream\csvStream.cls
+    copy $(OR_EXTENSIONS)\csvStream\csvStream.cls $(OR_OUTDIR)
 
