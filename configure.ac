@@ -306,6 +306,7 @@ AC_CHECK_HEADERS([ \
                   sys/time.h \
                   sys/utsname.h \
                   sys/wait.h \
+                  sys/syscall.h \
                   time.h \
                   unistd.h \
                   usersec.h \
