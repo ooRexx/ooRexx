@@ -148,6 +148,11 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING 
  * @param msg   Method name we are connecting to.
  *
  * @return 0 on success, ERROR_NOT_ENOUGH_MEMORY on failure.
+ *
+ * @remarks The WPARAM filter (menu id filter) needs to be 0xFFFFFFFF.  This
+ *          filters out dialog control notifications that use WM_COMMAND.  The
+ *          high word of WPARAM is the notification code for dialog controls, it
+ *          is 0 for menu command items.
  */
 inline uint32_t _connectItem(pCEventNotification pcen, uint32_t id, CSTRING msg)
 {
@@ -155,7 +160,7 @@ inline uint32_t _connectItem(pCEventNotification pcen, uint32_t id, CSTRING msg)
     {
         return 0;
     }
-    return addCommandMessage(pcen, id, 0x0000FFFF, 0, 0,  msg, TAG_NOTHING) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addCommandMessage(pcen, id, 0xFFFFFFFF, 0, 0,  msg, TAG_NOTHING) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /* Same as above but connects a System Menu item */
@@ -2477,7 +2482,7 @@ RexxObjectPtr newPopupFromHandle(RexxMethodContext *c, HMENU hPopup, RexxObjectP
     RexxObjectPtr popupMenu = c->SendMessage(popupClass, "NEW", args);
     if ( popupMenu == NULLOBJECT )
     {
-        // This is a good error code for this, buthow could it happen to begin
+        // This is a good error code for this, but how could it happen to begin
         // with?
         c->ClearCondition();
         oodSetSysErrCode(c->threadContext, OR_INVALID_OID);
@@ -4533,8 +4538,8 @@ RexxMethod5(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyW
 
 /** Menu::connectCommandEvent()
  *
- * <link linkend="miConnections">Directly connects</link> the menu item select
- * event with a method in the specified dialog.
+ * Directly connects the menu item select event with a method in the specified
+ * dialog.
  *
  * @param id          The resource ID of the menu item.
  *
@@ -4542,9 +4547,10 @@ RexxMethod5(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyW
  *
  * @param dlg         [optional] The dlg to connect the menu item select event
  *                    to. If omitted, then the menu's owning dialog is used. If
- *                    omitted and there is no owning dialog, then a condition is
- *                    raised.  (To connect a menu item select event, there must
- *                    be a dialog to connect it to.)
+ *                    omitted and there is no owning dialog, no connection is
+ *                    made and the system error code is set as mentioned below.
+ *                    (To connect a menu item select event, there must be a
+ *                    dialog to connect it to.)
  *
  * @return  True on success, false on error.
  *
@@ -6121,7 +6127,7 @@ static UINT getPopupTypeOpts(const char *opts, UINT type)
 }
 
 /**
- * Parses an option string to determine a popu menu's state flags.
+ * Parses an option string to determine a popup menu's state flags.
  *
  * @param opts Keywords signaling the different MFS_* flags.  These are the
  *             valid keyworkds: DEFAULT NOTDEFAULT DISABLED GRAYED ENABLED
