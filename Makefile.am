@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -83,9 +83,11 @@ build_streamlibrary_dir = $(build_interpreter_dir)/streamLibrary
 build_extensions_dir = $(top_srcdir)/extensions
 build_extensions_rexutils_dir = $(build_extensions_dir)/rexxutil
 build_extensions_rxftp_dir = $(build_extensions_dir)/rxftp
+build_extensions_csvstream_dir = $(build_extensions_dir)/csvStream
 build_extensions_rxmath_dir = $(build_extensions_dir)/rxmath
 build_extensions_rxregexp_dir = $(build_extensions_dir)/rxregexp
 build_extensions_rxsock_dir = $(build_extensions_dir)/rxsock
+build_extensions_hostemu_dir = $(build_extensions_dir)/hostemu
 build_utilities_dir = $(top_srcdir)/utilities
 build_utilities_rexximage_dir = $(build_utilities_dir)/rexximage
 build_api_dir = $(top_srcdir)/api
@@ -100,6 +102,7 @@ rexxapi_common_unix_dir = $(build_rexxapi_common_dir)/platform/unix
 interpreter_unix_dir = $(build_interpreter_dir)/platform/unix
 extensions_unix_dir = $(build_extensions_dir)/platform/unix
 extensions_rexutils_unix_dir = $(build_extensions_rexutils_dir)/platform/unix
+extensions_hostemu_unix_dir = $(build_extensions_hostemu_dir)/platform/unix
 utilities_rexx_unix_dir = $(build_utilities_dir)/rexx/platform/unix
 utilities_rexxc_unix_dir = $(build_utilities_dir)/rexxc/platform/unix
 utilities_rxqueue_unix_dir = $(build_utilities_dir)/rxqueue/platform/unix
@@ -198,7 +201,9 @@ classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
                  $(build_classes_dir)/StringClass.hpp \
                  $(build_classes_dir)/SupplierClass.hpp \
                  $(build_classes_dir)/TableClass.hpp \
-                 $(build_classes_dir)/WeakReferenceClass.hpp
+                 $(build_classes_dir)/WeakReferenceClass.hpp \
+                 $(build_classes_dir)/StackFrameClass.hpp \
+                 $(build_classes_dir)/ExceptionClass.hpp
 classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
                         $(build_classes_support_dir)/RexxCollection.hpp \
                         $(build_classes_support_dir)/RexxCompoundElement.hpp \
@@ -209,6 +214,7 @@ classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
                         $(build_classes_support_dir)/RexxListTable.hpp \
                         $(build_classes_support_dir)/StringUtil.hpp
 concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
+                     $(build_concurrency_dir)/ActivationFrame.hpp \
                      $(build_concurrency_dir)/ActivityDispatcher.hpp \
                      $(build_concurrency_dir)/ActivityManager.hpp \
                      $(build_concurrency_dir)/CallbackDispatcher.hpp \
@@ -351,6 +357,7 @@ rxregexpHeaders = $(build_extensions_rxregexp_dir)/automaton.hpp \
                   $(build_extensions_rxregexp_dir)/dblqueue.hpp \
                   $(build_extensions_rxregexp_dir)/regexp.hpp
 rxsockHeaders = $(build_extensions_rxsock_dir)/rxsock.h
+hostemuHeaders = $(build_extensions_hostemu_dir)/hostemu.h
 # Platform specific files
 windowsMiscFiles =
 unixMiscFiles = $(interpreter_unix_dir)/*.cat \
@@ -369,8 +376,13 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(top_srcdir)/unix-like-build.txt \
                   $(top_srcdir)/windows-build.txt \
                   $(top_srcdir)/oorexx.ver \
+                  $(build_extensions_csvstream_dir)/csvStream.cls \
                   $(build_extensions_rxftp_dir)/rxftp.cls \
+                  $(build_extensions_csvstream_dir)/csvStream.cls \
                   $(build_extensions_rxsock_dir)/socket.cls \
+                  $(build_extensions_rxsock_dir)/streamsocket.cls \
+                  $(build_extensions_rxsock_dir)/mime.cls \
+                  $(build_extensions_rxsock_dir)/smtp.cls \
                   $(build_extensions_rxregexp_dir)/*.cls \
                   $(build_messages_dir)/*.xsl \
                   $(build_messages_dir)/*.sgml \
@@ -401,7 +413,8 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(rexxapiCommonHeaders) \
                   $(rexxapiServerHeaders) \
                   $(rxregexpHeaders) \
-                  $(rxsockHeaders)
+                  $(rxsockHeaders) \
+                  $(hostemuHeaders)
 
 #
 # These error message files are built BEFORE any other target
@@ -416,7 +429,7 @@ bin_PROGRAMS = rxapi rexximage rexx rexxc rxqueue rxsubcom
 #
 # Shared library targets
 #
-pkglib_LTLIBRARIES = librexxapi.la librexx.la librexxutil.la librxmath.la librxregexp.la librxsock.la
+pkglib_LTLIBRARIES = librexxapi.la librexx.la librexxutil.la librxmath.la librxregexp.la librxsock.la libhostemu.la
 
 #
 # Scripts to install
@@ -532,7 +545,9 @@ classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/SupplierClass.cpp \
                   $(build_classes_dir)/TableClass.cpp \
                   $(build_classes_dir)/IdentityTableClass.cpp \
-                  $(build_classes_dir)/WeakReferenceClass.cpp
+                  $(build_classes_dir)/WeakReferenceClass.cpp \
+                  $(build_classes_dir)/StackFrameClass.cpp \
+                  $(build_classes_dir)/ExceptionClass.cpp
 package_sources = $(build_package_dir)/LibraryPackage.cpp \
                   $(build_package_dir)/PackageManager.cpp
 memory_sources = $(build_memory_dir)/DeadObject.cpp \
@@ -560,6 +575,7 @@ behaviour_sources = $(build_behaviour_dir)/PrimitiveBehaviours.cpp \
                     $(build_behaviour_dir)/VirtualFunctionTable.cpp
 concurrency_sources = $(build_concurrency_dir)/ActivityDispatcher.cpp \
                       $(build_concurrency_dir)/ActivityManager.cpp \
+                      $(build_concurrency_dir)/ActivationFrame.cpp \
                       $(build_concurrency_dir)/CallbackDispatcher.cpp \
                       $(build_concurrency_dir)/TrappingDispatcher.cpp \
                       $(build_concurrency_dir)/ExitHandler.cpp \
@@ -656,7 +672,8 @@ runtime_sources  = $(build_runtime_dir)/GlobalData.cpp \
                    $(build_runtime_dir)/RexxMisc.cpp \
                    $(build_runtime_dir)/Version.cpp
 streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
-                        $(build_streamlibrary_dir)/StreamNative.cpp
+                        $(build_streamlibrary_dir)/StreamNative.cpp \
+                        $(build_streamlibrary_dir)/FileNative.cpp
 librexx_la_SOURCES = $(classes_sources) \
                      $(classes_support_sources) \
                      $(interpreter_api_sources) \
@@ -673,7 +690,8 @@ librexx_la_SOURCES = $(classes_sources) \
                      $(runtime_sources) \
                      $(streamlibrary_sources)
 core_classes = $(build_rexxclasses_dir)/CoreClasses.orx \
-               $(build_rexxclasses_dir)/StreamClasses.orx
+               $(build_rexxclasses_dir)/StreamClasses.orx \
+               $(build_rexxclasses_dir)/Serializable.orx
 core_platform_classes = $(build_interpreter_platform_dir)/PlatformObjects.orx
 #
 # Preprocessor flags for librexx.so
@@ -909,9 +927,30 @@ librxregexp_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
 librxregexp_la_LIBADD  = @ORX_LIBADD_LIBRARY@
 librxregexp_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 
+#################### libhostemu.so ################
+#
+# Sources for libhostemu.so
+#
+libhostemu_la_SOURCES = $(extensions_hostemu_unix_dir)/hostemu.cpp \
+                        $(build_extensions_hostemu_dir)/hostemu.h \
+                        $(build_extensions_hostemu_dir)/cmdparse.ypp
+#
+# Preprocessor flags for libhostemu.so
+#
+libhostemu_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
+                        -I$(build_api_dir) \
+                        -I$(build_api_platform_dir) \
+                        -I$(build_extensions_hostemu_dir)
+#
+# Extra libraries for libhostemu.so (maybe)
+#
+libhostemu_la_LIBADD  = @ORX_LIBADD_LIBRARY@
+libhostemu_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
+
 #
 # explicit targets:
 #
+
 rexx.cat: $(build_messages_dir)/gencat.inp
 	-gencat $(@) $(build_messages_dir)/gencat.inp
 
@@ -957,7 +996,9 @@ rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 ooTest:
 	cp $(build_extensions_dir)/rxregexp/rxregexp.cls ./
 	cp $(build_extensions_dir)/rxftp/rxftp.cls ./
+	cp $(build_extensions_dir)/csvStream/csvStream.cls ./
 	cp $(build_extensions_dir)/rxsock/socket.cls ./
+	cp $(build_extensions_dir)/rxsock/streamsocket.cls ./
 
 #
 # distribution files
@@ -1010,13 +1051,14 @@ install-exec-local:
 	$(install_sh_SCRIPT) $(build_os_platform_dir)/oorexx-config $(DESTDIR)$(prefix)/bin/oorexx-config
 	$(install_sh_SCRIPT) $(build_extensions_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxftp_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
+	$(install_sh_SCRIPT) $(build_extensions_csvstream_dir)/csvStream.cls $(DESTDIR)$(prefix)/bin/csvStream.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/socket.cls $(DESTDIR)$(prefix)/bin/socket.cls
-        if test "$(ORX_SYS_STR)" != "AIX" -a "$(ORX_SYS_STR)" != "MACOSX"; then \
-                $(install_sh_SCRIPT) $(rexxapi_server_unix_dir)/rxapid $(DESTDIR)$(prefix)/bin/rxapid; \
-        fi
-        if test "$(ORX_SYS_STR)" = "MACOSX"; then \
-                $(install_sh_SCRIPT) $(platform_unix_dir)/macosx/org.rexxla.oorexx.rxapid.plist $(DESTDIR)$(prefix)/bin/org.rexxla.oorexx.rxapid.plist; \
-        fi
+	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/streamsocket.cls $(DESTDIR)$(prefix)/bin/streamsocket.cls
+	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/mime.cls $(DESTDIR)$(prefix)/bin/mime.cls
+	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/smtp.cls $(DESTDIR)$(prefix)/bin/smtp.cls
+	if test "$(ORX_SYS_STR)" != "AIX"; then \
+		$(install_sh_SCRIPT) $(rexxapi_server_unix_dir)/rxapid $(DESTDIR)$(prefix)/bin/rxapid; \
+	fi
 	for a in $(build_samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
 		$(install_sh_SCRIPT) $$a $(DESTDIR)$(prefix)/share/ooRexx/$$bn; \
