@@ -1056,12 +1056,12 @@ install-exec-local:
 	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/streamsocket.cls $(DESTDIR)$(prefix)/bin/streamsocket.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/mime.cls $(DESTDIR)$(prefix)/bin/mime.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/smtp.cls $(DESTDIR)$(prefix)/bin/smtp.cls
-        if test "$(ORX_SYS_STR)" != "AIX" -a "$(ORX_SYS_STR)" != "MACOSX"; then \
-                $(install_sh_SCRIPT) $(rexxapi_server_unix_dir)/rxapid $(DESTDIR)$(prefix)/bin/rxapid; \
-        fi
-        if test "$(ORX_SYS_STR)" = "MACOSX"; then \
-                $(install_sh_SCRIPT) $(platform_unix_dir)/macosx/org.rexxla.oorexx.rxapid.plist $(DESTDIR)$(prefix)/bin/org.rexxla.oorexx.rxapid.plist; \
-        fi
+	if test "$(ORX_SYS_STR)" != "AIX" -a "$(ORX_SYS_STR)" != "MACOSX"; then \
+		$(install_sh_SCRIPT) $(rexxapi_server_unix_dir)/rxapid $(DESTDIR)$(prefix)/bin/rxapid; \
+	fi
+	if test "$(ORX_SYS_STR)" = "MACOSX"; then \
+		$(install_sh_SCRIPT) $(platform_unix_dir)/macosx/org.rexxla.oorexx.rxapid.plist $(DESTDIR)$(prefix)/bin/org.rexxla.oorexx.rxapid.plist; \
+	fi
 	for a in $(build_samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
 		$(install_sh_SCRIPT) $$a $(DESTDIR)$(prefix)/share/ooRexx/$$bn; \
