@@ -203,15 +203,21 @@ bool Interpreter::terminateInterpreter()
         }
 
         {
-            // this may seem funny, but we need to create an instance
-            // so shut down so that the package manager can unload
-            // the libraries (it needs to pass a RexxThreadContext
-            // pointer out to package unloaders, if they are defined)
-            InstanceBlock instance;
-            // run whatever uninits we can before we start releasing the libraries
-            memoryObject.lastChanceUninit();
+            try
+            {
+                // this may seem funny, but we need to create an instance
+                // so shut down so that the package manager can unload
+                // the libraries (it needs to pass a RexxThreadContext
+                // pointer out to package unloaders, if they are defined)
+                InstanceBlock instance;
+                // run whatever uninits we can before we start releasing the libraries
+                memoryObject.lastChanceUninit();
 
-            PackageManager::unload();
+                PackageManager::unload();
+            } catch (ActivityException)
+            {
+                // we're shutting down, so ignore any failures while processing this
+            }
         }
         // perform system-specific cleanup
         SystemInterpreter::terminateInterpreter();
