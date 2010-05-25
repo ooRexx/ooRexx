@@ -2377,7 +2377,7 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
         ProtectedObject r;
                                              /* run the internal routine on the   */
                                              /* new activation                    */
-        newActivation->run(OREF_NULL, OREF_NULL, arglist, argcount, OREF_NULL, r);
+        newActivation->run(receiver, settings.msgname, arglist, argcount, OREF_NULL, r);
         // turn this off when done executing
         this->debug_pause = false;
     }
