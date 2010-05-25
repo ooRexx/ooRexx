@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -93,7 +93,6 @@ CleanUp:
 
 
 ::method InitDialog
-  InitDlgRet = self~InitDialog:super
 
   /* Initialize progress bar ID_A */
   curPB = self~newProgressBar("ID_A")
@@ -140,7 +139,7 @@ CleanUp:
 
 
 ::method DefineDialog
-  result = self~DefineDialog:super
+
   if result = 0 then do
      /* Additional dialog items (e.g. createEditInputGroup) */
   end
@@ -163,12 +162,33 @@ CleanUp:
   curPB~Step
   return 0
 
-  /* Method Cancel is connected to item 2 */
+  /* Method Cancel is connected to resource ID 2 */
 ::method Cancel
-  resCancel = self~Cancel:super  /* make sure self~InitCode is set to 2 */
-  self~Finished = resCancel      /* 1 means close dialog, 0 means keep open */
-  return resCancel
+  /* Calling the superclass cancel will *always* close the dialog. If you want
+   * to over-ride that behavior, for example to ask the user if she is sure she
+   * wants to cancel, do not call the super class cancel first.  Here, commented
+   * out, is one possible over-ride.
+   */
 
-  /* Method Help is connected to item 9 */
+  /*
+  text = 'There are unsaved changes, are you'.endOfLine'sure you want to cancel?'
+  title = "Abort All Changes !"
+  ret = MessageDialog(text, self~hwnd, title, "YESNO", "WARNING", "DEFBUTTON2")
+  say 'ret' ret
+  if ret == self~constDir[IDYES] then return self~cancel:super
+  else return 1
+  */
+
+  return self~Cancel:super
+
+  /* Method Help is connected to resource ID 9. The super class does nothing,
+   * you need to over-ride this method to actually do anything.
+   */
 ::method Help
-  self~Help:super
+  self~Help:super  -- Will do absolutely nothing.
+
+  text = "There is no help for oodpbar.rex"
+  title = "The ooDialog ProgressBar Example"
+
+  ret = MessageDialog(text, self~hwnd, title, "OK", "EXCLAMATION")
+

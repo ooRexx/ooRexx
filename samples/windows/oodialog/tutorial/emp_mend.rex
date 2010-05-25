@@ -49,7 +49,7 @@ signal on any name CleanUp
 dlg = .MyDialogClass~new
 if dlg~InitCode <> 0 then exit
 dlg~Execute("SHOWTOP")
-dlg~deinstall
+
 exit
 
 /* ------- signal handler to destroy dialog if condition trap happens  -----*/
@@ -101,12 +101,12 @@ CleanUp:
     menuBar~insertPopup(210, 210, ctrlPopup, "&Control")
     menuBar~insertPopup(210, 200, empPopup, "&Employees")
 
-    menuBar~connectSelect(201, "Add", self)
-    menuBar~connectSelect(202, "Print", self)
-    menuBar~connectSelect(204, "Emp_List", self)
-    menuBar~connectSelect(211, "Ok", self)
-    menuBar~connectSelect(212, "Cancel", self)
-    menuBar~connectSelect(214, "About", self)
+    menuBar~connectCommandEvent(201, "Add", self)
+    menuBar~connectCommandEvent(202, "Print", self)
+    menuBar~connectCommandEvent(204, "Emp_List", self)
+    menuBar~connectCommandEvent(211, "Ok", self)
+    menuBar~connectCommandEvent(212, "Cancel", self)
+    menuBar~connectCommandEvent(214, "About", self)
 
 
 ::method InitDialog

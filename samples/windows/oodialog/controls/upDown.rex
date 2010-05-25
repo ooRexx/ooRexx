@@ -50,7 +50,7 @@
  * the UpDown class.
  */
 
-  dlg = .AnUpDownDlg~new("upDown.rc", IDD_UP_DOWN, , "resource.h" )
+  dlg = .AnUpDownDlg~new("upDown.rc", IDD_UP_DOWN, , "upDown.h" )
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   dlg~deinstall
 

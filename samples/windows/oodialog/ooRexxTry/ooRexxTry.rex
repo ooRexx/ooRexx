@@ -621,7 +621,7 @@ return self~ok:super
 ::method OnResize
     expose u
     use arg dummy,sizeinfo
-    if self~PeekDialogMessage~left(8) \= 'OnResize' then u~resize(self,sizeinfo)
+    u~resize(self,sizeinfo)
 
 ::method Help
     expose code_input u

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,37 +35,40 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
-/*                                                                          */
-/* ooDialog\Samples\oobandit.rex  Jack slot machine                         */
-/*                                                                          */
-/*--------------------------------------------------------------------------*/
 
+/**
+ *  oobandit.rex  An ooDialog example, the Jackpot Slot Machine.
+ *
+ *  This example demonstrates one way of animating bitmaps, by drawing them on
+ *  the face of a button.  It also shows how to correctly use dialog units in
+ *  a UserDialog to size and place the controls.
+ *
+ *  Creating the dialog and its controls is done this way:
+ *
+ *  The pixel size of the bitmaps is known.  Although bitmaps can be stretched
+ *  by the OS to fit a specific size, bitmaps look best displayed in their
+ *  actual size.  The pixel size of the bitmaps is first converted to the
+ *  correct dialog unit size, correct for the actual dialog to be constructed.
+ *
+ *  Then the size of the dialog and the size and placement of the dialog
+ *  controls are calculated around the bitmap size.
+ */
 
- curdir = directory()
- parse source . . me
- mydir = me~left(me~lastpos('\')-1)              /* where is code     */
- mydir = directory(mydir)                        /* current is "my"   */
- env = 'ENVIRONMENT'
- win = value('WINDIR',,env)
- sp = value('SOUNDPATH',,env)
- sp = value('SOUNDPATH',win';'mydir'\WAV;'sp,env)
+   curdir = directory()
+   parse source . . me
+   mydir = me~left(me~lastpos('\')-1)              /* where is code     */
+   mydir = directory(mydir)                        /* current is "my"   */
+   env = 'ENVIRONMENT'
+   win = value('WINDIR',,env)
+   sp = value('SOUNDPATH',,env)
+   sp = value('SOUNDPATH',win';'mydir'\WAV;'sp,env)
 
-       /* 1ms fast, 500ms slow, 200ms start, equals random every 25th */
- d = .banditdlg~new(1,500,200,25)
- d~Execute("SHOWTOP")
+         /* 1ms fast, 500ms slow, 200ms start, equals random every 25th */
+   d = .BanditDlg~new(1, 1000, 1000, 25)
+   d~execute("SHOWTOP")
 
- -- You can not remove the bitmap handles while the dialog is still displayed
- -- on the screen.  As long as the dialog is showing, the os will try to repaint
- -- the dialog when needed.  If the bitmaps are destroyed, the program will
- -- crash.
- bmp. = d~getBitmapHandles
- do i = 1 to 8
-   d~removeBitmap(bmp.i)
- end
-
- ret = directory(curdir)
- return
+   ret = directory(curdir)
+   return 0
 
 /*---------------------------------- requires ------------------------*/
 
@@ -73,20 +76,49 @@
 
 /*---------------------------------- dialog class --------------------*/
 
-::class banditdlg subclass UserDialog
+::class 'BanditDlg' subclass UserDialog
+
+::constant BITMAP_X           152
+::constant BITMAP_Y           178
+::constant FONT_NAME          "MS Shell Dlg"
+::constant FONT_SIZE          14
+
+::constant MARGIN_X           10
+::constant MARGIN_Y           5
+::constant JACKPOT_LINE_Y     22
+::constant TEXT_Y             12
+
+::constant BUTTON_X           35
+::constant BUTTON_Y           15
 
 ::method init
-   expose kind3 speedx minspeed maxspeed maxcycle equal misses initpot
-   use arg minspeed, maxspeed, speedx, kind3
-   minspeed = max(1,minspeed)
-   maxcycle = 200; initpot = 1000; equal = 0; misses = 0
-   self~init:super()
-   self~InitCode = self~createcenter(255,140,"Jack Slot Machine -",
-                                     "Stop for 3 of the same kind", , , "System", 8)
+   expose kind3 initialSpeed minSpeed maxSpeed maxCycle cycle equal misses initPot won bitMapSize dlgSize
+   use arg minSpeed, maxSpeed, initialSpeed, kind3
 
-::method DefineDialog
-   expose bmp. speedx jackx jacky
-   self~DefineDialog:super
+   self~init:super()
+
+   -- Set the font the dialog will use when created.  Without this step, dialog
+   -- units can not be calculated correctly.
+   self~setDlgFont(self~FONT_NAME, self~FONT_SIZE)
+
+   -- Set our various instance variables.
+   minSpeed = max(1,minSpeed)
+   maxCycle = 200; initPot = 1000; equal = 0; misses = 0; cycle = maxCycle; won = .false
+
+   -- Calculate the size of a bitmap in dialog units.
+   bitMapSize = .Size~new(self~BITMAP_X, self~BITMAP_Y)
+   self~pixel2dlgUnit(bitMapSize)
+
+   -- Calculate the size of this dialog based on the bitmap size.
+   dlgSize = self~calcSize(bitMapSize)
+
+   title = "Jackpot Slot Machine - Stop on 3 of a Kind and Win $$$"
+   self~initCode = self~createcenter(dlgSize~width, dlgSize~height, title)
+
+::method defineDialog
+   expose bmp. initialSpeed dlgSize bitMapSize
+
+   -- Load the bitmaps into memory.
    bmp.1 = self~LoadBitmap("bmp\tiger.bmp")
    bmp.2 = self~LoadBitmap("bmp\chihuahu.bmp")
    bmp.3 = self~LoadBitmap("bmp\eleph2.bmp")
@@ -95,117 +127,290 @@
    bmp.6 = self~LoadBitmap("bmp\moose.bmp")
    bmp.7 = self~LoadBitmap("bmp\rhinoce.bmp")
    bmp.8 = self~LoadBitmap("bmp\goat.bmp")
-   self~createBlackFrame(-1, 10, 5, 235, 20, "BORDER") /* jackpot line */
-   self~createBlackFrame(-1, 107, 7, 41, 16, "BORDER")
-   self~createBlackFrame(-1, 108, 8, 39, 14, "BORDER")
-   self~createStaticText(-1, 40, 10, 60, 10, , "Jackpot  $$$")
-   self~createEdit(1200, 110, 9, 35, 11)
-   self~createStaticText(-1, 175, 10, 60, 10, , "$$$  Jackpot")
-   jackx = 20*self~factorx; jacky = 20*self~factory
-   self~createBitmapButton(1201,10, 30,75,90,"INMEMORY STRETCH USEPAL", , , bmp.1)
-   self~createBitmapButton(1202,90, 30,75,90,"INMEMORY STRETCH", , , bmp.1)
-   self~createBitmapButton(1203,170,30,75,90,"INMEMORY STRETCH", , , bmp.1)
-   self~createPushButtonGroup(10,125,34,12,"&Stop 1 OK &Cancel 2 Cancel",1,"DEFAULT")
-   self~createStaticText(-1, 105, 126, 40, 9, 'RIGHT', 'Speed (ms):')
-   self~createEdit(1205, 150, 125, 15, 12, , 'speed')
-   self~createStaticText(-1, 168, 126, 15, 9, 'RIGHT', 'Fast')
-   self~createStaticText(-1, 230, 126, 15, 9, 'LEFT', 'Slow')
-   self~createScrollBar(1206, 188, 125, 40, 12, "HORIZONTAL")
-   self~speed = speedx
+   bmp.0 = 8
 
-::method InitDialog
-   expose minspeed maxspeed
-   self~InitDialog:super
-   self~connectEachSBEvent(1206,'FASTER','SLOWER','DRAG',minspeed,maxspeed,self~speed)
+   -- Note that for a static text control, the CENTERIMAGE flag has the effect
+   -- of vertically centering the text within the control.
 
-::method Run unguarded
-   expose x y z bmp. kind3 cycle maxcycle equal misses
-   rand =  random(1,8,time('S')*7) /* init random */
+   -- Create the jackpot line.  First a frame around the whole thing.
+   x = self~MARGIN_X
+   y = self~MARGIN_Y
+   self~createBlackFrame(-1, x, y, dlgSize~width - (2 * self~MARGIN_X), self~JACKPOT_LINE_Y, "BORDER")
+
+   -- Static text on the right, centered over the 1st bitmap
+   txt = "Jackpot  $$$"
+   txtSize = self~getTextSizeDU(txt)
+   x += trunc((bitMapSize~width / 2) - (txtSize~width / 2))
+   y += self~MARGIN_Y
+   self~createStaticText(-1, x, y, txtSize~width, self~TEXT_Y, "CENTER CENTERIMAGE", txt)
+
+   -- The jackpot number, could be up to 9 digits.  Just a static control with a
+   -- fancy frame, centered over the middle bitmap
+   txt = "888888888"
+   txtSize = self~getTextSizeDU(txt)
+   x = trunc((dlgSize~width / 2) - ((txtSize~width + 6) / 2))
+   self~createBlackFrame(-1,   x + 0, y - 2, txtSize~width + 6, self~TEXT_Y + 4, "BORDER")
+   self~createBlackFrame(-1,   x + 1, y - 1, txtSize~width + 4, self~TEXT_Y + 2, "BORDER")
+   self~createStaticText(1200, x + 3, y - 0, txtSize~width + 0, self~TEXT_Y + 0, "RIGHT CENTERIMAGE")
+
+   -- Static text on the left, centered over the 3rd bitmap.
+   txt = "$$$  Jackpot"
+   txtSize = self~getTextSizeDU(txt)
+   x = (bitMapSize~width * 2) + (3 * self~MARGIN_X)            -- The left edge of the 3rd bitmap ...
+   x += trunc((bitMapSize~width / 2) - (txtSize~width / 2))    -- ... and center
+   self~createStaticText(-1, x, y, txtSize~width, self~TEXT_Y, "CENTER CENTERIMAGE", txt)
+
+   -- Now place the bitmaps
+   x = self~MARGIN_X
+   y = (2 * self~MARGIN_Y) + self~JACKPOT_LINE_Y
+   self~createBitmapButton(1201, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY  USEPAL", , , bmp.1)
+
+   x += bitMapSize~width + self~MARGIN_X
+   self~createBitmapButton(1202, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY ", , , bmp.1)
+
+   x += bitMapSize~width + self~MARGIN_X
+   self~createBitmapButton(1203, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY ", , , bmp.1)
+
+   -- Stop and cancel buttons, placed at left margin and under bitmaps
+   x = self~MARGIN_X
+   y += bitMapSize~height + self~MARGIN_Y
+   self~createPushButtonGroup(x, y, self~BUTTON_X, self~BUTTON_Y, "&Stop 1100 onStop &Cancel 2 Cancel", .false, "DEFAULT")
+
+   -- A group box to hold the speed adjustment controls
+   txt = 'Speed (in ms) lower is faster'
+   x += bitMapSize~width + self~MARGIN_X
+   cy = dlgSize~height - y - self~MARGIN_Y
+   self~createGroupBox(-1, x, y, (bitMapSize~width * 2) + self~MARGIN_X, cy, , txt)
+
+   -- And finally the speed adjustment controls them selves.  The top of a group box
+   -- is higher than the top line of the group box (to allow for text.)  So in order
+   -- for the speed controls to look centered with the group box lines, we need to
+   -- calculate the center, adjust for the height of the controls, and then push it
+   -- "down a bit."  I arbitrarily choose 3 as 'a bit.'
+   x += self~MARGIN_X
+   y += trunc((cy / 2) - (self~TEXT_Y / 2)) + 3
+   txt = ' Faster :'
+   txtSize = self~getTextSizeDU(txt)
+   self~createStaticText(-1, x, y, txtSize~width, self~TEXT_Y, 'RIGHT CENTERIMAGE', txt)
+
+   x += txtSize~width + 2
+   self~createEdit(1205, x , y, 35, self~TEXT_Y, "NUMBER")
+
+   x += 35
+   self~createUpDown(1206, x, y, 25, self~TEXT_Y, "RIGHT ARROWKEYS AUTOBUDDY BUDDYINT HORIZONTAL NOTHOUSANDS", 'speed')
+
+   x += 2
+   self~createStaticText(-1, x, y, 30, self~TEXT_Y, 'LEFT CENTERIMAGE', ': Slower')
+
+   -- Set the up down position to the initial speed.
+   self~speed = initialSpeed
+
+::method initDialog
+   expose minSpeed maxSpeed notStopped jackPotCtrl speedCtrl
+
+   self~newUpDown(1206)~setRange(minSpeed, maxSpeed)
+
+   speedCtrl = self~newEdit(1205)
+   speedCtrl~setLimit(maxSpeed~length - 1)
+   ret = speedCtrl~connectKeyEvent(onKey); say 'connectKeyEvent ret:' ret
+
+   jackPotCtrl = self~newStatic(1200)
+
+   notStopped = .true
+   self~disableControl(1100)
+   self~start("bandit")
+
+::method onKey unguarded
+  expose speedCtrl
+  use arg key, shift, control, alt, info
+  say 'Key press:' key 'shift?' shift 'control?' control 'alt?' alt 'info:' info
+  say
+  say 'speed text:' speedCtrl~getText
+
+  s = speedCtrl~selection
+  say 'selection:' s~startChar s~endChar
+
+  if control then return .false -- Don't allow cut and paste
+  if key == 57 then return .false
+  else return .true
+
+::method bandit unguarded
+   expose x y z bmp. kind3 cycle maxCycle equal misses notStopped won
+
+   rand =  random(1, 8, time('S') * 7) /* init random */
    ret = play("WHISTLE.WAV")
-   do cycle = maxcycle by -1 to 1 until self~finished
-      if self~checkspeed = 0 then leave
-      sleep = format(max(1, min(100,self~speed/2)), , 0)
-      do j = 1 to self~speed/sleep
-	 if self~Finished = 0 then do
-            self~HandleMessages
-            call msSleep sleep
-         end
+
+   -- The user could have canceled while the whistle was playing..
+   if self~finished then return 0
+
+   self~enableControl(1100)
+
+   do cycle = maxCycle by -1 to 1 until self~finished
+      if self~checkSpeed = 0 then leave
+
+      sleep = format(max(1, min(100, self~speed / 2)), , 0)
+      do j = 1 to self~speed / sleep
+	       if  \self~finished then call msSleep sleep
       end
-      self~HandleMessages
-      if self~Finished then return 0
-      if random(1,kind3) = 3 then
-           do; x = equal // 8 + 1; y = x; z = x; equal = equal + 1;  end
-      else do; x = random(1, 8); y = random(1, 8); z = random(1, 8); end
-      self~ChangeBitmapButton(1201, bmp.x,,,,"INMEMORY STRETCH")
-      self~ChangeBitmapButton(1202, bmp.y,,,,"INMEMORY STRETCH")
-      self~ChangeBitmapButton(1203, bmp.z,,,,"INMEMORY STRETCH")
+
+      if self~finished then return 0
+      guard on when notStopped     -- Don't change the bitmaps out from under the user.
+
+      if random(1, kind3) = 3 then do
+         x = equal // 8 + 1; y = x; z = x; equal += 1
+      end
+      else do
+         x = random(1, 8); y = random(1, 8); z = random(1, 8)
+      end
+
+      -- It's an error to invoke changeBitmapButton if the underlying dialog
+      -- no longer exists.  (Which may be if the user hit cancel.)
+      if \self~isDialogActive then return 0
+
+      self~changeBitmapButton(1201, bmp.x,,,,"INMEMORY STRETCH")
+      self~changeBitmapButton(1202, bmp.y,,,,"INMEMORY STRETCH")
+      self~changeBitmapButton(1203, bmp.z,,,,"INMEMORY STRETCH")
+
+      guard off
+      if self~finished then return 0
    end
-   ret = TimedMessage('Sorry, you did not get the jackpot in' misses 'tries on' equal 'chances', ,
-                      'End of run',4000)
-   return 1
 
-::method slower
-   self~combineElwithSB(1205,1206,+20)
-   self~checkspeed
+   if \won then do
+      self~disableControls
 
-::method faster
-   self~combineElwithSB(1205,1206,-20)
-   self~checkspeed
+      msg = 'Sorry, you did not get the jackpot in '     || .endOfLine ||   -
+            misses 'tries.' || .endOfLine~copies(2)                    ||   -
+            'There were' equal 'chances. ('equal' three' || .endOfLine || -
+            'of a kind were shown.)'
+      title = 'End of run'
+      ret = messageDialog(msg, self~hwnd, title, "OK", "INFORMATION")
+   end
 
-::method drag
-   use arg wparam, lparam
-   self~combineElwithSB(1205,1206,0, wparam)
-   self~checkspeed
+   -- Clean up is in our cancel method, so we invoke that rather than self~ok:super
+   if \self~finished then return self~cancel
+   else return 1
 
-::method checkspeed
-   expose minspeed maxspeed cycle initpot jackx jacky
-   self~getControlDataAttribute('speed')
-   if self~speed < minspeed then self~speed = minspeed
-   if self~speed > maxspeed then self~speed = maxspeed
-   self~setDataAttribute('speed')
-   jackpot = trunc(cycle * initpot / self~speed)
-   /*self~write(jackx,jacky,"Jackpot $$$" right(jackpot,6,'_'),"Arial",24,'BOLD')*/
-   self~setEditData(1200,right(jackpot,9))
-   return jackpot
+::method disableControls private
+   self~disableControl(1100)
+   self~disableControl(IDCANCEL)
+   self~disableControl(1205)
+   self~disableControl(1206)
 
-::method OK
-   expose x y z misses initpot
-   self~finished = 0
+::method onStop
+   expose x y z misses initPot notStopped won jackpotCtrl
+
+   notStopped = .false  -- Prevent the 'bandit' from changing the bitmaps
+
    if ((x=y) & (y=z)) then do
-      ret = Play("tada.wav")
+      -- All 3 bitmaps are the same, jackpot.
+      won = .true
+      ret = play("tada.wav")
       self~setWindowTitle(self~get,"Congratulations !")
-      do i=40 by 20 to 120
+      do i = 40 by 20 to 120
          self~write(i*self~factorx,i*self~factory,"Congratulations...","Arial",14,'BOLD')
       end
-      money = strip(self~getEditData(1200))
+      money = jackpotCtrl~getText
       self~write(10*self~factorx+5,75*self~factory,"You won the jackpot:" money,"Arial",18,'BOLD')
       do i=1 to min(money%500 + 1,10)
          ret = play("jackpot.wav")
          money = max(0,money - 500)
-         self~setEditData(1200,right(money,9))
+         jackpotCtrl~setText(money)
       end
+      jackpotCtrl~setText(0)
       call msSleep 1000
       return self~cancel
    end
-   misses = misses + 1
-   ret = Play("nope.wav", "yes")
+
+   -- Not 3 of a kind
+   misses += 1
+   ret = play("nope.wav", "yes")
+
    if ((x=y) | (y=z) | (x=z)) then do
         ret = infoDialog("2 equal, not bad, try again... jackpot reduced 25%")
-        initpot = trunc(initpot * .75)
-        end
+        initPot = trunc(initPot * .75)
+   end
    else do
         ret = infoDialog("Not a chance, try again... jackpot is halfed!")
-        initpot = trunc(initpot / 2)
+        initPot = trunc(initPot * .5)
    end
-   if initpot=1 then ret = infoDialog("One more chance to hit the jackpot....")
-   self~checkspeed
+
+   if initPot = 1 then ret = infoDialog("One more chance to hit the jackpot....")
+   self~checkSpeed
+   notStopped = .true  -- Unblock the 'bandit'
    return 0
 
+::method checkSpeed
+   expose minSpeed maxSpeed cycle initPot jackpotCtrl
+
+   if self~finished then return 0
+
+   self~getDataAttribute('speed')
+
+   -- Although the edit control is numbers only, and the up down control won't
+   -- allow the user to spin outside of the range, or use the arrow keys to move
+   -- outside of the range, it is possible for the user to delete all the
+   -- numbers in the edit control, or to type in numbers larger than the
+   -- maximum.  In which case the up down control seems to return the empty
+   -- string for its position ??
+   if self~speed == "" then do
+     say 'Up down position: ' self~newUpDown(1206)~getPosition
+     say 'Edit control text:' self~newEdit(1205)~getText
+   end
+
+   money = trunc(cycle * initPot / self~speed)
+   jackpotCtrl~setText(money)
+
+   return money
+
 ::method cancel
-   call Play "byebye.wav"
+   expose notStopped bmp.
+
+   self~disableControls
    self~finished = 1
+
+   call Play "byebye.wav"
+   notStopped = .true     -- Be sure the bandit() method is not blocked
+
+   -- You can not remove the bitmap handles while the dialog is still displayed
+   -- on the screen.  As long as the dialog is showing, the os will try to
+   -- repaint  the dialog when needed.  If the bitmaps are destroyed, the
+   -- program will crash.  Wait until the underlying dialog is closed.
+   do while self~isDialogActive
+     j = SysSleep(.334)
+   end
+
+   do i = 1 to bmp.0
+     self~removeBitmap(bmp.i)
+   end
    return 1
 
-::method getBitmapHandles
-  expose bmp.
-  return bmp.
+::method calcSize private
+   use strict arg bitMapSize
+
+   s = .Size~new
+
+   -- For the width of the dialog, we have 3 bitmaps, an X magin on both sides,
+   -- and we space the bitmaps apart horizontaly using the X margin.  3 bitmaps
+   -- and 4 X margins
+   s~width = (3 * bitMapSize~width) + (4 * self~MARGIN_X)
+
+   -- The height is sligthly more complicated.  It goes like this from top to
+   -- bottom: Y margin, jackpot line, Y margin, bitmap height, Y margin, push
+   -- button group height, Y margin.
+   s~height = (4 * self~MARGIN_Y) + self~JACKPOT_LINE_Y + bitMapSize~height +  -
+              self~getButtonGroupHeight
+
+   return s
+
+::method getButtonGroupHeight private
+   expose h
+
+   if \h~dataType('W') then do
+      -- To calculate the height of the push button group, we need to know the
+      -- height of a button, the number of buttons (2), and the vertical spacing
+      -- between buttons.  It so happens that I know the vertical spacing is 1/2
+      -- the button height, truncated.
+      h = (2 * self~BUTTON_Y) + trunc(.5 * self~BUTTON_Y)
+   end
+   return h
+

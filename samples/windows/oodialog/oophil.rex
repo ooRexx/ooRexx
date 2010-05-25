@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,11 +35,10 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
-/*                                                                          */
-/* ooDialog\Samples\oophil.rex    Philosophers' Forks                       */
-/*                                                                          */
-/*--------------------------------------------------------------------------*/
+
+/**
+ *  oophil.rex  An ooDialog demonstration of the Philosopher's Forks
+ */
 
 
   curdir = directory()
@@ -49,18 +48,18 @@
 
 /*---------------------- run default parameters ----------------------*/
 
-  parms.101 = 80                 /* sleeping time 80 * 100 ms = 8 sec */
-  parms.102 = 50                 /* eating   time 50 * 100 ms = 5 sec */
-  parms.103 = 3                  /* 3 repetitions                     */
+  parms.107 = 80                 /* sleeping time 80 * 100 ms = 8 sec */
+  parms.108 = 50                 /* eating   time 50 * 100 ms = 5 sec */
+  parms.109 = 3                  /* 3 repetitions                     */
   parms.104 = 0                  /* radio button left  fork first off */
   parms.105 = 0                  /*              right fork first off */
   parms.106 = 1                  /*              any   fork first on  */
 
 /*---------------------- dialogs & resources -------------------------*/
 
-  v.anidialog = 100              /* animation dialog graphical        */
+  v.anidialogID = 100            /* animation dialog graphical        */
   v.anidialog = 'rc\oophil2.rc'
-  v.setdialog = 101              /* setup dialog for parameters       */
+  v.setdialogID = 101            /* setup dialog for parameters       */
   v.setdialog = 'rc\oophil1.rc'
 
 /*---------------------- animation dialog IDs ------------------------*/
@@ -108,9 +107,9 @@
 
 /*---------------------- main logic ----------------------------------*/
 
-  setdlg = .setupdialog~new(parms., v., vb.)
-  ret = setdlg~execute("SHOWTOP")
-  setdlg~deinstall
+  setUpDlg = .SetUpDialog~new(parms., v., vb.)
+  setUpDlg~execute("SHOWTOP")
+
   ret = directory(curdir)
   return
 
@@ -122,96 +121,87 @@
 
 /*---------------------- setup dialog ---------------------------------*/
 
-::class setupdialog subclass userdialog
+::class 'SetupDialog' subclass UserDialog
 
 ::method init
    expose v. vb.
    use arg parms., v., vb.
    self~init:super(parms.)
-   self~load(v.setdialog,101,'CENTER')
+   self~load(v.setdialog, v.setdialogID, 'CENTER')
 
-::method InitDialog
+::method initDialog
    expose msg v. vb.
-   msg = .NIL
-   self~InitDialog:super
-   self~connectEachSBEvent(107, 'SLEEPDN', 'SLEEPUP',, 0, 1000, 1)
-   self~connectEachSBEvent(108, 'EATDN', 'EATUP',, 0, 1000, 1)
-   self~connectEachSBEvent(109, 'REPDN', 'REPUP',, 0, 1000, 1)
-   do i over vb.                               /* bitmaps in memory */
+   msg = .nil
+
+   -- Set the up down controls.  They all have a range from 0 to 1000.  Then
+   -- we connect the delta postion event notification for the sleeping and
+   -- eating time controls so that we can increment them by 5 rather than 1.
+   do id = 107 to 109
+     self~newUpDown(id)~setRange(0, 1000)
+   end
+
+   self~connectUpDownEvent(107, "DELTAPOS", onDelta)
+   self~connectUpDownEvent(108, "DELTAPOS", onDelta)
+
+   -- Load the bitmaps in to memory
+   do i over vb.
      v.i = self~LoadBitmap(vb.i)
    end
 
-::method SleepDN
-   self~CombineELwithSB(101, 107, +5)
-   return 0
+-- The user incremented (or decremented) one of the up down controls.  We
+-- intercept the notification so that we can increment (or decrement) by 5
+-- rather than 1.
+::method onDelta
+  use arg pos, delta, id, hwnd
 
-::method SleepUP
-   self~CombineELwithSB(101, 107, -5)
-   return 0
-
-::method EatDN
-   self~CombineELwithSB(102, 108, +5)
-   return 0
-
-::method EatUP
-   self~CombineELwithSB(102, 108, -5)
-   return 0
-
-::method RepDN
-   self~CombineELwithSB(103, 109, +1)
-   return 0
-
-::method RepUP
-   self~CombineELwithSB(103, 109, -1)
-   return 0
+  return .UpDown~deltaPosReply(.true, .false, delta * 5)
 
 ::method help
    expose msg v.
    if msg = .NIL then         ret = Play(v.help, 'yes')
    else if msg~completed then ret = Play(v.help, 'yes')
    else                       ret = Play()
-   msg = self~start("ScrollInButton",110, v.helptext, ,
-                    "Arial", 42, "BOLD",0, 4, 8)
+   msg = self~start("scrollInButton", 110, v.helptext, -
+                    "Arial", 30, "BOLD", 0, 4, 8)
    return 0
 
-::method OK                                   /* run philosophers      */
+::method ok                                   /* run philosophers      */
    expose msg v.
    if msg \= .nil then
-      if msg~completed=0 then self~ScrollInButton(110)
+      if msg~completed=0 then self~scrollInButton(110)
    self~getDataStem(parms.)
                                               /* philosopher dialog    */
    dlg = .phildlg~new(v.)
-   if dlg~ExecuteAsync(,"SHOWTOP") = 0 then do
-      dlg~myexecute(parms.)                      /* philosopher animation */
-      dlg~EndAsyncExecution
+   if dlg~executeAsync(,"SHOWTOP") = 0 then do
+      dlg~myExecute(parms.)                   /* philosopher animation */
+      dlg~endAsyncExecution
    end
    else call errorDialog "Couldn't execute Philosophers Forks Dialog"
-   dlg~deinstall
 
-::method Cancel
+::method cancel
    expose msg v. vb.
-   self~Cancel:super
-   if msg \= .NIL then
-      if msg~completed=0 then self~ScrollInButton(110)
+   if msg \= .nil then
+      if \msg~completed then self~scrollInButton(110)
    do i over vb.                              /* bitmaps out of memory */
-      self~RemoveBitmap(v.i)
+      self~removeBitmap(v.i)
    end
+   self~cancel:super
 
 
 /*---------------------- animation dialog -----------------------------*/
 
-::class phildlg subclass UserDialog
+::class 'PhilDlg' subclass UserDialog
 
 ::method init
    expose v.
    use arg v.
-   self~init:super(empty.)
-   self~load(v.anidialog,100,'CENTER')
+   self~init:super
+   self~load(v.anidialog, v.anidialogID, 'CENTER')
 
-::method InitDialog
+::method initDialog
    expose f1 f2 f3 f4 f5 p1 p2 p3 p4 p5 v.
-   self~InitDialog:super
-   self~disableItem(1)                          /* stop button      */
+
+   self~disableControl(1)                       /* disable stop button */
    do i = 1 to 5
       ret = self~installBitmapButton(v.idp  + i,    '', v.bmpphil ,,,,"STRETCH INMEMORY")
       ret = self~installBitmapButton(v.idf  + i,    '', v.bmpfork ,,,,"STRETCH INMEMORY")
@@ -221,102 +211,102 @@
    end
    ret    = self~installBitmapButton(v.idcake,      '', v.bmpblank,,,,"STRETCH INMEMORY")
 
-   f1 = .fork~new(1, self)                      /* create 5 forks   */
+   f1 = .fork~new(1, self)                      /* create 5 forks      */
    f2 = .fork~new(2, self)
    f3 = .fork~new(3, self)
    f4 = .fork~new(4, self)
    f5 = .fork~new(5, self)
 
-   p1 = .phil~new(1,f5,f1, self)                /* create 5 philos. */
+   p1 = .phil~new(1,f5,f1, self)                /* create 5 philos.    */
    p2 = .phil~new(2,f1,f2, self)
    p3 = .phil~new(3,f2,f3, self)
    p4 = .phil~new(4,f3,f4, self)
    p5 = .phil~new(5,f4,f5, self)
 
-::method myexecute                              /* animate dialog   */
+::method myExecute                              /* animate dialog      */
    expose f1 f2 f3 f4 f5 p1 p2 p3 p4 p5
    use arg parms.
    T.sleep = parms.101
    T.eat = parms.102
    T.veat = trunc(T.eat / 2)
    T.vsleep = trunc(T.sleep / 2)
-   if parms.104 = 1 then T.side = 100           /* left fork first  */
-   else if parms.105 = 1 then T.side = 0        /* right            */
-                         else T.side = 50       /* random           */
+   if parms.104 = 1 then T.side = 100           /* left fork first     */
+   else if parms.105 = 1 then T.side = 0        /* right               */
+                         else T.side = 50       /* random              */
    T.repeats = parms.103
 
-   self~cake('init')                            /* set up the cake  */
+   self~cake('init')                            /* set up the cake     */
 
-   m1 = p1~start("run",T.)                      /* run 5 philsophers*/
+   m1 = p1~start("run",T.)                      /* run 5 philsophers   */
    m2 = p2~start("run",T.)
    m3 = p3~start("run",T.)
    m4 = p4~start("run",T.)
    m5 = p5~start("run",T.)
-   self~enableItem(1)                           /* stop button      */
-                                                /* wait till done   */
-   do while(m1~completed+m2~completed+m3~completed+m4~completed+m5~completed <5),
-            & (self~finished = 0)
-      self~HandleMessages                       /* stop button ?    */
+   self~enableControl(1)                        /* enable stop button  */
+
+   -- wait untill the 5 philsopers are done, or the stop button is pushed.
+   do while(m1~completed+m2~completed+m3~completed+m4~completed+m5~completed <5) & \self~finished
+      j = SysSleep(.340)
    end
-   m1~result                                    /* check 5 phils    */
+   m1~result                                    /* check 5 phils       */
    m2~result
    m3~result
    m4~result
    m5~result
    self~ok:super                                /* finish dialog    */
 
-::method OK                                     /* Stop button      */
+::method ok unguarded                           /* Stop button      */
    expose f1 f2 f3 f4 f5 p1 p2 p3 p4 p5 v.
-   self~DisableItem(1)
-   call Play v.stop,'yes'
+   self~disableControl(1)
+   call play v.stop,'yes'
    self~ok:super                                /* sets finished    */
-   f1~laydown                                   /* take away forks  */
-   f2~laydown
-   f3~laydown
-   f4~laydown
-   f5~laydown
+   f1~layDown                                   /* take away forks  */
+   f2~layDown
+   f3~layDown
+   f4~layDown
+   f5~layDown
 
-::method setphil unguarded                      /* philosoph bitmap */
+::method setPhil unguarded                      /* philosoph bitmap */
    expose v.
    use arg num, bmp
-   self~ChangeBitmapButton(v.idp + num, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
+   self~changeBitmapButton(v.idp + num, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
 
-::method setfork unguarded                      /* fork bitmap      */
+::method setFork unguarded                      /* fork bitmap      */
    expose v.
    use arg num, bmp
-   self~ChangeBitmapButton(v.idf + num, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
+   self~changeBitmapButton(v.idf + num, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
 
-::method setleft unguarded                      /* left hand bitmap */
+::method setLeft unguarded                      /* left hand bitmap */
    expose v.
    use arg num, bmp
-   self~ChangeBitmapButton(v.idhl + num*10, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
+   self~changeBitmapButton(v.idhl + num*10, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
 
-::method setright unguarded                     /* righthand bitmap */
+::method setRight unguarded                     /* righthand bitmap */
    expose v.
    use arg num, bmp
-   self~ChangeBitmapButton(v.idhr + num*10, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
+   self~changeBitmapButton(v.idhr + num*10, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
 
-::method setpiece unguarded                     /* cakepiece bitmap */
+::method setPiece unguarded                     /* cakepiece bitmap */
    expose v.
    use arg num, bmp
-   self~ChangeBitmapButton(v.idpc + num, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
+   self~changeBitmapButton(v.idpc + num, value('v.bmp'bmp),,,,'STRETCH INMEMORY')
 
 ::method cake unguarded                         /* cake bitmap      */
-   expose curcake v.
+   expose curCake v.
    if arg() = 1 then do
-        curcake = -1
+        curCake = -1
         self~audio('cakewhere')
-        call msSleep 2000
+        call SysSleep(2)
    end
-   curcake = (curcake+1)//11
-   i = curcake + 1
-   self~ChangeBitmapButton(v.idcake, value('v.bmpcake'i),,,,'STRETCH INMEMORY')
-   if curcake=10 then self~audio('cakenew')
+   curCake = (curCake+1)//11
+   i = curCake + 1
+   self~changeBitmapButton(v.idcake, value('v.bmpcake'i),,,,'STRETCH INMEMORY')
+   if curCake=10 then self~audio('cakenew')
 
 ::method audio unguarded                        /* play a sound     */
    expose v.
    use arg act
-   ret = Play( value('v.'act), 'yes')
+   ret = play(value('v.'act), 'yes')
 
 
 /*---------------------- philosopher ---------------------------------*/
@@ -324,31 +314,32 @@
 ::class phil                                      /*** philosophers ***/
 
 ::method init                                     /* initialize       */
-   expose num rfork lfork dlg
-   use arg num, rfork, lfork, dlg
+   expose num rFork lFork dlg
+   use arg num, rFork, lFork, dlg
 
 ::method run                                      /* run the philosop.*/
-   expose num rfork lfork dlg
+   expose num rFork lFork dlg
    use arg T.
    x =  random(1,100,time('S')*num)
    do i=1 to T.repeats until dlg~finished         /* - run the loop   */
          stime = random(T.sleep-T.vsleep,T.sleep+T.vsleep)
+         if dlg~finished then leave               /* - stop clicked   */
          self~sleep(stime)                        /* - call sleep     */
          if dlg~finished then leave               /* - stop clicked   */
          self~wait                                /* - call wait      */
          if random(1,100) < T.side then do        /* - pick up forks  */
-            self~pickleft(T.eat>20)               /* - - left first   */
-            self~pickright(T.eat>20)
-            end
+            self~pickLeft(T.eat>20)               /* - - left first   */
+            self~pickRight(T.eat>20)
+         end
          else do                                  /* - - right first  */
-            self~pickright(T.eat>20)
-            self~pickleft(T.eat>20)
+            self~pickRight(T.eat>20)
+            self~pickLeft(T.eat>20)
          end
          etime = random(T.eat-T.veat,T.eat+T.veat)
          if dlg~finished then leave               /* - stop clicked   */
          self~eat(etime)                          /* - call eat       */
-         self~laydownleft                         /* - free forks     */
-         self~laydownright
+         self~layDownLeft                         /* - free forks     */
+         self~layDownRight
    end
    self~done
    return 1
@@ -356,61 +347,61 @@
 ::method sleep                                    /* philosoph sleeps */
       expose num dlg
       use arg ds
-      dlg~setphil(num, 'sleep')
+      dlg~setPhil(num, 'sleep')
       if num=1 & ds>=20 then dlg~audio('sleep')
       if ds > 0 then call msSleep ds*100
 
 ::method eat                                      /* philosoph eats   */
       expose num dlg
       use arg ds
-      dlg~setphil(num, 'eat')
+      dlg~setPhil(num, 'eat')
       dlg~cake                                    /* - cake smaller   */
-      dlg~setpiece(num, 'piece')                  /* - he gets piece  */
+      dlg~setPiece(num, 'piece')                  /* - he gets piece  */
       if ds > 0 then do
          if num=1 & ds>=20 then dlg~audio('eat')
-         do i = 1 to ds/5 while dlg~finished=0   /* - eat,check stop */
+         do i = 1 to ds/5 while \dlg~finished    /* - eat,check stop */
             call msSleep 300
             if random(1,50)=11 then
-                 dlg~~audio('ouch')~setphil(num, 'ouch')
-            else dlg~setphil(num, 'eat2')
+                 dlg~~audio('ouch')~setPhil(num, 'ouch')
+            else dlg~setPhil(num, 'eat2')
             call msSleep 200
-            dlg~setphil(num, 'eat')
+            dlg~setPhil(num, 'eat')
          end
-         call msSleep ds//10 * 100
+         if \dlg~finished then call msSleep ds//10 * 100
       end
-      dlg~setpiece(num, 'blank')
+      dlg~setPiece(num, 'blank')
 
 ::method wait                                     /* philosoph waits  */
       expose num dlg
-      dlg~setphil(num, 'wait')
+      dlg~setPhil(num, 'wait')
 
-::method pickleft                                 /* pick left fork   */
-      expose num dlg lfork
+::method pickLeft                                 /* pick left fork   */
+      expose num dlg lFork
       use arg sound
-      dlg~setleft(num, 'handl')
-      lfork~pickup(num=1 & sound)
-      dlg~setleft(num, 'handlf')
+      dlg~setLeft(num, 'handl')
+      lFork~pickUp(num=1 & sound)
+      dlg~setLeft(num, 'handlf')
 
-::method pickright                                /* pick right fork  */
-      expose num dlg rfork
+::method pickRight                                /* pick right fork  */
+      expose num dlg rFork
       use arg sound
-      dlg~setright(num, 'handr')
-      rfork~pickup(num=1 & sound)
-      dlg~setright(num, 'handrf')
+      dlg~setRight(num, 'handr')
+      rFork~pickUp(num=1 & sound)
+      dlg~setRight(num, 'handrf')
 
-::method laydownleft                              /* down left fork   */
-      expose num dlg lfork
-      dlg~setleft(num, 'blank')
-      lfork~laydown
+::method layDownLeft                              /* down left fork   */
+      expose num dlg lFork
+      dlg~setLeft(num, 'blank')
+      lFork~layDown
 
-::method laydownright                             /* down right fork  */
-      expose num dlg rfork
-      dlg~setright(num, 'blank')
-      rfork~laydown
+::method layDownRight                             /* down right fork  */
+      expose num dlg rFork
+      dlg~setRight(num, 'blank')
+      rFork~layDown
 
 ::method done                                     /* philosopher done */
       expose num dlg
-      dlg~setphil(num, 'blank')
+      dlg~setPhil(num, 'blank')
 
 
 /*---------------------- fork ----------------------------------------*/
@@ -422,15 +413,15 @@
    use arg num, dlg
    used = 0                                       /* - forks are free */
 
-::method pickup                                   /* pickup the fork  */
+::method pickUp                                   /* pickUp the fork  */
    expose used num dlg
    use arg sound
    if used & sound then dlg~audio('wait')
    guard on when used = 0                         /* - wait until free*/
    used = 1                                       /* - set occupied   */
-   dlg~setfork(num, 'blank')
+   dlg~setFork(num, 'blank')
 
-::method laydown unguarded                        /* laydown the fork */
+::method layDown unguarded                        /* layDown the fork */
    expose used num dlg
-   dlg~setfork(num, 'fork')
+   dlg~setFork(num, 'fork')
    used = 0                                       /* - set to free    */

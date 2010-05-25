@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,32 +35,36 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog\Samples\rc\oophil1.rc      Philosophers' Forks Setup      */
-/*--------------------------------------------------------------------*/
+
+/**
+ * oophil1.rc  The resource script for the set up dialog for oophil.rex
+ */
 
 #include <windows.h>
+#include <commctrl.h>
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 101 DIALOG 86, 68, 211, 125
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_MODALFRAME | DS_SETFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
 CAPTION "Philosophers' Forks Setup"
 FONT 8, "MS Sans Serif"
 {
- EDITTEXT 101, 87, 11, 25, 12, WS_BORDER | WS_TABSTOP
- EDITTEXT 102, 87, 37, 25, 12, WS_BORDER | WS_TABSTOP
- EDITTEXT 103, 87, 62, 25, 12, WS_BORDER | WS_TABSTOP
- AUTORADIOBUTTON "&Left hand first", 104, 137, 11, 60, 12
- AUTORADIOBUTTON "&Right hand first", 105, 137, 26, 62, 12
- AUTORADIOBUTTON "&Any hand first", 106, 137, 41, 59, 12
- PUSHBUTTON "Cancel", 2, 153, 84, 50, 14
- DEFPUSHBUTTON "OK", 1, 153, 64, 50, 14
- LTEXT "&Sleeping time (100 ms)", -1, 7, 13, 76, 8, NOT WS_GROUP
- LTEXT "&Eating time (100 ms)", -1, 7, 39, 71, 8, NOT WS_GROUP
- LTEXT "&Number of repeats", -1, 7, 64, 71, 8, NOT WS_GROUP
- CONTROL "", -1, "STATIC", SS_BLACKFRAME | WS_CHILD | WS_VISIBLE, 134, 7, 68, 50
- AUTO3STATE "Button", 110, 5, 90, 138, 25, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
- CONTROL "", -1, "STATIC", SS_BLACKFRAME | WS_CHILD | WS_VISIBLE, 3, 85, 141, 34
- PUSHBUTTON "&Help", 9, 153, 104, 50, 14
- SCROLLBAR 107, 116, 7, 9, 18, SBS_VERT
- SCROLLBAR 108, 116, 35, 9, 18, SBS_VERT
- SCROLLBAR 109, 116, 60, 9, 18, SBS_VERT
+    EDITTEXT        101, 87, 11, 36, 12, ES_NUMBER
+    CONTROL         "", 107, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_SETBUDDYINT, 111, 11, 12, 12
+    EDITTEXT        102, 87, 37, 36, 12, ES_NUMBER
+    CONTROL         "", 108, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_SETBUDDYINT, 111, 37, 12, 12
+    EDITTEXT        103, 87, 62, 36, 12, ES_NUMBER
+    CONTROL         "", 109, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_SETBUDDYINT, 111, 62, 12, 12
+    CONTROL         "", -1, WC_STATIC, SS_BLACKFRAME, 134, 7, 68, 50
+    AUTORADIOBUTTON "&Left hand first", 104, 137, 11, 60, 12
+    AUTORADIOBUTTON "&Right hand first", 105, 137, 26, 62, 12
+    AUTORADIOBUTTON "&Any hand first", 106, 137, 41, 59, 12
+    LTEXT           "&Sleeping time (100 ms)", -1, 7, 13, 76, 8, NOT WS_GROUP | SS_LEFT
+    LTEXT           "&Eating time (100 ms)", -1, 7, 39, 71, 8, NOT WS_GROUP | SS_LEFT
+    LTEXT           "&Number of repeats", -1, 7, 64, 71, 8, NOT WS_GROUP | SS_LEFT
+    CONTROL         "", -1, WC_STATIC, SS_BLACKFRAME, 3, 85, 141, 34
+    AUTO3STATE      "Button", 110, 5, 87, 138, 30, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | NOT WS_TABSTOP
+    DEFPUSHBUTTON   "OK", 1, 153, 64, 50, 14
+    PUSHBUTTON      "Cancel", 2, 153, 84, 50, 14
+    PUSHBUTTON      "&Help", 9, 153, 104, 50, 14
 }

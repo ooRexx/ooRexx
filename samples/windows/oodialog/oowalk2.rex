@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,9 +73,9 @@
 
  dlg = .WalkerDialog~new('res\oowalk2.dll',100,data.)
 
- if dlg~InitCode \= 0 then exit
- dlg~Execute("SHOWTOP")
- dlg~deinstall
+ if dlg~initCode \= 0 then exit
+ dlg~execute("SHOWTOP")
+
  ret = directory(curdir)
  return
 
@@ -129,7 +129,7 @@
 
 ::method onGotCha
    expose okButton
-   use strict arg animatedButton x, y
+   use strict arg animatedButton, x, y
    okButton~disable
    self~writetoButton(105, x, y, "Got-cha", "Arial", 28, "BOLD")
    ret = play('gotcha.wav')

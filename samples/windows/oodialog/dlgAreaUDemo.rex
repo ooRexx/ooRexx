@@ -84,8 +84,7 @@ self~addButton( 1,b~x,b~y('90%'),b~w,b~h('9%'),'Ok','Ok','DEFAULT')
 /* ------------------------------------------------------------------------- */
 expose u
 use arg dummy,sizeinfo
-                                 /* wait for last size event msg then resize */
-if self~peekDialogMessage~left(8) \= "onResize" then u~resize(self,sizeinfo)
+u~resize(self,sizeinfo)
 
 /* ------------------------------------------------------------------------- */
 ::method Unknown

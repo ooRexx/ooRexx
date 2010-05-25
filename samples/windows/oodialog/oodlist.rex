@@ -75,14 +75,6 @@ return
 
 ::class ListsDialog subclass PropertySheet inherit VirtualKeyCodes
 
-/* track and display the notification messages */
-/* uncomment this if you want to get the notification messages and their parameters displayed */
-/*
-::method HandleMessages
-   if self~PeekDialogMessage \= "" then say self~PeekDialogMessage
-   forward class (super)
-*/
-
 ::method InitDialog
   forward class (super) continue /* call parent constructor */
 
@@ -202,13 +194,17 @@ return
 ::method OnColumnClick
   expose ID_Rep
   use arg id, column
+
   curList = self~newListView(ID_Rep)
-  curList~SetColumnWidth(column,curList~ColumnWidth(column)+10)
-  info. = curlist~ColumnInfo(column)
-  call InfoDialog "Column Title : " info.!Text"d"x,
-                  "Column Number : " info.!Column"d"x,
-                  "Column Width : " info.!Width"d"x,
-                  "Allignment : " info.!Align
+  curList~setColumnWidthPx(column,curList~columnWidthPx(column)+10)
+
+  info. = curlist~getColumnInfo(column)
+  call InfoDialog "Column Title : " info.!Text"d"x                 -
+                  "Column Number : " info.!Column"d"x              -
+                  "Column Width : " info.!Width"d"x                -
+                  "Allignment : " info.!Align"d"x"d"x              -
+                  "Note: each time you click on a column" ||"d"x   -
+                  "its width is increased"
 
 /* an item was double clicked (activated in Windows terms.) */
 ::method OnActivate

@@ -209,15 +209,6 @@ CleanUp:
       end
   end
 
-/* track and display the notification messages */
-/* uncomment this if you want to get the notification messages and their parameters displayed */
-/*
-::method HandleMessages
-  msg = self~PeekDialogMessage
-  if msg \= "" then say msg
-  forward class(super)
-*/
-
 
 /* Method OnKeyDown_IDC_TREE handles notification 'KeyDown' for item IDC_TREE */
 ::method OnKeyDown_IDC_TREE
