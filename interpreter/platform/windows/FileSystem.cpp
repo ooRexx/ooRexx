@@ -133,18 +133,33 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
     return OREF_NULL;
 }
 
-void SystemInterpreter::loadImage(
-  char **imageBuffer,                  /* returned start of the image       */
-  size_t *imageSize )                  /* size of the image                 */
-/*******************************************************************/
-/* Function:  Load the image into storage                          */
-/*******************************************************************/
+/**
+ * Load the base image into storage.
+ *
+ * @param imageBuffer  returned start of the image
+ * @param imageSize    returned size of the image
+ *
+ * @remarks  We pass null to primitiveSearchName(), which has the effect of the
+ *           Windows API SearchPath() being called with null for the path.  When
+ *           SearchPath is called with null for the path, and there is no path
+ *           informtion in the file name, the first directory searched is the
+ *           directory in which the application (rexx.exe) image is located.
+ *
+ *           Since, on Windows, the base image (rexx.img) is always located in
+ *           the same directory as rexx.exe, this results in the image being
+ *           found faster.  For development, it prevents the wrong base image
+ *           being picked up during a compile.
+ *
+ *           If the image is not found in the application image's directory, the
+ *           regular executable search, which searches the path, is performed.
+ */
+void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize )
 {
     char fullname[MAX_PATH + 1];    // finally resolved name
-    // The file may purposefully have no extension.
-    if (!SysFileSystem::primitiveSearchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
+
+    if (!SysFileSystem::primitiveSearchName(BASEIMAGE, NULL, NULL, fullname))
     {
-        Interpreter::logicError("no startup image");   /* can't find it                     */
+        Interpreter::logicError("no startup image");   /* can't find it       */
     }
 
     /* try to open the file              */
@@ -153,7 +168,7 @@ void SystemInterpreter::loadImage(
 
     if (fileHandle == INVALID_HANDLE_VALUE)
     {
-        Interpreter::logicError("no startup image");   /* can't find it                     */
+        Interpreter::logicError("no startup image");   /* can't find it       */
     }
     DWORD     bytesRead;                 /* number of bytes read              */
     /* Read in the size of the image     */
@@ -163,7 +178,7 @@ void SystemInterpreter::loadImage(
     ReadFile(fileHandle, *imageBuffer, (DWORD)*imageSize, &bytesRead, NULL);
     // set this to the actual size read.
     *imageSize = bytesRead;
-    CloseHandle(fileHandle);                /* and close the file                */
+    CloseHandle(fileHandle);                /* and close the file             */
 }
 
 
