@@ -111,6 +111,8 @@ void outOfMemoryException(RexxThreadContext *c)
 /**
  * Message
  *
+ * The number of active dialogs has reached the maximum (20) allowed
+ *
  * Raises 88.900
  *
  * @param c    Thread context we are executing in.
@@ -124,17 +126,50 @@ void userDefinedMsgException(RexxThreadContext *c, CSTRING msg)
 /**
  * Argument 'argument' 'message'
  *
- * Argument 2 message
+ * Argument 2 must be a whole number greater than 100; actual 100.5
  *
  * Raises 88.900
  *
- * @param c    Thread context we are executing in.
- * @param msg  "Some message"
+ * @param *c    Thread context we are executing in.
+ * @param pos   Argument position.
+ * @param msg   "Some message"
  */
 void userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Argument %d %s", pos, msg);
+    userDefinedMsgException(c, buffer);
+}
+
+/**
+ * Message
+ *
+ * The 'methodName' argument must be less than 256 characters
+ *
+ * Raises 93.900
+ *
+ * @param c    Method context we are executing in.
+ * @param msg  "Some message"
+ */
+void userDefinedMsgException(RexxMethodContext *c, CSTRING msg)
+{
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(msg));
+}
+
+/**
+ * Method argument 'argument' 'message'
+ *
+ * Method argument 2 is not a handle
+ *
+ * Raises 93.900
+ *
+ * @param c    Method context we are executing in.
+ * @param msg  "Some message"
+ */
+void userDefinedMsgException(RexxMethodContext *c, size_t pos, CSTRING msg)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Method argument %d %s", pos, msg);
     userDefinedMsgException(c, buffer);
 }
 
@@ -427,6 +462,11 @@ void nullPointerException(RexxThreadContext *c, int pos)
 void notNonNegativeException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual)
 {
     c->RaiseException2(Rexx_Error_Invalid_argument_nonnegative, c->StringSize(pos), actual);
+}
+
+void notPositiveException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual)
+{
+    c->RaiseException2(Rexx_Error_Invalid_argument_positive, c->StringSize(pos), actual);
 }
 
 RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, RexxObjectPtr actual)

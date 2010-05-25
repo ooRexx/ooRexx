@@ -119,8 +119,6 @@
 
 
 ::method initDialog protected
-   /* this is to correct a redraw problem of a focused list view control that gets reactivated */
-   self~addUserMsg(PropSheetActivated, "0x00000006", "0xFFFFFFFF")  /* WM_ACTIVATE */
 
    tc = self~newTab(9001, 0)
    if tc \= .nil then do
@@ -142,17 +140,6 @@
    self~catalog['category'] = 1
    self~showWindow(self~catalog['handles'][self~catalog['category']])
 
-
-   /* this is to correct a redraw problem of a focused list view control. If the list control has the focus,
-   was overlapped by another window and is activated, the list is overlapped by the tab control */
-::method propSheetActivated
-   use arg wP, lp
-   if arg() = 0 then code = 0
-   else code = .DlgUtil~loWord(wp)
-   if code \= 0 then do
-       self~update
-       .Window~new(self~catalog['handles'][self~catalog['category']])~update
-   end
 
 ::method getSelectedPage unguarded
    return self~newTab(9001, 0)~selectedIndex+1

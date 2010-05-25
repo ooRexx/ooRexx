@@ -127,7 +127,7 @@ static UINT getSeparatorTypeOpts(const char *opts, UINT type);
 static UINT getTrackFlags(const char *);
 static uint32_t deleteSeparatorByID(HMENU, uint32_t);
 static uint32_t menuHelpID(HMENU hMenu, DWORD helpID, BOOL recurse, uint32_t *id);
-static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING msg, bool isSysMenu, logical_t handles);
+static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING msg, bool isSysMenu);
 
 
 /**
@@ -160,18 +160,14 @@ inline uint32_t _connectItem(pCEventNotification pcen, uint32_t id, CSTRING msg)
     {
         return 0;
     }
-    return addCommandMessage(pcen, id, 0xFFFFFFFF, 0, 0,  msg, TAG_NOTHING) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addCommandMessage(pcen, id, 0xFFFFFFFF, 0, 0, msg, TAG_NOTHING) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /* Same as above but connects a System Menu item */
-inline BOOL _connectSysItem(pCEventNotification pcen, uint32_t id, CSTRING msg, logical_t isHandled)
+inline BOOL _connectSysItem(pCEventNotification pcen, uint32_t id, CSTRING msg)
 {
     uint32_t tag = TAG_DIALOG | TAG_SYSMENUCOMMAND;
-    if ( isHandled )
-    {
-        tag |= TAG_MSGHANDLED;
-    }
-    return addMiscMessage(pcen, WM_SYSCOMMAND, UINT32_MAX, id, 0x0000FFF0, 0, 0,  msg, tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addMiscMessage(pcen, WM_SYSCOMMAND, UINT32_MAX, id, 0x0000FFF0, 0, 0, msg, tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /**
@@ -1238,7 +1234,7 @@ BOOL CppMenu::maybeRedraw(bool failOnNoDlg)
 }
 
 
-logical_t CppMenu::connectItem(RexxObjectPtr rxID, CSTRING methodName, RexxObjectPtr dialog, logical_t handles)
+logical_t CppMenu::connectCommandEvent(RexxObjectPtr rxID, CSTRING methodName, RexxObjectPtr dialog)
 {
     logical_t success = FALSE;
 
@@ -1257,7 +1253,7 @@ logical_t CppMenu::connectItem(RexxObjectPtr rxID, CSTRING methodName, RexxObjec
     uint32_t rc;
     if ( isSystemMenu() )
     {
-        rc = _connectSysItem(pcen, id, methodName, handles);
+        rc = _connectSysItem(pcen, id, methodName);
     }
     else
     {
@@ -1277,7 +1273,7 @@ done_out:
 }
 
 
-logical_t CppMenu::connectAllCommandEvents(CSTRING methodName, RexxObjectPtr dialog, logical_t handles)
+logical_t CppMenu::connectAllCommandEvents(CSTRING methodName, RexxObjectPtr dialog)
 {
     logical_t success = FALSE;
 
@@ -1289,7 +1285,7 @@ logical_t CppMenu::connectAllCommandEvents(CSTRING methodName, RexxObjectPtr dia
 
     // We can just pass methodName along.  If it was omitted, it is NULL, and
     // menuConnectItems() handles that correctly.
-    uint32_t rc = menuConnectItems(hMenu, pcen, methodName, isSystemMenu(), handles);
+    uint32_t rc = menuConnectItems(hMenu, pcen, methodName, isSystemMenu());
     if ( rc == 0 )
     {
         success = TRUE;
@@ -1304,7 +1300,7 @@ done_out:
 }
 
 logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING method, logical_t byPosition,
-                                    RexxObjectPtr _dlg, logical_t handles)
+                                            RexxObjectPtr _dlg)
 {
     logical_t success = FALSE;
     uint32_t *ids = NULL;
@@ -1364,7 +1360,7 @@ logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING met
 
         if ( isSystemMenu() )
         {
-            rc = _connectSysItem(pcen, id, method == NULL ? name : method, handles);
+            rc = _connectSysItem(pcen, id, method == NULL ? name : method);
         }
         else
         {
@@ -1386,6 +1382,8 @@ done_out:
     return success;
 }
 
+#define MENU_MESSAGE_KEYWORDS "INITMENU, INITMENUPOPUP, or CONTEXTMENU"
+
 uint32_t CppMenu::string2WM(CSTRING keyWord)
 {
     uint32_t wm = 0;
@@ -1404,7 +1402,7 @@ uint32_t CppMenu::string2WM(CSTRING keyWord)
     return wm;
 }
 
-logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND hwndFilter, RexxObjectPtr dialog, logical_t handles)
+logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND hwndFilter, RexxObjectPtr dialog)
 {
     logical_t success = FALSE;
 
@@ -1417,15 +1415,11 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
     uint32_t windowMessage = string2WM(keyWord);
     if ( windowMessage == 0 )
     {
-        wrongArgValueException(c->threadContext, 2, "INITMENU", keyWord);
+        wrongArgValueException(c->threadContext, 2, MENU_MESSAGE_KEYWORDS, keyWord);
         return FALSE;
     }
 
     uint32_t tag = TAG_DIALOG;
-    if ( handles )
-    {
-        tag |= TAG_MSGHANDLED;
-    }
 
     switch ( windowMessage )
     {
@@ -1487,6 +1481,15 @@ pCEventNotification CppMenu::basicConnectSetup(RexxObjectPtr dialog)
         }
         dialog = dlg;
     }
+    else
+    {
+        if ( ! c->IsOfType(dialog, "PLAINBASEDIALOG") )
+        {
+            oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
+            goto done_out;
+        }
+    }
+
     pcen = dlgToEventNotificationCSelf(c, dialog);
 
 done_out:
@@ -1562,7 +1565,7 @@ BOOL CppMenu::checkAutoConnect(pCEventNotification pcen)
 {
     if ( autoConnect )
     {
-        uint32_t rc = menuConnectItems(hMenu, pcen, connectionMethod, isSystemMenu(), FALSE);
+        uint32_t rc = menuConnectItems(hMenu, pcen, connectionMethod, isSystemMenu());
         if ( rc != 0 )
         {
             oodSetSysErrCode(c->threadContext, rc);
@@ -1978,7 +1981,9 @@ done_out:
  *  Most of the menu methods that set or modify information about menu items can
  *  use either the resource ID of the menu item, or its numeric position.  This
  *  function determines if the item ID is its item position, and if not,
- *  resolves it symbolic ID.
+ *  resolves it symbolic ID, if needed.
+ *
+ *  Menu item positions are zero-based, we use 1-based for Rexx.
  *
  *  @param rxItemID    The item ID which could be a number or a symbolic ID.
  *
@@ -2006,11 +2011,12 @@ static uint32_t resolveItemID(RexxMethodContext *c, RexxObjectPtr rxItemID, logi
 
     if ( byPosition )
     {
-        if ( ! c->UnsignedInt32(rxItemID, &itemID) )
+        if ( ! c->UnsignedInt32(rxItemID, &itemID) || itemID == 0 )
         {
-            notNonNegativeException(c->threadContext, argPos, rxItemID);
+            notPositiveException(c->threadContext, argPos, rxItemID);
             goto done_out;
         }
+        itemID--;
     }
     else
     {
@@ -2326,13 +2332,13 @@ BOOL setSingleState(CppMenu *cMenu, RexxObjectPtr rxItemIDs, logical_t byPositio
             oodSetSysErrCode(cMenu->getThreadContext());
             goto done_out;
         }
-
+        /*
         if ( _isSeparator(&mii) )
         {
             oodSetSysErrCode(cMenu->getThreadContext(), ERROR_INVALID_FUNCTION);
             goto done_out;
         }
-
+        */
         mii.fMask = MIIM_STATE;
 
         switch ( state )
@@ -2567,12 +2573,10 @@ bool menuData(RexxMethodContext *c, HMENU hMenu, RexxObjectPtr *data)
  *                   item is connected to a method name composed from the text
  *                   of the item.
  * @param isSysMenu  If hMenu is a system menu.
- * @param handles    If a system menu, whether the method being connected
- *                   handles the system message completely, or not.
  *
  * @return 0 on success, the system error code on failure.
  */
-static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING msg, bool isSysMenu, logical_t handles)
+static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING msg, bool isSysMenu)
 {
     uint32_t rc = 0;
     int count = GetMenuItemCount(hMenu);
@@ -2594,7 +2598,7 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING 
 
         if ( _isSubMenu(&mii) )
         {
-            rc = menuConnectItems(mii.hSubMenu, pcen, msg, isSysMenu, handles);
+            rc = menuConnectItems(mii.hSubMenu, pcen, msg, isSysMenu);
             if ( rc != 0 )
             {
                 return rc;
@@ -2626,7 +2630,7 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING 
 
             if ( isSysMenu )
             {
-                rc = _connectSysItem(pcen, mii.wID, pMsg, handles);
+                rc = _connectSysItem(pcen, mii.wID, pMsg);
             }
             else
             {
@@ -2710,11 +2714,6 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
  *
  * @param dlg         The dlg to connect the menu item too.
  *
- * @param isHandled   Whether the method handles completely the Windows message,
- *                    or not.  If true the message is NOT passed on to the
- *                    system for further processing, if false it is passed on.
- *                    This argument is only used for a SystemMenu.
- *
  * @return  True on success, false on error.
  *
  * @note  Sets .SystemErrorCode on error.
@@ -2748,7 +2747,7 @@ RexxMethod5(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRIN
     uint32_t rc;
     if ( isSystemMenu )
     {
-        rc = _connectSysItem(pcen, id, methodName, isHandled);
+        rc = _connectSysItem(pcen, id, methodName);
     }
     else
     {
@@ -2782,10 +2781,10 @@ RexxMethod1(RexxObjectPtr, menu_menuInit_pvt, RexxObjectPtr, cselfObject)
  *
  * @return The handle to the menu this object represents.
  */
-RexxMethod1(RexxObjectPtr, menu_getHMenu, CSELF, cMenuPtr)
+RexxMethod1(POINTER, menu_getHMenu, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
-    return context->NewPointer(cMenu->getHMenu());
+    return cMenu->getHMenu();
 }
 
 
@@ -2988,13 +2987,19 @@ RexxMethod1(logical_t, menu_isValidMenu, CSELF, cMenuPtr)
  * Checks if the specified handle represents a menu that the operating system
  * says is valid.
  *
- * @param  handle  The handle to check.  The handle must be in .Pointer format.
+ * @param  handle  The handle to check.
  *
  * @return  True if the menu handle is valid, otherwise false.
+ *
+ * @remarks  The intention of IsMenu() is to check if a handle is a valid menu
+ *           handle.  Since, in ooDialog, we are trying to maintain the concept
+ *           that handles are opaque objects, we need to accept any object for
+ *           handle.  Even though, in ooDialog, all menu handles are returned as
+ *           a .Pointer.
  */
-RexxMethod1(logical_t, menu_isValidMenuHandle, POINTER, handle)
+RexxMethod1(logical_t, menu_isValidMenuHandle, RexxObjectPtr, handle)
 {
-    return IsMenu((HMENU)handle);
+    return IsMenu((HMENU)oodObj2pointer(context, handle));
 }
 
 
@@ -4498,10 +4503,6 @@ RexxMethod2(RexxStringObject, menu_itemTextToMethodName, CSTRING, text, OSELF, s
  * @param keyword     A single keyword specifying which message event to
  *                    connect.
  *
- * @param handles     Whether the method handles completely the Windows message,
- *                    or not.  If true the message is NOT passed on to the
- *                    system for further processing, if false it is passed on.
- *
  * @param dlg         [optional] The dialog being connected.  By default the
  *                    dialog this menu is attached to is used.  However, any
  *                    dialog can be used.  In most cases, it only makes sense to
@@ -4527,18 +4528,18 @@ RexxMethod2(RexxStringObject, menu_itemTextToMethodName, CSTRING, text, OSELF, s
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod5(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyWord, logical_t, handles,
+RexxMethod4(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyWord,
             OPTIONAL_RexxObjectPtr, _dlg, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectMenuMessage(methodName, keyWord, (HWND)NULL, _dlg, handles);
+    return cMenu->connectMenuMessage(methodName, keyWord, (HWND)NULL, _dlg);
 }
 
 /** Menu::connectCommandEvent()
  *
- * Directly connects the menu item select event with a method in the specified
+ * Directly connects the menu command item event with a method in the specified
  * dialog.
  *
  * @param id          The resource ID of the menu item.
@@ -4574,7 +4575,7 @@ RexxMethod4(logical_t, menu_connectCommandEvent, RexxObjectPtr, rxID, CSTRING, m
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectItem(rxID, methodName, _dlg, FALSE);
+    return cMenu->connectCommandEvent(rxID, methodName, _dlg);
 }
 
 
@@ -4611,7 +4612,7 @@ RexxMethod3(logical_t, menu_connectAllCommandEvents, OPTIONAL_CSTRING, msg, OPTI
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectAllCommandEvents(msg, _dlg, FALSE);
+    return cMenu->connectAllCommandEvents(msg, _dlg);
 }
 
 /** Menu::connectSomeCommandEvents()
@@ -4665,7 +4666,7 @@ RexxMethod5(logical_t, menu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, 
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectSomeCommandEvents(rxItemIDs, msg, byPosition, _dlg, FALSE);
+    return cMenu->connectSomeCommandEvents(rxItemIDs, msg, byPosition, _dlg);
 }
 
 
@@ -5068,8 +5069,8 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
         if ( isResDialog )
         {
-            DIALOGADMIN *dlgAdm = dlgToDlgAdm(context, src);
-            hinst = dlgAdm->TheInstance;
+            pCPlainBaseDialog pcpbd = dlgToCSelf(context, src);
+            hinst = pcpbd->hInstance;
         }
         else
         {
@@ -5241,149 +5242,6 @@ RexxMethod1(logical_t, sysMenu_revert, CSELF, cMenuPtr)
 }
 
 
-/** SystemMenu::connectItem()
- *
- * Directly connects one of the system menu command items with a method in the
- * dialog this system menu is attached to.
- *
- * @param id          The resource ID of the menu item to be connected.
- *
- * @param handles     Whether the method handles completely the Windows message,
- *                    or not.  If true the message is NOT passed on to the
- *                    system for further processing, if false it is passed on.
- *                    For user added system menu items this should be true.  For
- *                    pre-defined system menu items, the programmer needs to
- *                    choose what behavior is desired.
- *
- * @param methodName  The method to connect the menu item to.
- *
- * @return  True on success, false on error.
- *
- * @note  If a pre-defined system command is *not* passed on to the system, than
- *        its normal behaviour will not happen.  For instance, most system menus
- *        have the Close menu item (SC_CLOSE).  If the programmer connects the
- *        Close menu item and specifies handles as true, then when the user
- *        selects close from the system menu, the dialog will not close, unless
- *        the programmer closes the dialog from the method mapped to the menu
- *        item.
- *
- *        Sets .SystemErrorCode on error.
- *
- *        The system error code is set this way in addition to what the OS might
- *        set:
- *
- *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
- */
-RexxMethod4(logical_t, sysMenu_connectCommandEvent, RexxObjectPtr, rxID, logical_t, handles,
-            CSTRING, methodName, CSELF, cMenuPtr)
-{
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
-    cMenu->setContext(context, TheFalseObj);
-
-    return cMenu->connectItem(rxID, methodName, NULLOBJECT, handles);
-}
-
-
-/** SystemMenu::connectAllCommandEvents()
- *
- * Connects all system menu command items in this menu to a method.
- *
- * @param handles  Whether the method handles completely the Windows message, or
- *                 not.  If true the message is NOT passed on to the system for
- *                 further processing, if false it is passed on. For user added
- *                 system menu items this should be true.  For pre-defined
- *                 system menu items, the programmer needs to choose what
- *                 behavior is desired.
- *
- * @param  msg     [optional]  Connect all menu command items to the method by
- *                 this name.  The default is to connect all menu command items
- *                 to a method name composed from the text of the command item.
- *
- * @return  True on success, false on error.
- *
- * @note  If a pre-defined system command is *not* passed on to the system, than
- *        its normal behaviour will not happen.  For instance, most system menus
- *        have the Close menu item (SC_CLOSE).  If the programmer connects the
- *        Close menu item and specifies handles as true, then when the user
- *        selects close from the system menu, the dialog will not close, unless
- *        the programmer closes the dialog from the method mapped to the menu
- *        item.
- *
- *        Sets .SystemErrorCode.
- *
- *        The system error code is set this way in addition to what the OS might
- *        set:
- *
- *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
- */
-RexxMethod3(logical_t, sysMenu_connectAllCommandEvents, logical_t, handles, OPTIONAL_CSTRING, msg, CSELF, cMenuPtr)
-{
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
-    cMenu->setContext(context, TheFalseObj);
-
-    return cMenu->connectAllCommandEvents(msg, NULLOBJECT, handles);
-}
-
-/** SystemMenu::connectSomeCommandEvents()
- *
- * Connects a collection of system menu command items to the single specified
- * method.
- *
- * @param rxItemIDs   A collection of item IDs to connect.  The IDs can be by
- *                    position IDs or resource IDs, depending on the value of
- *                    byPosition. However, they must be all the same type, all
- *                    resource IDs or all by position IDs.
- *
- * @param handles     Whether the method handles completely the Windows message,
- *                    or not.  If true the message is NOT passed on to the
- *                    system for further processing, if false it is passed on.
- *                    For user added system menu items this should be true.  For
- *                    pre-defined system menu items, the programmer needs to
- *                    choose what behavior is desired.
- *
- * @param  method     [optional]  Connect all menu command items to the method
- *                    by this name.  The default is to connect all menu command
- *                    items to a method name composed from the text of the
- *                    command item.
- *
- * @param byPosition  [optional]  If true, rxItemIDs are positional IDs,
- *                    otherwise the are resource IDs. The default is false,
- *                    resource IDs.
- *
- * @return       True on success, false on error.
- *
- * @note  If a pre-defined system command is *not* passed on to the system, than
- *        its normal behaviour will not happen.  For instance, most system menus
- *        have the Close menu item (SC_CLOSE).  If the programmer connects the
- *        Close menu item and specifies handles as true, then when the user
- *        selects close from the system menu, the dialog will not close, unless
- *        the programmer closes the dialog from the method mapped to the menu
- *        item.
- *
- *        Sets .SystemErrorCode.
- *
- *        The system error code is set this way in addition to what the OS might
- *        set:
- *
- *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
- *
- *        ERROR_INVALID_PARAMETER (87) -> One or more of the specified item IDs
- *        is not a menu command item.
- *
- *        The method quits when it encounters the first error, therefore menu
- *        items processed before the error will be connected and menu items that
- *        would be processed after the error will not be connected.
- */
-RexxMethod5(logical_t, sysMenu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, logical_t, handles, OPTIONAL_CSTRING, msg,
-            OPTIONAL_logical_t, byPosition, CSELF, cMenuPtr)
-{
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
-    cMenu->setContext(context, TheFalseObj);
-
-    return cMenu->connectSomeCommandEvents(rxItemIDs, msg, byPosition, NULLOBJECT, handles);
-}
-
-
 /** PopupMenu::connectContextMenu() [class]
  *
  * This class method connects WM_CONTEXTMENU Windows message event to a method
@@ -5401,12 +5259,6 @@ RexxMethod5(logical_t, sysMenu_connectSomeCommandEvents, RexxObjectPtr, rxItemID
  *                    received.  If omitted, all right-clicks on the dialog are
  *                    received.
  *
- * @param handles     Whether the method handles completely the Windows message,
- *                    or not.  If true the message is NOT passed on to the
- *                    system for further processing, if false it is passed on.
- *                    TODO - figure out if there is one value that should always
- *                    be used and remove this extra parameter.
- *
  * @return  True on success, false on error.
  *
  * @note  Sets .SystemErrorCode on error.
@@ -5419,8 +5271,7 @@ RexxMethod5(logical_t, sysMenu_connectSomeCommandEvents, RexxObjectPtr, rxItemID
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod4(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRING, methodName, OPTIONAL_POINTERSTRING, hwnd,
-            OPTIONAL_logical_t, handles)
+RexxMethod3(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRING, methodName, OPTIONAL_POINTERSTRING, hwnd)
 {
     BOOL success = FALSE;
 
@@ -5431,10 +5282,6 @@ RexxMethod4(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRI
     }
 
     uint32_t tag = TAG_DIALOG | TAG_CONTEXTMENU;
-    if ( handles )
-    {
-        tag |= TAG_MSGHANDLED;
-    }
 
     if ( hwnd != NULL )
     {
@@ -5573,14 +5420,6 @@ done_out:
  *                    If omitted and there is no assigned dialog, then a
  *                    condition is raised.
  *
- * @param handles     [Not Implemented] Whether the method handles completely
- *                    the Windows message, or not.  If true the message is NOT
- *                    passed on to the system for further processing, if false
- *                    it is passed on. TODO - figure out if there is one value
- *                    that should always be used and remove this extra
- *                    parameter.
- *
- *
  * @return  True on success, false on error.
  *
  * @note  Sets .SystemErrorCode on error.
@@ -5602,8 +5441,8 @@ RexxMethod4(logical_t, popMenu_connectContextMenu, CSTRING, methodName, OPTIONAL
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
-                                                   // TODO should handles be an option ????
-    return cMenu->connectMenuMessage(methodName, "CONTEXTMENU", (HWND)hwnd, _dlg, FALSE);
+
+    return cMenu->connectMenuMessage(methodName, "CONTEXTMENU", (HWND)hwnd, _dlg);
 }
 
 /** PopupMenu::isAssigned()

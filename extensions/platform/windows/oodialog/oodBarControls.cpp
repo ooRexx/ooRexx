@@ -340,6 +340,27 @@ RexxMethod1(RexxObjectPtr, tb_getSelRange, CSELF, pCSelf)
 #define UP_DOWN_CLASS      "UpDown"
 
 
+/** UpDown::deltaPosReply() [Class method]
+ *
+ *  Constructs the (proper) reply object for a DELTAPOS UpDown event
+ *  notification.
+ *
+ *  The Rexx programmer should use this method as the reply to the notification.
+ *
+ *  @param change    [optional] If true, the delta position message is to be
+ *                   canceled or modified.  If false, there is no change to the
+ *                   delta position message, and the other arguments are always
+ *                   ignored. The default is false.
+ *
+ *  @param cancel    [optional] If true, the delta position message is canceled
+ *                   completely.  If false the message is not canceled, and the
+ *                   delta position is set to newDelta.  The default is false.
+ *
+ *  @param newDelta  [optional] The amount by which the current position of the
+ *                   updown control is changed.  The default is 1.  This
+ *                   argument is only used if change is true and cancel is
+ *                   false.
+ */
 RexxMethod3(RexxObjectPtr, ud_deltaPosReply_cls, OPTIONAL_logical_t, change, OPTIONAL_logical_t, cancel, OPTIONAL_int32_t, newDelta)
 {
     if ( ! change )
@@ -359,7 +380,7 @@ RexxMethod3(RexxObjectPtr, ud_deltaPosReply_cls, OPTIONAL_logical_t, change, OPT
 
     if ( ! pdpr->cancel )
     {
-        pdpr->newDelta = newDelta;
+        pdpr->newDelta = argumentExists(1) ? newDelta : 1;
     }
     return _dpr;
 }

@@ -59,10 +59,13 @@ extern void systemServiceExceptionComCode(RexxThreadContext *context, const char
 extern void outOfMemoryException(RexxThreadContext *c);
 extern void userDefinedMsgException(RexxThreadContext *c, CSTRING msg);
 extern void userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg);
+extern void userDefinedMsgException(RexxMethodContext *c, CSTRING msg);
+extern void userDefinedMsgException(RexxMethodContext *c, size_t pos, CSTRING msg);
 extern void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual);
 extern void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen);
 extern void numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
 extern void notNonNegativeException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
+extern void notPositiveException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
 extern void wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING obj);
 extern void wrongObjInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);
 extern void executionErrorException(RexxThreadContext *c, CSTRING msg);

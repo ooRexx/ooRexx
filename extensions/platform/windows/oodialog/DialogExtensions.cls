@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -44,15 +44,15 @@
 
 ::class 'DialogExtensions' public mixinclass Object
 
--- Execute with asynchronous message dispatching.
+-- Like execute(), but does not wait for the dialog to close.
 ::method executeAsync unguarded
-   use strict arg sleepTime = 10, sh = "NORMAL", icon = 0, modeless = .false
+   use strict arg sleepTime = 1, sh = "NORMAL", icon = 0, modeless = .false
 
    if self~startIt(icon, modeless) \= 0 then do
       if self~useStem then self~setDataStem(self~dlgData)
       else self~setData
       self~show(sh)
-      self~start("asyncMessageHandling", sleepTime)
+
       do while self~automaticMethods~Items > 0
          p = self~automaticMethods~pull
          m = self~automaticMethods~pull
@@ -62,65 +62,41 @@
       end
       return 0
    end
-   else self~stopit
-   return 1
-
--- End the asynchronous execution of the dialog.
-::method endAsyncExecution unguarded
-   do while self~finished = 0
-      call msSleep 20
+   else do
+      self~stopit
+      return 1
    end
+
+-- Used to wait for a dialog started through executeAsync() to end.
+::method endAsyncExecution unguarded
+
+   self~run
+
    if self~initCode = 1 then do
       if self~useStem then self~getDataStem(self~dlgData)
       self~getData
    end
-   if self~adm \= 0 then self~stopit
+   self~stopit
    return self~initCode
-
--- Documented "internal use only" in 3.2.0 - Do not document.
-::method asyncMessageHandling unguarded
-   use strict arg sleepTime = 10
-   if \ sleepTime~datatype('W') then sleepTime = 10
-
-   do while self~finished = 0 & self~adm \= 0
-      msg = self~getDlgMsg
-      if msg~pos("1DLGDELETED1") > 0 then do
-         if self~finished = 0 then self~finished = 2
-      end
-      else do
-         if msg \= "" then do
-            parse var msg methodName '(' args ')'
-            argList = args~space(0)~makeArray(255~d2c)
-            self~sendWith(methodName, argList)
-         end
-         else do
-            call msSleep sleepTime
-         end
-      end
-   end
 
 -- Run a modeless dialog
 ::method popup
-   use strict arg sh = "NORMAL", sleepTime = 10, icon = 0
-   if \ sleepTime~datatype('W') then sleepTime = 10
+   use strict arg sh = "NORMAL", sleepTime = 1, icon = 0
    self~start("execute", sh, icon, sleeptime, .true)
 
+-- Run a modeless dialog that will be automatically closed when its parent closes.
 ::method popupAsChild
-   use strict arg parent, sh = "NORMAL", sleepTime = 10, icon = 0
+   use strict arg parent, sh = "NORMAL", sleepTime = 1, icon = 0
 
    if \ parent~isA(.PlainBaseDialog) then do
        call errorDialog "Specified parent is not a dialog!"
        return -1
    end
 
-   if \ sleepTime~datatype('W') then sleepTime = 10
    parent~childDialogs~insert(self)  /* add to the parents child list (last item) */
    self~parentDlg = parent
 
    self~start("execute", sh, icon, sleeptime, .true)
-
-::method peekDialogMessage unguarded
-   return self~getDlgMsg(.true)
 
 ::method setSBRange unguarded
    use strict arg id, min, max, redraw = .true
@@ -239,7 +215,26 @@
    use arg hwnd
    return .Window~new(hwnd)~redraw
 
--- DEPRECATED
+-- DEPRECATED START
+::method peekDialogMessage unguarded
+   return ""
+::method dump
+    say "dump() deprecated."
+::method clearButtonRect unguarded
+   forward message 'CLEARCONTROLRECT'
+::method redrawButton unguarded
+   forward message 'REDRAWCONTROL'
+::method setItemFont unguarded
+   forward message 'setControlFont'
+::method setItemColor
+   forward message "setControlColor"
+::method setItemSysColor
+   forward message "setControlSysColor"
+::method connectAnimatedButton
+   forward message "INSTALLANIMATEDBUTTON"
+::method connectBitmapButton
+   forward message "INSTALLBITMAPBUTTON"
+
 ::method getWindowRect unguarded        -- Old method returns coordinates as a string.
    forward message "windowRect" continue
    rect = result
@@ -251,12 +246,6 @@
    if \ rect~isA(.Rect) then return 1  -- mimic old behavior
    return rect~left rect~top rect~right rect~bottom
 
-::method clearButtonRect unguarded
-   forward message 'CLEARCONTROLRECT'
-
-::method redrawButton unguarded
-   forward message 'REDRAWCONTROL'
-
 ::method moveItem unguarded      -- old method, this is not accurate
    use strict arg id, xPos, yPos, showOptions = ""
    p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
@@ -267,16 +256,7 @@
    s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
    return self~resizeControl(id, s, showOptions)
 
-::method setItemFont unguarded
-   forward message 'setControlFont'
-
-::method setItemColor
-   forward message "setControlColor"
-
-::method setItemSysColor
-   forward message "setControlSysColor"
-
-::method combineELwithSB  -- Use UpDown control
+::method combineELwithSB  -- Use UpDown control, this method works very poorly
    use strict arg elid, sbID, step = 0, poscode = 0
    sb = self~newScrollBar(sbID)
    if sb == .nil then return -1
@@ -311,12 +291,6 @@
 
 /******************************************************************************/
 /* Bitmap extensions */
-
--- DEPRECATED  TODO don't forget to document name change / deprecated
-::method connectAnimatedButton
-   forward message "INSTALLANIMATEDBUTTON"
-::method connectBitmapButton
-   forward message "INSTALLBITMAPBUTTON"
 
 ::method installBitmapButton external "LIBRARY oodialog dlgext_installBitmapButton"
 ::method changeBitmapButton unguarded external "LIBRARY oodialog dlgext_changeBitmapButton"
@@ -542,62 +516,6 @@
 ::method releaseMouseCapture external "LIBRARY oodialog dlgext_mouseCapture"
 ::method isMouseButtonDown external "LIBRARY oodialog dlgext_isMouseButtonDown"
 
-
-::method dumpAdmin external "LIBRARY oodialog dlgext_dumpAdmin_pvt"
-::method dump
-    use strict arg adm = ""
-    if arg() == 1 then do
-        say "Dump of current dialog administration"
-        say "====================================="
-        self~dumpAdmin(ADMDUMP., adm)
-        say  "Slot:        " admdump.Slot
-        say  "hThread:     " admdump.hThread
-        say  "hDialog:     " admdump.hDialog
-        say  "TopMost:     " admdump.TopMost
-        say  "CurrentChild:" admdump.CurrentChild
-        say  "DLL:         " admdump.Dll
-        say  "Queue:       " admdump.queue
-        say  "BmpButtons:  " admdump.BmpButtons
-        do i = 1 to admdump.BmpButtons
-            say "    " admdump.BmpTab.i.id "->" admdump.BmpTab.i.normal "," admdump.BmpTab.i.focused "," admdump.BmpTab.i.selected "," admdump.BmpTab.i.disabled
-        end
-        say  "Messages:    " admdump.Messages
-        do i = 1 to admdump.Messages
-            say "    " admdump.MsgTab.i.msg "," admdump.MsgTab.i.param1 "," admdump.MsgTab.i.param2 "==>" admdump.MsgTab.i.method
-        end
-        say  "DataItems:   " admdump.DataItems
-        do i = 1 to admdump.DataItems
-            say "    " admdump.DataTab.i.id "("admdump.DataTab.i.type","admdump.DataTab.i.category")"
-        end
-        say  "ColorItems:  " admdump.ColorItems
-        do i = 1 to admdump.ColorItems
-            say "    " admdump.ColorTab.i.id "(" admdump.ColorTab.i.Foreground "," admdump.ColorTab.i.Background ")"
-        end
-    end
-    else do
-        say "Dump of administration state"
-        say "============================"
-        self~dumpAdmin(ADMDUMP.)
-        d = Digits()
-        NUMERIC DIGITS 15
-        do i = 1 to admdump.0
-            say  "AdmBlock:    " admdump.i.AdmBlock
-            say  "Slot:        " admdump.i.Slot
-            say  "hThread:     " admdump.i.hThread
-            say  "hDialog:     " admdump.i.hDialog
-            if admdump.i.hDialog \=0 then say "Window title:" self~WindowTitle(admdump.i.hDialog)
-            say  "TopMost:     " admdump.i.TopMost
-            say  "CurrentChild:" admdump.i.CurrentChild
-            say  "DLL:         " admdump.i.Dll
-            say  "Queue:       " admdump.i.queue
-            say  "BmpButtons:  " admdump.i.BmpButtons
-            say  "Messages:    " admdump.i.Messages
-            say  "DataItems:   " admdump.i.DataItems
-            say  "ColorItems:  " admdump.i.ColorItems
-            say "--------------------------"
-        end
-        NUMERIC DIGITS d
-    end
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   These menu bar methods are needed to provide backward compatibility for the

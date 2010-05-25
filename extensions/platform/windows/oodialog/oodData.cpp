@@ -209,7 +209,6 @@ static bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULON
    return rc;
 }
 
-
 static bool getMultiListBoxSelections(HWND hDlg, uint32_t id, char * data)
 {
     int sel[1500];
@@ -810,7 +809,7 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
             continue;
         }
 
-        hwnd        = dlgAdm->ChildDlg[dlgAdm->DataTab[j].category];
+        hwnd        = pcpbd->childDlg[dlgAdm->DataTab[j].category];
         itemID      = dlgAdm->DataTab[j].id;
         controlType = dlgAdm->DataTab[j].type;
 
@@ -823,7 +822,7 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
             dataObj = c->NullString();
         }
 
-        if ( controlType == winEdit || controlType == winStatic )
+        if ( controlType == winStatic || controlType == winEdit )
         {
             SetDlgItemText(hwnd, itemID, c->ObjectToStringValue(dataObj));
         }
@@ -905,7 +904,7 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
 
         data[0] = '\0';
 
-        hwnd =        dlgAdm->ChildDlg[dlgAdm->DataTab[j].category];
+        hwnd =        pcpbd->childDlg[dlgAdm->DataTab[j].category];
         itemID =      dlgAdm->DataTab[j].id;
         controlType = dlgAdm->DataTab[j].type;
 
@@ -999,10 +998,12 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
  * state of the control.
  *
  * The table entry is either made through the Rexx dialog's connectXXX()
- * methods, or by the data autodetection feature.  For data autodetection, when
- * the underlying dialog is first created, its child windows are enumerated and
- * an entry is made in the data table for each control found.  The connectXXX()
- * methods allow the Rexx programmer to manually connect the controls she wants.
+ * methods, or by the data autodetection feature.
+ *
+ * Data autodetection is only used for ResDialogs.  When the underlying dialog
+ * is first created, its child windows are enumerated and an entry is made in
+ * the data table for each control found. The connectXXX() methods allow the
+ * Rexx programmer to manually connect the controls she wants.
  *
  * In both scenarios, a Rexx dialog attribute that represents the 'data' of a
  * specific control is created and the data table entry allows the get / set
@@ -1017,22 +1018,27 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
  * field that never got implemented.
  *
  * The pre 4.1.0 code also had "get" and "set" data table functions beside the
- * "add" function.  The set function was not used anywhere in the code.  Set was
- * used to change the value of an existing data table entry.  Since there does
- * not seem to be any purpose to that, the function was dropped.
+ * "add" function.  The set function was not called anywhere in the code. The
+ * set function would change the value of an existing data table entry. Since
+ * there does not seem to be any purpose to that, the function was dropped.
  *
  * The get function returned the values of a single data table entry.  But it
  * was only used in one place, in a loop to get all entries.  And only the ID
  * value was used. So that function was replaced by getDataTableIDs() which
  * returns an array of all the resource IDs for every table entry.
  *
- * @param c
+ * @param c       Method context we are operating in, or null.
  * @param dlgAdm
  * @param id      The resource ID of the control.
  * @param type
  * @param category
  *
  * @return 0 on succes, and 1 for error.
+ *
+ * @remarks  addToDataTable() can be called from the WindowLoopThread, where we
+ *           don't have a valid method context.  In this case, we don't do an
+ *           out of memory exception, just pass back the return code and let the
+ *           higher level deal with it.
  */
 uint32_t addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, int id, oodControl_t type, uint32_t category)
 {
@@ -1041,8 +1047,11 @@ uint32_t addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, int id, oodCo
         dlgAdm->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
         if ( !dlgAdm->DataTab )
         {
-            outOfMemoryException(c->threadContext);
-            return 1;
+            if ( c != NULL )
+            {
+                outOfMemoryException(c->threadContext);
+            }
+            return OOD_MEMORY_ERR;
         }
         dlgAdm->DT_size = 0;
     }
@@ -1053,13 +1062,13 @@ uint32_t addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, int id, oodCo
         dlgAdm->DataTab[dlgAdm->DT_size].type = type;
         dlgAdm->DataTab[dlgAdm->DT_size].category = category;
         dlgAdm->DT_size ++;
-        return 0;
+        return OOD_NO_ERROR;
     }
 
     MessageBox(0, "Dialog data items have exceeded the maximum number of\n"
                "allocated table entries. No data item can be added.",
                "Error", MB_OK | MB_ICONHAND);
-    return 1;
+    return OOD_DATATABLE_FULL;
 }
 
 /**
@@ -1099,19 +1108,24 @@ RexxArrayObject getDataTableIDs(RexxMethodContext *c, pCPlainBaseDialog pcpbd, R
  * subclasses) the data table entry is done for each createXXX() method when the
  * dialog control is added to the in-memory template.
  *
- * @param c       RexxMethodContext pointer.  Only used for an out of memory
- *                exception when an item is added to the data table.
- * @param dlgAdm  Dialog Admin block for the dialog.
+ * @param pcpbd  Pointer to the CSelf struct of the ResDialog being created.
  *
- * @return True on success, false on failure.  The only failure here is an out
+ * @return A code indication success, or not.  The only failure here is an out
  *         of memory problem or the data table is full.
+ *
+ * @remarks  This function is only called from the WindowLoopThread, which is
+ *           creating a dialog from a resource DLL.  There is no valid method
+ *           context.  If there is a failure in addToDataTable() we just pass
+ *           the result code back and let the higher level handle it.
  */
-bool doDataAutoDetection(RexxMethodContext *c, DIALOGADMIN * dlgAdm)
+uint32_t doDataAutoDetection(pCPlainBaseDialog pcpbd)
 {
+    uint32_t result = OOD_NO_ERROR;
+
     HWND parent, current, next;
     oodControl_t itemToAdd;
 
-    parent = dlgAdm->TheDlg;
+    parent = pcpbd->hDlg;
     current = parent;
     next = GetTopWindow(current);
 
@@ -1131,12 +1145,13 @@ bool doDataAutoDetection(RexxMethodContext *c, DIALOGADMIN * dlgAdm)
 
        if ( itemToAdd != winNotAControl )
        {
-           if ( addToDataTable(c, dlgAdm, GetWindowLong(current, GWL_ID), itemToAdd, 0) == 1 )
+           result = addToDataTable(NULL, pcpbd->dlgAdm, GetWindowLong(current, GWL_ID), itemToAdd, 0);
+           if ( result != OOD_NO_ERROR )
            {
-               return false;
+               break;
            }
        }
        next = GetNextWindow(current, GW_HWNDNEXT);
     }
-    return true;
+    return result;
 }

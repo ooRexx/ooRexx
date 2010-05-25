@@ -1266,7 +1266,7 @@ SEQUENCE STYLE USERMSG
 /* expose u /* our topmost dlgAreaClass exposed in defineDialog */           */
 /* use arg dummy, sizeinfo    /* sizeinfo contains information about the     */
 /*                                                  new width and height */  */
-/* if self~PeekDialogMessage~left(8)\="OnResize" then u~resize(self,sizeinfo)*/
+/* u~resize(self,sizeinfo)                                                   */
 /* ------------------------------------------------------------------------- */
 expose DlgObjList
   use arg dlg,data

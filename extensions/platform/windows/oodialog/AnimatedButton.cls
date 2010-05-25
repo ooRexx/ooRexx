@@ -126,7 +126,7 @@
         else spos.y = spos.y + move.y
      end
 
-     if self~parentDlg~finished = 1 then return 1
+     if self~parentDlg~finished then return 1
 
      if (reset.x + reset.y) > 0 then do
         if reset.x = 1 then do
@@ -147,11 +147,11 @@
               if self~hittop = 1 then spos.y = spos.bottom - ss.y
            end
         end
-        if self~parentDlg~finished = 1 then return 1
+        if self~parentDlg~finished then return 1
         self~parentDlg~ChangeBitmapButton(sprite.buttonid, 0)
         /* self~parentDlg~ClearRect(spritewin, oldpos.x, oldpos.y, (oldpos.x + sprite.sizex), (oldpos.y + sprite.sizey)) */
      end
-     if self~parentDlg~finished = 1 then return 1
+     if self~parentDlg~finished then return 1
      self~parentDlg~setBitmapPosition(sprite.buttonid, spos.x, spos.y);
 
 
@@ -159,7 +159,7 @@
      expose spritewin spos. sprite.
      use arg new.x, new.y
 
-     if self~parentDlg~finished = 1 then return 1
+     if self~parentDlg~finished then return 1
      self~parentDlg~ChangeBitmapButton(sprite.buttonid, 0)
      self~parentDlg~ClearRect(spritewin, spos.x, spos.y, (spos.x + sprite.sizex), (spos.y + sprite.sizey))
      spos.x = new.x
@@ -182,7 +182,7 @@
         do actsprite = sprite.from by sprite.step to sprite.to
            if (sprite.movex \= 0) | (sprite.movey \=0) then
               self~movepos(sprite.movex, sprite.movey)
-           if self~parentDlg~finished = 1 then return 1
+           if self~parentDlg~finished then return 1
            self~parentDlg~ChangeBitmapButton(sprite.buttonid, actsprite,,,,opts)
            if (sprite.delay \= 0) then ret = msSleep(sprite.delay)
         end
@@ -193,7 +193,7 @@
            if (sprite.movex \= 0) | (sprite.movey \=0) then
               self~movepos(sprite.movex, sprite.movey)
 
-           if self~parentDlg~finished = 1 then return 1
+           if self~parentDlg~finished then return 1
            self~parentDlg~ChangeBitmapButton(sprite.buttonid, actsprite,,,,opts)
            if (sprite.delay \= 0) then ret = msSleep(sprite.delay)
         end
@@ -225,12 +225,12 @@
 
 
 ::method run unguarded
-   do until(self~stopped = 1) | (self~ParentStopped) | self~parentDlg~finished = 1
+   do until(self~stopped = 1) | (self~parentStopped) | self~parentDlg~finished
       self~moveseq
    end
    return 0
 
-::method Parentstopped
+::method parentStopped
    return self~parentDlg~finished
 
 ::method stop

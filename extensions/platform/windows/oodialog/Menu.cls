@@ -163,16 +163,37 @@
 
 /* class: SystemMenu - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
      A system menu class.  System menus are also known as window or control
-     menus.  They are the menu that appears when clicking on the icon in the
-     upper left corner of a window.
+     menus.  It is the menu that appears when clicking on the icon in the upper
+     left corner of a window.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::class 'SystemMenu' public subclass Object inherit Menu ResourceUtils
 
+::constant WM_SYSCOMMAND     "0x0112"
+
+-- Use decimal value to allow comparison in event handlers.
+::constant SC_SIZE           61440
+::constant SC_MOVE           61456
+::constant SC_MINIMIZE       61472
+::constant SC_MAXIMIZE       61488
+::constant SC_NEXTWINDOW     61504
+::constant SC_PREVWINDOW     61520
+::constant SC_CLOSE          61536
+::constant SC_VSCROLL        61552
+::constant SC_HSCROLL        61568
+::constant SC_MOUSEMENU      61584
+::constant SC_KEYMENU        61696
+::constant SC_ARRANGE        61712
+::constant SC_RESTORE        61728
+::constant SC_TASKLIST       61744
+::constant SC_SCREENSAVE     61760
+::constant SC_HOTKEY         61776
+::constant SC_DEFAULT        61792
+::constant SC_MONITORPOWER   61808
+::constant SC_CONTEXTHELP    61824
+::constant SC_SEPARATOR      61455
+
 ::method init external "LIBRARY oodialog sysMenu_init"
 ::method revert external "LIBRARY oodialog sysMenu_revert"
-::method connectCommandEvent external "LIBRARY oodialog sysMenu_connectCommandEvent"
-::method connectAllCommandEvents external "LIBRARY oodialog sysMenu_connectAllCommandEvents"
-::method connectSomeCommandEvents external "LIBRARY oodialog sysMenu_connectSomeCommandEvents"
 
 
 /* class: BinaryMenuBar- - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -205,9 +226,10 @@
 
 /* class: MenuTemplate - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
     A mix in class supplying the funtionality to create a menu template in
-    memory.
+    memory.  This a private, internal use only, class.  The methods are doc-
+    umented as part of the UserMenuBar, the class itself is not documented.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-::class 'MenuTemplate' public mixinclass ResourceUtils
+::class 'MenuTemplate' private mixinclass ResourceUtils
 
 ::method addPopup external "LIBRARY oodialog menuTemplate_addPopup"
 ::method addItem external "LIBRARY oodialog menuTemplate_addItem"

@@ -174,9 +174,9 @@ RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTI
     HWND hwndOwner = (HWND)string2pointer(hwnd);
     if ( hwndOwner == NULL )
     {
-        if ( topDlg != NULL && topDlg->OnTheTop )
+        if ( TopDlg != NULL && TopDlg->onTheTop )
         {
-            hwndOwner = topDlg->TheDlg;
+            hwndOwner = TopDlg->hDlg;
         }
     }
 

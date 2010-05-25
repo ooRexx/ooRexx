@@ -1231,7 +1231,7 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
         goto out;
     }
 
-    DIALOGADMIN *dlgAdm = getDlgAdm(context, dlg);
+    DIALOGADMIN *dlgAdm = dlgToDlgAdm(context, dlg);
     if ( dlgAdm == NULL )
     {
         goto out;
@@ -1556,8 +1556,8 @@ RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
                 goto err_out;
             }
 
-            DIALOGADMIN *adm = dlgToDlgAdm(context, dlg);
-            ri->hMod = adm->TheInstance;
+            pCPlainBaseDialog pcpbd = dlgToCSelf(context, dlg);
+            ri->hMod = pcpbd->hInstance;
             ri->isValid = true;
         }
     }

@@ -64,7 +64,7 @@
 //#define USE_DS_CONTROL
 
 #ifndef USE_DS_CONTROL
-BOOL IsNestedDialogMessage(DIALOGADMIN * dlgAdm, LPMSG lpmsg);
+BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, LPMSG lpmsg);
 #endif
 
 
@@ -87,25 +87,29 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
 {
     bool *release = args->release;
     pCPlainBaseDialog pcpbd = args->pcpbd;
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
 
-    dlgAdm->TheDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
-    dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
+    pcpbd->hDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
 
-    if ( dlgAdm->TheDlg )
+    if ( pcpbd->hDlg )
     {
+        pcpbd->childDlg[0] = pcpbd->hDlg;
+
         MSG msg;
+        BOOL result;
         pcpbd->isActive = true;
         *release = true;
 
-        while ( GetMessage(&msg,NULL, 0,0) && dialogInAdminTable(dlgAdm) && (!dlgAdm->LeaveDialog) )
+        while ( (result = GetMessage(&msg,NULL, 0,0)) != 0 && pcpbd->adminAllocated )
         {
+            if ( result == -1 )
+            {
+                break;
+            }
 #ifdef USE_DS_CONTROL
-            if ( dlgAdm && !IsDialogMessage(dlgAdm->TheDlg, &msg)
-                 && !IsDialogMessage(dlgAdm->AktChild, &msg) )
+            if ( ! IsDialogMessage(pcpbd->hDlg, &msg) && ! IsDialogMessage(pcpbd->activeChild, &msg) )
             {
 #else
-            if ( dlgAdm && (!IsNestedDialogMessage(dlgAdm, &msg)) )
+            if ( ! IsNestedDialogMessage(pcpbd, &msg) )
             {
 #endif
                 DispatchMessage(&msg);
@@ -114,16 +118,18 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     }
     else
     {
+        // The dialog was not created for some reason, this is not an 'abnormal' halt.
+        pcpbd->abnormalHalt = false;
         *release = true;
     }
 
-    // Need to synchronize here, otherwise dlgAdm might still be in the table
-    // but delDialog is already running.
+    // Need to synchronize here, otherwise adminAllocated might be true but
+    // delDialog() is already running.
     EnterCriticalSection(&crit_sec);
-    if ( dialogInAdminTable(dlgAdm) )
+    if ( pcpbd->adminAllocated )
     {
         delDialog(pcpbd);
-        dlgAdm->TheThread = NULL;
+        pcpbd->hDlgProcThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
 
@@ -225,7 +231,7 @@ static uint32_t getExpectedCount(RexxMethodContext *c, RexxArrayObject args)
 
 // Average size of a dialog control item in the dialog template.  This figure is
 // simply the figure the old ooDialog code used.  How accurate it is, who knows.
-#define DLGTMEPLATE_CONTROL_AVG_SIZE  256
+#define DLGTEMPLATE_CONTROL_AVG_SIZE  256
 
 // Number added to the dialog item count to give a little extra room.  Like the
 // average control size this is just an arbitrary number from the old ooDialog
@@ -236,7 +242,7 @@ static uint32_t getExpectedCount(RexxMethodContext *c, RexxArrayObject args)
 
 inline size_t calcTemplateSize(uint32_t count)
 {
-    return (count + DLGTEMPLATE_EXTRA_FACTOR) * DLGTEMPLATE_CONTROL_BASE_SIZE;
+    return (count + DLGTEMPLATE_EXTRA_FACTOR) * DLGTEMPLATE_CONTROL_AVG_SIZE;
 }
 
 /**
@@ -468,6 +474,17 @@ RexxMethod4(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
     return result;
 }
 
+RexxMethod1(RexxObjectPtr, userdlg_test, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    RexxArrayObject msgName = c->ArrayOfTwo(c->String("ABNORMALHALT"), ThePlainBaseDialogClass);
+    RexxArrayObject args = c->NewArray(0);
+    c->SendMessage2(pcpbd->rexxSelf, "SENDWITH", msgName, args);
+
+    return TheZeroObj;
+}
 
 /**
  *  Methods for the .DynamicDialog class.
@@ -742,6 +759,26 @@ uint32_t getControlStyle(oodControl_t ctrl, CSTRING opts)
 }
 
 
+/**
+ * Check if the word 'CENTER', case insignificant, is in a string.  Note that
+ * CENTER either has to have a space after it, or it has to be the end of the
+ * string.
+ *
+ * @param opts  The string to check.
+ *
+ * @return True or false.
+ */
+static bool hasCenterFlag(CSTRING opts)
+{
+    char *p = StrStrI(opts, "CENTER");
+    if ( p != NULL )
+    {
+        char c = *(p + 6);
+        return c == ' ' || c == '\0';
+    }
+    return false;
+}
+
 int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
                          CSTRING opts, CSTRING text, pCDynamicDialog pcdd)
 {
@@ -785,7 +822,9 @@ int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y,
 
     if ( *opts != '\0' )
     {
-        if ( StrStrI(opts, "CENTER" ) != NULL ) style |= SS_CENTER;
+        // If a static text control has none of these styles, then by default it
+        // is SS_LEFT.  (SS_LEFT == 0)
+        if ( hasCenterFlag(opts) )                      style |= SS_CENTER;
         else if ( StrStrI(opts, "RIGHT"     ) != NULL ) style |= SS_RIGHT;
         else if ( StrStrI(opts, "SIMPLE"    ) != NULL ) style |= SS_SIMPLE;
         else if ( StrStrI(opts, "LEFTNOWRAP") != NULL ) style |= SS_LEFTNOWORDWRAP;
@@ -808,7 +847,6 @@ int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y,
     }
     return 0;
 }
-
 
 int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
                          CSTRING opts, pCDynamicDialog pcdd)
@@ -929,7 +967,12 @@ int32_t connectCreatedControl(RexxMethodContext *c, pCPlainBaseDialog pcpbd, Rex
 
     c->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, c->String(attributeName));
 
-    return addToDataTable(c, dlgAdm, id, ctrl, category);
+    uint32_t result = addToDataTable(c, dlgAdm, id, ctrl, category);
+    if ( result == OOD_MEMORY_ERR )
+    {
+        return -2;
+    }
+    return (int32_t)result;
 }
 
 
@@ -1078,9 +1121,15 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
 err_out:
     // No underlying windows dialog is created, but we still need to clean up
     // the admin block, which was allocated when the Rexx dialog object was
-    // instantiated.  This admin block is now in the DialogTab.
-
+    // instantiated.  This admin block is now in the DialogTable.
+    //
+    // But, do we really need to?  This only happens if an exception is raised,
+    // the interpreter will probably just end.  In addition, I'm wrapping this
+    // with a critical section, but that is probably not needed.
+    EnterCriticalSection(&crit_sec);
     delDialog(pcpbd);
+    LeaveCriticalSection(&crit_sec);
+
     return FALSE;
 
 }
@@ -1099,13 +1148,6 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
     pCPlainBaseDialog pcpbd = pcdd->pcpbd;
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
-        return FALSE;
-    }
-
     DLGTEMPLATE *p = pcdd->base;
     if ( p == NULL )
     {
@@ -1120,18 +1162,18 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
 
     EnterCriticalSection(&crit_sec);
 
-    // InstallNecessaryStuff() can not fail for a UserDialog.
-    InstallNecessaryStuff(dlgAdm, NULL);
+    // installNecessaryStuff() can not fail for a UserDialog.
+    installNecessaryStuff(pcpbd, NULL);
 
     LoopThreadArgs threadArgs;
     threadArgs.dlgTemplate = p;
     threadArgs.pcpbd = pcpbd;
     threadArgs.release = &Release;
 
-    dlgAdm->TheThread = CreateThread(NULL, 2000, (LPTHREAD_START_ROUTINE)WindowUsrLoopThread, &threadArgs, 0, &thID);
+    pcpbd->hDlgProcThread = CreateThread(NULL, 2000, (LPTHREAD_START_ROUTINE)WindowUsrLoopThread, &threadArgs, 0, &thID);
 
-    // Wait for the dialog to start.
-    while ( ! Release && dlgAdm && (dlgAdm->TheThread) )
+    // Wait for the dialog to start, don't wait if the thread was not created.
+    while ( ! Release && pcpbd->hDlgProcThread )
     {
         Sleep(1);
     }
@@ -1140,56 +1182,43 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     // Free the memory allocated for template.
     cleanUpDialogTemplate(p, pcdd);
 
-    if ( dlgAdm->TheDlg )
+    if ( pcpbd->hDlg )
     {
+        setDlgHandle(context, pcpbd);
+
         // Set the thread priority higher for faster drawing.
-        SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
-        dlgAdm->OnTheTop = TRUE;
-        dlgAdm->threadID = thID;
+        SetThreadPriority(pcpbd->hDlgProcThread, THREAD_PRIORITY_ABOVE_NORMAL);
+        pcpbd->onTheTop = true;
+        pcpbd->threadID = thID;
 
         // Do we have a modal dialog?
-        if ( ! modeless )
-        {
-            if ( dlgAdm->previous && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
-            {
-                EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
-            }
-        }
+        checkModal((pCPlainBaseDialog)pcpbd->previous, modeless);
 
-        if ( GetWindowLong(dlgAdm->TheDlg, GWL_STYLE) & WS_SYSMENU )
+        if ( GetWindowLong(pcpbd->hDlg, GWL_STYLE) & WS_SYSMENU )
         {
             HICON hBig = NULL;
             HICON hSmall = NULL;
 
-            if ( GetDialogIcons(dlgAdm, iconID, ICON_FILE, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
+            if ( getDialogIcons(pcpbd, iconID, ICON_FILE, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
             {
-                dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
-                dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
-                dlgAdm->DidChangeIcon = TRUE;
+                pcpbd->sysMenuIcon = (HICON)setClassPtr(pcpbd->hDlg, GCLP_HICON, (LONG_PTR)hBig);
+                pcpbd->titleBarIcon = (HICON)setClassPtr(pcpbd->hDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
+                pcpbd->didChangeIcon = true;
 
-                SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
+                SendMessage(pcpbd->hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
             }
         }
 
-        setDlgHandle(context, pcdd->pcpbd, dlgAdm->TheDlg);
         return TRUE;
     }
 
-    // The dialog creation failed, so do some final clean up.  Note that the
-    // dialog admin block can not be freed in delDialog() because of its use
-    // here.
+    // The dialog creation failed, so do some final clean up.
     //
     // When the dialog creation fails in the WindowUsrLoop thread a delDialog()
     // is immediately done, as it fails to enter the message processing loop.
-    dlgAdm->OnTheTop = FALSE;
-    if ( dlgAdm->previous )
-    {
-        ((DIALOGADMIN *)(dlgAdm->previous))->OnTheTop = TRUE;
-    }
-    if ( dlgAdm->previous && !IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
-    {
-        EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, TRUE);
-    }
+
+    pcpbd->onTheTop = false;
+    enablePrevious((pCPlainBaseDialog)pcpbd);
 
     return FALSE;
 }
@@ -1236,13 +1265,6 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
     pCPlainBaseDialog pcpbd = pcdd->pcpbd;
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
-        return TheZeroObj;
-    }
-
     DLGTEMPLATE *p = (DLGTEMPLATE *)basePtr;
     if ( p == NULL )
     {
@@ -1264,7 +1286,7 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
         return TheZeroObj;
     }
 
-    dlgAdm->ChildDlg[childIndex] = hChild;
+    pcpbd->childDlg[childIndex] = hChild;
     return pointer2string(context, hChild);
 }
 
@@ -2570,92 +2592,134 @@ RexxMethod6(RexxObjectPtr, catdlg_sendMessageToCategoryControl, RexxObjectPtr, r
 
 extern BOOL SHIFTkey = FALSE;
 
-BOOL IsNestedDialogMessage(
-    DIALOGADMIN * dlgAdm,
-    PMSG  lpmsg    // address of structure with message
-   )
+/**
+ * Although not examined throughly, this appears to be a custom implementation
+ * of the Windows dialog manager to deal with ooDialog's CategoryDialog.
+ *
+ * @param pcpbd  Pointer to the dialog CSelf struct.
+ * @param lpmsg
+ *
+ * @return BOOL
+ */
+BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, PMSG  lpmsg)
 {
-   HWND hW, hParent, hW2;
-   BOOL prev = FALSE;
+    HWND hW, hParent, hW2;
+    bool prev = false;
 
-   if ((!dlgAdm->ChildDlg) || (!dlgAdm->AktChild))
-      return IsDialogMessage(dlgAdm->TheDlg, lpmsg);
+    if ( ! pcpbd->childDlg || ! pcpbd->activeChild )   // childDlg[] Is this expression correct?  TODO
+    {
+        return IsDialogMessage(pcpbd->hDlg, lpmsg);
+    }
 
-   switch (lpmsg->message)
-   {
-      case WM_KEYDOWN:
-         switch (lpmsg->wParam)
+    switch ( lpmsg->message )
+    {
+        case WM_KEYDOWN:
+            switch ( lpmsg->wParam )
             {
-            case VK_SHIFT: SHIFTkey = TRUE;
-               break;
+                case VK_SHIFT:
+                    SHIFTkey = TRUE;
+                    break;
 
-            case VK_TAB:
+                case VK_TAB:
 
-               if (IsChild(dlgAdm->AktChild, lpmsg->hwnd)) hParent = dlgAdm->AktChild; else hParent = dlgAdm->TheDlg;
+                    if ( IsChild(pcpbd->activeChild, lpmsg->hwnd) )
+                    {
+                        hParent = pcpbd->activeChild;
+                    }
+                    else
+                    {
+                        hParent = pcpbd->hDlg;
+                    }
 
-               hW = GetNextDlgTabItem(hParent, lpmsg->hwnd, SHIFTkey);
-               hW2 = GetNextDlgTabItem(hParent, NULL, SHIFTkey);
+                    hW = GetNextDlgTabItem(hParent, lpmsg->hwnd, SHIFTkey);
+                    hW2 = GetNextDlgTabItem(hParent, NULL, SHIFTkey);
 
-               /* see if we have to switch to the other dialog */
-               if (hW == hW2)
-               {
-                  if (hParent == dlgAdm->TheDlg)
-                     hParent = dlgAdm->AktChild;
-                  else
-                     hParent = dlgAdm->TheDlg;
+                    /* see if we have to switch to the other dialog */
+                    if ( hW == hW2 )
+                    {
+                        if ( hParent == pcpbd->hDlg )
+                        {
+                            hParent = pcpbd->activeChild;
+                        }
 
-                  hW = GetNextDlgTabItem(hParent, NULL, SHIFTkey);
-                  return SendMessage(hParent, WM_NEXTDLGCTL, (WPARAM)hW, (LPARAM)TRUE) != 0;
+                        hW = GetNextDlgTabItem(hParent, NULL, SHIFTkey);
+                        return SendMessage(hParent, WM_NEXTDLGCTL, (WPARAM)hW, (LPARAM)TRUE) != 0;
+                    }
+                    else
+                    {
+                        return SendMessage(hParent, WM_NEXTDLGCTL, (WPARAM)hW, (LPARAM)TRUE) != 0;
+                    }
+                    return TRUE;
 
-               } else return SendMessage(hParent, WM_NEXTDLGCTL, (WPARAM)hW, (LPARAM)TRUE) != 0;
+                case VK_LEFT:
+                case VK_UP:
+                    prev = true;
 
-                return TRUE;
+                case VK_RIGHT:
+                case VK_DOWN:
+                    if ( IsChild(pcpbd->activeChild, lpmsg->hwnd) )
+                    {
+                        hParent = pcpbd->activeChild;
+                    }
+                    else
+                    {
+                        hParent = pcpbd->hDlg;
+                    }
 
-            case VK_LEFT:
-            case VK_UP:
-               prev = TRUE;
-            case VK_RIGHT:
-            case VK_DOWN:
+                    hW = GetNextDlgGroupItem(hParent, lpmsg->hwnd, prev);
+                    hW2 = GetNextDlgGroupItem(hParent, NULL, prev);
 
-               if (IsChild(dlgAdm->AktChild, lpmsg->hwnd)) hParent = dlgAdm->AktChild; else hParent = dlgAdm->TheDlg;
+                    /* see if we have to switch to the other dialog */
+                    if ( hW == hW2 )
+                    {
+                        if ( hParent == pcpbd->hDlg )
+                        {
+                            hParent = pcpbd->activeChild;
+                        }
+                        else
+                        {
+                            hParent = pcpbd->hDlg;
+                        }
+                        return IsDialogMessage(hParent, lpmsg);
+                    }
+                    else
+                    {
+                        return IsDialogMessage(hParent, lpmsg);
+                    }
+                    return TRUE;
 
-               hW = GetNextDlgGroupItem(hParent, lpmsg->hwnd, prev);
-               hW2 = GetNextDlgGroupItem(hParent, NULL, prev);
+                case VK_CANCEL:
+                case VK_RETURN:
+                    return IsDialogMessage(pcpbd->hDlg, lpmsg);
 
-               /* see if we have to switch to the other dialog */
-               if (hW == hW2)
-               {
-                  if (hParent == dlgAdm->TheDlg)
-                     hParent = dlgAdm->AktChild;
-                  else
-                     hParent = dlgAdm->TheDlg;
+                default:
+                    hParent = (HWND)getWindowPtr(lpmsg->hwnd, GWLP_HWNDPARENT);
+                    if ( ! hParent )
+                    {
+                        return FALSE;
+                    }
+                    return IsDialogMessage(hParent, lpmsg);
+            }
+            break;
 
-                   return IsDialogMessage(hParent, lpmsg);
+        case WM_KEYUP:
+            if ( lpmsg->wParam == VK_SHIFT )
+            {
+                SHIFTkey = FALSE;
+            }
+            break;
+    }
 
-               } else
-                return IsDialogMessage(hParent, lpmsg);
+    hParent = (HWND)getWindowPtr(lpmsg->hwnd, GWLP_HWNDPARENT);
 
-                return TRUE;
-
-            case VK_CANCEL:
-            case VK_RETURN:
-               return IsDialogMessage(dlgAdm->TheDlg, lpmsg);
-
-            default:
-               hParent = (HWND)getWindowPtr(lpmsg->hwnd, GWLP_HWNDPARENT);
-               if (!hParent) return FALSE;
-               return IsDialogMessage(hParent, lpmsg);
-           }
-         break;
-
-      case WM_KEYUP:
-         if (lpmsg->wParam == VK_SHIFT) SHIFTkey = FALSE;
-         break;
-   }
-   hParent = (HWND)getWindowPtr(lpmsg->hwnd, GWLP_HWNDPARENT);
-   if (hParent)
-      return IsDialogMessage(hParent, lpmsg);
-   else return IsDialogMessage(dlgAdm->TheDlg, lpmsg);
+    if ( hParent )
+    {
+        return IsDialogMessage(hParent, lpmsg);
+    }
+    else
+    {
+        return IsDialogMessage(pcpbd->hDlg, lpmsg);
+    }
 }
 #endif
 

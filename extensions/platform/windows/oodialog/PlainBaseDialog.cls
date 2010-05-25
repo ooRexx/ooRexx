@@ -332,9 +332,6 @@
 ::method getFontSize class external "LIBRARY oodialog pbdlg_getFontSize_cls"
 ::method new class external "LIBRARY oodialog pbdlg_new_cls"
 
--- External adminstration buffer. Get can not be private for now see MenuBar::attachTo()
-::attribute adm get
-
 -- Automatic data field detection on/off
 ::attribute autoDetect get external "LIBRARY oodialog pbdlg_getAutoDetect"
 ::attribute autoDetect set external "LIBRARY oodialog pbdlg_setAutoDetect"
@@ -343,7 +340,10 @@
 
 ::attribute dataConnection private  -- store connections between ids and class attributes
 ::attribute useStem private         -- flag whether to use a stem to set/get data or not
-::attribute finished                -- finsished state of dialog, not a logical, can be 0, 1, or 2
+
+-- finsished is now a boolean, when set to .true, the dialog ends.  Older ooDialog set it
+-- to 2 on an abnormal termination of the underlying dialog.  This is no longer done
+::attribute finished
 
 ::method dlgData private
    expose dlgData.
@@ -371,16 +371,14 @@
 ::method initDialog unguarded private
    return 0
 
--- Dispatches window messages until the dialog is terminated.
+-- Needs a comment?  Was documented.
 ::method run unguarded private
-   use strict arg sleepTime = 1
-   if \ sleepTime~datatype('W') then sleepTime = 1
-
-   do while self~finished = 0
-      self~handleMessages(sleepTime)
-   end
+   expose finished
+   guard on when finished
 
 -- Creates the dialog, shows it, and destroys it.  Dialog "data" is set and received.
+-- sleepTime is ignored, it was never documented, but people might have used it anyway,
+-- so leave it in.
 ::method execute unguarded
    expose dlgData.
    use strict arg sh = "NORMAL", icon = 0, sleepTime = 1, modeless = .false
@@ -398,61 +396,30 @@
          o~start(m)
       end
 
-      self~run(sleepTime)
+      self~run
 
       if self~initCode = 1 then do
          if self~useStem then self~getDataStem(dlgData.)
          self~getData
       end
-      if self~adm \= 0 then self~stopIt
+      self~stopIt
       return self~initCode
    end
    else do
       self~stopIt
-   end
-   return 0
-
--- Note: handleMessages() and clearMessages() were two methods that were previously marked protected.
--- My believe is that there was some confusion in the original developement that led to methods being
--- marked protected when they were meant to be marked private.  However, changing these 2 methods to
--- private:  1.) breaks an existing example 2.) the doc on clearMessages() would lead one to think that
--- it is a public method.  So, the methods are changed to public rather than private.
-
--- Retrieve and dispatch, if available, one window message.
-::method handleMessages unguarded
-   use strict arg sleepTime = 1
-   if self~adm = 0 then do
-       self~finished = 2
-       return
+      return 0
    end
 
-   msg = self~getDlgMsg
-   if msg~pos("1DLGDELETED1") > 0 then do
-      if self~finished = 0 then self~finished = 2
-   end
-   else do
-      if msg \= "" then do
-         parse var msg methodName '(' args ')'
-         argList = args~makeArray(255~d2c)
-         self~sendWith(methodName, argList)
-      end
-      else do
-         call msSleep sleepTime
-      end
-   end
+::method dispatchWindowMessage unguarded
+  use strict arg methodName, argArray
+  reply .true     -- TODO, reply .true unneccesary?
+  self~startWith(methodName, argArray)
 
--- Clear all pending window messages
-::method clearMessages unguarded
-   if self~adm = 0 then return
-   msg = self~getDlgMsg
-   do while msg \= "" & self~adm \= 0
-       if msg~pos("1DLGDELETED1") > 0 then do
-          if self~finished = 0 then self~finished = 2
-       end
-       msg = self~getDlgMsg
-   end
+::method abnormalHalt unguarded
+  expose finished
+  self~initCode = 3
+  finished = 1
 
-::method getDlgMsg external "LIBRARY oodialog pbdlg_getDlgMsg"
 ::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
 
 -- Documented "internal use only" in 3.2.0 - Do not document.
@@ -463,7 +430,7 @@
    -- If we ourselves are a child dialog and not called by the parent's stopIt(), then
    -- remove ourself from the parent dialog's child list.  (Child dialogs are independent
    -- and the user could close them at any time.)
-   if self~parentDlg \= .nil & caller \= "PARENT" then self~parentDlg~ChildDied(self)
+   if self~parentDlg \= .nil & caller \= "PARENT" then self~parentDlg~childDied(self)
 
    -- If we have child dialogs, then stop all of them.  Child dialogs are always started
    -- through popupAsChild() and are always closed when the parent closes.
@@ -883,15 +850,15 @@
 
 ::method ok unguarded
    self~finished = self~validate
-   self~initCode = 1
+   if self~finished then self~initCode = 1
    return self~finished
 
  /* If self~finished = 1 the dialog is destroyed, if 0 the dialog */
  /* execution will be continued */
 
 ::method cancel unguarded
-   self~finished = 1
-   if self~finished = 1 then self~initCode = 2
+   self~finished = .true
+   self~initCode = 2
    return self~finished
 
 ::method help unguarded
@@ -930,7 +897,20 @@
 
 
 -- DEPRECATED  (to end of file)
+::method clearMessages unguarded
+
 ::method deInstall
+  return 0
+
+-- There is no longer a message queue.  TODO this was documented, do we need to
+-- keep a sleep here?
+::method handleMessages unguarded
+   j = SysSleep(.010)
+
+-- adm was never documented and should just be removed, but it would have been
+-- needed in the dump() method which was documented. (Even though the
+-- documentation never explained where a 'dialogadmin' block would come from.)
+::attribute adm get
   return 0
 
 ::method connectEntryLine unguarded

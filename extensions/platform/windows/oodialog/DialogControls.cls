@@ -102,6 +102,7 @@
    forward to (self~oDlg)
 
 ::method captureMouse external "LIBRARY oodialog dlgctrl_captureMouse"
+::method connectKeyEvent unguarded external "LIBRARY oodialog dlgctrl_connectKeyEvent"
 ::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
 ::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
 ::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"

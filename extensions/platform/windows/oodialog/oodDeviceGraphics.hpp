@@ -61,7 +61,7 @@ extern HBRUSH        oodCreateBrush(RexxMethodContext *, uint32_t, CSTRING);
 extern RexxObjectPtr clearRect(RexxMethodContext *, HWND, PRECT);
 extern RexxObjectPtr redrawRect(RexxMethodContext *, HWND, PRECT, bool, bool);
 extern int           getHeightFromFontSize(int fontSize);
-extern void          maybeSetColorPalette(RexxMethodContext *, HBITMAP, CSTRING, DIALOGADMIN *, RexxObjectPtr);
+extern void          maybeSetColorPalette(RexxMethodContext *, HBITMAP, CSTRING, pCPlainBaseDialog);
 extern LPBITMAPINFO  loadDIB(const char *szFile, uint32_t *);
 extern WORD          numDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 extern BOOL          drawBackgroundBmp(pCPlainBaseDialog, HWND);

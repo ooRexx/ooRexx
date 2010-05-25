@@ -44,10 +44,10 @@
 #endif
 #define IDC_STATIC        (-1)
 
-#define IDI_DLG_OODIALOG    11
-#define IDI_DLG_APPICON     12
-#define IDI_DLG_APPICON2    13
-#define IDI_DLG_OOREXX      14
+#define IDI_DLG_OODIALOG    12
+#define IDI_DLG_APPICON     13
+#define IDI_DLG_APPICON2    14
+#define IDI_DLG_OOREXX      15
 
 #define IDI_DLG_DEFAULT     IDI_DLG_APPICON2
 #define IDI_DLG_MIN_ID      IDI_DLG_OODIALOG

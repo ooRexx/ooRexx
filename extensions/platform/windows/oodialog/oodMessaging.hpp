@@ -54,23 +54,22 @@ typedef enum
 
 extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
-extern LRESULT       paletteMessage(DIALOGADMIN *, HWND, UINT, WPARAM, LPARAM);
+extern LRESULT       paletteMessage(pCPlainBaseDialog, HWND, UINT, WPARAM, LPARAM);
 extern MsgReplyType  searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog);
 extern bool          initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen);
-extern bool          initEventNotification(RexxMethodContext *, DIALOGADMIN *, RexxObjectPtr, pCEventNotification *);
-extern char         *getDlgMessage(DIALOGADMIN *dlgAdm, char *buffer, bool peek);
-extern BOOL          addDialogMessage(CHAR * msg, CHAR * Qptr);
+extern bool          initEventNotification(RexxMethodContext *, pCPlainBaseDialog, RexxObjectPtr, pCEventNotification *);
 extern bool          addCommandMessage(pCEventNotification, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
 extern bool          addNotifyMessage(pCEventNotification, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
 extern bool          addMiscMessage(pCEventNotification, uint32_t, uint32_t, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
 
-// Shared functions for keyboard hooks and key press subclassing.
-extern void          removeKBHook(DIALOGADMIN *dlgAdm);
-extern keyPressErr_t setKeyPressData(KEYPRESSDATA *, CSTRING, CSTRING, CSTRING);
-extern void          processKeyPress(KEYPRESSDATA *, WPARAM, LPARAM, PCHAR);
-extern void          freeKeyPressData(KEYPRESSDATA *);
-extern uint32_t      seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
-extern void          removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
+// Shared functions for keyboard hooks, key press and key event subclassing.
+extern void            removeKBHook(pCEventNotification);
+extern keyPressErr_t   setKeyPressData(KEYPRESSDATA *, CSTRING, CSTRING, CSTRING);
+extern void            processKeyPress(SUBCLASSDATA *, WPARAM, LPARAM);
+extern void            freeKeyPressData(SUBCLASSDATA *);
+extern uint32_t        seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
+extern void            removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
+extern RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam);
 
 
 #endif

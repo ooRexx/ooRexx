@@ -63,14 +63,15 @@ typedef map<string, int, less<string> > String2Int;
                                     "number of allocated icon table entries. The icon\n" \
                                     "resource will not be added."
 
-#define DEFAULT_FONTNAME            "MS Shell Dlg"
-#define DEFAULT_FONTSIZE            8
-#define MAX_DEFAULT_FONTNAME        256
-
 // Some int32_t codes where -1 and greater is valid.
 #define OOD_ID_EXCEPTION            0xFFFFFFF7   // -9
 #define OOD_BAD_WIDTH_EXCEPTION     0xFFFFFFF8   // -8
 #define OOD_INVALID_ITEM_ID         0xFFFFFFF7   // Rewording of OOD_ID_EXCEPTION
+
+// Some uint32_t result codes  TODO set up an enum for above and these.
+#define OOD_NO_ERROR                0
+#define OOD_DATATABLE_FULL          1
+#define OOD_MEMORY_ERR              2
 
 // Enum for the type of an ooDialog class.  Types to be added as needed.
 typedef enum
@@ -78,99 +79,6 @@ typedef enum
     oodPlainBaseDialog, oodCategoryDialog, oodStaticControl, oodButtonControl, oodEditControl,
     oodListBox,         oodProgressBar,    oodUnknown
 } oodClass_t;
-
-/* Struct for the WindowBase object CSelf. */
-typedef struct _wbCSelf {
-    HWND              hwnd;
-    RexxObjectPtr     rexxHwnd;
-    RexxObjectPtr     rexxSelf;
-    wholenumber_t     initCode;
-    uint32_t          sizeX;
-    uint32_t          sizeY;
-    double            factorX;
-    double            factorY;
-} CWindowBase;
-typedef CWindowBase *pCWindowBase;
-
-/* Struct for the EventNotification object CSelf. */
-typedef struct _enCSelf {
-    MESSAGETABLEENTRY  *notifyMsgs;
-    MESSAGETABLEENTRY  *commandMsgs;
-    MESSAGETABLEENTRY  *miscMsgs;
-    size_t              nmSize;
-    size_t              cmSize;
-    size_t              mmSize;
-    RexxObjectPtr       rexxSelf;
-    HWND                hDlg;
-    DIALOGADMIN        *dlgAdm;
-} CEventNotification;
-typedef CEventNotification *pCEventNotification;
-
-// Struct for the PlainBaseDialog class CSelf.
-typedef struct _pbdcCSelf {
-    char         fontName[MAX_DEFAULT_FONTNAME];
-    uint32_t     fontSize;
-
-} CPlainBaseDialogClass;
-typedef CPlainBaseDialogClass *pCPlainBaseDialogClass;
-
-/* Struct for the WindowExtensions object CSelf. */
-typedef struct _weCSelf {
-    pCWindowBase   wndBase;
-    HWND           hwnd;
-    RexxObjectPtr  rexxSelf;
-} CWindowExtensions;
-typedef CWindowExtensions *pCWindowExtensions;
-
-/* Struct for the PlainBaseDialog object CSelf. */
-typedef struct _pbdCSelf {
-    char                 fontName[MAX_DEFAULT_FONTNAME];
-    RexxInstance         *interpreter;
-    RexxThreadContext    *dlgProcContext;
-    pCWindowBase         wndBase;
-    pCEventNotification  enCSelf;
-    pCWindowExtensions   weCSelf;
-    RexxObjectPtr        rexxSelf;
-    HWND                 hDlg;
-    DIALOGADMIN          *dlgAdm;
-    HBRUSH               bkgBrush;
-    HBITMAP              bkgBitmap;
-    logical_t            autoDetect;
-    uint32_t             fontSize;
-    bool                 isActive;
-    bool                 scrollNow;   // For scrolling text in windows.
-} CPlainBaseDialog;
-typedef CPlainBaseDialog *pCPlainBaseDialog;
-
-// Struct for the DialogControl object CSelf.
-//
-// Note that for a control in a category dialog page, the hDlg is the handle of
-// the actual dialog the control resides in.  This is differnent than the dialog
-// handle of the Rexx owner dialog.
-typedef struct _dcCSelf {
-    bool           isInCategoryDlg;
-    uint32_t       id;
-    oodControl_t   controlType;
-    int            lastItem;
-    pCWindowBase   wndBase;
-    RexxObjectPtr  rexxSelf;
-    HWND           hCtrl;    // Handle of the dialog control
-    RexxObjectPtr  oDlg;     // The Rexx owner dialog object
-    HWND           hDlg;     // Handle of the dialog the control is in.
-} CDialogControl;
-typedef CDialogControl *pCDialogControl;
-
-/* Struct for the DynamicDialog object CSelf. */
-typedef struct _ddCSelf {
-    pCPlainBaseDialog  pcpbd;
-    RexxObjectPtr      rexxSelf;
-    DLGTEMPLATE       *base;          // Base pointer to dialog template (basePtr)
-    void              *active;        // Pointer to current location in dialog template (activePtr)
-    void              *endOfTemplate; // Pointer to end of allocated memory for the template
-    uint32_t           count;         // Dialog item count (dialogItemCount)
-} CDynamicDialog;
-typedef CDynamicDialog *pCDynamicDialog;
-
 
 /* Struct for a reply to the UDN_DELTAPOS notification message. (Up-down control.) */
 typedef struct _DELTAPOS_REPLY {
@@ -181,33 +89,26 @@ typedef struct _DELTAPOS_REPLY {
 typedef DELTAPOSREPLY *PDELTAPOSREPLY;
 
 
-extern bool             dialogInAdminTable(DIALOGADMIN * Dlg);
-extern bool             InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING library);
-extern int32_t          stopDialog(pCPlainBaseDialog);
-extern int32_t          delDialog(pCPlainBaseDialog);
-extern BOOL             GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
-extern bool             isYes(const char *s);
-extern void *           string2pointer(const char *string);
-extern void *           string2pointer(RexxMethodContext *c, RexxStringObject string);
-extern void             pointer2string(char *, void *pointer);
-extern RexxStringObject pointer2string(RexxMethodContext *, void *);
-extern RexxStringObject pointer2string(RexxThreadContext *c, void *pointer);
-extern RexxStringObject dword2string(RexxMethodContext *, uint32_t);
-extern char *           strdupupr(const char *str);
-extern char *           strdupupr_nospace(const char *str);
-extern char *           strdup_nospace(const char *str);
-extern char *           strdup_2methodName(const char *str);
-extern DIALOGADMIN *    getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg);
+extern bool              installNecessaryStuff(pCPlainBaseDialog pcpbd, CSTRING library);
+extern int32_t           stopDialog(pCPlainBaseDialog);
+extern int32_t           delDialog(pCPlainBaseDialog);
+extern BOOL              getDialogIcons(pCPlainBaseDialog, INT, UINT, PHANDLE, PHANDLE);
+extern bool              isYes(const char *s);
+extern void *            string2pointer(const char *string);
+extern void *            string2pointer(RexxMethodContext *c, RexxStringObject string);
+extern void              pointer2string(char *, void *pointer);
+extern RexxStringObject  pointer2string(RexxMethodContext *, void *);
+extern RexxStringObject  pointer2string(RexxThreadContext *c, void *pointer);
+extern RexxStringObject  dword2string(RexxMethodContext *, uint32_t);
+extern char *            strdupupr(const char *str);
+extern char *            strdupupr_nospace(const char *str);
+extern char *            strdup_nospace(const char *str);
+extern char *            strdup_2methodName(const char *str);
+extern void              checkModal(pCPlainBaseDialog previous, BOOL modeless);
+extern void              enablePrevious(pCPlainBaseDialog previous);
 
-extern void          ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
-extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
-extern RexxObjectPtr invalidWindowException(RexxMethodContext *c, RexxObjectPtr rxObj);
-extern RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int, int);
-extern RexxObjectPtr wrongClassReplyException(RexxThreadContext *c, const char *n);
-extern inline void   failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
-extern void          controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
-extern void          wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
-extern RexxObjectPtr wrongWindowsVersionException(RexxMethodContext *, const char *, const char *);
+extern DIALOGADMIN *     getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg);
+extern pCPlainBaseDialog getDlgCSelf(RexxMethodContext *c, RexxObjectPtr self);
 
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern uint32_t      oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, size_t);
@@ -217,6 +118,8 @@ extern void          oodSetSysErrCode(RexxThreadContext *, DWORD);
 extern void          oodResetSysErrCode(RexxThreadContext *context);
 extern bool          oodGetWParam(RexxMethodContext *, RexxObjectPtr, WPARAM *, size_t, bool);
 extern bool          oodGetLParam(RexxMethodContext *, RexxObjectPtr, LPARAM *, size_t, bool);
+extern bool          oodObj2handle(RexxMethodContext *c, RexxObjectPtr obj, void **result, size_t argPos);
+extern void         *oodObj2pointer(RexxMethodContext *c, RexxObjectPtr obj);
 
 extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
@@ -259,7 +162,7 @@ extern RexxObjectPtr quickDayStateBuffer(RexxMethodContext *c, uint32_t ds1, uin
 
 // These functions are defined in ooDialog.cpp
 extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
-extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hDlg);
+extern void          setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd);
 extern RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd);
 extern RexxObjectPtr oodGetFocus(RexxMethodContext *c, HWND hDlg);
 extern RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *, HWND, CSTRING, RexxObjectPtr, RexxObjectPtr, size_t, bool);
@@ -359,6 +262,35 @@ inline bool hasStyle(HWND hwnd, LONG style)
         return true;
     }
     return false;
+}
+
+extern void          ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
+extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
+extern RexxObjectPtr invalidWindowException(RexxMethodContext *c, RexxObjectPtr rxObj);
+extern RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int, int);
+extern RexxObjectPtr wrongClassReplyException(RexxThreadContext *c, const char *n);
+extern void          controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
+extern void          wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
+extern RexxObjectPtr wrongWindowsVersionException(RexxMethodContext *, const char *, const char *);
+
+inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
+{
+    failedToRetrieveException(c, "dialog administration block", source);
+}
+
+inline void failedToRetrieveDlgAdmException(RexxThreadContext *c)
+{
+    userDefinedMsgException(c, "Could not retrieve the dialog administration information block.");
+}
+
+inline void failedToRetrieveDlgCSelfException(RexxThreadContext *c, RexxObjectPtr source)
+{
+    failedToRetrieveException(c, "dialog CSelf information", source);
+}
+
+inline void failedToRetrieveDlgCSelfException(RexxThreadContext *c)
+{
+    userDefinedMsgException(c, "Could not retrieve the dialog CSelf information.");
 }
 
 /**

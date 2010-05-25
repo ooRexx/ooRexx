@@ -1282,19 +1282,6 @@ RexxMethod1(int, ckbx_setIndeterminate, CSELF, pCSelf)
  */
 RexxMethod1(int, bc_test, ARGLIST, args)
 {
-    RexxMethodContext *c = context;
-    size_t count = c->ArrayItems(args);
-    size_t size = c->ArraySize(args);
-    size_t i;
-    printf("ARGLIST items=%d size=%d\n", count, size);
-    for ( i = 1; i <= size; i += 3 )
-    {
-        RexxObjectPtr txt = c->ArrayAt(args, i);
-        RexxObjectPtr ndx = c->ArrayAt(args, i + 1);
-        RexxObjectPtr usr = c->ArrayAt(args, i + 2);
-        printf("Text=%p imageIndex=%p userData=%p\n", txt, ndx, usr);
-    }
-    printf("Done i=%d\n", i);
     return 0;
 }
 
@@ -1390,7 +1377,6 @@ uint32_t parseEditStyle(CSTRING keyWords)
  */
 LRESULT CALLBACK NoEditContextMenu(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
 {
-    // TODO SUBCLASSDATA needs to be turned into a generic struct.
     SUBCLASSDATA *pData = (SUBCLASSDATA *)dwData;
 
     switch ( msg )
