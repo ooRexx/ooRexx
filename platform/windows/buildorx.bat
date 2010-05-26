@@ -150,7 +150,7 @@ REM *** hostemu
 REM
 :HOSTEMU
 @ECHO Building HOSTEMU..
-CD  %OR_HOSTEMUSRC%
+CD  %OR_MAINSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\hostemu.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\hostemu.mak )
 if ERRORLEVEL 1 goto error
 
