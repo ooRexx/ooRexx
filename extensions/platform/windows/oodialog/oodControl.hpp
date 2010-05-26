@@ -65,7 +65,6 @@ extern oodControl_t    oodName2controlType(CSTRING name);
 extern bool            isControlMatch(HWND, oodControl_t);
 
 extern RexxStringObject  cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
-extern DIALOGADMIN      *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc);
 extern void              sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part);
 extern bool              dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part);
 extern RexxStringObject  objectStateToString(RexxMethodContext *c, uint32_t state);

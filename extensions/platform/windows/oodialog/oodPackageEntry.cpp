@@ -330,7 +330,6 @@ REXX_METHOD_PROTOTYPE(dyndlg_addEntryLine);
 REXX_METHOD_PROTOTYPE(dyndlg_addMethod);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconResource);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
-REXX_METHOD_PROTOTYPE(dyndlg_stopDynamic_pvt);
 
 // ResourceDialog
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
@@ -947,7 +946,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_startParentDialog,       dyndlg_startParentDialog),
     REXX_METHOD(dyndlg_startChildDialog,        dyndlg_startChildDialog),
     REXX_METHOD(dyndlg_stop,                    dyndlg_stop),
-    REXX_METHOD(dyndlg_stopDynamic_pvt,         dyndlg_stopDynamic_pvt),
 
     REXX_METHOD(dlgctrl_new_cls,                dlgctrl_new_cls),
     REXX_METHOD(dlgctrl_init_cls,               dlgctrl_init_cls),

@@ -133,12 +133,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         return FALSE;
     }
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-    /*if ( count == 60 )
-    {
-        return endDialogPremature(pcpbd, hDlg, NoThreadContext);
-    }*/
-    if ( dlgAdm == NULL || pcpbd->dlgProcContext == NULL )
+    if ( pcpbd->dlgProcContext == NULL )
     {
         // Once again, theoretically impossible ...
         if ( ! pcpbd->isActive )
@@ -185,7 +180,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         case WM_DRAWITEM:
             if ( lParam != 0 )
             {
-                return drawBitmapButton(dlgAdm, pcpbd, lParam, msgEnabled);
+                return drawBitmapButton(pcpbd, lParam, msgEnabled);
             }
             break;
 
@@ -205,7 +200,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         {
             HBRUSH hbrush = NULL;
 
-            if ( dlgAdm->CT_size > 0 )
+            if ( pcpbd->CT_size > 0 )
             {
                 // See of the user has set the dialog item with a different
                 // color.
@@ -213,31 +208,31 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 if ( id > 0 )
                 {
                     register size_t i = 0;
-                    while ( i < dlgAdm->CT_size && dlgAdm->ColorTab[i].itemID != id )
+                    while ( i < pcpbd->CT_size && pcpbd->ColorTab[i].itemID != id )
                     {
                         i++;
                     }
-                    if ( i < dlgAdm->CT_size )
+                    if ( i < pcpbd->CT_size )
                     {
-                        hbrush = dlgAdm->ColorTab[i].ColorBrush;
+                        hbrush = pcpbd->ColorTab[i].ColorBrush;
                     }
 
                     if ( hbrush )
                     {
-                        if ( dlgAdm->ColorTab[i].isSysBrush )
+                        if ( pcpbd->ColorTab[i].isSysBrush )
                         {
-                            SetBkColor((HDC)wParam, GetSysColor(dlgAdm->ColorTab[i].ColorBk));
-                            if ( dlgAdm->ColorTab[i].ColorFG != -1 )
+                            SetBkColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorBk));
+                            if ( pcpbd->ColorTab[i].ColorFG != -1 )
                             {
-                                SetTextColor((HDC)wParam, GetSysColor(dlgAdm->ColorTab[i].ColorFG));
+                                SetTextColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorFG));
                             }
                         }
                         else
                         {
-                            SetBkColor((HDC)wParam, PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
-                            if ( dlgAdm->ColorTab[i].ColorFG != -1 )
+                            SetBkColor((HDC)wParam, PALETTEINDEX(pcpbd->ColorTab[i].ColorBk));
+                            if ( pcpbd->ColorTab[i].ColorFG != -1 )
                             {
-                                SetTextColor((HDC)wParam, PALETTEINDEX(dlgAdm->ColorTab[i].ColorFG));
+                                SetTextColor((HDC)wParam, PALETTEINDEX(pcpbd->ColorTab[i].ColorFG));
                             }
                         }
                     }
@@ -471,7 +466,7 @@ static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrTyp
             _snprintf(buf, sizeof(buf), NO_THREAD_ATTACH_MSG, pcpbd, hDlg);
             break;
         case NoThreadContext :
-            _snprintf(buf, sizeof(buf), NO_THREAD_CONTEXT_MSG, pcpbd->dlgAdm, pcpbd->dlgProcContext, hDlg);
+            _snprintf(buf, sizeof(buf), NO_THREAD_CONTEXT_MSG, pcpbd->dlgProcContext, hDlg);
             break;
     }
 
@@ -1242,7 +1237,6 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
     {
         if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((code & m[i].lpfilter) == (uint32_t)m[i].lParam) )
         {
-            DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
             RexxThreadContext *c = pcpbd->dlgProcContext;
 
             char   tmpBuffer[20];

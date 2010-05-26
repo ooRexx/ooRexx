@@ -80,6 +80,37 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
 
 
 /**
+ *  Error 98.900
+ *
+ *  98 The language processor detected a specific error during execution. The
+ *  associated error gives the reason for the error.
+ *
+ *  900 User message.
+ *
+ *  The base class has not been initialized correctly
+ *
+ * @param c    The method context we are operating under.
+ *
+ * @remarks  This error should be used when the CSelf pointer is null.  It can
+ *           only happen (I believe) when the user inovkes a method on self in
+ *           init() before the super class init() has run.  For example:
+ *
+ *           ::method init
+ *             self~create(30, 30, 257, 123, "Simple Dialog", "CENTER")
+ *             forward class (super) continue
+ *
+ *           Unfortunately, I have sample ooDialog programs from users that do
+ *           just this sort of thing.  Prior to the conversion to the C++ APIs,
+ *           the programs probably did not work as the user thought they were
+ *           working, but it was not fatal.  However, now a null CSelf pointer
+ *           causes a crash if not checked for.
+ */
+void baseClassIntializationException(RexxMethodContext *c)
+{
+    executionErrorException(c->threadContext, "The base class has not been initialized correctly");
+}
+
+/**
  *  93.900
  *  Error 93 - Incorrect call to method
  *        The specified method, built-in function, or external routine exists,
@@ -1036,49 +1067,6 @@ void enablePrevious(pCPlainBaseDialog previous)
 
 
 /**
- * Convenience function to retrieve the dialog admin block from a generic
- * ooDialog Rexx object.
- *
- * This function is safe to call for any object, including NULLOBJECT.  It will
- * fail for any object that is not a dialog or a dialog control object.
- *
- * @param c      Method context we are operating in.
- * @param self   The Rexx object.
- *
- * @return A pointer to the dialog admin block on success, or NULL on failure.
- *
- * @note  An exception is raised on failure.
- */
-DIALOGADMIN *getDlgAdm(RexxMethodContext *c, RexxObjectPtr self)
-{
-    DIALOGADMIN *dlgAdm = NULL;
-
-    if ( self != NULLOBJECT )
-    {
-        if ( c->IsOfType(self, "PLAINBASEDIALOG") )
-        {
-            dlgAdm = dlgToDlgAdm(c, self);
-        }
-        else if ( c->IsOfType(self, "DIALOGCONTROL") )
-        {
-            pCDialogControl pcdc = controlToCSelf(c, self);
-            dlgAdm = dlgToDlgAdm(c, pcdc->oDlg);
-        }
-        else
-        {
-            failedToRetrieveDlgAdmException(c->threadContext, self);
-        }
-    }
-    else
-    {
-        failedToRetrieveDlgAdmException(c->threadContext);
-    }
-
-    return dlgAdm;
-}
-
-
-/**
  * Convenience function to retrieve the dialog CSelf struct from a generic
  * ooDialog Rexx object.
  *
@@ -1105,18 +1093,17 @@ pCPlainBaseDialog getDlgCSelf(RexxMethodContext *c, RexxObjectPtr self)
         else if ( c->IsOfType(self, "DIALOGCONTROL") )
         {
             pCDialogControl pcdc = controlToCSelf(c, self);
-            pcpbd = dlgToCSelf(c, pcdc->oDlg);
+            if ( pcdc != NULLOBJECT )
+            {
+                pcpbd = dlgToCSelf(c, pcdc->oDlg);
+            }
         }
-        else
-        {
-            failedToRetrieveDlgCSelfException(c->threadContext, self);
-        }
-    }
-    else
-    {
-        failedToRetrieveDlgCSelfException(c->threadContext);
     }
 
+    if ( pcpbd == NULLOBJECT )
+    {
+        baseClassIntializationException(c);
+    }
     return pcpbd;
 }
 

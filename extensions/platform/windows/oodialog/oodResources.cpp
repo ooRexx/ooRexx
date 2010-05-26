@@ -1231,18 +1231,14 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
         goto out;
     }
 
-    DIALOGADMIN *dlgAdm = dlgToDlgAdm(context, dlg);
-    if ( dlgAdm == NULL )
-    {
-        goto out;
-    }
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, dlg);
 
     const char *fileName = NULL;
-    for ( size_t i = 0; i < dlgAdm->IT_size; i++ )
+    for ( size_t i = 0; i < pcpbd->IT_size; i++ )
     {
-        if ( dlgAdm->IconTab[i].iconID == id )
+        if ( pcpbd->IconTab[i].iconID == id )
         {
-            fileName = dlgAdm->IconTab[i].fileName;
+            fileName = pcpbd->IconTab[i].fileName;
             break;
         }
     }

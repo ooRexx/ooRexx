@@ -83,14 +83,13 @@ static HICON getIconForID(pCPlainBaseDialog pcpbd, UINT id, UINT iconSrc, int cx
     if ( iconSrc & ICON_FILE )
     {
         // Load the icon from a file, file name should be in the icon table.
-        DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
         size_t i;
 
-        for ( i = 0; i < dlgAdm->IT_size; i++ )
+        for ( i = 0; i < pcpbd->IT_size; i++ )
         {
-            if ( dlgAdm->IconTab[i].iconID == id )
+            if ( pcpbd->IconTab[i].iconID == id )
             {
-                pName = dlgAdm->IconTab[i].fileName;
+                pName = pcpbd->IconTab[i].fileName;
                 break;
             }
         }
@@ -112,43 +111,6 @@ static HICON getIconForID(pCPlainBaseDialog pcpbd, UINT id, UINT iconSrc, int cx
 
     return (HICON)LoadImage(hInst, pName, IMAGE_ICON, cx, cy, loadFlags);
 }
-
-static DIALOGADMIN * allocDlgAdmin(RexxMethodContext *c)
-{
-    DIALOGADMIN *adm = NULL;
-
-    if ( CountDialogs >= MAXDIALOGS )
-    {
-        // This condition should have been intercepted by PlainBaseDialog::new()
-        // But if it hasn't, we'll try to end everything.
-        char buf[128];
-        _snprintf(buf, sizeof(buf), "The number of active dialogs has reached the maximum (%d) allowed", MAXDIALOGS);
-
-        userDefinedMsgException(c->threadContext, buf);
-        goto too_many_out;
-    }
-
-    EnterCriticalSection(&crit_sec);
-
-    adm = (DIALOGADMIN *)LocalAlloc(LPTR, sizeof(DIALOGADMIN));
-    if ( adm == NULL )
-    {
-        goto err_out;
-    }
-
-    goto done_out;
-
-err_out:
-    safeLocalFree(adm);
-    adm = NULL;
-    outOfMemoryException(c->threadContext);
-
-done_out:
-    LeaveCriticalSection(&crit_sec);
-too_many_out:
-    return adm;
-}
-
 
 static void deleteMessageTables(pCEventNotification pcen)
 {
@@ -186,20 +148,20 @@ static void deleteMessageTables(pCEventNotification pcen)
 }
 
 
-HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, size_t *index, uint32_t id)
+HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id)
 {
     HBRUSH hBrush = NULL;
     size_t i = 0;
 
-    if ( dlgAdm != NULL && dlgAdm->ColorTab != NULL )
+    if ( pcpbd != NULL && pcpbd->ColorTab != NULL )
     {
-        while ( i < dlgAdm->CT_size && dlgAdm->ColorTab[i].itemID != id )
+        while ( i < pcpbd->CT_size && pcpbd->ColorTab[i].itemID != id )
         {
            i++;
         }
-        if ( i < dlgAdm->CT_size )
+        if ( i < pcpbd->CT_size )
         {
-            hBrush = dlgAdm->ColorTab[i].ColorBrush;
+            hBrush = pcpbd->ColorTab[i].ColorBrush;
             *index = i;
         }
     }
@@ -349,8 +311,6 @@ int32_t delDialog(pCPlainBaseDialog pcpbd)
     }
     pcpbd->adminAllocated = false;
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-
     int32_t ret = 1;
     bool wasFGW = (pcpbd->hDlg == GetForegroundWindow());
 
@@ -416,59 +376,59 @@ int32_t delDialog(pCPlainBaseDialog pcpbd)
     deleteMessageTables(pcpbd->enCSelf);
 
     // Delete the data table.
-    safeLocalFree(dlgAdm->DataTab);
-    dlgAdm->DataTab = NULL;
-    dlgAdm->DT_size = 0;
+    safeLocalFree(pcpbd->DataTab);
+    pcpbd->DataTab = NULL;
+    pcpbd->DT_size = 0;
 
     // Delete the color brushes.
-    if (dlgAdm->ColorTab)
+    if (pcpbd->ColorTab)
     {
-        for (i=0;i<dlgAdm->CT_size;i++)
+        for ( i = 0; i < pcpbd->CT_size; i++ )
         {
-            safeDeleteObject(dlgAdm->ColorTab[i].ColorBrush);
+            safeDeleteObject(pcpbd->ColorTab[i].ColorBrush);
         }
-        LocalFree(dlgAdm->ColorTab);
-        dlgAdm->ColorTab = NULL;
-        dlgAdm->CT_size = 0;
+        LocalFree(pcpbd->ColorTab);
+        pcpbd->ColorTab = NULL;
+        pcpbd->CT_size = 0;
     }
 
     // Delete the bitmaps and bitmap table.
-    if (dlgAdm->BmpTab)
+    if (pcpbd->BmpTab)
     {
-        for (i=0;i<dlgAdm->BT_size;i++)
+        for ( i = 0; i < pcpbd->BT_size; i++ )
         {
-            if ( (dlgAdm->BmpTab[i].loaded & 0x1011) == 1 )
+            if ( (pcpbd->BmpTab[i].loaded & 0x1011) == 1 )
             {
                 /* otherwise stretched bitmap files are not freed */
-                safeLocalFree((void *)dlgAdm->BmpTab[i].bitmapID);
-                safeLocalFree((void *)dlgAdm->BmpTab[i].bmpFocusID);
-                safeLocalFree((void *)dlgAdm->BmpTab[i].bmpSelectID);
-                safeLocalFree((void *)dlgAdm->BmpTab[i].bmpDisableID);
+                safeLocalFree((void *)pcpbd->BmpTab[i].bitmapID);
+                safeLocalFree((void *)pcpbd->BmpTab[i].bmpFocusID);
+                safeLocalFree((void *)pcpbd->BmpTab[i].bmpSelectID);
+                safeLocalFree((void *)pcpbd->BmpTab[i].bmpDisableID);
             }
-            else if ( dlgAdm->BmpTab[i].loaded == 0 )
+            else if ( pcpbd->BmpTab[i].loaded == 0 )
             {
-                safeDeleteObject((HBITMAP)dlgAdm->BmpTab[i].bitmapID);
-                safeDeleteObject((HBITMAP)dlgAdm->BmpTab[i].bmpFocusID);
-                safeDeleteObject((HBITMAP)dlgAdm->BmpTab[i].bmpSelectID);
-                safeDeleteObject((HBITMAP)dlgAdm->BmpTab[i].bmpDisableID);
+                safeDeleteObject((HBITMAP)pcpbd->BmpTab[i].bitmapID);
+                safeDeleteObject((HBITMAP)pcpbd->BmpTab[i].bmpFocusID);
+                safeDeleteObject((HBITMAP)pcpbd->BmpTab[i].bmpSelectID);
+                safeDeleteObject((HBITMAP)pcpbd->BmpTab[i].bmpDisableID);
             }
         }
 
-        LocalFree(dlgAdm->BmpTab);
+        LocalFree(pcpbd->BmpTab);
         safeDeleteObject(pcpbd->colorPalette);
-        dlgAdm->BT_size = 0;
+        pcpbd->BT_size = 0;
     }
 
     // Delete the icon resource table.
-    if (dlgAdm->IconTab)
+    if (pcpbd->IconTab)
     {
-        for ( i = 0; i < dlgAdm->IT_size; i++ )
+        for ( i = 0; i < pcpbd->IT_size; i++ )
         {
-            safeLocalFree(dlgAdm->IconTab[i].fileName);
+            safeLocalFree(pcpbd->IconTab[i].fileName);
         }
-        LocalFree(dlgAdm->IconTab);
-        dlgAdm->IconTab = NULL;
-        dlgAdm->IT_size = 0;
+        LocalFree(pcpbd->IconTab);
+        pcpbd->IconTab = NULL;
+        pcpbd->IT_size = 0;
     }
 
     // Unhook a hook if it is installed.
@@ -2040,11 +2000,6 @@ static inline HWND getPBDWindow(void *pCSelf)
     return ((pCPlainBaseDialog)pCSelf)->hDlg;
 }
 
-static inline DIALOGADMIN *getPBDDlgAdm(void *pCSelf)
-{
-    return ((pCPlainBaseDialog)pCSelf)->dlgAdm;
-}
-
 HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID)
 {
     HWND hCtrl = NULL;
@@ -2097,7 +2052,7 @@ int32_t stopDialog(pCPlainBaseDialog pcpbd)
     if ( pcpbd->adminAllocated )
     {
         EnterCriticalSection(&crit_sec);
-        if ( pcpbd->adminAllocated && pcpbd->dlgAdm )
+        if ( pcpbd->adminAllocated )
         {
             pcpbd->abnormalHalt = false;
             result = delDialog(pcpbd);
@@ -2348,14 +2303,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     }
     pcpbd->enCSelf = pEN;
 
-    DIALOGADMIN *dlgAdm = allocDlgAdmin(context);
-    if ( dlgAdm == NULL )
-    {
-        goto terminate_out;
-    }
-
     pcpbd->interpreter = context->threadContext->instance;
-    pcpbd->dlgAdm = dlgAdm;
     pcpbd->adminAllocated = true;
     pcpbd->autoDetect = TRUE;
     pcpbd->rexxSelf = self;
@@ -2445,21 +2393,15 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
-        DIALOGADMIN *adm = pcpbd->dlgAdm;
-        if ( adm != NULL )
+        EnterCriticalSection(&crit_sec);
+
+        if ( pcpbd->adminAllocated )
         {
-            EnterCriticalSection(&crit_sec);
-
-            if ( pcpbd->adminAllocated )
-            {
-                pcpbd->abnormalHalt = false;
-                delDialog(pcpbd);
-            }
-            LocalFree(adm);
-            pcpbd->dlgAdm = NULL;
-
-            LeaveCriticalSection(&crit_sec);
+            pcpbd->abnormalHalt = false;
+            delDialog(pcpbd);
         }
+
+        LeaveCriticalSection(&crit_sec);
 
         pCWindowBase pcwb = pcpbd->wndBase;
         if ( pcwb->rexxHwnd != TheZeroObj )
@@ -3737,14 +3679,6 @@ RexxMethod4(RexxObjectPtr, pbdlg_setTabGroup, RexxObjectPtr, rxID, OPTIONAL_logi
  *  Tests if the Windows dialog is still active.
  *
  *  @return  True if the underlying Windows dialog is active, otherwise false.
- *
- *  @remarks  The original ooDialog code checked if the dlgAdm was still in the
- *            DialogAdmin table.  ??  Not really sure what was the point of
- *            that.  Internally, ooDialog no longer invokes isDialogActive()
- *            anywhere. The method was documented and thereofore needs to be
- *            maintained.  The test now checks that this Rexx dialog has a valid
- *            Windows dialog.  (Maybe that was always the purpose of the method
- *            and it was just implemented in an odd way.)
  */
 RexxMethod1(RexxObjectPtr, pbdlg_isDialogActive, CSELF, pCSelf)
 {
@@ -3784,10 +3718,7 @@ RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTION
             OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self, CSELF, pCSelf)
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    if ( pcpbd->dlgAdm == NULL )
-    {
-        return TheOneObj;
-    }
+
     // result will be the resolved resource ID, which may be -1 on error.
     RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
 
@@ -3800,7 +3731,7 @@ RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTION
     oodControl_t type = oodName2controlType(msgName + 7);
 
     uint32_t category = getCategoryNumber(context, self);
-    return ( addToDataTable(context, pcpbd->dlgAdm, id, type, category) == OOD_NO_ERROR ? TheZeroObj : TheOneObj );
+    return ( addToDataTable(context, pcpbd, id, type, category) == OOD_NO_ERROR ? TheZeroObj : TheOneObj );
 }
 
 

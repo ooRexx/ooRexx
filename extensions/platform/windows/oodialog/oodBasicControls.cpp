@@ -1066,14 +1066,6 @@ RexxMethod7(logical_t, bc_scroll, int32_t, xPos, int32_t, yPos, int32_t, left, i
     pCDialogControl pcdc = (pCDialogControl)pCSelf;
     pCPlainBaseDialog pcpbd = dlgToCSelf(context, pcdc->oDlg);
 
-    DIALOGADMIN *dlgAdm;
-    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(context->threadContext, pcdc->rexxSelf);
-        goto err_out;
-    }
-    dlgAdm = pcpbd->dlgAdm;
-
     HWND hwnd = pcdc->hCtrl;
     RECT r;
     if ( GetWindowRect(hwnd, &r) )

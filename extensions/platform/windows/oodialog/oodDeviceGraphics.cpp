@@ -255,13 +255,13 @@ static HPALETTE createDIBPalette(LPBITMAPINFO lpBmpInfo)
 }
 
 
-static bool findBmpForID(DIALOGADMIN *dlgAdm, uint32_t id, size_t *index)
+static bool findBmpForID(pCPlainBaseDialog pcpbd, uint32_t id, size_t *index)
 {
-    if ( dlgAdm->BmpTab != NULL )
+    if ( pcpbd->BmpTab != NULL )
     {
-        for ( size_t i = 0; i < dlgAdm->BT_size; i++ )
+        for ( size_t i = 0; i < pcpbd->BT_size; i++ )
         {
-            if ( dlgAdm->BmpTab[i].buttonID == id )
+            if ( pcpbd->BmpTab[i].buttonID == id )
             {
                 *index = i;
                 return true;
@@ -411,8 +411,8 @@ RexxObjectPtr oodGetWindowRect(RexxMethodContext *c, HWND hwnd)
  * Add, or replace, an entry in the color table for the specified control.
  *
  * @param c            Method context we are operating in.
- * @param dlgAdm       Pointer to the dialog admin block for the dialog the
- *                     control is within.
+ * @param pcpbd        Pointer to the CSelf struct for the dialog the control is
+ *                     within.
  * @param id           Resource ID of the control.
  * @param bkColor      Background color for the control.
  * @param fgColor      Optional foreground color for the control.  Use -1 to
@@ -422,54 +422,54 @@ RexxObjectPtr oodGetWindowRect(RexxMethodContext *c, HWND hwnd)
  *
  * @return  0 on no error, otherwise 1.
  */
-logical_t oodColorTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, uint32_t id,
+logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t id,
                         int32_t bkColor, int32_t fgColor, bool useSysColor)
 {
-    if ( dlgAdm->ColorTab == NULL )
+    if ( pcpbd->ColorTab == NULL )
     {
-        dlgAdm->ColorTab = (COLORTABLEENTRY *)LocalAlloc(LMEM_FIXED, sizeof(COLORTABLEENTRY) * MAX_CT_ENTRIES);
-        if ( dlgAdm->ColorTab == NULL )
+        pcpbd->ColorTab = (COLORTABLEENTRY *)LocalAlloc(LMEM_FIXED, sizeof(COLORTABLEENTRY) * MAX_CT_ENTRIES);
+        if ( pcpbd->ColorTab == NULL )
         {
             outOfMemoryException(c->threadContext);
             return 1;
         }
-        dlgAdm->CT_size = 0;
+        pcpbd->CT_size = 0;
     }
 
-    if ( dlgAdm->CT_size < MAX_CT_ENTRIES )
+    if ( pcpbd->CT_size < MAX_CT_ENTRIES )
     {
         size_t i = 0;
 
         // If brush is found, then an entry for this control already exists in
         // the color table.  The value of i is set to the entry index.  In this
         // case we are replacing the entry with a (presumably) new color.
-        HBRUSH hbrush = searchForBrush(dlgAdm, &i, id);
+        HBRUSH hbrush = searchForBrush(pcpbd, &i, id);
         if ( hbrush != NULL )
         {
-            if ( ! dlgAdm->ColorTab[i].isSysBrush )
+            if ( ! pcpbd->ColorTab[i].isSysBrush )
             {
                 DeleteObject(hbrush);
             }
         }
         else
         {
-            i = dlgAdm->CT_size;
-            dlgAdm->ColorTab[i].itemID = id;
-            dlgAdm->CT_size++;
+            i = pcpbd->CT_size;
+            pcpbd->ColorTab[i].itemID = id;
+            pcpbd->CT_size++;
         }
 
-        dlgAdm->ColorTab[i].ColorBk = bkColor;
-        dlgAdm->ColorTab[i].ColorFG = fgColor;
+        pcpbd->ColorTab[i].ColorBk = bkColor;
+        pcpbd->ColorTab[i].ColorFG = fgColor;
 
         if ( useSysColor )
         {
-            dlgAdm->ColorTab[i].ColorBrush = GetSysColorBrush(dlgAdm->ColorTab[i].ColorBk);
-            dlgAdm->ColorTab[i].isSysBrush = true;
+            pcpbd->ColorTab[i].ColorBrush = GetSysColorBrush(pcpbd->ColorTab[i].ColorBk);
+            pcpbd->ColorTab[i].isSysBrush = true;
         }
         else
         {
-            dlgAdm->ColorTab[i].ColorBrush = CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
-            dlgAdm->ColorTab[i].isSysBrush = false;
+            pcpbd->ColorTab[i].ColorBrush = CreateSolidBrush(PALETTEINDEX(pcpbd->ColorTab[i].ColorBk));
+            pcpbd->ColorTab[i].isSysBrush = false;
         }
     }
     else
@@ -936,7 +936,7 @@ $abort: // crap out
  * Used to draw the part of a bitmap button that will not be covered by the
  * bitmap.
  */
-static void drawBmpBackground(DIALOGADMIN * dlgAdm, pCPlainBaseDialog pcpbd, INT id, HDC hDC, RECT * itRect, RECT * bmpRect,
+static void drawBmpBackground(pCPlainBaseDialog pcpbd, INT id, HDC hDC, RECT * itRect, RECT * bmpRect,
                               LPARAM lParam, LONG left, LONG top)
 {
     HBRUSH hbr = NULL, oB;
@@ -962,10 +962,10 @@ static void drawBmpBackground(DIALOGADMIN * dlgAdm, pCPlainBaseDialog pcpbd, INT
     hpen = CreatePen(PS_NULL, 0, GetSysColor(COLOR_BTNFACE));
 
     // Check to see if the user has set a color for dialog item background.
-    if ( dlgAdm->CT_size != 0 )
+    if ( pcpbd->CT_size != 0 )
     {
         size_t i;
-        hbr = searchForBrush(dlgAdm, &i, id);
+        hbr = searchForBrush(pcpbd, &i, id);
     }
 
     if ( hbr == NULL )
@@ -1008,12 +1008,12 @@ static void drawBmpBackground(DIALOGADMIN * dlgAdm, pCPlainBaseDialog pcpbd, INT
 }
 
 
-inline bool forSureHaveBitmap(DIALOGADMIN *dlgAdm, size_t i)
+inline bool forSureHaveBitmap(pCPlainBaseDialog pcpbd, size_t i)
 {
-    return ( (ULONG_PTR)dlgAdm->BmpTab[i].bmpFocusID  +
-             (ULONG_PTR)dlgAdm->BmpTab[i].bmpSelectID +
-             (ULONG_PTR)dlgAdm->BmpTab[i].bitmapID    +
-             (ULONG_PTR)dlgAdm->BmpTab[i].bmpDisableID
+    return ( (ULONG_PTR)pcpbd->BmpTab[i].bmpFocusID  +
+             (ULONG_PTR)pcpbd->BmpTab[i].bmpSelectID +
+             (ULONG_PTR)pcpbd->BmpTab[i].bitmapID    +
+             (ULONG_PTR)pcpbd->BmpTab[i].bmpDisableID
              > 0 );
 }
 inline bool focusedNotDisabled(uint32_t itemState)
@@ -1023,7 +1023,7 @@ inline bool focusedNotDisabled(uint32_t itemState)
              (itemState & ODS_SELECTED) == 0 );
 }
 
-BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lParam, bool msgEnabled)
+BOOL drawBitmapButton(pCPlainBaseDialog pcpbd, LPARAM lParam, bool msgEnabled)
 {
     DRAWITEMSTRUCT * dis;
     HDC hDC;
@@ -1062,18 +1062,18 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
 
     size_t i;
 
-    if ( findBmpForID(dlgAdm, dis->CtlID, &i) )
+    if ( findBmpForID(pcpbd, dis->CtlID, &i) )
     {
         if ( (dis->itemState & ODS_DISABLED) == ODS_DISABLED )
         {
-            hBmp = (HBITMAP)(dlgAdm->BmpTab[i].bmpDisableID == NULL ? dlgAdm->BmpTab[i].bitmapID : dlgAdm->BmpTab[i].bmpDisableID);
+            hBmp = (HBITMAP)(pcpbd->BmpTab[i].bmpDisableID == NULL ? pcpbd->BmpTab[i].bitmapID : pcpbd->BmpTab[i].bmpDisableID);
         }
         else if ( (dis->itemState & ODS_SELECTED) == ODS_SELECTED )
         {
-            hBmp = (HBITMAP)(dlgAdm->BmpTab[i].bmpSelectID == NULL ? dlgAdm->BmpTab[i].bitmapID : dlgAdm->BmpTab[i].bmpSelectID);
+            hBmp = (HBITMAP)(pcpbd->BmpTab[i].bmpSelectID == NULL ? pcpbd->BmpTab[i].bitmapID : pcpbd->BmpTab[i].bmpSelectID);
 
             // For a 3D effect.
-            if ( dlgAdm->BmpTab[i].frame )
+            if ( pcpbd->BmpTab[i].frame )
             {
                 r.top    += 3;
                 r.left   += 3;
@@ -1083,19 +1083,19 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
         }
         else if ( (dis->itemState & ODS_FOCUS) == ODS_FOCUS )
         {
-            hBmp = (HBITMAP)(dlgAdm->BmpTab[i].bmpFocusID == NULL ? dlgAdm->BmpTab[i].bitmapID : dlgAdm->BmpTab[i].bmpFocusID);
+            hBmp = (HBITMAP)(pcpbd->BmpTab[i].bmpFocusID == NULL ? pcpbd->BmpTab[i].bitmapID : pcpbd->BmpTab[i].bmpFocusID);
         }
         else
         {
-            hBmp = (HBITMAP)dlgAdm->BmpTab[i].bitmapID;
+            hBmp = (HBITMAP)pcpbd->BmpTab[i].bitmapID;
         }
 
-        if ( dlgAdm->BmpTab[i].displaceX != 0 || dlgAdm->BmpTab[i].displaceY != 0 )
+        if ( pcpbd->BmpTab[i].displaceX != 0 || pcpbd->BmpTab[i].displaceY != 0 )
         {
-            r.top    = r.top    + dlgAdm->BmpTab[i].displaceY;
-            r.bottom = r.bottom + dlgAdm->BmpTab[i].displaceY;
-            r.left   = r.left   + dlgAdm->BmpTab[i].displaceX;
-            r.right  = r.right  + dlgAdm->BmpTab[i].displaceX;
+            r.top    = r.top    + pcpbd->BmpTab[i].displaceY;
+            r.bottom = r.bottom + pcpbd->BmpTab[i].displaceY;
+            r.left   = r.left   + pcpbd->BmpTab[i].displaceX;
+            r.right  = r.right  + pcpbd->BmpTab[i].displaceX;
             if ( r.left < 0 )
             {
                 left = abs(r.left);
@@ -1110,7 +1110,7 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
 
         if ( hBmp != NULL )
         {
-            if ( dlgAdm->BmpTab[i].loaded == 0 )
+            if ( pcpbd->BmpTab[i].loaded == 0 )
             {
                 hDC = CreateCompatibleDC(dis->hDC);
                 SelectObject(hDC, hBmp);
@@ -1121,7 +1121,7 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
 
                 BitBlt(dis->hDC, r.left, r.top, r.right, r.bottom, hDC, left, top, SRCCOPY);
             }
-            else if ( forSureHaveBitmap(dlgAdm, i) )
+            else if ( forSureHaveBitmap(pcpbd, i) )
             {
                 // Original comment: This if has been added because of a
                 // violation error moving animated button dialogs a lot
@@ -1129,7 +1129,7 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
                 // I think what was meant was the 'if' part of the else.
 
                 // Is stretching activated?
-                if ( (dlgAdm->BmpTab[i].loaded & 0x0100) == 0x0100 )
+                if ( (pcpbd->BmpTab[i].loaded & 0x0100) == 0x0100 )
                 {
                     destw = r.right  - r.left;
                     desth = r.bottom - r.top;
@@ -1147,9 +1147,9 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
                 r.bottom = r.top  + desth;
             }
 
-            drawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, lParam, left, top);
+            drawBmpBackground(pcpbd, dis->CtlID, dis->hDC, &ri, &r, lParam, left, top);
 
-            if ( dlgAdm->BmpTab[i].frame )
+            if ( pcpbd->BmpTab[i].frame )
             {
                 rc = FrameRect(dis->hDC, (LPRECT)&dis->rcItem, (HBRUSH)GetStockObject(BLACK_BRUSH));
 
@@ -1210,7 +1210,7 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
                 }
             }
 
-            if ( dlgAdm->BmpTab[i].loaded == 0 )
+            if ( pcpbd->BmpTab[i].loaded == 0 )
             {
                 DeleteDC(hDC);
             }
@@ -1227,7 +1227,7 @@ BOOL drawBitmapButton(DIALOGADMIN *dlgAdm, pCPlainBaseDialog pcpbd, LPARAM lPara
     r.top    = 0;
     r.right  = ri.left;
     r.bottom = ri.top;
-    drawBmpBackground(dlgAdm, pcpbd, dis->CtlID, dis->hDC, &ri, &r, lParam, left, top);
+    drawBmpBackground(pcpbd, dis->CtlID, dis->hDC, &ri, &r, lParam, left, top);
 
     if ( pcpbd->colorPalette != NULL )
     {
@@ -1281,19 +1281,26 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
    return EndPaint(hDlg, &ps);
 }
 
+inline bool isIntResource(CSTRING bmp)
+{
+    if ( atoi(bmp) || bmp[0] == '0' || bmp[0] == '\0' )
+    {
+        return true;
+    }
+    return false;
+}
 
 void assignBitmap(pCPlainBaseDialog pcpbd, size_t index, CSTRING bmp, PUSHBUTTON_STATES type, bool isInMemory)
 {
     HBITMAP hBmp = NULL;
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-    BITMAPTABLEENTRY *bitmapEntry = dlgAdm->BmpTab + index;
+    BITMAPTABLEENTRY *bitmapEntry = pcpbd->BmpTab + index;
 
     if ( isInMemory )
     {
         bitmapEntry->loaded = 2;
         hBmp = (HBITMAP)string2pointer(bmp);
     }
-    else if ( atoi(bmp) || bmp[0] == '0' || bmp[0] == '\0' )
+    else if ( isIntResource(bmp) )
     {
         hBmp = LoadBitmap(pcpbd->hInstance, MAKEINTRESOURCE(atoi(bmp)));
     }
@@ -1359,7 +1366,13 @@ RexxObjectPtr dlgExtControlSetup(RexxMethodContext *c, RexxObjectPtr self, RexxO
                                  pCPlainBaseDialog *ppcpbd, uint32_t *pID, HWND *phCtrl)
 {
     oodResetSysErrCode(c->threadContext);
+
     pCPlainBaseDialog pcpbd = dlgToCSelf(c, self);
+    if ( pcpbd == NULL )
+    {
+        baseClassIntializationException(c);
+        return TheOneObj;
+    }
 
     if ( pcpbd->hDlg == NULL && phCtrl != NULL )
     {
@@ -1853,6 +1866,12 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawControl, RexxObjectPtr, rxID, OPTIONAL_l
  *           msgToRise == "", or is ommitted, then  adding a method to the
  *           message table is skipped.
  *
+ * @remarks  Note that the dialog does not need to yet be created for some
+ *           variations of this method.  But if any of the bitmap CSTRINGs are a
+ *           number, so that the bitmap is to be loaded from a resource DLL,
+ *           then the dialog does need to be created.
+ *
+ *           These old bitmap methods are too error-prone.
  */
 RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTIONAL_CSTRING, msgToRaise,
             CSTRING, bmpNormal, OPTIONAL_CSTRING, bmpFocused, OPTIONAL_CSTRING, bmpSelected, OPTIONAL_CSTRING, bmpDisabled,
@@ -1861,25 +1880,28 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
     pCPlainBaseDialog pcpbd;
     uint32_t id;
 
-    // Note that the dialog does not need to yet be created for this method.
-    // TODO assignBitmap uses hInstance so dialog does need to be created ????
     RexxObjectPtr result = dlgExtControlSetup(context, self, rxID, &pcpbd, &id, NULL);
     if ( result != TheZeroObj )
     {
         return result;
     }
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-
-    if ( dlgAdm->BmpTab == NULL )
+    bool noUnderlyingDlg = pcpbd->hDlg == NULL ? true : false;
+    if ( isIntResource(bmpNormal) && noUnderlyingDlg )
     {
-       dlgAdm->BmpTab = (BITMAPTABLEENTRY *)LocalAlloc(LPTR, sizeof(BITMAPTABLEENTRY) * MAX_BT_ENTRIES);
-       if ( dlgAdm->BmpTab == NULL )
+        noWindowsDialogException(context, self);
+        return TheOneObj;
+    }
+
+    if ( pcpbd->BmpTab == NULL )
+    {
+       pcpbd->BmpTab = (BITMAPTABLEENTRY *)LocalAlloc(LPTR, sizeof(BITMAPTABLEENTRY) * MAX_BT_ENTRIES);
+       if ( pcpbd->BmpTab == NULL )
        {
-          MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
+          MessageBox(0, "No memory available","Error", MB_OK | MB_ICONHAND);
           return TheOneObj;
        }
-       dlgAdm->BT_size = 0;
+       pcpbd->BT_size = 0;
     }
 
     bool frame      = false;
@@ -1894,31 +1916,46 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
         if ( StrStrI(style, "USEPAL")   != NULL ) usePalette = true;
     }
 
-    if (dlgAdm->BT_size < MAX_BT_ENTRIES)
+    if ( pcpbd->BT_size < MAX_BT_ENTRIES )
     {
-        size_t index = dlgAdm->BT_size;
+        size_t index = pcpbd->BT_size;
 
-        dlgAdm->BmpTab[index].buttonID = id;
-        dlgAdm->BmpTab[index].frame  = frame;
+        pcpbd->BmpTab[index].buttonID = id;
+        pcpbd->BmpTab[index].frame  = frame;
 
         assignBitmap(pcpbd, index, bmpNormal, PBSS_NORMAL, inMemory);
 
         if ( argumentExists(4) )
         {
+            if ( isIntResource(bmpFocused) && noUnderlyingDlg )
+            {
+                noWindowsDialogException(context, self);
+                return TheOneObj;
+            }
             assignBitmap(pcpbd, index, bmpFocused, PBSS_DEFAULTED, inMemory);
         }
         if ( argumentExists(5) )
         {
+            if ( isIntResource(bmpSelected) && noUnderlyingDlg )
+            {
+                noWindowsDialogException(context, self);
+                return TheOneObj;
+            }
             assignBitmap(pcpbd, index, bmpSelected, PBSS_PRESSED, inMemory);
         }
         if ( argumentExists(6) )
         {
+            if ( isIntResource(bmpDisabled) && noUnderlyingDlg )
+            {
+                noWindowsDialogException(context, self);
+                return TheOneObj;
+            }
             assignBitmap(pcpbd, index, bmpDisabled, PBSS_DISABLED, inMemory);
         }
 
-        if ( stretch && dlgAdm->BmpTab[index].loaded )
+        if ( stretch && pcpbd->BmpTab[index].loaded )
         {
-            dlgAdm->BmpTab[index].loaded |= 0x0100;
+            pcpbd->BmpTab[index].loaded |= 0x0100;
         }
 
 
@@ -1930,18 +1967,18 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
                DeleteObject(pcpbd->colorPalette);
            }
 
-           pcpbd->colorPalette = createDIBPalette((LPBITMAPINFO)dlgAdm->BmpTab[index].bitmapID);
+           pcpbd->colorPalette = createDIBPalette((LPBITMAPINFO)pcpbd->BmpTab[index].bitmapID);
            setSysPalColors(pcpbd->colorPalette);
         }
 
         if ( argumentOmitted(2) || msgToRaise[0] == '\0' )
         {
-           dlgAdm->BT_size++;
+           pcpbd->BT_size++;
            return TheZeroObj;
         }
         else if ( addCommandMessage(pcpbd->enCSelf, id, 0x0000FFFF, 0, 0, msgToRaise, TAG_NOTHING) )
         {
-           dlgAdm->BT_size++;
+           pcpbd->BT_size++;
            return TheZeroObj;
         }
     }
@@ -2014,10 +2051,8 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
         return result;
     }
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
     size_t i;
-
-    if ( findBmpForID(dlgAdm, id, &i) )
+    if ( findBmpForID(pcpbd, id, &i) )
     {
         bool frame      = false;
         bool inMemory   = false;
@@ -2031,28 +2066,28 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
             if ( StrStrI(style, "USEPAL")   != NULL ) usePalette = true;
         }
 
-        if ( (dlgAdm->BmpTab[i].loaded & 0x1011) == 1 )
+        if ( (pcpbd->BmpTab[i].loaded & 0x1011) == 1 )
         {
-           safeLocalFree(dlgAdm->BmpTab[i].bitmapID);
-           safeLocalFree(dlgAdm->BmpTab[i].bmpFocusID);
-           safeLocalFree(dlgAdm->BmpTab[i].bmpSelectID);
-           safeLocalFree(dlgAdm->BmpTab[i].bmpDisableID);
+           safeLocalFree(pcpbd->BmpTab[i].bitmapID);
+           safeLocalFree(pcpbd->BmpTab[i].bmpFocusID);
+           safeLocalFree(pcpbd->BmpTab[i].bmpSelectID);
+           safeLocalFree(pcpbd->BmpTab[i].bmpDisableID);
         }
-        else if ( dlgAdm->BmpTab[i].loaded == 0 )
+        else if ( pcpbd->BmpTab[i].loaded == 0 )
         {
-           safeDeleteObject(dlgAdm->BmpTab[i].bitmapID);
-           safeDeleteObject(dlgAdm->BmpTab[i].bmpFocusID);
-           safeDeleteObject(dlgAdm->BmpTab[i].bmpSelectID);
-           safeDeleteObject(dlgAdm->BmpTab[i].bmpDisableID);
+           safeDeleteObject(pcpbd->BmpTab[i].bitmapID);
+           safeDeleteObject(pcpbd->BmpTab[i].bmpFocusID);
+           safeDeleteObject(pcpbd->BmpTab[i].bmpSelectID);
+           safeDeleteObject(pcpbd->BmpTab[i].bmpDisableID);
         }
 
-        dlgAdm->BmpTab[i].bitmapID     = NULL;
-        dlgAdm->BmpTab[i].bmpFocusID   = NULL;
-        dlgAdm->BmpTab[i].bmpSelectID  = NULL;
-        dlgAdm->BmpTab[i].bmpDisableID = NULL;
+        pcpbd->BmpTab[i].bitmapID     = NULL;
+        pcpbd->BmpTab[i].bmpFocusID   = NULL;
+        pcpbd->BmpTab[i].bmpSelectID  = NULL;
+        pcpbd->BmpTab[i].bmpDisableID = NULL;
 
-        dlgAdm->BmpTab[i].frame  = frame;
-        dlgAdm->BmpTab[i].loaded = 0;
+        pcpbd->BmpTab[i].frame  = frame;
+        pcpbd->BmpTab[i].loaded = 0;
 
         assignBitmap(pcpbd, i, bmpNormal, PBSS_NORMAL, inMemory);
 
@@ -2069,9 +2104,9 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
             assignBitmap(pcpbd, i, bmpDisabled, PBSS_DISABLED, inMemory);
         }
 
-        if ( stretch && dlgAdm->BmpTab[i].loaded )
+        if ( stretch && pcpbd->BmpTab[i].loaded )
         {
-            dlgAdm->BmpTab[i].loaded |= 0x0100;
+            pcpbd->BmpTab[i].loaded |= 0x0100;
         }
 
         // Maybe create a palette that conforms to the bitmap colors.
@@ -2082,7 +2117,7 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
                DeleteObject(pcpbd->colorPalette);
            }
 
-           pcpbd->colorPalette = createDIBPalette((LPBITMAPINFO)dlgAdm->BmpTab[i].bitmapID);
+           pcpbd->colorPalette = createDIBPalette((LPBITMAPINFO)pcpbd->BmpTab[i].bitmapID);
            setSysPalColors(pcpbd->colorPalette);
         }
 
@@ -2110,12 +2145,10 @@ RexxMethod9(RexxObjectPtr, dlgext_drawBitmap, OPTIONAL_RexxObjectPtr, ignored, R
         return result;
     }
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
     size_t index;
-
-    if ( findBmpForID(dlgAdm, id, &index) )
+    if ( findBmpForID(pcpbd, id, &index) )
     {
-        HBITMAP hBmp = (HBITMAP)dlgAdm->BmpTab[index].bitmapID;
+        HBITMAP hBmp = (HBITMAP)pcpbd->BmpTab[index].bitmapID;
 
         if ( hBmp != NULL )
         {
@@ -2127,7 +2160,7 @@ RexxMethod9(RexxObjectPtr, dlgext_drawBitmap, OPTIONAL_RexxObjectPtr, ignored, R
                hP = SelectPalette(hDC, pcpbd->colorPalette, 0);
                RealizePalette(hDC);
             }
-            if ( dlgAdm->BmpTab[index].loaded == 0 )
+            if ( pcpbd->BmpTab[index].loaded == 0 )
             {
                 HDC hDC2 = CreateCompatibleDC(hDC);
 
@@ -2145,7 +2178,7 @@ RexxMethod9(RexxObjectPtr, dlgext_drawBitmap, OPTIONAL_RexxObjectPtr, ignored, R
                 BitBlt(hDC, x, y, xL, yL, hDC2, xS, yS, SRCCOPY);
                 DeleteDC(hDC2);
             }
-            else if ( forSureHaveBitmap(dlgAdm, index) )
+            else if ( forSureHaveBitmap(pcpbd, index) )
             {
                 // Original comment: This if has been added because of a
                 // violation error moving animated button dialogs a lot
@@ -2197,13 +2230,12 @@ RexxMethod3(RexxObjectPtr, dlgext_getBitmapPosition, RexxObjectPtr, rxID, RexxOb
         return TheFalseObj;
     }
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
     size_t index;
 
-    if ( findBmpForID(dlgAdm, id, &index) )
+    if ( findBmpForID(pcpbd, id, &index) )
     {
-        p->x = dlgAdm->BmpTab[index].displaceX;
-        p->y = dlgAdm->BmpTab[index].displaceY;
+        p->x = pcpbd->BmpTab[index].displaceX;
+        p->y = pcpbd->BmpTab[index].displaceY;
         return TheTrueObj;
     }
     return TheFalseObj;
@@ -2226,13 +2258,11 @@ RexxMethod3(RexxObjectPtr, dlgext_setBitmapPosition, RexxObjectPtr, rxID, ARGLIS
         return TheOneObj;
     }
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
     size_t index;
-
-    if ( findBmpForID(dlgAdm, id, &index) )
+    if ( findBmpForID(pcpbd, id, &index) )
     {
-        dlgAdm->BmpTab[index].displaceX = point.x;
-        dlgAdm->BmpTab[index].displaceY = point.y;
+        pcpbd->BmpTab[index].displaceX = point.x;
+        pcpbd->BmpTab[index].displaceY = point.y;
         return TheZeroObj;
     }
     return TheOneObj;
@@ -2254,24 +2284,22 @@ RexxMethod3(RexxObjectPtr, dlgext_getBitmapSize, RexxObjectPtr, rxID, NAME, meth
         return TheNegativeOneObj;
     }
 
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
     size_t index;
-
-    if ( findBmpForID(dlgAdm, id, &index) )
+    if ( findBmpForID(pcpbd, id, &index) )
     {
         int x, y;
 
-        if ( dlgAdm->BmpTab[index].loaded == 0 )
+        if ( pcpbd->BmpTab[index].loaded == 0 )
         {
             BITMAP bmpInfo;
-            GetObject(dlgAdm->BmpTab[index].bitmapID, sizeof(BITMAP), &bmpInfo);
+            GetObject(pcpbd->BmpTab[index].bitmapID, sizeof(BITMAP), &bmpInfo);
             x = bmpInfo.bmWidth;
             y = bmpInfo.bmHeight;
         }
         else
         {
-            x = dibWidth(dlgAdm->BmpTab[index].bitmapID);
-            y = dibHeight(dlgAdm->BmpTab[index].bitmapID);
+            x = dibWidth(pcpbd->BmpTab[index].bitmapID);
+            y = dibHeight(pcpbd->BmpTab[index].bitmapID);
         }
 
         switch ( method[13] )
@@ -2296,6 +2324,7 @@ RexxMethod2(RexxObjectPtr, dlgext_drawButton, RexxObjectPtr, rxID, OSELF, self)
     pCPlainBaseDialog pcpbd;
     uint32_t id;
     HWND hCtrl;
+
     RexxObjectPtr result = dlgExtControlSetup(context, self, rxID, &pcpbd, &id, &hCtrl);
     if ( result != TheZeroObj )
     {
@@ -2405,7 +2434,7 @@ RexxMethod3(POINTERSTRING, dlgext_createBrush, OPTIONAL_uint32_t, color, OPTIONA
     if ( argumentExists(2) && context->Int32(specifier, &resID) )
     {
         pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
-        if ( pcpbd != NULL && pcpbd->dlgAdm != NULL )
+        if ( pcpbd != NULL )  // TODO revisit why that could be NULL ??
         {
             HBITMAP hBmp = LoadBitmap(pcpbd->hInstance, MAKEINTRESOURCE(resID));
             if ( hBmp == NULL )
@@ -2620,8 +2649,8 @@ RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkCol
         return -1;
     }
 
-    return (int32_t) oodColorTable(context, pcpbd->dlgAdm, id, bkColor, (argumentOmitted(3) ? -1 : fgColor),
-                                   (method[10] == 'S'));
+    return (int32_t)oodColorTable(context, pcpbd, id, bkColor, (argumentOmitted(3) ? -1 : fgColor),
+                                  (method[10] == 'S'));
 }
 
 

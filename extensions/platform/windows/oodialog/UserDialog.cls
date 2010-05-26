@@ -53,11 +53,6 @@
 
 ::method test external "LIBRARY oodialog userdlg_test"
 
--- Documented "internal use only" in 3.2.0 - Do not document.
-::method stopIt
-   forward class (super) continue
-   forward message "stopDynamic"
-
 -- DEPRECATED menu bar methods.  Use the Menu classes directly.
 ::method setMenu
     menuBar = self~menuBar

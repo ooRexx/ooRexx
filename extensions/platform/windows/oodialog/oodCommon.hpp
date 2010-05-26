@@ -107,7 +107,6 @@ extern char *            strdup_2methodName(const char *str);
 extern void              checkModal(pCPlainBaseDialog previous, BOOL modeless);
 extern void              enablePrevious(pCPlainBaseDialog previous);
 
-extern DIALOGADMIN *     getDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg);
 extern pCPlainBaseDialog getDlgCSelf(RexxMethodContext *c, RexxObjectPtr self);
 
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
@@ -265,6 +264,7 @@ inline bool hasStyle(HWND hwnd, LONG style)
 }
 
 extern void          ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
+extern void          baseClassIntializationException(RexxMethodContext *c);
 extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
 extern RexxObjectPtr invalidWindowException(RexxMethodContext *c, RexxObjectPtr rxObj);
 extern RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int, int);
@@ -321,23 +321,6 @@ inline pCPlainBaseDialogClass getPBDClass_CSelf(RexxMethodContext *c)
 inline pCPlainBaseDialog dlgToCSelf(RexxMethodContext *c, RexxObjectPtr dlg)
 {
     return (pCPlainBaseDialog)c->ObjectToCSelf(dlg, ThePlainBaseDialogClass);
-}
-
-/**
- * Retrieves the dialog admin block from an ooDialog dialog object.
- *
- * @param c    The method context we are operating in.
- * @param dlg  The dialog object whose dialog admin block is needed.
- *
- * @return A pointer to dialog admin block for the dialog.
- *
- * @assumes  The caller has ensured dlg is in fact a ooDialog Rexx dialog
- *           object.
- */
-inline DIALOGADMIN *dlgToDlgAdm(RexxMethodContext *c, RexxObjectPtr dlg)
-{
-    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
-    return pcpbd->dlgAdm;
 }
 
 /**

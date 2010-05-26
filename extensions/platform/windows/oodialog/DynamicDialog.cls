@@ -404,8 +404,6 @@
    self~initDialog
    return self~dlgHandle
 
-::method stopDynamic private external "LIBRARY oodialog dyndlg_stopDynamic_pvt"
-
 
 -- This method creates a dialog from a resource script file (usually with extension of '.rc'.)
 -- It calls loadFrame() and loadItems() The argument 'loadOptions' can be one or more of:e
@@ -748,7 +746,7 @@
       end
    end /* do while */
    f~close
-   self~ProcessingLoad = 0
+   self~processingLoad = 0
    return 0
 
 ::method getRCStyle private

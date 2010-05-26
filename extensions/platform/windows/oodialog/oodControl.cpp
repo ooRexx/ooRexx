@@ -435,22 +435,18 @@ done_out:
  */
 #define DIALOGCONTROL_CLASS        "DialogControl"
 
-
-DIALOGADMIN *getDCDlgAdm(RexxMethodContext *c, pCDialogControl pcdc)
+/**
+ * Validates that the CSelf pointer for a DialogControl object is not null.
+ */
+inline pCDialogControl validateDCCSelf(RexxMethodContext *c, void *pcdc)
 {
-    pCPlainBaseDialog pcpbd = dlgToCSelf(c, pcdc->oDlg);
-
-    DIALOGADMIN *dlgAdm = NULL;
-    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+    if ( pcdc == NULL )
     {
-        failedToRetrieveDlgAdmException(c->threadContext, pcdc->rexxSelf);
+        baseClassIntializationException(c);
     }
-    else
-    {
-        dlgAdm = pcpbd->dlgAdm;
-    }
-    return dlgAdm;
+    return (pCDialogControl)pcdc;
 }
+
 
 
 /**
@@ -1319,13 +1315,13 @@ RexxMethod1(RexxObjectPtr, dlgctrl_captureMouse, CSELF, pCSelf)
  */
 RexxMethod4(logical_t, dlgctrl_setColor, int32_t, bkColor, OPTIONAL_int32_t, fgColor, NAME, method, CSELF, pCSelf)
 {
-    DIALOGADMIN *dlgAdm = getDCDlgAdm(context, (pCDialogControl)pCSelf);
-    if ( dlgAdm == NULL )
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
     {
-        return 1;
+        return 0;
     }
-    return oodColorTable(context, dlgAdm, ((pCDialogControl)pCSelf)->id, bkColor,
-                         (argumentOmitted(2) ? -1 : fgColor), (method[3] == 'S'));
+    return oodColorTable(context, dlgToCSelf(context, pcdc->oDlg), pcdc->id, bkColor,
+                         argumentOmitted(2) ? -1 : fgColor, method[3] == 'S');
 }
 
 /** DialogControl::data()

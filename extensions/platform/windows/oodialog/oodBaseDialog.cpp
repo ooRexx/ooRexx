@@ -323,6 +323,12 @@ static inline HWND getWEWindow(void *pCSelf)
 
 static HWND winExtSetup(RexxMethodContext *c, void *pCSelf)
 {
+    if ( pCSelf == NULL )
+    {
+        baseClassIntializationException(c);
+        return NULL;
+    }
+
     oodResetSysErrCode(c->threadContext);
     HWND hwnd = getWEWindow(pCSelf);
 
@@ -381,7 +387,6 @@ bool initWindowExtensions(RexxMethodContext *c, RexxObjectPtr self, HWND hwnd, p
  */
 RexxMethod1(logical_t, winex_initWindowExtensions, RexxObjectPtr, cSelf)
 {
-    RexxMethodContext *c = context;
     if ( ! context->IsBuffer(cSelf) )
     {
         wrongClassException(context->threadContext, 1, "Buffer");
@@ -443,192 +448,6 @@ RexxMethod3(int, winex_setFont, POINTERSTRING, font, OPTIONAL_logical_t, redraw,
     return 0;
 }
 
-
-/** WindowExtensions::createFont()
- *
- *  Creates a logical font with the specified characteristics.
- *
- *  This implementation is broken.  It is the original ooDialog implementation.
- *  It incorrectly maps the point size to the font height and it defaults the
- *  average character width to the point size.
- *
- *  It is maintained "as is" for program compatibility.
- *
- *  @param fontName  Optional.  The typeface name.  The default is System.
- *
- *  @param fSize     Optional.  The point size of the font.  The default is 10.
- *
- *  @param fontStyle Optional.  A string containing 0 or more of the style
- *                              keywords separated by blanks. The default is a
- *                              normal font style.
- *
- *  @param fWidth    Optional.  The average character width.  The default is the
- *                              point size.
- *
- *  @note  The most broken thing with this implementation is defaulting the
- *         average character width to the point size.  Using a 0 for fWidth
- *         rather than omitting the argument will fix this.  0 causes the font
- *         mapper to pick the best font that matches the height.
- *
- */
-RexxMethod4(POINTERSTRING, winex_createFont, OPTIONAL_CSTRING, fontName, OPTIONAL_CSTRING, fSize,
-            OPTIONAL_CSTRING, fontStyle, OPTIONAL_CSTRING, fWidth)
-{
-    if ( argumentOmitted(1) )
-    {
-        fontName = "System";
-    }
-
-    int fontSize = 10;
-    if ( argumentExists(2) )
-    {
-        fontSize = atoi(fSize);
-    }
-
-    int fontWidth = fontSize;
-    if ( argumentExists(4) )
-    {
-        fontWidth = atoi(fWidth);
-    }
-
-    int weight = FW_NORMAL;
-    BOOL italic = FALSE;
-    BOOL underline = FALSE;
-    BOOL strikeout = FALSE;
-
-    if ( argumentExists(3) )
-    {
-        italic    = StrStrI(fontStyle, "ITALIC"   ) != NULL;
-        underline = StrStrI(fontStyle, "UNDERLINE") != NULL;
-        strikeout = StrStrI(fontStyle, "STRIKEOUT") != NULL;
-        weight = getWeight(fontStyle);
-    }
-
-    HFONT hFont = CreateFont(fontSize, fontWidth, 0, 0, weight, italic, underline, strikeout,
-                             DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
-                             DEFAULT_QUALITY, FF_DONTCARE, fontName);
-    return hFont;
-}
-
-/** WindowExtensions::createFontEx()
- *
- *  Creates a logical font with the specified characteristics.
- *
- *  This is a correct implementation of createFont() and should be used as a
- *  replacement for that method.  In addition it extends createFont() by giving
- *  the ooRexx progammer access to all of the options of the CreateFont API.
- *
- *  @param fontName  Required.  The typeface name.
- *
- *  @param fontSize  Optional.  The point size of the font, the default is 8.
- *
- *  @param args      Optional.  A .Directory object whose indexes can contain
- *                              over-rides for the default values of all other
- *                              arguments to CreateFont.
- *
- *  @return  Handle to the logical font.  On error, a null handle is returned
- *           and the ooDialog System error code (.SystemErrorCode) is set.
- *
- *  @note    All the 'other' arguments to CreateFont() have a default value. If
- *           the args Directory object has no index for a value, the default is
- *           used.  If the Directory object does have the index, then the value
- *           of the index is used for that arg.
- */
-RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, fontSize,
-            OPTIONAL_RexxObjectPtr, args, OSELF, self)
-{
-    int   width = 0;                              // average character width
-    int   escapement = 0;                         // angle of escapement
-    int   orientation = 0;                        // base-line orientation angle
-    int   weight = FW_NORMAL;                     // font weight
-    BOOL  italic = FALSE;                         // italic attribute option
-    BOOL  underline = FALSE;                      // underline attribute option
-    BOOL  strikeOut = FALSE;                      // strikeout attribute option
-    uint32_t charSet = DEFAULT_CHARSET;           // character set identifier
-    uint32_t outputPrecision = OUT_TT_PRECIS;     // output precision
-    uint32_t clipPrecision = CLIP_DEFAULT_PRECIS; // clipping precision
-    uint32_t quality = DEFAULT_QUALITY;           // output quality
-    uint32_t pitchAndFamily = FF_DONTCARE;        // pitch and family
-
-    oodResetSysErrCode(context->threadContext);
-
-    if ( argumentOmitted(2) )
-    {
-        fontSize = 8;
-    }
-    int height = getHeightFromFontSize(fontSize);
-
-    if ( argumentExists(3) )
-    {
-        if ( ! context->IsDirectory(args) )
-        {
-            wrongClassException(context->threadContext, 3, "Directory");
-            goto error_out;
-        }
-        RexxDirectoryObject d = (RexxDirectoryObject)args;
-
-        if ( ! rxNumberFromDirectory(context, d, "WIDTH", (uint32_t *)&width, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (uint32_t *)&escapement, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (uint32_t *)&orientation, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (uint32_t *)&weight, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxLogicalFromDirectory(context, d, "ITALIC", &italic, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxLogicalFromDirectory(context, d, "UNDERLINE", &underline, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxLogicalFromDirectory(context, d, "STRIKEOUT", &strikeOut, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "CHARSET", &charSet, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "OUTPUTPRECISION", &outputPrecision, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "CLIPPRECISION", &clipPrecision, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "QUALITY", &quality, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "PITCHANDFAMILY", &pitchAndFamily, 3, false) )
-        {
-            goto error_out;
-        }
-    }
-
-    HFONT font = CreateFont(height, width, escapement, orientation, weight, italic, underline, strikeOut,
-                            charSet, outputPrecision, clipPrecision, quality, pitchAndFamily, fontName);
-
-    if ( font == NULL )
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
-    return font;
-
-error_out:
-  return NULLOBJECT;
-}
 
 /** WindowExtensions::hScrollPos()
  *  WindowExtensions::vScrollPos()
@@ -745,8 +564,6 @@ RexxMethod2(RexxObjectPtr, winex_scroll, ARGLIST, args, CSELF, pCSelf)
     {
         return TheOneObj;
     }
-
-    RexxMethodContext *c = context;
 
     // POINT and SIZE structs are binary compatible.  A POINT is used to return
     // the values, even though the semantics are not quite correct for scroll().
@@ -940,68 +757,6 @@ done_out:
 }
 
 
-RexxMethod4(logical_t, winex_writeDirect, POINTERSTRING, hDC, int32_t, xPos, int32_t, yPos, CSTRING, text)
-{
-    if ( hDC != NULL )
-    {
-        TextOut((HDC)hDC, xPos, yPos, text, (int)strlen(text));
-        return 0;
-    }
-    return 1;
-}
-
-/** WindowExtensions::loadBitmap()
- *
- *
- *  @note  Sets the .SystemErrorCode.
- *
- *  @remarks  For maybeSetColorPalette(), self could be either a dialog or a
- *            dialog control. If self is a dialog control, then we get the CSelf
- *            of its owner dialog. If we don't get the CSelf, an exception has
- *            been raised, but that doesn't seem possible.
- *
- *            Still, if it happens we clear the exception and set
- *            .SystemErrorCode to:
- *
- *            ERROR_INVALID_DATA (13)  The data is invalid.
- */
-RexxMethod3(RexxStringObject, winex_loadBitmap, CSTRING, bitmapFile, OPTIONAL_CSTRING, opts, OSELF, self)
-{
-    oodResetSysErrCode(context->threadContext);
-    uint32_t errCode = 0;
-
-    HBITMAP hBmp = (HBITMAP)loadDIB(bitmapFile, &errCode);
-    if ( hBmp == NULL )
-    {
-        oodSetSysErrCode(context->threadContext, errCode);
-    }
-    else
-    {
-        pCPlainBaseDialog pcpbd = getDlgCSelf(context, self);
-        if ( pcpbd != NULL )
-        {
-            maybeSetColorPalette(context, hBmp, opts, pcpbd);
-        }
-        else
-        {
-            context->ClearCondition();
-            oodSetSysErrCode(context->threadContext, ERROR_INVALID_DATA);
-        }
-    }
-    return pointer2string(context, hBmp);
-}
-
-RexxMethod1(logical_t, winex_removeBitmap, POINTERSTRING, hBitmap)
-{
-    if ( hBitmap != NULL )
-    {
-        LocalFree(hBitmap);
-        return 0;
-    }
-    return 1;
-}
-
-
 /** WindowExtensions::getDC()
  *
  *  Retrieves the device context (DC) for the entire window.  For a dialog, this
@@ -1025,9 +780,9 @@ RexxMethod1(logical_t, winex_removeBitmap, POINTERSTRING, hBitmap)
  *
  *  @note  Sets .SystemErrorCode.
  *
- *  @remarks  This method was documented as returning 0 on failure.  Need to
- *            rectify that.  The optional client parameter was added after 4.0.0
- *            and needs to be documented.
+ *  @remarks  This method was documented as returning 0 on failure.  The
+ *            optional client parameter was added after 4.0.0 and needs to be
+ *            documented.
  */
 RexxMethod2(RexxObjectPtr, winex_getDC, OPTIONAL_logical_t, client, CSELF, pCSelf)
 {
@@ -1062,7 +817,7 @@ RexxMethod2(RexxObjectPtr, winex_getDC, OPTIONAL_logical_t, client, CSELF, pCSel
  *
  *  It is important to invoke this method using the correct DC.  The DC being
  *  freed must have been the DC obtained using the getDC() from the same object.
- *  E.g, this is incorrect:
+ *  E.g, this is not correct:
  *
  *  listView = self~newListView(IDC_LV_NAMES)
  *  hDC = listView~getDC
@@ -1096,6 +851,284 @@ RexxMethod2(RexxObjectPtr, winex_freeDC, POINTERSTRING, hDC, CSELF, pCSelf)
 }
 
 
+/** WindowExtensions::createFont()
+ *
+ *  Creates a logical font with the specified characteristics.
+ *
+ *  This implementation is broken.  It is the original ooDialog implementation.
+ *  It incorrectly maps the point size to the font height and it defaults the
+ *  average character width to the point size.
+ *
+ *  It is maintained "as is" for program compatibility.
+ *
+ *  @param fontName  Optional.  The typeface name.  The default is System.
+ *
+ *  @param fSize     Optional.  The point size of the font.  The default is 10.
+ *
+ *  @param fontStyle Optional.  A string containing 0 or more of the style
+ *                              keywords separated by blanks. The default is a
+ *                              normal font style.
+ *
+ *  @param fWidth    Optional.  The average character width.  The default is the
+ *                              point size.
+ *
+ *  @note  The most broken thing with this implementation is defaulting the
+ *         average character width to the point size.  Using a 0 for fWidth
+ *         rather than omitting the argument will fix this.  0 causes the font
+ *         mapper to pick the best font that matches the height.
+ *
+ *  @remarks  Note that this method does not make sense as a windows extension,
+ *            it does not require a valid window handle.
+ *
+ *            It would be better to use a common function for the implementation
+ *            and put a createFontEx() method in both PlainBaseDialog and
+ *            DialogControl that delegates to the common function.
+ */
+RexxMethod4(POINTERSTRING, winex_createFont, OPTIONAL_CSTRING, fontName, OPTIONAL_CSTRING, fSize,
+            OPTIONAL_CSTRING, fontStyle, OPTIONAL_CSTRING, fWidth)
+{
+    if ( argumentOmitted(1) )
+    {
+        fontName = "System";
+    }
+
+    int fontSize = 10;
+    if ( argumentExists(2) )
+    {
+        fontSize = atoi(fSize);
+    }
+
+    int fontWidth = fontSize;
+    if ( argumentExists(4) )
+    {
+        fontWidth = atoi(fWidth);
+    }
+
+    int weight = FW_NORMAL;
+    BOOL italic = FALSE;
+    BOOL underline = FALSE;
+    BOOL strikeout = FALSE;
+
+    if ( argumentExists(3) )
+    {
+        italic    = StrStrI(fontStyle, "ITALIC"   ) != NULL;
+        underline = StrStrI(fontStyle, "UNDERLINE") != NULL;
+        strikeout = StrStrI(fontStyle, "STRIKEOUT") != NULL;
+        weight = getWeight(fontStyle);
+    }
+
+    HFONT hFont = CreateFont(fontSize, fontWidth, 0, 0, weight, italic, underline, strikeout,
+                             DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
+                             DEFAULT_QUALITY, FF_DONTCARE, fontName);
+    return hFont;
+}
+
+/** WindowExtensions::createFontEx()
+ *
+ *  Creates a logical font with the specified characteristics.
+ *
+ *  This is a correct implementation of createFont() and should be used as a
+ *  replacement for that method.  In addition it extends createFont() by giving
+ *  the ooRexx progammer access to all of the options of the CreateFont API.
+ *
+ *  @param fontName  Required.  The typeface name.
+ *
+ *  @param fontSize  Optional.  The point size of the font, the default is 8.
+ *
+ *  @param args      Optional.  A .Directory object whose indexes can contain
+ *                              over-rides for the default values of all other
+ *                              arguments to CreateFont.
+ *
+ *  @return  Handle to the logical font.  On error, a null handle is returned
+ *           and the ooDialog System error code (.SystemErrorCode) is set.
+ *
+ *  @note    All the 'other' arguments to CreateFont() have a default value. If
+ *           the args Directory object has no index for a value, the default is
+ *           used.  If the Directory object does have the index, then the value
+ *           of the index is used for that arg.
+ *
+ *  @remarks  Note that this method does not make sense as a windows extension,
+ *            it does not require a valid window handle.
+ *
+ *            It would be better to use a common function for the implementation
+ *            and put a createFontEx() method in both PlainBaseDialog and
+ *            DialogControl that delegates to the common function.
+ */
+RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, fontSize,
+            OPTIONAL_RexxObjectPtr, args, OSELF, self)
+{
+    int   width = 0;                              // average character width
+    int   escapement = 0;                         // angle of escapement
+    int   orientation = 0;                        // base-line orientation angle
+    int   weight = FW_NORMAL;                     // font weight
+    BOOL  italic = FALSE;                         // italic attribute option
+    BOOL  underline = FALSE;                      // underline attribute option
+    BOOL  strikeOut = FALSE;                      // strikeout attribute option
+    uint32_t charSet = DEFAULT_CHARSET;           // character set identifier
+    uint32_t outputPrecision = OUT_TT_PRECIS;     // output precision
+    uint32_t clipPrecision = CLIP_DEFAULT_PRECIS; // clipping precision
+    uint32_t quality = DEFAULT_QUALITY;           // output quality
+    uint32_t pitchAndFamily = FF_DONTCARE;        // pitch and family
+
+    oodResetSysErrCode(context->threadContext);
+
+    if ( argumentOmitted(2) )
+    {
+        fontSize = 8;
+    }
+    int height = getHeightFromFontSize(fontSize);
+
+    if ( argumentExists(3) )
+    {
+        if ( ! context->IsDirectory(args) )
+        {
+            wrongClassException(context->threadContext, 3, "Directory");
+            goto error_out;
+        }
+        RexxDirectoryObject d = (RexxDirectoryObject)args;
+
+        if ( ! rxNumberFromDirectory(context, d, "WIDTH", (uint32_t *)&width, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (uint32_t *)&escapement, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (uint32_t *)&orientation, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (uint32_t *)&weight, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxLogicalFromDirectory(context, d, "ITALIC", &italic, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxLogicalFromDirectory(context, d, "UNDERLINE", &underline, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxLogicalFromDirectory(context, d, "STRIKEOUT", &strikeOut, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "CHARSET", &charSet, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "OUTPUTPRECISION", &outputPrecision, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "CLIPPRECISION", &clipPrecision, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "QUALITY", &quality, 3, false) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "PITCHANDFAMILY", &pitchAndFamily, 3, false) )
+        {
+            goto error_out;
+        }
+    }
+
+    HFONT font = CreateFont(height, width, escapement, orientation, weight, italic, underline, strikeOut,
+                            charSet, outputPrecision, clipPrecision, quality, pitchAndFamily, fontName);
+
+    if ( font == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return font;
+
+error_out:
+  return NULLOBJECT;
+}
+
+/** WindowExtensions::writeDirect()
+ *
+ *
+ *  @remarks  Note that this method does not make sense as a windows extension,
+ *            it does not require a valid window handle.
+ */
+RexxMethod4(logical_t, winex_writeDirect, POINTERSTRING, hDC, int32_t, xPos, int32_t, yPos, CSTRING, text)
+{
+    if ( hDC != NULL )
+    {
+        TextOut((HDC)hDC, xPos, yPos, text, (int)strlen(text));
+        return 0;
+    }
+    return 1;
+}
+
+/** WindowExtensions::loadBitmap()
+ *
+ *  Loads a bitmap into memory.
+ *
+ *  @param  opts  [OPTIONAL]  The only valid option is USEPAL.  If so, sets the
+ *                color palette of the bitmap as the system color palette.
+ *
+ *  @return  The handle of the bitmap, or 0 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  Note that this method does not make sense as a windows extension,
+ *            it does not require a valid window handle.
+ *
+ *  @remarks  For maybeSetColorPalette(): self could be either a dialog or a
+ *            dialog control. If self is a dialog control, then we get the CSelf
+ *            of its owner dialog. If we don't get the CSelf, an exception has
+ *            been raised.
+ *
+ *            The only reason for this would be the user invoking the method
+ *            in an init() method before invoking the superclass init(). IMHO,
+ *            that should always raise a syntax error.
+ */
+RexxMethod3(RexxStringObject, winex_loadBitmap, CSTRING, bitmapFile, OPTIONAL_CSTRING, opts, OSELF, self)
+{
+    oodResetSysErrCode(context->threadContext);
+    uint32_t errCode = 0;
+
+    HBITMAP hBmp = (HBITMAP)loadDIB(bitmapFile, &errCode);
+    if ( hBmp == NULL )
+    {
+        oodSetSysErrCode(context->threadContext, errCode);
+    }
+    else
+    {
+        pCPlainBaseDialog pcpbd = getDlgCSelf(context, self);
+        if ( pcpbd == NULL )
+        {
+            return NULLOBJECT;
+        }
+
+        maybeSetColorPalette(context, hBmp, opts, pcpbd);
+    }
+    return pointer2string(context, hBmp);
+}
+
+/** WindowsExtensions::removeBitmap()
+ *
+ *
+ *  @remarks  Note that this method does not make sense as a windows extension,
+ *            it does not require a valid window handle.
+ */
+RexxMethod1(logical_t, winex_removeBitmap, POINTERSTRING, hBitmap)
+{
+    if ( hBitmap != NULL )
+    {
+        LocalFree(hBitmap);
+        return 0;
+    }
+    return 1;
+}
+
+
 /** WindowExtensions::objectToDC()
  *
  *  Selects a graphics object into the specified device context (DC). The new
@@ -1123,6 +1156,8 @@ RexxMethod2(RexxObjectPtr, winex_freeDC, POINTERSTRING, hDC, CSELF, pCSelf)
  *         execution of this method, so the .SystemErrorCode has no information
  *         if this method fails.
  *
+ *  @remarks  Note that this method does not make sense as a windows extension,
+ *            it does not require a valid window handle.
  */
 RexxMethod2(POINTERSTRING, winex_objectToDC, POINTERSTRING, hDC, POINTERSTRING, hObj)
 {
@@ -1268,7 +1303,8 @@ RexxMethod1(RexxObjectPtr, winex_deleteObject, POINTERSTRING, hObj)
  *
  *  @remarks  TODO allow a .Rectange object for the args.
  */
-RexxMethod6(logical_t, winex_rectangle, POINTERSTRING, _hDC, int32_t, left, int32_t, top, int32_t, right, int32_t, bottom, OPTIONAL_CSTRING, fill)
+RexxMethod6(logical_t, winex_rectangle, POINTERSTRING, _hDC, int32_t, left, int32_t, top, int32_t, right, int32_t, bottom,
+            OPTIONAL_CSTRING, fill)
 {
     oodResetSysErrCode(context->threadContext);
 

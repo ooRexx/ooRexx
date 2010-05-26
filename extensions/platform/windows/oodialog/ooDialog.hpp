@@ -182,7 +182,7 @@ typedef enum
 
 #define NO_PCPBD_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PlainBaseDialog\nCSELF is null.\n\n\tpcpdb=%p\n\thDlg=%p\n"
 #define NO_THREAD_ATTACH_MSG   "RexxDlgProc() ERROR in WM_INITDIALOG.  Failed to attach\nthread context.\n\n\tpcpdb=%p\n\thDlg=%p\n"
-#define NO_THREAD_CONTEXT_MSG  "RexxDlgProc() ERROR.  Admin block pointer\nor thread context is null.\n\n\tdlgAdm=%p\n\tdlgProcContext=%p\n\thDlg=%pn"
+#define NO_THREAD_CONTEXT_MSG  "RexxDlgProc() ERROR.  Thread context is null.\n\n\\tdlgProcContext=%p\n\thDlg=%pn"
 
 
 // Enum for the type of Windows dialog control.
@@ -389,19 +389,6 @@ typedef struct {
 #define VK_Y   0x59
 #define VK_Z   0x5A
 
-typedef struct
-{
-   DATATABLEENTRY    *DataTab;
-   BITMAPTABLEENTRY  *BmpTab;
-   COLORTABLEENTRY   *ColorTab;
-   ICONTABLEENTRY    *IconTab;
-   size_t             DT_size;
-   size_t             BT_size;
-   size_t             CT_size;
-   size_t             IT_size;
-} DIALOGADMIN;
-
-
 /* Struct for the WindowBase object CSelf. */
 typedef struct _wbCSelf {
     HWND              hwnd;
@@ -471,7 +458,14 @@ typedef struct _pbdCSelf {
     pCWindowExtensions   weCSelf;
     RexxObjectPtr        rexxSelf;
     HWND                 hDlg;
-    DIALOGADMIN         *dlgAdm;
+    DATATABLEENTRY      *DataTab;
+    ICONTABLEENTRY      *IconTab;
+    COLORTABLEENTRY     *ColorTab;
+    BITMAPTABLEENTRY    *BmpTab;
+    size_t               DT_size;
+    size_t               IT_size;
+    size_t               CT_size;
+    size_t               BT_size;
     HBRUSH               bkgBrush;
     HBITMAP              bkgBitmap;
     WPARAM               stopScroll;
@@ -540,7 +534,7 @@ extern RexxClassObject TheDynamicDialogClass;
 extern RexxClassObject TheDialogControlClass;
 extern RexxClassObject TheSizeClass;
 
-extern HBRUSH searchForBrush(DIALOGADMIN *dlgAdm, size_t *index, uint32_t id);
+extern HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id);
 
 extern bool _isVersion(DWORD, DWORD, unsigned int, unsigned int, unsigned int);
 extern bool _is32on64Bit(void);
