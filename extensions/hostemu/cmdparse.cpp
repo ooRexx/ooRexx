@@ -19,7 +19,7 @@ extern int yyparse(void);
 
 static int yygrowstack(void);
 #define YYPREFIX "yy"
-#line 2 "./extensions/hostemu/cmdparse.y"
+#line 2 "cmdparse.ypp"
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 2009-2010 Rexx Language Association. All rights reserved.    */
@@ -90,13 +90,13 @@ bool isnumeric (
    char * token);                /* token string                      */
 
 
-#line 73 "./extensions/hostemu/cmdparse.y"
+#line 73 "cmdparse.ypp"
 typedef union
    {
    int    numval;
    char * strval;
    } YYSTYPE;
-#line 100 "./extensions/hostemu/cmdparse.cpp"
+#line 100 "cmdparse.cpp"
 #define EXECIO 257
 #define HI 258
 #define TE 259
@@ -273,7 +273,7 @@ static short   *yyss;
 static short   *yysslim;
 static YYSTYPE *yyvs;
 static int      yystacksize;
-#line 211 "./extensions/hostemu/cmdparse.y"
+#line 211 "cmdparse.ypp"
 
 
 /*--------------------------------------------------------------------*/
@@ -447,7 +447,7 @@ bool isnumeric (
    return true;
    }
 
-#line 451 "./extensions/hostemu/cmdparse.cpp"
+#line 451 "cmdparse.cpp"
 /* allocate initial stack or double stack size, up to YYMAXDEPTH */
 static int yygrowstack(void)
 {
@@ -629,7 +629,7 @@ yyreduce:
     switch (yyn)
     {
 case 1:
-#line 96 "./extensions/hostemu/cmdparse.y"
+#line 96 "cmdparse.ypp"
 {
       lStmtType = EXECIO_STMT;
       ExecIO_Options.lStartRcd = 1;
@@ -641,7 +641,7 @@ case 1:
       }
 break;
 case 2:
-#line 106 "./extensions/hostemu/cmdparse.y"
+#line 106 "cmdparse.ypp"
 {
       lStmtType = EXECIO_STMT;
       ExecIO_Options.lStartRcd = 1;
@@ -649,39 +649,39 @@ case 2:
       }
 break;
 case 3:
-#line 112 "./extensions/hostemu/cmdparse.y"
+#line 112 "cmdparse.ypp"
 {
       lStmtType = HI_STMT;
       }
 break;
 case 4:
-#line 116 "./extensions/hostemu/cmdparse.y"
+#line 116 "cmdparse.ypp"
 {
       lStmtType = TE_STMT;
       }
 break;
 case 5:
-#line 120 "./extensions/hostemu/cmdparse.y"
+#line 120 "cmdparse.ypp"
 {
       lStmtType = TS_STMT;
       }
 break;
 case 6:
-#line 126 "./extensions/hostemu/cmdparse.y"
+#line 126 "cmdparse.ypp"
 {
       ExecIO_Options.fRW = true;
       strcpy (ExecIO_Options.aFilename, yyvsp[-1].strval);
       }
 break;
 case 7:
-#line 131 "./extensions/hostemu/cmdparse.y"
+#line 131 "cmdparse.ypp"
 {
       ExecIO_Options.fRW = false;
       strcpy (ExecIO_Options.aFilename, yyvsp[-1].strval);
       }
 break;
 case 8:
-#line 136 "./extensions/hostemu/cmdparse.y"
+#line 136 "cmdparse.ypp"
 {
       ExecIO_Options.fRW = false;
       strcpy (ExecIO_Options.aFilename, yyvsp[-2].strval);
@@ -693,78 +693,78 @@ case 8:
       }
 break;
 case 11:
-#line 152 "./extensions/hostemu/cmdparse.y"
+#line 152 "cmdparse.ypp"
 {
       ExecIO_Options.fFinis = true;
       }
 break;
 case 12:
-#line 156 "./extensions/hostemu/cmdparse.y"
+#line 156 "cmdparse.ypp"
 {
       ExecIO_Options.fFinis = false;
       }
 break;
 case 13:
-#line 160 "./extensions/hostemu/cmdparse.y"
+#line 160 "cmdparse.ypp"
 {
       ExecIO_Options.fFinis = true;
       ExecIO_Options.lDirection = 1;
       }
 break;
 case 14:
-#line 165 "./extensions/hostemu/cmdparse.y"
+#line 165 "cmdparse.ypp"
 {
       ExecIO_Options.fFinis = true;
       ExecIO_Options.lDirection = 2;
       }
 break;
 case 15:
-#line 170 "./extensions/hostemu/cmdparse.y"
+#line 170 "cmdparse.ypp"
 {
       strcpy (ExecIO_Options.aStem, yyvsp[0].strval);
       }
 break;
 case 16:
-#line 174 "./extensions/hostemu/cmdparse.y"
+#line 174 "cmdparse.ypp"
 {
       strcpy (ExecIO_Options.aStem, yyvsp[-1].strval);
       ExecIO_Options.fFinis = true;
       }
 break;
 case 17:
-#line 179 "./extensions/hostemu/cmdparse.y"
+#line 179 "cmdparse.ypp"
 {
       strcpy (ExecIO_Options.aStem, yyvsp[0].strval);
       ExecIO_Options.fFinis = true;
       }
 break;
 case 21:
-#line 191 "./extensions/hostemu/cmdparse.y"
+#line 191 "cmdparse.ypp"
 {
       ExecIO_Options.fFinis = true;
       }
 break;
 case 22:
-#line 195 "./extensions/hostemu/cmdparse.y"
+#line 195 "cmdparse.ypp"
 {
       strcpy (ExecIO_Options.aStem, yyvsp[0].strval);
       }
 break;
 case 23:
-#line 199 "./extensions/hostemu/cmdparse.y"
+#line 199 "cmdparse.ypp"
 {
       strcpy (ExecIO_Options.aStem, yyvsp[-1].strval);
       ExecIO_Options.fFinis = true;
       }
 break;
 case 24:
-#line 204 "./extensions/hostemu/cmdparse.y"
+#line 204 "cmdparse.ypp"
 {
       strcpy (ExecIO_Options.aStem, yyvsp[0].strval);
       ExecIO_Options.fFinis = true;
       }
 break;
-#line 768 "./extensions/hostemu/cmdparse.cpp"
+#line 768 "cmdparse.cpp"
     }
     yyssp -= yym;
     yystate = *yyssp;
