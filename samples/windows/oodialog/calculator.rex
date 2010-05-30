@@ -290,14 +290,16 @@ any:
 
     This is what the default implementation of ok does: it invokes the validate()
     method.  If validate() returns false, then ok() does nothing and just returns.
-    If validate() returns true then ok() sets self~finished to true, which ends
-    the dialog.
+    If validate() returns true then ok() sets self~initCode to 1 and
+    self~finished to true, which ends the dialog.
 
     This over-ride sets the calculator display to 0 before ending the dialog.  Again,
     this is not necessary, it is just done to demonstrate how to over-ride the ok
     method
   */
   if \ self~validate then return 0
+
   self~setLine(0)
+  self~initCode = 1
   self~finished = .true
   return self~finished
