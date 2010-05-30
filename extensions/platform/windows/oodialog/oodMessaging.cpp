@@ -135,11 +135,12 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
     if ( pcpbd->dlgProcContext == NULL )
     {
-        // Once again, theoretically impossible ...
         if ( ! pcpbd->isActive )
         {
             return FALSE;
         }
+
+        // Once again, theoretically impossible ...
         return endDialogPremature(pcpbd, hDlg, NoThreadContext);
     }
 
@@ -149,8 +150,6 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         // it does, it is because of some unexplained / unanticpated error.
         // PostQuitMessage() will cause the window message loop to quit and
         // things should then (hopefully) unwind cleanly.
-        printf("Got WM_DESTROY posting quit allocated=%d abnormalHalt=%d\n",
-               pcpbd->dlgAllocated, pcpbd->abnormalHalt);
         PostQuitMessage(3);
         return TRUE;
     }
@@ -834,13 +833,12 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             RexxArrayObject args = c->ArrayOfFour(c->String(pQuery->pszFormat), _size, idFrom, hwndFrom);
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            printf("Got DTN_FORMATQUERY reply from Rexx.\n");
+
             if ( checkForCondition(c) )
             {
-                printf("Got condition check\n");
-                //pcpbd->abnormalHalt = true;
-                //delDialog(pcpbd, c);
-                //DestroyWindow(pcpbd->hDlg);
+                // TODO note this is a special case test of ending the dialog on
+                // a condition raised.  Need to always do the same thing, end
+                // the dialog or not end the dialog.
                 endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
                 return ReplyTrue;
             }
@@ -1404,7 +1402,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
                             args = c->ArrayOfFour(c->Int32(phi->iCtrlId), c->String(np),
                                                   c->Int32(phi->MousePos.x), c->Int32(phi->MousePos.x));
-                            c->ArrayPut(args, c->UnsignedInt32(phi->dwContextId), 5);
+                            c->ArrayPut(args, c->Uintptr(phi->dwContextId), 5);
 
                             return invokeDispatch(c, pcpbd->rexxSelf, c->String(m[i].rexxMethod), args);
                         }

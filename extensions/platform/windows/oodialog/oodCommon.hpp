@@ -63,12 +63,11 @@ typedef map<string, int, less<string> > String2Int;
                                     "number of allocated icon table entries. The icon\n" \
                                     "resource will not be added."
 
-// Some int32_t codes where -1 and greater is valid.
+// ooDialog return codes for special purposes, including some int32_t codes
+// where -1 and greater is valid.
 #define OOD_ID_EXCEPTION            0xFFFFFFF7   // -9
 #define OOD_BAD_WIDTH_EXCEPTION     0xFFFFFFF8   // -8
 #define OOD_INVALID_ITEM_ID         0xFFFFFFF7   // Rewording of OOD_ID_EXCEPTION
-
-// Some uint32_t result codes  TODO set up an enum for above and these.
 #define OOD_NO_ERROR                0
 #define OOD_DATATABLE_FULL          1
 #define OOD_MEMORY_ERR              2

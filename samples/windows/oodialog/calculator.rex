@@ -66,6 +66,7 @@ any:
   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc) "a"x condition("o")~message
   if calcDlg~isDialogActive then do
      calcDlg~finished = .true
+     calcDlg~stopDialog
   end
   signal reStart
 
@@ -288,9 +289,15 @@ any:
     will close.
 
     This is what the default implementation of ok does: it invokes the validate()
-    method.  If validate() returns false, then ok() does nothing and just returns
-    but if you want to override the OK method, this is what you do. The button has
-   to have the ID 1!                                                                */
-  resOK = self~OK:super  /* make sure self~Validate is called and self~InitCode is set to 1 */
-  self~Finished = resOK  /* 1 means close dialog, 0 means keep open */
-  return resOK
+    method.  If validate() returns false, then ok() does nothing and just returns.
+    If validate() returns true then ok() sets self~finished to true, which ends
+    the dialog.
+
+    This over-ride sets the calculator display to 0 before ending the dialog.  Again,
+    this is not necessary, it is just done to demonstrate how to over-ride the ok
+    method
+  */
+  if \ self~validate then return 0
+  self~setLine(0)
+  self~finished = .true
+  return self~finished

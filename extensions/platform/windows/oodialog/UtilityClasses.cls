@@ -67,6 +67,7 @@
 ::method screenArea class external "LIBRARY oodialog dlgutil_screenArea_cls"
 ::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
+::method threadID class external "LIBRARY oodialog dlgutil_threadID_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
 

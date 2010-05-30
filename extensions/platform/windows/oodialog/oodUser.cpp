@@ -1219,7 +1219,7 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
         pcpbd->threadID = thID;
 
         // Do we have a modal dialog?
-        checkModal((pCPlainBaseDialog)pcpbd->previous, modeless);
+        checkModal((pCPlainBaseDialog)pcpbd->previous, (BOOL)modeless);
 
         if ( GetWindowLong(pcpbd->hDlg, GWL_STYLE) & WS_SYSMENU )
         {

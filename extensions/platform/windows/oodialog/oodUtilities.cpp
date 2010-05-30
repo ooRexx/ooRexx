@@ -632,13 +632,22 @@ RexxMethod1(POINTER, dlgutil_handleToPointer_cls, POINTERSTRING, handle)
     return handle;
 }
 
+/** DlgUtil::threadID()  [class method]
+ *
+ *  Simple method to use for testing.
+ */
+RexxMethod0(uint32_t, dlgutil_threadID_cls)
+{
+    return GetCurrentThreadId();
+}
+
 /** DlgUtil::test()  [class method]
  *
  *  Simple method to use for testing.
  */
-RexxMethod1(uint32_t, dlgutil_test_cls, logical_t, fail)
+RexxMethod0(uint32_t, dlgutil_test_cls)
 {
-    return GetCurrentThreadId();
+    return 0;
 }
 
 /** ListBox::setTabulators()

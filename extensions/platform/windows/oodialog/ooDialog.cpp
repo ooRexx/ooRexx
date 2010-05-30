@@ -320,8 +320,6 @@ int32_t delDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
     HICON hIconBig = NULL;
     HICON hIconSmall = NULL;
 
-    printf("delDialog() allocated=%d abnormal=%d\n", pcpbd->dlgAllocated, pcpbd->abnormalHalt);
-
     EnterCriticalSection(&crit_sec);
 
     if ( ! pcpbd->dlgAllocated )
@@ -3907,9 +3905,6 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
 
     RexxObjectPtr finished = context->GetObjectVariable("FINISHED");
     pcpbd->abnormalHalt = (finished == TheFalseObj ? true : false);
-
-    printf("In stopIt() admin allocated=%d abnormalHalt=%d finished=%p trueObj=%p falseObj=%p\n",
-           pcpbd->dlgAllocated, pcpbd->abnormalHalt, finished, TheTrueObj, TheFalseObj);
 
     int32_t result = stopDialog(pcpbd, context->threadContext);
 

@@ -135,6 +135,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenArea_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_threadID_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
 // OS
@@ -764,6 +765,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_screenArea_cls,         dlgutil_screenArea_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls,   dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls,    dlgutil_handleToPointer_cls),
+    REXX_METHOD(dlgutil_threadID_cls,           dlgutil_threadID_cls),
     REXX_METHOD(dlgutil_test_cls,               dlgutil_test_cls),
 
     REXX_METHOD(os_is64bit,                     os_is64bit),
