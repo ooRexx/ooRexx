@@ -57,7 +57,10 @@ exit
 CleanUp:
    call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
                      || "a"x || condition("o")~message
-   if dlg~IsDialogActive then dlg~StopIt
+   if dlg~isDialogActive then do
+      dlg~finished = .true
+      dlg~stopIt
+   end
 
 
 ::requires "ooDialog.cls"

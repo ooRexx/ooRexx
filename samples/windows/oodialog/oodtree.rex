@@ -55,9 +55,9 @@
 /* Install signal handler to catch error conditions and clean up */
 signal on any name CleanUp
 
-MyDialog = .MyDialogClass~new
-if MyDialog~InitCode = 0 then do
-  rc = MyDialog~Execute("SHOWTOP")
+myDialog = .MyDialogClass~new
+if myDialog~InitCode = 0 then do
+    rc = myDialog~Execute("SHOWTOP")
 end
 
 /* Add program code here */
@@ -69,26 +69,29 @@ exit   /* leave program */
 CleanUp:
    call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
                      || "a"x || condition("o")~message
-   if MyDialog~IsDialogActive then MyDialog~StopIt
+   if myDialog~isDialogActive then do
+       myDialog~finished = .true
+       myDialog~stopIt
+   end
 
 
 ::requires "ooDialog.cls"    /* This file contains the ooDialog classes */
-::requires "WINSYSTM.CLS"    /* This file contains the Windows classes */
+::requires "winSystm.CLS"    /* This file contains the Windows classes */
 
 
 /* ---------------------------- Directives ---------------------------------*/
 
 ::class 'MyDialogClass' subclass UserDialog inherit VirtualKeyCodes
 
-::method Init
-  use arg InitStem.
-  if Arg(1,"o") = 1 then
-     InitRet = self~Init:super
+::method init
+  use arg initStem.
+  if arg(1,"o") = 1 then
+     initRet = self~init:super
   else
-     InitRet = self~Init:super(InitStem.)   /* Initialization stem is used */
+     initRet = self~init:super(initStem.)   /* Initialization stem is used */
 
-  if self~Load("rc\oodtree.rc", ) \= 0 then do
-     self~InitCode = 1
+  if self~load("rc\oodtree.rc", ) \= 0 then do
+     self~initCode = 1
      return
   end
 
@@ -112,14 +115,12 @@ CleanUp:
   self~IDC_TREE= 'Products' /* Text of the item which schould be selected */
 
   /* Add your initialization code here */
-  return InitRet
+  return initRet
 
 
 /* Initialization Code, fill tree with initialization data  */
-::method InitDialog
+::method initDialog
   expose bmpFile treeFile itemFile
-
-  InitDlgRet = self~InitDialog:super
 
   curTree = self~newTreeView("IDC_TREE")
   if curTree \= .Nil then
@@ -161,14 +162,9 @@ CleanUp:
     end
   end
 
-  return InitDlgRet
 
-
-::method DefineDialog
-  result = self~DefineDialog:super
-  if result = 0 then do
-     /* Additional dialog items (e.g. createEditInputGroup) */
-  end
+::method defineDialog
+    /* Additional dialog items could be added here (e.g. createEditInputGroup) */
 
 
 /* --------------------- message handler -----------------------------------*/

@@ -35,24 +35,96 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-  	ReadMe
+/**
+ * Simple Dialog showing how to: create a font. change the font of a control,
+ * manage buttons to prevent the user from getting the dialog in the wrong
+ * state.
+ *
+ * In this simple dialog, we don't want to manage the creation of lots of fonts,
+ * so after the user creates the first new font, we disable the button.  That
+ * way the user can not create a new font thousands of times.
+ */
 
-  1.  Simple ooDialog Example Programs
-  ------------------------------------
+  dlg = .FileViewDialog~new
+  if dlg~initCode <> 0 then do
+    say "Dialog initialization failed.  Program Abort."
+    return 99
+  end
 
-  This directory contains example ooDialog programs that are intended to be
-  simple enough to not require any comment.  They are short and only
-  demonstrate a few things.  They should encourage the user to read the
-  ooDialog documentation to better understand the areas the programs are
-  concerned with.
+  dlg~create(30, 30, 260, 180, "File Viewing Dialog", "VISIBLE")
+  dlg~execute("SHOWTOP")
 
-    - SimpleUpDown.rex
+return 0
+-- End of entry point.
 
-    Shows how to create an up down control in a user dialog and initialize
-    it.
+::requires "ooDialog.cls"
 
-    - ChangeFont.rex
+::class 'FileViewDialog' subclass UserDialog
 
-    Shows how to create a new font correctly and how to change the font of
-    a dialog control using the created font.  It is also an example of a
-    multi-line edit control and shows how to enable and disable buttons.
+::method defineDialog
+
+  self~autoDetect = .false
+  self~constDir[IDC_EDIT] = 110
+  self~constDir[IDC_PB_OPEN] = 111
+  self~constDir[IDC_PB_CHANGE_FONT] = 112
+
+  styles = "VSCROLL HSCROLL MULTILINE"
+  self~createEdit(IDC_EDIT, 5, 5, 250, 150, styles)
+
+  self~createPushButton(IDC_PB_OPEN,          5, 160, 35, 15, ,          "Open", onOpen)
+  self~createPushButton(IDC_PB_CHANGE_FONT,  50, 160, 45, 15, ,          "Change Font", onFont)
+  self~createPushButton(IDOK,               220, 160, 35, 15, "DEFAULT", "OK")
+
+::method initDialog
+  expose editControl newFont
+
+  newFont = .nil
+  editControl = self~newEdit(IDC_EDIT)
+
+  helpMsg = "Use the Open button to open a text file" || .endOfLine || -
+            "and then use the Change Font button to"  || .endOfLine || -
+            "change the font."
+
+  editControl~setText(helpMsg)
+  self~newPushButton(IDC_PB_CHANGE_FONT)~disable
+
+::method onOpen
+  expose editControl newFont
+
+  editControl~setText("")
+
+  fileName = fileNameDialog( , self~dlgHandle, , 1, "Open a File for Editing")
+  if fileName == "" then return
+
+  fObj = .stream~new(fileName)
+  fObj~open
+  if fObj~state \== 'READY' then return self~abort
+
+  text = fObj~charin(1, fObj~chars)
+  fObj~close
+
+  editControl~setText(text)
+  if newFont == .nil then self~newPushButton(IDC_PB_CHANGE_FONT)~enable
+
+::method onFont
+  expose editControl newFont
+
+  newFont = self~createFontEx("Courier", 12)
+  editControl~setFont(newFont)
+  self~newPushButton(IDC_PB_CHANGE_FONT)~disable
+
+::method cancel
+  expose newFont
+
+  if newFont \= .nil then self~deleteFont(newFont)
+  self~cancel:super
+
+::method ok
+  expose newFont
+
+  if newFont \= .nil then self~deleteFont(newFont)
+  self~ok:super
+
+::method abort private
+  j = errorDialog("There is an unexplained error.  Program Abort")
+  return self~cancel

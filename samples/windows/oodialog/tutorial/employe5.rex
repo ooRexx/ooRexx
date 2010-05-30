@@ -53,7 +53,10 @@ exit
 CleanUp:
    call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
                      || "a"x || condition("o")~message
-   if dlg~IsDialogActive then dlg~StopIt
+   if dlg~isDialogActive then do
+      dlg~finished = 1
+      dlg~stopIt
+   end
 
 
 ::requires "ooDialog.cls"
@@ -64,17 +67,17 @@ CleanUp:
 ::method Emp_count attribute
 ::method Emp_current attribute
 
-::method Init
+::method init
     ret = self~init:super;
     if ret = 0 then ret = self~Load("EMPLOYE3.RC", 100)
-    if ret = 0 then self~Employees = .array~new(10)
     if ret = 0 then do
+        self~Employees = .array~new(10)
         self~Emp_count = 1
         self~Emp_current = 1
         self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
         self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
     end
-    self~InitCode = ret
+    self~initCode = ret
     return ret
 
 ::method InitDialog

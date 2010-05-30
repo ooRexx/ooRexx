@@ -281,6 +281,7 @@ return
 Option15:
     if symbol('tdlg') = 'VAR' then
         do
+            tdlg~finished = .true
             tdlg~stopit
             drop tdlg
         end

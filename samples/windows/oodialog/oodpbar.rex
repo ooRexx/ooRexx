@@ -50,9 +50,9 @@
 /* Install signal handler to catch error conditions and clean up */
 signal on any name CleanUp
 
-MyDialog = .MyDialogClass~new
-if MyDialog~InitCode = 0 then do
-  rc = MyDialog~Execute("SHOWTOP")
+myDialog = .MyDialogClass~new
+if myDialog~initCode = 0 then do
+  rc = myDialog~execute("SHOWTOP")
 end
 
 /* Add program code here */
@@ -64,7 +64,10 @@ exit   /* leave program */
 CleanUp:
    call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
                      || "a"x || condition("o")~message
-   if MyDialog~IsDialogActive then MyDialog~StopIt
+   if myDialog~isDialogActive then do
+     myDialog~finished = .true
+     myDialog~stopIt
+   end
 
 
 ::requires "ooDialog.cls"    /* This file contains the ooDialog classes */
