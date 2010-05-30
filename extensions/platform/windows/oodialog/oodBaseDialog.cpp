@@ -121,7 +121,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
         MSG msg;
         BOOL result;
 
-        while ( (result = GetMessage(&msg, NULL, 0, 0)) != 0 && pcpbd->adminAllocated )
+        while ( (result = GetMessage(&msg, NULL, 0, 0)) != 0 && pcpbd->dlgAllocated )
         {
             if ( result == -1 )
             {
@@ -135,17 +135,15 @@ DWORD WINAPI WindowLoopThread(void *arg)
     }
     else
     {
-        // Although unusual, this is not an 'abnormal' halt.
-        pcpbd->abnormalHalt = false;
         *release = true;
     }
 
-    // Need to synchronize here, otherwise admin may still be marked allocated,
-    // but delDialog() is already running.
+    // Need to synchronize here, otherwise dlgAllocate may still be true, but
+    // delDialog() is already running.
     EnterCriticalSection(&crit_sec);
-    if ( pcpbd->adminAllocated )
+    if ( pcpbd->dlgAllocated )
     {
-        ret = delDialog(pcpbd);
+        ret = delDialog(pcpbd, pcpbd->dlgProcContext);
         pcpbd->hDlgProcThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
@@ -217,9 +215,7 @@ RexxMethod5(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
     EnterCriticalSection(&crit_sec);
     if ( ! installNecessaryStuff(pcpbd, library) )
     {
-        // This is not an 'abnormal' halt.
-        pcpbd->abnormalHalt = false;
-        delDialog(pcpbd);
+        delDialog(pcpbd, context->threadContext);
 
         LeaveCriticalSection(&crit_sec);
         return FALSE;
@@ -249,8 +245,7 @@ RexxMethod5(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
             outOfMemoryException(context->threadContext);
         }
 
-        pcpbd->abnormalHalt = false;
-        delDialog(pcpbd);
+        delDialog(pcpbd, context->threadContext);
         return FALSE;
     }
 

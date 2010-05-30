@@ -93,9 +93,9 @@ static BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
  *           set the CPlainBaseDialog struct of the parent in the window words
  *           of the child dialog.  Prior to the conversion of ooDialog to the
  *           C++ API, when a message came in for a child dialog, a search was
- *           made through the DialogTable to try and find the dialog admin block
- *           of the parent.  This has been disposed of and the CPlainBaseDialog
- *           struct is just pulled out of the window words.
+ *           made through the DialogTable to try and find the parent dialog.
+ *           This has been disposed of and the CPlainBaseDialog struct is just
+ *           pulled out of the window words.
  */
 LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
@@ -149,6 +149,8 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         // it does, it is because of some unexplained / unanticpated error.
         // PostQuitMessage() will cause the window message loop to quit and
         // things should then (hopefully) unwind cleanly.
+        printf("Got WM_DESTROY posting quit allocated=%d abnormalHalt=%d\n",
+               pcpbd->dlgAllocated, pcpbd->abnormalHalt);
         PostQuitMessage(3);
         return TRUE;
     }
@@ -259,7 +261,9 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                         // searchMessageTables().  But - sometimes we do, very
                         // rarely.  It is on some abnormal error. See the
                         // comments above for the WM_DESTROY message.
+                        pcpbd->abnormalHalt = true;
                         DestroyWindow(hDlg);
+
                         return TRUE;
                     }
             }
@@ -437,15 +441,14 @@ inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
     return ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (focusDidChange(p));
 }
 
-extern void abnormalTerminate(pCPlainBaseDialog pcpbd);
 
 /**
  * This function will (should) cleanly end the dialog and the Rexx dialog object
- * when things needed to be terminated for unusual reason.  It puts up a message
- * box to inform the user of the circumstances.
+ * when things needed to be terminated for unusual reason.  It can put up a
+ * message box to inform the user of the circumstances depending on the args.
  *
- * Right now this is only called from RexxDlgProc().  It could maybe be used
- * elsewhere, but not likely.
+ * Right now this is only called from functions in this module and is static.
+ * It could maybe be used elsewhere and would need to be made extern.
  *
  * @param pcpbd
  * @param hDlg
@@ -456,6 +459,7 @@ extern void abnormalTerminate(pCPlainBaseDialog pcpbd);
 static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
 {
     char buf[256];
+    bool noMsg = false;
 
     switch ( t )
     {
@@ -468,16 +472,23 @@ static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrTyp
         case NoThreadContext :
             _snprintf(buf, sizeof(buf), NO_THREAD_CONTEXT_MSG, pcpbd->dlgProcContext, hDlg);
             break;
+        case RexxConditionRaised :
+            noMsg = true;
+            break;
+        default :
+            noMsg = true;
+            break;
     }
 
-    internalErrorMsgBox(buf, "ooDialog Dialog Procedure Error");
+    if ( ! noMsg )
+    {
+        internalErrorMsgBox(buf, "ooDialog Dialog Procedure Error");
+    }
 
     // DestroyWindow() will either cause the message processing loop to end, or
     // more likely a WC_DESTROY message will make it to RexxDlgProc().  This
     // will then cause things to unwind and delDialog() will be called.
-    //
-    // pcpbd->abnormalHalt must remain true here, which will cause things to
-    // unwind without (hopefully) hanging.
+    pcpbd->abnormalHalt = true;
     DestroyWindow(hDlg);
 
     return FALSE;
@@ -551,7 +562,7 @@ LRESULT paletteMessage(pCPlainBaseDialog pcpbd, HWND hDlg, UINT msg, WPARAM wPar
  * @remarks  Earlier versions of ooDialog, on the C++ side, constructed a method
  *           invocation string, placed it on a queue, and returned immediately
  *           to the message processing loop.  On the Rexx side, the string was
- *           pulled from the queue and the event hanler method invoked throung
+ *           pulled from the queue and the event hanler method invoked through
  *           interpret.  This meant that the Rexx programmer could never block
  *           the window loop, but also could never reply to any window message.
  *
@@ -823,7 +834,16 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             RexxArrayObject args = c->ArrayOfFour(c->String(pQuery->pszFormat), _size, idFrom, hwndFrom);
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c);
+            printf("Got DTN_FORMATQUERY reply from Rexx.\n");
+            if ( checkForCondition(c) )
+            {
+                printf("Got condition check\n");
+                //pcpbd->abnormalHalt = true;
+                //delDialog(pcpbd, c);
+                //DestroyWindow(pcpbd->hDlg);
+                endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+                return ReplyTrue;
+            }
 
             PSIZE size = (PSIZE)c->ObjectToCSelf(_size);
 

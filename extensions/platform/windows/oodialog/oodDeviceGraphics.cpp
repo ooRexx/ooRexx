@@ -1336,7 +1336,13 @@ void assignBitmap(pCPlainBaseDialog pcpbd, size_t index, CSTRING bmp, PUSHBUTTON
 pCPlainBaseDialog dlgExtSetup(RexxMethodContext *c, RexxObjectPtr dlg)
 {
     oodResetSysErrCode(c->threadContext);
+
     pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
+    if ( pcpbd == NULL )
+    {
+        baseClassIntializationException(c);
+        return NULL;
+    }
 
     if ( pcpbd->hDlg == NULL )
     {
@@ -1448,14 +1454,20 @@ RexxMethod2(RexxObjectPtr, dlgext_clearWindowRect, POINTERSTRING, hwnd, OSELF, s
  *  @see WindowBase::clear()
  *
  *  @remarks  Technically this method does not require the underlying dialog to
- *             have been created, so that check is skipped.  But, in reality I
- *             suspect this method should only be used with the dialog and its
- *             control windows.
+ *            have been created, so that check is skipped.  But, in reality I
+ *            suspect this method should only be used with the dialog and its
+ *            control windows.
  */
 RexxMethod3(RexxObjectPtr, dlgext_clearRect, POINTERSTRING, hwnd, ARGLIST, args, OSELF, self)
 {
     oodResetSysErrCode(context->threadContext);
+
     pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+    if ( pcpbd == NULL )
+    {
+        baseClassIntializationException(context);
+        return TheOneObj;
+    }
 
     RECT r = {0};
     size_t arraySize;
@@ -2434,7 +2446,7 @@ RexxMethod3(POINTERSTRING, dlgext_createBrush, OPTIONAL_uint32_t, color, OPTIONA
     if ( argumentExists(2) && context->Int32(specifier, &resID) )
     {
         pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
-        if ( pcpbd != NULL )  // TODO revisit why that could be NULL ??
+        if ( pcpbd != NULL )
         {
             HBITMAP hBmp = LoadBitmap(pcpbd->hInstance, MAKEINTRESOURCE(resID));
             if ( hBmp == NULL )
@@ -2642,6 +2654,11 @@ RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkCol
             NAME, method, OSELF, self)
 {
     pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+    if ( pcpbd == NULL )
+    {
+        baseClassIntializationException(context);
+        return 0;
+    }
 
     uint32_t id;
     if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )

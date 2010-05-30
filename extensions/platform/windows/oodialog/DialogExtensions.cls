@@ -63,6 +63,7 @@
       return 0
    end
    else do
+      self~finished = .true
       self~stopit
       return 1
    end

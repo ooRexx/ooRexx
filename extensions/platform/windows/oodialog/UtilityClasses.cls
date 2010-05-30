@@ -273,6 +273,7 @@
    if sleeping >= 0 then do
       if earlyReply then reply
       ret = msSleep(sleeping)
+      self~finished = .true
       self~stopit
    end
 
@@ -605,6 +606,7 @@
     return ""
 
 
+-- Never documented and does not work well.  Could be usefull if fixed.
 ::class 'StateIndicator' subclass UserDialog public
 
 ::method Xext attribute
@@ -627,7 +629,7 @@
 ::method initAutoDetection
    self~noAutoDetection
 
-::method CalcSize
+::method calcSize
    size = self~getTextSizeDu(self~msg)
    scrSize = screenSize()
    self~dims["sx"] = size~width
@@ -650,19 +652,20 @@
    self~dims["x"] = trunc((scrSize[1]-self~dims["cx"]) /2)
    self~dims["y"] = trunc((scrSize[2] - self~dims["cy"] - 20) /2)
 
-::method Popup
-   self~CalcSize
+::method popUp
+   self~calcSize
    self~create(self~dims["x"],self~dims["y"], self~dims["cx"], self~dims["cy"], self~TitleTxt,"NOMENU",,,1 )
    self~startIt
    self~show("SHOWTOP")
 
-::method Destroy
-   self~stopit
+::method destroy
+   self~finished = .true
+   self~stopIt
 
 ::method "Message="
    parse arg message
    self~msg = message
-   self~CalcSize
+   self~calcSize
    self~ResizeItem(100, self~dims["sx"]+2, self~dims["sy"])
    if self~XExt = 0 then do
        self~Resize(self~dims["cx"], self~dims["cy"], "HIDE")
@@ -675,6 +678,7 @@
    if self~XExt = 0 then self~Move(self~dims["x"], self~dims["y"], "NORMAL")
 
 
+-- Never documented and does not work well.  Could be usefull if fixed.
 ::class 'ProgressIndicator' subclass StateIndicator public
 
 ::method lowValue attribute

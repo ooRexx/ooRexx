@@ -228,46 +228,66 @@ inline bool dlgInDlgTable(pCPlainBaseDialog dlg)
 }
 
 
-void abnormalTerminate(pCPlainBaseDialog pcpbd)
+/**
+ * Makes sure the finished attribute in the Rexx dialog is set to true.  This
+ * causes the Rexx dialog's run method to complete and things to unwind.
+ *
+ * @param pcpbd   CSelf struct for the dialog.
+ * @param c       Rexx thread context we are operating in.  It is possible that
+ *                this is null.
+ *
+ * @remarks
+ */
+static void ensureFinished(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
 {
-    RexxThreadContext *c;
-
-    if ( pcpbd->interpreter->AttachThread(&c) )
+    if ( c != NULL )
     {
-        RexxArrayObject msgName = c->ArrayOfTwo(c->String("ABNORMALHALT"), ThePlainBaseDialogClass);
-        RexxArrayObject args = c->NewArray(0);
+        c->SendMessage0(pcpbd->rexxSelf, "ENSUREFINISHED");
+    }
+    else
+    {
+        RexxThreadContext *context;
 
-        c->SendMessage0(pcpbd->rexxSelf, "ABNORMALHALT");
+        if ( pcpbd->interpreter->AttachThread(&context) )
+        {
+            context->SendMessage0(pcpbd->rexxSelf, "ENSUREFINISHED");
 
-        c->DetachThread();
+            context->DetachThread();
+        }
     }
 }
 
 /**
- * Ends a running dialog and cleans up some (most) of the dialog admin block.
+ * Ends a running dialog and cleans up some (most) of the CSelf struct.
  *
  * Note that this function is at times called when the underlying Windows dialog
  * was not created, and therefore there is no dialog handle.
  *
  * @param pcpbd  The CSelf pointer for the PlainBaseDialog whose underlying
- *               dialog is being ended, (or whose admin block is being cleaned
+ *               dialog is being ended, (or whose CSelf is being cleaned up
  *               if the dialog never got started.)
  *
- * @return  'Some code' It doesn't look like the return code was ever used
- *          anywhere.  For now, -1 is returned if the admin block has already
- *          been through delDialog(), which should nver happen.  2 is returned
- *          if abnormalHal() is still set.  Otherwise 1 is returned.
+ * @param c      A valid thread context, or null if the thread context is not
+ *               known.  This is only used when it is thought to be an abnormal
+ *               termination, in which case it is use to invoke ensureFinished()
+ *               int the Rexx dialog object.
  *
- * @remarks  We should never enter this function with adminAllocated set to
+ * @return  It doesn't appeat that the return code was ever used anywhere in
+ *          ooDialog.  So, it may be better to just eliminate the return. For
+ *          now, 1 is returned if the admin block has already been through
+ *          delDialog(), which should nver happen.  2 is returned if
+ *          abnormalHal() is still set.  Otherwise 1 is returned.
+ *
+ * @remarks  We should never enter this function with dlgAllocated set to
  *           false.  The flag is only set to false in this function, and it is
  *           protected by the critical section.  Nevertheless, if we do get
  *           here, we just leave.
  *
- * @remarks  If abnormalHalt is still set to true, then we entered delDialog()
- *           under some very unusual error path.
+ * @remarks  If abnormalHalt set to true, then we entered delDialog() under some
+ *           very unusual error path.
  *
  *           In which case, it is likely that the PlainBaseDialog::run() method
- *           is still waiting (guard on) the finished attribute and we will
+ *           is still waiting (guard on) on the finished attribute and we will
  *           hang.
  *
  *           In all normal cases, the finished attribute is set through the OK
@@ -282,7 +302,7 @@ void abnormalTerminate(pCPlainBaseDialog pcpbd)
  *
  *           I believe that comment was due to worries about acessing the
  *           pointer after things had started to be freed. The
- *           'dialogInAdminTable' check was used a lot.  Now the adminAllocate
+ *           'dialogInAdminTable' check was used a lot.  Now the dlgAllocated
  *           flag replaces that check, and the flag is set ahead of the WM_QUIT
  *           being posted.
  *
@@ -294,32 +314,34 @@ void abnormalTerminate(pCPlainBaseDialog pcpbd)
  *           So, don't set a zero into the class bytes, and, if the icon is to
  *           be freed, do so after leaving the critical section.
  */
-int32_t delDialog(pCPlainBaseDialog pcpbd)
+int32_t delDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
 {
-    // TODO we should be able to free the dialog admin block now.
-
     size_t i;
     HICON hIconBig = NULL;
     HICON hIconSmall = NULL;
 
+    printf("delDialog() allocated=%d abnormal=%d\n", pcpbd->dlgAllocated, pcpbd->abnormalHalt);
+
     EnterCriticalSection(&crit_sec);
 
-    if ( ! pcpbd->adminAllocated )
+    if ( ! pcpbd->dlgAllocated )
     {
         printf("delDialog() already ran for this dialog! pcpbd=%p\n", pcpbd);
         return -1;
     }
-    pcpbd->adminAllocated = false;
+    pcpbd->dlgAllocated = false;
 
     int32_t ret = 1;
     bool wasFGW = (pcpbd->hDlg == GetForegroundWindow());
 
     if ( pcpbd->abnormalHalt )
     {
-        abnormalTerminate(pcpbd);
+        ensureFinished(pcpbd, c);
         ret = 2;
     }
+    pcpbd->abnormalHalt = false;
 
+    // Remove the dialog from the dialog table
     if ( pcpbd->tableIndex == CountDialogs - 1 )
     {
         // The dialog being ended is the last entry in the table, just set it to
@@ -371,6 +393,15 @@ int32_t delDialog(pCPlainBaseDialog pcpbd)
     {
         FreeLibrary(pcpbd->hInstance);
     }
+
+    pcpbd->hDlg = NULL;
+    pcpbd->wndBase->hwnd = NULL;
+
+    safeLocalFree(pcpbd->bkgBitmap);
+    safeDeleteObject(pcpbd->bkgBrush);
+
+    pcpbd->bkgBitmap = NULL;
+    pcpbd->bkgBrush = NULL;
 
     // Delete the message tables of the dialog.
     deleteMessageTables(pcpbd->enCSelf);
@@ -2022,15 +2053,18 @@ HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObje
 }
 
 /**
- * Used to end the Windows dialog and clean up the dialog admin block.
+ * Used to end the Windows dialog and clean up the CSelf struct for the Rexx
+ * dialog.
  *
- * Can also be used to clean up the dialog admin block when an error happens
- * during the creation of the underlying Windows dialog.
+ * Can also be used to clean up the CSelf struct when an error happens during
+ * the creation of the underlying Windows dialog.
  *
  * @param pcpbd  Pointer to the PlainBaseDialog CSelf struct.
+ * @param c      Thread context we are operating in.
  *
- * @return -1 if the dialog admin block has already been cleaned up.  Otherwise,
- *         0, 1, or 2 which indicates the state of the dialog being ended.
+ * @return -1 if the CSelf struct has already been cleaned up.  Otherwise, 1 for
+ *         a normal termination, or 2 for an abnormal termination.  The return
+ *         is not really used anywhere.
  *
  * @remarks  Prior to the conversion to the C++ APIs, this function was passed
  *           the dialog window handle and did a seekDlgAdm using that handle.
@@ -2040,22 +2074,21 @@ HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObje
  *
  * @remarks  It turns out it is relatively easy for this function to be called
  *           twice for the same dialog (hence the old seekDlgAdm.)  We first
- *           test adminAllocated to bypass calling EnterCriticalSection() when
+ *           test dlgAllocated to bypass calling EnterCriticalSection() when
  *           it is not needed.  But, then we need to test the flag again after
  *           gaining the critical section, because it is not unusual for
- *           delDialog() to be running.
+ *           delDialog() to be running at the time this function is entered.
  */
-int32_t stopDialog(pCPlainBaseDialog pcpbd)
+int32_t stopDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
 {
     int32_t result = -1;
 
-    if ( pcpbd->adminAllocated )
+    if ( pcpbd->dlgAllocated )
     {
         EnterCriticalSection(&crit_sec);
-        if ( pcpbd->adminAllocated )
+        if ( pcpbd->dlgAllocated )
         {
-            pcpbd->abnormalHalt = false;
-            result = delDialog(pcpbd);
+            result = delDialog(pcpbd, c);
         }
         LeaveCriticalSection(&crit_sec);
     }
@@ -2304,10 +2337,9 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     pcpbd->enCSelf = pEN;
 
     pcpbd->interpreter = context->threadContext->instance;
-    pcpbd->adminAllocated = true;
+    pcpbd->dlgAllocated = true;
     pcpbd->autoDetect = TRUE;
     pcpbd->rexxSelf = self;
-    pcpbd->abnormalHalt = true;
     context->SetObjectVariable("CSELF", cselfBuffer);
 
     pcpbd->previous = TopDlg;
@@ -2333,7 +2365,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     }
 
     context->SetObjectVariable("PARENTDLG", TheNilObj);
-    context->SetObjectVariable("FINISHED", TheZeroObj);
+    context->SetObjectVariable("FINISHED", TheFalseObj);
     context->SetObjectVariable("PROCESSINGLOAD", TheFalseObj);
 
     // Set our default font to the PlainBaseDialog class default font.
@@ -2395,10 +2427,9 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
 
         EnterCriticalSection(&crit_sec);
 
-        if ( pcpbd->adminAllocated )
+        if ( pcpbd->dlgAllocated )
         {
-            pcpbd->abnormalHalt = false;
-            delDialog(pcpbd);
+            delDialog(pcpbd, context->threadContext);
         }
 
         LeaveCriticalSection(&crit_sec);
@@ -3848,42 +3879,45 @@ RexxMethod4(int32_t, pbdlg_setControlData, RexxObjectPtr, rxID, CSTRING, data, N
  *
  *
  *  @remarks  Normally, this method is inovked to stop a running dialog, and
- *            internally clean up the admin block.  However, it is sometimes
+ *            internally clean up the CSelf struct.  However, it is sometimes
  *            invoked when a dialog fails to be created.  The old ooDialog code
  *            checked if hDlg was null and if so didn't call stopDialog().  That
  *            was okay, sort of, the dialog admin block got cleaned up in the
  *            uninit() method.  The check for hDlg == null is now skipped so
- *            that stopDialog is called to clean up the admin block here instead
- *            of in uninit().
+ *            that stopDialog is called to clean up the CSelf struct here
+ *            instead of in uninit().
+ *
+ *  @remarks  PlainBaseDialog::leaving() does nothing.  It is intended to be
+ *            over-ridden by the Rexx programer to do whatever she would want.
+ *            It is invoked here, right before stopDialog().  However, it is
+ *            only invoked if the underlying dialog was created.
+ *
+ *
+ *
+ *
  */
 RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf)
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
-    // PlainBaseDialog::leaving() does nothing.  It is intended to be over-
-    // ridden by the Rexx programmer to do whatever she would want.  But, don't
-    // invoke it if there was no dialog created.
     if ( pcpbd->hDlg != NULL )
     {
         context->SendMessage0(pcpbd->rexxSelf, "LEAVING");
     }
 
-    int32_t result = stopDialog(pcpbd);
+    RexxObjectPtr finished = context->GetObjectVariable("FINISHED");
+    pcpbd->abnormalHalt = (finished == TheFalseObj ? true : false);
 
-    pcpbd->hDlg = NULL;
-    pcpbd->wndBase->hwnd = NULL;
+    printf("In stopIt() admin allocated=%d abnormalHalt=%d finished=%p trueObj=%p falseObj=%p\n",
+           pcpbd->dlgAllocated, pcpbd->abnormalHalt, finished, TheTrueObj, TheFalseObj);
+
+    int32_t result = stopDialog(pcpbd, context->threadContext);
 
     if ( pcpbd->wndBase->rexxHwnd != TheZeroObj )
     {
         context->ReleaseGlobalReference(pcpbd->wndBase->rexxHwnd);
         pcpbd->wndBase->rexxHwnd = TheZeroObj;
     }
-
-    safeLocalFree(pcpbd->bkgBitmap);
-    safeDeleteObject(pcpbd->bkgBrush);
-
-    pcpbd->bkgBitmap = NULL;
-    pcpbd->bkgBrush = NULL;
 
     if ( argumentOmitted(1) )
     {

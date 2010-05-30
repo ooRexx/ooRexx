@@ -342,7 +342,7 @@
 ::attribute useStem private         -- flag whether to use a stem to set/get data or not
 
 -- finsished is now a boolean, when set to .true, the dialog ends.  Older ooDialog set it
--- to 2 on an abnormal termination of the underlying dialog.  This is no longer done
+-- to 2 on an abnormal termination of the underlying dialog.  This is no longer done.
 ::attribute finished
 
 ::method dlgData private
@@ -377,8 +377,8 @@
    guard on when finished
 
 -- Creates the dialog, shows it, and destroys it.  Dialog "data" is set and received.
--- sleepTime is ignored, it was never documented, but people might have used it anyway,
--- so leave it in.
+-- The sleepTime arg is ignored.  This arg was never documented, but people might have
+-- used it anyway, so it is left in the arg list.
 ::method execute unguarded
    expose dlgData.
    use strict arg sh = "NORMAL", icon = 0, sleepTime = 1, modeless = .false
@@ -406,19 +406,22 @@
       return self~initCode
    end
    else do
+      self~finished = .true
       self~stopIt
       return 0
    end
 
+-- Not to be doumented.
 ::method dispatchWindowMessage unguarded
   use strict arg methodName, argArray
-  reply .true     -- TODO, reply .true unneccesary?
+  reply .true     -- TODO, do we need to do an early reply, or does that accomplish nothing but more overhead?
   self~startWith(methodName, argArray)
 
-::method abnormalHalt unguarded
+-- Not to be doumented.
+::method ensureFinished unguarded
   expose finished
   self~initCode = 3
-  finished = 1
+  finished = .true
 
 ::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
 
@@ -841,24 +844,37 @@
 ::method hasMenuBar
   return self~menuBar \== .nil & self~isLinked
 
- /* The following methods are abstract methods that will be called */
- /* whenever the push buttons 1, 2, or 9 will be pressed */
- /* Method 'OK' will call method 'Validate' */
- /* If self~finished = 1 the dialog is destroyed, if 0 the dialog */
- /* execution will be continued */
- /* OK returns 1 if the dialog is going to be destroyed */
+ /*
+  * The following methods are the default implementations of event handlers
+  * for the IDOK (resource ID 1,) IDCANCEL (resource ID 2,) and IDHELP
+  * (resource ID 9) push buttons.  The methods are intended to be over-ridden
+  * if the programmer needs to alter the behavior.
+  *
+  * Note that as soon as self~finished is set to true, the dialog is
+  * terminated.  As long as self~finished is false, the dialog continues
+  * to run.
+  */
 
+ /** ok()
+  * This method first invokes the validate() method.  If validate returns
+  * true, self~initCode is set to 1 and self~finished is set to true,
+  * terminating the dialog.
+  *
+  * If validate returns false, the dialog continues to run.
+  */
 ::method ok unguarded
-   self~finished = self~validate
-   if self~finished then self~initCode = 1
+   okayToClose = self~validate
+
+   if okayToClose then do
+     self~initCode = 1
+     self~finished = .true
+   end
+
    return self~finished
 
- /* If self~finished = 1 the dialog is destroyed, if 0 the dialog */
- /* execution will be continued */
-
 ::method cancel unguarded
-   self~finished = .true
    self~initCode = 2
+   self~finished = .true
    return self~finished
 
 ::method help unguarded
@@ -870,8 +886,8 @@
 /** validate()
  * This method is an abstract method that will be called to determin whether the
  * dialog can be closed or not. This function will be called by method OK.  If
- * the return value is 1 the dialog can be closed, if it is 0 the dialog
- * values are invalid.
+ * the return value is true the dialog can be closed, if it is false the dialog
+ * should not be closed.
  */
 ::method validate unguarded
    return .true

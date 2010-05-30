@@ -90,8 +90,8 @@ typedef DELTAPOSREPLY *PDELTAPOSREPLY;
 
 
 extern bool              installNecessaryStuff(pCPlainBaseDialog pcpbd, CSTRING library);
-extern int32_t           stopDialog(pCPlainBaseDialog);
-extern int32_t           delDialog(pCPlainBaseDialog);
+extern int32_t           stopDialog(pCPlainBaseDialog, RexxThreadContext *c);
+extern int32_t           delDialog(pCPlainBaseDialog, RexxThreadContext *c);
 extern BOOL              getDialogIcons(pCPlainBaseDialog, INT, UINT, PHANDLE, PHANDLE);
 extern bool              isYes(const char *s);
 extern void *            string2pointer(const char *string);
@@ -272,26 +272,6 @@ extern RexxObjectPtr wrongClassReplyException(RexxThreadContext *c, const char *
 extern void          controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
 extern void          wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
 extern RexxObjectPtr wrongWindowsVersionException(RexxMethodContext *, const char *, const char *);
-
-inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
-{
-    failedToRetrieveException(c, "dialog administration block", source);
-}
-
-inline void failedToRetrieveDlgAdmException(RexxThreadContext *c)
-{
-    userDefinedMsgException(c, "Could not retrieve the dialog administration information block.");
-}
-
-inline void failedToRetrieveDlgCSelfException(RexxThreadContext *c, RexxObjectPtr source)
-{
-    failedToRetrieveException(c, "dialog CSelf information", source);
-}
-
-inline void failedToRetrieveDlgCSelfException(RexxThreadContext *c)
-{
-    userDefinedMsgException(c, "Could not retrieve the dialog CSelf information.");
-}
 
 /**
  * Retrieves the PlainBaseDialog class CSelf pointer.

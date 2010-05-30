@@ -175,9 +175,10 @@ typedef enum
 // Used in endDialogPremature() to determine what message to display.
 typedef enum
 {
-    NoPCPBDpased    = 0,    // pCPlainBaseDialog not passed in the WM_INITDIALOG message
-    NoThreadAttach  = 1,    // Failed to attach the thread context.
-    NoThreadContext = 2,    // Thread context (or admin block) pointer is null.
+    NoPCPBDpased        = 0,    // pCPlainBaseDialog not passed in the WM_INITDIALOG message
+    NoThreadAttach      = 1,    // Failed to attach the thread context.
+    NoThreadContext     = 2,    // The thread context pointer is null.
+    RexxConditionRaised = 3,    // The invocation of a Rexx event handler method raised a condition.
 } DlgProcErrType;
 
 #define NO_PCPBD_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PlainBaseDialog\nCSELF is null.\n\n\tpcpdb=%p\n\thDlg=%p\n"
@@ -435,9 +436,9 @@ typedef CWindowExtensions *pCWindowExtensions;
 
 /* Struct for the PlainBaseDialog object CSelf.  The struct itself is
  * allocated using interpreter memory and therefore garbage collected by the
- * interpreter.  But, the dialog admin block is still allocated externally to
- * the interpreter and requires normal C/C++ memory management.  And things like
- * brushes, bitmaps, etc., still need to be released.
+ * interpreter.  But, there are still things like the table allocated externally
+ * to the interpreter and require normal C/C++ memory management.  Also things
+ * like brushes, bitmaps, etc., still need to be released.
  */
 typedef struct _pbdCSelf {
     char                 fontName[MAX_DEFAULT_FONTNAME];
@@ -475,7 +476,7 @@ typedef struct _pbdCSelf {
     bool                 sharedIcon;
     bool                 didChangeIcon;
     bool                 isActive;
-    bool                 adminAllocated;
+    bool                 dlgAllocated;
     bool                 abnormalHalt;
     bool                 scrollNow;   // For scrolling text in windows.
 } CPlainBaseDialog;

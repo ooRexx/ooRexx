@@ -99,7 +99,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
         pcpbd->isActive = true;
         *release = true;
 
-        while ( (result = GetMessage(&msg,NULL, 0,0)) != 0 && pcpbd->adminAllocated )
+        while ( (result = GetMessage(&msg,NULL, 0,0)) != 0 && pcpbd->dlgAllocated )
         {
             if ( result == -1 )
             {
@@ -118,17 +118,15 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     }
     else
     {
-        // The dialog was not created for some reason, this is not an 'abnormal' halt.
-        pcpbd->abnormalHalt = false;
         *release = true;
     }
 
-    // Need to synchronize here, otherwise adminAllocated might be true but
+    // Need to synchronize here, otherwise dlgAllocated might be true but
     // delDialog() is already running.
     EnterCriticalSection(&crit_sec);
-    if ( pcpbd->adminAllocated )
+    if ( pcpbd->dlgAllocated )
     {
-        delDialog(pcpbd);
+        delDialog(pcpbd, pcpbd->dlgProcContext);
         pcpbd->hDlgProcThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
@@ -1149,10 +1147,10 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
 
 err_out:
     // No underlying windows dialog is created, but we still need to clean up
-    // the admin block, which was allocated when the Rexx dialog object was
+    // the CSelf struct, which was allocated when the Rexx dialog object was
     // instantiated.  This admin block is now in the DialogTable.
     EnterCriticalSection(&crit_sec);
-    delDialog(pcpbd);
+    delDialog(pcpbd, context->threadContext);
     LeaveCriticalSection(&crit_sec);
 
     return FALSE;
@@ -2325,16 +2323,18 @@ done_out:
 
 
 /** DynamicDialog::stop()  [private]
+ *
+ *  Called when a dialog is being constructred from a resource script file and
+ *  there is an error from loadFrame().  In this case the underlying dialog can
+ *  not be created, yet the CSelf struct still needs to be cleaned up.
  */
 RexxMethod1(RexxObjectPtr, dyndlg_stop, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = validateDDCSelf(context, pCSelf);
-    if ( pcdd == NULL )
+    if ( pcdd != NULL )
     {
-        return NULLOBJECT;
+        stopDialog(pcdd->pcpbd, context->threadContext);
     }
-
-    stopDialog(pcdd->pcpbd);
 
     return NULLOBJECT;
 }
