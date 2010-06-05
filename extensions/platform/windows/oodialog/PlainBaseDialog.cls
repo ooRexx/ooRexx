@@ -78,13 +78,13 @@
 ::method sendMessageHandle unguarded external "LIBRARY oodialog wb_sendMessage"
 
 -- These shortcut methods are for internal use, do not document.
-::method sendWinIntMsg unguarded external "LIBRARY oodialog wb_sendWinIntMsg"
-::method sendWinIntMsgH unguarded external "LIBRARY oodialog wb_sendWinIntMsg"
-::method sendWinUintMsg unguarded external "LIBRARY oodialog wb_sendWinUintMsg"
-::method sendWinHandleMsg unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"
-::method sendWinHandleMsgH unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"
-::method sendWinHandle2Msg unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"
-::method sendWinHandle2MsgH unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"
+::method sendWinIntMsg unguarded external "LIBRARY oodialog wb_sendWinIntMsg"           -- Internal use do not document
+::method sendWinIntMsgH unguarded external "LIBRARY oodialog wb_sendWinIntMsg"          -- Internal use do not document
+::method sendWinUintMsg unguarded external "LIBRARY oodialog wb_sendWinUintMsg"         -- Internal use do not document
+::method sendWinHandleMsg unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"     -- Internal use do not document
+::method sendWinHandleMsgH unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"    -- Internal use do not document
+::method sendWinHandle2Msg unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"   -- Internal use do not document
+::method sendWinHandle2MsgH unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"  -- Internal use do not document
 
 ::method enable unguarded external "LIBRARY oodialog wb_enable"
 ::method disable unguarded external "LIBRARY oodialog wb_enable"
@@ -102,8 +102,7 @@
 ::method redrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
 ::method redraw unguarded external "LIBRARY oodialog wb_redraw"
 
--- Not intending to document getWindowLong, at this point
-::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt"
+::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt" -- Not intending to document getWindowLong, at this point
 ::method getID unguarded
   return self~getWindowLong(-12)
 
@@ -182,13 +181,11 @@
    use arg msgname
    call errorDialog msgname || " is not a method of " || self
 
--- DEPRECATED
-::method getSystemMetrics unguarded
+::method getSystemMetrics unguarded -- DEPRECATED
    use strict arg index
    return .DlgUtil~getSystemMetrics(index)
 
--- DEPRECATED
-::method assignWindow
+::method assignWindow               -- DEPRECATED
    return 0
 
 
@@ -410,12 +407,6 @@
       self~stopIt
       return 0
    end
-
--- Not to be doumented.
-::method dispatchWindowMessage unguarded
-  use strict arg methodName, argArray
-  reply .true     -- TODO, do we need to do an early reply, or does that accomplish nothing but more overhead?
-  self~startWith(methodName, argArray)
 
 -- Not to be doumented.
 ::method ensureFinished unguarded

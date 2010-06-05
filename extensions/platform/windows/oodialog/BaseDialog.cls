@@ -63,41 +63,43 @@
 ::method initWindowExtensions external "LIBRARY oodialog winex_initWindowExtensions"
 ::method setFont unguarded external "LIBRARY oodialog winex_setFont"
 ::method getFont unguarded external "LIBRARY oodialog winex_getFont"
-::method hScrollPos unguarded external "LIBRARY oodialog winex_getScrollPos"
-::method setHScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
-::method vScrollPos unguarded  external "LIBRARY oodialog winex_getScrollPos"
-::method setVScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
-::method scroll unguarded external "LIBRARY oodialog winex_scroll"
 
 -- createFont() has always been broken, maintained for program compatibility.
 -- createFontEx() is a correct implementation.
 ::method createFont unguarded external "LIBRARY oodialog winex_createFont"
 ::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
-::method writeDirect unguarded external "LIBRARY oodialog winex_writeDirect"
+::method deleteFont unguarded external "LIBRARY oodialog winex_deleteObject"
+
+::method scroll unguarded external "LIBRARY oodialog winex_scroll"
+::method hScrollPos unguarded external "LIBRARY oodialog winex_getScrollPos"
+::method setHScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
+::method vScrollPos unguarded  external "LIBRARY oodialog winex_getScrollPos"
+::method setVScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
+
 ::method loadBitmap unguarded external "LIBRARY oodialog winex_loadBitmap"
 ::method removeBitmap unguarded external "LIBRARY oodialog winex_removeBitmap"
-::method getDC unguarded external "LIBRARY oodialog winex_getDC"
-::method freeDC unguarded external "LIBRARY oodialog winex_freeDC"
 
+::method setCursorPos unguarded external "LIBRARY oodialog winex_setCursorPos"
+::method getCursorPos unguarded external "LIBRARY oodialog winex_getCursorPos"
+::method restoreCursorShape unguarded external "LIBRARY oodialog winex_restoreCursorShape"
 ::method cursor_Arrow unguarded external "LIBRARY oodialog winex_setCursorShape"
 ::method cursor_AppStarting unguarded external "LIBRARY oodialog winex_setCursorShape"
 ::method cursor_Cross unguarded external "LIBRARY oodialog winex_setCursorShape"
 ::method cursor_No unguarded external "LIBRARY oodialog winex_setCursorShape"
 ::method cursor_Wait unguarded external "LIBRARY oodialog winex_setCursorShape"
-::method setCursorPos unguarded external "LIBRARY oodialog winex_setCursorPos"
-::method getCursorPos unguarded external "LIBRARY oodialog winex_getCursorPos"
-::method restoreCursorShape unguarded external "LIBRARY oodialog winex_restoreCursorShape"
 
 ::method cursorPos unguarded       -- old method, returns a string
    forward message "getCursorPos" continue
    return result~x result~y
 
 ::method write unguarded external "LIBRARY oodialog winex_write"
-::method deleteFont unguarded external "LIBRARY oodialog winex_deleteObject"
-::method deleteObject unguarded external "LIBRARY oodialog winex_deleteObject"
+::method writeDirect unguarded external "LIBRARY oodialog winex_writeDirect"
 ::method createBrush unguarded external "LIBRARY oodialog winex_createBrush"
-::method CreatePen unguarded external "LIBRARY oodialog winex_createPen"
+::method createPen unguarded external "LIBRARY oodialog winex_createPen"
+::method deleteObject unguarded external "LIBRARY oodialog winex_deleteObject"
 
+::method getDC unguarded external "LIBRARY oodialog winex_getDC"
+::method freeDC unguarded external "LIBRARY oodialog winex_freeDC"
 ::method objectToDC unguarded external "LIBRARY oodialog winex_objectToDC"
 ::method fontToDC unguarded
    use strict arg dc, hFont
@@ -111,7 +113,7 @@
 ::method drawArc unguarded external "LIBRARY oodialog winex_drawArcOrPie"
 ::method drawPie unguarded external "LIBRARY oodialog winex_drawArcOrPie"
 ::method drawAngleArc unguarded external "LIBRARY oodialog winex_drawAngleArc"
-::method FontColor unguarded external "LIBRARY oodialog winex_fontColor"
+::method fontColor unguarded external "LIBRARY oodialog winex_fontColor"
 ::method transparentText unguarded external "LIBRARY oodialog winex_textBkMode"
 ::method opaqueText unguarded external "LIBRARY oodialog winex_textBkMode"
 ::method setArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"

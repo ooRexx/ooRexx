@@ -544,19 +544,16 @@ LRESULT paletteMessage(pCPlainBaseDialog pcpbd, HWND hDlg, UINT msg, WPARAM wPar
 /**
  * Invokes the Rexx dialog's event handling method for a Windows message.
  *
- * The method invocation is done indirectly throught the PlainBaseDialog's
- * dispatchWindowMessage() method.  On the Rexx side, dispatchWindowMessage()
- * uses startWith() to invoke the event handler method and returns immediately.
- * The primary effect of this is, on the C++ side, to return quickly to the
- * window message processing loop.
+ * The method invocation is done indirectly using startWith().  This allows us
+ * to return quickly to the window message processing loop.
  *
  * @param c       Thread context we are operating in.
  * @param obj     The Rexx dialog whose method will be invoked.
  * @param method  The name of the method being invoked
  * @param args    The argument array for the method being invoked
  *
- * @return The reply type for the dialog procedure, always true to indicate the
- *         message was processed.
+ * @return The reply type for the Windows dialog procedure, always true to
+ *         indicate the message was processed.
  *
  * @remarks  Earlier versions of ooDialog, on the C++ side, constructed a method
  *           invocation string, placed it on a queue, and returned immediately
@@ -575,8 +572,7 @@ LRESULT paletteMessage(pCPlainBaseDialog pcpbd, HWND hDlg, UINT msg, WPARAM wPar
  */
 static MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringObject method, RexxArrayObject args)
 {
-    c->SendMessage2(obj, "DISPATCHWINDOWMESSAGE", method, args);
-    checkForCondition(c);
+    c->SendMessage2(obj, "STARTWITH", method, args);
     return ReplyTrue;
 }
 
