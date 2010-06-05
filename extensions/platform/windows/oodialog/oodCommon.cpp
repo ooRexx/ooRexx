@@ -1030,7 +1030,7 @@ char *strdup_2methodName(const char *str)
  *            the process of refactoring ooDialog and updating it to the C++
  *            APIs, it may be that this tenous chain is broken.
  */
-void checkModal(pCPlainBaseDialog previous, BOOL modeless)
+void checkModal(pCPlainBaseDialog previous, logical_t modeless)
 {
     if ( ! modeless && previous != NULL )
     {

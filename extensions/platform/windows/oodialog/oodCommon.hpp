@@ -103,7 +103,7 @@ extern char *            strdupupr(const char *str);
 extern char *            strdupupr_nospace(const char *str);
 extern char *            strdup_nospace(const char *str);
 extern char *            strdup_2methodName(const char *str);
-extern void              checkModal(pCPlainBaseDialog previous, BOOL modeless);
+extern void              checkModal(pCPlainBaseDialog previous, logical_t modeless);
 extern void              enablePrevious(pCPlainBaseDialog previous);
 
 extern pCPlainBaseDialog getDlgCSelf(RexxMethodContext *c, RexxObjectPtr self);
