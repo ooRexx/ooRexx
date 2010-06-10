@@ -495,6 +495,23 @@ HFONT oodGenericFont(const char *fontName, uint32_t fontSize, const char *opts)
 }
 
 
+/**
+ * TODO we could be setting .SystemErrorCode on error.
+ *
+ *
+ * @param context
+ * @param hwnd
+ * @param xPos
+ * @param yPos
+ * @param text
+ * @param fontName
+ * @param fontSize
+ * @param fontStyle
+ * @param fgColor
+ * @param bkColor
+ *
+ * @return logical_t
+ */
 logical_t oodWriteToWindow(RexxMethodContext *context, HWND hwnd, int32_t xPos, int32_t yPos, CSTRING text,
                            CSTRING fontName, uint32_t fontSize, CSTRING fontStyle, int32_t fgColor, int32_t bkColor)
 {
@@ -2437,6 +2454,9 @@ RexxMethod2(logical_t, dlgext_freeWindowDC, POINTERSTRING, hwnd, POINTERSTRING, 
  * @return The handle to the brush on success, or a null handle on failure.
  *
  * @note  Sets the .SystemErrorCode on failure.
+ *
+ * @remarks  In essence, this createBrush() method overrides the
+ *           WindowExtensions::createBrush in a dialog object.
  */
 RexxMethod3(POINTERSTRING, dlgext_createBrush, OPTIONAL_uint32_t, color, OPTIONAL_RexxObjectPtr, specifier, OSELF, self)
 {

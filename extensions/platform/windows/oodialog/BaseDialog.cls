@@ -113,11 +113,11 @@
 ::method drawArc unguarded external "LIBRARY oodialog winex_drawArcOrPie"
 ::method drawPie unguarded external "LIBRARY oodialog winex_drawArcOrPie"
 ::method drawAngleArc unguarded external "LIBRARY oodialog winex_drawAngleArc"
+::method getArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
+::method setArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
 ::method fontColor unguarded external "LIBRARY oodialog winex_fontColor"
 ::method transparentText unguarded external "LIBRARY oodialog winex_textBkMode"
 ::method opaqueText unguarded external "LIBRARY oodialog winex_textBkMode"
-::method setArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
-::method getArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
 
 
 -- DEPRECATED

@@ -1222,14 +1222,14 @@ RexxMethod3(POINTERSTRING, winex_createPen, OPTIONAL_uint32_t, width, OPTIONAL_C
 
 /** WindowExtensions::createBrush()
  *
- *  Retrieves a handle to a graphics brush.  The type of brush is dependent on
- *  the supplied arguments.
+ * Retrieves a handle to a graphics brush.  The type of brush is dependent on
+ * the supplied arguments.
  *
  * If both args were omitted,then a stock hollow brush is returned.  When only
  * the color arg is specified, then a solid color brush of the color specified
  * is returned.
  *
- * The second arggument can either be a keyword to specify a brush pattern, or
+ * The second argument can either be a keyword to specify a brush pattern, or
  * the file name of a bitmap to use as the brush.
  *
  * @param color           [OPTIONAL]  The color of the brush.  If omitted, the
@@ -1586,7 +1586,8 @@ err_out:
  *
  *  drawArc() method:
  *
- *    Draws an elliptical arc.
+ *    Draws an elliptical arc.  The elliptical arc is defined the same way the
+ *    pie is, but only the arc is drawn, the radials are not drawn.
  *
  *  drawPie() method:
  *
@@ -1848,6 +1849,8 @@ err_out:
  *  @note  Sets .SystemErrorCode.  If hDC is null, the error code is set to 1
  *         ERROR_INVALID_FUNCTION "Incorrect function."  Other error codes may
  *         be set by the system.
+ *
+ *  @remarks  The default arc direction in Windows is counterclockwise.
  */
 RexxMethod3(CSTRING, winex_getSetArcDirection, POINTERSTRING, _hDC, OPTIONAL_CSTRING, _direction, NAME, method)
 {
@@ -1868,7 +1871,7 @@ RexxMethod3(CSTRING, winex_getSetArcDirection, POINTERSTRING, _hDC, OPTIONAL_CST
     else
     {
         direction = AD_COUNTERCLOCKWISE;
-        if ( _direction != NULLOBJECT && StrStrI(_direction, "CLOCKWISE") != NULL )
+        if ( _direction != NULLOBJECT && StrStrI(_direction, "COUNTER") == NULL )
         {
             direction = AD_CLOCKWISE;
         }

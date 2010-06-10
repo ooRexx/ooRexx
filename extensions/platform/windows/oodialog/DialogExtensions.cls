@@ -217,10 +217,6 @@
    return .Window~new(hwnd)~redraw
 
 -- DEPRECATED START
-::method peekDialogMessage unguarded
-   return ""
-::method dump
-    say "dump() deprecated."
 ::method clearButtonRect unguarded
    forward message 'CLEARCONTROLRECT'
 ::method redrawButton unguarded

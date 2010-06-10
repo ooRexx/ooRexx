@@ -3739,8 +3739,12 @@ RexxMethod1(RexxObjectPtr, pbdlg_isDialogActive, CSELF, pCSelf)
  *
  *  @remarks  The control type is determined by the invoking Rexx method name.
  *            oodName2control() special cases connectSeparator to
- *            winNotAControl.  winNotAControls is what is expected by the data
+ *            winNotAControl.  winNotAControl is what is expected by the data
  *            table code.
+ *
+ *            connectSeparator() was a special method to separate 2 groups of
+ *            radio buttons.  Previously never documented, and never called from
+ *            any ooDialog code.
  *
  */
 RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,

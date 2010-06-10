@@ -408,8 +408,8 @@
       return 0
    end
 
--- Not to be doumented.
-::method ensureFinished unguarded
+
+::method ensureFinished unguarded                          -- Not to be doumented.
   expose finished
   self~initCode = 3
   finished = .true
@@ -417,8 +417,8 @@
 ::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
 
 -- Documented "internal use only" in 3.2.0 - Do not document.
-::method stopIt external "LIBRARY oodialog pbdlg_stopIt"
-::method finalStopIt private
+::method stopIt external "LIBRARY oodialog pbdlg_stopIt"   -- Not to be doumented.
+::method finalStopIt private                               -- Not to be doumented.
    use arg caller
 
    -- If we ourselves are a child dialog and not called by the parent's stopIt(), then
@@ -439,7 +439,7 @@
 
 
 -- Remove a child dialog from the chain of child dialogs.
-::method childDied
+::method childDied                                         -- Not to be doumented.
    use arg child
    if self~childDialogs \= .nil then do
        ndx = self~childDialogs~first
@@ -484,6 +484,17 @@
    return self~sendWinIntMsg(self~DM_REPOSITION, 0, 0)
 
 
+-- initAutoDetection() is invoked by init() to set the default for automatic data field detection.
+-- Therefore, subclasses can over-ride this method to change the default, which is enabled.
+::method initAutoDetection private                                                               -- First data attribute method
+   self~autoDetection            -- autodetection is enabled by default
+
+::method noAutoDetection
+   self~autoDetect = .false      -- disable autodetection
+
+::method autoDetection
+   self~autoDetect = .true       -- enable autodetection
+
 /* The following methods 'connect' a Windows dialog control with a 'data' attribute of the Rexx
  * dialog object.  For each dialog control an attribute of the dialog object is created and an
  * entry is added to the data table to 'connect' the control and the attribute.  When auto detection
@@ -503,46 +514,8 @@
 ::method connectTab unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 ::method connectDateTimePicker unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 ::method connectMonthCalendar unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectUpDown unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 ::method connectSeparator unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
-
--- Documented "internal use only" in 3.2.0 - Do not document.
-::method addAttribute private
-   use strict arg id, attributeName = ("DATA"id~space(0))
-
-   if \ id~dataType("W") then do
-       if self~processingLoad = 1 then attributeName = id
-       id = self~resolveSymbolicId(id)
-   end
-   if id < 1 then return -1
-
-   -- Remove any possible spaces, &, and :, then check for a valid name
-   attributeName = attributeName~space(0)~changestr('&','')~changestr(':','')
-   if attributeName == "" | self~HasMethod(attributeName) | \ attributeName~datatype('V') then
-       attributeName = "DATA"id~space(0)
-
-   self~dataConnection[id] = attributeName
-   self~setmethod(attributeName, "expose "attributeName"; return "attributeName)
-   self~setmethod(attributeName || "=", "expose "attributeName"; use arg "attributeName)
-   self~sendWith(attributeName || '=', .array~of(""))  /* initial value = "" */
-   return id
-
-
--- Internal use only. - Do not document.
-::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"
-::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"
-
--- This method sets the 'data' of all the connected dialog controls using the value of the associated attribute.
--- The Windows dialog controls are associated with with a data attribute of the Rexx dialog object through the
--- connectXXX methods.  connectListBox(), connectComboBox(), etc..
-::method setData unguarded
-   id = self~dataConnection~first
-   do while (id \= .nil)
-      data = self~send(self~dataConnection[id])
-      InternDlgData.id = data
-      id = self~dataConnection~next(id)
-   end
-   return self~setDlgDataFromStem(InternDlgData.)
-
 
 -- This method gets the 'data' of all the connected dialog controls and uses that data to set the value of the
 -- associated attribute.  See comment above for setData()
@@ -556,32 +529,15 @@
    end
 
 
--- The method returns an array that contains the value of each of the attributes associated with a dialog
--- control.  MM What good is this, you don't know which control is associated with each of the 'data' pieces?
-::method makeArray unguarded
-
-   a = .array~new(self~dataConnection~items)
+-- This method sets the 'data' of all the connected dialog controls using the value of the associated attribute.
+-- The Windows dialog controls are associated with with a data attribute of the Rexx dialog object through the
+-- connectXXX methods.  connectListBox(), connectComboBox(), etc..
+::method setData unguarded
    id = self~dataConnection~first
-   do j = 1 while (id \= .nil)
-      attributeName = self~dataConnection~at(id)
-      data = self~send(attributeName)
-      a[j] = data
+   do while (id \= .nil)
+      data = self~send(self~dataConnection[id])
+      InternDlgData.id = data
       id = self~dataConnection~next(id)
-   end
-   return a
-
-
--- This method sets the 'data' of each of the connected dialog controls using the values of the specified stem.
--- Each index of the stem should be the resource ID of a connected dialog control and the value at that index is
--- the 'data' to set the control with.
-::method setDataStem unguarded
-   use arg dataStem.
-   if dataStem.~items == 0 then return 1
-   do k over dataStem.
-      if k~dataType('W') then numericID = k
-      else numericID = self~ResolveSymbolicID(k)
-      InternDlgData.numericID = dataStem.k
-      if InternDlgData.numericID = "INTERNDLGDATA."numericID then InternDlgData.numericID = ""
    end
    return self~setDlgDataFromStem(InternDlgData.)
 
@@ -598,6 +554,21 @@
       symbolicID = self~resolveNumericID(k)
       if symbolicID \== -1 then dataStem.symbolicID = InternDlgData.k
    end
+
+
+-- This method sets the 'data' of each of the connected dialog controls using the values of the specified stem.
+-- Each index of the stem should be the resource ID of a connected dialog control and the value at that index is
+-- the 'data' to set the control with.
+::method setDataStem unguarded
+   use arg dataStem.
+   if dataStem.~items == 0 then return 1
+   do k over dataStem.
+      if k~dataType('W') then numericID = k
+      else numericID = self~ResolveSymbolicID(k)
+      InternDlgData.numericID = dataStem.k
+      if InternDlgData.numericID = "INTERNDLGDATA."numericID then InternDlgData.numericID = ""
+   end
+   return self~setDlgDataFromStem(InternDlgData.)
 
 
 -- The following methods are used to get the 'data' from a single dialog control
@@ -652,6 +623,48 @@
       end
       id = self~dataConnection~next(id)
    end
+
+-- Documented "internal use only" in 3.2.0 - Do not document.
+::method addAttribute private                                                                           -- Not to be doumented.
+   use strict arg id, attributeName = ("DATA"id~space(0))
+
+   if \ id~dataType("W") then do
+       if self~processingLoad = 1 then attributeName = id
+       id = self~resolveSymbolicId(id)
+   end
+   if id < 1 then return -1
+
+   -- Remove any possible spaces, &, and :, then check for a valid name
+   attributeName = attributeName~space(0)~changestr('&','')~changestr(':','')
+   if attributeName == "" | self~HasMethod(attributeName) | \ attributeName~datatype('V') then
+       attributeName = "DATA"id~space(0)
+
+   self~dataConnection[id] = attributeName
+   self~setmethod(attributeName, "expose "attributeName"; return "attributeName)
+   self~setmethod(attributeName || "=", "expose "attributeName"; use arg "attributeName)
+   self~sendWith(attributeName || '=', .array~of(""))  /* initial value = "" */
+   return id
+
+
+-- Internal use only. - Do not document.
+::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"  -- Not to be doumented.
+::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"      -- Not to be doumented.
+
+-- The method returns an array that contains the value of each of the attributes associated with a dialog
+-- control.  MM What good is this, you don't know which control is associated with each of the 'data' pieces?
+::method makeArray unguarded  -- Never documented, do not intend to document now                 -- Last data attribute method.
+
+   a = .array~new(self~dataConnection~items)
+   id = self~dataConnection~first
+   do j = 1 while (id \= .nil)
+      attributeName = self~dataConnection~at(id)
+      data = self~send(attributeName)
+      a[j] = data
+      id = self~dataConnection~next(id)
+   end
+   return a
+
+
 
 
 -- Methods to manipulate a ComboBox
@@ -818,17 +831,6 @@
 ::method setGroup unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 ::method center unguarded external "LIBRARY oodialog pbdlg_center"
 
--- initAutoDetection() is invoked by init() to set the default for automatic data field detection.
--- Therefore, subclasses can over-ride this method to change the default, which is enabled.
-::method initAutoDetection private
-   self~autoDetection            -- autodetection is enabled by default
-
-::method noAutoDetection
-   self~autoDetect = .false      -- disable autodetection
-
-::method autoDetection
-   self~autoDetect = .true       -- enable autodetection
-
 ::method getMenuBar
   return self~menuBar
 
@@ -904,15 +906,20 @@
 
 
 -- DEPRECATED  (to end of file)
-::method clearMessages unguarded
 
 ::method deInstall
   return 0
 
--- There is no longer a message queue.  TODO this was documented, do we need to
--- keep a sleep here?
+-- There is no longer a message queue.
 ::method handleMessages unguarded
    j = SysSleep(.010)
+::method clearMessages unguarded
+::method peekDialogMessage unguarded
+   return ""
+
+-- There is no longer a DIALOGADMIN block.
+::method dump
+    say "dump() deprecated."
 
 -- adm was never documented and should just be removed, but it would have been
 -- needed in the dump() method which was documented. (Even though the
