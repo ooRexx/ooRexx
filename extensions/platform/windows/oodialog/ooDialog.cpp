@@ -3738,19 +3738,17 @@ RexxMethod1(RexxObjectPtr, pbdlg_isDialogActive, CSELF, pCSelf)
  *                         the native code.
  *
  *  @remarks  The control type is determined by the invoking Rexx method name.
- *            oodName2control() special cases connectSeparator to
- *            winNotAControl.  winNotAControl is what is expected by the data
- *            table code.
- *
- *            connectSeparator() was a special method to separate 2 groups of
- *            radio buttons.  Previously never documented, and never called from
- *            any ooDialog code.
- *
  */
 RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
             OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self, CSELF, pCSelf)
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    oodControl_t type = oodName2controlType(msgName + 7);
+    if ( type == winNotAControl )
+    {
+        return TheNegativeOneObj;
+    }
 
     // result will be the resolved resource ID, which may be -1 on error.
     RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
@@ -3760,8 +3758,6 @@ RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTION
     {
         return TheNegativeOneObj;
     }
-
-    oodControl_t type = oodName2controlType(msgName + 7);
 
     uint32_t category = getCategoryNumber(context, self);
     return ( addToDataTable(context, pcpbd, id, type, category) == OOD_NO_ERROR ? TheZeroObj : TheOneObj );
@@ -3845,7 +3841,7 @@ RexxMethod3(RexxObjectPtr, pbdlg_getControlData, RexxObjectPtr, rxID, NAME, msgN
  *  know what kind of item it is. The dialog item must have been connected
  *  before."
  *
- *  @param  rxID  The reosource ID of control.
+ *  @param  rxID  The resource ID of control.
  *  @param  data  The 'data' to set the control with.
  *
  *  @return  0 for success, 1 for error, -1 for bad resource ID.

@@ -515,7 +515,6 @@
 ::method connectDateTimePicker unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 ::method connectMonthCalendar unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 ::method connectUpDown unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
-::method connectSeparator unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 
 -- This method gets the 'data' of all the connected dialog controls and uses that data to set the value of the
 -- associated attribute.  See comment above for setData()
