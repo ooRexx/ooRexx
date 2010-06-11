@@ -310,6 +310,7 @@ AC_CHECK_HEADERS([ \
                   time.h \
                   unistd.h \
                   usersec.h \
+                  attr/xattr.h \
                   ])
 
 dnl Checks for library functions.

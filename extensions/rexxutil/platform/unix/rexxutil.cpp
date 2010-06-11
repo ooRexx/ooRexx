@@ -192,9 +192,6 @@
 #include <netdb.h>
 #include <wordexp.h>
 #include <alloca.h>
-#ifndef AIX
-#include <attr/xattr.h>
-#endif
 
 
 #if defined( HAVE_SYS_SEM_H )
@@ -4705,114 +4702,6 @@ RexxRoutine1(RexxObjectPtr,
     wordfree(&p);
     return (RexxObjectPtr)arr;
 }
-
-#ifndef AIX
-/**
- * Method:        SysSetxattr
- *
- * Set a file extended attribute.
- *
- * @param fname   The file name.
- *
- * @param name    The extended attribute name.
- *
- * @param val     The extended attribute value.
- *
- * @return        0 or -1.
- */
-RexxRoutine3(int,
-             SysSetxattr,
-             CSTRING, fname,
-             CSTRING, name,
-             CSTRING, val)
-{
-    return setxattr(fname, name, val, strlen(val) + 1, 0);
-}
-
-/**
- * Method:        SysGetxattr
- *
- * Get a file extended attribute.
- *
- * @param fname   The file name.
- *
- * @param name    The extended attribute name.
- *
- * @return        0 or -1.
- */
-RexxRoutine2(RexxObjectPtr,
-             SysGetxattr,
-             CSTRING, fname,
-             CSTRING, name)
-{
-    ssize_t sz;
-    char *buf;
-
-    sz = getxattr(fname, name, NULL, 0);
-    if (sz == -1) {
-        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
-    }
-    buf = (char *)alloca(sz);
-    getxattr(fname, name, buf, sz);
-
-    return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
-}
-
-/**
- * Method:        SysListxattr
- *
- * List a file's extended attribute(s).
- *
- * @param fname   The file name.
- *
- * @return        0 or -1.
- */
-RexxRoutine1(RexxObjectPtr,
-             SysListxattr,
-             CSTRING, fname)
-{
-    ssize_t sz;
-    char *buf, *name;
-    
-    sz = listxattr(fname, NULL, 0);
-    if (sz == -1) {
-        return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
-    }
-    buf = (char *)alloca(sz);
-    listxattr(fname, buf, sz);
-
-    // create a Rexx array of the xattr names
-    RexxArrayObject arr = context->NewArray(1);
-    while (sz > 0) {
-        context->ArrayAppendString(arr, buf, strlen(buf));
-        sz -= strlen(buf) + 1;
-        buf += strlen(buf) + 1;
-    }
-
-    return (RexxObjectPtr)arr;
-}
-
-/**
- * Method:        SysRemovexattr
- *
- * Remove an extended attribute.
- *
- * @param fname   The file name.
- *
- * @param name    The extended attribute name.
- *
- * @return        0 or -1.
- */
-RexxRoutine2(int,
-             SysRemovexattr,
-             CSTRING, fname,
-             CSTRING, name)
-{
-    
-
-    return removexattr(fname, name);
-}
-#endif
 
 /*************************************************************************
 * Function:  SysFork                                                     *
