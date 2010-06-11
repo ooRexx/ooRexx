@@ -6041,12 +6041,6 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_TYPED_ROUTINE(SysGetservbyname, SysGetservbyname),
     REXX_TYPED_ROUTINE(SysGetservbyport, SysGetservbyport),
     REXX_TYPED_ROUTINE(SysWordexp, SysWordexp),
-#ifndef AIX
-    REXX_TYPED_ROUTINE(SysSetxattr, SysSetxattr),
-    REXX_TYPED_ROUTINE(SysGetxattr, SysGetxattr),
-    REXX_TYPED_ROUTINE(SysListxattr, SysListxattr),
-    REXX_TYPED_ROUTINE(SysRemovexattr, SysRemovexattr),
-#endif
     REXX_CLASSIC_ROUTINE(SysFork,                SysFork),
     REXX_CLASSIC_ROUTINE(SysWait,                SysWait),
     REXX_CLASSIC_ROUTINE(SysCreatePipe,          SysCreatePipe),
