@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,11 +35,17 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
-/*                                                                          */
-/* ooDialog\Samples\ooticket.rex  Let's go to the movies - Cat.dialog       */
-/*                                                                          */
-/*--------------------------------------------------------------------------*/
+
+/**
+ *  Let's go to the movies.  ooticket.rex
+ *
+ *  This is an example of how to use the CategoryDialog class.
+ *
+ *  It also provides some code showing how to correctly calculate the placement
+ *  of dialog controls independent of the dialog font being used.  To
+ *  demonstrate that the placement is correct, the program allows the user to
+ *  select the font and font size for the dialog.
+ */
 
  curdir = directory()
  parse source . . me
@@ -154,22 +160,34 @@
    cinema.4 = "&Drive-in above Highway 101"
    cinema.5 = "&Premiere Black + White Movies Monterey"
    cinema.6 = "&Broadway Cinema San Francisco"
-   self~createCheckBoxStem(51, 25, 10, 0, cinema., 6)
-   self~createStaticText(-1, 10, self~SizeY - 65, 0, 0, , "Make your choice of one or more cinemas you prefer")
-   self~createBlackFrame(-1, 1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
+
+   -- We can't center the check box group unless we know how wide the
+   -- createCheckBoxStem() method is going to make the group.  We use our own
+   -- method to figure that out for us.
+   chkBoxWidth = self~calcChkBoxWidth(cinema.)
+
+   -- Center the check box group.
+   x = (self~SizeX % 2) - (chkBoxWidth % 2)
+   self~createCheckBoxStem(51, x, 10, 0, cinema., 6)
+
+   frameCX = self~catalog['page']['w'] - 2
+   self~createStaticText(-1, 9, self~SizeY - 66, frameCX - 16, 12, "CENTER CENTERIMAGE", "Pick one or more cinemas you prefer")
+   self~createBlackFrame(-1, 1, self~SizeY - 68, frameCX, 16)
 
 ::method Days                                        /* page 3 */
    expose daynames
-   self~createStaticText(-1, 10, self~SizeY - 65, 0, 0, , "Please select the day you like most")
-   self~createRadioButtonGroup(1031, 5, 5,0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
-   self~createBlackFrame(-1, 1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
-   self~createStaticImage(145, 73, 10, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
    daynames = .array~of('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+   self~createRadioButtonGroup(1031, 5, 5, 0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
+
+   frameCX = self~catalog['page']['w'] - 2
+   self~createStaticText(-1, 9, self~SizeY - 66, frameCX - 16, 12, "CENTER CENTERIMAGE", "Please select the day you like most")
+   self~createBlackFrame(-1, 1, self~SizeY - 68, frameCX, 16)
+
+   self~createStaticImage(145, 72, 10, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
 
 ::method InitDays
   staticImage = self~newStatic(145)
-  parse value staticImage~getRect with x y x2 y2
-  size = .Size~new(x2 - x, y2 - y)
+  size = staticImage~getRealSize
   image = .Image~getImage('bmp\movie.bmp', .Image~toID(IMAGE_BITMAP), size)
   staticImage~setImage(image)
 
@@ -189,9 +207,10 @@
    if .DlgUtil~comCtl32Version  < 6 then return
 
    bmpButton = self~newPushButton(45)
-   parse value bmpButton~getRect with x y x2 y2
+   size = bmpButton~getRealSize
+   size~width -= 10;
+   size~height -= 10;
 
-   size = .Size~new(x2 - x - 10, y2 - y - 10)
    image = .Image~getImage('bmp\ticket.bmp', .Image~toID(IMAGE_BITMAP), size)
    imageList = .ImageList~create(size, .Image~toID(ILC_COLOR8), 1, 0)
    imageList~add(image)
@@ -352,6 +371,27 @@
       ret = TimedMessage(msg, "Incomplete Selections", 3000)
    else ret = TimedMessage("This is where we would ask for money!.... and print the ticket", ,
                            selectedFilm '-at-' selectedCinema~substr(2), 3000)
+
+
+-- Calculate how wide the createCheckBoxStem() method is going to make the check
+-- box group.
+::method calcChkBoxWidth private
+  use strict arg labels.
+
+  -- The createCheckBoxStem() code itself is pretty complicated because it has
+  -- to account for a large number of different scenarios.  We can simplify this
+  -- a lot here because we know we only have 1 column of check boxes and we are
+  -- not over-riding the calculation of the maximum width.  In this case the
+  -- width calculated by createCheckBoxStem() is simply the width of the longest
+  -- label, in dialog units, plus 20.
+
+  maxCX = 0
+  do l over labels.
+    s = self~getTextSizeDu(labels.l)
+    if s~width > maxCX then maxCX = s~width
+  end
+
+  return maxCX + 20
 
 
 ::routine setFont
