@@ -984,7 +984,7 @@ $(build_behaviour_dir)/PrimitiveBehaviours.cpp: $(build_behaviour_dir)/Primitive
 $(build_behaviour_dir)/VirtualFunctionTable.cpp: $(build_behaviour_dir)/VirtualFunctionTable.xsl $(classesXML)
 	sh ./xsl.sh $(@) $(classesXML) $(build_behaviour_dir)/VirtualFunctionTable.xsl
 
-rexx.img: LD_LIBRARY_PATH = ./libs
+rexx.img: LD_LIBRARY_PATH = ./.libs
 rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 	cp $(build_rexxclasses_dir)/*.orx .
 	cp $(build_interpreter_platform_dir)/*.orx .
