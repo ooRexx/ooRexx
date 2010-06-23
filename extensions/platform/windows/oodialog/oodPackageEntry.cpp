@@ -181,6 +181,8 @@ REXX_METHOD_PROTOTYPE(wb_getTextSizePx);
 REXX_METHOD_PROTOTYPE(wb_getTextSizeScreen);
 REXX_METHOD_PROTOTYPE(wb_setRect);
 REXX_METHOD_PROTOTYPE(wb_resizeMove);
+REXX_METHOD_PROTOTYPE(wb_setWindowPos);
+REXX_METHOD_PROTOTYPE(wb_moveSizeWindow);
 REXX_METHOD_PROTOTYPE(wb_getSizePos);
 REXX_METHOD_PROTOTYPE(wb_windowRect);
 REXX_METHOD_PROTOTYPE(wb_clientRect);
@@ -220,6 +222,8 @@ REXX_METHOD_PROTOTYPE(pbdlg_getAutoDetect);
 REXX_METHOD_PROTOTYPE(pbdlg_setAutoDetect);
 REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToControl);
 REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToWindow);
+REXX_METHOD_PROTOTYPE(pbdlg_getLibrary);
+REXX_METHOD_PROTOTYPE(pbdlg_getResourceID);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
@@ -332,9 +336,17 @@ REXX_METHOD_PROTOTYPE(dyndlg_addMethod);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconResource);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 
+// ControlDialog
+REXX_METHOD_PROTOTYPE(chld_getOwnerDialog);
+REXX_METHOD_PROTOTYPE(chld_setOwnerDialog);
+
 // ResourceDialog
+REXX_METHOD_PROTOTYPE(resdlg_init);
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
 REXX_METHOD_PROTOTYPE(resdlg_startDialog_pvt);
+
+// ResourceControlDialog
+REXX_METHOD_PROTOTYPE(resCtrlDlg_startDialog_pvt);
 
 // WindowExtensions
 REXX_METHOD_PROTOTYPE(winex_initWindowExtensions);
@@ -808,6 +820,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_getTextSizeScreen,           wb_getTextSizeScreen),
     REXX_METHOD(wb_setRect,                     wb_setRect),
     REXX_METHOD(wb_resizeMove,                  wb_resizeMove),
+    REXX_METHOD(wb_setWindowPos,                wb_setWindowPos),
+    REXX_METHOD(wb_moveSizeWindow,              wb_moveSizeWindow),
     REXX_METHOD(wb_getSizePos,                  wb_getSizePos),
     REXX_METHOD(wb_windowRect,                  wb_windowRect),
     REXX_METHOD(wb_clientRect,                  wb_clientRect),
@@ -843,6 +857,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_sendMessageToWindow,      pbdlg_sendMessageToWindow),
     REXX_METHOD(pbdlg_get,                      pbdlg_get),
     REXX_METHOD(pbdlg_getDlgHandle,             pbdlg_getDlgHandle),
+    REXX_METHOD(pbdlg_getLibrary,               pbdlg_getLibrary),
+    REXX_METHOD(pbdlg_getResourceID,            pbdlg_getResourceID),
     REXX_METHOD(pbdlg_isDialogActive,           pbdlg_isDialogActive),
     REXX_METHOD(pbdlg_show,                     pbdlg_show),
     REXX_METHOD(pbdlg_showWindow,               pbdlg_showWindow),
@@ -966,15 +982,25 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
     REXX_METHOD(dlgctrl_captureMouse,           dlgctrl_captureMouse),
     REXX_METHOD(dlgctrl_setColor,               dlgctrl_setColor),
-    REXX_METHOD(dlgctrl_data,                  dlgctrl_data),
-    REXX_METHOD(dlgctrl_dataEquals,            dlgctrl_dataEquals),
+    REXX_METHOD(dlgctrl_data,                   dlgctrl_data),
+    REXX_METHOD(dlgctrl_dataEquals,             dlgctrl_dataEquals),
 
     REXX_METHOD(window_init,                    window_init),
     REXX_METHOD(window_unInit,                  window_unInit),
 
+    // ControlDialog
+    REXX_METHOD(chld_getOwnerDialog,            chld_getOwnerDialog),
+    REXX_METHOD(chld_setOwnerDialog,            chld_setOwnerDialog),
+
+    // ResDialog
+    REXX_METHOD(resdlg_init,                    resdlg_init),
     REXX_METHOD(resdlg_getDataTableIDs_pvt,     resdlg_getDataTableIDs_pvt),
     REXX_METHOD(resdlg_startDialog_pvt,         resdlg_startDialog_pvt),
 
+    // ResControlDialog
+    REXX_METHOD(resCtrlDlg_startDialog_pvt,     resCtrlDlg_startDialog_pvt),
+
+    // WindowExtensions
     REXX_METHOD(winex_initWindowExtensions,     winex_initWindowExtensions),
     REXX_METHOD(winex_getFont,                  winex_getFont),
     REXX_METHOD(winex_setFont,                  winex_setFont),

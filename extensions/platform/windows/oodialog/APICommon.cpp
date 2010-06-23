@@ -187,7 +187,7 @@ void userDefinedMsgException(RexxMethodContext *c, size_t pos, CSTRING msg)
  * @return Pointer to void, could be used in the return statement of a method
  *         to return NULLOBJECT after the exeception is raised.
  */
-RexxObjectPtr wrongClassException(RexxThreadContext *c, int pos, const char *n)
+RexxObjectPtr wrongClassException(RexxThreadContext *c, size_t pos, const char *n)
 {
     c->RaiseException2(Rexx_Error_Invalid_argument_noclass, c->WholeNumber(pos), c->String(n));
     return NULLOBJECT;
@@ -384,9 +384,10 @@ void sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index)
  * @param c
  * @param msg
  */
-void executionErrorException(RexxThreadContext *c, CSTRING msg)
+void *executionErrorException(RexxThreadContext *c, CSTRING msg)
 {
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->CString(msg));
+    return NULL;
 }
 
 /**

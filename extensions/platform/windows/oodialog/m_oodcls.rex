@@ -74,7 +74,7 @@ end
 srcFiles = .array~of("UtilityClasses.cls",    "AnimatedButton.cls",  "BaseDialog.cls",       "CategoryDialog.cls",  -
                      "DeprecatedClasses.cls", "DialogControls.cls",  "DialogExtensions.cls", "DynamicDialog.cls",   -
                      "EventNotification.cls", "Menu.cls",            "PlainBaseDialog.cls",  "PropertySheet.cls",   -
-                     "RcDialog.cls",          "ResDialog.cls",       "UserDialog.cls")
+                     "RcDialog.cls",          "ResDialog.cls",       "UserDialog.cls",       "ControlDialog.cls")
 
 outFile = .stream~new(outdir || outname[3])
 if outFile~open("WRITE REPLACE") \= "READY:" then return 9

@@ -168,6 +168,22 @@ HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id)
     return hBrush;
 }
 
+bool loadResourceDLL(pCPlainBaseDialog pcpbd, CSTRING library)
+{
+    pcpbd->hInstance = LoadLibrary(library);
+    if ( ! pcpbd->hInstance )
+    {
+        CHAR msg[256];
+        sprintf(msg,
+                "Failed to load Dynamic Link Library (resource DLL.)\n"
+                "  File name:\t\t\t%s\n"
+                "  Windows System Error Code:\t%d\n", library, GetLastError());
+        MessageBox(0, msg, "ooDialog DLL Load Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+        return false;
+    }
+    return true;
+}
+
 /**
  * Do some common set up when creating the underlying Windows dialog for any
  * ooDialog dialog.  This involves setting the 'TopDlg' and the hInstance
@@ -193,17 +209,7 @@ bool installNecessaryStuff(pCPlainBaseDialog pcpbd, CSTRING library)
 
     if ( library != NULL )
     {
-        pcpbd->hInstance = LoadLibrary(library);
-        if ( ! pcpbd->hInstance )
-        {
-            CHAR msg[256];
-            sprintf(msg,
-                    "Failed to load Dynamic Link Library (resource DLL.)\n"
-                    "  File name:\t\t\t%s\n"
-                    "  Windows System Error Code:\t%d\n", library, GetLastError());
-            MessageBox(0, msg, "ooDialog DLL Load Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
-            return false;
-        }
+        return loadResourceDLL(pcpbd, library);
     }
     else
     {
@@ -358,7 +364,10 @@ int32_t delDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
 
     if ( pcpbd->hDlg )
     {
-        PostMessage(pcpbd->hDlg, WM_QUIT, 0, 0);
+        if ( ! pcpbd->isControlDlg )
+        {
+            PostMessage(pcpbd->hDlg, WM_QUIT, 0, 0);
+        }
         DestroyWindow(pcpbd->hDlg);
     }
     pcpbd->isActive = false;
@@ -606,12 +615,21 @@ static inline HWND getWBWindow(void *pCSelf)
 
 static HWND wbSetUp(RexxMethodContext *c, void *pCSelf)
 {
-    oodResetSysErrCode(c->threadContext);
-    HWND hwnd = getWBWindow(pCSelf);
+    HWND hwnd = NULL;
 
-    if ( hwnd == NULL )
+    if ( pCSelf == NULL )
     {
-        noWindowsDialogException(c, ((pCWindowBase)pCSelf)->rexxSelf);
+        baseClassIntializationException(c);
+    }
+    else
+    {
+        oodResetSysErrCode(c->threadContext);
+
+        hwnd = getWBWindow(pCSelf);
+        if ( hwnd == NULL )
+        {
+            noWindowsDialogException(c, ((pCWindowBase)pCSelf)->rexxSelf);
+        }
     }
     return hwnd;
 }
@@ -792,6 +810,73 @@ uint32_t showFast(HWND hwnd, char type)
     }
     return 1;
 }
+
+
+/**
+ * Parses a string for all the show options possible in the setWindowPos() API.
+ *
+ * @param options  The keyword string.  This is a case-insensitive check. More
+ *                 than one keyword, or no keyword, is acceptable.
+ *
+ * @return The show window postion flag corresponding to the options string.
+ */
+static uint32_t parseAllShowOptions(CSTRING options)
+{
+    uint32_t opts = 0;
+
+    if ( options != NULL )
+    {
+        if ( StrStrI(options, "ASYNCWINDOWPOS") ) opts |= SWP_ASYNCWINDOWPOS;
+        if ( StrStrI(options, "DEFERERASE"    ) ) opts |= SWP_DEFERERASE;
+        if ( StrStrI(options, "DRAWFRAME"     ) ) opts |= SWP_DRAWFRAME;
+        if ( StrStrI(options, "FRAMECHANGED"  ) ) opts |= SWP_FRAMECHANGED;
+        if ( StrStrI(options, "HIDEWINDOW"    ) ) opts |= SWP_HIDEWINDOW;
+        if ( StrStrI(options, "NOACTIVATE"    ) ) opts |= SWP_NOACTIVATE;
+        if ( StrStrI(options, "NOCOPYBITS"    ) ) opts |= SWP_NOCOPYBITS;
+        if ( StrStrI(options, "NOMOVE"        ) ) opts |= SWP_NOMOVE;
+        if ( StrStrI(options, "NOOWNERZORDER" ) ) opts |= SWP_NOOWNERZORDER;
+        if ( StrStrI(options, "NOREDRAW"      ) ) opts |= SWP_NOREDRAW;
+        if ( StrStrI(options, "NOREPOSITION"  ) ) opts |= SWP_NOREPOSITION;
+        if ( StrStrI(options, "NOSENDCHANGING") ) opts |= SWP_NOSENDCHANGING;
+        if ( StrStrI(options, "NOSIZE"        ) ) opts |= SWP_NOSIZE;
+        if ( StrStrI(options, "NOZORDER"      ) ) opts |= SWP_NOZORDER;
+        if ( StrStrI(options, "SHOWWINDOW"    ) ) opts |= SWP_SHOWWINDOW;
+    }
+    return opts;
+}
+
+
+static bool getHwndBehind(RexxMethodContext *c, RexxObjectPtr _hwndBehind, HWND *hwnd)
+{
+    if ( c->IsPointer(_hwndBehind) )
+    {
+        *hwnd = (HWND)c->PointerValue((RexxPointerObject)_hwndBehind);
+    }
+    else
+    {
+        CSTRING str = c->ObjectToStringValue(_hwndBehind);
+
+        if      ( stricmp(str, "BOTTOM"    ) == 0 ) *hwnd = HWND_BOTTOM;
+        else if ( stricmp(str, "NOTTOPMOST") == 0 ) *hwnd = HWND_NOTOPMOST;
+        else if ( stricmp(str, "TOP"       ) == 0 ) *hwnd = HWND_TOP;
+        else if ( stricmp(str, "TOPMOST"   ) == 0 ) *hwnd = HWND_TOPMOST;
+        else
+        {
+            size_t len = strlen(str);
+
+            if ( (len == 0 || len == 2) || (len == 1 && *str != '0') || toupper(str[1]) != 'X' )
+            {
+                wrongArgValueException(c->threadContext, 1, "BOTTOM, NOTTOPMOST, TOP, TOPMOST, or a valid window handle", str);
+                return false;
+            }
+
+            *hwnd = (HWND)string2pointer(str);
+        }
+    }
+
+    return true;
+}
+
 
 /**
  * Performs the initialization of the WindowBase mixin class.
@@ -1657,9 +1742,9 @@ RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, 
  *
  *  Changes the size, and position of a child, pop-up, or top-level window.
  *
- *  Provides an interface to the Windows API, SetWindowPos().  The inteface is
- *  incomplete, at this time, as it does not recognize all the allowable flags
- *  to SetWindowPos.  In particular, it always uses SWP_NOZORDER.
+ *  Provides a simplified interface to the Windows API, SetWindowPos().  There
+ *  is no provision for the hwndInsertAfter arg, it does not recognize all the
+ *  allowable flags, and it always uses SWP_NOZORDER.
  *
  *  By specifying either NOSIZE or NOMOVE options the programmer can only move
  *  or only resize the window.
@@ -1673,7 +1758,7 @@ RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, 
  *
  *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
  *
- *  @return  0 for success, 1 on error.
+ *  @return  True for success, false on error.
  *
  *  @note  Sets the .SystemErrorCode.
  *
@@ -1690,8 +1775,11 @@ RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, 
  */
 RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-    oodResetSysErrCode(context->threadContext);
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     // A RECT is used to return the values, even though the semantics are not
     // quite correct.  (right will really be cx and bottom will be cy.)
@@ -1713,8 +1801,8 @@ RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
         }
         if ( countArgs == 2 )
         {
-            obj = c->ArrayAt(args, 2);
-            options = c->ObjectToStringValue(obj);
+            obj = context->ArrayAt(args, 2);
+            options = context->ObjectToStringValue(obj);
         }
     }
     else if ( argsUsed == 2 )
@@ -1725,26 +1813,27 @@ RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
         }
         if ( countArgs == 3 )
         {
-            obj = c->ArrayAt(args, 3);
-            options = c->ObjectToStringValue(obj);
+            obj = context->ArrayAt(args, 3);
+            options = context->ObjectToStringValue(obj);
         }
     }
     else
     {
         if ( countArgs == 5 )
         {
-            obj = c->ArrayAt(args, 5);
-            options = c->ObjectToStringValue(obj);
+            obj = context->ArrayAt(args, 5);
+            options = context->ObjectToStringValue(obj);
         }
     }
 
     uint32_t opts = parseShowOptions(options);
-    if ( SetWindowPos(getWBWindow(pCSelf), NULL, rect.left, rect.top, rect.right, rect.bottom, opts) == 0 )
+    if ( SetWindowPos(hwnd, NULL, rect.left, rect.top, rect.right, rect.bottom, opts) != 0 )
     {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
+        return TheTrueObj;
     }
-    return TheZeroObj;
+
+    oodSetSysErrCode(context->threadContext);
+    return TheFalseObj;
 }
 
 /** WindowBase::resizeTo()
@@ -1784,8 +1873,11 @@ RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
  */
 RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-    oodResetSysErrCode(context->threadContext);
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     // POINT and SIZE structs are binary compatible.  A POINT is used to return
     // the values, even though the semantics are not quite correct for
@@ -1810,8 +1902,8 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
         {
             // The object at index 2 has to exist, otherwise countArgs would
             // equal 1.
-            obj = c->ArrayAt(args, 2);
-            options = c->ObjectToStringValue(obj);
+            obj = context->ArrayAt(args, 2);
+            options = context->ObjectToStringValue(obj);
         }
     }
     else if ( argsUsed == 2 )
@@ -1820,8 +1912,8 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
         {
             // The object at index 3 has to exist, otherwise countArgs would
             // equal 2.
-            obj = c->ArrayAt(args, 3);
-            options = c->ObjectToStringValue(obj);
+            obj = context->ArrayAt(args, 3);
+            options = context->ObjectToStringValue(obj);
         }
     }
 
@@ -1830,18 +1922,18 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
 
     if ( *method == 'R' )
     {
-        opts |= SWP_NOMOVE;
+        opts = (opts & ~SWP_NOSIZE) | SWP_NOMOVE;
         r.right = point.x;
         r.bottom = point.y;
     }
     else
     {
-        opts |= SWP_NOSIZE;
+        opts = (opts & ~SWP_NOMOVE) | SWP_NOSIZE;
         r.left = point.x;
         r.top = point.y;
     }
 
-    if ( SetWindowPos(getWBWindow(pCSelf), NULL, r.left, r.top, r.right, r.bottom, opts) == 0 )
+    if ( SetWindowPos(hwnd, NULL, r.left, r.top, r.right, r.bottom, opts) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return TheOneObj;
@@ -1861,7 +1953,11 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
  */
 RexxMethod2(RexxObjectPtr, wb_getSizePos, NAME, method, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context->threadContext);
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     RECT r = {0};
     if ( GetWindowRect(getWBWindow(pCSelf), &r) == 0 )
@@ -1874,6 +1970,226 @@ RexxMethod2(RexxObjectPtr, wb_getSizePos, NAME, method, CSELF, pCSelf)
     }
 
     return rxNewPoint(context, r.left, r.top);
+}
+
+
+/** WindowBase::setWindowPos()
+ *
+ *  Changes the size and position of the specified window.  Provides a complete
+ *  interface to the SetWindowPos() Windows API, as contrasted to the setRect()
+ *  method.
+ *
+ *  By specifying either NOSIZE or NOMOVE options the programmer can only move
+ *  or only resize the window.  However, the programmer can also use the
+ *  convenience methods moveWindow() and sizeWindow().
+ *
+ *  @param hwndBehind   This window is inserted after hwndBehind.  This is the
+ *                      hwndInsertAfter arg in SetWindowPos().
+ *  @param coordinates  The coordinates of a point / size rectangle, given in
+ *                      pixels
+ *
+ *    Form 1:  A .Rect object.
+ *    Form 2:  A .Point object and a .Size object.
+ *    Form 3:  x1, y1, cx, cy
+ *
+ *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
+ *
+ *  @return  True for success, false on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  Microsoft says: If the SWP_SHOWWINDOW or SWP_HIDEWINDOW flag is
+ *            set, the window cannot be moved or sized.  But, that does not
+ *            appear to be true.
+ *
+ *            Th WindowBase::setRect() should be considered a convenience method
+ *            for setWindowPos().  It leaves out the hwndBehind arg and only a
+ *            recognizes a subset of the show options.
+ */
+RexxMethod3(RexxObjectPtr, wb_setWindowPos, RexxObjectPtr, _hwndBehind, ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        goto done_out;
+    }
+
+    HWND hwndBehind;
+    if ( ! getHwndBehind(context, _hwndBehind, &hwndBehind) )
+    {
+        goto done_out;
+    }
+
+    size_t countArgs;
+    size_t    argsUsed;
+    RECT   rect;
+    if ( ! getRectFromArglist(context, args, &rect, false, 2, 6, &countArgs, &argsUsed) )
+    {
+        goto done_out;
+    }
+
+    RexxObjectPtr obj;
+    CSTRING options = "";
+    if ( argsUsed == 1 )
+    {
+        if ( countArgs > 3 )
+        {
+            return tooManyArgsException(context->threadContext, 3);
+        }
+        if ( countArgs == 3 )
+        {
+            obj = context->ArrayAt(args, 3);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+    else if ( argsUsed == 2 )
+    {
+        if ( countArgs > 4 )
+        {
+            return tooManyArgsException(context->threadContext, 4);
+        }
+        if ( countArgs == 4 )
+        {
+            obj = context->ArrayAt(args, 4);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+    else
+    {
+        if ( countArgs == 6 )
+        {
+            obj = context->ArrayAt(args, 6);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+
+    uint32_t opts = parseAllShowOptions(options);
+    if ( SetWindowPos(hwnd, hwndBehind, rect.left, rect.top, rect.right, rect.bottom, opts) != 0 )
+    {
+        return TheTrueObj;
+    }
+
+    oodSetSysErrCode(context->threadContext);
+
+done_out:
+    return TheFalseObj;
+}
+
+/** WindowBase::moveWindow()
+ *  WindowBase::sizeWindow()
+ *
+ *  Size window, changes the size of this window.  The new size is specified in
+ *  pixels.
+ *
+ *  Move window, changes the position of this window.  The new position is
+ *  specified as the coordinates of the upper left corner of the window, in
+ *  pixels.
+ *
+ *  @param  hwndBehind   If the z-order is changed, then this window is inserted
+ *                       into the z-order after hwndBehind.  TOP BOTTOM TOPMOST
+ *                       and NOTTOPMOST keywords are also accepted.
+ *
+ *  @param  coordinates  The new position (x, y) or new size (cx, cy) in pixels.
+ *
+ *    sizeWindow()
+ *      Form 1:  A .Size object.
+ *      Form 2:  cx, cy
+ *
+ *    moveWindow()
+ *      Form 1:  A .Point object.
+ *      Form 2:  x, y
+ *
+ *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
+ *
+ *  @return  True for success, false on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *         moveTo() and resizeTo() are convenience methods that are somewhat
+ *         less complicated to use.  Those methods eliminate the hwndBehind
+ *         argument and use a simple subset of the allowable flags.
+ *
+ *  @remarks  No effort is made to ensure that only a .Size object is used for
+ *            sizeWindow() and only a .Point object for moveWindow().
+ */
+RexxMethod4(RexxObjectPtr, wb_moveSizeWindow, RexxObjectPtr, _hwndBehind, ARGLIST, args, NAME, method, CSELF, pCSelf)
+{
+    RECT r = {0};
+
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        goto done_out;
+    }
+
+    HWND hwndBehind;
+    if ( ! getHwndBehind(context, _hwndBehind, &hwndBehind) )
+    {
+        goto done_out;
+    }
+
+    // POINT and SIZE structs are binary compatible.  A POINT is used to return
+    // the values, even though the semantics are not quite correct for
+    // resizeTo(). (x will really be cx and y will be cy.)
+    size_t countArgs;
+    size_t argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 2, 4, &countArgs, &argsUsed) )
+    {
+        goto done_out;
+    }
+
+    RexxObjectPtr obj;
+    CSTRING options = "";
+    if ( argsUsed == 1 )
+    {
+        if ( countArgs > 3 )
+        {
+            return tooManyArgsException(context->threadContext, 3);
+        }
+        if ( countArgs == 3 )
+        {
+            // The object at index 3 has to exist, otherwise countArgs would
+            // equal 2.
+            obj = context->ArrayAt(args, 3);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+    else if ( argsUsed == 2 )
+    {
+        if ( countArgs == 4 )
+        {
+            // The object at index 4 has to exist, otherwise countArgs would
+            // equal 3.
+            obj = context->ArrayAt(args, 4);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+
+    uint32_t opts = parseAllShowOptions(options);
+
+    if ( *method == 'S' )
+    {
+        opts = (opts &= ~SWP_NOSIZE) | SWP_NOMOVE;
+        ;
+        r.right = point.x;
+        r.bottom = point.y;
+    }
+    else
+    {
+        opts = (opts & ~SWP_NOMOVE) | SWP_NOSIZE;
+        r.left = point.x;
+        r.top = point.y;
+    }
+    if ( SetWindowPos(hwnd, hwndBehind, r.left, r.top, r.right, r.bottom, opts) != 0 )
+    {
+        return TheTrueObj;
+    }
+
+    oodSetSysErrCode(context->threadContext);
+
+done_out:
+    return TheFalseObj;
 }
 
 
@@ -1966,6 +2282,8 @@ RexxMethod0(POINTERSTRING, wb_foreGroundWindow)
  */
 RexxMethod4(logical_t, wb_screenClient, RexxObjectPtr, pt, NAME, method, OSELF, self, CSELF, pCSelf)
 {
+    RexxMethodContext *c = context;
+
     oodResetSysErrCode(context->threadContext);
     BOOL success = FALSE;
 
@@ -1976,22 +2294,55 @@ RexxMethod4(logical_t, wb_screenClient, RexxObjectPtr, pt, NAME, method, OSELF, 
         goto done_out;
     }
 
-    POINT *p = rxGetPoint(context, pt, 1);
-    if ( p != NULL )
+    if ( c->IsOfType(pt, "POINT") )
     {
-        if ( *method == 'S' )
+        POINT *p = rxGetPoint(context, pt, 1);
+        if ( p != NULL )
         {
-            success = ScreenToClient(hwnd, p);
-        }
-        else
-        {
-            success = ClientToScreen(hwnd, p);
-        }
+            if ( *method == 'S' )
+            {
+                success = ScreenToClient(hwnd, p);
+            }
+            else
+            {
+                success = ClientToScreen(hwnd, p);
+            }
 
-        if ( ! success )
-        {
-            oodSetSysErrCode(context->threadContext);
+            if ( ! success )
+            {
+                oodSetSysErrCode(context->threadContext);
+            }
         }
+    }
+    else if ( c->IsOfType(pt, "RECT") )
+    {
+        RECT *r = rxGetRect(context, pt, 1);
+        if ( r != NULL )
+        {
+            if ( *method == 'S' )
+            {
+                if ( ScreenToClient(hwnd, (POINT *)r) )
+                {
+                    success = ScreenToClient(hwnd, ((POINT *)r) + 1);
+                }
+            }
+            else
+            {
+                if ( ClientToScreen(hwnd, (POINT *)r) )
+                {
+                    success = ClientToScreen(hwnd, ((POINT *)r) + 1);
+                }
+            }
+
+            if ( ! success )
+            {
+                oodSetSysErrCode(context->threadContext);
+            }
+        }
+    }
+    else
+    {
+        wrongArgValueException(context->threadContext, 1, "Point or Rect", pt);
     }
 
 done_out:
@@ -2024,9 +2375,19 @@ RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
 #define PLAINBASEDIALOG_CLASS    "PlainBaseDialog"
 #define CONTROLBAG_ATTRIBUTE     "PlainBaseDialogControlBag"
 
-static inline HWND getPBDWindow(void *pCSelf)
+static inline HWND getPBDWindow(RexxMethodContext *c, void *pCSelf)
 {
-    return ((pCPlainBaseDialog)pCSelf)->hDlg;
+    if ( pCSelf == NULL )
+    {
+        return (HWND)baseClassIntializationException(c);
+    }
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(c, pcpbd->rexxSelf);
+    }
+    return pcpbd->hDlg;
 }
 
 HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID)
@@ -2195,7 +2556,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_init_cls, OSELF, self)
 
 RexxMethod2(RexxObjectPtr, pbdlg_setDefaultFont_cls, CSTRING, fontName, uint32_t, fontSize)
 {
-    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(context);
+    pCPlainBaseDialogClass pcpbdc = dlgToClassCSelf(context);
 
     if ( strlen(fontName) > (MAX_DEFAULT_FONTNAME - 1) )
     {
@@ -2211,12 +2572,12 @@ RexxMethod2(RexxObjectPtr, pbdlg_setDefaultFont_cls, CSTRING, fontName, uint32_t
 
 RexxMethod1(CSTRING, pbdlg_getFontName_cls, CSELF, pCSelf)
 {
-    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(context);
+    pCPlainBaseDialogClass pcpbdc = dlgToClassCSelf(context);
     return pcpbdc->fontName;
 }
 RexxMethod1(uint32_t, pbdlg_getFontSize_cls, CSELF, pCSelf)
 {
-    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(context);
+    pCPlainBaseDialogClass pcpbdc = dlgToClassCSelf(context);
     return pcpbdc->fontSize;
 }
 
@@ -2293,7 +2654,7 @@ done_out:
  *            number of active dialogs has been reached.  (See
  *            PlainBaseDialog::new().)
  */
-RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, resource,
+RexxMethod5(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource,
             OPTIONAL_RexxObjectPtr, dlgDataStem, OPTIONAL_RexxObjectPtr, hFile, OSELF, self)
 {
     // This is an error return, but see remarks.
@@ -2334,11 +2695,32 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     }
     pcpbd->enCSelf = pEN;
 
+    size_t len = strlen(library);
+    if ( len >= MAX_LIBRARYNAME )
+    {
+        stringTooLongException(context->threadContext, 1, MAX_LIBRARYNAME, len);
+        goto terminate_out;
+    }
+    strcpy(pcpbd->library, library);
+    pcpbd->resourceID = resource;
+
     pcpbd->interpreter = context->threadContext->instance;
     pcpbd->dlgAllocated = true;
     pcpbd->autoDetect = TRUE;
     pcpbd->rexxSelf = self;
     context->SetObjectVariable("CSELF", cselfBuffer);
+
+    if ( context->IsOfType(self, "ControlDialog") )
+    {
+        pcpbd->isControlDlg = true;
+    }
+
+    // Set our default font to the PlainBaseDialog class default font.
+    pCPlainBaseDialogClass pcpbdc = dlgToClassCSelf(context);
+    strcpy(pcpbd->fontName, pcpbdc->fontName);
+    pcpbd->fontSize = pcpbdc->fontSize;
+
+    // TODO at this point calculate the true dialog base units and set them into CPlainBaseDialog.
 
     pcpbd->previous = TopDlg;
     pcpbd->tableIndex = CountDialogs;
@@ -2347,9 +2729,6 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
 
     // Now process the arguments and do the rest of the initialization.
     result = TheZeroObj;
-
-    context->SetObjectVariable("LIBRARY", library);
-    context->SetObjectVariable("RESOURCE", resource);
 
     if ( argumentExists(3) )
     {
@@ -2365,13 +2744,6 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     context->SetObjectVariable("PARENTDLG", TheNilObj);
     context->SetObjectVariable("FINISHED", TheFalseObj);
     context->SetObjectVariable("PROCESSINGLOAD", TheFalseObj);
-
-    // Set our default font to the PlainBaseDialog class default font.
-    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(context);
-    strcpy(pcpbd->fontName, pcpbdc->fontName);
-    pcpbd->fontSize = pcpbdc->fontSize;
-
-    // TODO at this point calculate the true dialog base units and set them into CPlainBaseDialog.
 
     context->SendMessage1(self, "CHILDDIALOGS=", rxNewList(context));       // self~childDialogs = .list~new
     context->SendMessage0(self, "INITAUTODETECTION");                       // self~initAutoDetection
@@ -2407,6 +2779,15 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     {
         context->SendMessage1(self, "PARSEINCLUDEFILE", hFile);
     }
+
+    if ( context->IsOfType(self, "OwnerDialog") )
+    {
+        RexxClassObject ownerClass = rxGetContextClass(context, "OWNERDIALOG");
+        RexxArrayObject args = context->ArrayOfOne(cselfBuffer);
+        printf("PlainBaseDialog this dialog is an owner dialog ownerClass=%p.\n", ownerClass);
+        context->ForwardMessage(NULL, NULL, ownerClass, args);
+    }
+
     goto done_out;
 
 terminate_out:
@@ -2448,6 +2829,20 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     }
 
     return TheZeroObj;
+}
+
+/** PlainBaseDialog::library  [attribute get]
+ */
+RexxMethod1(CSTRING, pbdlg_getLibrary, CSELF, pCSelf)
+{
+    return ( ((pCPlainBaseDialog)pCSelf)->library );
+}
+
+/** PlainBaseDialog::resourceID  [attribute get]
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getResourceID, CSELF, pCSelf)
+{
+    return ( ((pCPlainBaseDialog)pCSelf)->resourceID );
 }
 
 /** PlainBaseDialog::dlgHandle  [attribute get] / PlainBaseDialog::getSelf()
@@ -2865,10 +3260,9 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
  */
 RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSELF, pCSelf)
 {
-    HWND hwnd = getPBDWindow(pCSelf);
+    HWND hwnd = getPBDWindow(context, pCSelf);
     if ( hwnd == NULL )
     {
-        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
         return FALSE;
     }
 
@@ -3013,7 +3407,12 @@ RexxMethod3(RexxObjectPtr, pbdlg_showControl, RexxObjectPtr, rxID, NAME, method,
 RexxMethod3(RexxObjectPtr, pbdlg_center, OPTIONAL_CSTRING, options, OPTIONAL_logical_t, workArea, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    HWND hwnd = getPBDWindow(pCSelf);
+
+    HWND hwnd = getPBDWindow(context, pCSelf);
+    if ( hwnd = NULL )
+    {
+        return TheFalseObj;
+    }
 
     RECT r;
     if ( GetWindowRect(hwnd, &r) == 0 )
@@ -3105,7 +3504,12 @@ RexxMethod2(wholenumber_t, pbdlg_setWindowText, POINTERSTRING, hwnd, CSTRING, te
  */
 RexxMethod1(RexxObjectPtr, pbdlg_toTheTop, CSELF, pCSelf)
 {
-    return oodSetForegroundWindow(context, getPBDWindow(pCSelf));
+    HWND hwnd = getPBDWindow(context, pCSelf);
+    if ( hwnd = NULL )
+    {
+        return TheZeroObj;
+    }
+    return oodSetForegroundWindow(context, hwnd);
 }
 
 /** PlainBaseDialog::getFocus()
@@ -3116,7 +3520,12 @@ RexxMethod1(RexxObjectPtr, pbdlg_toTheTop, CSELF, pCSelf)
  */
 RexxMethod1(RexxObjectPtr, pbdlg_getFocus, CSELF, pCSelf)
 {
-    return oodGetFocus(context, getPBDWindow(pCSelf));
+    HWND hwnd = getPBDWindow(context, pCSelf);
+    if ( hwnd = NULL )
+    {
+        return TheZeroObj;
+    }
+    return oodGetFocus(context, hwnd);
 }
 
 /** PlainBaseDialog::setFocus()
@@ -3142,10 +3551,9 @@ RexxMethod3(RexxObjectPtr, pbdlg_setFocus, RexxStringObject, hwnd, NAME, method,
 {
     oodResetSysErrCode(context->threadContext);
 
-    HWND hDlg = getPBDWindow(pCSelf);
+    HWND hDlg = getPBDWindow(context, pCSelf);
     if ( hDlg == NULL )
     {
-        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
         return TheNegativeOneObj;
     }
 
@@ -3193,10 +3601,9 @@ RexxMethod2(RexxObjectPtr, pbdlg_tabTo, NAME, method, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
 
-    HWND hDlg = getPBDWindow(pCSelf);
+    HWND hDlg = getPBDWindow(context, pCSelf);
     if ( hDlg == NULL )
     {
-        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
         return TheNegativeOneObj;
     }
 
@@ -3639,10 +4046,9 @@ RexxMethod1(int32_t, pbdlg_getControlID, CSTRING, hwnd)
  */
 RexxMethod2(RexxObjectPtr, pbdlg_doMinMax, NAME, method, CSELF, pCSelf)
 {
-    HWND hDlg = getPBDWindow(pCSelf);
+    HWND hDlg = getPBDWindow(context, pCSelf);
     if ( hDlg == NULL )
     {
-        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
         return TheFalseObj;
     }
 
@@ -3711,10 +4117,13 @@ RexxMethod4(RexxObjectPtr, pbdlg_setTabGroup, RexxObjectPtr, rxID, OPTIONAL_logi
  */
 RexxMethod1(RexxObjectPtr, pbdlg_isDialogActive, CSELF, pCSelf)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    if ( pcpbd->hDlg != NULL && IsWindow(pcpbd->hDlg) && pcpbd->isActive )
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd != NULL )
     {
-        return TheTrueObj;
+        if ( pcpbd->hDlg != NULL && pcpbd->isActive && IsWindow(pcpbd->hDlg) )
+        {
+            return TheTrueObj;
+        }
     }
     return TheFalseObj;
 }
@@ -3742,7 +4151,11 @@ RexxMethod1(RexxObjectPtr, pbdlg_isDialogActive, CSELF, pCSelf)
 RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
             OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self, CSELF, pCSelf)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd == NULL )
+    {
+        return NULLOBJECT;
+    }
 
     oodControl_t type = oodName2controlType(msgName + 7);
     if ( type == winNotAControl )
@@ -3766,14 +4179,22 @@ RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTION
 
 RexxMethod2(uint32_t, pbdlg_setDlgDataFromStem_pvt, RexxStemObject, internDlgData, CSELF, pCSelf)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd == NULL )
+    {
+        return 0;
+    }
     return setDlgDataFromStem(context, pcpbd, internDlgData);
 }
 
 
 RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData, CSELF, pCSelf)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd == NULL )
+    {
+        return 0;
+    }
     return putDlgDataInStem(context, pcpbd, internDlgData);
 }
 

@@ -645,8 +645,13 @@ RexxMethod0(uint32_t, dlgutil_threadID_cls)
  *
  *  Simple method to use for testing.
  */
-RexxMethod0(uint32_t, dlgutil_test_cls)
+RexxMethod3(uint32_t, dlgutil_test_cls, POINTERSTRING, hwnd, POINTERSTRING, hwndBehind, RexxObjectPtr, pos)
 {
+    POINT *pt = rxGetPoint(context, pos, 3);
+    if ( ! SetWindowPos((HWND)hwnd, (HWND)hwndBehind, pt->x, pt->y, 0, 0, SWP_NOSIZE) )
+    {
+        return GetLastError();
+    }
     return 0;
 }
 

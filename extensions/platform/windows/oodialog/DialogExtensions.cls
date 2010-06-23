@@ -71,7 +71,7 @@
 -- Used to wait for a dialog started through executeAsync() to end.
 ::method endAsyncExecution unguarded
 
-   self~run
+   self~waitForDialog
 
    if self~initCode = 1 then do
       if self~useStem then self~getDataStem(self~dlgData)

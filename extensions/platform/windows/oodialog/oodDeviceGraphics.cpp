@@ -1354,11 +1354,10 @@ pCPlainBaseDialog dlgExtSetup(RexxMethodContext *c, RexxObjectPtr dlg)
 {
     oodResetSysErrCode(c->threadContext);
 
-    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
+    pCPlainBaseDialog pcpbd = requiredDlgCSelf(c, dlg, oodPlainBaseDialog, 0);
     if ( pcpbd == NULL )
     {
-        baseClassIntializationException(c);
-        return NULL;
+        return (pCPlainBaseDialog)baseClassIntializationException(c);
     }
 
     if ( pcpbd->hDlg == NULL )

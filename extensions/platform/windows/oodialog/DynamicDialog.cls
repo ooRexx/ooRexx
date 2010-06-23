@@ -494,6 +494,7 @@
 
    internopts = internopts || self~getRCStyle(dlg.style, "DLG")
 
+   dlg.title = ""
    s = f~linein; fl = fl -1
    do while s~wordpos("CAPTION ") = 0 & s~wordpos("FONT ") = 0 & fl > 0
       s = f~linein; fl = fl -1
@@ -517,6 +518,8 @@
       dlg.title = ""
    end
    f~close
+
+   if dlg.title == "" then internopts ||= " NOBORDER"
 
    if self~create(dlg.x, dlg.y, dlg.w, dlg.h, dlg.title, internopts,, dlg.font, dlg.fsize, expected) then return 0
    else return 1
@@ -766,6 +769,8 @@
       if style~wordpos("WS_MINIMIZEBOX") > 0 | style~wordpos("WS_GROUP") > 0 then ret = ret ||" MINIMIZEBOX"
       if style~wordpos("WS_MAXIMIZEBOX") > 0 | style~wordpos("WS_TABSTOP") > 0  then ret = ret ||" MAXIMIZEBOX"
       if style~wordpos("WS_OVERLAPPED") > 0 then ret = ret ||" OVERLAPPED"
+      if style~wordpos("WS_POPUP") > 0 then ret = ret ||" POPUP"
+      if style~wordpos("DS_CONTROL") > 0 | style~wordpos("WS_CHILD") > 0  then ret = ret ||" CONTROL"
    end
    else if kind = "BTN" then do
        if style~wordpos("WS_OWNERDRAW") > 0 | style~wordpos("BS_OWNERDRAW") > 0 then ret = ret || " OWNER"

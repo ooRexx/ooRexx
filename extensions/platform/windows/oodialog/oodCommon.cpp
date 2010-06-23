@@ -91,6 +91,13 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
  *
  * @param c    The method context we are operating under.
  *
+ * @return  Returns a null pointer.  This allows this type of code:
+ *
+ *            if ( pCSelf == NULL )
+ *            {
+ *                return baseClassIntializationException(c);
+ *            }
+ *
  * @remarks  This error should be used when the CSelf pointer is null.  It can
  *           only happen (I believe) when the user inovkes a method on self in
  *           init() before the super class init() has run.  For example:
@@ -105,9 +112,9 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
  *           working, but it was not fatal.  However, now a null CSelf pointer
  *           causes a crash if not checked for.
  */
-void baseClassIntializationException(RexxMethodContext *c)
+void *baseClassIntializationException(RexxMethodContext *c)
 {
-    executionErrorException(c->threadContext, "The base class has not been initialized correctly");
+    return executionErrorException(c->threadContext, "The base class has not been initialized correctly");
 }
 
 /**
@@ -116,44 +123,20 @@ void baseClassIntializationException(RexxMethodContext *c)
  *        The specified method, built-in function, or external routine exists,
  *        but you used it incorrectly.
  *
- *  The "methName" method can not be invoked on "objectName" when the Windows
- *  dialog does not exist.
+ *  The "methName" method can not be invoked on "objectName" when the "msg"
  *
  *  The connectEdit method can not be invoked on a StyleDlg when the Windows
  *  dialog does not exist.
  *
  * @param c
  * @param rxDlg
+ * @param msg
  */
-RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg)
+RexxObjectPtr methodCanNotBeInvokedException(RexxMethodContext *c, RexxObjectPtr rxDlg, CSTRING msg)
 {
     TCHAR buf[512];
-    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the Windows dialog does not exist.",
-              c->GetMessageName(), c->ObjectToStringValue(rxDlg));
-    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
-    return NULLOBJECT;
-}
-
-/**
- *  93.900
- *  Error 93 - Incorrect call to method
- *        The specified method, built-in function, or external routine exists,
- *        but you used it incorrectly.
- *
- *  The "methName" method can not be invoked on "objectName" when the window
- *  handle is not valid.
- *
- *  The getMaxSelection method can not be invoked on a MontnCalendar when the
- *  window handle is not valid.
- *
- * @param c
- * @param rxObj
- */
-RexxObjectPtr invalidWindowException(RexxMethodContext *c, RexxObjectPtr rxObj)
-{
-    TCHAR buf[512];
-    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the window handle is not valid.",
-              c->GetMessageName(), c->ObjectToStringValue(rxObj));
+    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the %s.",
+              c->GetMessageName(), c->ObjectToStringValue(rxDlg), msg);
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
 }
@@ -198,13 +181,11 @@ RexxObjectPtr invalidCategoryPageException(RexxMethodContext *c, int pageNum, in
  * @return Pointer to void, could be used in the return statement of a method
  *         to return NULLOBJECT after the exeception is raised.
  */
-RexxObjectPtr wrongClassReplyException(RexxThreadContext *c, const char *n)
+void *wrongClassReplyException(RexxThreadContext *c, const char *n)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "The windows message reply must be of the %s class", n);
-    executionErrorException(c, buffer);
-
-    return NULLOBJECT;
+    return executionErrorException(c, buffer);
 }
 
 void controlFailedException(RexxThreadContext *c, const char *msg, const char *func, const char *control)
@@ -1073,29 +1054,74 @@ void enablePrevious(pCPlainBaseDialog previous)
  * This function is safe to call for any object, including NULLOBJECT.  It will
  * fail for any object that is not a dialog or a dialog control object.
  *
- * @param c      Method context we are operating in.
- * @param self   The Rexx object.
+ * @param c         Method context we are operating in.
+ * @param self      The Rexx object.
+ * @param selfType  The class self is required to be.  Can be oodUnknown to
+ *                  indicate it doesn't matter if self is a PlainBaseDialog or a
+ *                  DialogControl.
+ * @param argPos    The argument position of self.  If this is not 0, a wrong
+ *                  argument exception is raised.  If it is 0, then a base class
+ *                  initialization is raised.
  *
  * @return A pointer to the dialog CSelf on success, or NULL on failure.
  *
- * @note  An exception is raised on failure.
+ * @note  An exception is always raised on failure.
  */
-pCPlainBaseDialog getDlgCSelf(RexxMethodContext *c, RexxObjectPtr self)
+pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos)
 {
     pCPlainBaseDialog pcpbd = NULL;
 
     if ( self != NULLOBJECT )
     {
-        if ( c->IsOfType(self, "PLAINBASEDIALOG") )
+        if ( type == oodPlainBaseDialog )
         {
-            pcpbd = dlgToCSelf(c, self);
-        }
-        else if ( c->IsOfType(self, "DIALOGCONTROL") )
-        {
-            pCDialogControl pcdc = controlToCSelf(c, self);
-            if ( pcdc != NULLOBJECT )
+            if ( c->IsOfType(self, "PLAINBASEDIALOG") )
             {
-                pcpbd = dlgToCSelf(c, pcdc->oDlg);
+                pcpbd = dlgToCSelf(c, self);
+            }
+            else if ( argPos > 0)
+            {
+                wrongClassException(c->threadContext, argPos, "PlainBaseDialog");
+                return NULLOBJECT;
+            }
+        }
+        else if ( type == oodDialogControl )
+        {
+            if ( c->IsOfType(self, "DIALOGCONTROL") )
+            {
+                pCDialogControl pcdc = controlToCSelf(c, self);
+                if ( pcdc != NULLOBJECT )
+                {
+                    pcpbd = dlgToCSelf(c, pcdc->oDlg);
+                }
+            }
+            else if ( argPos > 0)
+            {
+                wrongClassException(c->threadContext, argPos, "DialogControl");
+                return NULLOBJECT;
+            }
+        }
+        else
+        {
+            if ( c->IsOfType(self, "PLAINBASEDIALOG") )
+            {
+                pcpbd = dlgToCSelf(c, self);
+            }
+            else if ( c->IsOfType(self, "DIALOGCONTROL") )
+            {
+                pCDialogControl pcdc = controlToCSelf(c, self);
+                if ( pcdc != NULLOBJECT )
+                {
+                    pcpbd = dlgToCSelf(c, pcdc->oDlg);
+                }
+            }
+            else if ( argPos > 0 )
+            {
+                // If an arg position is specified we raise a wrong arg
+                // exception, otherwise we will drop through and raise a base
+                // class intialization exception.
+                wrongArgValueException(c->threadContext, argPos, "PlainBaseDialog or DialogControl", self);
+                return NULLOBJECT;
             }
         }
     }
@@ -1590,16 +1616,24 @@ bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size
  *
  * In either case, .Rect and 4 indvidual integers are taken at face value.
  *
- * @param c
- * @param args
- * @param rect
- * @param boundingRect
- * @param startArg
- * @param maxArgs
- * @param arraySize
- * @param usedArgs
+ * @param c            Method context we are operating in.
+ * @param args         The arg list array (ARGLIST) passed to the native API
+ * @param rect         [IN/OUT] Pointer to a rect struct, this is filled in on
+ *                     success.
+ * @param boundingRect True if rect should be interpreted as a bounding
+ *                     rectangle, false if rect should be interpreted as a
+ *                     point/size rectangle.
+ * @param startArg     The argument number in the arg array where the rectangle
+ *                     specifications start.
+ * @param maxArgs      The maximum number of args allowed.
+ * @param arraySize    [IN/OUT] The size of the argument array, returned.
+ * @param usedArgs     [IN/OUT] The number of arguments used in specifying the
+ *                     rectangle. I.e., if startArg is a .Rect, then usedArgs
+ *                     will be 1 on return.  If at startArg we have x, y, cx, cy
+ *                     then useArgs will be 4 on return.
  *
- * @return bool
+ * @return True on success, false otherwise.  If the return is false, an
+ *         exception has been raised.
  */
 bool getRectFromArglist(RexxMethodContext *c, RexxArrayObject args, PRECT rect, bool boundingRect,
                         int startArg, int maxArgs, size_t *arraySize, size_t *usedArgs)

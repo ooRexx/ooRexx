@@ -919,7 +919,7 @@
 
 ::method setSize
    forward message "setItemSize" continue
-   return result~cx result~cy
+   return result~width result~height
 
 ::method posRectangle
    use strict arg item

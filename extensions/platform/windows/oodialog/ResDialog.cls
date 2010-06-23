@@ -45,27 +45,16 @@
 
 ::class 'ResDialog' subclass PlainBaseDialog public
 
-::method init
-   expose library resource dlgData.
-   use arg library, resource, dlgData., includeFile
-
-   forward class (super) continue
-   if result \= 0 then return result
-
-   if \ resource~datatype("W") then resource = self~resolveSymbolicId(resource)
-   if resource < 1 then self~initCode = -1
-
-   return self~initCode
+::method init external "LIBRARY oodialog resdlg_init"
 
 -- Documented "internal use only" in 3.2.0 - Do not document.
 ::method startIt
-   expose library resource dlgData.
    use strict arg icon = 0, modeless = .false
 
    icon = self~resolveIconID(icon)
    if \ modeless~datatype('O') then modeless = .false
 
-   if self~startDialog(library, resource, icon, modeless) then do
+   if self~startDialog(self~library, self~resourceID, icon, modeless) then do
       -- if autodetection is on, create the data attributes
       if self~autoDetect then do
          ids = self~getDataTableIDs

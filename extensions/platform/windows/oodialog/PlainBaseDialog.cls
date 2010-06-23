@@ -123,6 +123,9 @@
 ::method setRect unguarded external "LIBRARY oodialog wb_setRect"
 ::method resizeTo unguarded external "LIBRARY oodialog wb_resizeMove"
 ::method moveTo unguarded external "LIBRARY oodialog wb_resizeMove"
+::method setWindowPos unguarded external "LIBRARY oodialog wb_setWindowPos"
+::method moveWindow unguarded external "LIBRARY oodialog wb_moveSizeWindow"
+::method sizeWindow unguarded external "LIBRARY oodialog wb_moveSizeWindow"
 ::method getRealSize unguarded external "LIBRARY oodialog wb_getSizePos"
 ::method getRealPos unguarded external "LIBRARY oodialog wb_getSizePos"
 ::method windowRect unguarded external "LIBRARY oodialog wb_windowRect"
@@ -133,13 +136,15 @@
    use strict arg width, height, showOptions = ""
    p = .Point~new(0, 0)
    s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
-   return self~setRect(p, s, "NOMOVE " || showOptions);
+   if self~setRect(p, s, "NOMOVE " || showOptions) then return 0
+   else return 1
 
 ::method move unguarded             -- old method, this is not accurate.
    use strict arg xPos, yPos, showOptions = ""
    p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
    s = .Size~new(0, 0)
-   return self~setRect(p, s, "NOSIZE " || showOptions);
+   if self~setRect(p, s, "NOSIZE " || showOptions) then return 0
+   else return 1
 
 ::method getSize unguarded          -- old method, this is not accurate.
    forward message "getRealSize" continue
@@ -329,6 +334,9 @@
 ::method getFontSize class external "LIBRARY oodialog pbdlg_getFontSize_cls"
 ::method new class external "LIBRARY oodialog pbdlg_new_cls"
 
+::attribute library get unguarded external "LIBRARY oodialog pbdlg_getLibrary"          -- Internal use do not document
+::attribute resourceID get unguarded external "LIBRARY oodialog pbdlg_getResourceID"    -- Internal use do not document
+
 -- Automatic data field detection on/off
 ::attribute autoDetect get external "LIBRARY oodialog pbdlg_getAutoDetect"
 ::attribute autoDetect set external "LIBRARY oodialog pbdlg_setAutoDetect"
@@ -362,16 +370,7 @@
  * set up of the dialog management block, for all dialogs.
  */
 ::method init external "LIBRARY oodialog pbdlg_init"
-::method unInit external "LIBRARY oodialog pbdlg_unInit"
 ::method setDlgFont external "LIBRARY oodialog pbdlg_setDlgFont"
-
-::method initDialog unguarded private
-   return 0
-
--- Needs a comment?  Was documented.
-::method run unguarded private
-   expose finished
-   guard on when finished
 
 -- Creates the dialog, shows it, and destroys it.  Dialog "data" is set and received.
 -- The sleepTime arg is ignored.  This arg was never documented, but people might have
@@ -393,7 +392,7 @@
          o~start(m)
       end
 
-      self~run
+      self~waitForDialog
 
       if self~initCode = 1 then do
          if self~useStem then self~getDataStem(dlgData.)
@@ -408,16 +407,68 @@
       return 0
    end
 
+::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
+
+
+ /*
+  * The following methods are the default implementations for methods that are
+  * intended to be over-ridden by the programmer if the default behavior needs
+  * to be altered.
+  */
+
+::method initDialog unguarded private
+   return 0
+
+ /** ok()
+  * This method first invokes the validate() method.  If validate returns
+  * true, self~initCode is set to 1 and self~finished is set to true,
+  * terminating the dialog.
+  *
+  * If validate returns false, the dialog continues to run.
+  */
+::method ok unguarded
+   okayToClose = self~validate
+
+   if okayToClose then do
+     self~initCode = 1
+     self~finished = .true
+   end
+
+   return self~finished
+
+::method cancel unguarded
+   self~initCode = 2
+   self~finished = .true
+   return self~finished
+
+::method help unguarded
+   return 0
+
+::method leaving
+   return
+
+/** validate()
+ * This method is an abstract method that will be called to determin whether the
+ * dialog can be closed or not. This function will be called by method OK.  If
+ * the return value is true the dialog can be closed, if it is false the dialog
+ * should not be closed.
+ */
+::method validate unguarded
+   return .true
+
+
+
+-- waitForDialog() replaces the run() method.  run() now just spins doing nothing.
+::method waitForDialog unguarded private                   -- Not to be doumented.
+   expose finished
+   guard on when finished
 
 ::method ensureFinished unguarded                          -- Not to be doumented.
   expose finished
   self~initCode = 3
   finished = .true
 
-::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
-
--- Documented "internal use only" in 3.2.0 - Do not document.
-::method stopIt external "LIBRARY oodialog pbdlg_stopIt"   -- Not to be doumented.
+::method stopIt external "LIBRARY oodialog pbdlg_stopIt"   -- Not to be doumented. Documented "internal use only" in 3.2.0
 ::method finalStopIt private                               -- Not to be doumented.
    use arg caller
 
@@ -451,6 +502,9 @@
           else ndx = self~childDialogs~next(ndx)
        end
    end
+
+::method unInit external "LIBRARY oodialog pbdlg_unInit"   -- Not to be doumented.
+
 
 ::method sendMessageToWindow unguarded external "LIBRARY oodialog pbdlg_sendMessageToWindow"
 ::method sendMessageToWindowH unguarded external "LIBRARY oodialog pbdlg_sendMessageToWindow"
@@ -836,54 +890,6 @@
 ::method hasMenuBar
   return self~menuBar \== .nil & self~isLinked
 
- /*
-  * The following methods are the default implementations of event handlers
-  * for the IDOK (resource ID 1,) IDCANCEL (resource ID 2,) and IDHELP
-  * (resource ID 9) push buttons.  The methods are intended to be over-ridden
-  * if the programmer needs to alter the behavior.
-  *
-  * Note that as soon as self~finished is set to true, the dialog is
-  * terminated.  As long as self~finished is false, the dialog continues
-  * to run.
-  */
-
- /** ok()
-  * This method first invokes the validate() method.  If validate returns
-  * true, self~initCode is set to 1 and self~finished is set to true,
-  * terminating the dialog.
-  *
-  * If validate returns false, the dialog continues to run.
-  */
-::method ok unguarded
-   okayToClose = self~validate
-
-   if okayToClose then do
-     self~initCode = 1
-     self~finished = .true
-   end
-
-   return self~finished
-
-::method cancel unguarded
-   self~initCode = 2
-   self~finished = .true
-   return self~finished
-
-::method help unguarded
-   return 0
-
-::method leaving
-   return
-
-/** validate()
- * This method is an abstract method that will be called to determin whether the
- * dialog can be closed or not. This function will be called by method OK.  If
- * the return value is true the dialog can be closed, if it is false the dialog
- * should not be closed.
- */
-::method validate unguarded
-   return .true
-
 ::method newStatic unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newPushButton unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newRadioButton unguarded external "LIBRARY oodialog pbdlg_newControl"
@@ -910,8 +916,14 @@
   return 0
 
 -- There is no longer a message queue.
+::method run unguarded private
+   do while \ self~finished
+      self~handleMessages
+   end
+
 ::method handleMessages unguarded
    j = SysSleep(.010)
+
 ::method clearMessages unguarded
 ::method peekDialogMessage unguarded
    return ""
