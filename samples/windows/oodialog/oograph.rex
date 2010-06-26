@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,31 +35,36 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: OOGRAPH.REX                                                        */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/* Description: Graphical demonstration                                     */
-/*                                                                          */
-/****************************************************************************/
 
- parse source . . me
- mydir = me~left(me~lastpos('\')-1)              /* where is code     */
- env = 'ENVIRONMENT'
- sp = value('SOUNDPATH',,env)
- sp = value('SOUNDPATH',mydir'\WAV;'sp,env)
+/**
+ * Name: oograph.rex
+ * Type: Open Object REXX Script
+ *
+ * Description: A dialog that allows the user to execute two graphical ooRexx
+ *              examples.  One example displays bitmaps and the other example
+ *              shows how to use the drawing methods provided by ooDialog.
+ *
+ *              The main program, this program, shows how to use the
+ *              scrollBitmapFromTo() and scrollInButton() methods.
+ */
 
- d = .GraphDialog~new()
- if d~InitCode \= 0 then do
-   say "Dialog init did not work"
-   exit
- end
+   parse source . . me
+   mydir = me~left(me~lastpos('\')-1)              /* where is code     */
+   env = 'ENVIRONMENT'
+   sp = value('SOUNDPATH', , env)
+   sp = value('SOUNDPATH', mydir'\WAV;'sp, env)
 
- title = "Graphical Demonstration of Open Object Rexx and ooDialog Capabilities"
- d~createCenter(trunc(770 / d~FactorX), trunc(470 / d~FactorY), title)
- d~execute("SHOWTOP")
- d~deinstall
- return
+   d = .GraphDialog~new()
+   if d~initCode \= 0 then do
+      say "Dialog init did not work"
+      return d~initCode
+   end
+
+   title = "Graphical Demonstration of Open Object Rexx and ooDialog Capabilities"
+   d~createCenter(trunc(770 / d~FactorX), trunc(470 / d~FactorY), title)
+   d~execute("SHOWTOP")
+
+   return 0
 
 /*-------------------------------- requires --------------------------*/
 
@@ -80,11 +85,11 @@
    --
    -- Then, the bitmaps for the buttons are positioned (moved from the upper left corner
    -- of the button) by a large amount.  The 101 button is positioned far to the right,
-   -- and the 102 button is positioned far to the bottom and far to the left.  In the run()
-   -- method, scrollBitmapFromTo() is used to scroll the bitmaps from their positions back
-   -- to the upper left corner of the buttons.  This gives the bitmaps the 101 button the
-   -- appearance of scrolling from the right to the left, and the 102 button the appearance
-   -- of scrolling from the bottom to the top.
+   -- and the 102 button is positioned far to the bottom and far to the left.  In the
+   -- showInterface() method, scrollBitmapFromTo() is used to scroll the bitmaps from
+   -- their positions back to the upper left corner of the buttons.  This gives the 101
+   -- button the appearance of scrolling from the right to the left, and the 102 button
+   -- the appearance of scrolling from the bottom to the top.
 
    self~createBitmapButton(101, 1, 10, self~sizeX-1, trunc(130 / self~factorY), "USEPAL", , , "bmp\install.bmp")
    self~createBitmapButton(102, 20, but2pos, self~sizeX - 20, but2size, , , , "bmp\install2.bmp")
@@ -100,7 +105,7 @@
    self~createWhiteFrame(203, 10, self~SizeY - 62, self~sizeX - 20, 38, "HIDDEN")
    self~createPushButton(103, 12, self~SizeY - 60, self~sizeX - 24, 34, "OWNER NOTAB")
 
-   groupArgs = "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL"
+   groupArgs = "&Bitmap-Viewer 111 bitmapViewer &Draw-Color-Demo 112 ooDraw &Cancel 2 CANCEL"
    self~createPushButtonGroup(self~sizeX - 220, self~sizeY - 18, 60, 12, groupArgs, 1, "DEFAULT")
 
 ::method initDialog
@@ -112,9 +117,13 @@
    self~setControlSysColor(101, COLOR_BTNFACE)
    self~setControlSysColor(102, COLOR_BTNFACE)
 
-::method run unguarded
+   self~start("showInterface")
+
+::method showInterface unguarded
    expose m but2size
+
    bmppos = trunc(but2size - 125 / self~FactorY)
+
    self~disableControl(111)  /* disable push buttons */
    self~disableControl(112)
    self~disableControl(2)
@@ -139,48 +148,72 @@
    self~enableControl(111)
    self~enableControl(112)
 
-   -- Asynchronuous scrolling text.
+   -- Start the Asynchronuous scrolling of the introductory text.
    text = "This ooDialog sample demonstrates dynamic dialog creation"
    m = self~start("ScrollInButton", 103, text, "Arial", 36, "BOLD", 0, 2, 2, 6)
-   do while self~finished = 0 & m~completed = 0
-      self~handleMessages
-   end
-   if m~completed = 0 then self~scrollInButton(103) /* end scroll */
+   m~notify(.message~new(self, "scrollingFinished"))
 
-   do while self~finished = 0
-      -- Scroll asynchronously so scrolling can be interrupted when button is pressed.
+   -- Now, wait until the scrolling finishes, or the user closes the main dialog.
+   self~waitForEvent
+
+   -- While the user has not closed the dialog, scroll the instruction text.
+   do while \ self~finished
       text = "... please press Bitmap-Viewer or Draw-Color-Demo buttons to run graphical applications ..."
       m = self~start("scrollInButton", 103, text, "Arial", 32, "SEMIBOLD", 0, 2, 4)
+      m~notify(.message~new(self, "scrollingFinished"))
 
-      do while self~finished = 0 & m~completed = 0
-         self~handleMessages
-      end
-      -- If still scrolling, end the scroll.
-      if m~completed = 0 then self~scrollInButton(103)
+      self~waitForEvent
    end
 
+-- Wait until the haveEvent object variable turns .true.  In this program we just
+-- watch for two events, the scrolling text has finished, or the user has closed
+-- the dialog.
+::method waitForEvent unguarded
+  expose haveEvent
+
+  haveEvent = .false
+  guard on when haveEvent
+
+-- This is the notification method for the scrolling text.  It is invoked when
+-- the scrollInButton() method has finished.  The haveEvent object variable is
+-- set to true which causes ourself to stop waiting.
+::method scrollingFinished unguarded
+  expose haveEvent
+  haveEvent = .true
+
+-- leaving() is invoked by the ooDialog framework when the underlying dialog is
+-- closed.  It serves as a notification that the dialog is finished.  The default
+-- implementation does nothing.  It can be, and if meant to be, over-ridden by
+-- the programmer when desired.  We use it to signal ourself to stop waiting by
+-- setting haveEvent to true.
+::method leaving  unguarded
+  expose haveEvent
+  haveEvent = .true
+
+
 -- Invoke the Bitmap Viewer program (oobmpvu.rex.)
-::method BmpView
+::method bitmapViewer
    expose m
-   -- Pause the scrolling and hide ourself.
-   if m~completed = 0 then self~scrollInButton(103)
+
+   -- Stop the scrolling and hide ourself.
+   if \ m~completed then self~scrollInButton(103)
    self~hide
 
    call "oobmpvu.rex"
 
-   -- Show ourself and restart the scrolling.
+   -- Show ourself and become the topmost.
    self~~show~toTheTop
-   self~scrollInButton(103)
 
 -- Invoke the Color Draw Demo program (oodraw.rex.)
-::method OODraw
+::method ooDraw
    expose m
-   -- Pause the scrolling and hide ourself.
+
+   -- Stop the scrolling and hide ourself.
    if m~completed = 0 then self~scrollInButton(103)
    self~hide
 
    call "oodraw.rex"
 
-   -- Show ourself and restart the scrolling.
+   -- Show ourself and become the topmost.
    self~~show~toTheTop
-   self~scrollInButton(103)
+
