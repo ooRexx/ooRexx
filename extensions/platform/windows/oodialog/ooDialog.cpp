@@ -2710,9 +2710,13 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     pcpbd->rexxSelf = self;
     context->SetObjectVariable("CSELF", cselfBuffer);
 
-    if ( context->IsOfType(self, "ControlDialog") )
+    if ( context->IsOfType(self, "CONTROLDIALOG") )
     {
         pcpbd->isControlDlg = true;
+    }
+    else if ( context->IsOfType(self, "CATEGORYDIALOG") )
+    {
+        pcpbd->isCategoryDlg = true;
     }
 
     // Set our default font to the PlainBaseDialog class default font.
@@ -2750,7 +2754,6 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     context->SendMessage1(self, "DATACONNECTION=", context->NewArray(50));  // self~dataConnection = .array~new(50)
     context->SendMessage1(self, "AUTOMATICMETHODS=", rxNewQueue(context));  // self~autoMaticMethods = .queue~new
 
-    context->SendMessage1(self, "SCROLLNOW=", TheFalseObj);
     context->SendMessage1(self, "MENUBAR=", TheNilObj);
     context->SendMessage1(self, "ISLINKED=", TheFalseObj);
 
@@ -2784,7 +2787,6 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     {
         RexxClassObject ownerClass = rxGetContextClass(context, "OWNERDIALOG");
         RexxArrayObject args = context->ArrayOfOne(cselfBuffer);
-        printf("PlainBaseDialog this dialog is an owner dialog ownerClass=%p.\n", ownerClass);
         context->ForwardMessage(NULL, NULL, ownerClass, args);
     }
 

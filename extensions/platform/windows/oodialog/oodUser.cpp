@@ -61,11 +61,7 @@
 #include "oodMessaging.hpp"
 #include "oodResourceIDs.hpp"
 
-#define USE_DS_CONTROL
-
-#ifndef USE_DS_CONTROL
 BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, LPMSG lpmsg);
-#endif
 
 
 class LoopThreadArgs
@@ -99,20 +95,34 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
         pcpbd->isActive = true;
         *release = true;
 
-        while ( (result = GetMessage(&msg,NULL, 0,0)) != 0 && pcpbd->dlgAllocated )
+        if ( pcpbd->isCategoryDlg )
         {
-            if ( result == -1 )
+            while ( (result = GetMessage(&msg, NULL, 0, 0)) != 0 && pcpbd->dlgAllocated )
             {
-                break;
+                if ( result == -1 )
+                {
+                    break;
+                }
+                if ( ! IsNestedDialogMessage(pcpbd, &msg) )
+                {
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
             }
-#ifdef USE_DS_CONTROL
-            if ( ! IsDialogMessage(pcpbd->hDlg, &msg) && ! IsDialogMessage(pcpbd->activeChild, &msg) )
+        }
+        else
+        {
+            while ( (result = GetMessage(&msg, NULL, 0, 0)) != 0 && pcpbd->dlgAllocated )
             {
-#else
-            if ( ! IsNestedDialogMessage(pcpbd, &msg) )
-            {
-#endif
-                DispatchMessage(&msg);
+                if ( result == -1 )
+                {
+                    break;
+                }
+                if ( ! IsDialogMessage(pcpbd->hDlg, &msg) && ! IsDialogMessage(pcpbd->activeChild, &msg) )
+                {
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
             }
         }
     }
@@ -123,6 +133,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
 
     // Need to synchronize here, otherwise dlgAllocated might be true but
     // delDialog() is already running.
+
     EnterCriticalSection(&crit_sec);
     if ( pcpbd->dlgAllocated )
     {
@@ -447,13 +458,13 @@ bool addToDialogTemplate(RexxMethodContext *c, pCDynamicDialog pcdd, SHORT kind,
 #define USERDIALOG_CLASS  "UserDialog"
 
 RexxMethod7(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTIONAL_RexxObjectPtr, includeFile,
-            OPTIONAL_RexxObjectPtr, owner, OPTIONAL_RexxObjectPtr, library, OPTIONAL_RexxObjectPtr, resourceID,
+            OPTIONAL_RexxObjectPtr, library, OPTIONAL_RexxObjectPtr, resourceID, OPTIONAL_RexxObjectPtr, owner,
             SUPER, super, OSELF, self)
 {
     RexxArrayObject newArgs = context->NewArray(4);
 
-    context->ArrayPut(newArgs, argumentExists(4) ? library : context->NullString(), 1);
-    context->ArrayPut(newArgs, argumentExists(5) ? resourceID : TheZeroObj, 2);
+    context->ArrayPut(newArgs, argumentExists(3) ? library : context->NullString(), 1);
+    context->ArrayPut(newArgs, argumentExists(4) ? resourceID : TheZeroObj, 2);
     if ( argumentExists(1) )
     {
         context->ArrayPut(newArgs, dlgData, 3);
@@ -468,9 +479,9 @@ RexxMethod7(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->GetCSelf();
 
-        if ( argumentExists(3) )
+        if ( argumentExists(5) )
         {
-            pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(context, owner, oodPlainBaseDialog, 3);
+            pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(context, owner, oodPlainBaseDialog, 5);
             if ( ownerPcpbd == NULL )
             {
                 return TheOneObj;
@@ -1174,8 +1185,19 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     pcpbd->wndBase->sizeX = cx;
     pcpbd->wndBase->sizeY = cy;
 
-    context->SendMessage0(pcdd->rexxSelf, "DEFINEDIALOG");
-    return pcdd->active != NULL;
+    RexxObjectPtr result = context->SendMessage0(pcdd->rexxSelf, "DEFINEDIALOG");
+
+    // If it is a category dialog, the underlying dialog(s) have already been
+    // created and the template cleaned up ... need to work on this some.
+    if ( context->IsOfType(pcpbd->rexxSelf, "CATEGORYDIALOG") )
+    {
+        return TRUE;
+    }
+
+    if ( pcdd->active != NULL )
+    {
+        return TRUE;
+    }
 
 err_out:
     // No underlying windows dialog is created, but we still need to clean up
@@ -2547,10 +2569,6 @@ RexxMethod8(logical_t, catdlg_createCategoryDialog, int32_t, x, int32_t, y, uint
 
     uint32_t style = DS_SETFONT | WS_CHILD;
 
-#ifdef USE_DS_CONTROL
-    style |= DS_CONTROL;
-#endif
-
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     pCDynamicDialog pcdd = (pCDynamicDialog)c->ObjectToCSelf(pcpbd->rexxSelf, TheDynamicDialogClass);
 
@@ -2718,8 +2736,6 @@ RexxMethod6(RexxObjectPtr, catdlg_sendMessageToCategoryControl, RexxObjectPtr, r
 }
 
 
-#ifndef USE_DS_CONTROL
-
 extern BOOL SHIFTkey = FALSE;
 
 /**
@@ -2851,7 +2867,6 @@ BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, PMSG  lpmsg)
         return IsDialogMessage(pcpbd->hDlg, lpmsg);
     }
 }
-#endif
 
 
 

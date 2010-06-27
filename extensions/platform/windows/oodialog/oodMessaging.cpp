@@ -78,6 +78,14 @@ static BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
  *           words for this dialog.  We do the same thing for the child dialogs,
  *           see the WM_USER_CREATECHILD message.
  *
+ *           Note that when the child dialogs of the category dialog get
+ *           created, we recieve a WM_INITDIALOG for each of them.  These child
+ *           dialogs are all running on the same thread as the parent category
+ *           dialog.  We don't want to do a bunch of nested AttachThreads()
+ *           because we only do 1 DetachThread() for each window message loop.
+ *           So, we check to see if dlgProcContext is null before doing the
+ *           AttachThread().
+ *
  *           The WM_USER_CREATECHILD message.
  *
  *           This user message's purpose is to create a child dialog of this
@@ -110,15 +118,18 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return endDialogPremature(pcpbd, hDlg, NoPCPBDpased);
         }
 
-        RexxThreadContext *context;
-        if ( ! pcpbd->interpreter->AttachThread(&context) )
+        if ( pcpbd->dlgProcContext == NULL )
         {
-            // Again, this shouldn't happen ... but
-            return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
-        }
-        pcpbd->dlgProcContext = context;
+            RexxThreadContext *context;
+            if ( ! pcpbd->interpreter->AttachThread(&context) )
+            {
+                // Again, this shouldn't happen ... but
+                return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
+            }
+            pcpbd->dlgProcContext = context;
 
-        RexxSetProcessMessages(FALSE);
+            RexxSetProcessMessages(FALSE);
+        }
 
         setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
 

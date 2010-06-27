@@ -334,14 +334,12 @@
 ::method getFontSize class external "LIBRARY oodialog pbdlg_getFontSize_cls"
 ::method new class external "LIBRARY oodialog pbdlg_new_cls"
 
-::attribute library get unguarded external "LIBRARY oodialog pbdlg_getLibrary"          -- Internal use do not document
-::attribute resourceID get unguarded external "LIBRARY oodialog pbdlg_getResourceID"    -- Internal use do not document
+::attribute library get unguarded private external "LIBRARY oodialog pbdlg_getLibrary"          -- Internal use do not document
+::attribute resourceID get unguarded private external "LIBRARY oodialog pbdlg_getResourceID"    -- Internal use do not document
 
 -- Automatic data field detection on/off
 ::attribute autoDetect get external "LIBRARY oodialog pbdlg_getAutoDetect"
 ::attribute autoDetect set external "LIBRARY oodialog pbdlg_setAutoDetect"
-
-::attribute scrollNow               -- Indicator whether or not scrolling is active
 
 ::attribute dataConnection private  -- store connections between ids and class attributes
 ::attribute useStem private         -- flag whether to use a stem to set/get data or not

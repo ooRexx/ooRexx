@@ -81,14 +81,14 @@
 ::class 'RcControlDialog' subclass UserControlDialog public
 
 ::method init
-  use arg rcFile, idDlg, initData., includeFile, options = "", expected = 200, ownerDlg
+  use strict arg rcFile, idDlg, initData. = .nil, includeFile = "", options = "", expected = 200, ownerDlg = .nil
 
   newArgs = .array~new(5)
   if arg(3, 'E') then newArgs[1] = arg(3)
   if arg(4, 'E') then newArgs[2] = arg(4)
-  if arg(7, 'E') then newArgs[3] = arg(7)
-  newArgs[4] = rcFile
-  newArgs[5] = idDlg
+  if arg(7, 'E') then newArgs[5] = arg(7)
+  newArgs[3] = rcFile
+  newArgs[4] = idDlg
 
   forward class (super) arguments (newArgs) continue
   if result <> 0 then return result

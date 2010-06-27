@@ -1953,7 +1953,7 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
 
         assignBitmap(pcpbd, index, bmpNormal, PBSS_NORMAL, inMemory);
 
-        if ( argumentExists(4) )
+        if ( argumentExists(4) && ! isEmptyString(bmpFocused) )
         {
             if ( isIntResource(bmpFocused) && noUnderlyingDlg )
             {
@@ -1962,7 +1962,7 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
             }
             assignBitmap(pcpbd, index, bmpFocused, PBSS_DEFAULTED, inMemory);
         }
-        if ( argumentExists(5) )
+        if ( argumentExists(5) && ! isEmptyString(bmpSelected) )
         {
             if ( isIntResource(bmpSelected) && noUnderlyingDlg )
             {
@@ -1971,7 +1971,7 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
             }
             assignBitmap(pcpbd, index, bmpSelected, PBSS_PRESSED, inMemory);
         }
-        if ( argumentExists(6) )
+        if ( argumentExists(6) && ! isEmptyString(bmpDisabled) )
         {
             if ( isIntResource(bmpDisabled) && noUnderlyingDlg )
             {

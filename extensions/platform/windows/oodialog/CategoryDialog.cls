@@ -107,7 +107,7 @@
       self~catalog['count'] = i
    end
 
-   self~InitCategories()    /* user overwrite */
+   self~initCategories()    /* user overwrite */
 
    if cdtable = '' then
    do
@@ -121,15 +121,11 @@
       end
    end
 
-   if self~catStyle~wordpos("WIZZARD") > 0 then do
-      self~wizard = 1
-      self~catStyle = self~catStyle~changestr("WIZZARD","")
+   if self~catStyle~wordpos("WIZZARD") > 0 | self~catStyle~wordpos("WIZARD") > 0 then do
+      self~wizard = .true
+      self~catStyle = self~catStyle~changestr("WIZZARD", "")
    end
-   else if self~catStyle~wordpos("WIZARD") > 0 then do
-      self~wizard = 1
-      self~catStyle = self~catStyle~changestr("WIZARD","")
-   end
-   else self~wizard = 0
+   else self~wizard = .false
 
 -- Documented "internal use only" in 3.2.0 - Do not document.
    self~catalog['id'] = .array~new(self~catalog['count'],100)
@@ -273,19 +269,24 @@
    rbtext = self~catalog['page']['rightbtntext']
    if lbtext~pos(" ") > 0 then lbtext = '"' || lbtext || '"'
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
-   if (self~catalog['page']['btnwidth'] > 0) then
-   do
-      self~createPushButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
-         self~sizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
-      if self~wizard = 1 then
-         self~createPushButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
-                             ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
+
+   x = 5
+   y = self~sizeY - 15
+   cx = self~catalog['page']['btnwidth']
+
+   wizardTextIdMsg = lbtext" 11 PreviousPage" rbtext" 12 NextPage"
+
+   if (self~catalog['page']['btnwidth'] > 0) then do
+      x = trunc(self~sizeX - self~catalog['page']['btnwidth'] * 2 - 15)
+
+      self~createPushButtonGroup(x, y, cx, , "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+      if self~wizard then self~createPushButtonGroup(x, y, cx,  , wizardTextIdMsg, 1, "")
    end
    else do
       self~createOkCancelRightBottom
-      if self~wizard = 1 then
-         self~createPushButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
+      if self~wizard then self~createPushButtonGroup(x, y, , , wizardTextIdMsg, 1, "")
    end
+
    self~createBlackFrame(-1, 0, self~sizeY - 20, self~sizeX, 1)
 
 ::method createCategoryDialog private external "LIBRARY oodialog catdlg_createCategoryDialog"
@@ -364,7 +365,7 @@
 
    self~HideWindowFast(self~catalog['handles'][self~catalog['category']])
    self~catalog['category'] = NewPage
-   if self~wizard = 1 then do
+   if self~wizard then do
       if NewPage = 1 then do
          self~DisableItem(11)
          self~EnableItem(12)

@@ -170,6 +170,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
             }
             if ( ! IsDialogMessage(pcpbd->hDlg, &msg) )
             {
+                TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
         }

@@ -75,8 +75,9 @@ typedef map<string, int, less<string> > String2Int;
 // Enum for the type of an ooDialog class.  Types to be added as needed.
 typedef enum
 {
-    oodPlainBaseDialog, oodCategoryDialog, oodDialogControl, oodStaticControl, oodButtonControl,
-    oodEditControl,     oodListBox,        oodProgressBar,   oodUnknown
+    oodPlainBaseDialog, oodCategoryDialog, oodUserDialog,    oodRcDialog,      oodResDialog,
+    oodControlDialog,   oodDialogControl,  oodStaticControl, oodButtonControl, oodEditControl,
+    oodListBox,         oodProgressBar,    oodUnknown
 } oodClass_t;
 
 /* Struct for a reply to the UDN_DELTAPOS notification message. (Up-down control.) */
@@ -248,6 +249,11 @@ inline bool isYes(const char * s)
 
    char c = toupper(s[0]);
    return ( c == 'J' || c =='Y' || c == '1' );
+}
+
+inline bool isEmptyString(const char * s)
+{
+    return s != NULL && *s == '\0';
 }
 
 inline const char *comctl32VersionName(DWORD id)

@@ -83,7 +83,7 @@
 -- Run a modeless dialog
 ::method popup
    use strict arg sh = "NORMAL", sleepTime = 1, icon = 0
-   self~start("execute", sh, icon, sleeptime, .true)
+   return self~start("execute", sh, icon, sleeptime, .true)
 
 -- Run a modeless dialog that will be automatically closed when its parent closes.
 ::method popupAsChild
@@ -97,7 +97,7 @@
    parent~childDialogs~insert(self)  /* add to the parents child list (last item) */
    self~parentDlg = parent
 
-   self~start("execute", sh, icon, sleeptime, .true)
+   return self~start("execute", sh, icon, sleeptime, .true)
 
 ::method setSBRange unguarded
    use strict arg id, min, max, redraw = .true

@@ -53,8 +53,8 @@
   newArgs = .array~new(5)
   if arg(3, 'E') then newArgs[1] = arg(3)
   if arg(4, 'E') then newArgs[2] = arg(4)
-  newArgs(3) = rcFile
-  newArgs(4) = idDlg
+  newArgs[3] = rcFile
+  newArgs[4] = idDlg
 
   forward class (super) arguments (newArgs) continue
   if result <> 0 then return result

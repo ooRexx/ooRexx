@@ -452,13 +452,11 @@ typedef struct _pbdCSelf {
     HWND                 childDlg[MAXCHILDDIALOGS+1];
     HINSTANCE            hInstance;     // Handle to loaded DLL instance, ooDialog.dll or a resource DLL for a ResDialog
     HANDLE               hDlgProcThread;
-    bool                 onTheTop;
     RexxInstance        *interpreter;
     RexxThreadContext   *dlgProcContext;
     RexxObjectPtr        resourceID;
     HICON                sysMenuIcon;
     HICON                titleBarIcon;
-    DWORD                threadID;
     pCWindowBase         wndBase;
     pCEventNotification  enCSelf;
     pCWindowExtensions   weCSelf;
@@ -479,7 +477,10 @@ typedef struct _pbdCSelf {
     WPARAM               stopScroll;
     HPALETTE             colorPalette;
     logical_t            autoDetect;
+    DWORD                threadID;
     uint32_t             fontSize;
+    bool                 onTheTop;
+    bool                 isCategoryDlg;  // Need to use IsNestedDialogMessage()
     bool                 isControlDlg;   // Dialog was created as DS_CONTROL | WS_CHILD
     bool                 sharedIcon;
     bool                 didChangeIcon;

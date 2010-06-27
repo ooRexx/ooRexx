@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -110,12 +110,16 @@
    rbtext = p['rightbtntext']
    if lbtext~pos(" ") > 0 then lbtext = '"' || lbtext || '"'
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
+
    if (p['btnwidth'] > 0) then bw = p['btnwidth']; else bw = 35
 
-   self~createPushButtonGroup(p['w']+p['x']+2-bw*2.25, self~sizeY - 15, bw, , "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
-   if self~wizard then do
-      self~createPushButtonGroup(p['x']-2,self~sizeY - 15, bw, , lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
-   end
+   x = trunc(p['w'] + p['x'] + 2 - bw * 2.25)
+   y = self~sizeY - 15
+   pbTextIdMsg = "&Ok 1 OK &Cancel 2 CANCEL"
+   wizardTextIdMsg = lbtext" 11 PreviousPage" rbtext" 12 NextPage"
+
+   self~createPushButtonGroup(x, y, bw, , pbTextIdMsg, 1, "DEFAULT")
+   if self~wizard then self~createPushButtonGroup(p['x'] - 2, y, bw, , wizardTextIdMsg, 1, "")
 
 
 ::method initDialog protected
@@ -129,11 +133,18 @@
    end
    if self~wizard then self~disableItem(11)
 
-   -- call initXXXX for each category, if such a method exists
+   -- call initXXXX for each category, if such a method exists.  The Rect is for
+   -- setWindowPos(), where the values are ignored because of NOMOVE / NOSIZE.
+   r = .Rect~new
    do i = 1 to self~catalog['count']
       self~catalog['category'] = i
       initMethod = "init" || self~catalog['names'][i]~space(0)
       if self~hasMethod(initMethod) then self~send(initMethod)
+
+      -- This ensures the child dialog is above the tab control and prevents painting
+      -- problems when the dialog is covered by another window and then uncovered.
+      wnd = .Window~new(self~catalog['handles'][i])
+      wnd~setWindowPos(TOP, r, "NOSIZE NOMOVE NOOWNERZORDER")
    end
 
    /* set the mark to the first radio button */
