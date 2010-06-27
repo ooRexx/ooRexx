@@ -44,24 +44,44 @@
 /*                                                                          */
 /****************************************************************************/
 
- /* get source directory */
- curdir = directory()
- parse source . . me
- mydir = me~left(me~lastpos('\')-1)             /* install directory */
- mydir = directory(mydir)                       /* current is "my"   */
+ -- To run correctly, this program needs to be able to find its support files.
+ -- But, we allow starting the program from anywhere.  To do this we:
+ -- get the directory we are executing from, switch to the directory this
+ -- program is installed in, and then switch back to the directory we started
+ -- from when we quit.
 
- dlg = .NewControlsDialog~new(,,,,"WIZARD")    /* create property sheet */
- if dlg~InitCode \= 0 then do; say "Dialog init did not work"; exit; end
- /* create a centered property sheet with 9pt Arial font */
- dlg~createcenter(325, 290, "New Win32 Controls",,,"Arial",9)
+ curdir = directory();                       -- Directory we started from.
+ parse source . . me
+ mydir = me~left(me~lastpos('\')-1)          -- Directory we are installed in.
+ mydir = directory(mydir)                    -- CD to the install direcotry.
+
+ -- Create the property sheet Rexx dialog.
+ dlg = .NewControlsDialog~new(,,,,"WIZARD")
+ if dlg~InitCode \= 0 then do
+     say "Dialog init did not work."
+
+     -- Return to directory we started from and quit.
+     ret = directory(curdir)
+     exit
+ end
+
+ -- Create a centered property sheet Windows dialog with 9pt Arial font.
+ if \ dlg~createcenter(325, 290, "New Win32 Controls",,,"Arial",9) then do
+     say 'Creating the underlying Windows dialog failed.'
+
+     -- Return to directory we started from and quit.
+     ret = directory(curdir)
+     exit
+ end
  dlg~execute("SHOWTOP")
- dlg~deinstall
- ret = directory(curdir)    /* switch back to stored directory */
+
+ -- Switch back to the intial directory and quit.
+ ret = directory(curdir)
  return
 
 ::requires "ooDialog.cls"
 
-    /* define subclass of PropertySheet */
+-- Define a subclass of the PropertySheet class
 ::class 'NewControlsDialog' subclass PropertySheet
 
     /* set the categories: used as tab label, definition method names and inititalization method names */
@@ -148,6 +168,9 @@
        yl = min(yl, q)
        lc~AddRow(,Random(3),"_" || ch~d2c~copies(3) || "_","$" || q, "$" || yh, "$" || yl, ch~d2c~copies(3) "is a fictitious company.")
    end
+
+   -- Add full row select and the ability to drag and drop the columns.
+   lc~addExtendedStyle("FULLROWSELECT HEADERDRAGDROP")
 
 
 ::method InitTreeView
