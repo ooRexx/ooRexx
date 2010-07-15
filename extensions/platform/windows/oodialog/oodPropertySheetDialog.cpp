@@ -307,7 +307,7 @@ INT_PTR getSetActiveValue(RexxThreadContext *c, pCPropertySheetDialog pcpsd, Rex
         return (INT_PTR)c->PointerValue((RexxPointerObject)result);
     }
 
-    int max = pcpsd->pageCount;
+    int max = (int)pcpsd->pageCount;
 
     int32_t index;
     if ( ! c->Int32(result, &index) || (index < -1 || index > max) )
@@ -1980,7 +1980,7 @@ RexxMethod2(RexxObjectPtr, psdlg_indexToID, int32_t, index, CSELF, pCSelf)
 
     INT_PTR result = -2;
 
-    int max = pcpsd->pageCount;
+    int max = (int)pcpsd->pageCount;
 
     if ( index < -1 || index > max )
     {
