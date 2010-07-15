@@ -38,21 +38,36 @@
 #ifndef oodPropertySheetDialog_Included
 #define oodPropertySheetDialog_Included
 
-// Enum for parts of a property sheet page.
-typedef enum
-{
-    pageText, headerText, headerSubtext
-} pagePart_t;
+
+#define TRANSLATEACCELERATOR_MSG    "translateAccelerator"
+#define SETACTIVE_MSG               "setActive"
+#define WIZBACK_MSG                 "wizBack"
+#define WIZNEXT_MSG                 "wizNext"
+#define WIZFINISH_MSG               "wizFinish"
+#define KILLACTIVE_MSG              "killActive"
+#define RESET_MSG                   "reset"
+#define QUERYCANCEL_MSG             "queryCancel"
+#define QUERYINITIALFOCUS_MSG       "queryInitialFocus"
+#define APPLY_MSG                   "apply"
+#define GETOBJECT_MSG               "getObject"
+#define HELP_MSG                    "help"
 
 #define MAX_PROPSHEET_DIALOGS        5
 
 #define TOO_MANY_PROPSHEET_DIALOGS \
         "The concurrent creation of property sheet dialogs has reached the maximum (%d)"
 
+// Enum for parts of a property sheet page.
+typedef enum
+{
+    pageText, headerText, headerSubtext
+} pagePart_t;
+
 // Struct used to pass information to a CBTHook set up for a property sheet.
 typedef struct {
     pCPropertySheetDialog   pcpsd;           // CSelf struct for the property sheet dialog.
     HHOOK                   hHook;           // Hook handle.
+    HWND                    hPropSheet;      // Window handle of property sheet when discovered
     uint32_t                threadID;        // Thread ID used to match the struct.
 } PROPSHEETHOOKDATA;
 

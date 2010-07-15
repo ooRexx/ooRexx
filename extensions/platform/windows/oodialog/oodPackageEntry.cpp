@@ -365,6 +365,9 @@ REXX_METHOD_PROTOTYPE(psdlg_popup);
 REXX_METHOD_PROTOTYPE(psdlg_getPage);
 REXX_METHOD_PROTOTYPE(psdlg_changed);
 REXX_METHOD_PROTOTYPE(psdlg_unchanged);
+REXX_METHOD_PROTOTYPE(psdlg_indexToID);
+REXX_METHOD_PROTOTYPE(psdlg_setWizButtons);
+REXX_METHOD_PROTOTYPE(psdlg_showWizButtons);
 REXX_METHOD_PROTOTYPE(psdlg_test);
 
 // PropertySheetPage
@@ -1052,6 +1055,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(psdlg_getPage,                  psdlg_getPage),
     REXX_METHOD(psdlg_changed,                  psdlg_changed),
     REXX_METHOD(psdlg_unchanged,                psdlg_unchanged),
+    REXX_METHOD(psdlg_indexToID,                psdlg_indexToID),
+    REXX_METHOD(psdlg_setWizButtons,            psdlg_setWizButtons),
+    REXX_METHOD(psdlg_showWizButtons,           psdlg_showWizButtons),
     REXX_METHOD(psdlg_test,                     psdlg_test),
 
     // PropertySheetPage

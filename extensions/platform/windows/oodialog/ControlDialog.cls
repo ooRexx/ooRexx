@@ -117,7 +117,7 @@
 ::class 'PropertySheetDialog' public subclass PlainBaseDialog
 
 -- WM_USER == 0x400
-::constant PSM_INDEXTOID             "0x0486"
+-- ::constant PSM_INDEXTOID             "0x0486"
 
 
 ::attribute pages get unguarded external "LIBRARY oodialog psdlg_getPages_atr"
@@ -127,16 +127,15 @@
 ::method initDialog unguarded
   return 0
 
-::method indexToID
-   use strict arg index
-   return self~sendWinIntMsg(self~PSM_INDEXTOID, index - 1, 0)
-
 ::method execute external "LIBRARY oodialog psdlg_execute"
 ::method popup external "LIBRARY oodialog psdlg_popup"
 
 ::method getPage unguarded external "LIBRARY oodialog psdlg_getPage"
 ::method changed unguarded external "LIBRARY oodialog psdlg_changed"
 ::method unchanged unguarded external "LIBRARY oodialog psdlg_unchanged"
+::method setWizButtons unguarded external "LIBRARY oodialog psdlg_setWizButtons"
+::method showWizButtons unguarded external "LIBRARY oodialog psdlg_showWizButtons"
+::method indexToID external "LIBRARY oodialog psdlg_indexToID"
 
 
 ::method test unguarded external "LIBRARY oodialog psdlg_test"
@@ -225,6 +224,18 @@
 ::method translateAccelerator unguarded
     use strict arg msg, keyCode, d, propsheet
     return self~PSNRET_NOERROR
+
+::method wizBack unguarded
+    use strict arg propSheet
+    return 0
+
+::method wizNext unguarded
+    use strict arg propSheet
+    return 0
+
+::method wizFinish unguarded
+    use strict arg propSheet
+    return 0
 
 ::method apply unguarded
     use strict arg isOkButton, propSheet

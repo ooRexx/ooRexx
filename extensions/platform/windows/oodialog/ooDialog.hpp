@@ -550,6 +550,7 @@ typedef struct _pspCSelf {
     void                   *cppPropSheet;     // PropertySheetDialog CSelf.
     RexxObjectPtr           rexxPropSheet;    // Rexx PropertySheetDialog object.
     RexxStringObject        extraOpts;        // Storage for extra options, used by RcPSPDialog, available for other uses.
+    INT_PTR                 pageID;           // Identifies the page to the Windows property sheet, resource ID or pointer
     char                   *pageTitle;
     char                   *headerTitle;
     char                   *headerSubtitle;
@@ -557,12 +558,13 @@ typedef struct _pspCSelf {
     uint32_t                cx;               // Width and height of the dialog.
     uint32_t                cy;
     uint32_t                pageFlags;
-    uint32_t                pageDlgID;        // Resource ID of dlg template for a ResPSPDialog
-    uint32_t                pageID;           // Page number, zero-based index
+    uint32_t                resID;            // Resource ID of dlg template for a ResPSPDialog (converted from symbolic if needed.)
+    uint32_t                pageNumber;       // Page number, zero-based index
     bool                    activated;        // Was the page visited by the user
     bool                    abort;            // Used to force a modal property sheet to close
     bool                    wantAccelerators; // User wants PSN_TRANSLATEACCELERATOR notifications
     bool                    wantGetObject;    // User wants PSN_GETOBJECT notifications
+    bool                    isWizardPage;
 } CPropertySheetPage;
 typedef CPropertySheetPage *pCPropertySheetPage;
 

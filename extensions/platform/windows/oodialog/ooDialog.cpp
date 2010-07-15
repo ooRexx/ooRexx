@@ -294,6 +294,11 @@ void delPropSheetDialog(pCPropertySheetDialog pcpsd)
         LocalFree(pcpsd->rexxPages);
         pcpsd->rexxPages = NULL;
     }
+    if ( pcpsd->caption != NULL )
+    {
+        LocalFree(pcpsd->caption);
+        pcpsd->caption = NULL;
+    }
     pcpsd->pageCount = 0;
 }
 

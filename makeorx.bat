@@ -116,7 +116,7 @@ REM  Don't loop building the debug version, forever.
 SET MKDEBUG=0
 
 :STARTBUILD
-killer rxapi.exe
+pskill rxapi.exe
 CALL ORXDB %BLDRELEASE%
 
 IF ERRORLEVEL 1 GOTO ENV_VARS_CLEANUP

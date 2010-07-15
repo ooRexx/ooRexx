@@ -93,8 +93,9 @@ bool goodReply(RexxThreadContext *c, pCPropertySheetDialog pcpsd, RexxObjectPtr 
             psnCheckForCondition(c, pcpsd);
             return false;
         }
+        return true;
     }
-    return true;
+    return false;
 }
 
 inline void psnMemoryErr(RexxThreadContext *c, pCPropertySheetDialog pcpsd)
@@ -284,6 +285,173 @@ RexxArrayObject getTranslateAccelatorArgs(RexxThreadContext *c, uint32_t _wmMsg,
 
 
 /**
+ * Translates the Rexx reply for a PSN_SETACTIVE notification to the Windows
+ * equivalent.
+ *
+ * Note that the replies to PSN_SETACTIVE, PSN_WIZBACK, and PSN_WIZNEXT are all
+ * handled by this function.
+ *
+ * @param c
+ * @param pcpsd
+ * @param result
+ * @param name
+ *
+ * @return INT_PRT
+ */
+INT_PTR getSetActiveValue(RexxThreadContext *c, pCPropertySheetDialog pcpsd, RexxObjectPtr result, CSTRING name)
+{
+    INT_PTR ret = -2;
+
+    if ( c->IsPointer(result) )
+    {
+        return (INT_PTR)c->PointerValue((RexxPointerObject)result);
+    }
+
+    int max = pcpsd->pageCount;
+
+    int32_t index;
+    if ( ! c->Int32(result, &index) || (index < -1 || index > max) )
+    {
+        TCHAR buf[256];
+        _snprintf(buf, sizeof(buf), "The return from method %s() must be a whole number from %d to %d; found %s",
+                  name, -1, max, c->ObjectToStringValue(result));
+
+        c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
+        return ret;
+    }
+
+    if ( index < 1 )
+    {
+        ret = index;
+    }
+    else
+    {
+        pCPropertySheetPage pcpsp = pcpsd->cppPages[index - 1];
+        ret = pcpsp->pageID;
+    }
+    return ret;
+}
+
+
+bool setPropSheetHook(pCPropertySheetDialog pcpsd)
+{
+    PROPSHEETHOOKDATA *pshd = NULL;
+    bool               result = false;
+    uint32_t           threadID = 0;
+
+    pshd = (PROPSHEETHOOKDATA *)LocalAlloc(LPTR, sizeof(PROPSHEETHOOKDATA));
+    if ( pshd != NULL )
+    {
+        pshd->pcpsd = pcpsd;
+        SetLastError(0);
+
+        EnterCriticalSection(&ps_crit_sec);
+
+        if ( CountPropSheetHooks < MAX_PROPSHEET_DIALOGS )
+        {
+            threadID = GetCurrentThreadId();
+            pshd->hHook = SetWindowsHookEx(WH_CBT, (HOOKPROC)PropSheetCBTProc, (HINSTANCE)NULL, GetCurrentThreadId());
+
+            if ( pshd->hHook != NULL )
+            {
+                pshd->threadID = threadID;
+                PropSheetHookData[CountPropSheetHooks] = pshd;
+                CountPropSheetHooks++;
+                result = true;
+            }
+        }
+
+        LeaveCriticalSection(&ps_crit_sec);
+
+        if ( result == true )
+        {
+            goto done_out;
+        }
+    }
+
+    // Only here if we had an error, figure out which one.
+    if ( pshd == NULL )
+    {
+        outOfMemoryException(pcpsd->dlgProcContext);
+    }
+    else if ( threadID == 0 )
+    {
+        userDefinedMsgException(pcpsd->dlgProcContext, TOO_MANY_PROPSHEET_DIALOGS, MAX_PROPSHEET_DIALOGS);
+    }
+    else
+    {
+        systemServiceExceptionCode(pcpsd->dlgProcContext, API_FAILED_MSG, "SetWindowsHookEx", GetLastError());
+    }
+
+    safeLocalFree(pshd);
+
+done_out:
+   return result;
+}
+
+/**
+ * Searches for a match of the property sheet hook data struct.  The match is
+ * keyed on the current thread ID and hwnd.
+ *
+ * This function is called twice.  The first time from PropCBTProc() where the
+ * hwnd has not yet been placed into the struct; the match is by thread ID only.
+ * If found, the struct is returned and PropSheetCBTProc() adds the hwnd to the
+ * struct and unhooks the hook.
+ *
+ * The second time this function is called, it is from the PropSheetCallback()
+ * function and this invocation passes in the hwnd.  If found, when hwnd is not
+ * null, the struct is removed from the table and the caller frees its memory.
+ *
+ * The use of the hwnd and second invocation is because of the AeroWizard style
+ * property sheet.  Placing the CSelf struct in the GWLP_USEDATA
+ *
+ *
+ * @param hwnd
+ *
+ * @return PROPSHEETHOOKDATA*
+ */
+PROPSHEETHOOKDATA *getPropSheetHookData(HWND hwnd)
+{
+    register size_t i;
+    DWORD id = GetCurrentThreadId();
+    PROPSHEETHOOKDATA *pshd = NULL;
+
+    EnterCriticalSection(&ps_crit_sec);
+
+    for ( i = 0; i < CountPropSheetHooks; i++ )
+    {
+        if ( PropSheetHookData[i]->threadID == id && PropSheetHookData[i]->hPropSheet == hwnd )
+        {
+            pshd = PropSheetHookData[i];
+            break;
+        }
+    }
+
+    // It seems almost impossible that pshd could be null, but there is nothing
+    // to do about it if it is.
+    if ( pshd != NULL && hwnd != NULL )
+    {
+        // If the slot found is the last, just set it to null.
+        if ( i == CountPropSheetHooks - 1 )
+        {
+            PropSheetHookData[i] = NULL;
+        }
+        else
+        {
+            // Since it is not the last, i + 1 must be valid memory.
+            memcpy(&PropSheetHookData[i], &PropSheetHookData[i + 1], (CountPropSheetHooks - i - 1) * sizeof(PROPSHEETHOOKDATA *));
+            PropSheetHookData[CountPropSheetHooks - 1] = NULL;
+        }
+        CountPropSheetHooks--;
+    }
+
+    LeaveCriticalSection(&ps_crit_sec);
+
+    return pshd;
+}
+
+
+/**
  * Called from the property sheet callback function when signaled that the
  * property sheet dialog is being initialized.  Performs the initialization
  * normally done in the window loop thread function and the execute() method for
@@ -293,12 +461,15 @@ RexxArrayObject getTranslateAccelatorArgs(RexxThreadContext *c, uint32_t _wmMsg,
  */
 static void initializePropSheet(HWND hPropSheet)
 {
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)getWindowPtr(hPropSheet, GWLP_USERDATA);
+    PROPSHEETHOOKDATA *pshd = getPropSheetHookData(hPropSheet);
 
-    if ( pcpsd != NULL )
+    if ( pshd != NULL )
     {
+        pCPropertySheetDialog pcpsd = pshd->pcpsd;
         RexxThreadContext *c = pcpsd->dlgProcContext;
         pCPlainBaseDialog pcpbd = pcpsd->pcpbd;
+
+        LocalFree(pshd);
 
         pcpbd->hDlg = hPropSheet;
 
@@ -430,10 +601,69 @@ inline bool isPSNMsg(uint32_t uMsg, LPARAM lParam)
 
 
 /**
+ * The PSN_SETACTIVE, PSN_WIZBACK, and PSN_WIZNEXT notifications all use
+ * identical code.
+ *
+ * @param c
+ * @param pcpsd
+ * @param hPage
+ * @param name
+ */
+void doSetActiveCommon(RexxThreadContext *c, pCPropertySheetPage pcpsp, HWND hPage, CSTRING name)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
+    INT_PTR reply = 0;
+
+    RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, name, pcpsd->rexxSelf);
+
+    if ( goodReply(c, pcpsd, result, name) )
+    {
+        reply = getSetActiveValue(c, pcpsd, result, name);
+        psnCheckForCondition(c, pcpsd);
+    }
+    setWindowPtr(hPage, DWLP_MSGRESULT, (LPARAM)reply);
+}
+
+/**
+ * Common code for PSN_WIZFINISH and PSN_QUERYINITIALFOCUS
+ *
+ *
+ * @param c
+ * @param pcpsd
+ * @param result
+ * @param hPage
+ * @param name
+ */
+void doWizFinishCommon(RexxThreadContext *c, pCPropertySheetPage pcpsp, RexxObjectPtr result, HWND hPage, CSTRING name)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
+    LPARAM reply = NULL;
+
+    if ( goodReply(c, pcpsd, result, name) )
+    {
+        uint32_t id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result);
+        if ( id == OOD_MEMORY_ERR )
+        {
+            psnMemoryErr(c, pcpsd);
+        }
+        else if ( id == OOD_ID_EXCEPTION )
+        {
+            invalidPSNReturnListException(c, name, "a valid resource ID or 0", result, pcpsd);
+        }
+        else
+        {
+            reply = (LPARAM)GetDlgItem(hPage, id);
+        }
+    }
+    setWindowPtr(hPage, DWLP_MSGRESULT, reply);
+}
+
+
+/**
  * Handler for all the property sheet notification messages.
  *
  * Rather than use a connectPropertySheetEvent() method, the property sheet
- * dialog handles every notification.  The dialog class supplies a do-nothing
+ * dialog handles every notification.  The dialog class supplies the correct
  * default implementation for each notification.  The Rexx programmer over-rides
  * the default implementation for any notification he wants to handle.
  *
@@ -457,13 +687,13 @@ static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPA
             uint32_t reply           = PSNRET_NOERROR;
             RexxObjectPtr isOkButton = lppsn->lParam ? TheTrueObj : TheFalseObj;
 
-            RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, "APPLY", isOkButton, pcpsd->rexxSelf);
+            RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, APPLY_MSG, isOkButton, pcpsd->rexxSelf);
 
-            if ( goodReply(c, pcpsd, result, "apply") )
+            if ( goodReply(c, pcpsd, result, APPLY_MSG) )
             {
                 if ( ! c->UnsignedInt32(result, &reply) || ! (reply >= PSNRET_NOERROR && reply <= PSNRET_INVALID_NOCHANGEPAGE) )
                 {
-                    invalidPSNReturnListException(c, "apply", VALID_PSNRET_LIST, result, pcpsd);
+                    invalidPSNReturnListException(c, APPLY_MSG, VALID_PSNRET_LIST, result, pcpsd);
                 }
             }
             setWindowPtr(hPage, DWLP_MSGRESULT, (LPARAM)reply);
@@ -483,11 +713,8 @@ static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPA
 
         case PSN_HELP :
         {
-            RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, "HELP", pcpsd->rexxSelf);
-
-            // There is no reply for this notification, so we just check for a
-            // syntax condition in the user's event handler.
-            psnCheckForCondition(c, pcpsd);
+            RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, HELP_MSG, pcpsd->rexxSelf);
+            goodReply(c, pcpsd, result, HELP_MSG);
             break;
         }
 
@@ -497,13 +724,13 @@ static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPA
             // should send .false to cancel.
             long reply = FALSE;
 
-            RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, "KILLACTIVE", pcpsd->rexxSelf);
+            RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, KILLACTIVE_MSG, pcpsd->rexxSelf);
 
-            if ( goodReply(c, pcpsd, result, "killActive") )
+            if ( goodReply(c, pcpsd, result, KILLACTIVE_MSG) )
             {
                 if ( result != TheTrueObj && result != TheFalseObj )
                 {
-                    invalidPSNReturnListException(c, "killActive", "true or false", result, pcpsd);
+                    invalidPSNReturnListException(c, KILLACTIVE_MSG, "true or false", result, pcpsd);
                 }
                 else if ( result == TheFalseObj )
                 {
@@ -523,13 +750,13 @@ static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPA
 
             if ( ! pcpsp->abort )
             {
-                RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, "QUERYCANCEL", pcpsd->rexxSelf);
+                RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, QUERYCANCEL_MSG, pcpsd->rexxSelf);
 
-                if ( goodReply(c, pcpsd, result, "queryCancel") )
+                if ( goodReply(c, pcpsd, result, QUERYCANCEL_MSG) )
                 {
                     if ( result != TheTrueObj && result != TheFalseObj )
                     {
-                        invalidPSNReturnListException(c, "queryCancel", "true or false", result, pcpsd);
+                        invalidPSNReturnListException(c, QUERYCANCEL_MSG, "true or false", result, pcpsd);
                     }
                     else if ( result == TheFalseObj )
                     {
@@ -542,61 +769,13 @@ static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPA
             break;
         }
 
-        case PSN_QUERYINITIALFOCUS :
-        {
-            int    id    = GetDlgCtrlID((HWND)((LPPSHNOTIFY)lParam)->lParam);
-            LPARAM reply = NULL;
-
-            RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, "QUERYINITIALFOCUS", c->Int32(id), pcpsd->rexxSelf);
-
-            if ( goodReply(c, pcpsd, result, "queryInitialFocus") )
-            {
-                uint32_t id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result);
-                if ( id == OOD_MEMORY_ERR )
-                {
-                    psnMemoryErr(c, pcpsd);
-                }
-                else if ( id == OOD_ID_EXCEPTION )
-                {
-                    invalidPSNReturnListException(c, "queryInitialFocus", "a valid resource ID or 0", result, pcpsd);
-                }
-                else
-                {
-                    reply = (LPARAM)GetDlgItem(hPage, id);
-                }
-            }
-            setWindowPtr(hPage, DWLP_MSGRESULT, reply);
-            break;
-        }
-
         case PSN_RESET :
         {
             LPPSHNOTIFY lppsn            = (LPPSHNOTIFY)lParam;
             RexxObjectPtr isCancelButton = lppsn->lParam ? TheTrueObj : TheFalseObj;
 
-            RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, "RESET", isCancelButton, pcpsd->rexxSelf);
-
-            // There is no reply for this notification, so we just check for a
-            // syntax condition in the user's event handler.
-            psnCheckForCondition(c, pcpsd);
-            break;
-        }
-
-        case PSN_SETACTIVE :
-        {
-            // Send 0 to accept the activation.
-            int32_t reply = 0;
-
-            RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, "SETACTIVE", pcpsd->rexxSelf);
-
-            if ( goodReply(c, pcpsd, result, "setActive") )
-            {
-                if ( ! c->Int32(result, &reply) || ! (reply >= -1 && reply <= INT32_MAX) )
-                {
-                    wrongPSNRangeException(c, "setActive", -1, INT32_MAX, result, pcpsd);
-                }
-            }
-            setWindowPtr(hPage, DWLP_MSGRESULT, (LPARAM)reply);
+            RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, RESET_MSG, isCancelButton, pcpsd->rexxSelf);
+            goodReply(c, pcpsd, result, RESET_MSG);
             break;
         }
 
@@ -608,13 +787,13 @@ static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPA
             uint32_t reply = PSNRET_NOERROR;
 
             RexxArrayObject args = getTranslateAccelatorArgs(c, pMsg->message, pMsg->wParam, pMsg->lParam, pcpsd->rexxSelf);
-            RexxObjectPtr result = c->SendMessage(pcpsp->rexxSelf, "TRANSLATEACCELERATOR", args);
+            RexxObjectPtr result = c->SendMessage(pcpsp->rexxSelf, TRANSLATEACCELERATOR_MSG, args);
 
-            if ( goodReply(c, pcpsd, result, "translateAccelerator") )
+            if ( goodReply(c, pcpsd, result, TRANSLATEACCELERATOR_MSG) )
             {
                 if ( ! c->UnsignedInt32(result, &reply) || (reply != PSNRET_NOERROR && reply != PSNRET_MESSAGEHANDLED) )
                 {
-                    invalidPSNReturnListException(c, "translateAccelerator", VALID_PSNRET_MSG_LIST, result, pcpsd);
+                    invalidPSNReturnListException(c, TRANSLATEACCELERATOR_MSG, VALID_PSNRET_MSG_LIST, result, pcpsd);
                 }
             }
             setWindowPtr(hPage, DWLP_MSGRESULT, reply);
@@ -622,117 +801,40 @@ static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPA
             break;
         }
 
+        case PSN_SETACTIVE :
+            doSetActiveCommon(c, pcpsp, hPage, SETACTIVE_MSG);
+            break;
+
         case PSN_WIZBACK :
-            printf("PSN_WIZBACK              hDlg=%p hCurrentPage=%p\n", hPage, PropSheet_GetCurrentPageHwnd(hPropSheet));
+            doSetActiveCommon(c, pcpsp, hPage, WIZBACK_MSG);
             break;
-        case PSN_WIZFINISH :
-            printf("PSN_WIZFINISH            hDlg=%p hCurrentPage=%p\n", hPage, PropSheet_GetCurrentPageHwnd(hPropSheet));
-            break;
+
         case PSN_WIZNEXT :
-            printf("PSN_WIZNEXT              hDlg=%p hCurrentPage=%p\n", hPage, PropSheet_GetCurrentPageHwnd(hPropSheet));
+            doSetActiveCommon(c, pcpsp, hPage, WIZNEXT_MSG);
             break;
+
+        case PSN_WIZFINISH :
+        {
+            RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, WIZFINISH_MSG, pcpsd->rexxSelf);
+
+            doWizFinishCommon(c, pcpsp, result, hPage, WIZFINISH_MSG);
+            break;
+        }
+
+        case PSN_QUERYINITIALFOCUS :
+        {
+            int id = GetDlgCtrlID((HWND)((LPPSHNOTIFY)lParam)->lParam);
+
+            RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, QUERYINITIALFOCUS_MSG, c->Int32(id), pcpsd->rexxSelf);
+
+            doWizFinishCommon(c, pcpsp, result, hPage, QUERYINITIALFOCUS_MSG);
+            break;
+        }
+
         default :
             break;
     }
 }
-
-
-bool setPropSheetHook(pCPropertySheetDialog pcpsd)
-{
-    PROPSHEETHOOKDATA *pshd = NULL;
-    bool               result = false;
-    uint32_t           threadID = 0;
-
-    pshd = (PROPSHEETHOOKDATA *)LocalAlloc(LPTR, sizeof(PROPSHEETHOOKDATA));
-    if ( pshd != NULL )
-    {
-        pshd->pcpsd = pcpsd;
-        SetLastError(0);
-
-        EnterCriticalSection(&ps_crit_sec);
-
-        if ( CountPropSheetHooks < MAX_PROPSHEET_DIALOGS )
-        {
-            threadID = GetCurrentThreadId();
-            pshd->hHook = SetWindowsHookEx(WH_CBT, (HOOKPROC)PropSheetCBTProc, (HINSTANCE)NULL, GetCurrentThreadId());
-
-            if ( pshd->hHook != NULL )
-            {
-                pshd->threadID = threadID;
-                PropSheetHookData[CountPropSheetHooks] = pshd;
-                CountPropSheetHooks++;
-                result = true;
-            }
-        }
-
-        LeaveCriticalSection(&ps_crit_sec);
-
-        if ( result == true )
-        {
-            goto done_out;
-        }
-    }
-
-    // Only here if we had an error, figure out which one.
-    if ( pshd == NULL )
-    {
-        outOfMemoryException(pcpsd->dlgProcContext);
-    }
-    else if ( threadID == 0 )
-    {
-        userDefinedMsgException(pcpsd->dlgProcContext, TOO_MANY_PROPSHEET_DIALOGS, MAX_PROPSHEET_DIALOGS);
-    }
-    else
-    {
-        systemServiceExceptionCode(pcpsd->dlgProcContext, API_FAILED_MSG, "SetWindowsHookEx", GetLastError());
-    }
-
-    safeLocalFree(pshd);
-
-done_out:
-   return result;
-}
-
-PROPSHEETHOOKDATA *getPropSheetHookData(void)
-{
-    register size_t i;
-    DWORD id = GetCurrentThreadId();
-    PROPSHEETHOOKDATA *pshd = NULL;
-
-    EnterCriticalSection(&ps_crit_sec);
-
-    for ( i = 0; i < CountPropSheetHooks; i++ )
-    {
-        if ( PropSheetHookData[i]->threadID == id )
-        {
-            pshd = PropSheetHookData[i];
-            break;
-        }
-    }
-
-    // It seems almost impossible that pshd could be null, but there is nothing
-    // to do about it if it is.
-    if ( pshd != NULL )
-    {
-        // If the slot found is the last, just set it to null.
-        if ( i == CountPropSheetHooks - 1 )
-        {
-            PropSheetHookData[i] = NULL;
-        }
-        else
-        {
-            // Since it is not the last, i + 1 must be valid memory.
-            memcpy(&PropSheetHookData[i], &PropSheetHookData[i + 1], (CountPropSheetHooks - i - 1) * sizeof(PROPSHEETHOOKDATA *));
-            PropSheetHookData[CountPropSheetHooks - 1] = NULL;
-        }
-        CountPropSheetHooks--;
-    }
-
-    LeaveCriticalSection(&ps_crit_sec);
-
-    return pshd;
-}
-
 
 /**
  * The thread and message pump function for a modeless property sheet.
@@ -1085,7 +1187,7 @@ LRESULT CALLBACK RexxPropertySheetDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 LRESULT CALLBACK PropSheetCBTProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-    PROPSHEETHOOKDATA *pshd = getPropSheetHookData();
+    PROPSHEETHOOKDATA *pshd = getPropSheetHookData(NULL);
     if ( pshd == NULL )
     {
         // Without the hook handle, there is nothing that can be done.
@@ -1098,13 +1200,12 @@ LRESULT CALLBACK PropSheetCBTProc(int nCode, WPARAM wParam, LPARAM lParam)
     {
         LPCREATESTRUCT cs = (LPCREATESTRUCT)((CBT_CREATEWND *)lParam)->lpcs;
 
-        pshd->pcpsd->hDlg = (HWND)wParam;
 
         if ( isPropSheetMatch(cs) )
         {
-            setWindowPtr((HWND)wParam, GWLP_USERDATA, (LONG_PTR)pshd->pcpsd);
-            UnhookWindowsHookEx(pshd->hHook);
-            LocalFree(pshd);
+            pshd->pcpsd->hDlg = (HWND)wParam;
+            pshd->hPropSheet = (HWND)wParam;
+            UnhookWindowsHookEx(hHook);
         }
         else
         {
@@ -1362,7 +1463,7 @@ PROPSHEETPAGE *initPropSheetPages(RexxMethodContext *c, pCPropertySheetDialog pc
         if ( pcpsp->pageType == oodResPSPDialog )
         {
             psp[i].hInstance   = pcpbd->hInstance;
-            psp[i].pszTemplate = MAKEINTRESOURCE(pcpsp->pageDlgID);
+            psp[i].pszTemplate = MAKEINTRESOURCE(pcpsp->resID);
         }
         else
         {
@@ -1445,7 +1546,7 @@ HWND getValidPageHwnd(RexxMethodContext *c, pCPropertySheetDialog pcpsd, RexxObj
     HWND hPage = dlgToPSPHDlg(c, match);
     if ( hPage == NULL )
     {
-        noWindowsPageException(c, dlgToPSPCSelf(c, page)->pageID + 1, pos);
+        noWindowsPageException(c, dlgToPSPCSelf(c, page)->pageNumber + 1, pos);
 }
 
     return hPage;
@@ -1582,9 +1683,10 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
         }
 
         pCPropertySheetPage pcpsp = dlgToPSPCSelf(context, dlg);
-        pcpsp->pageID = i;
+        pcpsp->pageNumber = i;
         pcpsp->rexxPropSheet = pcpsd->rexxSelf;
         pcpsp->cppPropSheet = pcpsd;
+        pcpsp->isWizardPage = ! pcpsd->isNotWizard;
 
         *pPage = pcpsp;
         *pRexxPage = dlg;
@@ -1742,7 +1844,7 @@ err_out:
     safeLocalFree(psh);
     stopDialog(pcpsd->pcpbd, context->threadContext);
     return TheFalseObj;
-    }
+}
 
 
 /** PropertySheetDialog::changed()
@@ -1774,7 +1876,128 @@ RexxMethod2(RexxObjectPtr, psdlg_unchanged, RexxObjectPtr, _page, CSELF, pCSelf)
         PropSheet_UnChanged(pcpsd->hDlg, page);
     }
     return TheZeroObj;
+}
+
+
+/** PropertySheetDialog::setWizButtons()
+ *
+ *  Enables or disables the Back, Next, and Finish buttons in a wizard.
+ *
+ *  @param  opts  Keyword(s) that control which buttons are enabled or disabled.
+ *
+ *  @return  True this property sheet is a wizard, otherwise false.
+ *
+ *  @notes  Wizards display either three or four buttons below each page. This
+ *          method is used to specify which buttons are enabled. Wizards
+ *          normally display Back, Cancel, and either a Next or Finish button.
+ *          Typically, enable only the Next button for the welcome page, Next
+ *          and Back for interior pages, and Back and Finish for the completion
+ *          page.  The Cancel button is always enabled.  Normally, setting
+ *          FINISH or DISABLEDFINISH replaces the Next button with a Finish
+ *          button.  To display Next and Finish buttons simultaneously, set the
+ *          WIZARDHASFINISH keyword in the options when the PropertySheetDialog
+ *          is instantiated.  Every page will then display all four buttons.
+ *
+ *          If this property sheet is not a Wizard, this method has no effect.
+ *
+ *  @remarks  We do not enforce that this is only called for a Wizard, although
+ *            maybe we should.
+ *
+ *            The prop sheet marco does not return a value.
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setWizButtons, CSTRING, opts, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    if ( pcpsd->isNotWizard )
+    {
+        return TheFalseObj;
     }
+
+    uint32_t flags = 0;
+
+    if ( StrStrI(opts, "BACK")           != NULL ) flags |= PSWIZB_BACK;
+    if ( StrStrI(opts, "NEXT")           != NULL ) flags |= PSWIZB_NEXT;
+    if ( StrStrI(opts, "FINISH")         != NULL ) flags |= PSWIZB_FINISH;
+    if ( StrStrI(opts, "DISABLEDFINISH") != NULL ) flags |= PSWIZB_DISABLEDFINISH;
+
+    PropSheet_SetWizButtons(pcpsd->hDlg, flags);
+    return TheTrueObj;
+}
+
+
+/** PropertySheetDialog::showWizButtons()
+ *
+ *  Show or hide buttons in a wizard.
+ *
+ *  @param  opts       One or more of the keyword values that specify which
+ *                     property sheet buttons are to be shown. If a button value
+ *                     is included in both this argument and the optsButtons
+ *                     argument, then the button is shown.
+ *
+ *  @param optsButtons One or more of the same keywords used in opts. Here,
+ *                     they specify which property sheet buttons are to be shown
+ *                     or hidden. If a keywor appears in this argument but not
+ *                     in opts, it indicates that the button should be hidden.
+ *
+ *  @param  Returns true if this is a Wizard property sheet on Vista on later,
+ *          otherwise false.
+ *
+ *  @notes  This method requires Vista or later, a condition is raised if the OS
+ *          is not Vista or later.
+ *
+ *          This method has no effect if the property sheet is not a Wizard.
+ */
+RexxMethod3(RexxObjectPtr, psdlg_showWizButtons, CSTRING, opts, CSTRING, optsButtons, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( ! requiredOS(context, "showWizButtons", "Vista", Vista_OS) || pcpsd->isNotWizard )
+    {
+        return TheFalseObj;
+    }
+
+    uint32_t flags = 0;
+    uint32_t buttons = 0;
+
+    if ( StrStrI(opts, "BACK")   != NULL ) flags |= PSWIZB_BACK;
+    if ( StrStrI(opts, "NEXT")   != NULL ) flags |= PSWIZB_NEXT;
+    if ( StrStrI(opts, "FINISH") != NULL ) flags |= PSWIZB_FINISH;
+    if ( StrStrI(opts, "CANCEL") != NULL ) flags |= PSWIZB_CANCEL;
+
+    if ( StrStrI(optsButtons, "BACK")   != NULL ) buttons |= PSWIZB_BACK;
+    if ( StrStrI(optsButtons, "NEXT")   != NULL ) buttons |= PSWIZB_NEXT;
+    if ( StrStrI(optsButtons, "FINISH") != NULL ) buttons |= PSWIZB_FINISH;
+    if ( StrStrI(optsButtons, "CANCEL") != NULL ) buttons |= PSWIZB_CANCEL;
+
+    PropSheet_ShowWizButtons(pcpsd->hDlg, flags, buttons);
+    return TheTrueObj;
+}
+
+
+RexxMethod2(RexxObjectPtr, psdlg_indexToID, int32_t, index, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    INT_PTR result = -2;
+
+    int max = pcpsd->pageCount;
+
+    if ( index < -1 || index > max )
+    {
+        wrongRangeException(context->threadContext, 1, -1, max, index);
+    }
+    else if ( index < 1 )
+    {
+        result = index;
+    }
+    else
+    {
+        pCPropertySheetPage pcpsp = pcpsd->cppPages[index - 1];
+        result = pcpsp->pageID;
+    }
+
+    return context->NewPointer((void *)result);
+}
 
 
 /** PropertySheetDialog::test()
@@ -1784,8 +2007,8 @@ RexxMethod2(RexxObjectPtr, psdlg_unchanged, RexxObjectPtr, _page, CSELF, pCSelf)
 RexxMethod1(RexxObjectPtr, psdlg_test, CSELF, pCSelf)
 {
     printf("No test set up at this time\n");
-    printf("Make version for 6.1=%d", MAKEVERSION(6, 1));
-    printf("Make version for 6.01=%d", MAKEVERSION(6, 1));
+    printf("Make version for 6.1=%d\n", MAKEVERSION(6, 1));
+    printf("Make version for 6.01=%d\n", MAKEVERSION(6, 01));
     return TheZeroObj;
 }
 
@@ -1897,15 +2120,15 @@ static void parsePageOpts(RexxMethodContext *c, pCPropertySheetPage pcpsp, CSTRI
 
     if ( options != NULL )
     {
-        if ( StrStrI(options, "USETITLE") ) opts |= PSP_USETITLE;
-        if ( StrStrI(options, "RTLREADING") ) opts |= PSP_RTLREADING;
-        if ( StrStrI(options, "HASHELP") ) opts |= PSP_HASHELP;
-        if ( StrStrI(options, "USEREFPARENT") ) opts |= PSP_USEREFPARENT;
-        if ( StrStrI(options, "PREMATURE") ) opts |= PSP_PREMATURE;
-        if ( StrStrI(options, "HIDEHEADER") ) opts |= PSP_HIDEHEADER;
-        if ( StrStrI(options, "USEHEADERTITLE") ) opts |= PSP_USEHEADERTITLE;
-        if ( StrStrI(options, "USEHEADERSUBTITLE") ) opts |= PSP_USEHEADERSUBTITLE;
-        if ( StrStrI(options, "USEFUSIONCONTEXT") ) opts |= PSP_USEFUSIONCONTEXT;
+        if ( StrStrI(options, "USETITLE")          != NULL ) opts |= PSP_USETITLE;
+        if ( StrStrI(options, "RTLREADING")        != NULL ) opts |= PSP_RTLREADING;
+        if ( StrStrI(options, "HASHELP")           != NULL ) opts |= PSP_HASHELP;
+        if ( StrStrI(options, "USEREFPARENT")      != NULL ) opts |= PSP_USEREFPARENT;
+        if ( StrStrI(options, "PREMATURE")         != NULL ) opts |= PSP_PREMATURE;
+        if ( StrStrI(options, "HIDEHEADER")        != NULL ) opts |= PSP_HIDEHEADER;
+        if ( StrStrI(options, "USEHEADERTITLE")    != NULL ) opts |= PSP_USEHEADERTITLE;
+        if ( StrStrI(options, "USEHEADERSUBTITLE") != NULL ) opts |= PSP_USEHEADERSUBTITLE;
+        if ( StrStrI(options, "USEFUSIONCONTEXT")  != NULL ) opts |= PSP_USEFUSIONCONTEXT;
     }
     pcpsp->pageFlags = opts;
 }
@@ -1918,7 +2141,7 @@ bool initPageDlgFrame(RexxMethodContext *c, pCPropertySheetPage pcpsp)
     if ( pcpsp->pageTitle == NULL )
     {
         char buf[32];
-        _snprintf(buf, sizeof(buf), "Page %d", pcpsp->pageID);
+        _snprintf(buf, sizeof(buf), "Page %d", pcpsp->pageNumber);
 
         if ( ! setPageText(c, pcpsp, buf, pageText) )
         {
@@ -1963,8 +2186,11 @@ RexxObjectPtr initUserTemplate(RexxMethodContext *c, pCPropertySheetPage pcpsp)
 
     if ( ! c->CheckCondition() && pcdd->active != NULL )
     {
+        pcpsp->pageID = (INT_PTR)pcdd->base;
+
         // Set the number of dialog items field in the dialog template.
         ((DLGTEMPLATE *)pcdd->base)->cdit = (WORD)pcdd->count;
+
         return TheTrueObj;
     }
 
@@ -2005,8 +2231,11 @@ RexxObjectPtr initRcTemplate(RexxMethodContext *c, pCPropertySheetPage pcpsp)
 
     if ( ! c->CheckCondition() && pcdd->active != NULL )
     {
+        pcpsp->pageID = (INT_PTR)pcdd->base;
+
         // Set the number of dialog items field in the dialog template.
         ((DLGTEMPLATE *)pcdd->base)->cdit = (WORD)pcdd->count;
+
         return TheTrueObj;
     }
 
@@ -2026,6 +2255,8 @@ RexxObjectPtr initResTemplate(RexxMethodContext *c, pCPropertySheetPage pcpsp)
     {
         goto err_out;
     }
+    pcpsp->pageID = (INT_PTR)pcpsp->resID;
+
     return TheTrueObj;
 
 err_out:
@@ -2453,7 +2684,7 @@ RexxMethod7(RexxObjectPtr, respspdlg_init, RexxStringObject, dllFile, RexxObject
         pCPropertySheetPage pcpsp = (pCPropertySheetPage)pcpbd->dlgPrivate;
 
         pcpsp->pageType = oodResPSPDialog;
-        pcpsp->pageDlgID = resID;
+        pcpsp->resID = resID;
 
         parsePageOpts(context, pcpsp, pageOpts);
 

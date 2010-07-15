@@ -297,12 +297,60 @@ void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char
     userDefinedMsgException(c->threadContext, msg);
 }
 
+// TODO replace all usage of this function with requiredOS(0
 RexxObjectPtr wrongWindowsVersionException(RexxMethodContext *context, const char *methodName, const char *windows)
 {
     char msg[256];
     _snprintf(msg, sizeof(msg), "The %s() method requires Windows %s or later", methodName, windows);
     context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(msg));
     return NULLOBJECT;
+}
+
+
+/**
+ * Checks that the current Os meets the minimum OS requirements for a method.
+ * Raises an exception if the minimum is not meet.
+ *
+ * @param context
+ * @param method
+ * @param os name
+ * @param os type
+ *
+ * @return True if the requirement is meet, otherwise false.
+ *
+ * @remarks Note the switch of the odering of the arguments for this
+ *          requiredComCtl32Version() and the one directly above.
+ */
+bool requiredOS(RexxMethodContext *context, const char *method, const char *osName, os_name_t os)
+{
+    bool ok = false;
+    switch ( os )
+    {
+        case XP_OS :
+            ok = _isAtLeastXP();
+            break;
+
+        case Vista_OS :
+            ok = _isAtLeastVista();
+            break;
+
+        case Windows7_OS :
+            ok = _isAtLeastWindows7();
+            break;
+
+        default :
+            break;
+
+    }
+    if ( ! ok )
+    {
+        char buf[256];
+
+        _snprintf(buf, sizeof(buf), "The %s() method requires Windows %s or later", method, osName);
+        context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(buf));
+        return false;
+    }
+    return true;
 }
 
 
@@ -371,7 +419,9 @@ bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName,
     if ( ComCtl32Version < minimum )
     {
         char msg[256];
+
         _snprintf(msg, sizeof(msg), "The %s() method requires %s or later", methodName, comctl32VersionName(minimum));
+
         context->RaiseException1(Rexx_Error_System_service_user_defined, context->String(msg));
         return false;
     }

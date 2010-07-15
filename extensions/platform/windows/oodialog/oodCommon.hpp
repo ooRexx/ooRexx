@@ -116,6 +116,7 @@ extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPt
 extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
 extern int32_t    resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPtr self);
+extern bool       requiredOS(RexxMethodContext *context, const char *method, const char *osName, os_name_t os);
 extern bool       requiredOS(RexxMethodContext *context, os_name_t os, const char *msg, const char *osName);
 extern bool       requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 extern bool       requiredComCtl32Version(RexxMethodContext *context, DWORD minimum, const char *msg);
