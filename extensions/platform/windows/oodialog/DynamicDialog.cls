@@ -42,7 +42,7 @@
  * The Dynamic Dialog Class.  This class is the foundation for creating a dialog
  * template in memory.
  */
-::class 'DynamicDialog' Mixinclass Object public
+::class 'DynamicDialog' mixinclass Object public
 
 ::constant STATIC_ID  -1
 
@@ -429,6 +429,9 @@
 -- It is usually called from the load() method.  The return was not documented prior to
 -- 4.1.0, but it returned 0 for success and 1 for error.  Need to preserve that, I guess,
 -- although .true and .false make much more sense.
+--
+-- We special case a .PropertySheetPage and return the dlg. stem so the dialog template
+-- can be started correctly for DS_CONTROL dialogs.
 ::method loadFrame private
    use arg resfile, dialogid, options, expected
    if arg(4,"o") | expected = 0 then expected = 200
@@ -495,6 +498,9 @@
    internopts = internopts || self~getRCStyle(dlg.style, "DLG")
 
    dlg.title = ""
+   dlg.fsize = ""
+   dlg.font = ""
+
    s = f~linein; fl = fl -1
    do while s~wordpos("CAPTION ") = 0 & s~wordpos("FONT ") = 0 & fl > 0
       s = f~linein; fl = fl -1
@@ -506,25 +512,23 @@
       do while s~wordpos("FONT ") = 0 & fl > 0
          s = f~linein; fl = fl -1
       end
-      if fl > 0 then
+      if fl > 0 then do
          parse var s prev dlg.fsize "," '"'dlg.font'"'
-      else do
-         dlg.fsize = ""
-         dlg.font = ""
       end
    end
    else do
       parse var s prev dlg.fsize "," '"'dlg.font'"'
-      dlg.title = ""
    end
    f~close
 
    if dlg.title == "" then internopts ||= " NOBORDER"
 
+   if self~isA(.PropertySheetPage) then return self~startTemplate(dlg.w, dlg.h, dlg.title, dlg.font, dlg.fsize, expected)
+
    if self~create(dlg.x, dlg.y, dlg.w, dlg.h, dlg.title, internopts,, dlg.font, dlg.fsize, expected) then return 0
    else return 1
 
--- This method creates the dialog's controls from a resource script file. It is usuall called by the load() method.
+-- This method creates the dialog's controls from a resource script file. It is usually called by the load() method.
 -- Although its return was not documented prior to 4.1.0, it has returned 0 for success and non-zero for failure.
 ::method loadItems private
    use arg resfile, dialogid, loadOptions

@@ -58,6 +58,7 @@ extern void  systemServiceExceptionCode(RexxThreadContext *context, const char *
 extern void  systemServiceExceptionComCode(RexxThreadContext *context, const char *msg, const char *arg1, HRESULT hr);
 extern void  outOfMemoryException(RexxThreadContext *c);
 extern void  userDefinedMsgException(RexxThreadContext *c, CSTRING msg);
+extern void  userDefinedMsgException(RexxThreadContext *c, CSTRING formatStr, int number);
 extern void  userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg);
 extern void  userDefinedMsgException(RexxMethodContext *c, CSTRING msg);
 extern void  userDefinedMsgException(RexxMethodContext *c, size_t pos, CSTRING msg);
@@ -66,6 +67,7 @@ extern void  stringTooLongException(RexxThreadContext *c, int pos, size_t len, s
 extern void  numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
 extern void  notNonNegativeException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
 extern void  notPositiveException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
+extern void  wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING obj, RexxObjectPtr actual);
 extern void  wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING obj);
 extern void  wrongObjInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);
 extern void *executionErrorException(RexxThreadContext *c, CSTRING msg);
@@ -104,9 +106,9 @@ extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxThreadContext *c, CSTRING className);
-extern bool            checkForCondition(RexxThreadContext *c);
+extern bool            checkForCondition(RexxThreadContext *c, bool clear);
 extern void            standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition);
-extern bool            isInt(int, RexxObjectPtr, RexxMethodContext *);
+extern bool            isInt(int, RexxObjectPtr, RexxThreadContext *);
 extern bool            isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
 extern void            dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
 extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);

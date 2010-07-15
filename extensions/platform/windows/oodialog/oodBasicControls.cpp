@@ -1735,12 +1735,12 @@ RexxMethod2(logical_t, e_setTabStops, RexxArrayObject, tabStops, CSELF, pCSelf)
         item = c->ArrayAt(tabStops, i);
         if ( item == NULLOBJECT )
         {
-            wrongObjInArrayException(c->threadContext, 1, i, "a positive number");
+            sparseArrayException(context->threadContext, 1, i);
             goto done_out;
         }
         if ( ! c->UnsignedInt32(item, &tabStop) )
         {
-            wrongObjInArrayException(c->threadContext, 1, i, "a positive number");
+            wrongObjInArrayException(c->threadContext, 1, i, "a positive number", item);
             goto done_out;
         }
         buf[i - 1] = tabStop;

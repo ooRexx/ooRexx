@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,7 +51,9 @@ pCPlainBaseDialog    DialogTable[MAXDIALOGS] = {NULL};
 pCPlainBaseDialog    TopDlg = NULL;
 size_t               CountDialogs = 0;
 CRITICAL_SECTION     crit_sec = {0};
+CRITICAL_SECTION     ps_crit_sec = {0};
 DWORD                ComCtl32Version = 0;
+char                 ComCtl32VersionStr[COMCTL32_VERSION_STRING_LEN + 1] = "";
 
 // Initialized in dlgutil_init_cls
 RexxObjectPtr       TheTrueObj = NULLOBJECT;
@@ -73,6 +75,9 @@ RexxClassObject     TheDynamicDialogClass = NULLOBJECT;
 // Initialized in the DialogControl class init method (dlgctrl_init_cls.)
 RexxClassObject     TheDialogControlClass = NULLOBJECT;
 
+// Initialized in the PropertySheetPage class init method (psp_init_cls.)
+RexxClassObject     ThePropertySheetPageClass = NULLOBJECT;
+
 // Initialize in the Size class init method (size_init_cls.)
 RexxClassObject     TheSizeClass = NULLOBJECT;;
 
@@ -86,11 +91,13 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     {
         MyInstance = hinstDLL;
         InitializeCriticalSection(&crit_sec);
+        InitializeCriticalSection(&ps_crit_sec);
     }
     else if ( fdwReason == DLL_PROCESS_DETACH )
     {
         MyInstance = NULL;
         DeleteCriticalSection(&crit_sec);
+        DeleteCriticalSection(&ps_crit_sec);
     }
     return(TRUE);
 }
@@ -151,6 +158,8 @@ REXX_METHOD_PROTOTYPE(rsrcUtils_checkID);
 
 // WindowBase
 REXX_METHOD_PROTOTYPE(wb_getHwnd);
+REXX_METHOD_PROTOTYPE(wb_getInitCode);
+REXX_METHOD_PROTOTYPE(wb_setInitCode);
 REXX_METHOD_PROTOTYPE(wb_getFactorX);
 REXX_METHOD_PROTOTYPE(wb_setFactorX);
 REXX_METHOD_PROTOTYPE(wb_getFactorY);
@@ -336,17 +345,50 @@ REXX_METHOD_PROTOTYPE(dyndlg_addMethod);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconResource);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 
-// ControlDialog
-REXX_METHOD_PROTOTYPE(chld_getOwnerDialog);
-REXX_METHOD_PROTOTYPE(chld_setOwnerDialog);
-
 // ResourceDialog
 REXX_METHOD_PROTOTYPE(resdlg_init);
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
 REXX_METHOD_PROTOTYPE(resdlg_startDialog_pvt);
 
+// ControlDialog
+REXX_METHOD_PROTOTYPE(chld_getOwnerDialog);
+REXX_METHOD_PROTOTYPE(chld_setOwnerDialog);
+
 // ResourceControlDialog
 REXX_METHOD_PROTOTYPE(resCtrlDlg_startDialog_pvt);
+
+// PropertySheetDialog
+REXX_METHOD_PROTOTYPE(psdlg_getPages_atr);
+REXX_METHOD_PROTOTYPE(psdlg_init);
+REXX_METHOD_PROTOTYPE(psdlg_execute);
+REXX_METHOD_PROTOTYPE(psdlg_popup);
+REXX_METHOD_PROTOTYPE(psdlg_getPage);
+REXX_METHOD_PROTOTYPE(psdlg_changed);
+REXX_METHOD_PROTOTYPE(psdlg_unchanged);
+REXX_METHOD_PROTOTYPE(psdlg_test);
+
+// PropertySheetPage
+REXX_METHOD_PROTOTYPE(psp_init_cls);
+REXX_METHOD_PROTOTYPE(psp_propSheet_atr);
+REXX_METHOD_PROTOTYPE(psp_wasActivated_atr);
+REXX_METHOD_PROTOTYPE(psp_getcx);
+REXX_METHOD_PROTOTYPE(psp_setcx);
+REXX_METHOD_PROTOTYPE(psp_getPageTitle);
+REXX_METHOD_PROTOTYPE(psp_setPageTitle);
+REXX_METHOD_PROTOTYPE(psp_getWantNotification);
+REXX_METHOD_PROTOTYPE(psp_setWantNotification);
+REXX_METHOD_PROTOTYPE(psp_init_propertySheetPage);
+REXX_METHOD_PROTOTYPE(psp_initTemplate);
+
+// ResPSPDialog
+REXX_METHOD_PROTOTYPE(respspdlg_init);
+
+// RcPSPDialog
+REXX_METHOD_PROTOTYPE(rcpspdlg_init);
+REXX_METHOD_PROTOTYPE(rcpspdlg_startTemplate);
+
+// UserPSPDialog
+REXX_METHOD_PROTOTYPE(userpspdlg_init);
 
 // WindowExtensions
 REXX_METHOD_PROTOTYPE(winex_initWindowExtensions);
@@ -791,6 +833,8 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(wb_init_windowBase,             wb_init_windowBase),
     REXX_METHOD(wb_getHwnd,                     wb_getHwnd),
+    REXX_METHOD(wb_getInitCode,                 wb_getInitCode),
+    REXX_METHOD(wb_setInitCode,                 wb_setInitCode),
     REXX_METHOD(wb_getFactorX,                  wb_getFactorX),
     REXX_METHOD(wb_setFactorX,                  wb_setFactorX),
     REXX_METHOD(wb_getFactorY,                  wb_getFactorY),
@@ -988,17 +1032,50 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(window_init,                    window_init),
     REXX_METHOD(window_unInit,                  window_unInit),
 
-    // ControlDialog
-    REXX_METHOD(chld_getOwnerDialog,            chld_getOwnerDialog),
-    REXX_METHOD(chld_setOwnerDialog,            chld_setOwnerDialog),
-
     // ResDialog
     REXX_METHOD(resdlg_init,                    resdlg_init),
     REXX_METHOD(resdlg_getDataTableIDs_pvt,     resdlg_getDataTableIDs_pvt),
     REXX_METHOD(resdlg_startDialog_pvt,         resdlg_startDialog_pvt),
 
+    // ControlDialog
+    REXX_METHOD(chld_getOwnerDialog,            chld_getOwnerDialog),
+    REXX_METHOD(chld_setOwnerDialog,            chld_setOwnerDialog),
+
     // ResControlDialog
     REXX_METHOD(resCtrlDlg_startDialog_pvt,     resCtrlDlg_startDialog_pvt),
+
+    // PropertySheetDialog
+    REXX_METHOD(psdlg_getPages_atr,             psdlg_getPages_atr),
+    REXX_METHOD(psdlg_init,                     psdlg_init),
+    REXX_METHOD(psdlg_execute,                  psdlg_execute),
+    REXX_METHOD(psdlg_popup,                    psdlg_popup),
+    REXX_METHOD(psdlg_getPage,                  psdlg_getPage),
+    REXX_METHOD(psdlg_changed,                  psdlg_changed),
+    REXX_METHOD(psdlg_unchanged,                psdlg_unchanged),
+    REXX_METHOD(psdlg_test,                     psdlg_test),
+
+    // PropertySheetPage
+    REXX_METHOD(psp_init_cls,                   psp_init_cls),
+    REXX_METHOD(psp_propSheet_atr,              psp_propSheet_atr),
+    REXX_METHOD(psp_wasActivated_atr,           psp_wasActivated_atr),
+    REXX_METHOD(psp_getcx,                      psp_getcx),
+    REXX_METHOD(psp_setcx,                      psp_setcx),
+    REXX_METHOD(psp_getPageTitle,               psp_getPageTitle),
+    REXX_METHOD(psp_setPageTitle,               psp_setPageTitle),
+    REXX_METHOD(psp_getWantNotification,        psp_getWantNotification),
+    REXX_METHOD(psp_setWantNotification,        psp_setWantNotification),
+    REXX_METHOD(psp_init_propertySheetPage,     psp_init_propertySheetPage),
+    REXX_METHOD(psp_initTemplate,               psp_initTemplate),
+
+    // UserPSPDialog
+    REXX_METHOD(userpspdlg_init,                userpspdlg_init),
+
+    // RcPSPDialog
+    REXX_METHOD(rcpspdlg_init,                  rcpspdlg_init),
+    REXX_METHOD(rcpspdlg_startTemplate,         rcpspdlg_startTemplate),
+
+    // ResPSPDialog
+    REXX_METHOD(respspdlg_init,                 respspdlg_init),
 
     // WindowExtensions
     REXX_METHOD(winex_initWindowExtensions,     winex_initWindowExtensions),

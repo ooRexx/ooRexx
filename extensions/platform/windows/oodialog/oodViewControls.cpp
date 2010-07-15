@@ -251,7 +251,7 @@ bool dt2sysTimeRange(RexxMethodContext *c, RexxArrayObject dateTimes, SYSTEMTIME
     {
         if ( ! c->IsOfType(startDate, "DATETIME") )
         {
-            wrongObjInArrayException(c->threadContext, 1, 1, "DateTime");
+            wrongObjInArrayException(c->threadContext, 1, 1, "a DateTime object", startDate);
             goto err_out;
         }
 
@@ -266,7 +266,7 @@ bool dt2sysTimeRange(RexxMethodContext *c, RexxArrayObject dateTimes, SYSTEMTIME
     {
         if ( ! c->IsOfType(endDate, "DATETIME") )
         {
-            wrongObjInArrayException(c->threadContext, 1, 2, "DateTime");
+            wrongObjInArrayException(c->threadContext, 1, 2, "a DateTime object", endDate);
             goto err_out;
         }
 
@@ -3323,7 +3323,7 @@ RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, CSELF, pCSelf)
                 item = context->ArrayAt(order, i + 1);
                 if ( item == NULLOBJECT || ! context->ObjectToInt32(item, &column) )
                 {
-                    wrongObjInArrayException(context->threadContext, 1, i + 1, "valid column number");
+                    wrongObjInArrayException(context->threadContext, 1, i + 1, "a valid column number");
                     goto done;
                 }
                 pOrder[i] = column;
@@ -3471,7 +3471,7 @@ RexxMethod5(int32_t, lv_addFullRow, CSTRING, text, OPTIONAL_int32_t, itemIndex, 
         RexxDirectoryObject subItem = (RexxDirectoryObject)context->ArrayAt((RexxArrayObject)subItems, i);
         if ( subItem == NULLOBJECT || ! context->IsDirectory(subItem) )
         {
-            wrongObjInArrayException(context->threadContext, 4, i, "Directory");
+            wrongObjInArrayException(context->threadContext, 4, i, "a Directory object");
             goto done_out;
         }
 

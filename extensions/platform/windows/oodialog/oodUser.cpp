@@ -50,9 +50,7 @@
 #include <dlgs.h>
 #include <commctrl.h>
 #include <shlwapi.h>
-#ifdef __CTL3D
-#include <ctl3d.h>
-#endif
+#include <prsht.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodData.hpp"
@@ -60,6 +58,7 @@
 #include "oodControl.hpp"
 #include "oodMessaging.hpp"
 #include "oodResourceIDs.hpp"
+#include "oodUser.hpp"
 
 BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, LPMSG lpmsg);
 
@@ -152,7 +151,6 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
 }
 
 
-#define DEFAULT_EXPECTED_DIALOG_ITEMS   200
 #define FONT_NAME_ARG_POS                 8
 #define FONT_SIZE_ARG_POS                 9
 #define EXPECTED_ITEM_COUNT_ARG_POS      10
@@ -170,9 +168,9 @@ static inline logical_t illegalBuffer(void)
  * args for DynamicDialog::create().
  *
  * The font name and font size args to create() are optional.  If the user
- * omitted them, we use the default font for the dialog.  If the user specified
- * the font, the default font for the dialog is replaced by what the user has
- * specified.
+ * omitted them, or used the empty string and 0, we use the default font for the
+ * dialog. If the user specified the font, the default font for the dialog is
+ * replaced by what the user has specified.
  *
  * @param c           Method context we are operating in.
  * @param args        Argument array for the method.
@@ -192,12 +190,17 @@ static bool adjustDialogFont(RexxMethodContext *c, RexxArrayObject args, pCPlain
         }
 
         CSTRING fontName = c->ObjectToStringValue(name);
-        if ( strlen(fontName) > (MAX_DEFAULT_FONTNAME - 1) )
+        size_t len = strlen(fontName);
+
+        if ( len > (MAX_DEFAULT_FONTNAME - 1) )
         {
-            stringTooLongException(c->threadContext, 1, MAX_DEFAULT_FONTNAME, strlen(fontName));
+            stringTooLongException(c->threadContext, FONT_NAME_ARG_POS, MAX_DEFAULT_FONTNAME, strlen(fontName));
             return false;
         }
-        strcpy(pcpbd->fontName, fontName);
+        if ( len > 0 )
+        {
+            strcpy(pcpbd->fontName, fontName);
+        }
     }
 
     RexxObjectPtr size = c->ArrayAt(args, FONT_SIZE_ARG_POS);
@@ -209,7 +212,10 @@ static bool adjustDialogFont(RexxMethodContext *c, RexxArrayObject args, pCPlain
             c->RaiseException2(Rexx_Error_Invalid_argument_positive, c->WholeNumber(FONT_SIZE_ARG_POS), size);
             return false;
         }
-        pcpbd->fontSize = fontSize;
+        if ( fontSize != 0 )
+        {
+            pcpbd->fontSize = fontSize;
+        }
     }
     return true;
 }
@@ -309,7 +315,6 @@ void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd)
  * @param c
  * @param ppBase
  * @param pcdd
- * @param count
  * @param x
  * @param y
  * @param cx
@@ -326,11 +331,11 @@ void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd)
  *        both a null pointer and an empty string.  That is why no check for
  *        null is needed for title, dlgClass, or fontname.
  */
-bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDialog pcdd, uint32_t count,
-                         int x, int y, int cx, int cy, const char * dlgClass, const char * title,
-                         const char * fontName, int fontSize, uint32_t style)
+bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDialog pcdd,
+                         int x, int y, int cx, int cy, const char *dlgClass, const char *title,
+                         const char *fontName, int fontSize, uint32_t style)
 {
-    size_t s = calcTemplateSize(count);
+    size_t s = calcTemplateSize(pcdd->expected);
 
     WORD *p = (PWORD)LocalAlloc(LPTR, s);
     if ( p == NULL )
@@ -356,7 +361,7 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
     *p++ = HIWORD(style);
     *p++ = 0;                       // Extended Style (DWORD in size.)
     *p++ = 0;
-    *p++ = count;                   // Number of dialog controls
+    *p++ = pcdd->expected;          // Number of dialog controls
     *p++ = x;                       // x
     *p++ = y;                       // y
     *p++ = cx;                      // cx
@@ -475,7 +480,7 @@ RexxMethod7(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
     }
     RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, newArgs);
 
-    if ( isInt(0, result, context) )
+    if ( isInt(0, result, context->threadContext) )
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->GetCSelf();
 
@@ -1165,8 +1170,8 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
         goto err_out;
     }
 
-    uint32_t expected = getExpectedCount(context, args);
-    if ( expected == 0 )
+    pcdd->expected = getExpectedCount(context, args);
+    if ( pcdd->expected == 0 )
     {
         goto err_out;
     }
@@ -1176,7 +1181,7 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     // track of the different child dialog base addresses.
     DLGTEMPLATE *pBase;
 
-    if ( ! startDialogTemplate(context, &pBase, pcdd, expected, x, y, cx, cy, dlgClass, title,
+    if ( ! startDialogTemplate(context, &pBase, pcdd, x, y, cx, cy, dlgClass, title,
                                pcpbd->fontName, pcpbd->fontSize, style) )
     {
        goto err_out;
@@ -1265,7 +1270,7 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
 
     if ( pcpbd->hDlg )
     {
-        setDlgHandle(context, pcpbd);
+        setDlgHandle(context->threadContext, pcpbd);
 
         // Set the thread priority higher for faster drawing.
         SetThreadPriority(pcpbd->hDlgProcThread, THREAD_PRIORITY_ABOVE_NORMAL);
@@ -1293,14 +1298,9 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
         return TRUE;
     }
 
-    // The dialog creation failed, so do some final clean up.
-    //
-    // When the dialog creation fails in the WindowUsrLoop thread a delDialog()
-    // is immediately done, as it fails to enter the message processing loop.
-
-    pcpbd->onTheTop = false;
-    enablePrevious((pCPlainBaseDialog)pcpbd);
-
+    // The dialog creation failed, return falls.  When the dialog creation fails
+    // in the WindowUsrLoop thread a delDialog() is immediately done, as it
+    // fails to enter the message processing loop.
     return FALSE;
 }
 
@@ -1376,7 +1376,7 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
         {
             pcpbd->hDlg = hChild;
             pcpbd->isActive = true;
-            setDlgHandle(context, pcpbd);
+            setDlgHandle(context->threadContext, pcpbd);
         }
     }
     else
@@ -2027,6 +2027,8 @@ RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y,
     uint32_t style = WS_CHILD;
     style |= getCommonWindowStyles(opts, true, true);
 
+    // TODO combo boxes have styles not listed here, please add them.
+
     if ( StrStrI(opts,"SIMPLE") )    style |= CBS_SIMPLE;
     else if ( StrStrI(opts,"LIST") ) style |= CBS_DROPDOWNLIST;
     else                             style |= CBS_DROPDOWN;
@@ -2580,9 +2582,10 @@ RexxMethod8(logical_t, catdlg_createCategoryDialog, int32_t, x, int32_t, y, uint
     {
         fontSize = pcpbd->fontSize;
     }
+    pcdd->expected = expected;
 
     DLGTEMPLATE *pBase;
-    if ( ! startDialogTemplate(context, &pBase, pcdd, expected, x, y, cx, cy, NULL, NULL, fontName, fontSize, style) )
+    if ( ! startDialogTemplate(context, &pBase, pcdd, x, y, cx, cy, NULL, NULL, fontName, fontSize, style) )
     {
         return FALSE;
     }

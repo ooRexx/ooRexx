@@ -53,7 +53,8 @@
 
 ::method init_windowBase private external "LIBRARY oodialog wb_init_windowBase"
 
-::attribute initCode
+::attribute initCode get external "LIBRARY oodialog wb_getInitCode"
+::attribute initCode set external "LIBRARY oodialog wb_setInitCode"
 
 ::attribute hwnd get external "LIBRARY oodialog wb_getHwnd"
 
@@ -457,13 +458,14 @@
 
 
 -- waitForDialog() replaces the run() method.  run() now just spins doing nothing.
-::method waitForDialog unguarded private                   -- Not to be doumented.
+::method waitForDialog unguarded                           -- Not to be doumented.
    expose finished
    guard on when finished
 
 ::method ensureFinished unguarded                          -- Not to be doumented.
   expose finished
-  self~initCode = 3
+  use strict arg wasAbnormalHalt
+  if wasAbnormalHalt then self~initCode = 3
   finished = .true
 
 ::method stopIt external "LIBRARY oodialog pbdlg_stopIt"   -- Not to be doumented. Documented "internal use only" in 3.2.0

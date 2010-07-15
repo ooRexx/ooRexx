@@ -38,24 +38,35 @@
 /**
  * Windows Dialog Interface for Open Object Rexx (ooRexx.)
  *
- * Control Dialog Classes and interfaces.  A control dialog is a dialog with a
- * style that allows it work well as a dialog within a top-level dialog.  The
- * top-level dialog is both the owner and the parent of the control dialog.
+ * Control, PropertySheet, and PropertySheetPage dialog classes and interfaces.
  *
- * Control dialogs work well as the content for tab controls and as the pages of
- * a Windows PropertySheet dialog, not to be confused with the wrongly named
- * ooDialog PropertySheet class.
+ * A control dialog is a dialog with a style that allows it work well as a
+ * dialog within a top-level dialog.  The top-level dialog is both the owner and
+ * the parent of the control dialog.  These dialogs work well as the content for
+ * tab control pages.
+ *
+ * PropertySheet dialogs differ slightly from the normal ooDialog dialog because
+ * the underlying dialog is created and maintained by the operating system.  This
+ * introduces some subtle differences in the behavior of the dialog.
+ *
+ * PropertySheetPage dialogs serve as the pages of the PropertySheetDialog.  Do
+ * not confuse a PropertySheetDialog with the wrongly named PropertySheet class.
  *
  * A control dialog is also a child of the owner / parent dialog.  The
- * popupAsChild() method also uses the concept of parent child dialogs.  To
+ * popupAsChild() method also uses the concept of parent / child dialogs.  To
  * prevent confusion with that, the control dialog classes use the terms control
- * dialog and owner dialog.
+ * dialog and owner dialog rather than child and parent dialog .
  */
 
 ::class 'ControlDialog' mixinclass Object public
 
 ::attribute ownerDialog get  external "LIBRARY oodialog chld_getOwnerDialog"
 ::attribute ownerDialog set  external "LIBRARY oodialog chld_setOwnerDialog"
+
+
+::class 'ResControlDialog' public subclass ResDialog inherit ControlDialog
+
+::method startDialog private external "LIBRARY oodialog resCtrlDlg_startDialog_pvt"
 
 
 ::class 'UserControlDialog' public subclass UserDialog inherit ControlDialog
@@ -71,11 +82,6 @@
 
    self~initDialog
    return self~dlgHandle
-
-
-::class 'ResControlDialog' public subclass ResDialog inherit ControlDialog
-
-::method startDialog private external "LIBRARY oodialog resCtrlDlg_startDialog_pvt"
 
 
 ::class 'RcControlDialog' subclass UserControlDialog public
@@ -104,3 +110,212 @@
   say 'In OwnerDialog::init()'
   --forward class (super) continue
   say 'Back in OwnerDialog::init()'
+
+
+/* Property sheets and pages */
+
+::class 'PropertySheetDialog' public subclass PlainBaseDialog
+
+-- WM_USER == 0x400
+::constant PSM_INDEXTOID             "0x0486"
+
+
+::attribute pages get unguarded external "LIBRARY oodialog psdlg_getPages_atr"
+
+::method init external "LIBRARY oodialog psdlg_init"
+
+::method initDialog unguarded
+  return 0
+
+::method indexToID
+   use strict arg index
+   return self~sendWinIntMsg(self~PSM_INDEXTOID, index - 1, 0)
+
+::method execute external "LIBRARY oodialog psdlg_execute"
+::method popup external "LIBRARY oodialog psdlg_popup"
+
+::method getPage unguarded external "LIBRARY oodialog psdlg_getPage"
+::method changed unguarded external "LIBRARY oodialog psdlg_changed"
+::method unchanged unguarded external "LIBRARY oodialog psdlg_unchanged"
+
+
+::method test unguarded external "LIBRARY oodialog psdlg_test"
+
+
+::class 'PropertySheetPage' mixinclass Object public
+
+::constant PSNRET_NOERROR                     0
+::constant PSNRET_INVALID                     1
+::constant PSNRET_INVALID_NOCHANGEPAGE        2
+::constant PSNRET_MESSAGEHANDLED              3
+
+::method init class external "LIBRARY oodialog psp_init_cls"
+
+::attribute propSheet get external "LIBRARY oodialog psp_propSheet_atr"
+::attribute wasActivated get external "LIBRARY oodialog psp_wasActivated_atr"
+
+::attribute cx get external "LIBRARY oodialog psp_getcx"
+::attribute cx set external "LIBRARY oodialog psp_setcx"
+
+::attribute cy get external "LIBRARY oodialog psp_getcx"
+::attribute cy set external "LIBRARY oodialog psp_setcx"
+
+::attribute pageTitle get external "LIBRARY oodialog psp_getPageTitle"
+::attribute pageTitle set external "LIBRARY oodialog psp_setPageTitle"
+
+::attribute headerTitle get external "LIBRARY oodialog psp_getPageTitle"
+::attribute headerTitle set external "LIBRARY oodialog psp_setPageTitle"
+
+::attribute headerSubtitle get external "LIBRARY oodialog psp_getPageTitle"
+::attribute headerSubtitle set external "LIBRARY oodialog psp_setPageTitle"
+
+::attribute wantAccelerators get external "LIBRARY oodialog psp_getWantNotification"
+::attribute wantAccelerators set external "LIBRARY oodialog psp_setWantNotification"
+
+::method init_propertySheetPage private external "LIBRARY oodialog psp_init_propertySheetPage"  -- Not to be documented
+::method initTemplate external "LIBRARY oodialog psp_initTemplate"                              -- Not to be documented
+
+::method execute unguarded
+    self~initDialog
+    if self~useStem then self~setDataStem(self~dlgData)
+    else self~setData
+
+    do while self~automaticMethods~Items > 0
+        p = self~automaticMethods~pull
+        m = self~automaticMethods~pull
+        c = self~automaticMethods~pull
+        o = c~new(p, self)
+        o~start(m)
+    end
+
+::method endExecute unguarded
+
+    self~finished = .true
+    self~stopIt
+
+::method getObject unguarded
+    return 0
+
+::method setActive unguarded
+    use strict arg propSheet
+    return 0
+
+::method killActive unguarded
+    use strict arg propSheet
+    return self~validatePage(propSheet)
+
+::method queryCancel unguarded
+    use strict arg propSheet
+    self~initCode = 2
+    return .true
+
+::method queryInitialFocus unguarded
+    use strict arg idDefFocus, propSheet
+    return 0
+
+::method reset unguarded
+  use strict arg isCancelButton, propSheet
+  self~initCode = 2
+  return 0
+
+::method help unguarded
+    use strict arg propSheet
+    return 0
+
+::method translateAccelerator unguarded
+    use strict arg msg, keyCode, d, propsheet
+    return self~PSNRET_NOERROR
+
+::method apply unguarded
+    use strict arg isOkButton, propSheet
+
+    ret = self~validate(isOkButton, propsheet)
+    if ret == self~PSNRET_NOERROR then return self~applyNoError(propSheet)
+    else return ret
+
+::method validate private unguarded
+    use strict arg isOkButton, propSheet
+    return self~PSNRET_NOERROR
+
+::method validatePage private unguarded
+    use strict arg propSheet
+    return .true
+
+::method applyNoError private unguarded
+    use strict arg propSheet
+
+    self~initCode = 1
+    if self~useStem then self~getDataStem(dlgData.)
+    self~getData
+    propSheet~unchanged(self)
+    return self~PSNRET_NOERROR
+
+
+::class 'ResPSPDialog' public subclass ResDialog inherit PropertySheetPage
+
+::method init external "LIBRARY oodialog respspdlg_init"
+
+::method execute unguarded
+    -- if autodetection is on, create the data attributes
+    if self~autoDetect then do
+       ids = self~getDataTableIDs
+       do id over ids
+          text = self~getControlText(id)
+          self~addAttribute(id, text)
+       end
+    end
+    forward class (.PropertySheetPage)
+
+::method validate unguarded
+    forward class (.PropertySheetPage)
+
+-- Over-ride these methods with a do nothing so that the user can not start the dialog
+::method popup unguarded
+::method popupAsChild unguarded
+::method executeAsync unguarded
+::method endAsyncExecution unguarded
+
+
+
+::class 'UserPSPDialog' public subclass UserDialog inherit PropertySheetPage
+
+::method init external "LIBRARY oodialog userpspdlg_init"
+
+::method execute unguarded
+    forward class (.PropertySheetPage)
+
+::method validate unguarded
+    forward class (.PropertySheetPage)
+
+-- Over-ride these methods with a do nothing so that the user can not start the dialog
+::method popup unguarded
+::method popupAsChild unguarded
+::method executeAsync unguarded
+::method endAsyncExecution unguarded
+
+
+
+::class 'RcPSPDialog' public subclass UserDialog inherit PropertySheetPage
+
+::method init external "LIBRARY oodialog rcpspdlg_init"
+::method startTemplate external "LIBRARY oodialog rcpspdlg_startTemplate"
+
+::method loadFrame private
+  use strict arg expected
+  return self~loadFrame:super(self~library, self~resourceID, "", expected)
+
+::method loadItems
+  use strict arg opts
+  return self~loadItems:super(self~library, self~resourceID, opts)
+
+::method execute unguarded
+    forward class (.PropertySheetPage)
+
+::method validate unguarded
+    forward class (.PropertySheetPage)
+
+-- Over-ride these methods with a do nothing so that the user can not start the dialog
+::method popup unguarded
+::method popupAsChild unguarded
+::method executeAsync unguarded
+::method endAsyncExecution unguarded

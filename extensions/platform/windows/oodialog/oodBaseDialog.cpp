@@ -125,6 +125,11 @@ err_out:
  *             dialog
  *
  * @return The exit code for the thread.
+ *
+ * @remarks  If auto detect is on, we call doDataAutoDetction().  This only
+ *           fails on a malloc error, or if the data table fills up.  If the
+ *           data table is full, that's okay we can continue.  If there is a
+ *           malloc error,
  */
 DWORD WINAPI WindowLoopThread(void *arg)
 {
@@ -138,49 +143,48 @@ DWORD WINAPI WindowLoopThread(void *arg)
     pcpbd->hDlg = CreateDialogParam(pcpbd->hInstance, MAKEINTRESOURCE(args->resourceId), 0,
                                     (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
 
+    if ( pcpbd->hDlg == NULL )
+    {
+        *release = true;
+        goto done_out;
+    }
+
     pcpbd->childDlg[0] = pcpbd->hDlg;
 
-    if ( pcpbd->hDlg )
+    if ( pcpbd->autoDetect )
     {
-        if ( pcpbd->autoDetect )
+        args->autoDetectResult = doDataAutoDetection(pcpbd);
+        if ( args->autoDetectResult == OOD_MEMORY_ERR )
         {
-            uint32_t result = doDataAutoDetection(pcpbd);
-            if ( result != OOD_NO_ERROR )
-            {
-                args->autoDetectResult = result;
-                pcpbd->hDlgProcThread = NULL;
-
-                *release = true;
-                return 0;
-            }
-        }
-
-        // Release wait in startDialog() and mark the dialog as active.
-        *release = true;
-        pcpbd->isActive = true;
-
-        MSG msg;
-        BOOL result;
-
-        while ( (result = GetMessage(&msg, NULL, 0, 0)) != 0 && pcpbd->dlgAllocated )
-        {
-            if ( result == -1 )
-            {
-                break;
-            }
-            if ( ! IsDialogMessage(pcpbd->hDlg, &msg) )
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
+            pcpbd->hDlgProcThread = NULL;
+            *release = true;
+            goto done_out;
         }
     }
-    else
+
+    // Release wait in startDialog() and mark the dialog as active.
+    *release = true;
+    pcpbd->isActive = true;
+
+    MSG msg;
+    BOOL result;
+
+    while ( (result = GetMessage(&msg, NULL, 0, 0)) != 0 && pcpbd->dlgAllocated )
     {
-        *release = true;
+        if ( result == -1 )
+        {
+            break;
+        }
+        if ( ! IsDialogMessage(pcpbd->hDlg, &msg) )
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
-    // Need to synchronize here, otherwise dlgAllocate may still be true, but
+done_out:
+
+    // Need to synchronize here, otherwise dlgAllocated may still be true, but
     // delDialog() is already running.
     EnterCriticalSection(&crit_sec);
     if ( pcpbd->dlgAllocated )
@@ -202,7 +206,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
 /**
  *  Used to set the fontName and fontSize attributes of the resource dialog.
  */
-void setFontAttrib(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
+void setFontAttrib(RexxThreadContext *c, pCPlainBaseDialog pcpbd)
 {
     HFONT font = (HFONT)SendMessage(pcpbd->hDlg, WM_GETFONT, 0, 0);
     if ( font == NULL )
@@ -251,7 +255,7 @@ RexxMethod7(RexxObjectPtr, resdlg_init, RexxObjectPtr, library, RexxObjectPtr, r
     }
     RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, newArgs);
 
-    if ( isInt(0, result, context) )
+    if ( isInt(0, result, context->threadContext) )
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->GetCSelf();
 
@@ -322,22 +326,19 @@ RexxMethod5(logical_t, resdlg_startDialog_pvt, CSTRING, library, RexxObjectPtr, 
     }
     LeaveCriticalSection(&crit_sec);
 
-    // If auto detection was on, but failed, we have a dialog created, but we
-    // are just to going to end everything.
-    if ( threadArgs.autoDetectResult != OOD_NO_ERROR )
+    // If auto detection was on, but failed on a memory allocation, a dialog was
+    // created.  delDialog() will be invoked in the window loop thread, to end
+    // that dialog.  Here we just need to raise the out of memory exception and
+    // return false.
+    if ( threadArgs.autoDetectResult == OOD_MEMORY_ERR )
     {
-        if ( threadArgs.autoDetectResult == OOD_MEMORY_ERR )
-        {
-            outOfMemoryException(context->threadContext);
-        }
-
-        delDialog(pcpbd, context->threadContext);
+        outOfMemoryException(context->threadContext);
         return FALSE;
     }
 
     if ( pcpbd->hDlg )
     {
-        setDlgHandle(context, pcpbd);
+        setDlgHandle(context->threadContext, pcpbd);
 
         // Set the thread priority higher for faster drawing.
         SetThreadPriority(pcpbd->hDlgProcThread, THREAD_PRIORITY_ABOVE_NORMAL);
@@ -358,28 +359,13 @@ RexxMethod5(logical_t, resdlg_startDialog_pvt, CSTRING, library, RexxObjectPtr, 
             SendMessage(pcpbd->hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
         }
 
-        setFontAttrib(context, pcpbd);
+        setFontAttrib(context->threadContext, pcpbd);
         return TRUE;
     }
 
-    // The dialog creation failed, do some final clean up.
-    //
-    // When the dialog creation fails in the WindowLoop thread, delDialog()
-    // is done immediately, as it skips entering the message processing
-    // loop.        TODO need to check this, isn't this done in delDialog() ???
-
-    pcpbd->onTheTop = false;
-    enablePrevious((pCPlainBaseDialog)pcpbd);
-
-    if ( pcpbd->previous )
-    {
-        ((pCPlainBaseDialog )pcpbd->previous)->onTheTop = true;
-
-        if ( ! IsWindowEnabled(((pCPlainBaseDialog )pcpbd->previous)->hDlg) )
-        {
-            EnableWindow(((pCPlainBaseDialog)pcpbd->previous)->hDlg, TRUE);
-        }
-    }
+    // The dialog creation failed, return false.  When the dialog creation fails
+    // in the WindowLoop thread, delDialog() is done immediately, as it skips
+    // entering the message processing loop.
 
     return FALSE;
 }
@@ -485,8 +471,8 @@ RexxMethod4(RexxObjectPtr, resCtrlDlg_startDialog_pvt, CSTRING, library, RexxObj
         pcpbd->isActive = true;
         pcpbd->childDlg[0] = hChild;
 
-        setDlgHandle(context, pcpbd);
-        setFontAttrib(context, pcpbd);
+        setDlgHandle(context->threadContext, pcpbd);
+        setFontAttrib(context->threadContext, pcpbd);
 
         if ( pcpbd->autoDetect )
         {

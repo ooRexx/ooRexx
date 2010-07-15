@@ -67,18 +67,10 @@ typedef map<string, int, less<string> > String2Int;
 // where -1 and greater is valid.
 #define OOD_ID_EXCEPTION            0xFFFFFFF7   // -9
 #define OOD_BAD_WIDTH_EXCEPTION     0xFFFFFFF8   // -8
+#define OOD_MEMORY_ERR              0xFFFFFFF9   // -7
 #define OOD_INVALID_ITEM_ID         0xFFFFFFF7   // Rewording of OOD_ID_EXCEPTION
 #define OOD_NO_ERROR                0
 #define OOD_DATATABLE_FULL          1
-#define OOD_MEMORY_ERR              2
-
-// Enum for the type of an ooDialog class.  Types to be added as needed.
-typedef enum
-{
-    oodPlainBaseDialog, oodCategoryDialog, oodUserDialog,    oodRcDialog,      oodResDialog,
-    oodControlDialog,   oodDialogControl,  oodStaticControl, oodButtonControl, oodEditControl,
-    oodListBox,         oodProgressBar,    oodUnknown
-} oodClass_t;
 
 /* Struct for a reply to the UDN_DELTAPOS notification message. (Up-down control.) */
 typedef struct _DELTAPOS_REPLY {
@@ -96,6 +88,7 @@ extern BOOL              getDialogIcons(pCPlainBaseDialog, INT, UINT, PHANDLE, P
 extern bool              isYes(const char *s);
 extern void *            string2pointer(const char *string);
 extern void *            string2pointer(RexxMethodContext *c, RexxStringObject string);
+extern void *            string2pointer(RexxThreadContext *c, RexxObjectPtr ptr);
 extern void              pointer2string(char *, void *pointer);
 extern RexxStringObject  pointer2string(RexxMethodContext *, void *);
 extern RexxStringObject  pointer2string(RexxThreadContext *c, void *pointer);
@@ -105,7 +98,6 @@ extern char *            strdupupr_nospace(const char *str);
 extern char *            strdup_nospace(const char *str);
 extern char *            strdup_2methodName(const char *str);
 extern void              checkModal(pCPlainBaseDialog previous, logical_t modeless);
-extern void              enablePrevious(pCPlainBaseDialog previous);
 
 extern pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos);
 
@@ -124,7 +116,9 @@ extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPt
 extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
 extern int32_t    resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPtr self);
+extern bool       requiredOS(RexxMethodContext *context, os_name_t os, const char *msg, const char *osName);
 extern bool       requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
+extern bool       requiredComCtl32Version(RexxMethodContext *context, DWORD minimum, const char *msg);
 
 extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
@@ -161,15 +155,20 @@ extern RexxObjectPtr quickDayStateBuffer(RexxMethodContext *c, uint32_t ds1, uin
 
 // These functions are defined in ooDialog.cpp
 extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
-extern void          setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd);
+extern void          setDlgHandle(RexxThreadContext *c, pCPlainBaseDialog pcpbd);
 extern RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd);
 extern RexxObjectPtr oodGetFocus(RexxMethodContext *c, HWND hDlg);
 extern RexxObjectPtr sendWinMsgGeneric(RexxMethodContext *, HWND, CSTRING, RexxObjectPtr, RexxObjectPtr, size_t, bool);
 extern bool          loadResourceDLL(pCPlainBaseDialog pcpbd, CSTRING library);
+extern void          ensureFinished(pCPlainBaseDialog pcpbd, RexxThreadContext *c, RexxObjectPtr abnormal);
 
 // These functions are defined in oodBaseDialog.cpp
 extern bool initWindowExtensions(RexxMethodContext *, RexxObjectPtr, HWND, pCWindowBase, pCPlainBaseDialog);
 extern bool validControlDlg(RexxMethodContext *c, pCPlainBaseDialog pcpbd);
+extern void setFontAttrib(RexxThreadContext *c, pCPlainBaseDialog pcpbd);
+
+// These functions are defined in oodPropertySheet.cpp
+void destroyModalPropSheet(pCPropertySheetDialog pcpsd, HWND hDlg, DlgProcErrType t);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;
@@ -274,10 +273,14 @@ inline bool hasStyle(HWND hwnd, LONG style)
 extern void           ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern void          *baseClassIntializationException(RexxMethodContext *c);
 extern RexxObjectPtr  invalidCategoryPageException(RexxMethodContext *c, int, int);
+extern RexxObjectPtr  noSuchPageException(RexxMethodContext *c, RexxObjectPtr page, size_t pos);
+extern RexxObjectPtr  noWindowsPageException(RexxMethodContext *c, size_t pageID, size_t pos);
+extern void          *noWindowsPageDlgException(RexxMethodContext *c, size_t pos);
 extern void          *wrongClassReplyException(RexxThreadContext *c, const char *n);
 extern void           controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
 extern void           wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
 extern RexxObjectPtr  wrongWindowsVersionException(RexxMethodContext *, const char *, const char *);
+extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, RexxObjectPtr rxDlg, CSTRING msg);
 extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, RexxObjectPtr rxDlg, CSTRING msg);
 
 /**
@@ -414,6 +417,45 @@ inline pCPlainBaseDialogClass dlgToClassCSelf(RexxMethodContext *c)
 inline pCPlainBaseDialog dlgToCSelf(RexxMethodContext *c, RexxObjectPtr dlg)
 {
     return (pCPlainBaseDialog)c->ObjectToCSelf(dlg, ThePlainBaseDialogClass);
+}
+
+/**
+ * Retrieves the PropertySheetPage CSelf pointer for a dialog object when the
+ * dialog object is not the direct object the method was invoked on.  This
+ * performs a scoped CSelf lookup.
+ *
+ * @param c    The method context we are operating in.
+ * @param dlg  The dialog object whose PropertySheetPage CSelf pointer is
+ *             needed.
+ *
+ * @return A pointer to the PropertySheetPage CSelf of the dlg object.
+ *
+ * @assumes  The caller has ensured dlg is in fact a ooDialog Rexx
+ *           PropertySheetPage dialog object.
+ */
+inline pCPropertySheetPage dlgToPSPCSelf(RexxMethodContext *c, RexxObjectPtr dlg)
+{
+    return (pCPropertySheetPage)c->ObjectToCSelf(dlg, ThePropertySheetPageClass);
+}
+
+/**
+ * Retrieves the window handle for a property sheet page from an ooDialog dialog
+ * object which was not the direct object the method was invoked on.  This
+ * performs a scoped CSelf lookup.
+ *
+ * @param c    The method context we are operating in.
+ * @param dlg  The dialog object whose window handle is needed.
+ *
+ * @return The window handle of the dialog.  Note that this will be null if the
+ *         underlying Windows dialog has not yet been created.
+ *
+ * @assumes  The caller has ensured dlg is in fact a ooDialog Rexx property
+ *           page object.
+ */
+inline HWND dlgToPSPHDlg(RexxMethodContext *c, RexxObjectPtr dlg)
+{
+    pCPropertySheetPage pcpsp = dlgToPSPCSelf(c, dlg);
+    return pcpsp->hPage;
 }
 
 /**

@@ -41,6 +41,7 @@
 
 #define NTDDI_VERSION   NTDDI_LONGHORN
 #define _WIN32_WINNT    0x0600
+#define _WIN32_IE       0x0600
 #define WINVER          0x0501
 
 #define STRICT
@@ -63,7 +64,6 @@
 #define MAX_DEFAULT_FONTNAME        256
 #define MAX_LIBRARYNAME             256
 
-#define MAX_MT_ENTRIES     500
 #define MAX_NOTIFY_MSGS    200
 #define MAX_COMMAND_MSGS   200
 #define MAX_MISC_MSGS      100
@@ -78,13 +78,13 @@
 #define WM_USER_SUBCLASS_REMOVE        WM_USER + 0x0607
 #define WM_USER_HOOK                   WM_USER + 0x0608
 #define WM_USER_CONTEXT_MENU           WM_USER + 0x0609
-#define WM_USER_CREATECONTROL_DLG        WM_USER + 0x060A
-#define WM_USER_CREATECONTROL_RESDLG     WM_USER + 0x060B
+#define WM_USER_CREATECONTROL_DLG      WM_USER + 0x060A
+#define WM_USER_CREATECONTROL_RESDLG   WM_USER + 0x060B
+
+#define WM_USER_CREATEPROPSHEET_DLG   WM_USER + 0x060C
 
 #define OODDLL                      "oodialog.dll"
 #define DLLVER                      2130
-
-#define MSG_TERMINATE               "1DLGDELETED1"
 
 /* Flags for the get icon functions.  Indicates the source of the icon. */
 #define ICON_FILE                 0x00000001
@@ -104,9 +104,9 @@
 #define COMCTL32_5_8         327688
 #define COMCTL32_5_81        327761
 #define COMCTL32_6_0         393216
+#define COMCTL32_6_10        393226    // Probably should use this as the latest version
+#define COMCTL32_6_16        393232    // Latest version I've seen on an updated Windows 7
 
-/* The version of comctl32.dll in use when oodialog.dll is loaded. */
-extern DWORD ComCtl32Version;
 
 /**
  *  A 'tag' is used in processing the mapping of Windows messages to user
@@ -179,12 +179,14 @@ typedef enum
 typedef enum
 {
     NoPCPBDpased        = 0,    // pCPlainBaseDialog not passed in the WM_INITDIALOG message
-    NoThreadAttach      = 1,    // Failed to attach the thread context.
-    NoThreadContext     = 2,    // The thread context pointer is null.
-    RexxConditionRaised = 3,    // The invocation of a Rexx event handler method raised a condition.
+    NoPCPSPpased        = 1,    // pCPropertySheet not passed in the WM_INITDIALOG message
+    NoThreadAttach      = 2,    // Failed to attach the thread context.
+    NoThreadContext     = 3,    // The thread context pointer is null.
+    RexxConditionRaised = 4,    // The invocation of a Rexx event handler method raised a condition.
 } DlgProcErrType;
 
 #define NO_PCPBD_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PlainBaseDialog\nCSELF is null.\n\n\tpcpdb=%p\n\thDlg=%p\n"
+#define NO_PCPSP_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PropertySheetPage\nCSELF is null.\n\n\tpcpsp=%p\n\thDlg=%p\n"
 #define NO_THREAD_ATTACH_MSG   "RexxDlgProc() ERROR in WM_INITDIALOG.  Failed to attach\nthread context.\n\n\tpcpdb=%p\n\thDlg=%p\n"
 #define NO_THREAD_CONTEXT_MSG  "RexxDlgProc() ERROR.  Thread context is null.\n\n\\tdlgProcContext=%p\n\thDlg=%pn"
 
@@ -215,6 +217,16 @@ typedef enum
 
     winUnknown             = 55
 } oodControl_t;
+
+
+// Enum for the type of an ooDialog class.  Types to be added as needed.
+typedef enum
+{
+    oodPlainBaseDialog, oodCategoryDialog, oodUserDialog,    oodRcDialog,      oodResDialog,
+    oodControlDialog,   oodUserPSPDialog,  oodRcPSPDialog,   oodResPSPDialog,  oodDialogControl,
+    oodStaticControl,   oodButtonControl,  oodEditControl,   oodListBox,       oodProgressBar,
+    oodUnknown
+} oodClass_t;
 
 
 inline LONG_PTR setWindowPtr(HWND hwnd, int index, LONG_PTR newPtr)
@@ -342,12 +354,15 @@ typedef struct {
     char              *method;          /* Name of method to invoke. */
 } KEYEVENTDATA;
 
-#define KEY_RELEASE          0x80000000
-#define KEY_WASDOWN           0x40000000
-#define EXTENDED_KEY          0x01000000
-#define KEY_TOGGLED           0x00000001
+// Masks for lParam of key messages.  WM_KEYDOWN, WM_CHAR, etc..
+#define KEY_RELEASED          0x80000000  // Transition state: 1 key is being released / 0 key is being pressed.
+#define KEY_WASDOWN           0x40000000  // Previous state: 1 key was down / 0 key was up.
+#define KEY_ALTHELD           0x20000000  // Context code: 1 ALT key was held when key pressed / 0 otherwise.
+#define KEY_ISEXTENDED        0x01000000  // Key is an extended key: 1 if an extended key / 0 otherwise
 
-#define ISDOWN                    0x8000
+// Masks for GetAsyncKeyState() and GetKeyState() returns.
+#define TOGGLED               0x00000001  // GetKeyState()
+#define ISDOWN                    0x8000  // GetAsyncKeyState()
 
 /* Microsoft does not define these, just has this note:
  *
@@ -464,6 +479,7 @@ typedef struct _pbdCSelf {
     HWND                 hDlg;
     RexxObjectPtr        rexxOwner;
     HWND                 hOwnerDlg;
+    void                *dlgPrivate;    // Subclasses can store data unique to the subclass
     DATATABLEENTRY      *DataTab;
     ICONTABLEENTRY      *IconTab;
     COLORTABLEENTRY     *ColorTab;
@@ -482,6 +498,8 @@ typedef struct _pbdCSelf {
     bool                 onTheTop;
     bool                 isCategoryDlg;  // Need to use IsNestedDialogMessage()
     bool                 isControlDlg;   // Dialog was created as DS_CONTROL | WS_CHILD
+    bool                 isPageDlg;      // Dialog is a property sheet page dialog
+    bool                 isPropSheetDlg; // Dialog is a property sheet dialog
     bool                 sharedIcon;
     bool                 didChangeIcon;
     bool                 isActive;
@@ -516,10 +534,58 @@ typedef struct _ddCSelf {
     DLGTEMPLATE       *base;          // Base pointer to dialog template (basePtr)
     void              *active;        // Pointer to current location in dialog template (activePtr)
     void              *endOfTemplate; // Pointer to end of allocated memory for the template
+    uint32_t           expected;      // Expected dialog item count
     uint32_t           count;         // Dialog item count (dialogItemCount)
 } CDynamicDialog;
 typedef CDynamicDialog *pCDynamicDialog;
 
+/* Struct for the PropertySheetPage object CSelf. */
+typedef struct _pspCSelf {
+    RexxInstance           *interpreter;
+    RexxThreadContext      *dlgProcContext;
+    pCPlainBaseDialog       pcpbd;
+    pCDynamicDialog         pcdd;             // DynmicDialog CSelf, may be null.
+    RexxObjectPtr           rexxSelf;
+    HWND                    hPage;            // Dialog handle of page.
+    void                   *cppPropSheet;     // PropertySheetDialog CSelf.
+    RexxObjectPtr           rexxPropSheet;    // Rexx PropertySheetDialog object.
+    RexxStringObject        extraOpts;        // Storage for extra options, used by RcPSPDialog, available for other uses.
+    char                   *pageTitle;
+    char                   *headerTitle;
+    char                   *headerSubtitle;
+    oodClass_t              pageType;
+    uint32_t                cx;               // Width and height of the dialog.
+    uint32_t                cy;
+    uint32_t                pageFlags;
+    uint32_t                pageDlgID;        // Resource ID of dlg template for a ResPSPDialog
+    uint32_t                pageID;           // Page number, zero-based index
+    bool                    activated;        // Was the page visited by the user
+    bool                    abort;            // Used to force a modal property sheet to close
+    bool                    wantAccelerators; // User wants PSN_TRANSLATEACCELERATOR notifications
+    bool                    wantGetObject;    // User wants PSN_GETOBJECT notifications
+} CPropertySheetPage;
+typedef CPropertySheetPage *pCPropertySheetPage;
+
+/* Struct for the PropertySheetDialog object CSelf. */
+typedef struct _psdCSelf {
+    RexxThreadContext   *dlgProcContext;
+    RexxObjectPtr        rexxSelf;
+    HWND                 hDlg;
+    RexxObjectPtr       *rexxPages;
+    pCPropertySheetPage *cppPages;
+    pCPlainBaseDialog    pcpbd;
+    char                *caption;
+    size_t               pageCount;
+    uint32_t             propSheetFlags;
+    bool                 modeless;
+    bool                 isNotWizard;
+    bool                 isWiz97;
+    bool                 isWizLite;
+    bool                 isAeroWiz;
+} CPropertySheetDialog;
+typedef CPropertySheetDialog *pCPropertySheetDialog;
+
+#define COMCTL32_VERSION_STRING_LEN  31
 
 // All global variables are defined in oodPackageEntry.cpp
 extern HINSTANCE           MyInstance;
@@ -527,7 +593,9 @@ extern pCPlainBaseDialog   DialogTable[];
 extern pCPlainBaseDialog   TopDlg;
 extern size_t              CountDialogs;
 extern CRITICAL_SECTION    crit_sec;
+extern CRITICAL_SECTION    ps_crit_sec;
 extern DWORD               ComCtl32Version;
+extern char                ComCtl32VersionStr[];
 
 extern RexxObjectPtr       TheTrueObj;
 extern RexxObjectPtr       TheFalseObj;
@@ -542,12 +610,19 @@ extern RexxPointerObject   TheNullPtrObj;
 extern RexxClassObject ThePlainBaseDialogClass;
 extern RexxClassObject TheDynamicDialogClass;
 extern RexxClassObject TheDialogControlClass;
+extern RexxClassObject ThePropertySheetPageClass;
 extern RexxClassObject TheSizeClass;
 
 extern HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id);
 
 extern bool _isVersion(DWORD, DWORD, unsigned int, unsigned int, unsigned int);
 extern bool _is32on64Bit(void);
+
+// Enum for a Windows OS, don't need many right now.
+typedef enum
+{
+    XP_OS, Vista_OS, Windows7_OS
+} os_name_t;
 
 inline bool _is64Bit(void)
 {

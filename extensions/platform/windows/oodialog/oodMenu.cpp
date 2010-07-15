@@ -5667,7 +5667,7 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
-    bool idOmitted = isInt(-1, id, context);
+    bool idOmitted = isInt(-1, id, context->threadContext);
 
     if ( ! cMenu->menuInit(id, symbolSrc, rcFile) )
     {

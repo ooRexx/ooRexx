@@ -52,11 +52,9 @@
 #include "oodDeviceGraphics.hpp"
 #include "oodMessaging.hpp"
 #include "oodData.hpp"
+#include "oodPropertySheetDialog.hpp"
 
-extern BOOL APIENTRY RexxSetProcessMessages(BOOL onoff);
-static LRESULT CALLBACK RexxChildDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
-
+static LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /**
  * The dialog procedure function for all ooDialog dialogs.  Handles and
@@ -108,7 +106,6 @@ static BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
  */
 LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
     if ( uMsg == WM_INITDIALOG )
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)lParam;
@@ -310,6 +307,26 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return TRUE;
         }
 
+        case WM_USER_CREATEPROPSHEET_DLG:
+        {
+            pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)lParam;
+
+            assignPSDThreadContext(pcpsd, pcpbd->dlgProcContext);
+
+            if ( setPropSheetHook(pcpsd) )
+            {
+                SetLastError(0);
+                INT_PTR ret = PropertySheet((PROPSHEETHEADER *)wParam);
+                ReplyMessage((LRESULT)ret);
+            }
+            else
+            {
+                ReplyMessage((LRESULT)-1);
+            }
+
+            return TRUE;
+        }
+
         case WM_USER_INTERRUPTSCROLL:
             pcpbd->stopScroll = wParam;
             return TRUE;
@@ -412,9 +429,8 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
  *
  * @return LRESULT CALLBACK
  */
-LRESULT CALLBACK RexxChildDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
     if ( uMsg == WM_INITDIALOG )
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)lParam;
@@ -631,7 +647,6 @@ LRESULT CALLBACK RexxChildDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
     return FALSE;
 }
 
-
 static RexxStringObject sc2string(RexxThreadContext *c, WPARAM wParam)
 {
     CSTRING s;
@@ -709,16 +724,27 @@ inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
  * when things needed to be terminated for unusual reason.  It can put up a
  * message box to inform the user of the circumstances depending on the args.
  *
- * Right now this is only called from functions in this module and is static.
- * It could maybe be used elsewhere and would need to be made extern.
+ * @param pcpbd  Pointer to CSelf struct for the dialog (the PlainBaseDialog
+ *               CSelf.)
+ * @param hDlg   Window handle of the dialog.
+ * @param t      Error type.
  *
- * @param pcpbd
- * @param hDlg
- * @param t
+ * @return False always.
  *
- * @return BOOL
+ * @remarks  For all the original types of ooDialog dialogs (4.0.1 and
+ *           previous,) DestroyWindow() causes a WM_DESTROY message to reach
+ *           RexxDlgProc(). The dialog procedure then posts a quit message, we
+ *           fall out of the message loop and things unwind cleanly.
+ *
+ *           Setting abnormalHalt causes ensureFinished() to be invoked which
+ *           terminates the thread waiting on the finished instance variable.
+ *
+ *           This works fine for modeless property sheets, but modal property
+ *           sheets hang.  The destroyModalPropSheet() essentially does a
+ *           programmatic close and prevents any of the property sheet pages
+ *           from nixing the close.
  */
-static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
+BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
 {
     char buf[256];
     bool noMsg = false;
@@ -727,6 +753,9 @@ static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrTyp
     {
         case NoPCPBDpased :
             _snprintf(buf, sizeof(buf), NO_PCPBD_PASSED_MSG, pcpbd, hDlg);
+            break;
+        case NoPCPSPpased :
+            _snprintf(buf, sizeof(buf), NO_PCPSP_PASSED_MSG, pcpbd, hDlg);
             break;
         case NoThreadAttach :
             _snprintf(buf, sizeof(buf), NO_THREAD_ATTACH_MSG, pcpbd, hDlg);
@@ -747,10 +776,17 @@ static BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrTyp
         internalErrorMsgBox(buf, "ooDialog Dialog Procedure Error");
     }
 
-    // DestroyWindow() will either cause the message processing loop to end, or
-    // more likely a WC_DESTROY message will make it to RexxDlgProc().  This
-    // will then cause things to unwind and delDialog() will be called.
-    pcpbd->abnormalHalt = true;
+    if ( pcpbd != NULL )
+    {
+        pcpbd->abnormalHalt = true;
+
+        if ( pcpbd->isPropSheetDlg && ! ((pCPropertySheetDialog)(pcpbd->dlgPrivate))->modeless  )
+        {
+            destroyModalPropSheet((pCPropertySheetDialog)pcpbd->dlgPrivate, hDlg, t);
+            return FALSE;
+        }
+    }
+
     DestroyWindow(hDlg);
 
     return FALSE;
@@ -1050,7 +1086,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             RexxArrayObject args = c->ArrayOfFour(dt, valid, idFrom, hwndFrom);
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c);
+            checkForCondition(c, false);
 
             return ReplyFalse;
         }
@@ -1066,7 +1102,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-            if ( ! checkForCondition(c) )
+            if ( ! checkForCondition(c, false) )
             {
                 CSTRING display = c->ObjectToStringValue(rexxReply);
                 if ( strlen(display) < 64 )
@@ -1076,7 +1112,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                 else
                 {
                     stringTooLongException(c, 1, 63, strlen(display));
-                    checkForCondition(c);
+                    checkForCondition(c, false);
                 }
             }
 
@@ -1093,7 +1129,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-            if ( checkForCondition(c) )
+            if ( checkForCondition(c, false) )
             {
                 // TODO note this is a special case test of ending the dialog on
                 // a condition raised.  Need to always do the same thing, end
@@ -1125,7 +1161,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, c->ArrayOfThree(d, idFrom, hwndFrom));
 
-            if ( checkForCondition(c) )
+            if ( checkForCondition(c, false) )
             {
                 return ReplyFalse;
             }
@@ -1134,13 +1170,13 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             if ( ! c->IsOfType(dt, "DATETIME") )
             {
                 wrongObjInDirectoryException(c, 1, "DATETIME", "a DateTime object", dt);
-                checkForCondition(c);
+                checkForCondition(c, false);
                 return ReplyFalse;
             }
 
             if ( ! dt2sysTime(c, dt, &(pdts->st), dtFull) )
             {
-                checkForCondition(c);
+                checkForCondition(c, false);
                 return ReplyFalse;
             }
 
@@ -1152,7 +1188,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                 if ( val == -1 )
                 {
                     wrongObjInDirectoryException(c, 1, "VALID", "Logical", _valid);
-                    checkForCondition(c);
+                    checkForCondition(c, false);
                     return ReplyFalse;
                 }
                 pdts->dwFlags = (val == 1 ? GDT_VALID : GDT_NONE);
@@ -1180,7 +1216,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-            if ( ! checkForCondition(c) )
+            if ( ! checkForCondition(c, false) )
             {
                 if ( rexxReply != dt )
                 {
@@ -1192,7 +1228,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                     {
                         wrongClassReplyException(c, "DateTime");
                     }
-                    checkForCondition(c);
+                    checkForCondition(c, false);
                 }
             }
 
@@ -1249,7 +1285,7 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             RexxArrayObject args = c->ArrayOfFour(idFrom, c->Int32(pIA->iItem), c->Int32(pIA->iSubItem), c->String(tmpBuffer));
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c);
+            checkForCondition(c, false);
 
             return ReplyFalse;
         }
@@ -1276,7 +1312,7 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                     RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(p));
 
                     rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-                    checkForCondition(c);
+                    checkForCondition(c, false);
 
                     return ReplyFalse;
                 }
@@ -1311,7 +1347,7 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                     RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(tmpBuffer));
 
                     rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-                    checkForCondition(c);
+                    checkForCondition(c, false);
 
                     return ReplyFalse;
                 }
@@ -1323,7 +1359,7 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                     rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-                    if ( checkForCondition(c) )
+                    if ( checkForCondition(c, false) )
                     {
                         return ReplyFalse;
                     }
@@ -1338,7 +1374,7 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                     rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-                    if ( checkForCondition(c) )
+                    if ( checkForCondition(c, false) )
                     {
                         return ReplyFalse;
                     }
@@ -1381,7 +1417,7 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-            if ( checkForCondition(c) )
+            if ( checkForCondition(c, false) )
             {
                 return ReplyFalse;
             }
@@ -1408,7 +1444,7 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom, hwndFrom);
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c);
+            checkForCondition(c, false);
             return ReplyTrue;
         }
 
@@ -1422,7 +1458,7 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom, hwndFrom);
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c);
+            checkForCondition(c, false);
             return ReplyTrue;
         }
 
@@ -1464,7 +1500,7 @@ MsgReplyType processUDN(RexxThreadContext *c, CSTRING methodName, LPARAM lParam,
 
     RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-    if ( ! checkForCondition(c) )
+    if ( ! checkForCondition(c, false) )
     {
         if ( msgReply != NULLOBJECT && msgReply != TheFalseObj && c->IsOfType(msgReply, "BUFFER") )
         {
@@ -1724,7 +1760,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
                             RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
 
-                            if ( ! checkForCondition(c) )
+                            if ( ! checkForCondition(c, false) )
                             {
                                 if ( msgReply == TheTrueObj )
                                 {
@@ -1753,7 +1789,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
                             RexxObjectPtr msgReply = c->SendMessage1(pcpbd->rexxSelf, m[i].rexxMethod, rxHMenu);
 
-                            if ( ! checkForCondition(c) )
+                            if ( ! checkForCondition(c, false) )
                             {
                                 if ( msgReply == TheTrueObj )
                                 {
@@ -2160,9 +2196,9 @@ RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam)
 
     CHAR info[64] = {'\0'};
 
-    GetKeyState(VK_NUMLOCK) & KEY_TOGGLED ? strcpy(info, "numOn") : strcpy(info, "numOff");
+    GetKeyState(VK_NUMLOCK) & TOGGLED ? strcpy(info, "numOn") : strcpy(info, "numOff");
 
-    GetKeyState(VK_CAPITAL) & KEY_TOGGLED ? strcat(info, " capsOn") : strcat(info, " capsOff");
+    GetKeyState(VK_CAPITAL) & TOGGLED ? strcat(info, " capsOn") : strcat(info, " capsOff");
 
     if ( bShift )
     {
@@ -2177,7 +2213,7 @@ RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam)
         GetAsyncKeyState(VK_RMENU) & ISDOWN ? strcat(info, " rAlt") : strcat(info, " lAlt");
     }
 
-    GetKeyState(VK_SCROLL) & KEY_TOGGLED ? strcat(info, " scrollOn") : strcat(info, " scrollOff");
+    GetKeyState(VK_SCROLL) & TOGGLED ? strcat(info, " scrollOn") : strcat(info, " scrollOff");
 
     RexxArrayObject args = c->ArrayOfFour(c->WholeNumber(wParam), c->Logical(bShift),
                                           c->Logical(bControl), c->Logical(bAlt));
@@ -2230,7 +2266,7 @@ LRESULT CALLBACK keyboardHookProc(int code, WPARAM wParam, LPARAM lParam)
 
     if ( (code == HC_ACTION) && pKeyPressData->key[wParam] )
     {
-        if ( !(lParam & KEY_RELEASE) && !(lParam & KEY_WASDOWN) )
+        if ( !(lParam & KEY_RELEASED) && !(lParam & KEY_WASDOWN) )
         {
             processKeyPress(pcen->pHookData, wParam, lParam);
         }

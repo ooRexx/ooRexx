@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -78,7 +78,7 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             {
                 part = "4.0";
             }
-            else if ( type == COMCTL32_NUMBER_PART )
+            else if ( type == COMCTL32_OS_PART )
             {
                 part = "W95 / NT4";
             }
@@ -178,6 +178,21 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             }
             break;
 
+        case COMCTL32_6_10 :
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "6.10";
+            }
+            else if ( type == COMCTL32_OS_PART )
+            {
+                part = "Vista SP2 / Windows 7";
+            }
+            else
+            {
+                part = "comctl32.dll version 6.10 (Vista SP2 / Windows 7)";
+            }
+            break;
+
         default :
             part = "Unknown";
             break;
@@ -224,6 +239,8 @@ bool getComCtl32Version(RexxMethodContext *context, DWORD *pDllVersion, DWORD mi
             if ( SUCCEEDED(hr) )
             {
                 *pDllVersion = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
+                _snprintf(ComCtl32VersionStr, COMCTL32_VERSION_STRING_LEN, "ComCtl32 v%d.%d",
+                          info.dwMajorVersion, info.dwMinorVersion);
                 success = true;
             }
             else
@@ -1138,7 +1155,7 @@ RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, siz
         rxMDSVal = c->ArrayAt(list, i);
         if ( rxMDSVal == NULLOBJECT || ! c->IsOfType(rxMDSVal, "DAYSTATE") )
         {
-            wrongObjInArrayException(c->threadContext, 1, i, "DayState");
+            wrongObjInArrayException(c->threadContext, 1, i, "a DayState object");
             return TheFalseObj;
         }
 

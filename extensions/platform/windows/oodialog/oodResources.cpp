@@ -505,13 +505,13 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
         RexxObjectPtr image = c->ArrayAt(images, i);
         if ( image == NULLOBJECT || ! c->IsOfType(image, "Image") )
         {
-            wrongObjInArrayException(c->threadContext, 1, i, "Image");
+            wrongObjInArrayException(c->threadContext, 1, i, "an Image object");
             goto out;
         }
         POODIMAGE oi = (POODIMAGE)context->ObjectToCSelf(image);
         if ( oi->hImage == NULL )
         {
-            wrongObjInArrayException(c->threadContext, 1, i, "non-null Image");
+            wrongObjInArrayException(c->threadContext, 1, i, "a non-null Image object");
             goto out;
         }
 
@@ -530,7 +530,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
 
             if ( imageType == -1 )
             {
-                wrongObjInArrayException(c->threadContext, 1, i, "bitmap, icon, or cursor Image");
+                wrongObjInArrayException(c->threadContext, 1, i, "a bitmap, icon, or cursor Image");
                 goto out;
             }
         }
@@ -541,7 +541,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
             case IMAGE_CURSOR :
                 if ( imageType != IMAGE_ICON )
                 {
-                    wrongObjInArrayException(c->threadContext, 1, i, "cursor or icon Image");
+                    wrongObjInArrayException(c->threadContext, 1, i, "a cursor or icon Image");
                     goto out;
                 }
                 tmpResult = ImageList_AddIcon(himl, (HICON)oi->hImage);
@@ -550,7 +550,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
             case IMAGE_BITMAP :
                 if ( imageType != IMAGE_BITMAP )
                 {
-                    wrongObjInArrayException(c->threadContext, 1, i, "bitmap Image");
+                    wrongObjInArrayException(c->threadContext, 1, i, "a bitmap Image");
                     goto out;
                 }
                 if ( doMasked )
@@ -564,7 +564,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
                 break;
 
             default :
-                wrongObjInArrayException(c->threadContext, 1, i, "bitmap, icon, or cursor Image");
+                wrongObjInArrayException(c->threadContext, 1, i, "a bitmap, icon, or cursor Image");
                 goto out;
 
         }

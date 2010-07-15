@@ -504,14 +504,14 @@ LRESULT CALLBACK KeyPressSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
             /* Sent when the alt key is down.  We need both WM_SYSKEYDOWN and
              * WM_KEYDOWN to catch everything that a keyboard hook catches.
              */
-            if (  pKeyData->key[wParam] && !(lParam & KEY_RELEASE) && !(lParam & KEY_WASDOWN) )
+            if (  pKeyData->key[wParam] && !(lParam & KEY_RELEASED) && !(lParam & KEY_WASDOWN) )
             {
                 processKeyPress(pSubclassData, wParam, lParam);
             }
             break;
 
         case WM_KEYDOWN:
-            /* WM_KEYDOWN will never have KEY_RELEASE set. */
+            /* WM_KEYDOWN will never have KEY_RELEASED set. */
             if (  pKeyData->key[wParam] && !(lParam & KEY_WASDOWN) )
             {
                 processKeyPress(pSubclassData, wParam, lParam);
@@ -666,9 +666,8 @@ static inline bool isExtendedKeyEvent(WPARAM wParam)
  * other than false is treated as true.
  *
  * @remarks  We know, or think we know, that this function is running in the
- *           thread of the dialog message loop.  We are doing an attach thread
- *           and caching the result, but really, couldn't we just grab it from
- *           the pCPlainBaseDialg?
+ *           thread of the dialog message loop.  So, for a thread context, we
+ *           just grab it from the pCPlainBaseDialg.
  */
 LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
 {
@@ -682,14 +681,14 @@ LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
     switch ( msg )
     {
         case WM_KEYDOWN:
-            if (  lParam & EXTENDED_KEY && isExtendedKeyEvent(wParam) )
+            if (  lParam & KEY_ISEXTENDED && isExtendedKeyEvent(wParam) )
             {
                 RexxThreadContext *c = pSubclassData->dlgProcContext;
                 RexxArrayObject args = getKeyEventRexxArgs(c, wParam);
 
                 RexxObjectPtr reply = c->SendMessage(pSubclassData->rexxDialog, pKeyEvent->method, args);
 
-                if ( ! checkForCondition(c) && reply == TheFalseObj )
+                if ( ! checkForCondition(c, false) && reply == TheFalseObj )
                 {
                     return TRUE;
                 }
@@ -703,7 +702,7 @@ LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
 
             RexxObjectPtr reply = c->SendMessage(pSubclassData->rexxDialog, pKeyEvent->method, args);
 
-            if ( ! checkForCondition(c) && reply != NULLOBJECT )
+            if ( ! checkForCondition(c, false) && reply != NULLOBJECT )
             {
                 if ( reply == TheFalseObj )
                 {
