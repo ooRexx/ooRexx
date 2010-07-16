@@ -123,7 +123,7 @@ void *baseClassIntializationException(RexxMethodContext *c)
  *        The specified method, built-in function, or external routine exists,
  *        but you used it incorrectly.
  *
- *  The "methName" method can not be invoked on "objectName" when the "msg"
+ *  The "methName" method can not be invoked on "objectName" "msg"
  *
  *  The execute method can not be invoked on a PropertyPage using an owner
  *  dialog whose Windows dialog does not exist.

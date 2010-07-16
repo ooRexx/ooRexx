@@ -367,8 +367,12 @@ int32_t delDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
     HICON hIconSmall = NULL;
 
     EnterCriticalSection(&crit_sec);
+
+#if 0
     printf("In delDialog() hDlg=%p tabIdx=%d allocate=%d isActive=%d onTop=%d prev=%p\n",
            pcpbd->hDlg, pcpbd->tableIndex, pcpbd->dlgAllocated, pcpbd->isActive, pcpbd->onTheTop, pcpbd->previous);
+#endif
+
     if ( ! pcpbd->dlgAllocated )
     {
         printf("delDialog() already ran for this dialog! pcpbd=%p\n", pcpbd);
@@ -2915,8 +2919,11 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     if ( pCSelf != NULLOBJECT )
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+#if 0
         printf("PlainBaseDialog::uninit() hDlg=%p isAllocated=%d  Dialog is a ", pcpbd->hDlg, pcpbd->dlgAllocated);
         dbgPrintClassID(context, pcpbd->rexxSelf);
+#endif
 
         EnterCriticalSection(&crit_sec);
 

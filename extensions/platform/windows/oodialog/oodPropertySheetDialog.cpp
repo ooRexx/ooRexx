@@ -543,17 +543,25 @@ static void initializePropSheetPage(HWND hPage, pCPropertySheetPage pcpsp)
  * @return True for a match, otherwise false.
  *
  * @remarks  Tough to be sure we get the right window in the CBTProc function.
- *           But, for out use, I think it is impossible to create two windows in
- *           the same thread without the property sheet window being first,
- *           anyway. Every property sheet window I've looked at will match the
- *           style and extended style masks used here.
+ *           But, for our use, I think it is impossible to create two windows in
+ *           the same thread without the property sheet window being first.
+ *
+ *           Trying to match the Windows styles for all different types of
+ *           property sheets, including AeroWizards, is not working well.  For
+ *           now, just assume if it is a dialog or a NativeHWNDHost on Vista or
+ *           later, that we are okay.
  */
 inline bool isPropSheetMatch(LPCREATESTRUCT cs)
 {
+#if 0
     uint32_t styleMask = WS_POPUP | WS_CAPTION | WS_SYSMENU | 0x000000c4;
     uint32_t exStyleMask = WS_EX_CONTROLPARENT | WS_EX_DLGMODALFRAME;
 
-    if ( cs->lpszClass == WC_DIALOG && (cs->style & styleMask) == styleMask && (cs->dwExStyle & exStyleMask) == exStyleMask )
+    printf("Matching styleMask=0x%08x exStyleMask=0x%08x\n", styleMask, exStyleMask);
+    printf("Actual       style=0x%08x     exStyle=0x%08x\n", cs->style, cs->dwExStyle);
+#endif
+
+    if ( cs->lpszClass == WC_DIALOG || (_isAtLeastVista() && strcmp(cs->lpszClass, "NativeHWNDHost") == 0) )
     {
         return true;
     }
@@ -1789,13 +1797,23 @@ done_out:
 /** PropertySheetDialog::popup()
  *
  *
+ *  @notes  AeroWizard dialogs do not support models
  */
 RexxMethod2(RexxObjectPtr, psdlg_popup, NAME, methodName, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
     pCPlainBaseDialog pcpbd = pcpsd->pcpbd;
 
-    PROPSHEETPAGE *psp = initPropSheetPages(context, pcpsd);
+    PROPSHEETPAGE *psp = NULL;
+    PROPSHEETHEADER *psh = NULL;
+
+    if ( pcpsd->isAeroWiz )
+    {
+        methodCanNotBeInvokedException(context, "popup", pcpsd->rexxSelf, "with the AeroWizard style");
+        goto err_out;
+    }
+
+    psp = initPropSheetPages(context, pcpsd);
     if ( psp == NULL )
     {
         goto err_out;
@@ -1803,7 +1821,7 @@ RexxMethod2(RexxObjectPtr, psdlg_popup, NAME, methodName, CSELF, pCSelf)
 
     pcpsd->modeless = true;
 
-    PROPSHEETHEADER *psh = initPropSheetHeader(context, pcpsd, psp, NULL);
+    psh = initPropSheetHeader(context, pcpsd, psp, NULL);
     if ( psh == NULL )
     {
         goto err_out;
