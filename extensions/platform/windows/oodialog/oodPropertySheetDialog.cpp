@@ -1740,6 +1740,9 @@ RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, 
     RexxObjectPtr   result = TheNegativeOneObj;
     HWND            hParent = NULL;
 
+    PROPSHEETPAGE *psp = NULL;
+    PROPSHEETHEADER *psh = NULL;
+
     if ( argumentExists(1) )
     {
         hParent = checkPropSheetOwner(context, owner, 1);
@@ -1751,7 +1754,7 @@ RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, 
 
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    PROPSHEETPAGE *psp = initPropSheetPages(context, pcpsd);
+    psp = initPropSheetPages(context, pcpsd);
     if ( psp == NULL )
     {
         goto done_out;
@@ -1759,7 +1762,7 @@ RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, 
 
     // It is not necessary to set pcpsd->modeless to false, it is false by default.
 
-    PROPSHEETHEADER *psh = initPropSheetHeader(context, pcpsd, psp, hParent);
+    psh = initPropSheetHeader(context, pcpsd, psp, hParent);
     if ( psh == NULL )
     {
         goto done_out;
