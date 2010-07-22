@@ -1863,9 +1863,8 @@ RexxMethod2(RexxObjectPtr, psdlg_setAppIcon_atr, RexxObjectPtr, icon, CSELF, pCS
  *
  *  Sets the header bitmap used for a Wizard (Wizard97 or AeroWizard.)
  *
- *  For a Wizard97, the user can specify the bitmap as either a resource ID
- *  (numeric or symbolic) or as an .Image object.  However for an AeroWizard,
- *  the bitmap must be specified as an .Image object.
+ *  The user can specify the bitmap as either a resource ID (numeric or
+ *  symbolic) or as an .Image object.
  *
  *  @remarks  If the user specifies the header as an .Image object, then it has
  *            to be a bitmap image, not some other type of image, like an icon,
@@ -1903,12 +1902,6 @@ RexxMethod2(RexxObjectPtr, psdlg_setHeader_atr, RexxObjectPtr, header, CSELF, pC
         }
         else
         {
-            if ( pcpsd->isAeroWiz )
-            {
-                wrongClassException(context->threadContext, 1, "Image");
-                goto done_out;
-            }
-
             pcpsd->headerBitmapID = (uint32_t)result;
         }
 
