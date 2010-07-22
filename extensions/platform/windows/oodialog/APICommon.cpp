@@ -252,7 +252,7 @@ RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char 
     return NULLOBJECT;
 }
 
-void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual)
+void invalidImageException(RexxThreadContext *c, size_t pos, CSTRING type, CSTRING actual)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Argument %d must be a %s image; found %s", pos, type, actual);
@@ -463,7 +463,7 @@ void failedToRetrieveException(RexxThreadContext *c, CSTRING item, RexxObjectPtr
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
 }
 
-void nullObjectException(RexxThreadContext *c, CSTRING name, int pos)
+void nullObjectException(RexxThreadContext *c, CSTRING name, size_t pos)
 {
     TCHAR buffer[256];
     if ( pos == 0 )
@@ -608,7 +608,7 @@ bool rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING
     return result;
 }
 
-bool requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, int pos)
+bool requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, size_t pos)
 {
     if ( obj == NULLOBJECT || ! c->IsOfType(obj, name) )
     {

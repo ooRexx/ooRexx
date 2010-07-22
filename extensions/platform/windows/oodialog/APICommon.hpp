@@ -62,7 +62,7 @@ extern void  userDefinedMsgException(RexxThreadContext *c, CSTRING formatStr, in
 extern void  userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg);
 extern void  userDefinedMsgException(RexxMethodContext *c, CSTRING msg);
 extern void  userDefinedMsgException(RexxMethodContext *c, size_t pos, CSTRING msg);
-extern void  invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual);
+extern void  invalidImageException(RexxThreadContext *c, size_t pos, CSTRING type, CSTRING actual);
 extern void  stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen);
 extern void  numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
 extern void  notNonNegativeException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
@@ -78,7 +78,7 @@ extern void  directoryIndexException(RexxThreadContext *c, size_t pos, CSTRING i
 extern void  wrongValueAtDirectoryIndexException(RexxThreadContext *, size_t pos, CSTRING index, CSTRING list, RexxObjectPtr actual);
 extern void  emptyArrayException(RexxThreadContext *c, int argPos);
 extern void  sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index);
-extern void  nullObjectException(RexxThreadContext *c, CSTRING name, int pos);
+extern void  nullObjectException(RexxThreadContext *c, CSTRING name, size_t pos);
 extern void  nullObjectException(RexxThreadContext *c, CSTRING name);
 extern void  nullPointerException(RexxThreadContext *c, int pos);
 
@@ -97,7 +97,7 @@ extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr ob
 extern bool    rxGetUIntPtrAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uintptr_t *pNumber);
 extern bool    rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uint32_t *pNumber);
 
-extern bool            requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, int pos);
+extern bool            requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, size_t pos);
 extern int32_t         getLogical(RexxThreadContext *c, RexxObjectPtr obj);
 extern size_t          rxArgCount(RexxMethodContext * context);
 extern bool            rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t pos);

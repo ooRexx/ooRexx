@@ -1388,7 +1388,7 @@ pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, ood
 }
 
 
-PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos)
+PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, size_t argPos)
 {
     if ( requiredClass(context->threadContext, p, "Point", argPos) )
     {
@@ -1410,7 +1410,7 @@ RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y)
 }
 
 
-PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos)
+PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, size_t argPos)
 {
     if ( requiredClass(context->threadContext, r, "Rect", argPos) )
     {
@@ -1458,7 +1458,7 @@ RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r)
 }
 
 
-PSIZE rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos)
+PSIZE rxGetSize(RexxMethodContext *context, RexxObjectPtr s, size_t argPos)
 {
     if ( requiredClass(context->threadContext, s, "Size", argPos) )
     {

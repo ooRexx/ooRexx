@@ -65,15 +65,15 @@ typedef struct _RESOURCEIMAGE
 } RESOURCEIMAGE, *PRESOURCEIMAGE;
 
 
-extern POODIMAGE     rxGetOodImage(RexxMethodContext *, RexxObjectPtr, int);
-extern POODIMAGE     rxGetImageIcon(RexxMethodContext *, RexxObjectPtr, int);
+extern POODIMAGE     rxGetOodImage(RexxMethodContext *, RexxObjectPtr, size_t);
+extern POODIMAGE     rxGetImageIcon(RexxMethodContext *, RexxObjectPtr, size_t);
 extern RexxObjectPtr oodGetImageAttribute(RexxMethodContext *, RexxObjectPtr, CSTRING, UINT, WPARAM, uint8_t, oodControl_t);
 extern RexxObjectPtr oodSetImageAttribute(RexxMethodContext *, CSTRING, RexxObjectPtr, HWND, HANDLE, uint8_t, oodControl_t);
 extern CSTRING       getImageTypeName(uint8_t);
-extern HIMAGELIST    rxGetImageList(RexxMethodContext *, RexxObjectPtr, int);
+extern HIMAGELIST    rxGetImageList(RexxMethodContext *, RexxObjectPtr, size_t);
 extern RexxObjectPtr oodILFromBMP(RexxMethodContext *, HIMAGELIST *, RexxObjectPtr, int, int, HWND);
 
-extern PRESOURCEIMAGE rxGetResourceImage(RexxMethodContext *context, RexxObjectPtr r, int argPos);
+extern PRESOURCEIMAGE rxGetResourceImage(RexxMethodContext *context, RexxObjectPtr r, size_t argPos);
 
 
 #define IMAGE_TYPE_LIST            "Bitmap, Icon, Cursor, Enhanced Metafile"

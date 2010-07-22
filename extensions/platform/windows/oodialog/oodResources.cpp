@@ -58,7 +58,6 @@
 
 
 // ImageList helper functions.
-HIMAGELIST rxGetImageList(RexxMethodContext *, RexxObjectPtr, int);
 RexxObjectPtr rxNewImageList(RexxMethodContext *, HIMAGELIST);
 
 #define IL_DEFAULT_FLAGS           ILC_COLOR32 | ILC_MASK
@@ -79,7 +78,7 @@ RexxObjectPtr rxNewImageFromControl(RexxMethodContext *, HWND, HANDLE, uint8_t, 
 RexxObjectPtr rxNewEmptyImage(RexxMethodContext *, DWORD);
 RexxObjectPtr rxNewValidImage(RexxMethodContext *, HANDLE, uint8_t, PSIZE, uint32_t, bool);
 
-POODIMAGE rxGetImageBitmap(RexxMethodContext *, RexxObjectPtr, int);
+POODIMAGE rxGetImageBitmap(RexxMethodContext *, RexxObjectPtr, size_t);
 
 RexxObjectPtr oodILFromBMP(RexxMethodContext *, HIMAGELIST *, RexxObjectPtr, int, int, HWND);
 
@@ -142,7 +141,7 @@ RexxObjectPtr oodGetImageAttribute(RexxMethodContext *c, RexxObjectPtr self, CST
 #define IMAGELIST_CLASS "ImageList"
 
 
-HIMAGELIST rxGetImageList(RexxMethodContext *context, RexxObjectPtr il, int argPos)
+HIMAGELIST rxGetImageList(RexxMethodContext *context, RexxObjectPtr il, size_t argPos)
 {
     HIMAGELIST himl = NULL;
     if ( requiredClass(context->threadContext, il, "ImageList", argPos) )
@@ -688,7 +687,7 @@ CSTRING getImageTypeName(uint8_t type)
     }
 }
 
-POODIMAGE rxGetOodImage(RexxMethodContext *context, RexxObjectPtr o, int argPos)
+POODIMAGE rxGetOodImage(RexxMethodContext *context, RexxObjectPtr o, size_t argPos)
 {
     if ( requiredClass(context->threadContext, o, "Image", argPos) )
     {
@@ -713,7 +712,7 @@ POODIMAGE rxGetOodImage(RexxMethodContext *context, RexxObjectPtr o, int argPos)
  *
  * @return A pointer to an OODIMAGE struct on success, othewise NULL.
  */
-POODIMAGE rxGetImageIcon(RexxMethodContext *c, RexxObjectPtr o, int pos)
+POODIMAGE rxGetImageIcon(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
 {
     POODIMAGE oi = rxGetOodImage(c, o, pos);
     if ( oi != NULL )
@@ -727,7 +726,7 @@ POODIMAGE rxGetImageIcon(RexxMethodContext *c, RexxObjectPtr o, int pos)
     return NULL;
 }
 
-POODIMAGE rxGetImageBitmap(RexxMethodContext *c, RexxObjectPtr o, int pos)
+POODIMAGE rxGetImageBitmap(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
 {
     POODIMAGE oi = rxGetOodImage(c, o, pos);
     if ( oi != NULL )
@@ -1495,7 +1494,7 @@ RexxMethod1(uint32_t, image_systemErrorCode, CSELF, oi) { return ((POODIMAGE)oi)
 #define RESOURCE_IMAGE_CLASS  "ResourceImage"
 
 
-PRESOURCEIMAGE rxGetResourceImage(RexxMethodContext *context, RexxObjectPtr r, int argPos)
+PRESOURCEIMAGE rxGetResourceImage(RexxMethodContext *context, RexxObjectPtr r, size_t argPos)
 {
     if ( requiredClass(context->threadContext, r, "ResourceImage", argPos) )
     {

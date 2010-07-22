@@ -121,12 +121,12 @@ extern bool       requiredOS(RexxMethodContext *context, os_name_t os, const cha
 extern bool       requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 extern bool       requiredComCtl32Version(RexxMethodContext *context, DWORD minimum, const char *msg);
 
-extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
+extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, size_t argPos);
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
-extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos);
+extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, size_t argPos);
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b);
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r);
-extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos);
+extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, size_t argPos);
 extern RexxObjectPtr rxNewSize(RexxThreadContext *c, long cx, long cy);
 extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 

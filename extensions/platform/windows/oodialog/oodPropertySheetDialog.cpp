@@ -1500,7 +1500,7 @@ uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROP
 
     if ( pcpsd->imageList != NULL )
     {
-        HICON hIcon = ImageList_GetIcon(pcpsd->imageList, index, INDEXTOOVERLAYMASK(index) | ILD_NORMAL);
+        HICON hIcon = ImageList_GetIcon(pcpsd->imageList, (uint32_t)index, INDEXTOOVERLAYMASK((uint32_t)index) | ILD_NORMAL);
 
         psp[index].hIcon = hIcon;
         flag = PSP_USEHICON;
@@ -1850,7 +1850,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setAppIcon_atr, RexxObjectPtr, icon, CSELF, pCS
         }
         else
         {
-            pcpsd->iconID = result;
+            pcpsd->iconID = (uint32_t)result;
         }
 
         context->SetObjectVariable("ICON", icon);
@@ -1909,7 +1909,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setHeader_atr, RexxObjectPtr, header, CSELF, pC
                 goto done_out;
             }
 
-            pcpsd->headerBitmapID = result;
+            pcpsd->headerBitmapID = (uint32_t)result;
         }
 
         context->SetObjectVariable("HEADER", header);
@@ -1957,7 +1957,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setWatermark_atr, RexxObjectPtr, watermark, CSE
         }
         else
         {
-            pcpsd->watermarkID = result;
+            pcpsd->watermarkID = (uint32_t)result;
         }
 
         context->SetObjectVariable("WATERMARK", watermark);
@@ -2883,7 +2883,7 @@ RexxMethod2(RexxObjectPtr, psp_setTabIcon_atr, RexxObjectPtr, icon, CSELF, pCSel
         }
         else
         {
-            pcpsp->iconID = result;
+            pcpsp->iconID = (uint32_t)result;
         }
 
         context->SetObjectVariable("TABICON", icon);
