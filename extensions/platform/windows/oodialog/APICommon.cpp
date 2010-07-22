@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,7 +43,7 @@
  * any code that uses the native API.  Include APICommon.hpp to use them.
  */
 
-#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
 #include <stdio.h>
 #include <errno.h>

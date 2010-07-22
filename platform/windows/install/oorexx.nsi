@@ -443,6 +443,7 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "AnimatedButton.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "BaseDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "CategoryDialog.cls"
+  ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "ControlDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "DeprecatedClasses.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "DialogControls.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "DialogExtensions.cls"

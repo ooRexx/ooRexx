@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -136,10 +136,12 @@ extern bool rxLogicalFromDirectory(RexxMethodContext *, RexxDirectoryObject, CST
 extern bool rxNumberFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, uint32_t *, int, bool);
 extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, int *, int, bool);
 
-extern RexxObjectPtr     setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
 extern int               putUnicodeText(LPWORD dest, const char *text);
-extern RexxStringObject  unicode2String(RexxMethodContext *c, PWSTR wstr, int32_t len);
-extern char *            unicode2Ansi(PWSTR wstr, int32_t len);
+extern LPWSTR            ansi2unicode(LPCSTR str);
+extern RexxStringObject  unicode2string(RexxMethodContext *c, PWSTR wstr);
+extern char *            unicode2ansi(PWSTR wstr);
+
+extern RexxObjectPtr     setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
 extern int               getKeywordValue(String2Int *cMap, const char * str);
 extern bool              goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size_t max, size_t *arraySize);
 extern bool              getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, size_t *);
@@ -283,6 +285,7 @@ extern void           wrongWindowStyleException(RexxMethodContext *c, CSTRING, C
 extern RexxObjectPtr  wrongWindowsVersionException(RexxMethodContext *, const char *, const char *);
 extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, RexxObjectPtr rxDlg, CSTRING msg);
 extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, RexxObjectPtr rxDlg, CSTRING msg);
+extern RexxObjectPtr  invalidAttributeException(RexxMethodContext *c, RexxObjectPtr rxDlg);
 
 /**
  *  93.900

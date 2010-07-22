@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,10 +42,9 @@
  * The base module for the ooDialog package.  Contains the method implmentations
  * for the WindowBase and PlainBaseDialog classes.
  */
-#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
 #include <mmsystem.h>
-#include <commctrl.h>
 #include <stdio.h>
 #include <dlgs.h>
 #include <shlwapi.h>
@@ -275,10 +274,10 @@ void delPageDialog(pCPropertySheetPage pcpsp)
         LocalFree(pcpsp->headerTitle);
         pcpsp->headerTitle = NULL;
     }
-    if ( pcpsp->headerSubtitle != NULL )
+    if ( pcpsp->headerSubTitle != NULL )
     {
-        LocalFree(pcpsp->headerSubtitle);
-        pcpsp->headerSubtitle = NULL;
+        LocalFree(pcpsp->headerSubTitle);
+        pcpsp->headerSubTitle = NULL;
     }
 }
 
@@ -3949,8 +3948,6 @@ RexxMethod2(logical_t, pbdlg_pixel2dlgUnit, RexxObjectPtr, du, OSELF, self)
  */
 RexxMethod2(logical_t, pbdlg_dlgUnit2pixel, RexxObjectPtr, pixels, OSELF, self)
 {
-    RECT *r = {0};
-
     if ( context->IsOfType(pixels, "RECT") )
     {
         RECT *r = (PRECT)context->ObjectToCSelf(pixels);
@@ -3958,14 +3955,16 @@ RexxMethod2(logical_t, pbdlg_dlgUnit2pixel, RexxObjectPtr, pixels, OSELF, self)
     }
     else if ( context->IsOfType(pixels, "POINT") || context->IsOfType(pixels, "SIZE") )
     {
-        POINT *p = (PPOINT)context->ObjectToCSelf(pixels);
-        r->right  = p->x;
-        r->bottom = p->y;
+        RECT r = {0};
 
-        if ( mapDuToPixel(context, self, r) )
+        POINT *p = (PPOINT)context->ObjectToCSelf(pixels);
+        r.right  = p->x;
+        r.bottom = p->y;
+
+        if ( mapDuToPixel(context, self, &r) )
         {
-            p->x = r->right;
-            p->y = r->bottom;
+            p->x = r.right;
+            p->y = r.bottom;
             return TRUE;
         }
         return FALSE;

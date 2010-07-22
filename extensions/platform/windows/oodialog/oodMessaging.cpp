@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -39,11 +39,10 @@
 /**
  * Open Object REXX OODialog - ooDialog Messaging function
  */
-#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>
-#include <commctrl.h>
 #include <shlwapi.h>
 #include <WindowsX.h>
 #include "APICommon.hpp"
@@ -57,7 +56,7 @@
 static LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /**
- * The dialog procedure function for all ooDialog dialogs.  Handles and
+ * The dialog procedure function for all regular ooDialog dialogs.  Handles and
  * processes all window messages for the dialog.
  *
  * @param hDlg

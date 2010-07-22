@@ -122,6 +122,31 @@
 
 ::attribute pages get unguarded external "LIBRARY oodialog psdlg_getPages_atr"
 
+-- The caption (title) for the property sheet dialog
+::attribute caption get unguarded
+::attribute caption set unguarded external "LIBRARY oodialog psdlg_setCaption_atr"
+
+-- A resource image from which to get resources for the property sheet dialog
+::attribute resources get unguarded
+::attribute resources set unguarded external "LIBRARY oodialog psdlg_setResources_atr"
+
+-- The application icon for the property sheet dialog
+::attribute appIcon get unguarded
+::attribute appIcon set unguarded external "LIBRARY oodialog psdlg_setAppIcon_atr"
+
+-- Icons for each tab can come from an ImageList owned by the property dialog
+::attribute imageList get unguarded
+::attribute imageList set unguarded external "LIBRARY oodialog psdlg_setImageList_atr"
+
+::attribute header get unguarded
+::attribute header set unguarded external "LIBRARY oodialog psdlg_setHeader_atr"
+
+::attribute watermark get unguarded
+::attribute watermark set unguarded external "LIBRARY oodialog psdlg_setWatermark_atr"
+
+::attribute startPage get unguarded
+::attribute startPage set unguarded external "LIBRARY oodialog psdlg_setStartPage_atr"
+
 ::method init external "LIBRARY oodialog psdlg_init"
 
 ::method initDialog unguarded
@@ -170,6 +195,15 @@
 
 ::attribute wantAccelerators get external "LIBRARY oodialog psp_getWantNotification"
 ::attribute wantAccelerators set external "LIBRARY oodialog psp_setWantNotification"
+
+::attribute wantGetObject get external "LIBRARY oodialog psp_getWantNotification"
+::attribute wantGetObject set external "LIBRARY oodialog psp_setWantNotification"
+
+::attribute resources get unguarded
+::attribute resources set external "LIBRARY oodialog psp_setResources_atr"
+
+::attribute tabIcon get unguarded
+::attribute tabIcon set external "LIBRARY oodialog psp_setTabIcon_atr"
 
 ::method init_propertySheetPage private external "LIBRARY oodialog psp_init_propertySheetPage"  -- Not to be documented
 ::method initTemplate external "LIBRARY oodialog psp_initTemplate"                              -- Not to be documented

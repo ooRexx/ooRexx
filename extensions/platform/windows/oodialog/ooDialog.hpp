@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,6 +48,7 @@
 #define OEMRESOURCE
 
 #include <windows.h>
+#include <CommCtrl.h>
 #include "oorexxapi.h"
 
 #define NR_BUFFER           15
@@ -549,11 +550,14 @@ typedef struct _pspCSelf {
     HWND                    hPage;            // Dialog handle of page.
     void                   *cppPropSheet;     // PropertySheetDialog CSelf.
     RexxObjectPtr           rexxPropSheet;    // Rexx PropertySheetDialog object.
+    HINSTANCE               hInstance;        // resources attribute, C++ part of .ResourceImage
     RexxStringObject        extraOpts;        // Storage for extra options, used by RcPSPDialog, available for other uses.
+    HICON                   hIcon;            // tabIcon attribute, C++ part if using .Image
+    uint32_t                iconID;           // tabIcon attribute, C++ part if using resource ID
     INT_PTR                 pageID;           // Identifies the page to the Windows property sheet, resource ID or pointer
     char                   *pageTitle;
     char                   *headerTitle;
-    char                   *headerSubtitle;
+    char                   *headerSubTitle;
     oodClass_t              pageType;
     uint32_t                cx;               // Width and height of the dialog.
     uint32_t                cy;
@@ -576,6 +580,16 @@ typedef struct _psdCSelf {
     RexxObjectPtr       *rexxPages;
     pCPropertySheetPage *cppPages;
     pCPlainBaseDialog    pcpbd;
+    HINSTANCE            hInstance;        // resources attribute, C++ part of .ResourceImage
+    HICON                hIcon;            // icon attribute, C++ part if using .Image
+    uint32_t             iconID;           // icon attribute, C++ part if using resource ID
+    HBITMAP              hWatermark;       // waterMark attribute, C++ part if using .Image
+    uint32_t             watermarkID;      // watermark attribute, C++ part if useing resource ID
+    HBITMAP              hHeaderBitmap;    // headerBitmap attribute, C++ part if using .Image
+    uint32_t             headerBitmapID;   // headerBitmap attribute, C++ part if useing resource ID
+    HPALETTE             hplWatermark;     // Palette to use when drawing watermark and / or header bitmap
+    HIMAGELIST           imageList;        // imageList attribute, C++ part of .ImageList
+    uint32_t             startPage;        // Index of start page, 1-based.  If 0 not set;
     char                *caption;
     size_t               pageCount;
     uint32_t             propSheetFlags;

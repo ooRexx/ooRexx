@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,12 +42,11 @@
  * Contains convenience / helper functions used throughout the ooDialog modules.
  */
 
-#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
-#include <CommCtrl.h>
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
@@ -162,6 +161,29 @@ RexxObjectPtr methodCanNotBeInvokedException(RexxMethodContext *c, RexxObjectPtr
     TCHAR buf[512];
     _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the %s.",
               c->GetMessageName(), c->ObjectToStringValue(rxDlg), msg);
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
+    return NULLOBJECT;
+}
+
+/**
+ *  93.900
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
+ *  The "" attribute is not valid for ""
+ *
+ *  The HEADER attribute is not valid for a ModalPropertySheet
+ *
+ * @param c
+ * @param rxDlg
+ * @param msg
+ */
+RexxObjectPtr invalidAttributeException(RexxMethodContext *c, RexxObjectPtr rxDlg)
+{
+    TCHAR buf[512];
+    _snprintf(buf, sizeof(buf), "The %s attribute is not valid for %s",
+              c->GetMessageName(), c->ObjectToStringValue(rxDlg));
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
 }
@@ -1663,8 +1685,8 @@ RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style)
 
 
 /**
- *  Converts an ANSI character string to a wide (Unicode) character string and
- *  puts it in the specified buffer.
+ *  Pust an ANSI character string converted to a wide (Unicode) character string
+ *  in the specified buffer.
  *
  *  This is a convenience function that assumes the caller has passed a buffer
  *  known to be big enough.
@@ -1692,9 +1714,9 @@ int putUnicodeText(LPWORD dest, const char *text)
     }
     else
     {
-        int cchWideChar = (int)strlen(text) + 1;
+        int countWideChars = (int)strlen(text) + 1;
 
-        count = MultiByteToWideChar(CP_ACP, 0, text, -1, (LPWSTR)dest, cchWideChar);
+        count = MultiByteToWideChar(CP_ACP, 0, text, -1, (LPWSTR)dest, countWideChars);
         if ( count == 0 )
         {
             // Unlikely that this failed, but if it did, treat it as an empty
@@ -1708,10 +1730,51 @@ int putUnicodeText(LPWORD dest, const char *text)
 
 
 /**
+ * Alocates a buffer and converts an ANSI string into a wide (Unicode) character
+ * string.
  *
+ * @param str     The ANSI string to convert, can not be null, must be null
+ *                terminated.
  *
+ * @return The converted string, or null on failure.
  *
- * @param wstr
+ * @note  The caller is responsible for freeing the returned string.  Memory is
+ *        allocated using LocalAlloc.
+ */
+LPWSTR ansi2unicode(LPCSTR str)
+{
+    if ( str == NULL )
+{
+        return NULL;
+    }
+
+    LPWSTR wstr = NULL;
+
+    size_t len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+
+    if ( len != 0 )
+    {
+        wstr = (LPWSTR)LocalAlloc(LPTR, len * 2);
+        if ( wstr != NULL )
+        {
+            if ( MultiByteToWideChar(CP_ACP, 0, str, -1, wstr, (int)len ) == 0)
+            {
+                // Conversion failed.
+                LocalFree(wstr);
+                wstr = NULL;
+            }
+        }
+    }
+
+    return wstr;
+}
+
+
+/**
+ * Allocates a buffer and converts a wide character (Unicode) string to an Ansi
+ * string.
+ *
+ * @param wstr    The string to convert.
  * @param len     The length, including the terminating null, of the wide string
  *                to convert.  If this length does not include the terminating
  *                null, the returned string will not include a terminating
@@ -1725,27 +1788,22 @@ int putUnicodeText(LPWORD dest, const char *text)
  * @note  The caller is responsible for freeing the returned string.  Memory is
  *        allocated using malloc.
  */
-char *unicode2Ansi(PWSTR wstr, int32_t len)
+char *unicode2ansi(LPWSTR wstr)
 {
     if (wstr == NULL)
     {
         return NULL;
     }
 
-    if ( len == -1 )
-    {
-        len = (int)wcslen(wstr) + 1;
-    }
-
     char *ansiStr = NULL;
-    int32_t neededLen = WideCharToMultiByte(CP_ACP, 0, wstr, len, NULL, 0, NULL, NULL);
+    int32_t neededLen = WideCharToMultiByte(CP_ACP, 0, wstr, -1, NULL, 0, NULL, NULL);
 
     if ( neededLen != 0 )
     {
         ansiStr = (char *)malloc(neededLen);
         if ( ansiStr != NULL )
         {
-            if ( WideCharToMultiByte(CP_ACP, 0, wstr, len, ansiStr, neededLen, NULL, NULL) == 0 )
+            if ( WideCharToMultiByte(CP_ACP, 0, wstr, -1, ansiStr, neededLen, NULL, NULL) == 0 )
             {
                 /* conversion failed */
                 free(ansiStr);
@@ -1760,17 +1818,16 @@ char *unicode2Ansi(PWSTR wstr, int32_t len)
 /**
  * Converts a wide character (Unicode) string to a Rexx string object.
  *
+ * @param c    Method context we are operating in.
+ * @param wstr Wide character string to convert.
  *
- * @param c
- * @param wstr
- * @param len
+ * @return The conveted string as a new Rexx string object on success.
  *
- * @return RexxStringObject
- *
- * @remarks  TODO  should an out of memeory exception be raised for a null
- *           return from unicode2Ansi?
+ * @remarks  The Rexx null string is returned if an error occurs.  A second
+ *           function could be added if it is necessary to distinguish types of
+ *           errors.
  */
-RexxStringObject unicode2String(RexxMethodContext *c, PWSTR wstr, int32_t len)
+RexxStringObject unicode2string(RexxMethodContext *c, LPWSTR wstr)
 {
     RexxStringObject result = c->NullString();
     if ( wstr == NULL )
@@ -1778,7 +1835,7 @@ RexxStringObject unicode2String(RexxMethodContext *c, PWSTR wstr, int32_t len)
         goto done_out;
     }
 
-    char *str = unicode2Ansi(wstr, len);
+    char *str = unicode2ansi(wstr);
     if ( str == NULL )
     {
         goto done_out;
@@ -1983,6 +2040,36 @@ err_out:
     return false;
 }
 
+
+/**
+ * Fills in a POINT structure using an argument array passed to a Rexx object
+ * method.
+ *
+ * The purpose is to give the Rexx programmer some flexibility in how they pass
+ * in "point-like" coordinates to a method.
+ *
+ * The coordinates can be expressed as a .Point, a .Size, or as 2 individual
+ * intergers.
+ *
+ * Since a point and a size are binary compatible, no effort is made to enforce
+ * that only a point is used.  This makes things more flexible.
+ *
+ * @param c            Method context we are operating in.
+ * @param args         The arg list array (ARGLIST) passed to the native API
+ * @param point        [IN/OUT] Pointer to a point struct, this is filled in on
+ *                     success.
+ * @param startArg     The argument number in the arg array where the rectangle
+ *                     specifications start.
+ * @param maxArgs      The maximum number of args allowed.
+ * @param arraySize    [IN/OUT] The size of the argument array, returned.
+ * @param usedArgs     [IN/OUT] The number of arguments used in specifying the
+ *                     point. I.e., if startArg is a .point, then usedArgs
+ *                     will be 1 on return.  If at startArg we have x, y, (or
+ *                     cx, cy) then useArgs will be 2 on return.
+ *
+ * @return True on success, false otherwise.  If the return is false, an
+ *         exception has been raised.
+ */
 bool getPointFromArglist(RexxMethodContext *c, RexxArrayObject args, PPOINT point, int startArg, int maxArgs,
                          size_t *arraySize, size_t *usedArgs)
 {

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2009-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -56,6 +56,15 @@ typedef struct _OODIMAGE
 } OODIMAGE, *POODIMAGE;
 
 
+typedef struct _RESOURCEIMAGE
+{
+    HMODULE  hMod;
+    DWORD    lastError;
+    bool     canRelease;
+    bool     isValid;
+} RESOURCEIMAGE, *PRESOURCEIMAGE;
+
+
 extern POODIMAGE     rxGetOodImage(RexxMethodContext *, RexxObjectPtr, int);
 extern POODIMAGE     rxGetImageIcon(RexxMethodContext *, RexxObjectPtr, int);
 extern RexxObjectPtr oodGetImageAttribute(RexxMethodContext *, RexxObjectPtr, CSTRING, UINT, WPARAM, uint8_t, oodControl_t);
@@ -63,6 +72,8 @@ extern RexxObjectPtr oodSetImageAttribute(RexxMethodContext *, CSTRING, RexxObje
 extern CSTRING       getImageTypeName(uint8_t);
 extern HIMAGELIST    rxGetImageList(RexxMethodContext *, RexxObjectPtr, int);
 extern RexxObjectPtr oodILFromBMP(RexxMethodContext *, HIMAGELIST *, RexxObjectPtr, int, int, HWND);
+
+extern PRESOURCEIMAGE rxGetResourceImage(RexxMethodContext *context, RexxObjectPtr r, int argPos);
 
 
 #define IMAGE_TYPE_LIST            "Bitmap, Icon, Cursor, Enhanced Metafile"

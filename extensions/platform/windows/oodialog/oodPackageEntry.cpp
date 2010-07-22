@@ -44,7 +44,7 @@
  * variables and DLLMain().
  */
 
-#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
 HINSTANCE            MyInstance = NULL;
 pCPlainBaseDialog    DialogTable[MAXDIALOGS] = {NULL};
@@ -359,6 +359,13 @@ REXX_METHOD_PROTOTYPE(resCtrlDlg_startDialog_pvt);
 
 // PropertySheetDialog
 REXX_METHOD_PROTOTYPE(psdlg_getPages_atr);
+REXX_METHOD_PROTOTYPE(psdlg_setCaption_atr);
+REXX_METHOD_PROTOTYPE(psdlg_setResources_atr);
+REXX_METHOD_PROTOTYPE(psdlg_setAppIcon_atr);
+REXX_METHOD_PROTOTYPE(psdlg_setHeader_atr);
+REXX_METHOD_PROTOTYPE(psdlg_setWatermark_atr);
+REXX_METHOD_PROTOTYPE(psdlg_setStartPage_atr);
+REXX_METHOD_PROTOTYPE(psdlg_setImageList_atr);
 REXX_METHOD_PROTOTYPE(psdlg_init);
 REXX_METHOD_PROTOTYPE(psdlg_execute);
 REXX_METHOD_PROTOTYPE(psdlg_popup);
@@ -374,6 +381,8 @@ REXX_METHOD_PROTOTYPE(psdlg_test);
 REXX_METHOD_PROTOTYPE(psp_init_cls);
 REXX_METHOD_PROTOTYPE(psp_propSheet_atr);
 REXX_METHOD_PROTOTYPE(psp_wasActivated_atr);
+REXX_METHOD_PROTOTYPE(psp_setResources_atr);
+REXX_METHOD_PROTOTYPE(psp_setTabIcon_atr);
 REXX_METHOD_PROTOTYPE(psp_getcx);
 REXX_METHOD_PROTOTYPE(psp_setcx);
 REXX_METHOD_PROTOTYPE(psp_getPageTitle);
@@ -1049,6 +1058,13 @@ RexxMethodEntry oodialog_methods[] = {
 
     // PropertySheetDialog
     REXX_METHOD(psdlg_getPages_atr,             psdlg_getPages_atr),
+    REXX_METHOD(psdlg_setCaption_atr,           psdlg_setCaption_atr),
+    REXX_METHOD(psdlg_setResources_atr,         psdlg_setResources_atr),
+    REXX_METHOD(psdlg_setAppIcon_atr,           psdlg_setAppIcon_atr),
+    REXX_METHOD(psdlg_setHeader_atr,            psdlg_setHeader_atr),
+    REXX_METHOD(psdlg_setWatermark_atr,         psdlg_setWatermark_atr),
+    REXX_METHOD(psdlg_setStartPage_atr,         psdlg_setStartPage_atr),
+    REXX_METHOD(psdlg_setImageList_atr,         psdlg_setImageList_atr),
     REXX_METHOD(psdlg_init,                     psdlg_init),
     REXX_METHOD(psdlg_execute,                  psdlg_execute),
     REXX_METHOD(psdlg_popup,                    psdlg_popup),
@@ -1064,6 +1080,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(psp_init_cls,                   psp_init_cls),
     REXX_METHOD(psp_propSheet_atr,              psp_propSheet_atr),
     REXX_METHOD(psp_wasActivated_atr,           psp_wasActivated_atr),
+    REXX_METHOD(psp_setResources_atr,           psp_setResources_atr),
+    REXX_METHOD(psp_setTabIcon_atr,             psp_setTabIcon_atr),
     REXX_METHOD(psp_getcx,                      psp_getcx),
     REXX_METHOD(psp_setcx,                      psp_setcx),
     REXX_METHOD(psp_getPageTitle,               psp_getPageTitle),

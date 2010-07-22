@@ -1,7 +1,7 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
 #/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-#/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -88,7 +88,8 @@ OODMESSAGING_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodControl.ob
                        $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodUser.obj
 
 # All Source files that include oodResources.hpp
-OODRESOURCES_SOURCEF = $(OR_OUTDIR)\oodBasicControls.obj $(OR_OUTDIR)\oodResources.obj $(OR_OUTDIR)\oodViewControls.obj
+OODRESOURCES_SOURCEF = $(OR_OUTDIR)\oodBasicControls.obj $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodResources.obj \
+                       $(OR_OUTDIR)\oodViewControls.obj
 
 # All Source files that include oodUser.hpp
 OODUSER_SOURCEF = $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodUser.obj

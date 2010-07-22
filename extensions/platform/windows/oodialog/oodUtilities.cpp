@@ -41,9 +41,8 @@
  *
  * Contains utility classes, including the .DlgUtil class.
  */
-#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
-#include <commctrl.h>
 #include <shlwapi.h>
 #include <stdio.h>
 #include "APICommon.hpp"

@@ -42,11 +42,10 @@
  * Contains the classes used to implement a Property Sheet dialog, (as oppossed
  * to the PropertySheet.cls which is not a Windows property sheet at all.)
  */
-#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>
-#include <commctrl.h>
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
@@ -54,8 +53,9 @@
 #include "oodUser.hpp"
 #include "oodDeviceGraphics.hpp"
 #include "oodData.hpp"
-#include "oodResourceIDs.hpp"
+#include "oodResources.hpp"
 #include "oodPropertySheetDialog.hpp"
+#include "oodResourceIDs.hpp"
 
 
 PROPSHEETHOOKDATA *PropSheetHookData[MAX_PROPSHEET_DIALOGS];
@@ -165,7 +165,12 @@ void invalidPSNReturnListException(RexxThreadContext *c, CSTRING method, CSTRING
  * @return The resolved numeric ID on success, OOD_MEMORY_ERR or
  *         OOD_ID_EXCEPTION on error.
  *
- * @remarks  The caller must ensure that oodObj has inherited ResourceUtils, no
+ * @remarks  Note that there is no exception raised in this version of
+ *           oodResolveSymbolicID(), the caller must raise the exception.  Note
+ *           also that 0 is considered okay, which may not always be the case.
+ *           However, some of the current callers need 0 to be okay.
+ *
+ *           The caller must ensure that oodObj has inherited ResourceUtils, no
  *           check is done.
  *
  *           This is currently only used for PropertySheetDialogs, but could be
@@ -403,12 +408,18 @@ done_out:
  * null, the struct is removed from the table and the caller frees its memory.
  *
  * The use of the hwnd and second invocation is because of the AeroWizard style
- * property sheet.  Placing the CSelf struct in the GWLP_USEDATA
+ * property sheet.  When the CSelf struct is placed in the GWLP_USEDATA index fo
+ * the property sheet, it ends up getting corrupted.  Probably because the Aero
+ * Wizard uses that index for its own purpose.  But, maybe because the Aero
+ * Wizard dialog classs does not seem to be a WC_DIALOG but a NativeHWNDHost.
  *
- *
- * @param hwnd
+ * @param hwnd  If hwnd is not null, and a match is found, we are done with the
+ *              struct, remove it from the table.
  *
  * @return PROPSHEETHOOKDATA*
+ *
+ * @remarks.  The caller is responsible for freeing the stuct when the caller
+ *            passes in a non-null hwnd.
  */
 PROPSHEETHOOKDATA *getPropSheetHookData(HWND hwnd)
 {
@@ -448,6 +459,52 @@ PROPSHEETHOOKDATA *getPropSheetHookData(HWND hwnd)
     LeaveCriticalSection(&ps_crit_sec);
 
     return pshd;
+}
+
+
+/**
+ * Common code for getting the value of a Rexx argument where the argument can
+ * be an Image object or a resource ID.
+ *
+ * @param c
+ * @param pcpsd
+ * @param image
+ * @param argPos
+ * @param isImage
+ * @param type
+ *
+ * @return The handle to the image or the resource ID.
+ */
+INT_PTR getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr image, size_t argPos,
+                     bool *isImage, uint8_t *type)
+{
+    INT_PTR result = 0;
+
+    if ( c->IsOfType(image, "IMAGE") )
+    {
+        POODIMAGE oodImage = rxGetOodImage(c, image, argPos);
+        if ( oodImage != NULL )
+        {
+            *isImage = true;
+            *type = (uint8_t)oodImage->type;
+            result = (INT_PTR)oodImage->hImage;
+        }
+    }
+    else
+    {
+        uint32_t id = oodResolveSymbolicID(c->threadContext, self, image);
+
+        if ( id == OOD_ID_EXCEPTION || id == 0 )
+        {
+            wrongArgValueException(c->threadContext, 1, "a postive numeric ID, valid symbolic ID, or .Image object", image);
+        }
+        else
+        {
+            *isImage = false;
+            result = id;
+        }
+    }
+    return result;
 }
 
 
@@ -1280,6 +1337,7 @@ bool setCaption(RexxMethodContext *c, pCPropertySheetDialog pcpsd, CSTRING text)
     }
 
     strcpy(pcpsd->caption, text);
+    c->SetObjectVariable("CAPTION", c->String(text));
     return true;
 }
 
@@ -1419,6 +1477,53 @@ bool psdInitSuper(RexxMethodContext *context, RexxClassObject super, RexxStringO
 }
 
 /**
+ * Determines if an icon for the tab is going to be used and sets the property
+ * sheet page struct accordingly.
+ *
+ * The user can specify to use an icon for the tab by setting the imageList
+ * attribute of the property sheet dialog or by setting the icon attribute of
+ * the propert sheet page dialog.  In addition, the icon attribute itself can
+ * either be an icon handle or an icon resource ID.
+ *
+ * The precedence for a tab icon is: image list in property sheet, loaded icon,
+ * icon ID.
+ *
+ * @param c
+ * @param pcpsd
+ * @param psp
+ *
+ * @return uint32_t
+ */
+uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROPSHEETPAGE *psp, size_t index)
+{
+    uint32_t flag = 0;
+
+    if ( pcpsd->imageList != NULL )
+    {
+        HICON hIcon = ImageList_GetIcon(pcpsd->imageList, index, INDEXTOOVERLAYMASK(index) | ILD_NORMAL);
+
+        psp[index].hIcon = hIcon;
+        flag = PSP_USEHICON;
+    }
+    else
+    {
+        pCPropertySheetPage pcpsp = pcpsd->cppPages[index];
+
+        if ( pcpsp->hIcon != NULL )
+        {
+            psp[index].hIcon = pcpsp->hIcon;
+            flag = PSP_USEHICON;
+        }
+        else if ( pcpsp->iconID != 0 && (pcpsp->hInstance != NULL || pcpsp->pageType == oodResPSPDialog) )
+        {
+            psp[index].pszIcon = MAKEINTRESOURCE(pcpsp->iconID);
+            flag = PSP_USEICONID;
+        }
+    }
+    return flag;
+}
+
+/**
  * Allocates the memory for the property sheet page structs and fills in the
  * struct for all the pages of the property sheet.
  *
@@ -1428,6 +1533,13 @@ bool psdInitSuper(RexxMethodContext *context, RexxClassObject super, RexxStringO
  *
  * @return The pointer to the property sheet page struct(s) on success, null on
  *         failure.
+ *
+ * @remarks  For ResDialogs, the user has to include all other resources, header
+ *           bitmap, etc., in the resource dll for the dialog.  But, for other
+ *           types of dialog pages the user can use a resource image for the
+ *           additional resources by using the resourceImage attribute.  When we
+ *           fill in the struct for a page we ignore the resourceImage attribute
+ *           if it is a ResDialog page.
  */
 PROPSHEETPAGE *initPropSheetPages(RexxMethodContext *c, pCPropertySheetDialog pcpsd)
 {
@@ -1445,7 +1557,6 @@ PROPSHEETPAGE *initPropSheetPages(RexxMethodContext *c, pCPropertySheetDialog pc
     {
         RexxObjectPtr       dlg   = pcpsd->rexxPages[i];
         pCPropertySheetPage pcpsp = pcpsd->cppPages[i];
-        pCPlainBaseDialog   pcpbd = pcpsp->pcpbd;
         pCDynamicDialog     pcdd  = pcpsp->pcdd;
         uint32_t            flags = pcpsp->pageFlags;
 
@@ -1470,23 +1581,48 @@ PROPSHEETPAGE *initPropSheetPages(RexxMethodContext *c, pCPropertySheetDialog pc
 
         if ( pcpsp->pageType == oodResPSPDialog )
         {
-            psp[i].hInstance   = pcpbd->hInstance;
+            psp[i].hInstance   = pcpsp->pcpbd->hInstance;
             psp[i].pszTemplate = MAKEINTRESOURCE(pcpsp->resID);
         }
         else
         {
             flags |= PSP_DLGINDIRECT;
             psp[i].pResource = pcdd->base;
+
+            if ( pcpsp->hInstance != NULL )
+            {
+                psp[i].hInstance = pcpsp->hInstance;
+            }
         }
 
-        psp[i].pszIcon = NULL;
+        flags |= maybeSetTabIcon(c, pcpsd, psp, i);
+
+        if ( (pcpsd->isWiz97 || pcpsd->isWizLite)  )
+        {
+            if ( pcpsp->headerTitle != NULL )
+            {
+                psp[i].pszHeaderTitle = pcpsp->headerTitle;
+                flags |= PSP_USEHEADERTITLE;
+            }
+
+            if ( pcpsp->headerSubTitle != NULL )
+            {
+                psp[i].pszHeaderSubTitle = pcpsp->headerSubTitle;
+                flags |= PSP_USEHEADERSUBTITLE;
+            }
+
+            if ( pcpsp->headerTitle == NULL && pcpsp->headerSubTitle == NULL && (i == 0 || i == count - 1) )
+            {
+                flags |= PSP_HIDEHEADER;
+            }
+        }
+
         psp[i].dwFlags = flags;
     }
 
 done_out:
     return psp;
 }
-
 
 /**
  * Allocates the memory for the property sheet header struct and fills in the
@@ -1513,12 +1649,78 @@ PROPSHEETHEADER *initPropSheetHeader(RexxMethodContext *c, pCPropertySheetDialog
 
     psh->dwSize           = sizeof(PROPSHEETHEADER);
     psh->hwndParent       = hParent;
-    psh->pszCaption       = pcpsd->caption;
-    psh->hInstance        = MyInstance;
-    psh->pszIcon          = MAKEINTRESOURCE(IDI_DLG_OOREXX);
     psh->nPages           = (uint32_t)pcpsd->pageCount;
     psh->ppsp             = (LPCPROPSHEETPAGE)psp;
     psh->pfnCallback      = (PFNPROPSHEETCALLBACK)PropSheetCallback;
+
+    if ( pcpsd->hInstance != NULL )
+    {
+        psh->hInstance = pcpsd->hInstance;
+    }
+
+    if ( pcpsd->caption != NULL )
+    {
+        if ( pcpsd->isAeroWiz )
+        {
+            LPWSTR newCaption = ansi2unicode(pcpsd->caption);
+            if ( newCaption != NULL )
+            {
+                LocalFree(pcpsd->caption);
+                pcpsd->caption = (char *)newCaption;
+            }
+        }
+
+        psh->pszCaption = pcpsd->caption;
+    }
+
+    if ( pcpsd->startPage != 0 )
+    {
+        psh->nStartPage = pcpsd->startPage - 1;
+    }
+
+    if ( pcpsd->hIcon != NULL )
+    {
+        psh->hIcon = pcpsd->hIcon;
+        flags |= PSH_USEHICON;
+    }
+    else if ( pcpsd->iconID != 0 && pcpsd->hInstance != NULL )
+    {
+        psh->pszIcon = MAKEINTRESOURCE(pcpsd->iconID);
+        flags |= PSH_USEICONID;
+    }
+
+    if ( pcpsd->isWiz97 || pcpsd->isAeroWiz )
+    {
+        if ( pcpsd->hHeaderBitmap != NULL )
+        {
+            psh->hbmHeader = pcpsd->hHeaderBitmap;
+
+            flags |= PSH_USEHBMHEADER;
+            if ( pcpsd->isWiz97 )
+            {
+                flags |= PSH_HEADER;
+            }
+        }
+        else if ( pcpsd->headerBitmapID != 0 && pcpsd->hInstance != NULL )
+        {
+            psh->pszbmHeader = MAKEINTRESOURCE(pcpsd->headerBitmapID);
+            flags |= pcpsd->isWiz97 ? PSH_HEADER : PSH_HEADERBITMAP;
+        }
+
+        if ( ! pcpsd->isAeroWiz )
+        {
+            if ( pcpsd->hWatermark != NULL )
+            {
+                psh->hbmWatermark = pcpsd->hWatermark;
+                flags |= PSH_USEHBMWATERMARK | PSH_WATERMARK;
+            }
+            else if ( pcpsd->watermarkID != 0 && pcpsd->hInstance != NULL )
+            {
+                psh->pszbmWatermark = MAKEINTRESOURCE(pcpsd->watermarkID);
+                flags |= PSH_WATERMARK;
+            }
+        }
+    }
 
     if ( pcpsd->modeless )
     {
@@ -1563,7 +1765,17 @@ HWND getValidPageHwnd(RexxMethodContext *c, pCPropertySheetDialog pcpsd, RexxObj
 
 /** PropertySheetDialog::pages          [Attrbiute Get]
  *
+ *  Gets the array of page dialogs for this property sheet.
  *
+ *  @return  An array of Rexx dialogs.  Each index in the array contains the
+ *           Rexx dialog for the page matching the index.  Page indexes are
+ *           one-based.
+ *
+ *  @remarks.  There is no set method for this attribute, it is set in the
+ *             native code when the user instantiates the property sheet.
+ *
+ *             We return a copy of the actual array so that the user can not
+ *             alter the actual array.
  */
 RexxMethod1(RexxObjectPtr, psdlg_getPages_atr, CSELF, pCSelf)
 {
@@ -1580,21 +1792,10 @@ RexxMethod1(RexxObjectPtr, psdlg_getPages_atr, CSELF, pCSelf)
 }
 
 
-/** PropertySheetDialg::caption()       [Attribute get]
- *
- */
-RexxMethod1(RexxObjectPtr, psdlg_getCaption, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    return pcpsd->caption == NULL ? TheNilObj : context->String(pcpsd->caption);
-}
-
-
 /** PropertySheetDialog::caption()      [Attribute set]
  *
  */
-RexxMethod2(RexxObjectPtr, psdlg_setCaption, CSTRING, text, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, psdlg_setCaption_atr, CSTRING, text, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
     setCaption(context, pcpsd, text);
@@ -1602,22 +1803,203 @@ RexxMethod2(RexxObjectPtr, psdlg_setCaption, CSTRING, text, CSELF, pCSelf)
 }
 
 
-/** PropertySheetDialog::getPage()
- *
+/** PropertySheetDialog::resources()      [Attribute set]
  *
  */
-RexxMethod2(RexxObjectPtr, psdlg_getPage, uint32_t, index, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, psdlg_setResources_atr, RexxObjectPtr, resourceImage, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    size_t count = pcpsd->pageCount;
-    if ( index < 1 || index > count )
+    PRESOURCEIMAGE ri = rxGetResourceImage(context, resourceImage, 1);
+    if ( ri != NULL )
     {
-        wrongRangeException(context->threadContext, 1, 1, (int)count, index);
-        return NULLOBJECT;
+        pcpsd->hInstance = ri->hMod;
+        context->SetObjectVariable("RESOURCES", resourceImage);
+    }
+    return NULLOBJECT;
+}
+
+/** PropertySheetDialog::appIcon()      [Attribute set]
+ *
+ *  Sets the icon for the appIcon attribute.  The user can specify the icon as
+ *  either a resource ID (numeric or symbolic) or as an .Image object.
+ *
+ *  @remarks  If the user specifies the icon as an .Image object, then it has to
+ *            be an icon image, not some other type of image, like a bitmap,
+ *            etc.  The rxGetImageIcon() call will raise an exception if the
+ *            image is not an icon.
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setAppIcon_atr, RexxObjectPtr, icon, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    bool    isImage;
+    uint8_t type;
+
+    INT_PTR result = getImageOrID(context, pcpsd->rexxSelf, icon, 1, &isImage, &type);
+    if ( result != 0 )
+    {
+        if ( isImage )
+        {
+            if ( type != IMAGE_ICON )
+            {
+                wrongArgValueException(context->threadContext, 1, "Icon, Cursor", getImageTypeName(type));
+                return NULLOBJECT;
+            }
+            pcpsd->hIcon = (HICON)result;
+        }
+        else
+        {
+            pcpsd->iconID = result;
+        }
+
+        context->SetObjectVariable("ICON", icon);
     }
 
-    return pcpsd->rexxPages[index - 1];
+    return NULLOBJECT;
+}
+
+/** PropertySheetDialog::header()        [Attribute set]
+ *
+ *  Sets the header bitmap used for a Wizard (Wizard97 or AeroWizard.)
+ *
+ *  For a Wizard97, the user can specify the bitmap as either a resource ID
+ *  (numeric or symbolic) or as an .Image object.  However for an AeroWizard,
+ *  the bitmap must be specified as an .Image object.
+ *
+ *  @remarks  If the user specifies the header as an .Image object, then it has
+ *            to be a bitmap image, not some other type of image, like an icon,
+ *            etc.
+ *
+ *            If this property sheet is an aero wizard we don't check that this
+ *            is Vista or later because it is checked when the AeroWizard
+ *            keyword is first used.
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setHeader_atr, RexxObjectPtr, header, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( ! (pcpsd->isAeroWiz || pcpsd->isWiz97) )
+    {
+        invalidAttributeException(context, pcpsd->rexxSelf);
+        goto done_out;
+    }
+
+    bool    isImage;
+    uint8_t type;
+
+    INT_PTR result = getImageOrID(context, pcpsd->rexxSelf, header, 1, &isImage, &type);
+    if ( result != 0 )
+    {
+        if ( isImage )
+        {
+            if ( type != IMAGE_BITMAP )
+            {
+                wrongArgValueException(context->threadContext, 1, "Bitmap", getImageTypeName(type));
+                goto done_out;
+            }
+
+            pcpsd->hHeaderBitmap = (HBITMAP)result;
+        }
+        else
+        {
+            if ( pcpsd->isAeroWiz )
+            {
+                wrongClassException(context->threadContext, 1, "Image");
+                goto done_out;
+            }
+
+            pcpsd->headerBitmapID = result;
+        }
+
+        context->SetObjectVariable("HEADER", header);
+    }
+
+done_out:
+    return NULLOBJECT;
+}
+
+/** PropertySheetDialog::watermark()        [Attribute set]
+ *
+ *  Sets the watermark bitmap used for a Wizard97 wizard.
+ *
+ *  The user can specify the bitmap as either a resource ID (numeric or
+ *  symbolic) or as an .Image object.
+ *
+ *  @remarks  If the user specifies the header as an .Image object, then it has
+ *            to be a bitmap image, not some other type of image, like an icon,
+ *            etc.
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setWatermark_atr, RexxObjectPtr, watermark, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( ! pcpsd->isWiz97 )
+    {
+        invalidAttributeException(context, pcpsd->rexxSelf);
+        goto done_out;
+    }
+
+    bool    isImage;
+    uint8_t type;
+
+    INT_PTR result = getImageOrID(context, pcpsd->rexxSelf, watermark, 1, &isImage, &type);
+    if ( result != 0 )
+    {
+        if ( isImage )
+        {
+            if ( type != IMAGE_BITMAP )
+            {
+                wrongArgValueException(context->threadContext, 1, "Bitmap", getImageTypeName(type));
+                goto done_out;
+            }
+            pcpsd->hWatermark = (HBITMAP)result;
+        }
+        else
+        {
+            pcpsd->watermarkID = result;
+        }
+
+        context->SetObjectVariable("WATERMARK", watermark);
+    }
+
+done_out:
+    return NULLOBJECT;
+}
+
+/** PropertySheetDialog::startPage()      [Attribute set]
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setStartPage_atr, uint32_t, startPage, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( startPage < 1 || startPage > MAXPROPPAGES )
+    {
+        wrongRangeException(context->threadContext, 1, 1, MAXPROPPAGES, startPage);
+    }
+    else
+    {
+        pcpsd->startPage = startPage;
+        context->SetObjectVariable("STARTPAGE", context->UnsignedInt32(startPage));
+    }
+
+    return NULLOBJECT;
+}
+
+/** PropertySheetDialog::imageList()      [Attribute set]
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setImageList_atr, RexxObjectPtr, imageList, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    pcpsd->imageList = rxGetImageList(context, imageList, 1);
+    if ( pcpsd->imageList != NULL )
+    {
+        context->SetObjectVariable("IMAGELIST", imageList);
+    }
+    return NULLOBJECT;
 }
 
 
@@ -1628,8 +2010,7 @@ RexxMethod2(RexxObjectPtr, psdlg_getPage, uint32_t, index, CSELF, pCSelf)
  *
  */
 RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, caption,
-            OPTIONAL_RexxStringObject, hFile,
-            SUPER, super, OSELF, self)
+            OPTIONAL_RexxStringObject, hFile, SUPER, super, OSELF, self)
 {
     // This is an error return.
     wholenumber_t result = 1;
@@ -1703,11 +2084,8 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
     pcpsd->cppPages = cppPages;
     pcpsd->rexxPages = rexxPages;
 
-    // When the Rexx page dialogs are stored in the CSelf struct, the garbage
-    // collector has no knowledge that they are in use. If a user does not
-    // keep a reference to the dialogs, (which they may not because they can
-    // access them though the PropertySheetDialog,) they could be garbage
-    // collected while in use.
+    // Set the pages attribute object variable so that the Rexx pages object is
+    // not garbage collected.
     context->SetObjectVariable("PAGES", pages);
 
     if ( argumentExists(3) )
@@ -1717,6 +2095,13 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
             goto done_out;
         }
     }
+    else
+    {
+        context->SetObjectVariable("CAPTION", TheNilObj);
+    }
+
+    context->SetObjectVariable("ICON", TheNilObj);
+    context->SetObjectVariable("RESOURCES", TheNilObj);
 
     if ( parsePropSheetOpts(context, pcpsd, opts) )
     {
@@ -1727,6 +2112,32 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
 done_out:
     pcpbd->wndBase->initCode = result;
     return result;
+}
+
+
+/** PropertySheetDialog::getPage()
+ *
+ *  Gets the page dialog specified by index.
+ *
+ *  @index  The one-based index of the page whose dialog is desired.
+ *
+ *  @return  The Rexx dialog object for the page specified.
+ *
+ *  @notes  Raises an exception if index is not correct.
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_getPage, uint32_t, index, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    size_t count = pcpsd->pageCount;
+    if ( index < 1 || index > count )
+    {
+        wrongRangeException(context->threadContext, 1, 1, (int)count, index);
+        return NULLOBJECT;
+    }
+
+    return pcpsd->rexxPages[index - 1];
 }
 
 
@@ -1800,7 +2211,7 @@ done_out:
 /** PropertySheetDialog::popup()
  *
  *
- *  @notes  AeroWizard dialogs do not support models
+ *  @notes  AeroWizard dialogs do not support modeless
  */
 RexxMethod2(RexxObjectPtr, psdlg_popup, NAME, methodName, CSELF, pCSelf)
 {
@@ -2102,7 +2513,7 @@ bool setPageText(RexxMethodContext *c, pCPropertySheetPage pcpsp, CSTRING text, 
     switch ( part )
     {
         case headerSubtext :
-            pcpsp->headerSubtitle = t;
+            pcpsp->headerSubTitle = t;
             break;
         case headerText :
             pcpsp->headerTitle = t;
@@ -2347,7 +2758,7 @@ RexxMethod3(RexxObjectPtr, psp_setcx, uint32_t, dlgUnit, NAME, name, CSELF, pCSe
 
 /** PropertySheetPage::pageTitle()       [Attribute get]
  *  PropertySheetPage::headerTitle()
- *  PropertySheetPage::headerSubtitle()
+ *  PropertySheetPage::headerSubTitle()
  */
 RexxMethod2(RexxObjectPtr, psp_getPageTitle, NAME, name, CSELF, pCSelf)
 {
@@ -2360,13 +2771,13 @@ RexxMethod2(RexxObjectPtr, psp_getPageTitle, NAME, name, CSELF, pCSelf)
         case 'I' :
             return pcpsp->headerTitle == NULL ? TheNilObj : context->String(pcpsp->headerTitle);
     }
-    return pcpsp->headerSubtitle == NULL ? TheNilObj : context->String(pcpsp->headerSubtitle);
+    return pcpsp->headerSubTitle == NULL ? TheNilObj : context->String(pcpsp->headerSubTitle);
 }
 
 
 /** PropertySheetPage::pageTitle()       [Attribute set]
  *  PropertySheetPage::headerTitle()
- *  PropertySheetPage::headerSubtitle()
+ *  PropertySheetPage::headerSubTitle()
  */
 RexxMethod3(RexxObjectPtr, psp_setPageTitle, CSTRING, text, NAME, name, CSELF, pCSelf)
 {
@@ -2421,6 +2832,64 @@ RexxMethod3(RexxObjectPtr, psp_setWantNotification, logical_t, want, NAME, methN
     {
         pcpsp->wantGetObject = want ? true : false;
     }
+    return NULLOBJECT;
+}
+
+
+/** PropertySheetPage::resources()      [Attribute set]
+ *
+ */
+RexxMethod2(RexxObjectPtr, psp_setResources_atr, RexxObjectPtr, resourceImage, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+
+    PRESOURCEIMAGE ri = rxGetResourceImage(context, resourceImage, 1);
+    if ( ri != NULL )
+    {
+        pcpsp->hInstance = ri->hMod;
+        context->SetObjectVariable("RESOURCES", resourceImage);
+    }
+    return NULLOBJECT;
+}
+
+/** PropertySheetPage::tabIcon()        [Attribute set]
+ *
+ *  Sets the icon used for the tab.  The user can specify the icon as either a
+ *  resource ID (numeric or symbolic) or as an .Image object.
+ *
+ *  @remarks  If the user specifies the icon as an .Image object, then it has to
+ *            be an icon image, not some other type of image, like a bitmap,
+ *            etc.  The rxGetImageIcon() call will raise an exception if the
+ *            image is not an icon.
+ */
+RexxMethod2(RexxObjectPtr, psp_setTabIcon_atr, RexxObjectPtr, icon, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+
+    bool    isImage;
+    uint8_t type;
+
+    INT_PTR result = getImageOrID(context, pcpsp->rexxSelf, icon, 1, &isImage, &type);
+    if ( result != 0 )
+    {
+        if ( isImage )
+        {
+            if ( type != IMAGE_ICON )
+            {
+                wrongArgValueException(context->threadContext, 1, "Icon, Cursor", getImageTypeName(type));
+                goto done_out;
+            }
+            pcpsp->hIcon = (HICON)result;
+        }
+        else
+        {
+            pcpsp->iconID = result;
+        }
+
+        context->SetObjectVariable("TABICON", icon);
+    }
+
+done_out:
     return NULLOBJECT;
 }
 
