@@ -1,0 +1,123 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+#include <windows.h>
+#include <commctrl.h>
+#include "PropertySheetDemo.h"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_LISTVIEW_DLG DIALOG 6, 15, 300, 250
+STYLE DS_SHELLFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_TABSTOP
+CAPTION "List View Control"
+FONT 9, "Arial"
+{
+    CONTROL         "ListView", IDC_LV_MAIN, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_REPORT, 7, 7, 290, 236
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_PROGRESSBAR_DLG DIALOG 6, 15, 300, 250
+STYLE DS_SHELLFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_TABSTOP
+CAPTION "Progress Bar Control"
+FONT 9, "Arial"
+{
+    CONTROL         "Progress", IDC_PBAR_PROCESSA, PROGRESS_CLASS, PBS_VERTICAL, 37, 27, 13, 199
+    CONTROL         "Progress", IDC_PBAR_PROCESSB, PROGRESS_CLASS, PBS_VERTICAL, 86, 27, 13, 199
+    CONTROL         "Progress", IDC_PBAR_PROCESSC, PROGRESS_CLASS, PBS_VERTICAL, 135, 27, 13, 199
+    CONTROL         "Progress", IDC_PBAR_PROCESSD, PROGRESS_CLASS, WS_BORDER | PBS_SMOOTH | PBS_VERTICAL, 182, 27, 13, 199
+    CONTROL         "Progress", IDC_PBAR_PROCESSE, PROGRESS_CLASS, WS_BORDER | PBS_SMOOTH | PBS_VERTICAL, 236, 27, 13, 199
+    LTEXT           "100%", IDC_ST_PERCENTA, 34, 229, 21, 8, SS_LEFT
+    LTEXT           "100%", IDC_ST_PERCENTB, 83, 229, 21, 8, SS_LEFT
+    LTEXT           "100%", IDC_ST_PERCENTC, 132, 229, 21, 8, SS_LEFT
+    LTEXT           "100%", IDC_ST_PERCENTD, 180, 229, 21, 8, SS_LEFT
+    LTEXT           "100%", IDC_ST_PERCENTE, 234, 229, 21, 8, SS_LEFT
+    LTEXT           "Process A", -1, 25, 12, 36, 8, SS_LEFT
+    LTEXT           "Process B", -1, 74, 12, 36, 8, SS_LEFT
+    LTEXT           "Process C", -1, 123, 12, 36, 8, SS_LEFT
+    LTEXT           "Process D", -1, 170, 12, 36, 8, SS_LEFT
+    LTEXT           "Process E", -1, 224, 12, 36, 8, SS_LEFT
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_TAB_DLG DIALOG 6, 15, 300, 250
+STYLE DS_SHELLFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_TABSTOP
+CAPTION "Tab Control"
+FONT 9, "Arial"
+{
+    CONTROL         "Tab", IDC_TAB_MAIN, WC_TABCONTROL, 0, 9, 19, 282, 215
+    AUTO3STATE      "", IDC_PB_OWNERDRAW, 17, 63, 267, 162, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_TRACKBAR_DLG DIALOG 6, 15, 300, 250
+STYLE DS_SHELLFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_TABSTOP
+CAPTION "Track Bar Control"
+FONT 9, "Arial"
+{
+    CONTROL         "Slider", IDC_TB_HORZ_BOTTOM, TRACKBAR_CLASS, WS_TABSTOP | TBS_AUTOTICKS, 10, 30, 119, 20
+    LTEXT           "Text", IDC_ST_HORZ_BOTTOM, 41, 56, 60, 27, SS_LEFT
+    CONTROL         "Slider", IDC_TB_HORZ_TOP, TRACKBAR_CLASS, WS_TABSTOP | TBS_AUTOTICKS | TBS_TOP, 10, 97, 119, 20
+    LTEXT           "Text", IDC_ST_HORZ_TOP, 41, 128, 60, 27, SS_LEFT
+    CONTROL         "Slider", IDC_TB_HORZ_BOTH, TRACKBAR_CLASS, WS_TABSTOP | TBS_AUTOTICKS | TBS_BOTH | TBS_ENABLESELRANGE, 10, 168, 119, 32
+    LTEXT           "Text", IDC_ST_HORZ_BOTH, 41, 203, 60, 30, SS_LEFT
+    CONTROL         "Slider", IDC_TB_VERT_RIGHT, TRACKBAR_CLASS, WS_TABSTOP | TBS_AUTOTICKS | TBS_VERT | TBS_ENABLESELRANGE, 176, 33, 19, 192
+    LTEXT           "Text", IDC_ST_VERT_RIGHT, 177, 17, 22, 8, SS_LEFT
+    CONTROL         "Slider", IDC_TB_VERT_LEFT, TRACKBAR_CLASS, WS_TABSTOP | TBS_AUTOTICKS | TBS_VERT | TBS_TOP, 212, 33, 19, 192
+    LTEXT           "Text", IDC_ST_VERT_LEFT, 216, 17, 27, 8, SS_LEFT
+    CONTROL         "Slider", IDC_TB_VERT_BOTH, TRACKBAR_CLASS, WS_TABSTOP | TBS_AUTOTICKS | TBS_VERT | TBS_BOTH, 257, 33, 27, 192
+    LTEXT           "Text", IDC_ST_VERT_BOTH, 261, 17, 21, 8, SS_LEFT
+    CONTROL         "", -1, WC_STATIC, SS_BLACKFRAME, 7, 7, 136, 236
+    CONTROL         "", -1, WC_STATIC, SS_BLACKFRAME, 163, 7, 130, 236
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_TREEVIEW_DLG DIALOG 6, 15, 300, 250
+STYLE DS_SHELLFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_TABSTOP
+CAPTION "Tree View Control"
+FONT 9, "Arial"
+{
+    CONTROL         "Tree", IDC_TV_MAIN, WC_TREEVIEW, WS_TABSTOP | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS, 7, 7, 286, 236
+}

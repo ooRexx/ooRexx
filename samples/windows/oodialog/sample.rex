@@ -121,7 +121,7 @@
    self~loadapp("oodpbar.rex")
 
 ::method property
-   self~loadapp("propdemo.rex")
+   self~loadapp("PropertySheetDemo.rex")
 
 
 ::method cancel
