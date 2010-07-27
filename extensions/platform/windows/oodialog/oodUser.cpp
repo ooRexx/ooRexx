@@ -65,7 +65,7 @@ BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, LPMSG lpmsg);
 class LoopThreadArgs
 {
 public:
-    DLGTEMPLATE       *dlgTemplate;
+    DLGTEMPLATEEX     *dlgTemplate;
     pCPlainBaseDialog  pcpbd;
     bool              *release;
 };
@@ -82,7 +82,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     bool *release = args->release;
     pCPlainBaseDialog pcpbd = args->pcpbd;
 
-    pcpbd->hDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
+    pcpbd->hDlg = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
 
     if ( pcpbd->hDlg )
     {
@@ -307,9 +307,10 @@ void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd)
     pcdd->count = 0;
 }
 
+
 /**
- * Starts the in-memory dialog template.  This uses the older DLGTEMPLTE
- * structure not the extended (DLGTEMPLATEEX) structure.
+ * Starts the in-memory extended dialog template using the DLGTEMPLATEEX
+ * structure.
  *
  * @param c
  * @param ppBase
@@ -329,10 +330,38 @@ void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd)
  * @note  putUnicodeText() is designed to handle, and do the 'right' thing, for
  *        both a null pointer and an empty string.  That is why no check for
  *        null is needed for title, dlgClass, or fontname.
+ *
+ * @remarks  The first part of the DLGTEMPLATEEX struct is fixed in length,
+ *           followed by fields that are unicode strings and are variable
+ *           length.  We start by filling in what we can of the struct, then
+ *           when we get to the variable length stuff, we switch to using a
+ *           pointer to keep track of where we are. The memory is zeroed on
+ *           allocation, so we could just skip setting things to 0, but it's
+ *           nice to see what fields are available.
+ *
+ *           We use 0 for exStyle because  MSDN say exStyle is ignored for
+ *           dialog boxes.  We set cDlgItems to the expected count.  We know it
+ *           is not correct, but the field is updated right before the template
+ *           is actually used.
+ *
+ *           Both the menu and the windowClass fields can be variable length
+ *           strings, but since we are using 0 we treat them as fixed length.
+ *           For a menu, the field specifies the resource ID or resource name of
+ *           a menu in an executable file.  To use it the menu would have to be
+ *           bound to oodialog.dll.  For windowClass, 0 specifies to use the
+ *           default dialog class.
+ *
+ *           After the dialog title, the rest is for the dialog font.  The
+ *           dialog style must include DS_SETFONT or DS_SHELLFONT.  We don't
+ *           check for that  because at this time we always set one or the
+ *           other.  For weight, MSDN says you can use any FW_* value, but the
+ *           value is always changed to FW_NORMAL. After weight are two fields,
+ *           italic and character set.  For italic, true sets the font as
+ *           italic.  Both italic and character set are byte sized.
  */
-bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDialog pcdd,
-                         int x, int y, int cx, int cy, const char *dlgClass, const char *title,
-                         const char *fontName, int fontSize, uint32_t style)
+bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATEEX **ppBase, pCDynamicDialog pcdd,
+                           int x, int y, int cx, int cy, const char *dlgClass, const char *title,
+                           const char *fontName, int fontSize, uint32_t style)
 {
     size_t s = calcTemplateSize(pcdd->expected);
 
@@ -350,37 +379,38 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
         return false;
     }
 
-    *ppBase = (DLGTEMPLATE *)p;
+    *ppBase = (DLGTEMPLATEEX *)p;
 
-    pcdd->base = (DLGTEMPLATE *)p;
+    pcdd->base = (DLGTEMPLATEEX *)p;
     pcdd->endOfTemplate = (BYTE *)p + s;
 
-    // Start to fill in the dlgtemplate information.  Addressing is by WORDs.
-    *p++ = LOWORD(style);           // Style (DWORD in size.)
-    *p++ = HIWORD(style);
-    *p++ = 0;                       // Extended Style (DWORD in size.)
-    *p++ = 0;
-    *p++ = pcdd->expected;          // Number of dialog controls
-    *p++ = x;                       // x
-    *p++ = y;                       // y
-    *p++ = cx;                      // cx
-    *p++ = cy;                      // cy
-    *p++ = 0;                       // Menu
 
-    // Copy the class of the dialog.  Really there should be a check that style
-    // does not contain WS_CHILD, but currently dlgClass is always null so this
-    // works.
-    p += putUnicodeText(p, dlgClass);
+    DLGTEMPLATEEX *pDlg = (DLGTEMPLATEEX *)p;
 
-    // Copy the title of the dialog.
-    p += putUnicodeText(p, title);
+    pDlg->dlgVer      = 0x1;            // Dialog version, must be 1.
+    pDlg->signature   = 0xFFFF;         // Extended dialog template signature.
+    pDlg->helpID      = 0;              // Help ID.  Not used yet
+    pDlg->exStyle     = 0;              // Extended style.
+    pDlg->style       = style;
+    pDlg->cDlgItems   = pcdd->expected;
+    pDlg->x           = x;
+    pDlg->y           = y;
+    pDlg->cx          = cx;
+    pDlg->cy          = cy;
+    pDlg->menu        = 0;              // 0 for no menu.
+    pDlg->windowClass = 0;              // 0 to use default dialog class.
 
-    // Add in the wPointSize and szFontName here.  Really this should only be if
-    // the DS_SETFONT bit on. But currently it is always set.
-    *p++ = fontSize;
-    p += putUnicodeText(p, fontName);
+    // Now point to the title, which is variable length.
+    p = (WORD *)&(pDlg->title);
 
-    // make sure the first item starts on a DWORD boundary
+    p += putUnicodeText(p, title);      // The title of the dialog.
+
+    *p++ = fontSize;                           // Point size.
+    *p++ = FW_NORMAL;                          // Weight.
+    *p++ = MAKEWORD(FALSE, DEFAULT_CHARSET);   // Italic / character set.
+    p += putUnicodeText(p, fontName);          // Type face name.
+
+    // Be sure first dialog item is double word aligned.
     p = lpwAlign(p);
 
     // Update the active pointer to reflect where we are in the template.
@@ -389,8 +419,8 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
 }
 
 /**
- *  Adds a dialog control item to the in-memory dialog template.  We are using
- *  the DLGITEMTEMPLATE structure here, not the extended structure.
+ *  Adds a dialog control item to the in-memory dialog template using
+ *  the DLGITEMTEMPLATEEX structure.
  *
  * @param pcdd
  * @param kind
@@ -410,7 +440,7 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
  *        by the control atom or by the class name.
  */
 bool addToDialogTemplate(RexxMethodContext *c, pCDynamicDialog pcdd, SHORT kind, const char *className, int id,
-                         int x, int y, int cx, int cy, const char * txt, uint32_t style)
+                           int x, int y, int cx, int cy, const char * txt, uint32_t style)
 {
    WORD *p = (WORD *)pcdd->active;
 
@@ -421,15 +451,20 @@ bool addToDialogTemplate(RexxMethodContext *c, pCDynamicDialog pcdd, SHORT kind,
        return false;
    }
 
-   *p++ = LOWORD(style);
-   *p++ = HIWORD(style);
-   *p++ = 0;          // LOWORD (lExtendedStyle)
-   *p++ = 0;          // HIWORD (lExtendedStyle)
-   *p++ = x;          // x
-   *p++ = y;          // y
-   *p++ = cx;         // cx
-   *p++ = cy;         // cy
-   *p++ = id;         // ID
+   // Use the DLGITEMTEMPLATEEX struct to start off.
+   DLGITEMTEMPLATEEX *pItem = (DLGITEMTEMPLATEEX *)p;
+
+   pItem->helpID  = 0;
+   pItem->exStyle = 0;
+   pItem->style   = style;
+   pItem->x       = x;
+   pItem->y       = y;
+   pItem->cx      = cx;
+   pItem->cy      = cy;
+   pItem->id      = (uint32_t)id;
+
+   // Beginning at windowClass the fields are variable length.
+   p = &(pItem->windowClass);
 
    if ( className == NULL )
    {
@@ -443,7 +478,7 @@ bool addToDialogTemplate(RexxMethodContext *c, pCDynamicDialog pcdd, SHORT kind,
 
    p += putUnicodeText(p, txt);
 
-   *p++ = 0;  // advance pointer over nExtraStuff WORD
+   *p++ = 0;  // extraCount, set to 0.
 
    // make sure the next item starts on a DWORD boundary
    p = lpwAlign(p);
@@ -1026,7 +1061,7 @@ RexxMethod2(RexxObjectPtr, dyndlg_setBasePtr, CSTRING, ptrStr, CSELF, pCSelf)
     pCDynamicDialog pcdd = validateDDCSelf(context, pCSelf);
     if ( pcdd != NULL )
     {
-        pcdd->base = (DLGTEMPLATE *)string2pointer(ptrStr);
+        pcdd->base = (DLGTEMPLATEEX *)string2pointer(ptrStr);
     }
     return NULLOBJECT;
 }
@@ -1178,7 +1213,7 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     // We need to pass in and set the base address separately because the
     // category diaogs also use startDialogTemplate() and they need to keep
     // track of the different child dialog base addresses.
-    DLGTEMPLATE *pBase;
+    DLGTEMPLATEEX *pBase;
 
     if ( ! startDialogTemplate(context, &pBase, pcdd, x, y, cx, cy, dlgClass, title,
                                pcpbd->fontName, pcpbd->fontSize, style) )
@@ -1233,7 +1268,7 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
 
     pCPlainBaseDialog pcpbd = pcdd->pcpbd;
 
-    DLGTEMPLATE *p = pcdd->base;
+    DLGTEMPLATEEX *p = pcdd->base;
     if ( p == NULL )
     {
         return illegalBuffer();
@@ -1243,7 +1278,7 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     bool Release = false;
 
     // Set the number of dialog items field in the dialog template.
-    p->cdit = (WORD)pcdd->count;
+    p->cDlgItems = (WORD)pcdd->count;
 
     EnterCriticalSection(&crit_sec);
 
@@ -1344,7 +1379,7 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
 {
     RexxObjectPtr result = TheZeroObj;
 
-    DLGTEMPLATE *p = (DLGTEMPLATE *)basePtr;
+    DLGTEMPLATEEX *p = (DLGTEMPLATEEX *)basePtr;
     if ( p == NULL )
     {
         illegalBuffer();
@@ -1365,7 +1400,7 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
     }
 
     // Set the field for the number of dialog controls in the dialog template.
-    p->cdit = (WORD)pcdd->count;
+    p->cDlgItems = (WORD)pcdd->count;
 
     HWND hChild;
     if ( pcpbd->isControlDlg )
@@ -2583,7 +2618,7 @@ RexxMethod8(logical_t, catdlg_createCategoryDialog, int32_t, x, int32_t, y, uint
     }
     pcdd->expected = expected;
 
-    DLGTEMPLATE *pBase;
+    DLGTEMPLATEEX *pBase;
     if ( ! startDialogTemplate(context, &pBase, pcdd, x, y, cx, cy, NULL, NULL, fontName, fontSize, style) )
     {
         return FALSE;

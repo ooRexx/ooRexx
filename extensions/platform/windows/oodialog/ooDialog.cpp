@@ -4422,18 +4422,13 @@ RexxMethod4(int32_t, pbdlg_setControlData, RexxObjectPtr, rxID, CSTRING, data, N
  *            invoked when a dialog fails to be created.  The old ooDialog code
  *            checked if hDlg was null and if so didn't call stopDialog().  That
  *            was okay, sort of, the dialog admin block got cleaned up in the
- *            uninit() method.  The check for hDlg == null is now skipped so
- *            that stopDialog is called to clean up the CSelf struct here
- *            instead of in uninit().
+ *            uninit() method.  stopDialog() is now called even if hDlg == null
+ *            to clean up the CSelf struct here instead of in uninit().
  *
  *  @remarks  PlainBaseDialog::leaving() does nothing.  It is intended to be
  *            over-ridden by the Rexx programer to do whatever she would want.
  *            It is invoked here, right before stopDialog().  However, it is
  *            only invoked if the underlying dialog was created.
- *
- *
- *
- *
  */
 RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf)
 {
@@ -4442,7 +4437,7 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
     RexxObjectPtr finished = context->GetObjectVariable("FINISHED");
     pcpbd->abnormalHalt = (finished == TheFalseObj ? true : false);
 
-    if ( pcpbd->hDlg != NULL && ! pcpbd->abnormalHalt && ! pcpbd->isPageDlg )
+    if ( pcpbd->hDlg != NULL && ! pcpbd->abnormalHalt )
     {
         context->SendMessage0(pcpbd->rexxSelf, "LEAVING");
     }

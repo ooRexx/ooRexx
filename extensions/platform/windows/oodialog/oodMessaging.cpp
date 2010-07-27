@@ -280,7 +280,7 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_USER_CREATECHILD:
         {
-            HWND hChild = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc,
+            HWND hChild = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)lParam, hDlg, (DLGPROC)RexxDlgProc,
                                                     (LPARAM)pcpbd);
             ReplyMessage((LRESULT)hChild);
             return TRUE;
@@ -289,7 +289,7 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_USER_CREATECONTROL_DLG:
         {
             pCPlainBaseDialog p = (pCPlainBaseDialog)wParam;
-            HWND hChild = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, p->hOwnerDlg, (DLGPROC)RexxChildDlgProc,
+            HWND hChild = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)lParam, p->hOwnerDlg, (DLGPROC)RexxChildDlgProc,
                                                     wParam);
             ReplyMessage((LRESULT)hChild);
             return TRUE;

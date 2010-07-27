@@ -270,21 +270,19 @@
    if lbtext~pos(" ") > 0 then lbtext = '"' || lbtext || '"'
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
 
-   x = 5
-   y = self~sizeY - 15
-   cx = self~catalog['page']['btnwidth']
-
    wizardTextIdMsg = lbtext" 11 PreviousPage" rbtext" 12 NextPage"
+   y = self~sizeY - 15
 
    if (self~catalog['page']['btnwidth'] > 0) then do
+      cx = self~catalog['page']['btnwidth']
       x = trunc(self~sizeX - self~catalog['page']['btnwidth'] * 2 - 15)
 
       self~createPushButtonGroup(x, y, cx, , "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
-      if self~wizard then self~createPushButtonGroup(x, y, cx,  , wizardTextIdMsg, 1, "")
+      if self~wizard then self~createPushButtonGroup(5, y, cx,  , wizardTextIdMsg, 1, "")
    end
    else do
       self~createOkCancelRightBottom
-      if self~wizard then self~createPushButtonGroup(x, y, , , wizardTextIdMsg, 1, "")
+      if self~wizard then self~createPushButtonGroup(5, y, , , wizardTextIdMsg, 1, "")
    end
 
    self~createBlackFrame(-1, 0, self~sizeY - 20, self~sizeX, 1)

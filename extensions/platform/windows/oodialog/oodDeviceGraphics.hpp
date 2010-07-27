@@ -68,7 +68,7 @@ extern BOOL          drawBackgroundBmp(pCPlainBaseDialog, HWND);
 extern BOOL          drawBitmapButton(pCPlainBaseDialog, LPARAM, bool);
 
 
-extern int   getWeight(CSTRING opts);
+extern bool  parseFontStyleArg(CSTRING fontStyle, int *weight, BOOL *italic, BOOL *underline, BOOL *strikeout);
 extern bool  getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, RexxObjectPtr, PSIZE);
 extern bool  textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
 extern bool  textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);

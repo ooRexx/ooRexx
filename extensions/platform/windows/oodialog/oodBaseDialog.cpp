@@ -490,8 +490,10 @@ err_out:
 /**
  *  Methods for the .WindowExtensions class.
  */
-#define WINDOWEXTENSIONS_CLASS        "WindowExtensions"
+#define WINDOWEXTENSIONS_CLASS    "WindowExtensions"
 
+
+#define CREATE_FONT_EX_ARG_LIST   "a Directory object or a keyword string containing at lease one of the font style keywords"
 
 static inline HWND getWEWindow(void *pCSelf)
 {
@@ -1084,20 +1086,14 @@ RexxMethod4(POINTERSTRING, winex_createFont, OPTIONAL_CSTRING, fontName, OPTIONA
     BOOL italic = FALSE;
     BOOL underline = FALSE;
     BOOL strikeout = FALSE;
-
-    if ( argumentExists(3) )
-    {
-        italic    = StrStrI(fontStyle, "ITALIC"   ) != NULL;
-        underline = StrStrI(fontStyle, "UNDERLINE") != NULL;
-        strikeout = StrStrI(fontStyle, "STRIKEOUT") != NULL;
-        weight = getWeight(fontStyle);
-    }
+    parseFontStyleArg(fontStyle, &weight, &italic, &underline, &strikeout);
 
     HFONT hFont = CreateFont(fontSize, fontWidth, 0, 0, weight, italic, underline, strikeout,
                              DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
                              DEFAULT_QUALITY, FF_DONTCARE, fontName);
     return hFont;
 }
+
 
 /** WindowExtensions::createFontEx()
  *
@@ -1156,60 +1152,67 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
 
     if ( argumentExists(3) )
     {
-        if ( ! context->IsDirectory(args) )
+        if ( context->IsDirectory(args) )
         {
-            wrongClassException(context->threadContext, 3, "Directory");
-            goto error_out;
-        }
-        RexxDirectoryObject d = (RexxDirectoryObject)args;
+            RexxDirectoryObject d = (RexxDirectoryObject)args;
 
-        if ( ! rxNumberFromDirectory(context, d, "WIDTH", (uint32_t *)&width, 3, false) )
-        {
-            goto error_out;
+            if ( ! rxNumberFromDirectory(context, d, "WIDTH", (uint32_t *)&width, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (uint32_t *)&escapement, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (uint32_t *)&orientation, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (uint32_t *)&weight, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxLogicalFromDirectory(context, d, "ITALIC", &italic, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxLogicalFromDirectory(context, d, "UNDERLINE", &underline, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxLogicalFromDirectory(context, d, "STRIKEOUT", &strikeOut, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxNumberFromDirectory(context, d, "CHARSET", &charSet, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxNumberFromDirectory(context, d, "OUTPUTPRECISION", &outputPrecision, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxNumberFromDirectory(context, d, "CLIPPRECISION", &clipPrecision, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxNumberFromDirectory(context, d, "QUALITY", &quality, 3, false) )
+            {
+                goto error_out;
+            }
+            if ( ! rxNumberFromDirectory(context, d, "PITCHANDFAMILY", &pitchAndFamily, 3, false) )
+            {
+                goto error_out;
+            }
         }
-        if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (uint32_t *)&escapement, 3, false) )
+        else
         {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (uint32_t *)&orientation, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (uint32_t *)&weight, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxLogicalFromDirectory(context, d, "ITALIC", &italic, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxLogicalFromDirectory(context, d, "UNDERLINE", &underline, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxLogicalFromDirectory(context, d, "STRIKEOUT", &strikeOut, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "CHARSET", &charSet, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "OUTPUTPRECISION", &outputPrecision, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "CLIPPRECISION", &clipPrecision, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "QUALITY", &quality, 3, false) )
-        {
-            goto error_out;
-        }
-        if ( ! rxNumberFromDirectory(context, d, "PITCHANDFAMILY", &pitchAndFamily, 3, false) )
-        {
-            goto error_out;
+            CSTRING fontStyle = context->ObjectToStringValue(args);
+            if ( ! parseFontStyleArg(fontStyle, &weight, &italic, &underline, &strikeOut) )
+            {
+                wrongArgValueException(context->threadContext, 3, CREATE_FONT_EX_ARG_LIST, args);
+                goto error_out;
+            }
         }
     }
 
@@ -1223,7 +1226,7 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
     return font;
 
 error_out:
-  return NULLOBJECT;
+    return NULLOBJECT;
 }
 
 /** WindowExtensions::writeDirect()

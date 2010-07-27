@@ -510,6 +510,70 @@ INT_PTR getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr ima
 
 /**
  * Called from the property sheet callback function when signaled that the
+ * property sheet dialog is about to be created.  At this point, the in-memory
+ * dialog template can be accessed.
+ *
+ * This allows us to alter the template.  The one practical use of this, would
+ * be to change the font of the property sheet.
+ *
+ * Note this is just temp code that shows it can actually be done.  Because the
+ * dialog template items are variable in size, we need to calculate the
+ * beginning and end of memory used by the dialog items, change the font type
+ * name and then move the dialog items to the correct place.
+ *
+ * @param tmplate
+ */
+void adjustPropSheetTemplate(LPARAM tmplate, bool quickReturn)
+{
+    if ( quickReturn )
+    {
+        return;
+    }
+
+    DLGTEMPLATE *pDlgTemplate;
+    DLGTEMPLATEEX *pDlgTemplateEx;
+    bool hasFontInfo;
+
+    pDlgTemplateEx = (DLGTEMPLATEEX *)tmplate;
+    if (pDlgTemplateEx->signature == 0xFFFF)
+    {
+        hasFontInfo = (pDlgTemplateEx->style & DS_SHELLFONT) || (pDlgTemplateEx->style & DS_SETFONT);
+
+        printf("PropertySheet, extended template. Has font info=%d\n", hasFontInfo);
+    }
+    else
+    {
+           pDlgTemplate = (DLGTEMPLATE *)tmplate;
+           hasFontInfo = (pDlgTemplate->style & DS_SHELLFONT) || (pDlgTemplate->style & DS_SETFONT);
+
+           printf("PropertySheet, regular template. Has font info=%d\n", hasFontInfo);
+
+           WORD *pStruct = (WORD *)tmplate;
+           printf(" count items=%d x=%d y=%d cx=%d cy=%d menu=%d class=%d titleWord=%d\n",
+                  pStruct[4], pStruct[5], pStruct[6], pStruct[7], pStruct[8],
+                  pStruct[9], pStruct[10], pStruct[11]);
+
+
+           WCHAR *wstr = (WCHAR *)(pStruct + 13);
+           printf("  pointSize=%d ", pStruct[12]);
+           wprintf(L"Font=%s\n", wstr);
+
+           // Temp, change the font size and font name.  Really temp.  Font name
+           // has to be exactly same number of characters as MS Shell Dlg.
+           //
+           // Arial Italic
+           // Book Antiqua
+           // Cooper Black
+           // Poor Richard
+           *(pStruct + 12) = 12;
+           putUnicodeText((LPWORD)wstr, "Arial Italic");
+    }
+
+}
+
+
+/**
+ * Called from the property sheet callback function when signaled that the
  * property sheet dialog is being initialized.  Performs the initialization
  * normally done in the window loop thread function and the execute() method for
  * normal ooDialog dialogs.
@@ -1318,6 +1382,10 @@ void CALLBACK PropSheetCallback(HWND hwndPropSheet, UINT uMsg, LPARAM lParam)
     {
         initializePropSheet(hwndPropSheet);
     }
+    else if ( uMsg == PSCB_PRECREATE )
+    {
+        adjustPropSheetTemplate(lParam, true);
+    }
 }
 
 
@@ -1587,7 +1655,7 @@ PROPSHEETPAGE *initPropSheetPages(RexxMethodContext *c, pCPropertySheetDialog pc
         else
         {
             flags |= PSP_DLGINDIRECT;
-            psp[i].pResource = pcdd->base;
+            psp[i].pResource = (PROPSHEETPAGE_RESOURCE)pcdd->base;
 
             if ( pcpsp->hInstance != NULL )
             {
@@ -1863,8 +1931,9 @@ RexxMethod2(RexxObjectPtr, psdlg_setAppIcon_atr, RexxObjectPtr, icon, CSELF, pCS
  *
  *  Sets the header bitmap used for a Wizard (Wizard97 or AeroWizard.)
  *
- *  The user can specify the bitmap as either a resource ID (numeric or
- *  symbolic) or as an .Image object.
+ *  For a Wizard97, the user can specify the bitmap as either a resource ID
+ *  (numeric or symbolic) or as an .Image object.  However for an AeroWizard,
+ *  the bitmap must be specified as an .Image object.
  *
  *  @remarks  If the user specifies the header as an .Image object, then it has
  *            to be a bitmap image, not some other type of image, like an icon,
@@ -1902,6 +1971,12 @@ RexxMethod2(RexxObjectPtr, psdlg_setHeader_atr, RexxObjectPtr, header, CSELF, pC
         }
         else
         {
+            if ( pcpsd->isAeroWiz )
+            {
+                wrongClassException(context->threadContext, 1, "Image");
+                goto done_out;
+            }
+
             pcpsd->headerBitmapID = (uint32_t)result;
         }
 
@@ -2579,7 +2654,7 @@ bool initPageDlgFrame(RexxMethodContext *c, pCPropertySheetPage pcpsp)
 
     uint32_t style = DS_SHELLFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_TABSTOP;
 
-    DLGTEMPLATE *pBase;
+    DLGTEMPLATEEX *pBase;
 
     return startDialogTemplate(c, &pBase, pcdd, 0, 0, pcpsp->cx, pcpsp->cy, NULL, "", pcpbd->fontName, pcpbd->fontSize, style);
 }
@@ -2614,7 +2689,7 @@ RexxObjectPtr initUserTemplate(RexxMethodContext *c, pCPropertySheetPage pcpsp)
         pcpsp->pageID = (INT_PTR)pcdd->base;
 
         // Set the number of dialog items field in the dialog template.
-        ((DLGTEMPLATE *)pcdd->base)->cdit = (WORD)pcdd->count;
+        ((DLGTEMPLATEEX *)pcdd->base)->cDlgItems = (WORD)pcdd->count;
 
         return TheTrueObj;
     }
@@ -2659,7 +2734,7 @@ RexxObjectPtr initRcTemplate(RexxMethodContext *c, pCPropertySheetPage pcpsp)
         pcpsp->pageID = (INT_PTR)pcdd->base;
 
         // Set the number of dialog items field in the dialog template.
-        ((DLGTEMPLATE *)pcdd->base)->cdit = (WORD)pcdd->count;
+        ((DLGTEMPLATEEX *)pcdd->base)->cDlgItems = (WORD)pcdd->count;
 
         return TheTrueObj;
     }

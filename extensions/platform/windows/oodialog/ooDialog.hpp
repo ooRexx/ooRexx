@@ -409,6 +409,46 @@ typedef struct {
 #define VK_Y   0x59
 #define VK_Z   0x5A
 
+/* The extended dialog template struct.  Microsoft does not supply this in any
+ * header, just provided the definition in the MSDN docs.
+ */
+typedef struct {
+    WORD dlgVer;
+    WORD signature;
+    DWORD helpID;
+    DWORD exStyle;
+    DWORD style;
+    WORD cDlgItems;
+    short x;
+    short y;
+    short cx;
+    short cy;
+    WCHAR menu;         // Actually variable length array of 16-bit values
+    WCHAR windowClass;  // Actually variable length array of 16-bit values
+    WCHAR title;        // Actually variable length array of 16-bit values
+    WORD pointsize;
+    WORD weight;
+    BYTE italic;
+    BYTE charset;
+    WCHAR typeface;     // Actually variable length array of 16-bit values
+} DLGTEMPLATEEX;
+
+typedef struct {
+    DWORD helpID;
+    DWORD exStyle;
+    DWORD style;
+    short x;
+    short y;
+    short cx;
+    short cy;
+    DWORD id;
+    WORD  windowClass;
+    WORD  title;
+    WORD extraCount;
+} DLGITEMTEMPLATEEX;
+
+
+
 /* Struct for the WindowBase object CSelf. */
 typedef struct _wbCSelf {
     HWND              hwnd;
@@ -532,7 +572,7 @@ typedef CDialogControl *pCDialogControl;
 typedef struct _ddCSelf {
     pCPlainBaseDialog  pcpbd;
     RexxObjectPtr      rexxSelf;
-    DLGTEMPLATE       *base;          // Base pointer to dialog template (basePtr)
+    DLGTEMPLATEEX       *base;        // Base pointer to dialog template (basePtr)
     void              *active;        // Pointer to current location in dialog template (activePtr)
     void              *endOfTemplate; // Pointer to end of allocated memory for the template
     uint32_t           expected;      // Expected dialog item count

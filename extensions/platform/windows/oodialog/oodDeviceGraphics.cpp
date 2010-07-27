@@ -354,33 +354,90 @@ uint32_t parseShowOptions(CSTRING options)
 
 
 /**
- * Parses an options string used to set the style of a font, looking for the
- * option that sets the weight of a font.
+ * Parses a common font style keyword argument.  The common font styles are set
+ * to their defaults with the keywords over-riding the defaults, if found.
  *
- * @param opts  The keyword string.  This is a case-insensitive check. More than
- *              one keyword, or no keyword, is acceptable.
+ * Note that the fontStyle string can be null.
  *
- * @return The font weight flag corresponding to the keyword found, or FW_NORMAL
- *         if there is no font weight flag.
+ * @param fontStyle  The string to parse.
+ * @param weight     [IN/OUT]  Font weight, returned.
+ * @param italic     [IN/OUT]  Use italics, returned.
+ * @param underline  [IN/OUT]  Use underline, returned.
+ * @param strikeout  [IN/OUT]  Use strike out, returned.
+ *
+ * @return True if the fontStyle string contains at least one of the keywords.
+ *         Return false if the string does not contain any of the keywords.
  */
-int getWeight(CSTRING opts)
+bool parseFontStyleArg(CSTRING fontStyle, int *weight, BOOL *italic, BOOL *underline, BOOL *strikeout)
 {
-    int weight = FW_NORMAL;
+    bool found = false;
 
-    if ( opts != NULL )
+    *weight = FW_NORMAL;
+    *italic = FALSE;
+    *underline = FALSE;
+    *strikeout = FALSE;
+
+    if ( fontStyle != NULL )
     {
-        if (      StrStrI(opts, "THIN")       != NULL ) weight = FW_THIN;
-        else if ( StrStrI(opts, "EXTRALIGHT") != NULL ) weight = FW_EXTRALIGHT;
-        else if ( StrStrI(opts, "LIGHT")      != NULL ) weight = FW_LIGHT;
-        else if ( StrStrI(opts, "MEDIUM")     != NULL ) weight = FW_MEDIUM;
-        else if ( StrStrI(opts, "SEMIBOLD")   != NULL ) weight = FW_SEMIBOLD;
-        else if ( StrStrI(opts, "EXTRABOLD")  != NULL ) weight = FW_EXTRABOLD;
-        else if ( StrStrI(opts, "BOLD")       != NULL ) weight = FW_BOLD;
-        else if ( StrStrI(opts, "HEAVY")      != NULL ) weight = FW_HEAVY;
-    }
-    return weight;
-}
+        if ( StrStrI(fontStyle, "ITALIC"   ) != NULL )
+        {
+            *italic = TRUE;
+            found = true;
+        }
+        if ( StrStrI(fontStyle, "UNDERLINE") != NULL )
+        {
+            *underline = TRUE;
+            found = true;
+        }
+        if ( StrStrI(fontStyle, "STRIKEOUT") != NULL )
+        {
+            *strikeout = TRUE;
+            found = true;
+        }
 
+        if ( StrStrI(fontStyle, "THIN") != NULL )
+        {
+            *weight = FW_THIN;
+            found = true;
+        }
+        else if ( StrStrI(fontStyle, "EXTRALIGHT") != NULL )
+        {
+            *weight = FW_EXTRALIGHT;
+            found = true;
+        }
+        else if ( StrStrI(fontStyle, "LIGHT") != NULL )
+        {
+            *weight = FW_LIGHT;
+            found = true;
+        }
+        else if ( StrStrI(fontStyle, "MEDIUM") != NULL )
+        {
+            *weight = FW_MEDIUM;
+            found = true;
+        }
+        else if ( StrStrI(fontStyle, "SEMIBOLD") != NULL )
+        {
+            *weight = FW_SEMIBOLD;
+            found = true;
+        }
+        else if ( StrStrI(fontStyle, "EXTRABOLD") != NULL )
+        {
+            *weight = FW_EXTRABOLD;
+            found = true;
+        }
+        else if ( StrStrI(fontStyle, "BOLD") != NULL )
+        {
+            *weight = FW_BOLD;
+            found = true;
+        }
+        else if ( StrStrI(fontStyle, "HEAVY") != NULL )
+        {
+            *weight = FW_HEAVY;
+            found = true;
+        }
+    }
+    return found;
+}
 
 RexxObjectPtr oodGetClientRect(RexxMethodContext *c, HWND hwnd, PRECT rect)
 {
@@ -485,12 +542,16 @@ logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t 
 
 HFONT oodGenericFont(const char *fontName, uint32_t fontSize, const char *opts)
 {
-    int weight = getWeight(opts);
+    int weight;
+    BOOL italic;
+    BOOL underline;
+    BOOL strikeout;
+    parseFontStyleArg(opts, &weight, &italic, &underline, &strikeout);
+
     int height = getHeightFromFontSize(fontSize);
 
-    return CreateFont(height, 0, 0, 0, weight, StrStrI(opts, "ITALIC") != NULL, StrStrI(opts, "UNDERLINE") != NULL,
-                      StrStrI(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                      FF_DONTCARE, fontName);
+    return CreateFont(height, 0, 0, 0, weight, italic, underline, strikeout, DEFAULT_CHARSET,
+                      OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, fontName);
 }
 
 
