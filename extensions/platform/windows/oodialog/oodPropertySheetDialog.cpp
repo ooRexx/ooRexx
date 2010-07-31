@@ -72,6 +72,7 @@ public:
 
 #define VALID_PSNRET_LIST       "PSNRET_NOERROR, PSNRET_INVALID, or PSNRET_INVALID_NOCHANGEPAGE"
 #define VALID_PSNRET_MSG_LIST   "PSNRET_NOERROR or PSNRET_MESSAGEHANDLED"
+#define VALID_PROPSHEET_BUTTONS  "APPLYNOW, BACK, CANCEL, FINISH, HELP, NEXT, or OK"
 
 bool psnCheckForCondition(RexxThreadContext *c, pCPropertySheetDialog pcpsd)
 {
@@ -295,6 +296,18 @@ RexxArrayObject getTranslateAccelatorArgs(RexxThreadContext *c, uint32_t _wmMsg,
  *
  * Note that the replies to PSN_SETACTIVE, PSN_WIZBACK, and PSN_WIZNEXT are all
  * handled by this function.
+ *
+ * The Rexx programmer returns 0 to allow the page to become active (or to go to
+ * the previous page for WIZBACK, or to go to the next page for WIZNEXT,) -1 to
+ * prevent a page change, and the page index, or page ID, to go to a specific
+ * page.  The Windows property sheet actually uses the page ID.
+ *
+ * The Rexx programmer can get the proper page ID by using the indexToID()
+ * method.  That method returns a .Pointer object.  Otherwise, it seems simplier
+ * for the Rexx programmet to simply use the page index and we'll look it up
+ * here.  The short of it is, the Rexx progammer can either reply using the page
+ * ID, in which case result is a Pointer object.  Or they can simple use the
+ * page index.
  *
  * @param c
  * @param pcpsd
@@ -722,16 +735,29 @@ void destroyModalPropSheet(pCPropertySheetDialog pcpsd, HWND hDlg, DlgProcErrTyp
  * @return Return true if the message is a property sheet notification message,
  *         otherwise false.
  */
-inline bool isPSNMsg(uint32_t uMsg, LPARAM lParam)
+inline bool isPSMsg(uint32_t uMsg, LPARAM lParam)
 {
     uint32_t code;
-    return (uMsg == WM_NOTIFY && ((code = ((NMHDR *)lParam)->code) >= PSN_LAST  && code <= PSN_FIRST));
+    return (uMsg == PSM_QUERYSIBLINGS) ||
+           (uMsg == WM_NOTIFY && ((code = ((NMHDR *)lParam)->code) >= PSN_LAST  && code <= PSN_FIRST));
 }
 
 
 /**
  * The PSN_SETACTIVE, PSN_WIZBACK, and PSN_WIZNEXT notifications all use
  * identical code.
+ *
+ * The Rexx programmer returns 0 to allow the page to become active (or to go to
+ * the previous page for WIZBACK, or to go to the next page for WIZNEXT,) -1 to
+ * prevent a page change, and the page index, or page ID, to go to a specific
+ * page.  The Windows property sheet actually uses the page ID.
+ *
+ * The Rexx programmer can get the proper page ID by using the indexToID()
+ * method.  That method returns a .Pointer object.  Otherwise, it seems simplier
+ * for the Rexx programmet to simply use the page index and we'll look it up
+ * here.  The short of it is, the Rexx progammer can either reply using the page
+ * ID, in which case result is a Pointer object.  Or they can simple use the
+ * page index.
  *
  * @param c
  * @param pcpsd
@@ -753,35 +779,57 @@ void doSetActiveCommon(RexxThreadContext *c, pCPropertySheetPage pcpsp, HWND hPa
     setWindowPtr(hPage, DWLP_MSGRESULT, (LPARAM)reply);
 }
 
+
 /**
- * Common code for PSN_WIZFINISH and PSN_QUERYINITIALFOCUS
+ * Common code to handle the return from the PSN_QUERYINITIALFOCUS or
+ * PSN_WIZFINISH notification.
  *
+ * Query initial focus allows the programmer to specify the dialog control on a
+ * page that should get the focus.  Wiz finish allows the programmer to prevent
+ * the wizard from finishing by specifying a dialog control on the page that
+ * will then recieve the focus.  The code for implementing this is nearly
+ * identical, even though the reason the the return is different.
+ *
+ * PSN_WIZFINISH also allows the programmer to return -1 to prevent the wizard
+ * from finishing.  But, for this case there is no control over which window on
+ * the page receives focus.  Accepting -1 for PSN_QUERYINITIALFOCUS is not
+ * semantically correct, but the outcome is probaly acceptable.  It is unlikely
+ * that any control on a page has a resource ID of 1, so the dialog control hwnd
+ * will be null and focus will remain on the default.
  *
  * @param c
+ * @param pcpsp
  * @param pcpsd
  * @param result
- * @param hPage
- * @param name
+ * @param method
  */
-void doWizFinishCommon(RexxThreadContext *c, pCPropertySheetPage pcpsp, RexxObjectPtr result, HWND hPage, CSTRING name)
+void pspSetFocus(RexxThreadContext *c, pCPropertySheetPage pcpsp, pCPropertySheetDialog pcpsd, RexxObjectPtr result,
+                 CSTRING method)
 {
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
-    LPARAM reply = NULL;
+    HWND   hPage = pcpsp->hPage;
+    LPARAM reply = 0;
 
-    if ( goodReply(c, pcpsd, result, name) )
+    if ( goodReply(c, pcpsd, result, method) )
     {
-        uint32_t id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result);
-        if ( id == OOD_MEMORY_ERR )
+        if ( isInt(-1, result, c) )
         {
-            psnMemoryErr(c, pcpsd);
-        }
-        else if ( id == OOD_ID_EXCEPTION )
-        {
-            invalidPSNReturnListException(c, name, "a valid resource ID or 0", result, pcpsd);
+            reply = TRUE;
         }
         else
         {
-            reply = (LPARAM)GetDlgItem(hPage, id);
+            uint32_t id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result);
+            if ( id == OOD_MEMORY_ERR )
+            {
+                psnMemoryErr(c, pcpsd);
+            }
+            else if ( id == OOD_ID_EXCEPTION )
+            {
+                invalidPSNReturnListException(c, method, "-1, 0, or a valid resource ID", result, pcpsd);
+            }
+            else if ( id != 0 )
+            {
+                reply = (LPARAM)GetDlgItem(hPage, id);
+            }
         }
     }
     setWindowPtr(hPage, DWLP_MSGRESULT, reply);
@@ -789,24 +837,112 @@ void doWizFinishCommon(RexxThreadContext *c, pCPropertySheetPage pcpsp, RexxObje
 
 
 /**
- * Handler for all the property sheet notification messages.
+ * Handles the PSN_QUERYINITIALFOCUS notification.
+ *
+ * The Rexx programmer returns 0 to set the focus to the default control and
+ * returns the dialog control resource ID to set that focus to that control.
+ * The ID can be numeric or symbolic.
+ *
+ * @param c
+ * @param pcpsp
+ * @param lParam
+ *
+ * @remarks  lParam of the PSHNOTIFY struct contains the HWND of the dialog
+ *           control that will receive the focus by default.  We use that to get
+ *           the resource ID of that control and use that ID as the first
+ *           argument sent to Rexx.
+ */
+void doQueryInitialFocus(RexxThreadContext *c, pCPropertySheetPage pcpsp, LPARAM lParam)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
+
+    int id = GetDlgCtrlID((HWND)((LPPSHNOTIFY)lParam)->lParam);
+
+    RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, QUERYINITIALFOCUS_MSG, c->Int32(id), pcpsd->rexxSelf);
+
+    pspSetFocus(c, pcpsp, pcpsd, result, QUERYINITIALFOCUS_MSG);
+}
+
+/**
+ * Handles the PSN_WIZFINISH notification.
+ *
+ * The Rexx programmer returns 0 to allow the wizard to finish, -1 to prevent
+ * the wizard from finishing, or the resource ID of a control on the wizard
+ * page.  Sending the resource ID prevents the wizard from finishing and sets
+ * the focus on the page to that dialog control.
+ *
+ * The Windows return is 0 to allow the wizard to finish, true to prevent the
+ * wizard from finishing, or the window handle of a dialog control on the page
+ * to prevent the finish and set that page as the current page.
+ *
+ * @param c
+ * @param pcpsd
+ * @param result
+ * @param hPage
+ * @param name
+ *
+ * @remarks
+ */
+void doWizFinish(RexxThreadContext *c, pCPropertySheetPage pcpsp)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
+
+    RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, WIZFINISH_MSG, pcpsd->rexxSelf);
+
+    pspSetFocus(c, pcpsp, pcpsd, result, WIZFINISH_MSG);
+}
+
+
+int queryFromSibling(RexxThreadContext *c, pCPropertySheetPage pcpsp, WPARAM wParam, LPARAM lParam)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
+    int                   reply = 0;
+
+    RexxArrayObject args   = c->ArrayOfThree((RexxObjectPtr)wParam, (RexxObjectPtr)lParam, pcpsd->rexxSelf);
+    RexxObjectPtr   result = c->SendMessage(pcpsp->rexxSelf, QUERYFROMSIBLING_MSG, args);
+
+    if ( goodReply(c, pcpsd, result, QUERYFROMSIBLING_MSG) )
+    {
+        if ( ! c->Int32(result, &reply) )
+        {
+            wrongPSNRangeException(c, QUERYFROMSIBLING_MSG, MININT, MAXINT, result, pcpsd);
+        }
+    }
+    return reply;
+}
+
+
+/**
+ * Handler for all the property sheet notification messages and the special case
+ * PSM_QUERYSIBLINGS message.
  *
  * Rather than use a connectPropertySheetEvent() method, the property sheet
  * dialog handles every notification.  The dialog class supplies the correct
  * default implementation for each notification.  The Rexx programmer over-rides
  * the default implementation for any notification he wants to handle.
  *
+ * The special PSM_QUERYSIBLINGS message is sent to a property sheet and the
+ * property sheet then forwards it to each page.  So, the page recieving the
+ * message is very similar to receiving a notification.  The sequence is
+ * initiated through the PropertySheet::querySiblings() method and replied to
+ * through the PropertySheetPage::queryFromSibling() method.
+ *
  * @param pcpsp
  * @param pcpbd
  * @param wParam
  * @param lParam
  */
-static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPARAM wParam, LPARAM lParam)
+static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint32_t msg, WPARAM wParam, LPARAM lParam)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
     HWND hPropSheet = pcpsd->hDlg;
     HWND hPage = pcpsp->hPage;
     RexxThreadContext *c = pcpbd->dlgProcContext;
+
+    if ( msg == PSM_QUERYSIBLINGS )
+    {
+        return queryFromSibling(c, pcpsp, wParam, lParam);
+    }
 
     switch ( ((NMHDR *)lParam)->code )
     {
@@ -943,26 +1079,17 @@ static void doPSNMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, WPA
             break;
 
         case PSN_WIZFINISH :
-        {
-            RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, WIZFINISH_MSG, pcpsd->rexxSelf);
-
-            doWizFinishCommon(c, pcpsp, result, hPage, WIZFINISH_MSG);
+            doWizFinish(c, pcpsp);
             break;
-        }
 
         case PSN_QUERYINITIALFOCUS :
-        {
-            int id = GetDlgCtrlID((HWND)((LPPSHNOTIFY)lParam)->lParam);
-
-            RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, QUERYINITIALFOCUS_MSG, c->Int32(id), pcpsd->rexxSelf);
-
-            doWizFinishCommon(c, pcpsp, result, hPage, QUERYINITIALFOCUS_MSG);
+            doQueryInitialFocus(c, pcpsp, lParam);
             break;
-        }
 
         default :
             break;
     }
+    return TRUE;
 }
 
 /**
@@ -1130,9 +1257,9 @@ LRESULT CALLBACK RexxPropertySheetDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
     // Do not search message table for WM_PAINT to improve redraw.
     if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
     {
-        if ( isPSNMsg(uMsg, lParam) )
+        if ( isPSMsg(uMsg, lParam) )
         {
-            doPSNMessage(pcpsp, pcpbd, wParam, lParam);
+            return doPSMessage(pcpsp, pcpbd, uMsg, wParam, lParam);
             return TRUE;
         }
 
@@ -1390,6 +1517,73 @@ void CALLBACK PropSheetCallback(HWND hwndPropSheet, UINT uMsg, LPARAM lParam)
 
 
 /**
+ * The property sheet page callback function.  It is called with 3 different
+ * messages:
+ *
+ * PSPCB_ADDREF   Called when a page is being created.
+ *
+ * PSPCB_CREATE   Called when the dialog box for the page is being created.
+ *
+ * PSPCP_RELEASE  Called when the page is being destroyed
+ *
+ * We use PSPCB_CREATE to call back in to Rexx by invoking the pageCreate()
+ * method of the PropertySheetPage.  The default implementation of pageCreate()
+ * simply returns true.
+ *
+ * The programmer can over-ride pageCreate(), for whatever reason.  Returning 0
+ * prevents the page dialog from being created.  Although, I'm not sure what use
+ * the Rexx programmer would make of that.
+ *
+ * The other messages are ignored at this time.  (And I'm not sure if the one
+ * callback is that useful for the Rexx programmer.)
+ *
+ *
+ * @param hwnd  Reserved by MS, always NULL.
+ * @param uMsg
+ * @param ppsp
+ *
+ * @return UINT CALLBACK
+ */
+uint32_t CALLBACK PropSheetPageCallBack(HWND hwnd, uint32_t msg, LPPROPSHEETPAGE ppsp)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)ppsp->lParam;
+
+    if ( msg == PSPCB_CREATE )
+    {
+        RexxThreadContext *c = pcpsp->dlgProcContext;
+
+        if ( pcpsp->dlgProcContext == NULL )
+        {
+            pcpsp->interpreter->AttachThread(&c);
+        }
+
+        uint32_t reply = TRUE;
+
+        if ( c != NULL )
+        {
+            pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
+
+            RexxObjectPtr result = c->SendMessage0(pcpsp->rexxSelf, PAGECREATE_MSG);
+
+            if ( goodReply(c, pcpsd, result, PAGECREATE_MSG) )
+            {
+                if ( result != TheTrueObj && result != TheFalseObj )
+                {
+                   invalidPSNReturnListException(c, PAGECREATE_MSG, "true or false", result, pcpsd);
+                }
+                else
+                {
+                    reply = (result == TheTrueObj ? 1 : 0);
+                }
+            }
+        }
+        return reply;
+    }
+    return 0;
+}
+
+
+/**
  *  Methods for the .PropertySheetDialog class.
  */
 #define PROPERTYSHEETDIALOG_CLASS  "PropertySheetDialog"
@@ -1640,6 +1834,7 @@ PROPSHEETPAGE *initPropSheetPages(RexxMethodContext *c, pCPropertySheetDialog pc
         psp[i].dwSize      = sizeof(PROPSHEETPAGE);
         psp[i].pfnDlgProc  = (DLGPROC)RexxPropertySheetDlgProc;
         psp[i].lParam      = (LPARAM)pcpsp;
+        psp[i].pfnCallback = PropSheetPageCallBack; flags |= PSP_USECALLBACK;  // Temp ??
 
         if ( pcpsp->pageTitle != NULL )
         {
@@ -2436,7 +2631,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setWizButtons, CSTRING, opts, CSELF, pCSelf)
  *
  *  @param optsButtons One or more of the same keywords used in opts. Here,
  *                     they specify which property sheet buttons are to be shown
- *                     or hidden. If a keywor appears in this argument but not
+ *                     or hidden. If a keyword appears in this argument but not
  *                     in opts, it indicates that the button should be hidden.
  *
  *  @param  Returns true if this is a Wizard property sheet on Vista on later,
@@ -2473,7 +2668,35 @@ RexxMethod3(RexxObjectPtr, psdlg_showWizButtons, CSTRING, opts, CSTRING, optsBut
     return TheTrueObj;
 }
 
-
+/** PropertySheetDialog::indexToID()
+ *
+ *  Given the index of a page, returns its ID.
+ *
+ *  Page IDs are different depending on the type of the dialog page,
+ *  UserPSPDialog, ResPSPDialog, etc..  In order to get the correct ID, the Rexx
+ *  programmer must use this method.
+ *
+ *  There are also two special case values.  The page ID would most commonly be
+ *  used in the setActive, wizBack, or wizNext event notification methods that
+ *  signal a page is being changed.  To accept the page change, 0 is returned,
+ *  and to cancel the page change -1 is returned.  So, 0 and -1 are acceptable
+ *  here and return the proper value for those methods.
+ *
+ *  @param  index  The one-based index of the page.  The special values 0 and -1
+ *                 are also acceptable.
+ *
+ *  @return  The proper page ID for the index.
+ *
+ *  @notes  A syntax condition is raised if the index is out of range, or 0 or
+ *          -1.
+ *
+ *  @remarks  In Windows the page id is either the resource ID of the dialog for
+ *            a dialog template bound to an executable, or the point to the
+ *            in-memory template for a dynamically constructed template.  We
+ *            keep track of the proper id when the template is used and return
+ *            it here to the programmer when requested.
+ *
+ */
 RexxMethod2(RexxObjectPtr, psdlg_indexToID, int32_t, index, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
@@ -2497,6 +2720,90 @@ RexxMethod2(RexxObjectPtr, psdlg_indexToID, int32_t, index, CSELF, pCSelf)
     }
 
     return context->NewPointer((void *)result);
+}
+
+
+/** PropertySheetDialog::indexToHwnd()
+ *
+ *  Given the index to a page, returns the page dialog's window handle.
+ *
+ *  @param  index  The one-based page index.
+ *
+ *  @return  The window handle for the page.
+ *
+ ** PropertySheetDialog::indexToPage()
+ *
+ *  Given the index to a page, returns its HPROPSHEETPAGE handle
+ *
+ *  @param  index  The one-based page index.
+ *
+ *  @return  The HPROPSHEETPAGE handle for the page.
+ *
+ *  @notes  A syntax condition is raised if index is not the index of an
+ *          existing page in the propertye sheet.
+ *
+ */
+RexxMethod3(RexxObjectPtr, psdlg_indexToHandle, int, index, NAME, method, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    int max = (int)pcpsd->pageCount;
+
+    if ( index < 1 || index > max )
+    {
+        wrongRangeException(context->threadContext, 1, 1, max, index);
+        return NULL;
+    }
+
+    index--;
+    if ( *(method + 7) == 'H' )
+    {
+        return pointer2string(context, PropSheet_IndexToHwnd(pcpsd->hDlg, index));
+    }
+    else
+    {
+        RexxMethodContext *c = context;
+        return c->NewPointer(PropSheet_IndexToPage(pcpsd->hDlg, index));
+    }
+}
+
+
+/** PropertySheetDialog::pressButton()
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_pressButton, CSTRING, button, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    int flag = 0;
+
+    if ( StrStrI(button, "APPLYNOW")    != NULL ) flag = PSBTN_APPLYNOW;
+    else if ( StrStrI(button, "BACK")   != NULL ) flag = PSBTN_BACK;
+    else if ( StrStrI(button, "CANCEL") != NULL ) flag = PSBTN_CANCEL;
+    else if ( StrStrI(button, "FINISH") != NULL ) flag = PSBTN_FINISH;
+    else if ( StrStrI(button, "HELP")   != NULL ) flag = PSBTN_HELP;
+    else if ( StrStrI(button, "NEXT")   != NULL ) flag = PSBTN_NEXT;
+    else if ( StrStrI(button, "OK")     != NULL ) flag = PSBTN_OK;
+    else
+    {
+        wrongArgValueException(context->threadContext, 1, VALID_PROPSHEET_BUTTONS, button);
+        return TheZeroObj;
+    }
+
+    PropSheet_PressButton(pcpsd->hDlg, flag);
+    return TheZeroObj;
+}
+
+
+/** PropertySheetDialog::querySiblings()
+ *
+ *
+ */
+RexxMethod3(int32_t, psdlg_querySiblings, RexxObjectPtr, wParam, RexxObjectPtr, lParam, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    return PropSheet_QuerySiblings(pcpsd->hDlg, (WPARAM)wParam, (LPARAM)lParam);
 }
 
 
@@ -3014,6 +3321,26 @@ RexxMethod1(RexxObjectPtr, psp_initTemplate, CSELF, pCSelf)
 }
 
 
+/** PropertySheetPage::setSize()
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, psp_setSize, RexxObjectPtr, size, CSELF, pCSelf)
+{
+    // TODO validate CSelf.
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+
+    PSIZE s = rxGetSize(context, size, 1);
+    if ( s != NULL )
+    {
+        pcpsp->cx = s->cx;
+        pcpsp->cy = s->cy;
+    }
+
+    return TheZeroObj;
+}
+
+
 
 
 /**
@@ -3251,76 +3578,6 @@ RexxMethod7(RexxObjectPtr, respspdlg_init, RexxStringObject, dllFile, RexxObject
 
 done_out:
     return result;
-}
-
-
-#if 0
-/**
- * The property sheet page callback function.  Seems like it would have some
- * good uses, but in reality does not provide much that is of use for the
- * ooDialog framework.
- *
- * The thread attach is better done somewhere else.
- *
- * Temporarily saving the code.
- *
- *
- * @param hwnd  Reserved by MS, always NULL.
- * @param uMsg
- * @param ppsp
- *
- * @return UINT CALLBACK
- */
-UINT CALLBACK PropSheetPageCallBack(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
-{
-    pCPropertySheetPage pcpsp = (pCPropertySheetPage)ppsp->lParam;
-
-    switch ( uMsg )
-    {
-        case PSPCB_ADDREF:
-        {
-            // Called when a page is being created.
-
-            //printf("PSPCB_ADDREF pcpsp=%p threadID=%d \n", pcpsp, GetCurrentThreadId());
-
-            break;
-        }
-
-        case PSPCB_CREATE:
-            // Called when the dialog box for the page is being created.
-
-            printf("PSPCB_CREATE pcpsp=%p threadID=%d hDlg? %p\n", pcpsp, GetCurrentThreadId(), pcpsp->pcpbd->hDlg);
-
-            if ( pcpsp->dlgProcContext == NULL )
-            {
-                RexxThreadContext *context;
-                if ( pcpsp->interpreter->AttachThread(&context) )
-                {
-                    pcpsp->dlgProcContext = context;
-                    pcpsp->pcpbd->dlgProcContext = context;
-                    ((pCPropertySheetDialog)pcpsp->cppPropSheet)->dlgProcContext = context;
-                    RexxSetProcessMessages(FALSE);
-                }
-            }
-
-            return TRUE;
-
-        case PSPCB_RELEASE:
-            // Called when the page is being destroyed
-
-            //printf("PSPCB_RELEASE pcpsp=%p threadID=%d hDlg? %p hCurrent=%p\n", pcpsp, GetCurrentThreadId(), pcpsp->pcpbd->hDlg,
-            //       PropSheet_GetCurrentPageHwnd(((pCPropertySheetDialog)pcpsp->cppPropSheet)->hDlg));
-
-            if ( pcpsp->dlgProcContext != NULL )
-            {
-                pcpsp->dlgProcContext->DetachThread();
-                pcpsp->dlgProcContext = NULL;
-                pcpsp->pcpbd->dlgProcContext = NULL;
-                ((pCPropertySheetDialog)pcpsp->cppPropSheet)->dlgProcContext = NULL;
-            }
-            break;
     }
-    return 0;
-}
-#endif
+
 

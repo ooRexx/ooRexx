@@ -244,7 +244,8 @@ static bool setMultiListBoxSelections(HWND hDlg, ULONG id, const char * data)
         SendDlgItemMessage(hDlg, id, LB_SETSEL, (WPARAM)FALSE, (LPARAM)j);
     }
 
-    // Now set the items passed to us as selected.
+    // Now set the items passed to us as selected.  Note that the empty string
+    // results in no items selected.
     while ( (p) && (*p) )
     {
         buffer[0] = '\0';
@@ -288,18 +289,49 @@ static bool getListBoxData(HWND hwnd, uint32_t itemID, char *data)
     }
 }
 
+/**
+ * Sets the 'data' in a single selection or multiple selection list box.  For
+ * single selection list boxes, the 'data' is considered to be the text of an
+ * item.  For multiple selection the 'data' is considered to be the indexs.
+ *
+ * @param hwnd
+ * @param itemID
+ * @param itemText
+ *
+ * @return bool
+ *
+ * @remarks  Prior to 4.1.0 there was no way to start a dialog with no item
+ *           selected in a single selection list box.  Which was annoying.  To
+ *           fix that we check if itemText is exactly the string "0".  If so, we
+ *           make sure no item is selected.  (Once the dialog is initialized,
+ *           the deselectIndex() method can be used to ensure no item is
+ *           selected.)
+ */
 static bool setListBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
 {
     if ( isSingleSelectionListBox(hwnd, itemID) )
     {
-        LRESULT result = SendDlgItemMessage(hwnd, itemID, LB_FINDSTRING, 0, (LPARAM)itemText);
-        if ( result != LB_ERR)
+        LRESULT result;
+
+        if ( strcmp(itemText, "0") == 0 )
         {
-           result = SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, result, 0);
+            SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, -1, 0);
+            result = LB_OKAY;
         }
-        if ( result == LB_ERR )
+        else
         {
-            SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, 0, 0);
+            result = SendDlgItemMessage(hwnd, itemID, LB_FINDSTRING, 0, (LPARAM)itemText);
+            if ( result != LB_ERR)
+            {
+               result = SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, result, 0);
+            }
+
+            // If we have, or still have an error at this point, try to select
+            // the first itme.
+            if ( result == LB_ERR )
+            {
+                SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, 0, 0);
+            }
         }
         return result != LB_ERR;
     }

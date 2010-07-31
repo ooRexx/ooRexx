@@ -373,8 +373,11 @@ REXX_METHOD_PROTOTYPE(psdlg_getPage);
 REXX_METHOD_PROTOTYPE(psdlg_changed);
 REXX_METHOD_PROTOTYPE(psdlg_unchanged);
 REXX_METHOD_PROTOTYPE(psdlg_indexToID);
+REXX_METHOD_PROTOTYPE(psdlg_indexToHandle);
+REXX_METHOD_PROTOTYPE(psdlg_pressButton);
 REXX_METHOD_PROTOTYPE(psdlg_setWizButtons);
 REXX_METHOD_PROTOTYPE(psdlg_showWizButtons);
+REXX_METHOD_PROTOTYPE(psdlg_querySiblings);
 REXX_METHOD_PROTOTYPE(psdlg_test);
 
 // PropertySheetPage
@@ -391,6 +394,7 @@ REXX_METHOD_PROTOTYPE(psp_getWantNotification);
 REXX_METHOD_PROTOTYPE(psp_setWantNotification);
 REXX_METHOD_PROTOTYPE(psp_init_propertySheetPage);
 REXX_METHOD_PROTOTYPE(psp_initTemplate);
+REXX_METHOD_PROTOTYPE(psp_setSize);
 
 // ResPSPDialog
 REXX_METHOD_PROTOTYPE(respspdlg_init);
@@ -1072,8 +1076,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(psdlg_changed,                  psdlg_changed),
     REXX_METHOD(psdlg_unchanged,                psdlg_unchanged),
     REXX_METHOD(psdlg_indexToID,                psdlg_indexToID),
+    REXX_METHOD(psdlg_indexToHandle,            psdlg_indexToHandle),
+    REXX_METHOD(psdlg_pressButton,              psdlg_pressButton),
     REXX_METHOD(psdlg_setWizButtons,            psdlg_setWizButtons),
     REXX_METHOD(psdlg_showWizButtons,           psdlg_showWizButtons),
+    REXX_METHOD(psdlg_querySiblings,            psdlg_querySiblings),
     REXX_METHOD(psdlg_test,                     psdlg_test),
 
     // PropertySheetPage
@@ -1090,6 +1097,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(psp_setWantNotification,        psp_setWantNotification),
     REXX_METHOD(psp_init_propertySheetPage,     psp_init_propertySheetPage),
     REXX_METHOD(psp_initTemplate,               psp_initTemplate),
+    REXX_METHOD(psp_setSize,                    psp_setSize),
 
     // UserPSPDialog
     REXX_METHOD(userpspdlg_init,                userpspdlg_init),

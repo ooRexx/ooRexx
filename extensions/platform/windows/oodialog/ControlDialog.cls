@@ -160,7 +160,13 @@
 ::method unchanged unguarded external "LIBRARY oodialog psdlg_unchanged"
 ::method setWizButtons unguarded external "LIBRARY oodialog psdlg_setWizButtons"
 ::method showWizButtons unguarded external "LIBRARY oodialog psdlg_showWizButtons"
+::method pressButton unguarded external "LIBRARY oodialog psdlg_pressButton"
+
+::method querySiblings external "LIBRARY oodialog psdlg_querySiblings"
+
 ::method indexToID external "LIBRARY oodialog psdlg_indexToID"
+::method indexToHwnd external "LIBRARY oodialog psdlg_indexToHandle"
+::method indexToPage external "LIBRARY oodialog psdlg_indexToHandle"
 
 
 ::method test unguarded external "LIBRARY oodialog psdlg_test"
@@ -175,7 +181,7 @@
 
 ::method init class external "LIBRARY oodialog psp_init_cls"
 
-::attribute propSheet get external "LIBRARY oodialog psp_propSheet_atr"
+::attribute propSheet get unguarded external "LIBRARY oodialog psp_propSheet_atr"
 ::attribute wasActivated get external "LIBRARY oodialog psp_wasActivated_atr"
 
 ::attribute cx get external "LIBRARY oodialog psp_getcx"
@@ -208,6 +214,8 @@
 ::method init_propertySheetPage private external "LIBRARY oodialog psp_init_propertySheetPage"  -- Not to be documented
 ::method initTemplate external "LIBRARY oodialog psp_initTemplate"                              -- Not to be documented
 
+::method setSize external "LIBRARY oodialog psp_setSize"
+
 ::method execute unguarded
     self~initDialog
     if self~useStem then self~setDataStem(self~dlgData)
@@ -225,6 +233,14 @@
 
     self~finished = .true
     self~stopIt
+
+::method pageCreate unguarded
+    use strict arg
+    return .true
+
+::method queryFromSibling unguarded
+    use strict arg arg1, arg2, propSheet
+    return 0
 
 ::method getObject unguarded
     return 0

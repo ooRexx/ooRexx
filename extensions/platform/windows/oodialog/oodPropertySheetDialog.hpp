@@ -39,6 +39,7 @@
 #define oodPropertySheetDialog_Included
 
 
+// PSN_* notification method names
 #define TRANSLATEACCELERATOR_MSG    "translateAccelerator"
 #define SETACTIVE_MSG               "setActive"
 #define WIZBACK_MSG                 "wizBack"
@@ -51,6 +52,13 @@
 #define APPLY_MSG                   "apply"
 #define GETOBJECT_MSG               "getObject"
 #define HELP_MSG                    "help"
+
+// PSM_* message methods names.  Really, it is likely there will only be the one.
+#define QUERYFROMSIBLING_MSG        "queryFromSibling"
+
+// Property Sheet Page callback method names
+#define PAGECREATE_MSG              "pageCreate"
+
 
 #define MAX_PROPSHEET_DIALOGS        5
 
