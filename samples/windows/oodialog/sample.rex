@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -80,7 +80,7 @@
    self~installBitmapButton(105, "WALKER",   "bmp\s2walker.bmp",,,,"FRAME STRETCH")
    self~installBitmapButton(106, "BANDIT",   "bmp\s2jack.bmp"  ,,,,"FRAME STRETCH")
    self~installBitmapButton(107, "USER",     "bmp\s2input.bmp" ,,,,"FRAME STRETCH")
-   self~installBitmapButton(108, "CATEGORY", "bmp\s2mov.bmp"   ,,,,"FRAME STRETCH")
+   self~installBitmapButton(108, "WIZ97",    "bmp\s2mov.bmp"   ,,,,"FRAME STRETCH")
    self~installBitmapButton(109, "TREE",     "bmp\s2tree.bmp"  ,,,,"FRAME STRETCH")
    self~installBitmapButton(110, "LIST",     "bmp\s2list.bmp"  ,,,,"FRAME STRETCH")
    self~installBitmapButton(111, "PROGRESS", "bmp\s2prog.bmp"  ,,,,"FRAME STRETCH")
@@ -108,8 +108,8 @@
 ::method user
    self~loadapp("oostddlg.rex", 2800)
 
-::method category
-   self~loadapp("ooticket.rex")
+::method wiz97
+   self~loadapp("ticketWizard.rex")
 
 ::method tree
    self~loadapp("oodtree.rex")
