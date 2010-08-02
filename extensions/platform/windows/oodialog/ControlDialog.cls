@@ -117,7 +117,9 @@
 ::class 'PropertySheetDialog' public subclass PlainBaseDialog
 
 -- WM_USER == 0x400
--- ::constant PSM_INDEXTOID             "0x0486"
+::constant PSM_REBOOTSYSTEM             "0x046A"
+::constant PSM_RESTARTWINDOWS           "0x0469"
+::constant PSM_RECALCPAGESIZES          "0x0488"
 
 
 ::attribute pages get unguarded external "LIBRARY oodialog psdlg_getPages_atr"
@@ -151,23 +153,50 @@
 
 ::method initDialog unguarded
   return 0
-
 ::method execute external "LIBRARY oodialog psdlg_execute"
 ::method popup external "LIBRARY oodialog psdlg_popup"
-
 ::method getPage unguarded external "LIBRARY oodialog psdlg_getPage"
+
+::method add unguarded external "LIBRARY oodialog psdlg_addPage"
+::method apply unguarded external "LIBRARY oodialog psdlg_apply"
+::method cancelToClose unguarded external "LIBRARY oodialog psdlg_cancelToClose"
 ::method changed unguarded external "LIBRARY oodialog psdlg_changed"
-::method unchanged unguarded external "LIBRARY oodialog psdlg_unchanged"
+::method getCurrentPageHwnd unguarded external "LIBRARY oodialog psdlg_getCurrentPageHwnd"
+::method getResult unguarded external "LIBRARY oodialog psdlg_getResult"
+::method getTabControl unguarded external "LIBRARY oodialog psdlg_getTabControl"
+::method hwndToIndex unguarded external "LIBRARY oodialog psdlg_hwndToIndex"
+::method idToIndex unguarded external "LIBRARY oodialog psdlg_idToIndex"
+::method indexToHwnd unguarded external "LIBRARY oodialog psdlg_indexToHandle"
+::method indexToID unguarded external "LIBRARY oodialog psdlg_indexToID"
+::method indexToPage unguarded external "LIBRARY oodialog psdlg_indexToHandle"
+::method pageToIndex unguarded external "LIBRARY oodialog psdlg_pageToIndex"
+::method pressButton unguarded external "LIBRARY oodialog psdlg_pressButton"
+::method querySiblings unguarded external "LIBRARY oodialog psdlg_querySiblings"
+
+::method rebootSystem unguarded
+   use strict arg
+   self~sendWinIntMsg(self~PSM_REBOOTSYSTEM, 0, 0)
+   return 0
+
+::method recalcPageSizes unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~PSM_RECALCPAGESIZES, 0, 0) != 0
+
+::method restartWindows unguarded
+   use strict arg
+   self~sendWinIntMsg(self~PSM_RESTARTWINDOWS, 0, 0)
+   return 0
+
+::method setCurSel unguarded external "LIBRARY oodialog psdlg_setCurSel"
+::method setCurSelByID unguarded external "LIBRARY oodialog psdlg_setCurSelByID"
+::method setFinishText unguarded external "LIBRARY oodialog psdlg_setButtonText"
+::method setHeaderSubTitle unguarded external "LIBRARY oodialog psdlg_resetPageText"
+::method setHeaderTitle unguarded external "LIBRARY oodialog psdlg_resetPageText"
+::method setNextText unguarded external "LIBRARY oodialog psdlg_setButtonText"
+::method setTitle unguarded external "LIBRARY oodialog psdlg_setTitle"
 ::method setWizButtons unguarded external "LIBRARY oodialog psdlg_setWizButtons"
 ::method showWizButtons unguarded external "LIBRARY oodialog psdlg_showWizButtons"
-::method pressButton unguarded external "LIBRARY oodialog psdlg_pressButton"
-
-::method querySiblings external "LIBRARY oodialog psdlg_querySiblings"
-
-::method indexToID external "LIBRARY oodialog psdlg_indexToID"
-::method indexToHwnd external "LIBRARY oodialog psdlg_indexToHandle"
-::method indexToPage external "LIBRARY oodialog psdlg_indexToHandle"
-
+::method unchanged unguarded external "LIBRARY oodialog psdlg_unchanged"
 
 ::method test unguarded external "LIBRARY oodialog psdlg_test"
 
@@ -182,6 +211,7 @@
 ::method init class external "LIBRARY oodialog psp_init_cls"
 
 ::attribute propSheet get unguarded external "LIBRARY oodialog psp_propSheet_atr"
+::attribute pageID get external "LIBRARY oodialog psp_pageID_atr"
 ::attribute wasActivated get external "LIBRARY oodialog psp_wasActivated_atr"
 
 ::attribute cx get external "LIBRARY oodialog psp_getcx"

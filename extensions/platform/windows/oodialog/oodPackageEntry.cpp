@@ -370,19 +370,34 @@ REXX_METHOD_PROTOTYPE(psdlg_init);
 REXX_METHOD_PROTOTYPE(psdlg_execute);
 REXX_METHOD_PROTOTYPE(psdlg_popup);
 REXX_METHOD_PROTOTYPE(psdlg_getPage);
+REXX_METHOD_PROTOTYPE(psdlg_addPage);
+REXX_METHOD_PROTOTYPE(psdlg_apply);
+REXX_METHOD_PROTOTYPE(psdlg_cancelToClose);
 REXX_METHOD_PROTOTYPE(psdlg_changed);
-REXX_METHOD_PROTOTYPE(psdlg_unchanged);
+REXX_METHOD_PROTOTYPE(psdlg_getCurrentPageHwnd);
+REXX_METHOD_PROTOTYPE(psdlg_getTabControl);
+REXX_METHOD_PROTOTYPE(psdlg_hwndToIndex);
+REXX_METHOD_PROTOTYPE(psdlg_idToIndex);
+REXX_METHOD_PROTOTYPE(psdlg_getResult);
 REXX_METHOD_PROTOTYPE(psdlg_indexToID);
 REXX_METHOD_PROTOTYPE(psdlg_indexToHandle);
+REXX_METHOD_PROTOTYPE(psdlg_pageToIndex);
 REXX_METHOD_PROTOTYPE(psdlg_pressButton);
+REXX_METHOD_PROTOTYPE(psdlg_setCurSel);
+REXX_METHOD_PROTOTYPE(psdlg_setCurSelByID);
+REXX_METHOD_PROTOTYPE(psdlg_resetPageText);
+REXX_METHOD_PROTOTYPE(psdlg_setTitle);
 REXX_METHOD_PROTOTYPE(psdlg_setWizButtons);
 REXX_METHOD_PROTOTYPE(psdlg_showWizButtons);
 REXX_METHOD_PROTOTYPE(psdlg_querySiblings);
+REXX_METHOD_PROTOTYPE(psdlg_setButtonText);
+REXX_METHOD_PROTOTYPE(psdlg_unchanged);
 REXX_METHOD_PROTOTYPE(psdlg_test);
 
 // PropertySheetPage
 REXX_METHOD_PROTOTYPE(psp_init_cls);
 REXX_METHOD_PROTOTYPE(psp_propSheet_atr);
+REXX_METHOD_PROTOTYPE(psp_pageID_atr);
 REXX_METHOD_PROTOTYPE(psp_wasActivated_atr);
 REXX_METHOD_PROTOTYPE(psp_setResources_atr);
 REXX_METHOD_PROTOTYPE(psp_setTabIcon_atr);
@@ -1073,19 +1088,34 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(psdlg_execute,                  psdlg_execute),
     REXX_METHOD(psdlg_popup,                    psdlg_popup),
     REXX_METHOD(psdlg_getPage,                  psdlg_getPage),
+    REXX_METHOD(psdlg_addPage,                  psdlg_addPage),
+    REXX_METHOD(psdlg_apply,                    psdlg_apply),
+    REXX_METHOD(psdlg_cancelToClose,            psdlg_cancelToClose),
     REXX_METHOD(psdlg_changed,                  psdlg_changed),
-    REXX_METHOD(psdlg_unchanged,                psdlg_unchanged),
+    REXX_METHOD(psdlg_getCurrentPageHwnd,       psdlg_getCurrentPageHwnd),
+    REXX_METHOD(psdlg_getTabControl,            psdlg_getTabControl),
+    REXX_METHOD(psdlg_getResult,                psdlg_getResult),
+    REXX_METHOD(psdlg_hwndToIndex,              psdlg_hwndToIndex),
+    REXX_METHOD(psdlg_idToIndex,                psdlg_idToIndex),
     REXX_METHOD(psdlg_indexToID,                psdlg_indexToID),
     REXX_METHOD(psdlg_indexToHandle,            psdlg_indexToHandle),
+    REXX_METHOD(psdlg_pageToIndex,              psdlg_pageToIndex),
     REXX_METHOD(psdlg_pressButton,              psdlg_pressButton),
+    REXX_METHOD(psdlg_setCurSel,                psdlg_setCurSel),
+    REXX_METHOD(psdlg_setCurSelByID,            psdlg_setCurSelByID),
     REXX_METHOD(psdlg_setWizButtons,            psdlg_setWizButtons),
     REXX_METHOD(psdlg_showWizButtons,           psdlg_showWizButtons),
     REXX_METHOD(psdlg_querySiblings,            psdlg_querySiblings),
+    REXX_METHOD(psdlg_resetPageText,            psdlg_resetPageText),
+    REXX_METHOD(psdlg_setTitle,                 psdlg_setTitle),
+    REXX_METHOD(psdlg_setButtonText,            psdlg_setButtonText),
+    REXX_METHOD(psdlg_unchanged,                psdlg_unchanged),
     REXX_METHOD(psdlg_test,                     psdlg_test),
 
     // PropertySheetPage
     REXX_METHOD(psp_init_cls,                   psp_init_cls),
     REXX_METHOD(psp_propSheet_atr,              psp_propSheet_atr),
+    REXX_METHOD(psp_pageID_atr,                 psp_pageID_atr),
     REXX_METHOD(psp_wasActivated_atr,           psp_wasActivated_atr),
     REXX_METHOD(psp_setResources_atr,           psp_setResources_atr),
     REXX_METHOD(psp_setTabIcon_atr,             psp_setTabIcon_atr),

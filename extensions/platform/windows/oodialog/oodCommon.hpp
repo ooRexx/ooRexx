@@ -66,9 +66,10 @@ typedef map<string, int, less<string> > String2Int;
 // ooDialog return codes for special purposes, including some int32_t codes
 // where -1 and greater is valid.
 #define OOD_ID_EXCEPTION            0xFFFFFFF7   // -9
+#define OOD_INVALID_ITEM_ID         0xFFFFFFF7   // Rewording of OOD_ID_EXCEPTION
 #define OOD_BAD_WIDTH_EXCEPTION     0xFFFFFFF8   // -8
 #define OOD_MEMORY_ERR              0xFFFFFFF9   // -7
-#define OOD_INVALID_ITEM_ID         0xFFFFFFF7   // Rewording of OOD_ID_EXCEPTION
+#define OOD_NO_VALUE                0xFFFFFFFA   // -6
 #define OOD_NO_ERROR                0
 #define OOD_DATATABLE_FULL          1
 

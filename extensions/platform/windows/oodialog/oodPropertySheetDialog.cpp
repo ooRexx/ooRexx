@@ -54,8 +54,9 @@
 #include "oodDeviceGraphics.hpp"
 #include "oodData.hpp"
 #include "oodResources.hpp"
-#include "oodPropertySheetDialog.hpp"
 #include "oodResourceIDs.hpp"
+#include "oodControl.hpp"
+#include "oodPropertySheetDialog.hpp"
 
 
 PROPSHEETHOOKDATA *PropSheetHookData[MAX_PROPSHEET_DIALOGS];
@@ -518,6 +519,56 @@ INT_PTR getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr ima
         }
     }
     return result;
+}
+
+
+/**
+ * A generic function used to set the title, or header titel, or header subtitle
+ * text for a property sheet page.
+ *
+ * These text strings can be set before the property sheet is created.  But they
+ * can also be changed after the property sheet begins execution.  Because of
+ * this, the function is called from both a property sheet method context and a
+ * property sheet page context.
+ *
+ * When replacing already existing text, the old text needs to be freed.  During
+ * delDialog for a property sheet page, the existing text is freed.
+ *
+ * @param c
+ * @param pcpsp
+ * @param text
+ * @param part
+ *
+ * @return bool
+ */
+bool setPageText(RexxMethodContext *c, pCPropertySheetPage pcpsp, CSTRING text, pagePart_t part)
+{
+    char *t = (char *)LocalAlloc(LPTR, strlen(text) + 1);
+    if ( t == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+
+    strcpy(t, text);
+
+    switch ( part )
+    {
+        case headerSubtext :
+            safeLocalFree(pcpsp->headerSubTitle);
+            pcpsp->headerSubTitle = t;
+            break;
+        case headerText :
+            safeLocalFree(pcpsp->headerTitle);
+            pcpsp->headerTitle = t;
+            break;
+        case pageText :
+            safeLocalFree(pcpsp->pageTitle);
+            pcpsp->pageTitle = t;
+            break;
+    }
+
+    return true;
 }
 
 
@@ -1153,6 +1204,7 @@ DWORD WINAPI PropSheetLoopThread(void *arg)
         }
         if ( PropSheet_GetCurrentPageHwnd(hPropSheet) == NULL )
         {
+            pcpsd->getResultValue = (int)PropSheet_GetResult(hPropSheet);
             break;
         }
     }
@@ -1543,6 +1595,12 @@ void CALLBACK PropSheetCallback(HWND hwndPropSheet, UINT uMsg, LPARAM lParam)
  * @param ppsp
  *
  * @return UINT CALLBACK
+ *
+ * @remarks  The property sheet page thread context is assigned during the
+ *           creation of the property sheet, on the thread where the property
+ *           sheet is created.  Since the property sheet is created before any
+ *           of the pages are created, the dlgProcContext for the page can not
+ *           be null.
  */
 uint32_t CALLBACK PropSheetPageCallBack(HWND hwnd, uint32_t msg, LPPROPSHEETPAGE ppsp)
 {
@@ -1551,12 +1609,6 @@ uint32_t CALLBACK PropSheetPageCallBack(HWND hwnd, uint32_t msg, LPPROPSHEETPAGE
     if ( msg == PSPCB_CREATE )
     {
         RexxThreadContext *c = pcpsp->dlgProcContext;
-
-        if ( pcpsp->dlgProcContext == NULL )
-        {
-            pcpsp->interpreter->AttachThread(&c);
-        }
-
         uint32_t reply = TRUE;
 
         if ( c != NULL )
@@ -1784,6 +1836,7 @@ uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROP
     }
     return flag;
 }
+
 
 /**
  * Allocates the memory for the property sheet page structs and fills in the
@@ -2020,7 +2073,7 @@ HWND getValidPageHwnd(RexxMethodContext *c, pCPropertySheetDialog pcpsd, RexxObj
     if ( hPage == NULL )
     {
         noWindowsPageException(c, dlgToPSPCSelf(c, page)->pageNumber + 1, pos);
-}
+    }
 
     return hPage;
 }
@@ -2346,6 +2399,7 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
 
     pcpsd->cppPages = cppPages;
     pcpsd->rexxPages = rexxPages;
+    pcpsd->getResultValue = OOD_NO_VALUE;
 
     // Set the pages attribute object variable so that the Rexx pages object is
     // not garbage collected.
@@ -2371,7 +2425,6 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
         result = 0;
     }
 
-
 done_out:
     pcpbd->wndBase->initCode = result;
     return result;
@@ -2388,6 +2441,8 @@ done_out:
  *
  *  @notes  Raises an exception if index is not correct.
  *
+ *  @remarks  This method is not an interface to a PSM_x message, it is a helper
+ *            function for ooDialog programmers.
  */
 RexxMethod2(RexxObjectPtr, psdlg_getPage, uint32_t, index, CSELF, pCSelf)
 {
@@ -2542,6 +2597,25 @@ err_out:
 }
 
 
+/** PropertySheetDialog::addPage()
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_addPage, RexxObjectPtr, _page, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    RexxObjectPtr result = TheFalseObj;
+
+    if ( ! requiredClass(context->threadContext, _page, "PROPERTYSHEETPAGE", 1) )
+    {
+        goto done_out;
+    }
+
+done_out:
+    return result;
+}
+
+
 /** PropertySheetDialog::changed()
  *
  */
@@ -2668,6 +2742,129 @@ RexxMethod3(RexxObjectPtr, psdlg_showWizButtons, CSTRING, opts, CSTRING, optsBut
     return TheTrueObj;
 }
 
+
+/** PropertySheetDialog::apply()
+ *
+ *  Simulates the selection of the Apply button, indicating that one or more
+ *  pages have changed and the changes need to be validated and recorded.
+ *
+ */
+RexxMethod1(RexxObjectPtr, psdlg_apply, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    return PropSheet_Apply(pcpsd->hDlg) ? TheTrueObj : TheFalseObj;
+}
+
+
+/** PropertySheetDialog::cancelToClose()
+ *
+ *  Used when changes made since the most recent PSN_APPLY notification cannot
+ *  be canceled.
+ *
+ */
+RexxMethod1(RexxObjectPtr, psdlg_cancelToClose, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    PropSheet_CancelToClose(pcpsd->hDlg);
+    return TheZeroObj;
+}
+
+
+/** PropertySheetDialog::getCurrentPageHwnd()
+ *
+ *  Retrieves a handle to the window of the current page of a property sheet.
+ *
+ */
+RexxMethod1(RexxObjectPtr, psdlg_getCurrentPageHwnd, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    return pointer2string(context, PropSheet_GetCurrentPageHwnd(pcpsd->hDlg));
+}
+
+
+/** PropertySheetDialog::getResult()
+ *
+ *  Used by modeless property sheets to retrieve the same information returned
+ *  to modal property sheets.
+ *
+ */
+RexxMethod1(RexxObjectPtr, psdlg_getResult, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    RexxObjectPtr result;
+    switch ( pcpsd->getResultValue )
+    {
+        case -1 :
+            result = TheNegativeOneObj;
+            break;
+        case ID_PSRESTARTWINDOWS :
+            result = context->String("RESTARTWINDOWS");
+            break;
+        case ID_PSREBOOTSYSTEM :
+            result = context->String("REBOOTSYSTEM");
+            break;
+        case 0 :
+            result = TheZeroObj;
+            break;
+        default :
+            result = TheNilObj;
+            break;
+    }
+    return result;
+}
+
+
+/** PropertySheetDialog::getTabControl()
+ *
+ *  Retrieves the Rexx tab control object for the tab control of the property
+ *  sheet.
+ *
+ */
+RexxMethod1(RexxObjectPtr, psdlg_getTabControl, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    return createControlFromHwnd(context, pcpsd->pcpbd, PropSheet_GetTabControl(pcpsd->hDlg), winTab);
+}
+
+
+/** PropertySheetDialog::hwndToIndex()
+ *
+ *  Takes a window handle of the property sheet page and returns its one-based
+ *  index.
+ *
+ *  @param  hwnd  The window handle of a property sheet page.
+ *
+ *  @return  The one-based index of the page on success, or 0 on error.
+ */
+RexxMethod2(uint32_t, psdlg_hwndToIndex, POINTERSTRING, hwnd, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    int index = PropSheet_HwndToIndex(pcpsd->hDlg, hwnd);
+    return ++index;
+}
+
+
+/** PropertySheetDialog::idToIndex()
+ *
+ *  Takes a property sheet page ID and returns its one-based index.
+ *
+ *  @param  id  The property sheet page ID.
+ *
+ *  @return  The one-based index of the page on success, or 0 on error.
+ */
+RexxMethod2(uint32_t, psdlg_idToIndex, POINTER, id, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    int index = PropSheet_IdToIndex(pcpsd->hDlg, id);
+    return ++index;
+}
+
+
 /** PropertySheetDialog::indexToID()
  *
  *  Given the index of a page, returns its ID.
@@ -2687,15 +2884,14 @@ RexxMethod3(RexxObjectPtr, psdlg_showWizButtons, CSTRING, opts, CSTRING, optsBut
  *
  *  @return  The proper page ID for the index.
  *
- *  @notes  A syntax condition is raised if the index is out of range, or 0 or
- *          -1.
+ *  @notes  A syntax condition is raised if the index is not -1, 0, or within
+ *          the range of existing pages.
  *
  *  @remarks  In Windows the page id is either the resource ID of the dialog for
- *            a dialog template bound to an executable, or the point to the
+ *            a dialog template bound to an executable, or the pointer to the
  *            in-memory template for a dynamically constructed template.  We
  *            keep track of the proper id when the template is used and return
  *            it here to the programmer when requested.
- *
  */
 RexxMethod2(RexxObjectPtr, psdlg_indexToID, int32_t, index, CSELF, pCSelf)
 {
@@ -2768,6 +2964,23 @@ RexxMethod3(RexxObjectPtr, psdlg_indexToHandle, int, index, NAME, method, CSELF,
 }
 
 
+/** PropertySheetDialog::pageToIndex()
+ *
+ *  Takes the handle of a property sheet page and returns its one-based index.
+ *
+ *  @param  hPage  The handle of a property sheet page.
+ *
+ *  @return  The one-based index of the page on success, or 0 on error.
+ */
+RexxMethod2(uint32_t, psdlg_pageToIndex, POINTER, hPage, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    int index = PropSheet_HwndToIndex(pcpsd->hDlg, hPage);
+    return ++index;
+}
+
+
 /** PropertySheetDialog::pressButton()
  *
  *
@@ -2803,7 +3016,245 @@ RexxMethod2(RexxObjectPtr, psdlg_pressButton, CSTRING, button, CSELF, pCSelf)
 RexxMethod3(int32_t, psdlg_querySiblings, RexxObjectPtr, wParam, RexxObjectPtr, lParam, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-    return PropSheet_QuerySiblings(pcpsd->hDlg, (WPARAM)wParam, (LPARAM)lParam);
+    return (int32_t)PropSheet_QuerySiblings(pcpsd->hDlg, (WPARAM)wParam, (LPARAM)lParam);
+}
+
+
+/** PropertySheetDialog::setCurSel()
+ *
+ *  Activates the specified page in a property sheet.
+ *
+ *  @param  hPage  [OPTIONAL] The property sheet page handle.
+ *  @param  index  [OPTIONAL] The one-based page index.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @notes The property sheet page to active can be specified by either the
+ *         property sheet page handle, or the page index, or both.  If both are
+ *         specified, the property sheet page handle takes precedence.
+ *
+ *         Although both arguments are optional, they are optional individually.
+ *         At least one of the arguments must be specified or a condition is
+ *         raised.  In addition, if the index argument is used to specify the
+ *         page is not a valid index, a condition is raised.
+ */
+RexxMethod3(RexxObjectPtr, psdlg_setCurSel, OPTIONAL_POINTER, hPage, OPTIONAL_int32_t, index, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    RexxObjectPtr result = TheFalseObj;
+
+    if ( argumentExists(1) )
+    {
+        result = PropSheet_SetCurSel(pcpsd->hDlg, (HPROPSHEETPAGE)hPage, NULL) ? TheTrueObj : TheFalseObj;
+    }
+    else
+    {
+        if ( argumentOmitted(2) )
+        {
+            missingArgException(context->threadContext, 2);
+            goto done_out;
+        }
+
+        int max = (int)pcpsd->pageCount;
+
+        if ( index < 1 || index > max )
+        {
+            wrongRangeException(context->threadContext, 2, 1, max, index);
+            goto done_out;
+        }
+
+        index--;
+        result = PropSheet_SetCurSel(pcpsd->hDlg, NULL, index) ? TheTrueObj : TheFalseObj;
+    }
+
+done_out:
+    return result;
+}
+
+
+/** PropertySheetDialog::setCurSelByID()
+ *
+ *  Activates the specified page in a property sheet.
+ *
+ *  @param  id  The property sheet page ID.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @notes The property sheet page ID can be obtained using the indexToID()
+ *         method.  Do not confuse a page ID with a page handle, they are 2
+ *         separate things.  The only way for the Rexx programmer to obtain the
+ *         page ID is through indexToID().
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setCurSelByID, POINTER, id, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    RexxObjectPtr result = PropSheet_SetCurSelByID(pcpsd->hDlg, id) ? TheTrueObj : TheFalseObj;
+    return result;
+}
+
+
+/** PropertySheetDialog::setFinishText()
+ *
+ *  Sets the text of the Finish button in a wizard, shows and enables the
+ *  button, and hides the Next and Back buttons.
+ *
+ *  @param  text  The text for the Finish button.
+ *
+ *  @return  0, always.
+ *
+/** PropertySheetDialog::setNextText()
+ *
+ *  Sets the text of the Next button in a wizard.
+ *
+ *  @param  text  The text for the Next button.
+ *
+ *  @return  0, always.
+ *
+ */
+RexxMethod3(RexxObjectPtr, psdlg_setButtonText, CSTRING, text, NAME, method, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( *(method + 3) == 'F' )
+    {
+        PropSheet_SetFinishText(pcpsd->hDlg, text);
+    }
+    else
+    {
+        PropSheet_SetNextText(pcpsd->hDlg, text);
+    }
+    return TheZeroObj;
+}
+
+
+#if 0
+/** PropertySheetDialog::setHeaderBitmap()
+ *
+ *  The property sheet PropSheet_SetHeaderBitmap and
+ *  PropSheet_SetHeaderBitmapResource macros are apparently not implemented.  I
+ *  wrote this code before discovering that.  Going to save the code for future
+ *  use.
+ */
+RexxMethod3(RexxObjectPtr, psdlg_setHeaderBitmap, uint32_t, index, RexxObjectPtr, bitmap, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( ! requiredOS(context, "setHeaderBitmap", "Vista", Vista_OS) || pcpsd->isNotWizard )
+    {
+        goto done_out;
+    }
+
+    uint32_t max = (uint32_t)pcpsd->pageCount;
+
+    if ( index < 1 || index > max )
+    {
+        wrongRangeException(context->threadContext, 1, 1, max, index);
+        goto done_out;
+    }
+
+    index--;
+
+    POODIMAGE oodImage = rxGetImageBitmap(context, bitmap, 2);
+    if ( oodImage == NULL )
+    {
+        goto done_out;
+    }
+
+    PropSheet_SetHeaderBitmap(pcpsd->hDlg, index, oodImage->hImage);
+
+done_out:
+    return TheZeroObj;
+}
+#endif
+
+
+/** PropertySheetDialog::setHeaderSubtitle()
+ *  PropertySheetDialog::setHeaderTitle()
+ *
+ *  Resets the text for a page in a property sheet wizard dialog.  These methods
+ *  are not available for Aero wizards
+ *
+ *  The same native function handles the setHeaderTitle() and
+ *  setHeaderSubtitle() methods.
+ *
+ *  @param  index    The one-based index of the page whose text is being
+ *                   changed.
+ *  @param  newText  New text for the page.
+ *
+ *  @return  Zero, always.
+ */
+RexxMethod4(RexxObjectPtr, psdlg_resetPageText, uint32_t, index, CSTRING, newText, NAME, method, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( pcpsd->isAeroWiz || pcpsd->isNotWizard )
+    {
+        goto done_out;
+    }
+
+    uint32_t max = (uint32_t)pcpsd->pageCount;
+
+    if ( index < 1 || index > max )
+    {
+        wrongRangeException(context->threadContext, 1, 1, max, index);
+        goto done_out;
+    }
+
+    pCPropertySheetPage pcpsp = pcpsd->cppPages[--index];
+
+    if ( *(method + 9) == 'S' )
+    {
+        if ( setPageText(context, pcpsp, newText, headerSubtext) )
+        {
+            PropSheet_SetHeaderSubTitle(pcpsd->hDlg, index, pcpsp->headerSubTitle);
+
+        }
+    }
+    else
+    {
+        if ( setPageText(context, pcpsp, newText, headerText) )
+        {
+            PropSheet_SetHeaderTitle(pcpsd->hDlg, index, pcpsp->headerTitle);
+
+        }
+    }
+
+done_out:
+    return TheZeroObj;
+}
+
+
+/** PropertySheetDialog::setTitle()
+ *
+ *  Sets the title for a property sheet dialog.  This method is not available
+ *  for Aero wizards, and does nothing in other wizards
+ *
+ *  @param  title             The title for the property sheet.
+ *  @param  addPropertiesFor  [OPTIONAL] If true the text "Properties for" is
+ *                            prefixed to the title.  If omitted or false, there
+ *                            is no text added.
+ *
+ *  @return  Zero, always.
+ *
+ *  @remarks  The MSDN documentation seems to indicate that this is valid for
+ *            wizards, but experimentation shows it does not work for any
+ *            wizard.
+ */
+RexxMethod3(RexxObjectPtr, psdlg_setTitle, CSTRING, title, OPTIONAL_logical_t, addPropertiesFor, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( pcpsd->isAeroWiz )
+    {
+        goto done_out;
+    }
+
+    PropSheet_SetTitle(pcpsd->hDlg, addPropertiesFor, title);
+
+done_out:
+    return TheZeroObj;
 }
 
 
@@ -2869,34 +3320,6 @@ bool initPropertySheetPage(RexxMethodContext *c, pCPlainBaseDialog pcpbd, pCDyna
     pcpbd->dlgPrivate = pcpsp;
 
     c->SendMessage1(self, "INIT_PROPERTYSHEETPAGE", obj);
-
-    return true;
-}
-
-
-bool setPageText(RexxMethodContext *c, pCPropertySheetPage pcpsp, CSTRING text, pagePart_t part)
-{
-    char *t = (char *)LocalAlloc(LPTR, strlen(text) + 1);
-    if ( t == NULL )
-    {
-        outOfMemoryException(c->threadContext);
-        return false;
-    }
-
-    strcpy(t, text);
-
-    switch ( part )
-    {
-        case headerSubtext :
-            pcpsp->headerSubTitle = t;
-            break;
-        case headerText :
-            pcpsp->headerTitle = t;
-            break;
-        case pageText :
-            pcpsp->pageTitle = t;
-            break;
-    }
 
     return true;
 }
@@ -3093,6 +3516,16 @@ RexxMethod1(RexxObjectPtr, psp_propSheet_atr, CSELF, pCSelf)
 {
     pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
     return pcpsp->rexxPropSheet;
+}
+
+
+/** PropertySheetPage::pageID()  [Attribute get]
+ *
+ */
+RexxMethod1(POINTER, psp_pageID_atr, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+    return (POINTER)pcpsp->pageID;
 }
 
 

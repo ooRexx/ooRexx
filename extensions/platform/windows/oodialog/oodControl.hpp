@@ -70,6 +70,7 @@ extern bool              dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime
 extern RexxStringObject  objectStateToString(RexxMethodContext *c, uint32_t state);
 extern RexxObjectPtr     createRexxControl(RexxMethodContext *, HWND, HWND, uint32_t, oodControl_t, RexxObjectPtr, bool, bool);
 extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *c, pCDialogControl pcdc, HWND hCtrl, oodControl_t type);
+extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hCtrl, oodControl_t type);
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081

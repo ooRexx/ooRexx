@@ -633,6 +633,7 @@ typedef struct _psdCSelf {
     char                *caption;
     size_t               pageCount;
     uint32_t             propSheetFlags;
+    int                  getResultValue;   // Storage for the return from PSM_GETRESULT
     bool                 modeless;
     bool                 isNotWizard;
     bool                 isWiz97;
