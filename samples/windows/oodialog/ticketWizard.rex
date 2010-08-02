@@ -1156,7 +1156,7 @@
   if count == 1 then ticketWord = "ticket"
   else ticketWord = count "tickets"
 
-  msg = "You can pick up your" ticketWord "now at the"   || doubleSpace || -
+  msg = "You can pick your" ticketWord "up now at the"   || doubleSpace || -
         smallTab || theaterFirst                         || doubleSpace || -
         "box office.  Or at"
 
