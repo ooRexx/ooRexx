@@ -754,21 +754,23 @@ inline bool isPropSheetMatch(LPCREATESTRUCT cs)
 }
 
 /**
- * Forces a modal property sheet dialog to end.  Setting each page's abort flag
+ * Forces a property sheet dialog to end.  Setting each page's abort flag
  * prevents the page from canceling the close.  We then programmatically press
  * the Cancel key.
  *
- * This would of course also work with modeless property sheet dialogs, but it
- * is not needed as DestroyWindow() works fine with modeless property sheets.
+ * This was originally intended only for modal propert sheetes.  Usually it is
+ * not needed with modeless property sheets as DestroyWindow() works fine,
+ * however there is no reason it can not be used with modeless property sheet
+ * dialogs.
  *
  * @param pcpsd
  * @param hDlg
  * @param t
  */
-void destroyModalPropSheet(pCPropertySheetDialog pcpsd, HWND hDlg, DlgProcErrType t)
+void abortPropertySheet(pCPropertySheetDialog pcpsd, HWND hDlg, DlgProcErrType t)
 {
-    size_t count = pcpsd->pageCount;
-    for ( size_t i = 0; i < count; i++ )
+    uint32_t count = pcpsd->pageCount;
+    for ( uint32_t i = 0; i < count; i++ )
     {
         pcpsd->cppPages[i]->abort = true;
     }
@@ -1766,8 +1768,8 @@ void assignPSDThreadContext(pCPropertySheetDialog pcpsd, RexxThreadContext *c)
 {
     pcpsd->dlgProcContext = c;
 
-    size_t count = pcpsd->pageCount;
-    for ( size_t i = 0; i < count; i++ )
+    uint32_t count = pcpsd->pageCount;
+    for ( uint32_t i = 0; i < count; i++ )
     {
         pcpsd->cppPages[i]->dlgProcContext = c;
         pcpsd->cppPages[i]->pcpbd->dlgProcContext = c;
@@ -1808,15 +1810,15 @@ bool psdInitSuper(RexxMethodContext *context, RexxClassObject super, RexxStringO
  *
  * @return uint32_t
  */
-uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROPSHEETPAGE *psp, size_t index)
+uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROPSHEETPAGE *psp, uint32_t index)
 {
     uint32_t flag = 0;
 
     if ( pcpsd->imageList != NULL )
     {
-        HICON hIcon = ImageList_GetIcon(pcpsd->imageList, (uint32_t)index, INDEXTOOVERLAYMASK((uint32_t)index) | ILD_NORMAL);
+        HICON hIcon = ImageList_GetIcon(pcpsd->imageList, index, INDEXTOOVERLAYMASK(index) | ILD_NORMAL);
 
-        psp[index].hIcon = hIcon;
+        psp->hIcon = hIcon;
         flag = PSP_USEHICON;
     }
     else
@@ -1825,16 +1827,107 @@ uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROP
 
         if ( pcpsp->hIcon != NULL )
         {
-            psp[index].hIcon = pcpsp->hIcon;
+            psp->hIcon = pcpsp->hIcon;
             flag = PSP_USEHICON;
         }
         else if ( pcpsp->iconID != 0 && (pcpsp->hInstance != NULL || pcpsp->pageType == oodResPSPDialog) )
         {
-            psp[index].pszIcon = MAKEINTRESOURCE(pcpsp->iconID);
+            psp->pszIcon = MAKEINTRESOURCE(pcpsp->iconID);
             flag = PSP_USEICONID;
         }
     }
     return flag;
+}
+
+
+/**
+ * Initializes a single PROPSHEETPAGE struct.
+ *
+ * @param c
+ * @param pcpsd
+ * @param psp
+ * @param i
+ *
+ * @return bool
+ *
+ * @remarks  On error, it is the caller's repsonsibility to clean up psp memory.
+ *
+ * @remarks  For ResDialogs, the user has to include all other resources, header
+ *           bitmap, etc., in the resource dll for the dialog.  But, for other
+ *           types of dialog pages the user can use a resource image for the
+ *           additional resources by using the resourceImage attribute.  When we
+ *           fill in the struct for a page we ignore the resourceImage attribute
+ *           if it is a ResDialog page.
+ */
+bool initPSP(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROPSHEETPAGE *psp, uint32_t i, bool isExteriorPage)
+    {
+        RexxObjectPtr       dlg   = pcpsd->rexxPages[i];
+        pCPropertySheetPage pcpsp = pcpsd->cppPages[i];
+        pCDynamicDialog     pcdd  = pcpsp->pcdd;
+        uint32_t            flags = pcpsp->pageFlags;
+    bool                success = false;
+
+        RexxObjectPtr result = c->SendMessage0(dlg, "INITTEMPLATE");
+        if ( result == TheFalseObj )
+        {
+            noWindowsPageDlgException(c, i + 1);
+            goto done_out;
+        }
+
+        psp->dwSize      = sizeof(PROPSHEETPAGE);
+        psp->pfnDlgProc  = (DLGPROC)RexxPropertySheetDlgProc;
+        psp->lParam      = (LPARAM)pcpsp;
+        psp->pfnCallback = PropSheetPageCallBack;
+
+    if ( pcpsp->pageTitle != NULL )
+        {
+            flags |= PSP_USETITLE;
+            psp->pszTitle = pcpsp->pageTitle;
+        }
+
+        if ( pcpsp->pageType == oodResPSPDialog )
+        {
+            psp->hInstance   = pcpsp->pcpbd->hInstance;
+            psp->pszTemplate = MAKEINTRESOURCE(pcpsp->resID);
+        }
+        else
+        {
+            flags |= PSP_DLGINDIRECT;
+            psp->pResource = (PROPSHEETPAGE_RESOURCE)pcdd->base;
+
+            if ( pcpsp->hInstance != NULL )
+            {
+                psp->hInstance = pcpsp->hInstance;
+            }
+        }
+
+        flags |= maybeSetTabIcon(c, pcpsd, psp, i);
+
+        if ( (pcpsd->isWiz97 || pcpsd->isWizLite)  )
+        {
+            if ( pcpsp->headerTitle != NULL )
+            {
+                psp->pszHeaderTitle = pcpsp->headerTitle;
+                flags |= PSP_USEHEADERTITLE;
+            }
+
+            if ( pcpsp->headerSubTitle != NULL )
+            {
+                psp->pszHeaderSubTitle = pcpsp->headerSubTitle;
+                flags |= PSP_USEHEADERSUBTITLE;
+            }
+
+            if ( pcpsp->headerTitle == NULL && pcpsp->headerSubTitle == NULL && isExteriorPage )
+            {
+                flags |= PSP_HIDEHEADER;
+            }
+    }
+
+    psp->dwFlags = flags;
+    success = true;
+
+done_out:
+    return success;
 }
 
 
@@ -1849,91 +1942,30 @@ uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROP
  * @return The pointer to the property sheet page struct(s) on success, null on
  *         failure.
  *
- * @remarks  For ResDialogs, the user has to include all other resources, header
- *           bitmap, etc., in the resource dll for the dialog.  But, for other
- *           types of dialog pages the user can use a resource image for the
- *           additional resources by using the resourceImage attribute.  When we
- *           fill in the struct for a page we ignore the resourceImage attribute
- *           if it is a ResDialog page.
+ * @remarks  When we call initPSP() we pass true for the isExteriorPage argument
+ *           on the first and last page without checking if the property sheet
+ *           is a wizard or not. initPSP() does that check.
  */
 PROPSHEETPAGE *initPropSheetPages(RexxMethodContext *c, pCPropertySheetDialog pcpsd)
 {
     PROPSHEETPAGE *psp = NULL;
-    size_t count = pcpsd->pageCount;
+    uint32_t count = pcpsd->pageCount;
 
-    psp = (PROPSHEETPAGE *)LocalAlloc(LPTR, count * sizeof(PROPSHEETPAGE));
+    psp = (PROPSHEETPAGE *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(PROPSHEETPAGE));
     if ( psp == NULL )
     {
         outOfMemoryException(c->threadContext);
         goto done_out;
     }
 
-    for ( size_t i = 0; i < count; i++ )
+    // Initialize each individual page.
+    for ( uint32_t i = 0; i < count; i++ )
     {
-        RexxObjectPtr       dlg   = pcpsd->rexxPages[i];
-        pCPropertySheetPage pcpsp = pcpsd->cppPages[i];
-        pCDynamicDialog     pcdd  = pcpsp->pcdd;
-        uint32_t            flags = pcpsp->pageFlags;
-
-        RexxObjectPtr result = c->SendMessage0(dlg, "INITTEMPLATE");
-        if ( result == TheFalseObj )
+        if ( ! initPSP(c, pcpsd, psp + i, i, (i == 0 || i == count - 1)) )
         {
             LocalFree(psp);
             psp = NULL;
-            noWindowsPageDlgException(c, i + 1);
-            goto done_out;
         }
-
-        psp[i].dwSize      = sizeof(PROPSHEETPAGE);
-        psp[i].pfnDlgProc  = (DLGPROC)RexxPropertySheetDlgProc;
-        psp[i].lParam      = (LPARAM)pcpsp;
-        psp[i].pfnCallback = PropSheetPageCallBack; flags |= PSP_USECALLBACK;  // Temp ??
-
-        if ( pcpsp->pageTitle != NULL )
-        {
-            flags |= PSP_USETITLE;
-            psp[i].pszTitle = pcpsp->pageTitle;
-        }
-
-        if ( pcpsp->pageType == oodResPSPDialog )
-        {
-            psp[i].hInstance   = pcpsp->pcpbd->hInstance;
-            psp[i].pszTemplate = MAKEINTRESOURCE(pcpsp->resID);
-        }
-        else
-        {
-            flags |= PSP_DLGINDIRECT;
-            psp[i].pResource = (PROPSHEETPAGE_RESOURCE)pcdd->base;
-
-            if ( pcpsp->hInstance != NULL )
-            {
-                psp[i].hInstance = pcpsp->hInstance;
-            }
-        }
-
-        flags |= maybeSetTabIcon(c, pcpsd, psp, i);
-
-        if ( (pcpsd->isWiz97 || pcpsd->isWizLite)  )
-        {
-            if ( pcpsp->headerTitle != NULL )
-            {
-                psp[i].pszHeaderTitle = pcpsp->headerTitle;
-                flags |= PSP_USEHEADERTITLE;
-            }
-
-            if ( pcpsp->headerSubTitle != NULL )
-            {
-                psp[i].pszHeaderSubTitle = pcpsp->headerSubTitle;
-                flags |= PSP_USEHEADERSUBTITLE;
-            }
-
-            if ( pcpsp->headerTitle == NULL && pcpsp->headerSubTitle == NULL && (i == 0 || i == count - 1) )
-            {
-                flags |= PSP_HIDEHEADER;
-            }
-        }
-
-        psp[i].dwFlags = flags;
     }
 
 done_out:
@@ -1965,7 +1997,7 @@ PROPSHEETHEADER *initPropSheetHeader(RexxMethodContext *c, pCPropertySheetDialog
 
     psh->dwSize           = sizeof(PROPSHEETHEADER);
     psh->hwndParent       = hParent;
-    psh->nPages           = (uint32_t)pcpsd->pageCount;
+    psh->nPages           = pcpsd->pageCount;
     psh->ppsp             = (LPCPROPSHEETPAGE)psp;
     psh->pfnCallback      = (PFNPROPSHEETCALLBACK)PropSheetCallback;
 
@@ -2053,8 +2085,8 @@ HWND getValidPageHwnd(RexxMethodContext *c, pCPropertySheetDialog pcpsd, RexxObj
 {
     RexxObjectPtr match = NULL;
 
-    size_t count = pcpsd->pageCount;
-    for ( size_t i = 0; i < count; i++ )
+    uint32_t count = pcpsd->pageCount;
+    for ( uint32_t i = 0; i < count; i++ )
     {
         if ( page == pcpsd->rexxPages[i] )
         {
@@ -2097,10 +2129,10 @@ RexxMethod1(RexxObjectPtr, psdlg_getPages_atr, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    size_t count = pcpsd->pageCount;
+    uint32_t count = pcpsd->pageCount;
     RexxArrayObject pages = context->NewArray(count);
 
-    for ( size_t i = 0; i < count; i++ )
+    for ( uint32_t i = 0; i < count; i++ )
     {
         context->ArrayPut(pages, pcpsd->rexxPages[i], i + 1);
     }
@@ -2362,8 +2394,8 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
     }
     pcpsd->pageCount = count;
 
-    pCPropertySheetPage *cppPages = (pCPropertySheetPage *)LocalAlloc(LPTR, count * sizeof(pCPropertySheetPage *));
-    RexxObjectPtr *rexxPages = (RexxObjectPtr *)LocalAlloc(LPTR, count * sizeof(RexxObjectPtr *));
+    pCPropertySheetPage *cppPages = (pCPropertySheetPage *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(pCPropertySheetPage *));
+    RexxObjectPtr *rexxPages = (RexxObjectPtr *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(RexxObjectPtr *));
 
     if ( cppPages == NULL || rexxPages == NULL )
     {
@@ -2448,7 +2480,7 @@ RexxMethod2(RexxObjectPtr, psdlg_getPage, uint32_t, index, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    size_t count = pcpsd->pageCount;
+    uint32_t count = pcpsd->pageCount;
     if ( index < 1 || index > count )
     {
         wrongRangeException(context->threadContext, 1, 1, (int)count, index);
@@ -2597,22 +2629,347 @@ err_out:
 }
 
 
-/** PropertySheetDialog::addPage()
+/**
+ * Checks the requirements, and allocates the PROPSHEETPAGE struct, for adding a
+ * single page to an existing property sheet page
  *
+ * @param c
+ * @param pcpsd
+ * @param _page
+ * @param index
+ * @param abortDialog
+ *
+ * @return PROPSHEETPAGE*
  */
-RexxMethod2(RexxObjectPtr, psdlg_addPage, RexxObjectPtr, _page, CSELF, pCSelf)
+PROPSHEETPAGE *getPSPMemory(RexxMethodContext *c, pCPropertySheetDialog pcpsd, pCPropertySheetPage *ppcpsp,
+                            RexxObjectPtr page, uint32_t index, bool *abortDialog)
 {
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    PROPSHEETPAGE         *psp   = NULL;
 
-    RexxObjectPtr result = TheFalseObj;
+    *abortDialog = false;
 
-    if ( ! requiredClass(context->threadContext, _page, "PROPERTYSHEETPAGE", 1) )
+    if ( pcpsd->pageCount > MAXPROPPAGES )
+    {
+        userDefinedMsgException(c->threadContext, TOO_MANY_PROPSHEET_PAGES, MAXPROPPAGES);
+        goto done_out;
+    }
+
+    if ( index < 1 || index > pcpsd->pageCount )
+    {
+        wrongRangeException(c->threadContext, 1, 1, pcpsd->pageCount, index);
+        goto done_out;
+    }
+
+    if ( ! requiredClass(c->threadContext, page, "PROPERTYSHEETPAGE", 1) )
     {
         goto done_out;
     }
 
+    pCPropertySheetPage pcpsp = dlgToPSPCSelf(c, page);
+    *ppcpsp = pcpsp;
+
+    if ( pcpsp->activated )
+    {
+        userDefinedMsgException(c->threadContext, 1, PROPSHEET_PAGE_ALREADY_ACTIVATED);
+        goto done_out;
+    }
+
+    psp = (PROPSHEETPAGE *)LocalAlloc(LPTR, sizeof(PROPSHEETPAGE));
+    if ( psp == NULL )
+    {
+        *abortDialog = true;
+        outOfMemoryException(c->threadContext);
+    }
+
 done_out:
-    return result;
+    return psp;
+    }
+
+
+/**
+ * Updates some of the CSelf fields for a property sheet page that is to be
+ * added to a property sheet.
+ *
+ *
+ * @param pcpsd
+ * @param ppcpsp
+ * @param index   Zero-based index of the page.
+ *
+ * @remarks  The original property sheet pages have their dialog procedure
+ *           thread context set when the property sheet is created.  When pages
+ *           are added or inserted we need to remember to set the thread
+ *           context.  This thread context is the same as the property sheet's
+ *           context.  (The thread context could also be copied from one of the
+ *           other pages.)
+ */
+void updatePageCSelf(pCPropertySheetDialog pcpsd, pCPropertySheetPage pcpsp, uint32_t index)
+{
+    pcpsp->pageNumber = index;
+    pcpsp->rexxPropSheet = pcpsd->rexxSelf;
+    pcpsp->cppPropSheet = pcpsd;
+    pcpsp->isWizardPage = ! pcpsd->isNotWizard;
+
+    pcpsp->dlgProcContext = pcpsd->dlgProcContext;
+    pcpsp->pcpbd->dlgProcContext = pcpsd->dlgProcContext;
+}
+
+
+/** PropertySheetDialog::addPage()
+ *
+ *  Adds a page to the property sheet at the end of the pages.
+ *
+ *  @param _page          The Rexx property sheet page dialog.
+ *
+ *  @param isExteriorPage [OPTIONAL]  If the added page is an exterior page in a
+ *                        wizard.  The default is false.  If the property sheet
+ *                        is not a wizard, this argument is ignored.  The
+ *                        default is false, the page is NOT an exterior page.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @notes  Syntax conditions are raised if the _page argument is not correct.
+ *          _page must be a PropertySheetPage dialog object.
+ *
+ *          The dialog object must not have already been "used" as a property
+ *          sheet page.  In addition to adding or inserting pages in a prooerty
+ *          sheet, pages can be removed from a property sheet.  When the page is
+ *          removed, the operating system destroys the underlying Windows
+ *          dialog.  Although the Rexx dialog object is still active, that
+ *          object can not be reinserted into a property sheet as a page.
+ *
+ *          It is possible that the user never 'visited' an inserted page before
+ *          it was removed. In this case the Rexx dialog object could be used to
+ *          add or insert a new page at some later point, because the underlying
+ *          Windows dialog would never have been created. The wasActivated
+ *          attribute can be used to test for this condition.  However, it is
+ *          probably simplier to always instantiate a new Rexx dialog object for
+ *          each page added to a property sheet.
+ *
+ *          The Windows operating system restricts the maximum number of pages
+ *          that a property sheet can hold.  The MAXPROPPAGES constant of the
+ *          PropertySheetDialog reflects this number.  If the programer tries to
+ *          insert or add a page past this number, a condition is raised.
+ *
+ */
+RexxMethod3(RexxObjectPtr, psdlg_addPage, RexxObjectPtr, _page, OPTIONAL_logical_t, isExteriorPage, CSELF, pCSelf)
+{
+    pCPropertySheetDialog  pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    bool abortDialog;
+    uint32_t count = pcpsd->pageCount;
+
+    pCPropertySheetPage pcpsp = NULL;
+
+    PROPSHEETPAGE *psp = getPSPMemory(context, pcpsd, &pcpsp, _page, count, &abortDialog);
+    if ( psp == NULL )
+    {
+        goto err_out;
+    }
+
+    pcpsp->psp = psp;
+    abortDialog = false;
+
+    updatePageCSelf(pcpsd, pcpsp, count);
+
+    pcpsd->cppPages[count] = pcpsp;
+    pcpsd->rexxPages[count] = _page;
+    pcpsd->pageCount++;
+
+    if ( ! initPSP(context, pcpsd, psp, count, isExteriorPage ? true : false) )
+    {
+        goto err_out;
+    }
+
+    abortDialog = true;
+
+    pcpsp->hPropSheetPage = CreatePropertySheetPage(psp);
+    if ( pcpsp->hPropSheetPage == NULL )
+    {
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "CreatePropertySheetPage");
+        goto err_out;
+    }
+
+    if ( ! PropSheet_AddPage(pcpsd->hDlg, pcpsp->hPropSheetPage) )
+    {
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "PropSheet_AddPage");
+        goto err_out;
+    }
+
+    PropSheet_RecalcPageSizes(pcpsd->hDlg);
+
+    return TheTrueObj;
+
+err_out:
+    safeLocalFree(psp);
+
+    if ( pcpsp != NULL )
+    {
+        pcpsp->psp = NULL;
+
+    if ( pcpsp->hPropSheetPage != NULL )
+        {
+            DestroyPropertySheetPage(pcpsp->hPropSheetPage);
+            pcpsp->hPropSheetPage = NULL;
+        }
+    }
+
+    if ( abortDialog )
+    {
+        endDialogPremature(pcpsd->pcpbd, pcpsd->hDlg, RexxConditionRaised);
+    }
+    return TheFalseObj;
+}
+
+
+/** PropertySheetDialog::insertPage()
+ *
+ *
+ */
+RexxMethod4(RexxObjectPtr, psdlg_insertPage, RexxObjectPtr, _page, uint32_t, index, OPTIONAL_logical_t, isExteriorPage, CSELF, pCSelf)
+{
+    pCPropertySheetDialog  pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    bool     abortDialog;
+    uint32_t max = pcpsd->pageCount;
+
+    pCPropertySheetPage pcpsp = NULL;
+
+    PROPSHEETPAGE *psp = getPSPMemory(context, pcpsd, &pcpsp, _page, max, &abortDialog);
+    if ( psp == NULL )
+    {
+        goto err_out;
+    }
+
+    pcpsp->psp = psp;
+    abortDialog = false;
+
+    index--;
+    updatePageCSelf(pcpsd, pcpsp, index);
+
+    if ( index + 1 < max )
+    {
+        for ( uint32_t i = max - 1, j = max; i >= index; i--, j-- )
+        {
+            pcpsd->rexxPages[j] = pcpsd->rexxPages[i];
+            pcpsd->cppPages[j] = pcpsd->cppPages[i];
+            pcpsd->cppPages[j]->pageNumber = j;
+        }
+    }
+
+    pcpsd->cppPages[index] = pcpsp;
+    pcpsd->rexxPages[index] = _page;
+    pcpsd->pageCount++;
+
+    if ( ! initPSP(context, pcpsd, psp, index, isExteriorPage ? true : false) )
+    {
+        goto err_out;
+    }
+
+    abortDialog = true;
+
+    pcpsp->hPropSheetPage = CreatePropertySheetPage(psp);
+    if ( pcpsp->hPropSheetPage == NULL )
+    {
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "CreatePropertySheetPage");
+        goto err_out;
+    }
+
+    if ( PropSheet_InsertPage(pcpsd->hDlg, index, pcpsp->hPropSheetPage) == 0 )
+    {
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "PropSheet_RemovePage");
+        goto err_out;
+    }
+
+    PropSheet_RecalcPageSizes(pcpsd->hDlg);
+
+    return TheTrueObj;
+
+err_out:
+    safeLocalFree(psp);
+
+    if ( pcpsp != NULL )
+    {
+        pcpsp->psp = NULL;
+
+        if ( pcpsp->hPropSheetPage != NULL )
+        {
+            DestroyPropertySheetPage(pcpsp->hPropSheetPage);
+            pcpsp->hPropSheetPage = NULL;
+        }
+    }
+
+    if ( abortDialog )
+    {
+        endDialogPremature(pcpsd->pcpbd, pcpsd->hDlg, RexxConditionRaised);
+    }
+    return TheFalseObj;
+}
+
+
+/** PropertySheetDialog::removePage()
+ *
+ *  Removes a page from the property sheet.
+ *
+ *  @param  index  The one-based index of the page to be removed.
+ *
+ *  @return  Zero always.
+ *
+ *  @remarks  If the page being removed is not the last page we need to move the
+ *            pointers in the arrays down 1.  However, we also need to adjust
+ *            the page numbers in the Rexx page object.  So, rather than do a
+ *            memmove for the pointers, we may as well just walk the arrays.
+ */
+RexxMethod2(RexxObjectPtr, psdlg_removePage, OPTIONAL_uint32_t, index, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    uint32_t max = pcpsd->pageCount;
+
+    if ( argumentOmitted(1) )
+    {
+        index = max;
+    }
+
+    if ( index < 1 || index > max )
+    {
+        wrongRangeException(context->threadContext, 1, 1, max, index);
+        return TheZeroObj;
+    }
+
+    index--;
+    pCPropertySheetPage pcpspRemove = pcpsd->cppPages[index];
+
+    if ( index + 1 < max )
+    {
+        for ( uint32_t i = index, j = index + 1; i > max - 1; i++, j++ )
+        {
+            pcpsd->rexxPages[i] = pcpsd->rexxPages[j];
+            pcpsd->cppPages[i] = pcpsd->cppPages[j];
+            pcpsd->cppPages[i]->pageNumber = i;
+        }
+    }
+
+    pcpsd->rexxPages[max] = NULL;
+    pcpsd->cppPages[max] = NULL;
+    pcpsd->pageCount--;
+
+    pcpspRemove->inRemovePage = true;
+
+    PropSheet_RemovePage(pcpsd->hDlg, index, NULL);
+    PropSheet_RecalcPageSizes(pcpsd->hDlg);
+
+    if ( pcpspRemove->hPropSheetPage != NULL )
+    {
+        DestroyPropertySheetPage(pcpspRemove->hPropSheetPage);
+        pcpspRemove->hPropSheetPage = NULL;
+
+        safeLocalFree(pcpspRemove->psp);
+        pcpspRemove->psp = NULL;
+    }
+
+    pcpspRemove->inRemovePage = false;
+
+    return TheZeroObj;
 }
 
 
@@ -3146,7 +3503,7 @@ RexxMethod3(RexxObjectPtr, psdlg_setHeaderBitmap, uint32_t, index, RexxObjectPtr
         goto done_out;
     }
 
-    uint32_t max = (uint32_t)pcpsd->pageCount;
+    uint32_t max = pcpsd->pageCount;
 
     if ( index < 1 || index > max )
     {
@@ -3194,7 +3551,7 @@ RexxMethod4(RexxObjectPtr, psdlg_resetPageText, uint32_t, index, CSTRING, newTex
         goto done_out;
     }
 
-    uint32_t max = (uint32_t)pcpsd->pageCount;
+    uint32_t max = pcpsd->pageCount;
 
     if ( index < 1 || index > max )
     {
@@ -3327,7 +3684,7 @@ bool initPropertySheetPage(RexxMethodContext *c, pCPlainBaseDialog pcpbd, pCDyna
 
 static void parsePageOpts(RexxMethodContext *c, pCPropertySheetPage pcpsp, CSTRING options)
 {
-    uint32_t opts = PSP_DEFAULT;
+    uint32_t opts = PSP_DEFAULT | PSP_USECALLBACK;
 
     if ( pcpsp->pageType != oodResPSPDialog )
     {
@@ -3504,7 +3861,10 @@ err_out:
  */
 RexxMethod1(RexxObjectPtr, psp_init_cls, OSELF, self)
 {
-    ThePropertySheetPageClass = (RexxClassObject)self;
+    if ( isOfClassType(context, self, PROPERTYSHEETPAGE_CLASS) )
+    {
+        ThePropertySheetPageClass = (RexxClassObject)self;
+    }
     return NULLOBJECT;
 }
 
@@ -3519,6 +3879,16 @@ RexxMethod1(RexxObjectPtr, psp_propSheet_atr, CSELF, pCSelf)
 }
 
 
+/** PropertySheetPage::wasActivated()  [Attribute get]
+ *
+ */
+RexxMethod1(RexxObjectPtr, psp_wasActivated_atr, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+    return pcpsp->activated ? TheTrueObj : TheFalseObj;
+}
+
+
 /** PropertySheetPage::pageID()  [Attribute get]
  *
  */
@@ -3529,13 +3899,13 @@ RexxMethod1(POINTER, psp_pageID_atr, CSELF, pCSelf)
 }
 
 
-/** PropertySheetPage::wasActivated()  [Attribute get]
+/** PropertySheetPage::pageIndex()  [Attribute get]
  *
  */
-RexxMethod1(RexxObjectPtr, psp_wasActivated_atr, CSELF, pCSelf)
+RexxMethod1(uint32_t, psp_pageNumber_atr, CSELF, pCSelf)
 {
     pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
-    return pcpsp->activated ? TheTrueObj : TheFalseObj;
+    return pcpsp->pageNumber + 1;
 }
 
 

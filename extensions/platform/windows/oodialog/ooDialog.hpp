@@ -587,6 +587,8 @@ typedef struct _pspCSelf {
     pCPlainBaseDialog       pcpbd;
     pCDynamicDialog         pcdd;             // DynmicDialog CSelf, may be null.
     RexxObjectPtr           rexxSelf;
+    HPROPSHEETPAGE          hPropSheetPage;   // If added to existing property sheet.
+    PROPSHEETPAGE          *psp;              // Allocated prop sheet page struct, needs to be freed.
     HWND                    hPage;            // Dialog handle of page.
     void                   *cppPropSheet;     // PropertySheetDialog CSelf.
     RexxObjectPtr           rexxPropSheet;    // Rexx PropertySheetDialog object.
@@ -609,6 +611,7 @@ typedef struct _pspCSelf {
     bool                    wantAccelerators; // User wants PSN_TRANSLATEACCELERATOR notifications
     bool                    wantGetObject;    // User wants PSN_GETOBJECT notifications
     bool                    isWizardPage;
+    bool                    inRemovePage;     // Signals running in PropertySheetDialg::removePage()
 } CPropertySheetPage;
 typedef CPropertySheetPage *pCPropertySheetPage;
 
@@ -631,7 +634,7 @@ typedef struct _psdCSelf {
     HIMAGELIST           imageList;        // imageList attribute, C++ part of .ImageList
     uint32_t             startPage;        // Index of start page, 1-based.  If 0 not set;
     char                *caption;
-    size_t               pageCount;
+    uint32_t             pageCount;
     uint32_t             propSheetFlags;
     int                  getResultValue;   // Storage for the return from PSM_GETRESULT
     bool                 modeless;

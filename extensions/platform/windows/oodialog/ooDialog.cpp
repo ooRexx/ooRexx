@@ -279,6 +279,15 @@ void delPageDialog(pCPropertySheetPage pcpsp)
         LocalFree(pcpsp->headerSubTitle);
         pcpsp->headerSubTitle = NULL;
     }
+
+    if ( ! pcpsp->inRemovePage && pcpsp->hPropSheetPage != NULL )
+    {
+        DestroyPropertySheetPage(pcpsp->hPropSheetPage);
+        pcpsp->hPropSheetPage = NULL;
+
+        safeLocalFree(pcpsp->psp);
+        pcpsp->psp = NULL;
+    }
 }
 
 void delPropSheetDialog(pCPropertySheetDialog pcpsd)

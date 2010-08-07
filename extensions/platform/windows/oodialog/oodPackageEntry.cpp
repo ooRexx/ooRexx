@@ -371,6 +371,8 @@ REXX_METHOD_PROTOTYPE(psdlg_execute);
 REXX_METHOD_PROTOTYPE(psdlg_popup);
 REXX_METHOD_PROTOTYPE(psdlg_getPage);
 REXX_METHOD_PROTOTYPE(psdlg_addPage);
+REXX_METHOD_PROTOTYPE(psdlg_insertPage);
+REXX_METHOD_PROTOTYPE(psdlg_removePage);
 REXX_METHOD_PROTOTYPE(psdlg_apply);
 REXX_METHOD_PROTOTYPE(psdlg_cancelToClose);
 REXX_METHOD_PROTOTYPE(psdlg_changed);
@@ -397,8 +399,9 @@ REXX_METHOD_PROTOTYPE(psdlg_test);
 // PropertySheetPage
 REXX_METHOD_PROTOTYPE(psp_init_cls);
 REXX_METHOD_PROTOTYPE(psp_propSheet_atr);
-REXX_METHOD_PROTOTYPE(psp_pageID_atr);
 REXX_METHOD_PROTOTYPE(psp_wasActivated_atr);
+REXX_METHOD_PROTOTYPE(psp_pageID_atr);
+REXX_METHOD_PROTOTYPE(psp_pageNumber_atr);
 REXX_METHOD_PROTOTYPE(psp_setResources_atr);
 REXX_METHOD_PROTOTYPE(psp_setTabIcon_atr);
 REXX_METHOD_PROTOTYPE(psp_getcx);
@@ -1089,6 +1092,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(psdlg_popup,                    psdlg_popup),
     REXX_METHOD(psdlg_getPage,                  psdlg_getPage),
     REXX_METHOD(psdlg_addPage,                  psdlg_addPage),
+    REXX_METHOD(psdlg_insertPage,               psdlg_insertPage),
+    REXX_METHOD(psdlg_removePage,               psdlg_removePage),
     REXX_METHOD(psdlg_apply,                    psdlg_apply),
     REXX_METHOD(psdlg_cancelToClose,            psdlg_cancelToClose),
     REXX_METHOD(psdlg_changed,                  psdlg_changed),
@@ -1115,8 +1120,9 @@ RexxMethodEntry oodialog_methods[] = {
     // PropertySheetPage
     REXX_METHOD(psp_init_cls,                   psp_init_cls),
     REXX_METHOD(psp_propSheet_atr,              psp_propSheet_atr),
-    REXX_METHOD(psp_pageID_atr,                 psp_pageID_atr),
     REXX_METHOD(psp_wasActivated_atr,           psp_wasActivated_atr),
+    REXX_METHOD(psp_pageID_atr,                 psp_pageID_atr),
+    REXX_METHOD(psp_pageNumber_atr,             psp_pageNumber_atr),
     REXX_METHOD(psp_setResources_atr,           psp_setResources_atr),
     REXX_METHOD(psp_setTabIcon_atr,             psp_setTabIcon_atr),
     REXX_METHOD(psp_getcx,                      psp_getcx),

@@ -38,7 +38,8 @@
 /**
  * Windows Dialog Interface for Open Object Rexx (ooRexx.)
  *
- * Control, PropertySheet, and PropertySheetPage dialog classes and interfaces.
+ * ControlDialog, PropertySheetDialog, and PropertySheetPage dialog classes,
+ * subclasses, and related interfaces.
  *
  * A control dialog is a dialog with a style that allows it work well as a
  * dialog within a top-level dialog.  The top-level dialog is both the owner and
@@ -58,6 +59,17 @@
  * dialog and owner dialog rather than child and parent dialog .
  */
 
+
+/*            Owner and Control Dialogs                                       */
+
+::class 'OwnerDialog' mixinclass Object public
+
+::method init
+    say 'In OwnerDialog::init()'
+    --forward class (super) continue
+    say 'Back in OwnerDialog::init()'
+
+
 ::class 'ControlDialog' mixinclass Object public
 
 ::attribute ownerDialog get  external "LIBRARY oodialog chld_getOwnerDialog"
@@ -76,43 +88,36 @@
 -- those arguments, but we don't use them.  So we just ignore all args
 ::method startIt
 
-   if self~basePtr = 0 then return 0
+    if self~basePtr = 0 then return 0
 
-   if self~startChildDialog(self~basePtr, 0) == 0 then return 0
+    if self~startChildDialog(self~basePtr, 0) == 0 then return 0
 
-   self~initDialog
-   return self~dlgHandle
+    self~initDialog
+    return self~dlgHandle
 
 
 ::class 'RcControlDialog' subclass UserControlDialog public
 
 ::method init
-  use strict arg rcFile, idDlg, initData. = .nil, includeFile = "", options = "", expected = 200, ownerDlg = .nil
+    use strict arg rcFile, idDlg, initData. = .nil, includeFile = "", options = "", expected = 200, ownerDlg = .nil
 
-  newArgs = .array~new(5)
-  if arg(3, 'E') then newArgs[1] = arg(3)
-  if arg(4, 'E') then newArgs[2] = arg(4)
-  if arg(7, 'E') then newArgs[5] = arg(7)
-  newArgs[3] = rcFile
-  newArgs[4] = idDlg
+    newArgs = .array~new(5)
+    if arg(3, 'E') then newArgs[1] = arg(3)
+    if arg(4, 'E') then newArgs[2] = arg(4)
+    if arg(7, 'E') then newArgs[5] = arg(7)
+    newArgs[3] = rcFile
+    newArgs[4] = idDlg
 
-  forward class (super) arguments (newArgs) continue
-  if result <> 0 then return result
+    forward class (super) arguments (newArgs) continue
+    if result <> 0 then return result
 
-  self~initCode = self~load(rcFile, idDlg, options, expected)
+    self~initCode = self~load(rcFile, idDlg, options, expected)
 
-  return self~initCode
-
-
-::class 'OwnerDialog' mixinclass Object public
-
-::method init
-  say 'In OwnerDialog::init()'
-  --forward class (super) continue
-  say 'Back in OwnerDialog::init()'
+    return self~initCode
 
 
-/* Property sheets and pages */
+
+/*                    Property sheets and pages                               */
 
 ::class 'PropertySheetDialog' public subclass PlainBaseDialog
 
@@ -121,6 +126,8 @@
 ::constant PSM_RESTARTWINDOWS           "0x0469"
 ::constant PSM_RECALCPAGESIZES          "0x0488"
 
+
+::constant MAXPROPPAGES                 100
 
 ::attribute pages get unguarded external "LIBRARY oodialog psdlg_getPages_atr"
 
@@ -157,7 +164,7 @@
 ::method popup external "LIBRARY oodialog psdlg_popup"
 ::method getPage unguarded external "LIBRARY oodialog psdlg_getPage"
 
-::method add unguarded external "LIBRARY oodialog psdlg_addPage"
+::method addPage unguarded external "LIBRARY oodialog psdlg_addPage"
 ::method apply unguarded external "LIBRARY oodialog psdlg_apply"
 ::method cancelToClose unguarded external "LIBRARY oodialog psdlg_cancelToClose"
 ::method changed unguarded external "LIBRARY oodialog psdlg_changed"
@@ -169,24 +176,26 @@
 ::method indexToHwnd unguarded external "LIBRARY oodialog psdlg_indexToHandle"
 ::method indexToID unguarded external "LIBRARY oodialog psdlg_indexToID"
 ::method indexToPage unguarded external "LIBRARY oodialog psdlg_indexToHandle"
+::method insertPage unguarded external "LIBRARY oodialog psdlg_insertPage"
 ::method pageToIndex unguarded external "LIBRARY oodialog psdlg_pageToIndex"
 ::method pressButton unguarded external "LIBRARY oodialog psdlg_pressButton"
 ::method querySiblings unguarded external "LIBRARY oodialog psdlg_querySiblings"
 
 ::method rebootSystem unguarded
-   use strict arg
-   self~sendWinIntMsg(self~PSM_REBOOTSYSTEM, 0, 0)
-   return 0
+    use strict arg
+    self~sendWinIntMsg(self~PSM_REBOOTSYSTEM, 0, 0)
+    return 0
 
 ::method recalcPageSizes unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~PSM_RECALCPAGESIZES, 0, 0) != 0
+    use strict arg
+    return self~sendWinIntMsg(self~PSM_RECALCPAGESIZES, 0, 0) != 0
 
 ::method restartWindows unguarded
-   use strict arg
-   self~sendWinIntMsg(self~PSM_RESTARTWINDOWS, 0, 0)
-   return 0
+    use strict arg
+    self~sendWinIntMsg(self~PSM_RESTARTWINDOWS, 0, 0)
+    return 0
 
+::method removePage unguarded external "LIBRARY oodialog psdlg_removePage"
 ::method setCurSel unguarded external "LIBRARY oodialog psdlg_setCurSel"
 ::method setCurSelByID unguarded external "LIBRARY oodialog psdlg_setCurSelByID"
 ::method setFinishText unguarded external "LIBRARY oodialog psdlg_setButtonText"
@@ -211,8 +220,9 @@
 ::method init class external "LIBRARY oodialog psp_init_cls"
 
 ::attribute propSheet get unguarded external "LIBRARY oodialog psp_propSheet_atr"
-::attribute pageID get external "LIBRARY oodialog psp_pageID_atr"
 ::attribute wasActivated get external "LIBRARY oodialog psp_wasActivated_atr"
+::attribute pageID get external "LIBRARY oodialog psp_pageID_atr"
+::attribute pageNumber get external "LIBRARY oodialog psp_pageNumber_atr"
 
 ::attribute cx get external "LIBRARY oodialog psp_getcx"
 ::attribute cx set external "LIBRARY oodialog psp_setcx"

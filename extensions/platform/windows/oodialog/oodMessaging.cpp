@@ -739,7 +739,7 @@ inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
  *           terminates the thread waiting on the finished instance variable.
  *
  *           This works fine for modeless property sheets, but modal property
- *           sheets hang.  The destroyModalPropSheet() essentially does a
+ *           sheets hang.  The abortPropertySheet() essentially does a
  *           programmatic close and prevents any of the property sheet pages
  *           from nixing the close.
  */
@@ -781,7 +781,7 @@ BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
 
         if ( pcpbd->isPropSheetDlg && ! ((pCPropertySheetDialog)(pcpbd->dlgPrivate))->modeless  )
         {
-            destroyModalPropSheet((pCPropertySheetDialog)pcpbd->dlgPrivate, hDlg, t);
+            abortPropertySheet((pCPropertySheetDialog)pcpbd->dlgPrivate, hDlg, t);
             return FALSE;
         }
     }

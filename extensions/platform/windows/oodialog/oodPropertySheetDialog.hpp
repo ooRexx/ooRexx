@@ -63,7 +63,14 @@
 #define MAX_PROPSHEET_DIALOGS        5
 
 #define TOO_MANY_PROPSHEET_DIALOGS \
-        "The concurrent creation of property sheet dialogs has reached the maximum (%d)"
+        "the concurrent creation of property sheet dialogs has reached the maximum (%d)"
+
+#define TOO_MANY_PROPSHEET_PAGES   \
+        "the number of property sheet pages has reached the operating system maximum (%d)"
+
+
+#define PROPSHEET_PAGE_ALREADY_ACTIVATED \
+        "can not be a property sheet page dialog that has already been activated and destroyed"
 
 // Enum for parts of a property sheet page.
 typedef enum
