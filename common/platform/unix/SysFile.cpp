@@ -1098,6 +1098,11 @@ void SysFile::getStreamTypeInfo()
         {
             readable = true;
         }
+        // tagged as FIFO, then this is also a transient
+        if ((fileInfo.st_mode & S_IFIFO) != 0)
+        {
+            transient = true;
+        }
     }
 }
 
