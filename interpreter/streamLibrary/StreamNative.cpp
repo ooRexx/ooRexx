@@ -745,8 +745,12 @@ void StreamInfo::implicitOpen(int type)
     if (!fileInfo.isOpen())
     {
         // turn off the read/write flag and try opening as write only or read
-        // only, depending on the type specified.
+        // only, depending on the type specified.  Also, be sure and clear
+        // errors, otherwise the reason for this implicit open, such as
+        // linein(), will fail.
         read_write = false;
+        fileInfo.clearErrors();
+
         if (type == operation_write)
         {
             // In Windows, all files are readable. Therefore S_IWRITE is
