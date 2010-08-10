@@ -91,7 +91,9 @@ $(OR_OUTDIR)\rxregexp.cls : $(OR_REGEXPSRC)\rxregexp.cls
 #
 # *** .cpp -> .obj rules
 #
+# char must be unsigned (/J) for the regular expression parser to work.
+#
 $(CPPOBJS):  $(@B).cpp
     @ECHO.
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_REGEXPSRC)\$(@B).cpp
+    $(OR_CC) $(cflags_common) /J $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_REGEXPSRC)\$(@B).cpp
