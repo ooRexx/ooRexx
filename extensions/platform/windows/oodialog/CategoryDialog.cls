@@ -53,7 +53,7 @@
 
 -- A directory that contains internal data.  This should be private, but I'm not sure of the
 -- consequences to existing programs if it is changed.  MM
-::attribute catalog protected
+::attribute catalog unguarded protected
 
 ::attribute staticID private
 ::attribute catX private
