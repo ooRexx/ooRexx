@@ -441,6 +441,8 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${BINDIR}\" "oodialog.cls"
   ${File} "${BINDIR}\" "oodwin32.cls"
   ${File} "${BINDIR}\" "oodplain.cls"
+  ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "0_READ_ME_FIRST.txt"
+  ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "build_ooDialog_cls.rex"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "AnimatedButton.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "BaseDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "CategoryDialog.cls"
