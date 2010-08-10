@@ -317,8 +317,14 @@ RexxReturnCode GrxHost(PCONSTRXSTRING command,
                }
             memset(pll, '\0', sizeof (LL));
             strcpy(pll -> FileName, ExecIO_Options.aFilename);
-            pll -> pFile = fopen(pll -> FileName, "r+");
+
             /* try to open an existing file */
+            pll -> pFile = fopen(pll -> FileName, "r+");
+
+            /* read only files can not be opened in read / write mode (r+) */
+            if ( pll -> pFile == NULL && ! ExecIO_Options.fRW ) {
+               pll -> pFile = fopen(pll -> FileName, "r");
+               }
             if (pll -> pFile == NULL) {
                /* no existing file, so open a new file */
                pll -> pFile = fopen(pll -> FileName, "w+");
@@ -418,7 +424,7 @@ static unsigned long ExecIO_Write_From_Stem (
    char *      Stem;             /* Stem variable name                */
    char *      Index;            /* Stem index value (string)         */
    RXSTRING rxVal;               /* Rexx stem variable value          */
-   int      elements;  
+   int      elements;
 
    /* process request */
    if (ExecIO_Options.lRcdCnt == 0)
@@ -800,7 +806,7 @@ static long queued (
    {
 
    /* local function variables */
-   size_t elements;   
+   size_t elements;
 
    RexxQueryQueue("SESSION", &elements);
    return (long)elements;
