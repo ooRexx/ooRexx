@@ -209,10 +209,10 @@ void SysFileSystem::qualifyStreamName(
  */
 bool SysFileSystem::fileExists(const char * fname)
 {
-    struct stat filestat;                // file attributes
+    struct stat64 filestat;              // file attributes
     int rc;                              // stat function return code
 
-    rc = stat(fname, &filestat);
+    rc = stat64(fname, &filestat);
     if (rc == 0)
     {
         if (S_ISREG(filestat.st_mode))
@@ -478,10 +478,10 @@ bool SysFileSystem::checkCurrentFile(const char *name, char *resolvedName)
         return false;
     }
 
-    struct stat dummy;                   /* structure for stat system calls   */
+    struct stat64 dummy;                 /* structure for stat system calls   */
 
     // ok, if this exists, life is good.  Return it.
-    if (stat(resolvedName, &dummy) == 0)             /* look for file              */
+    if (stat64(resolvedName, &dummy) == 0)           /* look for file              */
     {
         // this needs to be a regular file
         if (S_ISREG(dummy.st_mode))
@@ -533,8 +533,8 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
         // a failure here means an invalid name of some sort
         if (canonicalizeName(resolvedName))
         {
-            struct stat dummy;
-            if (stat(resolvedName, &dummy) == 0)     /* If file is found,          */
+            struct stat64 dummy;
+            if (stat64(resolvedName, &dummy) == 0)   /* If file is found,          */
             {
                 // this needs to be a regular file
                 if (S_ISREG(dummy.st_mode))
@@ -778,9 +778,9 @@ bool SysFileSystem::deleteDirectory(const char *name)
  */
 bool SysFileSystem::isDirectory(const char *name)
 {
-    struct stat finfo;                   /* return buf for the finfo   */
+    struct stat64 finfo;                 /* return buf for the finfo   */
 
-    int rc = stat(name, &finfo);         /* read the info about it     */
+    int rc = stat64(name, &finfo);       /* read the info about it     */
     return rc == 0 && S_ISDIR(finfo.st_mode);
 }
 
@@ -823,9 +823,9 @@ bool SysFileSystem::isWriteOnly(const char *name)
  */
 bool SysFileSystem::isFile(const char *name)
 {
-    struct stat finfo;                   /* return buf for the finfo   */
+    struct stat64 finfo;                 /* return buf for the finfo   */
 
-    int rc = stat(name, &finfo);         /* read the info about it     */
+    int rc = stat64(name, &finfo);       /* read the info about it     */
     return rc == 0 && (S_ISREG(finfo.st_mode) || S_ISBLK(finfo.st_mode));
 }
 
@@ -839,9 +839,9 @@ bool SysFileSystem::isFile(const char *name)
  */
 bool SysFileSystem::exists(const char *name)
 {
-    struct stat finfo;                   /* return buf for the finfo   */
+    struct stat64 finfo;                 /* return buf for the finfo   */
 
-    int rc = stat(name, &finfo);         /* read the info about it     */
+    int rc = stat64(name, &finfo);       /* read the info about it     */
     return rc == 0;
 }
 
@@ -856,10 +856,10 @@ bool SysFileSystem::exists(const char *name)
  */
 int64_t SysFileSystem::getLastModifiedDate(const char *name)
 {
-    struct stat st;
+    struct stat64 st;
     tzset ();
 
-    if (stat (name, &st))
+    if (stat64(name, &st))
     {
         return -1;
     }
@@ -874,14 +874,14 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
  *
  * @return the 64-bit file size.
  */
-int64_t SysFileSystem::getFileLength(const char *name)
+uint64_t SysFileSystem::getFileLength(const char *name)
 {
-    struct stat st;
-    if (stat(name, &st) != 0)
+    struct stat64 st;
+    if (stat64(name, &st) != 0)
     {
         return 0;
     }
-    return (int64_t)st.st_size;
+    return st.st_size;
 }
 
 
@@ -950,9 +950,9 @@ bool SysFileSystem::isHidden(const char *name)
  */
 bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 {
-    struct stat statbuf;
+    struct stat64 statbuf;
     struct utimbuf timebuf;
-    if (stat(name, &statbuf) != 0)
+    if (stat64(name, &statbuf) != 0)
     {
         return false;
     }
@@ -973,8 +973,8 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
  */
 bool SysFileSystem::setFileReadOnly(const char *name)
 {
-    struct stat buffer;
-    if (stat(name, &buffer) != 0)
+    struct stat64 buffer;
+    if (stat64(name, &buffer) != 0)
     {
         return false;
     }

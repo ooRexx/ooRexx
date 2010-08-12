@@ -110,7 +110,7 @@ public:
     static bool  isFile(const char *name);
     static bool  exists(const char *name);
     static int64_t getLastModifiedDate(const char *name);
-    static int64_t getFileLength(const char *name);
+    static uint64_t getFileLength(const char *name);
     static bool  makeDirectory(const char *name);
     static bool  moveFile(const char *oldName, const char *newName);
     static bool  isHidden(const char *name);
