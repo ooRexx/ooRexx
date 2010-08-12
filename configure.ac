@@ -242,6 +242,7 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
    *apple-darwin*)
       ORX_SYS_STR="MACOSX"
       ORX_SHARED_LIBRARY_EXT=".dylib"
+      ORX_LDFLAGS_PACKAGE=""
       ;;
    *hp-hpux*)
       ORX_SHARED_LIBRARY_EXT=".sl"

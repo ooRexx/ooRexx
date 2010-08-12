@@ -167,6 +167,11 @@
 # include <malloc.h>
 #endif
 
+#ifdef __APPLE__ & __MACH__
+#define lseek64 lseek
+#define open64 open
+#endif
+
 #include <fcntl.h>
 #include <ctype.h>
 #include <string.h>

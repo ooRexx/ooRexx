@@ -1,0 +1,97 @@
+#!/bin/sh
+echo $SCRIPT_NAME: Removing prior version of ooRexx.
+
+PREFIX=
+
+if [ -x /usr/bin/oorexx-config ]
+then
+	PREFIX=`/usr/bin/oorexx-config --prefix`;
+fi
+
+echo $SCRIPT_NAME: Removing links from /usr/lib.
+rm -f /usr/lib/librexx.*
+rm -f /usr/lib/librexxapi.*
+rm -f /usr/lib/librexxutil.*
+rm -f /usr/lib/librxmath.*
+rm -f /usr/lib/librxregexp.*
+rm -f /usr/lib/librxsock.*
+
+echo $SCRIPT_NAME: Removing libraries from $(PREFIX)/lib/ooRexx.
+rm -f $(PREFIX)/lib/ooRexx/librexx.*
+rm -r $(PREFIX)/lib/ooRexx/librexxapi.*
+rm -f $(PREFIX)/lib/ooRexx/librexxutil.*
+rm -f $(PREFIX)/lib/ooRexx/librxmath.*
+rm -f $(PREFIX)/lib/ooRexx/librxregexp.*
+rm -f $(PREFIX)/lib/ooRexx/librxsock.*
+
+echo $SCRIPT_NAME: Removing links from /usr/bin.
+rm -f /usr/bin/oorexx-config
+rm -f /usr/bin/rexx
+rm -f /usr/bin/rexx.cat
+rm -f /usr/bin/rexx.img
+rm -f /usr/bin/rexxc
+rm -f /usr/bin/rxdelipc
+rm -f /usr/bin/rxftp.cls
+rm -f /usr/bin/rxmigrate
+rm -f /usr/bin/rxqueue
+rm -f /usr/bin/rxregexp.cls
+rm -f /usr/bin/rxsubcom
+
+echo $SCRIPT_NAME: Removing programs from $(PREFIX)/bin.
+rm -f $(PREFIX)/bin/oorexx-config
+rm -f $(PREFIX)/bin/org.rexxla.oorexx.rxapid.plist
+rm -f $(PREFIX)/bin/rexx
+rm -f $(PREFIX)/bin/rexx.cat
+rm -f $(PREFIX)/bin/rexx.img
+rm -f $(PREFIX)/bin/rexxc
+rm -f $(PREFIX)/bin/rxapi
+rm -f $(PREFIX)/bin/rxapid
+rm -f $(PREFIX)/bin/rxdelipc
+rm -f $(PREFIX)/bin/rxftp.cls
+rm -f $(PREFIX)/bin/rxmigrate
+rm -f $(PREFIX)/bin/rxqueue
+rm -f $(PREFIX)/bin/rxregexp.cls
+rm -f $(PREFIX)/bin/rxsubcom
+
+echo $SCRIPT_NAME: Removing man pages from $(PREFIX)/share/man/man1.
+rm -f $(PREFIX)/share/man/man1/oorexx-config.1
+rm -f $(PREFIX)/share/man/man1/rexx.1
+rm -f $(PREFIX)/share/man/man1/rexxc.1
+rm -f $(PREFIX)/share/man/man1/rxqueue.1
+rm -f $(PREFIX)/share/man/man1/rxsubcom.1
+
+echo $SCRIPT_NAME: Removing rexx examples from $(PREFIX)/share/ooRexx.
+rm -f $(PREFIX)/share/ooRexx/ccreply.rex
+rm -f $(PREFIX)/share/ooRexx/complex.rex
+rm -f $(PREFIX)/share/ooRexx/factor.rex
+rm -f $(PREFIX)/share/ooRexx/greply.rex
+rm -f $(PREFIX)/share/ooRexx/guess.rex
+rm -f $(PREFIX)/share/ooRexx/ktguard.rex
+rm -f $(PREFIX)/share/ooRexx/makestring.rex
+rm -f $(PREFIX)/share/ooRexx/month.rex
+rm -f $(PREFIX)/share/ooRexx/philfork.rex
+rm -f $(PREFIX)/share/ooRexx/pipe.rex
+rm -f $(PREFIX)/share/ooRexx/properties.rex
+rm -f $(PREFIX)/share/ooRexx/qdate.rex
+rm -f $(PREFIX)/share/ooRexx/qtime.rex
+rm -f $(PREFIX)/share/ooRexx/readme
+rm -f $(PREFIX)/share/ooRexx/rexx.csh
+rm -f $(PREFIX)/share/ooRexx/rexx.sh
+rm -f $(PREFIX)/share/ooRexx/rexxcps.rex
+rm -f $(PREFIX)/share/ooRexx/rexxtry.rex
+rm -f $(PREFIX)/share/ooRexx/scclient.rex
+rm -f $(PREFIX)/share/ooRexx/scserver.rex
+rm -f $(PREFIX)/share/ooRexx/semcls.rex
+rm -f $(PREFIX)/share/ooRexx/sfclient.rex
+rm -f $(PREFIX)/share/ooRexx/sfserver.rex
+rm -f $(PREFIX)/share/ooRexx/stack.rex
+rm -f $(PREFIX)/share/ooRexx/usecomp.rex
+rm -f $(PREFIX)/share/ooRexx/usepipe.rex
+
+echo $SCRIPT_NAME: Shutting down rxapi daemon
+launchctl unload -w /Library/LaunchDaemons/org.rexxla.oorexx.rxapid.plist
+
+echo $SCRIPT_NAME: Removing rexx LaunchDeamon 
+rm -f /Library/LaunchDeamons/org.rexxla.oorexx.rxapid.plist
+
+echo $SCRIPT_NAME: Removal of prior version of ooRexx complete.

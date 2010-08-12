@@ -39,7 +39,8 @@
 OS=`uname -s`
 if [ "$OS" = "Darwin" ]
 then
-	export LIBTOOLIZE='glibtoolize autoreconf -fi' 
+	export LIBTOOLIZE=glibtoolize 
+	autoreconf -fi 
 	glibtoolize --copy --force --automake;
 else
 	libtoolize --copy --force --automake;

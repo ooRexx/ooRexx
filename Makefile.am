@@ -1061,7 +1061,13 @@ install-exec-local:
 		$(install_sh_SCRIPT) $(rexxapi_server_unix_dir)/rxapid $(DESTDIR)$(prefix)/bin/rxapid; \
 	fi
 	if test "$(ORX_SYS_STR)" = "MACOSX"; then \
-		$(install_sh_SCRIPT) $(platform_unix_dir)/macosx/org.rexxla.oorexx.rxapid.plist $(DESTDIR)$(prefix)/bin/org.rexxla.oorexx.rxapid.plist; \
+		$(install_sh_SCRIPT) $(platform_unix_dir)/macosx/org.rexxla.oorexx.rxapid.plist \
+			$(DESTDIR)$(prefix)/bin/org.rexxla.oorexx.rxapid.plist; \
+		sed -e "s/^VER=/VER=$(ORX_MAJOR)/" -e "s/^REL=/REL=$(ORX_MINOR)/" -e "s/^MOD=/MOD=$(ORX_MOD_LVL)/" \
+			-e "s?^PREFIX=?PREFIX=$(prefix)?" $(platform_unix_dir)/macosx/postflight.in \
+			>$(platform_unix_dir)/macosx/postflight; \
+		sed -e "s?^PREFIX=?PREFIX=$(prefix)?" $(platform_unix_dir)/macosx/preflight.in >$(platform_unix_dir)/macosx/preflight; \
+		chmod +X $(platform_unix_dir)/macosx/preflight $(platform_unix_dir)/macosx/postflight; \
 	fi
 	for a in $(build_samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
