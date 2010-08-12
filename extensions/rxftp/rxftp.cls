@@ -95,7 +95,7 @@
 ::method tracelog   attribute private -- trace log file stream
 ::method user       attribute private -- remote FTP host user name
 ::method version    attribute private -- version of this class
-::method thrdstatus attribute private -- finish status of a thread
+::method thrdstatus attribute private unguarded -- finish status of a thread
 
 
 /*----------------------------------------------------------------------------*/
