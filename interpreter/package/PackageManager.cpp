@@ -507,18 +507,22 @@ void PackageManager::addPackageRoutine(RexxString *name, RoutineClass *func)
 
 
 /**
- * Process the basics of RxFuncAdd().  This will return true
- * if the function can be resolved and is callable, false
- * otherwise.  If the target function is not in a loadable
- * package file, this will also do the global registration.
+ * Process the basics of RxFuncAdd().  This will return 0 if the function can be
+ * resolved and is callable, 1 otherwise.  If the target function is not in a
+ * loadable package file, this will also do the global registration.
  *
  * @param name   The name of the registered function.
  * @param module The name of the library containing the function.
  * @param proc   The target procedure name (ignored if the target library
  *               is a self-loading one).
  *
- * @return True if the function registration worked and the function
- *         is callable.  False otherwise.
+ * @return 0 if the function registration worked and the function is callable.
+ *         1 otherwise.
+ *
+ * @remarks  Note that we return TheFalseObject (0) if the function is resolved
+ *           and callable and TheTrueObject (1) for failure.  This is because
+ *           RxFuncAdd() directly returns this result. RxFuncAdd() is documented
+ *           to return 0 on success and 1 on failure.
  */
 RexxObject *PackageManager::addRegisteredRoutine(RexxString *name, RexxString *module, RexxString *proc)
 {
@@ -540,7 +544,7 @@ RexxObject *PackageManager::addRegisteredRoutine(RexxString *name, RexxString *m
     if (package != OREF_NULL)
     {
         // See if this is resolvable in this context.  If we got it,
-        // return True.
+        // return 0, the false object.
         return getLoadedRoutine(name) != OREF_NULL ? TheFalseObject : TheTrueObject;
     }
 
