@@ -1,0 +1,22 @@
+#!/bin/sh 
+
+ARCH=
+BLD_DIR=
+MOD=
+REL=
+PREFIX=
+VER=
+
+packagemaker 			\
+		--discard-forks \
+		--domain system \
+		--id org.rexxla.oorexx.$VER.$REL.$MOD \
+		--info /Users/bjskelly/SVN_ooRexx/platform/unix/macosx/PackageInfo \
+		--out $BLD_DIR/ooRexx-$VER.$REL.$MOD-$ARCH.pkg \
+		--root $PREFIX \
+		--root-volume-only \
+		--scripts $BLD_DIR/platform/unix/macosx \
+		--target 10.5 \
+		--title "Open Object Rexx V$VER.$REL.$MOD for Mac OS X" \
+		--verbose \
+		--version 1 \
