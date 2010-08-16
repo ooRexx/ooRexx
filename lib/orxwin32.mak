@@ -170,7 +170,7 @@ my_ldebug =
 my_ldebug = /PROFILE /DEBUG -debugtype:cv
 !ENDIF
 
-libs_common=user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib delayimp.lib ole32.lib oleaut32.lib uuid.lib shell32.lib kernel32.lib
+libs_common=user32.lib gdi32.lib winspool.lib comdlg32.lib comctl32.lib advapi32.lib delayimp.lib ole32.lib oleaut32.lib uuid.lib shell32.lib kernel32.lib
 
 lflags_common= /MAP /NOLOGO $(my_ldebug) /SUBSYSTEM:Windows $(lflags_lib) $(libs_common)
 lflags_common_console= /MAP /NOLOGO $(my_ldebug) /SUBSYSTEM:Console $(lflags_lib) user32.lib comdlg32.lib gdi32.lib kernel32.lib

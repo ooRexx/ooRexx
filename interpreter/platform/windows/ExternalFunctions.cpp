@@ -52,8 +52,8 @@
 #include <stdlib.h>                         /* Get system, max_path etc...    */
 #include <process.h>
 #include <direct.h>
-
-#define _WIN32_WINNT    0x0500
+#include <windows.h>
+#include <CommCtrl.h>
 
 #include "RexxCore.h"                         /* global REXX definitions        */
 #include "StringClass.hpp"
@@ -420,6 +420,11 @@ RexxRoutine5(int, sysMessageBox, CSTRING, text, OPTIONAL_CSTRING, title,
     int         maxCnt;                  /* Max loop count             */
     int         index;                   /* table index                */
 
+    INITCOMMONCONTROLSEX ctrlex;
+    ctrlex.dwSize = sizeof(ctrlex);
+    ctrlex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES;
+    InitCommonControlsEx(&ctrlex);
+
     PSZ Button_Styles[] =                /* message box button styles  */
     {
         "ABORTRETRYIGNORE",
@@ -489,7 +494,7 @@ RexxRoutine5(int, sysMessageBox, CSTRING, text, OPTIONAL_CSTRING, title,
             if ( !stricmp(button, Button_Styles[index]) )
             {
                 // Found a match.  Only 1 button style can be used, so break.
-                style += Button_Flags[index];
+                style |= Button_Flags[index];
                 break;
             }
         }
