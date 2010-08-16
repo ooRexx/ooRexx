@@ -402,17 +402,18 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
  *------------------------------------------------------------------*/
 RexxRoutine0(RexxStringObject, SockGetHostName)
 {
-    char     pszBuff[64];                    /* buffer for name */
+    char pszBuff[256];             /* host names are limited to 255 bytes */
+    *pszBuff = '\0';
+
     /*
      *   Assuming the hosts file in
      *   in %systemroot%/system/drivers/etc/hosts contains my computer name.
-     */                                      //get our name
-    if (gethostname(pszBuff, sizeof(pszBuff)))
-    {
-        // set the errno information
-        cleanup(context);
-        return context->String("");
-    }
+     */
+    int rc = gethostname(pszBuff, sizeof(pszBuff));
+
+    // set the errno information
+    cleanup(context);
+
     return context->String(pszBuff);
 }
 
