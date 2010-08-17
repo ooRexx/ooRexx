@@ -11,16 +11,18 @@
 ;  oorexx.nsi MUST be in the current directory!
 
 !define LONGNAME "Open Object Rexx"  ;Long Name (for descriptions)
-!define SHORTNAME "ooRexx" ;Short name (no slash) of package
+!define SHORTNAME "ooRexx"           ;Short name (no slash) of package
 !define DISPLAYICON "$INSTDIR\rexx.exe,0"
 !define UNINSTALLER "uninstall.exe"
-!define KEYFILE     "rexx.exe"
+!define KEYFILE1     "rexx.exe"
+!define KEYFILE2     "rxapi.dll"
 
 !define MUI_ICON "${SRCDIR}\platform\windows\rexx.ico"
 !define MUI_UNICON "${SRCDIR}\platform\windows\install\uninstall.ico"
 
 Name "${LONGNAME} ${VERSION}"
 
+!include "nsProcess.nsh"
 !include "MUI2.nsh"
 !include "Library.nsh"
 
@@ -110,8 +112,8 @@ SectionEnd
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
 
-  !insertmacro MUI_UNPAGE_WELCOME
   !define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.CheckForRxAPI
+  !insertmacro MUI_UNPAGE_WELCOME
   !insertmacro MUI_UNPAGE_CONFIRM
   !insertmacro MUI_UNPAGE_INSTFILES
   !insertmacro MUI_UNPAGE_FINISH
@@ -621,9 +623,9 @@ Function .onInit
   ; Uninstall previous version if present
   ;
   ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallString"
-  StrCmp $R1 "" NoUninstall
+  StrCmp $R1 "" NotInstalled
     ;
-    ; ask the user to run the uninstaller
+    ; demand that the user run the uninstaller
     ;
     ReadRegStr $R2 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UnInstallLocation"
     StrCmp $R2 "" NoUninstallLocation
@@ -631,21 +633,79 @@ Function .onInit
     NoUninstallLocation:
       StrCpy $R2 $INSTDIR
     StartUninstall:
-    MessageBox MB_YESNOCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST "A version of ${LONGNAME} is currently installed.$\nIt is recommended that it be uninstalled before proceeding.$\nUninstall previous version?" /SD IDYES IDNO NoUninstall IDCANCEL DoAbort
+    MessageBox MB_YESNOCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST \
+               "A version of ${LONGNAME} is currently installed.  If the$\n\
+               previous version is not uninstalled it is guaranteed to cause problems.$\n$\n\
+               Uninstall the previous version?" /SD IDYES IDNO RefusedUninstall IDCANCEL DoAbort
     HideWindow
     ClearErrors
-    ExecWait '$R1 _?=$R2'
-    IfErrors no_remove_uninstaller
-    IfFileExists "$INSTDIR\${KEYFILE}" no_remove_uninstaller
+    ; the "_?=" sets the uninstall dir and *prevents* the uninstaller from running in the temp dir, which we want
+    ExecWait '$R1 _?=$R2' $0
+    IfErrors UninstallErrors
+    IntCmp $0 0 SanityCheck
+    IntCmp $0 1 UserCanceledUninstall
+    ; Return code is 2 or greater.  2 is uninstall canceled by script, treat greater than the same.
+    MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
+               "The uninstall of the previous version of ${SHORTNAME} was terminated by$\n\
+               the uninstall script.  The most likely cause of this is that rxapi is running$\n\
+               as a service and could not be stopped, or was not stopped.$\n$\n\
+               When the previous version rxapi is not stopped, the new version can$\n\
+               not be installed correctly.  The installation will abort.  You can:$\n$\n\
+               1.) Contact the developers on the SourceForge project for help.$\n$\n\
+               2.) Try stopping rxapi and setting the service to disabled if it is$\n\
+               installed as a service.  The rerun the installation.$\n$\n\
+               3.) Elect to not stop rxapi and to not remove the previous version.  To do$\n\
+               this, rerun the installation and click No when asked to uninstall the previous$\n\
+               version.  Then click Yes when asked if you want to continue." /SD IDOK
+    Goto DoAbort
+
+    UserCanceledUninstall:
+      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
+                 "You have elected to cancel the uninstall of the previous version of$\n\
+                 ${SHORTNAME}.  There are very few cases where installing ${LONGNAME}$\n\
+                 without removing the previous version will work and this installation$\n\
+                 will abort.$\n$\n\
+                 If you are determined to install ${SHORTNAME} without removing the$\n\
+                 previous version, rerun the installation and click No when asked to$\n\
+                 uninstall the previous version.  Then click Yes when asked if you want$\n\
+                 to continue." /SD IDOK
+      Goto DoAbort
+
+    SanityCheck:
+      IfFileExists "$INSTDIR\${KEYFILE1}" UninstallErrors
+      IfFileExists "$INSTDIR\${KEYFILE2}" UninstallErrors
       Delete "$R2\${UNINSTALLER}"
       RMDir "$R2"
-    no_remove_uninstaller:
-    BringToFront
+      BringToFront
+      Goto NotInstalled
+    UninstallErrors:
+      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
+                 "There were unexpected errors uninstalling the previous version$\n\
+                 of ${SHORTNAME}.  There are very few cases where installing ${LONGNAME}$\n\
+                 without removing the previous version will work and this installation$\n\
+                 will abort.  You should first try rerunning the installtion.$\n$\n\
+                 If this is the second attempt at installation and you still get this$\n\
+                 message, you can:$\n$\n\
+                 1.) Contact the developers on the SourceForge project for help.$\n$\n\
+                 2.) Try removing the previous version manually and rerun the installation.$\n$\n\
+                 3.) Elect to not remove the previous version.  To do this, rerun the installation$\n\
+                 and click No when asked to uninstall the previous version.  Then click Yes when$\n\
+                 asked if you want to continue.$\n$\n\
+                 In all cases, please report this problem to the ${SHORTNAME} project on SourceForge." /SD IDOK
+      Goto DoAbort
 
-    Goto NoUninstall
-  DoAbort:
-    Abort
-  NoUninstall:
+    RefusedUninstall:
+      MessageBox MB_YESNO|MB_ICONEXCLAMATION|MB_TOPMOST \
+                 "There are very few cases where installing ${LONGNAME}$\n\
+                 without removing the previous version will work.  If you think$\n\
+                 you know better than this, proceed with the installation.  However,$\n\
+                 the ${SHORTNAME} developers will not support this type of installation$\n$\n\
+                 Click Yes to continue, No to cancel the installation." /SD IDNO IDNO DoAbort
+      BringToFront
+      Goto NotInstalled
+    DoAbort:
+      Abort
+  NotInstalled:
   ;
   ; Install as All Users if an admin
   ;
@@ -705,26 +765,61 @@ Function CheckForRxAPI
   ; Rather than fix FindProcDll, (easy to do, but I'm not sure of its license,)
   ; we first check if it is running as a service.  If so, we stop it.
   ;
+  ; TODO we need better than the above.  Trying nsProcess plusging, still not
+  ;      sure if it works.
+  ;
   StrCmp $rxapichk 1 NotRunning
   StrCpy $rxapichk 1
   services::IsServiceRunning 'RXAPI'
   Pop $R0
   StrCmp $R0 'Yes' ServiceIsRunning
-  ; Try FindProcDLL
-  FindProcDLL::FindProc "rxapi.exe"
-  StrCmp $R0 0 NotRunning
+
+  ; Try FindProcDLL to see if rxapi can be found running.
+  ;;;FindProcDLL::FindProc "rxapi.exe"
+  ;;;StrCmp $R0 0 NotRunning
+
+  ; Try nsProcess
+  ${nsProcess::FindProcess} "rxapi.exe" $0
+  StrCmp $0 603 NotRunning
+  DetailPrint "{nsProcess::FindProcess} rc: $0"
+
   ;
   ; rxapi.exe is running, we need to stop it
   ServiceIsRunning:
-  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST "The Open Object Rexx memory manager (RXAPI) is currently active.$\nSelect OK to stop it (possible loss of data) and continue.$\nSelect CANCEL to continue with the installation without stopping the memory manager." /SD IDOK IDCANCEL NotRunning
+  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST \
+             "A previous version of the Open Object Rexx memory manager (rxapi) is currently$\n\
+             running.  A new version of rxapi can not be installed while rxapi is running.$\n$\n\
+             Select Ok to stop rxapi and continue. Select Cancel to abort the installation.$\n$\n\
+             If, and only if, there are running Rexx programs, stopping the memory manager$\n\
+             could possibly cause data loss.  If you are worried about this, please cancel the$\n\
+             installation, stop all running Rexx programs, and rerun the installation" /SD IDOK IDOK DoStopRxapi
+  Quit
   ;
   ; Stop rxapi.exe.  Send the service stop command first.  If it is not a
-  ; service, we don't care, just try kill.
+  ; service, we don't care, we'll just try to kill it.
+  DoStopRxapi:
   Services::SendServiceCommand 'stop' 'RXAPI'
   Pop $R0
   StrCmp $R0 'Ok' NotRunning
-  KillProcDLL::KillProc "rxapi.exe"
-  DetailPrint "rc from KillProcDll $R0"
+
+  ;; KillProcDLL::KillProc "rxapi.exe"
+  ;; DetailPrint "rc from KillProcDll $R0"
+
+  ${nsProcess::KillProcess} "rxapi.exe" $0
+  StrCmp $0 603 NotRunning
+  DetailPrint "nsProcess::KillProcess rc: $0"
+  ; Ensure rxapid is stopped
+  ${nsProcess::FindProcess} "rxapi.exe" $0
+  StrCmp $0 603 NotRunning
+  DetailPrint "{nsProcess::FindProcess} rc: $0"
+  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST \
+             "Can not determine conclusively that the Open Object Rexx memory manager (rxapi) is$\n\
+             stopped.  Since a new version of rxapi can not be installed while rxapi is running,$\n\
+             the installation will quit.$\n$\n\
+             Please use the task manager to locate rxapi.exe and end that process, then restart the$\n\
+             installation.  If you are uncomfortable with using the task manager, contact the$\n\
+             ${SHORTNAME} developers on SourceForge for help." /SD IDOK
+  Quit
 
   NotRunning:
 FunctionEnd
@@ -822,10 +917,10 @@ SectionEnd
 ;========================================================================
 ;Uninstaller Section
 ;
-; Not this:  If the install was done by a non-admin user, the .rex file association may have been written
-;            to the HKEY_CURRENT_USER\SOFTWARE\Classes area.  You would think that we need to check for
-;            that and specifically delete those keys.  However, testing shows that the current code always
-;            removes those keys.  Tested on a number of machines with a number of different users.
+; Note this:  If the install was done by a non-admin user, the .rex file association may have been written
+;             to the HKEY_CURRENT_USER\SOFTWARE\Classes area.  You would think that we need to check for
+;             that and specifically delete those keys.  However, testing shows that the current code always
+;             removes those keys.  Tested on a number of machines with a number of different users.
 
 Section "Uninstall"
 
@@ -834,7 +929,8 @@ Section "Uninstall"
 ;;  !insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_PROTECTED "$INSTDIR\orxscrpt.dll"
   ;
   ; Stop rxapi.exe (again!) the de-registration process starts rxapi.exe GRRRR!!!
-  KillProcDLL::KillProc "rxapi.exe"
+  ;;;;  TODO need better than to just kill this
+  ;;;KillProcDLL::KillProc "rxapi.exe"
 
   ; get rid of file association
   Push ".REX"
@@ -846,6 +942,9 @@ Section "Uninstall"
     Pop $R0
     StrCmp $R0 'No' NotAdmin
     DetailPrint "Uninstalling ooRexx rxapi Service"
+    services::IsServiceRunning 'RXAPI'   ; if the service is not running, sending it a stop command will fail.
+    Pop $0
+    StrCmp $R0 'No' StoppedOK
     Services::SendServiceCommand 'stop' 'RXAPI'
     Pop $R0
     StrCmp $R0 'Ok' StoppedOK
@@ -948,6 +1047,7 @@ Function un.onInit
   ;
   ; UnInstall as All Users if an admin
   ;
+  StrCpy $rxapichk 0
   Call un.IsUserAdmin
   Pop $IsAdminUser
   StrCmp $IsAdminUser "false" DefaultUser
@@ -984,25 +1084,65 @@ Function un.CheckForRxAPI
   ; Rather than fix FindProcDll, (easy to do, but I'm not sure of its license,)
   ; we first check if it is running as a service.  If so, we stop it.
   ;
+  ;
+
   StrCmp $rxapichk 1 NotRunning
   StrCpy $rxapichk 1
   services::IsServiceRunning 'RXAPI'
   Pop $R0
   StrCmp $R0 'Yes' ServiceIsRunning
-  ; Try FindProcDLL
-  FindProcDLL::FindProc "rxapi.exe"
-  StrCmp $R0 0 NotRunning
+
+  ;; ; Try FindProcDLL to see if rxapi can be found running.
+  ;; FindProcDLL::FindProc "rxapi.exe"
+  ;; StrCmp $R0 0 NotRunning
+
+  ; Try nsProcess to see if rxapi can be found running.
+  ${nsProcess::FindProcess} "rxapi.exe" $0
+  StrCmp $0 603 NotRunning
+  DetailPrint "{nsProcess::FindProcess} rc: $0"
+
   ;
   ; rxapi.exe is running, we need to stop it
   ServiceIsRunning:
-  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST "The Open Object Rexx memory manager (RXAPI) is currently active.$\nSelect OK to stop it (possible loss of data) and continue.$\nSelect CANCEL to continue with the uninstall without stopping the service." /SD IDOK IDCANCEL NotRunning
-  ;
+  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST \
+             "The ${LONGNAME} memory manager (rxapi) is currently running.  ${SHORTNAME} can not be$\n\
+             completely uninstalled while rxapi is running.$\n$\n\
+             Select Ok to stop rxapi and continue.  Select Cancel to abort the uninstall.$\n$\n\
+             All Rexx programs should be stopped before the uninstall is started.  (Or,$\n\
+             before the install was started, if upgrading.)  If, and only if, there are$\n\
+             Rexx programs running, stopping the memory manager could possibly cause data$\n\
+             loss.  If you are worried about this, please cancel the uninstall, stop all$\n\
+             running Rexx programs, and rerun the uninstall, (or install.)" /SD IDOK IDOK DoStopRxapi
+  SetErrorLevel 1
+  Quit
+
   ; Stop rxapi.exe.  Send the service stop command first.  If it is not a
-  ; service, we don't care, just try kill.
+  ; service, we don't care, we'll get back that it is not stopped.  Then we just
+  ; try to kill it.
+  DoStopRxapi:
   Services::SendServiceCommand 'stop' 'RXAPI'
   Pop $R0
   StrCmp $R0 'Ok' NotRunning
-  KillProcDLL::KillProc "rxapi.exe"
+
+  ;; KillProcDLL::KillProc "rxapi.exe"
+  ;; DetailPrint "rc from KillProcDll $R0"
+
+  ${nsProcess::KillProcess} "rxapi.exe" $0
+  StrCmp $0 603 NotRunning
+  DetailPrint "nsProcess::KillProcess rc: $0"
+  ; Ensure rxapid is stopped
+  ${nsProcess::FindProcess} "rxapi.exe" $0
+  StrCmp $0 603 NotRunning
+  DetailPrint "{nsProcess::FindProcess} rc: $0"
+  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST \
+             "Can not determine conclusively that rxapi is currently stopped.  If the$\n\
+             installation continues, the file, rxapi.exe, may need to be deleted manually.$\n$\n\
+             Select Ok to continue anyway.  Select Cancel to abort the uninstall.$\n$\n\
+             Continuing the uninstall should not be a problem.  When the uninstall finishes$\n\
+             simply delete rxapi.exe manually.  If this uninstall is part of an install to$\n\
+             a new version of ${SHORTNAME}, simply cancel the install, delete the file,$\n\
+             restart the installation." /SD IDCANCEL IDOK NotRunning
+  Quit
 
   NotRunning:
 FunctionEnd
