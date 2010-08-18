@@ -2874,6 +2874,11 @@ Output:
   -- the target timezone, then create a new object using that offset
   return self~class~new(utcTimeStamp + adjustment, offset)
 
+-- return a .DateTime object converted to local time
+::METHOD toLocalTime
+  use strict arg
+  return self~toTimeZone(time('O')/60000000)  -- convert to the local offset
+
 -- return the time zone offset, as a TimeSpan object
 ::METHOD offset
   expose offset
