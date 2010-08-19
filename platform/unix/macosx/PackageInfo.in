@@ -1,2 +1,2 @@
 <?xml version="1.0"?>
-<pkg-info format-version="2" install-location="PREF" > </pkg-info>
+<pkg-info format-version="2" install-location="#PREF#" > </pkg-info>
