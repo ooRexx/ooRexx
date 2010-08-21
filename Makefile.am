@@ -1065,7 +1065,7 @@ install-exec-local:
 		$(install_sh_SCRIPT) $(platform_unix_dir)/macosx/org.rexxla.oorexx.rxapid.plist \
 			$(DESTDIR)$(prefix)/bin/org.rexxla.oorexx.rxapid.plist; \
 		mkdir $(platform_unix_dir)/macosx/scripts; \
-		sed -e "s/^VER=/VER=$(ORX_MAJOR)/" -e "s/^REL=/REL=$(ORX_AGE)/" -e "s/^MOD=/MOD=$(ORX_REVISION) \
+		sed -e "s/^VER=/VER=$(ORX_MAJOR)/" -e "s/^REL=/REL=$(ORX_AGE)/" -e "s/^MOD=/MOD=$(ORX_REVISION)/" \
 		    -e "s-^PREFIX=-PREFIX=$(prefix)-" $(platform_unix_dir)/macosx/postflight.in \
 		    >$(platform_unix_dir)/macosx/scripts/postflight; \
 		sed -e "s-^PREFIX=-PREFIX=$(prefix)-" $(platform_unix_dir)/macosx/preflight.in \
