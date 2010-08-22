@@ -97,11 +97,11 @@ Function un.DeleteEnvStr
   DeleteEnvStr_NT:
       StrCmp $8 "false" DeleteEnvStr_NormalUser
       DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" $0
-      DetailPrint "Deleting environment variable $0 from All Users"
+      DetailPrint "Deleting environment variable $0 for All Users"
       Goto DeleteEnvStr_cont
     DeleteEnvStr_NormalUser:
       DeleteRegValue HKCU "Environment" $0
-      DetailPrint "Deleting environment variable $0 from Current User"
+      DetailPrint "Deleting environment variable $0 for Current User"
     DeleteEnvStr_cont:
     SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} \
       0 "STR:Environment" /TIMEOUT=5000
