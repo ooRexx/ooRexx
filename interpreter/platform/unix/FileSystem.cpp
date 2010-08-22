@@ -200,11 +200,6 @@ RexxBuffer *SystemInterpreter::readProgram(const char *file_name)
             return OREF_NULL;                  /* return nothing                    */
         }
 
-        if (fileno(handle) == (FOPEN_MAX - 2))
-        {      /* open error?                       */
-            return OREF_NULL;                  /* return nothing                    */
-        }
-
         fseek(handle, 0, SEEK_END);          /* seek to the file end              */
         buffersize = ftell(handle);          /* get the file size                 */
         fseek(handle, 0, SEEK_SET);          /* seek back to the file beginning   */
