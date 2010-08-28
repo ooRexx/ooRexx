@@ -558,8 +558,8 @@ return xxx
 /* Method: select                                                             */
 /* Description: monitor activity on a set of sockets                          */
 /* Arguments:                                                                 */
-/*         reads   - an array of sockets                                       */
-/*         writes  - an array of sockets                                           */
+/*         reads   - an array of sockets                                      */
+/*         writes  - an array of sockets                                      */
 /*         excepts - an array of sockets                                      */
 /*         timeout - timeout in seconds                                       */
 /*----------------------------------------------------------------------------*/
@@ -575,15 +575,15 @@ if \excepts~isInstanceOf(.Array) then ,
  raise syntax 93.914 array (3, 'an Array', excepts)
 reads.0 = reads~items
 do i = 1 to reads~items
-   reads.i = reads[i]~s
+   reads.i = reads[i]~string
    end
 writes.0 = writes~items
 do i = 1 to writes~items
-   writes.i = writes[i]~s
+   writes.i = writes[i]~string
    end
 excepts.0 = excepts~items
 do i = 1 to excepts~items
-   excepts.i = excepts[i]~s
+   excepts.i = excepts[i]~string
    end
 retc = SockSelect('reads.', 'writes.', 'excepts.', timeout)
 if retc = -1 then do
