@@ -16,7 +16,7 @@ packagemaker 			\
 		--domain system \
 		--id org.rexxla.oorexx.$VER.$REL.$MOD \
 		--info $BLD_DIR/platform/unix/macosx/PackageInfo \
-		--out $BLD_DIR/ooRexx-$VER.$REL.$MOD-$ARCH.macosx.pkg \
+		--out $BLD_DIR/ooRexx-$VER.$REL.$MOD-$ARCH.pkg \
 		--root $PREFIX \
 		--root-volume-only \
 		--scripts $BLD_DIR/platform/unix/macosx/scripts \
@@ -26,3 +26,4 @@ packagemaker 			\
 		--version 1 \
 
 
+hdiutil        create
