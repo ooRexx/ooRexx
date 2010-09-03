@@ -928,7 +928,7 @@ bool SysFileSystem::isHidden(const char *name)
     }
 
     size_t length = strlen(name);
-    for (size_t index = length; index >= 0; index--)
+    for (size_t index = length - 1; index > 0; index--)
     {
         if (name[index] == '.' && (index > 0 && name[index - 1] == '/'))
         {
