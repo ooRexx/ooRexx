@@ -111,7 +111,7 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
     newBuffer = new ((RexxClass *)this) RexxMutableBuffer(bufferLength, defaultSize);
     newBuffer->dataLength = string->getLength();
     /* copy the content                  */
-    newBuffer->data->copyData(0, string->getStringData(), string->getLength());
+    newBuffer->copyData(0, string->getStringData(), string->getLength());
 
     ProtectedObject p(newBuffer);
     newBuffer->sendMessage(OREF_INIT, args, argc > 2 ? argc - 2 : 0);
@@ -226,7 +226,7 @@ RexxObject *RexxMutableBuffer::copy()
                                            /* see the comments in ::newRexx()!! */
     newObj->data = new_buffer(bufferLength);
     newObj->dataLength = this->dataLength;
-    newObj->data->copyData(0, data->getData(), bufferLength);
+    newObj->copyData(0, data->getData(), bufferLength);
 
     newObj->defaultSize = this->defaultSize;
     newObj->bufferLength = this->bufferLength;
@@ -278,7 +278,7 @@ RexxMutableBuffer *RexxMutableBuffer::append(RexxObject *obj)
     // make sure we have enough room
     ensureCapacity(string->getLength());
 
-    data->copyData(dataLength, string->getStringData(), string->getLength());
+    copyData(dataLength, string->getStringData(), string->getLength());
     this->dataLength += string->getLength();
     return this;
 }
@@ -322,19 +322,19 @@ RexxMutableBuffer *RexxMutableBuffer::insert(RexxObject *str, RexxObject *pos, R
     /* create space in the buffer   */
     if (begin < dataLength)
     {
-        data->openGap(begin, insertLength, dataLength - begin);
+        openGap(begin, insertLength, dataLength - begin);
     }
     else if (begin > this->dataLength)
     {
         /* pad before insertion         */
-        data->setData(dataLength, padChar, begin - dataLength);
+        setData(dataLength, padChar, begin - dataLength);
     }
     /* insert string contents       */
-    data->copyData(begin, string->getStringData(), copyLength);
+    copyData(begin, string->getStringData(), copyLength);
     // do we need data padding?
     if (padLength > 0)
     {
-        data->setData(begin + string->getLength(), padChar, padLength);
+        setData(begin + string->getLength(), padChar, padLength);
     }
     // inserting after the end? the resulting length is measured from the insertion point
     if (begin > this->dataLength)
@@ -368,16 +368,16 @@ RexxMutableBuffer *RexxMutableBuffer::overlay(RexxObject *str, RexxObject *pos, 
     if (begin > dataLength)
     {
         // add padding to the gap
-        data->setData(dataLength, padChar, begin - dataLength);
+        setData(dataLength, padChar, begin - dataLength);
     }
 
     // now overlay the string data
-    data->copyData(begin, string->getStringData(), Numerics::minVal(replaceLength, string->getLength()));
+    copyData(begin, string->getStringData(), Numerics::minVal(replaceLength, string->getLength()));
     // do we need additional padding?
     if (replaceLength > string->getLength())
     {
         // pad the section after the overlay
-        data->setData(begin + string->getLength(), padChar, replaceLength - string->getLength());
+        setData(begin + string->getLength(), padChar, replaceLength - string->getLength());
     }
 
     // did this add to the size?
@@ -447,9 +447,9 @@ RexxMutableBuffer *RexxMutableBuffer::replaceAt(RexxObject *str, RexxObject *pos
     if (begin > dataLength)
     {
         // add padding to the gap
-        data->setData(dataLength, padChar, begin - dataLength);
+        setData(dataLength, padChar, begin - dataLength);
         // now overlay the string data
-        data->copyData(begin, string->getStringData(), newLength);
+        copyData(begin, string->getStringData(), newLength);
     }
     else
     {
@@ -458,10 +458,10 @@ RexxMutableBuffer *RexxMutableBuffer::replaceAt(RexxObject *str, RexxObject *pos
         if (replaceLength != newLength && begin + replaceLength < dataLength)
         {
             // snip out the original string
-            data->adjustGap(begin, replaceLength, newLength);
+            adjustGap(begin, replaceLength, newLength);
         }
         // now overlay the string data
-        data->copyData(begin, string->getStringData(), newLength);
+        copyData(begin, string->getStringData(), newLength);
     }
 
     // and finally adjust the length
@@ -486,7 +486,7 @@ RexxMutableBuffer *RexxMutableBuffer::mydelete(RexxObject *_start, RexxObject *l
         if (begin + range < dataLength)
         {
             // shift everything over
-            data->closeGap(begin, range, dataLength - (begin + range));
+            closeGap(begin, range, dataLength - (begin + range));
             dataLength -= range;
         }
         else

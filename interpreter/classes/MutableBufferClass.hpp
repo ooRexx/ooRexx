@@ -122,7 +122,7 @@ class RexxMutableBufferClass : public RexxClass {
    inline void copyData(size_t offset, const char *string, size_t l) { data->copyData(offset, string, l); }
    inline void openGap(size_t offset, size_t _size, size_t tailSize) { data->openGap(offset, _size, tailSize); }
    inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }
-   inline void adjustGap(size_t offset, size_t _size, size_t _newSize) { data->adjustGap(offset, _size, _newSize); }
+   inline void adjustGap(size_t offset, size_t _size, size_t _newSize) { data->adjustGap(offset, _size, _newSize, dataLength); }
    inline void setData(size_t offset, char character, size_t l) { data->setData(offset, character, l); }
    inline char getChar(size_t offset) { return getData()[offset]; }
 
@@ -130,8 +130,6 @@ class RexxMutableBufferClass : public RexxClass {
    static RexxClass *classInstance;
 
  protected:
-
-
    size_t             bufferLength;    /* buffer length                   */
    size_t             defaultSize;     /* default size when emptied       */
    size_t             dataLength;      // current length of data
