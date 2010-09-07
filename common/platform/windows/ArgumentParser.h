@@ -36,26 +36,38 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-const char *nextArgument(BOOL getprog, const char *argptr, PULONG ndx, PULONG len, BOOL allocate, ULONG maxarglength)
+const char *nextArgument(BOOL getprog, const char *argptr, PULONG ndx, PULONG len, BOOL allocate)
 {
     PCHAR ret;
     if (argptr[*ndx] == ' ')                      /* skip blanks of previous argument */
-    while ((argptr[*ndx] == ' ') && argptr[*ndx] && (*ndx<maxarglength)) (*ndx)++;
+    {
+        while ((argptr[*ndx] == ' ') && argptr[*ndx])
+        {
+            (*ndx)++;
+        }
+    }
     *len = 0;
     const char *tmp = &argptr[*ndx];
 
     if (!allocate)
     {
-        while ((argptr[*ndx] != ' ') && argptr[*ndx] && (*ndx<maxarglength))
+        while ((argptr[*ndx] != ' ') && argptr[*ndx])
         {
             if (argptr[*ndx] == '\"') do
+                {
+                    if (argptr[*ndx] != '\"')
+                    {
+                        (*len)++;
+                    }
+                    (*ndx)++;
+                } while ((argptr[*ndx] != '\"') && argptr[*ndx]);
+            if (argptr[*ndx])
             {
-                if (argptr[*ndx] != '\"') (*len)++;
+                if (argptr[*ndx] != '\"')
+                {
+                    (*len)++;
+                }
                 (*ndx)++;
-            } while ((argptr[*ndx] != '\"') && argptr[*ndx] && (*ndx<maxarglength));
-            if (argptr[*ndx]) {
-                if (argptr[*ndx] != '\"') (*len)++;
-                 (*ndx)++;
             }
         }
     }
@@ -63,60 +75,91 @@ const char *nextArgument(BOOL getprog, const char *argptr, PULONG ndx, PULONG le
     else if (getprog)
     {
         if (argptr[*ndx] == '\"')
-        do {
-            (*len)++;(*ndx)++;
-        } while ((argptr[*ndx] != '\"') && argptr[*ndx] && (*ndx<maxarglength));
-        while (argptr[*ndx] && (argptr[*ndx] != ' ') && (*ndx<maxarglength)) { (*len)++; (*ndx)++;}
+            do
+            {
+                (*len)++;
+                (*ndx)++;
+            } while ((argptr[*ndx] != '\"') && argptr[*ndx]);
+        while (argptr[*ndx] && (argptr[*ndx] != ' '))
+        {
+            (*len)++;
+            (*ndx)++;
+        }
     }
-    else while (argptr[*ndx] && (*ndx<maxarglength)) { (*len)++; (*ndx)++;}
+    else
+    {
+        while (argptr[*ndx])
+        {
+            (*len)++;
+            (*ndx)++;
+        }
+    }
 
     if (*len)
     {
-        if (allocate) {
+        if (allocate)
+        {
             /* program name must not be enclosed within "" for REXXHIDE */
-            if (getprog && (tmp[0] == '\"')) {tmp++;(*len)-=2;};
+            if (getprog && (tmp[0] == '\"'))
+            {
+                tmp++;(*len)-=2;
+            };
 
             ret = (PCHAR) GlobalAlloc(GMEM_FIXED, (*len)+1);
             memcpy(ret, tmp, (*len)+1);
-            if (getprog) ret[*len]='\0';
+            if (getprog)
+            {
+                ret[*len]='\0';
+            }
             return ret;
-        } else return tmp;
+        }
+        else
+        {
+            return tmp;
+        }
     }
-    else return NULL;
+    else
+    {
+        return NULL;
+    }
 }
 
 
 
 PCONSTRXSTRING getArguments(const char **program, const char *argptr, size_t *count, PCONSTRXSTRING retarr)
 {
-    ULONG i, isave, len, maxarglen;
+    ULONG i, isave, len;
     /* don't forget the break after program_name */
-
-    /* WindowsNT accepts 2048 bytes, Windows95/98 1024 bytes */
-    maxarglen=2048;
 
     i = 0;
     if (program)
-        (*program) = nextArgument(TRUE, argptr, &i, &len, TRUE, maxarglen);  /* for REXXHIDE script is first argument */
+    {
+        (*program) = nextArgument(TRUE, argptr, &i, &len, TRUE);  /* for REXXHIDE script is first argument */
+    }
     else {
-        nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);             /* skip REXX*.EXE */
-        const char *tmp = nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);       /* skip REXX script or -e switch */
+        nextArgument(FALSE, argptr, &i, &len, FALSE);             /* skip REXX*.EXE */
+        const char *tmp = nextArgument(FALSE, argptr, &i, &len, FALSE);       /* skip REXX script or -e switch */
         /* the following test ensure that the -e switch on rexx.exe is not included in the arguments */
         /* passed to the running program as specified on the command line. Unfortunately it also     */
         /* affects rexxhide, rexxpaws, etc, that all use this code; may not be important             */
         if (tmp && strlen(tmp) > 1 && (tmp[0] == '/' || tmp[0] == '-') && (tmp[1] == 'e' || tmp[1] == 'E') )
-          nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);           /* skip REXX code*/
+        {
+            nextArgument(FALSE, argptr, &i, &len, FALSE);           /* skip REXX code*/
+        }
     }
 
     retarr->strptr = NULL;
     isave = i;
     *count = 0;
-    if (nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen)) (*count)++;
+    if (nextArgument(FALSE, argptr, &i, &len, FALSE))
+    {
+        (*count)++;
+    }
 
     if (*count)
     {
         i = isave;
-        retarr->strptr = nextArgument(FALSE, argptr, &i, &len, TRUE, maxarglen);
+        retarr->strptr = nextArgument(FALSE, argptr, &i, &len, TRUE);
         retarr->strlength = len;
     }
     return retarr;

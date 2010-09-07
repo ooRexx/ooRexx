@@ -60,51 +60,55 @@ int WINAPI WinMain(
     LPSTR lpCmdLine,	// pointer to command line
     int nCmdShow)
 {
-  short    rexxrc = 0;                 /* return code from rexx             */
-  LONG  rc;                            /* actually running program RC       */
-  const char *program_name;            /* name to run                       */
-  CHAR  arg_buffer[1024];              /* starting argument buffer         */
-  CONSTRXSTRING arguments;             /* rexxstart argument                */
-  size_t argcount;
-  RXSTRING rxretbuf;                   // program return buffer
+    short    rexxrc = 0;                 /* return code from rexx             */
+    LONG  rc;                            /* actually running program RC       */
+    const char *program_name;            /* name to run                       */
+    CHAR  arg_buffer[1024];              /* starting argument buffer         */
+    CONSTRXSTRING arguments;             /* rexxstart argument                */
+    size_t argcount;
+    RXSTRING rxretbuf;                   // program return buffer
 
-  rc = 0;                              /* set default return                */
+    rc = 0;                              /* set default return                */
 
-  strcpy(arg_buffer, lpCmdLine);
-  getArguments(&program_name, arg_buffer, &argcount, &arguments);
+    strcpy(arg_buffer, lpCmdLine);
+    getArguments(&program_name, arg_buffer, &argcount, &arguments);
 
-  if (program_name == NULL) {
-                                       /* give a simple error message       */
-    MessageBox(NULL, "Syntax: REXXHIDE ProgramName [parameter_1....parameter_n]\n", "Wrong Arguments", MB_OK | MB_ICONHAND);
-    return -1;
-  }
-  else {                               /* real program execution            */
-    rxretbuf.strlength = 0L;           /* initialize return to empty*/
+    if (program_name == NULL)
+    {
+        /* give a simple error message       */
+        MessageBox(NULL, "Syntax: REXXHIDE ProgramName [parameter_1....parameter_n]\n", "Wrong Arguments", MB_OK | MB_ICONHAND);
+        return -1;
+    }
+    else                               /* real program execution            */
+    {
+        rxretbuf.strlength = 0L;           /* initialize return to empty*/
 
-   /* Here we call the interpreter.  We don't really need to use     */
-   /* all the casts in this call; they just help illustrate          */
-   /* the data types used.                                           */
-   rc=REXXSTART(argcount,      /* number of arguments   */
-                &arguments,    /* array of arguments    */
-                program_name,  /* name of REXX file     */
-                0,             /* No INSTORE used       */
-                "CMD",         /* Command env. name     */
-                RXCOMMAND,     /* Code for how invoked  */
-				NULL,          /* No system exits */
-                &rexxrc,       /* Rexx program output   */
-                &rxretbuf );   /* Rexx program output   */
+        /* Here we call the interpreter.  We don't really need to use     */
+        /* all the casts in this call; they just help illustrate          */
+        /* the data types used.                                           */
+        rc=REXXSTART(argcount,      /* number of arguments   */
+                     &arguments,    /* array of arguments    */
+                     program_name,  /* name of REXX file     */
+                     0,             /* No INSTORE used       */
+                     "CMD",         /* Command env. name     */
+                     RXCOMMAND,     /* Code for how invoked  */
+                     NULL,          /* No system exits */
+                     &rexxrc,       /* Rexx program output   */
+                     &rxretbuf );   /* Rexx program output   */
 
-   if ((rc==0) && rxretbuf.strptr) RexxFreeMemory(rxretbuf.strptr);        /* Release storage only if*/
-   freeArguments(program_name, &arguments);
+        if ((rc==0) && rxretbuf.strptr) {
+            RexxFreeMemory(rxretbuf.strptr);        /* Release storage only if*/
+        }
+        freeArguments(program_name, &arguments);
 
-   if (rc < 0)
-   {
-       sprintf(arg_buffer, "Open Object Rexx program execution failure: rc = %d",rc);
-       MessageBox(NULL, arg_buffer, "Execution Error", MB_OK | MB_ICONHAND);
-   }
-  }
-                                             // return interpeter or
- return rc ? rc : rexxrc;                    // rexx program return cd
+        if (rc < 0)
+        {
+            sprintf(arg_buffer, "Open Object Rexx program execution failure: rc = %d",rc);
+            MessageBox(NULL, arg_buffer, "Execution Error", MB_OK | MB_ICONHAND);
+        }
+    }
+    // return interpeter or
+    return rc ? rc : rexxrc;                    // rexx program return cd
 }
 
 

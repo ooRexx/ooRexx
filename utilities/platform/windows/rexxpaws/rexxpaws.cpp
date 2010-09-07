@@ -78,72 +78,80 @@ void __cdecl set_pause_at_exit( void )
 //
 int __cdecl main(int argc, char *argv[])
 {
-  short    rexxrc = 0;                 /* return code from rexx             */
-  INT   i;                             /* loop counter                      */
-  LONG  rc;                            /* actually running program RC       */
-  const char *program_name;            /* name to run                       */
-  char  arg_buffer[8192];              /* starting argument buffer          */
-  CONSTRXSTRING arguments;             /* rexxstart argument                */
-  size_t argcount;
-  RXSTRING rxretbuf;                   // program return buffer
+    short    rexxrc = 0;                 /* return code from rexx             */
+    INT   i;                             /* loop counter                      */
+    LONG  rc;                            /* actually running program RC       */
+    const char *program_name;            /* name to run                       */
+    char  arg_buffer[8192];              /* starting argument buffer          */
+    CONSTRXSTRING arguments;             /* rexxstart argument                */
+    size_t argcount;
+    RXSTRING rxretbuf;                   // program return buffer
 
-  rc = 0;                              /* set default return                */
+    rc = 0;                              /* set default return                */
 
-   /*
-    * Convert the input array into a single string for the Object REXX
-    * argument string. Initialize the RXSTRING variable to point to this
-    * string. Keep the string null terminated so we can print it for debug.
-    * First argument is name of the REXX program
-    * Next argument(s) are parameters to be passed
-   */
-  set_pause_at_exit();
+    /*
+     * Convert the input array into a single string for the Object REXX
+     * argument string. Initialize the RXSTRING variable to point to this
+     * string. Keep the string null terminated so we can print it for debug.
+     * First argument is name of the REXX program
+     * Next argument(s) are parameters to be passed
+    */
+    set_pause_at_exit();
 
-  arg_buffer[0] = '\0';                /* default to no argument string     */
-  program_name = NULL;                 /* no program to run yet             */
+    arg_buffer[0] = '\0';                /* default to no argument string     */
+    program_name = NULL;                 /* no program to run yet             */
 
-  for (i = 1; i < argc; i++) {         /* loop through the arguments        */
-      if (program_name == NULL)        /* no name yet?                      */
-      {
-        program_name = argv[i];        /* program is first non-option       */
-        break;      /* end parsing after program_name has been resolved */
-      }
-      else {                           /* part of the argument string       */
-        if (arg_buffer[0] != '\0')     /* not the first one?                */
-          strcat(arg_buffer, " ");     /* add an blank                      */
-        strcat(arg_buffer, argv[i]);   /* add this to the argument string   */
-      }
-  }
+    for (i = 1; i < argc; i++)         /* loop through the arguments        */
+    {
+        if (program_name == NULL)        /* no name yet?                      */
+        {
+            program_name = argv[i];        /* program is first non-option       */
+            break;      /* end parsing after program_name has been resolved */
+        }
+        else                           /* part of the argument string       */
+        {
+            if (arg_buffer[0] != '\0')     /* not the first one?                */
+            {
+                strcat(arg_buffer, " ");     /* add an blank                      */
+            }
+            strcat(arg_buffer, argv[i]);   /* add this to the argument string   */
+        }
+    }
 
-  if (program_name == NULL) {
-                                       /* give a simple error message       */
-    #undef printf
-    printf("Syntax: REXXPAWS ProgramName [parameter_1....parameter_n]\n");
-    return -1;
-  }
-  else {                               /* real program execution            */
-    strcpy(arg_buffer, GetCommandLine());
-    getArguments(NULL, arg_buffer, &argcount, &arguments);
-    rxretbuf.strlength = 0L;           /* initialize return to empty*/
+    if (program_name == NULL)
+    {
+        /* give a simple error message       */
+#undef printf
+        printf("Syntax: REXXPAWS ProgramName [parameter_1....parameter_n]\n");
+        return -1;
+    }
+    else                               /* real program execution            */
+    {
+        getArguments(NULL, GetCommandLine(), &argcount, &arguments);
+        rxretbuf.strlength = 0L;           /* initialize return to empty*/
 
-   /* Here we call the interpreter.  We don't really need to use     */
-   /* all the casts in this call; they just help illustrate          */
-   /* the data types used.                                           */
-   rc=REXXSTART(argcount,      /* number of arguments   */
-                &arguments,     /* array of arguments   */
-                program_name,  /* name of REXX file     */
-                0,             /* No INSTORE used       */
-                "CMD",         /* Command env. name     */
-                RXCOMMAND,     /* Code for how invoked  */
-                NULL,
-                &rexxrc,       /* Rexx program output   */
-                &rxretbuf );   /* Rexx program output   */
+        /* Here we call the interpreter.  We don't really need to use     */
+        /* all the casts in this call; they just help illustrate          */
+        /* the data types used.                                           */
+        rc=REXXSTART(argcount,      /* number of arguments   */
+                     &arguments,     /* array of arguments   */
+                     program_name,  /* name of REXX file     */
+                     0,             /* No INSTORE used       */
+                     "CMD",         /* Command env. name     */
+                     RXCOMMAND,     /* Code for how invoked  */
+                     NULL,
+                     &rexxrc,       /* Rexx program output   */
+                     &rxretbuf );   /* Rexx program output   */
 
-                        /* rexx procedure executed*/
-   if ((rc==0) && rxretbuf.strptr) RexxFreeMemory(rxretbuf.strptr);        /* Release storage only if*/
-   freeArguments(NULL, &arguments);
+        /* rexx procedure executed*/
+        if ((rc==0) && rxretbuf.strptr)
+        {
+            RexxFreeMemory(rxretbuf.strptr);        /* Release storage only if*/
+        }
+        freeArguments(NULL, &arguments);
 
-  }
-                                             // return interpeter or
- return rc ? rc : rexxrc;                    // rexx program return cd
+    }
+    // return interpeter or
+    return rc ? rc : rexxrc;                    // rexx program return cd
 }
 
