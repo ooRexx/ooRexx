@@ -2879,6 +2879,11 @@ Output:
   use strict arg
   return self~toTimeZone(time('O')/60000000)  -- convert to the local offset
 
+-- return a .DateTime object converted to UTC time
+::METHOD toUTCTime
+  use strict arg
+  return self~toTimeZone(0)  -- convert to the offset zero
+
 -- return the time zone offset, as a TimeSpan object
 ::METHOD offset
   expose offset
