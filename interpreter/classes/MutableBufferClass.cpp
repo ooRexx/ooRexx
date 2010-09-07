@@ -424,6 +424,13 @@ RexxMutableBuffer *RexxMutableBuffer::replaceAt(RexxObject *str, RexxObject *pos
     {
         finalLength = begin + newLength;
     }
+    // we could be replacing a substring that runs over the
+    // end of the start...in that case, the result with be
+    // the same as above
+    else if (begin + replaceLength > dataLength)
+    {
+        finalLength = begin + newLength;
+    }
     else
     {
         // we need to add the delta between the excised string and the inserted
@@ -447,8 +454,8 @@ RexxMutableBuffer *RexxMutableBuffer::replaceAt(RexxObject *str, RexxObject *pos
     else
     {
         // if the strings are of different lengths, we need to adjust the size
-        // of the gap we're copying into
-        if (replaceLength != newLength)
+        // of the gap we're copying into.  Only adjust if there is a real gap
+        if (replaceLength != newLength && begin + replaceLength < dataLength)
         {
             // snip out the original string
             data->adjustGap(begin, replaceLength, newLength);
