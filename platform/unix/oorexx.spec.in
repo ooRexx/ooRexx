@@ -53,12 +53,12 @@
 
 # Specify the package version
 %define orx_major 4
-%define orx_minor 1
+%define orx_minor 2
 %define orx_mod_lvl 0
 
 # Specify the libtool library version
 %define orx_current 4
-%define orx_revision 2
+%define orx_revision 3
 # orx_age should ALWAYS remain 0 so the linker can always use the latest version
 %define orx_age 0
 # the order of these looks wrong, but that is how it comes out!

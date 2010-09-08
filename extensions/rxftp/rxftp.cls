@@ -894,7 +894,7 @@ self~srvr_os = ''                -- remote host operating system
 self~traceflg = 0                -- .true = display ftp commands
 self~tracelog = .nil             -- trace log stream
 self~user = ''                   -- user account on the ftp server
-self~version = '4.1.0'           -- current version of this class
+self~version = '4.2.0'           -- current version of this class
 self~bufsize = 4096              -- default buffer size for send/receive
 self~thrdstatus = ''
 return
