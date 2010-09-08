@@ -155,6 +155,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_current}
 %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/libhostemu.la
+%{_prefix}/lib/ooRexx/librxunixsys.so
+%{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_current}
+%{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}
+%{_prefix}/lib/ooRexx/librxunixsys.la
 %{_prefix}/include/rexx.h
 %{_prefix}/include/rexxapidefs.h
 %{_prefix}/include/rexxapitypes.h
@@ -229,6 +233,10 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.%{orx_current}
    ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so
    ln -sf %{_prefix}/lib/ooRexx/libhostemu.la                    /usr/%{_lib}/libhostemu.la
+   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so
+   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.la                    /usr/%{_lib}/librxunixsys.la
    ln -sf %{_prefix}/include/rexx.h                       /usr/include/rexx.h
    ln -sf %{_prefix}/include/rexxapidefs.h                /usr/include/rexxapidefs.h
    ln -sf %{_prefix}/include/rexxapitypes.h               /usr/include/rexxapitypes.h
@@ -243,20 +251,22 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
    ln -sf %{_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 # allow backwards compatibility to previous versions
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/%{_lib}/librxmath.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/%{_lib}/librxmath.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.3
-   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.2
-   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}       /usr/%{_lib}/librexx.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}       /usr/%{_lib}/librexx.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}    /usr/%{_lib}/librexxapi.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}    /usr/%{_lib}/librexxapi.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}     /usr/%{_lib}/librxsock.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}     /usr/%{_lib}/librxsock.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}     /usr/%{_lib}/librxmath.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}     /usr/%{_lib}/librxmath.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion}   /usr/%{_lib}/librxregexp.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion}   /usr/%{_lib}/librxregexp.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion}   /usr/%{_lib}/librexxutil.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion}   /usr/%{_lib}/librexxutil.so.3
+   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}    /usr/%{_lib}/libhostemu.so.2
+   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}    /usr/%{_lib}/libhostemu.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so.3
 fi
 if [ -d /etc/rc.d/init.d ]; then
    # Red Hat
@@ -319,6 +329,10 @@ rm -f /usr/%{_lib}/libhostemu.so
 rm -f /usr/%{_lib}/libhostemu.la
 rm -f /usr/%{_lib}/libhostemu.%{orx_libversion}
 rm -f /usr/%{_lib}/libhostemu.%{orx_current}
+rm -f /usr/%{_lib}/librxunixsys.so
+rm -f /usr/%{_lib}/librxunixsys.la
+rm -f /usr/%{_lib}/librxunixsys.%{orx_libversion}
+rm -f /usr/%{_lib}/librxunixsys.%{orx_current}
 rm -f /usr/share/man/man1/oorexx-config.1
 rm -f /usr/share/man/man1/rexx.1
 rm -f /usr/share/man/man1/rexxc.1
@@ -349,7 +363,7 @@ fi
 
 %postun
 ldconfig
-# Do no change this to rm -rf %{_prefix}
+# Do not change this to rm -rf %{_prefix}
 # If you do you could wipe out the all the /usr subdirs!
 if [ -d /opt/ooRexx ]; then
    rm -rf /opt/ooRexx

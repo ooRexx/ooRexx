@@ -429,7 +429,7 @@ bin_PROGRAMS = rxapi rexximage rexx rexxc rxqueue rxsubcom
 #
 # Shared library targets
 #
-pkglib_LTLIBRARIES = librexxapi.la librexx.la librexxutil.la librxmath.la librxregexp.la librxsock.la libhostemu.la
+pkglib_LTLIBRARIES = librexxapi.la librexx.la librexxutil.la librxmath.la librxregexp.la librxsock.la libhostemu.la librxunixsys.la
 
 #
 # Scripts to install
@@ -946,6 +946,25 @@ libhostemu_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
 #
 libhostemu_la_LIBADD  = @ORX_LIBADD_LIBRARY@
 libhostemu_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
+
+#################### librxunixsys.so ################
+#
+# Sources for librxunixsys.so
+#
+librxunixsys_la_SOURCES = $(extensions_unix_dir)/rxunixsys/rxunixsys.cpp \
+                          $(extensions_unix_dir)/rxunixsys/rxunixsys.h
+#
+# Preprocessor flags for librxunixsys.so
+#
+librxunixsys_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
+                           -I$(build_api_dir) \
+                           -I$(build_api_platform_dir) \
+                           -I$(extensions_unix_dir)/rxunixsys
+#
+# Extra libraries for librxunixsys.so (maybe)
+#
+librxunixsys_la_LIBADD  = @ORX_LIBADD_LIBRARY@
+librxunixsys_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 
 #
 # explicit targets:
