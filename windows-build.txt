@@ -16,12 +16,12 @@ for Windows can be obtained from:
 
   http://subversion.tigris.org/
 
-Use this command to check out a copy of the head revision of ooRexx 3.x:
+Use this command to check out a copy of the head revision of ooRexx:
 
-  svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/interpreter-3.x/trunk interpreter
+  svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/main/trunk main
 
-The 'interpreter' at the end of the command will be the root directory of
-the source tree.  This directory can be given any name.
+The 'main' at the end of the command will be the root directory of the
+source tree.  This directory can be given any name.
 
 Release Source File Archive:  Download from SourceForge the archive desired,
 for instance, ooRexx-4.0.0.zip or ooRexx-4.2.0.zip, and unzip it in a work
@@ -34,38 +34,45 @@ Some of these items are optional, have alternatives, or have caveats.  The
 options, alternatives, or caveats are discussed at the relevant point in the
 build instructions.
 
-[Required] Visual C++ .NET 2003 (known also as Visual C++ 7.1), plus service
-packs, or later.  Visual C++ 2005 is a good choice.
+[Required] A version of MicroSoft's Visual C++ compiler.
+
+To build the 64-bit version of ooRexx, Visual C++ 2005, plus service packs,
+or later is required.
+
+To build the 32-bit version of ooRexx, it is possible that Visual C++ .NET
+2003 (known also as Visual C++ 7.1,) will suffice.  But this has not been
+tested recently.  Visual C++ 2005 or later is the best choice.
+
+ooRexx is built using the command line compiler and tools.  Therefore the
+Visual C++ Express tools will work fine.  In addition the (required) Windows
+SDK also contains the command line compiler tools.  Microsoft provides the
+Visual C++ Express tools free of charge.  More information and download
+options are available on MicroSoft's website here:
+
+  http://www.microsoft.com/express/
 
 Note:
 -----
 Visual C++ 6.0 is no longer supported and the code base will not compile
-using that version of Visual C++. Microsoft releases a free C++ complier under
-the Visual Studio Express label. More information and download options are
-available on Microsoft's website here:
+using that version of Visual C++.
 
-  http://www.microsoft.com/express/
+[Required] A current version of a Microsoft Windows SDK.  The minimum
+required is Windows Vista Update & .NET 3.0 SDK.  Later versions are fine.
+Microsoft provides Windows SDKs free of charge.
 
-[Required] Microsoft Platform SDK February 2003, or later.  A later version
-of the SDK is preferable.
-
-Note:  Microsoft has switched from calling the SDK the "Platform SDK" to the
-"Windows SDK."  In the following text, substitute Windows SDK for Platform SDK
-if needed.
-
-The environment variables for the C++ compiler and the Platform SDK *MUST*
-be set correctly to build ooRexx.  See the Environment set up section below
-for details.
+The environment variables for the C++ compiler and the Windows SDK *MUST* be
+set correctly to build ooRexx.  See the Environment set up section below for
+details.
 
 Note: The release ooRexx, built by the project team, is built using Visual
-C++ 2005 and the Windows Server 2003 R2 Platform SDK.  However, ooRexx
+C++ 2008 and the Windows Vista Update & .NET 3.0 SDK.  However, ooRexx
 builds without problems using later versions of these tools.  For instance,
-ooRexx can be built using Microsoft Visual Studio 2008 and the latest
-version of the Windows SDK.  In addition, ooRexx will build using the free
-Visual C++ Express editions.
+ooRexx can be built using Microsoft Visual Studio 2010 and the Microsoft
+Windows SDK for Windows 7 and .NET Framework 4.  ooRexx will build using the
+free Visual C++ Express editions.
 
-Microsoft has the tendency to move the download URL for the SDKs, often.  A
-good starting point for locating a SDK is:
+Microsoft has the tendency to move the download URL for the Windows SDKs,
+often. A good starting point for locating a SDK is:
 
   http://en.wikipedia.org/wiki/Microsoft_Windows_SDK
 
@@ -74,8 +81,8 @@ good starting point for locating a SDK is:
 Note: This package is part of the ooRexx project and is available from
 SourceForge on the download page.  The package contains pre-compiled
 binaries that can be used to meet some of the other requirements of the
-build process.  For instance, the package contains a process killer and a
-touch program.
+build process.  For instance, the package contains a process killer, a
+touch program, and the ooRexxProcess.dll plugin for NSIS.
 
 [Required] Some form of a process killer.
 
@@ -127,7 +134,7 @@ Initial set up
 
 * Check out or download / unzip the ooRexx source.
 
-* Install the C++ compiler and Platform SDK
+* Install the C++ compiler and Windows SDK
 
 * If using the build utilities, download the current Windows package and
 place the binaries somewhere in the path.
@@ -154,8 +161,8 @@ Depending on how the builder has installed these tools, the environment
 variables may be already set in the System environment.  However, it is more
 common to run the batch files provided by the tools.
 
-The environment variables for the C++ compiler and the Platform SDK *MUST*
-be set correctly to build ooRexx.
+The environment variables for the C++ compiler and the Windows SDK *MUST* be
+set correctly to build ooRexx.
 
 Over the years Microsoft has changed the name and location of the batch
 files provided with the compiler and SDK tools.  Plus this process is
@@ -167,16 +174,16 @@ Nevertheless, the general procedure is the same.  Run the compiler batch
 file first, then the SDK batch file.  The builder needs to determine the
 exact steps for her specific system, but as an example:
 
-F:\>call F:\Tools\MsVisualStudio.2005\VC\vcvarsall.bat x86
-F:\>call F:\Tools\MsPlatformSDK\SetEnv.cmd  /XP32 /RETAIL
+F:\>call F:\Tools\MsVisualStudio.2010\VC\vcvarsall.bat amd64
+F:\>call F:\Tools\WindowsSDK.v7.1\SetEnv.cmd  /RELEASE /x64 /xp
 
 Important:
 ----------
 
-Later versions of Visual C++ and the Windows SDK use a feature called delayed
-environment expansion in their set up scripts.  But, often delayed expansion
-is turned off.  This causes problems, the set up scripts do not work.  The
-easist way to fix this is to edit the registry:
+Later versions of Visual C++ and the Windows SDK use a feature called
+delayed environment expansion in their set up scripts.  But, often delayed
+expansion is turned off.  This causes problems, the set up scripts do not
+work.  The easiest way to fix this is to edit the registry:
 
 Using regedit, edit the following REG_DWORD value in the registry:
 
@@ -218,6 +225,8 @@ check out.)
 
 For example:
 
+F:\>set SRC_DIR=\main\trunk
+F:\>set SRC_DRV=E:
 F:\>e:
 E:\>cd \main\trunk
 E:\trunk>touchheaders
@@ -303,37 +312,6 @@ rebuild of the release version:
 
 E:\interpreter-3.x>rd /Q /S Win32Rel
 
-Windows Platform SDK
---------------------
-
-* The February 2003 version of the Platform SDK has a bug in NewAPIs.h.
-This bug is fixed in later version of the SDK.  If using the February 2003
-SDK, one can either edit the NewAPIs.h file to fix the bug, or replace the
-header file with the fixed version from a later SDK.
-
-The error is on line 312 of the file.  To fix it, locate the NewAPIs.h file
-in the SDK and change line 312 from:
-
-      BOOL (CALLBACK *RealGetLongPathName)(LPCTSTR, LPTSTR, DWORD);
-
-to:
-
-      DWORD (CALLBACK *RealGetLongPathName)(LPCTSTR, LPTSTR, DWORD);
-
-* The "Windows Software Development Kit (SDK) for Windows Vista" version of
-the Platform SDK no longer supports Windows 95, 98, or NT.  This version of
-the SDK can be used to compile ooRexx, but the result may have problems
-running on Windows versions previous to Windows 2000 (i.e., Windows NT,
-Windows 95, Windows 98, etc.)
-
-In addition, to compile, the file kernel\platform\windows\FileSystem.cpp
-will need to be edited to remove the reference to NewAPIs.h.  In
-FileSystem.cpp, comment out lines 60 - 62.  For example:
-
-// #define COMPILE_NEWAPIS_STUBS          /* Allows GetLongPathName to run on  */
-// #define WANT_GETLONGPATHNAME_WRAPPER   /* NT and Windows 95                 */
-// #include <NewAPIs.h>
-
 Process killer
 --------------
 
@@ -387,7 +365,9 @@ This would not be the normal case.
 Packaging with NSIS
 -------------------
 
-Requires NSIS 2.0.3 or greater.
+Requires NSIS 2.46 or greater.
+
+http://nsis.sourceforge.net/Main_Page
 
 The build process using makeorx can automatically create the Windows
 installer by using the PACKAGE option.  NSIS needs to be installed correctly
@@ -398,17 +378,26 @@ After installing the base NSIS package, do the following:
 Be sure makensis.exe is in the path.  This file is located in the top-level
 directory of the installed NSIS package.
 
-3 additional NSIS plugins need to be added to the base install.  These files
+2 additional NSIS plugins need to be added to the base install.  These files
 need to be put into the 'Plugins' subdirectory of the base install.  They
 are:
 
-FindProcDLL.dll
-KillProcDLL.dll
+ooRexxProcess.dll
 services.dll
 
-The files can be obtained from the NSIS project at:
+services.dll can be obtained from the NSIS project at:
 
-  http://nsis.sourceforge.net/FindProcDLL_plug-in
-  http://nsis.sourceforge.net/KillProcDLL_plug-in
   http://nsis.sourceforge.net/File:Services.zip
 
+ooRexxProcess.dll is available in the build-utilities package of the ooRexx
+project.  The builder can download pre-compiled binaries of the build
+utilities from the project download page.  oorexx-buildutils v1.2.0 or later
+is needed:
+
+https://sourceforge.net/projects/oorexx/files/
+
+
+Or, the source for the build utilities can also be checked out from the SVN
+repository and the builder can build her own version of ooRexxProcess.dll.
+
+svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/build-utilities/trunk build.utils
