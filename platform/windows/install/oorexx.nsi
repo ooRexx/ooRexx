@@ -31,7 +31,11 @@ Name "${LONGNAME} ${VERSION}"
 !include "isnt.nsh"
 !include "newpath.nsh"
 !include "WriteEnv.nsh"
+!include "StrFunc.nsh"
 
+; Docs for the string functions say they need to be declared before use:
+${StrTok}
+${UnStrTok}
 
 !define MUI_ICON "${SRCDIR}\platform\windows\rexx.ico"
 !define MUI_UNICON "${SRCDIR}\platform\windows\install\uninstall.ico"
@@ -53,6 +57,8 @@ Name "${LONGNAME} ${VERSION}"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
 
 ;define MUI_CUSTOMFUNCTION_GUIINIT myGuiInit
+
+!define MUI_CUSTOMFUNCTION_UNABORT un.onCancelButton
 
 !define UninstLog "uninstall.log"
 Var UninstLog
@@ -97,6 +103,11 @@ Var UninstLog
   SetPluginUnload alwaysoff
   RequestExecutionLevel admin
   InstallDir "$PROGRAMFILES\${SHORTNAME}"
+
+  ;InstType "Defualt"
+  ;InstType "Simple"
+  ;InstType /COMPONENTSONLYONCUSTOM
+
 ;--------------------------------
 ;Pages
   /* Installer pages */
@@ -106,7 +117,9 @@ Var UninstLog
   Page custom Uninstall_Type_page Uninstall_Type_Leave
   Page custom Ok_Stop_RxAPI_page Ok_Stop_RxAPI_leave
 
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW Components_Page_show
   !insertmacro MUI_PAGE_COMPONENTS
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW Directory_Page_show
   !insertmacro MUI_PAGE_DIRECTORY
 ;  Page custom SetCustomAssoc
 ;  Page custom SetCustomLanguage
@@ -136,8 +149,14 @@ Var RxapiIsRunning             ; is rxapi running:                              
 Var RegVal_uninstallString     ; uninstall string (program) found in regsitry
 Var RegVal_uninstallLocation   ; location of uninstall program found in registry
 Var RegVal_uninstallVersion    ; Version / level of uninstaller program.  This only exists at 410 or greater
+Var RegVal_rexxAssociation     ; File association string for rexx.exe     (.ext / ftype - i.e. .rex RexxScript)
+Var RegVal_rexxHideAssociation ; File association string for rexxhide.exe (.ext / ftype - i.e. .rxg RexxHide)
+Var RegVal_rexxPawsAssociation ; File association string for rexxpaws.exe (.ext / ftype - i.e. .rxp RexxPaws)
+Var AssociationProgramName     ; Executable being associated  (i.e rexxpaws.exe, rexx.exe, etc..)
+Var AssociationText            ; Descriptive text that goes in registry  (i.e. ooRexx Rexx GUI Program)
 Var DoUpgrade                  ; try to do an upgrade install                      true / false
 Var UpgradeTypeAvailable       ; Level of uninstaller sufficient for upgrade type  true / false
+Var PreviousVersionInstalled   ; A previous version is installed                   true / false
 
 ; Dialog variables
 Var Dialog
@@ -156,6 +175,7 @@ Var StopRxAPI_CK
 Var StopRxAPI_CK_State
 
 ; Uninstall variables
+Var InStopRxapiPage
 Var LogFileExists
 Var DeleteWholeTree
 
@@ -237,26 +257,13 @@ Section "${LONGNAME} Core (required)" SecMain
   ; Set output path to the installation directory just in case
   SetOutPath $INSTDIR
 
-;;;;  Comment out orxscrpt stuff temporarily
-  /*
+  /*  Comment out orxscrpt stuff temporarily
   ; orxscrpt.dll needs to be registered
   !insertmacro InstallLib REGDLL NOTSHARED REBOOT_PROTECTED "${BINDIR}\orxscrpt.dll" "$INSTDIR\orxscrpt.dll" "$INSTDIR"
 
   ; Stop rxapi.exe (again!) the registration process starts rxapi.exe.
   ooRexxProcess::killProcess "rxapi.exe"
   */
-
-  ; Set the REXX_HOME environment variable
-  Push "REXX_HOME"
-  Push $INSTDIR
-  Push $IsAdminUser ; "true" or "false"
-  Call WriteEnvStr
-
-  ; add the Install directory to the PATH env variable; either system wide or user-specific
-  Push $INSTDIR
-  Push $IsAdminUser ; "true" or "false"
-  Push "PATH"
-  Call AddToPath
 
   ; Add the Start Menu folder and start adding the items.
   ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}"
@@ -280,7 +287,48 @@ Section "${LONGNAME} Core (required)" SecMain
   WriteINIStr "$SMPROGRAMS\${LONGNAME}\ooRexx Home Page.url" "InternetShortcut" "URL" "http://www.oorexx.org/"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\ooRexx Home Page.url"
 
-  ; Write the uninstall keys
+  ; If we are doing an upgrade, these settings are all left however they were.
+  ${if} $DoUpgrade == 'false'
+    ; TEMP TEMP A custom page will be added where the user can specify what they
+    ; want.  Until then ...
+    ; If any of the association values are empty, fill them in with the default:
+    ${if} $RegVal_rexxAssociation == ''
+      StrCpy $RegVal_rexxAssociation '.rex RexxScript'
+    ${endif}
+    ${if} $RegVal_rexxHideAssociation == ''
+      StrCpy $RegVal_rexxHideAssociation '.rxg RexxHide'
+    ${endif}
+    ${if} $RegVal_rexxPawsAssociation == ''
+      StrCpy $RegVal_rexxPawsAssociation '.rxp RexxPawws'
+    ${endif}
+
+    ; Set the environment variables, PATH, REXX_HOME, etc..
+    Call DoEnvVariables
+
+    ; Do the file associations, like associate .rex with ooRexx (REXXScript).
+    ; The function itself figures out what needs to be done based on some
+    ; variable settings.
+
+    Call DoFileAssociations
+
+    ; If an administrator, install rxapi as a service depending on what the user
+    ; selected.
+    ${if} $IsAdminUser == "true"
+      Call InstallRxapi
+    ${endif}
+  ${else}
+    ; We are doing an upgrade, but if rxapi was installed as a service
+    ; previously, the user has the choice of starting it.
+    ${if} $RxapiIsService == 'true'
+      Call StartRxapi
+    ${endif}
+  ${endif}
+
+
+  ; Write the uninstall keys.  Note that the uninstaller always deletes these
+  ; keys, even if doing an upgrade.  So we need to still write the file
+  ; assoication keys.  For an upgrade install, these will be exactly what we
+  ; read in on init.
   WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "InstallLocation" '"$INSTDIR"'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "DisplayName" "${LONGNAME}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "DisplayIcon" "${DISPLAYICON}"
@@ -295,22 +343,12 @@ Section "${LONGNAME} Core (required)" SecMain
   WriteRegStr       HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallVersion" "${VERSION}"
   WriteRegDWORD     HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "NoModify" 0x00000001
   WriteRegDWORD     HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "NoRepair" 0x00000001
+
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxAssociation" $RegVal_rexxAssociation
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxHideAssociation" $RegVal_rexxHideAssociation
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxPawsAssociation" $RegVal_rexxPawsAssociation
+
   ${WriteUninstaller} "$INSTDIR\${UNINSTALLER}"
-
-  ; Associate .rex with ooRexx (REXXScript)
-  Push 1
-  Push ".rex"
-  Call DoFileAssociation
-
-  ; Add .rex to the PATHEXT
-  Push ".rex"
-  Call AddToPathExt
-
-  ; If an administrator, install rxapi as a service depending on what the user
-  ; selected.
-  ${if} $IsAdminUser == "true"
-    Call InstallRxapi
-  ${endif}
 
 SectionEnd
 
@@ -666,15 +704,20 @@ Section -closelogfile
  SetFileAttributes "$INSTDIR\${UninstLog}" READONLY|SYSTEM|HIDDEN
 SectionEnd
 
-Var PreviousVersionInstalled
-
 ;===============================================================================
 ;Installer Functions
 ;===============================================================================
 
+/** .onInit()  Call back function
+ *
+ * Called by the installer before any page is shown.  We use it to check for a
+ * previously installed ooRexx and to set execution variables.
+ *
+ * Note that if we end up doing an upgrade type of install,
+ * RegVal_uninstallLocation needs to be copied to the INSTDIR variable so that
+ * we install in the same place as previous.
+ */
 Function .onInit
-  ;  Called by the installer before any page is shown.  We use it to check for a
-  ;  previously installed ooRexx and to set execution variables.
 
   ${if} ${CPU} == "x86_64"
     strcpy $INSTDIR "$PROGRAMFILES64\${SHORTNAME}"
@@ -697,6 +740,9 @@ Function .onInit
   ReadRegStr $RegVal_uninstallString HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallString"
   ReadRegStr $RegVal_uninstallLocation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UnInstallLocation"
   ReadRegStr $RegVal_uninstallVersion HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallVersion"
+  ReadRegStr $RegVal_rexxAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxAssociation"
+  ReadRegStr $RegVal_rexxHideAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxHideAssociation"
+  ReadRegStr $RegVal_rexxPawsAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxPawsAssociation"
 
   ; Check for previous version and if the upgrade type of uninstall is available.
   ${if} $RegVal_uninstallString == ""
@@ -723,9 +769,21 @@ Function .onInit
     ${endif}
   ${endif}
 
+  ; We never do an upgrade type of install unless the user requests it.
+  StrCpy $DoUpgrade 'false'
+
 FunctionEnd
 
 /** Uninstall_Old_ooRexx_page()  Custom page function.
+ *
+ * This page is show when a previously installed version ooRexx is detected.  It
+ * explains to the user that it is necessary to uninstall the previous version
+ * and forces the user to check a secondary check box to "force" the install to
+ * continue without uninstalling the previous version.
+ *
+ * The intent is to make it difficult to not do the uninstall and ensure that
+ * the user knows installing over the top of an existing install is not
+ * supported.
  */
 Function Uninstall_Old_ooRexx_page
 
@@ -828,6 +886,14 @@ Function Uninstall_Old_ooRexx_Leave
 
 FunctionEnd
 
+/** Uninstall_Type_page()  Custom page function.
+ *
+ * This page is show when a previously installed version ooRexx is detected,
+ * and the uninstaller version is capable of doing an upgrade type of install.
+ *
+ * It gives the user the option of only deleting the installed files while
+ * leaving the environment, registry, etc., setting untouched.
+ */
 Function Uninstall_Type_page
 
   /* Skip this page if no previous version is present */
@@ -836,7 +902,6 @@ Function Uninstall_Type_page
   ${endif}
 
   ${if} $UpgradeTypeAvailable == 'false'
-    StrCpy $DoUpgrade 'false'
     Call Do_The_Uninstall
     Abort
   ${endif}
@@ -853,14 +918,18 @@ Function Uninstall_Type_page
     "An 'upgrade' type of install will remove all the previously installed files and install \
     the new version of ${SHORTNAME}.  However, it will not undo any of the environment, file \
     association, or registry settings done by the previous install.$\n$\n\
-    Use this type of install when you have customized these types of settings and do not wish \
-    them changed.$\n$\n\
+    Use this type of install to quickly replace the old version files with the new version \
+    files. Or, when you have customized these types of settings and do not wish them changed.$\n$\n\
     Note: with this type of install, the install location and other settings can NOT be changed.$\n$\n\"
   Pop $Label_One
 
   ${NSD_CreateCheckBox} 0 68u 100% 8u "Perform an upgrade type of install"
   Pop $Do_Upgrade_Type_CK
 
+  ; Set focus to the page dialog rather than the installer dialog, set focus to
+  ; the check box, and then show the page dialog
+  SendMessage $Dialog ${WM_SETFOCUS} $HWNDPARENT 0
+  SendMessage $Dialog ${WM_NEXTDLGCTL} $Do_Upgrade_Type_CK 1
   nsDialogs::Show
 
 FunctionEnd
@@ -883,7 +952,32 @@ Function Uninstall_Type_Leave
 
 FunctionEnd
 
+/** Do_The_Uninstall()
+ *
+ * Executes the uninstall program and waits for its return.  The user could
+ * have:
+ *    Finished the uninstall
+ *    Canceled the uninstall because they want to stop any running Rexx programs
+ *    Canceled the uninstll for some other reason
+ *
+ * In addition, the script may have aborted the uninstall for some unexplained
+ * error.
+ *
+ * In all cases we quit the install.  We put up a message box to explain why we
+ * are quitting in most cases, the only exception is if the user choose to quit
+ * to stop any running Rexx programs.
+ *
+ * @note  If we are doing an upgrade install, then we need to install to the
+ *        same location as the original install.  This could easily be different
+ *        than what $INSTDIR currently is, so we set $INSTDIR to our uninstall
+ *        location.  For an upgrade install, the portion of the installer that
+ *        allows the user to pick the install location will be disable.
+ */
 Function Do_The_Uninstall
+
+  ${if} $DoUpgrade == 'true'
+    StrCpy $INSTDIR $RegVal_uninstallLocation
+  ${endif}
 
   HideWindow
   ClearErrors
@@ -920,8 +1014,16 @@ Function Do_The_Uninstall
     Goto DoAbort
   ${endif}
 
-  ; Return code is 2 or greater.  2 is uninstall canceled by script, treat
-  ; anything greater than 2 in the same way.
+  ${if} $0 == 4
+    ; The user wants to quit to stop rxapi.  Only set to 4 if the user cancels
+    ; on the page where she is asked to stop rxapi.  On that page she is given
+    ; the option to quit completely.
+    Goto DoAbort
+  ${endif}
+
+
+  ; Return code is 2 or greater, but not 4.  2 is uninstall canceled by script,
+  ; we treat anything greater than 2 in the same way.
   MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
              "The uninstall of the previous version of ${SHORTNAME} was terminated by$\n\
              the uninstall script.  The most likely cause of this is that the rxapi$\n\
@@ -1023,32 +1125,14 @@ Function Ok_Stop_RxAPI_leave
     Quit
   ${endif}
 
-  /*
-   * If the user decided to force the installation without removing the previous
-   * installation, then it is possible that rxapi is still installed as a
-   * service.  Since stopping a service is the surest means of stopping rxapi,
-   * we'll check that first.
-   */
-  ${if} $$RxapiIsService == 'true'
-    Services::SendServiceCommand 'stop' 'RXAPI'
-    Pop $R0
-    ${if} $R0 == 'Ok'
-      Goto NotRunning
-    ${endif}
-  ${else}
-    ooRexxProcess::killProcess "rxapi.exe"
-    Pop $R0
-    ${if} $R0 == 0
-      Goto NotRunning
-    ${endif}
-  ${endif}
-
-  /* We'll try one more time to kill rxapi and capture the return code */
-  ooRexxProcess::killProcess "rxapi.exe"
+  Call StopRxapi
   Pop $R0
-  ${if} $R0 == 0
+  ${if} $R0 == 'Ok'
     Goto NotRunning
   ${endif}
+
+  ; rxapi was not stopped, the error code is now at top of stack
+  Pop $R0
 
   MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
              "Can not determine conclusively that the Open Object Rexx memory manager (rxapi) is$\n\
@@ -1057,10 +1141,56 @@ Function Ok_Stop_RxAPI_leave
              Please use the task manager to locate rxapi.exe and end that process, then restart the$\n\
              installation.  If you are uncomfortable with using the task manager, contact the$\n\
              ${SHORTNAME} developers on SourceForge for help.$\n$\n\
-             If you report this problem, please not that the error code is $R0." /SD IDOK
+             If you report this problem, please note that the error code is $R0." /SD IDOK
     Quit
 
   NotRunning:
+FunctionEnd
+
+/** Components_Page_show()  Call back function
+ *
+ * Invoked by the installer right before the components page is shown.
+ *
+ * If this is an upgrade install, we don't allow the user to quit from here on
+ * out.  On this page we also don't let the user go back
+ *
+ * When it is not an upgrade install, nothing is done.
+ */
+Function Components_Page_show
+
+  ${if} $DoUpgrade == 'true'
+    ; Disable Back button
+    GetDlgItem $0 $HWNDPARENT 3
+    EnableWindow $0 0
+
+    Call PageDisableQuit
+  ${endif}
+
+FunctionEnd
+
+/** Directory_Page_show()  Call back function
+ *
+ * Invoked by the installer right before the directory page is shown.
+ *
+ * If this is an upgrade install, the install location can not be changed.  We
+ * use function to show the user the install location, but not let them change
+ * the location.
+ *
+ * When it is not an upgrade install, nothing is done.
+ */
+Function Directory_Page_show
+
+  ${if} $DoUpgrade == 'true'
+    SendMessage $mui.DirectoryPage.Text ${WM_SETTEXT} 0 \
+      "STR:Setup will install ${LONGNAME} ${VERSION} in the following folder.  The location can not be \
+      changed for an upgrade type of install.  Click Next to continue."
+
+    EnableWindow $mui.DirectoryPage.Directory 0
+    EnableWindow $mui.DirectoryPage.BrowseButton 0
+
+    Call PageDisableQuit
+  ${endif}
+
 FunctionEnd
 
 /** Rxapi_Options_page()  Custom page function.
@@ -1077,7 +1207,20 @@ Function Rxapi_Options_page
     Abort
   ${endif}
 
-  !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process" "Install rxapi as a Windows Service"
+  ; If doing an upgrade and rxapi was NOT previously installed as a service, we
+  ; skip this page
+  ${if} $DoUpgrade == 'true'
+  ${andif} $RxapiIsService == 'false'
+    Abort
+  ${endif}
+
+  ${if} $DoUpgrade == 'true'
+    !insertmacro MUI_HEADER_TEXT "ooRexx rxapi is installed as a Windows Service." "Choose whether \
+                                 to start the rxapi Service during installation."
+  ${else}
+    !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process." "Install rxapi as a Windows Service."
+  ${endif}
+
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
 
@@ -1099,8 +1242,18 @@ Function Rxapi_Options_page
 
   ${NSD_CreateCheckBox} 0 86u 100% 15u "Install rxapi as a Windows Service"
   Pop $RxAPI_Install_Service_CK
-  ${NSD_SetState} $RxAPI_Install_Service_CK $RxAPIInstallService
-  ${NSD_OnClick} $RxAPI_Install_Service_CK EnableStartService
+
+  ; If we are doing an upgrade, then we are only here if rxapi was previously
+  ; installed as a service.  If so we don't allow the user to change this.
+  ${if} $DoUpgrade == 'true'
+    ${NSD_SetState} $RxAPI_Install_Service_CK 1
+	  EnableWindow $RxAPI_Install_Service_CK 0
+	  EnableWindow $Label_One 0
+    Call PageDisableQuit
+  ${else}
+    ${NSD_SetState} $RxAPI_Install_Service_CK $RxAPIInstallService
+    ${NSD_OnClick} $RxAPI_Install_Service_CK EnableStartService
+  ${endif}
 
   ${NSD_CreateCheckBox} 0 106u 100% 15u "Start the rxapi Service during installation"
   Pop $RxAPI_Start_CK
@@ -1118,6 +1271,9 @@ FunctionEnd
  *
  * If the check box is checked, we enable the start the service check box, if it
  * is unchecked we disable the check box.
+ *
+ * Note: If we are doing an upgrade, then NSD_OnClick is not set.  So we don't
+ *       need to worry about getting during an upgrade install.
  */
 Function EnableStartService
 	Pop $RxAPI_Install_Service_CK
@@ -1141,6 +1297,241 @@ FunctionEnd
 Function Rxapi_Options_leave
   ${NSD_GetState} $RxAPI_Install_Service_CK $RxAPIInstallService
   ${NSD_GetState} $RxAPI_Start_CK $RxAPIStartService
+FunctionEnd
+
+/** PageDisableQuit()
+ *
+ * Prevents the user from closing (quitting) the installer from the current
+ * page.  The function could be generic, but at this point only works if we
+ * are doing an upgrade install.
+ */
+Function PageDisableQuit
+
+  ; Really this should only be called when DoUpgrade is true, but we'll use
+  ; a little defensive programming.
+  ${if} $DoUpgrade == 'true'
+    ; Disable the close button on title bar.
+    push $1
+    System::Call "user32::GetSystemMenu(i $HWNDPARENT,i 0) i.s"
+    pop $1
+    System::Call "user32::EnableMenuItem(i $1,i 0xF060,i 1)"
+    pop $1
+
+    ; Disable Cancel button
+    GetDlgItem $0 $HWNDPARENT 2
+    EnableWindow $0 0
+
+    ; Set focus to the Next button
+    GetDlgItem $0 $HWNDPARENT 1
+    SendMessage $HWNDPARENT ${WM_NEXTDLGCTL} $0 1
+  ${endif}
+
+FunctionEnd
+
+/** .onMouseOverSection()  Call back function
+ *
+ * Invoked when the user puts the mouse over one of the componets that can be
+ * installed.  This is what provides the description of each component.
+ */
+Function .onMouseOverSection
+
+  !insertmacro MUI_DESCRIPTION_BEGIN
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} "Installs the core components of ${LONGNAME} to the application folder."
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecDev} "Installs the files required to embed ${LONGNAME} into you C/C++ application."
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecDemo} "Install sample ${LONGNAME} programs."
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecDoc} "Install ${LONGNAME} documentation."
+ !insertmacro MUI_DESCRIPTION_END
+
+FunctionEnd
+
+/** DoEnvVariables()
+ *
+ * Sets up the variable environemnt variables.
+ */
+Function DoEnvVariables
+
+    Push "REXX_HOME"
+    Push $INSTDIR
+    Push $IsAdminUser ; "true" or "false"
+    Call WriteEnvStr
+
+    ; Add the install directory to the PATH env variable, either system wide or
+    ; user-specific
+    Push $INSTDIR
+    Push $IsAdminUser ; "true" or "false"
+    Push "PATH"
+    Call AddToPath
+
+    ; Do the PATHEXT extensions
+    Push ".rex"
+    Call AddToPathExt
+FunctionEnd
+
+/** DoFileAssociations()
+ *
+ * Does the file associations for ooRexx.
+ *
+ */
+Function DoFileAssociations
+
+  ${if} $RegVal_rexxAssociation != ''
+    StrCpy $AssociationProgramName 'rexx.exe'
+    Call AssociateExtensionWithExe
+  ${endif}
+
+  ${if} $RegVal_rexxHideAssociation != ''
+    StrCpy $AssociationProgramName 'rexxhide.exe'
+    Call AssociateExtensionWithExe
+  ${endif}
+
+  ${if} $RegVal_rexxPawsAssociation != ''
+    StrCpy $AssociationProgramName 'rexxpaws.exe'
+    Call AssociateExtensionWithExe
+  ${endif}
+
+  System::Call 'Shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_IDLIST}, i 0, i 0)'
+FunctionEnd
+
+/** AssociateExtensionWithExe()
+ *
+ * Associates a file extension and file type with one of the ooRexx executables,
+ * rexx.exe, rexxhide.exe, or rexxpaws.  We are only called when we have
+ * something to do.
+ *
+ * TODO - I added the section to install into the user customizable area some
+ *        years ago.  Really what we should be doing, rather than this IsAdmin
+ *        stuff is deciding if this is a machine-wide install (All Users) or
+ *        a single-user install.  Then use SHCTX or SHELL_CONTEXT to just write
+ *        once. SHCTX will use HKCR if it is an all users install and HKCU for
+ *        a single user install.
+ *
+ */
+Function AssociateExtensionWithExe
+
+  ; We will put the file extension in $0 and the ftype in $1
+  ${if} $AssociationProgramName == 'rexx.exe'
+    ${StrTok} $0 $RegVal_rexxAssociation " " "0" "0"
+    ${StrTok} $1 $RegVal_rexxAssociation " " "1" "0"
+    StrCpy $AssociationText "ooRexx Rexx Progam"
+  ${elseif} $AssociationProgramName == 'rexxhide.exe'
+    ${StrTok} $0 $RegVal_rexxHideAssociation " " "0" "0"
+    ${StrTok} $1 $RegVal_rexxHideAssociation " " "1" "0"
+    StrCpy $AssociationText "ooRexx Rexx GUI Progam"
+  ${elseif} $AssociationProgramName == 'rexxpaws.exe'
+    ${StrTok} $0 $RegVal_rexxPawsAssociation " " "0" "0"
+    ${StrTok} $1 $RegVal_rexxPawsAssociation " " "1" "0"
+    StrCpy $AssociationText "ooRexx Rexx pausing Progam"
+  ${else}
+    DetailPrint "Unrecoverable ERROR. The ftype association executable: $AssociationProgramName is not recognized."
+    Goto DoneWithRexxExe
+  ${endif}
+
+  ${if} $0 == ''
+  ${orif} $1 == ''
+    DetailPrint "Unrecoverable ERROR.  Empty string in $AssociationProgramName association"
+    DetailPrint "  Word one=<$0> word two=<$1>"
+    Goto DoneWithRexxExe
+  ${endif}
+
+  ClearErrors
+  ; Write key $0 (.rex for example) with default value of $1 (RexxScript for example.)
+  WriteRegStr HKCR $0 "" $1
+  IfErrors TryCurrentUser
+  DetailPrint "Registered $0 extension as ftype $1 to open with $AssociationProgramName for all users"
+  Goto WriteHKCRRegKeys
+
+  TryCurrentUser:
+  ; Failed to write to the registy, try the user customizable area.
+  ClearErrors
+  WriteRegStr HKCU $0 "" $1
+  IfErrors 0
+    DetailPrint "Could NOT associate $0 extension with $AssociationProgramName for either all users or the current user"
+    Goto DonewithRexxExe
+
+  DetailPrint "Registered $0 extension as ftype $1 to open with $AssociationProgramName for the current user."
+  WriteRegStr HKCU "SOFTWARE\Classes\$1" "" $AssociationText
+  WriteRegStr HKCU "SOFTWARE\Classes\$1\shell" "" "open"
+  WriteRegStr HKCU "SOFTWARE\Classes\$1\DefaultIcon" "" "$INSTDIR\$AssociationProgramName,0"
+  WriteRegStr HKCU "SOFTWARE\Classes\$1\shell\open" "" "Run"
+  WriteRegStr HKCU "SOFTWARE\Classes\$1\shell\open\command" "" '"$INSTDIR\$AssociationProgramName" "%1" %*'
+  WriteRegStr HKCU "SOFTWARE\Classes\$1\shell\edit" "" "Edit"
+  WriteRegStr HKCU "SOFTWARE\Classes\$1\shell\edit\command" "" 'notepad.exe "%1"'
+  WriteRegStr HKCU "SOFTWARE\Classes\$1\shellex\DropHandler" "" "{60254CA5-953B-11CF-8C96-00AA00B8708C}"
+  Goto DoneWithRexxExe
+
+  WriteHKCRRegKeys:
+  WriteRegStr HKCR "$1" "" $AssociationText
+  WriteRegStr HKCR "$1\shell" "" "open"
+  WriteRegStr HKCR "$1\DefaultIcon" "" "$INSTDIR\$AssociationProgramName,0"
+  WriteRegStr HKCR "$1\shell\open" "" "Run"
+  WriteRegStr HKCR "$1\shell\open\command" "" '"$INSTDIR\$AssociationProgramName" "%1" %*'
+  WriteRegStr HKCR "$1\shell\edit" "" "Edit"
+  WriteRegStr HKCR "$1\shell\edit\command" "" 'notepad.exe "%1"'
+  WriteRegStr HKCR "$1\shellex\DropHandler" "" "{60254CA5-953B-11CF-8C96-00AA00B8708C}"
+
+  DoneWithRexxExe:
+FunctionEnd
+
+/** AddToPathExt()
+ *
+ * Adds the file extension(s) associated with the ooRexx executables to PATHEXT.
+ *
+ * Right now the user can not specifies these, but a future enhancement will add
+ * that feature.
+ *
+ * @notes - This could be done for a single-user install, but remember that
+ *          the user specific PATHEXT *replaces* the system wide PATHEXT, so
+ *          we would need to read the system wide value and add the extension
+ *          to it and then write it to the user specific PATHEXT.
+ */
+Function AddToPathExt
+
+  ${if} $IsAdminUser == "false"  ; TODO fix this
+    Return
+  ${endif}
+
+  ${StrTok} $0 $RegVal_rexxAssociation " " "0" "0"
+  DetailPrint "Adding the $0 extension to PATHEXT"
+  Push $0
+  Push $IsAdminUser      ; should only be "true" at this point
+  Push "PATHEXT"
+  Call AddToPath
+
+  ${StrTok} $0 $RegVal_rexxHideAssociation " " "0" "0"
+  DetailPrint "Adding the $0 extension to PATHEXT"
+  Push $0
+  Push $IsAdminUser      ; should only be "true" at this point
+  Push "PATHEXT"
+  Call AddToPath
+
+  ${StrTok} $0 $RegVal_rexxPawsAssociation " " "0" "0"
+  DetailPrint "Adding the $0 extension to PATHEXT"
+  Push $0
+  Push $IsAdminUser      ; should only be "true" at this point
+  Push "PATHEXT"
+  Call AddToPath
+
+FunctionEnd
+
+/** InstallRxapi()
+ *
+ * Installs rxapi as a service, if the user elected to do so.
+ */
+Function InstallRxapi
+
+  ${if} $RxAPIInstallService == 1
+    ; User asked to install rxapi as a service.
+    DetailPrint "Installing rxapi as a Windows Service"
+    nsExec::ExecToLog "$INSTDIR\rxapi /i /s"
+    Pop $R0
+
+    ${if} $R0 == 0
+      DetailPrint "rxapi successfully installed as a Windows Service"
+      Call StartRxapi
+    ${else}
+      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to install rxapi as a Windows Service: $R0\n" /SD IDOK
+    ${endif}
+  ${endif}
 FunctionEnd
 
 /** CheckIsRxapiService()
@@ -1192,149 +1583,81 @@ Function CheckIsRxapiRunning
   ${endif}
 FunctionEnd
 
-Function .onMouseOverSection
-
-  !insertmacro MUI_DESCRIPTION_BEGIN
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} "Installs the core components of ${LONGNAME} to the application folder."
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecDev} "Installs the files required to embed ${LONGNAME} into you C/C++ application."
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecDemo} "Install sample ${LONGNAME} programs."
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecDoc} "Install ${LONGNAME} documentation."
- !insertmacro MUI_DESCRIPTION_END
-
-FunctionEnd
-
-Function DoFileAssociation
-  ;  Does the file associations for ooRexx.  Right now we only do .rex and the
-  ;  arguments are a little pointless.
-  ;
-  ;  TODO - I added the section to install into the user customizable area some
-  ;         years ago.  Really what we should be doing, rather than this IsAdmin
-  ;         stuff is deciding if this is a machine-wide install (All Users) or
-  ;         a single-user install.
-  ;
-  ;  Usage:
-  ;    Push <doIt>
-  ;    Push <ext>
-  ;
-  ;  Here:
-  ;    Pop $R1  -> $R1 contains the extension, .rex is the only case for now.
-  ;    Pop $R0  -> $R0 contains doIt, 0 or 1.
-
-  Pop $R1
-  Pop $R0
-  ${if} $R0 == 0
-    Return
-  ${endif}
-  ${if} $R1 == ""
-    Return
-  ${endif}
-
-  ClearErrors
-  WriteRegStr HKCR $R1 "" "REXXScript"
-  IfErrors TryCurrentUser
-  DetailPrint "Registering $R1 extension to run with ooRexx for all users"
-  Goto WriteHKCRRegKeys
-
-  TryCurrentUser:
-  ; Failed to write to the registy, try the user customizable area.
-  ClearErrors
-  WriteRegStr HKCU $R1 "" "REXXScript"
-  IfErrors 0
-    DetailPrint "Failed to register $R1 extension to run with ooRexx for all users and the current user"
-    Return
-
-  DetailPrint "Registering $R1 extension to run with ooRexx for the current user"
-  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript" "" "ooRexx Rexx Program"
-  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell" "" "open"
-  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\DefaultIcon" "" "$INSTDIR\rexx.exe,0"
-  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell\open" "" "Run"
-  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell\open\command" "" '"$INSTDIR\rexx.exe" "%1" %*'
-  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell\edit" "" "Edit"
-  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell\edit\command" "" 'notepad.exe "%1"'
-  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shellex\DropHandler" "" "{60254CA5-953B-11CF-8C96-00AA00B8708C}"
-  Goto NotifyTheShell
-
-  WriteHKCRRegKeys:
-  WriteRegStr HKCR "REXXScript" "" "ooRexx Rexx Program"
-  WriteRegStr HKCR "REXXScript\shell" "" "open"
-  WriteRegStr HKCR "REXXScript\DefaultIcon" "" "$INSTDIR\rexx.exe,0"
-  WriteRegStr HKCR "REXXScript\shell\open" "" "Run"
-  WriteRegStr HKCR "REXXScript\shell\open\command" "" '"$INSTDIR\rexx.exe" "%1" %*'
-  WriteRegStr HKCR "REXXScript\shell\edit" "" "Edit"
-  WriteRegStr HKCR "REXXScript\shell\edit\command" "" 'notepad.exe "%1"'
-  WriteRegStr HKCR "REXXScript\shellex\DropHandler" "" "{60254CA5-953B-11CF-8C96-00AA00B8708C}"
-
-
-  NotifyTheShell:
-  System::Call 'Shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_IDLIST}, i 0, i 0)'
-FunctionEnd
-
-Function AddToPathExt
-  ;  Adds the specified file extension to PATHEXT  Right now we only do .rex and
-  ;  the argument is a little pointless.
-  ;
-  ;  @notes - This could be done for a single-user install, but remember that
-  ;           the user specific PATHEXT *replaces* the system wide PATHEXT, so
-  ;           we would need to read the system wide value and add the extension
-  ;           to it.
-  ;
-  ;  Usage:
-  ;    Push <ext>
-  ;
-  ;  Here:
-  ;    Pop $R0  -> $R0 now contains the extension to add to PATHEXT.
-
-  Pop $R0
-
-  ${if} $IsAdminUser == "false"
-    Return
-  ${endif}
-
-  Call IsNT
-  Pop $1
-  ${if} $1 == 0
-    Return
-  ${endif}
-
-  DetailPrint "Adding the $R1 extension to PATHEXT"
-  Push $R0
-  Push $IsAdminUser      ; should only be "true" at this point
-  Push "PATHEXT"
-  Call AddToPath
-FunctionEnd
-
-/**
+/** StartRxapi()
+ *
+ * Starts the rxapi service process, if the user elected to do so.
  */
-Function InstallRxapi
-  ;  Installs rxapi as a service, if the user elected to do so.
+Function StartRxapi
 
-  ${if} $RxAPIInstallService == 1
-    ; User asked to install rxapi as a service.
-    DetailPrint "Installing rxapi as a Windows Service"
-    nsExec::ExecToLog "$INSTDIR\rxapi /i /s"
+  ${if} $RxAPIStartService == 1
+    ; User asked to start the rxapi service.
+    Services::SendServiceCommand 'start' 'RXAPI'
     Pop $R0
 
-    ${if} $R0 == 0
-      DetailPrint "rxapi successfully installed as a Windows Service"
-      ${if} $RxAPIStartService == 1
-        ; User also asked to start the service.
-        Services::SendServiceCommand 'start' 'RXAPI'
-        Pop $R0
-
-        ${if} $R0 == 'Ok'
-          DetailPrint "The rxapi service was successfully sent the start command"
-        ${else}
-          MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to start the ooRexx rxapi service: $R0\n" /SD IDOK
-        ${endif}
-      ${endif}
+    ${if} $R0 == 'Ok'
+      DetailPrint "The rxapi service was successfully sent the start command"
     ${else}
-      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to install rxapi as a Windows Service: $R0\n" /SD IDOK
+      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to start the ooRexx rxapi service: $R0" /SD IDOK
     ${endif}
+  ${endif}
+
+FunctionEnd
+
+/** StopRxapi()
+ *
+ * Stop the rxapi.exe process.
+ *
+ * If rxapi is installed as a service, the stop command should stop it.
+ * Otherwise, we use killProcess.
+ *
+ * On return top of stack will contain 'Ok' for success or 'Error'.  If there
+ * was an error top of stack minus 1 will contain the error code from
+ * ooRexx::killProcess.
+ *
+ * @remarks  There was a problem I was having with CheckisRxapiRunning saying
+ *           rxapi was running when it actually was not.
+ *
+ *           When a service is sent the stop command it may take some time for
+ *           it to report its state to the service control manager.  In addition
+ *           the state may first be changed to stop pending.  In both of these
+ *           cases CheckIsRxapirunning would report that rxapi is running.  So,
+ *           a .3 sleep is added, which hopefully fixes the problem.
+ */
+Function StopRxapi
+
+  ${if} $RxapiIsService == 'true'
+    Services::SendServiceCommand 'stop' 'RXAPI'
+    Pop $R0
+    Sleep 300
+  ${else}
+    ooRexxProcess::killProcess 'rxapi'
+    Pop $R0
+  ${endif}
+
+  Call CheckIsRxapiRunning
+  ${if} $RxapiIsRunning == 'false'
+    Push 'Ok'
+    return
+  ${endif}
+
+  ; Still running, try one more time, it may be that the service has a stop
+  ; pending.  Otherwise, this is probably a waste of time.  But, we will capture
+  ; the error code for debugging.  Note that if the return from killProcess is
+  ; 1, then the process was not found, so it is not running.  See the @remarks
+  ; above.
+  ooRexxProcess::killProcess 'rxapi'
+  Pop $R0
+  ${if} $R0 == 0
+  ${orif} $R0 == 1
+    Push 'Ok'
+  ${else}
+    Push $R0
+    Push 'Error'
   ${endif}
 FunctionEnd
 
 ;===============================================================================
-;  Uninstaller Sections
+;  Uninstaller portion of oorexx.nsi.
 ;===============================================================================
 
 ;
@@ -1343,9 +1666,12 @@ FunctionEnd
 ;             that and specifically delete those keys.  However, testing shows that the current code always
 ;             removes those keys.  Tested on a number of machines with a number of different users.
 
-;-------------------------------------------------------------------------------
-; Uninstall
+;===============================================================================
+;  Uninstaller Sections
+;===============================================================================
 
+;-------------------------------------------------------------------------------
+; Uninstall section
 Section "Uninstall"
 
   /*
@@ -1360,46 +1686,42 @@ Section "Uninstall"
    ooRExxProcess::killProc "rxapi.exe"
   */
 
-  ${if} $RxapiIsService == 'true'
-    Call un.InstallRxapiService
-    Pop $R0
-    ${if} $R0 != 0
-      MessageBox MB_OK|MB_ICONSTOP \
-      "Unexpected error removing the rxapi service.$\n$\n\
-      The uninstall will abort.  Report this error to$\n\
-      the ${SHORTNAME} developers:$\n$\n\
-      Uninstall as service failed: $R0" \
-      /SD IDOK
-      SetErrorLevel 3
-      Quit
+  /* If we are doing an upgrade type of install, we leave everything as it was. */
+  ${if} $DoUpgrade == 'false'
+    ${if} $RxapiIsService == 'true'
+      Call un.InstallRxapiService
+      Pop $R0
+      ${if} $R0 != 0
+        MessageBox MB_OK|MB_ICONSTOP \
+        "Unexpected error removing the rxapi service.$\n$\n\
+        The uninstall will abort.  Report this error to$\n\
+        the ${SHORTNAME} developers:$\n$\n\
+        Uninstall as service failed: $R0" \
+        /SD IDOK
+        SetErrorLevel 3
+        Quit
+      ${endif}
     ${endif}
+
+    ; Get rid of the file associations.  Also removes the extension from
+    ; PATHEXT.
+    Call un.DeleteFileAssociations
+
+    ; remove directory from PATH
+    Push $INSTDIR
+    Push $IsAdminUser ; pushes "true" or "false"
+    Push "PATH"
+    Call un.RemoveFromPath
+
+    ; remove the REXX_HOME environment variable
+    Push "REXX_HOME"
+    Push $IsAdminUser ; "true" or "false"
+    Call un.DeleteEnvStr
   ${endif}
 
-  ; Get rid of the file association
-  Push ".rex"
-  Call un.DeleteFileAssociation
-
-  ; Remove .rex from PATHEXT
-  Push ".rex"
-  Call un.AddToPathExt
-
-  ; remove directory from PATH
-  Push $INSTDIR
-  Push $IsAdminUser ; pushes "true" or "false"
-  Push "PATH"
-  Call un.RemoveFromPath
-
-  ;
-  DeleteRegKey HKCR "REXXScript"
-
-  ; remove the REXX_HOME environment variable
-  Push "REXX_HOME"
-  Push $IsAdminUser ; "true" or "false"
-  Call un.DeleteEnvStr
-
-  ; Remove the installation stuff
+  ; Upgrade or not, we always remove the installation stuff.
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}"
-  DeleteRegKey HKLM "SOFTWARE\${LONGNAME}"
+  ;DeleteRegKey HKLM "SOFTWARE\${LONGNAME}"  We don't write anything here, maybe we should?
 
   Call un.Delete_Installed_Files
 
@@ -1409,9 +1731,13 @@ SectionEnd
 ;  Uninstaller Functions
 ;===============================================================================
 
+/** un.onInit()  Callback function.
+ *
+ *  Called by the uninstaller program before any pages are shown.  We use it to
+ *  set up the execution variables.
+ *
+ */
 Function un.onInit
-  ;  Called by the uninstaller program before any pages are shown.  We use it to
-  ;  set up the execution variables.
 
   ${GetOptions} "$CMDLINE" "/U="  $R0
   ${if} $R0 == 'true'
@@ -1420,6 +1746,8 @@ Function un.onInit
     StrCpy $DoUpgrade 'false'
   ${endif}
 
+  StrCpy $DeleteWholeTree 'false'
+
   ; UnInstall as All Users if an admin
   Call un.IsUserAdmin
   Pop $IsAdminUser
@@ -1427,9 +1755,224 @@ Function un.onInit
     SetShellVarContext all
   ${endif}
 
+  ; Read in the file associations done by the installer.
+  ReadRegStr $RegVal_rexxAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxAssociation"
+  ReadRegStr $RegVal_rexxHideAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxHideAssociation"
+  ReadRegStr $RegVal_rexxPawsAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxPawsAssociation"
+
   StrCpy $StopRxAPI_CK_State 1
+  StrCpy $InStopRxapiPage 'false'
   Call un.CheckIsRxapiService
   Call un.CheckIsRxapiRunning
+FunctionEnd
+
+
+/** un.Ok_Stop_RxAPI_page()  Custom page function.
+ *
+ * This is a custom page that follows the Welcome page.  If rxapi.exe is not
+ * running the page is skipped.  If rxapi.exe is running, the user is asked for
+ * the okay to stop it.  If the user says no, we quit the uninstall.
+ */
+Function un.Ok_Stop_RxAPI_page
+  ${if} $RxapiIsRunning == 'false'
+    Abort
+  ${endif}
+
+  StrCpy $InStopRxapiPage 'true'
+
+  !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process" "The ${LONGNAME} memory manager (rxapi) is currently running"
+  nsDialogs::Create /NOUNLOAD 1018
+  Pop $Dialog
+
+  ${If} $Dialog == error
+    Abort
+  ${EndIf}
+
+  ${NSD_CreateLabel} 0 0 100% 104u \
+    "${SHORTNAME} can not be completely uninstalled while rxapi is running.$\n$\n\
+    When the Stop rxapi check box is checked, the uninstall will stop rxapi before \
+    proceeding.  If the check box is not checked, rxapi will not be stopped.$\n$\n\
+    If rxapi is not stopped the uninstall will be canceled.$\n$\n\
+    If, and only if, there are Rexx programs running, stopping the memory manager could \
+    possibly cause data loss.$\n$\n\
+    If you are worried about this, cancel the uninstall at this point by using the cancel \
+    button or unchecking the Stop rxapi check box.  Then stop all running Rexx programs, \
+    and rerun the uninstall program, (or the installation program.)"
+
+  Pop $Label_One
+
+  ${NSD_CreateCheckBox} 0 108u 100% 15u "Stop rxapi"
+  Pop $StopRxAPI_CK
+  ${NSD_SetState} $StopRxAPI_CK $StopRxAPI_CK_State
+
+  GetFunctionAddress $0 un.CheckOkToStopRxapiBack
+  nsDialogs::OnBack $0
+
+  nsDialogs::Show
+
+FunctionEnd
+
+/** un.Ok_Stop_RxAPI_leave()  Custom Page Call back function.
+ *
+ * Invoked by the uninstaller when the user clicks Next on the Ok to stop rxapi
+ * page.  We check if the user agreed to stopping rxapi.  If not we quit the
+ * uninstaller.  Otherwise we stop rxapi.  If we can not stop rxapi, we also
+ * quit the uninstaller.
+ */
+Function un.Ok_Stop_RxAPI_leave
+
+  ${NSD_GetState} $StopRxAPI_CK $StopRxAPI_CK_State
+
+  ${if} $StopRxAPI_CK_State == 0
+    SetErrorLevel 4
+    Quit
+  ${endif}
+
+  StrCpy $InStopRxapiPage 'false'
+
+  Call un.StopRxapi
+  Pop $R0
+  ${if} $R0 == 'Ok'
+    Return
+  ${endif}
+
+  ; rxapi was not stopped, the error code is now at top of stack
+  Pop $R0
+
+  MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
+             "Can not determine conclusively that rxapi is currently stopped.  It may be$\n\
+             that you do not have sufficient privileges to uninstall ${SHORTNAME}.$\n\$\n\
+             The uninstall will quit.$\n$\n\
+             If you believe you do have sufficient privileges to do the uninstall,$\n\
+             you can:$\n$\n\
+             1.) Manually stop the rxapi process and restart the uninstall.  If rxapi$\n\
+             is installed as a service, stop the service.  Otherwise, use the task$\n\
+             manager to end the rxapi process.$\n$\n\
+             2.) Ask the ${SHORTNAME} developers for help.  Please report this error code$\n\
+             to the ${SHORTNAME} developers: killProcess $R0$\n$\n"\
+             /SD IDOK
+  SetErrorLevel 2
+  Quit
+
+FunctionEnd
+
+Function un.CheckOkToStopRxapiBack
+  ${NSD_GetState} $StopRxAPI_CK $StopRxAPI_CK_State
+  StrCpy $InStopRxapiPage 'false'
+FunctionEnd
+
+/** un.Uninstall_By_Log_page()  Custom page function.
+ *
+ * This is a custom page that follows the page that checks if it is okay to
+ * stop rxapi.  Here we check for the uninstall log.  We then give the user the
+ * option of simply deleting the ooRexx directory tree (50 times faster on my
+ * system) or using the log file to individually delete only the install files.
+ *
+ * If the uninstall log is missing, the user does not have the option of
+ * deleting individual files and directories.
+ */
+Function un.Uninstall_By_Log_page
+
+  StrCpy $LogFileExists 'false'
+  IfFileExists "$INSTDIR\${UninstLog}" 0 +4
+    StrCpy $LogFileExists 'true'
+
+  ${if} $LogFileExists == 'false'
+    !insertmacro MUI_HEADER_TEXT \
+      "${UninstLog} NOT found" \
+      "The option of only removing files installed by the prior ooRexx installer is not available."
+
+    StrCpy $0 \
+      "Because the ${UninstLog} file is missing, the uninstall process must remove all \
+      files in the $INSTDIR directory tree.$\n$\n\
+      WARNING: This will remove all folders and files in the $INSTDIR folder, including \
+      any folders or files not placed there by the ooRexx installation.$\n$\n\
+      If there are any personl folders or files in the $INSTDIR directory tree that need \
+      to be saved, please cancel the uninstall, move the files, and restart the uninstall \
+      program."
+  ${else}
+    !insertmacro MUI_HEADER_TEXT \
+      "Choose the method for removing installed files" \
+      "Delete only installed files or delete entire directory tree?"
+
+    StrCpy $0 \
+      "The uninstall program can use an install log to delete only the folders and files \
+      placed in the $INSTDIR directory tree by the original installation program.$\n$\n\
+      Optionally, the entire $INSTDIR directory tree can be deleted.$\n$\n\
+      WARNING: Deleting the entire directory tree will remove all folders and files in the \
+      $INSTDIR folder.  This will include any folders or files not placed there by the ooRexx \
+      installation."
+
+  ${endif}
+
+  ; If the log file exists and we are doing an upgrade type of uninstall, then
+  ; we don't show this page.  On the other hand, if we are doing an upgrade, but
+  ; the install log is missing, we do show the page so that the user can cancel
+  ; here.
+
+  ${if} $DoUpgrade == 'true'
+  ${andif} $LogFileExists == 'true'
+    Abort
+  ${endif}
+
+  nsDialogs::Create /NOUNLOAD 1018
+  Pop $Dialog
+
+  ${If} $Dialog == error
+    Abort
+  ${EndIf}
+
+  ${if} $LogFileExists == 'false'
+    ${NSD_CreateLabel} 0 0 100% 80u $0
+    Pop $Label_One
+
+    ${NSD_CreateCheckBox} 0 84u 100% 8u "Delete entire directory tree"
+    Pop $Delete_ooRexx_Tree_CK
+    ${NSD_Check} $Delete_ooRexx_Tree_CK
+    EnableWindow $Delete_ooRexx_Tree_CK 0
+  ${else}
+    ${NSD_CreateLabel} 0 0 100% 64u $0
+    Pop $Label_One
+
+    ${NSD_CreateLabel} 0 80u 100% 16u "To DELETE the entire $INSTDIR directory tree, check the check box."
+    Pop $Label_Two
+
+    ${NSD_CreateCheckBox} 0 100u 100% 8u "Delete entire directory tree"
+    Pop $Delete_ooRexx_Tree_CK
+  ${endif}
+
+  nsDialogs::Show
+
+FunctionEnd
+
+/** un.Uninstall_By_Log_leave()  Call back function.
+ *
+ * Invoked by the uninstaller when the user clicks Next on the uninstall using
+ * the log page.
+ */
+Function un.Uninstall_By_Log_leave
+
+  ${NSD_GetState} $Delete_ooRexx_Tree_CK $0
+
+  ${if} $0 == 1
+    StrCpy $DeleteWholeTree 'true'
+  ${else}
+    StrCpy $DeleteWholeTree 'false'
+  ${endif}
+
+FunctionEnd
+
+/** un.onCancelButton()  Call back function
+ *
+ * Invoked by the uninstaller when the user clicks the cancel button.  We only
+ * care if the user was on the ok to stop rxapi page.  If so, we set the error
+ * level to 4 to indicate that, if the uninstall was invoked by the installer,
+ * we should just quit.
+ */
+Function un.onCancelButton
+  ${if} $InStopRxapiPage == 'true'
+    SetErrorLevel 4
+  ${endif}
 FunctionEnd
 
 /** un.Delete_Installed_Files()
@@ -1540,32 +2083,92 @@ Function un.InstallRxapiService
   Push 0
 FunctionEnd
 
-Function un.DeleteFileAssociation
-  ; Top of stack has the file extension, only "REX" at this time.  Pop it off
-  ; into R0.
-  Pop $R0
-  ReadRegStr $R1 HKCR "$R0" ""
-  ${if} $R1 == "RexxScript"
-    ; Only delete the .rex association if we own it, (we use RexxScript for the ftype name.)
-    DeleteRegKey HKCR "$R0"
-    DetailPrint "Deleted file association for $R0"
+/** un.DeleteFileAssociations()
+ *
+ * Deletes the file associations set by the installer.
+ *
+ * @note  Notice that we do the uninstaller differently from the installer.  In
+ *        the installer, addToPathExt() determines which extensions to add to
+ *        PATHEXT.  Here, un.DeleteFileAssociations decides which extensions to
+ *        remove from the PATHEXT.
+ *
+ * TODO need to test this well. TODO need to determine if this is a per machine
+ * install or a per user install!!!!
+ */
+Function un.DeleteFileAssociations
+
+  ; We will put the file extension in $0 and the ftype in $1
+
+  ${if} $RegVal_rexxAssociation != ''
+    ${UnStrTok} $0 $RegVal_rexxAssociation " " "0" "0"
+    ${UnStrTok} $1 $RegVal_rexxAssociation " " "1" "0"
+
+    ; Only delete the association if we own it.  In other words, the ftype we
+    ; read from the registry should match the ftype we saved in our uninstall
+    ; strings.
+    ReadRegStr $2 HKCR "$0" ""
+    ${if} $1 == $2
+      DeleteRegKey HKCR "$0"
+      DeleteRegKey HKCR "$1"
+      DetailPrint "Deleted file association for $0"
+
+      push $0
+      Call un.AddToPathExt
+    ${endif}
   ${endif}
+
+  ${if} $RegVal_rexxHideAssociation != ''
+    ${UnStrTok} $0 $RegVal_rexxHideAssociation " " "0" "0"
+    ${UnStrTok} $1 $RegVal_rexxHideAssociation " " "1" "0"
+
+    ReadRegStr $2 HKCR "$0" ""
+    ${if} $1 == $2
+      DeleteRegKey HKCR "$0"
+      DeleteRegKey HKCR "$1"
+      DetailPrint "Deleted file association for $0"
+
+      push $0
+      Call un.AddToPathExt
+    ${endif}
+  ${endif}
+
+  ${if} $RegVal_rexxPawsAssociation != ''
+    ${UnStrTok} $0 $RegVal_rexxPawsAssociation " " "0" "0"
+    ${UnStrTok} $1 $RegVal_rexxPawsAssociation " " "1" "0"
+
+    ReadRegStr $2 HKCR "$0" ""
+    ${if} $1 == $2
+      DeleteRegKey HKCR "$0"
+      DeleteRegKey HKCR "$1"
+      DetailPrint "Deleted file association for $0"
+
+      push $0
+      Call un.AddToPathExt
+    ${endif}
+  ${endif}
+
+  System::Call 'Shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_IDLIST}, i 0, i 0)'
+
 FunctionEnd
 
+/** un.AddToPathExt()
+ *
+ * Removes the specified file extension from PATHEXT.  The file extension is
+ * pushed on the stack to send it here.
+ *
+ * @notes - This could be done for a single-user install, but remember that
+ *          ... what? - need to think about how to do this for a single user,
+ *          could easily hose the system for a user.  I.e., end up with no
+ *          programs running from the command line.
+ *
+ * Usage:
+ *   Push <ext>
+ *
+ * Here:
+ *   Pop $R0 -> $R0 now contains the extension to un.add to PATHEXT.  I.e., the
+ *              extension to remove.
+ */
 Function un.AddToPathExt
-  ;  Removes the specified file extension from PATHEXT  Right now we only do
-  ;  .rex and ;  the argument is a little pointless.
-  ;
-  ;  @notes - This could be done for a single-user install, but remember that
-  ;           ... what? - need to think about how to do this for a single user,
-  ;           could easily hose the system for a user.  I.e., end up with no
-  ;           programs running from the command line.
-  ;
-  ;  Usage:
-  ;    Push <ext>
-  ;
-  ;  Here:
-  ;    Pop $R0  -> $R0 now contains the extension to add to PATHEXT.
 
   Pop $R0
 
@@ -1573,20 +2176,20 @@ Function un.AddToPathExt
     Return
   ${endif}
 
-  Call un.IsNT
-  Pop $1
-  ${if} $1 == 0
-    Return
-  ${endif}
-
-  DetailPrint "Removing the $R0 extension from PATHEXT"
+  DetailPrint "Removing the $R0 extension from PATHEXT."
   Push $R0
   Push $IsAdminUser      ; should only be "true" at this point
   Push "PATHEXT"
   Call un.RemoveFromPath
 FunctionEnd
 
+/** un.CheckIsRxapiService()
+ *
+ * Checks if rxap is installed as a Windows service.  Copies true or false to
+ * the variable: RxapiIsService as appropriate.
+ */
 Function un.CheckIsRxapiService
+
   services::IsServiceInstalled 'RXAPI'
   Pop $R0
   ${if} $R0 == 'Yes'
@@ -1596,12 +2199,17 @@ Function un.CheckIsRxapiService
   ${endif}
 FunctionEnd
 
+/** un.CheckIsRxapiRunning()
+ *
+ * Determines if rxapi.exe is running.
+ *
+ * On return the top of the stack contains 'true', 'false', or 'unknoww <rc>'
+ * where the <rc> is the error recturn code from ooRexxProcess::findProcess.
+ *
+ * TODO still need to test on Vista / Windows 7 as regular user.
+ */
 Function un.CheckIsRxapiRunning
-  ;
-  ; Determines if rxapi.exe is running.
-  ;
-  ; TODO still need to test on Vista / Windows 7
-  ;
+
   ${if} $RxapiIsService == 'true'
     services::IsServiceRunning 'RXAPI'
     Pop $R0
@@ -1624,219 +2232,52 @@ Function un.CheckIsRxapiRunning
   ${endif}
 FunctionEnd
 
-/** un.Ok_Stop_RxAPI_page()  Custom page function.
+/** un.StopRxapi()
  *
- * This is a custom page that follows the Welcome page.  If rxapi.exe is not
- * running the page is skipped.  If rxapi.exe is running, the user is asked for
- * the okay to stop it.  If the user says no, we quit the uninstall.
+ * Stop the rxapi.exe process.
+ *
+ * If rxapi is installed as a service, the stop command should stop it.
+ * Otherwise, we use killProcess.
+ *
+ * On return top of stack will contain 'Ok' for success or 'Error'.  If there
+ * was an error top of stack minus 1 will contain the error code from
+ * ooRexx::killProcess.
+ *
+ * @remarks  There was a problem I was having with CheckisRxapiRunning saying
+ *           rxapi was running when it actually was not.
+ *
+ *           When a service is sent the stop command it may take some time for
+ *           it to report its state to the service control manager.  In addition
+ *           the state may first be changed to stop pending.  In both of these
+ *           cases CheckIsRxapirunning would report that rxapi is running.  So,
+ *           a .3 sleep is added, which hopefully fixes the problem.
  */
-Function un.Ok_Stop_RxAPI_page
-  ${if} $RxapiIsRunning == 'false'
-    Abort
-  ${endif}
-
-  !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process" "The ${LONGNAME} memory manager (rxapi) is currently running"
-  nsDialogs::Create /NOUNLOAD 1018
-  Pop $Dialog
-
-  ${If} $Dialog == error
-    Abort
-  ${EndIf}
-
-  ${NSD_CreateLabel} 0 0 100% 96u \
-    "${SHORTNAME} can not be completely uninstalled while rxapi is running.$\n$\n\
-    When the Stop rxapi check box is checked, the uninstall will stop rxapi before \
-    proceeding.  If the check box is not checked, rxapi will not be stopped.$\n$\n\
-    If rxapi is not stopped the uninstall will be canceled.$\n$\n\
-    If, and only if, there are Rexx programs running, stopping the memory manager could \
-    possibly cause data loss.$\n$\n\
-    If you are worried about this, please uncheck the Stop rxapi check box.  When the \
-    uninstall (or install) ends, stop all running Rexx programs, and rerun the uninstall, \
-    (or install.)"
-
-  Pop $Label_One
-
-  ${NSD_CreateCheckBox} 0 100u 100% 15u "Stop rxapi"
-  Pop $StopRxAPI_CK
-  ${NSD_SetState} $StopRxAPI_CK $StopRxAPI_CK_State
-
-  GetFunctionAddress $0 un.CheckOkToStopRxapiBack
-  nsDialogs::OnBack $0
-
-  nsDialogs::Show
-
-FunctionEnd
-
-/** un.Ok_Stop_RxAPI_leave()  Call back function.
- *
- * Invoked by the uninstaller when the user clicks Next on the Ok to stop rxapi
- * page.  We check if the user agreed to stopping rxapi.  If not we quit the
- * uninstaller.  Otherwise we stop rxapi.  If we can not stop rxapi, we also
- * quit the uninstaller.
- */
-Function un.Ok_Stop_RxAPI_leave
-
-  ${NSD_GetState} $StopRxAPI_CK $StopRxAPI_CK_State
-
-  ${if} $StopRxAPI_CK_State == 0
-    SetErrorLevel 1
-    Quit
-  ${endif}
-
-  Call un.StopRxapi
-  Pop $R0
-  ${if} $R0 == 'Ok'
-    Return
-  ${endif}
-
-  ; rxapi was not stopped, the error code is now at top of stack
-  Pop $R0
-
-  MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
-             "Can not determine conclusively that rxapi is currently stopped.  It may be$\n\
-             that you do not have sufficient privileges to uninstall ${SHORTNAME}.$\n\$\n\
-             The uninstall will quit.$\n$\n\
-             If you believe you do have sufficient privileges to do the uninstall,$\n\
-             you can:$\n$\n\
-             1.) Manually stop the rxapi process and restart the uninstall.  If rxapi$\n\
-             is installed as a service, stop the service.  Otherwise, use the task$\n\
-             manager to end the rxapi process.$\n$\n\
-             2.) Ask the ${SHORTNAME} developers for help.  Please report this error code$\n\
-             to the ${SHORTNAME} developers: killProcess $R0$\n$\n"\
-             /SD IDOK
-  SetErrorLevel 2
-  Quit
-
-FunctionEnd
-
-Function un.CheckOkToStopRxapiBack
-  ${NSD_GetState} $StopRxAPI_CK $StopRxAPI_CK_State
-FunctionEnd
-
-/** un.Uninstall_By_Log_page()  Custom page function.
- *
- * This is a custom page that follows the page that checks if it is okay to
- * stop rxapi.  Here we check for the uninstall log.  We then give the user the
- * option of simply deleting the ooRexx directory tree (50 times faster on my
- * system) or using the log file to individually delete only the install files.
- *
- * If the uninstall log is missing, the user does not have the option of
- * deleting individual files and directories.
- */
-Function un.Uninstall_By_Log_page
-
-  StrCpy $LogFileExists 'false'
-  IfFileExists "$INSTDIR\${UninstLog}" 0 +4
-    StrCpy $LogFileExists 'true'
-
-  ${if} $LogFileExists == 'false'
-    !insertmacro MUI_HEADER_TEXT \
-      "${UninstLog} NOT found" \
-      "The option of only removing files installed by the prior ooRexx installer is not available."
-
-    StrCpy $0 \
-      "Because the ${UninstLog} file is missing, the uninstall process must remove all \
-      files in the $INSTDIR directory tree.$\n$\n\
-      WARNING: This will remove all folders and files in the $INSTDIR folder, including \
-      any folders or files not placed there by the ooRexx installation.$\n$\n\
-      If there are any personl folders or files in the $INSTDIR directory tree that need \
-      to be saved, please cancel the uninstall, move the files, and restart the uninstall \
-      program."
-  ${else}
-    !insertmacro MUI_HEADER_TEXT \
-      "Choose the method for removing installed files" \
-      "Delete only installed files or delete entire directory tree?"
-
-    StrCpy $0 \
-      "The uninstall program can use an install log to delete only the folders and files \
-      placed in the $INSTDIR directory tree by the original installation program.$\n$\n\
-      Optionally, the entire $INSTDIR directory tree can be deleted.$\n$\n\
-      WARNING: Deleting the entire directory tree will remove all folders and files in the \
-      $INSTDIR folder.  This will include any folders or files not placed there by the ooRexx \
-      installation."
-
-  ${endif}
-
-  nsDialogs::Create /NOUNLOAD 1018
-  Pop $Dialog
-
-  ${If} $Dialog == error
-    Abort
-  ${EndIf}
-
-  ${if} $LogFileExists == 'false'
-    ${NSD_CreateLabel} 0 0 100% 80u $0
-    Pop $Label_One
-
-    ${NSD_CreateCheckBox} 0 84u 100% 8u "Delete entire directory tree"
-    Pop $Delete_ooRexx_Tree_CK
-    ${NSD_Check} $Delete_ooRexx_Tree_CK
-    EnableWindow $Delete_ooRexx_Tree_CK 0
-  ${else}
-    ${NSD_CreateLabel} 0 0 100% 64u $0
-    Pop $Label_One
-
-    ${NSD_CreateLabel} 0 80u 100% 16u "To DELETE the entire $INSTDIR directory tree, check the check box."
-    Pop $Label_Two
-
-    ${NSD_CreateCheckBox} 0 100u 100% 8u "Delete entire directory tree"
-    Pop $Delete_ooRexx_Tree_CK
-  ${endif}
-
-  nsDialogs::Show
-
-FunctionEnd
-
-/** un.Uninstall_By_Log_leave()  Call back function.
- *
- * Invoked by the uninstaller when the user clicks Next on the uninstall using
- * the log page.
- */
-Function un.Uninstall_By_Log_leave
-
-  ${NSD_GetState} $Delete_ooRexx_Tree_CK $0
-
-  ${if} $0 == 1
-    StrCpy $DeleteWholeTree 'true'
-  ${else}
-    StrCpy $DeleteWholeTree 'false'
-  ${endif}
-
-FunctionEnd
-
 Function un.StopRxapi
-  ;  Stop rxapi.exe. If rxapi is installed as a service, the stop command should
-  ;  stop it.  Otherwise, we use killProcess.
-  ;
-  ;  On return top of stack will contain 'Ok' for success or 'Error'.  If there
-  ;  was an error top of stack minus 1 will contain the error code from
-  ;  ooRexx::killProcess.
 
   ${if} $RxapiIsService == 'true'
     Services::SendServiceCommand 'stop' 'RXAPI'
     Pop $R0
+    Sleep 300
   ${else}
     ooRexxProcess::killProcess 'rxapi'
     Pop $R0
   ${endif}
 
-  StrCpy $4 $R0 ; TEMP
-  Call un.CheckIsRxapiRunning  ; TODO this function seems to return true sometimes when rxapi is not running
+  Call un.CheckIsRxapiRunning
   ${if} $RxapiIsRunning == 'false'
     Push 'Ok'
     return
   ${endif}
 
-  MessageBox MB_OK "un.StopRxapi AFTER stop checkIsRxapiRunning reports true RxapiIsService=$RxapiIsRunning popped R0=$4"
-
-  ; Still running, try one more time, although this is probably a waste of time.
-  ; But, we will capture the error code for debugging.  Note that if the return
-  ; from killProcess is 1, then the process was not found, so it is killed.  See
-  ; the above TODO
+  ; Still running, try one more time, it may be that the service has a stop
+  ; pending.  Otherwise, this is probably a waste of time.  But, we will capture
+  ; the error code for debugging.  Note that if the return from killProcess is
+  ; 1, then the process was not found, so it is not running.  See the @remarks
+  ; above.
   ooRexxProcess::killProcess 'rxapi'
   Pop $R0
   ${if} $R0 == 0
-  ${orif} $R1 == 1
+  ${orif} $R0 == 1
     Push 'Ok'
   ${else}
     Push $R0
