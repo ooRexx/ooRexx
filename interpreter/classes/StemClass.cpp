@@ -218,7 +218,7 @@ RexxObject *RexxStem::bracket(
                                            /* create a searchable tail from the array elements */
     RexxCompoundTail resolved_tail(tailElements, argCount);
     /* now look up this element */
-    return evaluateCompoundVariableValue(OREF_NULL, &resolved_tail);
+    return evaluateCompoundVariableValue(OREF_NULL, stemName, &resolved_tail);
 }
 
 
@@ -676,6 +676,7 @@ RexxArray *RexxStem::tailArray()
 
 RexxObject *RexxStem::evaluateCompoundVariableValue(
      RexxActivation *context,           /* the evaluation context (can be NULL) */
+     RexxString *stemVariableName,     // the stem variable name this was evaluated from (used for noValue)
      RexxCompoundTail *resolved_tail)   /* the search tail                   */
 /******************************************************************************/
 /* Function:  Retrieve a compound variable, returning the default value if the*/
@@ -697,7 +698,7 @@ RexxObject *RexxStem::evaluateCompoundVariableValue(
         else
         {                             /* need to use name                  */
                                       /* create a string version of the name */
-            tail_name = resolved_tail->createCompoundName(stemName);
+            tail_name = resolved_tail->createCompoundName(stemVariableName);
             /* take care of any novalue situations */
             _value = handleNovalue(context, tail_name, variable);
         }

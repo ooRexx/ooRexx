@@ -4089,7 +4089,7 @@ RexxObject *RexxActivation::evaluateLocalCompoundVariable(RexxString *stemName, 
     RexxCompoundTail resolved_tail(this, tail, tailCount);
 
     RexxStem *stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-    RexxObject *value = stem_table->evaluateCompoundVariableValue(this, &resolved_tail);
+    RexxObject *value = stem_table->evaluateCompoundVariableValue(this, stemName, &resolved_tail);
     /* need to trace?                    */
     if (tracingIntermediates())
     {

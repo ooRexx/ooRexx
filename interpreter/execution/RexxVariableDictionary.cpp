@@ -178,7 +178,7 @@ RexxObject *RexxVariableDictionary::getCompoundVariableValue(
     RexxStem *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
     /* get the value from the stem...we pass OREF_NULL */
     /* for the dictionary to bypass NOVALUE handling */
-    return stem_table->evaluateCompoundVariableValue(OREF_NULL, &resolved_tail);
+    return stem_table->evaluateCompoundVariableValue(OREF_NULL, stemName, &resolved_tail);
 }
 
 

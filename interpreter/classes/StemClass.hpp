@@ -114,7 +114,7 @@ class RexxNativeActivation;
 
   RexxString *tail(RexxArray *, size_t);
   RexxObject *newRexx(RexxObject **, size_t);
-  RexxObject *evaluateCompoundVariableValue(RexxActivation *context, RexxCompoundTail *resolved_tail);
+  RexxObject *evaluateCompoundVariableValue(RexxActivation *context, RexxString *stemVariableName, RexxCompoundTail *resolved_tail);
   RexxObject *getCompoundVariableValue(RexxCompoundTail *resolved_tail);
   RexxObject *getCompoundVariableRealValue(RexxCompoundTail *resolved_tail);
   RexxObject *realCompoundVariableValue(RexxCompoundTail *resolved_tail);
