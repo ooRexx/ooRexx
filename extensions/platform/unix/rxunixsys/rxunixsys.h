@@ -60,7 +60,9 @@
 #include <time.h>
 #include <netdb.h>
 #include <wordexp.h>
+#if !defined(AIX)
 #include <alloca.h>
+#endif
 #include <pthread.h>
 #include <errno.h>
 #include <dirent.h>
