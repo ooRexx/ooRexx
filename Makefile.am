@@ -1107,13 +1107,15 @@ package:
 	./rexx $(build_os_platform_dir)/makepkg.rex @PACKAGETYPE@ $(ORX_MAJOR).$(ORX_MINOR).$(ORX_MOD_LVL) $(target) $(prefix) $(DESTDIR)
 
 rpm: dist
-	rm -fr $(top_srcdir)/rpm
-	mkdir rpm
-	mkdir rpm/BUILD
-	mkdir rpm/RPMS
-	mkdir rpm/SOURCES
-	mkdir rpm/SPECS
-	mkdir rpm/SRPMS
+	- mkdir ~/rpmbuild
+	- mkdir ~/rpmbuild/BUILD
+	- mkdir ~/rpmbuild/BUILDROOT
+	- mkdir ~/rpmbuild/RPMS
+	- mkdir ~/rpmbuild/SOURCES
+	- mkdir ~/rpmbuild/SPECS
+	- mkdir ~/rpmbuild/SRPMS
+	cp ooRexx*.tar.gz ~/rpmbuild/SOURCES
+	cp platform/unix/oorexx.spec ~/rpmbuild/SPECS
 	rpmbuild -ba $(build_os_platform_dir)/oorexx.spec < /dev/null;
 
 deb:

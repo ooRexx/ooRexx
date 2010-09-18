@@ -1,6 +1,6 @@
 #*******************************************************************************
 # Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
-# Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+# Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.
 #
 # This program and the accompanying materials are made available under
 # the terms of the Common Public License v1.0 which accompanies this
@@ -34,340 +34,168 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #******************************************************************************
 
-# The following unconditionally overrides the default prefix with our own.
-# This will make us LSB compliant as far as where we install stuff when we are
-# not an official part of a Linux distribution.
-# If this RPM is for a Linux distribution you should replace "/opt/ooRexx"
-# with "/"
-%undefine _prefix
-%define _prefix /opt/ooRexx
-
-# Specify a top dir so we can build the RPM as a non-root user
-%define _rpmtopdir @abs_top_srcdir@/rpm
-%define _builddir @abs_top_srcdir@/rpm/BUILD
-%define _rpmdir @abs_top_srcdir@/rpm/RPMS
-%define _sourcedir @abs_top_srcdir@
-%define _specdir @abs_top_srcdir@/platform/unix
-%define _srcrpmdir @abs_top_srcdir@/rpm/SRPMS
-%define _tmpdir /tmp
-
-# Specify the package version
-%define orx_major 4
-%define orx_minor 2
-%define orx_mod_lvl 0
-
-# Specify the libtool library version
-%define orx_current 4
-%define orx_revision 3
-# orx_age should ALWAYS remain 0 so the linker can always use the latest version
-%define orx_age 0
-# the order of these looks wrong, but that is how it comes out!
-%define orx_libversion %{orx_current}.%{orx_age}.%{orx_revision}
 
 Name: ooRexx
-Version: %{orx_major}.%{orx_minor}.%{orx_mod_lvl}
+Prefix: /usr
+Version: @ORX_SUBST_MAJOR@.@ORX_SUBST_MINOR@.@ORX_SUBST_MOD_LVL@
 Release: @SVN_REV@
 Summary: Open Object Rexx
 Group: Development/Languages
 License: CPL
 URL: http://www.oorexx.org/
 Source: %{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Buildroot: %{_buildroot}
 # If we don't include the following option we get bogus dependencies generated
 Autoreq: 0
 
-%description
-Open Object Rexx is an object-oriented scripting language. The language
-is designed for "non-programmer" type users, so it is easy to learn
-and easy to use, and provides an excellent vehicle to enter the world
-of object-oriented programming without much effort.
+# Specify the libtool library version
+# the order of these looks wrong, but that is how it comes out!
+%define orx_libversion @ORX_SUBST_CURRENT@.@ORX_SUBST_AGE@.@ORX_SUBST_REVISION@
 
-It extends the procedural way of programming with object-oriented
-features that allow you to gradually change your programming style
-as you learn more about objects.
+#******************************************************************************
+%description
+#******************************************************************************
+Open Object Rexx is an object-oriented scripting language. The language
+is designed for both beginners and experienced Rexx programmers. It is
+easy to learn and use, and provides an excellent vehicle to enter the
+world of object-oriented programming without much effort.
+
+It extends the procedural way of Rexx programming with object-oriented
+features that allow you to gradually change your programming style as
+you learn more about objects.
 
 For more information on ooRexx, visit http://www.oorexx.org/
 For more information on Rexx, visit http://www.rexxla.org/
+
+#******************************************************************************
 %prep
+#******************************************************************************
 %setup -q
 
+#******************************************************************************
 %build
-# Do not remove the --prefix option! This is how we control where things get
-# installed, either /opt/ooRexx or /usr
+#******************************************************************************
 ./configure --disable-static --prefix=%{_prefix}
 make %{?_smp_mflags}
 
+#******************************************************************************
 %install
+#******************************************************************************
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 
+#******************************************************************************
 %clean
+#******************************************************************************
 rm -rf $RPM_BUILD_ROOT
 
-#%prefix: /opt/ooRexx
-#%prefix: /usr
-
+#******************************************************************************
 %files
+#******************************************************************************
 %defattr(-,root,root,-)
 %doc
-%{_prefix}/bin/rexx
-%{_prefix}/bin/rexxc
-%{_prefix}/bin/rxapi
-%{_prefix}/bin/rxapid
-%{_prefix}/bin/rxqueue
-%{_prefix}/bin/rxsubcom
-%{_prefix}/bin/rexximage
-%{_prefix}/bin/rexx.img
-%{_prefix}/bin/rexx.cat
-%{_prefix}/bin/rxregexp.cls
-%{_prefix}/bin/rxftp.cls
-%{_prefix}/bin/csvStream.cls
-%{_prefix}/bin/socket.cls
-%{_prefix}/bin/streamsocket.cls
-%{_prefix}/bin/mime.cls
-%{_prefix}/bin/smtp.cls
-%{_prefix}/bin/oorexx-config
+%{_bindir}/rexx
+%{_bindir}/rexxc
+%{_bindir}/rxapi
+%{_bindir}/rxapid
+%{_bindir}/rxqueue
+%{_bindir}/rxsubcom
+%{_bindir}/rexximage
+%{_bindir}/rexx.img
+%{_bindir}/rexx.cat
+%{_bindir}/rxregexp.cls
+%{_bindir}/rxftp.cls
+%{_bindir}/csvStream.cls
+%{_bindir}/socket.cls
+%{_bindir}/streamsocket.cls
+%{_bindir}/mime.cls
+%{_bindir}/smtp.cls
+%{_bindir}/oorexx-config
 %{_prefix}/lib/ooRexx/librexx.so
-%{_prefix}/lib/ooRexx/librexx.so.%{orx_current}
+%{_prefix}/lib/ooRexx/librexx.so.@ORX_SUBST_CURRENT@
 %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librexx.la
 %{_prefix}/lib/ooRexx/librexxapi.so
-%{_prefix}/lib/ooRexx/librexxapi.so.%{orx_current}
+%{_prefix}/lib/ooRexx/librexxapi.so.@ORX_SUBST_CURRENT@
 %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librexxapi.la
 %{_prefix}/lib/ooRexx/librxsock.so
-%{_prefix}/lib/ooRexx/librxsock.so.%{orx_current}
+%{_prefix}/lib/ooRexx/librxsock.so.@ORX_SUBST_CURRENT@
 %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librxsock.la
 %{_prefix}/lib/ooRexx/librxmath.so
-%{_prefix}/lib/ooRexx/librxmath.so.%{orx_current}
+%{_prefix}/lib/ooRexx/librxmath.so.@ORX_SUBST_CURRENT@
 %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librxmath.la
 %{_prefix}/lib/ooRexx/librxregexp.so
-%{_prefix}/lib/ooRexx/librxregexp.so.%{orx_current}
+%{_prefix}/lib/ooRexx/librxregexp.so.@ORX_SUBST_CURRENT@
 %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librxregexp.la
 %{_prefix}/lib/ooRexx/librexxutil.so
-%{_prefix}/lib/ooRexx/librexxutil.so.%{orx_current}
+%{_prefix}/lib/ooRexx/librexxutil.so.@ORX_SUBST_CURRENT@
 %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librexxutil.la
 %{_prefix}/lib/ooRexx/libhostemu.so
-%{_prefix}/lib/ooRexx/libhostemu.so.%{orx_current}
+%{_prefix}/lib/ooRexx/libhostemu.so.@ORX_SUBST_CURRENT@
 %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/libhostemu.la
 %{_prefix}/lib/ooRexx/librxunixsys.so
-%{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_current}
+%{_prefix}/lib/ooRexx/librxunixsys.so.@ORX_SUBST_CURRENT@
 %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librxunixsys.la
-%{_prefix}/include/rexx.h
-%{_prefix}/include/rexxapidefs.h
-%{_prefix}/include/rexxapitypes.h
-%{_prefix}/include/rexxplatformapis.h
-%{_prefix}/include/rexxplatformdefs.h
-%{_prefix}/include/oorexxapi.h
-%{_prefix}/include/oorexxerrors.h
-%{_prefix}/share/man/man1/oorexx-config.1
-%{_prefix}/share/man/man1/rexx.1
-%{_prefix}/share/man/man1/rexxc.1
-%{_prefix}/share/man/man1/rxsubcom.1
-%{_prefix}/share/man/man1/rxqueue.1
-%{_prefix}/share/ooRexx/rexx.sh
-%{_prefix}/share/ooRexx/rexx.csh
-%{_prefix}/share/ooRexx/*.rex
-%{_prefix}/share/ooRexx/readme
-# We still need to figure out how to get the following installed somewhere in
-# the install tree. Obviously the following does not work.
-#%{_prefix}/share/ooRexx/trexx
-#%{_prefix}/share/ooRexx/api/*.README
-#%{_prefix}/share/ooRexx/api/callrexx/*.c
-#%{_prefix}/share/ooRexx/api/callrexx/*.rex
-#%{_prefix}/share/ooRexx/api/wpipe1/*.c
-#%{_prefix}/share/ooRexx/api/wpipe1/*.rex
-#%{_prefix}/share/ooRexx/api/wpipe2/*.c
-#%{_prefix}/share/ooRexx/api/wpipe2/*.rex
-#%{_prefix}/share/ooRexx/api/wpipe3/*.c
-#%{_prefix}/share/ooRexx/api/wpipe3/*.rex
+%{_includedir}/rexx.h
+%{_includedir}/rexxapidefs.h
+%{_includedir}/rexxapitypes.h
+%{_includedir}/rexxplatformapis.h
+%{_includedir}/rexxplatformdefs.h
+%{_includedir}/oorexxapi.h
+%{_includedir}/oorexxerrors.h
+%{_mandir}/man1/oorexx-config.1.gz
+%{_mandir}/man1/rexx.1.gz
+%{_mandir}/man1/rexxc.1.gz
+%{_mandir}/man1/rxsubcom.1.gz
+%{_mandir}/man1/rxqueue.1.gz
+%{_datadir}/ooRexx/rexx.sh
+%{_datadir}/ooRexx/rexx.csh
+%{_datadir}/ooRexx/*.rex
+%{_datadir}/ooRexx/readme
 
+#******************************************************************************
 %post
-# We only need to create the links if we are installed in /opt/ooRexx
-if [ -d /opt/ooRexx ]; then
-   ln -sf %{_prefix}/bin/rexx                             /usr/bin/rexx
-   ln -sf %{_prefix}/bin/rexxc                            /usr/bin/rexxc
-   ln -sf %{_prefix}/bin/rxapi                            /usr/bin/rxapi
-   ln -sf %{_prefix}/bin/rxqueue                          /usr/bin/rxqueue
-   ln -sf %{_prefix}/bin/rxsubcom                         /usr/bin/rxsubcom
-   ln -sf %{_prefix}/bin/rexx.img                         /usr/bin/rexx.img
-   ln -sf %{_prefix}/bin/rexx.cat                         /usr/bin/rexx.cat
-   ln -sf %{_prefix}/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
-   ln -sf %{_prefix}/bin/rxftp.cls                        /usr/bin/rxftp.cls
-   ln -sf %{_prefix}/bin/csvStream.cls                    /usr/bin/csvStream.cls
-   ln -sf %{_prefix}/bin/socket.cls                       /usr/bin/socket.cls
-   ln -sf %{_prefix}/bin/streamsocket.cls                 /usr/bin/streamsocket.cls
-   ln -sf %{_prefix}/bin/mime.cls                         /usr/bin/mime.cls
-   ln -sf %{_prefix}/bin/smtp.cls                         /usr/bin/smtp.cls
-   ln -sf %{_prefix}/bin/oorexx-config                    /usr/bin/oorexx-config
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/%{_lib}/librexx.so
-   ln -sf %{_prefix}/lib/ooRexx/librexx.la                       /usr/%{_lib}/librexx.la
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/%{_lib}/librexxapi.so
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.la                    /usr/%{_lib}/librexxapi.la
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/%{_lib}/librxsock.so
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.la                     /usr/%{_lib}/librxsock.la
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/%{_lib}/librxmath.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/%{_lib}/librxmath.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.la                     /usr/%{_lib}/librxmath.la
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/%{_lib}/librxregexp.so
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.la                   /usr/%{_lib}/librxregexp.la
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/%{_lib}/librexxutil.so
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.la                   /usr/%{_lib}/librexxutil.la
-   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}  /usr/%{_lib}/libhostemu.so
-   ln -sf %{_prefix}/lib/ooRexx/libhostemu.la                    /usr/%{_lib}/libhostemu.la
-   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so.%{orx_libversion}
-   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so
-   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.la                    /usr/%{_lib}/librxunixsys.la
-   ln -sf %{_prefix}/include/rexx.h                       /usr/include/rexx.h
-   ln -sf %{_prefix}/include/rexxapidefs.h                /usr/include/rexxapidefs.h
-   ln -sf %{_prefix}/include/rexxapitypes.h               /usr/include/rexxapitypes.h
-   ln -sf %{_prefix}/include/rexxplatformapis.h           /usr/include/rexxplatformapis.h
-   ln -sf %{_prefix}/include/rexxplatformdefs.h           /usr/include/rexxplatformdefs.h
-   ln -sf %{_prefix}/include/oorexxapi.h                  /usr/include/oorexxapi.h
-   ln -sf %{_prefix}/include/oorexxerrors.h               /usr/include/oorexxerrors.h
-   ln -sf %{_prefix}/share/man/man1/oorexx-config.1       /usr/share/man/man1/oorexx-config.1
-   ln -sf %{_prefix}/share/man/man1/rexx.1                /usr/share/man/man1/rexx.1
-   ln -sf %{_prefix}/share/man/man1/rexxc.1               /usr/share/man/man1/rexxc.1
-   ln -sf %{_prefix}/share/man/man1/rxsubcom.1            /usr/share/man/man1/rxsubcom.1
-   ln -sf %{_prefix}/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
-   ln -sf %{_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
-# allow backwards compatibility to previous versions
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}       /usr/%{_lib}/librexx.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}       /usr/%{_lib}/librexx.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}    /usr/%{_lib}/librexxapi.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}    /usr/%{_lib}/librexxapi.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}     /usr/%{_lib}/librxsock.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}     /usr/%{_lib}/librxsock.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}     /usr/%{_lib}/librxmath.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}     /usr/%{_lib}/librxmath.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion}   /usr/%{_lib}/librxregexp.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion}   /usr/%{_lib}/librxregexp.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion}   /usr/%{_lib}/librexxutil.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion}   /usr/%{_lib}/librexxutil.so.3
-   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}    /usr/%{_lib}/libhostemu.so.2
-   ln -sf %{_prefix}/lib/ooRexx/libhostemu.so.%{orx_libversion}    /usr/%{_lib}/libhostemu.so.3
-   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so.2
-   ln -sf %{_prefix}/lib/ooRexx/librxunixsys.so.%{orx_libversion}  /usr/%{_lib}/librxunixsys.so.3
-fi
-if [ -d /etc/rc.d/init.d ]; then
-   # Red Hat
-   cp %{_prefix}/bin/rxapid          /etc/rc.d/init.d
-   ln -sf /etc/rc.d/init.d/rxapid    /etc/rc.d/rc3.d/S89rxapid
-   ln -sf /etc/rc.d/init.d/rxapid    /etc/rc.d/rc5.d/S89rxapid
-   ldconfig
-   /etc/rc.d/init.d/rxapid start
+#******************************************************************************
+ln -sf %{_datadir}/ooRexx/rexxtry.rex %{_bindir}/rexxtry.rex
+ln -sf %{_bindir}/rxapid /etc/init.d/rxapid
+if [ -x /sbin/insserv ]; then
+   # try insserv first (for Suse)
+   insserv -f rxapid
 else
-   # Suse
-   cp %{_prefix}/bin/rxapid          /etc/rc.d
-   ln -sf /etc/rc.d/rxapid           /etc/rc.d/rc3.d/S89rxapid
-   ln -sf /etc/rc.d/rxapid           /etc/rc.d/rc5.d/S89rxapid
-   ldconfig
-   /etc/rc.d/rxapid start
+   # else, try good old chkconfig
+   chkconfig --add rxapid
 fi
-
-%preun
-# Remove all our installed files/links
-rm -f /usr/bin/rexx
-rm -f /usr/bin/rexxc
-rm -f /usr/bin/rxapi
-rm -f /usr/bin/rxqueue
-rm -f /usr/bin/rxsubcom
-rm -f /usr/bin/rexx.img
-rm -f /usr/bin/rexx.cat
-rm -f /usr/bin/rxregexp.cls
-rm -f /usr/bin/rxftp.cls
-rm -f /usr/bin/csvStream.cls
-rm -f /usr/bin/socket.cls
-rm -f /usr/bin/streamsocket.cls
-rm -f /usr/bin/mime.cls
-rm -f /usr/bin/smtp.cls
-rm -f /usr/bin/oorexx-config
-rm -f /usr/%{_lib}/librexx.so
-rm -f /usr/%{_lib}/librexx.la
-rm -f /usr/%{_lib}/librexx.%{orx_libversion}
-rm -f /usr/%{_lib}/librexx.%{orx_current}
-rm -f /usr/%{_lib}/librexxapi.so
-rm -f /usr/%{_lib}/librexxapi.la
-rm -f /usr/%{_lib}/librexxapi.%{orx_libversion}
-rm -f /usr/%{_lib}/librexxapi.%{orx_current}
-rm -f /usr/%{_lib}/librxsock.so
-rm -f /usr/%{_lib}/librxsock.la
-rm -f /usr/%{_lib}/librxsock.%{orx_libversion}
-rm -f /usr/%{_lib}/librxsock.%{orx_current}
-rm -f /usr/%{_lib}/librxmath.so
-rm -f /usr/%{_lib}/librxmath.la
-rm -f /usr/%{_lib}/librxmath.%{orx_libversion}
-rm -f /usr/%{_lib}/librxmath.%{orx_current}
-rm -f /usr/%{_lib}/librxregexp.so
-rm -f /usr/%{_lib}/librxregexp.la
-rm -f /usr/%{_lib}/librxregexp.%{orx_libversion}
-rm -f /usr/%{_lib}/librxregexp.%{orx_current}
-rm -f /usr/%{_lib}/librexxutil.so
-rm -f /usr/%{_lib}/librexxutil.la
-rm -f /usr/%{_lib}/librexxutil.%{orx_libversion}
-rm -f /usr/%{_lib}/librexxutil.%{orx_current}
-rm -f /usr/%{_lib}/libhostemu.so
-rm -f /usr/%{_lib}/libhostemu.la
-rm -f /usr/%{_lib}/libhostemu.%{orx_libversion}
-rm -f /usr/%{_lib}/libhostemu.%{orx_current}
-rm -f /usr/%{_lib}/librxunixsys.so
-rm -f /usr/%{_lib}/librxunixsys.la
-rm -f /usr/%{_lib}/librxunixsys.%{orx_libversion}
-rm -f /usr/%{_lib}/librxunixsys.%{orx_current}
-rm -f /usr/share/man/man1/oorexx-config.1
-rm -f /usr/share/man/man1/rexx.1
-rm -f /usr/share/man/man1/rexxc.1
-rm -f /usr/share/man/man1/rxsubcom.1
-rm -f /usr/share/man/man1/rxqueue.1
-rm -f /usr/include/rexx.h
-rm -f /usr/include/rexxapidefs.h
-rm -f /usr/include/rexxapitypes.h
-rm -f /usr/include/rexxplatformapis.h
-rm -f /usr/include/rexxplatformdefs.h
-rm -f /usr/include/oorexxapi.h
-rm -f /usr/include/oorexxerrors.h
-rm -f /usr/bin/rexxtry.rex
-rm -rf /usr/share/ooRexx
-if [ -d /etc/rc.d/init.d ]; then
-   # Red Hat
-   /etc/rc.d/init.d/rxapid stop
-   rm /etc/rc.d/rc3.d/S89rxapid
-   rm /etc/rc.d/rc5.d/S89rxapid
-   rm /etc/rc.d/init.d/rxapid
-else
-   # Suse
-   /etc/rc.d/rxapid stop
-   rm /etc/rc.d/rc3.d/S89rxapid
-   rm /etc/rc.d/rc5.d/S89rxapid
-   rm /etc/rc.d/rxapid
-fi
-
-%postun
 ldconfig
-# Do not change this to rm -rf %{_prefix}
-# If you do you could wipe out the all the /usr subdirs!
-if [ -d /opt/ooRexx ]; then
-   rm -rf /opt/ooRexx
-fi
+service rxapid start
 
+#******************************************************************************
+%preun
+#******************************************************************************
+# Remove rxapi service
+service rxapid stop
+if [ -x /sbin/insserv ]; then
+   # try insserv first (for Suse)
+   insserv -f rxapid
+else
+   # else, try good old chkconfig
+   chkconfig --del rxapid
+fi
+rm -f /etc/init.d/rxapid
+rm -f %{_bindir}/rexxtry.rex
+
+#******************************************************************************
+%postun
+#******************************************************************************
+ldconfig
+
+#******************************************************************************
 %changelog
+#******************************************************************************
 

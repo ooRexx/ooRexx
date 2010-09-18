@@ -35,14 +35,7 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script
 AC_INIT(oorexx, 4.2.0)
-AC_PREFIX_DEFAULT(/opt/ooRexx)
-
-dnl This is to fix a problem with distribution prior to Fedora 7. Fedora 7
-dnl requires the share/man location, not just man. Prior distributions didn't
-dnl care that the share was left out but Fedora 7 absolutely requires it. So to
-dnl make things portable we redefine mandir to the correct value so that all
-dnl older distributions are happy.
-mandir="\$(prefix)/share/man"
+AC_PREFIX_DEFAULT(/usr)
 
 PACKAGE=ooRexx
 VERSION=4.2.0
