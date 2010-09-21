@@ -1114,6 +1114,9 @@ rpm: dist
 	- mkdir ~/rpmbuild/SOURCES
 	- mkdir ~/rpmbuild/SPECS
 	- mkdir ~/rpmbuild/SRPMS
+	- rm -rf ~/rpmbuild/RPMS/*
+	- rm -rf ~/rpmbuild/SOURCES/*
+	- rm -rf ~/rpmbuild/SRPMS/*
 	cp ooRexx*.tar.gz ~/rpmbuild/SOURCES
 	cp platform/unix/oorexx.spec ~/rpmbuild/SPECS
 	rpmbuild -ba $(build_os_platform_dir)/oorexx.spec < /dev/null;
