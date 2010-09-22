@@ -44,7 +44,6 @@ Group: Development/Languages
 License: CPL
 URL: http://www.oorexx.org/
 Source: %{name}-%{version}.tar.gz
-Buildroot: %{_buildroot}
 # If we don't include the following option we get bogus dependencies generated
 Autoreq: 0
 
@@ -82,7 +81,7 @@ make %{?_smp_mflags}
 %install
 #******************************************************************************
 rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+make DESTDIR=$RPM_BUILD_ROOT install
 
 #******************************************************************************
 %clean
