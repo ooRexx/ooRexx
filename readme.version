@@ -13,7 +13,11 @@ platform/unix/rexxc.1
 platform/unix/rxqueue.1
 platform/unix/rxsubcom.1
 
+When the copyright year changes be sure to update the following.
+
+interpreter/api/InterpreterAPI.cpp
+
 When the library interface changes you need to modify the oorexx.ver
-file. BE CAREFUL!!!!! This info has no relationship to the ooRexx package
+file. BE CAREFUL!!!!! Some of this info has no relationship to the ooRexx package
 version! If you don't know what you are doing, then don't do anything!
 
