@@ -245,10 +245,10 @@ char *REXXENTRY RexxGetVersionInformation()
   #else
     char mode[] = "\nAddressing Mode: 32";
   #endif
-    char copy1[] = "\n\nCopyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA 2005-2009.\nAll Rights Reserved.";
-    char copy2[] = "\nThis program and the accompanying materials";
-    char copy3[] = "\nare made available under the terms of the Common Public License v1.0";
-    char copy4[] = "\nwhich accompanies this distribution.";
+    char copy1[] = "\n\nCopyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA 2005-2010.\nAll Rights Reserved.";
+    char copy2[] = "\nThis program and the accompanying materials are made available under";
+    char copy3[] = "\nthe terms of the Common Public License v1.0 which accompanies this";
+    char copy4[] = "\ndistribution or at";
     char copy5[] = "\nhttp://www.oorexx.org/license.html";
     char *ptr = (char *)SystemInterpreter::allocateResultMemory(strlen(header) + strlen(ver) + strlen(build) + strlen(__DATE__) +
         strlen(mode) + strlen(copy1) + strlen(copy2) + strlen(copy3) + strlen(copy4) + strlen(copy5) + 1);
