@@ -85,6 +85,7 @@
  class RexxSaveStack : public RexxStack {
   public:
    void       *operator new(size_t, size_t);
+   inline void operator delete(void *) { ; }
    inline void operator delete(void *, size_t) { }
 
    RexxSaveStack(size_t, size_t);

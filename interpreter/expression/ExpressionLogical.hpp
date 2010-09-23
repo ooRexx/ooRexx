@@ -50,8 +50,9 @@ class RexxQueue;
 class RexxExpressionLogical : public RexxInternalObject {
  public:
   inline void *operator new(size_t, void *ptr) {return ptr;}
+         void *operator new(size_t, size_t);
+  inline void  operator delete(void *) { ; }
   inline void  operator delete(void *, void *) {;}
-  void       *operator new(size_t, size_t);
   inline void  operator delete(void *, size_t) {;}
 
   RexxExpressionLogical(RexxSource *, size_t, RexxQueue *);
