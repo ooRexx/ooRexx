@@ -1,0 +1,50 @@
+                       Notes on Building an ooRexx RPM
+                       ===============================
+
+The configure script, makefile and RPM spec file are all set up to build the
+ooRexx RPM in the user's HOME subdirectory in a subdirectory named rpmbuild.
+
+    ~/rpmbuild
+
+The RPM build tree will be created in that location.
+
+    ~/rpmbuild/BUILD
+    ~/rpmbuild/BUILDROOT
+    ~/rpmbuild/SOURCES
+    ~/rpmbuild/SRPMS
+    ~/rpmbuild/RPMS
+
+The build process first attempts to remove the entire ~/rpmbuild tree if it
+exists. It then recreates the tree before the rpmbuild command is actually
+executed. The result RPM(s) will be placed in this tree and this tree will
+be used for all build steps.
+
+                          Building a Suse ooRexx RPM
+                          ==========================
+
+On Suse there is an additional step that has to be performed prior to
+executing the rpmbuild command. You need to create the file .rpmmacros
+in your home subdirectory and place the following in it:
+
+    %_topdir /home/dashley/rpmbuild
+    %_mandir /usr/man
+
+The above is just an example. You need to replace the /home/dashley
+string with your HOME subdirectory. DO NOT attempt to use the tilde (~)
+to specify your HOME subdirectory as the tilde will not be expanded
+to your HOME subdirectory. The %_mandir line should be left as shown.
+
+These changes are absolutely necessary on a SLES or openSuse system
+use to build an ooRexx RPM.
+
+You should also be aware that the RPM built on a Suse system will NOT
+install correctly on a Fedora/Red Hat system as the location of the
+man dir is different on these systems.
+
+If these steps do not work for you please open a Bug Report on the ooRexx
+SourceForge web site. Be sure to include any error messages that are
+available to help us debug the problem.
+
+David Ashley
+ooRexx Development Team
+
