@@ -130,6 +130,7 @@ class RexxInteger : public RexxObject {
   RexxString *concat(RexxString *);
   RexxString *concatBlank(RexxString *);
   void        setString(RexxString *string);
+  RexxClass  *classObject();
                                        /* numberstring operator forwarders  */
   koper (integer_operator_not)
 

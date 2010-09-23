@@ -600,6 +600,7 @@ CPPM(RexxInteger::d2x),
 CPPM(RexxInteger::d2c),
 CPPM(RexxInteger::format),
 CPPM(RexxInteger::trunc),
+CPPM(RexxInteger::classObject),
 
 CPPM(RexxList::value),                 /* list methods                      */
 CPPM(RexxList::remove),
@@ -726,6 +727,7 @@ CPPM(RexxNumberString::d2x),
 CPPM(RexxNumberString::d2xD2c),
 CPPM(RexxNumberString::strictEqual),
 CPPM(RexxNumberString::hashCode),
+CPPM(RexxNumberString::classObject),
 
 CPPM(RexxQueue::supplier),             /* Queue methods                     */
 CPPM(RexxQueue::pushRexx),

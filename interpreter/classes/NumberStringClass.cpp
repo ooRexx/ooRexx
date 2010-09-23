@@ -3178,6 +3178,15 @@ RexxObject  *RexxNumberString::getRealValue(
     return (RexxObject *)this;           /* just return this value            */
 }
 
+RexxClass   *RexxNumberString::classObject()
+/******************************************************************************/
+/* Function:  Return the String class object for numberstring instances       */
+/******************************************************************************/
+{
+                                       /* just return class from behaviour  */
+  return TheStringClass;
+}
+
 void  *RexxNumberString::operator new(size_t size, size_t length)
 /******************************************************************************/
 /* Function:  Create a new NumberString object                                */

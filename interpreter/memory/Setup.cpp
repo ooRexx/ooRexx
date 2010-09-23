@@ -1046,6 +1046,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_MAKESTRING                   ,TheIntegerBehaviour, CPPM(RexxObject::makeStringRexx), 0);
   defineKernelMethod(CHAR_FORMAT                       ,TheIntegerBehaviour, CPPM(RexxInteger::format), 4);
   defineKernelMethod(CHAR_TRUNC                        ,TheIntegerBehaviour, CPPM(RexxInteger::trunc), 1);
+  defineKernelMethod(CHAR_CLASS                        ,TheIntegerBehaviour, CPPM(RexxInteger::classObject), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1111,6 +1112,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_MAKESTRING                   ,TheNumberStringBehaviour, CPPM(RexxObject::makeStringRexx), 0);
   defineKernelMethod(CHAR_FORMAT                       ,TheNumberStringBehaviour, CPPM(RexxNumberString::formatRexx), 4);
   defineKernelMethod(CHAR_TRUNC                        ,TheNumberStringBehaviour, CPPM(RexxNumberString::trunc), 1);
+  defineKernelMethod(CHAR_CLASS                        ,TheNumberStringBehaviour, CPPM(RexxNumberString::classObject), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

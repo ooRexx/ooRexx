@@ -1162,6 +1162,15 @@ void RexxIntegerClass::liveGeneral(int reason)
   }
 }
 
+RexxClass   *RexxInteger::classObject()
+/******************************************************************************/
+/* Function:  Return the String class object for integer instances            */
+/******************************************************************************/
+{
+                                       /* just return class from behaviour  */
+  return TheStringClass;
+}
+
 void *RexxInteger::operator new(size_t size)
 /******************************************************************************/
 /* Function:  Create a new integer object                                     */
