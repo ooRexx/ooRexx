@@ -35,10 +35,59 @@
 #******************************************************************************
 
 
+#******************************************************************************
+# Figure out the operating system and version
+#******************************************************************************
+
+%define _fedora %(if [ -f /etc/fedora-release ]; then echo 1; else echo 0; fi)
+%define _redhat %(if [ -f /etc/redhat-release ]; then echo 1; else echo 0; fi)
+%define _suse %(if [ -f /etc/SuSE-release ]; then echo 1; else echo 0; fi)
+%define _unknownos 1
+
+# Note: the order of these is very important!
+
+# Fedora
+%if 0%{?_fedora}
+%define _osdistname %{build_distro}%{build_release}
+%define _redhat 0
+%define _unknownos 0
+%endif
+
+# Red Hat
+%if 0%{?_redhat}
+# Currently RH does not define these like Fedora does, but they might in the future.
+# So we define them and if RH ever does use them we can eliminate the definitions.
+# We will leave the version as a null string.
+%define build_distro %(grep -q "Red Hat Enterprise Linux" /etc/redhat-release && echo rhel || echo rhl)
+%define build_release
+%define _osdistname %{build_distro}%{build_release}
+%define _unknownos 0
+%endif
+
+# SuSE
+%if 0%{?_suse}
+%define build_distro %(grep -q "openSUSE" /etc/SuSE-release && echo opensuse || echo sles)
+%define build_version %{suse_version}
+%define _osdistname %{build_distro}%{build_version}
+%define _unknownos 0
+%endif
+
+# This is the default
+%if 0%{?_unknownos}
+%define build_distro unknown
+%define build_version
+%define _osdistname %{build_distro}%{build_version}
+%endif
+
+
+#******************************************************************************
+# The base spec tags
+#******************************************************************************
+
 Name: ooRexx
 Prefix: /usr
 Version: @ORX_SUBST_MAJOR@.@ORX_SUBST_MINOR@.@ORX_SUBST_MOD_LVL@
-Release: @SVN_REV@
+Release: @SVN_REV@.%{_osdistname}
 Summary: Open Object Rexx
 Group: Development/Languages
 License: CPL
@@ -48,7 +97,7 @@ Source: %{name}-%{version}.tar.gz
 Autoreq: 0
 
 # Specify the libtool library version
-# the order of these looks wrong, but that is how it comes out!
+# The order of these looks wrong, but that is how it comes out!
 %define orx_libversion @ORX_SUBST_CURRENT@.@ORX_SUBST_AGE@.@ORX_SUBST_REVISION@
 
 #******************************************************************************

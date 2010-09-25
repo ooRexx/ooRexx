@@ -32,7 +32,10 @@ in your home subdirectory and place the following in it:
 The above is just an example. You need to replace the /home/dashley
 string with your HOME subdirectory. DO NOT attempt to use the tilde (~)
 to specify your HOME subdirectory as the tilde will not be expanded
-to your HOME subdirectory. The %_mandir line should be left as shown.
+to your HOME subdirectory. The %_mandir line may or may not be needed
+depending on where your version of Suse stores man pages. If they are
+stored in /usr/share/man then this line is not needed. Otherwise it
+should probably point to /usr/man.
 
 These changes are absolutely necessary on a SLES or openSuse system
 use to build an ooRexx RPM.
