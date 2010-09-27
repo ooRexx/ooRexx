@@ -48,6 +48,8 @@
 
 # Fedora
 %if 0%{?_fedora}
+%define build_distro fedora
+%define build_release %{fedora}
 %define _osdistname %{build_distro}%{build_release}
 %define _redhat 0
 %define _unknownos 0
