@@ -60,7 +60,7 @@ while test $# -gt 0; do
           ;;
 
        --libs)
-          echo -L$libdir -lrexx -lrexxapi
+          echo -L $libdir/ooRexx -L $prefix/lib64/ooRexx -lrexx -lrexxapi
           ;;
 
        *)
