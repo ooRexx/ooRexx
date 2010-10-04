@@ -2057,6 +2057,46 @@ RexxMethod1(CSTRING, stream_close, CSELF, streamPtr)
     return 0;     // return 0 for all exceptions...the result value has already been set.
 }
 
+
+/********************************************************************************************/
+/* stream_uninit -- really close this and perform final cleanup                             */
+/********************************************************************************************/
+RexxMethod1(CSTRING, stream_uninit, CSELF, streamPtr)
+{
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    // we might be getting called from the uninit method after a creation
+    // error, so only close if we have the stream info
+    if (stream_info == NULL)
+    {
+        return 0;
+    }
+
+    stream_info->setContext(context, context->NullString());
+
+    try
+    {
+        stream_info->streamClose();
+        // delete the stream information backing this.  This can only
+        // be done by the uninit, not by close, because a stream object
+        // can be reused.  We need to wait until the garbage collector
+        // reclaims this.
+        delete stream_info;
+        stream_info = NULL;
+        // clear the backing pointer for the stream info
+        context->DropObjectVariable("CSELF");
+        return 0;
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
+}
+
 /**
  * Try to flush the stream, returning the appropriate error
  * state if there is a problem.

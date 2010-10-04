@@ -187,10 +187,8 @@ notready:
                                      /* set this as a handle type         */
     self~!handle_set(substr(stream_name,8))
   return
-                                       /* close and uninit are actually the */
-                                       /* same method                       */
 ::METHOD close        EXTERNAL 'LIBRARY REXX stream_close'
-::METHOD uninit       EXTERNAL 'LIBRARY REXX stream_close'
+::METHOD uninit       EXTERNAL 'LIBRARY REXX stream_uninit'
 
 ::METHOD  arrayout                     /* write out lines as an array       */
   use strict arg array, type='LINES'   /* access the array                  */

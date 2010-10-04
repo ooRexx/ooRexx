@@ -68,6 +68,7 @@
    INTERNAL_METHOD(query_handle)
    INTERNAL_METHOD(query_streamtype)
    INTERNAL_METHOD(stream_close)
+   INTERNAL_METHOD(stream_uninit)
    INTERNAL_METHOD(stream_open)
    INTERNAL_METHOD(rexx_create_queue)
    INTERNAL_METHOD(rexx_open_queue)
