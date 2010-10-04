@@ -1,6 +1,6 @@
 @REM
 @REM Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
-@REM Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+@REM Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.
 @REM
 @REM This program and the accompanying materials are made available under
 @REM the terms of the Common Public License v1.0 which accompanies this
