@@ -2275,7 +2275,7 @@ static uint32_t changeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTRIN
     uint32_t newStyle = 0;
     if ( remove )
     {
-        newStyle &= ~listViewStyle(_style, 0);
+        newStyle = oldStyle & ~listViewStyle(_style, 0);
         if ( _additionalStyle != NULL )
         {
             newStyle = listViewStyle(_additionalStyle, newStyle);
