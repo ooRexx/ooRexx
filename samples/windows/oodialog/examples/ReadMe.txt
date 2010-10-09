@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2007 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2007-2010 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -63,3 +63,8 @@
     This example program demonstrates some of the new features introduced in
     ooRexx 4.0.0, including the .Image, .Imagelist classes, and the
     setImageList() method of the button class.
+
+    - columnClickListView.rex
+
+    An example program that shows how to determine which row and which column
+    in a list view control the user has clicked on.
