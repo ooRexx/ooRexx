@@ -172,7 +172,10 @@ extern bool validControlDlg(RexxMethodContext *c, pCPlainBaseDialog pcpbd);
 extern void setFontAttrib(RexxThreadContext *c, pCPlainBaseDialog pcpbd);
 
 // These functions are defined in oodPropertySheet.cpp
-void abortPropertySheet(pCPropertySheetDialog pcpsd, HWND hDlg, DlgProcErrType t);
+extern void abortPropertySheet(pCPropertySheetDialog pcpsd, HWND hDlg, DlgProcErrType t);
+
+// These functions are defined in oodViewControls.cpp
+extern bool isInReportView(HWND hList);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;
