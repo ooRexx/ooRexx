@@ -481,7 +481,7 @@ bool SysFileSystem::checkCurrentFile(const char *name, char *resolvedName)
     struct stat64 dummy;                 /* structure for stat system calls   */
 
     // ok, if this exists, life is good.  Return it.
-    if (stat64(resolvedName, &dummy) == 0)           /* look for file              */
+    if (stat64(resolvedName, &dummy) == 0)           /* look for file         */
     {
         // this needs to be a regular file
         if (S_ISREG(dummy.st_mode))
@@ -534,7 +534,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
         if (canonicalizeName(resolvedName))
         {
             struct stat64 dummy;
-            if (stat64(resolvedName, &dummy) == 0)   /* If file is found,          */
+            if (stat64(resolvedName, &dummy) == 0)   /* If file is found,     */
             {
                 // this needs to be a regular file
                 if (S_ISREG(dummy.st_mode))

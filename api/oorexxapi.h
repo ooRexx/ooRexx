@@ -212,7 +212,6 @@ typedef struct _RexxMethodEntry
 #define REXX_PACKAGE_API_NO 20081030
 // The interpreter version gets defined using two digits for major, minor, and revision.
 #define REXX_INTERPRETER_4_0_0  0x00040000
-#define REXX_INTERPRETER_4_0_0  0x00040000
 #define REXX_INTERPRETER_4_0_1  0x00040001
 #define REXX_INTERPRETER_4_1_0  0x00040100
 #define REXX_INTERPRETER_4_2_0  0x00040200
