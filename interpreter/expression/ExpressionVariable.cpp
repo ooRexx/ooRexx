@@ -103,7 +103,7 @@ RexxObject  *RexxParseVariable::evaluate(
     if (value == OREF_NULL)              /* no value yet?                     */
     {
         // try the various novalue mechanisms
-        value = context->handleNovalueEvent(variableName, variable);
+        value = context->handleNovalueEvent(variableName, variableName, variable);
     }
     stack->push(value);                  /* place on the evaluation stack     */
                                          /* trace if necessary                */

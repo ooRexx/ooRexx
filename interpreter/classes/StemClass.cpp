@@ -699,8 +699,12 @@ RexxObject *RexxStem::evaluateCompoundVariableValue(
         {                             /* need to use name                  */
                                       /* create a string version of the name */
             tail_name = resolved_tail->createCompoundName(stemVariableName);
+            // the tail_name is the fully resolved variable, used for NOVALUE reporting.
+            // the defaultValue is the value that's returned as the expression result,
+            // which is derived from the stem object.
+            RexxObject *defaultValue = resolved_tail->createCompoundName(stemName);
             /* take care of any novalue situations */
-            _value = handleNovalue(context, tail_name, variable);
+            _value = handleNovalue(context, tail_name, defaultValue, variable);
         }
     }
     else
@@ -711,8 +715,12 @@ RexxObject *RexxStem::evaluateCompoundVariableValue(
         {         /* explicitly dropped variable?      */
                   /* create a string version of the name */
             tail_name = resolved_tail->createCompoundName(stemName);
+            // the tail_name is the fully resolved variable, used for NOVALUE reporting.
+            // the defaultValue is the value that's returned as the expression result,
+            // which is derived from the stem object.
+            RexxObject *defaultValue = resolved_tail->createCompoundName(stemName);
             /* take care of any novalue situations */
-            _value = handleNovalue(context, tail_name, variable);
+            _value = handleNovalue(context, tail_name, defaultValue, variable);
         }
     }
     return _value;                       /* and finally return the value */
@@ -820,7 +828,8 @@ RexxObject *RexxStem::realCompoundVariableValue(
 
 RexxObject *RexxStem::handleNovalue(
     RexxActivation *context,           /* the execution context for the request */
-    RexxString *name,                  /* the fully resolved compound name */
+    RexxString *name,                  // the fully resolved compound name
+    RexxObject *defaultValue,          // the default value to use
     RexxCompoundElement *variable)     // the resolved variable element
 /******************************************************************************/
 /* Function:  Process a nonvalue condition for a stem variable retrieval.     */
@@ -832,7 +841,7 @@ RexxObject *RexxStem::handleNovalue(
     if (context != OREF_NULL)
     {
         /* the context may need to do additional work */
-        return context->handleNovalueEvent(name, variable);
+        return context->handleNovalueEvent(name, defaultValue, variable);
     }
     else
     {

@@ -127,7 +127,7 @@ class RexxNativeActivation;
   void        setValue(RexxObject *value);
   RexxArray  *tailArray();
   RexxCompoundElement *nextVariable(RexxNativeActivation *activation);
-  RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxCompoundElement *variable);
+  RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxObject *defaultValue, RexxCompoundElement *variable);
   void        expose(RexxCompoundElement *variable);
   bool        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
   void        quickSort(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, size_t left, size_t right);
