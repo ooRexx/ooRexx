@@ -61,7 +61,7 @@
 # So we define them and if RH ever does use them we can eliminate the definitions.
 # We will leave the version as a null string.
 %define build_distro %(grep -q "Red Hat Enterprise Linux" /etc/redhat-release && echo rhel || echo rhl)
-%define build_release
+%define build_release 55
 %define _osdistname %{build_distro}%{build_release}
 %define _unknownos 0
 %endif
