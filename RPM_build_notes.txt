@@ -2,7 +2,7 @@
                        ===============================
 
 The configure script, makefile and RPM spec file are all set up to build the
-ooRexx RPM in the user's HOME subdirectory in a subdirectory named rpmbuild.
+ooRexx RPM off the user's HOME subdirectory in a subdirectory named rpmbuild.
 
     ~/rpmbuild
 
@@ -19,30 +19,24 @@ exists. It then recreates the tree before the rpmbuild command is actually
 executed. The result RPM(s) will be placed in this tree and this tree will
 be used for all build steps.
 
-                          Building a Suse ooRexx RPM
-                          ==========================
-
-On Suse there is an additional step that has to be performed prior to
-executing the rpmbuild command. You need to create the file .rpmmacros
+On some RPM-based systems there is an additional step that has to be performed
+prior to executing the rpmbuild command. You need to create the file .rpmmacros
 in your home subdirectory and place the following in it:
 
     %_topdir /home/dashley/rpmbuild
-    %_mandir /usr/man
 
 The above is just an example. You need to replace the /home/dashley
 string with your HOME subdirectory. DO NOT attempt to use the tilde (~)
 to specify your HOME subdirectory as the tilde will not be expanded
-to your HOME subdirectory. The %_mandir line may or may not be needed
-depending on where your version of Suse stores man pages. If they are
-stored in /usr/share/man then this line is not needed. Otherwise it
-should probably point to /usr/man.
+to your HOME subdirectory. The .rpmmacros file may or may not be needed
+but it is safer to go ahead and create one. You will know that you need it
+if you get an error at the very end of the build and it complains that you
+have no access to the target build tree.
 
-These changes are absolutely necessary on a SLES or openSuse system
-use to build an ooRexx RPM.
-
-You should also be aware that the RPM built on a Suse system will NOT
-install correctly on a Fedora/Red Hat system as the location of the
-man dir is different on these systems.
+You should also be aware that RPMs may not be portable accross all Linux
+RPM-based distributions. This is particurally true when you are trying to
+install on an older distribution that does not fully comply with the Linux
+Filesystem Standard.
 
 If these steps do not work for you please open a Bug Report on the ooRexx
 SourceForge web site. Be sure to include any error messages that are
