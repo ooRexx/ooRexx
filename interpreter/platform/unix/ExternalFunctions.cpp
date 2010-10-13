@@ -289,7 +289,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
             }
 
         case FILESPEC_DRIVE:                 /* extract the drive name               */
-            {                                /* everything to left of slash        */
+            {                                /* compatibility to windows, no drive   */
                 return context->NullString();
             }
         
