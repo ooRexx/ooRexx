@@ -105,6 +105,7 @@
 #define FILESPEC_NAME         'N'
 #define FILESPEC_LOCATION     'L'
 #define FILESPEC_EXTENSION    'E'
+#define FILESPEC_DRIVE        'D'
 
 #define KIOCSOUND   0x4B2F              /* start sound generation (0 for off) */
 
@@ -287,6 +288,11 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
                 return context->String(nameStart, endPtr - nameStart);
             }
 
+        case FILESPEC_DRIVE:                 /* extract the drive name               */
+            {                                /* everything to left of slash        */
+                return context->NullString();
+            }
+        
         case FILESPEC_LOCATION:          /* extract the file name               */
             {                                /* everything to left of slash        */
                 return context->String(name, pathEnd - name);
