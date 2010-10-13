@@ -132,7 +132,7 @@ make %{?_smp_mflags}
 %install
 #******************************************************************************
 rm -rf $RPM_BUILD_ROOT
-make DESTDIR=$RPM_BUILD_ROOT libdir=%{_libdir} install
+make DESTDIR=$RPM_BUILD_ROOT libdir=%{_libdir} mandir=%{_mandir} install
 
 #******************************************************************************
 %clean
