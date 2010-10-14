@@ -59,11 +59,12 @@
 #define RXQUEUE_CLEAR    -2    /* used for queue mode CLEAR flag     */
 #define BAD_MESSAGE      -6    /* Exit RC for message not found.     */
 
-#define ENVBUFSIZE 256
+#define ENVBUFSIZE      256
+#define LINEBUFSIZE   65472    /* Arbitrary but matches current docs */
 
 #define DLLNAME "rexx.dll"
 
-char  line[4096];              /* buffer for data to add to queue    */
+char  line[LINEBUFSIZE];       /* buffer for data to add to queue    */
 char  work[256];               /* buffer for queue name, if default  */
 
 static void options_error(     /* function called on errors          */
@@ -85,7 +86,7 @@ int __cdecl main(
     size_t    linelen ;          /* input line length                  */
     RXSTRING  queuedata;         /* data added to the queue            */
     char *    t;                 /* argument pointer                   */
-    int   queuemode = -1;          /* mode for access to queue           */
+    int   queuemode = -1;        /* mode for access to queue           */
 
 /*********************************************************************/
 /*  Initialize string buffers to empty strings:                      */
