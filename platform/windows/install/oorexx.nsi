@@ -19,9 +19,14 @@
 !define UNINSTALLER    "uninstall.exe"
 !define KEYFILE1       "rexx.exe"
 !define KEYFILE2       "rxapi.dll"
-!define DefRexxExt     ".rex"              ; Defualt file extensions
-!define DefRexxHideExt ".rexg"
-!define DefRexxPawsExt ".rexp"
+
+; Default file extensions and ftypes
+!define DefRexxExt       ".rex"
+!define DefRexxFType     "RexxScript"
+!define DefRexxHideExt   ".rexg"
+!define DefRexxHideFType "RexxHide"
+!define DefRexxPawsExt   ".rexp"
+!define DefRexxPawsFType "RexxPaws"
 
 Name "${LONGNAME} ${VERSION}"
 
@@ -120,6 +125,7 @@ Var UninstLog
   Page custom Uninstall_Type_page Uninstall_Type_Leave
   Page custom Ok_Stop_RxAPI_page Ok_Stop_RxAPI_leave
 
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE Components_Page_pre
   !define MUI_PAGE_CUSTOMFUNCTION_SHOW Components_Page_show
   !insertmacro MUI_PAGE_COMPONENTS
 
@@ -129,9 +135,10 @@ Var UninstLog
 
   Page custom Rxapi_Options_page Rxapi_Options_leave
   Page custom File_Associations_page File_Associations_leave
+  Page custom SendTo_Items_page SendTo_Items_leave
   Page custom Associate_rexx_page Associate_rexx_leave
-  Page custom Associate_rexxhide_page Associate_rexxhide_leave
-  Page custom Associate_rexxpaws_page Associate_rexxpaws_leave
+  Page custom Associate_otherExes_page Associate_otherExes_leave
+  Page custom Confirm_page
 
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
@@ -165,6 +172,10 @@ Var RegVal_rexxAssociation     ; File association string for rexx.exe     (.ext 
 Var RegVal_rexxEditor          ; ... and editor file name
 Var RegVal_rexxHideAssociation ; File association string for rexxhide.exe (.ext / ftype - i.e. .rexg RexxHide)
 Var RegVal_rexxPawsAssociation ; File association string for rexxpaws.exe (.ext / ftype - i.e. .rexp RexxPaws)
+Var RegVal_sendTo_rexx         ; Add / don't add Send To Rexx item
+Var RegVal_sendTo_rexxHide     ; Add / don't add Send To rexxpaws item
+Var RegVal_sendTo_rexxPaws     ; Add / don't add Send To rexxhide item
+
 Var AssociationProgramName     ; Executable being associated  (i.e rexxpaws.exe, rexx.exe, etc..)
 Var AssociationText            ; Descriptive text that goes in registry  (i.e. ooRexx Rexx GUI Program)
 Var AssociationEditor          ; File path name of editor that goes in registry  (i.e. C:\Windows\system32\NotePad.exe)
@@ -198,16 +209,23 @@ Var StopRxAPI_CK_State
 Var Use_File_Associations_CK
 Var Use_File_Associations_CK_state
 
-; rexx.exe file associations
+Var SendTo_rexx_CK
+Var SendTo_rexx_CK_state
+Var SendTo_rexxHide_CK
+Var SendTo_rexxHide_CK_state
+Var SendTo_rexxPaws_CK
+Var SendTo_rexxPaws_CK_state
+
+; rexx.exe file associations page controls
+Var Rexx_editor_EDIT
+Var Rexx_editor_text
+Var Rexx_editor_PB
 Var Associate_rexx_CK
 Var Associate_rexx_CK_state
 Var Rexx_ext_EDIT
 Var Rexx_ext_text
 Var Rexx_ftype_EDIT
 Var Rexx_ftype_text
-Var Rexx_editor_EDIT
-Var Rexx_editor_text
-Var Rexx_editor_PB
 
 ; rexxhide.exe file associations
 Var Associate_rexxhide_CK
@@ -216,8 +234,6 @@ Var RexxHide_ext_EDIT
 Var RexxHide_ext_text
 Var RexxHide_ftype_EDIT
 Var RexxHide_ftype_text
-Var RexxHide_editor_EDIT
-Var RexxHide_editor_PB
 
 ; rexxpaws.exe file associations
 Var Associate_rexxpaws_CK
@@ -226,8 +242,6 @@ Var RexxPaws_ext_EDIT
 Var RexxPaws_ext_text
 Var RexxPaws_ftype_EDIT
 Var RexxPaws_ftype_text
-Var RexxPaws_editor_EDIT
-Var RexxPaws_editor_PB
 
 ; Uninstall variables
 Var InStopRxapiPage
@@ -345,8 +359,11 @@ Section "${LONGNAME} Core (required)" SecMain
 
   ; If we are doing an upgrade, these settings are all left however they were.
   ${if} $DoUpgrade == 'false'
-    ; Do the file associations first, like associate .rex with ooRexx
-    ; (REXXScript).  DoFileAssociations needs to run before DoEnvVariagles.
+    ; Maybe create Send To items.
+    Call DoSendToItems
+
+    ; Do the file associations, like associate .rex with ooRexx (REXXScript).
+    ; DoFileAssociations needs to run before DoEnvVariagles.
     Call DoFileAssociations
 
     ; Set the environment variables, PATH, REXX_HOME, etc..
@@ -389,6 +406,10 @@ Section "${LONGNAME} Core (required)" SecMain
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxEditor" $RegVal_rexxEditor
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxHideAssociation" $RegVal_rexxHideAssociation
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxPawsAssociation" $RegVal_rexxPawsAssociation
+
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexx" $RegVal_sendTo_rexx
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexxHide" $RegVal_sendTo_rexxHide
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexxPaws" $RegVal_sendTo_rexxPaws
 
   ${WriteUninstaller} "$INSTDIR\${UNINSTALLER}"
 
@@ -709,6 +730,7 @@ SectionEnd
 
 Section "${LONGNAME} Documentation" SecDoc
   DetailPrint "********** Documentation **********"
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\doc
   ${File} "${SRCDIR}\doc\" "rexxpg.pdf"
@@ -719,6 +741,7 @@ Section "${LONGNAME} Documentation" SecDoc
   ${File} "${SRCDIR}\doc\" "oodialog.pdf"
   ${File} "${SRCDIR}\doc\" "winextensions.pdf"
   ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\doc\" "ooRexxTry.pdf"
+
   ; Create start menu shortcuts
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk" "$INSTDIR\doc\rexxref.pdf" "" "$INSTDIR\doc\rexxref.pdf" 0
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk"
@@ -737,11 +760,6 @@ Section "${LONGNAME} Documentation" SecDoc
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexxTry Reference.lnk" "$INSTDIR\doc\ooRexxTry.pdf" "" "$INSTDIR\doc\ooRexxTry.pdf" 0
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexxTry Reference.lnk"
 
-  SetOutPath $INSTDIR
-  CreateShortCut "$SENDTO\ooRexx with pause (rexxpaws).lnk" "$INSTDIR\rexxpaws.exe" "" "" "" SW_SHOWNORMAL "" "ooRexx with pause (rexxpaws)"
-  ${AddItem} "$SENDTO\ooRexx with pause (rexxpaws).lnk"
-  CreateShortCut "$SENDTO\ooRexx with no console (rexxhide).lnk" "$INSTDIR\rexxhide.exe" "" "" "" SW_SHOWNORMAL "" "ooRexx with no console (rexxhide)"
-  ${AddItem} "$SENDTO\ooRexx with no console (rexxhide).lnk"
 SectionEnd
 
 ;-------------------------------------------------------------------------------
@@ -788,13 +806,19 @@ Function .onInit
   ReadRegStr $RegVal_uninstallString HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallString"
   ReadRegStr $RegVal_uninstallLocation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UnInstallLocation"
   ReadRegStr $RegVal_uninstallVersion HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallVersion"
-  ReadRegStr $RegVal_rexxAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxAssociation"
   ReadRegStr $RegVal_rexxEditor HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxEditor"
+  ReadRegStr $RegVal_rexxAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxAssociation"
   ReadRegStr $RegVal_rexxHideAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxHideAssociation"
   ReadRegStr $RegVal_rexxPawsAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxPawsAssociation"
+  ReadRegStr $RegVal_sendTo_rexx HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexx"
+  ReadRegStr $RegVal_sendTo_rexxHide HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexxHide"
+  ReadRegStr $RegVal_sendTo_rexxPaws HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexxPaws"
 
   ; Check for previous version and if the upgrade type of uninstall is available.
   Call CheckInstalledStatus
+
+  ; Set the send to dialog control variables.
+  Call SetSendToVars
 
   ; Set all the dialog control variables for doing file associations to their
   ; correct starting values.
@@ -833,7 +857,7 @@ Function Uninstall_Old_ooRexx_page
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
   ${NSD_CreateLabel} 0 0 100% 40u \
     "A version of ${LONGNAME} is currently installed.  If the previous version is \
@@ -884,7 +908,7 @@ Function ShowHideForceInstall
 		ShowWindow $Label_Two ${SW_SHOW}
 		ShowWindow $Force_Install_CK ${SW_SHOW}
     ${NSD_Uncheck} $Force_Install_CK
-	${EndIf}
+	${endif}
 FunctionEnd
 
 /** Uninstall_Old_ooRexx_Leave()  Callback function.
@@ -947,7 +971,7 @@ Function Uninstall_Type_page
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
 
   ${NSD_CreateLabel} 0u 0u 100% 64u \
@@ -1185,14 +1209,14 @@ Function Ok_Stop_RxAPI_page
     Abort
   ${endif}
 
-  !insertmacro MUI_HEADER_TEXT "The ${LONGNAME} memory manager (rxapi) is currently running" \
+  !insertmacro MUI_HEADER_TEXT "The ${LONGNAME} memory manager (rxapi) is currently running." \
                                "A new version of rxapi can not be installed while rxapi is running."
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
   ${NSD_CreateLabel} 0 0 100% 112u \
     "A previous version of the ${LONGNAME} memory manager (rxapi) is currently running. \
@@ -1254,6 +1278,21 @@ Function Ok_Stop_RxAPI_leave
   NotRunning:
 FunctionEnd
 
+/** Components_Page_pre()  Call back function
+ *
+ * Invoked by the installer before the components page is created.
+ *
+ * If this is a QUICK upgrade install, we skip the page.
+ */
+Function Components_Page_pre
+
+  ${if} $DoUpgrade == 'true'
+  ${andif} $DoUpgradeQuick == 'true'
+    Abort
+  ${endif}
+
+FunctionEnd
+
 /** Components_Page_show()  Call back function
  *
  * Invoked by the installer right before the components page is shown.
@@ -1269,6 +1308,14 @@ Function Components_Page_show
     ; Disable Back button
     GetDlgItem $0 $HWNDPARENT 3
     EnableWindow $0 0
+
+    ; Disable the components list view control
+    EnableWindow $mui.ComponentsPage.Components 0
+
+    ; Change the descriptive text
+    SendMessage $mui.ComponentsPage.Text ${WM_SETTEXT} 0 \
+      "STR:These components of ${LONGNAME} ${VERSION} wil be installed.  The component list can not be \
+      changed for an upgrade type of install.  Click Next to continue."
 
     Call PageDisableQuit
   ${endif}
@@ -1344,8 +1391,9 @@ Function Rxapi_Options_page
   ${endif}
 
   ${if} $DoUpgrade == 'true'
-    !insertmacro MUI_HEADER_TEXT "ooRexx rxapi is installed as a Windows Service." "Choose whether \
-                                 to start the rxapi Service during installation."
+    !insertmacro MUI_HEADER_TEXT "ooRexx rxapi is installed as a Windows Service." \
+                                 "Installation of rxapi as a service can not be changed during an upgrade, but \
+                                 you can choose whether to start the rxapi Service during installation."
   ${else}
     !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process." "Install rxapi as a Windows Service."
   ${endif}
@@ -1355,7 +1403,7 @@ Function Rxapi_Options_page
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
   ${NSD_OnBack} Rxapi_Options_leave
 
@@ -1414,7 +1462,7 @@ Function EnableStartService
 	${Else}
 	  EnableWindow $RxAPI_Start_CK 0
     ${NSD_Uncheck} $RxAPI_Start_CK
-	${EndIf}
+	${endif}
 FunctionEnd
 
 /** Rxapi_Options_leave()  Call back function.
@@ -1441,7 +1489,7 @@ Function File_Associations_page
     Abort
   ${endif}
 
-  !insertmacro MUI_HEADER_TEXT "Associate file extensions with the ooRexx executables" \
+  !insertmacro MUI_HEADER_TEXT "Associate file extensions with the ooRexx executables." \
                                "Any, or all, of the ooRexx executables (rexx.exe, rexxhide.exe, or rexxpaws.exe) \
                                can be associated with a file extension."
 
@@ -1450,7 +1498,7 @@ Function File_Associations_page
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
   ${NSD_OnBack} File_Associations_leave
 
@@ -1488,6 +1536,87 @@ Function File_Associations_leave
 
 FunctionEnd
 
+/** SendTo_Items_page()  Custom page function.
+ *
+ * Allows the user to create 'Send To' items for the Rexx executables.
+ *
+ * The page is skipped if we are doing a quick upgrade.
+ */
+Function SendTo_Items_page
+
+  ${if} $DoUpgrade == 'true'
+  ${andif} $DoUpgradeQuick == 'true'
+    Abort
+  ${endif}
+
+  ${if} $DoUpgrade == 'true'
+    !insertmacro MUI_HEADER_TEXT "The Send To items that will be created." \
+                                 "Which Send To items will be created can not be changed during an upgrade \
+                                 type of install."
+  ${else}
+    !insertmacro MUI_HEADER_TEXT "Create 'Send To' items for the Rexx executables." \
+                                 "'Send To' items can be used instead of file associations, or in addition \
+                                 to file associations."
+  ${endif}
+
+  nsDialogs::Create 1018
+  Pop $Dialog
+
+  ${If} $Dialog == error
+    Abort
+  ${endif}
+
+  ${NSD_OnBack} SendTo_Items_leave
+
+  ${NSD_CreateLabel} 0u 0u 100% 72u \
+    "The 'Send To' context menu item for objects displayed in the Windows Explore contains a list of \
+    programs that the object can be 'sent to.'  Typically, the items in the list are executables that \
+    can process the file or directory object sent to them.  'Sending' your Rexx program to one of the \
+    Rexx executables will execute your program.$\n$\n\
+    Rather than create a file association for rexxhide.exe and rexxpaws.exe you may wish to create a \
+    'Send To' item for those executables.  Or create both a file association and 'Send To' items for \
+    those executabls.  Usually a file association is created for rexx.exe and not a 'Send To' item."
+
+  Pop $Label_One
+
+  ${NSD_CreateCheckBox}   0u   80u 100%  8u "Create 'Send To' Rexx item  (Typically this is not done.)"
+  Pop $SendTo_rexx_CK
+
+  ${NSD_CreateCheckBox}    0u 100u 100%  8u "Create 'Send To' Rexx Hide (rexxhide.exe) item"
+  Pop $SendTo_rexxHide_CK
+
+  ${NSD_CreateCheckBox}    0u 120u 100%  8u "Create 'Send To' Rexx Pause (rexxpaws.exe) item"
+  Pop $SendTo_rexxPaws_CK
+
+  ${NSD_SetState} $SendTo_rexx_CK $SendTo_rexx_CK_state
+  ${NSD_SetState} $SendTo_rexxhide_CK $SendTo_rexxHide_CK_state
+  ${NSD_SetState} $SendTo_rexxpaws_CK $SendTo_rexxPaws_CK_state
+
+  ${if} $DoUpgrade == 'true'
+    EnableWindow $Label_One 0
+	  EnableWindow $SendTo_rexx_CK 0
+	  EnableWindow $SendTo_rexxHide_CK 0
+	  EnableWindow $SendTo_rexxPaws_CK 0
+    Call PageDisableQuit
+	${endif}
+
+  nsDialogs::Show
+
+FunctionEnd
+
+/** SendTo_Items_leave()  Call back function.
+ *
+ * This function is called when the Send To Items page is left.  The state of
+ * the dialog controls is saved.
+ */
+Function SendTo_Items_leave
+
+  ${NSD_GetState} $SendTo_rexx_CK $SendTo_rexx_CK_state
+  ${NSD_GetState} $SendTo_rexxHide_CK $SendTo_rexxHide_CK_state
+  ${NSD_GetState} $SendTo_rexxPaws_CK $SendTo_rexxPaws_CK_state
+
+FunctionEnd
+
 /** Associate_rexx_page()  Custom page function.
  *
  * Presents the option to the user of creating a file association for rexx.exe
@@ -1506,21 +1635,26 @@ Function Associate_rexx_page
     Abort
   ${endif}
 
-  !insertmacro MUI_HEADER_TEXT "Associate a file extension with rexx.exe" "Pick the editor to be used when the Edit \
-                               item of the context menu is selected."
+  ${if} $DoUpgrade == 'true'
+    !insertmacro MUI_HEADER_TEXT "The file extension for rexx.exe and Rexx program editor choices." \
+                                 "These choices can not be changed during an upgrade type of install."
+  ${else}
+    !insertmacro MUI_HEADER_TEXT "Associate a file extension with rexx.exe." "Pick the editor to be used when the Edit \
+                                 item of the context menu is selected."
+  ${endif}
 
   nsDialogs::Create 1018
   Pop $Dialog
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
   ${NSD_OnBack} Associate_rexx_leave
 
   ${NSD_CreateLabel} 0u 0u 100% 16u \
     "Select the editor to be used with your ooRexx file type(s).  This adds the Edit menu item to \
-    context menu of the file type.  The same editor is used for all file types."
+    the context menu of the file type.  The same editor is used for all file types."
 
   Pop $Label_One
 
@@ -1537,47 +1671,52 @@ Function Associate_rexx_page
 	System::Call shlwapi::SHAutoComplete(i$Rexx_editor_EDIT, i${SHACF_FILESYSTEM})
 
 
-  ${NSD_CreateLabel} 0u 50u 100% 24u \
+  ${NSD_CreateLabel} 0u 60u 100% 24u \
     "By default in ${LONGNAME} installations the Rexx interpreter, rexx.exe, is associated with the \
-    .rex extension using the file type name of RexxScript.  However, you can change these values if \
+    ${DefRexxExt} extension using the file type name of ${DefRexxFType}.  However, you can change these values if \
     you care to."
 
   Pop $Label_Two
 
-  ${NSD_CreateGroupBox} 0u 80u 100% 40u "File Associations for rexx.exe"
+  ${NSD_CreateGroupBox} 0u 90u 100% 44u "File Association for rexx.exe"
   Pop $0  ; Discarded
 
-  ${NSD_CreateCheckBox} 8u 92u 80% 8u "Create rexx.exe file association"
+  ${NSD_CreateCheckBox} 8u  104u 80% 8u "Create rexx.exe file association"
   Pop $Associate_rexx_CK
 
   ${NSD_SetState} $Associate_rexx_CK $Associate_rexx_CK_state
 
   ; Extension line
-  ${NSD_CreateLabel}     16u  106u  36u  8u "Extension:"
+  ${NSD_CreateLabel}     16u  116u  36u  8u "Extension:"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      54u  104u  46u 12u $Rexx_ext_text
+  ${NSD_CreateText}      52u  114u  46u 12u $Rexx_ext_text
   Pop $Rexx_ext_EDIT
 
   ; File type line
-  ${NSD_CreateLabel}     120u 106u  52u  8u "File type name:"
+  ${NSD_CreateLabel}     120u 116u  52u  8u "File type name:"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      175u 104u  46u 12u $Rexx_ftype_text
+  ${NSD_CreateText}      173u 114u  46u 12u $Rexx_ftype_text
   Pop $Rexx_ftype_EDIT
+
+  ${NSD_SetState} $Associate_rexx_CK $Associate_rexx_CK_state
+  ${NSD_SetState} $SendTo_rexx_CK $SendTo_rexx_CK_state
 
   ${if} $Associate_rexx_CK_state == ${BST_UNCHECKED}
   ${orif} $DoUpgrade == 'true'
 	  EnableWindow $Rexx_ext_EDIT 0
 	  EnableWindow $Rexx_ftype_EDIT 0
-	  EnableWindow $Rexx_editor_EDIT 0
-	  EnableWindow $Rexx_editor_PB 0
-	${EndIf}
 
-  ${if} $DoUpgrade == 'true'
-	  EnableWindow $Associate_rexx_CK 0
-    Call PageDisableQuit
-	${EndIf}
+    ${if} $DoUpgrade == 'true'
+  	  EnableWindow $Rexx_editor_EDIT 0
+  	  EnableWindow $Rexx_editor_PB 0
+  	  EnableWindow $Associate_rexx_CK 0
+      EnableWindow $Label_One 0
+      EnableWindow $Label_Two 0
+      Call PageDisableQuit
+  	${endif}
+	${endif}
 
   ${NSD_OnClick} $Associate_rexx_CK EnableRexxAssociation
   ${NSD_OnClick} $Rexx_editor_PB Get_rexx_editor_file
@@ -1664,24 +1803,20 @@ Function EnableRexxAssociation
 	${If} $0 == 1
 	  EnableWindow $Rexx_ext_EDIT 1
 	  EnableWindow $Rexx_ftype_EDIT 1
-	  EnableWindow $Rexx_editor_EDIT 1
-	  EnableWindow $Rexx_editor_PB 1
 	${Else}
 	  EnableWindow $Rexx_ext_EDIT 0
 	  EnableWindow $Rexx_ftype_EDIT 0
-	  EnableWindow $Rexx_editor_EDIT 0
-	  EnableWindow $Rexx_editor_PB 0
-	${EndIf}
+	${endif}
 FunctionEnd
 
-/** Associate_rexxhide_page()  Custom page function.
+/** Associate_otherExes_page()  Custom page function.
  *
  * This is a custom page
  *
  *
  *
  */
-Function Associate_rexxhide_page
+Function Associate_otherExes_page
 
   ${if} $Use_File_Associations_CK_state == ${BST_UNCHECKED}
     Abort
@@ -1692,89 +1827,124 @@ Function Associate_rexxhide_page
     Abort
   ${endif}
 
-  !insertmacro MUI_HEADER_TEXT "Associate a file extension with rexxhide.exe" \
-                               "The default file extension for rexxhide is $\"${DefRexxPawsExt}$\" with a file type of $\"RexxHide$\"."
+  ${if} $DoUpgrade == 'true'
+    !insertmacro MUI_HEADER_TEXT "The file extension chocies for rexxhide.exe. and rexxpaws.exe" \
+                                 "These choices can not be changed during an upgrade type of install."
+  ${else}
+    !insertmacro MUI_HEADER_TEXT "Associate a file extension with rexxhide.exe and / or rexxpaws.exe" \
+                                 "rexxhide default file extension: $\"${DefRexxHideExt}$\" file type: $\"${DefRexxHideFType}$\"$\n\
+                                 rexpaws default file extension: $\"${DefRexxPawsExt}$\" file type: $\"${DefRexxPawsFType}$\"."
+  ${endif}
 
   nsDialogs::Create 1018
   Pop $Dialog
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
-  ${NSD_OnBack} Associate_rexxhide_leave
+  ${NSD_OnBack} Associate_otherExes_leave
 
-  ${NSD_CreateLabel} 0u 0u 100% 48u \
-    "The rexxhide executable runs Rexx programs without creating a console window.  It is typically used \
-    for GUI (graphical user interface) programs like ooDialog programs.  This allows the program to run \
-    without a secondary console window opening up.$\n$\n\
-    Check, or uncheck, the check box to create, or not create, a file association for rexxhide."
+  /* Controls for Rexx Hide */
+  ${NSD_CreateLabel} 0u 0u 100% 8u \
+    "rexxhide runs Rexx programs without creating a console window."
 
   Pop $Label_One
 
-  ${NSD_CreateGroupBox} 0u 56u 100% 84u "File Associations for rexxhide.exe"
+  ${NSD_CreateGroupBox} 0u 12u 100% 44u "File Association for rexxhide.exe"
   Pop $0  ; Discarded
 
-  ${NSD_CreateCheckBox} 8u 72u 80% 8u "Create rexxhide.exe file association"
+  ${NSD_CreateCheckBox} 8u 24u 80% 8u "Create rexxhide.exe file association"
   Pop $Associate_rexxhide_CK
 
   ${NSD_SetState} $Associate_rexxhide_CK $Associate_rexxhide_CK_state
 
   ; Extension line
-  ${NSD_CreateLabel}     16u  86u  50u  8u "Extension:"
+  ${NSD_CreateLabel}     16u  38u  36u  8u "Extension:"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      78u  84u  46u 12u $RexxHide_ext_text
+  ${NSD_CreateText}      52u  36u  46u 12u $RexxHide_ext_text
   Pop $RexxHide_ext_EDIT
 
   ; File type line
-  ${NSD_CreateLabel}     16u 104u  50u  8u "File type name:"
+  ${NSD_CreateLabel}     120u 38u  52u  8u "File type name:"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      78u 102u  46u 12u $RexxHide_ftype_text
+  ${NSD_CreateText}      173u 36u  46u 12u $RexxHide_ftype_text
   Pop $RexxHide_ftype_EDIT
 
-  ; Editor line
-  ${NSD_CreateLabel}     16u 122u  60u  8u "Full path to editor:"
+
+  /* Controls for Rexx Paws */
+  ${NSD_CreateLabel} 0u 70u 100% 16u \
+    "rexxpaws runs a Rexx programs and 'pauses' until the user hits the Enter key, allowing any output to \
+    be read before the console window closes."
+
+  Pop $Label_Two
+
+  ${NSD_CreateGroupBox} 0u 92u 100% 44u "File Association for rexxpaws.exe"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      78u 120u 165u 12u $Rexx_editor_text
-  Pop $RexxHide_editor_EDIT
+  ${NSD_CreateCheckBox} 8u 104u 80% 8u "Create rexxpaws.exe file association"
+  Pop $Associate_rexxpaws_CK
 
-  ${NSD_CreateButton}   250u 118u  45u 16u "Browse..."
-  Pop $RexxHide_editor_PB
+  ${NSD_SetState} $Associate_rexxpaws_CK $Associate_rexxpaws_CK_state
 
-	System::Call shlwapi::SHAutoComplete(i$RexxHide_editor_EDIT, i${SHACF_FILESYSTEM})
+  ; Extension line
+  ${NSD_CreateLabel}     16u  118u  36u  8u "Extension:"
+  Pop $0  ; Discarded
 
-  ${if} $Associate_rexxhide_CK_state == ${BST_UNCHECKED}
-  ${orif} $DoUpgrade == 'true'
-	  EnableWindow $RexxHide_ext_EDIT 0
-	  EnableWindow $RexxHide_ftype_EDIT 0
-	  EnableWindow $RexxHide_editor_EDIT 0
-	  EnableWindow $RexxHide_editor_PB 0
-	${EndIf}
+  ${NSD_CreateText}      52u  116u  46u 12u $RexxPaws_ext_text
+  Pop $RexxPaws_ext_EDIT
+
+  ; File type line
+  ${NSD_CreateLabel}     120u 118u  52u  8u "File type name:"
+  Pop $0  ; Discarded
+
+  ${NSD_CreateText}      173u 116u  46u 12u $RexxPaws_ftype_text
+  Pop $RexxPaws_ftype_EDIT
 
   ${if} $DoUpgrade == 'true'
-	  EnableWindow $Associate_rexxhide_CK 0
+    EnableWindow $Associate_rexxhide_CK 0
+	  EnableWindow $RexxHide_ext_EDIT 0
+	  EnableWindow $RexxHide_ftype_EDIT 0
+
+  	EnableWindow $Associate_rexxpaws_CK 0
+	  EnableWindow $RexxPaws_ext_EDIT 0
+	  EnableWindow $RexxPaws_ftype_EDIT 0
+
+    EnableWindow $Label_One 0
+    EnableWindow $Label_Two 0
+
     Call PageDisableQuit
-	${EndIf}
+  ${else}
+    ${if} $Associate_rexxhide_CK_state == ${BST_UNCHECKED}
+  	  EnableWindow $RexxHide_ext_EDIT 0
+  	  EnableWindow $RexxHide_ftype_EDIT 0
+  	${endif}
+
+    ${if} $Associate_rexxpaws_CK_state == ${BST_UNCHECKED}
+  	  EnableWindow $RexxPaws_ext_EDIT 0
+  	  EnableWindow $RexxPaws_ftype_EDIT 0
+    ${endif}
+  ${endif}
 
   ${NSD_OnClick} $Associate_rexxhide_CK EnableRexxHideAssociation
-  ${NSD_OnClick} $RexxHide_editor_PB Get_rexx_editor_file
+  ${NSD_OnClick} $Associate_rexxpaws_CK EnableRexxPawsAssociation
 
   nsDialogs::Show
 
 FunctionEnd
 
-/** Associate_rexxhide_leave()  Call back function.
+/** Associate_otherExes_leave()  Call back function.
  *
  * This function is called when the RexxHide association page is left.  We check
  * that the text fields are 'sane' and return the user to the page if they
  * are not.  If the text field values are good, the state of the dialog contorls
  * is saved.
  */
-Function Associate_rexxhide_leave
+Function Associate_otherExes_leave
 
+  /* Check the Rexx Hide controls */
   ${NSD_GetState} $Associate_rexxhide_CK $Associate_rexxhide_CK_state
 
   ${if} $Associate_rexxhide_CK_state == ${BST_CHECKED}
@@ -1808,134 +1978,7 @@ Function Associate_rexxhide_leave
     ${endif}
   ${endif}
 
-  ; Okay text fields are okay.  If editor field is blank, it is just not used.
-  ${NSD_GetText} $RexxHide_ext_EDIT $RexxHide_ext_text
-  ${NSD_GetText} $RexxHide_ftype_EDIT $RexxHide_ftype_text
-  ${NSD_GetText} $RexxHide_editor_EDIT $Rexx_editor_text
-
-FunctionEnd
-
-/** EnableRexxHideAssociation()
- *
- * Called when the user clicks on the Create rexxhide.exe file association check
- * box.  Disables, or enables, the controls depending on if the check box is
- * checked or not.
- */
-Function EnableRexxHideAssociation
-	Pop $Associate_rexxhide_CK
-	${NSD_GetState} $Associate_rexxhide_CK $0
-
-	${If} $0 == 1
-	  EnableWindow $RexxHide_ext_EDIT 1
-	  EnableWindow $RexxHide_ftype_EDIT 1
-	  EnableWindow $RexxHide_editor_EDIT 1
-	  EnableWindow $RexxHide_editor_PB 1
-	${Else}
-	  EnableWindow $RexxHide_ext_EDIT 0
-	  EnableWindow $RexxHide_ftype_EDIT 0
-	  EnableWindow $RexxHide_editor_EDIT 0
-	  EnableWindow $RexxHide_editor_PB 0
-	${EndIf}
-FunctionEnd
-
-/** Associate_rexxpaws_page()  Custom page function.
- *
- * Shows the options for associating rexxpaws with a file extension.
- */
-Function Associate_rexxpaws_page
-
-  ${if} $Use_File_Associations_CK_state == ${BST_UNCHECKED}
-    Abort
-  ${endif}
-
-  ${if} $DoUpgrade == 'true'
-  ${andif} $DoUpgradeQuick == 'true'
-    Abort
-  ${endif}
-
-  !insertmacro MUI_HEADER_TEXT \
-    "Associate a file extension with rexxpaws.exe" \
-    "The default file extension for rexxpaws is $\"${DefRexxPawsExt}$\" with a file type of $\"RexxPaws$\"."
-
-  nsDialogs::Create 1018
-  Pop $Dialog
-
-  ${If} $Dialog == error
-    Abort
-  ${EndIf}
-
-  ${NSD_OnBack} Associate_rexxpaws_leave
-
-  ${NSD_CreateLabel} 0u 0u 100% 48u \
-    "The rexxpaws executable runs Rexx programs by opening up a console window and executing the program.  \
-    When the program finishes, rexxpaws 'pauses' until the user hits any key.  This allows the user to \
-    read any output of the to be read before the console window closes.$\n$\n\
-    Check, or uncheck, the check box to create, or not create, a file association for rexxpaws."
-
-  Pop $Label_One
-
-  ${NSD_CreateGroupBox} 0u 56u 100% 84u "File Associations for rexxpaws.exe"
-  Pop $0  ; Discarded
-
-  ${NSD_CreateCheckBox} 8u 72u 80% 8u "Create rexxpaws.exe file association"
-  Pop $Associate_rexxpaws_CK
-
-  ${NSD_SetState} $Associate_rexxpaws_CK $Associate_rexxpaws_CK_state
-
-  ; Extension line
-  ${NSD_CreateLabel}     16u  86u  50u  8u "Extension:"
-  Pop $0  ; Discarded
-
-  ${NSD_CreateText}      78u  84u  46u 12u $RexxPaws_ext_text
-  Pop $RexxPaws_ext_EDIT
-
-  ; File type line
-  ${NSD_CreateLabel}     16u 104u  50u  8u "File type name:"
-  Pop $0  ; Discarded
-
-  ${NSD_CreateText}      78u 102u  46u 12u $RexxPaws_ftype_text
-  Pop $RexxPaws_ftype_EDIT
-
-  ; Editor line
-  ${NSD_CreateLabel}     16u 122u  60u  8u "Full path to editor:"
-  Pop $0  ; Discarded
-
-  ${NSD_CreateText}      78u 120u 165u 12u $Rexx_editor_text
-  Pop $RexxPaws_editor_EDIT
-
-  ${NSD_CreateButton}   250u 118u  45u 16u "Browse..."
-  Pop $RexxPaws_editor_PB
-
-	System::Call shlwapi::SHAutoComplete(i$RexxPaws_editor_EDIT, i${SHACF_FILESYSTEM})
-
-  ${if} $Associate_rexxpaws_CK_state == ${BST_UNCHECKED}
-  ${orif} $DoUpgrade == 'true'
-	  EnableWindow $RexxPaws_ext_EDIT 0
-	  EnableWindow $RexxPaws_ftype_EDIT 0
-	  EnableWindow $RexxPaws_editor_EDIT 0
-	  EnableWindow $RexxPaws_editor_PB 0
-	${EndIf}
-
-  ${if} $DoUpgrade == 'true'
-	  EnableWindow $Associate_rexxpaws_CK 0
-    Call PageDisableQuit
-	${EndIf}
-
-  ${NSD_OnClick} $Associate_rexxpaws_CK EnableRexxPawsAssociation
-  ${NSD_OnClick} $RexxPaws_editor_PB Get_rexx_editor_file
-
-  nsDialogs::Show
-
-FunctionEnd
-
-/** Associate_rexxpaws_leave()  Call back function
- *
- * Invoked when the user clicks the Back or Next buttons on the file association
- * for rexxpaws page.  Checks for correct values in the text fields and saves
- * the state of the controls.
- */
-Function Associate_rexxpaws_leave
-
+  /* Check the Rexx Paws controls */
   ${NSD_GetState} $Associate_rexxpaws_CK $Associate_rexxpaws_CK_state
 
   ${if} $Associate_rexxpaws_CK_state == ${BST_CHECKED}
@@ -1969,11 +2012,31 @@ Function Associate_rexxpaws_leave
     ${endif}
   ${endif}
 
-  ; Okay text fields are okay.  If editor field is blank, it is just not used.
+  ; Okay text fields are okay.
+  ${NSD_GetText} $RexxHide_ext_EDIT $RexxHide_ext_text
+  ${NSD_GetText} $RexxHide_ftype_EDIT $RexxHide_ftype_text
   ${NSD_GetText} $RexxPaws_ext_EDIT $RexxPaws_ext_text
   ${NSD_GetText} $RexxPaws_ftype_EDIT $RexxPaws_ftype_text
-  ${NSD_GetText} $RexxPaws_editor_EDIT $Rexx_editor_text
 
+FunctionEnd
+
+/** EnableRexxHideAssociation()
+ *
+ * Called when the user clicks on the Create rexxhide.exe file association check
+ * box.  Disables, or enables, the controls depending on if the check box is
+ * checked or not.
+ */
+Function EnableRexxHideAssociation
+	Pop $Associate_rexxhide_CK
+	${NSD_GetState} $Associate_rexxhide_CK $0
+
+	${If} $0 == 1
+	  EnableWindow $RexxHide_ext_EDIT 1
+	  EnableWindow $RexxHide_ftype_EDIT 1
+	${Else}
+	  EnableWindow $RexxHide_ext_EDIT 0
+	  EnableWindow $RexxHide_ftype_EDIT 0
+	${endif}
 FunctionEnd
 
 /** EnableRexxPawsAssociation()
@@ -1989,14 +2052,63 @@ Function EnableRexxPawsAssociation
 	${If} $0 == 1
 	  EnableWindow $RexxPaws_ext_EDIT 1
 	  EnableWindow $RexxPaws_ftype_EDIT 1
-	  EnableWindow $RexxPaws_editor_EDIT 1
-	  EnableWindow $RexxPaws_editor_PB 1
 	${Else}
 	  EnableWindow $RexxPaws_ext_EDIT 0
 	  EnableWindow $RexxPaws_ftype_EDIT 0
-	  EnableWindow $RexxPaws_editor_EDIT 0
-	  EnableWindow $RexxPaws_editor_PB 0
-	${EndIf}
+	${endif}
+FunctionEnd
+
+/** Confirm_page()  Custom page function.
+ *
+ * Gives the user one last chance to go back and change any settings.
+ *
+ * The page is skipped if we are doing an upgrade type of install.
+ */
+Function Confirm_page
+
+  ${if} $DoUpgrade == 'true'
+  ${andif} $DoUpgradeQuick == 'true'
+    Abort
+  ${endif}
+
+  ${if} $DoUpgrade == 'true'
+    !insertmacro MUI_HEADER_TEXT "${LONGNAME} is ready for installation." \
+                                 "Installation options remain the same for an upgrade type of installation \
+                                 of ${LONGNAME}."
+  ${else}
+    !insertmacro MUI_HEADER_TEXT "${LONGNAME} is ready for installation." \
+                                 "All options for ${LONGNAME} have been collected."
+  ${endif}
+
+  nsDialogs::Create 1018
+  Pop $Dialog
+
+  ${If} $Dialog == error
+    Abort
+  ${endif}
+
+  ${if} $DoUpgrade == 'true'
+    ${NSD_CreateLabel} 0u 0u 100% 72u \
+    "Click the Install button to begin installation.  Click the Back button if you \
+     wish to review the installation options.  An upgrade type of installation can \
+     not be canceled at this point."
+  ${else}
+    ${NSD_CreateLabel} 0u 0u 100% 72u \
+    "All the parameters needed to install ${LONGNAME} on your system have been \
+    gathered to gether.$\n$\n\
+    Click the Install button to begin installation.  Click the Back button to \
+    review or change any settings.  Click the Cancel button to abort the installation \
+    altogether."
+  ${endif}
+
+  Pop $Label_One
+
+  ${if} $DoUpgrade == 'true'
+    Call PageDisableQuit
+  ${endif}
+
+  nsDialogs::Show
+
 FunctionEnd
 
 /** PageDisableQuit()
@@ -2044,26 +2156,40 @@ Function .onMouseOverSection
 
 FunctionEnd
 
-/** DoEnvVariables()
+/** DoSendToItems()
  *
- * Sets up the variable environemnt variables.
+ * Create 'Send To' items depending on what the user specified.  This is only
+ * called when we are not doing an upgrade type of install.
+ *
+ * Note that we do not add the shortcut files to the uninstall log.  Deleting
+ * the files is done separately from the uninstall log usage because there is
+ * no (easy) way to tell which file is being deleted when using the uninstall
+ * log.
  */
-Function DoEnvVariables
+Function DoSendToItems
 
-    Push "REXX_HOME"
-    Push $INSTDIR
-    Push $IsAdminUser ; "true" or "false"
-    Call WriteEnvStr
+  ; Save the user specified settings into the registry variables so the are
+  ; written to the registry correctly.
+  StrCpy $RegVal_sendTo_rexx $SendTo_rexx_CK_state
+  StrCpy $RegVal_sendTo_rexxHide $SendTo_rexxHide_CK_state
+  StrCpy $RegVal_sendTo_rexxPaws $SendTo_rexxPaws_CK_state
 
-    ; Add the install directory to the PATH env variable, either system wide or
-    ; user-specific
-    Push $INSTDIR
-    Push $IsAdminUser ; "true" or "false"
-    Push "PATH"
-    Call AddToPath
+  SetOutPath $INSTDIR
+  ${if} $SendTo_rexx_CK_state == ${BST_CHECKED}
+    CreateShortCut "$SENDTO\ooRexx.lnk" "$INSTDIR\rexx.exe" "" "" "" SW_SHOWNORMAL "" "ooRexx"
+    DetailPrint "Created Send To rexx.exe item"
+  ${endif}
 
-    ; Do the PATHEXT extensions
-    Call AddToPathExt
+  ${if} $SendTo_rexxHide_CK_state == ${BST_CHECKED}
+    CreateShortCut "$SENDTO\ooRexx with no console (rexxhide).lnk" "$INSTDIR\rexxhide.exe" "" "" "" SW_SHOWNORMAL "" "ooRexx with no console (rexxhide)"
+    DetailPrint "Created Send To rexxhide.exe item"
+  ${endif}
+
+  ${if} $SendTo_rexxPaws_CK_state == ${BST_CHECKED}
+    CreateShortCut "$SENDTO\ooRexx with pause (rexxpaws).lnk" "$INSTDIR\rexxpaws.exe" "" "" "" SW_SHOWNORMAL "" "ooRexx with pause (rexxpaws)"
+    DetailPrint "Created Send To rexxpaws.exe item"
+  ${endif}
+
 FunctionEnd
 
 /** DoFileAssociations()
@@ -2117,6 +2243,28 @@ Function DoFileAssociations
   ${endif}
 
   System::Call 'Shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_IDLIST}, i 0, i 0)'
+FunctionEnd
+
+/** DoEnvVariables()
+ *
+ * Sets up the variable environemnt variables.
+ */
+Function DoEnvVariables
+
+    Push "REXX_HOME"
+    Push $INSTDIR
+    Push $IsAdminUser ; "true" or "false"
+    Call WriteEnvStr
+
+    ; Add the install directory to the PATH env variable, either system wide or
+    ; user-specific
+    Push $INSTDIR
+    Push $IsAdminUser ; "true" or "false"
+    Push "PATH"
+    Call AddToPath
+
+    ; Do the PATHEXT extensions
+    Call AddToPathExt
 FunctionEnd
 
 /** AssociateExtensionWithExe()
@@ -2221,16 +2369,16 @@ Function SetDefaultFileAssociation
 
   StrCpy $Associate_rexx_CK_state '${BST_CHECKED}'
   StrCpy $Rexx_ext_text ${DefRexxExt}
-  StrCpy $Rexx_ftype_text "RexxScript"
+  StrCpy $Rexx_ftype_text ${DefRexxFType}
   StrCpy $Rexx_editor_text "C:\Windows\System32\NotePad.exe"
 
   StrCpy $Associate_rexxhide_CK_state '${BST_CHECKED}'
   StrCpy $RexxHide_ext_text ${DefRexxHideExt}
-  StrCpy $RexxHide_ftype_text "RexxHide"
+  StrCpy $RexxHide_ftype_text ${DefRexxHideFType}
 
   StrCpy $Associate_rexxpaws_CK_state '${BST_CHECKED}'
   StrCpy $RexxPaws_ext_text ${DefRexxPawsExt}
-  StrCpy $RexxPaws_ftype_text "RexxPaws"
+  StrCpy $RexxPaws_ftype_text ${DefRexxPawsFType}
 
 FunctionEnd
 
@@ -2316,6 +2464,28 @@ Function SetFileAssociationVars
           StrCpy $RexxPaws_ftype_text $1
         ${endif}
       ${endif}
+    ${endif}
+
+FunctionEnd
+
+/** SetSendToVars()
+ *
+ * Sets the values of the SendTo check box states on start up.  Either to the
+ * defaults if there is no previous installation or a pre-4.1.0 installation.
+ * Otherwise, the variables are set to what we read out of the registry.
+ */
+Function SetSendToVars
+
+    ${if} $PreviousVersionInstalled == 'false'
+    ${orif} $UpgradeTypeAvailable == 'false'
+    ${orif} $RegVal_sendTo_rexx == ''
+      StrCpy $SendTo_rexx_CK_state ${BST_UNCHECKED}
+      StrCpy $SendTo_rexxHide_CK_state ${BST_CHECKED}
+      StrCpy $SendTo_rexxPaws_CK_state ${BST_CHECKED}
+    ${else}
+      StrCpy $SendTo_rexx_CK_state $RegVal_sendTo_rexx
+      StrCpy $SendTo_rexxHide_CK_state $RegVal_sendTo_rexxHide
+      StrCpy $SendTo_rexxPaws_CK_state $RegVal_sendTo_rexxPaws
     ${endif}
 
 FunctionEnd
@@ -2630,7 +2800,7 @@ Function un.onInit
 
   StrCpy $DeleteWholeTree 'false'
 
-  /* StrCpy $DeleteWholeTree 'true'  ; TEMP TEMP TEMP always del tree while testing MM */
+  StrCpy $DeleteWholeTree 'true'  ; TEMP TEMP TEMP always del tree while testing MM */
 
   ; UnInstall as All Users if an admin
   Call un.IsUserAdmin
@@ -2664,13 +2834,13 @@ Function un.Ok_Stop_RxAPI_page
 
   StrCpy $InStopRxapiPage 'true'
 
-  !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process" "The ${LONGNAME} memory manager (rxapi) is currently running"
+  !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process." "The ${LONGNAME} memory manager (rxapi) is currently running"
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
   ${NSD_CreateLabel} 0 0 100% 104u \
     "${SHORTNAME} can not be completely uninstalled while rxapi is running.$\n$\n\
@@ -2763,7 +2933,7 @@ Function un.Uninstall_By_Log_page
 
   ${if} $LogFileExists == 'false'
     !insertmacro MUI_HEADER_TEXT \
-      "${UninstLog} NOT found" \
+      "${UninstLog} NOT found." \
       "The option of only removing files installed by the prior ooRexx installer is not available."
 
     StrCpy $0 \
@@ -2776,7 +2946,7 @@ Function un.Uninstall_By_Log_page
       program."
   ${else}
     !insertmacro MUI_HEADER_TEXT \
-      "Choose the method for removing installed files" \
+      "Choose the method for removing installed files." \
       "Delete only installed files or delete entire directory tree?"
 
     StrCpy $0 \
@@ -2804,7 +2974,7 @@ Function un.Uninstall_By_Log_page
 
   ${If} $Dialog == error
     Abort
-  ${EndIf}
+  ${endif}
 
   ${if} $LogFileExists == 'false'
     ${NSD_CreateLabel} 0 0 100% 80u $0
@@ -2892,12 +3062,6 @@ Function un.Delete_Installed_Files
     DetailPrint "Removing all Start Menu short cuts by removing the $SMPROGRAMS\${LONGNAME} folder"
     RMDir /r "$SMPROGRAMS\${LONGNAME}"
 
-    /* Remove the send to entries unless we are doing an updgrade type. */
-    ${if} $DoUpgrade == 'true'
-      Return
-    ${endif}
-    Delete "$SENDTO\ooRexx with pause (rexxpaws).lnk"
-    Delete "$SENDTO\ooRexx with no console (rexxhide).lnk"
   ${else}
     DetailPrint "Uninstall files using the install log file"
     Push $R0
@@ -2933,11 +3097,27 @@ Function un.Delete_Installed_Files
       Goto LoopRead
     LoopDone:
     FileClose $UninstLog
+
     Delete "$INSTDIR\${UninstLog}"
     RMDir "$INSTDIR"
     Pop $R2
     Pop $R1
     Pop $R0
+  ${endif}
+
+  /*
+   * Remove the send to entries unless we are doing an updgrade type. These
+   * entries are not put into the uninstall log.  We simply deleted them if we
+   * are not doing an upgrade and leave them alone if we are doing an upgrade.
+   *
+   * If they do not exist, deleting them does not harm, i.e., there is no
+   * warning or error rasised.
+   */
+  ${if} $DoUpgrade == 'false'
+    Delete "$SENDTO\ooRexx.lnk"
+    Delete "$SENDTO\ooRexx with pause (rexxpaws).lnk"
+    Delete "$SENDTO\ooRexx with no console (rexxhide).lnk"
+    DetailPrint "Removed 'Send To' items (if any.)"
   ${endif}
 
 FunctionEnd
