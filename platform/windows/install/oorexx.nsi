@@ -2376,13 +2376,13 @@ Function SetDefaultFileAssociation
   StrCpy $Associate_rexx_CK_state '${BST_CHECKED}'
   StrCpy $Rexx_ext_text ${DefRexxExt}
   StrCpy $Rexx_ftype_text ${DefRexxFType}
-  StrCpy $Rexx_editor_text "C:\Windows\System32\NotePad.exe"
+  StrCpy $Rexx_editor_text "$WINDIR\System32\NotePad.exe"
 
-  StrCpy $Associate_rexxhide_CK_state '${BST_CHECKED}'
+  StrCpy $Associate_rexxhide_CK_state '${BST_UNCHECKED}'
   StrCpy $RexxHide_ext_text ${DefRexxHideExt}
   StrCpy $RexxHide_ftype_text ${DefRexxHideFType}
 
-  StrCpy $Associate_rexxpaws_CK_state '${BST_CHECKED}'
+  StrCpy $Associate_rexxpaws_CK_state '${BST_UNCHECKED}'
   StrCpy $RexxPaws_ext_text ${DefRexxPawsExt}
   StrCpy $RexxPaws_ftype_text ${DefRexxPawsFType}
 
