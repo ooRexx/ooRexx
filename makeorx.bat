@@ -222,14 +222,16 @@ REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if not exist doc\nul md doc
 
 SET MISSING_DOC=0
-if not exist doc\readme.pdf        SET MISSING_DOC=1
-if not exist doc\rexxpg.pdf        SET MISSING_DOC=1
-if not exist doc\rexxref.pdf       SET MISSING_DOC=1
-if not exist doc\rxmath.pdf        SET MISSING_DOC=1
-if not exist doc\rxsock.pdf        SET MISSING_DOC=1
-if not exist doc\rxftp.pdf         SET MISSING_DOC=1
-if not exist doc\oodialog.pdf      SET MISSING_DOC=1
-if not exist doc\winextensions.pdf SET MISSING_DOC=1
+if not exist doc\readme.pdf          SET MISSING_DOC=1
+if not exist doc\rexxpg.pdf          SET MISSING_DOC=1
+if not exist doc\rexxref.pdf         SET MISSING_DOC=1
+if not exist doc\rxmath.pdf          SET MISSING_DOC=1
+if not exist doc\rxsock.pdf          SET MISSING_DOC=1
+if not exist doc\rxftp.pdf           SET MISSING_DOC=1
+if not exist doc\oodialog.pdf        SET MISSING_DOC=1
+if not exist doc\rexxextensions.pdf  SET MISSING_DOC=1
+if not exist doc\unixextensions.pdf  SET MISSING_DOC=1
+if not exist doc\winextensions.pdf   SET MISSING_DOC=1
 
 if %MISSING_DOC% EQU 0 goto DOC_CHECK_DONE
 
@@ -304,6 +306,22 @@ if not exist doc\oodialog.pdf (
   )
 )
 copy %DOC_LOCATION%\oodialog.pdf doc 1>nul 2>&1
+
+if not exist doc\rexxxtensions.pdf (
+  if not exist %DOC_LOCATION%\rexxextensions.pdf (
+    if %USELOGFILE% EQU 1 (echo rexxextensions.pdf is missing >>%OR_ERRLOG%) else (echo rexxextensions.pdf is missing)
+    goto NO_DOC_ERR
+  )
+)
+copy %DOC_LOCATION%\rexxextensions.pdf doc 1>nul 2>&1
+
+if not exist doc\unixetensions.pdf (
+  if not exist %DOC_LOCATION%\unixextensions.pdf (
+    if %USELOGFILE% EQU 1 (echo unixextensions.pdf is missing >>%OR_ERRLOG%) else (echo unixextensions.pdf is missing)
+    goto NO_DOC_ERR
+  )
+)
+copy %DOC_LOCATION%\unixextensions.pdf doc 1>nul 2>&1
 
 if not exist doc\winextensions.pdf (
   if not exist %DOC_LOCATION%\winextensions.pdf (
