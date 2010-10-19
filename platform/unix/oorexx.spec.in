@@ -126,7 +126,7 @@ For more information on Rexx, visit http://www.rexxla.org/
 %build
 #******************************************************************************
 ./configure --disable-static --prefix=%{_prefix}
-make %{?_smp_mflags}
+make %{?_smp_mflags} libdir=%{_libdir}
 
 #******************************************************************************
 %install
