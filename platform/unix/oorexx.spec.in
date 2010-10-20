@@ -59,7 +59,7 @@
 %if 0%{?_redhat}
 # Currently RH does not define these like Fedora does, but they might in the future.
 # So we define them and if RH ever does use them we can eliminate the definitions.
-# We will leave the version as a null string.
+# We will default the version to 55 for now.
 %define build_distro %(grep -q "Red Hat Enterprise Linux" /etc/redhat-release && echo rhel || echo rhl)
 %define build_release 55
 %define _osdistname %{build_distro}%{build_release}
@@ -213,7 +213,25 @@ rm -rf $RPM_BUILD_ROOT
 #******************************************************************************
 %post
 #******************************************************************************
+# Normally we would not need to add links back to /usr/lib because the ooRexx
+# executables have the correct path to the libraries linked into them. But
+# developers need to be able to link their applications to a known location.
+# So we add links to the libraries that developers will need access to.
+ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so
+ln -sf %{_libdir}/ooRexx/librexx.so.@ORX_SUBST_CURRENT@ %{_libdir}/librexx.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/ooRexx/librexx.so.%{orx_libversion} %{_libdir}/librexx.so.%{orx_libversion}
+ln -sf %{_libdir}/ooRexx/librexx.la %{_libdir}/librexx.la
+ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.2
+ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.3
+ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so
+ln -sf %{_libdir}/ooRexx/librexxapi.so.@ORX_SUBST_CURRENT@ %{_libdir}/librexxapi.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/ooRexx/librexxapi.so.%{orx_libversion} %{_libdir}/librexxapi.so.%{orx_libversion}
+ln -sf %{_libdir}/ooRexx/librexxapi.la %{_libdir}/librexxapi.la
+ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.2
+ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.3
+# Add links for some ooRexx scripts
 ln -sf %{_datadir}/ooRexx/rexxtry.rex %{_bindir}/rexxtry.rex
+# Add the rxapi service
 ln -sf %{_bindir}/rxapid /etc/init.d/rxapid
 if [ -x /sbin/insserv ]; then
    # try insserv first (for Suse)
@@ -237,8 +255,11 @@ else
    # else, try good old chkconfig
    chkconfig --del rxapid
 fi
+# Remove links
 rm -f /etc/init.d/rxapid
 rm -f %{_bindir}/rexxtry.rex
+rm -f %{_libdir}/librexxapi.*
+rm -f %{_libdir}/librexx.*
 
 #******************************************************************************
 %postun
