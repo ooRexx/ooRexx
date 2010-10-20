@@ -218,14 +218,14 @@ rm -rf $RPM_BUILD_ROOT
 # developers need to be able to link their applications to a known location.
 # So we add links to the libraries that developers will need access to.
 ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so
-ln -sf %{_libdir}/ooRexx/librexx.so.@ORX_SUBST_CURRENT@ %{_libdir}/librexx.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librexx.so.%{orx_libversion} %{_libdir}/librexx.so.%{orx_libversion}
+ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.%{orx_libversion}
 ln -sf %{_libdir}/ooRexx/librexx.la %{_libdir}/librexx.la
 ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.2
 ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.3
 ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so
-ln -sf %{_libdir}/ooRexx/librexxapi.so.@ORX_SUBST_CURRENT@ %{_libdir}/librexxapi.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librexxapi.so.%{orx_libversion} %{_libdir}/librexxapi.so.%{orx_libversion}
+ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.%{orx_libversion}
 ln -sf %{_libdir}/ooRexx/librexxapi.la %{_libdir}/librexxapi.la
 ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.2
 ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.3
