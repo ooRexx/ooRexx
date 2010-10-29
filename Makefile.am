@@ -1057,6 +1057,7 @@ am_config_clean-local:
 	rm -fr $(top_srcdir)/rpm
 	rm -fr $(top_srcdir)/debian
 	rm -f $(top_srcdir)/*.cls
+	rm -r $(top_srcdir)/ylwrap
 
 install-exec-local:
 	echo $(DESTDIR) is destdir
