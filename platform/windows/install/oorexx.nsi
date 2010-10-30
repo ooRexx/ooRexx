@@ -2101,7 +2101,7 @@ Function Confirm_page
   ${else}
     ${NSD_CreateLabel} 0u 0u 100% 72u \
     "All the parameters needed to install ${LONGNAME} on your system have been \
-    gathered to gether.$\n$\n\
+    gathered together.$\n$\n\
     Click the Install button to begin installation.  Click the Back button to \
     review or change any settings.  Click the Cancel button to abort the installation \
     altogether."
