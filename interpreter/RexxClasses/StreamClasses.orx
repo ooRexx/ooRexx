@@ -505,16 +505,31 @@ return position
   expose path qualifiedPath
 
   use strict arg path, dir = .nil
+  qualifiedPath = .nil
 
-  if dir == .nil then
+  if dir == .nil then do
+      -- if we don't have a path, then we can't do a lazy
+      -- qualification because the current directory might
+      -- change.  We need to process everything
       path = self~normalizePathSyntax(path)
+      self~qualifiedPath
+  end
   else do
       if dir~isA(.File) then do
+          -- if we're relative to another file object, then
+          -- we don't need to qualify this now.  This is very common
+          -- if we're requesting a list of files under a directory.  We
+          -- want to avoid the overhead of additional system calls.
           dir = dir~absolutePath
+          path = self~createPath(dir, path)
       end
-      path = self~createPath(dir, path)
+      else do
+          -- string based path name.  Create the path, and then qualify it
+          -- now because we don't have an absolute path to work with.
+          path = self~createPath(dir, path)
+          self~qualifiedPath
+      end
   end
-  qualifiedPath = .nil
 
 -- support the query methods as both instance and class methods
 ::METHOD separator CLASS EXTERNAL 'LIBRARY REXX file_separator'
@@ -787,7 +802,7 @@ return position
 
   .ArgUtil~validateClass("destination", dest, .File)
 
-  return self~renameToImpl(self~qualfiedPath, dest~qualfiedPath)
+  return self~renameToImpl(self~qualifiedPath, dest~qualifiedPath)
 
 ::METHOD string
   expose path
