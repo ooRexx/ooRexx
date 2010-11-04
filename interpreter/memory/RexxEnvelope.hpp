@@ -47,6 +47,9 @@
 class RexxSmartBuffer;
 class RexxBuffer;
 
+// default size of the buffer used for flatten operations
+#define DEFAULT_ENVELOPE_BUFFER (64*1024)
+
 class RexxEnvelope : public RexxInternalObject
 {
   public:

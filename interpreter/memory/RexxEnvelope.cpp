@@ -184,7 +184,7 @@ RexxBuffer *RexxEnvelope::pack(
     // object offsets into a hashtable without having the hashtable
     // attempt to mark the references.
     duptable->contents->setHasNoReferences();
-    OrefSet(this, this->buffer, new RexxSmartBuffer(1024));
+    OrefSet(this, this->buffer, new RexxSmartBuffer(DEFAULT_ENVELOPE_BUFFER));
     // get a flatten stack from the memory object
     this->flattenStack = memoryObject.getFlattenStack();
     // push unique terminator onto stack
