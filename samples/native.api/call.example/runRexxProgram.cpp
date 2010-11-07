@@ -50,7 +50,6 @@
 
 #include "oorexxapi.h"
 #include <stdio.h>
-#include <string.h>
 
 #if defined(_WIN32)
 #define _CDECL __cdecl
@@ -98,7 +97,7 @@ int _CDECL main(int argc, char **argv)
     // array of Rexx objects.  We can pass null if there are no arguments.
     RexxArrayObject args = NULL;
 
-    if ( stricmp("backward.fnc", programName) == 0 )
+    if ( strcmp("backward.fnc", programName) == 0 )
     {
         RexxStringObject str = threadContext->String("These words will be swapped");
         args = threadContext->ArrayOfOne(str);
