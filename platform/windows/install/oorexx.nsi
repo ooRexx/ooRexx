@@ -2256,7 +2256,7 @@ Function DoFileAssociations
     Call AssociateExtensionWithExe
   ${endif}
 
-  ${if} $Associate_rexxpaws_CK_state = ${BST_CHECKED}
+  ${if} $Associate_rexxpaws_CK_state == ${BST_CHECKED}
     StrCpy $AssociationProgramName 'rexxpaws.exe'
     StrCpy $RegVal_rexxPawsAssociation '$RexxPaws_ext_text $RexxPaws_ftype_text'
     StrCpy $RegVal_rexxEditor '$Rexx_editor_text'
@@ -2457,6 +2457,7 @@ Function SetFileAssociationVars
         ; We will put the file extension in $0 and the ftype in $1
 
         StrCpy $Use_File_Associations_CK_state '${BST_CHECKED}'
+        StrCpy $Rexx_editor_text "$RegVal_rexxEditor"
 
         ${if} $RegVal_rexxAssociation != ''
           ${StrTok} $0 $RegVal_rexxAssociation " " "0" "0"
@@ -2465,7 +2466,8 @@ Function SetFileAssociationVars
           StrCpy $Associate_rexx_CK_state '${BST_CHECKED}'
           StrCpy $Rexx_ext_text $0
           StrCpy $Rexx_ftype_text $1
-          StrCpy $Rexx_editor_text "$RegVal_rexxEditor"
+        ${else}
+          StrCpy $Associate_rexx_CK_state '${BST_UNCHECKED}'
         ${endif}
 
         ${if} $RegVal_rexxHideAssociation != ''
@@ -2475,6 +2477,8 @@ Function SetFileAssociationVars
           StrCpy $Associate_rexxhide_CK_state '${BST_CHECKED}'
           StrCpy $RexxHide_ext_text $0
           StrCpy $RexxHide_ftype_text $1
+        ${else}
+          StrCpy $Associate_rexxhide_CK_state '${BST_UNCHECKED}'
         ${endif}
 
         ${if} $RegVal_rexxPawsAssociation != ''
@@ -2484,6 +2488,8 @@ Function SetFileAssociationVars
           StrCpy $Associate_rexxpaws_CK_state '${BST_CHECKED}'
           StrCpy $RexxPaws_ext_text $0
           StrCpy $RexxPaws_ftype_text $1
+        ${else}
+          StrCpy $Associate_rexxpaws_CK_state '${BST_UNCHECKED}'
         ${endif}
       ${endif}
     ${endif}
