@@ -1,0 +1,17 @@
+
+
+                          OLE Object Examples
+                          ===================
+
+    This directory and its subdirectories contain a number of example
+    programs that use the OleObject class.
+
+    There are two other nice example programs that combine using the
+    OleObject class and the ooDialog framework.  Those programs are
+    included in the ooDialog examples in the following directories:
+
+    samples\oodialog\oleinfo
+
+    and
+
+    samples\oodialog\sysinfo

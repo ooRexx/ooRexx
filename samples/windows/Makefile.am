@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,8 +37,10 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= api misc ole oodialog rexutils winsystem wsh
-DIST_SUBDIRS            = api misc ole oodialog rexutils winsystem wsh
+SUBDIRS			= api misc ole oodialog rexutils wsh
+DIST_SUBDIRS            = api misc ole oodialog rexutils wsh
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
+
+EXTRA_DIST = 0ReadMe.first
 

@@ -422,6 +422,7 @@ Section "${LONGNAME} Samples" SecDemo
   DetailPrint "********** Samples **********"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples
+  ${File} "${SRCDIR}\samples\windows\" "0ReadMe.first"
   ${File} "${SRCDIR}\samples\" "rexxcps.rex"
   ${File} "${SRCDIR}\samples\" "ccreply.rex"
   ${File} "${SRCDIR}\samples\" "complex.rex"
@@ -453,6 +454,10 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.rex"
   ${CreateDirectory} $INSTDIR\samples\ole
   ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\ole
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\ole\" "ReadMe.first"
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\adsi
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\ole\adsi\" "*.rex"
@@ -482,21 +487,9 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\ole\methinfo\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\ole\methinfo\" "*.cls"
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\ole\oleinfo
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\ole\oleinfo\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\ole\oleinfo\" "*.txt"
-  ${File} "${SRCDIR}\samples\windows\ole\oleinfo\" "*.bmp"
-  ${File} "${SRCDIR}\samples\windows\ole\oleinfo\" "*.rc"
-  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\wmi
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\ole\wmi\" "*.rex"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\ole\wmi\sysinfo
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\ole\wmi\sysinfo\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\ole\wmi\sysinfo\" "*.rc"
 ;;; Temporarily block out the orxscrpt samples
 ;;;   ; Set output path to the installation directory.
 ;;;   SetOutPath $INSTDIR\samples\wsh
@@ -505,12 +498,6 @@ Section "${LONGNAME} Samples" SecDemo
 ;;;   ${File} "${SRCDIR}\samples\windows\wsh\" "*.htm"
 ;;;   ${File} "${SRCDIR}\samples\windows\wsh\" "*.wsf"
 ;;;   ${File} "${SRCDIR}\samples\windows\wsh\" "*.wsc"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\winsystem
-  ${File} "${SRCDIR}\samples\windows\winsystem\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\winsystem\" "*.rc"
-  ${File} "${SRCDIR}\samples\windows\winsystem\" "*.h"
-  ${File} "${SRCDIR}\samples\windows\winsystem\" "*.frm"
   ; Create start menu shortcuts
   SetOutPath $INSTDIR\samples
   ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples"
@@ -520,11 +507,11 @@ Section "${LONGNAME} Samples" SecDemo
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Date.lnk"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Time.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\qtime.rex"' "$INSTDIR\rexx.exe"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Time.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Event Log.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\winsystem\eventlog.rex"' "$INSTDIR\rexx.exe"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Event Log.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\oodialog\winsystem\eventlog.rex"' "$INSTDIR\rexx.exe"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Event Log.lnk"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Drive Info.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\drives.rex"' "$INSTDIR\rexx.exe"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Drive Info.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Windows Manager.lnk" "$INSTDIR\rexxhide.exe" '"$INSTDIR\samples\winsystem\usewmgr.rex"' "$INSTDIR\rexx.exe"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Windows Manager.lnk" "$INSTDIR\rexxhide.exe" '"$INSTDIR\samples\oodialog\winsystem\usewmgr.rex"' "$INSTDIR\rexx.exe"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Windows Manager.lnk"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\MS Access.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\ole\apps\MSAccessDemo.rex"' "$INSTDIR\rexx.exe"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\MS Access.lnk"
@@ -554,6 +541,19 @@ Section "${LONGNAME} Samples" SecDemo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.txt"
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\examples\resources
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.rc"
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\oleinfo
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.txt"
+  ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.rc"
   ${SetOutPath} $INSTDIR\samples\oodialog\ooRexxTry
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\" "ooRexxTry.rex"
@@ -576,22 +576,10 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\simple\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\simple\" "*.txt"
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\wav
+  ${SetOutPath} $INSTDIR\samples\oodialog\sysinfo
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.wav"
-  ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.txt"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\examples\resources
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.h"
-  ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.rc"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\tutorial
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\sysinfo\" "*.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\sysinfo\" "*.rc"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\source
   ; Distribution files...
@@ -616,6 +604,23 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "ResDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "UserDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "UtilityClasses.cls"
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\tutorial
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.rc"
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\wav
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.wav"
+  ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.txt"
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\winsystem
+  ${File} "${SRCDIR}\samples\windows\oodialog\winsystem\" "*.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\winsystem\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\winsystem\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\winsystem\" "*.frm"
   ; Create start menu shortcuts
   SetOutPath $INSTDIR\samples\oodialog
   ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog"
