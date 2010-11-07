@@ -706,6 +706,22 @@ Section "${LONGNAME} Development Kit" SecDev
   ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.mak"
   ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.dll"
   ;
+  ; C++ API samples
+  ;
+  ${SetOutPath} $INSTDIR\samples\native.api
+  ${File} "${SRCDIR}\samples\native.api\" "ReadMe.txt"
+  ; Set output path to the installation directory for callexample.
+  ${SetOutPath} $INSTDIR\samples\native.api\call.example
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "backward.fnc"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "HelloWorld.rex"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "Makefile.windows"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "ReadMe.txt"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "runRexxProgram.cpp"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "stackOverflow.cpp"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "tooRecursiveTrapped.rex"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "tooRecursiveUnhandled.rex"
+  ;
   ; Create start menu shortcuts
   ;
   ; All three of these examples have files that the executable needs to locate
