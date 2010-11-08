@@ -1225,60 +1225,190 @@ int compare_desc_i_cols(SortData *sd, RexxString *arg1, RexxString *arg2)
 }
 
 
-void RexxStem::quickSort(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, size_t left, size_t right)
+/**
+ * The merge sort routine.  This will partition the data in to
+ * two sections, mergesort each partition, then merge the two
+ * partitions together.
+ *
+ * @param sd         The sort information.
+ * @param comparator The comparator object used for the compares.
+ * @param strings    The input set of strings.
+ * @param working    The working array (same size as the sorted array).
+ * @param left       The left bound of the partition.
+ * @param right      The right bounds of the parition.
+ */
+void RexxStem::mergeSort(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t right)
 {
-    size_t old_left = left;
-    size_t old_right = right;
-
-    RexxString *pivot = strings[left];     // get the pivot value
-
-    // now find the new partitioning
-    while (left < right)
-    {
-        // fix the right end
-        while (comparator(sd, strings[right], pivot) >= 0 && (left < right))
-        {
-            right--;
+    size_t len = right - left + 1;
+    // use insertion sort for small arrays
+    if (len <= 7) {
+        for (size_t i = left + 1; i <= right; i++) {
+            RexxString *current = strings[i];
+            RexxString *prev = strings[i - 1];
+            if (comparator(sd, current, prev) < 0) {
+                size_t j = i;
+                do {
+                    strings[j--] = prev;
+                } while (j > left && comparator(sd, current, prev = strings[j - 1]) < 0);
+                strings[j] = current;
+            }
         }
-        // did we find a mismatch while testing?  then pull things in from the left too
-        if (left != right)
-        {
-            // swap these and pull the left in
-            strings[left] = strings[right];
-            left++;
-        }
-        // now compare from the left
-        while (comparator(sd, strings[left], pivot) <= 0 && (left < right))
-        {
-            left++;
-        }
-        // still not done?
-        if (left != right)
-        {
-            // swap these two and continue
-            strings[right] = strings[left];
-            right--;
-        }
+        return;
     }
 
-    // store the pivot value in the current left position
-    strings[left] = pivot;
-    // this is the new pivot point
-    size_t pivotPoint = left;
-    // restore the old end points
-    left = old_left;
-    right = old_right;
-    // something to the left of the pivot?
-    if (left < pivotPoint)
-    {
-        // sort the left partition
-        quickSort(sd, comparator, strings, left, pivotPoint - 1);
+    size_t mid = (right + left) / 2;
+    mergeSort(sd, comparator, strings, working, left, mid);
+    mergeSort(sd, comparator, strings, working, mid + 1, right);
+    merge(sd, comparator, strings, working, left, mid + 1, right);
+}
+
+
+/**
+ * Perform a merge of two sort partitions.
+ *
+ * @param sd         The sort descriptor.
+ * @param comparator The comparator used to compare elements.
+ * @param strings    The input strings.
+ * @param working    A working array used for the merge operations.
+ * @param left       The left bound for the merge.
+ * @param mid        The midpoint for the merge.
+ * @param right      The right bound of merge (inclusive).
+ */
+void RexxStem::merge(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString **working, size_t left, size_t mid, size_t right)
+{
+    size_t leftEnd = mid - 1;
+    // merging
+
+    // if arrays are already sorted - no merge
+    if (comparator(sd, strings[leftEnd], strings[mid]) <= 0) {
+        return;
     }
-    // and also the right partition if we have one
-    if (right > pivotPoint)
+
+    size_t leftCursor = left;
+    size_t rightCursor = mid;
+    size_t workingPosition = left;
+
+    // use merging with exponential search
+    do
     {
-        quickSort(sd, comparator, strings, pivotPoint + 1, right);
+        RexxString *fromVal = strings[leftCursor];
+        RexxString *rightVal = strings[rightCursor];
+        if (comparator(sd, fromVal, rightVal) <= 0)
+        {
+            size_t leftInsertion = find(sd, comparator, strings, rightVal, -1, leftCursor + 1, leftEnd);
+            size_t toCopy = leftInsertion - leftCursor + 1;
+            arraycopy(strings, leftCursor, working, workingPosition, toCopy);
+            workingPosition += toCopy;
+            working[workingPosition++] = rightVal;
+            // now we've added this
+            rightCursor++;
+            // step over the section we just copied...which might be
+            // all of the remaining section
+            leftCursor = leftInsertion + 1;
+        }
+        else
+        {
+            size_t rightInsertion = find(sd, comparator, strings, fromVal, 0, rightCursor + 1, right);
+            size_t toCopy = rightInsertion - rightCursor + 1;
+            arraycopy(strings, rightCursor, working, workingPosition, toCopy);
+            workingPosition += toCopy;
+            // insert the right-hand value
+            working[workingPosition++] = fromVal;
+            leftCursor++;
+            rightCursor = rightInsertion + 1;
+        }
+    } while (right >= rightCursor && mid > leftCursor);
+
+    // copy rest of array.  If we've not used up the left hand side,
+    // we copy that.  Otherwise, there are items on the right side
+    if (leftCursor < mid)
+    {
+        arraycopy(strings, leftCursor, working, workingPosition, mid - leftCursor);
     }
+    else
+    {
+        arraycopy(strings, rightCursor, working, workingPosition, right - rightCursor + 1);
+    }
+
+    arraycopy(working, left, strings, left, right - left + 1);
+}
+
+/**
+ * copy segments of one array into another.
+ *
+ * @param source The source array
+ * @param start  The starting index of the source copy
+ * @param target The target array
+ * @param index  The target copy index
+ * @param count  The number of items to count.
+ */
+void RexxStem::arraycopy(RexxString **source, size_t start, RexxString **target, size_t index, size_t count)
+{
+    for (size_t i = start; i < start + count; i++)
+    {
+        target[index++] = source[i];
+    }
+}
+
+/**
+ * Finds the place in the given range of specified sorted array, where the
+ * element should be inserted for getting sorted array. Uses exponential
+ * search algorithm.
+ *
+ * @param sd         The sort descriptor
+ * @param comparator The comparator used to compare pairs of elements.
+ * @param strings    The input set of strings.
+ * @param val        object to be inserted
+ * @param bnd        possible values 0,-1. "-1" - val is located at index more then
+ *                   elements equals to val. "0" - val is located at index less
+ *                   then elements equals to val.
+ * @param left       The left bound of the insert operation.
+ * @param right      The right bound for the insert.
+ *
+ * @return The insertion point.
+ */
+size_t RexxStem::find(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, RexxString *val, int limit, size_t left, size_t right)
+{
+    size_t checkPoint = left;
+    size_t delta = 1;
+    while (checkPoint <= right)
+    {
+        // if this is too big, then we're moving to the right
+        if (comparator(sd, val, strings[checkPoint]) > limit)
+        {
+            // the left bound is at least this
+            left = checkPoint + 1;
+        }
+        else
+        {
+            // we've found a right limit.  We can stop scanning here
+            right = checkPoint - 1;
+            break;
+        }
+        // step the delta amount
+        checkPoint += delta;
+        // and double the movement amount
+        delta = delta * 2;
+    }
+    // we should have now limited the bounds for the insertion point
+    // now start in the middle and shrink the range with each comparison
+    while (left <= right)
+    {
+        // start in the middle of the current range
+        checkPoint = (left + right) / 2;
+        if (comparator(sd, val, strings[checkPoint]) > limit)
+        {
+            // pull in the left end of the range
+            left = checkPoint + 1;
+        }
+        else
+        {
+            // chop the right range
+            right = checkPoint - 1;
+        }
+    }
+    // the left bound is the insertion point
+    return left - 1;
 }
 
 
@@ -1332,8 +1462,9 @@ bool RexxStem::sort(RexxString *prefix, int order, int type, size_t _first, size
     }
     size_t bounds = last - _first + 1;
 
-    /* get an array item and protect it.  We need to have space for both the variable anchors, and the variable values. */
-    RexxArray *array = new_array(bounds * 2);
+    // get an array item and protect it.  We need to have space for
+    // the the variable anchors, the variable values, and a working buffer for the merge. */
+    RexxArray *array = new_array(bounds * 3);
     ProtectedObject p1(array);
 
     size_t i;
@@ -1358,7 +1489,10 @@ bool RexxStem::sort(RexxString *prefix, int order, int type, size_t _first, size
         array->put(nextValue, j + bounds);
     }
 
+    // the data to be sorted
     RexxString **aData = (RexxString **)array->data(bounds + 1);
+    // the merge sort work area
+    RexxString **working = (RexxString **)array->data((bounds * 2) + 1);
 
     {
         // we're releasing kernel access during the process.  The sort is being
@@ -1371,12 +1505,12 @@ bool RexxStem::sort(RexxString *prefix, int order, int type, size_t _first, size
           switch (type) {
 
               case SORT_CASESENSITIVE:
-                  quickSort(&sd, order == SORT_ASCENDING ? compare_asc : compare_desc,
-                      aData, 0, bounds - 1);
+                  mergeSort(&sd, order == SORT_ASCENDING ? compare_asc : compare_desc,
+                      aData, working, 0, bounds - 1);
                   break;
               case SORT_CASEIGNORE:
-                  quickSort(&sd, order == SORT_ASCENDING ? compare_asc_i : compare_desc_i,
-                    aData, 0, bounds - 1);
+                  mergeSort(&sd, order == SORT_ASCENDING ? compare_asc_i : compare_desc_i,
+                      aData, working, 0, bounds - 1);
                 break;
           }
         }
@@ -1389,12 +1523,12 @@ bool RexxStem::sort(RexxString *prefix, int order, int type, size_t _first, size
           switch (type)
           {
             case SORT_CASESENSITIVE:
-                quickSort(&sd, order == SORT_ASCENDING ? compare_asc_cols : compare_desc_cols,
-                    aData, 0, bounds - 1);
+                mergeSort(&sd, order == SORT_ASCENDING ? compare_asc_cols : compare_desc_cols,
+                    aData, working, 0, bounds - 1);
                 break;
             case SORT_CASEIGNORE:
-                quickSort(&sd, order == SORT_ASCENDING ? compare_asc_i_cols : compare_desc_i_cols,
-                    aData, 0, bounds - 1);
+                mergeSort(&sd, order == SORT_ASCENDING ? compare_asc_i_cols : compare_desc_i_cols,
+                    aData, working, 0, bounds - 1);
                 break;
           }
         }

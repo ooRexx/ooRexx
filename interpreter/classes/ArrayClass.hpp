@@ -186,8 +186,6 @@ typedef struct copyElelmentParm {
    RexxObject  *hasItem(RexxObject *);
    RexxObject  *removeItem(RexxObject *);
    wholenumber_t sortCompare(RexxObject *comparator, RexxObject *left, RexxObject *right);
-   RexxArray   *sortRexx();
-   RexxArray   *sortWithRexx(RexxObject *comparator);
    RexxArray   *stableSortRexx();
    RexxArray   *stableSortWithRexx(RexxObject *comparator);
 
@@ -215,10 +213,8 @@ typedef struct copyElelmentParm {
 
    void         mergeSort(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t right);
    void         merge(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t mid, size_t right);
-   void         quickSort(BaseSortComparator &comparator, size_t left, size_t right);
-   void         interchange(size_t i1, size_t i2);
-   void         insertionSort(BaseSortComparator &comparator, PartitionBounds &bounds);
-   size_t       split(BaseSortComparator &comparator, PartitionBounds &bounds);
+   static void  arraycopy(RexxArray *source, size_t start, RexxArray *target, size_t index, size_t count);
+   size_t       find(BaseSortComparator &comparator, RexxObject *val, int bnd, size_t left, size_t right);
 
    static const size_t MAX_FIXEDARRAY_SIZE;
 

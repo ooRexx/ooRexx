@@ -2121,17 +2121,32 @@ void *RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, R
  * @param comparator The comparator object used for the compares.
  * @param working    The working array (same size as the sorted array).
  * @param left       The left bound of the partition.
- * @param right      The right bounds of the parition.
+ * @param right      The right bounds of the parition
+ *                   (inclusive).
  */
 void RexxArray::mergeSort(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t right)
 {
-    if (right > left)
-    {
-        size_t mid = (right + left) / 2;
-        mergeSort(comparator, working, left, mid);
-        mergeSort(comparator, working, mid + 1, right);
-        merge(comparator, working, left, mid + 1, right);
+    size_t len = right - left + 1;  // total size of the range
+    // use insertion sort for small arrays
+    if (len <= 7) {
+        for (size_t i = left + 1; i <= right; i++) {
+            RexxObject *current = get(i);
+            RexxObject *prev = get(i - 1);
+            if (comparator.compare(current, prev) < 0) {
+                size_t j = i;
+                do {
+                    put(prev, j--);
+                } while (j > left && comparator.compare(current, prev = get(j - 1)) < 0);
+                put(current, j);
+            }
+        }
+        return;
     }
+
+    size_t mid = (right + left) / 2;
+    mergeSort(comparator, working, left, mid);
+    mergeSort(comparator, working, mid + 1, right);
+    merge(comparator, working, left, mid + 1, right);
 }
 
 
@@ -2148,273 +2163,155 @@ void RexxArray::mergeSort(BaseSortComparator &comparator, RexxArray *working, si
 void RexxArray::merge(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t mid, size_t right)
 {
     size_t leftEnd = mid - 1;
-    size_t elements = right - left + 1;
-    size_t mergePosition = left;
+    // merging
 
-    while ((left <= leftEnd) && (mid <= right))
+    // if arrays are already sorted - no merge
+    if (comparator.compare(get(leftEnd), get(mid)) <= 0) {
+        return;
+    }
+
+    size_t leftCursor = left;
+    size_t rightCursor = mid;
+    size_t workingPosition = left;
+
+    // use merging with exponential search
+    do
     {
-        RexxObject *leftItem = get(left);
-        RexxObject *midItem = get(mid);
-        if (comparator.compare(leftItem, midItem) <= 0)
+        RexxObject *fromVal = get(leftCursor);
+        RexxObject *rightVal = get(rightCursor);
+        // if the left value is the smaller one, so we try to find the
+        // insertion point of the right value into the left side of the
+        // the array
+        if (comparator.compare(fromVal, rightVal) <= 0)
         {
-            working->put(leftItem, mergePosition);
-            mergePosition++;
-            left++;
+            // try to find an insertion point in the remaining left-hand elements
+            size_t leftInsertion = find(comparator, rightVal, -1, leftCursor + 1, leftEnd);
+            // we start copying with the left-hand bound up to the insertion point
+            size_t toCopy = leftInsertion - leftCursor + 1;
+            arraycopy(this, leftCursor, working, workingPosition, toCopy);
+            workingPosition += toCopy;
+            // add the inserted position
+            working->put(rightVal, workingPosition++);
+            // now we've added this
+            rightCursor++;
+            // step over the section we just copied...which might be
+            // all of the remaining section
+            leftCursor = leftInsertion + 1;
         }
         else
         {
-            working->put(midItem, mergePosition);
-            mergePosition++;
-            mid++;
+            // find the insertion point of the left value into the remaining right
+            // hand section
+            size_t rightInsertion = find(comparator, fromVal, 0, rightCursor + 1, right);
+            size_t toCopy = rightInsertion - rightCursor + 1;
+            arraycopy(this, rightCursor, working, workingPosition, toCopy);
+            workingPosition += toCopy;
+            // insert the right-hand value
+            working->put(fromVal, workingPosition++);
+            leftCursor++;
+            rightCursor = rightInsertion + 1;
         }
-    }
+    } while (right >= rightCursor && mid > leftCursor);
 
-    // now we have to copy any remainders in the segments
-    while (left <= leftEnd)
+    // copy rest of array.  If we've not used up the left hand side,
+    // we copy that.  Otherwise, there are items on the right side
+    if (leftCursor < mid)
     {
-        RexxObject *item = get(left);
-        working->put(item, mergePosition);
-        left++;
-        mergePosition++;
-    }
-
-    while (mid <= right)
-    {
-        RexxObject *item = get(mid);
-        working->put(item, mergePosition);
-        mid++;
-        mergePosition++;
-    }
-
-    // we've not modified the right position, so we can use that now to copy the
-    // merged elements back into the original array in reverse order
-    for (size_t i = 1; i <= elements; i++)
-    {
-        RexxObject *item = working->get(right);
-        put(item, right);
-        right--;
-    }
-}
-
-/**
- * Interchange two items in an array.
- *
- * @param i1     The first index to swap.
- * @param i2     The second index to swap.
- */
-void RexxArray::interchange(size_t i1, size_t i2)
-{
-    RexxObject *temp = get(i1);
-    put(get(i2), i1);
-    put(temp, i2);
-}
-
-
-/**
- * Perform an insertion sort one a section of an array.
- *
- * @param comparator The comparator used for comparing two array items.
- * @param bounds     The bounds of the partition to be sorted.
- */
-void RexxArray::insertionSort(BaseSortComparator &comparator, PartitionBounds &bounds)
-{
-    for (size_t i = bounds.left; i <= bounds.right; i++) {
-        // get an item to insert
-        RexxObject *current = get(i);
-        // and a new position to scan through
-        size_t scan = i;
-        while ((scan > bounds.left) && comparator.compare(get(scan - 1), current) > 0) {
-            put(get(scan - 1), scan);
-            scan--;
-        }
-        put(current, scan);
-    }
-}
-
-
-/**
- * Split a partition into sections.
- *
- * @param comparator The comparator used to comparing items.
- * @param bounds     The current partition bounds for the spli.
- *
- * @return The split position for the partition.
- */
-size_t RexxArray::split(BaseSortComparator &comparator, PartitionBounds &bounds)
-{
-    size_t s;
-    size_t g;
-    size_t x;
-
-    PartitionBounds mid;
-
-    // here, atleast three elements are needed
-    if (comparator.compare(get(bounds.left), get(bounds.midPoint())) < 0)
-    {
-        s = bounds.left;
-        g = bounds.midPoint();
+        arraycopy(this, leftCursor, working, workingPosition, mid - leftCursor);
     }
     else
     {
-        g = bounds.left;
-        s = bounds.midPoint();
+        arraycopy(this, rightCursor, working, workingPosition, right - rightCursor + 1);
     }
 
-    if (comparator.compare(get(bounds.right), get(s)) <= 0)
-    {
-        x = s;
-    }
-    else if (comparator.compare(get(bounds.right), get(g)) <= 0)
-    {
-        x = bounds.right;
-    }
-    else {
-        x = g;
-    }
-
-    // swap the split-point element
-    // with the first
-    interchange(x, bounds.left);
-
-    // this is our pivot element
-    RexxObject *pivot = get(bounds.left);
-    // set the scanning points
-    size_t i = bounds.left;
-    size_t j = bounds.right + 1;
-    // now find the pivot point
-    while (i < j)
-    {
-        do {                                 // find j
-            j--;
-        }
-        while (i < j && comparator.compare(get(j), pivot) > 0);
-        do {
-            i++;                             // find i
-        } while (i < j && comparator.compare(get(i), pivot) < 0);
-        interchange(i, j);
-    }
-    interchange(i, j);                       // undo the extra swap
-    interchange(bounds.left, j);             // bring the split-point
-                                             // element to the first
-    return j;                                // this is our new pivot point
+    // finally, copy everything back into the the target array.
+    arraycopy(working, left, this, left, right - left + 1);
 }
 
 
 /**
- * Recursive quick sort routine for sorting a partition.
+ * copy segments of one array into another.
  *
- * @param left   The left bound of the partition.
- * @param right  The right bound of the partition.
+ * @param source The source array
+ * @param start  The starting index of the source copy
+ * @param target The target array
+ * @param index  The target copy index
+ * @param count  The number of items to count.
  */
-void RexxArray::quickSort(BaseSortComparator &comparator, size_t left, size_t right)
+void RexxArray::arraycopy(RexxArray *source, size_t start, RexxArray *target, size_t index, size_t count)
 {
-    std::deque<PartitionBounds>stack;  // stack for non-recursive quick sort
-    PartitionBounds bounds(left, right);    // initial bounds
-
-    stack.push_front(bounds);          // push the initial bounds
-
-    // keep processing until the stack dries up
-    while (!stack.empty())
+    for (size_t i = start; i < start + count; i++)
     {
-        // get the top stack frame
-        bounds = stack.front();
-        stack.pop_front();
-        for (;;)
-        {
-            // if this is a larger range, then we need to partition
-            if (!bounds.isSmall())
-            {
-                // go find the new pivot point
-                size_t splitpoint = split(comparator, bounds);
-                // push the smaller list
-                if (bounds.right - splitpoint < bounds.left - splitpoint)
-                {
-                    stack.push_front(PartitionBounds(bounds.left, splitpoint - 1));
-                    bounds.left = splitpoint + 1;
-                }
-                else
-                {
-                    stack.push_front(PartitionBounds(splitpoint + 1, bounds.right));
-                    bounds.right = splitpoint - 1;
-                }
-            }
-            else {
-                // sort the smaller partitions via insertion sort
-                insertionSort(comparator, bounds);
-                // we break out of this once we find a small section we can sort
-                break;
-            }
-        }
+        target->put(source->get(i), index++);
     }
 }
 
 
 /**
- * Sort elements of the array in place, using a quicksort.
+ * Finds the place in the given range of specified sorted array, where the
+ * element should be inserted for getting sorted array. Uses exponential
+ * search algorithm.
  *
- * @return Returns the same array, with the elements sorted.
- */
-RexxArray *RexxArray::sortRexx()
-{
-    size_t count = items();
-    if (count == 0)         // if the count is zero, sorting is easy!
-    {
-        return this;
-    }
-
-    // make sure this is a non-sparse array.  Checking up front means we don't
-    // need to check on each compare operation.
-    for (size_t i = 1; i <= count; i++)
-    {
-        if (get(i) == OREF_NULL)
-        {
-            reportException(Error_Execution_sparse_array, i);
-        }
-    }
-
-    BaseSortComparator comparator;
-
-    // go do the quick sort
-    quickSort(comparator, 1, count);
-    return this;
-}
-
-
-/**
- * Sort elements of the array in place, using a quicksort.
+ * @param comparator The comparator used to compare pairs of elements.
+ * @param val        object to be inserted
+ * @param limit      possible values 0,-1. "-1" - val is located
+ *                   at index more then elements equals to val.
+ *                   "0" - val is located at index less then
+ *                   elements equals to val.
+ * @param left       The left bound of the insert operation.
+ * @param right      The right bound for the insert (inclusive)
  *
- * @return Returns the same array, with the elements sorted.
+ * @return The insertion point.
  */
-RexxArray *RexxArray::sortWithRexx(RexxObject *comparator)
+size_t RexxArray::find(BaseSortComparator &comparator, RexxObject *val, int limit, size_t left, size_t right)
 {
-    requiredArgument(comparator, ARG_ONE);
-
-    size_t count = items();
-    if (count <= 1)         // if the count is zero, sorting is easy!
+    size_t checkPoint = left;
+    size_t delta = 1;
+    while (checkPoint <= right)
     {
-        return this;
-    }
-
-    // make sure this is a non-sparse array.  Checking up front means we don't
-    // need to check on each compare operation.
-    for (size_t i = 1; i <= count; i++)
-    {
-        if (get(i) == OREF_NULL)
+        // if this is too big, then we're moving to the right
+        if (comparator.compare(val, get(checkPoint)) > limit)
         {
-            reportException(Error_Execution_sparse_array, i);
+            // the left bound is at least this
+            left = checkPoint + 1;
+        }
+        else
+        {
+            // we've found a right limit.  We can stop scanning here
+            right = checkPoint - 1;
+            break;
+        }
+        // step the delta amount
+        checkPoint += delta;
+        // and double the movement amount
+        delta = delta * 2;
+    }
+    // we should have now limited the bounds for the insertion point
+    // now start in the middle and shrink the range with each comparison
+    while (left <= right)
+    {
+        // start in the middle of the current range
+        checkPoint = (left + right) / 2;
+        if (comparator.compare(val, get(checkPoint)) > limit)
+        {
+            // pull in the left end of the range
+            left = checkPoint + 1;
+        }
+        else
+        {
+            // chop the right range
+            right = checkPoint - 1;
         }
     }
 
-    WithSortComparator c(comparator);
-
-    // go do the quick sort
-    quickSort(c, 1, count);
-    return this;
+    // the left bound is the insertion point
+    return left - 1;
 }
 
 
 /**
- * Sort elements of the array in place, using a quicksort.
+ * Sort elements of the array in place, using a stable merge
+ * sort.
  *
  * @return Returns the same array, with the elements sorted.
  */
@@ -2449,7 +2346,8 @@ RexxArray *RexxArray::stableSortRexx()
 
 
 /**
- * Sort elements of the array in place, using a quicksort.
+ * Sort elements of the array in place, using a stable merge
+ * sort.
  *
  * @return Returns the same array, with the elements sorted.
  */
