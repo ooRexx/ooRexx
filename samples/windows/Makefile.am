@@ -42,5 +42,5 @@ DIST_SUBDIRS            = api misc ole oodialog rexutils wsh
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
-EXTRA_DIST = 0ReadMe.first
+#EXTRA_DIST = 0ReadMe.first
 
