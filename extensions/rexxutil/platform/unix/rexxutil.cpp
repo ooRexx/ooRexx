@@ -988,7 +988,7 @@ int LinFindNextFile(
   const char * filespec,               /* filespec to search for     */
   const char * path,                   /* current path               */
   DIR *dir_handle,                     /* directory handle           */
-  struct stat64 *finfo,                /* return buf for the finfo   */
+  struct stat *finfo,                  /* return buf for the finfo   */
   char * *d_name,                      /* name of the file found     */
   size_t caseless)                     /* case insensitive matching  */
 {
@@ -1003,7 +1003,7 @@ int LinFindNextFile(
 
                                        /* make full spec             */
     sprintf(full_path, "%s%s", path, dir_entry->d_name);
-    lstat64(full_path, finfo);           /* read the info about it     */
+    lstat(full_path, finfo);           /* read the info about it     */
 
   if(S_ISREG(finfo->st_mode) ||        /* if it is a file            */
      S_ISCHR(finfo->st_mode) ||        /* or a device special        */
@@ -1052,7 +1052,7 @@ int LinFindNextDir(
   const char * filespec,               /* filespec to search for     */
   const char * path,                   /* current path               */
   DIR *dir_handle,                     /* directory handle           */
-  struct stat64 *finfo,                /* return buf for the finfo   */
+  struct stat *finfo,                  /* return buf for the finfo   */
   char * *d_name,                      /* name of the file found     */
   size_t caseless)                     /* case insensitive matching  */
 {
@@ -1067,7 +1067,7 @@ int LinFindNextDir(
 
                                        /* make full spec             */
     sprintf(full_path, "%s%s", path, dir_entry->d_name);
-    lstat64(full_path, finfo);           /* read the info about it     */
+    lstat(full_path, finfo);           /* read the info about it     */
 
     if(S_ISDIR(finfo->st_mode)){       /* if it is a directory       */
 
@@ -1112,7 +1112,7 @@ size_t FormatFile(
                                        /* search for                 */
   int          *dmask,                 /* Mask of attributes to set  */
   size_t        options,               /* Search and output format   */
-  struct stat64 *finfo )              /* File info sturcture        */
+  struct stat *finfo )              /* File info sturcture        */
 {
   struct tm *timestamp;                /* Time info about the file   */
   char tp;                             /* type of the entry          */
@@ -1282,7 +1282,7 @@ int  RecursiveFindFile(
 {
   char  tempfile[MAX+1];               /* Used to hold temp file name*/
   DIR *dir_handle;                     /* Directory handle           */
-  struct stat64 finfo;                 /* file information           */
+  struct stat finfo;                   /* file information           */
   char * filename;
   size_t caseless = options&CASELESS;
 
