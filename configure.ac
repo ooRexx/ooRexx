@@ -445,9 +445,7 @@ AC_CONFIG_FILES([
         samples/windows/ole/adsi/Makefile
         samples/windows/ole/apps/Makefile
         samples/windows/ole/methinfo/Makefile
-        samples/windows/ole/oleinfo/Makefile
         samples/windows/ole/wmi/Makefile
-        samples/windows/ole/wmi/sysinfo/Makefile
         samples/windows/oodialog/Makefile
         samples/windows/oodialog/bmp/Makefile
         samples/windows/oodialog/controls/Makefile
@@ -464,7 +462,6 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/wav/Makefile
         samples/windows/oodialog/winsystem/Makefile
         samples/windows/rexutils/Makefile
-        samples/windows/winsystem/Makefile
         samples/windows/wsh/Makefile
         xsl.sh
         platform/unix/oorexx-config
