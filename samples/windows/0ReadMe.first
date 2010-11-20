@@ -1,0 +1,81 @@
+
+
+                    Windows ooRexx Example Programs
+                    ===============================
+
+    The Windows distribution of ooRexx comes with a large number of example
+    programs that demonstrate programming with ooRexx.  Many of these
+    programs are primarily used to show features of one of the extensions
+    to ooRexx, such as the ooDialog framework, or the OleObject class.
+
+    To make locating a program of interest easier, the example programs are
+    grouped in subdirectories.  This read me file serves as an additional
+    resource to help document the location of different examples.
+
+    samples\
+
+    This top-level directory, (the directory containing this read me file,)
+    contains samples that run unchanged on any platform supported by
+    ooRexx.  Subdirectories, with the exception of samples\native.api,
+    contain examples that use Windows only extensions.
+
+    samples\api\
+
+    This directory contains Windows only examples using the old API to
+    write Rexx extensions.  The use of the old API to write new Rexx
+    extensions is discouraged and the examples may be removed in future
+    distributions.
+
+    samples\misc\
+
+    This directory contains miscellaneous Windows only examples that do not
+    fit well in the other categories.
+
+    samples\native.api\
+
+    This directory contains platform independent samples using the C++ API
+    introduced in ooRexx 4.0.0 to write ooRexx extensions.  nMake
+    compatible make files for the examples are included in this directory.
+
+    samples\ole
+
+    This directory and its subdirectories contain examples using the
+    OleObject class, a Windows only class that gives the programmer access
+    OLE objects.
+
+    A few additional samples that combine using the OleObject class and the
+    ooDialog framework are located under samples\oodialog.
+
+    samples\oodialog
+
+    This directory and its subdirectories contain all example programs that
+    use the ooDialog framework.  The ooDialog framework allows the Rexx
+    programmer to easy create programs that have a graphical user
+    interface.
+
+    A number of the programs included with the ooDialog examples
+    demonstrate combining other Windows only extensions with the ooDialog
+    framework.
+
+    samples\rexxutils
+
+    This directory contains example programs that use some of the Windows
+    only functions from RexxUtils.
+
+    Note:
+    -----
+
+    One of the interesting Windows only extensions is the winsystm.cls.
+    The example programs for this class all make use of the ooDialog
+    framework.  The examples for the winsystm.cls are located at:
+
+    samples\oodialog\winsystm\
+
+    Two excellent examples of using the OleObject, oleinfo.rex and
+    sysinfo.rex, are also located under the oodialog subdirectory.  These
+    examples are located at:
+
+    samples\oodialog\oleinfo
+
+    samples\oodialog\sysinfo
+
