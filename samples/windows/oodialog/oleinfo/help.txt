@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -55,14 +55,14 @@
 This REXX script helps you to gather information about the methods of an OLE
 object. This is done through the use of the GetKnownMethods method of the
 REXX OLE object. A comprehensive introduction to OLE can be found in the
-Object REXX online documentation.
+Open Object REXX online documentation.
 
 GetKnownMethods retrieves information from the so-called "Type Library" of the
 OLE object, which should be - but is not always - installed together with the
 OLE object.
 
 To execute this sample the ooDialog extension of Open Object REXX is needed.
-ooDialog is part of the Windows ooRexx distribution.
+ooDialog is part of Open Object REXX for Windows
 
 2. Using OLEINFO
 
@@ -162,14 +162,3 @@ will be displayed in another window. This will include one line showing the
 result object, and also a list giving the output of possible 'out' parameters.
 If an OLE object is returned, you can use this as the new object that the
 viewer displays for you.
-
-3. Disclaimer
-
-The following supplied code is sample code created by the IBM Corporation.
-This sample code is not part of any standard or IBM product and is provided to
-you solely for the purpose of assisting you in the development of your
-applications.  The code is provided "AS IS", without warranty of any kind.
-IBM shall not be liable for any damages arising out of your use of the sample
-code, even if they have been advised of the possibility of such liability.
-
-
