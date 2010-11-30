@@ -941,6 +941,7 @@ RexxRoutine2(int,
 }
 
 
+#if !defined (AIX)
 /**
  * Method:        SysEuidaccess
  *
@@ -960,7 +961,7 @@ RexxRoutine2(int,
 
     return euidaccess(file, option);
 }
-
+#endif
 
 /**
  * Method:        SysGetservbyname
@@ -1373,7 +1374,7 @@ RexxRoutine2(int,
  *
  * Get the errno value.
  *
- * @return        hostname.
+ * @return        errno.
  */
 RexxRoutine0(int,
              SysGeterrno)
@@ -1708,7 +1709,9 @@ RexxRoutineEntry orxnixclib_routines[] = {
     REXX_TYPED_ROUTINE(SysGetgrgid, SysGetgrgid),
     REXX_TYPED_ROUTINE(SysStat, SysStat),
     REXX_TYPED_ROUTINE(SysAccess, SysAccess),
+#if !defined (AIX)
     REXX_TYPED_ROUTINE(SysEuidaccess, SysEuidaccess),
+#endif
     REXX_TYPED_ROUTINE(SysGetservbyname, SysGetservbyname),
     REXX_TYPED_ROUTINE(SysGetservbyport, SysGetservbyport),
     REXX_TYPED_ROUTINE(SysWordexp, SysWordexp),
