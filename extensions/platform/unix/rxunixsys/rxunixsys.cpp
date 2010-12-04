@@ -139,7 +139,7 @@ RexxRoutine1(RexxObjectPtr,
  *
  * @return        Process id
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysSetsid)
 {
     pid_t pid;
@@ -158,7 +158,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        Session id
  */
-RexxRoutine1(RexxObjectPtr,          
+RexxRoutine1(RexxObjectPtr,
              SysGetsid,
              int, pid)
 {
@@ -176,7 +176,7 @@ RexxRoutine1(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine1(RexxObjectPtr,          
+RexxRoutine1(RexxObjectPtr,
              SysSetuid,
              int, uid)
 {
@@ -192,7 +192,7 @@ RexxRoutine1(RexxObjectPtr,
  *
  * @return        uid
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysGetuid)
 {
 
@@ -209,7 +209,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine1(RexxObjectPtr,          
+RexxRoutine1(RexxObjectPtr,
              SysSeteuid,
              int, uid)
 {
@@ -225,7 +225,7 @@ RexxRoutine1(RexxObjectPtr,
  *
  * @return        uid
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysGeteuid)
 {
 
@@ -242,7 +242,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine1(RexxObjectPtr,          
+RexxRoutine1(RexxObjectPtr,
              SysSetgid,
              int, gid)
 {
@@ -258,7 +258,7 @@ RexxRoutine1(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysGetgid)
 {
 
@@ -275,7 +275,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine1(RexxObjectPtr,          
+RexxRoutine1(RexxObjectPtr,
              SysSetegid,
              int, gid)
 {
@@ -291,7 +291,7 @@ RexxRoutine1(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysGetegid)
 {
 
@@ -306,7 +306,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysSetpgrp)
 {
 
@@ -321,7 +321,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysGetpgrp)
 {
 
@@ -340,7 +340,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        0 or -1
  */
-RexxRoutine2(RexxObjectPtr,          
+RexxRoutine2(RexxObjectPtr,
              SysSetpgid,
              int, pid1,
              int, pid2)
@@ -359,7 +359,7 @@ RexxRoutine2(RexxObjectPtr,
  *
  * @return        The pid.
  */
-RexxRoutine1(RexxObjectPtr,          
+RexxRoutine1(RexxObjectPtr,
              SysGetpgid,
              int, pid)
 {
@@ -375,7 +375,7 @@ RexxRoutine1(RexxObjectPtr,
  *
  * @return        pid
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysGetpid)
 {
     pid_t pid = getpid();
@@ -390,7 +390,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        pid
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysGetppid)
 {
     pid_t pid = getppid();
@@ -405,7 +405,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        tid
  */
-RexxRoutine0(RexxObjectPtr,          
+RexxRoutine0(RexxObjectPtr,
              SysGettid)
 {
     pthread_t tid = pthread_self();
@@ -424,7 +424,7 @@ RexxRoutine0(RexxObjectPtr,
  *
  * @return        int error code
  */
-RexxRoutine2(int,          
+RexxRoutine2(int,
              SysSymlink,
              CSTRING, path1,
              CSTRING, path2)
@@ -444,7 +444,7 @@ RexxRoutine2(int,
  *
  * @return        int error code
  */
-RexxRoutine2(int,          
+RexxRoutine2(int,
              SysLink,
              CSTRING, path1,
              CSTRING, path2)
@@ -462,7 +462,7 @@ RexxRoutine2(int,
  *
  * @return        int error code
  */
-RexxRoutine1(int,          
+RexxRoutine1(int,
              SysUnlink,
              CSTRING, path1)
 {
@@ -477,13 +477,13 @@ RexxRoutine1(int,
  *
  * @param path1   The file path.
  *
- * @param uid     The new userid. 
+ * @param uid     The new userid.
  *
  * @param gid     The new groupid.
  *
  * @return        int error code
  */
-RexxRoutine3(int,          
+RexxRoutine3(int,
              SysChown,
              CSTRING, path1,
              int, uid,
@@ -500,13 +500,13 @@ RexxRoutine3(int,
  *
  * @param path1   The file path.
  *
- * @param uid     The new userid. 
+ * @param uid     The new userid.
  *
  * @param gid     The new groupid.
  *
  * @return        int error code
  */
-RexxRoutine3(int,          
+RexxRoutine3(int,
              SysLchown,
              CSTRING, path1,
              int, uid,
@@ -525,7 +525,7 @@ RexxRoutine3(int,
  *
  * @return        int error code
  */
-RexxRoutine1(int,          
+RexxRoutine1(int,
              SysChroot,
              CSTRING, path1)
 {
@@ -542,7 +542,7 @@ RexxRoutine1(int,
  *
  * @return        the old umansk value
  */
-RexxRoutine1(int,          
+RexxRoutine1(int,
              SysUmask,
              int, nmask)
 {
@@ -795,7 +795,7 @@ RexxRoutine2(RexxObjectPtr,
         else if (S_IFSOCK & mystat.st_mode == S_IFSOCK) {
             strcpy(buf, "s");
         }
-        else strcpy(buf, "-");  
+        else strcpy(buf, "-");
         // 2 - user read
         if (S_IRUSR & mystat.st_mode) {
             strcat(buf, "r");
@@ -941,7 +941,7 @@ RexxRoutine2(int,
 }
 
 
-#if !defined (AIX)
+#if !defined (AIX) && !defined (__APPLE__)
 /**
  * Method:        SysEuidaccess
  *
@@ -1155,7 +1155,7 @@ RexxRoutine1(RexxObjectPtr,
 {
     ssize_t sz;
     char *buf, *name;
-    
+
     sz = listxattr(fname, NULL, 0);
     if (sz == -1) {
         return (RexxObjectPtr)context->NewStringFromAsciiz("\0");
@@ -1191,7 +1191,7 @@ RexxRoutine2(int,
              CSTRING, fname,
              CSTRING, name)
 {
-    
+
 
     return removexattr(fname, name);
 }
@@ -1208,7 +1208,7 @@ RexxRoutine2(int,
 RexxRoutine0(int,
              SysGetsizeofptr)
 {
-    
+
 
     return sizeof(void *) * 8;
 }
@@ -1550,7 +1550,7 @@ RexxRoutine1(RexxObjectPtr,
  * @return        Encrypted string.
  */
 RexxRoutine2(RexxObjectPtr,
-             SysCrypt,   
+             SysCrypt,
              CSTRING, str,
              CSTRING, salt)
 {
@@ -1583,7 +1583,7 @@ RexxRoutine2(RexxObjectPtr,
  * @return        0 or -1.
  */
 RexxRoutine2(int,
-             SysMkdir,   
+             SysMkdir,
              CSTRING, dir,
              int, mode)
 {
@@ -1601,7 +1601,7 @@ RexxRoutine2(int,
  * @return        0 or -1.
  */
 RexxRoutine1(int,
-             SysRmdir,   
+             SysRmdir,
              CSTRING, dir)
 {
     return rmdir(dir);
@@ -1618,7 +1618,7 @@ RexxRoutine1(int,
  * @return        RexxArrayObject.
  */
 RexxRoutine1(RexxObjectPtr,
-             SysGetdirlist,   
+             SysGetdirlist,
              CSTRING, dir)
 {
     RexxArrayObject arr = context->NewArray(5);
@@ -1627,10 +1627,10 @@ RexxRoutine1(RexxObjectPtr,
 
     dirptr = opendir(dir);
     if (dirptr != NULL) {
-        direntry = readdir(dirptr);                
+        direntry = readdir(dirptr);
         while (direntry != NULL) {
             context->ArrayAppendString(arr, direntry->d_name, strlen(direntry->d_name));
-            direntry = readdir(dirptr);                
+            direntry = readdir(dirptr);
         }
         closedir(dirptr);
     }
@@ -1646,7 +1646,7 @@ RexxRoutine1(RexxObjectPtr,
  * @return        RexxStringObject.
  */
 RexxRoutine0(RexxObjectPtr,
-             SysGettzname1)   
+             SysGettzname1)
 {
 
     tzset();
@@ -1662,7 +1662,7 @@ RexxRoutine0(RexxObjectPtr,
  * @return        RexxStringObject.
  */
 RexxRoutine0(RexxObjectPtr,
-             SysGettzname2)   
+             SysGettzname2)
 {
 
     tzset();
@@ -1709,7 +1709,7 @@ RexxRoutineEntry orxnixclib_routines[] = {
     REXX_TYPED_ROUTINE(SysGetgrgid, SysGetgrgid),
     REXX_TYPED_ROUTINE(SysStat, SysStat),
     REXX_TYPED_ROUTINE(SysAccess, SysAccess),
-#if !defined (AIX)
+#if !defined (AIX) && !defined (__APPLE__)
     REXX_TYPED_ROUTINE(SysEuidaccess, SysEuidaccess),
 #endif
     REXX_TYPED_ROUTINE(SysGetservbyname, SysGetservbyname),
