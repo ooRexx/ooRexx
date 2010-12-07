@@ -40,7 +40,7 @@ AUTOMAKE_OPTIONS	= foreign dist-zip
 
 MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config.guess config.sub \
 			depcomp install-sh ltmain.sh missing mkinstalldirs config.h.in \
-			compile @REXXCAT@ rexx.img \
+			compile @REXXCAT@ rexx.img ylwrap \
 			stamp-h.in cscope.files cscope.out $(distdir).tar.gz
 
 DIST_SUBDIRS 		= samples
@@ -1057,7 +1057,6 @@ am_config_clean-local:
 	rm -fr $(top_srcdir)/rpm
 	rm -fr $(top_srcdir)/debian
 	rm -f $(top_srcdir)/*.cls
-	rm -r $(top_srcdir)/ylwrap
 
 install-exec-local:
 	echo $(DESTDIR) is destdir
