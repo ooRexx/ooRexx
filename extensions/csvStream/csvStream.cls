@@ -12,6 +12,8 @@
 /* 1.06 21Dec07 SN As ooRexx 3.2 has lineend constant - remove discovery     *//*{1.06}*/
 /* 1.07 21Apr08 SN provide stripoption for CSVLineIn                         *//*{1.07}*/
 /* 1.08 23Mar09 SN Bugfix - gratitude to Bill Shipman                        *//*{1.08}*/
+/* 1.09 13Dec10 SN Bugfix - headers should be ignored for write replace      *//*{1.09}*/
+/*              SN Allow Directory as input collection                       *//*{1.09}*/
 /*                                                                           */
 /* ========================================================================= */
 
@@ -103,10 +105,15 @@ use arg args
 
 self~openArgs = args~translate             /* Close needs to know open basis */
 
-if self~fileHasHeaders = .true             /* read the headers into a table  */
+if self~openargs~wordpos('WRITE') > 0, self~openargs~wordpos('REPLACE') > 0    /*{1.09}*/
+then ignoreCurrentHeaders? = .true                                             /*{1.09}*/
+else ignoreCurrentHeaders? = .false                                            /*{1.09}*/
+
+if self~fileHasHeaders = .true             /* read the headers into a table  *//*{1.04}*/
 then do
    self~headers = .csvStreamHeader~new           /* blank in case no headers */
-   if self~open:super('read') = 'READY:'
+   if ignoreCurrentHeaders? = .false,                                          /*{1.09}*/
+    , self~open:super('read') = 'READY:'
    then do
       if self~chars > 0
       then do
@@ -259,11 +266,12 @@ parse upper value data~class~string with . dataCollectionType .                /
 select                                                                         /*{1.04}*/
    /* if we have been passed a table or stem, convert it to an array */
    when (self~fileHasHeaders = .true                       ),
-   &    .set~of('TABLE','STEM')~hasIndex(dataCollectionType)                   /*{1.04}*/
+   &    .set~of('TABLE','STEM','DIRECTORY')~hasIndex(dataCollectionType)       /*{1.09}*/
    then do
       dataArray = .array~new
       do name over data
          if (name = 0) & (dataCollectionType = 'STEM') then iterate            /*{1.04}*/
+
          column = 0
          do i = 1 to self~headers~last
             if self~headers~field(i)~name = name
@@ -272,12 +280,14 @@ select                                                                         /
                leave
             end /* DO */
          end /* DO */
+
          if column = 0                                /* unregistered column */
          then do
             column = self~headers~last + 1
             self~headers~field(column)~name = name
          end /* DO */
          dataArray[column] = data[name]                                        /*{1.04}*/
+
       end /* DO */
       data = dataArray
    end /* DO */
