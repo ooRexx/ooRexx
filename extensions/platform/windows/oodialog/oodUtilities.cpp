@@ -448,6 +448,22 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
 {
     char buf[64];
 
+    switch ( toupper(*format) )
+    {
+        case 'L' :
+            break;
+
+        case 'S' :
+            _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+            break;
+
+        case '\0' :
+        default :
+            _snprintf(buf, sizeof(buf), "ooDialog Version %u.%u.%u.%u (an ooRexx Windows Extension)",
+                      ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+            break;
+
+    }
     if ( argumentExists(1) && (*format == 'S' || *format == 's') )
     {
         _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);

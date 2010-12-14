@@ -65,9 +65,6 @@
 ::method isCommandItem external "LIBRARY oodialog menu_isCommandItem"
 ::method isSeparator external "LIBRARY oodialog menu_isSeparator"
 
-/** getHandle()
- * Need to also doc this method which is really just an alias for self~hMenu.
- */
 ::method getHandle external "LIBRARY oodialog menu_getHMenu"
 ::method getMenuHandle external "LIBRARY oodialog menu_getMenuHandle"
 ::method releaseMenuHandle external "LIBRARY oodialog menu_releaseMenuHandle"
