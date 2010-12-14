@@ -187,7 +187,15 @@ do until (inLiteral  = .false) ,
    i = 0                                                                       /*{1.05}*/
    do forever                                                                  /*{1.05}*/
       i = i + 1                                                                /*{1.05}*/
-      if i > textLength then leave                                             /*{1.05}*/
+      if i > textLength
+      then do
+         if fieldText \= ''
+         then do  
+            self~csvState = 'ERROR'
+            self~LastDataError = 'Bad CSV data field' fieldno '- unmatched qualifier ('||blip||')'
+         end /* DO */
+         leave                                                                 /*{1.05}*/
+      end
                                                                                /*{1.05}*/
       select
          when text~matchChar(i,qualifier)                                      /*{1.05}*/
@@ -197,7 +205,7 @@ do until (inLiteral  = .false) ,
                if \fieldText~matchChar(1,qualifier)
                then do
                   self~csvState = 'ERROR'
-                  self~LastDataError = 'field' fieldno '- qualifier present but is not first character'
+                  self~LastDataError = 'Bad CSV data field' fieldno '- qualifier ('||blip||') present but is not first character'
                end
             end /* DO */
 
@@ -217,6 +225,12 @@ do until (inLiteral  = .false) ,
                   fieldText = fieldText~substr(2, fieldText~length - 2)
                   literalFields~put(fieldNo)
                end /* Do */
+
+               if fieldText~countstr(blip) // 2 \= 0
+               then do 
+                  self~csvState = 'ERROR'
+                  self~LastDataError = 'Bad CSV data field' fieldno '- unmatched qualifier ('||blip||') found'
+               end /* DO */
 
                /* '"' are represented in text as '""' */
                fieldText = fieldText~changeStr(blipBlip,blip)                  /*{1.02}*/
