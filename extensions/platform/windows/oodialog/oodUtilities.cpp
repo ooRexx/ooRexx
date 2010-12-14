@@ -439,10 +439,17 @@ RexxMethod1(RexxStringObject, dlgutil_comctl32Version_cls, OPTIONAL_CSTRING, for
  *  number part of the string.
  *
  * @param  format  [optional]  Keyword indicating which format the returned
- *                 string should be in.  Currently, if the arg is not omitted
- *                 and the first letter of the keyword is either S or s the
- *                 short form (number part of the string) is returned.  In all
- *                 other cases the full string is returned.
+ *                 string should be in.  Keywords are:
+ *
+ *         Short   4.1.0.5814
+ *
+ *         Full    ooDialog Version 4.1.0.5814 (an ooRexx Windows Extension)
+ *
+ *         Level   4.2.0
+ *
+ *                 Only the first letter is required and case is not
+ *                 significant.  If the argument is omitted the Full format is
+ *                 the default.
  */
 RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
 {
@@ -451,6 +458,7 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
     switch ( toupper(*format) )
     {
         case 'L' :
+            _snprintf(buf, sizeof(buf), "%u.%u.%u", OOD_LVL_MAJOR, OOD_LVL_MINOR, OOD_LVL_BIT);
             break;
 
         case 'S' :
@@ -463,14 +471,6 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
                       ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
             break;
 
-    }
-    if ( argumentExists(1) && (*format == 'S' || *format == 's') )
-    {
-        _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
-    }
-    else
-    {
-        _snprintf(buf, sizeof(buf), "ooDialog Version %u.%u.%u.%u (an ooRexx Windows Extension)", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
     }
     return context->String(buf);
 }

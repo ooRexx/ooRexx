@@ -85,7 +85,9 @@
 #define WM_USER_CREATEPROPSHEET_DLG   WM_USER + 0x060C
 
 #define OODDLL                      "oodialog.dll"
-#define DLLVER                      2130
+#define OOD_LVL_MAJOR               4
+#define OOD_LVL_MINOR               2
+#define OOD_LVL_BIT                 0
 
 /* Flags for the get icon functions.  Indicates the source of the icon. */
 #define ICON_FILE                 0x00000001
