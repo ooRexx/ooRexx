@@ -62,6 +62,7 @@
 ::Attribute originalRawHeaders    private -- for comparison
 ::Attribute headerLineAbsent      private -- headersexist but absent
 ::Attribute OpenArgs              private -- args to open method
+::Attribute CSVStreamOpen?        private -- is the stream open?
 ::Attribute values                        -- table for headered i/o
 ::Attribute rawText                       -- copy of last line read
 ::Attribute skipHeaders                   -- switch can be set before open
@@ -93,6 +94,7 @@ self~qualifier          = '"'     /* surrounds literal fields                *//
 self~openArgs           = .nil                                                 /*{1.05}*/
 self~stripOption        = 'N'                                                  /*{1.07}*/
 self~stripChar          = ' '                                                  /*{1.07}*/
+self~CSVStreamOpen?     = .false
 
 self~init:super(parms)                        /* let stream class initialise */
 
@@ -135,6 +137,7 @@ then do
 end /* DO */
 
 forward class (super) continue                              /* open the file */
+self~CSVStreamOpen? = .true
 
 if   (args~word(1)~translate \= 'WRITE') , /* move read pointer past headers */
 &    (self~fileHasHeaders     = .true  ) ,
@@ -349,6 +352,8 @@ return self~lineout(text)
 
 self~close:super
 
+self~CSVStreamOpen? = .false    /* let uninit know it does not need to close */
+
 if self~fileHasHeaders
 then do                                               /* maintain headers    */
    headerText = ''                                    /* prepare header line */
@@ -393,6 +398,18 @@ if newHeaders~class~string \= 'The CSVSTREAMHEADER class'
 then raise syntax 93.948 array (1, "CsvStreamHeader")
 
 self~Headers = newHeaders~copy
+
+/* ------------------------------------------------------------------------- */
+::method uninit
+/* ------------------------------------------------------------------------- */
+/* if the CSVstream has not been closed - close it                           */
+
+if self~CSVStreamOpen?
+then do
+   say 'implicitly closing csvstream'  --<<<>>>-- diagnostic so remove --<<<>>>--
+   self~close
+end
+
 
 /* ========================================================================= */
 ::class CsvStreamHeader
