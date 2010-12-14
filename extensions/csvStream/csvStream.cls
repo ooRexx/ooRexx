@@ -64,12 +64,14 @@
 ::Attribute headerLineAbsent      private -- headersexist but absent
 ::Attribute OpenArgs              private -- args to open method
 ::Attribute CSVStreamOpen?        private -- is the stream open?
+::Attribute CSVState              private -- if not nil overrides stream state
 ::Attribute values                        -- table for headered i/o
 ::Attribute rawText                       -- copy of last line read
 ::Attribute skipHeaders                   -- switch can be set before open
 ::Attribute lineEnd                       -- string used for line terminations
 ::Attribute Delimiter                     -- separates CSV fields              /*{1.02}*/
 ::Attribute Qualifier                     -- Surrounds literals                /*{1.02}*/
+::Attribute LastDataError                 -- if bad data detected, what where
 ::Attribute StripOption get               -- optional stripping on lineIn      /*{1.07}*/
 ::Attribute StripOption set                                                    /*{1.07}*/
    expose stripOption                                                          /*{1.07}*/
@@ -96,6 +98,8 @@ self~openArgs           = .nil                                                 /
 self~stripOption        = 'N'                                                  /*{1.07}*/
 self~stripChar          = ' '                                                  /*{1.07}*/
 self~CSVStreamOpen?     = .false
+self~lastDataError      = .nil
+self~CSVState           = .nil
 
 self~init:super(parms)                        /* let stream class initialise */
 
@@ -190,6 +194,11 @@ do until (inLiteral  = .false) ,
             then do
                inLiteral = \inLiteral                                          /*{1.05}*/
                fieldText = fieldText || qualifier                              /*{1.05}*/
+               if \fieldText~matchChar(1,qualifier)
+               then do
+                  self~csvState = 'ERROR'
+                  self~LastDataError = 'field' fieldno '- qualifier present but is not first character'
+               end
             end /* DO */
 
          when (text~matchchar(i,delimiter) ,                                   /*{1.05}*/
@@ -386,6 +395,23 @@ then do                                               /* maintain headers    */
       self~close:super
    end /* DO */
 end /* DO */
+
+/* ------------------------------------------------------------------------- */
+::method state
+/* ------------------------------------------------------------------------- */
+/* the CSVStream can contribute towards this stream having an error condition*/
+
+  if self~csvState = .nil
+  then Return self~state:super
+  else Return self~csvState
+
+/* ------------------------------------------------------------------------- */
+::method description
+/* ------------------------------------------------------------------------- */
+
+  if self~csvState = .nil
+  then Return self~description:super
+  else return self~csvState||':'||self~lastDataError
 
 /* ------------------------------------------------------------------------- */
 ::method getHeaders
