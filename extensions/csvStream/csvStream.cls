@@ -14,6 +14,7 @@
 /* 1.08 23Mar09 SN Bugfix - gratitude to Bill Shipman                        *//*{1.08}*/
 /* 1.09 13Dec10 SN Bugfix - headers should be ignored for write replace      *//*{1.09}*/
 /*              SN Allow Directory as input collection                       *//*{1.09}*/
+/*              SN Stream closes itself on uninit if necesary                */
 /*                                                                           */
 /* ========================================================================= */
 
@@ -107,7 +108,7 @@ use arg args
 
 self~openArgs = args~translate             /* Close needs to know open basis */
 
-if self~openargs~wordpos('WRITE') > 0, self~openargs~wordpos('REPLACE') > 0    /*{1.09}*/
+if self~openargs~wordpos('REPLACE') > 0                                        /*{1.09}*/
 then ignoreCurrentHeaders? = .true                                             /*{1.09}*/
 else ignoreCurrentHeaders? = .false                                            /*{1.09}*/
 
@@ -263,6 +264,8 @@ then do
    self~close
    return
 end /* DO */
+else if self~openArgs = .nil
+     then self~open                                                            /*{1.05}*/
 
 parse upper value data~class~string with . dataCollectionType .                /*{1.04}*/
 
