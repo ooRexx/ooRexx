@@ -404,12 +404,7 @@ self~Headers = newHeaders~copy
 /* ------------------------------------------------------------------------- */
 /* if the CSVstream has not been closed - close it                           */
 
-if self~CSVStreamOpen?
-then do
-   say 'implicitly closing csvstream'  --<<<>>>-- diagnostic so remove --<<<>>>--
-   self~close
-end
-
+if self~CSVStreamOpen? then self~close
 
 /* ========================================================================= */
 ::class CsvStreamHeader
