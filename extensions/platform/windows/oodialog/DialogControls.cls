@@ -165,6 +165,17 @@
 ::constant WM_PASTE                "0x0302"
 ::constant WM_CLEAR                "0x0303"
 
+::attribute passwordChar set
+    use strict arg char
+    ch = char~c2d
+    if self~isSingleLine, ch > 0, ch < 256 then self~sendWinIntMsg(self~EM_SETPASSWORDCHAR, ch, 0)
+
+::attribute passwordChar get
+    if \ self~isSingleLine then return ""
+    char = self~sendWinIntMsg(self~EM_GETPASSWORDCHAR, 0, 0)
+    if char \= 0 then return char~d2c
+    else return ""
+
 ::method isSingleLine external "LIBRARY oodialog e_isSingleLine"
 ::method selection external "LIBRARY oodialog e_selection"
 ::method selected
@@ -279,16 +290,6 @@
     if ndx == -1 then ndx = self~EM_NEGATIVEONE
     else ndx -= 1
     return self~sendWinIntMsg(self~EM_LINEFROMCHAR, ndx, 0) + 1
-
-::method "passwordChar="
-    use strict arg char
-    ch = char~c2d
-    if self~isSingleLine, ch > 0, ch < 256 then self~sendWinIntMsg(self~EM_SETPASSWORDCHAR, ch, 0)
-
-::method passwordChar
-    char = self~sendWinIntMsg(self~EM_GETPASSWORDCHAR, 0, 0)
-    if char \= 0 then return char~d2c
-    else return ""
 
 ::method firstVisibleLine
     return self~sendWinIntMsg(self~EM_GETFIRSTVISIBLELINE, 0, 0) + 1
