@@ -39,8 +39,14 @@
 /* */
 rexxcps=2.1    /* REXXCPS version; quotable only if code unchanged */
 trace o
-count=30
-averaging=100
+
+parse arg count averaging .
+if count == '' then do
+    count=30
+end
+if averaging == '' then do
+    averaging=100
+end
 tracevar='o'
 signal on novalue
 parse source  source  1 system .
