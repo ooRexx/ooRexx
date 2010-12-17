@@ -292,6 +292,7 @@
     return self~sendWinIntMsg(self~EM_LINEFROMCHAR, ndx, 0) + 1
 
 ::method firstVisibleLine
+    use strict arg
     return self~sendWinIntMsg(self~EM_GETFIRSTVISIBLELINE, 0, 0) + 1
 
 ::method setReadOnly
