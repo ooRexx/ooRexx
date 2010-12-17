@@ -89,7 +89,7 @@
 
   self~connectButtonEvent(IDC_PB_PREVIOUS, CLICKED, onPrevious)
   self~connectButtonEvent(IDC_PB_NEXT,     CLICKED, onNext)
-  self~connectTabEvent(IDC_TAB, SEL_CHANGE, onNewTab)
+  self~connectTabEvent(IDC_TAB, SELCHANGE, onNewTab)
 
 /** initDialog()
  *
@@ -98,7 +98,7 @@
  * area of the tab control, one control dialog for each tab of the tab control.
  */
 ::method initDialog
-  expose tabContent tabControl displayRect
+  expose tabContent tabControl displayRect lastSelected havePositioned
 
   -- We create the control dialog for the first tab in the tab control, and
   -- start it running now, because it takes some finite time for the underlying
@@ -121,26 +121,19 @@
   -- Save the 5 dialogs so we can access them when needed.
   tabContent = .array~of(t1, t2, t3, t4, t5)
 
+  -- Mark them all as not having been positioned yet
+  havePositioned = .array~of(.false, .false, .false, .false, .false)
+
+  -- No tab has been selected yet
+  lastSelected = 0
+
   self~calculateDisplay
 
-  -- We can not position the control dialog until the underlying Windows dialog
-  -- is created. If the system is heavily loaded for some reason, this may not
-  -- have happened yet.  We need to wait for it.
-  dlg = tabContent[1]
-  do 10
-    z = SysSleep(.1)
-    if dlg~isDialogActive then leave
-  end
+  self~positionAndShow(1)
 
-  if \ dlg~isDialogActive then do
-    say "Error creating dialog for the first tab, aborting"
-    return self~cancel
-  end
+  self~startControlDialogs
 
-  -- Now resize and reposition the control dialog to the tab control's display
-  -- area.  We need to position the control dialog *above* the tab control in
-  -- the Z-order so that it shows.
-  t1~setWindowPos(tabControl~hwnd, displayRect, "SHOWWINDOW NOOWNERZORDER")
+
 
 
 /** calculateDisplay()
@@ -180,6 +173,69 @@
   -- rectangle, and using the bottom attribute for the height of the rectangle.
   displayRect = .Rect~new(p~x, p~y, r~right - r~left, r~bottom - r~top)
 
+
+/** positionAndShow()
+ *
+ * Used to resize and reposition one of the control dialogs so it occupies the
+ * display area of the tab control.
+ *
+ */
+::method positionAndShow private
+  expose tabControl tabContent displayRect lastSelected havePositioned
+  use strict arg index
+
+  -- We can not position the control dialog until the underlying Windows dialog
+  -- is created. If the system is heavily loaded for some reason, this may not
+  -- have happened yet.  We need to wait for it.
+  dlg = tabContent[index]
+  do 10
+    if \ dlg~initializing then leave
+    z = SysSleep(.1)
+  end
+
+  if dlg~initializing then do
+    say "Error creating dialog for the tab with index:" index", aborting"
+    return self~cancel
+  end
+
+  if lastSelected <> 0 then tabContent[lastSelected]~hide
+
+  -- Now resize and reposition the control dialog to the tab control's display
+  -- area.  We need to position the control dialog *above* the tab control in
+  -- the Z-order so that it shows.
+  dlg~setWindowPos(tabControl~hwnd, displayRect, "SHOWWINDOW NOOWNERZORDER")
+
+  lastSelected = index
+  havePositioned[index] = .true
+
+
+::method startControlDialogs private unguarded
+  expose tabContent
+
+  reply 0
+  do i = 2 to tabContent~items
+    dlg = tabContent[i]
+    dlg~ownerDialog = self
+    dlg~popup("HIDE")
+  end
+
+
+::method onNewTab
+  expose tabControl tabContent havePositioned lastSelected
+
+  index = tabControl~selectedIndex + 1
+  dlg = tabContent[index]
+  if index == 3 then dlg~activateThreads
+
+  if havePositioned[index] then do
+    last = tabContent[lastSelected]
+    last~hide
+    dlg~show
+    lastSelected = index
+  end
+  else do
+    self~positionAndShow(index)
+  end
 
 ::method cancel
   expose tabContent
@@ -368,11 +424,10 @@
                         'animateProgressD', 'animateProgressE')
 
 
--- The setActive event notification is sent by the property sheet to the page
--- that is about to become the active page.  It is sent before the page is
--- visible.  This allows the page to do any initialization necessary.  For this
--- program, we use the notification to start the progress bar animation threads.
-::method setActive unguarded
+-- This message is sent to us by the owner dialog, the .NewControlsDialog dialog
+-- to notify us that we are about to become visible.  We use the notification to
+-- start the progress bar animation threads.
+::method activateThreads unguarded
     expose threadsStarted processes
     use arg propSheet
 
