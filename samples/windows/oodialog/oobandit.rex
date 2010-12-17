@@ -212,7 +212,7 @@
 
    speedCtrl = self~newEdit(1205)
    speedCtrl~setLimit(maxSpeed~length - 1)
-   ret = speedCtrl~connectKeyEvent(onKey); say 'connectKeyEvent ret:' ret
+   ret = speedCtrl~connectKeyEvent(onKey)
 
    jackPotCtrl = self~newStatic(1200)
 
@@ -220,15 +220,12 @@
    self~disableControl(1100)
    self~start("bandit")
 
+-- An attempt to disallow cut and paste into the speed control.
 ::method onKey unguarded
   expose speedCtrl
   use arg key, shift, control, alt, info
-  say 'Key press:' key 'shift?' shift 'control?' control 'alt?' alt 'info:' info
-  say
-  say 'speed text:' speedCtrl~getText
 
   s = speedCtrl~selection
-  say 'selection:' s~startChar s~endChar
 
   if control then return .false -- Don't allow cut and paste
   if key == 57 then return .false
