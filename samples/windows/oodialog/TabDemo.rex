@@ -98,7 +98,7 @@
  * area of the tab control, one control dialog for each tab of the tab control.
  */
 ::method initDialog
-  expose tabContent tabControl displayRect lastSelected havePositioned
+  expose tabContent tabControl displayRect lastSelected havePositioned pbNext pbPrevious
 
   -- We create the control dialog for the first tab in the tab control, and
   -- start it running now, because it takes some finite time for the underlying
@@ -127,7 +127,11 @@
   -- No tab has been selected yet
   lastSelected = 0
 
-  self~calculateDisplay
+  -- Save a reference to the push buttons.
+  pbNext = self~newPushButton(IDC_PB_NEXT)
+  pbPrevious = self~newPushButton(IDC_PB_PREVIOUS)
+
+  self~calculateDisplayArea
 
   self~positionAndShow(1)
 
@@ -136,7 +140,7 @@
 
 
 
-/** calculateDisplay()
+/** calculateDisplayArea()
  *
  * Tab controls contain two areas, the tabs themselves and the display area.
  * The display area is where the content for each tab is drawn.
@@ -151,7 +155,7 @@
  * and reposition the control dialog(s) to match.  This is the approach we use
  * here.
  */
-::method calculateDisplay private
+::method calculateDisplayArea private
   expose tabControl displayRect
 
   -- Given a rectangle describing the tab control's size and position, the tab
@@ -208,6 +212,8 @@
   lastSelected = index
   havePositioned[index] = .true
 
+  self~checkButtons
+
 
 ::method startControlDialogs private unguarded
   expose tabContent
@@ -236,6 +242,41 @@
   else do
     self~positionAndShow(index)
   end
+
+  self~checkButtons
+
+
+::method onNext
+  expose tabControl
+
+  tabControl~selectIndex(tabControl~selectedIndex + 1)
+  self~onNewTab
+
+
+::method onPrevious
+  expose tabControl
+
+  tabControl~selectIndex(tabControl~selectedIndex - 1)
+  self~onNewTab
+
+
+::method checkButtons private
+  expose tabControl pbNext pbPrevious
+
+  index = tabControl~selectedIndex + 1
+  if index == 1 then do
+    pbPrevious~disable
+    pbNext~enable
+  end
+  else if index == 5 then do
+    pbPrevious~enable
+    pbNext~disable
+  end
+  else do
+    pbPrevious~enable
+    pbNext~enable
+  end
+
 
 ::method cancel
   expose tabContent
