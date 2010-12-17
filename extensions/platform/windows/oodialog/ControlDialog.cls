@@ -75,6 +75,7 @@
 ::attribute ownerDialog get  external "LIBRARY oodialog chld_getOwnerDialog"
 ::attribute ownerDialog set  external "LIBRARY oodialog chld_setOwnerDialog"
 
+::attribute initializing
 
 ::class 'ResControlDialog' public subclass ResDialog inherit ControlDialog
 
@@ -93,6 +94,7 @@
     if self~startChildDialog(self~basePtr, 0) == 0 then return 0
 
     self~initDialog
+    self~initializing = .false;
     return self~dlgHandle
 
 
@@ -100,6 +102,8 @@
 
 ::method init
     use strict arg rcFile, idDlg, initData. = .nil, includeFile = "", options = "", expected = 200, ownerDlg = .nil
+
+    self~initializing = .true
 
     newArgs = .array~new(5)
     if arg(3, 'E') then newArgs[1] = arg(3)
