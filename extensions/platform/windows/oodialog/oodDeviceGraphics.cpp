@@ -1360,7 +1360,7 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
 
 inline bool isIntResource(CSTRING bmp)
 {
-    if ( atoi(bmp) || bmp[0] == '0' || bmp[0] == '\0' )
+    if ( ! isPointerString(bmp) && (atoi(bmp) || bmp[0] == '0' || bmp[0] == '\0') )
     {
         return true;
     }
@@ -1957,7 +1957,8 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawControl, RexxObjectPtr, rxID, OPTIONAL_l
  * @remarks  Note that the dialog does not need to yet be created for some
  *           variations of this method.  But if any of the bitmap CSTRINGs are a
  *           number, so that the bitmap is to be loaded from a resource DLL,
- *           then the dialog does need to be created.
+ *           then the dialog does need to be created.  We want to raise the no
+ *           windows dialog exception, *only* for that one condition.
  *
  *           These old bitmap methods are too error-prone.
  */

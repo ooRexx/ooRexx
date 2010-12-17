@@ -982,6 +982,25 @@ int32_t resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPt
 }
 
 /**
+ * Tests if a string is a pointer string.
+ *
+ * Pointer strings are strings representing a pointer, handle, etc..  I.e. in
+ * "0xdd" format. But, this really just tests for hexidecimal format.
+ *
+ * @param string  The string to test.
+ *
+ * @return True or false
+ */
+bool isPointerString(const char *string)
+{
+    if ( string != NULL && strlen(string) > 2 )
+    {
+        return *string == '0' && toupper(string[1]) == 'X' && isxdigit(string[2]);
+    }
+    return false;
+}
+
+/**
  * Converts a string in hexadecimal format (starts with 0x) to its pointer-sized
  * value.
  *

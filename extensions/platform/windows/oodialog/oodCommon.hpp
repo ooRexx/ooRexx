@@ -87,6 +87,7 @@ extern int32_t           stopDialog(pCPlainBaseDialog, RexxThreadContext *c);
 extern int32_t           delDialog(pCPlainBaseDialog, RexxThreadContext *c);
 extern BOOL              getDialogIcons(pCPlainBaseDialog, INT, UINT, PHANDLE, PHANDLE);
 extern bool              isYes(const char *s);
+extern bool              isPointerString(const char *string);
 extern void *            string2pointer(const char *string);
 extern void *            string2pointer(RexxMethodContext *c, RexxStringObject string);
 extern void *            string2pointer(RexxThreadContext *c, RexxObjectPtr ptr);
