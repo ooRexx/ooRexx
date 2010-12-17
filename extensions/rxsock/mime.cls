@@ -211,8 +211,8 @@ expose mimever type encoding id description disposition content multiparts
 use strict arg
 headers = 'MIME-Version:' mimever || self~crlf
 boundary = '===ooRexx=Mime=Part===' || c2x(date('b') || time('L')) || '=='
-type = 'multipart/mixed; boundary="' || boundary || '"'
-headers = headers || 'Content-Type:' type || self~crlf
+contenttype = type'; boundary="' || boundary || '"'
+headers = headers || 'Content-Type:' contenttype || self~crlf
 if encoding <> '' then do
    headers = headers || 'Content-Transfer-Encoding:' encoding || self~crlf
    end
