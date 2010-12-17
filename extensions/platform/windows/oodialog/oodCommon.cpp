@@ -881,7 +881,7 @@ bool oodObj2handle(RexxMethodContext *c, RexxObjectPtr obj, void **result, size_
         CSTRING str = c->ObjectToStringValue(obj);
         size_t len = strlen(str);
 
-        if ( (len == 0 || len == 2) || (len == 1 && *str != '0') || toupper(str[1]) != 'X' )
+        if ( (len == 0 || len == 2) || (len == 1 && *str != '0') || (len != 1 && toupper(str[1]) != 'X') )
         {
             goto raise_condition;
         }

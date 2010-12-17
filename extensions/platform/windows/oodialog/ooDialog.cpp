@@ -1338,10 +1338,16 @@ RexxMethod6(RexxObjectPtr, wb_sendWinHandleMsg, CSTRING, wm_msg, POINTERSTRING, 
  *  @remarks  This method is not meant to be documented to the user, it is
  *            intended to be used internally only.
  */
-RexxMethod6(RexxObjectPtr, wb_sendWinHandle2Msg, CSTRING, wm_msg, intptr_t, wParam, POINTERSTRING, lParam,
+RexxMethod6(RexxObjectPtr, wb_sendWinHandle2Msg, CSTRING, wm_msg, intptr_t, wParam, RexxObjectPtr, lParam,
             OPTIONAL_POINTERSTRING, _hwnd, NAME, method, CSELF, pCSelf)
 {
-    LRESULT lr = sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)lParam, (HWND)_hwnd, (pCWindowBase)pCSelf);
+    void *handle;
+    if ( ! oodObj2handle(context, lParam, &handle, 3) )
+    {
+        return NULLOBJECT;
+    }
+
+    LRESULT lr = sendWinMsg(context, wm_msg, (WPARAM)wParam, (LPARAM)handle, (HWND)_hwnd, (pCWindowBase)pCSelf);
 
     if ( strlen(method) == 17 )
     {
