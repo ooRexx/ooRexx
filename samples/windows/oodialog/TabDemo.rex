@@ -163,6 +163,9 @@
   r = tabControl~windowRect
   tabControl~calcDisplayRect(r)
 
+  -- Save the size of the display area, we need it later.
+  s = .Size~new(r~right - r~left, r~bottom - r~top)
+
   -- Now we need to map the display area's position on the screen, to the client
   -- co-ordinates of the main dialog. The control dialog(s) are children windows
   -- of the main dialog, which is why we need to use the client-area of the
@@ -175,7 +178,7 @@
   -- as using the left and top attributes for the position of the upper left
   -- corner of a rectangle, using the right attribute for the width of the
   -- rectangle, and using the bottom attribute for the height of the rectangle.
-  displayRect = .Rect~new(p~x, p~y, r~right - r~left, r~bottom - r~top)
+  displayRect = .Rect~new(p~x, p~y, s~width, s~height)
 
 
 /** positionAndShow()
@@ -746,6 +749,30 @@
       iconsRemoved = .true
    end
 
+  -- Have the tab control calculate its display area's size and position.
+  r = tc~windowRect
+  tc~calcDisplayRect(r)
+  s = .Size~new(r~right - r~left, r~bottom - r~top)
+
+  -- Get the owner draw push button. We'll resize and position it so that it
+  -- completely takes up the display area of the tab control.
+  pb = self~newPushButton(IDC_PB_OWNERDRAW)
+
+  -- Map the display area's position on the screen, to the client co-ordinates
+  -- of this control dialog.
+  p = .Point~new(r~left, r~top)
+  self~screen2client(p)
+
+  -- Now resize and reposition the button so it exactly over-lays the display
+  -- area of the tab control.  We specify that the tab control window is behind
+  -- the button and use the flag that prevents the button's owner window, this
+  -- z-order from changing.  This leaves the tab control on top of the dialog,
+  -- and our push button on top of the tab control.  Which of course is what we
+  -- want.
+  pb~setWindowPos(tc~hwnd, p~x, p~y, s~width, s~height, "SHOWWINDOW NOOWNERZORDER")
+
+
+
 -- When a new tab is selected, we have the owner-drawn button update itself.
 -- This causes the button to redraw and the onDrawTabRect() method gets invoked,
 -- which actually does the drawing.
@@ -792,15 +819,21 @@
    oldFont = button~fontToDC(dc, font2)
    button~transparentText(dc)
 
-   -- Draw a filled in rectangle and write text
-   button~rectangle(dc, 5, 5, button~SizeX * button~FactorX - 10, button~SizeY * button~FactorY - 10, "FILL")
-   button~writeDirect(dc, 30, 50, tc~Selected)
+   -- Draw a filled in rectangle, with a border of 5 around it, and write text.
+   size = button~getRealSize
+   button~rectangle(dc, 5, 5, size~width - 5, size~height - 5, "FILL")
+   button~writeDirect(dc, trunc(size~width / 4), trunc(size~height / 4), tc~Selected)
 
    -- Add informative text if needed.
    if needWrite then do
       button~fontToDC(dc, font3)
-      if currentTab == 'Gray' then button~writeDirect(dc, 30, 120, "(Tab icons are removed)")
-      else button~writeDirect(dc, 30, 120, "(Tab icons are restored)")
+      x = trunc(size~width / 4)
+      y = trunc(size~height / 2)
+
+      if currentTab == 'Gray' then
+        button~writeDirect(dc, x, y, "(Tab icons are removed)")
+      else
+        button~writeDirect(dc, x, y, "(Tab icons are restored)")
       needWrite = .false
    end
 
