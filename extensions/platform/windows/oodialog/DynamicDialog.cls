@@ -353,7 +353,7 @@
    if nob = 0 then return self~createGroupBox(idstat, x, y, mx+cx, highy-y+(stepy % 2), newopts, "")
    else return 0
 
-::method createPushButtonGroup
+::method createPushButtonGroup  -- TODO this doesn't support symbolic IDs.
    use arg x, y, cx, cy, inp, bottom, opts = ""
    parse var inp bt bid bfnk newinp
 

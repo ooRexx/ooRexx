@@ -4085,7 +4085,7 @@ RexxMethod2(RexxObjectPtr, pbdlg_focusControl, RexxObjectPtr, rxID, CSELF, pCSel
  *
  *  @return  1 (true) if the window was previously disabled, returns 0 (false)
  *           if the window was not previously disabled.  Note that this is not
- *           succes or failure.  -1 on error
+ *           succes or failure.
  *
  *  @note  Sets the .SystemErrorCode.
  *
