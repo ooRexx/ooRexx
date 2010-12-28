@@ -1002,6 +1002,7 @@ int32_t createStaticFrame(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
             else if ( StrStrI(opts, "ETCHED"    ) != NULL ) style |= SS_ETCHEDFRAME;
             else if ( StrStrI(opts, "HORZ"      ) != NULL ) style |= SS_ETCHEDHORZ;
             else if ( StrStrI(opts, "VERT"      ) != NULL ) style |= SS_ETCHEDVERT;
+            else style |= SS_WHITERECT;
         }
     }
 
