@@ -82,13 +82,11 @@
 
   self~createTab(IDC_TAB, 10, 5, 305, 265)
 
-  self~createPushButton(IDC_PB_PREVIOUS, 10, 278, 60, 14, , "Previous Control")
-  self~createPushButton(IDC_PB_NEXT, 80, 278, 60, 14, , "Next Control")
+  self~createPushButton(IDC_PB_PREVIOUS, 10, 278, 60, 14, , "Previous Control", onPrevious)
+  self~createPushButton(IDC_PB_NEXT, 80, 278, 60, 14, , "Next Control", onNext)
   self~createPushButton(IDOK, 185, 278, 60, 14, "DEFAULT", "Ok")
   self~createPushButton(IDCANCEL, 255, 278, 60, 14, , "Cancel")
 
-  self~connectButtonEvent(IDC_PB_PREVIOUS, CLICKED, onPrevious)
-  self~connectButtonEvent(IDC_PB_NEXT,     CLICKED, onNext)
   self~connectTabEvent(IDC_TAB, SELCHANGE, onNewTab)
 
 /** initDialog()
