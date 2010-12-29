@@ -802,6 +802,7 @@
    else if kind = "GB" then do
        if style~wordpos("BS_LEFT") > 0 then ret = ret || " LEFT"
        if style~wordpos("BS_RIGHT") > 0 then ret = ret || " RIGHT"
+       if style~wordpos("BS_CENTER") > 0 then ret = ret || " CENTER"
        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
        if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
    end

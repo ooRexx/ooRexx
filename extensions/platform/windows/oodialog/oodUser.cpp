@@ -1820,14 +1820,19 @@ RexxMethod8(int32_t, dyndlg_createGroupBox, OPTIONAL_RexxObjectPtr, rxID, int, x
         text = "";
     }
 
-    // For a groupbox, we support right or left aligned text.  By default the
-    // alignment is left so we only need to check for the RIGHT key word.
+    // For a groupbox, we support right, center, or left aligned text.  By
+    // default the alignment is left so we only need to check for the RIGHT and
+    // CENTER key word.
 
     uint32_t  style = WS_CHILD | BS_GROUPBOX;
     style |= getCommonWindowStyles(opts, false, false);
     if ( StrStrI(opts, "RIGHT") != NULL )
     {
         style |= BS_RIGHT;
+    }
+    else if ( StrStrI(opts, "CENTER") != NULL )
+    {
+        style |= BS_CENTER;
     }
 
     if ( ! addToDialogTemplate(context, pcdd, ButtonAtom, NULL, id, x, y, cx, cy, text, style) )

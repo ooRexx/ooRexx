@@ -415,8 +415,8 @@ BUTTONTYPE getButtonInfo(HWND hwnd, PBUTTONSUBTYPE sub, DWORD *style)
 /** GroupBox::style=()
  *
  * A group box is a button, but the only style change that makes much sense is
- * the right or left alignment of the text.  Other changes either have no
- * effect, or cause the group box / dialog to paint in a weird way.
+ * the right, center or left alignment of the text.  Other changes either have
+ * no effect, or cause the group box / dialog to paint in a weird way.
  */
 RexxMethod2(int, gb_setStyle, CSTRING, opts, CSELF, pCSelf)
 {
@@ -427,40 +427,62 @@ RexxMethod2(int, gb_setStyle, CSTRING, opts, CSELF, pCSelf)
 
     if ( stricmp(opts, "RIGHT") == 0 )
     {
-        style = (style & ~BS_CENTER) | BS_RIGHT;
+        style = (style & ~(BS_CENTER | BS_LEFT)) | BS_RIGHT;
     }
     else if ( stricmp(opts, "LEFT") == 0 )
     {
-        style = (style & ~BS_CENTER) | BS_LEFT;
+        style = (style & ~(BS_CENTER | BS_RIGHT)) | BS_LEFT;
+    }
+    else if ( stricmp(opts, "CENTER") == 0 )
+    {
+        style = (style & ~(BS_RIGHT | BS_LEFT)) | BS_CENTER;
     }
     else
     {
-        wrongArgValueException(context->threadContext, 1, "RIGHT, LEFT", opts);
+        wrongArgValueException(context->threadContext, 1, "RIGHT, CENTER, or LEFT, ", opts);
         return 0;
     }
 
     /**
      * When the alignment changes, we need to force the dialog to redraw the
      * area occupied by the group box.  Otherwise the old text remains on the
-     * screen.  But, it is only the top part of the group box that needs to be
-     * redrawn, so we only invalidate the top half of the group box.
+     * screen. Likewise, when we force the dialog to redraw the background, we
+     * need to force the group box to redraw.  But, it is only the top part of
+     * the group box that needs to be redrawn, so we only invalidate the top
+     * half of the group box.
+     *
+     * The sequence below works.  There may be a better sequence, but the ones
+     * I've tried, don't work.
      */
-    RECT r;
 
-    // Get the screen area of the group box and map it to the client area of the
-    // dialog.
-    GetWindowRect(hwnd, &r);
-    MapWindowPoints(NULL, hDlg, (LPPOINT)&r, 2);
-
-    LONG halfHeight = ((r.bottom - r.top) / 2);
-    r.bottom = (halfHeight >= MIN_HALFHEIGHT_GB ? r.top + halfHeight : r.bottom);
-
-    // Change the group box style, force the dialog to repaint.
+    // Change the group box style, then force the repainting.
     SetWindowLong(hwnd, GWL_STYLE, style);
     SendMessage(hwnd, BM_SETSTYLE, (WPARAM)style, (LPARAM)TRUE);
 
+    RECT r;
+    LONG halfHeight;
+
+    // Get the screen area of the group box and map it to the client area of the
+    // dialog.  This forces the dialog to repaint the background, which erases
+    // the group box text.
+    GetWindowRect(hwnd, &r);
+    MapWindowPoints(NULL, hDlg, (LPPOINT)&r, 2);
+
+    halfHeight = ((r.bottom - r.top) / 2);
+    r.bottom = (halfHeight >= MIN_HALFHEIGHT_GB ? r.top + halfHeight : r.bottom);
+
     InvalidateRect(hDlg, &r, TRUE);
     UpdateWindow(hDlg);
+
+    // Now force the group box to repaint the text.
+    GetWindowRect(hwnd, &r);
+    MapWindowPoints(NULL, hwnd, (LPPOINT)&r, 2);
+
+    halfHeight = ((r.bottom - r.top) / 2);
+    r.bottom = (halfHeight >= MIN_HALFHEIGHT_GB ? r.top + halfHeight : r.bottom);
+
+    InvalidateRect(hwnd, &r, TRUE);
+    UpdateWindow(hwnd);
 
     return 0;
 }
