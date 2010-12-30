@@ -289,11 +289,13 @@
   end
 
   found = 0; n = 0
+  isMenuEx = .false
   fl = f~lines
   do while found = 0, fl > 0
      do while n = 0, fl > 0
         s = f~linein; fl -= 1
-        n = s~wordpos("MENU")  -- TODO we could parse extended menus by looking for MENU *and* MENUEX
+        keyWord = s~word(2)
+        if keyWord == "MENU" |  keyWord == "MENUEX" then n = 2
      end
 
      if f~lines == 0 then do
@@ -312,6 +314,8 @@
      else if menuid == -1, s~word(n-1)~translate == menuName then found = 1
      else if menuid \== -1, self~resolveResourceID(s~word(n-1)) == menuid then found = 1
      else n = 0
+
+     if n \= 0, keyWord == "MENUEX" then isMenuEx = .true
   end
 
   s = f~linein; fl -= 1
@@ -360,6 +364,17 @@
     raise syntax 98.900 array (msg)
   end
 
+  if isMenuEx then return self~parseMenuEx(rcarray, arrcount, connect)
+  else return self~parseMenu(rcarray, arrcount, connect)
+
+syntax:
+  c = condition('O')
+  if c~traceBack \== .nil then c~traceBack~empty
+  raise propagate
+
+::method parseMenu private
+  use strict arg rcarray, arrcount, connect
+
   do i = 1 to arrcount
      s = rcarray[i]
 
@@ -407,8 +422,10 @@
 
   return 0
 
-syntax:
-  c = condition('O')
-  if c~traceBack \== .nil then c~traceBack~empty
-  raise propagate
+-- TODO write code to actually parse a MENUEX resource.  By accident, the code
+-- for parsing a MENU resource is adequate to produce an in-memory MENU
+-- template.  It does not produce an in-memory MENUEX template.
+::method parseMenuEx private
+  use strict arg rcarray, arrcount, connect
+  forward message 'PARSEMENU'
 
