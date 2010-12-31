@@ -83,20 +83,20 @@ const char *controlType2className(oodControl_t control)
 {
     switch ( control )
     {
-        case winStatic :               return "STATICCONTROL";
-        case winPushButton :           return "BUTTONCONTROL";
+        case winStatic :               return "STATIC";
+        case winPushButton :           return "BUTTON";
         case winRadioButton :          return "RADIOBUTTON";
         case winCheckBox :             return "CHECKBOX";
         case winGroupBox :             return "GROUPBOX";
-        case winEdit :                 return "EDITCONTROL";
+        case winEdit :                 return "EDIT";
         case winListBox :              return "LISTBOX";
         case winComboBox :             return "COMBOBOX";
         case winScrollBar :            return "SCROLLBAR";
-        case winTreeView :             return "TREECONTROL";
+        case winTreeView :             return "TREEVIEW";
         case winListView :             return "LISTVIEW";
-        case winTab :                  return "TABCONTROL";
+        case winTab :                  return "TAB";
         case winProgressBar :          return "PROGRESSBAR";
-        case winTrackBar :             return "SLIDERCONTROL";
+        case winTrackBar :             return "TRACKBAR";
         case winMonthCalendar :        return "MONTHCALENDAR";
         case winDateTimePicker :       return "DATETIMEPICKER";
         case winUpDown :               return "UPDOWN";

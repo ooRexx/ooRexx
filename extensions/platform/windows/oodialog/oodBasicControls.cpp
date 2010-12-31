@@ -159,15 +159,15 @@ RexxMethod2(RexxObjectPtr, stc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
 }
 
 /**
- *  Methods for the ooDialog class: .ButtonControl and its subclasses
+ *  Methods for the ooDialog class: .Button and its subclasses
  *  .RadioButton and .CheckBox.
  */
-#define BUTTON_CLASS                 "ButtonControl"
+#define BUTTON_CLASS                 "Button"
 
 #define BUTTONIMAGELIST_ATTRIBUTE    "!BUTTONIMAGELIST"
 #define BUTTONIMAGE_ATTRIBUTE        "!BUTTONIMAGE"
 
-#define BUTTONCONTROLCLASS   ".ButtonControl"
+#define BUTTONCONTROLCLASS   ".Button"
 #define RADIOBUTTONCLASS     ".RadioButton"
 #define CHECKBOXCLASS        ".CheckBox"
 #define GROUPBOXCLASS        ".GroupBox"
@@ -232,7 +232,7 @@ static HWND changeDefPushButton(HWND hCtrl)
  * image list itself, the image alignment, and the margin around the image.
  *
  * @param c     The method context we are executing in.
- * @param hwnd  The ButtonControl window handle.
+ * @param hwnd  The Button window handle.
  *
  * @return  A directory object containing the image list information, if there
  *          is an image list.  Otherwise .nil.
@@ -885,7 +885,7 @@ RexxMethod2(RexxObjectPtr, bc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
     return oodGetImageAttribute(context, self, BUTTONIMAGE_ATTRIBUTE, BM_GETIMAGE, wParam, type, winPushButton);
 }
 
-/** ButtonControl::setImage()
+/** Button::setImage()
  *
  *  Sets or removes the image for a button control.
  *
@@ -929,7 +929,7 @@ out:
     return result;
 }
 
-/** ButtonControl::getImageList()
+/** Button::getImageList()
  *
  * Gets the image list for the button, if there is one.
  *
@@ -947,7 +947,7 @@ out:
  *
  * @note  The only way to have an image list is for it have been put there by
  *        setImageList().  That method stores the .ImageList object as an
- *        attribute of the ButtonControl ojbect.  That stored object is the
+ *        attribute of the Button ojbect.  That stored object is the
  *        object returned.
  */
 RexxMethod1(RexxObjectPtr, bc_getImageList, CSELF, pCSelf)
@@ -960,7 +960,7 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, CSELF, pCSelf)
 
 }
 
-/** ButtonControl::setImageList()
+/** Button::setImageList()
  *
  * Sets or removes an image list for the button.
  *
@@ -1065,7 +1065,7 @@ err_out:
 
 /* TODO convert to using optional .Rect arg */
 
-/** ButtonControl::scroll()
+/** Button::scroll()
  *
  *  Moves the specified rectangle within the button and redraws the uncovered
  *  area with the button background color.  This method is used to move bitmaps
@@ -1158,7 +1158,7 @@ err_out:
 }
 
 
-/** ButtonControl::dimBitmap()
+/** Button::dimBitmap()
  *
  *
  */
@@ -1289,7 +1289,7 @@ RexxMethod1(int, ckbx_setIndeterminate, CSELF, pCSelf)
 }
 
 
-/** ButtonControl::test()
+/** Button::test()
  *
  *  This method is used as a convenient way to test code.
  */
@@ -1298,7 +1298,7 @@ RexxMethod1(int, bc_test, ARGLIST, args)
     return 0;
 }
 
-/** ButtonControl::test()  [class method]
+/** Button::test()  [class method]
  *
  *  This method is used as a convenient way to test code.
  */

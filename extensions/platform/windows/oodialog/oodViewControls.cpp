@@ -53,7 +53,7 @@
 
 /**
  * This is the window procedure used to subclass the edit control for both the
- * ListView and TreeControl objects.  It would be nice to convert this to use
+ * ListView and TreeView objects.  It would be nice to convert this to use
  * the better API: SetWindowSubclass / RemoveWindowSubclass.
  *
  * TODO this whole subclassing thing is no longer needed.
@@ -84,8 +84,8 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 }
 
 
-/** TreeControl::subclassEdit()
- *  TreeControl::restoreEditClass()
+/** TreeView::subclassEdit()
+ *  TreeView::restoreEditClass()
  *  ListView::subclassEdit()
  *  ListView::restoreEditClass()
  */
@@ -3716,9 +3716,9 @@ RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
 
 
 /**
- *  Methods for the .TreeControl class.
+ *  Methods for the .TreeView class.
  */
-#define TREECONTROL_CLASS         "TreeControl"
+#define TREEVIEW_CLASS            "TreeView"
 
 #define TVSTATE_ATTRIBUTE         "TV!STATEIMAGELIST"
 #define TVNORMAL_ATTRIBUTE        "TV!NORMALIMAGELIST"
@@ -4017,9 +4017,9 @@ RexxMethod3(RexxObjectPtr, tv_getNextItem, CSTRING, _hItem, NAME, method, CSELF,
 }
 
 
-/** TreeControl::select()
- *  TreeControl::makeFirstVisible()
- *  TreeControl::dropHighLight()
+/** TreeView::select()
+ *  TreeView::makeFirstVisible()
+ *  TreeView::dropHighLight()
  */
 RexxMethod3(RexxObjectPtr, tv_selectItem, OPTIONAL_CSTRING, _hItem, NAME, method, CSELF, pCSelf)
 {
@@ -4047,10 +4047,10 @@ RexxMethod3(RexxObjectPtr, tv_selectItem, OPTIONAL_CSTRING, _hItem, NAME, method
 }
 
 
-/** TreeControl::expand()
- *  TreeControl::collapse()
- *  TreeControl::collapseAndReset()
- *  TreeControl::toggle()
+/** TreeView::expand()
+ *  TreeView::collapse()
+ *  TreeView::collapseAndReset()
+ *  TreeView::toggle()
  */
 RexxMethod3(RexxObjectPtr, tv_expand, CSTRING, _hItem, NAME, method, CSELF, pCSelf)
 {
@@ -4122,7 +4122,7 @@ RexxMethod2(RexxObjectPtr, tv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
 }
 
 
-/** TreeControl::setImageList()
+/** TreeView::setImageList()
  *
  *  Sets or removes one of a tree-view's image lists.
  *
@@ -4210,7 +4210,7 @@ err_out:
     return NULLOBJECT;
 }
 
-/** TreeControl::getImageList()
+/** TreeView::getImageList()
  *
  *  Gets the tree-view's specifed image list.
  *
@@ -4240,14 +4240,14 @@ RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
 
 
 /**
- *  Methods for the .TabControl class.
+ *  Methods for the .Tab class.
  */
-#define TABCONTROL_CLASS          "TabControl"
+#define TAB_CLASS                 "Tab"
 
 #define TABIMAGELIST_ATTRIBUTE    "TAB!IMAGELIST"
 
 
-/** TabControl::setItemSize()
+/** Tab::setItemSize()
  *
  *  Sets the width and height of the tabs.
  *
@@ -4284,7 +4284,7 @@ RexxMethod2(RexxObjectPtr, tab_setItemSize, ARGLIST, args, CSELF, pCSelf)
 }
 
 
-/** TabControl::setPadding()
+/** Tab::setPadding()
  *
  *  Sets the amount of space (padding) around each tab's icon and label.
  *
@@ -4579,7 +4579,7 @@ RexxMethod3(RexxObjectPtr, tab_getItemRect, uint32_t, item, RexxObjectPtr, rect,
 }
 
 
-/** TabControl::calcWindowRect()
+/** Tab::calcWindowRect()
  *
  *  calcWindowRect() takes a display rectangle and adjusts the rectangle to be
  *  the window rect of the tab control needed for that display size.
@@ -4593,7 +4593,7 @@ RexxMethod3(RexxObjectPtr, tab_getItemRect, uint32_t, item, RexxObjectPtr, rect,
  *
  *  @return  The return is 0 and has no meaning.
  *
- *  TabControl::calcDisplayRect()
+ *  Tab::calcDisplayRect()
  *
  *  caclDisplayRect() takes the window rect of the tab control, and adjusts the
  *  rectangle to the size the display will be.
@@ -4632,7 +4632,7 @@ RexxMethod3(RexxObjectPtr, tab_calcRect, RexxObjectPtr, rect, NAME, method, CSEL
 }
 
 
-/** TabControl::setImageList()
+/** Tab::setImageList()
  *
  *  Sets or removes the image list for a Tab control.
  *
@@ -4698,7 +4698,7 @@ err_out:
     return NULLOBJECT;
 }
 
-/** TabControl::getImageList()
+/** Tab::getImageList()
  *
  *  Gets the Tab control's image list.
  *
