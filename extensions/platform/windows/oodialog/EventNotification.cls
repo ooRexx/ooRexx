@@ -382,18 +382,22 @@
 
 
 ::method connectTabEvent
-   use strict arg id, type, msgToRise = ""
+   use strict arg id, type, msgToRise = "", willReply = .false
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
+   tag = 0
    select
        when type = "KEYDOWN"     then lp = -550
        when type = "SELCHANGE"   then lp = -551
-       when type = "SELCHANGING" then lp = -552
+       when type = "SELCHANGING" then do
+         lp = -552
+         if willReply then tag = 0x02000009
+       end
        otherwise return -1
    end
-   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
+   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", tag)
 
 
 ::method connectTrackBarEvent   /* can only be called in initDialog */

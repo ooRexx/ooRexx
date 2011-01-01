@@ -1468,6 +1468,55 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
     return ReplyFalse;
 }
 
+/**
+ * Processes tab control notifications.
+ *
+ * Note this is only invoked when TAG_TAB is set in the tag.  At this time,
+ * TAG_TAB is only set for TCN_SELCHANGING and TAB_REPLYFROMREXX is always set
+ * to true.  So, we could skip the checks, but this may be expanded in the
+ * future.
+ *
+ * @param c
+ * @param methodName
+ * @param tag
+ * @param code
+ * @param lParam
+ * @param pcpbd
+ *
+ * @return MsgReplyType
+ */
+MsgReplyType processTCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
+
+    if ( (tag & TAG_EXTRAMASK) == TAG_REPLYFROMREXX )
+    {
+        switch ( code )
+        {
+            case TCN_SELCHANGING :
+            {
+                RexxObjectPtr rexxReply;
+
+                // The Rexx programmer returns .true, changing the tab is okay, or .false do not change tabs.
+                rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, idFrom, hwndFrom);
+
+                if ( ! checkForCondition(c, false) )
+                {
+                    // Return true to prevent the change.
+                    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT,  rexxReply == TheTrueObj ? FALSE : TRUE);
+                }
+                return ReplyTrue;
+            }
+
+            default :
+                break;
+        }
+    }
+
+    return genericNotifyInvoke(c, pcpbd, methodName, idFrom, hwndFrom);
+}
+
 MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
 {
     RexxObjectPtr rexxReply;
@@ -1643,6 +1692,9 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 }
 
                 // TODO should we terminate the interpreter if checkForCondition() returns true??
+
+                case TAG_TAB :
+                    return processTCN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
 
                 case TAG_UPDOWN :
                     return processUDN(c, m[i].rexxMethod, lParam, pcpbd);
@@ -3270,9 +3322,9 @@ RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
     }
 
     uint32_t tag = TAG_MONTHCALENDAR;
-    if ( notificationCode == MCN_GETDAYSTATE )  // TODO rethink this if
+    if ( notificationCode == MCN_GETDAYSTATE )  // TODO rethink this. We do not actually check for TAG_REPLYFROMREXX.
     {
-        tag |= (TAG_MSGHANDLED | TAG_REPLYFROMREXX);
+        tag |= TAG_REPLYFROMREXX;
     }
 
     if ( addNotifyMessage(pcen, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )

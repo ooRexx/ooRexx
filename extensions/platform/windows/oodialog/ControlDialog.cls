@@ -221,7 +221,7 @@
 ::constant PSNRET_INVALID_NOCHANGEPAGE        2
 ::constant PSNRET_MESSAGEHANDLED              3
 
-::method init class external "LIBRARY oodialog psp_init_cls"
+::method init class external "LIBRARY oodialog psp_init_cls"                                    -- Not to be documented
 
 ::attribute propSheet get unguarded external "LIBRARY oodialog psp_propSheet_atr"
 ::attribute wasActivated get external "LIBRARY oodialog psp_wasActivated_atr"
@@ -260,7 +260,7 @@
 
 ::method setSize external "LIBRARY oodialog psp_setSize"
 
-::method execute unguarded
+::method execute unguarded                                                                      -- Not to be documented
     self~initDialog
     if self~useStem then self~setDataStem(self~dlgData)
     else self~setData
@@ -273,7 +273,7 @@
         o~start(m)
     end
 
-::method endExecute unguarded
+::method endExecute unguarded                                                                   -- Not to be documented
 
     self~finished = .true
     self~stopIt
