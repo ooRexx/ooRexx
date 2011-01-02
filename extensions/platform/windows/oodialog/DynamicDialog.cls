@@ -460,7 +460,6 @@
                parse var s nameID ic fileName
                self~addIconResource(nameID, fileName)
             end
-            /* premission: #define only at the top of the RC and separated by a tab or a blank */
             when s~wordpos("#define") > 0 then do
                s = s~translate(" ", "9"x)
                parse var s "#define " symb iid
@@ -518,6 +517,26 @@
    end
    else do
       parse var s prev dlg.fsize "," '"'dlg.font'"'
+   end
+
+   -- Now read to the end of the file to pick up any additional icon resource
+   -- or define statements.
+   do while fl > 0
+      s = f~linein; fl = fl -1
+      select
+         when s~wordpos("ICON") = 2 then do
+            parse var s nameID ic fileName
+            self~addIconResource(nameID, fileName)
+         end
+         when s~wordpos("#define") > 0 then do
+            s = s~translate(" ", "9"x)
+            parse var s "#define " symb iid
+            self~ConstDir[symb~space(0)~translate] = iid
+         end
+         otherwise
+            nop
+      end
+      -- End select
    end
    f~close
 
