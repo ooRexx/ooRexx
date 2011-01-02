@@ -841,10 +841,14 @@ uint32_t getControlStyle(oodControl_t ctrl, CSTRING opts)
 static bool hasCenterFlag(CSTRING opts)
 {
     char *p = StrStrI(opts, "CENTER");
-    if ( p != NULL )
+    while ( p != NULL )
     {
-        char c = *(p + 6);
-        return c == ' ' || c == '\0';
+        p += 6;
+        if ( *p == ' ' || *p == '\0' )
+        {
+            return true;
+        }
+        p = StrStrI(p, "CENTER");
     }
     return false;
 }
