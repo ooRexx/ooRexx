@@ -207,6 +207,7 @@ REXX_METHOD_PROTOTYPE(en_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(en_disconnectKeyPress);
 REXX_METHOD_PROTOTYPE(en_hasKeyPressConnection);
 REXX_METHOD_PROTOTYPE(en_connectCommandEvents);
+REXX_METHOD_PROTOTYPE(en_connectListViewEvent);
 REXX_METHOD_PROTOTYPE(en_connectDateTimePickerEvent);
 REXX_METHOD_PROTOTYPE(en_connectMonthCalendarEvent);
 REXX_METHOD_PROTOTYPE(en_connectUpDownEvent);
@@ -914,6 +915,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(en_disconnectKeyPress,          en_disconnectKeyPress),
     REXX_METHOD(en_hasKeyPressConnection,       en_hasKeyPressConnection),
     REXX_METHOD(en_connectCommandEvents,        en_connectCommandEvents),
+    REXX_METHOD(en_connectListViewEvent,        en_connectListViewEvent),
     REXX_METHOD(en_connectDateTimePickerEvent,  en_connectDateTimePickerEvent),
     REXX_METHOD(en_connectMonthCalendarEvent,   en_connectMonthCalendarEvent),
     REXX_METHOD(en_connectUpDownEvent,          en_connectUpDownEvent),

@@ -304,56 +304,6 @@
    return self~connectEachSBEvent(id, prog, prog, prog, min, max, pos, prog, prog, prog, prog)
 
 
-::method connectListViewEvent
-   use strict arg id, type, msgToRise = ""
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   tag = 0
-   type = type~translate
-   select
-      when type = "CHANGING"    then lp = -100
-      when type = "CHANGED"     then lp = -101
-      when type = "INSERTED"    then lp = -102
-      when type = "DELETE"      then lp = -103
-      when type = "DELETEALL"   then lp = -104
-      when type = "BEGINEDIT"   then lp = -105
-      when type = "ENDEDIT"     then lp = -106
-      when type = "DEFAULTEDIT" then do
-           self~addUserMsg("DefListEditStarter", 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", -105, "0xFFFFFFFF")
-           lp = -106
-           msgToRise = "DefListEditHandler"
-      end
-      when type = "COLUMNCLICK" then lp = -108
-      when type = "BEGINDRAG"   then lp = -109
-      when type = "BEGINRDRAG"  then lp = -111
-      when type = "ACTIVATE"    then lp = -114
-      when type = "KEYDOWN"     then lp = -155
-      when type = "CLICK" then do
-         lp = -2
-         tag = 0x00000007
-      end
-      when type = "CHECKBOXCHANGED" then do
-         lp = -101
-         tag = 0x00000307
-      end
-      when type = "SELECTCHANGED" then do
-         lp = -101
-         tag = 0x00000507
-      end
-      when type = "FOCUSCHANGED" then do
-         lp = -101
-         tag = 0x00000907
-      end
-      when type~abbrev("SELECTFOCUS") then do
-         lp = -101
-         tag = 0x00000D07
-      end
-      otherwise return -1
-   end
-   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", tag)
-
-
 ::method connectTreeViewEvent
    use strict arg id, type, msgToRise = ""
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
@@ -426,6 +376,7 @@
    return self~addUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
 
 
+::method connectListViewEvent external "LIBRARY oodialog en_connectListViewEvent"
 ::method connectDateTimePickerEvent external "LIBRARY oodialog en_connectDateTimePickerEvent"
 ::method connectMonthCalendarEvent external "LIBRARY oodialog en_connectMonthCalendarEvent"
 ::method connectUpDownEvent external "LIBRARY oodialog en_connectUpDownEvent"

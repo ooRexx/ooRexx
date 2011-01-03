@@ -834,12 +834,11 @@ void standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, Rex
  * Given a thread context, checks for a raised condition, and prints out the
  * standard condition message if there is a condition.
  *
- * @param c            Thread context we are operating in.
+ * @param c      Thread context we are operating in.
+ * @param clear  True if the condition should be cleared, false if it should not
+ *               be cleared.
  *
  * @return True if there was a condition, otherwise false.
- *
- * @remarks.  This function could maybe take a second argument, true / false,
- *            whether to clear or not clear the condition.
  */
 bool checkForCondition(RexxThreadContext *c, bool clear)
 {

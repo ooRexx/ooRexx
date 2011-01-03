@@ -862,16 +862,50 @@ LRESULT paletteMessage(pCPlainBaseDialog pcpbd, HWND hDlg, UINT msg, WPARAM wPar
  *
  *           This function should be used when:
  *
- *           a.) The reply to the window message is ignored anyway.
+ *           a.) The reply to the window message is ignored anyway and, when
+ *           applicable, the Rexx programmer has specified not to wait for a
+ *           reply.
  *
- *           b.) To maintain backward compatibility with event connections, so
- *           that the Rexx programmer does not inadvertently block the message
- *           loop.
+ *           b.) To maintain backward compatibility with pre-existing event
+ *           connections, so that the Rexx programmer does not inadvertently
+ *           block the message loop.
  */
 static MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringObject method, RexxArrayObject args)
 {
     c->SendMessage2(obj, "STARTWITH", method, args);
     return ReplyTrue;
+}
+
+/**
+ * Invokes the Rexx dialog's event handling method for a Windows message.
+ *
+ * The method invocation is done directly by sending a message to the method.
+ *
+ * @param c       Thread context we are operating in.
+ * @param obj     The Rexx dialog whose method will be invoked.
+ * @param method  The name of the method being invoked
+ * @param args    The argument array for the method being invoked
+ *
+ * @return True for no problems, false if a condition was raised during the
+ *         execution of the Rexx method.
+ *
+ * @remarks  Earlier versions of ooDialog, on the C++ side, constructed a method
+ *           invocation string, placed it on a queue, and returned immediately
+ *           to the message processing loop.  On the Rexx side, the string was
+ *           pulled from the queue and the event hanler method invoked through
+ *           interpret.  This meant that the Rexx programmer could never block
+ *           the window loop, but also could never reply to any window message.
+ *
+ *           This function should be used when:
+ *
+ *           a.) The reply to the window message is ignored and either the
+ *           default behaviour is to wait for the reply, or the Rexx programmer
+ *           has specified to wait for a reply.
+ */
+static bool invokeDirect(RexxThreadContext *c, RexxObjectPtr obj, CSTRING methodName, RexxArrayObject args)
+{
+    RexxObjectPtr rexxReply = c->SendMessage(obj, methodName, args);
+    return checkForCondition(c, false) ? false : true;
 }
 
 /**
@@ -1056,202 +1090,6 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
 }
 
 
-MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
-{
-    RexxObjectPtr rexxReply;
-    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
-    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
-
-    switch ( code )
-    {
-        case DTN_DATETIMECHANGE:
-        {
-            LPNMDATETIMECHANGE pChange = (LPNMDATETIMECHANGE)lParam;
-
-            RexxObjectPtr dt;
-            RexxObjectPtr valid;
-
-            if ( pChange->dwFlags == GDT_VALID )
-            {
-                sysTime2dt(c, &(pChange->st), &dt, dtFull);
-                valid = TheTrueObj;
-            }
-            else
-            {
-                sysTime2dt(c, NULL, &dt, dtNow);
-                valid = TheFalseObj;
-            }
-
-            RexxArrayObject args = c->ArrayOfFour(dt, valid, idFrom, hwndFrom);
-
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c, false);
-
-            return ReplyFalse;
-        }
-
-        case DTN_FORMAT:
-        {
-            LPNMDATETIMEFORMAT pFormat = (LPNMDATETIMEFORMAT)lParam;
-
-            RexxObjectPtr dt;
-            sysTime2dt(c, &(pFormat->st), &dt, dtFull);
-
-            RexxArrayObject args = c->ArrayOfFour(c->String(pFormat->pszFormat), dt, idFrom, hwndFrom);
-
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-
-            if ( ! checkForCondition(c, false) )
-            {
-                CSTRING display = c->ObjectToStringValue(rexxReply);
-                if ( strlen(display) < 64 )
-                {
-                    strcpy(pFormat->szDisplay, display);
-                }
-                else
-                {
-                    stringTooLongException(c, 1, 63, strlen(display));
-                    checkForCondition(c, false);
-                }
-            }
-
-            return ReplyFalse;
-        }
-
-        case DTN_FORMATQUERY:
-        {
-            LPNMDATETIMEFORMATQUERY pQuery = (LPNMDATETIMEFORMATQUERY)lParam;
-
-            RexxObjectPtr _size = rxNewSize(c, 0, 0);
-
-            RexxArrayObject args = c->ArrayOfFour(c->String(pQuery->pszFormat), _size, idFrom, hwndFrom);
-
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-
-            if ( checkForCondition(c, false) )
-            {
-                // TODO note this is a special case test of ending the dialog on
-                // a condition raised.  Need to always do the same thing, end
-                // the dialog or not end the dialog.
-                endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
-                return ReplyTrue;
-            }
-
-            PSIZE size = (PSIZE)c->ObjectToCSelf(_size);
-
-            pQuery->szMax.cx = size->cx;
-            pQuery->szMax.cy = size->cy;
-
-            return ReplyFalse;
-        }
-
-        case DTN_USERSTRING:
-        {
-            LPNMDATETIMESTRING pdts = (LPNMDATETIMESTRING)lParam;
-
-            RexxDirectoryObject d = (RexxDirectoryObject)rxNewBuiltinObject(c, "DIRECTORY");
-            c->DirectoryPut(d, c->String(pdts->pszUserString), "USERSTRING");
-            c->DirectoryPut(d, TheNilObj, "DATETIME");
-            c->DirectoryPut(d, TheFalseObj, "VALID");
-
-            // Fill in the date time string struct with error values.
-            dt2sysTime(c, NULLOBJECT, &(pdts->st), dtNow);
-            pdts->dwFlags = GDT_ERROR;
-
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, c->ArrayOfThree(d, idFrom, hwndFrom));
-
-            if ( checkForCondition(c, false) )
-            {
-                return ReplyFalse;
-            }
-
-            RexxObjectPtr dt = c->DirectoryAt(d, "DATETIME");
-            if ( ! c->IsOfType(dt, "DATETIME") )
-            {
-                wrongObjInDirectoryException(c, 1, "DATETIME", "a DateTime object", dt);
-                checkForCondition(c, false);
-                return ReplyFalse;
-            }
-
-            if ( ! dt2sysTime(c, dt, &(pdts->st), dtFull) )
-            {
-                checkForCondition(c, false);
-                return ReplyFalse;
-            }
-
-            if ( isShowNoneDTP(pdts->nmhdr.hwndFrom) )
-            {
-                RexxObjectPtr _valid = c->DirectoryAt(d, "VALID");
-                int32_t val = getLogical(c, _valid);
-
-                if ( val == -1 )
-                {
-                    wrongObjInDirectoryException(c, 1, "VALID", "Logical", _valid);
-                    checkForCondition(c, false);
-                    return ReplyFalse;
-                }
-                pdts->dwFlags = (val == 1 ? GDT_VALID : GDT_NONE);
-            }
-            else
-            {
-                pdts->dwFlags = GDT_VALID;
-            }
-            return ReplyFalse;
-        }
-
-        case DTN_WMKEYDOWN:
-        {
-            LPNMDATETIMEWMKEYDOWN pQuery = (LPNMDATETIMEWMKEYDOWN)lParam;
-
-            RexxObjectPtr dt;
-            sysTime2dt(c, &(pQuery->st), &dt, dtFull);
-
-            RexxArrayObject args = c->NewArray(5);
-            c->ArrayPut(args, c->String(pQuery->pszFormat), 1);
-            c->ArrayPut(args, dt, 2);
-            c->ArrayPut(args, c->Int32(pQuery->nVirtKey), 3);
-            c->ArrayPut(args, idFrom, 4);
-            c->ArrayPut(args, hwndFrom, 5);
-
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-
-            if ( ! checkForCondition(c, false) )
-            {
-                if ( rexxReply != dt )
-                {
-                    if ( c->IsOfType(rexxReply, "DATETIME") )
-                    {
-                        dt2sysTime(c, rexxReply, &(pQuery->st), dtFull);
-                    }
-                    else
-                    {
-                        wrongClassReplyException(c, "DateTime");
-                    }
-                    checkForCondition(c, false);
-                }
-            }
-
-            return ReplyFalse;
-        }
-
-        case DTN_CLOSEUP:
-        case DTN_DROPDOWN:
-        case NM_KILLFOCUS:
-        case NM_SETFOCUS:
-        {
-            return genericNotifyInvoke(c, pcpbd, methodName, idFrom, hwndFrom);
-        }
-
-        default :
-            // Theoretically we can not get here because all date time
-            // picker notification codes that have a tag are accounted
-            // for.
-            break;
-    }
-
-    return ReplyFalse;
-}
-
 /**
  * Helper function to deterimine a list view item's index using a hit test.
  *
@@ -1261,7 +1099,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
  * @remarks  This function should only be used when the list view is in report
  *           mode.  If the subitem hit test does not produce an item index, we
  *           only look for a y position that falls within the bounding rectangle
- *           of the a visible item.
+ *           of a visible item.
  *
  *           We start with the top visible index and look at each item on the
  *           page.  The count per page only includes fully visible items, so we
@@ -1302,6 +1140,9 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
     char          tmpBuffer[20];
     RexxObjectPtr rexxReply;
     RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+
+    MsgReplyType  msgReply = ReplyTrue;
+    bool          expectReply = (tag & TAG_REPLYFROMREXX) == TAG_REPLYFROMREXX;
 
     switch ( code )
     {
@@ -1354,10 +1195,16 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             RexxArrayObject args = c->ArrayOfFour(idFrom, c->Int32(pIA->iItem), c->Int32(pIA->iSubItem), c->String(tmpBuffer));
 
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c, false);
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd->rexxSelf, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
 
-            return ReplyFalse;
+            break;
         }
 
         case LVN_ITEMCHANGED:
@@ -1381,10 +1228,14 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                     RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(p));
 
-                    rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-                    checkForCondition(c, false);
-
-                    return ReplyFalse;
+                    if ( expectReply )
+                    {
+                        invokeDirect(c, pcpbd->rexxSelf, methodName, args);
+                    }
+                    else
+                    {
+                        invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+                    }
                 }
                 else if ( matchSelectFocus(tag, pLV) )
                 {
@@ -1416,10 +1267,14 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                     RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(tmpBuffer));
 
-                    rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-                    checkForCondition(c, false);
-
-                    return ReplyFalse;
+                    if ( expectReply )
+                    {
+                        invokeDirect(c, pcpbd->rexxSelf, methodName, args);
+                    }
+                    else
+                    {
+                        invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+                    }
                 }
                 else if ( matchSelect(tag, pLV) )
                 {
@@ -1429,12 +1284,18 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                     rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-                    if ( checkForCondition(c, false) )
+                    if ( expectReply )
                     {
-                        return ReplyFalse;
+                        if ( invokeDirect(c, pcpbd->rexxSelf, methodName, args) )
+                        {
+                            // No condition was raised, it is safe to continue searching.
+                            msgReply = ContinueSearching;  // Not sure if this is wise with the C++ API
+                        }
                     }
-
-                    return ContinueSearching;  // Not sure if this is wise with the C++ API
+                    else
+                    {
+                        invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+                    }
                 }
                 else if ( matchFocus(tag, pLV) )
                 {
@@ -1444,17 +1305,23 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                     rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-                    if ( checkForCondition(c, false) )
+                    if ( expectReply )
                     {
-                        return ReplyFalse;
+                        if ( invokeDirect(c, pcpbd->rexxSelf, methodName, args) )
+                        {
+                            // No condition was raised, it is safe to continue searching.
+                            msgReply = ContinueSearching;  // Not sure if this is wise with the C++ API
+                        }
                     }
-
-                    return ContinueSearching;  // Not sure if this is wise with the C++ API
+                    else
+                    {
+                        invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+                    }
                 }
                 else
                 {
                     // This message in the message table does not match, keep searching.
-                    return ContinueSearching;
+                    msgReply = ContinueSearching;
                 }
             }
 
@@ -1465,7 +1332,239 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             break;
     }
 
-    return ReplyFalse;
+    return msgReply;
+}
+
+/**
+ * Processes date time picker notification messages.
+ *
+ * @param c
+ * @param methodName
+ * @param tag
+ * @param code
+ * @param lParam
+ * @param pcpbd
+ *
+ * @return MsgReplyType
+ *
+ * @remarks  DTN_FORMAT, DTN_FORMATQUERY, DTN_USERSTRING, and DTN_WMKEYDOWN are
+ *           always direct reply, (documented that way,) while with the others,
+ *           the user can specify which they want.
+ */
+MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    RexxObjectPtr rexxReply;
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
+    bool          expectReply = (tag & TAG_REPLYFROMREXX) == TAG_REPLYFROMREXX;
+
+    switch ( code )
+    {
+        case DTN_DATETIMECHANGE:
+        {
+            LPNMDATETIMECHANGE pChange = (LPNMDATETIMECHANGE)lParam;
+
+            RexxObjectPtr dt;
+            RexxObjectPtr valid;
+
+            if ( pChange->dwFlags == GDT_VALID )
+            {
+                sysTime2dt(c, &(pChange->st), &dt, dtFull);
+                valid = TheTrueObj;
+            }
+            else
+            {
+                sysTime2dt(c, NULL, &dt, dtNow);
+                valid = TheFalseObj;
+            }
+
+            RexxArrayObject args = c->ArrayOfFour(dt, valid, idFrom, hwndFrom);
+
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd->rexxSelf, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+
+            break;
+        }
+
+        case DTN_FORMAT:
+        {
+            LPNMDATETIMEFORMAT pFormat = (LPNMDATETIMEFORMAT)lParam;
+
+            RexxObjectPtr dt;
+            sysTime2dt(c, &(pFormat->st), &dt, dtFull);
+
+            RexxArrayObject args = c->ArrayOfFour(c->String(pFormat->pszFormat), dt, idFrom, hwndFrom);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+            if ( ! checkForCondition(c, false) )
+            {
+                CSTRING display = c->ObjectToStringValue(rexxReply);
+                if ( strlen(display) < 64 )
+                {
+                    strcpy(pFormat->szDisplay, display);
+                }
+                else
+                {
+                    stringTooLongException(c, 1, 63, strlen(display));
+                    checkForCondition(c, false);
+                }
+            }
+
+            break;
+        }
+
+        case DTN_FORMATQUERY:
+        {
+            LPNMDATETIMEFORMATQUERY pQuery = (LPNMDATETIMEFORMATQUERY)lParam;
+
+            RexxObjectPtr _size = rxNewSize(c, 0, 0);
+
+            RexxArrayObject args = c->ArrayOfFour(c->String(pQuery->pszFormat), _size, idFrom, hwndFrom);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+            if ( checkForCondition(c, false) )
+            {
+                // TODO note this is a special case test of ending the dialog on
+                // a condition raised.  Need to always do the same thing, end
+                // the dialog or not end the dialog.
+                endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+            }
+            else
+            {
+                PSIZE size = (PSIZE)c->ObjectToCSelf(_size);
+
+                pQuery->szMax.cx = size->cx;
+                pQuery->szMax.cy = size->cy;
+            }
+
+            break;
+        }
+
+        case DTN_USERSTRING:
+        {
+            LPNMDATETIMESTRING pdts = (LPNMDATETIMESTRING)lParam;
+
+            RexxDirectoryObject d = (RexxDirectoryObject)rxNewBuiltinObject(c, "DIRECTORY");
+            c->DirectoryPut(d, c->String(pdts->pszUserString), "USERSTRING");
+            c->DirectoryPut(d, TheNilObj, "DATETIME");
+            c->DirectoryPut(d, TheFalseObj, "VALID");
+
+            // Fill in the date time string struct with error values.
+            dt2sysTime(c, NULLOBJECT, &(pdts->st), dtNow);
+            pdts->dwFlags = GDT_ERROR;
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, c->ArrayOfThree(d, idFrom, hwndFrom));
+
+            if ( ! checkForCondition(c, false) )
+            {
+                RexxObjectPtr dt = c->DirectoryAt(d, "DATETIME");
+                if ( ! c->IsOfType(dt, "DATETIME") )
+                {
+                    wrongObjInDirectoryException(c, 1, "DATETIME", "a DateTime object", dt);
+                    checkForCondition(c, false);
+                    goto done_out;
+                }
+
+                if ( ! dt2sysTime(c, dt, &(pdts->st), dtFull) )
+                {
+                    checkForCondition(c, false);
+                    goto done_out;
+                }
+
+                if ( isShowNoneDTP(pdts->nmhdr.hwndFrom) )
+                {
+                    RexxObjectPtr _valid = c->DirectoryAt(d, "VALID");
+                    int32_t val = getLogical(c, _valid);
+
+                    if ( val == -1 )
+                    {
+                        wrongObjInDirectoryException(c, 1, "VALID", "Logical", _valid);
+                        checkForCondition(c, false);
+                        goto done_out;
+                    }
+                    pdts->dwFlags = (val == 1 ? GDT_VALID : GDT_NONE);
+                }
+                else
+                {
+                    pdts->dwFlags = GDT_VALID;
+                }
+            }
+
+
+            break;
+        }
+
+        case DTN_WMKEYDOWN:
+        {
+            LPNMDATETIMEWMKEYDOWN pQuery = (LPNMDATETIMEWMKEYDOWN)lParam;
+
+            RexxObjectPtr dt;
+            sysTime2dt(c, &(pQuery->st), &dt, dtFull);
+
+            RexxArrayObject args = c->NewArray(5);
+            c->ArrayPut(args, c->String(pQuery->pszFormat), 1);
+            c->ArrayPut(args, dt, 2);
+            c->ArrayPut(args, c->Int32(pQuery->nVirtKey), 3);
+            c->ArrayPut(args, idFrom, 4);
+            c->ArrayPut(args, hwndFrom, 5);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+            if ( ! checkForCondition(c, false) )
+            {
+                if ( rexxReply != dt )
+                {
+                    if ( c->IsOfType(rexxReply, "DATETIME") )
+                    {
+                        dt2sysTime(c, rexxReply, &(pQuery->st), dtFull);
+                    }
+                    else
+                    {
+                        wrongClassReplyException(c, "DateTime");
+                    }
+                    checkForCondition(c, false);
+                }
+            }
+
+            break;
+        }
+
+        case DTN_CLOSEUP:
+        case DTN_DROPDOWN:
+        case NM_KILLFOCUS:
+        case NM_SETFOCUS:
+        {
+            RexxArrayObject args = c->ArrayOfTwo(idFrom, hwndFrom);
+
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd->rexxSelf, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+
+            break;
+        }
+
+        default :
+            // Theoretically we can not get here because all date time
+            // picker notification codes that have a tag are accounted
+            // for.
+            break;
+    }
+
+done_out:
+    return ReplyTrue;
 }
 
 /**
@@ -1522,6 +1621,7 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
     RexxObjectPtr rexxReply;
     RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
     RexxObjectPtr hwndFrom = hwndFrom2rexxArg(c, lParam);
+    bool          expectReply = (tag & TAG_REPLYFROMREXX) == TAG_REPLYFROMREXX;
 
     switch ( code )
     {
@@ -1535,18 +1635,14 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             RexxArrayObject args = c->ArrayOfFour(dt, c->Int32(pDayState->cDayState), idFrom, hwndFrom);
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-
-            if ( checkForCondition(c, false) )
-            {
-                return ReplyFalse;
-            }
+            checkForCondition(c, false);
 
             if ( rexxReply != NULLOBJECT && c->IsOfType(rexxReply, "BUFFER") )
             {
                 pDayState->prgDayState = (MONTHDAYSTATE *)c->BufferData((RexxBufferObject)rexxReply);
-                return ReplyTrue;
             }
-            return ReplyFalse;
+
+            break;
         }
 
         case MCN_SELECT :
@@ -1562,9 +1658,16 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom, hwndFrom);
 
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c, false);
-            return ReplyTrue;
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd->rexxSelf, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+
+            break;
         }
 
         case MCN_VIEWCHANGE :
@@ -1576,14 +1679,30 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             RexxArrayObject args = c->ArrayOfFour(newView, oldView, idFrom, hwndFrom);
 
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-            checkForCondition(c, false);
-            return ReplyTrue;
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd->rexxSelf, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+
+            break;
         }
 
         case NM_RELEASEDCAPTURE :
         {
-            return genericNotifyInvoke(c, pcpbd, methodName, idFrom, hwndFrom);
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd->rexxSelf, methodName, c->ArrayOfTwo(idFrom, hwndFrom));
+            }
+            else
+            {
+                genericNotifyInvoke(c, pcpbd, methodName, idFrom, hwndFrom);
+            }
+
+            break;
         }
 
         default :
@@ -1593,7 +1712,7 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             break;
     }
 
-    return ReplyFalse;
+    return ReplyTrue;
 }
 
 /**
@@ -1763,6 +1882,10 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
             return genericInvokeDispatch(pcpbd, m[i].rexxMethod, wParam, lParam, np, handle, item);
         }
     }
+
+    // TODO - this doesn't seem right, we are only invoked if it is a WM_NOTIFY
+    // message. We searched the whole notify table and didn't match.  Shouldn't
+    // we be done?  I.e., ReplyFalse or ReplyTrue.
     return ContinueProcessing;
 }
 
@@ -2205,6 +2328,116 @@ bool initEventNotification(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxOb
 #define MCN_KEYWORDS                  "GetDayState, Released, SelChange, Select, or ViewChange"
 
 /**
+ * Convert a keyword to the proper list view notification code.
+ *
+ *
+ */
+static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, uint32_t *tag, bool *isDefEdit, logical_t willReply)
+{
+    uint32_t lvn = 0;
+
+    *isDefEdit = false;
+    *tag = 0;
+
+    if ( StrStrI(keyword,      "CHANGING")    != NULL ) lvn = LVN_ITEMCHANGING;
+    else if ( StrStrI(keyword, "CHANGED")     != NULL ) lvn = LVN_ITEMCHANGED;
+    else if ( StrStrI(keyword, "INSERTED")    != NULL ) lvn = LVN_INSERTITEM;
+    else if ( StrStrI(keyword, "DELETE")      != NULL ) lvn = LVN_DELETEITEM;
+    else if ( StrStrI(keyword, "DELETEALL")   != NULL ) lvn = LVN_DELETEALLITEMS;
+    else if ( StrStrI(keyword, "BEGINEDIT")   != NULL ) lvn = LVN_BEGINLABELEDIT;
+    else if ( StrStrI(keyword, "ENDEDIT")     != NULL ) lvn = LVN_ENDLABELEDIT;
+    else if ( StrStrI(keyword, "COLUMNCLICK") != NULL ) lvn = LVN_COLUMNCLICK;
+    else if ( StrStrI(keyword, "BEGINDRAG")   != NULL ) lvn = LVN_BEGINDRAG;
+    else if ( StrStrI(keyword, "BEGINRDRAG")  != NULL ) lvn = LVN_BEGINRDRAG;
+    else if ( StrStrI(keyword, "ACTIVATE")    != NULL ) lvn = LVN_ITEMACTIVATE;
+    else if ( StrStrI(keyword, "KEYDOWN")     != NULL ) lvn = LVN_KEYDOWN;
+    else if ( StrStrI(keyword, "DEFAULTEDIT") != NULL ) *isDefEdit = true;
+    else if ( StrStrI(keyword, "CLICK") != NULL )
+    {
+        lvn = NM_CLICK;
+        *tag = TAG_LISTVIEW;
+    }
+    else if ( StrStrI(keyword, "CHECKBOXCHANGED") != NULL )
+    {
+        lvn = LVN_ITEMCHANGED;
+        *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_CHECKBOXCHANGED;
+    }
+    else if ( StrStrI(keyword, "SELECTCHANGED") != NULL )
+    {
+        lvn = LVN_ITEMCHANGED;
+        *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_SELECTCHANGED;
+    }
+    else if ( StrStrI(keyword, "FOCUSCHANGED") != NULL )
+    {
+        lvn = LVN_ITEMCHANGED;
+        *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_FOCUSCHANGED;
+    }
+    else if ( StrStrI(keyword, "SELECTFOCUS") != NULL )
+    {
+        lvn = LVN_ITEMCHANGED;
+        *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_SELECTCHANGED | TAG_FOCUSCHANGED;
+    }
+    else
+    {
+        return false;
+    }
+
+    if ( *tag != 0 && willReply )
+    {
+        *tag = *tag | TAG_REPLYFROMREXX;
+    }
+
+    *code = lvn;
+    return true;
+}
+
+
+/**
+ * Convert a list view notification code and tag to a method name.
+ */
+inline CSTRING lvn2name(uint32_t lvn, uint32_t tag)
+{
+    tag &= ~(TAG_REPLYFROMREXX | TAG_LISTVIEW | TAG_STATECHANGED);
+
+    switch ( lvn )
+    {
+        case LVN_ITEMCHANGING   : return "onChanging";
+        case LVN_INSERTITEM     : return "onInserted";
+        case LVN_DELETEITEM     : return "onDelete";
+        case LVN_DELETEALLITEMS : return "onDeleteAll";
+        case LVN_BEGINLABELEDIT : return "onBeginedit";
+        case LVN_ENDLABELEDIT   : return "onEndedit";
+        case LVN_COLUMNCLICK    : return "onColumnclick";
+        case LVN_BEGINDRAG      : return "onBegindrag";
+        case LVN_BEGINRDRAG     : return "onBeginrdrag";
+        case LVN_ITEMACTIVATE   : return "onActivate";
+        case LVN_KEYDOWN        : return "onKeydown";
+        case NM_CLICK           : return "onClick";
+
+        case LVN_ITEMCHANGED :
+            switch ( tag )
+            {
+                case TAG_NOTHING :
+                    return "onChanged";
+
+                case TAG_CHECKBOXCHANGED :
+                    return "onCheckBoxChanged";
+
+                case TAG_SELECTCHANGED :
+                    return "onSelectChanged";
+
+                case TAG_FOCUSCHANGED :
+                    return "onFocusChanged";
+
+                case TAG_SELECTCHANGED | TAG_FOCUSCHANGED :
+                    return "onSelectFocus";
+            }
+    }
+    return "onLVN";
+}
+
+
+/**
  * Convert a month calendar notification code to a method name.
  */
 inline CSTRING mcn2name(uint32_t mcn)
@@ -2247,7 +2480,7 @@ static bool keyword2mcn(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
 
 
 /**
- * Convert a date time pickeer notification code to a method name.
+ * Convert a date time picker notification code to a method name.
  */
 inline CSTRING dtpn2name(uint32_t dtpn)
 {
@@ -2264,6 +2497,18 @@ inline CSTRING dtpn2name(uint32_t dtpn)
         case NM_SETFOCUS        : return "onSetFocus";
     }
     return "onDTPN";
+}
+
+
+/**
+ * Determines if the reply to a date time picker notification code has any
+ * meaning, or if it is ignored.  For the notifications listed, the Rexx dialog
+ * object method is always invoked directly, i.e., the user must always reply.
+ */
+inline bool dtpnReplySignificant(uint32_t dtpn)
+{
+    return (dtpn == DTN_FORMAT) || (dtpn == DTN_FORMATQUERY) ||
+           (dtpn == DTN_USERSTRING) || (dtpn == DTN_WMKEYDOWN);
 }
 
 
@@ -3128,6 +3373,111 @@ RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID, CSTRING, meth
 }
 
 
+/** EventNotification::connectListViewEvent()
+ *
+ *  Connects a Rexx dialog method with a list view event.
+ *
+ *  @param  rxID        The resource ID of the dialog control.  Can be numeric
+ *                      or symbolic.
+ *
+ *  @param  event       Keyword specifying which event to connect.  Keywords at
+ *                      this time:
+ *
+ *                      CHANGING
+ *                      CHANGED
+ *                      INSERTED
+ *                      DELETE
+ *                      DELETEALL
+ *                      BEGINEDIT
+ *                      ENDEDIT
+ *                      DEFAULTEDIT
+ *                      COLUMNCLICK
+ *                      BEGINDRAG
+ *                      BEGINRDRAG
+ *                      ACTIVATE
+ *                      KEYDOWN
+ *
+ *                      CLICK
+ *                      CHECKBOXCHANGED
+ *                      SELECTCHANGED
+ *                      FOCUSCHANGED
+ *                      SELECTFOCUS
+ *
+ *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
+ *                      Rexx dialog.  If this argument is omitted then the
+ *                      method name is constructed by prefixing the event
+ *                      keyword with 'on'.  For instance onUserString.
+ *
+ *  @param  willReply   [OPTIONAL] Specifies if the method invocation should be
+ *                      direct or indirect. With a direct invocation, the
+ *                      interpreter waits in the Windows message loop for the
+ *                      return from the Rexx method. With indirect, the Rexx
+ *                      method is invoked through ~startWith(), which of course
+ *                      returns immediately.
+ *
+ *                      For list views, at this time, the default is false, i.e.
+ *                      the Rexx programmer needs to specify that she wants to
+ *                      reply.  This could change if new key words are added.
+ *
+ *  @return 0 for no error, -1 for a bad resource ID or incorrect event keyword,
+ *          1 if the event could not be connected.  The event can not be
+ *          connected if there is a problem with the message table, full or out
+ *          of memory error.
+ *
+ *  @remarks   For the current keywords, if a symbolic ID is  used and it can
+ *             not be resolved to a numeric number -1 has to be returned for
+ *             backwards compatibility.  Essentially, for this method, all
+ *             behaviour needs to be pre-4.2.0.  The only change is that for
+ *             tagged list view events, the user can specify to reply directly.
+ */
+RexxMethod5(RexxObjectPtr, en_connectListViewEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, OPTIONAL_logical_t, willReply, CSELF, pCSelf)
+{
+    pCEventNotification pcen = (pCEventNotification)pCSelf;
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    uint32_t tag = 0;
+    bool     isDefEdit = false;
+    uint32_t notificationCode;
+
+    if ( ! keyword2lvn(context, event, &notificationCode, &tag, &isDefEdit, willReply) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    // Deal with DEFAULTEDIT separately.
+    if ( isDefEdit )
+    {
+        if ( ! addNotifyMessage(pcen, id, 0xFFFFFFFF, LVN_BEGINLABELEDIT, 0xFFFFFFFF, "DefListEditStarter", 0) )
+        {
+            return TheNegativeOneObj;
+        }
+        if ( ! addNotifyMessage(pcen, id, 0xFFFFFFFF, LVN_ENDLABELEDIT, 0xFFFFFFFF, "DefListEditHandler", 0) )
+        {
+            return TheNegativeOneObj;
+        }
+        return TheZeroObj;
+    }
+
+    if ( argumentOmitted(3) || *methodName == '\0' )
+    {
+        methodName = lvn2name(notificationCode, tag);
+    }
+
+    if ( addNotifyMessage(pcen, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
+    {
+        return TheZeroObj;
+    }
+
+    return TheOneObj;
+}
+
+
 /** EventNotification::connectUpDownEvent()
  *
  *  Connects a Rexx dialog method with an up down control event.
@@ -3164,6 +3514,9 @@ RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID, CSTRING, meth
  *
  *            Up-Down control doesn't send NM_RELEASEDCAPTURE notification.
  *            (docs are wrong...)
+ *
+ *            Since DELTAPOS is the only notification and it is always direct
+ *            reply, we don't have the the optional fourth, willReply, argument.
  */
 RexxMethod4(RexxObjectPtr, en_connectUpDownEvent, RexxObjectPtr, rxID, CSTRING, event,
             OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
@@ -3228,14 +3581,26 @@ err_out:
  *                      method name is constructed by prefixing the event
  *                      keyword with 'on'.  For instance onUserString.
  *
+ *  @param  willReply   [OPTIONAL] Specifies if the method invocation should be
+ *                      direct or indirect. With a direct invocation, the
+ *                      interpreter waits in the Windows message loop for the
+ *                      return from the Rexx method. With indirect, the Rexx
+ *                      method is invoked through ~startWith(), which of course
+ *                      returns immediately. The default is true, i.e. the Rexx
+ *                      programmer is always expected to reply.
+ *
  *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
  *          number an exception is raised.
+ *
+ *          willReply is ignored for USERSTRING, WMKEYDOWN, FORMAT, and
+ *          FORMATQUERY, the programmer must always reply in the event handler
+ *          for those events.
  *
  *  @remarks  This method is new since the 4.0.0 release, therefore an exception
  *            is raised for a bad resource ID rather than returning -1.
  */
-RexxMethod4(RexxObjectPtr, en_connectDateTimePickerEvent, RexxObjectPtr, rxID, CSTRING, event,
-            OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
+RexxMethod5(RexxObjectPtr, en_connectDateTimePickerEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, OPTIONAL_logical_t, _willReply, CSELF, pCSelf)
 {
     pCEventNotification pcen = (pCEventNotification)pCSelf;
 
@@ -3256,7 +3621,17 @@ RexxMethod4(RexxObjectPtr, en_connectDateTimePickerEvent, RexxObjectPtr, rxID, C
         methodName = dtpn2name(notificationCode);
     }
 
-    uint32_t tag = TAG_DATETIMEPICKER | TAG_REPLYFROMREXX;
+    uint32_t tag = TAG_DATETIMEPICKER;
+    bool willReply = argumentOmitted(4) || _willReply;
+
+    if ( dtpnReplySignificant(notificationCode) )
+    {
+        tag |= TAG_REPLYFROMREXX;
+    }
+    else
+    {
+          tag |= willReply ? TAG_REPLYFROMREXX : 0;
+    }
 
     if ( addNotifyMessage(pcen, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
     {
@@ -3282,20 +3657,34 @@ err_out:
  *                      SELCHANGE
  *                      SELECT
  *                      VIEWCHANGE
+ *                      RELEASED
  *
  *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
  *                      Rexx dialog.  If this argument is omitted then the
  *                      method name is constructed by prefixing the event
  *                      keyword with 'on'.  For instance onGetDayState.
  *
+ *  @param  willReply   [OPTIONAL] Specifies if the method invocation should be
+ *                      direct or indirect. With a direct invocation, the
+ *                      interpreter waits in the Windows message loop for the
+ *                      return from the Rexx method. With indirect, the Rexx
+ *                      method is invoked through ~startWith(), which of course
+ *                      returns immediately.
+ *
  *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
  *          number an exception is raised.
  *
  *  @remarks  This method is new since the 4.0.0 release, therefore an exception
  *            is raised for a bad resource ID rather than returning -1.
+ *
+ *            For controls new since 4.0.0, event notifications that have a
+ *            reply are documented as always being 'direct' reply and
+ *            notifications that ignore the return are documented as allowing
+ *            the programmer to specify.  This means that willReply is ignored
+ *            for MCN_GETDAYSTATE and not ignored for all other notifications.
  */
-RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CSTRING, event,
-            OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
+RexxMethod5(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, OPTIONAL_logical_t, _willReply, CSELF, pCSelf)
 {
     pCEventNotification pcen = (pCEventNotification)pCSelf;
 
@@ -3322,9 +3711,15 @@ RexxMethod4(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
     }
 
     uint32_t tag = TAG_MONTHCALENDAR;
-    if ( notificationCode == MCN_GETDAYSTATE )  // TODO rethink this. We do not actually check for TAG_REPLYFROMREXX.
+    bool willReply = argumentOmitted(4) || _willReply;
+
+    if ( notificationCode == MCN_GETDAYSTATE )
     {
         tag |= TAG_REPLYFROMREXX;
+    }
+    else
+    {
+        tag |= willReply ? TAG_REPLYFROMREXX : 0;
     }
 
     if ( addNotifyMessage(pcen, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
