@@ -1181,7 +1181,6 @@ RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, siz
 
         pDayState = (PDAYSTATE)c->ObjectToCSelf(rxMDSVal);
         *pmds = pDayState->val;
-        printf("makeDayStateBuffer() address pmds=%p pmds val=0x%08x val=0x%08x\n", pmds, *pmds, pDayState->val);
     }
 
     return _mds;
