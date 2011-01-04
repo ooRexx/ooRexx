@@ -4586,3 +4586,56 @@ RexxMethod2(RexxObjectPtr, pbdlg_putControl_pvt, RexxObjectPtr, control, OSELF, 
     return TheNilObj;
 }
 
+void dumpMsgTable(MESSAGETABLEENTRY *msgTable, size_t count, CSTRING title)
+{
+    printf("  %s\n", title);
+    printf("msg        filter     wParam     filter     lParam     filter     tag        method\n");
+    printf("=====================================================================================================\n");
+
+    if ( msgTable == NULL )
+    {
+        printf("  table is empty\n\n");
+        return;
+    }
+
+    for ( size_t i = 0; i < count; i++)
+    {
+        printf("0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x %s\n",
+               msgTable[i].msg, msgTable[i].msgFilter,
+               msgTable[i].wParam, msgTable[i].wpFilter,
+               msgTable[i].lParam, msgTable[i].lpfilter,
+               msgTable[i].tag, msgTable[i].rexxMethod);
+    }
+    printf("\n");
+}
+
+RexxMethod2(RexxObjectPtr, pbdlg_dumpMessageTable, OPTIONAL_CSTRING, table, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    if ( argumentOmitted(1) )
+    {
+        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmSize, "Notify Message Table:");
+        dumpMsgTable(pcpbd->enCSelf->commandMsgs, pcpbd->enCSelf->cmSize, "Command Message Table:");
+        dumpMsgTable(pcpbd->enCSelf->miscMsgs, pcpbd->enCSelf->mmSize, "Miscellaneous Message Table:");
+    }
+    else if( !strcmpi(table, "notify") )
+    {
+        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmSize, "Notify Message Table:");
+    }
+    else if( !strcmpi(table, "command") )
+    {
+        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmSize, "Command Message Table:");
+    }
+    else if( !strcmpi(table, "misc") )
+    {
+        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmSize, "Miscellaneous Message Table:");
+    }
+    else
+    {
+        printf("Wrong table option: notify, command, misc, or omit the argument\n");
+    }
+
+    return NULLOBJECT;
+}

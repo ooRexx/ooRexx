@@ -908,6 +908,7 @@
 ::method newDateTimePicker unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newUpDown unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method putControl private unguarded external "LIBRARY oodialog pbdlg_putControl_pvt"
+::method dumpMessageTable unguarded external "LIBRARY oodialog pbdlg_dumpMessageTable"
 
 
 -- DEPRECATED  (to end of file)

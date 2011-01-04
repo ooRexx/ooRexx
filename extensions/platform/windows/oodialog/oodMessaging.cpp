@@ -1138,10 +1138,9 @@ static void getItemIndexFromHitPoint(LPNMITEMACTIVATE pIA, HWND hwnd)
 MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
 {
     char          tmpBuffer[20];
-    RexxObjectPtr rexxReply;
     RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
 
-    MsgReplyType  msgReply = ReplyTrue;
+    MsgReplyType  msgReply = ReplyFalse;
     bool          expectReply = (tag & TAG_REPLYFROMREXX) == TAG_REPLYFROMREXX;
 
     switch ( code )
@@ -1282,8 +1281,6 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                     RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(p));
 
-                    rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-
                     if ( expectReply )
                     {
                         if ( invokeDirect(c, pcpbd->rexxSelf, methodName, args) )
@@ -1295,6 +1292,7 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                     else
                     {
                         invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+                        msgReply = ContinueSearching;  // Not sure if this is wise with the C++ API
                     }
                 }
                 else if ( matchFocus(tag, pLV) )
@@ -1303,8 +1301,6 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                     RexxArrayObject args = c->ArrayOfThree(idFrom, item, c->String(p));
 
-                    rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-
                     if ( expectReply )
                     {
                         if ( invokeDirect(c, pcpbd->rexxSelf, methodName, args) )
@@ -1316,6 +1312,7 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                     else
                     {
                         invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+                        msgReply = ContinueSearching;  // Not sure if this is wise with the C++ API
                     }
                 }
                 else
@@ -2339,40 +2336,40 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
     *isDefEdit = false;
     *tag = 0;
 
-    if ( StrStrI(keyword,      "CHANGING")    != NULL ) lvn = LVN_ITEMCHANGING;
-    else if ( StrStrI(keyword, "CHANGED")     != NULL ) lvn = LVN_ITEMCHANGED;
-    else if ( StrStrI(keyword, "INSERTED")    != NULL ) lvn = LVN_INSERTITEM;
-    else if ( StrStrI(keyword, "DELETE")      != NULL ) lvn = LVN_DELETEITEM;
-    else if ( StrStrI(keyword, "DELETEALL")   != NULL ) lvn = LVN_DELETEALLITEMS;
-    else if ( StrStrI(keyword, "BEGINEDIT")   != NULL ) lvn = LVN_BEGINLABELEDIT;
-    else if ( StrStrI(keyword, "ENDEDIT")     != NULL ) lvn = LVN_ENDLABELEDIT;
-    else if ( StrStrI(keyword, "COLUMNCLICK") != NULL ) lvn = LVN_COLUMNCLICK;
-    else if ( StrStrI(keyword, "BEGINDRAG")   != NULL ) lvn = LVN_BEGINDRAG;
-    else if ( StrStrI(keyword, "BEGINRDRAG")  != NULL ) lvn = LVN_BEGINRDRAG;
-    else if ( StrStrI(keyword, "ACTIVATE")    != NULL ) lvn = LVN_ITEMACTIVATE;
-    else if ( StrStrI(keyword, "KEYDOWN")     != NULL ) lvn = LVN_KEYDOWN;
-    else if ( StrStrI(keyword, "DEFAULTEDIT") != NULL ) *isDefEdit = true;
-    else if ( StrStrI(keyword, "CLICK") != NULL )
+    if ( StrCmpI(keyword,      "CHANGING")    == 0 ) lvn = LVN_ITEMCHANGING;
+    else if ( StrCmpI(keyword, "CHANGED")     == 0 ) lvn = LVN_ITEMCHANGED;
+    else if ( StrCmpI(keyword, "INSERTED")    == 0 ) lvn = LVN_INSERTITEM;
+    else if ( StrCmpI(keyword, "DELETE")      == 0 ) lvn = LVN_DELETEITEM;
+    else if ( StrCmpI(keyword, "DELETEALL")   == 0 ) lvn = LVN_DELETEALLITEMS;
+    else if ( StrCmpI(keyword, "BEGINEDIT")   == 0 ) lvn = LVN_BEGINLABELEDIT;
+    else if ( StrCmpI(keyword, "ENDEDIT")     == 0 ) lvn = LVN_ENDLABELEDIT;
+    else if ( StrCmpI(keyword, "COLUMNCLICK") == 0 ) lvn = LVN_COLUMNCLICK;
+    else if ( StrCmpI(keyword, "BEGINDRAG")   == 0 ) lvn = LVN_BEGINDRAG;
+    else if ( StrCmpI(keyword, "BEGINRDRAG")  == 0 ) lvn = LVN_BEGINRDRAG;
+    else if ( StrCmpI(keyword, "ACTIVATE")    == 0 ) lvn = LVN_ITEMACTIVATE;
+    else if ( StrCmpI(keyword, "KEYDOWN")     == 0 ) lvn = LVN_KEYDOWN;
+    else if ( StrCmpI(keyword, "DEFAULTEDIT") == 0 ) *isDefEdit = true;
+    else if ( StrCmpI(keyword, "CLICK") == 0 )
     {
         lvn = NM_CLICK;
         *tag = TAG_LISTVIEW;
     }
-    else if ( StrStrI(keyword, "CHECKBOXCHANGED") != NULL )
+    else if ( StrCmpI(keyword, "CHECKBOXCHANGED") == 0 )
     {
         lvn = LVN_ITEMCHANGED;
         *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_CHECKBOXCHANGED;
     }
-    else if ( StrStrI(keyword, "SELECTCHANGED") != NULL )
+    else if ( StrCmpI(keyword, "SELECTCHANGED") == 0 )
     {
         lvn = LVN_ITEMCHANGED;
         *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_SELECTCHANGED;
     }
-    else if ( StrStrI(keyword, "FOCUSCHANGED") != NULL )
+    else if ( StrCmpI(keyword, "FOCUSCHANGED") == 0 )
     {
         lvn = LVN_ITEMCHANGED;
         *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_FOCUSCHANGED;
     }
-    else if ( StrStrI(keyword, "SELECTFOCUS") != NULL )
+    else if ( StrCmpI(keyword, "SELECTFOCUS") == 0 )
     {
         lvn = LVN_ITEMCHANGED;
         *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_SELECTCHANGED | TAG_FOCUSCHANGED;
@@ -2464,11 +2461,11 @@ static bool keyword2mcn(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
 {
     uint32_t mcn;
 
-    if ( StrStrI(keyword,      "GETDAYSTATE") != NULL ) mcn = MCN_GETDAYSTATE;
-    else if ( StrStrI(keyword, "RELEASED")    != NULL ) mcn = NM_RELEASEDCAPTURE;
-    else if ( StrStrI(keyword, "SELCHANGE")   != NULL ) mcn = MCN_SELCHANGE;
-    else if ( StrStrI(keyword, "SELECT")      != NULL ) mcn = MCN_SELECT;
-    else if ( StrStrI(keyword, "VIEWCHANGE")  != NULL ) mcn = MCN_VIEWCHANGE;
+    if ( StrCmpI(keyword,      "GETDAYSTATE") == 0 ) mcn = MCN_GETDAYSTATE;
+    else if ( StrCmpI(keyword, "RELEASED")    == 0 ) mcn = NM_RELEASEDCAPTURE;
+    else if ( StrCmpI(keyword, "SELCHANGE")   == 0 ) mcn = MCN_SELCHANGE;
+    else if ( StrCmpI(keyword, "SELECT")      == 0 ) mcn = MCN_SELECT;
+    else if ( StrCmpI(keyword, "VIEWCHANGE")  == 0 ) mcn = MCN_VIEWCHANGE;
     else
     {
         wrongArgValueException(c->threadContext, 2, MCN_KEYWORDS, keyword);
@@ -2522,15 +2519,15 @@ static bool keyword2dtpn(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
 {
     uint32_t dtpn;
 
-    if ( StrStrI(keyword,      "CLOSEUP")        != NULL ) dtpn = DTN_CLOSEUP;
-    else if ( StrStrI(keyword, "DATETIMECHANGE") != NULL ) dtpn = DTN_DATETIMECHANGE;
-    else if ( StrStrI(keyword, "DROPDOWN")       != NULL ) dtpn = DTN_DROPDOWN;
-    else if ( StrStrI(keyword, "FORMATQUERY")    != NULL ) dtpn = DTN_FORMATQUERY;
-    else if ( StrStrI(keyword, "FORMAT")         != NULL ) dtpn = DTN_FORMAT;
-    else if ( StrStrI(keyword, "KILLFOCUS")      != NULL ) dtpn = NM_KILLFOCUS;
-    else if ( StrStrI(keyword, "SETFOCUS")       != NULL ) dtpn = NM_SETFOCUS;
-    else if ( StrStrI(keyword, "USERSTRING")     != NULL ) dtpn = DTN_USERSTRING;
-    else if ( StrStrI(keyword, "WMKEYDOWN")      != NULL ) dtpn = DTN_WMKEYDOWN;
+    if ( StrCmpI(keyword,      "CLOSEUP")        == 0 ) dtpn = DTN_CLOSEUP;
+    else if ( StrCmpI(keyword, "DATETIMECHANGE") == 0 ) dtpn = DTN_DATETIMECHANGE;
+    else if ( StrCmpI(keyword, "DROPDOWN")       == 0 ) dtpn = DTN_DROPDOWN;
+    else if ( StrCmpI(keyword, "FORMATQUERY")    == 0 ) dtpn = DTN_FORMATQUERY;
+    else if ( StrCmpI(keyword, "FORMAT")         == 0 ) dtpn = DTN_FORMAT;
+    else if ( StrCmpI(keyword, "KILLFOCUS")      == 0 ) dtpn = NM_KILLFOCUS;
+    else if ( StrCmpI(keyword, "SETFOCUS")       == 0 ) dtpn = NM_SETFOCUS;
+    else if ( StrCmpI(keyword, "USERSTRING")     == 0 ) dtpn = DTN_USERSTRING;
+    else if ( StrCmpI(keyword, "WMKEYDOWN")      == 0 ) dtpn = DTN_WMKEYDOWN;
     else
     {
         wrongArgValueException(c->threadContext, 2, DTPN_KEYWORDS, keyword);
