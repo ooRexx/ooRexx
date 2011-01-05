@@ -93,7 +93,10 @@ return 0
 
   editControl~setText("")
 
-  startDirectory =  directory() || '\'
+  -- Have the open file dialog start in the same directory as the location of
+  -- this program.
+  parse source . . programSrc
+  startDirectory =  fileSpec('L', programSrc)
 
   fileName = fileNameDialog(startDirectory, self~dlgHandle, , 1, "Open a File for Editing")
   if fileName == 0 then return
