@@ -444,7 +444,7 @@ RexxRoutine8(RexxObjectPtr, fileNameDlg_rtn,
     }
 
     // Possible owner window.
-    if ( argumentExists(2) && !_hwndOwner != '\0' )
+    if ( argumentExists(2) && *_hwndOwner != '\0' )
     {
         OpenFileName.hwndOwner = (HWND)string2pointer(_hwndOwner);
     }
