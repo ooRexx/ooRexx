@@ -278,6 +278,13 @@ RexxObject *ExceptionClass::fillInStackTrace()
 }
 
 
+/**
+ * Get a condition directory object from an exception.
+ * Primarily for compatibility with previous releases.
+ *
+ * @return A directory instance containing the exception information
+ *         transformed into directory entries.
+ */
 RexxDirectory *ExceptionClass::getCondition()
 {
     if (condition == OREF_NULL)

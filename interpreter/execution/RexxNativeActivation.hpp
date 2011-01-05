@@ -119,7 +119,7 @@ class RexxNativeActivation : public RexxActivationBase
   inline bool        getVpavailable()   {return this->vpavailable;}
   inline RexxString *getMessageName()   {return this->msgname;}
   inline size_t      nextVariable()     {return this->nextvariable;}
-  inline RexxStem   *nextStem()         {return this->nextstem;}
+  inline RexxVariable *nextStem()       {return this->nextstem;}
   RexxObject *getContextStem(RexxString *name);
   RexxObject *getContextVariable(const char *name);
   void dropContextVariable(const char *name);
@@ -136,7 +136,7 @@ class RexxNativeActivation : public RexxActivationBase
   inline RexxCompoundElement *compoundElement() {return this->compoundelement; }
   inline void        setNextVariable(size_t value)           {this->nextvariable = value;}
   inline void        setNextCurrent(RexxVariableDictionary *vdict)     {this->nextcurrent = vdict;}
-  inline void        setNextStem(RexxStem *stemVar)     {this->nextstem = stemVar;}
+  inline void        setNextStem(RexxVariable *stemVar)     {this->nextstem = stemVar;}
   inline void        setCompoundElement(RexxCompoundElement *element)     {this->compoundelement = element;}
   inline RexxObject *getSelf() { return receiver; }
   inline RexxActivity *getActivity() { return activity; }
@@ -210,7 +210,7 @@ protected:
     size_t          nextvariable;        /* next variable to retrieve         */
     RexxVariableDictionary *nextcurrent; /* current processed vdict           */
     RexxCompoundElement *compoundelement;/* current compound variable value   */
-    RexxStem *      nextstem;            /* our working stem variable         */
+    RexxVariable   *nextstem;            /* our working stem variable         */
     size_t          argcount;            /* size of the argument list         */
     bool            vpavailable;         /* Variable pool access flag         */
     int             object_scope;        /* reserve/release state of variables*/

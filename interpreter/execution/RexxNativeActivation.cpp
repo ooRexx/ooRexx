@@ -2290,14 +2290,17 @@ bool RexxNativeActivation::fetchNext(
 
     for (;;)                             /* loop until we get something       */
     {
-        stemVar = nextStem();              /* see if we're processing a stem variable */
-        if (stemVar != OREF_NULL)          /* were we in the middle of processing a stem? */
+        variable = nextStem();             /* see if we're processing a stem variable */
+        if (variable != OREF_NULL)          /* were we in the middle of processing a stem? */
         {
+            stemVar = (RexxStem *)variable->getVariableValue();
             compound = stemVar->nextVariable(this);
             if (compound != OREF_NULL)     /* if we still have elements here */
             {
-                /* create a full stem name           */
-                *name = compound->createCompoundName(stemVar->getName());
+                // create a full stem name
+                // NOTE:  We're using the stem name from the variable, not the
+                // stem OBJECT we're iterating over.
+                *name = compound->createCompoundName(variable->getName());
                 /* get the value                     */
                 *value = compound->getVariableValue();
                 return true;
@@ -2320,10 +2323,10 @@ bool RexxNativeActivation::fetchNext(
             /* get the value                     */
             RexxObject *variable_value = variable->getVariableValue();
             /* found a stem item?                */
-            if (isOfClass(Stem, variable_value))
+            if (variable->isStem())
             {
-                /* we are not on a stem              */
-                setNextStem((RexxStem *)variable_value);
+                /* we are now on a stem              */
+                setNextStem(variable);
                 setCompoundElement(((RexxStem *)variable_value)->first());
                 /* set up an iterator for the stem   */
             }

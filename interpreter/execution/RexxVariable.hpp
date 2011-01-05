@@ -44,6 +44,8 @@
 #ifndef Included_RexxVariable
 #define Included_RexxVariable
 
+#include "StringClass.hpp"
+
 class RexxVariable : public RexxInternalObject {
  public:
   inline void *operator new(size_t size, void *ptr) { return ptr; }
@@ -86,6 +88,7 @@ class RexxVariable : public RexxInternalObject {
   inline RexxVariable *getNext() { return (RexxVariable *)variableValue; }
   inline void cache(RexxVariable *next) { reset(OREF_NULL); variableValue = (RexxObject *)next; }
   inline bool isLocal(RexxActivation *act) { return act == creator; }
+  inline bool isStem() { return variable_name->endsWith('.'); }
 
   static RexxVariable *newInstance(RexxString *name);
 
