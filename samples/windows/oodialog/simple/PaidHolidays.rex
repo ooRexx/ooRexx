@@ -151,7 +151,11 @@ return 0
   -- months.  We also know that our calendar only displays 1 month completely,
   -- and displays the partial month preceding and the partial month following.
   -- Therefore, if the complete month is January 2011, the preceding month will
-  -- be December 2010.  Likewise we know that the range set for the calendar
+  -- be December 2010.  Likewise we know that the range set for the calendar is
+  -- January 2011 through December 2011, January 2012 can never be shown, so
+  -- December 2011 can never be a preceding month.  Therefore, if the start
+  -- month is 12, it must be December 2010.  We give that month a 0 number so
+  -- that getDayState() will return an empty .DayState object.
   month = startMonth~month
   if month == 12 then month = 0
 
