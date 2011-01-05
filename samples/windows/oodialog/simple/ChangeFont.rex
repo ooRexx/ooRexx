@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -93,8 +93,10 @@ return 0
 
   editControl~setText("")
 
-  fileName = fileNameDialog( , self~dlgHandle, , 1, "Open a File for Editing")
-  if fileName == "" then return
+  startDirectory =  directory() || '\'
+
+  fileName = fileNameDialog(startDirectory, self~dlgHandle, , 1, "Open a File for Editing")
+  if fileName == 0 then return
 
   fObj = .stream~new(fileName)
   fObj~open
@@ -113,17 +115,9 @@ return 0
   editControl~setFont(newFont)
   self~newPushButton(IDC_PB_CHANGE_FONT)~disable
 
-::method cancel
+::method leaving
   expose newFont
-
   if newFont \= .nil then self~deleteFont(newFont)
-  self~cancel:super
-
-::method ok
-  expose newFont
-
-  if newFont \= .nil then self~deleteFont(newFont)
-  self~ok:super
 
 ::method abort private
   j = errorDialog("There is an unexplained error.  Program Abort")
