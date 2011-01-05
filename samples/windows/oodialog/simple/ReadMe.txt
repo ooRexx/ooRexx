@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -56,3 +56,10 @@
     Shows how to create a new font correctly and how to change the font of
     a dialog control using the created font.  It is also an example of a
     multi-line edit control and shows how to enable and disable buttons.
+
+    - PaidHolidays.rex
+
+    Shows how to use a MonthCalendar control, inlcuding responding to the
+    GETDAYSTATE event.  Also shows how to: restrict the time span shown in
+    the calendar, resize the calendar to the optimal size, and determine
+    which months are currently displayed.
