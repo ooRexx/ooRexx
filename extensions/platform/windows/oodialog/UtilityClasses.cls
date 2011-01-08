@@ -162,7 +162,7 @@
         do i = 1 to count
             resultArray[i] = .DayState~new
         end
-        return .DayStates~makeDayStateBuffer(resultArray, count)
+        return .DayStates~makeDayStateBuffer(resultArray)
     end
 
     do i = 1 to count
@@ -180,7 +180,7 @@
         resultArray[i] = .DayState~new
     end
 
-    return .DayStates~makeDayStateBuffer(resultArray, count)
+    return .DayStates~makeDayStateBuffer(resultArray)
 
 ::method addYear
     expose startMonth endMonth years
