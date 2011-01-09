@@ -196,6 +196,9 @@
 ::method getStyle unguarded external "LIBRARY oodialog e_style"
 ::method noContextMenu unguarded external "LIBRARY oodialog e_noContextMenu"
 
+-- TODO New method, need doc. Prevents the edit control from resizing itself.
+::method setResizing unguarded external "LIBRARY oodialog e_setResizing"
+
 ::method canUndo unguarded
     use strict arg
     return self~sendWinIntMsg(self~EM_CANUNDO, 0, 0) != 0

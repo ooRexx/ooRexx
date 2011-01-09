@@ -1865,6 +1865,67 @@ RexxMethod2(RexxObjectPtr, e_setCue, CSTRING, text, CSELF, pCSelf)
 }
 
 
+LRESULT CALLBACK EditSizeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
+{
+    // We don't need dwData.
+
+    switch ( msg )
+    {
+        case WM_SIZE:
+            // Do not let the edit control resize itself.
+            return TRUE;
+
+        case WM_NCDESTROY:
+            /* The window is being destroyed, remove the subclass, clean up
+             * memory.
+             */
+            RemoveWindowSubclass(hwnd, EditSizeProc, id);
+            LocalFree((HLOCAL)dwData);
+            break;
+    }
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+
+/** Edit::setResizing()
+ *
+ *  Subclasses, or removes the subclass, so that the edit control will not
+ *  internally resize itself on receiveing WM_SIZE messages.
+ *
+ *  TODO this new function is not complete.
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, e_setResizing, OPTIONAL_logical_t, set, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    // Skipped checking for already installed.  TODO
+
+    SUBCLASSDATA *pData = (SUBCLASSDATA *)LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
+    if ( pData == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        return TheFalseObj;
+    }
+
+    // Skipped adding any extra data
+
+    pData->hCtrl = pcdc->hCtrl;
+    pData->uID = pcdc->id;
+    pData->pData = NULL;
+
+    if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)EditSizeProc, (LPARAM)pData) == 0 )
+    {
+        // The subclass was not installed, free memeory, set error code.
+        LocalFree(pData);
+        oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        return TheFalseObj;
+    }
+
+    return TheTrueObj;
+}
+
+
 /** Edit::getStyle()
  *  Edit::replaceStyle()
  *  Edit::removeStyle()
