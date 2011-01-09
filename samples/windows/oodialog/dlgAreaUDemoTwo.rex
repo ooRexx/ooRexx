@@ -1,11 +1,11 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2006 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2006-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -34,73 +34,118 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* DlgAreaDemo.Rex  --  Demonstrate DlgArea & DlgAreaU Classes  --  Feb 2006 */
 
-MyDlg=.MyDialog~new
-MyDlg~execute('ShowTop')
-MyDlg~DeInstall
+/**
+ *  DlgAreaDemoTwo.Rex
+ *
+ *  Demonstrates a second approach to resizable dialogs.  Essentially what this
+ *  approach does is to defer the redrawing of the dialog controls until the
+ *  user has finished resizing the dialog.
+ *
+ *  By default, the DialogAreaU class calls a dialog method (the update method)
+ *  that forces all the dialog controls to redraw themselves every time a resize
+ *  event ocurrs.  This causes the constant flicker seen in DlgAreaDemo.rex.
+ *
+ *  The approach taken here is to tell the DialogAreaU object to *not* invoke
+ *  the update method during the resize event.  This is done by setting the
+ *  updateOnResize attribute to false in the DialogAreaU object.
+ *
+ *  Then we connect the size / move ended event connected to a method in our
+ *  dialog.  This event is called exactly once when the user has stopped
+ *  resizing or moving the dialog.
+ *
+ *  We keep track of whether the user is resizing, or not.  When we get the size
+ *  move ended event, if the user was resizing, we invoked the update method of
+ *  the dialog, forcing all the dialog controls to redraw themselves in their
+ *  new, final, position.
+ *
+ *  This eliminates the flicker, but also makes it appear as though the dialog
+ *  controls are not changing while the user is actively resizing.  When the
+ *  user stops resizing, the dialog controls "magically" appear in their new
+ *  size and position.
+ *
+ *  Which approach is better is probably a matter of personal preference.
+ */
 
-exit
+  myDlg = .MyDialog~new
+  myDlg~execute('ShowTop')
+
+  return 0
+
 ::requires "ooDialog.cls"
-/* ========================================================================= */
-::class MyDialog Subclass UserDialog
-/* ========================================================================= */
-::method Init
-/* ------------------------------------------------------------------------- */
-  self~Init:super
-  rc=self~CreateCenter(250,250,'MyDialog',,
-                               'ThickFrame MinimizeBox MaximizeBox',,,
-                               'MS Sans Serif',8)
-  self~InitCode=(rc=0)
-  self~connectResize('OnResize')
-  self~addUserMsg(onMoveSizeEnded, "0x00000232", "0xFFFFFFFF", 0, 0, 0, 0, 0)
 
-/* ------------------------------------------------------------------------- */
-::method DefineDialog
-/* ------------------------------------------------------------------------- */
-expose u sizing
+::class 'MyDialog' subclass UserDialog
 
-sizing = .false
+::method init
 
-u=.dlgAreaU~new(self)                                         /* whole dlg   */
-if u~lastError \= .nil then call errorDialog u~lastError
+  self~init:super
+  self~createCenter(250, 250, 'MyDialog',                             -
+                              'ThickFrame MinimizeBox MaximizeBox', , -
+                              'MS Sans Serif', 8)
 
-u~NoResize~put(13)
-e=.dlgArea~new(u~x       ,u~y       ,u~w('70%'),u~h('90%'))   /* edit   area */
-s=.dlgArea~new(u~x       ,u~y('90%'),u~w('70%'),u~hr      )   /* status area */
-b=.dlgArea~new(u~x('70%'),u~y       ,u~wr      ,u~hr      )   /* button area */
+  self~connectResize('onResize')
+  self~connectSizeMoveEnded('onSizeMoveEnded')
 
-self~addEntryLine(12,'text',e~x,e~y,e~w,e~h,'multiline')
-self~addText(s~x,s~y,s~w,s~h,'Status info appears here',,11)
 
-self~addButton(13,b~x,b~y('00%'),b~w,b~h('9%'),'Button' 0,'Button'||0)
-self~addButton(14,b~x,b~y('10%'),b~w,b~h('9%'),'Button' 1,'Button'||1)
-self~addButton(15,b~x,b~y('20%'),b~w,b~h('9%'),'Button' 2,'Button'||2)
-self~addButton(16,b~x,b~y('30%'),b~w,b~h('9%'),'Button' 3,'Button'||3)
-self~addButton(17,b~x,b~y('40%'),b~w,b~h('9%'),'Button' 4,'Button'||4)
-self~addButton(18,b~x,b~y('50%'),b~w,b~h('9%'),'Button' 5,'Button'||5)
-self~addButton(19,b~x,b~y('60%'),b~w,b~h('9%'),'Button' 6,'Button'||6)
-self~addButton( 1,b~x,b~y('90%'),b~w,b~h('9%'),'Ok','Ok','DEFAULT')
+::method defineDialog
+  expose u sizing
 
-::method initDialog
-  self~newEdit(12)~setResizing(.false)
+  u = .dlgAreaU~new(self)                                            /* whole dlg   */
+  if u~lastError \= .nil then call errorDialog u~lastError
 
-/* ------------------------------------------------------------------------- */
-::method onResize
-/* ------------------------------------------------------------------------- */
-expose u sizing
-use arg dummy,sizeinfo
-sizing = .true
-u~resize(self,sizeinfo)
-
-::method onMoveSizeEnded
-  expose sizing
-
-  if sizing then self~update
+  -- Tell the DialogAreaU object to not invoke the update method.  We are not
+  -- resizing now.
+  u~updateOnResize = .false
   sizing = .false
 
-/* ------------------------------------------------------------------------- */
-::method Unknown
-/* ------------------------------------------------------------------------- */
-use arg msgname, args
-self~newStatic(11)~setText('You Pressed' msgname)
+  u~noResize~put(13)
+  e = .dlgArea~new(u~x       , u~y       , u~w('70%'), u~h('90%'))   /* edit   area */
+  s = .dlgArea~new(u~x       , u~y('90%'), u~w('70%'), u~hr      )   /* status area */
+  b = .dlgArea~new(u~x('70%'), u~y       , u~wr      , u~hr      )   /* button area */
+
+  self~addEntryLine(12, 'text', e~x, e~y, e~w, e~h, 'multiline')
+  self~addText(s~x, s~y, s~w, s~h, 'Status info appears here', , 11)
+
+  self~addButton(13, b~x, b~y('00%'), b~w, b~h('9%'), 'Button' 0 , 'Button'||0)
+  self~addButton(14, b~x, b~y('10%'), b~w, b~h('9%'), 'Button' 1 , 'Button'||1)
+  self~addButton(15, b~x, b~y('20%'), b~w, b~h('9%'), 'Button' 2 , 'Button'||2)
+  self~addButton(16, b~x, b~y('30%'), b~w, b~h('9%'), 'Button' 3 , 'Button'||3)
+  self~addButton(17, b~x, b~y('40%'), b~w, b~h('9%'), 'Button' 4 , 'Button'||4)
+  self~addButton(18, b~x, b~y('50%'), b~w, b~h('9%'), 'Button' 5 , 'Button'||5)
+  self~addButton(19, b~x, b~y('60%'), b~w, b~h('9%'), 'Button' 6 , 'Button'||6)
+  self~addButton( 1, b~x, b~y('90%'), b~w, b~h('9%'), 'Ok',        'Ok', 'DEFAULT')
+
+
+::method initDialog
+
+  -- The underlying edit controls internally resize themselves as the dialog
+  -- they are contained in is resized.  We don't want that, so we disable that
+  -- behavior in the underlying edit control.
+  self~newEdit(12)~disableInternalResize
+
+
+::method onResize unguarded
+  expose u sizing
+  use arg dummy, sizeinfo
+
+  -- We are resizing now.
+  sizing = .true
+
+  u~resize(self, sizeinfo)
+  return 0
+
+
+::method onSizeMoveEnded unguarded
+  expose sizing
+
+  -- If we were resizing, force the dialog controls to redraw themselves.
+  if sizing then self~update
+
+  -- We are not resizing.
+  sizing = .false
+  return 0
+
+
+::method unknown
+  use arg msgname, args
+  self~newStatic(11)~setText('You Pressed' msgname)
