@@ -195,9 +195,7 @@
 ::method removeStyle unguarded external "LIBRARY oodialog e_style"
 ::method getStyle unguarded external "LIBRARY oodialog e_style"
 ::method noContextMenu unguarded external "LIBRARY oodialog e_noContextMenu"
-
--- TODO New method, need doc. Prevents the edit control from resizing itself.
-::method setResizing unguarded external "LIBRARY oodialog e_setResizing"
+::method disableInternalResize unguarded external "LIBRARY oodialog e_disableInternalResize"
 
 ::method canUndo unguarded
     use strict arg

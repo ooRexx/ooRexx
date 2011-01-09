@@ -1146,9 +1146,9 @@ Expose DlgObjList
 
 use arg DlgObj,Margin,NoResize,NoMove
 
-if NoResize~String \= 'a Set' then NoResize = .Set~new
+if \NoResize~isA(.Set) then NoResize = .Set~new
 self~NoResize = NoResize
-if NoMove~String   \= 'a Set' then NoMove   = .Set~new
+if \NoMove~isA(.Set) then NoMove   = .Set~new
 self~NoMove   = NoMove
 
 if \margin~datatype('n') then margin = 5
@@ -1157,6 +1157,7 @@ self~CorrectionFactor = 1.05
 
 self~init:super(0,0,DlgObj~sizeX,DlgObj~sizeY,margin)
 
+self~updateOnResize = .true
 self~OriginalWidth  = DlgObj~sizeX
 self~OriginalHeight = DlgObj~sizeY
 self~LastError      = .nil
@@ -1289,12 +1290,14 @@ expose DlgObjList
      if \self~NoMove~HasIndex(DOid)
      then dlg~MoveItem(DOid,DOx * wFactor,DOy * hFactor,"NOREDRAW")
   end /* DO */
-  dlg~update
+
+  if self~updateOnResize then dlg~update
 /* ------------------------------------------------------------------------- */
 
-::method OriginalWidth    Attribute Private
-::method OriginalHeight   Attribute Private
-::method NoResize         Attribute
-::method NoMove           Attribute
-::method CorrectionFactor Attribute
-::method LastError        Attribute
+::attribute OriginalWidth     Private
+::attribute OriginalHeight    Private
+::attribute NoResize
+::attribute NoMove
+::attribute CorrectionFactor
+::attribute LastError
+::attribute updateOnResize

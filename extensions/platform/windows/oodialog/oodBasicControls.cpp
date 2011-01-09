@@ -1867,8 +1867,6 @@ RexxMethod2(RexxObjectPtr, e_setCue, CSTRING, text, CSELF, pCSelf)
 
 LRESULT CALLBACK EditSizeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
 {
-    // We don't need dwData.
-
     switch ( msg )
     {
         case WM_SIZE:
@@ -1886,30 +1884,97 @@ LRESULT CALLBACK EditSizeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
     return DefSubclassProc(hwnd, msg, wParam, lParam);
 }
 
-/** Edit::setResizing()
+/** Edit::disableInternalResize()
  *
- *  Subclasses, or removes the subclass, so that the edit control will not
- *  internally resize itself on receiveing WM_SIZE messages.
+ *  The edit control, internally, resizes itself in response to its parent
+ *  dialog being resized.  There are times when this behavior may not be
+ *  desired.
  *
- *  TODO this new function is not complete.
+ *  The disableInternalResize method can be used to disable that behavior.
  *
+ *  @param disable  [optional] If true, disable the edit control's internal
+ *                  resizing.  If false, renable the behavior, if it has been
+ *                  disabled.  The default is true.
  *
+ *  @return  True on success, false on failure.
+ *
+ *  @notes  Requires ComCtl version 6.0 or higher.
+ *
+ *          Sets the .SystemErrorCode.  These codes may be set, by the ooDialog
+ *          framework, the OS does not set any:
+ *
+ * ERROR_NOT_SUPPORTED   The request is not supported.
+ *   Meaning:  Asked to disable internal resizing when it was already disabled,
+ *             or asked to re-ennable the behavior when it is not disabled to
+ *             begin with.
+ *
+ * ERROR_SIGNAL_REFUSED  The recipient process has refused the signal.
+ *   Meaning:  Tried to re-enable the internal resizing, but failed.
+ *
+ *  @remarks  The above doc is for oodialg.pdf of course.  Internally this
+ *            method is implemented by subclassing the edit control.  The
+ *            subclass swallows the WM_SIZE messages.  You might think that this
+ *            would prevent the programmer from resizing the control, but it
+ *            does not.
  */
-RexxMethod2(RexxObjectPtr, e_setResizing, OPTIONAL_logical_t, set, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, e_disableInternalResize, OPTIONAL_logical_t, disable, CSELF, pCSelf)
 {
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr result = TheFalseObj;
+    if ( ! requiredComCtl32Version(context, "disableInternalResize", COMCTL32_6_0) )
+    {
+        goto done_out;
+    }
+
     pCDialogControl pcdc = (pCDialogControl)pCSelf;
 
-    // Skipped checking for already installed.  TODO
+    if ( argumentOmitted(1) )
+    {
+        disable = TRUE;
+    }
 
-    SUBCLASSDATA *pData = (SUBCLASSDATA *)LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
+    SUBCLASSDATA *pData = NULL;
+    BOOL success = GetWindowSubclass(pcdc->hCtrl, EditSizeProc, pcdc->id, (DWORD_PTR *)&pData);
+
+    if ( ! disable )
+    {
+        if ( pData == NULL )
+        {
+            // The subclass is not installed, we call this an error.
+            oodSetSysErrCode(context->threadContext, ERROR_NOT_SUPPORTED);
+            goto done_out;
+        }
+
+        if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)EditSizeProc, (LPARAM)pcdc->id) == 0 )
+        {
+            // The subclass is not removed, we can't free pData because the
+            // subclass procedure may (will) still access it.
+            oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        }
+        else
+        {
+            LocalFree(pData);
+            result = TheTrueObj;
+        }
+        goto done_out;
+    }
+
+    if ( pData != NULL )
+    {
+        // The subclass is already installed, we call this an error.
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_SUPPORTED);
+        goto done_out;
+    }
+
+    pData = (SUBCLASSDATA *)LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
     if ( pData == NULL )
     {
         outOfMemoryException(context->threadContext);
-        return TheFalseObj;
+        goto done_out;
     }
 
-    // Skipped adding any extra data
-
+    // We do not need any extra data (pData->pData)
     pData->hCtrl = pcdc->hCtrl;
     pData->uID = pcdc->id;
     pData->pData = NULL;
@@ -1919,10 +1984,13 @@ RexxMethod2(RexxObjectPtr, e_setResizing, OPTIONAL_logical_t, set, CSELF, pCSelf
         // The subclass was not installed, free memeory, set error code.
         LocalFree(pData);
         oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
-        return TheFalseObj;
+        goto done_out;
     }
 
-    return TheTrueObj;
+    result = TheTrueObj;
+
+done_out:
+    return result;
 }
 
 

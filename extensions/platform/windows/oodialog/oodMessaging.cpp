@@ -963,6 +963,7 @@ inline MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog
  * @param np
  * @param handle
  * @param item
+ * @param tag
  *
  * @return MsgReplyType
  *
@@ -979,7 +980,7 @@ inline MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog
  *           getting converted properly.
  */
 MsgReplyType genericInvokeDispatch(pCPlainBaseDialog pcpbd, char *rexxMethod, WPARAM wParam, LPARAM lParam,
-                                     char *np, HANDLE handle, int item)
+                                     char *np, HANDLE handle, int item, uint32_t tag)
 {
     RexxThreadContext *c = pcpbd->dlgProcContext;
     RexxStringObject method = c->String(rexxMethod);
@@ -1017,7 +1018,17 @@ MsgReplyType genericInvokeDispatch(pCPlainBaseDialog pcpbd, char *rexxMethod, WP
         args = c->ArrayOfTwo(c->Uintptr(wParam), c->Intptr(lParam));
     }
 
-    return invokeDispatch(c, pcpbd->rexxSelf, method, args);
+    if ( tag & TAG_REPLYFROMREXX )
+    {
+        // We only get here for messages where what the Rexx method returns is
+        // discarded / ignored.
+        invokeDirect(c, pcpbd->rexxSelf, rexxMethod, args);
+        return ReplyTrue;
+    }
+    else
+    {
+        return invokeDispatch(c, pcpbd->rexxSelf, method, args);
+    }
 }
 
 inline RexxStringObject mcnViewChange2rexxString(RexxThreadContext *c, uint32_t view)
@@ -1876,7 +1887,7 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 lParam = (((NMBCHOTITEM *)lParam)->dwFlags & HICF_ENTERING) ? 1 : 0;
             }
 
-            return genericInvokeDispatch(pcpbd, m[i].rexxMethod, wParam, lParam, np, handle, item);
+            return genericInvokeDispatch(pcpbd, m[i].rexxMethod, wParam, lParam, np, handle, item, m[i].tag);
         }
     }
 
@@ -2061,7 +2072,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                 handle = (HANDLE)lParam;
             }
 
-            return genericInvokeDispatch(pcpbd, m[i].rexxMethod, wParam, lParam, np, handle, item);
+            return genericInvokeDispatch(pcpbd, m[i].rexxMethod, wParam, lParam, np, handle, item, m[i].tag);
         }
     }
     return ContinueProcessing;

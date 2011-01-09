@@ -65,6 +65,13 @@
    use strict arg msgToRise
    return self~addUserMsg(msgToRise, 0x00000003, 0xFFFFFFFF, 0, 0, 0, 0)
 
+-- WM_EXITSIZEMOVE
+::method connectSizeMoveEnded
+   use strict arg msgToRise, willReply = .true
+   tag = 0
+   if willReply then tag = 0x02000000
+   self~addUserMsg(msgToRise, "0x00000232", "0xFFFFFFFF", 0, 0, 0, 0, tag)
+
 -- WM_WINDOWPOSCHANGED
 ::method connectPosChanged
    use strict arg msgToRise
