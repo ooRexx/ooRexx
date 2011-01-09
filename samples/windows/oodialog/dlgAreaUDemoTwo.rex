@@ -50,9 +50,9 @@
  *  the update method during the resize event.  This is done by setting the
  *  updateOnResize attribute to false in the DialogAreaU object.
  *
- *  Then we connect the size / move ended event connected to a method in our
- *  dialog.  This event is called exactly once when the user has stopped
- *  resizing or moving the dialog.
+ *  Then we connect the size / move ended event to a method in our dialog.  This
+ *  event is called exactly once when the user has stopped resizing or moving
+ *  the dialog.
  *
  *  We keep track of whether the user is resizing, or not.  When we get the size
  *  move ended event, if the user was resizing, we invoked the update method of
