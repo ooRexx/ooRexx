@@ -199,7 +199,11 @@ public:
     // locate a named data queue
     DataQueue *locate(const char *name);
     // locate a named data queue
+    DataQueue *synchronizedLocate(ServerQueueManager *manager, const char *name);
+    // locate a session data queue
     DataQueue *locate(SessionID id);
+    // locate a session data queue
+    DataQueue *synchronizedLocate(ServerQueueManager *manager, SessionID id);
     // locate and remove a named data queue
     DataQueue *remove(const char *name);
     // locate a named data queue
@@ -246,6 +250,7 @@ protected:
 class ServerQueueManager
 {
     friend class DataQueue;     // needs access to the instance lock
+    friend class QueueTable;    // needs access to the instance lock
 public:
     ServerQueueManager() : namedQueues(), sessionQueues(), lock() { lock.create(); }
 
