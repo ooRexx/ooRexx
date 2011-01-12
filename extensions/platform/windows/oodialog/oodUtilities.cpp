@@ -968,9 +968,48 @@ RexxMethod1(int32_t, rsrcUtils_idError, RexxObjectPtr, rxID)
     return idError(context, rxID);
 }
 
-RexxMethod2(int32_t, rsrcUtils_resolveResourceID, RexxObjectPtr, rxID, OSELF, self)
+/** ResourceUtils::resolveSymbolicID
+ *  ResourceUtils::resolveResourceID
+ *  ResourceUtils::getResourceID
+ *
+ *  Returns the numeric value of an, assumed, resource ID.
+ *
+ *  The primary purpose is to resolve a symbolic resource ID to its integer
+ *  value.  If the object is already an integer value, then that value is
+ *  simpley returned.
+ *
+ *  @param rxID  The resource ID object to resolve.
+ *
+ *  @return  On success, the resolved interger value of the resource ID.
+ *
+ *  @remarks  resolveSymbolicID and resolveResourceID allow a resource ID of -1,
+ *            and do not raise an exception if a symbolic ID can not be
+ *            resolved.
+ *
+ *            getResourceID() does raises execeptions if a symbolic ID can not
+ *            be resolved, o for a -1 ID.
+ */
+RexxMethod3(int32_t, rsrcUtils_resolveResourceID, RexxObjectPtr, rxID, NAME, method, OSELF, self)
 {
-    return resolveResourceID(context, rxID, self);
+    if ( *method == 'R' )
+    {
+        return resolveResourceID(context, rxID, self);
+    }
+    else
+    {
+        uint32_t result = oodResolveSymbolicID(context, self, rxID, -1, 1);
+        if ( result != OOD_ID_EXCEPTION )
+        {
+            if ( result == (int32_t)-1 || result == 0 )
+            {
+                wrongArgValueException(context->threadContext, 1, "a valid positive numeric ID or a valid symbolic ID" , rxID);
+            }
+        }
+
+        // At this point if result == OOD_ID_EXCEPTION or < 1 an exception has
+        // been raised and it does not matter what the value of result is.
+        return (int32_t)result;
+    }
 }
 
 RexxMethod2(int32_t, rsrcUtils_resolveIconID_pvt, RexxObjectPtr, rxID, OSELF, self)

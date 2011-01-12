@@ -268,6 +268,7 @@
 ::method resolveIconID private external "LIBRARY oodialog rsrcUtils_resolveIconID_pvt"
 ::method resolveSymbolicId unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
 ::method resolveResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
+::method getResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
 ::method checkID external "LIBRARY oodialog rsrcUtils_checkID"
 
 /**
@@ -328,6 +329,12 @@
 ::constant WM_NEXTDLGCTL                 "0x0028"
 ::constant WM_USER_INTERRUPTSCROLL       "0x0A02"
 
+::constant SIZE_RESTORED       0
+::constant SIZE_MINIMIZED      1
+::constant SIZE_MAXIMIZED      2
+::constant SIZE_MAXSHOW        3
+::constant SIZE_MAXHIDE        4
+
 
 ::method init class external "LIBRARY oodialog pbdlg_init_cls"
 ::method setDefaultFont class external "LIBRARY oodialog pbdlg_setDefaultFont_cls"
@@ -347,7 +354,8 @@
 
 -- finsished is now a boolean, when set to .true, the dialog ends.  Older ooDialog set it
 -- to 2 on an abnormal termination of the underlying dialog.  This is no longer done.
-::attribute finished
+::attribute finished get external "LIBRARY oodialog pbdlg_getFinished"
+::attribute finished set external "LIBRARY oodialog pbdlg_setFinished"
 
 ::method dlgData private
    expose dlgData.
