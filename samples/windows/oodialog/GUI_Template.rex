@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2006-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2006-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -34,6 +34,8 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------*/
 /* How to use this template:                                                 */
 /*                                                                           */
 /* This template allows you to create dialogs with ooDialog without need     */
@@ -43,8 +45,6 @@
 /*                                                                           */
 /* ooDialog is very fully featured and it would not be useful to try to      */
 /* anticipate and include every possible activity.                           */
-/*                                                                           */
-/* Category dialogs & Property sheets subclass differently -see the Manual.  */
 /*                                                                           */
 /* Not all Dialogs require all the methods listed in the template.           */
 /* If you are not adding any control through a particular method then you    */
@@ -81,7 +81,7 @@ MyDialog=.MyDlgClass~new /*(a.)*/          /* Create ooDialog Class instance */
                         /* it start minimised etc. then change the following */
                         /* clause.  See Show, Execute, ExecuteAsync, Popup&  */
                         /* PopupasChild in the ooDialog Reference            */
-MyDialog~Execute('ShowTop')     /* Create, show and run the Windows Object   */
+MyDialog~execute('ShowTop')     /* Create, show and run the Windows Object   */
                         /* ------------------------------------------------- */
 
                         /* ------------------------------------------------- */
@@ -89,8 +89,6 @@ MyDialog~Execute('ShowTop')     /* Create, show and run the Windows Object   */
                         /* the ooDialog Object after OK/Cancel has been      */
                         /* pressed.  ie: MyDialog~Attribute                  */
                         /* ------------------------------------------------- */
-
-MyDialog~DeInstall              /* Clean Up                                  */
 
                         /* ------------------------------------------------- */
                         /* Code that you want to execute after the Dialog    */
@@ -106,7 +104,18 @@ exit
 /*                                                                           */
 /* All error information available is written to STDOUT (usually the console)*/
 /* As this may not be present (running a GUI with REXXHIDE) a ooDialog       */
-/* errorDialog popup is also presented                                      */
+/* errorDialog popup is also presented                                       */
+/*                                                                           */
+/* While this type of error handling is useful to some people, it also will  */
+/* mask the print out of many syntax errors that happen while your dialog    */
+/* is executing.                                                             */
+/*                                                                           */
+/* If you are having trouble debugging problems in your dialog, 1.) Comment  */
+/* out the 'signal on any' line above.  2.) Execute your dialog from a       */
+/* console window so that you will see any syntax messages printed out by    */
+/* the interpreter.                                                          */
+/*                                                                           */
+/* Those two steps will solve many of your debugging problems.               */
 /* ========================================================================= */
 any:
 
@@ -184,13 +193,16 @@ exit -1
   width=300 ; height=200        /* Set the Width and height of dialog        */
 
                                 /* Now we create the Windows Object          */
-  rc=self~createCenter(width,height,'This text appears in the Dialog Title',,,,
+  success=self~createCenter(width,height,'This text appears in the Dialog Title',,,,
                                     'MS Sans Serif',8)
   /* The above line creates a dialog in the centre of the screen, if you     */
   /* Would rather specify values for x & y use the line below instead        */
-  /* rc=self~Create(x,y,width,height,Title)                                  */
+  /* success=self~create(x,y,width,height,Title)                             */
 
-  self~initCode=(rc=0)
+  if \success then do
+    self~initCode=1
+    return
+  end
                         /* ------------------------------------------------- */
                         /* Here we can initialise any attributes of our      */
                         /* dialog.                                           */
@@ -199,11 +211,11 @@ exit -1
                         /* ------------------------------------------------- */
                         /* Here we can 'connect' dialog item events to       */
                         /* Methods or Attributes.                            */
-                        /* i.e.: self~connectListViewEvent(id,"Changed",,       */
+                        /* i.e.: self~connectListViewEvent(id,"Changed",,    */
                         /*                            "ItemSelectedMethod")  */
                         /*                                                   */
                         /* NB: Many createXXX Methods (which appear in the   */
-                        /* DefineDialog method below) also provide a way to  */
+                        /* defineDialog method below) also provide a way to  */
                         /* define connections.                               */
                         /* ------------------------------------------------- */
 
@@ -227,8 +239,8 @@ exit -1
                         /* Dialog Height is available to us as self~sizeY    */
                         /* ------------------------------------------------- */
 
-   self~createPushButton( 1,self~sizeX-60 ,self~sizeY-20,50,15,'DEFAULT','OK','Ok')
-   self~createPushButton( 2,self~sizeX-120,self~sizeY-20,50,15,,'Cancel','Cancel')
+   self~createPushButton(IDOK,self~sizeX-60 ,self~sizeY-20,50,15,'DEFAULT','OK')
+   self~createPushButton(IDCANCEL,self~sizeX-120,self~sizeY-20,50,15,,'Cancel')
 
 /* examples to cut & paste:                                                  */
 /* self~createPushButton(id,x,y,cx,cy,'options','text','method')             */
@@ -256,7 +268,17 @@ exit -1
 ::method initDialog
 /* ------------------------------------------------------------------------- */
 /* If you have no need to initialise/populate items delete this method       */
-  self~initDialog:super
+
+                        /* ------------------------------------------------- */
+                        /* Code here is run after the underlying windows     */
+                        /* dialog object has been created.  Whether the      */
+                        /* dialog is displayed depends on the style keywords */
+                        /* used in the createCenter(), (or create()) method. */
+                        /* By default the dialog will be created invisible.  */
+                        /* If you use the VISIBLE keyword, the dialog will   */
+                        /* be visisble at this point.                        */
+                        /* ------------------------------------------------- */
+
                         /* ------------------------------------------------- */
                         /* Here we can populate list boxes etc.              */
                         /* ------------------------------------------------- */
@@ -265,9 +287,9 @@ exit -1
 /*  List = self~newListView([id])                                            */
 /*  if List \= .Nil then do                                                  */
 /*    list~setImageList(imageList, .Image~toID(LVSIL_SMALL))                 */
-/*    list~AddStyle("[Style1 style2...]")                                    */
-/*    list~InsertColumn(0,"[Title]",[width],[style])                         */
-/*    list~InsertColumn(1,"[Title]",[width],[style])                         */
+/*    list~addStyle("[Style1 style2...]")                                    */
+/*    list~insertColumn(0,"[Title]",[width],[style])                         */
+/*    list~insertColumn(1,"[Title]",[width],[style])                         */
 /*    do data over dataset                                                   */
 /*       ordinal=list~addrow(,[icon_no],[column 0 text],[column 1 text]...)  */
 /*    end                                                                    */
@@ -278,50 +300,77 @@ exit -1
                         /* self~SetMenu                                      */
                         /* ------------------------------------------------- */
 
-                        /* ------------------------------------------------- */
-                        /* Code here is run after the windows dialog object  */
-                        /* has been created, but before it is displayed      */
-                        /* ------------------------------------------------- */
-
 /* ------------------------------------------------------------------------- */
 ::method ok
 /* ------------------------------------------------------------------------- */
-/* If you do not need to add processing to this class you can delete it      */
-  self~oK:super                 /* call Self~Validate, set self~InitCode to 1*/
+/* The ok() method is invoked automatically by the ooDialog framework when   */
+/* the user pushes or clicks a button, or a menu item, with the resource ID  */
+/* of IDOK (1).  If you do not need to do, or do not want to do, any         */
+/* processing here, you can delete this method.  The ooDialog framework      */
+/* provides the correct implementation for you.  The framework also provides */
+/* a default implementation of the validate method.  By default validate()   */
+/* returns true.  If you want to have a chance to validate the user's input, */
+/* and perhaps prevent the dialog from closing, then over-ride the validate  */
+/* method.  From validate() return true to close the dialog, or false to     */
+/* prevent the dialog from closing.                                          */
 
                         /* ------------------------------------------------- */
-                        /* add code for closing with OK here                 */
-                        /* Self~Finished will be 0 if Self~Validate failed   */
-                        /* You can set self~Finished=0 to stop dlg closing   */
+                        /* If you want to do your validation here, you can   */
+                        /* add the valdiation code here.  Then, if you want  */
+                        /* to allow the dialog to close normally, invoke the */
+                        /* super class's ok() method.  If you want to        */
+                        /* prevent dialog from closing, simply return 0 with */
+                        /* out invoking the super class ok.                  */
+                        /*                                                   */
+                        /* By invoking the super class ok() method you       */
+                        /* ensure the dialog is closed properly.  That is    */
+                        /* really the best way to end the dialog.  The best  */
+                        /* to not end the dialog at this point is to simply  */
+                        /* return 0.                                         */
                         /* ------------------------------------------------- */
 
-return self~finished
+return self~oK:super
+
 /* ------------------------------------------------------------------------- */
 ::method cancel
 /* ------------------------------------------------------------------------- */
-/* If you do not need to add processing to this class you can delete it      */
-  self~cancel:super             /*call Self~Validate, set self~InitCode to 2 */
+/* The cancel() method is invoked automatically by the ooDialog framework    */
+/* when the user pushes or clicks a button, or a menu item, with the         */
+/* resource ID of IDCANCEL (2), or the user hits the escape key.  If you do  */
+/* not need to do, or do not want to do, any processing here, you can delete */
+/* this method.  The ooDialog framework provides the correct implementation  */
+/* of the cancel method for you.                                             */
 
                         /* ------------------------------------------------- */
-                        /* add code for closing with cancel here             */
-                        /* Self~Finished will be 0 if Self~Validate failed   */
-                        /* You can set self~Finished=0 to stop dlg closing   */
+                        /* You can add code for closing with cancel here, if */
+                        /* you want to.  Then, to prevent the dialog from    */
+                        /* closing at this point, simply return 0.  To       */
+                        /* continue with the normal closing of the dialog,   */
+                        /* invoke the super class's cancel method.           */
+                        /*                                                   */
+                        /* By invoking the super class cance.() method you   */
+                        /* ensure the dialog is closed properly.  That is    */
+                        /* really the best way to end the dialog.  The best  */
+                        /* to not end the dialog at this point is to simply  */
+                        /* return 0.                                         */
                         /* ------------------------------------------------- */
-return self~finished
+return self~cancel:super
+
 /* ------------------------------------------------------------------------- */
 ::method validate
 /* ------------------------------------------------------------------------- */
-/* This is called by the OK:Super Method.  Returning 0 stops dialog closing. */
-/* If you do not need this method - delete it.                               */
-valid=1
+/* This is called by the OK:Super Method.  Returning .false stops the dialog */
+/* from closing.  Returning .true allows the dialog to close. If you do not  */
+/* need this method - delete it                                              */
+valid=.true
 
 /*
-  valid=0
+  valid=.false
   select
      when [error_condition] then call errorDialog [error_condition_message]
      when [error_condition] then call errorDialog [error_condition_message]
      otherwise
-        valid=1
+        valid=.true
   end /* select */
 */
 
