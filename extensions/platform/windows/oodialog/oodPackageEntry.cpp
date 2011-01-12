@@ -230,6 +230,8 @@ REXX_METHOD_PROTOTYPE(pbdlg_setFontName_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_setFontSize_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_getAutoDetect);
 REXX_METHOD_PROTOTYPE(pbdlg_setAutoDetect);
+REXX_METHOD_PROTOTYPE(pbdlg_getFinished);
+REXX_METHOD_PROTOTYPE(pbdlg_setFinished);
 REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToControl);
 REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToWindow);
 REXX_METHOD_PROTOTYPE(pbdlg_getLibrary);
@@ -935,6 +937,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setDlgFont,               pbdlg_setDlgFont),
     REXX_METHOD(pbdlg_getAutoDetect,            pbdlg_getAutoDetect),
     REXX_METHOD(pbdlg_setAutoDetect,            pbdlg_setAutoDetect),
+    REXX_METHOD(pbdlg_getFinished,              pbdlg_getFinished),
+    REXX_METHOD(pbdlg_setFinished,              pbdlg_setFinished),
     REXX_METHOD(pbdlg_sendMessageToControl,     pbdlg_sendMessageToControl),
     REXX_METHOD(pbdlg_sendMessageToWindow,      pbdlg_sendMessageToWindow),
     REXX_METHOD(pbdlg_get,                      pbdlg_get),

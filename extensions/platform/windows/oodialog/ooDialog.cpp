@@ -3001,6 +3001,28 @@ RexxMethod2(CSTRING, pbdlg_setAutoDetect, logical_t, on, CSELF, pCSelf)
     return NULLOBJECT;
 }
 
+/** PlainBaseDialog::finished  [attribute get]
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getFinished, CSELF, pCSelf)
+{
+    return context->GetObjectVariable("FINISHED");
+}
+/** PlainBaseDialog::finished  [attribute set]
+ */
+RexxMethod2(CSTRING, pbdlg_setFinished, logical_t, val, CSELF, pCSelf)
+{
+    if ( val )
+    {
+        context->SetObjectVariable("FINISHED", TheTrueObj);
+    }
+    else
+    {
+        context->SetObjectVariable("FINISHED", TheFalseObj);
+    }
+
+    return NULLOBJECT;
+}
+
 /** PlainBaseDialog::fontName  [attribute get]
  *  PlainBaseDialog::fontSize  [attribute get]
  */
