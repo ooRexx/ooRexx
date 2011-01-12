@@ -1,11 +1,11 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2006 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2006-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,48 +36,52 @@
 /*----------------------------------------------------------------------------*/
 /* DlgAreaDemo.Rex  --  Demonstrate DlgArea & DlgAreaU Classes  --  Feb 2006 */
 
-MyDlg=.MyDialog~new
+MyDlg=.MyDialog~new( , 'dlgAreaUDemo.h')
 MyDlg~execute('ShowTop')
-MyDlg~DeInstall
 
-exit
+return 0
+
 ::requires "ooDialog.cls"
 /* ========================================================================= */
 ::class MyDialog Subclass UserDialog
 /* ========================================================================= */
-::method Init
+::method init
 /* ------------------------------------------------------------------------- */
-  self~Init:super
-  rc=self~CreateCenter(250,250,'MyDialog',,
-                               'ThickFrame MinimizeBox MaximizeBox',,,
-                               'MS Sans Serif',8)
-  self~InitCode=(rc=0)
+  forward class (super) continue
+  success=self~createCenter(250,250,'My Resizable Dialog',,
+                                    'ThickFrame MinimizeBox MaximizeBox',,,
+                                    'MS Sans Serif',8)
+  if \success then do
+    self~initCode = 1
+    return
+  end
+
   self~connectResize('OnResize')
 
 /* ------------------------------------------------------------------------- */
-::method DefineDialog
+::method defineDialog
 /* ------------------------------------------------------------------------- */
 expose u
 
 u=.dlgAreaU~new(self)                                         /* whole dlg   */
 if u~lastError \= .nil then call errorDialog u~lastError
 
-u~NoResize~put(13)
+u~noResizePut(IDC_PB_0)
 e=.dlgArea~new(u~x       ,u~y       ,u~w('70%'),u~h('90%'))   /* edit   area */
 s=.dlgArea~new(u~x       ,u~y('90%'),u~w('70%'),u~hr      )   /* status area */
 b=.dlgArea~new(u~x('70%'),u~y       ,u~wr      ,u~hr      )   /* button area */
 
-self~addEntryLine(12,'text',e~x,e~y,e~w,e~h,'multiline')
-self~addText(s~x,s~y,s~w,s~h,'Status info appears here',,11)
+self~createEdit(IDC_EDIT,e~x,e~y,e~w,e~h,'multiline','text')
+self~createStaticText(IDC_ST_STATUS,s~x,s~y,s~w,s~h,,'Status info appears here')
 
-self~addButton(13,b~x,b~y('00%'),b~w,b~h('9%'),'Button' 0,'Button'||0)
-self~addButton(14,b~x,b~y('10%'),b~w,b~h('9%'),'Button' 1,'Button'||1)
-self~addButton(15,b~x,b~y('20%'),b~w,b~h('9%'),'Button' 2,'Button'||2)
-self~addButton(16,b~x,b~y('30%'),b~w,b~h('9%'),'Button' 3,'Button'||3)
-self~addButton(17,b~x,b~y('40%'),b~w,b~h('9%'),'Button' 4,'Button'||4)
-self~addButton(18,b~x,b~y('50%'),b~w,b~h('9%'),'Button' 5,'Button'||5)
-self~addButton(19,b~x,b~y('60%'),b~w,b~h('9%'),'Button' 6,'Button'||6)
-self~addButton( 1,b~x,b~y('90%'),b~w,b~h('9%'),'Ok','Ok','DEFAULT')
+self~createPushButton(IDC_PB_0,b~x,b~y('00%'),b~w,b~h('9%'),,'Button' 0,'Button'||0)
+self~createPushButton(IDC_PB_1,b~x,b~y('10%'),b~w,b~h('9%'),,'Button' 1,'Button'||1)
+self~createPushButton(IDC_PB_2,b~x,b~y('20%'),b~w,b~h('9%'),,'Button' 2,'Button'||2)
+self~createPushButton(IDC_PB_3,b~x,b~y('30%'),b~w,b~h('9%'),,'Button' 3,'Button'||3)
+self~createPushButton(IDC_PB_4,b~x,b~y('40%'),b~w,b~h('9%'),,'Button' 4,'Button'||4)
+self~createPushButton(IDC_PB_5,b~x,b~y('50%'),b~w,b~h('9%'),,'Button' 5,'Button'||5)
+self~createPushButton(IDC_PB_6,b~x,b~y('60%'),b~w,b~h('9%'),,'Button' 6,'Button'||6)
+self~createPushButton(IDOK,b~x,b~y('90%'),b~w,b~h('9%'),'DEFAULT','Ok')
 
 /* ------------------------------------------------------------------------- */
 ::method onResize
@@ -87,7 +91,8 @@ use arg dummy,sizeinfo
 u~resize(self,sizeinfo)
 
 /* ------------------------------------------------------------------------- */
-::method Unknown
+::method unknown
 /* ------------------------------------------------------------------------- */
 use arg msgname, args
-self~newStatic(11)~setText('You Pressed' msgname)
+if msgname~abbrev("BUTTON") then
+   self~newStatic(IDC_ST_STATUS)~setText('You Pressed Button' msgname~right(1))

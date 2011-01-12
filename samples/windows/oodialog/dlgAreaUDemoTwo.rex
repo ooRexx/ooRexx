@@ -55,7 +55,7 @@
  *  the dialog.
  *
  *  We keep track of whether the user is resizing, or not.  When we get the size
- *  move ended event, if the user was resizing, we invoked the update method of
+ *  move ended event, if the user was resizing, we invoke the update method of
  *  the dialog, forcing all the dialog controls to redraw themselves in their
  *  new, final, position.
  *
@@ -67,53 +67,60 @@
  *  Which approach is better is probably a matter of personal preference.
  */
 
-  myDlg = .MyDialog~new
-  myDlg~execute('ShowTop')
+  dlg = .ResizableDialog~new( , 'dlgAreaUDemo.h')
+  dlg~execute('ShowTop')
 
   return 0
 
 ::requires "ooDialog.cls"
 
-::class 'MyDialog' subclass UserDialog
+::class 'ResizableDialog' subclass UserDialog
 
 ::method init
 
-  self~init:super
-  self~createCenter(250, 250, 'MyDialog',                             -
-                              'ThickFrame MinimizeBox MaximizeBox', , -
-                              'MS Sans Serif', 8)
+  forward class (super) continue
+  success = self~createCenter(250, 250, 'My Flicker Free Resizable Dialog',     -
+                                        'ThickFrame MinimizeBox MaximizeBox', , -
+                                        'MS Sans Serif', 8)
+  if \ success then do
+    self~initCode = 1
+    return
+  end
 
   self~connectResize('onResize')
   self~connectSizeMoveEnded('onSizeMoveEnded')
 
 
 ::method defineDialog
-  expose u sizing
+  expose u sizing minMaximized
 
-  u = .dlgAreaU~new(self)                                            /* whole dlg   */
+  u = .dlgAreaU~new(self)
   if u~lastError \= .nil then call errorDialog u~lastError
 
   -- Tell the DialogAreaU object to not invoke the update method.  We are not
-  -- resizing now.
+  -- resizing now.  We have not been minimized or minMaximized.
   u~updateOnResize = .false
+
+  -- We use these variables to track when to update, or not.
   sizing = .false
+  minMaximized = .false
 
-  u~noResize~put(13)
-  e = .dlgArea~new(u~x       , u~y       , u~w('70%'), u~h('90%'))   /* edit   area */
-  s = .dlgArea~new(u~x       , u~y('90%'), u~w('70%'), u~hr      )   /* status area */
-  b = .dlgArea~new(u~x('70%'), u~y       , u~wr      , u~hr      )   /* button area */
+  u~noResize~put(IDC_PB_0)
+  e = .dlgArea~new(u~x       , u~y       , u~w('70%'), u~h('90%'))   -- edit   area
+  s = .dlgArea~new(u~x       , u~y('90%'), u~w('70%'), u~hr      )   -- status area
+  b = .dlgArea~new(u~x('70%'), u~y       , u~wr      , u~hr      )   -- button area
 
-  self~addEntryLine(12, 'text', e~x, e~y, e~w, e~h, 'multiline')
-  self~addText(s~x, s~y, s~w, s~h, 'Status info appears here', , 11)
+  self~createEdit(IDC_EDIT, e~x, e~y, e~w, e~h, 'multiline')
+  self~createStaticText(IDC_ST_STATUS, s~x, s~y, s~w, s~h, , 'Status info appears here')
 
-  self~addButton(13, b~x, b~y('00%'), b~w, b~h('9%'), 'Button' 0 , 'Button'||0)
-  self~addButton(14, b~x, b~y('10%'), b~w, b~h('9%'), 'Button' 1 , 'Button'||1)
-  self~addButton(15, b~x, b~y('20%'), b~w, b~h('9%'), 'Button' 2 , 'Button'||2)
-  self~addButton(16, b~x, b~y('30%'), b~w, b~h('9%'), 'Button' 3 , 'Button'||3)
-  self~addButton(17, b~x, b~y('40%'), b~w, b~h('9%'), 'Button' 4 , 'Button'||4)
-  self~addButton(18, b~x, b~y('50%'), b~w, b~h('9%'), 'Button' 5 , 'Button'||5)
-  self~addButton(19, b~x, b~y('60%'), b~w, b~h('9%'), 'Button' 6 , 'Button'||6)
-  self~addButton( 1, b~x, b~y('90%'), b~w, b~h('9%'), 'Ok',        'Ok', 'DEFAULT')
+  self~createPushButton(IDC_PB_0, b~x, b~y('00%'), b~w, b~h('9%'),          , 'Button' 0 , 'Button'||0)
+  self~createPushButton(IDC_PB_1, b~x, b~y('10%'), b~w, b~h('9%'),          , 'Button' 1 , 'Button'||1)
+  self~createPushButton(IDC_PB_2, b~x, b~y('20%'), b~w, b~h('9%'),          , 'Button' 2 , 'Button'||2)
+  self~createPushButton(IDC_PB_3, b~x, b~y('30%'), b~w, b~h('9%'),          , 'Button' 3 , 'Button'||3)
+  self~createPushButton(IDC_PB_4, b~x, b~y('40%'), b~w, b~h('9%'),          , 'Button' 4 , 'Button'||4)
+  self~createPushButton(IDC_PB_5, b~x, b~y('50%'), b~w, b~h('9%'),          , 'Button' 5 , 'Button'||5)
+  self~createPushButton(IDC_PB_6, b~x, b~y('60%'), b~w, b~h('9%'),          , 'Button' 6 , 'Button'||6)
+  self~createPushButton(IDOK,     b~x, b~y('90%'), b~w, b~h('9%'), 'DEFAULT', 'Ok')
 
 
 ::method initDialog
@@ -121,17 +128,32 @@
   -- The underlying edit controls internally resize themselves as the dialog
   -- they are contained in is resized.  We don't want that, so we disable that
   -- behavior in the underlying edit control.
-  self~newEdit(12)~disableInternalResize
+  self~newEdit(IDC_EDIT)~disableInternalResize
 
 
 ::method onResize unguarded
-  expose u sizing
-  use arg dummy, sizeinfo
-
-  -- We are resizing now.
-  sizing = .true
+  expose u sizing minMaximized
+  use arg sizingType, sizeinfo
 
   u~resize(self, sizeinfo)
+
+  -- The size / move ended event does not occur when the user maximize,
+  -- minimizes, or restores from maximized / minimized.  Because of that, we
+  -- need to use self~update under those conditions.
+
+  if sizingType == self~SIZE_MAXIMIZED | sizingType == self~SIZE_MINIMIZED then do
+    minMaximized = .true
+    if sizingType == self~SIZE_MAXIMIZED then self~update
+  end
+  else if sizingType == self~SIZE_RESTORED, minMaximized then do
+    minMaximized = .false
+    self~update
+  end
+  else do
+    -- We are resizing now.
+    sizing = .true
+  end
+
   return 0
 
 
@@ -141,11 +163,13 @@
   -- If we were resizing, force the dialog controls to redraw themselves.
   if sizing then self~update
 
-  -- We are not resizing.
+  -- We are not resizing anymore.
   sizing = .false
   return 0
 
 
 ::method unknown
-  use arg msgname, args
-  self~newStatic(11)~setText('You Pressed' msgname)
+  use arg msgName, args
+
+  if msgName~abbrev("BUTTON") then
+    self~newStatic(IDC_ST_STATUS)~setText('You Pressed Button' msgName~right(1))
