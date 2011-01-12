@@ -300,7 +300,7 @@
    self~AddLine(10, self~sy+4+10, size)
    self~createPushButtonGroup(self~sx-80, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
-::method AddLine
+::method addLine
    use arg x, y, l
    self~createEdit(101, x, y, l, , , "DATA")
 
@@ -1142,9 +1142,9 @@ else return self~w(100 - self~LastX~changestr('%','')||'%')       /* X was % */
 /*                                                                           */
 ::method Init
 /* ------------------------------------------------------------------------- */
-Expose DlgObjList
+expose DlgObjList DlgObject
 
-use arg DlgObj,Margin,NoResize,NoMove
+use arg DlgObj, Margin, NoResize, NoMove
 
 if \NoResize~isA(.Set) then NoResize = .Set~new
 self~NoResize = NoResize
@@ -1161,17 +1161,28 @@ self~updateOnResize = .true
 self~OriginalWidth  = DlgObj~sizeX
 self~OriginalHeight = DlgObj~sizeY
 self~LastError      = .nil
+DlgObject           = DlgObj
 
-                                  /* Analyze the callers defineDialog Method */
-                                       /* Remove comments prefixed by --     */
+CreateControlTypes = .set~of('BITMAPBUTTON', 'CHECKBOX', 'COMBOBOXEDIT', 'TAB', -
+  'PUSHBUTTON', 'RADIOBUTTON', 'DATETIMEPICKER', 'LISTVIEW', 'PASSWORDEDIT',    -
+  'PROGRESSBAR', 'SCROLLBAR', 'TRACKBAR', 'BLACKFRAME', 'BLACKRECT', 'LISTBOX', -
+  'ETCHEDHORIZONTAL', 'ETCHEDVERTICAL', 'GRAYRECT', 'GRAYFRAME', 'GROUPBOX',    -
+  'STATIC', 'STATICFRAME', 'STATICIMAGE', 'STATICTEXT', 'TREEVIEW', 'UPDOWN',   -
+  'WHITEFRAME', 'WHITERECT', 'MONTHCALENDAR', 'EDIT'                            -
+)
+
+-- Analyze the callers defineDialog Method
 DDSourceArr=DlgObj~class~method('defineDialog')~source
 DDSBuff=.mutableBuffer~new
+
+-- Remove comments prefixed by --
 do line over DDSourceArr
-   parse var line line '--' .       -- strip out this style inline comments
+   parse var line line '--' .
    DDSBuff~Append(' '||line)
-end /* DO */
+end
 DDSource = DDSBuff~String ; Drop DDSBuff
-                                       /* remove comments within /*  */      */
+
+-- remove comments within /*  */
 do forever
    commEnd = DDsource~pos('*'||'/')
    if commEnd = 0 then leave
@@ -1180,88 +1191,152 @@ do forever
    then do
       self~LastError='Error in DlgAreaU Class: Unbalanced comments in defineDialog class of' Dlg
       leave
-   end /* DO */
+   end
 
    parse var DDSource front =(commStart) . =(commEnd) . +2 back
    DDSource = front back
-end /* DO */
+end
 
-DDSource1 = DDSource           /* copy of de-commented defineDialog source   */
+-- copy of de-commented defineDialog source
+DDSource1 = DDSource
 
-                               /* re-create DlgArea objects within scope     */
+-- re-create DlgArea objects within scope
 do forever
    parse upper var DDSource1 front '.DLGAREA'DAMsg'('DAparms')'DDSource1
    do while DAParms~Countstr('(') > DAParms~CountStr(')')
       parse var DDSource1 fragment ')' DDSource1
       DAParms = DAParms||')'||fragment
-   end /* DO */
-   if DAParms = '' then leave          /* we have got them all!              */
+   end
 
-                                     /* parse out the refferer variable name */
+
+   if DAParms = '' then leave    -- we have got them all!
+
+   -- parse out the refferer variable name
    parse value front~reverse with . '='DAVar .
    DAVar = DAVar~reverse~strip
    DAObj = DAVar
    sourceline = DAVar'=.DLGAREA'||DAMsg||'('||DAParms||')'
    select
-      when DAMsg~Space(0) = 'U~NEW'  /* This is the DlgAreaU (self) obj def  */
+      when DAMsg~Space(0) = 'U~NEW'  -- This is the DlgAreaU (self) obj def
          then interpret DAVar'=.DlgArea~new(0,0,'||self~w||','||self~h||','||self~margin||')'
-      when DAMsg~Space(0) = '~NEW'   /* This is a DlgArea Obj definition     */
+      when DAMsg~Space(0) = '~NEW'   -- This is a DlgArea Obj definition
          then interpret DAVar'=.DlgArea~new('daparms')'
       otherwise
          self~LastError='DlgAreaU Class: Unable to parse:' SourceLine
-   end /* select */
+   end
 end
 
-                                    /* Now we parse out resizable widgets    */
+-- Now we parse out resizable widgets.
 DlgObjList=.List~new
 delim = '00'x
 
 signal on syntax name parseerror
 Parseerroroccured = 1 /* provisionally */
 
+-- Save another copy of DDSource, we'll need it later.
+DDSourceCopy = DDSource
+
+-- First look for the create<Control> methods.
+do forever
+   parse upper var DDSource front 'CREATE'ObjName'('ObjParms')'DDSource1
+   do while ObjParms~Countstr('(') > ObjParms~CountStr(')')
+      parse var DDSource1 fragment ')' DDSource1
+      ObjParms = ObjParms||')' fragment
+   end
+
+   if ObjParms = '' then leave
+   if front~space(0)~right(5)='SELF~' then do
+      sourcelinetxt = 'SELF~CREATE'||Objname||'('||Objparms||')'
+      DDSource=DDSource1
+
+      if CreateControlTypes~HasIndex(ObjName~strip) then
+          parse var ObjParms ObjId','ObjX','ObjY','ObjW','ObjH','.
+      else
+          ObjId = ''       -- This createXXX method is ignored
+
+      ObjId = DlgObject~resolveResourceID(ObjId~space(0))
+
+      if ObjId \= '', ObjId > 0 then
+         interpret 'DlgObjList~Insert(ObjId "@"' ObjX '"@"' ObjY '"@"' ObjW '"@"' ObjH ')'
+   end
+   else do
+      -- skip past this create
+      parse var DDSource 'CREATE'DDSource
+   end
+end
+
+-- Now look for all the deprecated add<Control> methods.
+DDSource = DDSourceCopy
+
 do forever
    parse upper var DDSource front 'ADD'ObjName'('ObjParms')'DDSource1
    do while ObjParms~Countstr('(') > ObjParms~CountStr(')')
       parse var DDSource1 fragment ')' DDSource1
       ObjParms = ObjParms||')' fragment
-   end /* DO */
+   end
 
    if ObjParms = '' then leave
-   if front~space(0)~right(5)='SELF~'
-   then do
+   if front~space(0)~right(5)='SELF~' then do
       sourcelinetxt = 'SELF~ADD'||Objname||'('||Objparms||')'
       DDSource=DDSource1
       select
-         when 'BITMAPBUTTON BUTTON PROGRESSBAR SCROLLBAR'~Wordpos(ObjName~strip) >0
-            then parse var ObjParms ObjId','ObjX','ObjY','ObjW','ObjH','.
-         when 'CHECKBOX COMBOBOX ENTRYLINE LISTBOX LISTCONTROL PASSWORDLINE RADIOBUTTON SLIDERCONTROL TABCONTROL'~Wordpos(ObjName~strip) > 0
-            then parse var ObjParms ObjId','.','ObjX','ObjY','ObjW','ObjH','.
-         when 'BLACKFRAME BLACKRECT GRAYRECT GRAYFRAME TREECONTROL WHITEFRAME WHITERECT'~Wordpos(ObjName~strip) > 0
-            then parse var ObjParms ObjX','ObjY','ObjW','ObjH','.','ObjId','.
-         when 'GROUPBOX TEXT'~Wordpos(ObjName~strip) > 0
-            then parse var ObjParms ObjX','ObjY','ObjW','ObjH','.','.','ObjId','.
+         when 'BITMAPBUTTON BUTTON PROGRESSBAR SCROLLBAR'~Wordpos(ObjName~strip) > 0 then
+            parse var ObjParms ObjId','ObjX','ObjY','ObjW','ObjH','.
+         when 'CHECKBOX COMBOBOX ENTRYLINE LISTBOX LISTCONTROL PASSWORDLINE RADIOBUTTON SLIDERCONTROL TABCONTROL'~Wordpos(ObjName~strip) > 0 then
+            parse var ObjParms ObjId','.','ObjX','ObjY','ObjW','ObjH','.
+         when 'BLACKFRAME BLACKRECT GRAYRECT GRAYFRAME TREECONTROL WHITEFRAME WHITERECT'~Wordpos(ObjName~strip) > 0 then
+            parse var ObjParms ObjX','ObjY','ObjW','ObjH','.','ObjId','.
+         when 'GROUPBOX TEXT'~Wordpos(ObjName~strip) > 0 then
+            parse var ObjParms ObjX','ObjY','ObjW','ObjH','.','.','ObjId','.
          otherwise
-            ObjId = ''                    /* This type is on the ignore list */
-      end /* select */
-      if ObjId \= ''
-      then interpret 'DlgObjList~Insert(ObjId "@"' ObjX '"@"' ObjY '"@"' ObjW '"@"' ObjH ')'
-   end /* DO */
-   else parse var DDSource 'ADD'DDSource            /* skip past this add */
-end /* DO */
+            ObjId = ''     -- This addXXX method is ignored
+      end
+
+      ObjId = DlgObject~resolveResourceID(ObjId~space(0))
+
+      if ObjId \= '', ObjId > 0 then
+         interpret 'DlgObjList~Insert(ObjId "@"' ObjX '"@"' ObjY '"@"' ObjW '"@"' ObjH ')'
+   end
+   else do
+     -- skip past this add
+      parse var DDSource 'ADD'DDSource
+   end
+end
 
 Parseerroroccured = 0
+
 parseerror:
 signal off syntax
 
 if parseerroroccured then self~lastError = 'DlgAreaU class could not parse' sourcelinetxt
 
-/* ------------------------------- ignore list -----------------------------
-ATTRIBUTE AUTOSTARTMETHOD BUTTONGROUP CATEGORYCOMBOENTRY CATEGORYLISTENTRY
-CHECKBOXSTEM CHECKGROUP COMBOENTRY COMBOINPUT FULLSEQ INPUT INPUTGROUP
-INPUTSTEM LISTENTRY MENUITEM MENUSEPERATOR OKCANCELLEFTBOTTOM OKCANCELLEFTTOP
-OKCANCELRIGHTBOTTOM OKCANCELREGHTTOP POPUPMENU RADIOGROUP RADIOSTEM ROW
-SEQUENCE STYLE USERMSG
-   ------------------------------------------------------------------------- */
+
+/* ------------------------------------------------------------------------- */
+::method noResizePut
+/* ------------------------------------------------------------------------- */
+/* This method allows the user to place dialog controls in the NoResize set  */
+/* using symbolic IDs.                                                       */
+/* ------------------------------------------------------------------------- */
+expose DlgObject
+   use strict arg id
+
+   id = DlgObject~getResourceID(id)
+   self~NoResize~put(id)
+
+
+/* ------------------------------------------------------------------------- */
+::method noMovePut
+/* ------------------------------------------------------------------------- */
+/* This method allows the user to place dialog controls in the NoMove set    */
+/* using symbolic IDs.                                                       */
+/* ------------------------------------------------------------------------- */
+expose DlgObject
+   use strict arg id
+
+   id = DlgObject~getResourceID(id)
+   self~NoMove~put(id)
+
+
 /* ------------------------------------------------------------------------- */
 ::method Resize
 /* ------------------------------------------------------------------------- */
@@ -1294,8 +1369,9 @@ expose DlgObjList
   if self~updateOnResize then dlg~update
 /* ------------------------------------------------------------------------- */
 
-::attribute OriginalWidth     Private
-::attribute OriginalHeight    Private
+::attribute OriginalWidth     private
+::attribute OriginalHeight    private
+::attribute DlgObject         private get
 ::attribute NoResize
 ::attribute NoMove
 ::attribute CorrectionFactor
