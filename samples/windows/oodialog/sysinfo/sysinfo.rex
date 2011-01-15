@@ -92,13 +92,16 @@ return 0
   componentQueue = .queue~new
   queueHasData = .false
   userHasQuit = .false
+  doneProcessing = .true
   self~start("queueProcessor")
 
   self~addToQueue("Win32_ComputerSystem")
 
 
 ::method queueProcessor unguarded
-  expose queueHasData componentQueue lb userHasQuit
+  expose queueHasData componentQueue lb userHasQuit doneProcessing
+
+  doneProcessing = .false
 
   do forever
 
@@ -142,6 +145,8 @@ return 0
     queueHasData = .false
   end
 
+  doneProcessing = .true
+
 ::method selectionChange unguarded
   expose cb lb
 
@@ -151,17 +156,23 @@ return 0
   return 0
 
 ::method ok unguarded
-  expose userHasQuit queueHasData
+  expose userHasQuit queueHasData doneProcessing
 
   userHasQuit = .true
   queueHasData = .true
+
+  guard on when doneProcessing
+
   return self~ok:super
 
 ::method cancel unguarded
-  expose userHasQuit queueHasData
+  expose userHasQuit queueHasData doneProcessing
 
   userHasQuit = .true
   queueHasData = .true
+
+  guard on when doneProcessing
+
   return self~cancel:super
 
 ::method addToQueue private
