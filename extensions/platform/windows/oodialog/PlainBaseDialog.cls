@@ -329,11 +329,24 @@
 ::constant WM_NEXTDLGCTL                 "0x0028"
 ::constant WM_USER_INTERRUPTSCROLL       "0x0A02"
 
-::constant SIZE_RESTORED       0
-::constant SIZE_MINIMIZED      1
-::constant SIZE_MAXIMIZED      2
-::constant SIZE_MAXSHOW        3
-::constant SIZE_MAXHIDE        4
+::constant SIZE_RESTORED                       0
+::constant SIZE_MINIMIZED                      1
+::constant SIZE_MAXIMIZED                      2
+::constant SIZE_MAXSHOW                        3
+::constant SIZE_MAXHIDE                        4
+
+::constant IDOK                                1
+::constant IDCANCEL                            2
+::constant IDABORT                             3
+::constant IDRETRY                             4
+::constant IDIGNORE                            5
+::constant IDYES                               6
+::constant IDNO                                7
+::constant IDCLOSE                             8
+::constant IDHELP                              9
+::constant IDTRYAGAIN                         10
+::constant IDCONTINUE                         11
+::constant IDTIMEOUT                       32000
 
 
 ::method init class external "LIBRARY oodialog pbdlg_init_cls"
