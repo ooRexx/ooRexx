@@ -944,7 +944,7 @@ inline MsgReplyType genericNotifyInvoke(RexxThreadContext *c, pCPlainBaseDialog 
  * accelerators, it is always 0. So, converting to a pseudo pointer is always
  * the correct thing to do.
  */
-inline MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName,
+static MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName,
                                          uint32_t tag, WPARAM wParam, LPARAM lParam)
 {
     RexxArrayObject args = c->ArrayOfTwo(c->Uintptr(wParam), pointer2string(c, (void *)lParam));
@@ -1102,7 +1102,7 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
 
     for ( i = 0; i < tableSize; i++ )
     {
-        if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((lParam & m[i].lpfilter) == (uint32_t)m[i].lParam) )
+        if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((lParam & m[i].lpfilter) == m[i].lParam) )
         {
             return genericCommandInvoke(pcpbd->dlgProcContext, pcpbd, m[i].rexxMethod, m[i].tag, wParam, lParam);
         }
