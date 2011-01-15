@@ -208,10 +208,11 @@
 
 
 ::method connectComboBoxEvent
-   use strict arg id, type, msgToRise = ""
+   use strict arg id, type, msgToRise = "", willReply = .false
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    if msgToRise == "" then msgToRise = "on" || type
+   tag = 0
    type = type~translate
    select
        when type = "SELCHANGE"    then lp = 1
@@ -227,7 +228,8 @@
        when type = "ERRSPACE"     then lp = -1
        otherwise return -1
    end
-   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
+   if willReply then tag = 0x02000000
+   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0, tag)
 
 
 ::method connectScrollBarEvent         /* can only be called in initDialog */
