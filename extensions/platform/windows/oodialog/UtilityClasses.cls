@@ -108,6 +108,9 @@
 ::method 'x=' external "LIBRARY oodialog point_setX"
 ::method y external "LIBRARY oodialog point_y"
 ::method 'y=' external "LIBRARY oodialog point_setY"
+::method '+' external "LIBRARY oodialog point_add"
+::method '-' external "LIBRARY oodialog point_subtract"
+::method 'incr' external "LIBRARY oodialog point_incr"
 
 ::class 'Size' public
 ::method init class external "LIBRARY oodialog size_init_cls"

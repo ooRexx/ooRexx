@@ -754,6 +754,9 @@ REXX_METHOD_PROTOTYPE(point_x);
 REXX_METHOD_PROTOTYPE(point_setX);
 REXX_METHOD_PROTOTYPE(point_y);
 REXX_METHOD_PROTOTYPE(point_setY);
+REXX_METHOD_PROTOTYPE(point_add);
+REXX_METHOD_PROTOTYPE(point_subtract);
+REXX_METHOD_PROTOTYPE(point_incr);
 
 // .Size
 REXX_METHOD_PROTOTYPE(size_init_cls);
@@ -1446,6 +1449,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(point_setX,                     point_setX),
     REXX_METHOD(point_y,                        point_y),
     REXX_METHOD(point_setY,                     point_setY),
+    REXX_METHOD(point_add,                      point_add),
+    REXX_METHOD(point_subtract,                 point_subtract),
+    REXX_METHOD(point_incr,                     point_incr),
     REXX_METHOD(size_init_cls,                  size_init_cls),
     REXX_METHOD(size_init,                      size_init),
     REXX_METHOD(size_cx,                        size_cx),

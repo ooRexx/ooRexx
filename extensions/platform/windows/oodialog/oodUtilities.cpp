@@ -1079,6 +1079,77 @@ RexxMethod1(int32_t, point_y, CSELF, p) { return ((POINT *)p)->y; }
 RexxMethod2(RexxObjectPtr, point_setX, CSELF, p, int32_t, x) { ((POINT *)p)->x = x; return NULLOBJECT; }
 RexxMethod2(RexxObjectPtr, point_setY, CSELF, p, int32_t, y) { ((POINT *)p)->y = y; return NULLOBJECT; }
 
+/** Point::+
+ *
+ *  Returns a new point object that is the result of "adding" two points.
+ *
+ */
+RexxMethod2(RexxObjectPtr, point_add, RexxObjectPtr, other, CSELF, p)
+{
+    if ( ! context->IsOfType(other, "POINT") )
+    {
+        wrongClassException(context->threadContext, 1, "Point");
+        return NULLOBJECT;
+    }
+
+    POINT *p1 = (POINT *)p;
+    POINT *p2 = (POINT *)context->ObjectToCSelf(other);
+
+    return rxNewPoint(context, p1->x + p2->x, p1->y + p2->y);
+}
+
+/** Point::-
+ *
+ *  Returns a new point object that is the result of "subtracting" two points.
+ *
+ */
+RexxMethod2(RexxObjectPtr, point_subtract, RexxObjectPtr, other, CSELF, p)
+{
+    if ( ! context->IsOfType(other, "POINT") )
+    {
+        wrongClassException(context->threadContext, 1, "Point");
+        return NULLOBJECT;
+    }
+
+    POINT *p1 = (POINT *)p;
+    POINT *p2 = (POINT *)context->ObjectToCSelf(other);
+
+    return rxNewPoint(context, p1->x - p2->x, p1->y - p2->y);
+}
+
+/** Point::incr
+ *
+ *  Increments this point's x and y attributes by the specified amount. If both
+ *  optional args are ommitted, the x and y are incremented by 1.
+ *
+ *  @param  x  The amount to increment, (to add to,) this point's x attribute.
+ *             If y is specified and this arg is omitted than 0 is used.
+ *
+ *  @param  y  The amount to increment, (to add to,) this point's y attribute.
+ *             If x is specified and this arg is omitted than 0 is used.
+ *
+ *  @return  No return.
+ *
+ *  @remarks  If either x or y are omitted, then their value will be 0.  Since
+ *            that is the default, once we check that both are not ommitted, we
+ *            are safe to just add x and y to the current x and y.
+ */
+RexxMethod3(RexxObjectPtr, point_incr, OPTIONAL_int32_t, x, OPTIONAL_int32_t, y, CSELF, p)
+{
+    if ( argumentOmitted(1) && argumentOmitted(2) )
+    {
+        ((POINT *)p)->x++;
+        ((POINT *)p)->y++;
+    }
+    else
+    {
+        ((POINT *)p)->x += x;
+        ((POINT *)p)->y += y;
+    }
+
+    return NULLOBJECT;
+}
+
 /**
  * Methods for the ooDialog .Size class.
  */
