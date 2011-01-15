@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,17 +42,16 @@ produced by IBM Object REXX Resource Workshop
 *****************************************************************************/
 
 #include <windows.h>
+#include <sysInfo.h>
 
-#define DIALOG_1	1
-
-4711 DIALOG 80, 40, 213, 201
+SYSINFO_DLG DIALOG 80, 40, 213, 201
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "System Information"
 FONT 8, "MS Sans Serif"
 {
  DEFPUSHBUTTON "OK", IDOK, 158, 180, 50, 14
  LTEXT "System Component", -1, 4, 6, 68, 12
- COMBOBOX 100, 75, 4, 132, 108, CBS_DROPDOWNLIST | WS_TABSTOP
- LISTBOX 101, 4, 24, 204, 150, LBS_STANDARD | WS_HSCROLL
+ COMBOBOX IDC_CB_COMPONENTS, 75, 4, 132, 108, CBS_DROPDOWNLIST | WS_TABSTOP
+ LISTBOX IDC_LB_DATA, 4, 24, 204, 150, LBS_STANDARD | WS_HSCROLL
 }
 

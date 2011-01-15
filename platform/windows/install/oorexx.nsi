@@ -582,6 +582,7 @@ Section "${LONGNAME} Samples" SecDemo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\sysinfo\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\sysinfo\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\sysinfo\" "*.h"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\source
   ; Distribution files...

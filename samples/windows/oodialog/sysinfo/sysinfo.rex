@@ -35,52 +35,46 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: sysinfo.rex                                                        */
-/* Type: Open Object Rexx Script using ooDialog and OLE                     */
-/* Resource: sysinfo.rc                                                     */
-/*                                                                          */
-/* Description:                                                             */
-/* Demo application for inspecting some system properties using WMI         */
-/*                                                                          */
-/* Note:                                                                    */
-/* Windows 2000 has WMI pre-installed, on WinNT/98 it has to be installed   */
-/* manually. See: http://msdn.microsoft.com/downloads/sdks/wmi/eula.asp     */
-/*                                                                          */
-/* A complete overview of the used classes is available at:                 */
-/* http://msdn.microsoft.com/library/psdk/wmisdk/clascomp_3d4j.htm          */
-/*                                                                          */
-/****************************************************************************/
 
-System = .SystemClass~new
-if System~InitCode = 0 then do
-  rc = System~Execute("SHOWTOP")
-end
+/**
+ * Name: sysinfo.rex
+ * Type: Open Object Rexx Script using ooDialog and OLE
+ * Resource: sysinfo.rc
+ *
+ * Description:
+ * Demo application for inspecting some system properties using WMI
+ *
+ * WMI is the acronym for Windows Management Instrumentation. Full documentation
+ * of WMI can be found in the Windows SDK which Microsoft provides free of
+ * charge.  You can also locate this documentation on the web.  A google search
+ * of:
+ *
+ *   "MSDN Windows Management Instrumentation"
+ *
+ * will lead you straight to the documentation
+ */
 
-exit
+  sysInfoDlg = .SystemClass~new('sysinfo.rc', SYSINFO_DLG, , 'sysInfo.h')
+  if sysInfoDlg~initCode = 0 then do
+    sysInfoDlg~execute("SHOWTOP")
+  end
+
+return 0
 
 
 ::requires "ooDialog.cls"
 
-::class SystemClass subclass UserDialog
+::class 'SystemClass' subclass RcDialog
 
-::method Init
-  forward class (super) continue /* call parent constructor */
-  InitRet = Result
+::method initDialog
+  expose cb lb componentQueue queueHasData userHasQuit
 
-  if self~Load("sysinfo.rc", ) \= 0 then do
-     self~InitCode = 1
-     return 1
-  end
+  -- Connect the selection change event of the combo box to a method in this
+  -- dialog.
+  self~connectComboBoxEvent(IDC_CB_COMPONENTS, "SELCHANGE", selectionChange)
 
-  /* Connect dialog control items to class methods */
-  self~connectComboBoxEvent(100,"SELCHANGE",selectionChange)
-
-  /* Add your initialization code here */
-  return InitRet
-
-::method InitDialog
-  cb = self~newComboBox(100)
+  -- Fill the combo box with the names of the WMI classes we will display.
+  cb = self~newComboBox(IDC_CB_COMPONENTS)
   if cb \= .nil then do
     cb~add("Win32_BootConfiguration")
     cb~add("Win32_ComputerSystem")
@@ -92,44 +86,115 @@ exit
     cb~add("Win32_Service")
   end
 
-::method run
-  self~selectionChange  /* call self~selectionChanged to display information of initial selection */
-  self~run:super
+  lb = self~newListBox(IDC_LB_DATA)
+  cb~select("Win32_ComputerSystem")
 
-::method Ok
-  resOK = self~OK:super  /* make sure self~Validate is called and self~InitCode is set to 1 */
-  self~Finished = resOK  /* 1 means close dialog, 0 means keep open */
-  return resOK
+  componentQueue = .queue~new
+  queueHasData = .false
+  userHasQuit = .false
+  self~start("queueProcessor")
 
-::method selectionChange
-  lc = self~newListBox(101)
-  if lc = .nil then return
-  lc~DeleteAll
-  component = self~newComboBox(100)~title
--- Gather data on the current size and position of the dialog
-  parse value lc~getPos() with siX siY
-  parse value lc~getSize() with siW siH
--- Get the current position of the cursor
-  parse value self~CursorPos with preCX preCY
--- Set the cursor to the hour glass
-  ch1 = lc~Cursor_Wait
--- Place the hour glass cursor in the center of the dialog being populated
-  lc~SetCursorPos((siX+(siW/2))*self~FactorX,(siY+(siH/2))*self~FactorY)
+  self~addToQueue("Win32_ComputerSystem")
 
-  WMIobject = .OLEObject~GetObject("WinMgmts:")
-  objects = WMIobject~InstancesOf(component)
 
-  do instance over objects
-    /* please note: these objects offer a lot more information than is */
-    /* displayed here. for simplicity's sake only name and description */
-    /* (if available) are shown                                        */
-    name = instance~name
-    desc = instance~description
-    if ((name = desc) | (desc = .nil)) then
-      lc~add(name)
-    else
-      lc~add(name "("desc")")
+::method queueProcessor unguarded
+  expose queueHasData componentQueue lb userHasQuit
+
+  do forever
+
+    guard on when queueHasData
+
+    if userHasQuit then leave
+
+    component = componentQueue~pull
+    do while component \== .nil
+      if userHasQuit then leave
+
+      WMIObject = .OLEObject~getObject("WinMgmts:")
+
+      if WMIObject \== .nil, component \== "" then do
+        -- Change the cursor to the hour glass cursor to indicate we are processing
+        -- and the user should be patient.
+        self~showHourGlass
+
+        lb~deleteAll
+        objects = WMIObject~instancesOf(component)
+
+        do instance over objects
+          -- Please note: these objects offer a lot more information than is
+          -- displayed here. For simplicity's sake only the name and description
+          -- (if available) are shown.
+          name = instance~name
+          desc = instance~description
+          if ((name = desc) | (desc = .nil)) then
+            lb~add(name)
+          else
+            lb~add(name "("desc")")
+        end
+
+        -- Restore the cursor to its original shape and position.
+        self~showHourGlass(.false)
+      end
+      if userHasQuit then leave
+      component = componentQueue~pull
+    end
+    if userHasQuit then leave
+    queueHasData = .false
   end
--- Restore the cursor to its original shape and position
-  lc~RestoreCursorShape(ch1)
-  self~SetCursorPos(preCX,preCY)
+
+::method selectionChange unguarded
+  expose cb lb
+
+  component = cb~selected
+  self~addToQueue(component)
+
+  return 0
+
+::method ok unguarded
+  expose userHasQuit queueHasData
+
+  userHasQuit = .true
+  queueHasData = .true
+  return self~ok:super
+
+::method cancel unguarded
+  expose userHasQuit queueHasData
+
+  userHasQuit = .true
+  queueHasData = .true
+  return self~cancel:super
+
+::method addToQueue private
+  expose queueHasData componentQueue
+  use strict arg component
+
+  componentQueue~queue(component)
+  queueHasData = .true
+
+
+::method showHourGlass private
+  expose lb oldCursorPosition oldCursorShape
+  use strict arg show = .true
+
+  if show then do
+    -- Save the current cursor position.  Change the list box's cursor shape to
+    -- the hour glass and save the old shape.
+    oldCursorPosition = self~getCursorPos
+    oldCursorShape = lb~cursor_wait
+
+    -- Get the current size and position of the list box.
+    p = lb~getRealPos
+    s = lb~getRealSize
+
+    -- Set the point object to the midpoint of the list box and position the
+    -- cursor at that posiiion
+    p~incr(s~width % 2, s~height % 2)
+    lb~setCursorPos(p)
+  end
+  else do
+    lb~restoreCursorShape(oldCursorShape)
+    self~setCursorPos(oldCursorPosition)
+  end
+
+::method initAutoDetection
+  self~noAutoDetection

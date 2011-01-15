@@ -91,6 +91,9 @@
    -- button the appearance of scrolling from the right to the left, and the 102 button
    -- the appearance of scrolling from the bottom to the top.
 
+   -- install.bmp   550 x 100 pixels
+   -- install2.bmp  450 x 120 pixels
+
    self~createBitmapButton(101, 1, 10, self~sizeX-1, trunc(130 / self~factorY), "USEPAL", , , "bmp\install.bmp")
    self~createBitmapButton(102, 20, but2pos, self~sizeX - 20, but2size, , , , "bmp\install2.bmp")
 
