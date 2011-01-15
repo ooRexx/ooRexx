@@ -567,6 +567,7 @@ REXX_METHOD_PROTOTYPE(e_lineIndex);
 REXX_METHOD_PROTOTYPE(e_setTabStops);
 REXX_METHOD_PROTOTYPE(e_showBallon);
 REXX_METHOD_PROTOTYPE(e_hideBallon);
+REXX_METHOD_PROTOTYPE(e_getCue);
 REXX_METHOD_PROTOTYPE(e_setCue);
 REXX_METHOD_PROTOTYPE(e_disableInternalResize);
 REXX_METHOD_PROTOTYPE(e_style);
@@ -1272,6 +1273,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(e_style,                        e_style),
     REXX_METHOD(e_showBallon,                   e_showBallon),
     REXX_METHOD(e_hideBallon,                   e_hideBallon),
+    REXX_METHOD(e_getCue,                       e_getCue),
     REXX_METHOD(e_setCue,                       e_setCue),
     REXX_METHOD(e_disableInternalResize,        e_disableInternalResize),
 

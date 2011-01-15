@@ -1845,23 +1845,77 @@ RexxMethod4(RexxObjectPtr, e_showBallon, CSTRING, title, CSTRING, text, OPTIONAL
  */
 
 
-RexxMethod2(RexxObjectPtr, e_setCue, CSTRING, text, CSELF, pCSelf)
+/** Edit::setCue()
+ *
+ *  Sets the cue, or tip, text for the edit control.  This text prompts the user
+ *  for what to enter in the edit control.
+ *
+ *  @param  text   The text for the tip.  The length of the text must be 255
+ *                 characters or less.
+ *  @param  show   [optional] Whether the cue should still display when the edit
+ *                 control has the focus. The default is false, the cue text
+ *                 disappears when the user clickd the edit control.
+ *
+ *  @return  0 on success, 1 on failure.
+ *
+ *  @notes  Requires ComCtl 6.0 or later. Note the restriction on the length of
+ *          text.  You can not set a cue on a multi-line edit control.
+ *
+ *  @remarks  This method was originally written using the old API in 3.2.0.  At
+ *            that time the method returned a bunch of negative numbers, -4 for
+ *            wrong ComCtl version, -3 for this, -2 for that.  Unintentionally
+ *            in the conversion to the C++ APIs, the negative return numbers got
+ *            dropped and exceptions were raised.  We're going to just stick
+ *            with this, some users might complain.
+ *
+ */
+RexxMethod3(RexxObjectPtr, e_setCue, CSTRING, text, OPTIONAL_logical_t, show, CSELF, pCSelf)
 {
-    if ( ! requiredComCtl32Version(context, context->GetMessageName(), COMCTL32_6_0)  )
+    if ( ! requiredComCtl32Version(context, "setCue", COMCTL32_6_0)  )
     {
         return TheOneObj;
     }
 
     // The text is limited to 255.
-    WCHAR wszCue[QUE_MAX_TEXT + 1];
     if ( strlen(text) > QUE_MAX_TEXT )
     {
         stringTooLongException(context->threadContext, 1, QUE_MAX_TEXT, strlen(text));
         return TheOneObj;
     }
 
+    WCHAR wszCue[QUE_MAX_TEXT + 1];
     putUnicodeText((LPWORD)wszCue, text);
-    return (Edit_SetCueBannerText(getDChCtrl(pCSelf), wszCue) ? TheZeroObj : TheOneObj);
+
+    return Edit_SetCueBannerTextFocused(getDChCtrl(pCSelf), wszCue, show) ? TheZeroObj : TheOneObj;
+}
+
+
+/** Edit::getCue()
+ *
+ *  Retrieves the cue banner text, or the empty string if there is no cue set.
+ *
+ *  @return  The cue banner text on success, or the empty string on error and if
+ *           no cue is set
+ *
+ *  @remarks  This simply does not seem to work under XP.  However, it may work
+ *            in Vista or Windows 7.  TODO need to test this.
+ */
+RexxMethod1(RexxStringObject, e_getCue, CSELF, pCSelf)
+{
+    if ( ! requiredComCtl32Version(context, "getCue", COMCTL32_6_0)  )
+    {
+        return NULLOBJECT;
+    }
+
+    RexxStringObject result = context->NullString();
+    WCHAR wszCue[QUE_MAX_TEXT + 1];
+
+    if ( Edit_GetCueBannerText(getDChCtrl(pCSelf), wszCue, QUE_MAX_TEXT) )
+    {
+        result = unicode2string(context, wszCue);
+    }
+
+    return result;
 }
 
 

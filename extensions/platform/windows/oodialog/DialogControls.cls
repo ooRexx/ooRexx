@@ -189,6 +189,7 @@
 ::method lineIndex unguarded external "LIBRARY oodialog e_lineIndex"
 ::method hideBalloon unguarded external "LIBRARY oodialog e_hideBallon"
 ::method showBalloon unguarded external "LIBRARY oodialog e_showBallon"
+::method getCue unguarded external "LIBRARY oodialog e_getCue"
 ::method setCue unguarded external "LIBRARY oodialog e_setCue"
 ::method replaceStyle unguarded external "LIBRARY oodialog e_style"
 ::method addStyle unguarded external "LIBRARY oodialog e_style"
