@@ -58,10 +58,13 @@
 # Red Hat
 %if 0%{?_redhat}
 # Currently RH does not define these like Fedora does, but they might in the future.
-# So we define them and if RH ever does use them we can eliminate the definitions.
-# We will default the version to 55 for now.
-%define build_distro %(grep -q "Red Hat Enterprise Linux" /etc/redhat-release && echo rhel || echo rhl)
+# So we define them using the uname output.
+%define build_distro rhel
+# We start with a default of a release of 5.5 as the default
 %define build_release 55
+%define build_release %(grep -q "release 5.5" /etc/redhat-release && echo rhel55)
+%define build_release %(grep -q "release 5.6" /etc/redhat-release && echo rhel56)
+%define build_release %(grep -q "release 6.0" /etc/redhat-release && echo rhel60)
 %define _osdistname %{build_distro}%{build_release}
 %define _unknownos 0
 %endif
