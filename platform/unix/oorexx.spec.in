@@ -61,10 +61,9 @@
 # So we define them using the uname output.
 %define build_distro rhel
 # We start with a default of a release of 5.5 as the default
-%define build_release 55
-%define build_release %(grep -q "release 5.5" /etc/redhat-release && echo rhel55)
-%define build_release %(grep -q "release 5.6" /etc/redhat-release && echo rhel56)
-%define build_release %(grep -q "release 6.0" /etc/redhat-release && echo rhel60)
+%define build_release %(grep -q "release 5.5" /etc/redhat-release && echo 55)
+%define build_release %(grep -q "release 5.6" /etc/redhat-release && echo 56)
+%define build_release %(grep -q "release 6.0" /etc/redhat-release && echo 60)
 %define _osdistname %{build_distro}%{build_release}
 %define _unknownos 0
 %endif
