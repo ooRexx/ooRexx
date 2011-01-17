@@ -55,9 +55,9 @@
  *  the dialog.
  *
  *  We keep track of whether the user is resizing, or not.  When we get the size
- *  move ended event, if the user was resizing, we invoke the update method of
- *  the dialog, forcing all the dialog controls to redraw themselves in their
- *  new, final, position.
+ *  move ended event, if the user was resizing, we invoke the redrawClient
+ *  method of the dialog, forcing all the dialog controls to redraw themselves
+ *  in their new, final, position.
  *
  *  This eliminates the flicker, but also makes it appear as though the dialog
  *  controls are not changing while the user is actively resizing.  When the
@@ -65,6 +65,15 @@
  *  size and position.
  *
  *  Which approach is better is probably a matter of personal preference.
+ *
+ *  After some use of this example program, a refinement to the above algorithm
+ *  was made.  This is what is used now.  Since no repainting of the dialog
+ *  controls is done until the last resize event, there is no sense in re-
+ *  calculating the size and position of each control on every resize event.
+ *
+ *  Rather than invoke u~resize(self, sizeinfo) every single time in onResize()
+ *  u~resize is only invoked when the dialog client area is going to be forced
+ *  to redraw.
  */
 
   dlg = .ResizableDialog~new( , 'dlgAreaUDemo.h')
@@ -97,15 +106,14 @@
   u = .dlgAreaU~new(self)
   if u~lastError \= .nil then call errorDialog u~lastError
 
-  -- Tell the DialogAreaU object to not invoke the update method.  We are not
-  -- resizing now.  We have not been minimized or minMaximized.
+  -- Tell the DialogAreaU object to not invoke the update method.
   u~updateOnResize = .false
 
-  -- We use these variables to track when to update, or not.
+  -- We use these variables to track when to redraw, or not.
   sizing = .false
   minMaximized = .false
 
-  u~noResize~put(IDC_PB_0)
+  u~noResizePut(IDC_PB_0)
   e = .dlgArea~new(u~x       , u~y       , u~w('70%'), u~h('90%'))   -- edit   area
   s = .dlgArea~new(u~x       , u~y('90%'), u~w('70%'), u~hr      )   -- status area
   b = .dlgArea~new(u~x('70%'), u~y       , u~wr      , u~hr      )   -- button area
@@ -132,22 +140,27 @@
 
 
 ::method onResize unguarded
-  expose u sizing minMaximized
+  expose u sizing minMaximized lastSizeInfo
   use arg sizingType, sizeinfo
 
-  u~resize(self, sizeinfo)
+  -- Save the size information so we know the final size of the dialog.
+  lastSizeInfo = sizeInfo
 
-  -- The size / move ended event does not occur when the user maximize,
+  -- The size / move ended event does not occur when the user maximizes,
   -- minimizes, or restores from maximized / minimized.  Because of that, we
-  -- need to use self~update under those conditions.
+  -- need to redraw the client area under those conditions.
 
   if sizingType == self~SIZE_MAXIMIZED | sizingType == self~SIZE_MINIMIZED then do
     minMaximized = .true
-    if sizingType == self~SIZE_MAXIMIZED then self~update
+    if sizingType == self~SIZE_MAXIMIZED then do
+      u~resize(self, sizeinfo)
+      self~redrawClient(.true)
+    end
   end
   else if sizingType == self~SIZE_RESTORED, minMaximized then do
     minMaximized = .false
-    self~update
+    u~resize(self, sizeinfo)
+    self~redrawClient(.true)
   end
   else do
     -- We are resizing now.
@@ -158,10 +171,13 @@
 
 
 ::method onSizeMoveEnded unguarded
-  expose sizing
+  expose u sizing lastSizeInfo
 
   -- If we were resizing, force the dialog controls to redraw themselves.
-  if sizing then self~update
+  if sizing then do
+    u~resize(self, lastSizeInfo)
+    self~redrawClient(.true)
+  end
 
   -- We are not resizing anymore.
   sizing = .false
