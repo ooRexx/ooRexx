@@ -210,17 +210,6 @@ public:
     DataQueue *remove(SessionID id);
     void remove(DataQueue *q);
 
-    inline void reorderQueues(DataQueue *current, DataQueue *previous)
-    {
-        if (previous != NULL)            // if we have a predecessor
-        {
-            // rearrange to get "most recently used" behavior
-            previous->next = current->next;
-            current->next = queues;
-            queues = current;
-        }
-    }
-
     inline void removeQueue(DataQueue *current, DataQueue *previous)
     {
         if (previous != NULL)            // if we have a predecessor

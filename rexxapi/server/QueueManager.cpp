@@ -295,8 +295,6 @@ DataQueue *QueueTable::locate(const char *name)
         // find the one we want?
         if (Utilities::strCaselessCompare(name, current->queueName) == 0)
         {
-            // move this to the front so we find it quickly
-            reorderQueues(current, previous);
             return current;
         }
         previous = current;                /* remember this block        */
@@ -337,8 +335,6 @@ DataQueue *QueueTable::locate(SessionID id)
         // find the one we want?
         if (current->session == id)
         {
-            // move this to the front so we find it quickly
-            reorderQueues(current, previous);
             return current;
         }
         previous = current;         // remember this block
