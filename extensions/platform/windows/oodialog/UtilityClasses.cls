@@ -1000,7 +1000,7 @@
 arg left,top,width,height,margin
 
 if margin~datatype('n')
-then self~Margin = margin~trunc
+then self~margin = margin~trunc
 else self~margin = max(min(height % 7,5),1)
 
 if top~datatype('n')
@@ -1020,10 +1020,10 @@ then self~height    = height~trunc
 else self~height    = 100
 
 
-self~T = self~Top  + self~Margin
-self~L = self~left + self~Margin
+self~T = self~Top  + self~margin
+self~L = self~left + self~margin
 self~B = self~top  + self~height - self~margin
-self~R = self~Left + self~Width  - self~Margin
+self~R = self~Left + self~Width  - self~margin
 
 self~LastX = 0
 self~LastY = 0
@@ -1090,7 +1090,7 @@ else return trunc(h)
 /* ------------------------------------------------------------------------- */
 
 if self~LastY~pos('%') = 0                                 /* Y was absolute */
-then return self~Top + self~Height - self~Margin - self~LastY
+then return self~Top + self~Height - self~margin - self~LastY
 else return self~h(100 - self~LastY~changestr('%','')||'%')       /* Y was % */
 
 /* ------------------------------------------------------------------------- */
@@ -1111,7 +1111,7 @@ else return w
 /* ------------------------------------------------------------------------- */
 
 if self~LastX~pos('%') = 0                                 /* X was absolute */
-then return self~Left + self~Width - self~Margin - self~LastX
+then return self~Left + self~Width - self~margin - self~LastX
 else return self~w(100 - self~LastX~changestr('%','')||'%')       /* X was % */
 
 /* ----------------------- compatibility methods --------------------------- */
@@ -1120,20 +1120,20 @@ else return self~w(100 - self~LastX~changestr('%','')||'%')       /* X was % */
 ::method sizeX ; return self~width
 ::method sizeY ; return self~height
 /* ------------------------------------------------------------------------- */
-::method T              Attribute
-::method L              Attribute
-::method B              Attribute
-::method R              Attribute
-::method Top            Attribute
-::method Left           Attribute
-::method Width          Attribute
-::method Height         Attribute
-::method Margin         Attribute
-::method LastX          Attribute Private
-::method LastY          Attribute Private
+::method T              attribute
+::method L              attribute
+::method B              attribute
+::method R              attribute
+::method Top            attribute
+::method Left           attribute
+::method Width          attribute
+::method Height         attribute
+::method margin         attribute
+::method LastX          attribute private
+::method LastY          attribute private
 
 /* ========================================================================= */
-::Class 'DlgAreaU' SubClass DlgArea Public -- DlgAreaUniversal - Whole of Dialog
+::class 'DlgAreaU' subclass DlgArea public -- DlgAreaUniversal - Whole of Dialog
 /* ========================================================================= */
 /*  define the Area of the calling Dialog                                    */
 /*                                                                           */
@@ -1141,30 +1141,32 @@ else return self~w(100 - self~LastX~changestr('%','')||'%')       /* X was % */
 /*                                                                           */
 /*  methods & attributes                                                     */
 /*  resize     Aids in Dynamically Resizing Dialogs - See Documentation      */
-/*  CorrectionFactor                                - See Documentation      */
+/*  correctionFactor                                - See Documentation      */
 /*                                                                           */
-::method Init
+::method init
 /* ------------------------------------------------------------------------- */
-expose DlgObjList DlgObject
+expose dlgObjList dlgObject
+use arg dlgObj, margin, noResize, noMove
 
-use arg DlgObj, Margin, NoResize, NoMove
+dlgObject = dlgObj
 
-if \NoResize~isA(.Set) then NoResize = .Set~new
-self~NoResize = NoResize
-if \NoMove~isA(.Set) then NoMove   = .Set~new
-self~NoMove   = NoMove
+if \noResize~isA(.Set) then noResize = .Set~new
+if \noMove~isA(.Set) then noMove = .Set~new
+self~noResize = noResize
+self~noMove   = noMove
+
+self~resolveSetIDs
 
 if \margin~datatype('n') then margin = 5
 
-self~CorrectionFactor = 1.05
+self~correctionFactor = 1.05
 
-self~init:super(0,0,DlgObj~sizeX,DlgObj~sizeY,margin)
+self~init:super(0,0,dlgObj~sizeX,dlgObj~sizeY,margin)
 
 self~updateOnResize = .true
-self~OriginalWidth  = DlgObj~sizeX
-self~OriginalHeight = DlgObj~sizeY
-self~LastError      = .nil
-DlgObject           = DlgObj
+self~originalWidth  = dlgObj~sizeX
+self~originalHeight = dlgObj~sizeY
+self~lastError      = .nil
 
 CreateControlTypes = .set~of('BITMAPBUTTON', 'CHECKBOX', 'COMBOBOXEDIT', 'TAB', -
   'PUSHBUTTON', 'RADIOBUTTON', 'DATETIMEPICKER', 'LISTVIEW', 'PASSWORDEDIT',    -
@@ -1175,7 +1177,7 @@ CreateControlTypes = .set~of('BITMAPBUTTON', 'CHECKBOX', 'COMBOBOXEDIT', 'TAB', 
 )
 
 -- Analyze the callers defineDialog Method
-DDSourceArr=DlgObj~class~method('defineDialog')~source
+DDSourceArr=dlgObj~class~method('defineDialog')~source
 DDSBuff=.mutableBuffer~new
 
 -- Remove comments prefixed by --
@@ -1192,7 +1194,7 @@ do forever
    commStart = DDSource~SubStr(1,CommEnd-1)~lastPos('/'||'*')
    if comStart=0
    then do
-      self~LastError='Error in DlgAreaU Class: Unbalanced comments in defineDialog class of' Dlg
+      self~lastError='Error in DlgAreaU Class: Unbalanced comments in defineDialog class of' Dlg
       leave
    end
 
@@ -1225,12 +1227,12 @@ do forever
       when DAMsg~Space(0) = '~NEW'   -- This is a DlgArea Obj definition
          then interpret DAVar'=.DlgArea~new('daparms')'
       otherwise
-         self~LastError='DlgAreaU Class: Unable to parse:' SourceLine
+         self~lastError='DlgAreaU Class: Unable to parse:' SourceLine
    end
 end
 
 -- Now we parse out resizable widgets.
-DlgObjList=.List~new
+dlgObjList=.List~new
 delim = '00'x
 
 signal on syntax name parseerror
@@ -1257,10 +1259,10 @@ do forever
       else
           ObjId = ''       -- This createXXX method is ignored
 
-      ObjId = DlgObject~resolveResourceID(ObjId~space(0))
+      ObjId = dlgObject~resolveResourceID(ObjId~space(0))
 
       if ObjId \= '', ObjId > 0 then
-         interpret 'DlgObjList~Insert(ObjId "@"' ObjX '"@"' ObjY '"@"' ObjW '"@"' ObjH ')'
+         interpret 'dlgObjList~Insert(ObjId"@"'ObjX'"@"'ObjY'"@"'ObjW'"@"'ObjH')'
    end
    else do
       -- skip past this create
@@ -1295,10 +1297,10 @@ do forever
             ObjId = ''     -- This addXXX method is ignored
       end
 
-      ObjId = DlgObject~resolveResourceID(ObjId~space(0))
+      ObjId = dlgObject~resolveResourceID(ObjId~space(0))
 
       if ObjId \= '', ObjId > 0 then
-         interpret 'DlgObjList~Insert(ObjId "@"' ObjX '"@"' ObjY '"@"' ObjW '"@"' ObjH ')'
+         interpret 'dlgObjList~Insert(ObjId"@"'ObjX'"@"'ObjY'"@"'ObjW'"@"'ObjH')'
    end
    else do
      -- skip past this add
@@ -1317,31 +1319,53 @@ if parseerroroccured then self~lastError = 'DlgAreaU class could not parse' sour
 /* ------------------------------------------------------------------------- */
 ::method noResizePut
 /* ------------------------------------------------------------------------- */
-/* This method allows the user to place dialog controls in the NoResize set  */
+/* This method allows the user to place dialog controls in the noResize set  */
 /* using symbolic IDs.                                                       */
 /* ------------------------------------------------------------------------- */
-expose DlgObject
+expose dlgObject
    use strict arg id
 
-   id = DlgObject~getResourceID(id)
-   self~NoResize~put(id)
+   id = dlgObject~getResourceID(id)
+   self~noResize~put(id)
 
 
 /* ------------------------------------------------------------------------- */
 ::method noMovePut
 /* ------------------------------------------------------------------------- */
-/* This method allows the user to place dialog controls in the NoMove set    */
+/* This method allows the user to place dialog controls in the noMove set    */
 /* using symbolic IDs.                                                       */
 /* ------------------------------------------------------------------------- */
-expose DlgObject
+expose dlgObject
    use strict arg id
 
-   id = DlgObject~getResourceID(id)
-   self~NoMove~put(id)
+   id = dlgObject~getResourceID(id)
+   self~noMove~put(id)
 
 
 /* ------------------------------------------------------------------------- */
-::method Resize
+::method resolveSetIDs private
+/* ------------------------------------------------------------------------- */
+/* This method looks through the noMove and noResize sets and replaces any   */
+/* symbolic resource IDs with the correct numeric ID.  If a symbolic ID can  */
+/* not be resolved, it is removed from the set.                              */
+/* ------------------------------------------------------------------------- */
+expose dlgObject noMove noResize
+
+   do id over noMove
+     id = noMove~remove(id)
+     id = dlgObject~getResourceID(id)
+     if id > 0 then noMove~put(id)
+   end
+
+   do id over noResize
+     id = noResize~remove(id)
+     id = dlgObject~getResourceID(id)
+     if id > 0 then noResize~put(id)
+   end
+
+
+/* ------------------------------------------------------------------------- */
+::method resize
 /* ------------------------------------------------------------------------- */
 /* this method needs to be called as follows:                                */
 /* in your dialog init method place this line after call to the superclass   */
@@ -1352,31 +1376,30 @@ expose DlgObject
 /*                                                  new width and height */  */
 /* u~resize(self,sizeinfo)                                                   */
 /* ------------------------------------------------------------------------- */
-expose DlgObjList
+expose dlgObjList
   use arg dlg,data
   dlg~sizeX = .DlgUtil~loWord(data) % dlg~factorX
   dlg~sizeY = .DlgUtil~hiWord(data) % dlg~factorY
 
-  wFactor   = (dlg~sizeX / self~OriginalWidth ) * self~CorrectionFactor
-  hFactor   = (dlg~sizeY / self~OriginalHeight) * self~CorrectionFactor
+  wFactor   = (dlg~sizeX / self~originalWidth ) * self~correctionFactor
+  hFactor   = (dlg~sizeY / self~originalHeight) * self~correctionFactor
 
-
-  do dlgObjDef over DlgObjList
+  do dlgObjDef over dlgObjList
      parse var dlgObjdef DOid'@'DOx'@'DOy'@'DOw'@'DOh
-     if \self~NoResize~HasIndex(DOid~strip)
-     then dlg~ResizeItem(Doid,DOw * wFactor,DOh * hFactor,"NOREDRAW")
-     if \self~NoMove~HasIndex(DOid)
-     then dlg~MoveItem(DOid,DOx * wFactor,DOy * hFactor,"NOREDRAW")
+     if \self~noResize~hasIndex(DOid)
+     then dlg~resizeItem(Doid,DOw * wFactor,DOh * hFactor,"NOREDRAW")
+     if \self~noMove~hasIndex(DOid)
+     then dlg~moveItem(DOid,DOx * wFactor,DOy * hFactor,"NOREDRAW")
   end /* DO */
 
   if self~updateOnResize then dlg~update
 /* ------------------------------------------------------------------------- */
 
-::attribute OriginalWidth     private
-::attribute OriginalHeight    private
-::attribute DlgObject         private get
-::attribute NoResize
-::attribute NoMove
-::attribute CorrectionFactor
-::attribute LastError
+::attribute originalWidth     private
+::attribute originalHeight    private
+::attribute dlgObject         private get
+::attribute noResize
+::attribute noMove
+::attribute correctionFactor
+::attribute lastError
 ::attribute updateOnResize
