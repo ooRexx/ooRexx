@@ -104,6 +104,7 @@ return 0
   doneProcessing = .false
 
   do forever
+    if userHasQuit then leave
 
     guard on when queueHasData
 
@@ -113,20 +114,25 @@ return 0
     do while component \== .nil
       if userHasQuit then leave
 
+      -- Change the cursor to the hour glass cursor to indicate we are processing
+      -- and the user should be patient.
+      self~showHourGlass
+
       WMIObject = .OLEObject~getObject("WinMgmts:")
 
       if WMIObject \== .nil, component \== "" then do
-        -- Change the cursor to the hour glass cursor to indicate we are processing
-        -- and the user should be patient.
-        self~showHourGlass
+        if userHasQuit then leave
 
         lb~deleteAll
         objects = WMIObject~instancesOf(component)
 
         do instance over objects
+          if userHasQuit then leave
+
           -- Please note: these objects offer a lot more information than is
           -- displayed here. For simplicity's sake only the name and description
           -- (if available) are shown.
+
           name = instance~name
           desc = instance~description
           if ((name = desc) | (desc = .nil)) then
@@ -135,13 +141,12 @@ return 0
             lb~add(name "("desc")")
         end
 
-        -- Restore the cursor to its original shape and position.
-        self~showHourGlass(.false)
       end
-      if userHasQuit then leave
+      -- Restore the cursor to its original shape and position.
+      self~showHourGlass(.false)
+
       component = componentQueue~pull
     end
-    if userHasQuit then leave
     queueHasData = .false
   end
 
