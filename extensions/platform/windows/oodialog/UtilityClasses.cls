@@ -1168,7 +1168,7 @@ self~originalWidth  = dlgObj~sizeX
 self~originalHeight = dlgObj~sizeY
 self~lastError      = .nil
 
-CreateControlTypes = .set~of('BITMAPBUTTON', 'CHECKBOX', 'COMBOBOXEDIT', 'TAB', -
+CreateControlTypes = .set~of('BITMAPBUTTON', 'CHECKBOX', 'COMBOBOX', 'TAB', -
   'PUSHBUTTON', 'RADIOBUTTON', 'DATETIMEPICKER', 'LISTVIEW', 'PASSWORDEDIT',    -
   'PROGRESSBAR', 'SCROLLBAR', 'TRACKBAR', 'BLACKFRAME', 'BLACKRECT', 'LISTBOX', -
   'ETCHEDHORIZONTAL', 'ETCHEDVERTICAL', 'GRAYRECT', 'GRAYFRAME', 'GROUPBOX',    -
