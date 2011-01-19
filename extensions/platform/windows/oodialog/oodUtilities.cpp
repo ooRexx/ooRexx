@@ -1254,7 +1254,7 @@ RexxMethod1(RexxObjectPtr, ds_init, ARGLIST, args)
     return NULLOBJECT;
 }
 
-RexxMethod1(uint32_t, ds_dayStateValue, CSELF, ds) { return ((PDAYSTATE)ds)->val; }
+RexxMethod1(uint32_t, ds_value, CSELF, ds) { return ((PDAYSTATE)ds)->val; }
 
 
 /**

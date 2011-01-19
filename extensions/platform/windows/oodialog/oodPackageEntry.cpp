@@ -735,7 +735,7 @@ REXX_METHOD_PROTOTYPE(dss_quickDayStateBuffer);
 
 // .DayState
 REXX_METHOD_PROTOTYPE(ds_init);
-REXX_METHOD_PROTOTYPE(ds_dayStateValue);
+REXX_METHOD_PROTOTYPE(ds_value);
 
 
 // .Rect
@@ -1436,7 +1436,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dss_makeDayStateBuffer,         dss_makeDayStateBuffer),
     REXX_METHOD(dss_quickDayStateBuffer,        dss_quickDayStateBuffer),
     REXX_METHOD(ds_init,                        ds_init),
-    REXX_METHOD(ds_dayStateValue,               ds_dayStateValue),
+    REXX_METHOD(ds_value,                       ds_value),
     REXX_METHOD(rect_init,                      rect_init),
     REXX_METHOD(rect_left,                      rect_left),
     REXX_METHOD(rect_top,                       rect_top),

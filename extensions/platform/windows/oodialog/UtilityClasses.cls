@@ -123,7 +123,7 @@
 
 ::class 'DayState' public
 ::method init external "LIBRARY oodialog ds_init"
-::method dayStateValue external "LIBRARY oodialog ds_dayStateValue"
+::method value external "LIBRARY oodialog ds_value"
 
 
 ::class 'DayStates' public
@@ -960,7 +960,7 @@
 /*  methods                                                                  */
 /*  x & y  can take an offset argument which may be absolute or a percentage */
 /*  w & h  can take a percentage as argument                                 */
-/*         a parm of R to W or H means the remainder of the width or height  */
+/*         a parm of r to w or h means the remainder of the width or height  */
 /*                                                                           */
 /*  so to add a button 80% across your margined dialog for the remainder     */
 /*  a = .DlgArea~new(10,10,150,110,5)                                        */
@@ -995,7 +995,7 @@
 /* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
-::method Init
+::method init
 /* ------------------------------------------------------------------------- */
 arg left,top,width,height,margin
 
@@ -1020,19 +1020,19 @@ then self~height    = height~trunc
 else self~height    = 100
 
 
-self~T = self~Top  + self~margin
-self~L = self~left + self~margin
-self~B = self~top  + self~height - self~margin
-self~R = self~Left + self~Width  - self~margin
+self~t = self~top  + self~margin
+self~l = self~left + self~margin
+self~b = self~top  + self~height - self~margin
+self~r = self~left + self~width  - self~margin
 
-self~LastX = 0
-self~LastY = 0
+self~lastX = 0
+self~lastY = 0
 
 /* ------------------------------------------------------------------------- */
-::method X
+::method x
 /* ------------------------------------------------------------------------- */
 arg offset
-self~LastX='0'||Offset
+self~lastX='0'||Offset
 
 if offset~pos('%') > 0
 then do
@@ -1051,10 +1051,10 @@ else if offset~datatype('n')
 else return self~left + self~margin
 
 /* ------------------------------------------------------------------------- */
-::method Y
+::method y
 /* ------------------------------------------------------------------------- */
 arg offset
-self~LastY = '0'||offset
+self~lastY = '0'||offset
 
 if offset~pos('%') > 0
 then do
@@ -1073,7 +1073,7 @@ else if offset~datatype('n')
 else return self~top + self~margin
 
 /* ------------------------------------------------------------------------- */
-::method H
+::method h
 /* ------------------------------------------------------------------------- */
 arg pc
 
@@ -1089,12 +1089,12 @@ else return trunc(h)
 ::method HR
 /* ------------------------------------------------------------------------- */
 
-if self~LastY~pos('%') = 0                                 /* Y was absolute */
-then return self~Top + self~Height - self~margin - self~LastY
-else return self~h(100 - self~LastY~changestr('%','')||'%')       /* Y was % */
+if self~lastY~pos('%') = 0                                 /* Y was absolute */
+then return self~top + self~height - self~margin - self~lastY
+else return self~h(100 - self~lastY~changestr('%','')||'%')       /* Y was % */
 
 /* ------------------------------------------------------------------------- */
-::method W
+::method w
 /* ------------------------------------------------------------------------- */
 arg pc
 
@@ -1107,12 +1107,12 @@ then return trunc(w * (pc~changestr('%','') / 100))
 else return w
 
 /* ------------------------------------------------------------------------- */
-::method WR
+::method wr
 /* ------------------------------------------------------------------------- */
 
-if self~LastX~pos('%') = 0                                 /* X was absolute */
-then return self~Left + self~Width - self~margin - self~LastX
-else return self~w(100 - self~LastX~changestr('%','')||'%')       /* X was % */
+if self~lastX~pos('%') = 0                                 /* X was absolute */
+then return self~left + self~width - self~margin - self~lastX
+else return self~w(100 - self~lastX~changestr('%','')||'%')       /* X was % */
 
 /* ----------------------- compatibility methods --------------------------- */
 ::method cx    ; return self~w(arg(1))         -- Compatibility version of w
@@ -1120,17 +1120,17 @@ else return self~w(100 - self~LastX~changestr('%','')||'%')       /* X was % */
 ::method sizeX ; return self~width
 ::method sizeY ; return self~height
 /* ------------------------------------------------------------------------- */
-::method T              attribute
-::method L              attribute
-::method B              attribute
-::method R              attribute
-::method Top            attribute
-::method Left           attribute
-::method Width          attribute
-::method Height         attribute
-::method margin         attribute
-::method LastX          attribute private
-::method LastY          attribute private
+::attribute t
+::attribute l
+::attribute b
+::attribute r
+::attribute top
+::attribute left
+::attribute width
+::attribute height
+::attribute margin
+::attribute lastX           private
+::attribute lastY           private
 
 /* ========================================================================= */
 ::class 'DlgAreaU' subclass DlgArea public -- DlgAreaUniversal - Whole of Dialog
