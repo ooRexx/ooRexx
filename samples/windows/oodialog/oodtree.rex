@@ -210,13 +210,12 @@ CleanUp:
   use arg treeId, key
   curTree = self~newTreeView(treeId)
   /* if DELETE key is pressed, delete the selected item */
-  if .VK~key2name(key) = "VK_DELETE" then
+  if key == .VK~DELETE then
     curTree~Delete(curTree~Selected)
   else
     /* if INSERT key is pressed, simulate pressing the New button */
-    if .VK~key2name(key) = VK_"INSERT" then
+    if key == .VK~INSERT then
       self~IDC_PB_NEW
-
 
 /* Method IDC_PB_NEW is connected to item IDC_PB_NEW */
 ::method IDC_PB_NEW
