@@ -60,10 +60,11 @@
 # Currently RH does not define these like Fedora does, but they might in the future.
 # So we define them using the uname output.
 %define build_distro rhel
-# We start with a default of a release of 5.5 as the default
-%define build_release %(grep -q "release 5.5" /etc/redhat-release && echo 55)
-%define build_release %(grep -q "release 5.6" /etc/redhat-release && echo 56)
-%define build_release %(grep -q "release 6.0" /etc/redhat-release && echo 60)
+# We start with a null build_release string for the default
+%define build_release
+%define build_release %(grep -q "release 5.5" /etc/redhat-release && echo 55 || echo $build_release)
+%define build_release %(grep -q "release 5.6" /etc/redhat-release && echo 56 || echo $build_release)
+%define build_release %(grep -q "release 6.0" /etc/redhat-release && echo 60 || echo $build_release)
 %define _osdistname %{build_distro}%{build_release}
 %define _unknownos 0
 %endif
