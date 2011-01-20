@@ -165,17 +165,6 @@ exit -1
 /* REQUIRES directive then add the keyword PUBLIC to the class directive     */
 /*                                                                           */
 /*                          ----------------------                           */
-/* Multiple inheritance:                                                     */
-/*                                                                           */
-/* If you are going to use either of these methods:                          */
-/*                                                                           */
-/* VCODE                    KEYNAME                                          */
-/*                                                                           */
-/* Then you must add INHERIT VIRTUALKEYCODES to the class directive above    */
-/* Simply remove the "--" comment characters from before 'inherit and un-    */
-/* comment the requires winsystm.cls line.                                   */
-/*                                                                           */
-/*                          ----------------------                           */
 /*                                                                           */
 /* ------------------------------------------------------------------------- */
 

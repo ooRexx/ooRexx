@@ -66,14 +66,13 @@ dlg~deinstall
 return
 
 ::requires "ooDialog.cls"
-::requires "WINSYSTM.CLS"           /* This file contains the Windows classes */
 
 
 
 
 /* ---------------------------- Directives ---------------------------------*/
 
-::class ListsDialog subclass PropertySheet inherit VirtualKeyCodes
+::class ListsDialog subclass PropertySheet
 
 ::method InitDialog
   forward class (super) continue /* call parent constructor */
