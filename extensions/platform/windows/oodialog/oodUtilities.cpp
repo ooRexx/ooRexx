@@ -1214,17 +1214,49 @@ RexxMethod2(RexxObjectPtr, rect_setRight, CSELF, pRect, int32_t, right) { ((RECT
 RexxMethod2(RexxObjectPtr, rect_setBottom, CSELF, pRect, int32_t, bottom) { ((RECT *)pRect)->bottom = bottom; return NULLOBJECT; }
 
 
+/**
+ * Methods for the ooDialog .VK class.
+ */
+#define VK_CLASS  "VK"
+
+/** VK::key2name()
+ *
+ * Translates a virtual key code into a string version of its symbolic name.
+ * I.e., 32 becomes "VK_SPACE".
+ *
+ * @param  key  The virtual key code.  Must be between 0 and 255.
+ *
+ * @return The virtual key name.
+ *
+ * @notes  Not all the numbers between 0 and 255 map to a virtual key.  The
+ *         empty string is returned for those numbers.
+ *
+ * @remarks  The initializers for names, and nothing else, are kept in
+ *           oodKeyNames.hpp.
+ *
+ */
+RexxMethod1(CSTRING, vk_key2name, uint8_t, key)
+{
+    static char *names[256] =
+    {
+#include "oodKeyNames.hpp"
+    };
+
+    return names[key];
+}
+
+
+
+/**
+ * Methods for the ooDialog .DayState class.
+ */
+#define DAYSTATE_CLASS  "DayState"
 
 typedef struct _dayState
 {
     uint32_t  val;
 } DAYSTATE, *PDAYSTATE;
 
-
-/**
- * Methods for the ooDialog .DayState class.
- */
-#define DAYSTATE_CLASE  "DayState"
 
 RexxMethod1(RexxObjectPtr, ds_init, ARGLIST, args)
 {

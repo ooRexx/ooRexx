@@ -239,6 +239,240 @@
     end
 
 
+::class 'VK' mixinclass Object public
+
+-- Virtual Keys, Standard Set.  Note that several of the integer values have
+-- duplicate names.
+::constant VK_LBUTTON                1
+::constant VK_RBUTTON                2
+::constant VK_CANCEL                 3
+::constant VK_MBUTTON                4
+::constant VK_XBUTTON1               5
+::constant VK_XBUTTON2               6
+                               --    7 : unassigned
+::constant VK_BACK                   8
+::constant VK_TAB                    9
+                               --   10 : reserved
+                               --   11 : reserved
+::constant VK_CLEAR                 12
+::constant VK_RETURN                13
+                               --   14 : Microsoft does not list.
+                               --   15 : Microsoft does not list.
+::constant VK_SHIFT                 16
+::constant VK_CONTROL               17
+::constant VK_MENU                  18
+::constant VK_PAUSE                 19
+::constant VK_CAPITAL               20
+::constant VK_KANA                  21
+::constant VK_HANGEUL               21
+::constant VK_HANGUL                21
+                               --   22 : Microsoft does not list.
+::constant VK_JUNJA                 23
+::constant VK_FINAL                 24
+::constant VK_HANJA                 25
+::constant VK_KANJI                 25
+                               --   26 : Microsoft does not list.
+::constant VK_ESCAPE                27
+::constant VK_CONVERT               28
+::constant VK_NONCONVERT            29
+::constant VK_ACCEPT                30
+::constant VK_MODECHANGE            31
+::constant VK_SPACE                 32
+::constant VK_PRIOR                 33
+::constant VK_NEXT                  34
+::constant VK_END                   35
+::constant VK_HOME                  36
+::constant VK_LEFT                  37
+::constant VK_UP                    38
+::constant VK_RIGHT                 39
+::constant VK_DOWN                  40
+::constant VK_SELECT                41
+::constant VK_PRINT                 42
+::constant VK_EXECUTE               43
+::constant VK_SNAPSHOT              44
+::constant VK_INSERT                45
+::constant VK_DELETE                46
+::constant VK_HELP                  47
+::constant VK_0                     48
+::constant VK_1                     49
+::constant VK_2                     50
+::constant VK_3                     51
+::constant VK_4                     52
+::constant VK_5                     53
+::constant VK_6                     54
+::constant VK_7                     55
+::constant VK_8                     56
+::constant VK_9                     57
+                               -- 58 - 63 (0x3A -0x3F) Microsoft does not list.
+                               -- 0x40 : unassigned
+::constant VK_A                     65
+::constant VK_B                     66
+::constant VK_C                     67
+::constant VK_D                     68
+::constant VK_E                     69
+::constant VK_F                     70
+::constant VK_G                     71
+::constant VK_H                     72
+::constant VK_I                     73
+::constant VK_J                     74
+::constant VK_K                     75
+::constant VK_L                     76
+::constant VK_M                     77
+::constant VK_N                     78
+::constant VK_O                     79
+::constant VK_P                     80
+::constant VK_Q                     81
+::constant VK_R                     82
+::constant VK_S                     83
+::constant VK_T                     84
+::constant VK_U                     85
+::constant VK_V                     86
+::constant VK_W                     87
+::constant VK_X                     88
+::constant VK_Y                     89
+::constant VK_Z                     90
+::constant VK_LWIN                  91
+::constant VK_RWIN                  92
+::constant VK_APPS                  93
+                               -- 0x5E : reserved
+::constant VK_SLEEP                 95
+::constant VK_NUMPAD0               96
+::constant VK_NUMPAD1               97
+::constant VK_NUMPAD2               98
+::constant VK_NUMPAD3               99
+::constant VK_NUMPAD4              100
+::constant VK_NUMPAD5              101
+::constant VK_NUMPAD6              102
+::constant VK_NUMPAD7              103
+::constant VK_NUMPAD8              104
+::constant VK_NUMPAD9              105
+::constant VK_MULTIPLY             106
+::constant VK_ADD                  107
+::constant VK_SEPARATOR            108
+::constant VK_SUBTRACT             109
+::constant VK_DECIMAL              110
+::constant VK_DIVIDE               111
+::constant VK_F1                   112
+::constant VK_F2                   113
+::constant VK_F3                   114
+::constant VK_F4                   115
+::constant VK_F5                   116
+::constant VK_F6                   117
+::constant VK_F7                   118
+::constant VK_F8                   119
+::constant VK_F9                   120
+::constant VK_F10                  121
+::constant VK_F11                  122
+::constant VK_F12                  123
+::constant VK_F13                  124
+::constant VK_F14                  125
+::constant VK_F15                  126
+::constant VK_F16                  127
+::constant VK_F17                  128
+::constant VK_F18                  129
+::constant VK_F19                  130
+::constant VK_F20                  131
+::constant VK_F21                  132
+::constant VK_F22                  133
+::constant VK_F23                  134
+::constant VK_F24                  135
+                                  -- 0x88 - 0x8F : unassigned
+::constant VK_NUMLOCK              144
+::constant VK_SCROLL               145
+
+-- NEC PC-9800 kbd definitions
+::constant VK_OEM_NEC_EQUAL        146   -- '=' key on numpad
+
+-- Fujitsu/OASYS kbd definitions
+::constant VK_OEM_FJ_JISHO         146   -- 'Dictionary' key
+::constant VK_OEM_FJ_MASSHOU       147   -- 'Unregister word' key
+::constant VK_OEM_FJ_TOUROKU       148   -- 'Register word' key
+::constant VK_OEM_FJ_LOYA          149   -- 'Left OYAYUBI' key
+::constant VK_OEM_FJ_ROYA          150   -- 'Right OYAYUBI' key
+                               -- 0x97 - 0x9F : unassigned
+
+::constant VK_LSHIFT               160
+::constant VK_RSHIFT               161
+::constant VK_LCONTROL             162
+::constant VK_RCONTROL             163
+::constant VK_LMENU                164
+::constant VK_RMENU                165
+::constant VK_BROWSER_BACK         166
+::constant VK_BROWSER_FORWARD      167
+::constant VK_BROWSER_REFRESH      168
+::constant VK_BROWSER_STOP         169
+::constant VK_BROWSER_SEARCH       170
+::constant VK_BROWSER_FAVORITES    171
+::constant VK_BROWSER_HOME         172
+::constant VK_VOLUME_MUTE          173
+::constant VK_VOLUME_DOWN          174
+::constant VK_VOLUME_UP            174
+::constant VK_MEDIA_NEXT_TRACK     176
+::constant VK_MEDIA_PREV_TRACK     177
+::constant VK_MEDIA_STOP           178
+::constant VK_MEDIA_PLAY_PAUSE     179
+::constant VK_LAUNCH_MAIL          180
+::constant VK_LAUNCH_MEDIA_SELECT  181
+::constant VK_LAUNCH_APP1          182
+::constant VK_LAUNCH_APP2          183
+                               -- 0xB8 - 0xB9 : reserved
+
+::constant VK_OEM_1                186   -- ';:' for US
+::constant VK_OEM_PLUS             187   -- '+' any country
+::constant VK_OEM_COMMA            188   -- ',' any country
+::constant VK_OEM_MINUS            189   -- '-' any country
+::constant VK_OEM_PERIOD           190   -- '.' any country
+::constant VK_OEM_2                191   -- '/?' for US
+::constant VK_OEM_3                192   -- '`~' for US
+                               -- 0xC1 - 0xD7 : reserved
+                               -- 0xD8 - 0xDA : unassigned
+
+::constant VK_OEM_4                219  --  '[{' for US
+::constant VK_OEM_5                220  --  '\|' for US
+::constant VK_OEM_6                221  --  ']}' for US
+::constant VK_OEM_7                222  --  ''"' for US
+::constant VK_OEM_8                223
+                               -- 0xE0 : reserved
+
+-- Various extended or enhanced keyboards
+::constant VK_OEM_AX               225  --  'AX' key on Japanese AX kbd
+::constant VK_OEM_102              226  --  "<>" or "\|" on RT 102-key kbd.
+::constant VK_ICO_HELP             227  --  Help key on ICO
+::constant VK_ICO_00               228  --  00 key on ICO
+::constant VK_PROCESSKEY           229
+::constant VK_ICO_CLEAR            230
+::constant VK_PACKET               231
+                               -- 0xE8 : unassigned
+
+-- Nokia/Ericsson definitions
+::constant VK_OEM_RESET            233
+::constant VK_OEM_JUMP             234
+::constant VK_OEM_PA1              235
+::constant VK_OEM_PA2              236
+::constant VK_OEM_PA3              237
+::constant VK_OEM_WSCTRL           238
+::constant VK_OEM_CUSEL            239
+::constant VK_OEM_ATTN             240
+::constant VK_OEM_FINISH           241
+::constant VK_OEM_COPY             242
+::constant VK_OEM_AUTO             243
+::constant VK_OEM_ENLW             244
+::constant VK_OEM_BACKTAB          245
+::constant VK_ATTN                 246
+::constant VK_CRSEL                247
+::constant VK_EXSEL                248
+::constant VK_EREOF                249
+::constant VK_PLAY                 250
+::constant VK_ZOOM                 251
+::constant VK_NONAME               252
+::constant VK_PA1                 0x53
+::constant VK_OEM_CLEAR            254
+                               -- 0xFF : reserved
+
+::method key2name class external "LIBRARY oodialog vk_key2name"
+::method key2name       external "LIBRARY oodialog vk_key2name"
+
+
 
 /**
  * Standard Dialog Control Classes.  Some simple short cut dialogs.

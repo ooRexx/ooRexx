@@ -146,3 +146,4 @@ $(OODMESSAGING_SOURCEF) : oodMessaging.hpp
 $(OODRESOURCES_SOURCEF) : oodResources.hpp
 $(OODUSER_SOURCEF) : oodUser.hpp
 $(OR_OUTDIR)\oodMenu.obj : oodMenu.hpp
+$(OR_OUTDIR)\oodUtilities.obj : oodKeyNames.hpp

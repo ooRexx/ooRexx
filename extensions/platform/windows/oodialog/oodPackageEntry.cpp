@@ -767,6 +767,9 @@ REXX_METHOD_PROTOTYPE(size_setCX);
 REXX_METHOD_PROTOTYPE(size_cy);
 REXX_METHOD_PROTOTYPE(size_setCY);
 
+// .VK
+REXX_METHOD_PROTOTYPE(vk_key2name);
+
 // Menu classes methods
 REXX_METHOD_PROTOTYPE(menu_menuInit_pvt);
 REXX_METHOD_PROTOTYPE(menu_connectCommandEvent_cls);
@@ -1460,6 +1463,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(size_setCX,                     size_setCX),
     REXX_METHOD(size_cy,                        size_cy),
     REXX_METHOD(size_setCY,                     size_setCY),
+    REXX_METHOD(vk_key2name,                    vk_key2name),
 
     // Menu classes methods
     REXX_METHOD(menu_menuInit_pvt,              menu_menuInit_pvt),
