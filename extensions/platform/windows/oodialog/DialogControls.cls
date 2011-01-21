@@ -311,7 +311,7 @@
     else do
        flag = 0
        if arg(1, 'E') then flag = self~EC_LEFTMARGIN
-       if arg(2, 'E') then flag .DlgUtil~or(flag, self~EC_RIGHTMARGIN)
+       if arg(2, 'E') then flag = .DlgUtil~or(flag, self~EC_RIGHTMARGIN)
        lParam = .DlgUtil~makeLParam(right, left)
        self~sendWinIntMsg(self~EM_SETMARGINS, flag, lParam)
     end
