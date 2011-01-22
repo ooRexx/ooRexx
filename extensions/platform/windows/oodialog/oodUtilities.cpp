@@ -1150,6 +1150,27 @@ RexxMethod3(RexxObjectPtr, point_incr, OPTIONAL_int32_t, x, OPTIONAL_int32_t, y,
     return NULLOBJECT;
 }
 
+/** Point::decr
+ *
+ *  Decrements this point's x and y attributes by the specified amount. See the
+ *  comments above for Point::incr() for details.
+ */
+RexxMethod3(RexxObjectPtr, point_decr, OPTIONAL_int32_t, x, OPTIONAL_int32_t, y, CSELF, p)
+{
+    if ( argumentOmitted(1) && argumentOmitted(2) )
+    {
+        ((POINT *)p)->x--;
+        ((POINT *)p)->y--;
+    }
+    else
+    {
+        ((POINT *)p)->x -= x;
+        ((POINT *)p)->y -= y;
+    }
+
+    return NULLOBJECT;
+}
+
 /**
  * Methods for the ooDialog .Size class.
  */
