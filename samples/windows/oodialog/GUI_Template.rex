@@ -153,9 +153,8 @@ any:
 exit -1
 /* ========================================================================= */
 ::requires "ooDialog.cls"
-/* ::requires 'winsystm.cls'    -- Uncomment if you inherit VirtualKeyCodes  */
 /* ========================================================================= */
-::class MyDlgClass subclass userdialog --inherit VirtualKeyCodes
+::class MyDlgClass subclass userdialog
 /*                                                                           */
 /* The class directive                                                       */
 /* Rename your object from MyDlgClass to something that makes sense to you   */
@@ -182,8 +181,9 @@ exit -1
   width=300 ; height=200        /* Set the Width and height of dialog        */
 
                                 /* Now we create the Windows Object          */
-  success=self~createCenter(width,height,'This text appears in the Dialog Title',,,,
-                                    'MS Sans Serif',8)
+  success=self~createCenter(width,height,                                    -
+                            'This text appears in the Dialog Title',,,       -
+                            'MS Sans Serif',8)
   /* The above line creates a dialog in the centre of the screen, if you     */
   /* Would rather specify values for x & y use the line below instead        */
   /* success=self~create(x,y,width,height,Title)                             */

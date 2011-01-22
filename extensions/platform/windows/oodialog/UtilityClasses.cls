@@ -93,21 +93,21 @@
 
 ::class 'Rect' public
 ::method init external "LIBRARY oodialog rect_init"
-::method left external "LIBRARY oodialog rect_left"
-::method 'left=' external "LIBRARY oodialog rect_setLeft"
-::method top external "LIBRARY oodialog rect_top"
-::method 'top=' external "LIBRARY oodialog rect_setTop"
-::method right external "LIBRARY oodialog rect_right"
-::method 'right=' external "LIBRARY oodialog rect_setRight"
-::method bottom external "LIBRARY oodialog rect_bottom"
-::method 'bottom=' external "LIBRARY oodialog rect_setBottom"
+::attribute left get external "LIBRARY oodialog rect_left"
+::attribute left set external "LIBRARY oodialog rect_setLeft"
+::attribute top get external "LIBRARY oodialog rect_top"
+::attribute top set external "LIBRARY oodialog rect_setTop"
+::attribute right get external "LIBRARY oodialog rect_right"
+::attribute right set external "LIBRARY oodialog rect_setRight"
+::attribute bottom get external "LIBRARY oodialog rect_bottom"
+::attribute bottom set external "LIBRARY oodialog rect_setBottom"
 
 ::class 'Point' public
 ::method init external "LIBRARY oodialog point_init"
-::method x external "LIBRARY oodialog point_x"
-::method 'x=' external "LIBRARY oodialog point_setX"
-::method y external "LIBRARY oodialog point_y"
-::method 'y=' external "LIBRARY oodialog point_setY"
+::attribute x get external "LIBRARY oodialog point_x"
+::attribute x set external "LIBRARY oodialog point_setX"
+::attribute y get external "LIBRARY oodialog point_y"
+::attribute y set external "LIBRARY oodialog point_setY"
 ::method '+' external "LIBRARY oodialog point_add"
 ::method '-' external "LIBRARY oodialog point_subtract"
 ::method 'incr' external "LIBRARY oodialog point_incr"
@@ -115,10 +115,10 @@
 ::class 'Size' public
 ::method init class external "LIBRARY oodialog size_init_cls"
 ::method init external "LIBRARY oodialog size_init"
-::method width external "LIBRARY oodialog size_cx"
-::method 'width=' external "LIBRARY oodialog size_setCX"
-::method height external "LIBRARY oodialog point_y"
-::method 'height=' external "LIBRARY oodialog point_setY"
+::attribute width get external "LIBRARY oodialog size_cx"
+::attribute width set external "LIBRARY oodialog size_setCX"
+::attribute height get external "LIBRARY oodialog point_y"
+::attribute height set external "LIBRARY oodialog point_setY"
 
 
 ::class 'DayState' public

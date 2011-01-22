@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,27 +35,19 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-  	ReadMe
+#include <windows.h>
+#include <commctrl.h>
+#include "simpleMonthCalendar.h"
 
-  1.  ooDialog - Dialog Control Example Programs
-  -----------------------------------------------
 
-  This directory contains example programs that demonstrate how to use the
-  various dialog control objects in ooDialog.  It is intended that,
-  eventually there will be an example of all the control objects.  The
-  programs are intended to cover most of the methods of the control objects.
-  This will probably cause them to be medium complex.
-
-    - upDown.rex
-
-    Demonstrates how to use the UpDown class.  An up down control is a pair
-    of arrow buttons that the user can click to increment or decrement a
-    value, such as a scroll position or a number displayed in a companion
-    control.
-
-    - paidHolidays.rex
-
-    Shows how to use a MonthCalendar control, inlcuding responding to the
-    GETDAYSTATE event.  Also shows how to: restrict the time span shown in
-    the calendar, resize the calendar to the optimal size, and determine
-    which months are currently displayed.
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_MONTHCAL DIALOG 0, 0, 233, 124
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Simple Month Calendar"
+FONT 8, "Ms Shell Dlg"
+{
+    CONTROL         "", IDC_MC, MONTHCAL_CLASS, WS_TABSTOP, 7, 7, 129, 105
+    CTEXT           "Pick you birth date.", IDC_STATIC, 141, 9, 85, 33, SS_CENTER | SS_CENTERIMAGE
+    CTEXT           "", IDC_ST_BIRTHDATE, 138, 47, 85, 33, SS_CENTER | SS_CENTERIMAGE
+    DEFPUSHBUTTON   "OK", IDOK, 176, 103, 50, 14
+}

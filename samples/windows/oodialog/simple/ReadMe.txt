@@ -57,9 +57,7 @@
     a dialog control using the created font.  It is also an example of a
     multi-line edit control and shows how to enable and disable buttons.
 
-    - PaidHolidays.rex
+    - SimpleMonthCalendar.rex
 
-    Shows how to use a MonthCalendar control, inlcuding responding to the
-    GETDAYSTATE event.  Also shows how to: restrict the time span shown in
-    the calendar, resize the calendar to the optimal size, and determine
-    which months are currently displayed.
+    Shows how to use a month calendar control in a rc dialog and how to
+    respond to selected date changes.

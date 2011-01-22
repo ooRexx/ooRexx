@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,27 +35,10 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-  	ReadMe
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
 
-  1.  ooDialog - Dialog Control Example Programs
-  -----------------------------------------------
-
-  This directory contains example programs that demonstrate how to use the
-  various dialog control objects in ooDialog.  It is intended that,
-  eventually there will be an example of all the control objects.  The
-  programs are intended to cover most of the methods of the control objects.
-  This will probably cause them to be medium complex.
-
-    - upDown.rex
-
-    Demonstrates how to use the UpDown class.  An up down control is a pair
-    of arrow buttons that the user can click to increment or decrement a
-    value, such as a scroll position or a number displayed in a companion
-    control.
-
-    - paidHolidays.rex
-
-    Shows how to use a MonthCalendar control, inlcuding responding to the
-    GETDAYSTATE event.  Also shows how to: restrict the time span shown in
-    the calendar, resize the calendar to the optimal size, and determine
-    which months are currently displayed.
+#define IDD_MONTHCAL                            101
+#define IDC_ST_BIRTHDATE                        1004
+#define IDC_MC                                  1005

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,27 +35,40 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-  	ReadMe
+/**
+ * This program displays a month calendar control in a small dialog and prompts
+ * the user to pick their birthday. Each time the user selects a new date, that
+ * date is shown in a static text control.
+ */
 
-  1.  ooDialog - Dialog Control Example Programs
-  -----------------------------------------------
+  dlg = .SimpleMonthCalendar~new("simpleMonthCalendar.rc", IDD_MONTHCAL, , "simpleMonthCalendar.h" )
+  dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
-  This directory contains example programs that demonstrate how to use the
-  various dialog control objects in ooDialog.  It is intended that,
-  eventually there will be an example of all the control objects.  The
-  programs are intended to cover most of the methods of the control objects.
-  This will probably cause them to be medium complex.
+return 0
+-- End of entry point.
 
-    - upDown.rex
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
+  Directives, Classes, or Routines.
+\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+::requires "ooDialog.cls"
 
-    Demonstrates how to use the UpDown class.  An up down control is a pair
-    of arrow buttons that the user can click to increment or decrement a
-    value, such as a scroll position or a number displayed in a companion
-    control.
+::class 'SimpleMonthCalendar' subclass RcDialog
 
-    - paidHolidays.rex
+::method initDialog
+  expose dateText
 
-    Shows how to use a MonthCalendar control, inlcuding responding to the
-    GETDAYSTATE event.  Also shows how to: restrict the time span shown in
-    the calendar, resize the calendar to the optimal size, and determine
-    which months are currently displayed.
+  self~connectMonthCalendarEvent(IDC_MC, "SELECT", onSelect)
+
+  dateText = self~newStatic(IDC_ST_BIRTHDATE)
+
+::method onSelect unguarded
+  expose dateText
+  use arg startDate, endDate
+
+  dateText~setText(self~formatDate(startDate))
+  return 0
+
+::method formatDate private
+  use strict arg date
+
+  return date~monthName date~standardDate~right(2)~strip('L', 0)',' date~standardDate~left(4)

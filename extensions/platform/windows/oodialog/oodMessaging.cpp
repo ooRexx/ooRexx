@@ -680,6 +680,22 @@ static RexxStringObject sc2string(RexxThreadContext *c, WPARAM wParam)
     return c->String(s);
 }
 
+/**
+ * Checks if a SYSTEMTIME struct's values are all 0.
+ *
+ * @param sysTime  Pointer to the struct to check.
+ *
+ * @return True if all 0 and false other wise.
+ *
+ * @remarks  We don't actually check all the fields of the struct, year, month,
+ *           day, hour seem sufficient.
+ */
+inline bool isZeroDate(SYSTEMTIME *sysTime)
+{
+    return sysTime->wYear == 0 && sysTime->wMonth == 0 && sysTime->wDay == 0 &&
+           sysTime->wHour == 0;
+}
+
 inline bool selectionDidChange(LPNMLISTVIEW p)
 {
     return ((p->uNewState & LVIS_SELECTED) != (p->uOldState & LVIS_SELECTED));
@@ -1672,7 +1688,14 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             sysTime2dt(c, &(pSelChange->stSelStart), &dtStart, dtDate);
 
             RexxObjectPtr dtEnd;
-            sysTime2dt(c, &(pSelChange->stSelEnd), &dtEnd, dtDate);
+            if ( isZeroDate(&(pSelChange->stSelEnd)) )
+            {
+                dtEnd = dtStart;
+            }
+            else
+            {
+                sysTime2dt(c, &(pSelChange->stSelEnd), &dtEnd, dtDate);
+            }
 
             RexxArrayObject args = c->ArrayOfFour(dtStart, dtEnd, idFrom, hwndFrom);
 
