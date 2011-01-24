@@ -148,7 +148,7 @@
     endMonth = .DateTime~fromStandardDate((year + count) || '0101')
 
     years = .table~new
-    do i = year to year + count
+    do i = year to year + count - 1
         years[i] = self~generateEmptyYear
     end
 
