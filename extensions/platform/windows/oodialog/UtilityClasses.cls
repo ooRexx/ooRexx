@@ -145,19 +145,30 @@
     use strict arg year = (.DateTime~today~year - 2), count = 3
 
     startMonth = .DateTime~fromStandardDate(year || '0101')
-    endMonth = .DateTime~fromStandardDate((year + count) || '0101')
+    endMonth = .DateTime~fromStandardDate((year + count - 1) || '1201')
 
     years = .table~new
     do i = year to year + count - 1
         years[i] = self~generateEmptyYear
     end
 
+::method getDayState
+    expose startMonth years
+    use strict arg dateTime
+
+    year = dateTime~year
+    month = dateTime~month
+
+    aYear = years[year]
+    if aYear == .nil then return .nil
+    else return aYear[month]
+
 ::method getDayStateBuffer
     expose startMonth years
-    use strict arg startDate, count
+    use strict arg dateTime, count
 
-    year = startDate~year
-    month = startDate~month
+    year = dateTime~year
+    month = dateTime~month
 
     resultArray = .array~new(count)
 
@@ -186,9 +197,11 @@
 
     return .DayStates~makeDayStateBuffer(resultArray)
 
-::method addYear
+::method putYear
     expose startMonth endMonth years
-    use strict arg year, values
+    use strict arg dateTime, values
+
+    year = dateTime~year
 
     newYear = .DateTime~fromStandardDate(year || '0101')
     months = .array~new(12)
@@ -205,21 +218,24 @@
         if years[year + 1] == .nil then needFill = .true
     end
     else if newYear > endMonth then do
-        endMonth = newYear
+        endMonth = .DateTime~fromStandardDate(year || '1201')
         if years[year - 1] == .nil then needFill = .true
     end
 
     if needFill then self~doFill
 
-::method addMonth
+::method putMonth
     expose startMonth endMonth years
-    use strict arg year, month, dayState
+    use strict arg dateTime, dayState
+
+    year = dateTime~year
+    month = dateTime~month
 
     yearArray = years[year]
     if yearArray == .nil then do
         yearArray = .array~new(12)
         yearArray[month] = dayState
-        self~addYear(year, yearArray)
+        self~putYear(dateTime, yearArray)
     end
     else do
         yearArray[month] = dayState

@@ -1318,55 +1318,54 @@ RexxMethod1(uint32_t, ds_value, CSELF, ds) { return ((PDAYSTATE)ds)->val; }
 
 RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, size_t count, LPMONTHDAYSTATE *ppmds)
 {
-    RexxBufferObject _mds = c->NewBuffer(count * sizeof(MONTHDAYSTATE));
-    if ( _mds == NULLOBJECT )
+    RexxBufferObject mdsBuf = c->NewBuffer(count * sizeof(MONTHDAYSTATE));
+    if ( mdsBuf != NULLOBJECT )
     {
-        return TheFalseObj;
-    }
+        MONTHDAYSTATE *pmds = (MONTHDAYSTATE *)c->BufferData(mdsBuf);
+        RexxObjectPtr  rxMDSVal;
+        PDAYSTATE      pDayState;
 
-    MONTHDAYSTATE *pmds = (MONTHDAYSTATE *)c->BufferData(_mds);
-    if ( ppmds != NULL )
-    {
-        *ppmds = pmds;
-    }
-
-    RexxObjectPtr  rxMDSVal;
-    PDAYSTATE      pDayState;
-
-    for ( size_t i = 1; i <= count; i++, pmds++ )
-    {
-        rxMDSVal = c->ArrayAt(list, i);
-        if ( rxMDSVal == NULLOBJECT || ! c->IsOfType(rxMDSVal, "DAYSTATE") )
+        for ( size_t i = 1; i <= count; i++, pmds++ )
         {
-            wrongObjInArrayException(c->threadContext, 1, i, "a DayState object");
-            return TheFalseObj;
+            rxMDSVal = c->ArrayAt(list, i);
+            if ( rxMDSVal == NULLOBJECT || ! c->IsOfType(rxMDSVal, "DAYSTATE") )
+            {
+                wrongObjInArrayException(c->threadContext, 1, i, "a DayState object");
+                mdsBuf = NULLOBJECT;
+                break;
+            }
+
+            pDayState = (PDAYSTATE)c->ObjectToCSelf(rxMDSVal);
+            *pmds = pDayState->val;
         }
 
-        pDayState = (PDAYSTATE)c->ObjectToCSelf(rxMDSVal);
-        *pmds = pDayState->val;
+        if ( mdsBuf != NULLOBJECT && ppmds != NULL )
+        {
+            *ppmds = pmds;
+        }
     }
 
-    return _mds;
+    return mdsBuf;
 }
 
 RexxObjectPtr quickDayStateBuffer(RexxMethodContext *c, uint32_t ds1, uint32_t ds2, uint32_t ds3, LPMONTHDAYSTATE *ppmds)
 {
-    RexxBufferObject _mds = c->NewBuffer(3 * sizeof(MONTHDAYSTATE));
-    if ( _mds == NULLOBJECT )
+    RexxBufferObject mdsBuf = c->NewBuffer(3 * sizeof(MONTHDAYSTATE));
+    if ( mdsBuf != NULLOBJECT )
     {
-        return TheFalseObj;  // Need to think about this.
+        MONTHDAYSTATE *pmds = (MONTHDAYSTATE *)c->BufferData(mdsBuf);
+
+        *pmds = ds1;
+        *(pmds + 1) = ds2;
+        *(pmds + 2) = ds3;
+
+        if ( ppmds != NULL )
+        {
+            *ppmds = pmds;
+        }
     }
 
-    MONTHDAYSTATE *pmds = (MONTHDAYSTATE *)c->BufferData(_mds);
-    *pmds = ds1;
-    *(pmds + 1) = ds2;
-    *(pmds + 2) = ds3;
-
-    if ( ppmds != NULL )
-    {
-        *ppmds = pmds;
-    }
-    return _mds;
+    return mdsBuf;
 }
 
 RexxMethod1(RexxObjectPtr, dss_makeDayStateBuffer, RexxArrayObject, list)
@@ -1375,9 +1374,21 @@ RexxMethod1(RexxObjectPtr, dss_makeDayStateBuffer, RexxArrayObject, list)
     return makeDayStateBuffer(context, list, count, NULL);
 }
 
-RexxMethod3(RexxObjectPtr, dss_quickDayStateBuffer, uint32_t, ds1, uint32_t, ds2, uint32_t, ds3)
+RexxMethod3(RexxObjectPtr, dss_quickDayStateBuffer, RexxObjectPtr, _ds1, RexxObjectPtr, _ds2, RexxObjectPtr, _ds3)
 {
-    return quickDayStateBuffer(context, ds1, ds2, ds3, NULL);
+    RexxObjectPtr result = NULLOBJECT;
+
+    if ( requiredClass(context->threadContext, _ds1, "DAYSTATE", 1) &&
+         requiredClass(context->threadContext, _ds2, "DAYSTATE", 2) &&
+         requiredClass(context->threadContext, _ds3, "DAYSTATE", 3) )
+    {
+        PDAYSTATE ds1 = (PDAYSTATE)context->ObjectToCSelf(_ds1);
+        PDAYSTATE ds2 = (PDAYSTATE)context->ObjectToCSelf(_ds2);
+        PDAYSTATE ds3 = (PDAYSTATE)context->ObjectToCSelf(_ds3);
+
+        result = quickDayStateBuffer(context, ds1->val, ds2->val, ds3->val, NULL);
+    }
+    return result;
 }
 
 
