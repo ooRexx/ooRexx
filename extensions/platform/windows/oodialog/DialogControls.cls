@@ -318,6 +318,7 @@
     return 0
 
 ::method getMargins unguarded
+    use strict arg
     marg = self~sendWinIntMsg(self~EM_GETMARGINS, 0, 0)
     m = .directory~new
     m~right = .DlgUtil~hiWord(marg)
