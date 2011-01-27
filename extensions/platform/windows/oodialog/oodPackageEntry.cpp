@@ -134,6 +134,8 @@ REXX_METHOD_PROTOTYPE(dlgutil_comctl32Version_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_version_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_hiWord_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_loWord_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_shiWord_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_sloWord_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_makeLPARAM_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_makeWPARAM_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
@@ -858,6 +860,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_version_cls,            dlgutil_version_cls),
     REXX_METHOD(dlgutil_hiWord_cls,             dlgutil_hiWord_cls),
     REXX_METHOD(dlgutil_loWord_cls,             dlgutil_loWord_cls),
+    REXX_METHOD(dlgutil_sloWord_cls,            dlgutil_sloWord_cls),
+    REXX_METHOD(dlgutil_shiWord_cls,            dlgutil_shiWord_cls),
     REXX_METHOD(dlgutil_makeLPARAM_cls,         dlgutil_makeLPARAM_cls),
     REXX_METHOD(dlgutil_makeWPARAM_cls,         dlgutil_makeWPARAM_cls),
     REXX_METHOD(dlgutil_and_cls,                dlgutil_and_cls),

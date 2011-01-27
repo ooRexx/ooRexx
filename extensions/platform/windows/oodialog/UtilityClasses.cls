@@ -59,6 +59,8 @@
 ::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version_cls"
 ::method hiWord class external "LIBRARY oodialog dlgutil_hiWord_cls"
 ::method loWord class external "LIBRARY oodialog dlgutil_loWord_cls"
+::method sHiWord class external "LIBRARY oodialog dlgutil_shiWord_cls"
+::method sLoWord class external "LIBRARY oodialog dlgutil_sloWord_cls"
 ::method makeWParam class external "LIBRARY oodialog dlgutil_makeWPARAM_cls"
 ::method makeLParam class external "LIBRARY oodialog dlgutil_makeLPARAM_cls"
 ::method and class external "LIBRARY oodialog dlgutil_and_cls"

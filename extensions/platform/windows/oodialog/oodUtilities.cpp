@@ -475,8 +475,12 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
     return context->String(buf);
 }
 
+RexxMethod1(int16_t, dlgutil_shiWord_cls, uint32_t, dw) { return HIWORD(dw); }
+RexxMethod1(int16_t, dlgutil_sloWord_cls, uint32_t, dw) { return LOWORD(dw); }
+
 RexxMethod1(uint16_t, dlgutil_hiWord_cls, uint32_t, dw) { return HIWORD(dw); }
 RexxMethod1(uint16_t, dlgutil_loWord_cls, uint32_t, dw) { return LOWORD(dw); }
+
 RexxMethod2(intptr_t, dlgutil_makeLPARAM_cls, int16_t, loWord, int16_t, hiWord) { return MAKELPARAM(loWord, hiWord); }
 RexxMethod2(uintptr_t, dlgutil_makeWPARAM_cls, int16_t, loWord, int16_t, hiWord) { return MAKEWPARAM(loWord, hiWord); }
 
