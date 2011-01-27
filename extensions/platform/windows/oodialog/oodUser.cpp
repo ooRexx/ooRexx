@@ -1143,7 +1143,7 @@ done_out:
  * @param  y          ( 2 required) Y co-ordinate
  * @param  cx         ( 3 required) width
  * @param  cy         ( 4 required) height
- * @param  title      ( 5 required) Title for the caption bar
+ * @param  title      ( 5 optional) Title for the caption bar
  * @param  opts       ( 6 optional) Style 0ptions for the dialog
  * @param  dlgClass   ( 7 optional) The dialog class.  Has never been used.
  * @param  fontName   ( 8 optional) Font name for the dialog

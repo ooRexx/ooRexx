@@ -1840,11 +1840,6 @@ RexxMethod4(RexxObjectPtr, e_showBallon, CSTRING, title, CSTRING, text, OPTIONAL
     return (Edit_ShowBalloonTip(pcdc->hCtrl, &tip) ? TheZeroObj : TheOneObj);
 }
 
-/* Note that the EM_GETCUEBANNER simply does not work.  At least on XP.  So
- * the code is removed.  But, it might be worth trying on Vista.
- */
-
-
 /** Edit::setCue()
  *
  *  Sets the cue, or tip, text for the edit control.  This text prompts the user
@@ -1897,8 +1892,8 @@ RexxMethod3(RexxObjectPtr, e_setCue, CSTRING, text, OPTIONAL_logical_t, show, CS
  *  @return  The cue banner text on success, or the empty string on error and if
  *           no cue is set
  *
- *  @remarks  This simply does not seem to work under XP.  However, it may work
- *            in Vista or Windows 7.  TODO need to test this.
+ *  @remarks  This simply does not seem to work under XP.  However, it does work
+ *            in Vista and Windows 7.
  */
 RexxMethod1(RexxStringObject, e_getCue, CSELF, pCSelf)
 {
