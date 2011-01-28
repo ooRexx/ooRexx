@@ -61,18 +61,18 @@
 # So we define them using the uname output.
 %define build_distro rhel
 # We start with a null build_release string for the default
-%if ! %(build_release)
-%if %(grep -q "release 5.5" /etc/redhat-release)
+%if ! %{build_release}
+%if %{grep -q "release 5.5" /etc/redhat-release}
 %define build_release 55
 %endif
 %endif
-%if ! %(build_release)
-%if %(grep -q "release 5.6" /etc/redhat-release)
+%if ! %{build_release}
+%if %{grep -q "release 5.6" /etc/redhat-release}
 %define build_release 56
 %endif
 %endif
-%if ! %(build_release)
-%if %(grep -q "release 6.0" /etc/redhat-release)
+%if ! %{build_release}
+%if %{grep -q "release 6.0" /etc/redhat-release}
 %define build_release 60
 %endif
 %endif
@@ -115,6 +115,7 @@ URL: http://www.oorexx.org/
 Source: %{name}-%{version}.tar.gz
 # If we don't include the following option we get bogus dependencies generated
 Autoreq: 0
+Requires: /bin/ln, /sbin/service
 
 # Specify the libtool library version
 # The order of these looks wrong, but that is how it comes out!
