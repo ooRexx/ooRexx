@@ -746,7 +746,7 @@ RexxToken *RexxSource::sourceNextToken(
                                 state = EXP_E;         /* remember we've had the 'E' form   */
                             }
                                                        /* non-digit?                        */
-                            else if (inch < '0' && inch > '9')
+                            else if (inch < '0' || inch > '9')
                             {
                                 state = EXP_EXCLUDED;  /* no longer scanning a number       */
                             }
