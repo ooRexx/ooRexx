@@ -339,6 +339,7 @@ typedef struct {
     BOOL alt;
     BOOL control;
     BOOL and;           /* If 'and' is false, filter is 'or' */
+    BOOL virt;          /* If virtual use GetKeyState to see if control, alt, or shift is down. */
 } KEYFILTER, *PKEYFILTER;
 
 typedef struct {

@@ -2826,20 +2826,44 @@ void removeKBHook(pCEventNotification pcen)
  *
  * @remarks  The method name (pMethod) can not be longer than 197 chars.  This
  *           is checked for in setKeyPressData()
+ *
+ *           By default we use GetAsyncKeyState() to check the status of Ctrl,
+ *           Alt, and Shift keys.  But, that gets the physical state of the
+ *           keyboard.  If other applications insert key events into message
+ *           queue of the Rexx application, when it is looking for, say Ctrl-S
+ *           and the inserted key event is Ctrl-S, we won't find it here,
+ *           because the physical state of the control key will be not pressed.
+ *
+ *           The GetKeyState() API adjusts the state of the control, alt, shift
+ *           keys as it processes the message queue.  So, the Rexx programmer
+ *           can specify that she wants to detect this situation by adding
+ *           'VIRT' to the key filter.
  */
 void processKeyPress(SUBCLASSDATA *pSubclassData, WPARAM wParam, LPARAM lParam)
 {
     KEYPRESSDATA *pKeyData = (KEYPRESSDATA *)pSubclassData->pData;
 
-    BOOL passed = TRUE;
+    BOOL passed   = TRUE;
+    BOOL bShift   = FALSE;
+    BOOL bControl = FALSE;
+    BOOL bAlt     = FALSE;
 
     size_t i = pKeyData->key[wParam];
     char *pMethod = pKeyData->pMethods[i];
     KEYFILTER *pFilter = pKeyData->pFilters[i];
 
-    BOOL bShift = (GetAsyncKeyState(VK_SHIFT) & ISDOWN) ? 1 : 0;
-    BOOL bControl = (GetAsyncKeyState(VK_CONTROL) & ISDOWN) ? 1 : 0;
-    BOOL bAlt = (GetAsyncKeyState(VK_MENU) & ISDOWN) ? 1 : 0;
+    if ( pFilter && pFilter->virt )
+    {
+        bShift = (GetKeyState(VK_SHIFT) & ISDOWN) ? 1 : 0;
+        bControl = (GetKeyState(VK_CONTROL) & ISDOWN) ? 1 : 0;
+        bAlt = (GetKeyState(VK_MENU) & ISDOWN) ? 1 : 0;
+    }
+    else
+    {
+        bShift = (GetAsyncKeyState(VK_SHIFT) & ISDOWN) ? 1 : 0;
+        bControl = (GetAsyncKeyState(VK_CONTROL) & ISDOWN) ? 1 : 0;
+        bAlt = (GetAsyncKeyState(VK_MENU) & ISDOWN) ? 1 : 0;
+    }
 
     if ( pFilter )
     {
@@ -3083,12 +3107,20 @@ static keyPressErr_t kpCheckFilter(CSTRING filter, KEYFILTER **ppFilter)
         if ( StrStrI(filter, "ALT"    ) ) tmpFilter->alt = TRUE;
     }
 
+    if ( StrStrI(filter, "VIRT") )
+    {
+        tmpFilter->virt = TRUE;
+    }
+
     // Some combinations are not filters, so they are ignored.
     if ( ((! tmpFilter->and) && tmpFilter->shift && tmpFilter->control && tmpFilter->alt) ||
          (tmpFilter->and && ! tmpFilter->shift && ! tmpFilter->control && ! tmpFilter->alt) )
     {
-        LocalFree(tmpFilter);
-        return badFilterErr;
+        if ( ! tmpFilter->virt )
+        {
+            LocalFree(tmpFilter);
+            return badFilterErr;
+        }
     }
 
     // Okay, we are good.
