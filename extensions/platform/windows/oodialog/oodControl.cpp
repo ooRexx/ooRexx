@@ -1015,60 +1015,64 @@ RexxMethod2(int32_t, dlgctrl_disconnectKeyPress, OPTIONAL_CSTRING, methodName, C
     SUBCLASSDATA *pSubclassData = NULL;
     GetWindowSubclass(pcdc->hCtrl, KeyPressSubclassProc, pcdc->id, (DWORD_PTR *)&pSubclassData);
 
-    // If pSubclassData is not null, the subclass is still installed, otherwise
-    // the subclass has already been removed, (or never existed.)
-    if ( pSubclassData != NULL )
+    // If pSubclassData is null, the subclass has already been removed, (or
+    // never existed.)
+    if ( pSubclassData == NULL )
     {
-        // If no method name, remove the whole thing.
-        if ( argumentOmitted(1) )
-        {
-            result = (removeKeyPressSubclass(pSubclassData, pcdc->hDlg, pcdc->id) ? noErr : winAPIErr);
-            goto done_out;
-        }
+        result = nameErr;
+        goto done_out;
+    }
 
-        // Have a method name, just remove that method from the mapping.
-        tmpName = strdupupr(methodName);
-        if ( tmpName == NULL )
-        {
-            result = memoryErr;
-            goto done_out;
-        }
+    // If no method name, remove the whole thing.
+    if ( argumentOmitted(1) )
+    {
+        result = (removeKeyPressSubclass(pSubclassData, pcdc->hDlg, pcdc->id) ? noErr : winAPIErr);
+        goto done_out;
+    }
 
-        KEYPRESSDATA *pKeyPressData = (KEYPRESSDATA *)pSubclassData->pData;
+    // Have a method name, just remove that method from the mapping.
+    tmpName = strdupupr(methodName);
+    if ( tmpName == NULL )
+    {
+        result = memoryErr;
+        outOfMemoryException(context->threadContext);
+        goto done_out;
+    }
 
-        uint32_t index = seekKeyPressMethod(pKeyPressData, tmpName);
-        if ( index == 0 )
-        {
-            result = nameErr;
-            goto done_out;
-        }
+    KEYPRESSDATA *pKeyPressData = (KEYPRESSDATA *)pSubclassData->pData;
 
-        // If only 1 method left, remove the subclass entirely.  Otherwise,
-        // remove the subclass, fix up the subclass data block, then reinstall
-        // the subclass.
-        BOOL success = FALSE;
-        if ( pKeyPressData->usedMethods == 1 )
+    uint32_t index = seekKeyPressMethod(pKeyPressData, tmpName);
+    if ( index == 0 )
+    {
+        result = nameErr;
+        goto done_out;
+    }
+
+    // If only 1 method left, remove the subclass entirely.  Otherwise,
+    // remove the subclass, fix up the subclass data block, then reinstall
+    // the subclass.
+    BOOL success = FALSE;
+    if ( pKeyPressData->usedMethods == 1 )
+    {
+        success = removeKeyPressSubclass(pSubclassData, pcdc->hDlg, pcdc->id);
+    }
+    else
+    {
+        if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)KeyPressSubclassProc, (LPARAM)pcdc->id) )
         {
-            success = removeKeyPressSubclass(pSubclassData, pcdc->hDlg, pcdc->id);
-        }
-        else
-        {
-            if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)KeyPressSubclassProc, (LPARAM)pcdc->id) )
+            removeKeyPressMethod(pKeyPressData, index);
+            success = (BOOL)SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pSubclassData);
+
+            // If not success, then the subclass procedure is no longer
+            // installed, (even though it was originally,) and the memory
+            // will never be cleaned up, so clean it up now.
+            if ( ! success )
             {
-                removeKeyPressMethod(pKeyPressData, index);
-                success = (BOOL)SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pSubclassData);
-
-                // If not success, then the subclass procedure is no longer
-                // installed, (even though it was originally,) and the memory
-                // will never be cleaned up, so clean it up now.
-                if ( ! success )
-                {
-                    freeKeyPressData(pSubclassData);
-                }
+                freeKeyPressData(pSubclassData);
             }
         }
-        result = (success ? noErr : winAPIErr);
     }
+    result = (success ? noErr : winAPIErr);
 
 done_out:
     return -(int32_t)result;
