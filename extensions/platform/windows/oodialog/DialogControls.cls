@@ -571,6 +571,8 @@
 ::constant CB_SETCURSEL                "0x014E"
 ::constant CB_SHOWDROPDOWN             "0x014F"
 ::constant CB_GETDROPPEDSTATE          "0x0157"
+::constant CB_GETHORIZONTALEXTENT      "0x015d"
+::constant CB_SETHORIZONTALEXTENT      "0x015e"
 
 ::method getText unguarded external "LIBRARY oodialog cb_getText"
 ::method add unguarded external "LIBRARY oodialog cb_add"
@@ -621,6 +623,16 @@
    if endndx == 0 then endndx = -1
    lParam = .DlgUtil~makeLParam(startndx - 1, endndx)
    return self~sendWinIntMsg(self~CB_SETEDITSEL, 0, lParam) == -1
+
+::method getHorizontalExtent unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~CB_GETHORIZONTALEXTENT, 0, 0)
+
+::method setHorizontalExtent unguarded
+   use strict arg extent
+   self~sendWinIntMsg(self~CB_SETHORIZONTALEXTENT, extent, 0)
+   return 0
+
 
 
 /*********** ScrollBar Class **************************************************/

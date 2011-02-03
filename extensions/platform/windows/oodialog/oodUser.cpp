@@ -2077,10 +2077,12 @@ RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y,
     else if ( StrStrI(opts,"LIST") ) style |= CBS_DROPDOWNLIST;
     else                             style |= CBS_DROPDOWN;
 
-    if ( StrStrI(opts, "NOHSCROLL" ) == NULL ) style |= CBS_AUTOHSCROLL;
-    if ( StrStrI(opts, "VSCROLL"   ) != NULL ) style |= WS_VSCROLL;
-    if ( StrStrI(opts, "SORT"      ) != NULL ) style |= CBS_SORT;
-    if ( StrStrI(opts, "PARTIAL"   ) != NULL ) style |= CBS_NOINTEGRALHEIGHT;
+    if ( StrStrI(opts, "SORT"            ) != NULL ) style |= CBS_SORT;
+    if ( StrStrI(opts, "NOHSCROLL"       ) == NULL ) style |= CBS_AUTOHSCROLL;
+    if ( StrStrI(opts, "PARTIAL"         ) != NULL ) style |= CBS_NOINTEGRALHEIGHT;
+    if ( StrStrI(opts, "DISABLENOSCROLL" ) != NULL ) style |= CBS_DISABLENOSCROLL;
+    if ( StrStrI(opts, "VSCROLL"         ) != NULL ) style |= WS_VSCROLL;
+    if ( StrStrI(opts, "HSCROLL"         ) != NULL ) style |= WS_HSCROLL;
 
     if ( ! addToDialogTemplate(context, pcdd, ComboBoxAtom, NULL, id, x, y, cx, cy, NULL, style) )
     {
