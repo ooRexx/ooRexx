@@ -50,6 +50,15 @@ typedef UINT_PTR  uintptr_t;
 #undef __REXX64__
 #endif
 
+#ifdef NATIVE_INTYPES
+/* If the plattform and compiler supports the
+* C9X 'proposed' standard for interger types,
+* use the provided inttypes.h
+* otherwise use our own defintions of the same types
+*/
+
+#include <inttypes.h>
+#else
 // portable ANSI types
 typedef short int16_t;
 typedef unsigned short uint16_t;
@@ -59,6 +68,7 @@ typedef char int8_t;
 typedef unsigned char uint8_t;
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
+#endif
 
 typedef DWORD thread_id_t;
 typedef DWORD process_id_t;
