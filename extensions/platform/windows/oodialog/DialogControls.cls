@@ -588,12 +588,15 @@
    return ret
 
 ::method deleteAll unguarded
+   use strict arg
    return self~sendWinIntMsg(self~CB_RESETCONTENT, 0, 0)
 
 ::method selectedIndex unguarded
+   use strict arg
    return self~sendWinIntMsg(self~CB_GETCURSEL, 0, 0) + 1
 
 ::method selected unguarded
+   use strict arg
    return self~getText(self~selectedIndex)
 
 ::method selectIndex unguarded
@@ -601,6 +604,7 @@
    return self~sendWinIntMsg(self~CB_SETCURSEL, ndx - 1, 0)
 
 ::method items unguarded
+   use strict arg
    return self~sendWinIntMsg(self~CB_GETCOUNT, 0, 0)
 
 ::method modify unguarded
@@ -610,12 +614,15 @@
    return self~insert(index, newEntry)
 
 ::method openDropDown unguarded
-   self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 1, 0)
+   use strict arg
+   return self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 1, 0)
 
 ::method closeDropDown unguarded
-   self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 0, 0)
+   use strict arg
+   return self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 0, 0)
 
 ::method isDropDownOpen unguarded
+   use strict arg
    return self~sendWinIntMsg(self~CB_GETDROPPEDSTATE, 0, 0)
 
 ::method editSelection unguarded

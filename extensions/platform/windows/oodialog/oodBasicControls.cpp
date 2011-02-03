@@ -2209,6 +2209,7 @@ static int32_t cbLbInsert(RexxMethodContext *context, HWND hCtrl, int32_t index,
     }
     else
     {
+        // If index is 0 or -1, then that is the correct index already.
         if ( index > 0 )
         {
             index--;
@@ -2661,7 +2662,7 @@ RexxMethod2(int32_t, cb_add, CSTRING, text, CSELF, pCSelf)
  *  Inserts a string entry into the cobo box at the index specified.
  *
  *  @param  index  [OPTIONAL]  The one-based index of where the entry is to be
- *                 inerted.  If index is less than -1, the entry is inserted at
+ *                 inserted.  If index is less than 0, the entry is inserted at
  *                 the end of the entries.  If index is 0, the new entry is
  *                 inserted as the first entry.
  *
