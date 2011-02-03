@@ -244,6 +244,7 @@ inline char IntToHexDigit(int n)
    RexxString  *delWord(RexxInteger *, RexxInteger *);
    RexxString  *space(RexxInteger *, RexxString *);
    RexxString  *subWord(RexxInteger *, RexxInteger *);
+   RexxArray   *subWords(RexxInteger *, RexxInteger *);
    RexxString  *word(RexxInteger *);
    RexxInteger *wordIndex(RexxInteger *);
    RexxInteger *wordLength(RexxInteger *);

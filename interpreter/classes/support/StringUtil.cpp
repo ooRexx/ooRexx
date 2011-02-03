@@ -1560,6 +1560,65 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
 
 
 /**
+ * Do a wordList operation on a buffer of data
+ *
+ * @param data     The start of the data buffer.
+ * @param length   The length of the buffer
+ * @param position The starting word position.
+ * @param plength  the count of words to return.
+ *
+ * @return The array containing the indicated subwords.
+ */
+RexxArray *StringUtil::subWords(const char *data, size_t length, RexxInteger *position, RexxInteger *plength)
+{
+                                         /* convert position to binary        */
+    size_t wordPos = optionalPositionArgument(position, 1, ARG_ONE);
+    // get num of words to extract.  The default is a "very large number
+    size_t count = optionalLengthArgument(plength, Numerics::MAX_WHOLENUMBER, ARG_TWO);
+
+    // handle cases that will always result an empty array
+    if (length == 0 || count == 0)
+    {
+        return new_array((size_t)0);
+    }
+
+    const char *nextSite = NULL;
+    const char *word = data;
+                                       /* get the first word                */
+    size_t wordLength = nextWord(&word, &length, &nextSite);
+    while (--wordPos > 0 && wordLength != 0)
+    {  /* loop until we reach target        */
+        word = nextSite;                 /* copy the start pointer            */
+                                         /* get the next word                 */
+        wordLength = nextWord(&word, &length, &nextSite);
+    }
+    // we terminated because there was no word found before we reached the
+    // count position
+    if (wordPos != 0)
+    {
+        return new_array((size_t)0);      // again, an empty array
+    }
+
+    // we make this size zero so the size and the items count will match
+    RexxArray *result = new_array((size_t)0);
+    ProtectedObject p(result);
+
+    const char *wordStart = word;                /* save start position               */
+                                     /* loop until we reach tArget        */
+    while (count-- > 0 && wordLength != 0)
+    {
+        // add to the result array
+        result->append(new_string(word, wordLength));
+        word = nextSite;               /* copy the start pointer            */
+                                       /* get the next word                 */
+        wordLength = nextWord(&word, &length, &nextSite);
+    }
+
+    return result;                     // return the populated array
+}
+
+
+/**
  * Extract a word from a buffer
  *
  * @param data     The data pointer

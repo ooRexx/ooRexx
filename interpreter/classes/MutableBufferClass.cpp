@@ -1358,6 +1358,26 @@ RexxString *RexxMutableBuffer::subWord(RexxInteger *position, RexxInteger *pleng
 
 
 /**
+ * Returns an array of all words contained in the given range
+ * of the string, using the same extraction rules used
+ * for subWord() and word().
+ *
+ * @param position The optional starting position.  If not provided, extraction
+ *                 starts with the first word.
+ * @param plength  The number of words to extract.  If omitted, will extract
+ *                 from the starting postion to the end of the string.
+ *
+ * @return An array containing the extracted words.  If no words are
+ *         available within the given range, this returns an empty
+ *         array.
+ */
+RexxArray *RexxMutableBuffer::subWords(RexxInteger *position, RexxInteger *plength)
+{
+    return StringUtil::subWords(getStringData(), getLength(), position, plength);
+}
+
+
+/**
  * Extract a given word from a mutable buffer.
  *
  * @param position The target word position.
