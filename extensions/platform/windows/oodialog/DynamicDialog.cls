@@ -844,10 +844,12 @@
    else if kind = "CB" then do
       if style~wordpos("CBS_SIMPLE") > 0 then ret = ret || " SIMPLE"
       if style~wordpos("CBS_DROPDOWNLIST") > 0 then ret = ret || " LIST"
+      if style~wordpos("CBS_LOWERCASE") > 0 then ret = ret || " LOWER"
       if style~wordpos("CBS_SORT") > 0 then ret = ret || " SORT"
       if style~wordpos("CBS_AUTOHSCROLL") = 0 then ret = ret || " NOHSCROLL"
       if style~wordpos("CBS_NOINTEGRALHEIGHT") > 0 then ret = ret || " PARTIAL"
       if style~wordpos("CBS_DISABLENOSCROLL") > 0 then ret = ret || " DISABLENOSCROLL"
+      if style~wordpos("CBS_UPPERCASE") > 0 then ret = ret || " DISABLENOSCROLL"
       if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
       if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"
       if style~wordpos("WS_TABSTOP") = 0 then ret = ret || " NOTAB"
