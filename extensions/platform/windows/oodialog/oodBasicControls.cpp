@@ -1556,7 +1556,7 @@ RexxMethod3(RexxObjectPtr, e_replaceSelText, CSTRING, replacement, OPTIONAL_logi
 /** Edit::lineIndex()
  *
  *  Gets the character index of the first character of a specified line in a
- *  multiline edit control. A character index is the zero-based index of the
+ *  multiline edit control. A character index is the one-based index of the
  *  character from the beginning of the edit control.
  *
  *  @param  lineNumber  The one-based index of the line whose character index is
@@ -1564,8 +1564,8 @@ RexxMethod3(RexxObjectPtr, e_replaceSelText, CSTRING, replacement, OPTIONAL_logi
  *                      number (the line that contains the caret).
  *
  *  @return The character index. -1 is returned if the specified line index is
- *          not within bounds of the edit control lines.  (More than the curent
- *          number of lines or 0.)
+ *          not valid.  (Less than -1, 0, or more than the lines in the edit
+ *          control.)
  *
  *  @note  The lineIndex() method is intended for multi-line edit controls,
  *         however, it will behave as documented for single-line edit controls.
@@ -1580,7 +1580,7 @@ RexxMethod3(RexxObjectPtr, e_replaceSelText, CSTRING, replacement, OPTIONAL_logi
 RexxMethod2(RexxObjectPtr, e_lineIndex, int32_t, lineNumber, CSELF, pCSelf)
 {
     RexxObjectPtr result = TheNegativeOneObj;
-    if ( lineNumber != 0 )
+    if ( lineNumber >= -1 && lineNumber != 0 )
     {
         HWND hCtrl = getDChCtrl(pCSelf);
 
@@ -2260,14 +2260,12 @@ static int32_t cbLbSelect(HWND hCtrl, CSTRING text, oodControl_t ctrl)
 static int32_t cbLbFind(HWND hCtrl, CSTRING text, uint32_t startIndex, CSTRING exactly, oodControl_t ctrl)
 {
     bool exact = false;
-    if ( exactly != NULL && (*exactly == '1' || toupper(*exactly) || 'E') )
+    if ( exactly != NULL && (*exactly == '1' || toupper(*exactly) == 'E') )
     {
         exact = true;
     }
-    if ( startIndex > 0 )
-    {
-        startIndex--;
-    }
+
+    int32_t index = startIndex == 0 ? -1 : --startIndex;
 
     int32_t found;
     uint32_t msg;
@@ -2280,9 +2278,9 @@ static int32_t cbLbFind(HWND hCtrl, CSTRING text, uint32_t startIndex, CSTRING e
         msg = (ctrl == winComboBox ? CB_FINDSTRING : LB_FINDSTRING);
     }
 
-    found = (int32_t)SendMessage(hCtrl, LB_FINDSTRING, startIndex, (LPARAM)text);
+    found = (int32_t)SendMessage(hCtrl, msg, index, (LPARAM)text);
 
-    return (found > 0 ? 0 : --found);
+    return (found == CB_ERR ? 0 : ++found);
 }
 
 
