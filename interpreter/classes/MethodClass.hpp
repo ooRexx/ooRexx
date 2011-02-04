@@ -90,6 +90,7 @@ public:
     RexxArray *source();
     RexxClass *findClass(RexxString *className);
     BaseExecutable *setSourceObject(RexxSource *s);
+    RexxString *getName() { return executableName; }
 
 protected:
     RexxString *executableName;     // the created name of this routine

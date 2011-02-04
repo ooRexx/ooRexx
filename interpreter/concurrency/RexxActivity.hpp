@@ -91,6 +91,7 @@ enum TracePrefixes {
     TRACE_PREFIX_MESSAGE  ,
     TRACE_PREFIX_ARGUMENT ,
     TRACE_PREFIX_ASSIGNMENT,
+    TRACE_PREFIX_INVOCATION,
 };
 
 
@@ -167,6 +168,7 @@ typedef enum
    void        raisePropagate(RexxDirectory *);
    RexxObject *display(RexxDirectory *);
    RexxObject *displayDebug(RexxDirectory *);
+   RexxString *buildMessage(wholenumber_t, RexxArray *);
    RexxString *messageSubstitution(RexxString *, RexxArray *);
    void        live(size_t);
    void        liveGeneral(int reason);

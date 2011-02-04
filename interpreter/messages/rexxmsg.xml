@@ -5079,6 +5079,51 @@ special character (such as a parenthesis).
     <Subcodes>
       <SubMessage>
         <Code>101</Code>
+        <Subcode>001</Subcode>
+        <MessageNumber>524</MessageNumber>
+        <Component>Translation</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Message_Translations_error</SymbolicName>
+        <Text>Error</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>101</Code>
+        <Subcode>002</Subcode>
+        <MessageNumber>525</MessageNumber>
+        <Component>Translation</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Message_Translations_running</SymbolicName>
+        <Text>running</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>101</Code>
+        <Subcode>003</Subcode>
+        <MessageNumber>526</MessageNumber>
+        <Component>Translation</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Message_Translations_line</SymbolicName>
+        <Text>line</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>101</Code>
+        <Subcode>004</Subcode>
+        <MessageNumber>126</MessageNumber>
+        <Component>Translation</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Message_Translations_debug_error</SymbolicName>
+        <Text>+++ Interactive trace.  Error</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>101</Code>
+        <Subcode>005</Subcode>
+        <MessageNumber>114</MessageNumber>
+        <Component>Translation</Component>
+        <Severity>Info</Severity>
+        <SymbolicName>Message_Translations_debug_prompt</SymbolicName>
+        <Text>+++ Interactive trace. <q>Trace Off</q> to end debug, ENTER to Continue. +++</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>101</Code>
         <Subcode>006</Subcode>
         <MessageNumber>102</MessageNumber>
         <Component>Translation</Component>
@@ -5187,48 +5232,21 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
-        <Subcode>005</Subcode>
-        <MessageNumber>114</MessageNumber>
+        <Subcode>018</Subcode>
+        <MessageNumber>719</MessageNumber>
         <Component>Translation</Component>
         <Severity>Info</Severity>
-        <SymbolicName>Message_Translations_debug_prompt</SymbolicName>
-        <Text>+++ Interactive trace. <q>Trace Off</q> to end debug, ENTER to Continue. +++</Text>
+        <SymbolicName>Message_Translations_routine_invocation</SymbolicName>
+        <Text>Routine <Sub position="1" name="routine"/> in package <Sub position="2" name="package"/></Text>
       </SubMessage>
       <SubMessage>
         <Code>101</Code>
-        <Subcode>004</Subcode>
-        <MessageNumber>126</MessageNumber>
+        <Subcode>019</Subcode>
+        <MessageNumber>720</MessageNumber>
         <Component>Translation</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Message_Translations_debug_error</SymbolicName>
-        <Text>+++ Interactive trace.  Error</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>101</Code>
-        <Subcode>001</Subcode>
-        <MessageNumber>524</MessageNumber>
-        <Component>Translation</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Message_Translations_error</SymbolicName>
-        <Text>Error</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>101</Code>
-        <Subcode>002</Subcode>
-        <MessageNumber>525</MessageNumber>
-        <Component>Translation</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Message_Translations_running</SymbolicName>
-        <Text>running</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>101</Code>
-        <Subcode>003</Subcode>
-        <MessageNumber>526</MessageNumber>
-        <Component>Translation</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Message_Translations_line</SymbolicName>
-        <Text>line</Text>
+        <Severity>Info</Severity>
+        <SymbolicName>Message_Translations_method_invocation</SymbolicName>
+        <Text>Method <Sub position="1" name="method"/> with scope <q><Sub position="2" name="class"/></q> in package <Sub position="3" name="package"/></Text>
       </SubMessage>
     </Subcodes>
   </Message>

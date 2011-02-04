@@ -845,14 +845,7 @@ RexxDirectory *RexxActivity::createExceptionObject(
     if (primary != errcode)              /* have a secondary message to issue?*/
     {
         /* retrieve the secondary message    */
-        RexxString *message = SystemInterpreter::getMessageText(errcode);
-        if (message == OREF_NULL)          /* no corresponding message          */
-        {
-            /* this is an error                  */
-            reportException(Error_Execution_error_condition, code);
-        }
-        /* do required substitutions         */
-        message = messageSubstitution(message, additional);
+        RexxString *message = buildMessage(errcode, additional);
         /* replace the original message text */
         exobj->put(message, OREF_NAME_MESSAGE);
     }
@@ -973,6 +966,29 @@ RexxList *RexxActivity::generateStackFrames()
         }
     }
     return stackFrames;
+}
+
+/**
+ * Build a message and perform the indicated substitutions.
+ *
+ * @param messageCode
+ *               The target message code
+ * @param substitutions
+ *               An array of substitution values
+ *
+ * @return The message with the substitution values inserted.
+ */
+RexxString *RexxActivity::buildMessage(wholenumber_t messageCode, RexxArray *substitutions)
+{
+    /* retrieve the secondary message    */
+    RexxString *message = SystemInterpreter::getMessageText(messageCode);
+    if (message == OREF_NULL)          /* no corresponding message          */
+    {
+        /* this is an error                  */
+        reportException(Error_Execution_error_condition, messageCode);
+    }
+    /* do required substitutions         */
+    return messageSubstitution(message, substitutions);
 }
 
 

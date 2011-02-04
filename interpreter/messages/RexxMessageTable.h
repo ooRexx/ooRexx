@@ -590,6 +590,11 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Translation_duplicate_attribute)
       MINOR(Error_Translation_duplicate_constant)
   MAJOR(Error_at_line)
+      MINOR(Message_Translations_error)
+      MINOR(Message_Translations_running)
+      MINOR(Message_Translations_line)
+      MINOR(Message_Translations_debug_error)
+      MINOR(Message_Translations_debug_prompt)
       MINOR(Message_Translations_January)
       MINOR(Message_Translations_February)
       MINOR(Message_Translations_March)
@@ -602,11 +607,8 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Message_Translations_October)
       MINOR(Message_Translations_November)
       MINOR(Message_Translations_December)
-      MINOR(Message_Translations_debug_prompt)
-      MINOR(Message_Translations_debug_error)
-      MINOR(Message_Translations_error)
-      MINOR(Message_Translations_running)
-      MINOR(Message_Translations_line)
+      MINOR(Message_Translations_routine_invocation)
+      MINOR(Message_Translations_method_invocation)
 
   MAJOR(Table_end)                       /* make sure table is ended          */
 };

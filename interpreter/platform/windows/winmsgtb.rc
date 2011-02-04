@@ -622,6 +622,8 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Execution_invalid_thread    "Execution thread does not match API thread context."
    Error_Invalid_expression_parse    "Missing expression following ( of parse template"
    Error_Invalid_expression_call    "Missing expression for calculated CALL name"
+   Message_Translations_routine_invocation    "Routine &1 in package &2"
+   Message_Translations_method_invocation    "Method &1 with scope ""&2"" in package &3"
    
 END
 

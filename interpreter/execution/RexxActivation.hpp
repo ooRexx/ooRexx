@@ -203,6 +203,7 @@ class ActivationSettings
    inline bool isProgramLevelCall() { return (activation_context & PROGRAM_LEVEL_CALL) != 0; }
    inline bool isInternalLevelCall() { return (activation_context & INTERNAL_LEVEL_CALL) != 0; }
    inline bool isProgramOrMethod() { return (activation_context & PROGRAM_OR_METHOD) != 0; }
+   inline bool isMethodOrRoutine() { return isMethod() || isRoutine(); }
 
    RexxObject *run(RexxObject *_receiver, RexxString *msgname, RexxObject **_arglist,
        size_t _argcount, RexxInstruction * start, ProtectedObject &resultObj);
@@ -261,6 +262,7 @@ class ActivationSettings
    void              traceOperatorValue(int prefix, const char *tag, RexxObject *value);
    void              traceSourceString();
    void              traceClause(RexxInstruction *, int);
+   void              traceEntry();
    void              resetElapsed();
    RexxString      * formatTrace(RexxInstruction *, RexxSource *);
    RexxString      * getTraceBack();

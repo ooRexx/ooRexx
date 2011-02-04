@@ -76,6 +76,7 @@
 #include "ActivationFrame.hpp"
 #include "StackFrameClass.hpp"
 #include "InterpreterInstance.hpp"
+#include "PackageClass.hpp"
 
 /* max instructions without a yield */
 #define MAX_INSTRUCTIONS  100
@@ -486,6 +487,11 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
         }
     }
     this->execution_state = ACTIVE;      /* we are now actively processing    */
+
+    if (tracingAll() && isMethodOrRoutine())
+    {
+        traceEntry();
+    }
 
     while (true)                         // loop until we get a terminating condition
     {
@@ -3099,6 +3105,7 @@ static const char * trace_prefix_table[] = {  /* table of trace prefixes        
   ">M>",                               /* TRACE_PREFIX_MESSAGE              */
   ">A>",                               /* TRACE_PREFIX_ARGUMENT             */
   ">=>",                               /* TRACE_PREFIX_ASSIGNMENT           */
+  ">I>",                               /* TRACE_PREFIX_INVOCATION           */
 };
 
                                        /* extra space required to format a  */
@@ -3119,6 +3126,44 @@ static const char * trace_prefix_table[] = {  /* table of trace prefixes        
 #define INDENT_SPACING 2               /* spaces per indentation amount     */
 // over head for adding quotes
 #define QUOTES_OVERHEAD 2
+
+/**
+ * Trace program entry for a method or routine
+ */
+void RexxActivation::traceEntry()
+{
+    // since we're advertising the entry location up front, we want to disable
+    // the normal trace-turn on notice.  We'll get one or the other, but not
+    // both
+    this->settings.flags |= source_traced;
+
+    RexxArray *info = OREF_NULL;
+
+    if (isMethod())
+    {
+        info = new_array(getMessageName(), scope, getPackage()->getName());
+    }
+    else
+    {
+        info = new_array(getExecutable()->getName(), getPackage()->getName());
+    }
+    ProtectedObject p(info);
+
+    RexxString *message = activity->buildMessage(isRoutine() ? Message_Translations_routine_invocation : Message_Translations_method_invocation, info);
+    p = message;
+
+    /* get a string large enough to      */
+    size_t outlength = message->getLength() + INSTRUCTION_OVERHEAD;
+    RexxString *buffer = raw_string(outlength);      /* get an output string              */
+    /* insert the leading blanks         */
+    buffer->set(0, ' ', INSTRUCTION_OVERHEAD);
+    /* add the trace prefix              */
+    buffer->put(PREFIX_OFFSET, trace_prefix_table[TRACE_PREFIX_INVOCATION], PREFIX_LENGTH);
+    /* copy the string value             */
+    buffer->put(INSTRUCTION_OVERHEAD, message->getStringData(), message->getLength());
+                                         /* write out the line                */
+    activity->traceOutput(this, buffer);
+}
 
 
 void RexxActivation::traceValue(       /* trace an intermediate value       */
