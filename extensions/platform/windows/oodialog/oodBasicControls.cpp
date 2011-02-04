@@ -1559,53 +1559,76 @@ RexxMethod3(RexxObjectPtr, e_replaceSelText, CSTRING, replacement, OPTIONAL_logi
  *  multiline edit control. A character index is the one-based index of the
  *  character from the beginning of the edit control.
  *
- *  @param  lineNumber  The one-based index of the line whose character index is
- *                      desired.  A value of –1 specifies the current line
- *                      number (the line that contains the caret).
+ *  @param  lineNumber  The non-negative, one-based index, of the line whose
+ *                      character index is desired.  A value of 0 specifies the
+ *                      current line number (the line that contains the caret).
  *
- *  @return The character index. -1 is returned if the specified line index is
- *          not valid.  (Less than -1, 0, or more than the lines in the edit
- *          control.)
+ *  @return On success, the one-based character index.  On error, 0 is returned,
+ *          for instance if the specified line index is not valid.  (Greater
+ *          than the lines in the edit control.)
  *
  *  @note  The lineIndex() method is intended for multi-line edit controls,
  *         however, it will behave as documented for single-line edit controls.
  *         The return is always 1 for a single-line if the lineNumber argument
- *         is 1 or -1 and always -1 for any other value.
- *
- *  @remarks  The EM_LINEINDEX message is documented as returning -1 if the line
- *            number specified as being greater than the current number of lines
- *            in the edit control.  However, under 64-bit Windows, the return is
- *            0x00000000FFFFFFFF (4294967295) rather than -1.
+ *         is 1 or 0 and always 0 for any other value.
  */
-RexxMethod2(RexxObjectPtr, e_lineIndex, int32_t, lineNumber, CSELF, pCSelf)
+RexxMethod2(uint32_t, e_lineIndex, OPTIONAL_uint32_t, lineNumber, CSELF, pCSelf)
 {
-    RexxObjectPtr result = TheNegativeOneObj;
-    if ( lineNumber >= -1 && lineNumber != 0 )
+    HWND hCtrl = getDChCtrl(pCSelf);
+    uint32_t charIndex = 0;
+
+    lineNumber--;
+
+    if ( isSingleLineEdit(hCtrl) )
     {
-        HWND hCtrl = getDChCtrl(pCSelf);
-
-        if ( isSingleLineEdit(hCtrl) )
+        if ( lineNumber == 1 || lineNumber == 0 )
         {
-            if ( lineNumber == 1 || lineNumber == -1 )
-            {
-                result = TheOneObj;
-            }
-        }
-        else
-        {
-            if ( lineNumber != -1 )
-            {
-                lineNumber--;
-            }
-
-            uint32_t charIndex = (uint32_t)SendMessage(hCtrl, EM_LINEINDEX, lineNumber, 0);
-            if ( charIndex != 0xFFFFFFFF )
-            {
-                result = context->UnsignedInt32(++charIndex);
-            }
+            charIndex = 1;
         }
     }
-    return result;
+    else
+    {
+        charIndex = (uint32_t)SendMessage(hCtrl, EM_LINEINDEX, lineNumber, 0);
+        charIndex++;
+    }
+
+    return charIndex;
+}
+
+
+/** Edit::lineFromIndex()
+ *
+ *  Retrieves the line index containing the character at the specified character
+ *  index.
+ *
+ *  @param charIndex  A non-negative number specifying the one-based character
+ *                    index of the character whose line number is needed. If
+ *                    charIndex is 0 then this method retrieves the current line
+ *                    number (the line the caret is on,) or, if there is a
+ *                    selection, then the line containging the current
+ *                    selection.
+ *
+ *  @return  The one-based line index of the specified character
+ *
+ *  @notes  If the character index is beyond the end of the text in the edit
+ *          control, the index of the last line is returned.
+ *
+ *  @remarks  If charIndex is omitted, its value will be 0.  0 is the default
+ *            for the argument, so we do not need to check if it is omitted or
+ *            not.
+ *
+ *            Experimentation shows that the index of the last line is returned
+ *            when char index is not valid. Since it doesn't appear that -1 is
+ *            ever returned by the OS, the check for -1 is removed.
+ */
+RexxMethod2(uint32_t, e_lineFromIndex, OPTIONAL_uint32_t, charIndex, CSELF, pCSelf)
+{
+    HWND hCtrl = getDChCtrl(pCSelf);
+
+    charIndex--;
+    uint32_t lineIndex = (uint32_t)SendMessage(hCtrl, EM_LINEFROMCHAR, charIndex, 0);
+
+    return ++lineIndex;
 }
 
 

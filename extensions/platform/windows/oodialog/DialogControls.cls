@@ -187,6 +187,7 @@
 ::method replaceSelText unguarded external "LIBRARY oodialog e_replaceSelText"
 ::method getLine unguarded external "LIBRARY oodialog e_getLine"
 ::method lineIndex unguarded external "LIBRARY oodialog e_lineIndex"
+::method lineFromIndex unguarded external "LIBRARY oodialog e_lineFromIndex"
 ::method hideBalloon unguarded external "LIBRARY oodialog e_hideBallon"
 ::method showBalloon unguarded external "LIBRARY oodialog e_showBallon"
 ::method getCue unguarded external "LIBRARY oodialog e_getCue"
@@ -286,14 +287,9 @@
 
 ::method setLimit unguarded
     use strict arg limit
-    self~sendWinIntMsg(self~EM_LIMITTEXT, limit, 0)
+    self~sendWinUintMsg(self~EM_LIMITTEXT, limit, 0)
     return 0
 
-::method lineFromIndex unguarded
-    use strict arg ndx = (-1)
-    if ndx == -1 then ndx = self~EM_NEGATIVEONE
-    else ndx -= 1
-    return self~sendWinIntMsg(self~EM_LINEFROMCHAR, ndx, 0) + 1
 
 ::method firstVisibleLine unguarded
     use strict arg
