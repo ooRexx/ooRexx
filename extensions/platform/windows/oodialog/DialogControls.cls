@@ -188,6 +188,7 @@
 ::method getLine unguarded external "LIBRARY oodialog e_getLine"
 ::method lineIndex unguarded external "LIBRARY oodialog e_lineIndex"
 ::method lineFromIndex unguarded external "LIBRARY oodialog e_lineFromIndex"
+::method lineLength unguarded external "LIBRARY oodialog e_lineLength"
 ::method hideBalloon unguarded external "LIBRARY oodialog e_hideBallon"
 ::method showBalloon unguarded external "LIBRARY oodialog e_showBallon"
 ::method getCue unguarded external "LIBRARY oodialog e_getCue"
@@ -276,14 +277,6 @@
 ::method lines unguarded
     use strict arg
     return self~sendWinIntMsg(self~EM_GETLINECOUNT, 0, 0)
-
-::method lineLength unguarded
-    use strict arg line = (-1)
-    if line == -1 then line = self~EM_NEGATIVEONE
-    else line -= 1
-    ndx = self~lineIndex(line)
-    if ndx == -1 then return -1
-    return self~sendWinIntMsg(self~EM_LINELENGTH, ndx - 1, 0)
 
 ::method setLimit unguarded
     use strict arg limit
