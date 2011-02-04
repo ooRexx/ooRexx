@@ -601,7 +601,9 @@
 
 ::method selectIndex unguarded
    use strict arg ndx = 0
-   return self~sendWinIntMsg(self~CB_SETCURSEL, ndx - 1, 0)
+   ret = self~sendWinIntMsg(self~CB_SETCURSEL, ndx - 1, 0)
+   if ret == -1, ndx <> 0 then return -1
+   return ret + 1
 
 ::method items unguarded
    use strict arg
@@ -625,7 +627,7 @@
    use strict arg
    return self~sendWinIntMsg(self~CB_GETDROPPEDSTATE, 0, 0)
 
-::method editSelection unguarded
+::method setEditSelection unguarded
    use strict arg startndx = 0, endndx = 0
    if endndx == 0 then endndx = -1
    lParam = .DlgUtil~makeLParam(startndx - 1, endndx)
@@ -639,6 +641,11 @@
    use strict arg extent
    self~sendWinIntMsg(self~CB_SETHORIZONTALEXTENT, extent, 0)
    return 0
+
+
+-- DEPRECATED
+::method editSelection
+   forward message "setEditSelection"
 
 
 
