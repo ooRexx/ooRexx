@@ -324,6 +324,87 @@ RexxObject *RexxHashTable::remove(
     return OREF_NULL;                    /* removed item not found            */
 }
 
+
+/**
+ * Remove all elements with a given index from a hashtable,
+ * returning an array of all items.
+ *
+ * @param _index The target index.
+ *
+ * @return An array of all matching items.
+ */
+RexxObject *RexxHashTable::removeAll(RexxObject *_index)
+{
+    // get a count of matching items
+    size_t count = countAll(_index);
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    RexxArray *result = new_array(count);           /* get proper size result array      */
+    // only copy if we have something to remove
+    if (count > 0)
+    {
+        size_t i = 1;                               /* start at the first element        */
+        HashLink previous = NO_LINK;                  /* no previous slot yet              */
+        do
+        {                                 /* while more items in chain         */
+            /* copy the value into our array     */
+            result->put(this->entries[position].value,i++);
+                                          /* if got a match                    */
+            if (EQUAL_VALUE(_index, this->entries[position].index))
+            {
+                /* get the next pointer              */
+                HashLink _next = this->entries[position].next;
+                if (_next == NO_MORE)
+                {        /* end of the chain?                 */
+                         /* clear this slot entry             */
+                    OrefSet(this,this->entries[position].index,OREF_NULL);
+                    OrefSet(this,this->entries[position].value,OREF_NULL);
+                    if (previous != NO_LINK)     /* if not the first of the chain     */
+                    {
+                        /* IH: In this special case we delete an item from the overhead and
+                               therefore might have to increase the free counter, otherwise
+                               hash table will be extended unnecessarily !!! */
+                        if (position > this->free)
+                        {
+                            this->free = position;
+                        }
+                        /* break the link                    */
+                        this->entries[previous].next = NO_MORE;
+                    }
+                    return result;             // we've hit the end of the chain, we're done
+                }                              /* non-terminal chain element        */
+                else
+                {
+                    /* close up the link                 */
+                    this->entries[position].next = this->entries[_next].next;
+                    /* copy value and index to current   */
+                    OrefSet(this,this->entries[position].index,this->entries[_next].index);
+                    OrefSet(this,this->entries[position].value,this->entries[_next].value);
+                    /* clear the next entry              */
+                    OrefSet(this,this->entries[_next].index,OREF_NULL);
+                    OrefSet(this,this->entries[_next].value,OREF_NULL);
+                    /* set to "pristine" condition       */
+                    this->entries[_next].next = NO_MORE;
+                    if (this->free < _next)       /* new-low water mark?               */
+                    {
+                        this->free = _next;         /* reset to this point               */
+                    }
+
+                    // NOTE:  We don't update either previous or position because we'll
+                    // be looking at the same link again
+                }
+            }
+            else
+            {
+                // remember the previous position and step to the next one
+                previous = position;
+                position = this->entries[position].next;
+            }
+            /* step to the next link             */
+        } while (position != NO_MORE);
+    }
+    return result;                       /* return the result array           */
+}
+
 RexxObject *RexxHashTable::primitiveRemove(
             RexxObject *_index)        /* index to remove                   */
 /******************************************************************************/

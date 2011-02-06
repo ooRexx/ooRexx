@@ -952,6 +952,7 @@ CPPM(RexxIdentityTable::newRexx),
 
 CPPM(RexxRelation::put),               /* Relation methods                  */
 CPPM(RexxRelation::removeItemRexx),
+CPPM(RexxRelation::removeAll),
 CPPM(RexxRelation::allIndex),
 CPPM(RexxRelation::itemsRexx),
 CPPM(RexxRelation::supplier),

@@ -190,6 +190,22 @@ RexxObject *RexxRelation::allAt(
 }
 
 
+/**
+ * Remove all items with a given index.
+ *
+ * @param _index The index to remove.
+ *
+ * @return An array of all removed items.  Returns an empty array
+ *         if the index is not found.
+ */
+RexxObject *RexxRelation::removeAll(RexxObject *_index)
+{
+    requiredArgument(_index, ARG_ONE);           /* make sure we have an index        */
+                                       /* just get from the hash table      */
+    return this->contents->removeAll(_index);
+}
+
+
 RexxObject *RexxRelation::put(
   RexxObject *_value,                   /* new value to add                  */
   RexxObject *_index)                   /* index for insertion               */

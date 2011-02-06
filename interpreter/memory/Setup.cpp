@@ -748,6 +748,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_ALLINDEXES   , TheRelationBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY        , TheRelationBehaviour, CPPM(RexxHashTableCollection::empty), 0);
   defineKernelMethod(CHAR_ISEMPTY      , TheRelationBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
+  defineKernelMethod("REMOVEALL"       , TheRelationBehaviour, CPPM(RexxRelation::removeAll), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
