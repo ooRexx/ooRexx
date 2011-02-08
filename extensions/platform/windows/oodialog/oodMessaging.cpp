@@ -2138,7 +2138,7 @@ MsgReplyType searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCP
  *
  * @remarks  The command message table is allocated during the plain base dialog
  *           init process, so we do not need to check that it has been
- *           allocated.
+ *           allocated.  TODO TODO this statement is not true think testListbox.rex
  *
  *           Caller must ensure that 'prog' is not an empty string and that
  *           winMsg, wParam, lParam are not all 0.  TODO need to recheck this.
