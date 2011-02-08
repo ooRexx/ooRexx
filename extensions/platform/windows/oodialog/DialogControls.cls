@@ -463,7 +463,7 @@
 
 ::method delete unguarded
    use strict arg index = (self~selectedIndex)
-   if index == 0 then return 0
+   if index == 0 then return -1
    return self~sendWinIntMsg(self~LB_DELETESTRING, index - 1, 0)
 
 ::method deleteAll unguarded
