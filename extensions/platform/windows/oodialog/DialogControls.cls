@@ -467,7 +467,8 @@
    return self~sendWinIntMsg(self~LB_DELETESTRING, index - 1, 0)
 
 ::method deleteAll unguarded
-   return self~sendWinIntMsg(self~LB_RESETCONTENT, 0, 0)
+   self~sendWinIntMsg(self~LB_RESETCONTENT, 0, 0)
+   return 0
 
 ::method selected unguarded
    return self~getText(self~selectedIndex)
