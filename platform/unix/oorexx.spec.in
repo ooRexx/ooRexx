@@ -169,38 +169,38 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/mime.cls
 %{_bindir}/smtp.cls
 %{_bindir}/oorexx-config
-%{_libdir}/ooRexx/librexx.so
-%{_libdir}/ooRexx/librexx.so.@ORX_SUBST_CURRENT@
-%{_libdir}/ooRexx/librexx.so.%{orx_libversion}
-%{_libdir}/ooRexx/librexx.la
-%{_libdir}/ooRexx/librexxapi.so
-%{_libdir}/ooRexx/librexxapi.so.@ORX_SUBST_CURRENT@
-%{_libdir}/ooRexx/librexxapi.so.%{orx_libversion}
-%{_libdir}/ooRexx/librexxapi.la
-%{_libdir}/ooRexx/librxsock.so
-%{_libdir}/ooRexx/librxsock.so.@ORX_SUBST_CURRENT@
-%{_libdir}/ooRexx/librxsock.so.%{orx_libversion}
-%{_libdir}/ooRexx/librxsock.la
-%{_libdir}/ooRexx/librxmath.so
-%{_libdir}/ooRexx/librxmath.so.@ORX_SUBST_CURRENT@
-%{_libdir}/ooRexx/librxmath.so.%{orx_libversion}
-%{_libdir}/ooRexx/librxmath.la
-%{_libdir}/ooRexx/librxregexp.so
-%{_libdir}/ooRexx/librxregexp.so.@ORX_SUBST_CURRENT@
-%{_libdir}/ooRexx/librxregexp.so.%{orx_libversion}
-%{_libdir}/ooRexx/librxregexp.la
-%{_libdir}/ooRexx/librexxutil.so
-%{_libdir}/ooRexx/librexxutil.so.@ORX_SUBST_CURRENT@
-%{_libdir}/ooRexx/librexxutil.so.%{orx_libversion}
-%{_libdir}/ooRexx/librexxutil.la
-%{_libdir}/ooRexx/libhostemu.so
-%{_libdir}/ooRexx/libhostemu.so.@ORX_SUBST_CURRENT@
-%{_libdir}/ooRexx/libhostemu.so.%{orx_libversion}
-%{_libdir}/ooRexx/libhostemu.la
-%{_libdir}/ooRexx/librxunixsys.so
-%{_libdir}/ooRexx/librxunixsys.so.@ORX_SUBST_CURRENT@
-%{_libdir}/ooRexx/librxunixsys.so.%{orx_libversion}
-%{_libdir}/ooRexx/librxunixsys.la
+%{_libdir}/librexx.so
+%{_libdir}/librexx.so.@ORX_SUBST_CURRENT@
+%{_libdir}/librexx.so.%{orx_libversion}
+%{_libdir}/librexx.la
+%{_libdir}/librexxapi.so
+%{_libdir}/librexxapi.so.@ORX_SUBST_CURRENT@
+%{_libdir}/librexxapi.so.%{orx_libversion}
+%{_libdir}/librexxapi.la
+%{_libdir}/librxsock.so
+%{_libdir}/librxsock.so.@ORX_SUBST_CURRENT@
+%{_libdir}/librxsock.so.%{orx_libversion}
+%{_libdir}/librxsock.la
+%{_libdir}/librxmath.so
+%{_libdir}/librxmath.so.@ORX_SUBST_CURRENT@
+%{_libdir}/librxmath.so.%{orx_libversion}
+%{_libdir}/librxmath.la
+%{_libdir}/librxregexp.so
+%{_libdir}/librxregexp.so.@ORX_SUBST_CURRENT@
+%{_libdir}/librxregexp.so.%{orx_libversion}
+%{_libdir}/librxregexp.la
+%{_libdir}/librexxutil.so
+%{_libdir}/librexxutil.so.@ORX_SUBST_CURRENT@
+%{_libdir}/librexxutil.so.%{orx_libversion}
+%{_libdir}/librexxutil.la
+%{_libdir}/libhostemu.so
+%{_libdir}/libhostemu.so.@ORX_SUBST_CURRENT@
+%{_libdir}/libhostemu.so.%{orx_libversion}
+%{_libdir}/libhostemu.la
+%{_libdir}/librxunixsys.so
+%{_libdir}/librxunixsys.so.@ORX_SUBST_CURRENT@
+%{_libdir}/librxunixsys.so.%{orx_libversion}
+%{_libdir}/librxunixsys.la
 %{_includedir}/rexx.h
 %{_includedir}/rexxapidefs.h
 %{_includedir}/rexxapitypes.h
@@ -221,58 +221,38 @@ rm -rf $RPM_BUILD_ROOT
 #******************************************************************************
 %post
 #******************************************************************************
-# Normally we would not need to add links back to /usr/lib because the ooRexx
-# executables have the correct path to the libraries linked into them. But
-# developers need to be able to link their applications to a known location.
-# So we add links to the libraries that developers will need access to.
-ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so
-ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.%{orx_libversion}
-ln -sf %{_libdir}/ooRexx/librexx.la %{_libdir}/librexx.la
-ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.2
-ln -sf %{_libdir}/ooRexx/librexx.so %{_libdir}/librexx.so.3
-ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so
-ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.%{orx_libversion}
-ln -sf %{_libdir}/ooRexx/librexxapi.la %{_libdir}/librexxapi.la
-ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.2
-ln -sf %{_libdir}/ooRexx/librexxapi.so %{_libdir}/librexxapi.so.3
-ln -sf %{_libdir}/ooRexx/librxsock.so %{_libdir}/librxsock.so
-ln -sf %{_libdir}/ooRexx/librxsock.so %{_libdir}/librxsock.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librxsock.so %{_libdir}/librxsock.so.%{orx_libversion}
-ln -sf %{_libdir}/ooRexx/librxsock.la %{_libdir}/librxsock.la
-ln -sf %{_libdir}/ooRexx/librxsock.so %{_libdir}/librxsock.so.2
-ln -sf %{_libdir}/ooRexx/librxsock.so %{_libdir}/librxsock.so.3
-ln -sf %{_libdir}/ooRexx/librxmath.so %{_libdir}/librxmath.so
-ln -sf %{_libdir}/ooRexx/librxmath.so %{_libdir}/librxmath.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librxmath.so %{_libdir}/librxmath.so.%{orx_libversion}
-ln -sf %{_libdir}/ooRexx/librxmath.la %{_libdir}/librxmath.la
-ln -sf %{_libdir}/ooRexx/librxmath.so %{_libdir}/librxmath.so.2
-ln -sf %{_libdir}/ooRexx/librxmath.so %{_libdir}/librxmath.so.3
-ln -sf %{_libdir}/ooRexx/librxregexp.so %{_libdir}/librxregexp.so
-ln -sf %{_libdir}/ooRexx/librxregexp.so %{_libdir}/librxregexp.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librxregexp.so %{_libdir}/librxregexp.so.%{orx_libversion}
-ln -sf %{_libdir}/ooRexx/librxregexp.la %{_libdir}/librxregexp.la
-ln -sf %{_libdir}/ooRexx/librxregexp.so %{_libdir}/librxregexp.so.2
-ln -sf %{_libdir}/ooRexx/librxregexp.so %{_libdir}/librxregexp.so.3
-ln -sf %{_libdir}/ooRexx/librexxutil.so %{_libdir}/librexxutil.so
-ln -sf %{_libdir}/ooRexx/librexxutil.so %{_libdir}/librexxutil.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librexxutil.so %{_libdir}/librexxutil.so.%{orx_libversion}
-ln -sf %{_libdir}/ooRexx/librexxutil.la %{_libdir}/librexxutil.la
-ln -sf %{_libdir}/ooRexx/librexxutil.so %{_libdir}/librexxutil.so.2
-ln -sf %{_libdir}/ooRexx/librexxutil.so %{_libdir}/librexxutil.so.3
-ln -sf %{_libdir}/ooRexx/libhostemu.so %{_libdir}/libhostemu.so
-ln -sf %{_libdir}/ooRexx/libhostemu.so %{_libdir}/libhostemu.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/libhostemu.so %{_libdir}/libhostemu.so.%{orx_libversion}
-ln -sf %{_libdir}/ooRexx/libhostemu.la %{_libdir}/libhostemu.la
-ln -sf %{_libdir}/ooRexx/libhostemu.so %{_libdir}/libhostemu.so.2
-ln -sf %{_libdir}/ooRexx/libhostemu.so %{_libdir}/libhostemu.so.3
-ln -sf %{_libdir}/ooRexx/librxunixsys.so %{_libdir}/librxunixsys.so
-ln -sf %{_libdir}/ooRexx/librxunixsys.so %{_libdir}/librxunixsys.so.@ORX_SUBST_CURRENT@
-ln -sf %{_libdir}/ooRexx/librxunixsys.so %{_libdir}/librxunixsys.so.%{orx_libversion}
-ln -sf %{_libdir}/ooRexx/librxunixsys.la %{_libdir}/librxunixsys.la
-ln -sf %{_libdir}/ooRexx/librxunixsys.so %{_libdir}/librxunixsys.so.2
-ln -sf %{_libdir}/ooRexx/librxunixsys.so %{_libdir}/librxunixsys.so.3
+ln -sf %{_libdir}/librexx.so %{_libdir}/librexx.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/librexx.so %{_libdir}/librexx.so.%{orx_libversion}
+ln -sf %{_libdir}/librexx.so %{_libdir}/librexx.so.2
+ln -sf %{_libdir}/librexx.so %{_libdir}/librexx.so.3
+ln -sf %{_libdir}/librexxapi.so %{_libdir}/librexxapi.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/librexxapi.so %{_libdir}/librexxapi.so.%{orx_libversion}
+ln -sf %{_libdir}/librexxapi.so %{_libdir}/librexxapi.so.2
+ln -sf %{_libdir}/librexxapi.so %{_libdir}/librexxapi.so.3
+ln -sf %{_libdir}/librxsock.so %{_libdir}/librxsock.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/librxsock.so %{_libdir}/librxsock.so.%{orx_libversion}
+ln -sf %{_libdir}/librxsock.so %{_libdir}/librxsock.so.2
+ln -sf %{_libdir}/librxsock.so %{_libdir}/librxsock.so.3
+ln -sf %{_libdir}/librxmath.so %{_libdir}/librxmath.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/librxmath.so %{_libdir}/librxmath.so.%{orx_libversion}
+ln -sf %{_libdir}/librxmath.so %{_libdir}/librxmath.so.2
+ln -sf %{_libdir}/librxmath.so %{_libdir}/librxmath.so.3
+ln -sf %{_libdir}/librxregexp.so %{_libdir}/librxregexp.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/librxregexp.so %{_libdir}/librxregexp.so.%{orx_libversion}
+ln -sf %{_libdir}/librxregexp.so %{_libdir}/librxregexp.so.2
+ln -sf %{_libdir}/librxregexp.so %{_libdir}/librxregexp.so.3
+ln -sf %{_libdir}/librexxutil.so %{_libdir}/librexxutil.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/librexxutil.so %{_libdir}/librexxutil.so.%{orx_libversion}
+ln -sf %{_libdir}/librexxutil.so %{_libdir}/librexxutil.so.2
+ln -sf %{_libdir}/librexxutil.so %{_libdir}/librexxutil.so.3
+ln -sf %{_libdir}/libhostemu.so %{_libdir}/libhostemu.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/libhostemu.so %{_libdir}/libhostemu.so.%{orx_libversion}
+ln -sf %{_libdir}/libhostemu.so %{_libdir}/libhostemu.so.2
+ln -sf %{_libdir}/libhostemu.so %{_libdir}/libhostemu.so.3
+ln -sf %{_libdir}/librxunixsys.so %{_libdir}/librxunixsys.so.@ORX_SUBST_CURRENT@
+ln -sf %{_libdir}/librxunixsys.so %{_libdir}/librxunixsys.so.%{orx_libversion}
+ln -sf %{_libdir}/librxunixsys.so %{_libdir}/librxunixsys.so.2
+ln -sf %{_libdir}/librxunixsys.so %{_libdir}/librxunixsys.so.3
 # Add links for some ooRexx scripts
 ln -sf %{_datadir}/ooRexx/rexxtry.rex %{_bindir}/rexxtry.rex
 # Add the rxapi service
@@ -302,8 +282,10 @@ fi
 # Remove links
 rm -f /etc/init.d/rxapid
 rm -f %{_bindir}/rexxtry.rex
-rm -f %{_libdir}/librexxapi.*
 rm -f %{_libdir}/librexx.*
+rm -f %{_libdir}/librex*
+rm -f %{_libdir}/librx*
+rm -f %{_libdir}/libhostemu.*
 
 #******************************************************************************
 %postun

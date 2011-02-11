@@ -53,52 +53,36 @@ data_dir=${orx_prefix}/share/ooRexx
 #  On debian, we may not need to add links for the private libraries the 
 #  interpreter uses, they should be found automatically.  However, on some Linux
 #  distributions we do need all the links.  So, just add all of them.
-ln -sf ${lib_dir}/ooRexx/librexx.so ${lib_dir}/librexx.so
-ln -sf ${lib_dir}/ooRexx/librexx.so ${lib_dir}/librexx.so.@ORX_SUBST_CURRENT@
-ln -sf ${lib_dir}/ooRexx/librexx.so ${lib_dir}/librexx.so.${orx_libversion}
-ln -sf ${lib_dir}/ooRexx/librexx.la ${lib_dir}/librexx.la
-ln -sf ${lib_dir}/ooRexx/librexxapi.so ${lib_dir}/librexxapi.so
-ln -sf ${lib_dir}/ooRexx/librexxapi.so ${lib_dir}/librexxapi.so.@ORX_SUBST_CURRENT@
-ln -sf ${lib_dir}/ooRexx/librexxapi.so ${lib_dir}/librexxapi.so.${orx_libversion}
-ln -sf ${lib_dir}/ooRexx/librexxapi.la ${lib_dir}/librexxapi.la
-ln -sf ${lib_dir}/ooRexx/librxsock.so ${lib_dir}/librxsock.so
-ln -sf ${lib_dir}/ooRexx/librxsock.so ${lib_dir}/librxsock.so.@ORX_SUBST_CURRENT@
-ln -sf ${lib_dir}/ooRexx/librxsock.so ${lib_dir}/librxsock.so.${orx_libversion}
-ln -sf ${lib_dir}/ooRexx/librxsock.la ${lib_dir}/librxsock.la
-ln -sf ${lib_dir}/ooRexx/librxmath.so ${lib_dir}/librxmath.so
-ln -sf ${lib_dir}/ooRexx/librxmath.so ${lib_dir}/librxmath.so.@ORX_SUBST_CURRENT@
-ln -sf ${lib_dir}/ooRexx/librxmath.so ${lib_dir}/librxmath.so.${orx_libversion}
-ln -sf ${lib_dir}/ooRexx/librxmath.la ${lib_dir}/librxmath.la
-ln -sf ${lib_dir}/ooRexx/librxregexp.so ${lib_dir}/librxregexp.so
-ln -sf ${lib_dir}/ooRexx/librxregexp.so ${lib_dir}/librxregexp.so.@ORX_SUBST_CURRENT@
-ln -sf ${lib_dir}/ooRexx/librxregexp.so ${lib_dir}/librxregexp.so.${orx_libversion}
-ln -sf ${lib_dir}/ooRexx/librxregexp.la ${lib_dir}/librxregexp.la
-ln -sf ${lib_dir}/ooRexx/librexxutil.so ${lib_dir}/librexxutil.so
-ln -sf ${lib_dir}/ooRexx/librexxutil.so ${lib_dir}/librexxutil.so.@ORX_SUBST_CURRENT@
-ln -sf ${lib_dir}/ooRexx/librexxutil.so ${lib_dir}/librexxutil.so.${orx_libversion}
-ln -sf ${lib_dir}/ooRexx/librexxutil.la ${lib_dir}/librexxutil.la
-ln -sf ${lib_dir}/ooRexx/libhostemu.so ${lib_dir}/libhostemu.so
-ln -sf ${lib_dir}/ooRexx/libhostemu.so ${lib_dir}/libhostemu.so.@ORX_SUBST_CURRENT@
-ln -sf ${lib_dir}/ooRexx/libhostemu.so ${lib_dir}/libhostemu.so.${orx_libversion}
-ln -sf ${lib_dir}/ooRexx/libhostemu.la ${lib_dir}/libhostemu.la
-ln -sf ${lib_dir}/ooRexx/librxunixsys.so ${lib_dir}/librxunixsys.so
-ln -sf ${lib_dir}/ooRexx/librxunixsys.so ${lib_dir}/librxunixsys.so.@ORX_SUBST_CURRENT@
-ln -sf ${lib_dir}/ooRexx/librxunixsys.so ${lib_dir}/librxunixsys.so.${orx_libversion}
-ln -sf ${lib_dir}/ooRexx/librxunixsys.la ${lib_dir}/librxunixsys.la
+ln -sf ${lib_dir}/librexx.so ${lib_dir}/librexx.so.@ORX_SUBST_CURRENT@
+ln -sf ${lib_dir}/librexx.so ${lib_dir}/librexx.so.${orx_libversion}
+ln -sf ${lib_dir}/librexxapi.so ${lib_dir}/librexxapi.so.@ORX_SUBST_CURRENT@
+ln -sf ${lib_dir}/librexxapi.so ${lib_dir}/librexxapi.so.${orx_libversion}
+ln -sf ${lib_dir}/librxsock.so ${lib_dir}/librxsock.so.@ORX_SUBST_CURRENT@
+ln -sf ${lib_dir}/librxsock.so ${lib_dir}/librxsock.so.${orx_libversion}
+ln -sf ${lib_dir}/librxmath.so ${lib_dir}/librxmath.so.@ORX_SUBST_CURRENT@
+ln -sf ${lib_dir}/librxmath.so ${lib_dir}/librxmath.so.${orx_libversion}
+ln -sf ${lib_dir}/librxregexp.so ${lib_dir}/librxregexp.so.@ORX_SUBST_CURRENT@
+ln -sf ${lib_dir}/librxregexp.so ${lib_dir}/librxregexp.so.${orx_libversion}
+ln -sf ${lib_dir}/librexxutil.so ${lib_dir}/librexxutil.so.@ORX_SUBST_CURRENT@
+ln -sf ${lib_dir}/librexxutil.so ${lib_dir}/librexxutil.so.${orx_libversion}
+ln -sf ${lib_dir}/libhostemu.so ${lib_dir}/libhostemu.so.@ORX_SUBST_CURRENT@
+ln -sf ${lib_dir}/libhostemu.so ${lib_dir}/libhostemu.so.${orx_libversion}
+ln -sf ${lib_dir}/librxunixsys.so ${lib_dir}/librxunixsys.so.@ORX_SUBST_CURRENT@
+ln -sf ${lib_dir}/librxunixsys.so ${lib_dir}/librxunixsys.so.${orx_libversion}
 
 # allow backwards compatibility to previous versions
-ln -sf ${lib_dir}/ooRexx/librexx.so ${lib_dir}/librexx.so.2
-ln -sf ${lib_dir}/ooRexx/librexx.so ${lib_dir}/librexx.so.3
-ln -sf ${lib_dir}/ooRexx/librexxapi.so ${lib_dir}/librexxapi.so.2
-ln -sf ${lib_dir}/ooRexx/librexxapi.so ${lib_dir}/librexxapi.so.3
-ln -sf ${lib_dir}/ooRexx/librxsock.so ${lib_dir}/librxsock.so.2
-ln -sf ${lib_dir}/ooRexx/librxsock.so ${lib_dir}/librxsock.so.3
-ln -sf ${lib_dir}/ooRexx/librxmath.so ${lib_dir}/libxmath.so.2
-ln -sf ${lib_dir}/ooRexx/librxmath.so ${lib_dir}/libxmath.so.3
-ln -sf ${lib_dir}/ooRexx/librxregexp.so ${lib_dir}/librxregexp.so.2
-ln -sf ${lib_dir}/ooRexx/librxregexp.so ${lib_dir}/librxregexp.so.3
-ln -sf ${lib_dir}/ooRexx/librexxutil.so ${lib_dir}/librexxutil.so.2
-ln -sf ${lib_dir}/ooRexx/librexxutil.so ${lib_dir}/librexxutil.so.3
+ln -sf ${lib_dir}/librexx.so ${lib_dir}/librexx.so.2
+ln -sf ${lib_dir}/librexx.so ${lib_dir}/librexx.so.3
+ln -sf ${lib_dir}/librexxapi.so ${lib_dir}/librexxapi.so.2
+ln -sf ${lib_dir}/librexxapi.so ${lib_dir}/librexxapi.so.3
+ln -sf ${lib_dir}/librxsock.so ${lib_dir}/librxsock.so.2
+ln -sf ${lib_dir}/librxsock.so ${lib_dir}/librxsock.so.3
+ln -sf ${lib_dir}/librxmath.so ${lib_dir}/libxmath.so.2
+ln -sf ${lib_dir}/librxmath.so ${lib_dir}/libxmath.so.3
+ln -sf ${lib_dir}/librxregexp.so ${lib_dir}/librxregexp.so.2
+ln -sf ${lib_dir}/librxregexp.so ${lib_dir}/librxregexp.so.3
+ln -sf ${lib_dir}/librexxutil.so ${lib_dir}/librexxutil.so.2
+ln -sf ${lib_dir}/librexxutil.so ${lib_dir}/librexxutil.so.3
 
 # Although rexxtry is technically a sample, historically we have set it up to
 # be used like the other executables.
