@@ -3174,8 +3174,15 @@ RexxMethod1(int, lv_getColumnCount, CSELF, pCSelf)
     return getColumnCount(getDChCtrl(pCSelf));
 }
 
-RexxMethod2(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, RexxObjectPtr, _d, CSELF, pCSelf)
 {
+    if ( ! context->IsDirectory(_d) )
+    {
+        wrongClassException(context->threadContext, 1, "Directory");
+        return TheFalseObj;
+    }
+    RexxDirectoryObject d = (RexxDirectoryObject)_d;
+
     HWND hList = getDChCtrl(pCSelf);
 
     LVCOLUMN lvi;
@@ -3187,14 +3194,8 @@ RexxMethod2(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, CSELF, pCSelf)
 
     if ( ! ListView_GetColumn(hList, index, &lvi) )
     {
-        return TheNegativeOneObj;
+        return TheFalseObj;
     }
-
-    RexxStemObject stem = context->NewStem("InternalLVColInfo");
-
-    context->SetStemElement(stem, "!TEXT", context->String(lvi.pszText));
-    context->SetStemElement(stem, "!COLUMN", context->Int32(lvi.iSubItem));
-    context->SetStemElement(stem, "!WIDTH", context->Int32(lvi.cx));
 
     char *align = "LEFT";
     if ( (LVCFMT_JUSTIFYMASK & lvi.fmt) == LVCFMT_CENTER )
@@ -3205,9 +3206,13 @@ RexxMethod2(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, CSELF, pCSelf)
     {
         align = "RIGHT";
     }
-    context->SetStemElement(stem, "!ALIGN", context->String(align));
 
-    return stem;
+    context->DirectoryPut(d, context->String(lvi.pszText), "TEXT");
+    context->DirectoryPut(d, context->Int32(lvi.iSubItem), "SUBITEM");
+    context->DirectoryPut(d, context->Int32(lvi.cx), "WIDTH");
+    context->DirectoryPut(d, context->String(align), "ALIGNMENT");
+
+    return TheTrueObj;
 }
 
 RexxMethod3(RexxObjectPtr, lv_setColumnWidthPx, uint32_t, index, OPTIONAL_RexxObjectPtr, _width, CSELF, pCSelf)

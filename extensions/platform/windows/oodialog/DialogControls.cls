@@ -1093,7 +1093,6 @@
 ::method stringWidthPx unguarded external "LIBRARY oodialog lv_stringWidthPx"
 ::method getColumnCount unguarded external "LIBRARY oodialog lv_getColumnCount"
 ::method getColumnOrder unguarded external "LIBRARY oodialog lv_getColumnOrder"
-::method getColumnInfo unguarded  external "LIBRARY oodialog lv_getColumnInfo"
 ::method insertColumnPx unguarded external "LIBRARY oodialog lv_insertColumnPx"
 ::method modifyColumnPx unguarded external "LIBRARY oodialog lv_modifyColumnPx"
 ::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
@@ -1103,11 +1102,20 @@
    use strict arg text
    return self~stringWidthPx(text) / self~factorX
 
+::method getColumnInfo unguarded  external "LIBRARY oodialog lv_getColumnInfo"
 ::method columnInfo unguarded  -- Dialog units, not accurate.
    use strict arg index
-   InternalLVColInfo. = self~getColumnInfo(index)
-   if InternalLVColInfo.!Width~Datatype('N') = 1 then InternalLVColInfo.!Width = InternalLVColInfo.!Width / self~factorX
-   return InternalLVColInfo.
+   d = .Directory~new
+   if self~getColumnInfo(index, d) then do
+     colInfo.!TEXT = d~text
+     colInfo.!WIDTH = d~width / self~factorX
+     colInfo.!COLUMN = d~subItem
+     colInfo.!ALIGN = d~alignment
+     return colInfo
+   end
+
+   colInfo.!WIDTH = 0
+   return colInfo.
 
 ::method columnWidth unguarded  -- Dialog units, not accurate.
    use strict arg colNum
