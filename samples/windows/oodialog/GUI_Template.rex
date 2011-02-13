@@ -210,6 +210,8 @@ exit -1
 
 /* ------------------------------------------------------------------------- */
 ::method defineDialog
+/* expose menuBar */            /* Perhaps save a menu object if you create  */
+                                /* one below.                                */
 /* ------------------------------------------------------------------------- */
 /* This is where we lay out the controls (widgets) in our dialog             */
 /* Refer to the ooDialog manual for the create methods and their parameters  */
@@ -239,22 +241,28 @@ exit -1
 /* self~createListView(id,x,y,cx,cy,'options','attribute')                   */
 /* self~createTreeView(id,x,y,cx,cy,'options','attribute')                   */
 /* self~createStaticText(id, x,y,cx,cy,'options','text')                     */
-/* self~create[Black|White|Gray]Rect,x,y,cx,cy,'options',id)                 */
+/* self~create[Black|White|Gray]Rect(id,x,y,cx,cy,'options')                 */
 /* etc. etc. ...                                                             */
 /* other controls should have unique ids over 100 (or -1 for static text)    */
 
                         /* ------------------------------------------------- */
-                        /* You can add a menu here using self~addMenuItem &  */
-                        /* self~addMenuSeperator.                            */
-                        /* To display it add a call to setMenu in the        */
-                        /* initDialog method                                 */
+                        /* You could create a menu here, or really anywhere, */
+                        /* using one of the menu classes such as the         */
+                        /* .UserMenuBar, and the menu methods.               */
+                        /*                                                   */
+                        /* Save the menu and have it attach to the dialog in */
+                        /* the initDialog() method.  It could be saved in an */
+                        /* exposed variable for instance.                    */
                         /* ------------------------------------------------- */
 
-/* self~AddPopupMenu('name','options')                                       */
-/* self~AddMenuItem('text',id,'options','method')                            */
-/* self~AddMenuSeperator                                                     */
+/* menuBar = .UserMenuBar~new(200, self, ...)                                */
+/* menuBar~addPopUp(id, 'text', options, ...)                                */
+/* menuBar~addItem(id, 'someText', options, ...)                             */
+/* menuBar~addSeparator                                                      */
+/* menuBar~complete                                                          */
 /* ------------------------------------------------------------------------- */
 ::method initDialog
+/*  expose menuBar */   /* If you are adding a menu perhaps.                 */
 /* ------------------------------------------------------------------------- */
 /* If you have no need to initialise/populate items delete this method       */
 
@@ -285,9 +293,11 @@ exit -1
 /*  end                                                                      */
 
                         /* ------------------------------------------------- */
-                        /* If you defined a menu in Define Dialog, show it:  */
-                        /* self~SetMenu                                      */
+                        /* If you created a menu in defineDialog(), attach   */
+                        /* it:                                               */
                         /* ------------------------------------------------- */
+
+/*  menuBar~attachTo(self) */
 
 /* ------------------------------------------------------------------------- */
 ::method ok
@@ -314,8 +324,8 @@ exit -1
                         /* By invoking the super class ok() method you       */
                         /* ensure the dialog is closed properly.  That is    */
                         /* really the best way to end the dialog.  The best  */
-                        /* to not end the dialog at this point is to simply  */
-                        /* return 0.                                         */
+                        /* way to not end the dialog at this point is to     */
+                        /* simply return 0.                                  */
                         /* ------------------------------------------------- */
 
 return self~oK:super
@@ -337,7 +347,7 @@ return self~oK:super
                         /* continue with the normal closing of the dialog,   */
                         /* invoke the super class's cancel method.           */
                         /*                                                   */
-                        /* By invoking the super class cance.() method you   */
+                        /* By invoking the super class cancel() method you   */
                         /* ensure the dialog is closed properly.  That is    */
                         /* really the best way to end the dialog.  The best  */
                         /* to not end the dialog at this point is to simply  */
@@ -348,7 +358,7 @@ return self~cancel:super
 /* ------------------------------------------------------------------------- */
 ::method validate
 /* ------------------------------------------------------------------------- */
-/* This is called by the OK:Super Method.  Returning .false stops the dialog */
+/* This is called by the ok:super method.  Returning .false stops the dialog */
 /* from closing.  Returning .true allows the dialog to close. If you do not  */
 /* need this method - delete it                                              */
 valid=.true
