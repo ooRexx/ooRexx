@@ -1148,7 +1148,15 @@
 -- Intent is to return directory item with normal names and in itemInfo convert to old stem return
 ::method getItemInfo unguarded external "LIBRARY oodialog lv_getItemInfo"
 ::method itemInfo
-   forward message "getItemInfo"
+   use strict arg index, subItem = 0
+   d = .Directory~new
+   if getItemInfo(d, index, subItem) then do
+     itemInfo.!TEXT = d~text
+     itemInfo.!IMAGE = d~image
+     itemInfo.!STATE = d~state
+     return itemInfo.
+   end
+   return -1
 
 ::method checkAll unguarded
    return self~check(-1)

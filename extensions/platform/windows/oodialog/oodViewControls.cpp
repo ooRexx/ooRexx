@@ -3125,8 +3125,15 @@ RexxMethod3(uint32_t, lv_replaceStyle, CSTRING, removeStyle, CSTRING, additional
     return changeStyle(context, (pCDialogControl)pCSelf, removeStyle, additionalStyle, true);
 }
 
-RexxMethod3(RexxObjectPtr, lv_getItemInfo, uint32_t, index, OPTIONAL_uint32_t, subItem, CSELF, pCSelf)
+RexxMethod4(RexxObjectPtr, lv_getItemInfo, RexxObjectPtr, _d, uint32_t, index, OPTIONAL_uint32_t, subItem, CSELF, pCSelf)
 {
+    if ( ! context->IsDirectory(_d) )
+    {
+        wrongClassException(context->threadContext, 1, "Directory");
+        return TheFalseObj;
+    }
+    RexxDirectoryObject d = (RexxDirectoryObject)_d;
+
     HWND hList = getDChCtrl(pCSelf);
 
     LVITEM lvi;
@@ -3141,13 +3148,11 @@ RexxMethod3(RexxObjectPtr, lv_getItemInfo, uint32_t, index, OPTIONAL_uint32_t, s
 
     if ( ! ListView_GetItem(hList, &lvi) )
     {
-        return TheNegativeOneObj;
+        return TheFalseObj;
     }
 
-    RexxStemObject stem = context->NewStem("InternalLVItemInfo");
-
-    context->SetStemElement(stem, "!TEXT", context->String(lvi.pszText));
-    context->SetStemElement(stem, "!IMAGE", context->Int32(lvi.iImage));
+    context->DirectoryPut(d, context->String(lvi.pszText), "TEXT");
+    context->DirectoryPut(d, context->Int32(lvi.iImage), "IMAGE");
 
     *buf = '\0';
     if ( lvi.state & LVIS_CUT)         strcat(buf, "CUT ");
@@ -3159,9 +3164,9 @@ RexxMethod3(RexxObjectPtr, lv_getItemInfo, uint32_t, index, OPTIONAL_uint32_t, s
     {
         *(buf + strlen(buf) - 1) = '\0';
     }
-    context->SetStemElement(stem, "!STATE", context->String(buf));
+    context->DirectoryPut(d, context->String(buf), "STATE");
 
-    return stem;
+    return TheTrueObj;
 }
 
 RexxMethod1(int, lv_getColumnCount, CSELF, pCSelf)
