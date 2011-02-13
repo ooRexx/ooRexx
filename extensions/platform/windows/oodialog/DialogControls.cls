@@ -1096,7 +1096,7 @@
 ::method getColumnInfo unguarded  external "LIBRARY oodialog lv_getColumnInfo"
 ::method insertColumnPx unguarded external "LIBRARY oodialog lv_insertColumnPx"
 ::method modifyColumnPx unguarded external "LIBRARY oodialog lv_modifyColumnPx"
-::method setColumnOrderc external "LIBRARY oodialog lv_setColumnOrder"
+::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
 ::method setColumnWidthPx unguarded external "LIBRARY oodialog lv_setColumnWidthPx"
 
 ::method stringWidth unguarded  -- Dialog units, not accurate.
