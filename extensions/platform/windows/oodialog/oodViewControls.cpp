@@ -3227,7 +3227,13 @@ RexxMethod3(RexxObjectPtr, lv_setColumnWidthPx, uint32_t, index, OPTIONAL_RexxOb
     return (ListView_SetColumnWidth(hList, index, width) ? TheZeroObj : TheOneObj);
 }
 
-RexxMethod5(RexxObjectPtr, lv_modifyColumnPx, uint32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_RexxObjectPtr, _width,
+/**
+ *
+ *
+ * @remarks  LVSCW_AUTOSIZE_USEHEADER and LVSCW_AUTOSIZE are *only* accepted by
+ *           ListView_SetColumnWidth()
+ */
+RexxMethod5(RexxObjectPtr, lv_modifyColumnPx, uint32_t, index, OPTIONAL_CSTRING, label, OPTIONAL_uint16_t, _width,
             OPTIONAL_CSTRING, align, CSELF, pCSelf)
 {
     HWND hList = getDChCtrl(pCSelf);
@@ -3241,11 +3247,7 @@ RexxMethod5(RexxObjectPtr, lv_modifyColumnPx, uint32_t, index, OPTIONAL_CSTRING,
     }
     if ( argumentExists(3) )
     {
-        lvi.cx = getColumnWidthArg(context, _width, 3);
-        if ( lvi.cx == OOD_BAD_WIDTH_EXCEPTION )
-        {
-            goto err_out;
-        }
+        lvi.cx = _width;
         lvi.mask |= LVCF_WIDTH;
     }
     if ( argumentExists(4) && *align != '\0' )
