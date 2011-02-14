@@ -52,16 +52,19 @@ void RexxLocalVariables::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-   RexxVariable **entry;                /* marked stack entry                */
-   RexxVariable **top;
-
-                                       /* loop through the stack entries    */
-   for (entry = locals, top = entry + size; entry < top; entry++)
-   {
-       memory_mark(*entry);            /* marking each one                  */
-   }
-
-   memory_mark(dictionary);            /* also mark any created vdict       */
+    // We can only mark if full initialized
+    if (locals != NULL)
+    {
+       RexxVariable **entry;                /* marked stack entry                */
+       RexxVariable **top;
+    
+                                           /* loop through the stack entries    */
+       for (entry = locals, top = entry + size; entry < top; entry++)
+       {
+           memory_mark(*entry);            /* marking each one                  */
+       }
+    }
+    memory_mark(dictionary);            /* also mark any created vdict       */
 }
 
 void RexxLocalVariables::liveGeneral(int reason)
@@ -69,15 +72,19 @@ void RexxLocalVariables::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-   RexxVariable **entry;                /* marked stack entry                */
-   RexxVariable **top;
+    // We can only mark if full initialized
+    if (locals != NULL)
+    {
+        RexxVariable **entry;                /* marked stack entry                */
+        RexxVariable **top;
 
-                                       /* loop through the stack entries    */
-   for (entry = locals, top = entry + size; entry < top; entry++)
-   {
-       memory_mark_general(*entry);    /* marking each one                  */
-   }
-   memory_mark_general(dictionary);    /* also mark any created vdict       */
+                                            /* loop through the stack entries    */
+        for (entry = locals, top = entry + size; entry < top; entry++)
+        {
+            memory_mark_general(*entry);    /* marking each one                  */
+        }
+    }
+    memory_mark_general(dictionary);    /* also mark any created vdict       */
 }
 
 
