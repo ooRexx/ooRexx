@@ -46,7 +46,7 @@ orx_libversion=${orx_current}.${orx_age}.${orx_revision}
 orx_prefix=@prefix@
 
 # Debian doesn't use lib64, so this is the same for 32-bit or 64-bit
-lib_dir=${orx_prefix}/lib
+lib_dir=${orx_prefix}/lib/ooRexx
 bin_dir=${orx_prefix}/bin
 data_dir=${orx_prefix}/share/ooRexx
 
@@ -91,6 +91,9 @@ ln -sf ${data_dir}/rexxtry.rex ${bin_dir}/rexxtry.rex
 # Debian specific set up for rxapid
 cp ${bin_dir}/rxapid       /etc/init.d
 update-rc.d rxapid start 89 2 3 4 5 . stop 89 0 1 6 . > /dev/null 2>&1
+# Add the /usr/lib/ooRexx subdir to the ld.conf
+echo "${libdir}/ooRexx\n" > /etc/ld.so.conf.d/ooRexx.conf
 ldconfig
+
 /etc/init.d/rxapid start
 

@@ -50,15 +50,9 @@ rm -f /usr/bin/streamsocket.cls
 rm -f /usr/bin/mime.cls
 rm -f /usr/bin/smtp.cls
 rm -f /usr/bin/oorexx-config
+rm -f /usr/bin/*.rex
 
-rm -f /usr/lib/librexx.*
-rm -f /usr/lib/librexxapi.*
-rm -f /usr/lib/librxsock.*
-rm -f /usr/lib/librxmath.*
-rm -f /usr/lib/librxregexp.*
-rm -f /usr/lib/librexxutil.*
-rm -f /usr/lib/libhostemu.*
-rm -f /usr/lib/librxunixsys.*
+rm -rf /usr/lib/ooRexx
 
 rm -f /usr/share/man/man1/oorexx-config.1
 rm -f /usr/share/man/man1/rexx.1
@@ -82,3 +76,7 @@ if [ -e /etc/init.d/rxapid ]; then
 fi
 rm -f /etc/init.d/rxapid
 update-rc.d rxapid remove
+
+# Remove the ld ooRexx.conf file
+rm -f /etc/ld.so.conf.d/ooRexx.conf
+
