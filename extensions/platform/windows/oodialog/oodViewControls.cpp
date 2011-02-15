@@ -3210,7 +3210,7 @@ RexxMethod3(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, RexxObjectPtr, _d,
     context->DirectoryPut(d, context->String(lvi.pszText), "TEXT");
     context->DirectoryPut(d, context->Int32(lvi.iSubItem), "SUBITEM");
     context->DirectoryPut(d, context->Int32(lvi.cx), "WIDTH");
-    context->DirectoryPut(d, context->String(align), "ALIGNMENT");
+    context->DirectoryPut(d, context->String(align), "FMT");
 
     return TheTrueObj;
 }
@@ -3379,6 +3379,11 @@ done:
  *         being in pixels, the code actually converted it to dialog units.
  *         This method is provided to really use pixels.
  *
+ *  @remarks  Not sure why there is a restriction on the length of the column
+ *            label, or why the passed text is copied to a buffer.  The
+ *            ListView_InsertColumn() API does not impose a limit on the length,
+ *            and just asks for a pointer to a string.  Both the length
+ *            restriction and the copy are probably not needed.
  */
 RexxMethod5(int, lv_insertColumnPx, OPTIONAL_uint16_t, column, CSTRING, text, uint16_t, width,
             OPTIONAL_CSTRING, fmt, CSELF, pCSelf)
