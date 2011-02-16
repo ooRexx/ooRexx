@@ -515,6 +515,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Incorrect_method_signature)
       MINOR(Error_Incorrect_method_nostem)
       MINOR(Error_Unsupported_copy_method)
+      MINOR(Error_Incorrect_method_multi_dimension)
   MAJOR(Error_No_method)
       MINOR(Error_No_method_name)
       MINOR(Error_No_method_user_defined)

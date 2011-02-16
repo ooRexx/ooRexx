@@ -215,6 +215,9 @@ typedef struct copyElelmentParm {
    void         merge(BaseSortComparator &comparator, RexxArray *working, size_t left, size_t mid, size_t right);
    static void  arraycopy(RexxArray *source, size_t start, RexxArray *target, size_t index, size_t count);
    size_t       find(BaseSortComparator &comparator, RexxObject *val, int bnd, size_t left, size_t right);
+   void         openGap(size_t index, size_t elements);
+   void         closeGap(size_t index, size_t elements);
+   
 
    static const size_t MAX_FIXEDARRAY_SIZE;
 

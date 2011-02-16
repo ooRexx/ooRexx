@@ -624,6 +624,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Invalid_expression_call    "Missing expression for calculated CALL name"
    Message_Translations_routine_invocation    "Routine &1 in package &2"
    Message_Translations_method_invocation    "Method &1 with scope ""&2"" in package &3"
+   Error_Incorrect_method_multi_dimension    "Method argument &1 cannot have more than a single dimension"
    
 END
 

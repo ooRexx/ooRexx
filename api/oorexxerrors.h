@@ -512,6 +512,7 @@
 #define Rexx_Error_Incorrect_method_signature                   93968
 #define Rexx_Error_Incorrect_method_nostem                      93969
 #define Rexx_Error_Unsupported_copy_method                      93970
+#define Rexx_Error_Incorrect_method_multi_dimension             93971
 #define Rexx_Error_No_method                                    97000
 #define Rexx_Error_No_method_name                               97001
 #define Rexx_Error_No_method_user_defined                       97900

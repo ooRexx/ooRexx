@@ -3197,6 +3197,12 @@ special character (such as a parenthesis).
 </para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>971</term>
+<listitem>
+<para>Method argument <emphasis role="italic">argument</emphasis> cannot have more than a single dimension</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR97">

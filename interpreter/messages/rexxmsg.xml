@@ -4391,6 +4391,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Unsupported_copy_method</SymbolicName>
         <Text>COPY method is not supported for object <Sub position="1" name="object"/></Text>
       </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>971</Subcode>
+        <MessageNumber>721</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_multi_dimension</SymbolicName>
+        <Text>Method argument <Sub position="1" name="argument"/> cannot have more than a single dimension</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

@@ -285,6 +285,50 @@ RexxObject  *RexxArray::appendRexx(RexxObject *value)
 
 
 /**
+ * Open a gap in the array by shifting each element to the right
+ * starting at the given index.
+ *
+ * @param index    The index of the first item to shift.
+ *
+ * @param elements The number of elements to shift.
+ */
+void RexxArray::openGap(size_t index, size_t elements)
+{
+    size_t newIndex = index + elements;
+    size_t lastIndex = lastElement;   // where we start moving from
+    // make sure we have space
+    ensureSpace(lastIndex);
+    // open from the back...
+    for (size_t i = lastIndex; i >= index; i--)
+    {
+        // copy the element to the new position and null out the old slot
+        put(get(i), i + elements);
+        put(OREF_NULL, i);
+    }
+}
+
+/**
+ * Close a gap in the array item.
+ *
+ * @param index    The gap to close.
+ * @param elements
+ */
+void RexxArray::closeGap(size_t index, size_t elements)
+{
+    // cap the number of elements we're shifting.
+    elements = Numerics::maxVal(elements, lastElement - index + 1);
+    size_t firstIndex = index + elements;
+    for (size_t i = 0; i < elements; i++)
+    {
+        put(get(firstIndex + i), index + i);
+        put(OREF_NULL, firstIndex + i);
+    }
+    // adjust the last element position
+    lastElement -= elements;
+}
+
+
+/**
  * Append an item after the last item in the array.
  *
  * @param value  The value to append.
