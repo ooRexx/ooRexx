@@ -197,13 +197,23 @@ return
   curList = self~newListView(ID_Rep)
   curList~setColumnWidthPx(column,curList~columnWidthPx(column)+10)
 
-  info. = curlist~getColumnInfo(column)
-  call InfoDialog "Column Title : " info.!Text"d"x                 -
-                  "Column Number : " info.!Column"d"x              -
-                  "Column Width : " info.!Width"d"x                -
-                  "Allignment : " info.!Align"d"x"d"x              -
-                  "Note: each time you click on a column" ||"d"x   -
-                  "its width is increased"
+  d = .Directory~new
+  if curlist~getColumnInfo(column, d) then do
+    tab = '09'x
+    msg = "Column Title:"tab d~text               || .endOfLine            ||  -
+          "Subitem index:"tab d~subitem           || .endOfLine            ||  -
+          "Column Width:"tab d~width              || .endOfLine            ||  -
+          "Allignment:"tab d~fmt                  || .endOfLine~copies(2)  ||  -
+          "Note: each time you click on a column" || .endOfLine            ||  -
+          "its width is increased."
+    j = MessageDialog(msg, self~hwnd, "Column Click Detected")
+  end
+  else do
+    msg = "An error ocurred getting the column information."
+    j = MessageDialog(msg, self~hwnd, "Windows API Error", "OK", "ERROR")
+  end
+
+
 
 /* an item was double clicked (activated in Windows terms.) */
 ::method OnActivate

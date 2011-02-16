@@ -134,7 +134,7 @@ static uint32_t winKeyword2ID(CSTRING symbol, RexxThreadContext *c, int pos, CST
     {
         invalidTypeException(c, pos, type);
     }
-    return (uint32_t)getKeywordValue(winConstantsMap, symbol);
+    return (uint32_t)id;
 }
 
 
@@ -161,6 +161,15 @@ static uint32_t getMiscMBStyle(char *mbStyle, RexxCallContext *c, int pos, CSTRI
     return styles;
 }
 
+/** MessageDialog()
+ *
+ *
+ *  @param  text
+ *  @param  hwnd  Handle of owner window.  If the user specifies 0 we do not use
+ *                an owner window.  If the user omits hwnd, then we try the to
+ *                find and use the topmost dialog.
+ *
+ */
 RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTIONAL_CSTRING, _title,
              OPTIONAL_CSTRING, button, OPTIONAL_CSTRING, icon, OPTIONAL_CSTRING, miscStyles)
 {
@@ -173,7 +182,7 @@ RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTI
     HWND hwndOwner = (HWND)string2pointer(hwnd);
     if ( hwndOwner == NULL )
     {
-        if ( TopDlg != NULL && TopDlg->onTheTop )
+        if ( argumentOmitted(2) && TopDlg != NULL && TopDlg->onTheTop )
         {
             hwndOwner = TopDlg->hDlg;
         }
