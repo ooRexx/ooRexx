@@ -1158,7 +1158,7 @@
 ::method itemInfo
    use strict arg index, subItem = 0
    d = .Directory~new
-   if getItemInfo(d, index, subItem) then do
+   if getItemInfo(index, d, subItem) then do
      itemInfo.!TEXT = d~text
      itemInfo.!IMAGE = d~image
      itemInfo.!STATE = d~state

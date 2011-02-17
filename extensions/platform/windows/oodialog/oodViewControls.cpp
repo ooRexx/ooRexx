@@ -2359,11 +2359,12 @@ static int getColumnWidthArg(RexxMethodContext *context, RexxObjectPtr _width, s
         {
             width = LVSCW_AUTOSIZE_USEHEADER;
         }
-        else if ( ! context->Int32(_width, &width) )
+        else if ( ! context->Int32(_width, &width) || width < 1 )
         {
-            wrongArgValueException(context->threadContext, argPos, "AUTO, AUTOHEADER, or a numeric value", _width);
+            wrongArgValueException(context->threadContext, argPos, "AUTO, AUTOHEADER, or a positive whole number", _width);
         }
     }
+
     return width;
 }
 
@@ -3125,11 +3126,11 @@ RexxMethod3(uint32_t, lv_replaceStyle, CSTRING, removeStyle, CSTRING, additional
     return changeStyle(context, (pCDialogControl)pCSelf, removeStyle, additionalStyle, true);
 }
 
-RexxMethod4(RexxObjectPtr, lv_getItemInfo, RexxObjectPtr, _d, uint32_t, index, OPTIONAL_uint32_t, subItem, CSELF, pCSelf)
+RexxMethod4(RexxObjectPtr, lv_getItemInfo, uint32_t, index, RexxObjectPtr, _d, OPTIONAL_uint32_t, subItem, CSELF, pCSelf)
 {
     if ( ! context->IsDirectory(_d) )
     {
-        wrongClassException(context->threadContext, 1, "Directory");
+        wrongClassException(context->threadContext, 2, "Directory");
         return TheFalseObj;
     }
     RexxDirectoryObject d = (RexxDirectoryObject)_d;
@@ -3224,6 +3225,16 @@ RexxMethod3(RexxObjectPtr, lv_setColumnWidthPx, uint32_t, index, OPTIONAL_RexxOb
     {
         return TheOneObj;
     }
+
+    if ( width == LVSCW_AUTOSIZE || width == LVSCW_AUTOSIZE_USEHEADER )
+    {
+        if ( !isInReportView(hList) )
+        {
+            userDefinedMsgException(context->threadContext, 2, "can not be AUTO or AUTOHEADER if not in report view");
+            return TheOneObj;
+        }
+    }
+
     return (ListView_SetColumnWidth(hList, index, width) ? TheZeroObj : TheOneObj);
 }
 
