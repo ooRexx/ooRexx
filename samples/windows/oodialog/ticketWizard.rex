@@ -530,7 +530,7 @@
 
       ans = MessageDialog(msg, propSheet~dlgHandle, title, buttons, icon, style)
 
-      if ans == self~constDir[IDYES] then return 0
+      if ans == .PlainBaseDialog~IDYES then return 0
 
       movieCombo~select(movie)
       self~setRadioButtons(movie)
@@ -729,7 +729,7 @@
 
       ans = MessageDialog(msg, propSheet~dlgHandle, title, buttons, icon, style)
 
-      if ans == self~constDir[IDYES] then return 0
+      if ans == .PlainBaseDialog~IDYES then return 0
 
       movieCombo~select(movie)
       self~setRadioButtons(movie)
