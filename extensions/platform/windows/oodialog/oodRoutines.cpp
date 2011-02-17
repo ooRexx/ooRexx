@@ -169,10 +169,15 @@ static uint32_t getMiscMBStyle(char *mbStyle, RexxCallContext *c, int pos, CSTRI
  *                an owner window.  If the user omits hwnd, then we try the to
  *                find and use the topmost dialog.
  *
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
  */
 RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTIONAL_CSTRING, _title,
              OPTIONAL_CSTRING, button, OPTIONAL_CSTRING, icon, OPTIONAL_CSTRING, miscStyles)
 {
+    oodResetSysErrCode(context->threadContext);
+
     int result = -1;
 
     char *uprButton = NULL;
@@ -251,6 +256,10 @@ RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTI
     }
 
     result = MessageBox(hwndOwner, text, title, flags);
+    if ( result == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
 
 done_out:
     safeFree(uprButton);
