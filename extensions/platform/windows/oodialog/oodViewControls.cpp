@@ -4098,6 +4098,32 @@ RexxMethod3(RexxObjectPtr, tv_expand, CSTRING, _hItem, NAME, method, CSELF, pCSe
 }
 
 
+/** TreeView::hitTestInfo()
+ *
+ *  Determine the location of a point relative to the tree-view control.
+ *
+ *  @param  pHit  The position, x and y co-ordinates of the point to test.  This
+ *                can be specified in two forms.
+ *
+ *      Form 1:  arg 1 is a .Point object.
+ *      Form 2:  arg 1 is the x co-ordinate and arg2 is the y co-ordinate.
+ *
+ *  @return  A directory object containing the result of the test in these
+ *           indexes:
+ *
+ *             hItem     The handle to the tree-view item that occupies the
+ *                       point. This will be 0, if there is no item at the
+ *                       point.
+ *
+ *             location  A string of blank separated keywords describing the
+ *                       location of the point.  For instance, the string might
+ *                       be "ONITEM ONLABEL" or it could be "ABOVE TORIGHT" if
+ *                       the point is not on the client area of the tree-view at
+ *                       all.
+ *
+ *  @note  Any x, y coordinates will work.  I.e. -6000, -7000 will work. The
+ *         hItem will be 0 and location will be "ABOVE TOLEFT"
+ */
 RexxMethod2(RexxObjectPtr, tv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
 {
     HWND hwnd = getDChCtrl(pCSelf);
@@ -4123,7 +4149,7 @@ RexxMethod2(RexxObjectPtr, tv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
 
     RexxDirectoryObject result = context->NewDirectory();
 
-    context->DirectoryPut(result, pointer2string(context, TreeView_HitTest(hwnd, &hti)), "HITEM");
+    context->DirectoryPut(result, pointer2string(context, hti.hItem), "HITEM");
 
     char buf[128];
     *buf = '\0';
