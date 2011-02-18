@@ -318,14 +318,16 @@ RexxReturnCode GrxHost(PCONSTRXSTRING command,
                }
             memset(pll, '\0', sizeof (LL));
             strcpy(pll -> FileName, ExecIO_Options.aFilename);
-            pll -> pFile = fopen(pll -> FileName, "r+");
-            /* try to open an existing file */
-            if (pll -> pFile == NULL) {
-               /* no existing file, so open a new file */
+            if (ExecIO_Options.fRW) {
+               /* DISKW */
                pll -> pFile = fopen(pll -> FileName, "w+");
                }
-            if (pll -> pFile == NULL) {
-               /* nothing could be opened so return an error */
+            else {
+               /* DISKR */
+               pll -> pFile = fopen(pll -> FileName, "r+");
+               }
+            if ((pll -> pFile == NULL)) {
+               /* file could be opened so return an error */
                free(pll);
                rc = 20;
                *flags = RXSUBCOM_FAILURE;
