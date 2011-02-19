@@ -1667,7 +1667,7 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
 
     if ( methName != NULL && strlen(methName) != 0 )
     {
-        result = addCommandMessage(pcdd->pcpbd->enCSelf, id, UINTPTR_MAX, 0, 0, methName, 0) ? 0 : 1;
+        result = addCommandMessage(pcdd->pcpbd->enCSelf, context, id, UINTPTR_MAX, 0, 0, methName, 0) ? 0 : 1;
     }
 
     safeFree((void *)methName);
@@ -1777,7 +1777,7 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
         strcpy(finalName, "ID");
         strcat(finalName, methName);
 
-        result = addCommandMessage(pcpbd->enCSelf, id, UINTPTR_MAX, 0, 0, finalName, 0) ? 0 : 1;
+        result = addCommandMessage(pcpbd->enCSelf, context, id, UINTPTR_MAX, 0, 0, finalName, 0) ? 0 : 1;
         free((void *)methName);
         free((void *)finalName);
     }

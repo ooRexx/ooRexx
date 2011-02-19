@@ -127,7 +127,7 @@ static UINT getSeparatorTypeOpts(const char *opts, UINT type);
 static UINT getTrackFlags(const char *);
 static uint32_t deleteSeparatorByID(HMENU, uint32_t);
 static uint32_t menuHelpID(HMENU hMenu, DWORD helpID, BOOL recurse, uint32_t *id);
-static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING msg, bool isSysMenu);
+static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, RexxMethodContext *, CSTRING msg, bool isSysMenu);
 
 
 /**
@@ -143,6 +143,8 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING 
  * @param pcen  EventNotification CSelf for the dialog we are adding the method
  *              connection to.
  *
+ * @param c     Rexx method context we are operating in.
+ *
  * @param id    Menu ID to connect.
  *
  * @param msg   Method name we are connecting to.
@@ -154,13 +156,13 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING 
  *          high word of WPARAM is the notification code for dialog controls, it
  *          is 0 for menu command items.
  */
-inline uint32_t _connectItem(pCEventNotification pcen, uint32_t id, CSTRING msg)
+inline uint32_t _connectItem(pCEventNotification pcen, RexxMethodContext *c, uint32_t id, CSTRING msg)
 {
     if ( id < 3 || id == 9 )
     {
         return 0;
     }
-    return addCommandMessage(pcen, id, 0xFFFFFFFF, 0, 0, msg, TAG_NOTHING) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addCommandMessage(pcen, c, id, 0xFFFFFFFF, 0, 0, msg, TAG_NOTHING) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /* Same as above but connects a System Menu item */
@@ -287,6 +289,12 @@ logical_t CppMenu::addTemplateItem(RexxObjectPtr rxID, CSTRING text, CSTRING opt
     if ( isFinal )
     {
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
+        goto done_out;
+    }
+
+    if ( method != NULL && *method == '\0' )
+    {
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
         goto done_out;
     }
 
@@ -714,6 +722,10 @@ RexxDirectoryObject CppMenu::autoConnectionStatus()
  *        programmer requested it.  2.) Autoconnection is on and the menu is
  *        attached to a dialog.
  *
+ *        If the programmer has both turned on Autoconnection and requests the
+ *        item be connected, then the outcome is undefined.  The programmer
+ *        shouldn't do that.
+ *
  * @assumes id is a resource ID and not a by position ID.  This menu is a menu
  *          bar.
  */
@@ -731,10 +743,6 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
     success = FALSE;
     uint32_t rc = 0;
 
-    // TODO why? if we do doAutoConnection, why do we also do connect ??  I
-    // think it may have been for backwards compatiblity, but it doesn't make
-    // sense.
-
     pCPlainBaseDialog pcpbd = NULL;
     if ( dlg != TheNilObj )
     {
@@ -746,14 +754,26 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
         if ( connectionMethod == NULL )
         {
             _methodName = strdup_2methodName(text);
-            if ( _methodName = NULL )
+            if ( _methodName == NULL )
             {
                 oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
                 goto done_out;
             }
+
+            // Method name can not be the empty string.
+            if ( *_methodName == '\0' )
+            {
+                oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
+                goto done_out;
+            }
+        }
+        else if ( *connectionMethod == '\0' )
+        {
+            oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
+            goto done_out;
         }
 
-        rc = _connectItem(pcpbd->enCSelf, id, connectionMethod == NULL ? _methodName : connectionMethod);
+        rc = _connectItem(pcpbd->enCSelf, c, id, connectionMethod == NULL ? _methodName : connectionMethod);
         if ( rc != 0 )
         {
             oodSetSysErrCode(c->threadContext, rc);
@@ -774,15 +794,27 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
                     oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
                     goto done_out;
                 }
+
+                // Method name can not be the empty string.
+                if ( *_methodName == '\0' )
+                {
+                    oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
+                    goto done_out;
+                }
             }
             methodName = _methodName;
+        }
+        else if ( *methodName == '\0' )
+        {
+            oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
+            goto done_out;
         }
 
         // If we have an owner dialog, connect the menu item now, otherwise
         // add it to the connection queue.
         if ( pcpbd != NULL )
         {
-            rc = _connectItem(pcpbd->enCSelf, id, _methodName);
+            rc = _connectItem(pcpbd->enCSelf, c, id, methodName);
             if ( rc != 0 )
             {
                 oodSetSysErrCode(c->threadContext, rc);
@@ -791,7 +823,7 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
         }
         else
         {
-            if ( ! addToConnectionQ(id, _methodName) )
+            if ( ! addToConnectionQ(id, methodName) )
             {
                 // Couldn't allocate memory
                 goto done_out;
@@ -1250,6 +1282,12 @@ logical_t CppMenu::connectCommandEvent(RexxObjectPtr rxID, CSTRING methodName, R
         goto done_out;
     }
 
+    if ( *methodName == '\0' )
+    {
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
+        goto done_out;
+    }
+
     uint32_t rc;
     if ( isSystemMenu() )
     {
@@ -1257,7 +1295,7 @@ logical_t CppMenu::connectCommandEvent(RexxObjectPtr rxID, CSTRING methodName, R
     }
     else
     {
-        rc = _connectItem(pcen, id, methodName);
+        rc = _connectItem(pcen, c, id, methodName);
     }
     if ( rc == 0 )
     {
@@ -1285,7 +1323,7 @@ logical_t CppMenu::connectAllCommandEvents(CSTRING methodName, RexxObjectPtr dia
 
     // We can just pass methodName along.  If it was omitted, it is NULL, and
     // menuConnectItems() handles that correctly.
-    uint32_t rc = menuConnectItems(hMenu, pcen, methodName, isSystemMenu());
+    uint32_t rc = menuConnectItems(hMenu, pcen, c, methodName, isSystemMenu());
     if ( rc == 0 )
     {
         success = TRUE;
@@ -1315,6 +1353,12 @@ logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING met
     if ( ! c->IsOfType(rxItemIds, "COLLECTION") )
     {
         wrongClassException(c->threadContext, 1, "Collection");
+        goto done_out;
+    }
+
+    if ( *method == '\0' )
+    {
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
         goto done_out;
     }
 
@@ -1356,6 +1400,15 @@ logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING met
                 oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
                 goto done_out;
             }
+
+            // If the programmer used a menu name like "..." we now have the
+            // empty string.  This is an error, but it might be hard for the
+            // programmer to figure what the problem is.
+            if ( *name == '\0' )
+            {
+                oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
+                goto done_out;
+            }
         }
 
         if ( isSystemMenu() )
@@ -1364,7 +1417,7 @@ logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING met
         }
         else
         {
-            rc = _connectItem(pcen, id, method == NULL ? name : method);
+            rc = _connectItem(pcen, c, id, method == NULL ? name : method);
         }
 
         if ( rc != 0 )
@@ -1540,7 +1593,7 @@ BOOL CppMenu::checkPendingConnections()
             m = connectionQ[i];
 
             // We could run out of message table entries.
-            rc = _connectItem(pcen, m->id, m->methodName);
+            rc = _connectItem(pcen, c, m->id, m->methodName);
             if ( rc != 0 )
             {
                 oodSetSysErrCode(c->threadContext, rc);
@@ -1565,7 +1618,7 @@ BOOL CppMenu::checkAutoConnect(pCEventNotification pcen)
 {
     if ( autoConnect )
     {
-        uint32_t rc = menuConnectItems(hMenu, pcen, connectionMethod, isSystemMenu());
+        uint32_t rc = menuConnectItems(hMenu, pcen, c, connectionMethod, isSystemMenu());
         if ( rc != 0 )
         {
             oodSetSysErrCode(c->threadContext, rc);
@@ -2576,7 +2629,7 @@ bool menuData(RexxMethodContext *c, HMENU hMenu, RexxObjectPtr *data)
  *
  * @return 0 on success, the system error code on failure.
  */
-static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING msg, bool isSysMenu)
+static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, RexxMethodContext *c, CSTRING msg, bool isSysMenu)
 {
     uint32_t rc = 0;
     int count = GetMenuItemCount(hMenu);
@@ -2598,7 +2651,7 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING 
 
         if ( _isSubMenu(&mii) )
         {
-            rc = menuConnectItems(mii.hSubMenu, pcen, msg, isSysMenu);
+            rc = menuConnectItems(mii.hSubMenu, pcen, c, msg, isSysMenu);
             if ( rc != 0 )
             {
                 return rc;
@@ -2614,7 +2667,6 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING 
             if ( GetMenuItemInfo(hMenu, i, TRUE, &mii) == 0 )
             {
                 return GetLastError();
-
             }
 
             char *pMsg = (char *)msg;
@@ -2628,13 +2680,19 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, CSTRING 
                 }
             }
 
+            /* Can not use the empty string for a method name. */
+            if ( *pMsg == '\0' )
+            {
+                return ERROR_INVALID_FUNCTION;
+            }
+
             if ( isSysMenu )
             {
                 rc = _connectSysItem(pcen, mii.wID, pMsg);
             }
             else
             {
-                rc = _connectItem(pcen, mii.wID, pMsg);
+                rc = _connectItem(pcen, c, mii.wID, pMsg);
             }
 
             if ( pMsg != msg )
@@ -2721,6 +2779,9 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
  *        The system error code is set this way in addition to what the OS might
  *        set:
  *
+ *        ERROR_INVALID_FUNCTION(1) -> The method name argument can not be the
+ *        empty string.
+ *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument is not a
  *        .PlainBaseDialog, (or subclass of course.)
  *
@@ -2744,6 +2805,12 @@ RexxMethod5(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRIN
         goto done_out;
     }
 
+    if ( *methodName == '\0' )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        goto done_out;
+    }
+
     uint32_t rc;
     if ( isSystemMenu )
     {
@@ -2751,7 +2818,7 @@ RexxMethod5(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRIN
     }
     else
     {
-        rc = _connectItem(pcen, id, methodName);
+        rc = _connectItem(pcen, context, id, methodName);
     }
 
     (rc == 0) ? success = TRUE : oodSetSysErrCode(context->threadContext, rc);
@@ -3545,11 +3612,18 @@ done_out:
  *                    argument is omitted and connect is true then the method
  *                    name is automatically constructed from the text for the
  *                    menu item. If connect is false or omitted, this argument
- *                    is ignored.
+ *                    is ignored.  If connect is true and this argument is used
+ *                    it can not be the empty string.
  *
  * @return  True on success, false on error.
  *
  * @note  Sets .SystemErrorCode on error.
+ *
+ *        The system error code is set this way in addition to what the OS might
+ *        set:
+ *
+ *        ERROR_INVALID_PARAMETER (87) -> When used, the methodName argument can
+ *        not be the empty string.
  *
  * @note  State keywords: DEFAULT NOTDEFAULT DISABLED GRAYED ENABLED UNCHECKED
  *        CHECKED HILITE UNHILITE.
@@ -3640,7 +3714,6 @@ RexxMethod9(logical_t, menu_insertItem, RexxObjectPtr, rxBefore, RexxObjectPtr, 
     }
 
     success = TRUE;
-    // TODO what if connecting the item fails?  Should we return false???
 
     cMenu->maybeRedraw(false);
 
@@ -4544,7 +4617,8 @@ RexxMethod4(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyW
  *
  * @param id          The resource ID of the menu item.
  *
- * @param methodName  The method to connect the item select event to.
+ * @param methodName  The method to connect the item select event to.  This can
+ *                    not be the empty string.
  *
  * @param dlg         [optional] The dlg to connect the menu item select event
  *                    to. If omitted, then the menu's owning dialog is used. If
@@ -4562,6 +4636,9 @@ RexxMethod4(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyW
  *
  *        ERROR_INVALID_FUNCTION (1) -> The dialog argument was omitted and the
  *        menu does not have an assigned dialog.
+ *
+ *        ERROR_INVALID_PARAMETER (87) -> The methodName argument can not be the
+ *        empty string.
  *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument was not
  *        ommitted, but the object is not a .PlainBaseDialog, (or subclass of
@@ -4624,10 +4701,12 @@ RexxMethod3(logical_t, menu_connectAllCommandEvents, OPTIONAL_CSTRING, msg, OPTI
  *                    byPosition. However, they must be all the same type, all
  *                    resource IDs or all by position IDs.
  *
- * @param  method     [optional]  Connect all menu command items to the method
+ * @param  msg        [optional]  Connect all menu command items to the method
  *                    by this name.  The default is to connect all menu command
  *                    items to a method name composed from the text of the
  *                    command item.
+ *
+ *                    If not omitted, method can not be the empty string.
  *
  * @param byPosition  [optional]  If true, rxItemIDs are positional IDs,
  *                    otherwise the are resource IDs. The default is false,
@@ -4654,7 +4733,8 @@ RexxMethod3(logical_t, menu_connectAllCommandEvents, OPTIONAL_CSTRING, msg, OPTI
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  *
  *        ERROR_INVALID_PARAMETER (87) -> One or more of the specified item IDs
- *        is not a menu command item.
+ *        is not a menu command item.  Or the msg argument was used, but it is
+ *        the empty string.
  *
  *        The method quits when it encounters the first error, therefore menu
  *        items processed before the error will be connected and menu items that
@@ -4848,7 +4928,8 @@ RexxMethod5(logical_t, menuTemplate_addPopup, RexxObjectPtr, rxID, CSTRING, text
  *                the itme is the last item at the current level in the menu.
  *
  * @param method  [optional]  A method name to connect the item to.  The default
- *                is to not connect the menu command item.
+ *                is to not connect the menu command item. If this argument is
+ *                used it can not be the empty string.
  *
  * @return  True on success, false on error.
  *
@@ -4859,6 +4940,9 @@ RexxMethod5(logical_t, menuTemplate_addPopup, RexxObjectPtr, rxID, CSTRING, text
  *
  *        ERROR_INVALID_FUNCTION (1) -> The .UserMenu has already been
  *        completed.
+ *
+ *        ERROR_INVALID_PARAMETER (87) -> Argument method can not be the empty
+ *        string.
  *
  * @note  State keywords: DEFAULT DISABLED GRAYED HILITE CHECKED.  The keywords:
  *        ENABLED UNHILITE NOTDEFAULT UNCHECKED, although valid keywords are

@@ -2126,6 +2126,7 @@ MsgReplyType searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCP
  * Adds an event connection for a command (WM_COMMAND) message to the table.
  *
  * @param pcen
+ * @param c
  * @param wParam
  * @param wpFilter
  * @param lParam
@@ -2148,9 +2149,15 @@ MsgReplyType searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCP
  *           Caller must ensure that 'prog' is not an empty string and that
  *           winMsg, wParam, lParam are not all 0.  TODO need to recheck this.
  */
-bool addCommandMessage(pCEventNotification pcen, WPARAM wParam, ULONG_PTR wpFilter, LPARAM lParam, ULONG_PTR lpFilter,
-                       CSTRING method, uint32_t tag)
+bool addCommandMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wParam, ULONG_PTR wpFilter,
+                       LPARAM lParam, ULONG_PTR lpFilter, CSTRING method, uint32_t tag)
 {
+    if ( pcen == NULL || pcen->commandMsgs == NULL )
+    {
+        baseClassIntializationException(c);
+        return false;
+    }
+
     size_t index = pcen->cmSize;
     if ( index < MAX_COMMAND_MSGS )
     {
@@ -2328,13 +2335,18 @@ bool initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen)
     }
     pcen->cmSize = 0;
 
-    // We don't check the return of addCommandMessage() because the message
-    // table can not be full at this point, we are just starting out.  A memory
-    // allocation failure, which is highly unlikely, will just be ignored.  If
-    // this ooRexx process is out of memory, that will quickly show up.
-    addCommandMessage(pcen, IDOK,     UINTPTR_MAX, 0, 0, "OK",     TAG_NOTHING);
-    addCommandMessage(pcen, IDCANCEL, UINTPTR_MAX, 0, 0, "Cancel", TAG_NOTHING);
-    addCommandMessage(pcen, IDHELP,   UINTPTR_MAX, 0, 0, "Help",   TAG_NOTHING);
+    if ( ! addCommandMessage(pcen, c, IDOK, UINTPTR_MAX, 0, 0, "OK", TAG_NOTHING) )
+    {
+        return false;
+    }
+    if ( ! addCommandMessage(pcen, c, IDCANCEL, UINTPTR_MAX, 0, 0, "Cancel", TAG_NOTHING) )
+    {
+        return false;
+    }
+    if ( ! addCommandMessage(pcen, c, IDHELP, UINTPTR_MAX, 0, 0, "Help", TAG_NOTHING) )
+    {
+        return false;
+    }
 
     return true;
 }
@@ -3447,7 +3459,7 @@ RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID, CSTRING, meth
         context->RaiseException1(Rexx_Error_Invalid_argument_null, TheTwoObj);
         return 1;
     }
-    return (addCommandMessage(pcen, id, 0x0000FFFF, 0, 0, methodName, 0) ? 0 : 1);
+    return (addCommandMessage(pcen, context, id, 0x0000FFFF, 0, 0, methodName, 0) ? 0 : 1);
 }
 
 
@@ -3934,7 +3946,7 @@ RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIO
         bool success;
         if ( (winMessage & wmFilter) == WM_COMMAND )
         {
-            success = addCommandMessage(pcen, wParam, wpFilter, lParam, lpFilter, methodName, tag);
+            success = addCommandMessage(pcen, context, wParam, wpFilter, lParam, lpFilter, methodName, tag);
         }
         else if ( (winMessage & wmFilter) == WM_NOTIFY )
         {

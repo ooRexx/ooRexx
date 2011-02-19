@@ -2065,7 +2065,7 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
            pcpbd->BT_size++;
            return TheZeroObj;
         }
-        else if ( addCommandMessage(pcpbd->enCSelf, id, 0x0000FFFF, 0, 0, msgToRaise, TAG_NOTHING) )
+        else if ( addCommandMessage(pcpbd->enCSelf, context, id, 0x0000FFFF, 0, 0, msgToRaise, TAG_NOTHING) )
         {
            pcpbd->BT_size++;
            return TheZeroObj;
