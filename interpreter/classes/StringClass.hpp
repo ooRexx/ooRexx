@@ -347,7 +347,7 @@ inline char IntToHexDigit(int n)
    inline void  toRxstring(CONSTRXSTRING &r) { r.strptr = getStringData(); r.strlength = getLength(); }
    inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }
           void  copyToRxstring(RXSTRING &r);
-   inline bool  endsWith(char c) { return this->stringData[this->length - 1] == c; }
+   inline bool  endsWith(char c) { return this->length > 0 && this->stringData[this->length - 1] == c; }
 
    RexxNumberString *createNumberString();
 
