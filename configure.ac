@@ -116,7 +116,6 @@ case "$target" in
       GENERIC_OS="-DAIX"
       GENERIC_OPSYS="-DOPSYS_AIX"
       GENERIC_DEFINES="$GENERIC_DEFINES"
-#     ORX_SHARED_LIBRARY_EXT=".a"
       case "$CXX" in
          g++)
             CC_WARNINGS="-maix32 -pthread $GCC_WARNINGS"
@@ -134,6 +133,7 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       esac
       PACKAGETYPE="aix"
       ORX_SYS_STR="AIX"
+      ORX_PLATFORM_SPEC_DIR="aix"
       ;;
    *solaris*)
       GENERIC_OPSYS="$GENERIC_OPSYS -DOPSYS_SUN"
@@ -148,6 +148,7 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       esac
       PACKAGETYPE="sun"
       ORX_SYS_STR="SUNOS"
+      ORX_PLATFORM_SPEC_DIR="linux"
       case "$target" in
          *solaris2.8)
             SPECIFIC_DEFINES="-DLIMITED_SOLARIS_SEMS"
@@ -165,16 +166,19 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
       ORX_SYS_STR="LINUX"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    *86_64-*linux*)
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
       ORX_SYS_STR="LINUX"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    alpha*-*linux*)
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
       ORX_SYS_STR="LINUX"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    i370-*ibm*)
       dnl This a 31 bit system
@@ -182,12 +186,14 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       GENERIC_DEFINES="$GENERIC_DEFINES -m31"
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    s390x-*ibm*)
       dnl This a 64 bit system
       ORX_SYS_STR="LINUX"
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    s390-*ibm*)
       dnl This a 31 bit system
@@ -195,11 +201,13 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       GENERIC_DEFINES="$GENERIC_DEFINES -m31"
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    *linux*)
       ORX_SYS_STR="LINUX"
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    *cygnus*)
       CC_WARNINGS="$GCC_WARNINGS"
@@ -207,6 +215,7 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       ORX_SYS_STR="CYGNUS"
       ORX_SHARED_LIBRARY_EXT=".dll"
       ORX_PLATFORM="windows"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    *freebsd*)
       ORX_SYS_STR="FREEBSD"
@@ -215,6 +224,7 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       ORX_LDFLAGS_EXECUTABLE="-pthread"
       ORX_LDFLAGS_LIBRARY="-shared -pthread"
       ORX_LDFLAGS_PACKAGE="-nostartfiles -shared"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    *netbsd*)
       ORX_SYS_STR="NETBSD"
@@ -223,6 +233,7 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       ORX_LDFLAGS_EXECUTABLE="-pthread"
       ORX_LDFLAGS_LIBRARY="-shared -pthread"
       ORX_LDFLAGS_PACKAGE="-nostartfiles -shared"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    *openbsd*)
       ORX_SYS_STR="NETBSD"
@@ -231,14 +242,17 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       ORX_LDFLAGS_EXECUTABLE="-pthread"
       ORX_LDFLAGS_LIBRARY="-shared -pthread"
       ORX_LDFLAGS_PACKAGE="-nostartfiles -shared"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    *apple-darwin*)
       ORX_SYS_STR="MACOSX"
       ORX_SHARED_LIBRARY_EXT=".dylib"
       ORX_LDFLAGS_PACKAGE=""
+      ORX_PLATFORM_SPEC_DIR="mac"
       ;;
    *hp-hpux*)
       ORX_SHARED_LIBRARY_EXT=".sl"
+      ORX_PLATFORM_SPEC_DIR="linux"
       ;;
    *dec-osf*)
       ;;
@@ -260,6 +274,7 @@ AC_C_BIGENDIAN()
 
 AC_SUBST(PACKAGETYPE)
 AC_SUBST(ORX_SYS_STR)
+AC_SUBST(ORX_PLATFORM_SPEC_DIR)
 AC_SUBST(ORX_SHARED_LIBRARY_EXT)
 AC_SUBST(ORX_LDADD_EXECUTABLE)
 AC_SUBST(ORX_LIBADD_LIBRARY)

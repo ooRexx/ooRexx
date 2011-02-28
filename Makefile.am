@@ -730,7 +730,7 @@ rxapi_SOURCES = $(build_rexxapi_server_dir)/APIServer.cpp \
                 $(build_rexxapi_server_dir)/MacroSpaceManager.cpp \
                 $(build_rexxapi_server_dir)/QueueManager.cpp \
                 $(build_rexxapi_server_dir)/RegistrationManager.cpp \
-                $(build_rexxapi_server_dir)/platform/unix/APIService.cpp \
+                $(build_rexxapi_server_dir)/platform/unix/$(ORX_PLATFORM_SPEC_DIR)/APIService.cpp \
                 $(build_rexxapi_common_dir)/ServiceMessage.cpp \
                 $(build_rexxapi_common_platform_dir)/SysAPIManager.cpp \
                 $(build_rexxapi_common_platform_dir)/SysCSStream.cpp \
