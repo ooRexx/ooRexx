@@ -1213,6 +1213,16 @@ RexxMethod2(RexxObjectPtr, size_setCY, CSELF, s, int32_t, cy) { ((SIZE *)s)->cy 
  */
 #define RECT_CLASS  "Rect"
 
+RexxMethod1(RexxObjectPtr, rect_init_cls, OSELF, self)
+{
+    if ( isOfClassType(context, self, RECT_CLASS) )
+    {
+        TheRectClass = (RexxClassObject)self;
+        context->RequestGlobalReference(TheRectClass);
+    }
+    return NULLOBJECT;
+}
+
 RexxMethod4(RexxObjectPtr, rect_init, OPTIONAL_int32_t, left, OPTIONAL_int32_t, top,
             OPTIONAL_int32_t, right, OPTIONAL_int32_t, bottom)
 {

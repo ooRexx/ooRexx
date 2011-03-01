@@ -78,8 +78,11 @@ RexxClassObject     TheDialogControlClass = NULLOBJECT;
 // Initialized in the PropertySheetPage class init method (psp_init_cls.)
 RexxClassObject     ThePropertySheetPageClass = NULLOBJECT;
 
-// Initialize in the Size class init method (size_init_cls.)
+// Initialized in the Size class init method (size_init_cls.)
 RexxClassObject     TheSizeClass = NULLOBJECT;;
+
+// Initialized in the Rect class init method (rect_init_cls.)
+RexxClassObject     TheRectClass = NULLOBJECT;
 
 #ifdef __cplusplus
 extern "C" {
@@ -209,6 +212,9 @@ REXX_METHOD_PROTOTYPE(en_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(en_disconnectKeyPress);
 REXX_METHOD_PROTOTYPE(en_hasKeyPressConnection);
 REXX_METHOD_PROTOTYPE(en_connectCommandEvents);
+REXX_METHOD_PROTOTYPE(en_connectScrollBarEvent);
+REXX_METHOD_PROTOTYPE(en_connectEachSBEvent);
+REXX_METHOD_PROTOTYPE(en_connectAllSBEvents);
 REXX_METHOD_PROTOTYPE(en_connectListViewEvent);
 REXX_METHOD_PROTOTYPE(en_connectDateTimePickerEvent);
 REXX_METHOD_PROTOTYPE(en_connectMonthCalendarEvent);
@@ -743,6 +749,7 @@ REXX_METHOD_PROTOTYPE(ds_value);
 
 
 // .Rect
+REXX_METHOD_PROTOTYPE(rect_init_cls);
 REXX_METHOD_PROTOTYPE(rect_init);
 REXX_METHOD_PROTOTYPE(rect_left);
 REXX_METHOD_PROTOTYPE(rect_top);
@@ -933,6 +940,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(en_disconnectKeyPress,          en_disconnectKeyPress),
     REXX_METHOD(en_hasKeyPressConnection,       en_hasKeyPressConnection),
     REXX_METHOD(en_connectCommandEvents,        en_connectCommandEvents),
+    REXX_METHOD(en_connectScrollBarEvent,       en_connectScrollBarEvent),
+    REXX_METHOD(en_connectEachSBEvent,          en_connectEachSBEvent),
+    REXX_METHOD(en_connectAllSBEvents,          en_connectAllSBEvents),
     REXX_METHOD(en_connectListViewEvent,        en_connectListViewEvent),
     REXX_METHOD(en_connectDateTimePickerEvent,  en_connectDateTimePickerEvent),
     REXX_METHOD(en_connectMonthCalendarEvent,   en_connectMonthCalendarEvent),
@@ -1449,6 +1459,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dss_quickDayStateBuffer,        dss_quickDayStateBuffer),
     REXX_METHOD(ds_init,                        ds_init),
     REXX_METHOD(ds_value,                       ds_value),
+    REXX_METHOD(rect_init_cls,                  rect_init_cls),
     REXX_METHOD(rect_init,                      rect_init),
     REXX_METHOD(rect_left,                      rect_left),
     REXX_METHOD(rect_top,                       rect_top),

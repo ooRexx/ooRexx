@@ -61,8 +61,8 @@ extern MsgReplyType  searchMessageTables(ULONG message, WPARAM param, LPARAM lpa
 extern bool          initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen);
 extern bool          initEventNotification(RexxMethodContext *, pCPlainBaseDialog, RexxObjectPtr, pCEventNotification *);
 extern bool          addCommandMessage(pCEventNotification, RexxMethodContext *, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
-extern bool          addNotifyMessage(pCEventNotification, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
-extern bool          addMiscMessage(pCEventNotification, uint32_t, uint32_t, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
+extern bool          addNotifyMessage(pCEventNotification, RexxMethodContext *, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
+extern bool          addMiscMessage(pCEventNotification, RexxMethodContext *, uint32_t, uint32_t, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
 
 // Shared functions for keyboard hooks, key press and key event subclassing.
 extern void            removeKBHook(pCEventNotification);

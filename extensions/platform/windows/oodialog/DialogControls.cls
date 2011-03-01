@@ -644,6 +644,22 @@
 
 ::class 'ScrollBar' subclass DialogControl public
 
+::constant SB_LINEUP           0
+::constant SB_LINELEFT         0
+::constant SB_LINEDOWN         1
+::constant SB_LINERIGHT        1
+::constant SB_PAGEUP           2
+::constant SB_PAGELEFT         2
+::constant SB_PAGEDOWN         3
+::constant SB_PAGERIGHT        3
+::constant SB_THUMBPOSITION    4
+::constant SB_THUMBTRACK       5
+::constant SB_TOP              6
+::constant SB_LEFT             6
+::constant SB_BOTTOM           7
+::constant SB_RIGHT            7
+::constant SB_ENDSCROLL        8
+
 ::method setRange unguarded external "LIBRARY oodialog sb_setRange"
 ::method getRange unguarded external "LIBRARY oodialog sb_getRange"
 ::method setPos unguarded external "LIBRARY oodialog sb_setPosition"

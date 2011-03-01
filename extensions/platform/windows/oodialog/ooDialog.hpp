@@ -82,7 +82,7 @@
 #define WM_USER_CREATECONTROL_DLG      WM_USER + 0x060A
 #define WM_USER_CREATECONTROL_RESDLG   WM_USER + 0x060B
 
-#define WM_USER_CREATEPROPSHEET_DLG   WM_USER + 0x060C
+#define WM_USER_CREATEPROPSHEET_DLG    WM_USER + 0x060C
 
 #define OODDLL                      "oodialog.dll"
 #define OOD_LVL_MAJOR               4
@@ -675,6 +675,7 @@ extern RexxClassObject TheDynamicDialogClass;
 extern RexxClassObject TheDialogControlClass;
 extern RexxClassObject ThePropertySheetPageClass;
 extern RexxClassObject TheSizeClass;
+extern RexxClassObject TheRectClass;
 
 extern HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id);
 

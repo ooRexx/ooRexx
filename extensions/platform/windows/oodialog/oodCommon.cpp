@@ -1458,24 +1458,21 @@ RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long
 }
 
 
-RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r)
+RexxObjectPtr rxNewRect(RexxThreadContext *c, PRECT r)
 {
-    RexxObjectPtr rect = NULL;
+    RexxArrayObject args = c->ArrayOfFour(c->WholeNumber(r->left),
+                                          c->WholeNumber(r->top),
+                                          c->WholeNumber(r->right),
+                                          c->WholeNumber(r->bottom));
 
-    RexxClassObject RectClass = rxGetContextClass(context, "RECT");
-    if ( RectClass != NULL )
-    {
-        RexxArrayObject args = context->NewArray(4);
-        context->ArrayAppend(args, context->WholeNumber(r->left));
-        context->ArrayAppend(args, context->WholeNumber(r->top));
-        context->ArrayAppend(args, context->WholeNumber(r->right));
-        context->ArrayAppend(args, context->WholeNumber(r->bottom));
-
-        rect = context->SendMessage(RectClass, "NEW", args);
-    }
-    return rect;
+    return c->SendMessage(TheRectClass, "NEW", args);
 }
 
+
+RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r)
+{
+    return rxNewRect(context->threadContext, r);
+}
 
 PSIZE rxGetSize(RexxMethodContext *context, RexxObjectPtr s, size_t argPos)
 {

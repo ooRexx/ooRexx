@@ -60,6 +60,11 @@
    use strict arg msgToRise
    return self~addUserMsg(msgToRise, 0x00000005, 0xFFFFFFFF, 0, 0, 0, 0)
 
+-- WM_SIZING
+::method connectResizing
+   use strict arg msgToRise
+   return self~addUserMsg(msgToRise, 0x00000214, 0xFFFFFFFF, 0, 0, 0, 0)
+
 -- WM_MOVE
 ::method connectMove
    use strict arg msgToRise
@@ -232,85 +237,9 @@
    return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0, tag)
 
 
-::method connectScrollBarEvent         /* can only be called in initDialog */
-   use strict arg id, type, msgToRise = "", categoryHDlg = (.NullHandle)
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(4,'O') then hnd = self~getControlHandle(id)
-   else hnd = self~getControlHandle(id, categoryHdlg)
-   if hnd = 0 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   type = type~translate
-   select
-       when type = "UP"        then wp = 0
-       when type = "DOWN"      then wp = 1
-       when type = "PAGEUP"    then wp = 2
-       when type = "PAGEDOWN"  then wp = 3
-       when type = "POSITION"  then wp = 4
-       when type = "DRAG"      then wp = 5
-       when type = "TOP"       then wp = 6
-       when type = "BOTTOM"    then wp = 7
-       when type = "ENDSCROLL" then wp = 8
-       otherwise return -1
-   end
-   ret = self~addUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_HSCROLL */
-   if ret <> 0 then return ret
-   return self~addUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_VSCROLL */
-
-
-::method connectEachSBEvent
-   use arg id, progUp, progDn, progPos, min, max, pos, progPgUp, progPgDn, progTop, progBottom, progTrack, progEndSc
-
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-
-   if arg(5, 'E'), min~datatype('N'), arg(6,'E'), max~datatype('N') then self~setSBRange(id, min, max, 0)
-   if arg(7, 'E'), pos~datatype('N') then self~setSBPos(id, pos, 0)
-
-   hwnd = self~getControlHandle(id)
-   WM_HSCROLL = 0x00000114
-   WM_VSCROOL = 0x00000115
-   wf = "0x0000FFFF"
-   nf = "0xFFFFFFFF"
-   /* Install hooks for WM_VSCROLL and WM_HSCROLL */
-   self~addUserMsg(progDn, 0x00000114, wf, 0x00000001, wf, hwnd, nf)
-   self~addUserMsg(progUp, 0x00000114, wf, 0x00000000, wf, hwnd, nf)
-   self~addUserMsg(progDn, 0x00000115, wf, 0x00000001, wf, hwnd, nf)
-   self~addUserMsg(progUp, 0x00000115, wf, 0x00000000, wf, hwnd, nf)
-   if arg(4, 'E'), progPos \== "" then do
-      self~addUserMsg(progPos, 0x00000114, wf, 0x00000004, wf, hwnd, nf)
-      self~addUserMsg(progPos, 0x00000115, wf, 0x00000004, wf, hwnd, nf)
-   end
-   if arg(8, 'E'), progPgUp \== "" then do
-      self~addUserMsg(progPgUp, 0x00000114, wf, 0x00000002, wf, hwnd, nf)
-      self~addUserMsg(progPgUp, 0x00000115, wf, 0x00000002, wf, hwnd, nf)
-   end
-   if arg(9, 'E'), progPgDn \== "" then do
-      self~addUserMsg(progPgDn, 0x00000114, wf, 0x00000003, wf, hwnd, nf)
-      self~addUserMsg(progPgDn, 0x00000115, wf, 0x00000003, wf, hwnd, nf)
-   end
-   if arg(10, 'E'), progTop \== "" then do
-      self~addUserMsg(progTop, 0x00000114, wf, 0x00000006, wf, hwnd, nf)
-      self~addUserMsg(progTop, 0x00000115, wf, 0x00000006, wf, hwnd, nf)
-   end
-   if arg(11, 'E'), progBottom \== "" then do
-      self~addUserMsg(progBottom, 0x00000114, wf, 0x00000007, wf, hwnd, nf)
-      self~addUserMsg(progBottom, 0x00000115, wf, 0x00000007, wf, hwnd, nf)
-   end
-   if arg(12, 'E'), progTrack \== "" then do
-      self~addUserMsg(progTrack, 0x00000114, wf, 0x00000005, wf, hwnd, nf)
-      self~addUserMsg(progTrack, 0x00000115, wf, 0x00000005, wf, hwnd, nf)
-   end
-   if arg(13, 'E'), progEndSc \== "" then do
-      self~addUserMsg(progEndSc, 0x00000114, wf, 0x00000008, wf, hwnd, nf)
-      self~addUserMsg(progEndSc, 0x00000115, wf, 0x00000008, wf, hwnd, nf)
-   end
-   return 0
-
-
-::method connectAllSBEvents
-   use arg id, prog, min, max, pos
-   return self~connectEachSBEvent(id, prog, prog, prog, min, max, pos, prog, prog, prog, prog)
+::method connectScrollBarEvent external "LIBRARY oodialog en_connectScrollBarEvent"
+::method connectEachSBEvent external "LIBRARY oodialog en_connectEachSBEvent"
+::method connectAllSBEvents external "LIBRARY oodialog en_connectAllSBEvents"
 
 
 ::method connectTreeViewEvent

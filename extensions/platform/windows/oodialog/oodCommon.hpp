@@ -127,6 +127,7 @@ extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, siz
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
 extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, size_t argPos);
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b);
+extern RexxObjectPtr rxNewRect(RexxThreadContext *context, PRECT r);
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r);
 extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, size_t argPos);
 extern RexxObjectPtr rxNewSize(RexxThreadContext *c, long cx, long cy);

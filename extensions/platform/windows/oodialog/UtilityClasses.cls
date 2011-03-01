@@ -94,6 +94,7 @@
 
 
 ::class 'Rect' public
+::method init class external "LIBRARY oodialog rect_init_cls"
 ::method init external "LIBRARY oodialog rect_init"
 ::attribute left get external "LIBRARY oodialog rect_left"
 ::attribute left set external "LIBRARY oodialog rect_setLeft"

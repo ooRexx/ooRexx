@@ -166,10 +166,10 @@ inline uint32_t _connectItem(pCEventNotification pcen, RexxMethodContext *c, uin
 }
 
 /* Same as above but connects a System Menu item */
-inline BOOL _connectSysItem(pCEventNotification pcen, uint32_t id, CSTRING msg)
+inline BOOL _connectSysItem(pCEventNotification pcen, RexxMethodContext *c, uint32_t id, CSTRING msg)
 {
     uint32_t tag = TAG_DIALOG | TAG_SYSMENUCOMMAND;
-    return addMiscMessage(pcen, WM_SYSCOMMAND, UINT32_MAX, id, 0x0000FFF0, 0, 0, msg, tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addMiscMessage(pcen, c, WM_SYSCOMMAND, UINT32_MAX, id, 0x0000FFF0, 0, 0, msg, tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /**
@@ -1291,7 +1291,7 @@ logical_t CppMenu::connectCommandEvent(RexxObjectPtr rxID, CSTRING methodName, R
     uint32_t rc;
     if ( isSystemMenu() )
     {
-        rc = _connectSysItem(pcen, id, methodName);
+        rc = _connectSysItem(pcen, c, id, methodName);
     }
     else
     {
@@ -1413,7 +1413,7 @@ logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING met
 
         if ( isSystemMenu() )
         {
-            rc = _connectSysItem(pcen, id, method == NULL ? name : method);
+            rc = _connectSysItem(pcen, c, id, method == NULL ? name : method);
         }
         else
         {
@@ -1481,23 +1481,23 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
             tag |= TAG_CONTEXTMENU;
             if ( hwndFilter != NULL )
             {
-                success = addMiscMessage(pcen, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwndFilter, UINTPTR_MAX, 0, 0, methodName, tag);
+                success = addMiscMessage(pcen, c, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwndFilter, UINTPTR_MAX, 0, 0, methodName, tag);
             }
             else
             {
-                success = addMiscMessage(pcen, WM_CONTEXTMENU, UINT32_MAX, 0, 0, 0, 0, methodName, tag);
+                success = addMiscMessage(pcen, c, WM_CONTEXTMENU, UINT32_MAX, 0, 0, 0, 0, methodName, tag);
             }
         }
             break;
 
         case WM_INITMENU :
             tag |= TAG_MENUMESSAGE;
-            success = addMiscMessage(pcen, WM_INITMENU, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX, 0, 0, methodName, tag);
+            success = addMiscMessage(pcen, c, WM_INITMENU, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX, 0, 0, methodName, tag);
             break;
 
         case WM_INITMENUPOPUP :
             tag |= TAG_MENUMESSAGE;
-            success = addMiscMessage(pcen, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX, 0, 0, methodName, tag);
+            success = addMiscMessage(pcen, c, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX, 0, 0, methodName, tag);
             break;
 
         default :
@@ -2688,7 +2688,7 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, RexxMeth
 
             if ( isSysMenu )
             {
-                rc = _connectSysItem(pcen, mii.wID, pMsg);
+                rc = _connectSysItem(pcen, c, mii.wID, pMsg);
             }
             else
             {
@@ -2814,7 +2814,7 @@ RexxMethod5(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRIN
     uint32_t rc;
     if ( isSystemMenu )
     {
-        rc = _connectSysItem(pcen, id, methodName);
+        rc = _connectSysItem(pcen, context, id, methodName);
     }
     else
     {
@@ -5369,11 +5369,11 @@ RexxMethod3(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRI
 
     if ( hwnd != NULL )
     {
-        success = addMiscMessage(pcen, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwnd, UINTPTR_MAX, 0, 0, methodName, tag);
+        success = addMiscMessage(pcen, context, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwnd, UINTPTR_MAX, 0, 0, methodName, tag);
     }
     else
     {
-        success = addMiscMessage(pcen, WM_CONTEXTMENU, UINT32_MAX, 0, 0, 0, 0, methodName, tag);
+        success = addMiscMessage(pcen, context, WM_CONTEXTMENU, UINT32_MAX, 0, 0, 0, 0, methodName, tag);
     }
 
     if ( ! success )
