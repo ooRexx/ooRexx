@@ -263,7 +263,7 @@ RexxMethod1(RexxObjectPtr, sb_getRange, CSELF, pCSelf)
 RexxMethod3(logical_t, sb_setPosition, int32_t, pos, OPTIONAL_logical_t, redraw, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    redraw = (argumentOmitted(3) ? TRUE : redraw);
+    redraw = (argumentOmitted(2) ? TRUE : redraw);
 
     SCROLLINFO si = {0};
     si.cbSize = sizeof(SCROLLINFO);
