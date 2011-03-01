@@ -385,6 +385,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_INDEX        ,TheArrayBehaviour, CPPM(RexxArray::index), 1);
   defineKernelMethod(CHAR_HASITEM      ,TheArrayBehaviour, CPPM(RexxArray::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM   ,TheArrayBehaviour, CPPM(RexxArray::removeItem), 1);
+  defineKernelMethod(CHAR_INSERT       ,TheArrayBehaviour, CPPM(RexxArray::insertRexx), 2);
+  defineKernelMethod(CHAR_DELETE       ,TheArrayBehaviour, CPPM(RexxArray::deleteRexx), 1);
   // there have been some problems with the quick sort used as the default sort, so map everything
   // to the stable sort.  The stable sort, in theory, uses more memory, but in practice, this is not true.
   defineKernelMethod(CHAR_SORT         ,TheArrayBehaviour, CPPM(RexxArray::stableSortRexx), 0);
@@ -470,6 +472,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_PREVIOUS     ,TheListBehaviour, CPPM(RexxList::previous), 1);
   defineKernelMethod(CHAR_PUT          ,TheListBehaviour, CPPM(RexxList::put), 2);
   defineKernelMethod(CHAR_REMOVE       ,TheListBehaviour, CPPM(RexxList::remove), 1);
+  // DELETE is the same as REMOVE for the List class
+  defineKernelMethod(CHAR_DELETE       ,TheListBehaviour, CPPM(RexxList::remove), 1);
   defineKernelMethod(CHAR_SECTION      ,TheListBehaviour, CPPM(RexxList::section), 2);
   defineKernelMethod(CHAR_SUPPLIER     ,TheListBehaviour, CPPM(RexxList::supplier), 0);
   defineKernelMethod(CHAR_APPEND       ,TheListBehaviour, CPPM(RexxList::append), 1);
@@ -694,6 +698,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_HASINDEX      ,TheQueueBehaviour, CPPM(RexxQueue::hasindex), 1);
   defineKernelMethod(CHAR_PUT           ,TheQueueBehaviour, CPPM(RexxQueue::put), 2);
   defineKernelMethod(CHAR_REMOVE        ,TheQueueBehaviour, CPPM(RexxQueue::remove), 1);
+  // REMOVE and DELETE are synonyms for the QUEUE class
+  defineKernelMethod(CHAR_DELETE        ,TheQueueBehaviour, CPPM(RexxQueue::remove), 1);
   defineKernelMethod(CHAR_APPEND        ,TheQueueBehaviour, CPPM(RexxQueue::append), 1);
   defineKernelMethod(CHAR_ALLITEMS      ,TheQueueBehaviour, CPPM(RexxList::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES    ,TheQueueBehaviour, CPPM(RexxQueue::allIndexes), 0);

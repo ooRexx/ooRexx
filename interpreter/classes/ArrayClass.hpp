@@ -169,12 +169,9 @@ typedef struct copyElelmentParm {
    size_t       getDimension();
    RexxObject  *supplier();
    RexxObject  *join(RexxArray *);
-   RexxObject  *insert(RexxObject *, size_t);
    RexxArray   *extend(size_t);
    void         shrink(size_t);
    size_t       indexOf(RexxObject *);
-   void         deleteItem(size_t);
-   void         insertItem(RexxObject *, size_t);
    RexxArray   *extendMulti(RexxObject **, size_t, size_t);
    void         resize();
    void         ensureSpace(size_t newSize);
@@ -188,9 +185,14 @@ typedef struct copyElelmentParm {
    wholenumber_t sortCompare(RexxObject *comparator, RexxObject *left, RexxObject *right);
    RexxArray   *stableSortRexx();
    RexxArray   *stableSortWithRexx(RexxObject *comparator);
+   RexxObject  *insertRexx(RexxObject *_value, RexxObject *index);
+   size_t       insert(RexxObject *_value, size_t index);
+   RexxObject  *deleteRexx(RexxObject *index);
+   RexxObject  *deleteItem(size_t index);
 
-   inline void         addLast(RexxObject *item) { this->insertItem(item, this->size() + 1); }
-   inline void         addFirst(RexxObject *item) { this->insertItem(item, 1); }
+   inline size_t       addLast(RexxObject *item) { return this->insert(item, this->size() + 1); }
+   inline size_t       addFirst(RexxObject *item) { return this->insert(item, 1); }
+   inline size_t       insertAfter(RexxObject *item, size_t index) { return this->insert(item, index); }
    inline RexxArray   *array() { return this->makeArray(); }
    inline size_t       size() { return this->expansionArray->arraySize; }
    inline RexxObject  *get(size_t pos) { return (this->data())[pos-1];}
@@ -200,6 +202,9 @@ typedef struct copyElelmentParm {
    size_t              findSingleIndexItem(RexxObject *item);
    RexxObject *        indexToArray(size_t idx);
    RexxObject *        convertIndex(size_t idx);
+
+   inline bool isMultiDimensional() { return this->dimensions != OREF_NULL && this->dimensions->size() != 1; }
+   inline bool isSingleDimensional() { return !isMultiDimensional(); }
 
    static void createInstance();
    // singleton class instance;
@@ -217,7 +222,9 @@ typedef struct copyElelmentParm {
    size_t       find(BaseSortComparator &comparator, RexxObject *val, int bnd, size_t left, size_t right);
    void         openGap(size_t index, size_t elements);
    void         closeGap(size_t index, size_t elements);
-   
+   inline RexxObject **slotAddress(size_t index) { return &(this->data()[index - 1]); }
+   inline size_t       dataSize() { return ((char *)slotAddress(size() + 1)) - ((char *)data()); }
+
 
    static const size_t MAX_FIXEDARRAY_SIZE;
 

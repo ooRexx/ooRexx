@@ -540,6 +540,8 @@ CPPM(RexxArray::removeItem),
 CPPM(RexxArray::toString),
 CPPM(RexxArray::stableSortRexx),
 CPPM(RexxArray::stableSortWithRexx),
+CPPM(RexxArray::insertRexx),
+CPPM(RexxArray::deleteRexx),
 
 CPPM(RexxArray::newRexx),
 CPPM(RexxArray::makeString),

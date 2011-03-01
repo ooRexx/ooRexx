@@ -1199,8 +1199,8 @@ RexxObject *RexxClass::inherit(
         }
         /* insert the mixin class into the   */
         /* superclasses list's               */
-        this->classSuperClasses->insertItem(mixin_class, class_index + 1);
-        this->instanceSuperClasses->insertItem(mixin_class, instance_index + 1);
+        this->classSuperClasses->insertAfter(mixin_class, class_index);
+        this->instanceSuperClasses->insertAfter(mixin_class, instance_index);
     }
 
     /* update the mixin class subclass   */

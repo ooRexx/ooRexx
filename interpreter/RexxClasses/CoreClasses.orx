@@ -788,6 +788,10 @@ nomethod:
 
 -- methods defined for OrderedCollection classes
 ::CLASS 'OrderedCollection' MIXINCLASS Collection
+-- abstract methods for ordered insertion/deletion
+::method 'insert' ABSTRACT
+::method 'delete' ABSTRACT
+
 ::method 'append'    ABSTRACT
 
 /*****************************************/
@@ -956,7 +960,6 @@ return new                             -- not an array
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
   raise syntax 93.948 array(1, "Collection")
-
 
 
 ::CLASS 'MapCollection' MIXINCLASS Collection
@@ -1623,12 +1626,9 @@ nomethod:
 
 /*
    name:    CircularQueue.rex
-   author:  Rony G. Flatscher, Rick McGuire
-   date:    2006-05-09, 2006-05-11, 2006-05-15, 2006-05-16, 2006-05-17, 2006-05-27
    purpose: allow to use a circular queue (buffer) of predefined size; if queue is full
             new entries overwrite existing ones in a circular fashion; also allows for
             resizing the circular queue at runtime
-   license: CPL 1.0
 
    documentation:
 
