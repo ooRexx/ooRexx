@@ -1359,7 +1359,7 @@ LRESULT CALLBACK RexxPropertySheetDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
         {
             HBRUSH hbrush = NULL;
 
-            if ( pcpbd->CT_size > 0 )
+            if ( pcpbd->CT_nextIndex > 0 )
             {
                 // See of the user has set the dialog item with a different
                 // color.
@@ -1367,11 +1367,11 @@ LRESULT CALLBACK RexxPropertySheetDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
                 if ( id > 0 )
                 {
                     register size_t i = 0;
-                    while ( i < pcpbd->CT_size && pcpbd->ColorTab[i].itemID != id )
+                    while ( i < pcpbd->CT_nextIndex && pcpbd->ColorTab[i].itemID != id )
                     {
                         i++;
                     }
-                    if ( i < pcpbd->CT_size )
+                    if ( i < pcpbd->CT_nextIndex )
                     {
                         hbrush = pcpbd->ColorTab[i].ColorBrush;
                     }

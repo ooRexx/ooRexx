@@ -60,8 +60,9 @@ typedef map<string, int, less<string> > String2Int;
 #define OOD_RESOURCE_ERR_TITLE      "ooDialog - Resource Definition Error"
 
 #define OOD_ADDICONFILE_ERR_MSG     "Icon resource elements have exceeded the maximum\n" \
-                                    "number of allocated icon table entries. The icon\n" \
-                                    "resource will not be added."
+                                    "number of allocated icon table entries, and the\n" \
+                                    "table could not be expanded.\n\n" \
+                                    "The icon resource will not be added."
 
 // ooDialog return codes for special purposes, including some int32_t codes
 // where -1 and greater is valid.

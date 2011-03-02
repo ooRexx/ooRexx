@@ -51,23 +51,27 @@
 #include <CommCtrl.h>
 #include "oorexxapi.h"
 
-#define NR_BUFFER           15
-#define DATA_BUFFER       8192
-#define MAX_BT_ENTRIES     300
-#define MAX_DT_ENTRIES     750
-#define MAX_CT_ENTRIES    1000
-#define MAX_IT_ENTRIES      20
-#define MAXCHILDDIALOGS     20
-#define MAXDIALOGS          20
+#define NR_BUFFER               15
+#define DATA_BUFFER           8192
+#define MAXCHILDDIALOGS         20
+#define MAXDIALOGS              20
 
 #define DEFAULT_FONTNAME            "MS Shell Dlg"
-#define DEFAULT_FONTSIZE            8
+#define DEFAULT_FONTSIZE              8
 #define MAX_DEFAULT_FONTNAME        256
 #define MAX_LIBRARYNAME             256
 
-#define MAX_NOTIFY_MSGS    200
-#define MAX_COMMAND_MSGS   200
-#define MAX_MISC_MSGS      100
+/*
+ * The number of table entries is per dialog.  100 controls per dialog seems
+ * like more than plenty.
+ */
+#define DEF_MAX_BT_ENTRIES           50
+#define DEF_MAX_DT_ENTRIES          100
+#define DEF_MAX_CT_ENTRIES          100
+#define DEF_MAX_IT_ENTRIES           20
+#define DEF_MAX_NOTIFY_MSGS         100
+#define DEF_MAX_COMMAND_MSGS        100
+#define DEF_MAX_MISC_MSGS            50
 
 /* User defined window messages used for RexxDlgProc() */
 #define WM_USER_CREATECHILD            WM_USER + 0x0601
@@ -470,9 +474,12 @@ typedef struct _enCSelf {
     MESSAGETABLEENTRY  *notifyMsgs;
     MESSAGETABLEENTRY  *commandMsgs;
     MESSAGETABLEENTRY  *miscMsgs;
-    size_t              nmSize;
+    size_t              nmSize;        // Size of  table.
+    size_t              nmNextIndex;   // Next free index in table.
     size_t              cmSize;
+    size_t              cmNextIndex;
     size_t              mmSize;
+    size_t              mmNextIndex;
     HWND                hDlg;
     RexxObjectPtr       rexxSelf;
     HHOOK               hHook;
@@ -528,9 +535,13 @@ typedef struct _pbdCSelf {
     ICONTABLEENTRY      *IconTab;
     COLORTABLEENTRY     *ColorTab;
     BITMAPTABLEENTRY    *BmpTab;
+    size_t               DT_nextIndex;
     size_t               DT_size;
+    size_t               IT_nextIndex;
     size_t               IT_size;
+    size_t               CT_nextIndex;
     size_t               CT_size;
+    size_t               BT_nextIndex;
     size_t               BT_size;
     HBRUSH               bkgBrush;
     HBITMAP              bkgBitmap;

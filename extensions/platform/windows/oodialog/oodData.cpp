@@ -72,11 +72,11 @@ static inline oodControl_t searchDataTable(pCPlainBaseDialog pcpbd, uint32_t id)
     if ( pcpbd->DataTab != NULL )
     {
         register size_t ndx = 0;
-        while ( ndx < pcpbd->DT_size && pcpbd->DataTab[ndx].id != id )
+        while ( ndx < pcpbd->DT_nextIndex && pcpbd->DataTab[ndx].id != id )
         {
             ndx++;
         }
-        if ( ndx < pcpbd->DT_size )
+        if ( ndx < pcpbd->DT_nextIndex )
         {
             return pcpbd->DataTab[ndx].type;
         }
@@ -143,12 +143,12 @@ static bool manualCheckRadioButton(pCPlainBaseDialog pcpbd, HWND hW, ULONG id, U
        // This function only checks a radio button, not unchecks a radio button.
        return true;
    }
-   while ( (ndx < pcpbd->DT_size) && (pcpbd->DataTab[ndx].id != id) )
+   while ( (ndx < pcpbd->DT_nextIndex) && (pcpbd->DataTab[ndx].id != id) )
    {
        ndx++;
    }
 
-   if ( ndx >= pcpbd->DT_size )
+   if ( ndx >= pcpbd->DT_nextIndex )
    {
        // Not found.
        return false;
@@ -172,7 +172,7 @@ static bool manualCheckRadioButton(pCPlainBaseDialog pcpbd, HWND hW, ULONG id, U
        beg--;
    }
    en = ndx;
-   while ( ((en + 1) < pcpbd->DT_size) && isInSameDlg(pcpbd, en + 1, ndx) && ! hasGroupStyle(hW, pcpbd, en + 1) )
+   while ( ((en + 1) < pcpbd->DT_nextIndex) && isInSameDlg(pcpbd, en + 1, ndx) && ! hasGroupStyle(hW, pcpbd, en + 1) )
    {
        en++;
    }
@@ -827,7 +827,7 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
     RexxObjectPtr dataObj;
     oodControl_t controlType;
 
-    for ( j = 0; j < pcpbd->DT_size; j++ )
+    for ( j = 0; j < pcpbd->DT_nextIndex; j++ )
     {
         hwnd        = pcpbd->childDlg[pcpbd->DataTab[j].category];
         itemID      = pcpbd->DataTab[j].id;
@@ -910,7 +910,7 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
     uint32_t itemID;
     oodControl_t controlType;
 
-    for ( j = 0; j < pcpbd->DT_size; j++ )
+    for ( j = 0; j < pcpbd->DT_nextIndex; j++ )
     {
         data[0] = '\0';
 
@@ -1054,7 +1054,7 @@ uint32_t addToDataTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, int id, o
 {
     if ( pcpbd->DataTab == NULL )
     {
-        pcpbd->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
+        pcpbd->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * DEF_MAX_DT_ENTRIES);
         if ( !pcpbd->DataTab )
         {
             if ( c != NULL )
@@ -1063,22 +1063,33 @@ uint32_t addToDataTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, int id, o
             }
             return OOD_MEMORY_ERR;
         }
-        pcpbd->DT_size = 0;
+        pcpbd->DT_nextIndex = 0;
+        pcpbd->DT_size = DEF_MAX_DT_ENTRIES;
     }
 
-    if ( pcpbd->DT_size < MAX_DT_ENTRIES )
+    if ( pcpbd->DT_nextIndex >= pcpbd->DT_size )
     {
-        pcpbd->DataTab[pcpbd->DT_size].id = id;
-        pcpbd->DataTab[pcpbd->DT_size].type = type;
-        pcpbd->DataTab[pcpbd->DT_size].category = category;
-        pcpbd->DT_size ++;
-        return OOD_NO_ERROR;
+        HLOCAL temp = LocalReAlloc(pcpbd->DataTab, sizeof(DATATABLEENTRY) * pcpbd->DT_size * 2, LMEM_ZEROINIT | LMEM_MOVEABLE);
+        if ( temp == NULL )
+        {
+            MessageBox(0, "Dialog data items have exceeded the maximum\n"
+                          "number of allocated table entries, and the\n"
+                          "table can not be expaded.\n\n"
+                          "No data item can be added.",
+                       "Error", MB_OK | MB_ICONHAND);
+            return OOD_DATATABLE_FULL;
+        }
+
+        pcpbd->DT_size *= 2;
+        pcpbd->DataTab = (DATATABLEENTRY *)temp;
     }
 
-    MessageBox(0, "Dialog data items have exceeded the maximum number of\n"
-               "allocated table entries. No data item can be added.",
-               "Error", MB_OK | MB_ICONHAND);
-    return OOD_DATATABLE_FULL;
+    pcpbd->DataTab[pcpbd->DT_nextIndex].id = id;
+    pcpbd->DataTab[pcpbd->DT_nextIndex].type = type;
+    pcpbd->DataTab[pcpbd->DT_nextIndex].category = category;
+    pcpbd->DT_nextIndex ++;
+
+    return OOD_NO_ERROR;
 }
 
 /**
@@ -1092,7 +1103,7 @@ uint32_t addToDataTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, int id, o
  */
 RexxArrayObject getDataTableIDs(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr self)
 {
-    size_t count = pcpbd->DT_size;
+    size_t count = pcpbd->DT_nextIndex;
     RexxArrayObject result = c->NewArray(count);
 
     for ( size_t i = 0; i < count; i++ )

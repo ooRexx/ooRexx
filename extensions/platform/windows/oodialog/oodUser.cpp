@@ -2401,47 +2401,54 @@ RexxMethod3(int32_t, dyndlg_addIconResource, RexxObjectPtr, rxID, CSTRING, fileN
 
     if ( pcpbd->IconTab == NULL )
     {
-        pcpbd->IconTab = (ICONTABLEENTRY *)LocalAlloc(LPTR, sizeof(ICONTABLEENTRY) * MAX_IT_ENTRIES);
+        pcpbd->IconTab = (ICONTABLEENTRY *)LocalAlloc(LPTR, sizeof(ICONTABLEENTRY) * DEF_MAX_IT_ENTRIES);
         if ( pcpbd->IconTab == NULL )
         {
             outOfMemoryException(context->threadContext);
             goto done_out;
         }
-        pcpbd->IT_size = 0;
+        pcpbd->IT_nextIndex = 0;
+        pcpbd->IT_size = DEF_MAX_IT_ENTRIES;
     }
 
-    if ( pcpbd->IT_size < MAX_IT_ENTRIES )
+    if ( pcpbd->IT_nextIndex >= pcpbd->IT_size )
     {
-        size_t i;
-
-        // If there is already a resource with this ID, it is replaced.
-        for ( i = 0; i < pcpbd->IT_size; i++ )
+        HLOCAL temp = LocalReAlloc(pcpbd->IconTab, sizeof(ICONTABLEENTRY) * pcpbd->IT_size * 2, LMEM_ZEROINIT | LMEM_MOVEABLE);
+        if ( temp == NULL )
         {
-            if ( pcpbd->IconTab[i].iconID == iconID )
-                break;
-        }
-
-        char *buf = (char *)LocalAlloc(LPTR, strlen(fileName) + 1);
-        if ( buf == NULL )
-        {
-            outOfMemoryException(context->threadContext);
+            internalErrorMsgBox(OOD_ADDICONFILE_ERR_MSG, OOD_RESOURCE_ERR_TITLE);
             goto done_out;
         }
-        strcpy(buf, fileName);
-        StrTrim(buf, " \"'");
 
-        pcpbd->IconTab[i].fileName = buf;
-        pcpbd->IconTab[i].iconID = iconID;
-        if ( i == pcpbd->IT_size )
-        {
-            pcpbd->IT_size++;
-        }
-        rc = 0;
+        pcpbd->IT_size *= 2;
+        pcpbd->IconTab = (ICONTABLEENTRY *)temp;
     }
-    else
+
+    size_t i;
+
+    // If there is already a resource with this ID, it is replaced.
+    for ( i = 0; i < pcpbd->IT_nextIndex; i++ )
     {
-        internalErrorMsgBox(OOD_ADDICONFILE_ERR_MSG, OOD_RESOURCE_ERR_TITLE);
+        if ( pcpbd->IconTab[i].iconID == iconID )
+            break;
     }
+
+    char *buf = (char *)LocalAlloc(LPTR, strlen(fileName) + 1);
+    if ( buf == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        goto done_out;
+    }
+    strcpy(buf, fileName);
+    StrTrim(buf, " \"'");
+
+    pcpbd->IconTab[i].fileName = buf;
+    pcpbd->IconTab[i].iconID = iconID;
+    if ( i == pcpbd->IT_nextIndex )
+    {
+        pcpbd->IT_nextIndex++;
+    }
+    rc = 0;
 
 done_out:
     return rc;

@@ -258,7 +258,7 @@ static bool findBmpForID(pCPlainBaseDialog pcpbd, uint32_t id, size_t *index)
 {
     if ( pcpbd->BmpTab != NULL )
     {
-        for ( size_t i = 0; i < pcpbd->BT_size; i++ )
+        for ( size_t i = 0; i < pcpbd->BT_nextIndex; i++ )
         {
             if ( pcpbd->BmpTab[i].buttonID == id )
             {
@@ -483,58 +483,65 @@ logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t 
 {
     if ( pcpbd->ColorTab == NULL )
     {
-        pcpbd->ColorTab = (COLORTABLEENTRY *)LocalAlloc(LMEM_FIXED, sizeof(COLORTABLEENTRY) * MAX_CT_ENTRIES);
+        pcpbd->ColorTab = (COLORTABLEENTRY *)LocalAlloc(LMEM_FIXED, sizeof(COLORTABLEENTRY) * DEF_MAX_CT_ENTRIES);
         if ( pcpbd->ColorTab == NULL )
         {
             outOfMemoryException(c->threadContext);
             return 1;
         }
-        pcpbd->CT_size = 0;
+        pcpbd->CT_nextIndex = 0;
+        pcpbd->CT_size = DEF_MAX_CT_ENTRIES;
     }
 
-    if ( pcpbd->CT_size < MAX_CT_ENTRIES )
+    if ( pcpbd->CT_nextIndex >= pcpbd->CT_size )
     {
-        size_t i = 0;
-
-        // If brush is found, then an entry for this control already exists in
-        // the color table.  The value of i is set to the entry index.  In this
-        // case we are replacing the entry with a (presumably) new color.
-        HBRUSH hbrush = searchForBrush(pcpbd, &i, id);
-        if ( hbrush != NULL )
+        HLOCAL temp = LocalReAlloc(pcpbd->ColorTab, sizeof(COLORTABLEENTRY) * pcpbd->CT_size * 2, LMEM_ZEROINIT | LMEM_MOVEABLE);
+        if ( temp == NULL )
         {
-            if ( ! pcpbd->ColorTab[i].isSysBrush )
-            {
-                DeleteObject(hbrush);
-            }
-        }
-        else
-        {
-            i = pcpbd->CT_size;
-            pcpbd->ColorTab[i].itemID = id;
-            pcpbd->CT_size++;
+            MessageBox(NULL, "Dialog control elements have exceeded the maximum\n"
+                       "number of allocated color table entries, and the table\n"
+                       "could not be expanded.\n\n"
+                       "The color for the dialog control can not be added.",
+                       "Error", MB_OK | MB_ICONHAND);
+            return 1;
         }
 
-        pcpbd->ColorTab[i].ColorBk = bkColor;
-        pcpbd->ColorTab[i].ColorFG = fgColor;
+        pcpbd->CT_size *= 2;
+        pcpbd->ColorTab = (COLORTABLEENTRY *)temp;
+    }
 
-        if ( useSysColor )
+    size_t i = 0;
+
+    // If brush is found, then an entry for this control already exists in
+    // the color table.  The value of i is set to the entry index.  In this
+    // case we are replacing the entry with a (presumably) new color.
+    HBRUSH hbrush = searchForBrush(pcpbd, &i, id);
+    if ( hbrush != NULL )
+    {
+        if ( ! pcpbd->ColorTab[i].isSysBrush )
         {
-            pcpbd->ColorTab[i].ColorBrush = GetSysColorBrush(pcpbd->ColorTab[i].ColorBk);
-            pcpbd->ColorTab[i].isSysBrush = true;
-        }
-        else
-        {
-            pcpbd->ColorTab[i].ColorBrush = CreateSolidBrush(PALETTEINDEX(pcpbd->ColorTab[i].ColorBk));
-            pcpbd->ColorTab[i].isSysBrush = false;
+            DeleteObject(hbrush);
         }
     }
     else
     {
-        MessageBox(NULL, "Dialog control elements have exceeded the maximum\n"
-                   "number of allocated color table entries. The color\n"
-                   "for the dialog control can not be added.",
-                   "Error", MB_OK | MB_ICONHAND);
-        return 1;
+        i = pcpbd->CT_nextIndex;
+        pcpbd->ColorTab[i].itemID = id;
+        pcpbd->CT_nextIndex++;
+    }
+
+    pcpbd->ColorTab[i].ColorBk = bkColor;
+    pcpbd->ColorTab[i].ColorFG = fgColor;
+
+    if ( useSysColor )
+    {
+        pcpbd->ColorTab[i].ColorBrush = GetSysColorBrush(pcpbd->ColorTab[i].ColorBk);
+        pcpbd->ColorTab[i].isSysBrush = true;
+    }
+    else
+    {
+        pcpbd->ColorTab[i].ColorBrush = CreateSolidBrush(PALETTEINDEX(pcpbd->ColorTab[i].ColorBk));
+        pcpbd->ColorTab[i].isSysBrush = false;
     }
     return 0;
 }
@@ -1039,7 +1046,7 @@ static void drawBmpBackground(pCPlainBaseDialog pcpbd, INT id, HDC hDC, RECT * i
     hpen = CreatePen(PS_NULL, 0, GetSysColor(COLOR_BTNFACE));
 
     // Check to see if the user has set a color for dialog item background.
-    if ( pcpbd->CT_size != 0 )
+    if ( pcpbd->CT_nextIndex != 0 )
     {
         size_t i;
         hbr = searchForBrush(pcpbd, &i, id);
@@ -1984,13 +1991,14 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
 
     if ( pcpbd->BmpTab == NULL )
     {
-       pcpbd->BmpTab = (BITMAPTABLEENTRY *)LocalAlloc(LPTR, sizeof(BITMAPTABLEENTRY) * MAX_BT_ENTRIES);
+       pcpbd->BmpTab = (BITMAPTABLEENTRY *)LocalAlloc(LPTR, sizeof(BITMAPTABLEENTRY) * DEF_MAX_BT_ENTRIES);
        if ( pcpbd->BmpTab == NULL )
        {
           MessageBox(0, "No memory available","Error", MB_OK | MB_ICONHAND);
           return TheOneObj;
        }
-       pcpbd->BT_size = 0;
+       pcpbd->BT_nextIndex = 0;
+       pcpbd->BT_size = DEF_MAX_BT_ENTRIES;
     }
 
     bool frame      = false;
@@ -2005,79 +2013,86 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
         if ( StrStrI(style, "USEPAL")   != NULL ) usePalette = true;
     }
 
-    if ( pcpbd->BT_size < MAX_BT_ENTRIES )
+    if ( pcpbd->BT_nextIndex >= pcpbd->BT_size )
     {
-        size_t index = pcpbd->BT_size;
-
-        pcpbd->BmpTab[index].buttonID = id;
-        pcpbd->BmpTab[index].frame  = frame;
-
-        assignBitmap(pcpbd, index, bmpNormal, PBSS_NORMAL, inMemory);
-
-        if ( argumentExists(4) && ! isEmptyString(bmpFocused) )
+        HLOCAL temp = LocalReAlloc(pcpbd->BmpTab, sizeof(BITMAPTABLEENTRY) * pcpbd->BT_size * 2, LMEM_ZEROINIT | LMEM_MOVEABLE);
+        if ( temp == NULL )
         {
-            if ( isIntResource(bmpFocused) && noUnderlyingDlg )
-            {
-                noWindowsDialogException(context, self);
-                return TheOneObj;
-            }
-            assignBitmap(pcpbd, index, bmpFocused, PBSS_DEFAULTED, inMemory);
-        }
-        if ( argumentExists(5) && ! isEmptyString(bmpSelected) )
-        {
-            if ( isIntResource(bmpSelected) && noUnderlyingDlg )
-            {
-                noWindowsDialogException(context, self);
-                return TheOneObj;
-            }
-            assignBitmap(pcpbd, index, bmpSelected, PBSS_PRESSED, inMemory);
-        }
-        if ( argumentExists(6) && ! isEmptyString(bmpDisabled) )
-        {
-            if ( isIntResource(bmpDisabled) && noUnderlyingDlg )
-            {
-                noWindowsDialogException(context, self);
-                return TheOneObj;
-            }
-            assignBitmap(pcpbd, index, bmpDisabled, PBSS_DISABLED, inMemory);
+            MessageBox(NULL, "Bitmap buttons have exceeded the maximum\n"
+                       "number of allocated table entries, and the table\n"
+                       "could not be expanded.\n\n"
+                       "No bitmap button can be added.",
+                       "Error", MB_OK | MB_ICONHAND);
+            return TheOneObj;
         }
 
-        if ( stretch && pcpbd->BmpTab[index].loaded )
-        {
-            pcpbd->BmpTab[index].loaded |= 0x0100;
-        }
-
-
-        // Maybe create a palette that conforms to the bitmap colors.
-        if ( usePalette )
-        {
-           if ( pcpbd->colorPalette != NULL )
-           {
-               DeleteObject(pcpbd->colorPalette);
-           }
-
-           pcpbd->colorPalette = createDIBPalette((LPBITMAPINFO)pcpbd->BmpTab[index].bitmapID);
-           setSysPalColors(pcpbd->colorPalette);
-        }
-
-        if ( argumentOmitted(2) || msgToRaise[0] == '\0' )
-        {
-           pcpbd->BT_size++;
-           return TheZeroObj;
-        }
-        else if ( addCommandMessage(pcpbd->enCSelf, context, id, 0x0000FFFF, 0, 0, msgToRaise, TAG_NOTHING) )
-        {
-           pcpbd->BT_size++;
-           return TheZeroObj;
-        }
+        pcpbd->BT_size *= 2;
+        pcpbd->BmpTab = (BITMAPTABLEENTRY *)temp;
     }
-    else
+
+    size_t index = pcpbd->BT_nextIndex;
+
+    pcpbd->BmpTab[index].buttonID = id;
+    pcpbd->BmpTab[index].frame  = frame;
+
+    assignBitmap(pcpbd, index, bmpNormal, PBSS_NORMAL, inMemory);
+
+    if ( argumentExists(4) && ! isEmptyString(bmpFocused) )
     {
-       MessageBox(0, "Bitmap buttons have exceeded the maximum number of\n"
-                     "allocated table entries. No bitmap button can be\n"
-                     "added.",
-                  "Error",MB_OK | MB_ICONHAND);
+        if ( isIntResource(bmpFocused) && noUnderlyingDlg )
+        {
+            noWindowsDialogException(context, self);
+            return TheOneObj;
+        }
+        assignBitmap(pcpbd, index, bmpFocused, PBSS_DEFAULTED, inMemory);
     }
+    if ( argumentExists(5) && ! isEmptyString(bmpSelected) )
+    {
+        if ( isIntResource(bmpSelected) && noUnderlyingDlg )
+        {
+            noWindowsDialogException(context, self);
+            return TheOneObj;
+        }
+        assignBitmap(pcpbd, index, bmpSelected, PBSS_PRESSED, inMemory);
+    }
+    if ( argumentExists(6) && ! isEmptyString(bmpDisabled) )
+    {
+        if ( isIntResource(bmpDisabled) && noUnderlyingDlg )
+        {
+            noWindowsDialogException(context, self);
+            return TheOneObj;
+        }
+        assignBitmap(pcpbd, index, bmpDisabled, PBSS_DISABLED, inMemory);
+    }
+
+    if ( stretch && pcpbd->BmpTab[index].loaded )
+    {
+        pcpbd->BmpTab[index].loaded |= 0x0100;
+    }
+
+    // Maybe create a palette that conforms to the bitmap colors.
+    if ( usePalette )
+    {
+       if ( pcpbd->colorPalette != NULL )
+       {
+           DeleteObject(pcpbd->colorPalette);
+       }
+
+       pcpbd->colorPalette = createDIBPalette((LPBITMAPINFO)pcpbd->BmpTab[index].bitmapID);
+       setSysPalColors(pcpbd->colorPalette);
+    }
+
+    if ( argumentOmitted(2) || msgToRaise[0] == '\0' )
+    {
+       pcpbd->BT_nextIndex++;
+       return TheZeroObj;
+    }
+    else if ( addCommandMessage(pcpbd->enCSelf, context, id, 0x0000FFFF, 0, 0, msgToRaise, TAG_NOTHING) )
+    {
+       pcpbd->BT_nextIndex++;
+       return TheZeroObj;
+    }
+
     return TheOneObj;
 }
 

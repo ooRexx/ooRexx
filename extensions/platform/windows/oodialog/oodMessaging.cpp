@@ -207,7 +207,7 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             HBRUSH hbrush = NULL;
 
-            if ( pcpbd->CT_size > 0 )
+            if ( pcpbd->CT_nextIndex > 0 )
             {
                 // See of the user has set the dialog item with a different
                 // color.
@@ -215,11 +215,11 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 if ( id > 0 )
                 {
                     register size_t i = 0;
-                    while ( i < pcpbd->CT_size && pcpbd->ColorTab[i].itemID != id )
+                    while ( i < pcpbd->CT_nextIndex && pcpbd->ColorTab[i].itemID != id )
                     {
                         i++;
                     }
-                    if ( i < pcpbd->CT_size )
+                    if ( i < pcpbd->CT_nextIndex )
                     {
                         hbrush = pcpbd->ColorTab[i].ColorBrush;
                     }
@@ -511,7 +511,7 @@ LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             HBRUSH hbrush = NULL;
 
-            if ( pcpbd->CT_size > 0 )
+            if ( pcpbd->CT_nextIndex > 0 )
             {
                 // See of the user has set the dialog item with a different
                 // color.
@@ -519,11 +519,11 @@ LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 if ( id > 0 )
                 {
                     register size_t i = 0;
-                    while ( i < pcpbd->CT_size && pcpbd->ColorTab[i].itemID != id )
+                    while ( i < pcpbd->CT_nextIndex && pcpbd->ColorTab[i].itemID != id )
                     {
                         i++;
                     }
-                    if ( i < pcpbd->CT_size )
+                    if ( i < pcpbd->CT_nextIndex )
                     {
                         hbrush = pcpbd->ColorTab[i].ColorBrush;
                     }
@@ -1192,7 +1192,7 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
         return ContinueProcessing;
     }
 
-    size_t tableSize = pcpbd->enCSelf->cmSize;
+    size_t tableSize = pcpbd->enCSelf->cmNextIndex;
     register size_t i = 0;
 
     for ( i = 0; i < tableSize; i++ )
@@ -1901,7 +1901,7 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
     }
 
     uint32_t code = ((NMHDR *)lParam)->code;
-    size_t tableSize = pcpbd->enCSelf->nmSize;
+    size_t tableSize = pcpbd->enCSelf->nmNextIndex;
     register size_t i = 0;
 
     for ( i = 0; i < tableSize; i++ )
@@ -2032,7 +2032,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
         return ContinueProcessing;
     }
 
-    size_t tableSize = pcpbd->enCSelf->mmSize;
+    size_t tableSize = pcpbd->enCSelf->mmNextIndex;
     register size_t i = 0;
 
     for ( i = 0; i < tableSize; i++ )
@@ -2241,8 +2241,7 @@ MsgReplyType searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCP
  * @param method
  * @param tag
  *
- * @return True on success, false if the message table is full, or for a memory
- *         allocation error.
+ * @return True on success, false for a memory allocation error.
  *
  * @remarks  The command message table is allocated during the plain base dialog
  *           init process, so we should not need to check that it has been
@@ -2253,6 +2252,18 @@ MsgReplyType searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCP
  *
  *           Caller must ensure that 'method' is not an empty string and that
  *           winMsg, wParam, lParam are not all 0.
+ *
+ *           If the message table is full we reallocate a table double in size
+ *           through LocalReAlloc().  Without the LMEM_MOVABLE flag, the realloc
+ *           can fail.  Note that even though the LMEM_MOVABLE flag is used, if
+ *           the memory object being reallocated is fixed, the returned memory
+ *           object is still fixed.  LocalLock() does not need to be used.
+ *
+ *           LMEM_MOVEABLE:  If uBytes is nonzero, enables the system to move
+ *           the reallocated block to a new location without changing the
+ *           movable or fixed attribute of the memory object. If the object is
+ *           fixed, the handle returned may be different from the handle
+ *           specified in the hMem parameter.
  */
 bool addCommandMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wParam, ULONG_PTR wpFilter,
                        LPARAM lParam, ULONG_PTR lpFilter, CSTRING method, uint32_t tag)
@@ -2263,35 +2274,42 @@ bool addCommandMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wP
         return false;
     }
 
-    size_t index = pcen->cmSize;
-    if ( index < MAX_COMMAND_MSGS )
+    size_t index = pcen->cmNextIndex;
+    if ( index >= pcen->cmSize )
     {
-        pcen->commandMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
-        if ( pcen->commandMsgs[index].rexxMethod == NULL )
+        HLOCAL temp = LocalReAlloc(pcen->commandMsgs, sizeof(MESSAGETABLEENTRY) * pcen->cmSize * 2, LMEM_ZEROINIT | LMEM_MOVEABLE);
+        if ( temp == NULL )
         {
+            MessageBox(0, "Command message connections have exceeded the maximum\n"
+                          "number of allocated table entries, and the table could\n"
+                          "not be expanded.\n\n"
+                          "No more command message connections can be added.\n",
+                       "Error", MB_OK | MB_ICONHAND);
             return false;
         }
-        strcpy(pcen->commandMsgs[index].rexxMethod, method);
 
-        pcen->commandMsgs[index].msg = WM_COMMAND;
-        pcen->commandMsgs[index].msgFilter = 0xFFFFFFFF;
-        pcen->commandMsgs[index].wParam = wParam;
-        pcen->commandMsgs[index].wpFilter = wpFilter;
-        pcen->commandMsgs[index].lParam = lParam;
-        pcen->commandMsgs[index].lpfilter = lpFilter;
-        pcen->commandMsgs[index].tag = tag;
-
-        pcen->cmSize++;
-        return true;
+        pcen->cmSize *= 2;
+        pcen->commandMsgs = (MESSAGETABLEENTRY *)temp;
     }
-    else
+
+    pcen->commandMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+    if ( pcen->commandMsgs[index].rexxMethod == NULL )
     {
-        MessageBox(0, "Command message connections have exceeded the maximum\n"
-                      "number of allocated table entries.  No more command\n"
-                      "message connections can be added.\n",
-                   "Error", MB_OK | MB_ICONHAND);
+        outOfMemoryException(c->threadContext);
+        return false;
     }
-    return false;
+    strcpy(pcen->commandMsgs[index].rexxMethod, method);
+
+    pcen->commandMsgs[index].msg = WM_COMMAND;
+    pcen->commandMsgs[index].msgFilter = 0xFFFFFFFF;
+    pcen->commandMsgs[index].wParam = wParam;
+    pcen->commandMsgs[index].wpFilter = wpFilter;
+    pcen->commandMsgs[index].lParam = lParam;
+    pcen->commandMsgs[index].lpfilter = lpFilter;
+    pcen->commandMsgs[index].tag = tag;
+
+    pcen->cmNextIndex++;
+    return true;
 }
 
 
@@ -2313,51 +2331,61 @@ bool addCommandMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wP
  *
  * @remarks  Caller must ensure that 'method' is not an empty string and that
  *           winMsg, wParam, lParam are not all 0.
+ *
+ *           See remarks in addCommandMessages() for some relevant information.
  */
 bool addNotifyMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wParam, ULONG_PTR wpFilter,
                       LPARAM lParam, ULONG_PTR lpFilter, CSTRING method, uint32_t tag)
 {
     if ( pcen->notifyMsgs == NULL )
     {
-        pcen->notifyMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_NOTIFY_MSGS);
+        pcen->notifyMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * DEF_MAX_NOTIFY_MSGS);
         if ( pcen->notifyMsgs == NULL )
         {
             outOfMemoryException(c->threadContext);
             return false;
         }
-        pcen->nmSize = 0;
+        pcen->nmNextIndex = 0;
+        pcen->nmSize = DEF_MAX_NOTIFY_MSGS;
     }
 
-    size_t index = pcen->nmSize;
+    size_t index = pcen->nmNextIndex;
 
-    if ( index < MAX_NOTIFY_MSGS )
+    if ( index >= pcen->nmSize )
     {
-        pcen->notifyMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
-        if ( pcen->notifyMsgs[index].rexxMethod == NULL )
+        HLOCAL temp = LocalReAlloc(pcen->notifyMsgs, sizeof(MESSAGETABLEENTRY) * pcen->nmSize * 2, LMEM_ZEROINIT | LMEM_MOVEABLE);
+        if ( temp == NULL )
         {
+            MessageBox(0, "Notify message connections have exceeded the maximum\n"
+                          "number of allocated table entries, and the table could\n"
+                          "not be expanded.\n\n"
+                          "No more notify message connections can be added.\n",
+                       "Error", MB_OK | MB_ICONHAND);
             return false;
         }
-        strcpy(pcen->notifyMsgs[index].rexxMethod, method);
 
-        pcen->notifyMsgs[index].msg = WM_NOTIFY;
-        pcen->notifyMsgs[index].msgFilter = 0xFFFFFFFF;
-        pcen->notifyMsgs[index].wParam = wParam;
-        pcen->notifyMsgs[index].wpFilter = wpFilter;
-        pcen->notifyMsgs[index].lParam = lParam;
-        pcen->notifyMsgs[index].lpfilter = lpFilter;
-        pcen->notifyMsgs[index].tag = tag;
-
-        pcen->nmSize++;
-        return true;
+        pcen->nmSize *= 2;
+        pcen->notifyMsgs = (MESSAGETABLEENTRY *)temp;
     }
-    else
+
+    pcen->notifyMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+    if ( pcen->notifyMsgs[index].rexxMethod == NULL )
     {
-        MessageBox(0, "Notify message connections have exceeded the maximum\n"
-                      "number of allocated table entries.  No more notify\n"
-                      "message connections can be added.\n",
-                   "Error", MB_OK | MB_ICONHAND);
+        outOfMemoryException(c->threadContext);
+        return false;
     }
-    return false;
+    strcpy(pcen->notifyMsgs[index].rexxMethod, method);
+
+    pcen->notifyMsgs[index].msg = WM_NOTIFY;
+    pcen->notifyMsgs[index].msgFilter = 0xFFFFFFFF;
+    pcen->notifyMsgs[index].wParam = wParam;
+    pcen->notifyMsgs[index].wpFilter = wpFilter;
+    pcen->notifyMsgs[index].lParam = lParam;
+    pcen->notifyMsgs[index].lpfilter = lpFilter;
+    pcen->notifyMsgs[index].tag = tag;
+
+    pcen->nmNextIndex++;
+    return true;
 }
 
 
@@ -2380,6 +2408,8 @@ bool addNotifyMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wPa
  *
  * @remarks  Caller must ensure that 'method' is not an empty string and that
  *           winMsg, wParam, lParam are not all 0.
+ *
+ *           See remarks in addCommandMessages() for some relevant information.
  */
 bool addMiscMessage(pCEventNotification pcen, RexxMethodContext *c, uint32_t winMsg, uint32_t wmFilter,
                     WPARAM wParam, ULONG_PTR wpFilter, LPARAM lParam, ULONG_PTR lpFilter,
@@ -2387,57 +2417,66 @@ bool addMiscMessage(pCEventNotification pcen, RexxMethodContext *c, uint32_t win
 {
     if ( pcen->miscMsgs == NULL )
     {
-        pcen->miscMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_MISC_MSGS);
+        pcen->miscMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * DEF_MAX_MISC_MSGS);
         if ( pcen->miscMsgs == NULL )
         {
             outOfMemoryException(c->threadContext);
             return false;
         }
-        pcen->mmSize = 0;
+        pcen->mmNextIndex = 0;
+        pcen->mmSize = DEF_MAX_MISC_MSGS;
     }
 
-    size_t index = pcen->mmSize;
+    size_t index = pcen->mmNextIndex;
 
-    if ( index < MAX_NOTIFY_MSGS )
+    if ( index >= pcen->mmSize )
     {
-        pcen->miscMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
-        if ( pcen->miscMsgs[index].rexxMethod == NULL )
+        HLOCAL temp = LocalReAlloc(pcen->miscMsgs, sizeof(MESSAGETABLEENTRY) * pcen->mmSize * 2, LMEM_ZEROINIT | LMEM_MOVEABLE);
+        if ( temp == NULL )
         {
+            MessageBox(0, "Miscellaneous message connections have exceeded the maximum\n"
+                          "number of allocated table entries, and the table could\n"
+                          "not be expanded.\n\n"
+                          "No more miscellaneous message connections can be added.\n",
+                       "Error", MB_OK | MB_ICONHAND);
             return false;
         }
-        strcpy(pcen->miscMsgs[index].rexxMethod, method);
 
-        pcen->miscMsgs[index].msg = winMsg;
-        pcen->miscMsgs[index].msgFilter = 0xFFFFFFFF;
-        pcen->miscMsgs[index].wParam = wParam;
-        pcen->miscMsgs[index].wpFilter = wpFilter;
-        pcen->miscMsgs[index].lParam = lParam;
-        pcen->miscMsgs[index].lpfilter = lpFilter;
-        pcen->miscMsgs[index].tag = tag;
-
-        pcen->mmSize++;
-        return true;
+        pcen->mmSize *= 2;
+        pcen->miscMsgs = (MESSAGETABLEENTRY *)temp;
     }
-    else
+
+    pcen->miscMsgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(method) + 1);
+    if ( pcen->miscMsgs[index].rexxMethod == NULL )
     {
-        MessageBox(0, "Miscellaneous message connections have exceeded the\n"
-                      "maximum number of allocated table entries.  No more\n"
-                      "miscellaneous message connections can be added.\n",
-                   "Error", MB_OK | MB_ICONHAND);
+        outOfMemoryException(c->threadContext);
+        return false;
     }
-    return false;
+    strcpy(pcen->miscMsgs[index].rexxMethod, method);
+
+    pcen->miscMsgs[index].msg = winMsg;
+    pcen->miscMsgs[index].msgFilter = 0xFFFFFFFF;
+    pcen->miscMsgs[index].wParam = wParam;
+    pcen->miscMsgs[index].wpFilter = wpFilter;
+    pcen->miscMsgs[index].lParam = lParam;
+    pcen->miscMsgs[index].lpfilter = lpFilter;
+    pcen->miscMsgs[index].tag = tag;
+
+    pcen->mmNextIndex++;
+    return true;
 }
 
 
 bool initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen)
 {
-    pcen->commandMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_COMMAND_MSGS);
+    pcen->commandMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * DEF_MAX_COMMAND_MSGS);
     if ( ! pcen->commandMsgs )
     {
         outOfMemoryException(c->threadContext);
         return false;
     }
-    pcen->cmSize = 0;
+    pcen->cmSize = DEF_MAX_COMMAND_MSGS;
+    pcen->cmNextIndex = 0;
 
     if ( ! addCommandMessage(pcen, c, IDOK, UINTPTR_MAX, 0, 0, "OK", TAG_NOTHING) )
     {
@@ -3907,9 +3946,12 @@ RexxMethod10(RexxObjectPtr, en_connectEachSBEvent, RexxObjectPtr, rxID, CSTRING,
         }
     }
 
-    if ( argumentExists(9) )
+    // We can not use argumentExists() for arguments in ARGLIST, only for named
+    // arguments. So for each arg, we check for its presence in the arg array.
+
+    RexxObjectPtr _methName = c->ArrayAt(args, 9);
+    if ( _methName != NULLOBJECT )
     {
-        RexxObjectPtr _methName = c->ArrayAt(args, 9);
         CSTRING meth = c->ObjectToStringValue(_methName);
 
         if ( meth == NULLOBJECT || *meth == '\0' )
@@ -3926,9 +3968,10 @@ RexxMethod10(RexxObjectPtr, en_connectEachSBEvent, RexxObjectPtr, rxID, CSTRING,
             goto err_out;
         }
     }
-    if ( argumentExists(10) )
+
+    _methName = c->ArrayAt(args, 10);
+    if ( _methName != NULLOBJECT )
     {
-        RexxObjectPtr _methName = c->ArrayAt(args, 10);
         CSTRING meth = c->ObjectToStringValue(_methName);
 
         if ( meth == NULLOBJECT || *meth == '\0' )
@@ -3945,9 +3988,10 @@ RexxMethod10(RexxObjectPtr, en_connectEachSBEvent, RexxObjectPtr, rxID, CSTRING,
             goto err_out;
         }
     }
-    if ( argumentExists(11) )
+
+    _methName = context->ArrayAt(args, 11);
+    if ( _methName != NULLOBJECT )
     {
-        RexxObjectPtr _methName = context->ArrayAt(args, 11);
         CSTRING meth = context->ObjectToStringValue(_methName);
 
         if ( meth == NULLOBJECT || *meth == '\0' )
@@ -3964,9 +4008,10 @@ RexxMethod10(RexxObjectPtr, en_connectEachSBEvent, RexxObjectPtr, rxID, CSTRING,
             goto err_out;
         }
     }
-    if ( argumentExists(12) )
+
+    _methName = context->ArrayAt(args, 12);
+    if ( _methName != NULLOBJECT )
     {
-        RexxObjectPtr _methName = context->ArrayAt(args, 12);
         CSTRING meth = context->ObjectToStringValue(_methName);
 
         if ( meth == NULLOBJECT || *meth == '\0' )
@@ -3983,9 +4028,10 @@ RexxMethod10(RexxObjectPtr, en_connectEachSBEvent, RexxObjectPtr, rxID, CSTRING,
             goto err_out;
         }
     }
-    if ( argumentExists(13) )
+
+    _methName = context->ArrayAt(args, 13);
+    if ( _methName != NULLOBJECT )
     {
-        RexxObjectPtr _methName = context->ArrayAt(args, 13);
         CSTRING meth = context->ObjectToStringValue(_methName);
 
         if ( meth == NULLOBJECT || *meth == '\0' )

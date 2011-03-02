@@ -84,7 +84,7 @@ static HICON getIconForID(pCPlainBaseDialog pcpbd, UINT id, UINT iconSrc, int cx
         // Load the icon from a file, file name should be in the icon table.
         size_t i;
 
-        for ( i = 0; i < pcpbd->IT_size; i++ )
+        for ( i = 0; i < pcpbd->IT_nextIndex; i++ )
         {
             if ( pcpbd->IconTab[i].iconID == id )
             {
@@ -115,32 +115,35 @@ static void deleteMessageTables(pCEventNotification pcen)
 {
     size_t i;
 
-    for ( i = 0; i < pcen->cmSize; i++ )
+    for ( i = 0; i < pcen->cmNextIndex; i++ )
     {
         safeLocalFree(pcen->commandMsgs[i].rexxMethod);
     }
     LocalFree(pcen->commandMsgs);
     pcen->commandMsgs = NULL;
     pcen->cmSize = 0;
+    pcen->cmNextIndex = 0;
 
     if ( pcen->notifyMsgs != NULL )
     {
-        for ( i = 0; i < pcen->nmSize; i++ )
+        for ( i = 0; i < pcen->nmNextIndex; i++ )
         {
             safeLocalFree(pcen->notifyMsgs[i].rexxMethod);
         }
         LocalFree(pcen->notifyMsgs);
+        pcen->nmNextIndex = 0;
         pcen->nmSize = 0;
         pcen->notifyMsgs = NULL;
     }
 
     if ( pcen->miscMsgs != NULL )
     {
-        for ( i = 0; i < pcen->mmSize; i++ )
+        for ( i = 0; i < pcen->mmNextIndex; i++ )
         {
             safeLocalFree(pcen->miscMsgs[i].rexxMethod);
         }
         LocalFree(pcen->miscMsgs);
+        pcen->mmNextIndex = 0;
         pcen->mmSize = 0;
         pcen->miscMsgs = NULL;
     }
@@ -154,11 +157,11 @@ HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id)
 
     if ( pcpbd != NULL && pcpbd->ColorTab != NULL )
     {
-        while ( i < pcpbd->CT_size && pcpbd->ColorTab[i].itemID != id )
+        while ( i < pcpbd->CT_nextIndex && pcpbd->ColorTab[i].itemID != id )
         {
            i++;
         }
-        if ( i < pcpbd->CT_size )
+        if ( i < pcpbd->CT_nextIndex )
         {
             hBrush = pcpbd->ColorTab[i].ColorBrush;
             *index = i;
@@ -476,24 +479,26 @@ int32_t delDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
     // Delete the data table.
     safeLocalFree(pcpbd->DataTab);
     pcpbd->DataTab = NULL;
+    pcpbd->DT_nextIndex = 0;
     pcpbd->DT_size = 0;
 
     // Delete the color brushes.
     if (pcpbd->ColorTab)
     {
-        for ( i = 0; i < pcpbd->CT_size; i++ )
+        for ( i = 0; i < pcpbd->CT_nextIndex; i++ )
         {
             safeDeleteObject(pcpbd->ColorTab[i].ColorBrush);
         }
         LocalFree(pcpbd->ColorTab);
         pcpbd->ColorTab = NULL;
+        pcpbd->CT_nextIndex = 0;
         pcpbd->CT_size = 0;
     }
 
     // Delete the bitmaps and bitmap table.
     if (pcpbd->BmpTab)
     {
-        for ( i = 0; i < pcpbd->BT_size; i++ )
+        for ( i = 0; i < pcpbd->BT_nextIndex; i++ )
         {
             if ( (pcpbd->BmpTab[i].loaded & 0x1011) == 1 )
             {
@@ -514,18 +519,20 @@ int32_t delDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
 
         LocalFree(pcpbd->BmpTab);
         safeDeleteObject(pcpbd->colorPalette);
+        pcpbd->BT_nextIndex = 0;
         pcpbd->BT_size = 0;
     }
 
     // Delete the icon resource table.
     if (pcpbd->IconTab)
     {
-        for ( i = 0; i < pcpbd->IT_size; i++ )
+        for ( i = 0; i < pcpbd->IT_nextIndex; i++ )
         {
             safeLocalFree(pcpbd->IconTab[i].fileName);
         }
         LocalFree(pcpbd->IconTab);
         pcpbd->IconTab = NULL;
+        pcpbd->IT_nextIndex = 0;
         pcpbd->IT_size = 0;
     }
 
@@ -4638,21 +4645,21 @@ RexxMethod2(RexxObjectPtr, pbdlg_dumpMessageTable, OPTIONAL_CSTRING, table, CSEL
 
     if ( argumentOmitted(1) )
     {
-        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmSize, "Notify Message Table:");
-        dumpMsgTable(pcpbd->enCSelf->commandMsgs, pcpbd->enCSelf->cmSize, "Command Message Table:");
-        dumpMsgTable(pcpbd->enCSelf->miscMsgs, pcpbd->enCSelf->mmSize, "Miscellaneous Message Table:");
+        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmNextIndex, "Notify Message Table:");
+        dumpMsgTable(pcpbd->enCSelf->commandMsgs, pcpbd->enCSelf->cmNextIndex, "Command Message Table:");
+        dumpMsgTable(pcpbd->enCSelf->miscMsgs, pcpbd->enCSelf->mmNextIndex, "Miscellaneous Message Table:");
     }
     else if( !strcmpi(table, "notify") )
     {
-        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmSize, "Notify Message Table:");
+        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmNextIndex, "Notify Message Table:");
     }
     else if( !strcmpi(table, "command") )
     {
-        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmSize, "Command Message Table:");
+        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmNextIndex, "Command Message Table:");
     }
     else if( !strcmpi(table, "misc") )
     {
-        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->nmSize, "Miscellaneous Message Table:");
+        dumpMsgTable(pcpbd->enCSelf->notifyMsgs, pcpbd->enCSelf->mmNextIndex, "Miscellaneous Message Table:");
     }
     else
     {
