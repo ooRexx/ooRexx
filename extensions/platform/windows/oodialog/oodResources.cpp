@@ -44,6 +44,12 @@
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
+#if 0
+// Future enhancement.
+#include <gdiplus.h>
+using namespace Gdiplus;
+#endif
+
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
@@ -1186,6 +1192,39 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
 out:
     return result;
 }
+
+#if 0
+// Place holder, future enhancement.
+RexxMethod1(RexxObjectPtr, image_getGDIImage_cls, CSTRING, file)
+{
+    RexxObjectPtr result = NULLOBJECT;
+
+    WCHAR *fileName = ansi2unicode(file);
+
+    Bitmap bitmap(fileName, FALSE);
+
+    Gdiplus::Color colorBackground = Gdiplus::Color(255, 255, 255);
+
+    HBITMAP hImage = NULL;
+    bitmap.GetHBITMAP(colorBackground, &hImage);
+    if ( hImage == NULL )
+    {
+        DWORD rc = GetLastError();
+        oodSetSysErrCode(context->threadContext, rc);
+        result = rxNewEmptyImage(context, rc);
+        goto out;
+    }
+
+    SIZE s;
+    s.cx = bitmap.GetHeight();
+    s.cy = bitmap.GetWidth();
+
+    result = rxNewValidImage(context, hImage, IMAGE_BITMAP, &s, 0, true);
+
+out:
+    return result;
+}
+#endif
 
 /** Image::userIcon()  [class method]
  *

@@ -1169,12 +1169,11 @@
 ::method hasCheckBoxes unguarded external "LIBRARY oodialog lv_hasCheckBoxes"
 ::method getCheck unguarded external "LIBRARY oodialog lv_getCheck"
 
--- Intent is to return directory item with normal names and in itemInfo convert to old stem return
 ::method getItemInfo unguarded external "LIBRARY oodialog lv_getItemInfo"
 ::method itemInfo
    use strict arg index, subItem = 0
    d = .Directory~new
-   if getItemInfo(index, d, subItem) then do
+   if self~getItemInfo(index, d, subItem) then do
      itemInfo.!TEXT = d~text
      itemInfo.!IMAGE = d~image
      itemInfo.!STATE = d~state

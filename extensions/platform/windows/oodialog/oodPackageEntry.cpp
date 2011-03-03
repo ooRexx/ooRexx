@@ -46,6 +46,7 @@
 
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
+
 HINSTANCE            MyInstance = NULL;
 pCPlainBaseDialog    DialogTable[MAXDIALOGS] = {NULL};
 pCPlainBaseDialog    TopDlg = NULL;
@@ -84,6 +85,7 @@ RexxClassObject     TheSizeClass = NULLOBJECT;;
 // Initialized in the Rect class init method (rect_init_cls.)
 RexxClassObject     TheRectClass = NULLOBJECT;
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -109,6 +111,40 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 }
 #endif
 
+
+/* GdiplusStartupInput gdiplusStartupInput;
+ULONG_PTR           gdiplusToken; */
+
+/**
+ * RexxPackageLoader function.  This does nothing right now.
+ *
+ * In a future release it will be used for the GDI+ startup initialization, and
+ * some of the other startup function currently in DlgUtil init class will be
+ * moved here.  Place holder for now.
+ *
+ * @param c  Thread context pointer passed from the intepreter when this package
+ *           is loaded.
+ *
+ * @return Nothing is returned
+ */
+void RexxEntry ooDialogLoad(RexxThreadContext *c)
+{
+    /* Initialize GDI+.
+    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);*/
+}
+
+/**
+ * RexxPackageUnloader function.  Place holder for now, see comments above.
+ *
+ * @param c  Thread context pointer passed from the intepreter when this package
+ *           is loaded.
+ *
+ * @return Nothing is returned
+ */
+void RexxEntry ooDialogUnload(RexxThreadContext *c)
+{
+    /* GdiplusShutdown(gdiplusToken); */
+}
 
 REXX_TYPED_ROUTINE_PROTOTYPE(messageDialog_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(fileNameDlg_rtn);
@@ -1575,8 +1611,8 @@ RexxPackageEntry oodialog_package_entry =
     REXX_INTERPRETER_4_1_0,              // needs at least the 4.1.0 interpreter
     "ooDialog",                          // name of the package
     "4.2.0",                             // package information
-    NULL,                                // no load/unload functions
-    NULL,
+    ooDialogLoad,                        // package load function
+    ooDialogUnload,                      // package unload function
     oodialog_functions,                  // the exported functions
     oodialog_methods                     // the exported methods
 };

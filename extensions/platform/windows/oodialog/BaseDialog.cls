@@ -154,6 +154,7 @@
 ::method toID class external "LIBRARY oodialog image_toID_cls"
 ::method getImage class external "LIBRARY oodialog image_getImage_cls"
 ::method fromFiles class external "LIBRARY oodialog image_fromFiles_cls"
+-- ::method getGDIImage class external "LIBRARY oodialog image_getGDIImage_cls" future enhancement
 ::method fromIDs class external "LIBRARY oodialog image_fromIDs_cls"
 ::method userIcon class external "LIBRARY oodialog image_userIcon_cls"
 
