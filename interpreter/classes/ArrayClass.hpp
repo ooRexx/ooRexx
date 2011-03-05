@@ -159,7 +159,6 @@ typedef struct copyElelmentParm {
    RexxArray   *section(size_t, size_t);
    RexxObject  *sectionRexx(RexxObject *, RexxObject *);
    RexxObject  *sectionSubclass(size_t, size_t);
-   RexxInteger *hasIndex(RexxObject *);
    bool         hasIndexNative(size_t);
    RexxObject  *hasIndexRexx(RexxObject **, size_t);
    bool         hasIndexApi(size_t);
