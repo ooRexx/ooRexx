@@ -2790,7 +2790,7 @@ void  RexxActivity::traceOutput(       /* write a line of trace information */
     if (this->callTraceExit(activation, line))
     {
         /* get the default output stream     */
-        RexxObject *stream = getLocalEnvironment(OREF_ERRORNAME);
+        RexxObject *stream = getLocalEnvironment(OREF_TRACEOUTPUT);
         /* have .local set up yet?           */
         if (stream != OREF_NULL && stream != TheNilObject)
         {
@@ -2840,7 +2840,7 @@ RexxString *RexxActivity::traceInput(  /* read a line of trace input        */
     if (this->callDebugInputExit(activation, value))
     {
         /* get the input stream              */
-        RexxObject *stream = getLocalEnvironment(OREF_INPUT);
+        RexxObject *stream = getLocalEnvironment(OREF_DEBUGINPUT);
         if (stream != OREF_NULL)           /* have a stream?                    */
         {
             /* read from it                      */

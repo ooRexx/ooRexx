@@ -563,12 +563,16 @@ nomethod:
   .local~setentry('STDIN', input)
   .local~setentry('INPUT',.monitor~new(.stdin))
   .input~objectname = "The INPUT monitor"
+  .local~setentry('DEBUGINPUT', .monitor~new(.input))
+  .debuginput~objectname = "The DEBUG INPUT monitor"
   .local~setentry('STDOUT', output)
   .local~setentry('OUTPUT',.monitor~new(.stdout))
   .output~objectname = "The OUTPUT monitor"
   .local~setentry('STDERR', error)
   .local~setentry('ERROR', .monitor~new(.stderr))
   .error~objectname = "The ERROR monitor"
+  .local~setentry('TRACEOUTPUT',.monitor~new(.error))
+  .output~objectname = "The TRACE OUTPUT monitor"
 
   .local~setentry('STDQUE',.RexxQueue~new('SESSION'))
 
