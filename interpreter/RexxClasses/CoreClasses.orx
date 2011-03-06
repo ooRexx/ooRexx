@@ -965,6 +965,48 @@ nomethod:
       -- an unknown method is an argument problem.  report it as such.
   raise syntax 93.948 array(1, "Collection")
 
+/*****************************************/
+/* STABLESORT    method                  */
+/*****************************************/
+::METHOD stablesort
+  use strict arg   -- no arguments
+  target = self~makearray    -- use the array sort to order things
+  target~sort
+  current = self~first
+  -- copy all of the items back into the sorted collection
+  loop i = 1 for target~size
+      self[current] = target[i]
+      current = self~next(current)
+  end
+  return self  -- return value is always the collection
+
+/*****************************************/
+/* STABLESORTWITH method                 */
+/*****************************************/
+
+::METHOD stablesortwith
+  use strict arg comparator  -- must have a single comparator
+  target = self~makearray    -- use the array sort to order things
+  target~sortwith(comparator)
+  current = self~first
+  -- copy all of the items back into the sorted collection
+  loop i = 1 for target~size
+      self[current] = target[i]
+      current = self~next(current)
+  end
+  return self  -- return value is always the collection
+
+/*****************************************/
+/* SORT          method                  */
+/*****************************************/
+::METHOD sort
+  forward message('STABLESORT') -- just use the stable variety
+
+/*****************************************/
+/* SORTWITH      method                  */
+/*****************************************/
+::METHOD sortwith
+  forward message('STABLESORTWITH') -- just use the stable variety
 
 ::CLASS 'MapCollection' MIXINCLASS Collection
 
