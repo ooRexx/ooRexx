@@ -500,6 +500,87 @@ size_t RexxQueue::entryToIndex(size_t target)
     return 0;
 }
 
+/**
+ * Create a sublist of this queue.
+ *
+ * @param _index The starting index
+ * @param _count The size of the subset to extract.
+ *
+ * @return A new instance of this class containing the subsection items.
+ */
+RexxObject *RexxQueue::section(RexxObject *_index, RexxObject *_count )
+{
+    size_t counter;                      /* object counter                    */
+                                         /* locate this entry                 */
+    LISTENTRY *element = this->locateEntry(_index, (RexxObject *)IntegerOne);
+    if (_count != OREF_NULL)
+    {           /* have a count?                     */
+                /* Make sure it's a good integer     */
+        counter = _count->requiredNonNegative(ARG_TWO);
+    }
+    else
+    {
+        counter = 999999999;               /* just use largest possible count   */
+    }
+    if (element == NULL)                 /* index doesn't exist?              */
+                                         /* raise an error                    */
+        reportException(Error_Incorrect_method_index, _index);
+    if (!isOfClass(Queue, this))              /* actually a queue subclass?         */
+    {
+        /* need to do this the slow way      */
+        return this->sectionSubclass(element, counter);
+    }
+    RexxQueue *result = new RexxQueue;     /* create a new queue instance       */
+    ProtectedObject p(result);
+    /* while still more to go and not at */
+    /* the end of the list               */
+    while (counter--> 0)
+    {               /* while still more items            */
+                    /* add the this item to new list     */
+        result->addLast(element->value);
+        if (element->next == LIST_END)     /* this the last one?                */
+        {
+            break;                           /* done sectioning                   */
+        }
+                                             /* step to the next item             */
+        element = ENTRY_POINTER(element->next);
+    }
+    return result;                       /* return the sectioned list         */
+}
+
+
+
+/**
+ * Section method used when dealing with a subclass of the Queue class.
+ *
+ * @param element The starting element.
+ * @param counter the number of items to extract.
+ *
+ * @return A new instance of the target class containing the
+ *         subsection elements.
+ */
+RexxObject *RexxQueue::sectionSubclass(LISTENTRY *element, size_t counter)
+{
+    ProtectedObject r;
+    /* create a new list                 */
+    this->behaviour->getOwningClass()->sendMessage(OREF_NEW, r);
+    RexxQueue *newQueue = (RexxQueue *)(RexxObject *)r;
+    /* while still more to go and not at */
+    /* the end of the list               */
+    while (counter-- > 0)                /* while still more items            */
+    {
+        /* add the this item to new list     */
+        newQueue->sendMessage(OREF_INSERT, element->value);
+        if (element->next == LIST_END)     /* this the last one?                */
+        {
+            break;                           /* done sectioning                   */
+        }
+                                             /* step to the next item             */
+        element = ENTRY_POINTER(element->next);
+    }
+    return newQueue;                      /* return the sectioned list         */
+}
+
 
 RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
 /******************************************************************************/

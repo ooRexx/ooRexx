@@ -795,8 +795,8 @@ nomethod:
 -- abstract methods for ordered insertion/deletion
 ::method 'insert' ABSTRACT
 ::method 'delete' ABSTRACT
-
-::method 'append'    ABSTRACT
+::method 'append' ABSTRACT
+::method 'section' ABSTRACT
 
 /*****************************************/
 /* APPENDALL     method                  */

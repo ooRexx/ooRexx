@@ -713,6 +713,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_NEXT          ,TheQueueBehaviour, CPPM(RexxQueue::next), 1);
   defineKernelMethod(CHAR_PREVIOUS      ,TheQueueBehaviour, CPPM(RexxQueue::previous), 1);
   defineKernelMethod(CHAR_INSERT        ,TheQueueBehaviour, CPPM(RexxQueue::insert), 2);
+  defineKernelMethod(CHAR_SECTION       ,TheQueueBehaviour, CPPM(RexxQueue::section), 2);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

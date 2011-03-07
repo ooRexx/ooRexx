@@ -746,6 +746,7 @@ CPPM(RexxQueue::lastRexx),
 CPPM(RexxQueue::next),
 CPPM(RexxQueue::previous),
 CPPM(RexxQueue::insert),
+CPPM(RexxQueue::section),
 
 CPPM(RexxQueue::newRexx),
 CPPM(RexxQueue::ofRexx),
