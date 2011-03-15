@@ -4208,7 +4208,7 @@ RexxMethod9(RexxObjectPtr, userpspdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPT
             }
             strcpy(pcpbd->fontName, fontName);
         }
-        if ( argumentExists(5) )
+        if ( argumentExists(6) )
         {
             if ( fontSize == 0 )
             {
