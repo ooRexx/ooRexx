@@ -264,6 +264,9 @@ RexxRoutine2(int, SockConnect, int, sock, RexxObjectPtr, stemSource)
  *------------------------------------------------------------------*/
 RexxRoutine3(int, SockGetHostByAddr, CSTRING, addrArg, RexxObjectPtr, stemSource, OPTIONAL_int, domain)
 {
+    struct hostent *pHostEnt;
+    in_addr addr;
+
     StemManager stem(context);
 
     if (!stem.resolveStem(stemSource))
@@ -271,8 +274,7 @@ RexxRoutine3(int, SockGetHostByAddr, CSTRING, addrArg, RexxObjectPtr, stemSource
         return 0;
     }
 
-    struct hostent *pHostEnt;
-    unsigned int addr = inet_addr(addrArg);
+    addr.s_addr = inet_addr(addrArg);
 
     if (argumentOmitted(3))
     {
