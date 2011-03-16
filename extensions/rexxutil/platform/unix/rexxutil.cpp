@@ -185,7 +185,9 @@
 #include <errno.h>                     /* get the errno variable     */
 #include <stddef.h>
 #include <sys/types.h>
+#if !defined(AIX)
 #include <sys/syscall.h>
+#endif
 #include <sys/utsname.h>
 #include <sys/ipc.h>
 #include <pthread.h>
