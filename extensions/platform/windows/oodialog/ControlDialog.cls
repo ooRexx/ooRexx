@@ -72,10 +72,8 @@
 
 ::class 'ControlDialog' mixinclass Object public
 
-::attribute ownerDialog get  external "LIBRARY oodialog chld_getOwnerDialog"
-::attribute ownerDialog set  external "LIBRARY oodialog chld_setOwnerDialog"
-
-::attribute initializing
+::attribute initializing get unguarded external "LIBRARY oodialog ctrlDlg_get_initializing"
+::attribute initializing set unguarded external "LIBRARY oodialog ctrlDlg_set_initializing"
 
 ::class 'ResControlDialog' public subclass ResDialog inherit ControlDialog
 
@@ -102,8 +100,6 @@
 
 ::method init
     use strict arg rcFile, idDlg, initData. = .nil, includeFile = "", options = "", expected = 200, ownerDlg = .nil
-
-    self~initializing = .true
 
     newArgs = .array~new(5)
     if arg(3, 'E') then newArgs[1] = arg(3)

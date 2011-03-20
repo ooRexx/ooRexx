@@ -82,7 +82,8 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     bool *release = args->release;
     pCPlainBaseDialog pcpbd = args->pcpbd;
 
-    pcpbd->hDlg = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
+    pcpbd->hDlg = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)args->dlgTemplate, pcpbd->hOwnerDlg,
+                                            (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
 
     if ( pcpbd->hDlg )
     {
@@ -496,6 +497,10 @@ bool addToDialogTemplate(RexxMethodContext *c, pCDynamicDialog pcdd, SHORT kind,
  */
 #define USERDIALOG_CLASS  "UserDialog"
 
+/** UserDialog::new()
+ *
+ *
+ */
 RexxMethod7(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTIONAL_RexxObjectPtr, includeFile,
             OPTIONAL_RexxObjectPtr, library, OPTIONAL_RexxObjectPtr, resourceID, OPTIONAL_RexxObjectPtr, owner,
             SUPER, super, OSELF, self)
@@ -1174,11 +1179,17 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
         title = "";
     }
 
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
     if ( argumentExists(6) )
     {
-        if ( StrStrI(opts, "CONTROL") != NULL )
+        if ( pcpbd->isControlDlg || StrStrI(opts, "CONTROL") != NULL )
         {
-            style = DS_SETFONT | DS_CONTROL | WS_CHILD;
+            style = DS_SETFONT | DS_CONTROL;
+            if ( StrStrI(opts, "NOTCHILD") == NULL )
+            {
+                style |= WS_CHILD;
+            }
         }
         else
         {
@@ -1201,8 +1212,6 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
             style |= WS_VISIBLE;
         }
     }
-
-    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
 
     if ( ! adjustDialogFont(context, args, pcpbd) )
     {
@@ -1254,13 +1263,13 @@ err_out:
     return FALSE;
 }
 
+
 /** DyamicDialog::startParentDialog()
  *
  *  Creates the underlying Windows dialog for a user dialog (or one of its
  *  subclasses) object.  This is the counterpart to the ResDialog::startDialog()
  *  which is only used to create the underlying Windows dialog for ResDialog
  *  dialogs.
- *
  *
  */
 RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, modeless, CSELF, pCSelf)
@@ -1277,6 +1286,15 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     if ( p == NULL )
     {
         return illegalBuffer();
+    }
+
+    if ( pcpbd->isOwnedDlg )
+    {
+        modeless = TRUE;
+        if ( ! processOwnedDialog(context, pcpbd) )
+        {
+            return false;
+        }
     }
 
     ULONG thID;

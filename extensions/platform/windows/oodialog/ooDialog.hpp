@@ -526,10 +526,11 @@ typedef struct _pbdCSelf {
     pCWindowBase         wndBase;
     pCEventNotification  enCSelf;
     pCWindowExtensions   weCSelf;
-    RexxObjectPtr        rexxSelf;
+    RexxObjectPtr        rexxSelf;      // This dialog's Rexx dialog object
     HWND                 hDlg;
-    RexxObjectPtr        rexxOwner;
+    RexxObjectPtr        rexxOwner;     // This dialog's Rexx owner dialog object
     HWND                 hOwnerDlg;
+    RexxObjectPtr        rexxParent;    // This dialog's Rexx parent dialog object
     void                *dlgPrivate;    // Subclasses can store data unique to the subclass
     DATATABLEENTRY      *DataTab;
     ICONTABLEENTRY      *IconTab;
@@ -553,6 +554,8 @@ typedef struct _pbdCSelf {
     bool                 onTheTop;
     bool                 isCategoryDlg;  // Need to use IsNestedDialogMessage()
     bool                 isControlDlg;   // Dialog was created as DS_CONTROL | WS_CHILD
+    bool                 isInitializing; // ControlDialog attribute
+    bool                 isOwnedDlg;     // Dialog has an owner dialog
     bool                 isPageDlg;      // Dialog is a property sheet page dialog
     bool                 isPropSheetDlg; // Dialog is a property sheet dialog
     bool                 sharedIcon;
@@ -586,7 +589,7 @@ typedef CDialogControl *pCDialogControl;
 typedef struct _ddCSelf {
     pCPlainBaseDialog  pcpbd;
     RexxObjectPtr      rexxSelf;
-    DLGTEMPLATEEX       *base;        // Base pointer to dialog template (basePtr)
+    DLGTEMPLATEEX     *base;          // Base pointer to dialog template (basePtr)
     void              *active;        // Pointer to current location in dialog template (activePtr)
     void              *endOfTemplate; // Pointer to end of allocated memory for the template
     uint32_t           expected;      // Expected dialog item count

@@ -179,6 +179,10 @@ REXX_METHOD_PROTOTYPE(dlgutil_makeLPARAM_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_makeWPARAM_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_shiftLeft_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_shiftRight_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_sShiftLeft_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_sShiftRight_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenArea_cls);
@@ -274,6 +278,10 @@ REXX_METHOD_PROTOTYPE(pbdlg_setFontName_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_setFontSize_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_getAutoDetect);
 REXX_METHOD_PROTOTYPE(pbdlg_setAutoDetect);
+REXX_METHOD_PROTOTYPE(pbdlg_getParentDlg_pvt);
+REXX_METHOD_PROTOTYPE(pbdlg_setParentDlg_pvt);
+REXX_METHOD_PROTOTYPE(pbdlg_getOwnerDialog);
+REXX_METHOD_PROTOTYPE(pbdlg_setOwnerDialog);
 REXX_METHOD_PROTOTYPE(pbdlg_getFinished);
 REXX_METHOD_PROTOTYPE(pbdlg_setFinished);
 REXX_METHOD_PROTOTYPE(pbdlg_sendMessageToControl);
@@ -399,8 +407,8 @@ REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
 REXX_METHOD_PROTOTYPE(resdlg_startDialog_pvt);
 
 // ControlDialog
-REXX_METHOD_PROTOTYPE(chld_getOwnerDialog);
-REXX_METHOD_PROTOTYPE(chld_setOwnerDialog);
+REXX_METHOD_PROTOTYPE(ctrlDlg_get_initializing);
+REXX_METHOD_PROTOTYPE(ctrlDlg_set_initializing);
 
 // ResourceControlDialog
 REXX_METHOD_PROTOTYPE(resCtrlDlg_startDialog_pvt);
@@ -911,6 +919,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_makeWPARAM_cls,         dlgutil_makeWPARAM_cls),
     REXX_METHOD(dlgutil_and_cls,                dlgutil_and_cls),
     REXX_METHOD(dlgutil_or_cls,                 dlgutil_or_cls),
+    REXX_METHOD(dlgutil_shiftLeft_cls,          dlgutil_shiftLeft_cls),
+    REXX_METHOD(dlgutil_shiftRight_cls,         dlgutil_shiftRight_cls),
+    REXX_METHOD(dlgutil_sShiftLeft_cls,         dlgutil_sShiftLeft_cls),
+    REXX_METHOD(dlgutil_sShiftRight_cls,        dlgutil_sShiftRight_cls),
     REXX_METHOD(dlgutil_screenSize_cls,         dlgutil_screenSize_cls),
     REXX_METHOD(dlgutil_screenArea_cls,         dlgutil_screenArea_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls,   dlgutil_getSystemMetrics_cls),
@@ -997,6 +1009,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setDlgFont,               pbdlg_setDlgFont),
     REXX_METHOD(pbdlg_getAutoDetect,            pbdlg_getAutoDetect),
     REXX_METHOD(pbdlg_setAutoDetect,            pbdlg_setAutoDetect),
+    REXX_METHOD(pbdlg_getParentDlg_pvt,         pbdlg_getParentDlg_pvt),
+    REXX_METHOD(pbdlg_setParentDlg_pvt,         pbdlg_setParentDlg_pvt),
+    REXX_METHOD(pbdlg_getOwnerDialog,           pbdlg_getOwnerDialog),
+    REXX_METHOD(pbdlg_setOwnerDialog,           pbdlg_setOwnerDialog),
     REXX_METHOD(pbdlg_getFinished,              pbdlg_getFinished),
     REXX_METHOD(pbdlg_setFinished,              pbdlg_setFinished),
     REXX_METHOD(pbdlg_sendMessageToControl,     pbdlg_sendMessageToControl),
@@ -1141,8 +1157,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(resdlg_startDialog_pvt,         resdlg_startDialog_pvt),
 
     // ControlDialog
-    REXX_METHOD(chld_getOwnerDialog,            chld_getOwnerDialog),
-    REXX_METHOD(chld_setOwnerDialog,            chld_setOwnerDialog),
+    REXX_METHOD(ctrlDlg_get_initializing,       ctrlDlg_get_initializing),
+    REXX_METHOD(ctrlDlg_set_initializing,       ctrlDlg_set_initializing),
 
     // ResControlDialog
     REXX_METHOD(resCtrlDlg_startDialog_pvt,     resCtrlDlg_startDialog_pvt),

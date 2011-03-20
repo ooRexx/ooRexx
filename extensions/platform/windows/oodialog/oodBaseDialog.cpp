@@ -108,6 +108,55 @@ err_out:
     return false;
 }
 
+
+/**
+ * Checks that an owned dialog has an underlying owner window and sets up the
+ * popup as child data.
+ *
+ * All owned dialogs are treated as if they were started with popupAsChild()
+ * even if they weren't. If rexxParent is set, then we actually were started
+ * with popupAsChild(). If not set then we do that here.
+ *
+ * @param c
+ * @param pcpbd
+ *
+ * @remarks
+ */
+bool processOwnedDialog(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
+{
+    pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(c, pcpbd->rexxOwner, oodPlainBaseDialog, 0);
+    if ( ownerPcpbd == NULL )
+    {
+        goto err_out;
+    }
+
+    if ( ownerPcpbd->hDlg == NULL || ! ownerPcpbd->isActive )
+    {
+        methodCanNotBeInvokedException(c, pcpbd->rexxSelf, "owner Windows dialog does not exist");
+        goto err_out;
+    }
+    pcpbd->hOwnerDlg = ownerPcpbd->hDlg;
+
+    if ( pcpbd->rexxParent == NULLOBJECT )
+    {
+        pcpbd->rexxParent = pcpbd->rexxOwner;
+        RexxObjectPtr childList = c->SendMessage0(pcpbd->rexxParent, "CHILDDIALOGS");
+        if ( childList == NULLOBJECT )
+        {
+            baseClassIntializationException(c);
+            goto err_out;
+        }
+
+        c->SendMessage1(childList, "INSERT", pcpbd->rexxSelf);
+    }
+
+    return true;
+
+err_out:
+    return false;
+}
+
+
 /**
  *  Methods for the .ResDialog class.
  */
@@ -139,7 +188,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
     bool *release = args->release;
 
     // Pass the pointer to the CSelf for this dialog to WM_INITDIALOG.
-    pcpbd->hDlg = CreateDialogParam(pcpbd->hInstance, MAKEINTRESOURCE(args->resourceId), 0,
+    pcpbd->hDlg = CreateDialogParam(pcpbd->hInstance, MAKEINTRESOURCE(args->resourceId), pcpbd->hOwnerDlg,
                                     (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
 
     if ( pcpbd->hDlg == NULL )
@@ -298,6 +347,15 @@ RexxMethod5(logical_t, resdlg_startDialog_pvt, CSTRING, library, RexxObjectPtr, 
         return FALSE;
     }
 
+    if ( pcpbd->isOwnedDlg )
+    {
+        modeless = TRUE;
+        if ( ! processOwnedDialog(context, pcpbd) )
+        {
+            return false;
+        }
+    }
+
     ULONG thID;
     bool Release = false;
 
@@ -381,42 +439,30 @@ RexxMethod2(RexxArrayObject, resdlg_getDataTableIDs_pvt, CSELF, pCSelf, OSELF, s
  */
 #define CONTROLDIALOG_CLASS        "ControlDialog"
 
-
-/** ControlDialog::parentDlg  [attribute get]
- *
- *  Raises base class initialization exception if we can't get the CSelf
- *  pointer.
- */
-RexxMethod1(RexxObjectPtr, chld_getOwnerDialog, OSELF, self)
+RexxMethod1(RexxObjectPtr, ctrlDlg_get_initializing, OSELF, self)
 {
-    pCPlainBaseDialog pcpbd = requiredDlgCSelf(context, self, oodPlainBaseDialog, 0);
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
     if ( pcpbd != NULL )
     {
-        return pcpbd->rexxOwner == NULLOBJECT ? TheNilObj : pcpbd->rexxOwner;
+        return pcpbd->isInitializing ? TheTrueObj : TheFalseObj;
     }
 
+    baseClassIntializationException(context);
     return NULLOBJECT;
 }
-/** ControlDialog::parentDlg  [attribute set]
- *
- *  Raises base class initialization exception if we can't get the CSelf
- *  pointer.  Raises wrong class exception if parent is not a PlainBaseDialog.
- *
- *  @note Although hOwnerDlg gets set, it very well could still be null.
- */
-RexxMethod2(RexxObjectPtr, chld_setOwnerDialog, RexxObjectPtr, owner, OSELF, self)
-{
-    pCPlainBaseDialog pcpbd = requiredDlgCSelf(context, self, oodPlainBaseDialog, 0);
-    if ( pcpbd != NULL )
-    {
-        pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(context, owner, oodPlainBaseDialog, 1);
-        if ( ownerPcpbd != NULL )
-        {
-            pcpbd->rexxOwner = owner;
-            pcpbd->hOwnerDlg = ownerPcpbd->hDlg;
-        }
-    }
 
+
+RexxMethod2(RexxObjectPtr, ctrlDlg_set_initializing, logical_t, initializing, OSELF, self)
+{
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+    if ( pcpbd == NULL )
+    {
+        baseClassIntializationException(context);
+    }
+    else
+    {
+        pcpbd->isInitializing = initializing ? true : false;
+    }
     return NULLOBJECT;
 }
 
@@ -478,6 +524,8 @@ RexxMethod4(RexxObjectPtr, resCtrlDlg_startDialog_pvt, CSTRING, library, RexxObj
             // TODO should we check result?
             uint32_t result = doDataAutoDetection(pcpbd);
         }
+
+        pcpbd->isInitializing = false;
         return TheTrueObj;
     }
 

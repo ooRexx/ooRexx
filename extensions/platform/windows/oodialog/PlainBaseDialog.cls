@@ -374,8 +374,12 @@
    expose dlgData.
    return dlgData.
 
-::attribute parentDlg private
+::attribute parentDlg get private external "LIBRARY oodialog pbdlg_getParentDlg_pvt"
+::attribute parentDlg set private external "LIBRARY oodialog pbdlg_setParentDlg_pvt"
 ::attribute childDialogs
+
+::attribute ownerDialog get  external "LIBRARY oodialog pbdlg_getOwnerDialog"
+::attribute ownerDialog set  external "LIBRARY oodialog pbdlg_setOwnerDialog"
 
 ::attribute dlgHandle get unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
 ::attribute fontName get external "LIBRARY oodialog pbdlg_getFontNameSize"

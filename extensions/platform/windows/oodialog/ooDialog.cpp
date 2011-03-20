@@ -57,6 +57,16 @@
 #include "oodResourceIDs.hpp"
 
 
+inline bool isValidOwner(pCPlainBaseDialog pcpbd)
+{
+    if ( pcpbd->isPropSheetDlg || pcpbd->isPageDlg || pcpbd->isControlDlg )
+    {
+        return false;
+    }
+    return true;
+}
+
+
 /**
  * Loads and returns the handle to an icon for the specified ID, of the
  * specified size.
@@ -2514,6 +2524,11 @@ static inline HWND getPBDWindow(RexxMethodContext *c, void *pCSelf)
 
 HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID)
 {
+    if ( pcpbd == NULL )
+    {
+        return (HWND)baseClassIntializationException(c);
+    }
+
     HWND hCtrl = NULL;
     oodResetSysErrCode(c->threadContext);
 
@@ -2829,6 +2844,7 @@ RexxMethod5(wholenumber_t, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     if ( context->IsOfType(self, "CONTROLDIALOG") )
     {
         pcpbd->isControlDlg = true;
+        pcpbd->isInitializing = true;
     }
     else if ( context->IsOfType(self, "CATEGORYDIALOG") )
     {
@@ -2879,7 +2895,6 @@ RexxMethod5(wholenumber_t, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
         context->SetObjectVariable("USESTEM", TheFalseObj);
     }
 
-    context->SetObjectVariable("PARENTDLG", TheNilObj);
     context->SetObjectVariable("FINISHED", TheFalseObj);
     context->SetObjectVariable("PROCESSINGLOAD", TheFalseObj);
 
@@ -2977,34 +2992,169 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
  */
 RexxMethod1(CSTRING, pbdlg_getLibrary, CSELF, pCSelf)
 {
-    return ( ((pCPlainBaseDialog)pCSelf)->library );
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (CSTRING)baseClassIntializationException(context);
+    }
+    return pcpbd->library;
 }
 
 /** PlainBaseDialog::resourceID  [attribute get]
  */
 RexxMethod1(RexxObjectPtr, pbdlg_getResourceID, CSELF, pCSelf)
 {
-    return ( ((pCPlainBaseDialog)pCSelf)->resourceID );
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+    return pcpbd->resourceID;
 }
 
 /** PlainBaseDialog::dlgHandle  [attribute get] / PlainBaseDialog::getSelf()
  */
 RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
 {
-    return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+    return pcpbd->wndBase->rexxHwnd;
 }
 
 /** PlainBaseDialog::autoDetect  [attribute get]
  */
 RexxMethod1(RexxObjectPtr, pbdlg_getAutoDetect, CSELF, pCSelf)
 {
-    return ( ((pCPlainBaseDialog)pCSelf)->autoDetect ? TheTrueObj : TheFalseObj );
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+    return pcpbd->autoDetect ? TheTrueObj : TheFalseObj;
 }
 /** PlainBaseDialog::autoDetect  [attribute set]
  */
-RexxMethod2(CSTRING, pbdlg_setAutoDetect, logical_t, on, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, pbdlg_setAutoDetect, logical_t, on, CSELF, pCSelf)
 {
-    ((pCPlainBaseDialog)pCSelf)->autoDetect = on;
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+    pcpbd->autoDetect = on;
+    return NULLOBJECT;
+}
+
+/** PlainBaseDialog::parentDlg  [attribute get private]
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getParentDlg_pvt, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+    return pcpbd->rexxParent == NULLOBJECT ? TheNilObj : pcpbd->rexxParent;
+}
+/** PlainBaseDialog::parentDlg  [attribute set private]
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_setParentDlg_pvt, RexxObjectPtr, parent, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+
+    if ( requiredClass(context->threadContext, parent, "PLAINBASEDIALOG", 1) )
+    {
+        pcpbd->rexxParent = parent;
+    }
+    return NULLOBJECT;
+}
+
+/** PlainBaseDialog::ownerDialog  [attribute get]
+ *
+ *  Returns the value of the owner dialog attribute, which is .nil if there is
+ *  no owner dialog.
+ *
+ *  @remarks  Read the remarks for the ownerDialog [attribute set] below.
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getOwnerDialog, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+    return pcpbd->rexxOwner == NULLOBJECT ? TheNilObj : pcpbd->rexxOwner;
+}
+
+/** PlainBaseDialog::ownerDialog  [attribute set]
+ *
+ *  Sets an owner dialog of this dialog.
+ *
+ *  @note  There are restraints on setting an owner dialog.  The owner argument
+ *         must be a Rexx dialog object, but can not be a PropertySheetDialog,
+ *         PropertySheetPage, or ControlDialog.  Once set, the owner dialog can
+ *         not be changed or removed.  The owner dialog can not be set once the
+ *         underlying dialog for this dialog has been created and when the owned
+ *         dialog is executed, the underlying owner dialog must have already
+ *         been created.
+ *
+ *         Raises error conditions if the constraints are not met.
+ *
+ *  @remarks  The ownerDialog attribute is used for both regular dialogs and
+ *            ControlDialogs.  A control dialog must have the owner dialog
+ *            attribute set or it will not execute.  A regular dialog does not
+ *            need the owner dialog attribute set, and in almost all cases it
+ *            will not be set.  However, once it is set, the regular dialog
+ *            becomes an 'owned' dialog, and from that point on the dialog
+ *            remains an owned dialog.
+ *
+ *            Although hOwnerDlg gets set here, it very well could still be
+ *            null. When the owned dialog is executed, that is the underlying
+ *            dialog is about to be created, there is a check that the
+ *            underlying owner dialog has already been created.
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_setOwnerDialog, RexxObjectPtr, owner, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+
+    if ( pcpbd->isOwnedDlg )
+    {
+        userDefinedMsgException(context, "Once set, the owner dialog attribute can not be changed");
+        return NULLOBJECT;
+    }
+
+    if ( pcpbd->hDlg != NULL )
+    {
+        userDefinedMsgException(context, "The owner dialog attribute can not be set after the underlying dialog is created");
+        return NULLOBJECT;
+    }
+
+    pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(context, owner, oodPlainBaseDialog, 1);
+    if ( ownerPcpbd != NULL )
+    {
+        if ( ! isValidOwner(ownerPcpbd) )
+        {
+            userDefinedMsgException(context, "The owner dialog can not be a PropertySheetDialog or a child dialog");
+        }
+        else
+        {
+            pcpbd->isOwnedDlg = true;
+            pcpbd->rexxOwner = owner;
+            pcpbd->hOwnerDlg = ownerPcpbd->hDlg;
+        }
+    }
+
     return NULLOBJECT;
 }
 
@@ -3016,7 +3166,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_getFinished, CSELF, pCSelf)
 }
 /** PlainBaseDialog::finished  [attribute set]
  */
-RexxMethod2(CSTRING, pbdlg_setFinished, logical_t, val, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, pbdlg_setFinished, logical_t, val, CSELF, pCSelf)
 {
     if ( val )
     {
@@ -3035,14 +3185,20 @@ RexxMethod2(CSTRING, pbdlg_setFinished, logical_t, val, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, pbdlg_getFontNameSize, NAME, method, CSELF, pCSelf)
 {
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+
     RexxObjectPtr result;
     if ( *(method + 4) == 'N' )
     {
-        result =  context->String(((pCPlainBaseDialog)pCSelf)->fontName);
+        result =  context->String(pcpbd->fontName);
     }
     else
     {
-        result = context->UnsignedInt32(((pCPlainBaseDialog)pCSelf)->fontSize);
+        result = context->UnsignedInt32(pcpbd->fontSize);
     }
     return result;
 }
@@ -3051,13 +3207,19 @@ RexxMethod2(RexxObjectPtr, pbdlg_getFontNameSize, NAME, method, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, pbdlg_setFontName_pvt, CSTRING, name, CSELF, pCSelf)
 {
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+
     if ( strlen(name) > (MAX_DEFAULT_FONTNAME - 1) )
     {
         stringTooLongException(context->threadContext, 1, MAX_DEFAULT_FONTNAME, strlen(name));
     }
     else
     {
-        strcpy(((pCPlainBaseDialog)pCSelf)->fontName, name);
+        strcpy(pcpbd->fontName, name);
     }
     return NULLOBJECT;
 }
@@ -3066,7 +3228,13 @@ RexxMethod2(RexxObjectPtr, pbdlg_setFontName_pvt, CSTRING, name, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, pbdlg_setFontSize_pvt, uint32_t, size, CSELF, pCSelf)
 {
-    ((pCPlainBaseDialog)pCSelf)->fontSize = size;
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+
+    pcpbd->fontSize = size;
     return NULLOBJECT;
 }
 
@@ -3104,6 +3272,10 @@ RexxMethod2(RexxObjectPtr, pbdlg_setFontSize_pvt, uint32_t, size, CSELF, pCSelf)
 RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_t, fontSize, CSELF, pCSelf)
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
 
     if ( strlen(fontName) > (MAX_DEFAULT_FONTNAME - 1) )
     {

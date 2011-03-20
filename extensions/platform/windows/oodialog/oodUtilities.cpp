@@ -484,6 +484,28 @@ RexxMethod1(uint16_t, dlgutil_loWord_cls, uint32_t, dw) { return LOWORD(dw); }
 RexxMethod2(intptr_t, dlgutil_makeLPARAM_cls, int16_t, loWord, int16_t, hiWord) { return MAKELPARAM(loWord, hiWord); }
 RexxMethod2(uintptr_t, dlgutil_makeWPARAM_cls, int16_t, loWord, int16_t, hiWord) { return MAKEWPARAM(loWord, hiWord); }
 
+RexxMethod2(uint64_t, dlgutil_shiftLeft_cls, uint64_t, n1, uint16_t, amount)
+{
+    return n1 << amount;
+}
+
+RexxMethod2(uint64_t, dlgutil_shiftRight_cls, uint64_t, n1, uint16_t, amount)
+{
+    return n1 >> amount;
+}
+
+RexxMethod2(wholenumber_t, dlgutil_sShiftLeft_cls, int64_t, n1, uint16_t, amount)
+{
+    uint64_t un1 = (uint64_t)n1;
+    return (wholenumber_t)(un1 << amount);
+}
+
+RexxMethod2(wholenumber_t, dlgutil_sShiftRight_cls, int64_t, n1, uint16_t, amount)
+{
+    uint64_t un1 = (uint64_t)n1;
+    return (wholenumber_t)(un1 >> amount);
+}
+
 RexxMethod2(uint64_t, dlgutil_and_cls, CSTRING, s1, CSTRING, s2)
 {
     uint64_t n1, n2;
