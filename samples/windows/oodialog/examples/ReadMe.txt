@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2007-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -40,31 +40,40 @@
   1.  ooDialog Example Programs
   -------------------------------
 
-  This directory contains example ooDialog programs.  They are intended to be
-  relatively short and simple programs that demonstrate how to use some feature
-  of ooDialog.
+  This directory contains example ooDialog programs.  They are intended to
+  be relatively short and simple programs that demonstrate how to use some
+  feature of ooDialog.
 
     - publicRoutines_demo.rex
 
     ooDialog contains a number of standard dialog and public routines.  The
-    standard dialogs and public routines are designed to be easy to use.  They
-    allow a programmer to added simple graphical elements to a program without
-    any detailed knowledge of the ooDialog framework.  The publicRoutines_demo
-    program demonstrates how to use these public routines.
+    standard dialogs and public routines are designed to be easy to use.
+    They allow a programmer to added simple graphical elements to a program
+    without any detailed knowledge of the ooDialog framework.  The
+    publicRoutines_demo program demonstrates how to use these public
+    routines.
 
     - fileNameDialog_demo.rex
 
-    The FileNameDialog public routine allows a programmer to present the user
-    with the standard Windows Open or Save file dialog.  The fileNameDialog_demo
-    program demonstrates how to use this routine.
+    The FileNameDialog public routine allows a programmer to present the
+    user with the standard Windows Open or Save file dialog.  The
+    fileNameDialog_demo program demonstrates how to use this routine.
 
     - imageButton.rex
 
-    This example program demonstrates some of the new features introduced in
-    ooRexx 4.0.0, including the .Image, .Imagelist classes, and the
+    This example program demonstrates some of the new features introduced
+    in ooRexx 4.0.0, including the .Image, .Imagelist classes, and the
     setImageList() method of the button class.
 
     - columnClickListView.rex
 
-    An example program that shows how to determine which row and which column
-    in a list view control the user has clicked on.
+    An example program that shows how to determine which row and which
+    column in a list view control the user has clicked on.
+
+    - useTools.rex
+
+    This example program shows how to use a dialog that is an "owned"
+    window.  Owned windows have several constraints, one of which is that
+    they always remain above their owner window.  This makes them useful to
+    create "tool palette" types of programs.  The example program does just
+    that, demonstrates a main dialog with a tool palette.

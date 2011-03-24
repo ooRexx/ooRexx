@@ -66,10 +66,15 @@
   dlgTool = .ToolPaletteDlg~new( , "resources\useTools.h" )
   dlgTool~ownerDialog = dlg
 
+  -- Start the main dialog asynchronously so we continue and then can start the
+  -- tool palette.
   dlg~executeAsync("SHOWTOP", IDI_DLG_OOREXX)
 
+  -- Start the tool palette now.  It can not be started until its owner dialog
+  -- has been started.
   dlgTool~popup("SHOWTOP")
 
+  -- End async execution which will not return until the main dialog closes.
   dlg~endAsyncExecution
 
 
@@ -169,6 +174,8 @@
   expose toolText
   toolText~setText('Running projectReview tool')
 
+-- Invoked by the tool palette dialog when the user presses the close tool
+-- button.  That is the only way for the user to close the tool palette.  Here
 ::method closePalette
   expose toolText
 

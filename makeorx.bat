@@ -229,6 +229,7 @@ if not exist doc\rxmath.pdf          SET MISSING_DOC=1
 if not exist doc\rxsock.pdf          SET MISSING_DOC=1
 if not exist doc\rxftp.pdf           SET MISSING_DOC=1
 if not exist doc\oodialog.pdf        SET MISSING_DOC=1
+if not exist doc\oodguide.pdf        SET MISSING_DOC=1
 if not exist doc\rexxextensions.pdf  SET MISSING_DOC=1
 if not exist doc\unixextensions.pdf  SET MISSING_DOC=1
 if not exist doc\winextensions.pdf   SET MISSING_DOC=1
@@ -306,6 +307,14 @@ if not exist doc\oodialog.pdf (
   )
 )
 copy %DOC_LOCATION%\oodialog.pdf doc 1>nul 2>&1
+
+if not exist doc\oodguide.pdf (
+  if not exist %DOC_LOCATION%\oodguide.pdf (
+    if %USELOGFILE% EQU 1 (echo oodguide.pdf is missing >>%OR_ERRLOG%) else (echo oodguide.pdf is missing)
+    goto NO_DOC_ERR
+  )
+)
+copy %DOC_LOCATION%\oodguide.pdf doc 1>nul 2>&1
 
 if not exist doc\rexxxtensions.pdf (
   if not exist %DOC_LOCATION%\rexxextensions.pdf (
