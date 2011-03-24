@@ -106,7 +106,12 @@
   toolText~setFont(font)
 
 
+-- The event handling method for the Show Palette button click.  We hide the
+-- button and execute a new tool palette dialog.  The button is always hidden
+-- while a tool palette dialog is executing and is only visible when the user
+-- has closed the currently executing tool palette dialog.
 ::method onShowPalette unguarded
+  expose dlgTool
 
   self~paletteButton(.false)
 
@@ -176,12 +181,17 @@
 
 -- Invoked by the tool palette dialog when the user presses the close tool
 -- button.  That is the only way for the user to close the tool palette.  Here
+-- we set the tool text to the empty string and then make the Show Palette
+-- button visible.  This allows the user to click on the button and reshow a
+-- tool palette.
 ::method closePalette
   expose toolText
 
   toolText~setText('')
   self~paletteButton(.true)
 
+-- This private method either hides or makes visible the Show Palette button
+-- depending on the value of the argument.
 ::method paletteButton private
   use strict arg showButton
 
@@ -196,6 +206,7 @@
 
   forward class (super) continue
 
+  -- Populate the buttonIDs and buttonNames arrays.
   self~populateButtons
 
   -- The bitmaps are 32 x 32, we want the button to have a 4 pixel margin so
@@ -203,7 +214,6 @@
   -- Convert the size in pixels to dialog units
   s = .Size~new(40, 40)
   self~pixel2dlgUnit(s)
-
   count = buttonIDs~items
 
   -- The last button is the close button.  We palace an empty spot the width
@@ -216,12 +226,23 @@
 ::method defineDialog
   expose s buttonIDs
 
+  -- Create all our tool buttons and connect their button click event with the
+  -- onToolClick method in this dialog.
   do i = 1 to buttonIDs~items
     x = (i - 1) * s~width
     if i == buttonIDs~items then x += s~width
     self~createPushButton(buttonIDs[i], x, 0, s~width, s~height, 'BITMAP', , onToolClick)
   end
 
+
+-- In the initDialog method we create a bitmap Image object from the bitmap
+-- files for each button.  Then an ImageList for each button is created and
+-- assigned to the button.  Each image list only has one image in it, so the
+-- operating system uses that one image for all the states of the button.
+--
+-- Note that when the bitmap image is added to the image list, the image list
+-- makes a copy of the image, so we release the image resource in our copy once
+-- it is added to the image list.
 ::method initDialog
    expose buttonIDs buttonNames
 
@@ -250,10 +271,27 @@
    end
 
 
+-- The leaving method is called automatically by the ooDialog framework when the
+-- underlying Windows dialog is closing.  The leaving method is a good place to
+-- do any final clean up.  We use it here to release the operating system
+-- resouces used by the image lists.
+--
+-- Note this.  For some controls like the list-view control, Microsoft's
+-- documentation explicityly states that the list-view control will release
+-- the image list resources.  However, for the button control, the documentation
+-- does not say one way or the other.
+::method leaving unguarded
+   expose buttonIDs
+
+   do id over buttonIDs
+     btn = self~newPushButton(id)
+     btn~getImageList~release
+   end
+
 -- The event handler for the button click event.  We map which button was
 -- clicked to the proper method in the parent / owner dialog and invoke that
 -- method
-::method onToolClick
+::method onToolClick unguarded
    use arg id, hwnd
 
    select
