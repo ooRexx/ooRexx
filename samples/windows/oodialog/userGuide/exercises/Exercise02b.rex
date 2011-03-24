@@ -77,12 +77,7 @@
   say "'More wisdom' button clicked"
 
   newText = self~newStatic(902)
-  if newText == .nil then do
-    say "Method okClicked: newStatic bad!"
-    return
-  end
   i = random(1,7)
   newText~setText(arrWow[i])
-  newText~show
   return
 
