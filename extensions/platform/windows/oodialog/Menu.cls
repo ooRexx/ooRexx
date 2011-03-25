@@ -85,7 +85,7 @@
 ::method isEnabled external "LIBRARY oodialog menu_isEnabled"
 ::method isDisabled external "LIBRARY oodialog menu_isDisabled"
 ::method isGrayed external "LIBRARY oodialog menu_isDisabled"
-::method isChecked external "LIBRARY oodialog menu_isDisabled"
+::method isChecked external "LIBRARY oodialog menu_isChecked"
 
 ::method enable external "LIBRARY oodialog menu_enable"
 ::method disable external "LIBRARY oodialog menu_disable"
