@@ -41,8 +41,7 @@
 
   dlg = .SimpleDialog~new
 
-  dlg~Execute("SHOWTOP")
-  dlg~deinstall
+  dlg~execute("SHOWTOP")
 
 return 0
 
@@ -63,8 +62,8 @@ return 0
   self~createStatic(IDC_STATIC, 20, 21, 40, 12, "TEXT RIGHT", "Spin Me:")
   self~createEdit(IDC_EDIT_BUDDY, 62, 20, 65, 12, "RIGHT NUMBER")
   self~createUpDown(IDC_UPD, 81, 26, 12, 16, "WRAP ARROWKEYS AUTOBUDDY SETBUDDYINT")
-  self~addButton(IDOK, 22, 45, 50, 14, "Ok", , "DEFAULT")
-  self~addButton(IDCANCEL, 77, 45, 50, 14, "Cancel")
+  self~createPushButton(IDOK, 22, 45, 50, 14, "DEFAULT", "Ok")
+  self~createPushButton(IDCANCEL, 77, 45, 50, 14, , "Cancel")
 
 ::method initDialog
 
