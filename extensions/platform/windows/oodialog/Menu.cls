@@ -92,7 +92,7 @@
 ::method gray external "LIBRARY oodialog menu_disable"
 ::method check external "LIBRARY oodialog menu_check"
 ::method unCheck external "LIBRARY oodialog menu_unCheck"
-::method checkRadioItem external "LIBRARY oodialog menu_checkRadio"
+::method checkRadio external "LIBRARY oodialog menu_checkRadio"
 ::method hilite external "LIBRARY oodialog menu_hilite"
 ::method unHilite external "LIBRARY oodialog menu_unHilite"
 ::method getItemState external "LIBRARY oodialog menu_getItemState"

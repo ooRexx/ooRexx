@@ -633,7 +633,7 @@ syntax:
 
     if self~menuBar == .nil then raise syntax 93.900 array("There is no MenuBar attached to this dialog")
     if self~menuBar~isA(.UserMenuBar), \self~menuBar~isComplete then raise syntax 93.900 array("the UserMenuBar is not complete")
-    return self~menuBar~checkRadioItem(idstart, idend, idset)
+    return self~menuBar~checkRadio(idstart, idend, idset)
 
 syntax:
   c = condition('O')
