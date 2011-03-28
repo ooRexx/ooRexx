@@ -548,6 +548,13 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.rc"
   ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\menus
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.rc"
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\oleinfo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.rex"

@@ -1531,11 +1531,11 @@
    use strict arg newBase
    return self~sendWinIntMsg(self~UDM_SETBASE, newBase, 0)
 
-::method getBuddy unguarded
+::method getBuddy unguarded     -- TODO the buddy should be Rexx Objects, NOT hwnd
    use strict arg
    return self~sendWinIntMsgH(self~UDM_GETBUDDY, 0, 0)
 
-::method setBuddy unguarded
+::method setBuddy unguarded     -- TODO the buddy should be Rexx Objects, NOT hwnd
    use strict arg hwndBuddy
    return self~sendWinHandleMsgH(self~UDM_SETBUDDY, hwndBuddy, 0)
 

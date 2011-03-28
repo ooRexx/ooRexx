@@ -37,8 +37,8 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= bmp controls examples oleinfo ooRexxTry rc res simple sysinfo tutorial userGuide wav winsystem
-DIST_SUBDIRS 	= bmp controls examples oleinfo ooRexxTry rc res simple sysinfo tutorial userGuide wav winsystem
+SUBDIRS			= bmp controls examples menus oleinfo ooRexxTry rc res simple sysinfo tutorial userGuide wav winsystem
+DIST_SUBDIRS 	= bmp controls examples menus oleinfo ooRexxTry rc res simple sysinfo tutorial userGuide wav winsystem
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 

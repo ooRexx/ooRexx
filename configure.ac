@@ -466,6 +466,7 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/controls/Makefile
         samples/windows/oodialog/examples/Makefile
         samples/windows/oodialog/examples/resources/Makefile
+        samples/windows/oodialog/menus/Makefile
         samples/windows/oodialog/oleinfo/Makefile
         samples/windows/oodialog/ooRexxTry/Makefile
         samples/windows/oodialog/ooRexxTry/doc/Makefile
