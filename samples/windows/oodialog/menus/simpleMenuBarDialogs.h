@@ -35,6 +35,10 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
+
 #define IDD_INSERT_DIALOG                       101
 #define IDD_SELECT_DIALOG                       103
 #define IDD_ACCEL_DIALOG                        105
