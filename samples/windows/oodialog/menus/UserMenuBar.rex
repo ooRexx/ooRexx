@@ -47,7 +47,7 @@
  * a menu bar example.
  */
 
-  dlg = .SimpleDialog~new("simpleMenuBarDialogs.rc", IDD_MAIN_DIALOG, , "simpleMenuBarDialogs.h")
+  dlg = .SimpleDialog~new("UserMenuBar.rc", IDD_MAIN_DIALOG, , "UserMenuBar.h")
   if dlg~initCode <> 0 then do
     return 99
   end
@@ -227,7 +227,7 @@ return 0
 ::method insertText unguarded
   expose edit
 
-  dlg = .InsertDialog~new("simpleMenuBarDialogs.rc", IDD_INSERT_DIALOG, , "simpleMenuBarDialogs.h")
+  dlg = .InsertDialog~new("UserMenuBar.rc", IDD_INSERT_DIALOG, , "UserMenuBar.h")
 
   if dlg~execute("SHOWTOP", IDI_DLG_OODIALOG) == .PlainBaseDialog~IDOK then do
     edit~setText(dlg~selectedText)
@@ -237,7 +237,7 @@ return 0
 ::method selectText unguarded
   expose edit
 
-  dlg = .SelectDialog~new("simpleMenuBarDialogs.rc", IDD_SELECT_DIALOG, , "simpleMenuBarDialogs.h")
+  dlg = .SelectDialog~new("UserMenuBar.rc", IDD_SELECT_DIALOG, , "UserMenuBar.h")
   dlg~currentText = edit~getText
   edit~select(1, 1)
 
@@ -263,7 +263,7 @@ return 0
 ::method setAcceleration unguarded
   expose upDown
 
-  dlg = .AccelDialog~new("simpleMenuBarDialogs.rc", IDD_ACCEL_DIALOG, , "simpleMenuBarDialogs.h")
+  dlg = .AccelDialog~new("UserMenuBar.rc", IDD_ACCEL_DIALOG, , "UserMenuBar.h")
 
   if dlg~execute("SHOWTOP", IDI_DLG_APPICON2) == .PlainBaseDialog~IDOK then do
     accel = dlg~acceleration
@@ -274,7 +274,7 @@ return 0
 ::method setRange unguarded
   expose upDown
 
-  dlg = .RangeDialog~new("simpleMenuBarDialogs.rc", IDD_RANGE_DIALOG, , "simpleMenuBarDialogs.h")
+  dlg = .RangeDialog~new("UserMenuBar.rc", IDD_RANGE_DIALOG, , "UserMenuBar.h")
 
   if dlg~execute("SHOWTOP", IDI_DLG_OOREXX) == .PlainBaseDialog~IDOK then do
     r = dlg~range
@@ -285,7 +285,7 @@ return 0
 ::method setPosition unguarded
   expose upDown
 
-  dlg = .PositionDialog~new("simpleMenuBarDialogs.rc", IDD_POSITION_DIALOG, , "simpleMenuBarDialogs.h")
+  dlg = .PositionDialog~new("UserMenuBar.rc", IDD_POSITION_DIALOG, , "UserMenuBar.h")
   dlg~upDown = upDown
 
   if dlg~execute("SHOWTOP", IDI_DLG_DEFAULT) == .PlainBaseDialog~IDOK then do
@@ -294,9 +294,9 @@ return 0
   end
 
 
-::method aboutSimpleMenu unguarded
+::method aboutUserMenuBar unguarded
 
-  dlg = .AboutDialog~new("simpleMenuBarDialogs.rc", IDD_ABOUT_DIALOG, , "simpleMenuBarDialogs.h")
+  dlg = .AboutDialog~new("UserMenuBar.rc", IDD_ABOUT_DIALOG, , "UserMenuBar.h")
 
   dlg~execute("SHOWTOP", IDI_DLG_DEFAULT)
 
@@ -351,7 +351,7 @@ return 0
     menuBar~addItem(ID_UPDOWNCONTROL_SET_POSITION, "Set Position ...", "END")
 
   menuBar~addPopup( IDM_POP_HELP, "Help", "END")
-    menuBar~addItem(ID_HELP_ABOUT, "About Simple Menu", "END")
+    menuBar~addItem(ID_HELP_ABOUT, "About User Menu Bar", "END")
 
   if \ menuBar~complete then do
     say 'User menu bar completion error:' .SystemErrorCode SysGetErrortext(.SystemErrorCode)
@@ -570,12 +570,12 @@ return 0
 ::method initDialog
    expose font
 
-   bitmap = .Image~getImage("simpleMenuBarOORexx.bmp")
+   bitmap = .Image~getImage("UserMenuBar.bmp")
    self~newStatic(IDC_ST_BITMAP)~setImage(bitmap)
 
    font = self~createFontEx("Ariel", 14)
    self~newStatic(IDC_ST_ABOUT)~setFont(font)
 
-::method leafing
+::method leaving
    expose font
    self~deleteFont(font)

@@ -37,13 +37,13 @@
 
 #include <windows.h>
 #include <commctrl.h>
-#include "simpleMenuBarDialogs.h"
+#include "UserMenuBar.h"
 
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDD_ABOUT_DIALOG DIALOGEX 0, 0, 231, 105
 STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
-CAPTION "About Menu Bar Example"
+CAPTION "About User Menu Bar Example"
 FONT 8, "Ms Shell Dlg", 400, 0, 1
 {
     CONTROL         "", IDC_ST_BITMAP, WC_STATIC, SS_BITMAP | SS_REALSIZECONTROL, 16, 7, 102, 71
