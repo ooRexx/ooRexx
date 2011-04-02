@@ -72,7 +72,6 @@ return 0
 
 
 ::method init
-  expose menuBar
 
   forward class (super) continue
 
@@ -80,8 +79,6 @@ return 0
     self~initCode = 1
     return
   end
-
-  --self~makeMenuItemConnections
 
 
 ::method initDialog
@@ -100,6 +97,50 @@ return 0
   edit~setText(.SimpleDialog~DEFAULT_TEXT)
 
   self~setRadioChecks(ID_EDITCONTROL_UNRESTRICTED)
+
+
+-- Creates a UserMenuBar
+::method createMenuBar private
+  expose menuBar
+
+  -- Create a menu bar that has a symbolic resource ID of IDM_MENUBAR, whose
+  -- constDir attribute is copied from this dialog's constdir, has no help ID,
+  -- does not attach to a dialog at this point, and autoconnects all command
+  -- menu items when it is attached to a dialog.
+  menuBar = .UserMenuBar~new(IDM_MENUBAR, self, , .false, .true)
+
+  -- Create the menu bar template.
+  menuBar~addPopup(IDM_POP_FILES, "Files")
+    menuBar~addItem(ID_FILES_HIDE_EDIT, "Hide Edit Control", "DEFAULT CHECK")
+    menuBar~addItem(ID_FILES_HIDE_UPDOWN, "Hide UpDown Control", " CHECK")
+    menuBar~addSeparator(IDM_SEP_FILES)
+    menuBar~addItem(ID_FILES_EXIT, "Exit", "END")
+
+  menuBar~addPopup(IDM_POP_EDITCONTROL, "Edit Control")
+    menuBar~addItem(ID_EDITCONTROL_LOWER, "Lower Case Only", "CHECK RADIO")
+    menuBar~addItem(ID_EDITCONTROL_NUMBER, "Numbers Only", "CHECK RADIO")
+    menuBar~addItem(ID_EDITCONTROL_UPPER, "Upper Case Only", "CHECK RADIO")
+    menuBar~addItem(ID_EDITCONTROL_UNRESTRICTED, "No Restriction", "CHECK RADIO DEFAULT")
+    menuBar~addSeparator(IDM_SEP_EDITCONTROL)
+    menuBar~addItem(ID_EDITCONTROL_INSERT, "Insert Text ...")
+    menuBar~addItem(ID_EDITCONTROL_SELECT, "Select Text ...", "END")
+
+  menuBar~addPopup(IDM_POP_UPDOWNCONTROL, "UpDown Control")
+    menuBar~addItem(ID_UPDOWNCONTROL_HEXIDECIMAL, "Hexidecimal", "CHECK")
+    menuBar~addSeparator(IDM_SEP_UPDOWNCONTROL)
+    menuBar~addItem(ID_UPDOWNCONTROL_SET_ACCELERATION, "Set Acceleration ...")
+    menuBar~addItem(ID_UPDOWNCONTROL_SET_RANGE, "Set Range ...")
+    menuBar~addItem(ID_UPDOWNCONTROL_SET_POSITION, "Set Position ...", "END")
+
+  menuBar~addPopup( IDM_POP_HELP, "Help", "END")
+    menuBar~addItem(ID_HELP_ABOUT, "About User Menu Bar", "END")
+
+  if \ menuBar~complete then do
+    say 'User menu bar completion error:' .SystemErrorCode SysGetErrortext(.SystemErrorCode)
+    return .false
+  end
+
+  return .true
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -272,13 +313,19 @@ return 0
 
 
 ::method setRange unguarded
-  expose upDown
+  expose upDown edit
 
   dlg = .RangeDialog~new("UserMenuBar.rc", IDD_RANGE_DIALOG, , "UserMenuBar.h")
 
   if dlg~execute("SHOWTOP", IDI_DLG_OOREXX) == .PlainBaseDialog~IDOK then do
     r = dlg~range
     upDown~setRange(r~x, r~y)
+
+    -- If the current position was no longer within the new range, the up-down
+    -- control will have internally reset its position so that it is within the
+    -- new range.  But, the value displayed will still be the old value.  This
+    -- forces the value displayed to match the current position.
+    upDown~setPosition(upDown~getPosition)
   end
 
 
@@ -305,6 +352,7 @@ return 0
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 
+
 -- Convenience method to set the radio button menu items.  The checkRadio()
 -- method takes a start resource ID and an end resource, and the resource ID for
 -- a single menu item within that range of IDs.  It removes the radio button
@@ -315,50 +363,6 @@ return 0
   use strict arg item
 
   menuBar~checkRadio(ID_EDITCONTROL_LOWER, ID_EDITCONTROL_UNRESTRICTED, item)
-
-
--- Creates a UserMenuBar
-::method createMenuBar private
-  expose menuBar
-
-  -- Create a menu bar that has a symbolic resource ID of IDM_MENUBAR, whose
-  -- constDir attribute is copied from this dialog's constdir, has no help ID,
-  -- does not attach to a dialog at this point, and autoconnects all command
-  -- menu items when it is attached to a dialog.
-  menuBar = .UserMenuBar~new(IDM_MENUBAR, self, , .false, .true)
-
-  -- Create the menu bar template.
-  menuBar~addPopup(IDM_POP_FILES, "Files")
-    menuBar~addItem(ID_FILES_HIDE_EDIT, "Hide Edit Control", "DEFAULT CHECK")
-    menuBar~addItem(ID_FILES_HIDE_UPDOWN, "Hide UpDown Control", " CHECK")
-    menuBar~addSeparator(IDM_SEP_FILES)
-    menuBar~addItem(ID_FILES_EXIT, "Exit", "END")
-
-  menuBar~addPopup(IDM_POP_EDITCONTROL, "Edit Control")
-    menuBar~addItem(ID_EDITCONTROL_LOWER, "Lower Case Only", "CHECK RADIO")
-    menuBar~addItem(ID_EDITCONTROL_NUMBER, "Numbers Only", "CHECK RADIO")
-    menuBar~addItem(ID_EDITCONTROL_UPPER, "Upper Case Only", "CHECK RADIO")
-    menuBar~addItem(ID_EDITCONTROL_UNRESTRICTED, "No Restriction", "CHECK RADIO DEFAULT")
-    menuBar~addSeparator(IDM_SEP_EDITCONTROL)
-    menuBar~addItem(ID_EDITCONTROL_INSERT, "Insert Text ...")
-    menuBar~addItem(ID_EDITCONTROL_SELECT, "Select Text ...", "END")
-
-  menuBar~addPopup(IDM_POP_UPDOWNCONTROL, "UpDown Control")
-    menuBar~addItem(ID_UPDOWNCONTROL_HEXIDECIMAL, "Hexidecimal", "CHECK")
-    menuBar~addSeparator(IDM_SEP_UPDOWNCONTROL)
-    menuBar~addItem(ID_UPDOWNCONTROL_SET_ACCELERATION, "Set Acceleration ...")
-    menuBar~addItem(ID_UPDOWNCONTROL_SET_RANGE, "Set Range ...")
-    menuBar~addItem(ID_UPDOWNCONTROL_SET_POSITION, "Set Position ...", "END")
-
-  menuBar~addPopup( IDM_POP_HELP, "Help", "END")
-    menuBar~addItem(ID_HELP_ABOUT, "About User Menu Bar", "END")
-
-  if \ menuBar~complete then do
-    say 'User menu bar completion error:' .SystemErrorCode SysGetErrortext(.SystemErrorCode)
-    return .false
-  end
-
-  return .true
 
 
 ::method initAutoDetection
