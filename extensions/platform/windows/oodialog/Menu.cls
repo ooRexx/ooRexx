@@ -289,6 +289,7 @@
   end
 
   found = 0; n = 0
+  menuName = menuName~translate
   isMenuEx = .false
   fl = f~lines
   do while found = 0, fl > 0

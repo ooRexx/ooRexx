@@ -313,7 +313,7 @@ return 0
 
 
 ::method setRange unguarded
-  expose upDown edit
+  expose upDown
 
   dlg = .RangeDialog~new("UserMenuBar.rc", IDD_RANGE_DIALOG, , "UserMenuBar.h")
 

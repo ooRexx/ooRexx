@@ -5743,15 +5743,15 @@ RexxMethod6(RexxObjectPtr, popMenu_show, RexxObjectPtr, location, OPTIONAL_RexxO
  *            simple string.  We have to special case these things both in
  *            menuInit() and in the call to load().
  */
-RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObjectPtr, id, OPTIONAL_RexxObjectPtr, symbolSrc,
-            OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_uint32_t, count, OPTIONAL_logical_t, connect, OPTIONAL_logical_t, attach,
-            OSELF, self)
+RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_RexxObjectPtr, id,
+            OPTIONAL_RexxObjectPtr, symbolSrc, OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_uint32_t, count,
+            OPTIONAL_logical_t, connect, OPTIONAL_logical_t, attach, OSELF, self)
 {
     CppMenu *cMenu = new CppMenu(self, ScriptMenuBar, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
-    bool idOmitted = isInt(-1, id, context->threadContext);
+    bool idOmitted = argumentOmitted(2) ? true : false;
 
     if ( ! cMenu->menuInit(id, symbolSrc, rcFile) )
     {
@@ -5784,8 +5784,9 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
     // load() will raise an exception, so that's ok.
     RexxObjectPtr menuName = (cMenu->wID == -1 && ! idOmitted) ? id : context->NullString();
 
-    RexxArrayObject args = context->ArrayOfFour(rcFile, context->UnsignedInt32(cMenu->wID),
-                                                context->Logical(connect), context->UnsignedInt32(count));
+    RexxMethodContext *c = context;
+    RexxArrayObject args = context->ArrayOfFour(rcFile, c->Int32(cMenu->wID), context->Logical(connect),
+                                                context->UnsignedInt32(count));
     context->ArrayAppend(args, idOmitted ? TheTrueObj : TheFalseObj);
     context->ArrayAppend(args, menuName);
 
