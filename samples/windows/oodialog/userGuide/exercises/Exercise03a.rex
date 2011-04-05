@@ -35,12 +35,12 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-/* Exercise 03: Re-structuring the "Words of Widom" application               */
+/* Exercise 03: Re-structuring the "Words of Wisdom" application               */
 
 /*******************************************************************************
   ooDialog User Guide
-    Exercise03a							v00-01 24Mar11
-  --------
+    Exercise03a							v00-02 01Apr11
+    -----------
 
   A re-structuring of the "Words of Wisdom" code.
 
@@ -70,7 +70,8 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
     self~create(30, 30, 257, 123, "Words of Wisdom", "CENTER")
     wowPicker = .WowPicker~new
     return
-
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  
   /*----------------------------------------------------------------------------
     defineDialog - defines the "Words of Wisdom" controls
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -86,23 +87,6 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method okClicked
     expose wowPicker
-/*
-    arrWow = .array~new
-    arrWow[1] = "Agnes Allen's Law:"||.endofline|| -
-     	        "Almost anything is easier to get into than out of."
-    arrWow[2] = "Airplane Law:"||.endofline||"When the plane you are on is late," -
-    	        ||.endofline||"the plane you want to transfer to is on time."
-    arrWow[3] = "Fourteenth Corollary of Atwood's General Law of Dynamic Negatives:" -
-  	        ||.endofline||"No books are lost by loaning"||.endofline|| -
-  	        "except those you particularly wanted to keep."
-    arrWow[4] = "Baker's Byroad:"||.endofline||"When you're over the hill, you pick up speed."
-    arrWow[5] = "First Law of Bicycling:"||.endofline|| -
-  	        "No matter which way you ride, it's uphill and against the wind."
-    arrWow[6] = "Brooks's Law:"||.endofline|| -
-  	        "Adding manpower to a late software project makes it later."
-    arrWow[7] = "Grossman's Misquote of H. L. Mencken"||.endofline|| -
-  	        "Complex problems have simple, easy-to-understand wrong answers."
-*/
     newText = self~newStatic(902)
     wow = wowPicker~pickWow
     newText~setText(wow)
@@ -112,13 +96,13 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 /*============================================================================*/
 
+
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
   WowPicker							v00-01 24Mar11
   -------------
-  Single-method class that returns a set of Words of Wisdom, or a different
-  set than that currently returned (makes the new set the current set).
-  The size of the set is defined by configuration (but not in this version)
+  Picks a "words of wisdom" string from a set of such "words of wisdom" 
+  and returns it. The set is initially retrieved from the WowData class.  
 
   interface{
     pickWow( out string wow )
@@ -147,7 +131,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 
-  /*//////////////////////////////////////////////////////////////////////////////
+/*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
   WowData							v00-01 24Mar11
   -------------
@@ -168,21 +152,6 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   ::METHOD init
     expose arrWow
     arrWow = .array~new
-    arrWow[1] = "Agnes Allen's Law:"||.endofline|| -
-	      "Almost anything is easier to get into than out of."
-    arrWow[2] = "Airplane Law:"||.endofline||"When the plane you are on is late," -
-    	      ||.endofline||"the plane you want to transfer to is on time."
-    arrWow[3] = "Fourteenth Corollary of Atwood's General Law of Dynamic Negatives:" -
-  	      ||.endofline||"No books are lost by loaning"||.endofline|| -
-  	      "except those you particularly wanted to keep."
-    arrWow[4] = "Baker's Byroad:"||.endofline||"When you're over the hill, you pick up speed."
-    arrWow[5] = "First Law of Bicycling:"||.endofline|| -
-  	      "No matter which way you ride, it's uphill and against the wind."
-    arrWow[6] = "Brooks's Law:"||.endofline|| -
-  	      "Adding manpower to a late software project makes it later."
-    arrWow[7] = "Grossman's Misquote of H. L. Mencken"||.endofline|| -
-  	      "Complex problems have simple, easy-to-understand wrong answers."
-
     arrWow[1] = "Agnes Allen's Law:" -
 	      	"Almost anything is easier to get into than out of."
     arrWow[2] = "Airplane Law:" -
@@ -198,8 +167,6 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   	      "Adding manpower to a late software project makes it later."
     arrWow[7] = "Grossman's Misquote of H. L. Mencken" -
   	      "Complex problems have simple, easy-to-understand wrong answers."
-
-
     return
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
