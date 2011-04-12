@@ -571,6 +571,23 @@ RexxRoutine1(int,
 
 
 /**
+ * Method:        SysClose
+ *
+ * Close a file handle.
+ *
+ * @param nmask   The file handle to close.
+ *
+ * @return        the return code from the C close function
+ */
+RexxRoutine1(int,
+             SysClose,
+             int, fh)
+{
+    return close(fh);
+}
+
+
+/**
  * Method:        SysGetpwnam
  *
  * Return user name information from the passwd file.
@@ -1724,6 +1741,7 @@ RexxRoutineEntry orxnixclib_routines[] = {
     REXX_TYPED_ROUTINE(SysLchown, SysLchown),
     REXX_TYPED_ROUTINE(SysChroot, SysChroot),
     REXX_TYPED_ROUTINE(SysUmask, SysUmask),
+    REXX_TYPED_ROUTINE(SysClose, SysClose),
     REXX_TYPED_ROUTINE(SysGetpwnam, SysGetpwnam),
     REXX_TYPED_ROUTINE(SysGetpwuid, SysGetpwuid),
     REXX_TYPED_ROUTINE(SysGetgrnam, SysGetgrnam),
