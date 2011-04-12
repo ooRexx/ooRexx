@@ -414,6 +414,26 @@ RexxRoutine0(RexxObjectPtr,
 
 
 /**
+ * Method:        SysKill
+ *
+ * Kill a process.
+ *
+ * @param pid1    The pid to kill.
+ *
+ * @param sig1    The signal to send.
+ *
+ * @return        return code
+ */
+RexxRoutine2(int,
+             SysKill,
+             int, pid1,
+             int, sig1)
+{
+    return kill((pid_t)pid1, sig1);
+}
+
+
+/**
  * Method:        SysSymlink
  *
  * Create a symbolic link.
@@ -1696,6 +1716,7 @@ RexxRoutineEntry orxnixclib_routines[] = {
     REXX_TYPED_ROUTINE(SysGetpid, SysGetpid),
     REXX_TYPED_ROUTINE(SysGetppid, SysGetppid),
     REXX_TYPED_ROUTINE(SysGettid, SysGettid),
+    REXX_TYPED_ROUTINE(SysKill, SysKill),
     REXX_TYPED_ROUTINE(SysSymlink, SysSymlink),
     REXX_TYPED_ROUTINE(SysLink, SysLink),
     REXX_TYPED_ROUTINE(SysUnlink, SysUnlink),
