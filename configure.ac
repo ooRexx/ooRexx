@@ -283,6 +283,9 @@ AC_SUBST(ORX_LDFLAGS_LIBRARY)
 AC_SUBST(ORX_LDFLAGS_PACKAGE)
 AC_SUBST(ORX_PLATFORM)
 AC_SUBST(ORX_INIT_LDFLAGS)
+# The following line is what gets ooRexx libraries installed into ${libdir}
+# instead of ${libdir}/${PACKAGE}
+AC_SUBST([pkglibdir], ['${libdir}'])
 
 dnl Checks for header files.
 AC_HEADER_STDC

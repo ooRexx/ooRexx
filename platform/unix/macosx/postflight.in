@@ -7,43 +7,6 @@ PREFIX=
 
 echo $SCRIPT_NAME: linking files
 
-echo $SCRIPT_NAME: linking libraries to /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexx                 /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexx.$VER.$REL.$MOD.dylib     /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexx.$VER.dylib         /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexx.a               /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexx.dylib           /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexx.la              /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxapi              /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxapi.$VER.$REL.$MOD.dylib  /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxapi.$VER.dylib      /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxapi.a            /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxapi.dylib        /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxapi.la           /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxutil             /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxutil.$VER.$REL.$MOD.dylib /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxutil.$VER.dylib     /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxutil.a           /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxutil.dylib       /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librexxutil.la          /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxmath               /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxmath.$VER.$REL.$MOD.dylib   /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxmath.$VER.dylib       /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxmath.a             /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxmath.dylib         /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxmath.la            /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxregexp             /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxregexp.$VER.$REL.$MOD.dylib /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxregexp.$VER.dylib     /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxregexp.a           /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxregexp.dylib       /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxregexp.la          /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxsock               /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxsock.$VER.$REL.$MOD.dylib   /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxsock.$VER.dylib       /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxsock.a             /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxsock.dylib         /usr/lib
-ln -sf $PREFIX/lib/ooRexx/librxsock.la            /usr/lib
 
 echo $SCRIPT_NAME: linking programs to /usr/bin
 ln -sf $PREFIX/bin/oorexx-config /usr/bin

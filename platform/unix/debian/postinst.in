@@ -46,7 +46,7 @@ orx_libversion=${orx_current}.${orx_age}.${orx_revision}
 orx_prefix=@prefix@
 
 # Debian doesn't use lib64, so this is the same for 32-bit or 64-bit
-lib_dir=${orx_prefix}/lib/ooRexx
+lib_dir=${orx_prefix}/lib
 bin_dir=${orx_prefix}/bin
 data_dir=${orx_prefix}/share/ooRexx
 

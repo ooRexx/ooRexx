@@ -17,12 +17,12 @@ rm -f /usr/lib/librxregexp.*
 rm -f /usr/lib/librxsock.*
 
 echo $SCRIPT_NAME: Removing libraries from $PREFIX/lib/ooRexx.
-rm -f $PREFIX/lib/ooRexx/librexx.*
-rm -r $PREFIX/lib/ooRexx/librexxapi.*
-rm -f $PREFIX/lib/ooRexx/librexxutil.*
-rm -f $PREFIX/lib/ooRexx/librxmath.*
-rm -f $PREFIX/lib/ooRexx/librxregexp.*
-rm -f $PREFIX/lib/ooRexx/librxsock.*
+rm -f $PREFIX/lib/librexx.*
+rm -r $PREFIX/lib/librexxapi.*
+rm -f $PREFIX/lib/librexxutil.*
+rm -f $PREFIX/lib/librxmath.*
+rm -f $PREFIX/lib/librxregexp.*
+rm -f $PREFIX/lib/librxsock.*
 
 echo $SCRIPT_NAME: Removing links from /usr/bin.
 rm -f /usr/bin/oorexx-config
