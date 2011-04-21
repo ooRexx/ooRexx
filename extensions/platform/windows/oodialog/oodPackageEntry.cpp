@@ -323,7 +323,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_getControlData);
 REXX_METHOD_PROTOTYPE(pbdlg_setControlData);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_newControl);
-REXX_METHOD_PROTOTYPE(pbdlg_putControl_pvt);
+REXX_METHOD_PROTOTYPE(pbdlg_putControl);
 REXX_METHOD_PROTOTYPE(pbdlg_dumpMessageTable);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
@@ -666,6 +666,8 @@ REXX_METHOD_PROTOTYPE(ud_deltaPosReply_cls);
 REXX_METHOD_PROTOTYPE(ud_getRange);
 REXX_METHOD_PROTOTYPE(ud_setRange);
 REXX_METHOD_PROTOTYPE(ud_getPosition);
+REXX_METHOD_PROTOTYPE(ud_getBuddy);
+REXX_METHOD_PROTOTYPE(ud_setBuddy);
 REXX_METHOD_PROTOTYPE(ud_getAcceleration);
 REXX_METHOD_PROTOTYPE(ud_setAcceleration);
 
@@ -1054,7 +1056,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setTabGroup,              pbdlg_setTabGroup),
     REXX_METHOD(pbdlg_stopIt,                   pbdlg_stopIt),
     REXX_METHOD(pbdlg_newControl,               pbdlg_newControl),
-    REXX_METHOD(pbdlg_putControl_pvt,           pbdlg_putControl_pvt),
+    REXX_METHOD(pbdlg_putControl,           pbdlg_putControl),
     REXX_METHOD(pbdlg_dumpMessageTable,         pbdlg_dumpMessageTable),
     REXX_METHOD(pbdlg_unInit,                   pbdlg_unInit),
 
@@ -1498,6 +1500,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(ud_getRange,                    ud_getRange),
     REXX_METHOD(ud_setRange,                    ud_setRange),
     REXX_METHOD(ud_getPosition,                 ud_getPosition),
+    REXX_METHOD(ud_getBuddy,                    ud_getBuddy),
+    REXX_METHOD(ud_setBuddy,                    ud_setBuddy),
     REXX_METHOD(ud_getAcceleration,             ud_getAcceleration),
     REXX_METHOD(ud_setAcceleration,             ud_setAcceleration),
 

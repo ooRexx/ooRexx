@@ -69,8 +69,8 @@ extern void              sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, R
 extern bool              dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part);
 extern RexxStringObject  objectStateToString(RexxMethodContext *c, uint32_t state);
 extern RexxObjectPtr     createRexxControl(RexxMethodContext *, HWND, HWND, uint32_t, oodControl_t, RexxObjectPtr, bool, bool);
-extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *c, pCDialogControl pcdc, HWND hCtrl, oodControl_t type);
-extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hCtrl, oodControl_t type);
+extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *, pCDialogControl, HWND, oodControl_t, bool);
+extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081

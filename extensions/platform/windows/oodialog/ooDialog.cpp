@@ -4771,7 +4771,7 @@ out:
     return result;
 }
 
-RexxMethod2(RexxObjectPtr, pbdlg_putControl_pvt, RexxObjectPtr, control, OSELF, self)
+RexxMethod2(RexxObjectPtr, pbdlg_putControl, RexxObjectPtr, control, OSELF, self)
 {
     RexxObjectPtr bag = context->GetObjectVariable(CONTROLBAG_ATTRIBUTE);
     if ( bag == NULLOBJECT )

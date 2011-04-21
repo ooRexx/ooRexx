@@ -1515,8 +1515,6 @@
 
 ::class 'UpDown' subclass DialogControl public
 
-::constant UDM_SETBUDDY            "0x0469"
-::constant UDM_GETBUDDY            "0x046A"
 ::constant UDM_SETBASE             "0x046D"
 ::constant UDM_GETBASE             "0x046E"
 ::constant UDM_SETPOS32            "0x0471"
@@ -1531,19 +1529,13 @@
    use strict arg newBase
    return self~sendWinIntMsg(self~UDM_SETBASE, newBase, 0)
 
-::method getBuddy unguarded     -- TODO the buddy should be Rexx Objects, NOT hwnd
-   use strict arg
-   return self~sendWinIntMsgH(self~UDM_GETBUDDY, 0, 0)
-
-::method setBuddy unguarded     -- TODO the buddy should be Rexx Objects, NOT hwnd
-   use strict arg hwndBuddy
-   return self~sendWinHandleMsgH(self~UDM_SETBUDDY, hwndBuddy, 0)
-
 ::method getPosition unguarded external "LIBRARY oodialog ud_getPosition"
 ::method setPosition unguarded
    use strict arg newPos
    return self~sendWinIntMsg(self~UDM_SETPOS32, 0, newPos)
 
+::method getBuddy unguarded external "LIBRARY oodialog ud_getBuddy"
+::method setBuddy unguarded external "LIBRARY oodialog ud_setBuddy"
 ::method getRange unguarded external "LIBRARY oodialog ud_getRange"
 ::method setRange unguarded external "LIBRARY oodialog ud_setRange"
 ::method getAcceleration unguarded external "LIBRARY oodialog ud_getAcceleration"

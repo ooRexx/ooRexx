@@ -575,13 +575,16 @@ RexxMethod1(RexxObjectPtr, dtp_getInfo, CSELF, pCSelf)
     context->DirectoryPut(result, rxNewRect(context, &(info.rcButton)), "BUTTONRECT");
     context->DirectoryPut(result, objectStateToString(context, info.stateButton), "BUTTONSTATE");
 
-    RexxObjectPtr ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndDropDown, winMonthCalendar);
+    // TODO this really needs testing.  MSN docs do not specifically say this is
+    // a month calendar control, rather they call it a drop down grid??
+    // Assuming for now it is a month calendar.
+    RexxObjectPtr ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndDropDown, winMonthCalendar, false);
     context->DirectoryPut(result, ctrl, "DROPDOWN");
 
-    ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndEdit, winEdit);
+    ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndEdit, winEdit, true);
     context->DirectoryPut(result, ctrl, "EDIT");
 
-    ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndUD, winUpDown);
+    ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndUD, winUpDown, true);
     context->DirectoryPut(result, ctrl, "UPDOWN");
 
     return result;
@@ -645,11 +648,14 @@ RexxMethod2(RexxObjectPtr, dtp_getIdealSize, RexxObjectPtr, _size, CSELF, pCSelf
  *         month calendar control is destroyed. Once the close up event is
  *         received, the MonthCalendar object will no longer be valid.  Invoking
  *         methods on the object will raise a syntax condition.
+ *
+ *  @note  We do *not* have the new Rexx month calendar object put in the Rexx
+ *         dialog's control bag to protect it from garbage collection.
  */
 RexxMethod1(RexxObjectPtr, dtp_getMonthCal, CSELF, pCSelf)
 {
     HWND hDTP = getDChCtrl(pCSelf);
-    return createControlFromHwnd(context, (pCDialogControl)pCSelf, DateTime_GetMonthCal(hDTP), winMonthCalendar);
+    return createControlFromHwnd(context, (pCDialogControl)pCSelf, DateTime_GetMonthCal(hDTP), winMonthCalendar, false);
 }
 
 

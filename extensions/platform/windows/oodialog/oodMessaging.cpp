@@ -4475,6 +4475,8 @@ err_out:
  *                      method is invoked through ~startWith(), which of course
  *                      returns immediately.
  *
+ *  @return  True if the event notification was connected, otherwsie false.
+ *
  *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
  *          number an exception is raised.
  *

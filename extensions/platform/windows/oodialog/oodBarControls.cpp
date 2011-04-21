@@ -476,6 +476,50 @@ RexxMethod1(RexxObjectPtr, ud_getRange, CSELF, pCSelf)
 }
 
 
+/** UpDown::getBuddy()
+ *
+ *  Returns the buddy dialog control ojbect, or .nil if there is no buddy.
+ *
+ *  @remarks  createControlFromHwnd() can handle a null window handle, or a
+ *            winUnknown type for the control type.  In both cases, it simply
+ *            returns the .nil object.  This is what we want, so we don't check
+ *            for those things.
+ */
+RexxMethod1(RexxObjectPtr, ud_getBuddy, CSELF, pCSelf)
+{
+    HWND hUpDown = getDChCtrl(pCSelf);
+
+    HWND hBuddy = (HWND)SendMessage(hUpDown, UDM_GETBUDDY, 0, 0);
+    oodControl_t ctrl = control2controlType(hBuddy);
+
+    return createControlFromHwnd(context, (pCDialogControl)pCSelf, hBuddy, ctrl, true);
+}
+
+
+/** UpDown::setBuddy()
+ *
+ *  Sets the buddy control for the up-down and returns the old buddy, if there
+ *  was one.
+ *
+ */
+RexxMethod2(RexxObjectPtr, ud_setBuddy, RexxObjectPtr, buddy, CSELF, pCSelf)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    if ( requiredClass(context->threadContext, buddy, "DIALOGCONTROL", 1) )
+    {
+        pCDialogControl pcdc    = controlToCSelf(context, buddy);
+        HWND            hUpDown = getDChCtrl(pCSelf);
+
+        HWND hOldBuddy = (HWND)SendMessage(hUpDown, UDM_SETBUDDY, (WPARAM)pcdc->hCtrl, 0);
+
+        oodControl_t ctrl = control2controlType(hOldBuddy);
+        result = createControlFromHwnd(context, (pCDialogControl)pCSelf, hOldBuddy, ctrl, true);
+    }
+    return result;
+}
+
+
 /** UpDown::getPosition()
  *
  *

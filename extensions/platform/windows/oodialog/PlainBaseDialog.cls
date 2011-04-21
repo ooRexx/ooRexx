@@ -724,10 +724,6 @@
    return id
 
 
--- Internal use only. - Do not document.
-::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"  -- Not to be doumented.
-::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"      -- Not to be doumented.
-
 -- The method returns an array that contains the value of each of the attributes associated with a dialog
 -- control.  MM What good is this, you don't know which control is associated with each of the 'data' pieces?
 ::method makeArray unguarded  -- Never documented, do not intend to document now                 -- Last data attribute method.
@@ -742,6 +738,11 @@
    end
    return a
 
+
+-- Internal use *only*, do *not* use. - Do not document.
+::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"  -- Not to be doumented.
+::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"      -- Not to be doumented.
+::method putControl unguarded external "LIBRARY oodialog pbdlg_putControl"                              -- Not to be doumented.
 
 
 
@@ -932,7 +933,6 @@
 ::method newMonthCalendar unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newDateTimePicker unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newUpDown unguarded external "LIBRARY oodialog pbdlg_newControl"
-::method putControl private unguarded external "LIBRARY oodialog pbdlg_putControl_pvt"
 ::method dumpMessageTable unguarded external "LIBRARY oodialog pbdlg_dumpMessageTable"
 
 

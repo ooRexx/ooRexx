@@ -87,14 +87,15 @@ return 0
 -- on one of the arrows of the up down or uses the up or down arrow keys when
 -- the focus is on the client edit control.
 --
--- Three arguments are sent to the method: the current position of the up down,
+-- Four arguments are sent to the method: the current position of the up down,
 -- the amount the position is to be changed (which can be negative depending on
--- the direction of the change,) and the window handle of the control.  We don't
--- need the window handle, so that arg is just ignored.
+-- the direction of the change,) the control ID, and the window handle of the
+-- control.  We don't need the ID or  window handle, so those args are just
+-- ignored.
 --
 -- Each position of the up down maps to the index of a record in the client
 -- database, so we just update the record fields using the new index.
-::method onClientChange
+::method onClientChange unguarded
   expose clientUPD clientDB
   use arg curPos, increment
   self~refreshClientDisplay(curPos + increment)
@@ -119,7 +120,7 @@ return 0
 --
 -- See the printAccelValues(), getFirstAccelIncrease(), and doubleAccel()
 -- methods to see the acceleration array works.
-::method onChangeAcceleration
+::method onChangeAcceleration unguarded
   expose decUpDown originalAccel index
 
   currentAccel = decUpDown~getAcceleration
@@ -166,7 +167,7 @@ return 0
 -- seem to behave rather oddly if the base is 16 and the range includes negative
 -- numbers.  So the decimal set has some ranges using negative numbers, but the
 -- set for base 16 has only ranges with all positive positions.
-::method onChangeRange
+::method onChangeRange unguarded
   expose hexUpDown decRanges hexRanges
 
   -- Get the index of the next range and keep track of the current position in
@@ -198,7 +199,7 @@ return 0
 -- Integer up down controls can be either base 10 or base 16.  This method seems
 -- to have a lot in it, but changing the base is actually simple.  The rest of
 -- the code is to keep the user interface consistent and looking "good."
-::method onChangeBase
+::method onChangeBase unguarded
   expose decUpDown hexUpDown leftUpDownDecimalRange leftUpDownHexadecimalRange
 
   if self~decimalRBSelected then do
@@ -272,19 +273,23 @@ return 0
 -- method can be used to set the buddy control for an up down control, but that
 -- method is not demonstrated in this example.  Here we just display the window
 -- handle value.
+--
+-- Note that the getBuddy() method can return .nil if there is no buddy control.
+-- We do not check for that here, since we know there is a buddy control.  The
+-- up-downs were created with the AUTOBUDDY style.
 ::method onGetBuddy
   expose decUpDown hexUpDown
 
   if self~decimalRBSelected then do
-    hwnd = decUpDown~getBuddy
+    buddy = decUpDown~getBuddy
     side = 'left'
   end
   else do
-    hwnd = hexUpDown~getBuddy
+    buddy = hexUpDown~getBuddy
     side = 'right'
   end
 
-  msg = "The window handle of the up down control on the" side "is" hwnd
+  msg = "The window handle of the up down control on the" side "is" buddy~hwnd
   self~information(msg)
 
 

@@ -3179,11 +3179,14 @@ RexxMethod1(RexxObjectPtr, psdlg_getResult, CSELF, pCSelf)
  *  Retrieves the Rexx tab control object for the tab control of the property
  *  sheet.
  *
+ *  Note that in this case, once we instantiate the Rexx tab object, we do not
+ *  want it garbage collected so we use specify true in the
+ *  createControlFromHwnd() call to have it put in the dialog's control bag.
  */
 RexxMethod1(RexxObjectPtr, psdlg_getTabControl, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-    return createControlFromHwnd(context, pcpsd->pcpbd, PropSheet_GetTabControl(pcpsd->hDlg), winTab);
+    return createControlFromHwnd(context, pcpsd->pcpbd, PropSheet_GetTabControl(pcpsd->hDlg), winTab, true);
 }
 
 

@@ -401,11 +401,14 @@ out:
  * code.  Actually, this is the only case so far, but the code is made generic
  * in the assumption that other uses will come up.
  *
- * @param c      The method context we are operating in.
- * @param pcpbd  The CSelf struct of the dialog the control resides in.
- * @param hCtrl  The window handle of the companion control.  This can be null,
- *               in which case .nil is returned.
- * @param type   The type of the dialog control.
+ * @param c         The method context we are operating in.
+ * @param pcpbd     The CSelf struct of the dialog the control resides in.
+ * @param hCtrl     The window handle of the companion control.  This can be
+ *                  null, in which case .nil is returned.
+ * @param type      The type of the dialog control.
+ * @param putInBag  Whether the new Rexx dialog control object should be
+ *                  protected from garbage collection by being placed in the
+ *                  Rexx dialog object's control bag.
  *
  * @return A Rexx dialog control object that represents the dialo control, or
  *         .nil if the object is not instantiated.
@@ -414,7 +417,8 @@ out:
  *           the parent dialog is a CategoryDialog, otherwise false.  Since the
  *           CategoryDialog is now deprecated, we just pass false.
  */
-RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hCtrl, oodControl_t type)
+RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hCtrl,
+                                    oodControl_t type, bool putInBag)
 {
     RexxObjectPtr result = TheNilObj;
 
@@ -425,7 +429,7 @@ RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCPlainBaseDialog pcpb
 
     uint32_t id = (uint32_t)GetDlgCtrlID(hCtrl);
 
-    result = createRexxControl(c, hCtrl, pcpbd->hDlg, id, type, pcpbd->rexxSelf, false, true);
+    result = createRexxControl(c, hCtrl, pcpbd->hDlg, id, type, pcpbd->rexxSelf, false, putInBag);
 
 done_out:
     return result;
@@ -445,16 +449,20 @@ done_out:
  * In these cases, this function will convert the window handle to a Rexx dialog
  * control object.
  *
- * @param c      The method context we are operating in.
- * @param pcdc   The CSelf struct of the originating control.
- * @param hCtrl  The window handle of the dialog control.  This can be null, in
- *               which case .nil is returned.
- * @param type   The type of the dialog control.
+ * @param c         The method context we are operating in.
+ * @param pcdc      The CSelf struct of the originating control.
+ * @param hCtrl     The window handle of the dialog control.  This can be null,
+ *                  in which case .nil is returned.
+ * @param type      The type of the dialog control.
+ * @param putInBag  Whether the new Rexx dialog control object should be
+ *                  protected from garbage collection by being placed in the
+ *                  Rexx dialog object's control bag.
  *
  * @return A Rexx dialog control object that represents the underlying Windows
  *         dialog control, or .nil if the object is not instantiated.
  */
-RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCDialogControl pcdc, HWND hCtrl, oodControl_t type)
+RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCDialogControl pcdc, HWND hCtrl,
+                                    oodControl_t type, bool putInBag)
 {
     RexxObjectPtr result = TheNilObj;
 
@@ -466,7 +474,7 @@ RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCDialogControl pcdc, 
     bool     isCategoryDlg = (c->IsOfType(pcdc->oDlg, "CATEGORYDIALOG") ? true : false);
     uint32_t id = (uint32_t)GetDlgCtrlID(hCtrl);
 
-    result = createRexxControl(c, hCtrl, pcdc->hDlg, id, type, pcdc->oDlg, isCategoryDlg, false);
+    result = createRexxControl(c, hCtrl, pcdc->hDlg, id, type, pcdc->oDlg, isCategoryDlg, putInBag);
 
 done_out:
     return result;
