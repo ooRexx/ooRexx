@@ -1361,7 +1361,8 @@ RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, siz
         RexxObjectPtr  rxMDSVal;
         PDAYSTATE      pDayState;
 
-        for ( size_t i = 1; i <= count; i++, pmds++ )
+        MONTHDAYSTATE *p = pmds;
+        for ( size_t i = 1; i <= count; i++, p++ )
         {
             rxMDSVal = c->ArrayAt(list, i);
             if ( rxMDSVal == NULLOBJECT || ! c->IsOfType(rxMDSVal, "DAYSTATE") )
@@ -1372,7 +1373,7 @@ RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, siz
             }
 
             pDayState = (PDAYSTATE)c->ObjectToCSelf(rxMDSVal);
-            *pmds = pDayState->val;
+            *p = pDayState->val;
         }
 
         if ( mdsBuf != NULLOBJECT && ppmds != NULL )

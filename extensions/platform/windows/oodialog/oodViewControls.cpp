@@ -905,7 +905,7 @@ inline bool isMultiSelectionMonthCalendar(HWND hCtrl)
 
 inline RexxObjectPtr setDayState(HWND hMC, LPMONTHDAYSTATE pmds, int count, RexxObjectPtr result)
 {
-    if ( result != TheFalseObj )
+    if ( result != NULLOBJECT )
     {
         result = (MonthCal_SetDayState(hMC, count, pmds) == 0 ? TheFalseObj : TheTrueObj);
     }
