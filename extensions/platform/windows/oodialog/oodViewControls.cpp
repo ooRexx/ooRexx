@@ -1393,10 +1393,6 @@ RexxMethod2(int32_t, mc_getFirstDayOfWeek, OPTIONAL_RexxObjectPtr, result, CSELF
 
     uint32_t ret = MonthCal_GetFirstDayOfWeek(hMC);
 
-    int32_t       iDay = LOWORD(ret);
-    RexxObjectPtr usesLocale = HIWORD(ret) == 0 ? TheTrueObj : TheFalseObj;
-    CSTRING       dayName = day2dayName(iDay);
-
     if ( argumentExists(1) )
     {
         if ( ! context->IsOfType(result, "DIRECTORY") )
