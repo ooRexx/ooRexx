@@ -1340,7 +1340,7 @@ RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
 {
     if ( ! _isAtLeastVista() )
     {
-        return wrongWindowsVersionException(context, "getBorder", "Vista");
+        return wrongWindowsVersionException(context, "getCurrentView", "Vista");
     }
 
     HWND hMC = getMonthCalendar(context, pCSelf);
