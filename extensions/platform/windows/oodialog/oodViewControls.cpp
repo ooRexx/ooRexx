@@ -428,14 +428,14 @@ static RexxStringObject mcStyle2String(RexxMethodContext *c, uint32_t style)
     char buf[256];
     buf[0] = '\0';
 
-    if ( style & MCS_DAYSTATE )         strcat(buf, "DAYSTATE"   );
-    if ( style & MCS_MULTISELECT )      strcat(buf, "MULTI"      );
-    if ( style & MCS_NOTODAY )          strcat(buf, "NOTODAY"    );
-    if ( style & MCS_NOTODAYCIRCLE )    strcat(buf, "NOCIRCLE"   );
-    if ( style & MCS_WEEKNUMBERS )      strcat(buf, "WEEKNUMBERS");
-    if ( style & MCS_NOTRAILINGDATES )  strcat(buf, "NOTRAILING" );
-    if ( style & MCS_SHORTDAYSOFWEEK )  strcat(buf, "SHORTDAYS"  );
-    if ( style & MCS_NOSELCHANGEONNAV ) strcat(buf, "NOSELCHANGE");
+    if ( style & MCS_DAYSTATE )         strcat(buf, "DAYSTATE "   );
+    if ( style & MCS_MULTISELECT )      strcat(buf, "MULTI "      );
+    if ( style & MCS_NOTODAY )          strcat(buf, "NOTODAY "    );
+    if ( style & MCS_NOTODAYCIRCLE )    strcat(buf, "NOCIRCLE "   );
+    if ( style & MCS_WEEKNUMBERS )      strcat(buf, "WEEKNUMBERS ");
+    if ( style & MCS_NOTRAILINGDATES )  strcat(buf, "NOTRAILING " );
+    if ( style & MCS_SHORTDAYSOFWEEK )  strcat(buf, "SHORTDAYS "  );
+    if ( style & MCS_NOSELCHANGEONNAV ) strcat(buf, "NOSELCHANGE ");
 
     *(buf + strlen(buf)) = '\0';
     return c->String(buf);
