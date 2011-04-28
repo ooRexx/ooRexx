@@ -2779,7 +2779,7 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
  *        The system error code is set this way in addition to what the OS might
  *        set:
  *
- *        ERROR_INVALID_FUNCTION(1) -> The method name argument can not be the
+ *        ERROR_INVALID_PARAMETER(87) -> The method name argument can not be the
  *        empty string.
  *
  *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument is not a
@@ -2787,8 +2787,8 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod5(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRING, methodName,
-            RexxObjectPtr, dlg, OPTIONAL_logical_t, isHandled, OSELF, self)
+RexxMethod4(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRING, methodName,
+            RexxObjectPtr, dlg, OSELF, self)
 {
     logical_t success = FALSE;
     bool isSystemMenu = isOfClassType(context, self, "SystemMenu");
@@ -2807,7 +2807,7 @@ RexxMethod5(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRIN
 
     if ( *methodName == '\0' )
     {
-        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_PARAMETER);
         goto done_out;
     }
 
@@ -5712,10 +5712,8 @@ RexxMethod6(RexxObjectPtr, popMenu_show, RexxObjectPtr, location, OPTIONAL_RexxO
  *                       is 0 indicating no help ID.
  *
  *  @param  count        [optional]  The count of menu items.  This determines
- *                       the size of memory allocated for the template, and is
- *                       currently dangerous.  If it is too small, we crash.
- *                       The default is 100.
- *                       TODO - we need to fix this.
+ *                       the size of memory allocated for the template. The
+ *                       default if omitted is 100.
  *
  *  @param  connect      [optional]  If true, each menu command item in the menu
  *                       is connected to a method.  The name of the method is
