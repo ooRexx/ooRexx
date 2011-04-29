@@ -1024,7 +1024,7 @@ static void firstDay2directory(RexxMethodContext *c, uint32_t firstDay, RexxDire
 
 bool putHitInfo(RexxMethodContext *c, RexxDirectoryObject hitInfo, MCHITTESTINFO *info)
 {
-    bool done = true;
+    bool done = true;  // TODO TODO logic seems backwards here - default should be false, set to true if MCHT_NOWHERE
     bool needDate = false;
 
     switch ( info->uHit )
