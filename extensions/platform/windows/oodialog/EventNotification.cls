@@ -338,17 +338,17 @@
 ::method defListDragHandler
    use arg id, item, pt
    lc = self~newListView(id)
-   hc = lc~Cursor_Cross   /* change cursor and store current */
-   parse value lc~GetRect with left top right bottom
+   hc = lc~cursor_Cross   /* change cursor and store current */
+   parse value lc~getRect with left top right bottom
    parse var pt oldx oldy
-   origin = lc~ItemPos(item)
-   lmb = self~IsMouseButtonDown("LEFT")
-   rmb = self~IsMouseButtonDown("RIGHT")
+   origin = lc~itemPos(item)
+   lmb = self~isMouseButtonDown("LEFT")
+   rmb = self~isMouseButtonDown("RIGHT")
    do while (lmb \= 0 | rmb \= 0) & \(lmb \= 0 & rmb \= 0)
-     pos = self~CursorPos
+     pos = self~cursorPos
      parse var pos x y
-     parse value lc~ScreenToClient(x, y) with newx newy
-     hs = lc~HScrollPos; vs = lc~VScrollPos
+     parse value lc~screenToClient(x, y) with newx newy
+     hs = lc~hScrollPos; vs = lc~VScrollPos
      sx = x-right
      sy = y-bottom
       in_rx = (sx <= 30) & (newx >= -30)
@@ -360,11 +360,11 @@
           if newx < 0 then newx = 0
           if newy < 0 then newy = 0
           if (in_rx & oldx \= newx) | (in_ry & oldy \= newy) then do
-           lc~SetItemPos(item, newx, newy)
+           lc~setItemPos(item, newx, newy)
              oldx = newx
              oldy = newy
              if sx \= 0 | sy \= 0 then do
-                lc~Scroll(sx, sy)
+                lc~scroll(sx, sy)
                 call msSleep 30
              end
         end
@@ -374,27 +374,27 @@
          if sx > 30 then newx = (right-left) + 28
          if newy < -30 then newy = -30
          if sy > 30 then newy = (bottom-top) + 28
-         parse value lc~ClientToSCreen(newx, newy) with x y
-         self~SetCursorPos(x, y)
+         parse value lc~clientToSCreen(newx, newy) with x y
+         self~setCursorPos(x, y)
       end
-      lmb = self~IsMouseButtonDown("LEFT")
-      rmb = self~IsMouseButtonDown("RIGHT")
+      lmb = self~isMouseButtonDown("LEFT")
+      rmb = self~isMouseButtonDown("RIGHT")
    end
    if (lmb \= 0 & rmb \= 0) then do  /* if both buttons pressed restore origin. pos */
       parse var origin x y
-      lc~SetItemPos(item, x, y)
+      lc~setItemPos(item, x, y)
    end
-   lc~RestoreCursorShape(hc)  /* restore old cursor */
-   pos = self~CursorPos
+   lc~restoreCursorShape(hc)  /* restore old cursor */
+   pos = self~cursorPos
    parse var pos x y
-   self~SetCursorPos(x+1, y+1)  /* move cursor to force redraw */
+   self~setCursorPos(x+1, y+1)  /* move cursor to force redraw */
 
 
 ::method defTreeEditStarter
     use arg id, dummy, category
     if arg(3,'o') = 1 then tc = self~newTreeView(id)
     else tc = self~newTreeView(id, category)
-    if tc \= .nil then tc~SubclassEdit
+    if tc \= .nil then tc~subclassEdit
 
 ::method defTreeEditHandler
     use arg id, item, newText, category
