@@ -37,10 +37,7 @@
 
 .NOTPARALLEL:
 
-SUBDIRS		= Exercise04a
-DIST_SUBDIRS		= Exercise04a
-
 MAINTAINERCLEANFILES	= Makefile.in *~
 
-EXTRA_DIST		= *.rex
+EXTRA_DIST		= *.rex *.rc *.h
 
