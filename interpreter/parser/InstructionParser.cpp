@@ -2336,12 +2336,12 @@ RexxInstruction *RexxSource::traceNew()
         /* is this a minus sign?             */
         else if (token->subclass == OPERATOR_SUBTRACT || token->subclass == OPERATOR_PLUS)
         {
+            setting = 0;                     /* indicate a debug version          */
             /* minus form?                       */
             if (token->subclass == OPERATOR_SUBTRACT)
             {
                 setting |= DEBUG_NOTRACE;      // turn on the no tracing flag
             }
-            setting = 0;                     /* indicate a debug version          */
             token = nextReal();              /* get the next token                */
             if (token->isEndOfClause()) /* end of the instruction?           */
             {
