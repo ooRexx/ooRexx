@@ -99,7 +99,7 @@ void CommandHandler::call(RexxActivity *activity, RexxActivation *activation, Re
 {
     if (type == REGISTERED_NAME)
     {
-        CommandHandlerDispatcher dispatcher(entryPoint, command);
+        CommandHandlerDispatcher dispatcher(activity, entryPoint, command);
 
         // run this and give back the return code
         activity->run(dispatcher);
@@ -114,8 +114,9 @@ void CommandHandler::call(RexxActivity *activity, RexxActivation *activation, Re
     }
 }
 
-CommandHandlerDispatcher::CommandHandlerDispatcher(REXXPFN e, RexxString *command)
+CommandHandlerDispatcher::CommandHandlerDispatcher(RexxActivity *a, REXXPFN e, RexxString *command)
 {
+    activity = a;      // needed for raising conditions
     entryPoint = e;             // the call point
     // clear the state flags
     flags = 0;
@@ -178,13 +179,13 @@ void CommandHandlerDispatcher::complete(RexxString *command, ProtectedObject &re
     {
         /*   send failure condition back     */
         // raise the condition when things are done
-        condition = (RexxObject *)RexxActivity::createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+        condition = (RexxObject *)activity->createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
     }
     /* If error flag set                 */
     else if (flags & (unsigned short)RXSUBCOM_ERROR)
     {
         // raise the condition when things are done
-        condition = (RexxObject *)RexxActivity::createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+        condition = (RexxObject *)activity->createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
     }
 }
 

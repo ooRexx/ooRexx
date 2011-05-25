@@ -82,12 +82,13 @@ protected:
 class CommandHandlerDispatcher : public CallbackDispatcher
 {
 public:
-    CommandHandlerDispatcher(REXXPFN e, RexxString *c);
+    CommandHandlerDispatcher(RexxActivity * a, REXXPFN e, RexxString *c);
     virtual ~CommandHandlerDispatcher() { ; }
 
     virtual void run();
     void complete(RexxString *command, ProtectedObject &result, ProtectedObject &condition);
 
+    RexxActivity *activity;               // the activity we're dispatching on
     REXXPFN    entryPoint;                // resolved exit entry point
     CONSTRXSTRING  rxstrcmd;              // invoked command
     RXSTRING       retstr;                // passed back result

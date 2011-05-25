@@ -144,9 +144,10 @@ typedef enum
    wholenumber_t errorNumber(RexxDirectory *conditionObject);
    bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
    bool        raiseCondition(RexxDirectory *);
-   static RexxDirectory *createConditionObject(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
+   RexxDirectory *createConditionObject(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
    void        raiseException(wholenumber_t, RexxString *, RexxArray *, RexxObject *);
    RexxDirectory *createExceptionObject(wholenumber_t, RexxString *, RexxArray *, RexxObject *);
+   void        generateProgramInformation(RexxDirectory *exObj);
    void        reportAnException(wholenumber_t, const char *);
    void        reportAnException(wholenumber_t, const char *, const char *);
    void        reportAnException(wholenumber_t, RexxObject *, const char *);

@@ -222,15 +222,15 @@ bool SecurityManager::checkFunctionCall(RexxString *functionName, size_t count, 
 /**
  * Check for permission to call an external command
  *
- * @param functionName
- *                  The name of the target function.
- * @param count     The return count.
- * @param arguments The method arguments.
+ * @param activity  The activity we're running on
+ * @param address
+ * @param command
  * @param result    The returned result.
+ * @param condition
  *
  * @return true if the security manager handled this call, false otherwise.
  */
-bool SecurityManager::checkCommand(RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
+bool SecurityManager::checkCommand(RexxActivity *activity, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
 {
     // no method here
     if (manager == OREF_NULL)
@@ -256,13 +256,13 @@ bool SecurityManager::checkCommand(RexxString *address, RexxString *command, Pro
         if (securityArgs->fastAt(OREF_FAILURENAME) != OREF_NULL)
         {
             // raise the condition when things are done
-            condition = RexxActivity::createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+            condition = activity->createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
         /* how about an error condition?     */
         else if (securityArgs->fastAt(OREF_ERRORNAME) != OREF_NULL)
         {
             // raise the condition when things are done
-            condition = RexxActivity::createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+            condition = activity->createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
         return true;
     }
