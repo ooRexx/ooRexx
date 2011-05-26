@@ -56,9 +56,8 @@
   It is part of the sample Order Management application.           	      		      
   [interface (idl format)]
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
+
 ::CLASS CustomerView SUBCLASS RcDialog PUBLIC
-  --::ATTRIBUTE CustNo
-  --::ATTRIBUTE CustName
 
   /*----------------------------------------------------------------------------
     Init - creates the dialog instance but does not make it visible.		
@@ -89,7 +88,7 @@
   ::METHOD createMenuBar
     expose menuBar
     say "CustomerView-createMenuBar-01"
-    menuBar = .scriptMenuBar~new("CustomerView.rc", "IDR_MENU1", self, , , .true)
+    menuBar = .ScriptMenuBar~new("CustomerView.rc", "IDR_MENU1", self, , , .true)
     return .true	
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
@@ -112,20 +111,21 @@
     say "CustomerView-initDialog-01"; say
     menuBar~attachTo(self)
 
-    -- Create objects that map to the controls defined by the "customer.rc" file: 
+    -- Create objects that map to the edit controls defined by the "customer.rc" 
+    -- so they can be programmatically used elsewhere in the class: 
     custControls = .Directory~new
     custControls[ecCustNo]         = self~newEdit("IDC_EDIT_CUST_NO")
     custControls[ecCustName]       = self~newEdit("IDC_EDIT_CUST_NAME")
     custControls[ecCustAddr]       = self~newEdit("IDC_EDIT_CUST_ADDR")
     custControls[ecCustZip]        = self~newEdit("IDC_EDIT_CUST_ZIP")
     custControls[ecCustDiscount]   = self~newEdit("IDC_EDIT_CUST_DISCOUNT")
-    -- Include the 'Record Changes' button to be able to change its focus later:
-    custControls[recordChangesBtn] = self~newPushButton("IDC_RECORD_CHANGES")
-
+    custControls[stLastOrder] = self~newStatic("IDC_LAST_ORDER_DETAILS")
+    -- Create an object for the "Record Change" pushbutton in order to be able 
+    -- to change its focus later:
+    custControls[btnRecordChanges] = self~newPushButton("IDC_RECORD_CHANGES")
     -- Define event handler methods for push-buttons:
     self~connectButtonEvent("IDC_RECORD_CHANGES","CLICKED",recordChanges)
     self~connectButtonEvent("IDC_SHOW_LAST_ORDER","CLICKED",showLastOrder)
-
     -- Get app data and then show it:    
     self~getData		
     self~showData
@@ -138,8 +138,8 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
     Actions->New... - Not fully implemented - merely tells user to use the 
-                      Customer List object (but this not implemented either!).*/ 
-  ::METHOD newCustomer
+                      Customer List object.                                   */ 
+  ::METHOD newCustomer unguarded
     msg = "You must use the Customer List to create a new Customer."||.endofline||,
           "Would you like to open the Customer List now?"
     hwnd = self~dlgHandle
@@ -150,7 +150,7 @@
     Update - "Actions" - "Update..."
              Sets fields to edit mode so that user can change the data.
              Business Rule: Customer Number cannot be changed.                */ 
-  ::METHOD update
+  ::METHOD update unguarded
     expose custControls
     say "CustomerView-Update-01"
     custControls[ecCustName]~setReadOnly(.false)
@@ -158,18 +158,19 @@
     custControls[ecCustZip]~setReadOnly(.false)  
     custControls[ecCustDiscount]~setReadOnly(.false)
     self~enableControl("IDC_RECORD_CHANGES")
-    custControls[recordChangesBtn]~state = "FOCUS"
-
+    custControls[btnRecordChanges]~state = "FOCUS"  -- Put focus on the button
+    self~focusControl("IDC_EDIT_CUST_NAME")         -- place cursor in the CustName edit control.
+    
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
     LastOrder - "Actions" - "Show Last Order"
             
     Displays info about the last order placed by this customer.   */ 
-  ::METHOD lastOrder
+  ::METHOD lastOrder unguarded
+    expose custControls
+    use arg button
     orderDate="31/12/11";   orderNum = "ZZ999";   orderTotal = "$999.99"
     lastOrder = orderDate "   " orderNum "   " orderTotal
-    self~newStatic("IDC_LAST_ORDER_DETAILS")~setText(lastOrder)
-
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+    custControls[stLastOrder]~setText(lastOrder)
 
     	    
   /*----------------------------------------------------------------------------
@@ -178,9 +179,9 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
     "Record Changes" - Collects new data, checks if there has indeed been a 
-                       change, and if not, issues a warnign msg and disables
+                       change, and if not, issues a warning msg and disables
                        the button.                                            */ 
-  ::METHOD recordChanges 
+  ::METHOD recordChanges unguarded
     expose custControls custData newCustData
     say "CustomerView-recordChanges-01"
 
@@ -210,17 +211,18 @@
   /*----------------------------------------------------------------------------
     "Show Last Order" - displays mock sales order info in the Last_Order_Details
                         field; info is hard-coded in this method.             */
-  ::METHOD showLastOrder
-  -- Notionally get last order from "OrderList" component.
-  orderDate="12/2/11";   orderNum = "AB123";   orderTotal = "$524.58"
-  lastOrder = orderDate "   " orderNum "   " orderTotal
-  self~newStatic("IDC_LAST_ORDER_DETAILS")~setText(lastOrder)
+  ::METHOD showLastOrder unguarded
+    expose CustControls
+    -- Notionally get last order from "SalesOrder" component.
+    orderDate="12/2/11";   orderNum = "AB123";   orderTotal = "$524.58"
+    lastOrder = orderDate "   " orderNum "   " orderTotal
+    custControls[stLastOrder]~setText(lastOrder)
 
   /*----------------------------------------------------------------------------
     "OK" - This no-op method is provided to over-ride the default Windows action
            resulting from pressing the Enter key. The default action is to close 
            the wiundow - even if there is no "OK" button on the dialog.       */
-  ::METHOD ok	
+  ::METHOD ok unguarded
 
   
   /*----------------------------------------------------------------------------
@@ -246,6 +248,7 @@
     custData[custZip]     = "LB7 4EJ"
     custData[custDiscount]= "B1"
  
+
   /*----------------------------------------------------------------------------
     showData - displays data in the dialog's controls.                        */  
   ::METHOD showData
@@ -269,14 +272,17 @@
     -- Finally, show Zip and Discount:
     custControls[ecCustZip]~setText(custData[custZip])
     custControls[ecCustDiscount]~setText(custData[custDiscount])
+    --custControls[stLastOrder]~setText("Press Me")
 
+    
   /*--------------------------------------------------------------------------
     checkForChanges - after "Record Changes" actioned by the user, check whether
-      any data has actually changed. If it has: (a) assign new data to old data,
-      (b) return .true. If it hasn't: return .false.                          */
+    any data has actually changed. If it has: (a) assign new data to old data;
+    (b) return .true. If it hasn't: return .false.                          
+    Note: cannot just compare the two directories since data format in Address
+    is different.                                                             */
   ::METHOD checkForChanges
     expose custData newCustData
-
     changed = .false
     if newCustData[custName] \= custData[custName] then do
       custData[custName] = newCustData[custName]
@@ -304,7 +310,10 @@
       hwnd = self~dlgHandle
       answer = MessageDialog(msg,hwnd,"Update Customer","OK","WARNING","DEFBUTTON2 APPLMODAL") 
     end
-    say "CustomerView-checkForChanges-02: changed =" changed  
+    else do
+      say "CustomerView-checkForChanges-02: changed =" changed
+      custData = newCustData
+    end
     return changed 
 
 /*============================================================================*/
@@ -312,7 +321,7 @@
 
 
 /*============================================================================*/
-::ROUTINE startCustomerView PUBLIC
+::ROUTINE StartCustomerView PUBLIC
   
   say "StartCustomerView Routine-01: .CustomerView~new..."
   dlg = .CustomerView~new("customerView.rc", IDD_DIALOG1, dlgData., "customerView.h")
