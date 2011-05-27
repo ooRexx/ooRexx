@@ -1,7 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,95 +35,24 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-/**
- * Windows Dialog Interface for Open Object Rexx (ooRexx.)
- *
- * User Dialog Class.
- */
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
 
-/* include the base dialog class */
-::requires "PlainBaseDialog.cls"
-::requires "DynamicDialog.cls"
-
-/* This class extends the 'PlainBaseDialog' class */
-::class 'UserDialog' subclass PlainBaseDialog public inherit DynamicDialog
-
-::method init external "LIBRARY oodialog userdlg_init"
-
-::method test external "LIBRARY oodialog userdlg_test"
-
--- DEPRECATED menu bar methods.  Use the Menu classes directly.
-::method setMenu
-    menuBar = self~menuBar
-
-    .local~systemErrorCode = 0
-    if menuBar == .nil then do
-      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
-      return .false
-    end
-
-    if menuBar~isA(.UserMenuBar) then do
-      if \ menuBar~complete then do
-        self~menuBar = .nil
-        return .false
-      end
-    end
-
-    if \ menuBar~isA(.UserMenuBar), \ menuBar~isA(.ScriptMenuBar) then do
-      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
-      return .false
-    end
-
-    return menuBar~attachTo(self)
-
-::method createMenu
-    use strict arg count = 100
-
-    -- menuBar is either good, or a condition was raised.
-    menuBar = .UserMenuBar~new(-1, self, 0, count)
-    self~menuBar = menuBar
-    return .true;
-
-::method addPopupMenu
-    use strict arg name, opt = ""
-
-    .local~systemErrorCode = 0
-    if self~menuBar == .nil then do
-      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
-      return .false
-    end
-
-    return self~menuBar~addPopup(0, name, opt, 0)
-
-::method addMenuItem
-    use strict arg name, id, opt = "", msgToRaise = .nil
-
-    .local~systemErrorCode = 0
-    if self~menuBar == .nil then do
-      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
-      return .false
-    end
-
-    if arg(4, 'O') then return self~menuBar~addItem(id, name, opt)
-    else return self~menuBar~addItem(id, name, opt, msgToRaise)
-
-::method addMenuSeparator
-
-    .local~systemErrorCode = 0
-    if self~menuBar == .nil then do
-      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
-      return .false
-    end
-
-    return self~menuBar~addSeparator(0)
-
-::method loadMenu protected
-  use strict arg resfile, menuid, loadopts = "", count = 50
-
-  connect = .false
-  if loadopts~caselessWordPos("CONNECTITEMS") <> 0 then connect = .true
-
-  -- menuBar is either good, or a condition was raised.
-  menuBar = .ScriptMenuBar~new(resFile, menuid, self, 0, count, connect)
-  self~menuBar = menuBar
-  return 0
+#define IDD_LISTVIEWS                           100
+#define IDC_TAB                                 102
+#define IDC_PB_BACKWARD                         103
+#define IDC_PB_FORWARD                          105
+#define IDC_PB_ADDRECORD                        107
+#define IDD_PAGE                                200
+#define IDC_LISTVIEW                            208
+#define IDD_ADDRESS                             300
+#define IDC_RB_MALE                             301
+#define IDC_RB_FEMALE                           302
+#define IDC_EDIT_FNAME                          303
+#define IDC_EDIT_LNAME                          304
+#define IDC_EDIT_STREET                         305
+#define IDC_EDIT_CITY                           306
+#define IDC_EDIT_AGE                            307
+#define IDC_EDIT_STATE                          308
+#define IDC_EDIT_ZIPCODE                        309

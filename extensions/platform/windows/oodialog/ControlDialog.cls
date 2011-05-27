@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2010-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2010-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -62,44 +62,207 @@
 
 /*            Owner and Control Dialogs                                       */
 
-::class 'OwnerDialog' mixinclass Object public
+::class 'TabOwnerDlgInfo' subclass Object public
 
-::method init
-    say 'In OwnerDialog::init()'
-    --forward class (super) continue
-    say 'Back in OwnerDialog::init()'
+::method init external "LIBRARY oodialog todi_init"
 
+::class 'TabOwnerDialog' mixinclass Object public
+
+::method tabOwnerDlginit external "LIBRARY oodialog tod_tabOwnerDlgInit"
+::method getTabPage external "LIBRARY oodialog tod_getTabPage"
+
+
+::class 'ManagedTab' subclass Object public
+
+::method init external "LIBRARY oodialog mt_init"
+
+
+::class 'ControlDlgInfo' subclass Object public
+
+::attribute title set external "LIBRARY oodialog cdi_set_title"
+::method init external "LIBRARY oodialog cdi_init"
+::method setSize external "LIBRARY oodialog cdi_setSize"
 
 ::class 'ControlDialog' mixinclass Object public
 
-::attribute initializing get unguarded external "LIBRARY oodialog ctrlDlg_get_initializing"
-::attribute initializing set unguarded external "LIBRARY oodialog ctrlDlg_set_initializing"
+::method init class external "LIBRARY oodialog cd_init_cls"                                     -- Not to be documented
+
+/*::attribute pageNumber get external "LIBRARY oodialog cd_get_pageNumber"
+::attribute pageNumber set external "LIBRARY oodialog cd_set_pageNumber"*/
+
+::attribute isManaged get external "LIBRARY oodialog cd_get_isManaged"
+::attribute wasActivated get external "LIBRARY oodialog cd_get_wasActivated"
+
+::attribute initializing get external "LIBRARY oodialog cd_get_initializing"
+::attribute initializing set external "LIBRARY oodialog cd_set_initializing"
+
+::attribute pageTitle get external "LIBRARY oodialog cd_get_pageTitle"
+::attribute pageTitle set external "LIBRARY oodialog cd_set_pageTitle"
+
+/*::attribute size get external "LIBRARY oodialog ctrlDlg_get_size"
+::attribute size set external "LIBRARY oodialog ctrlDlg_set_size"
+
+::attribute wantAllNotifications get external "LIBRARY oodialog ctrlDlg_get_wantAllNotifications"
+::attribute wantAllNotifications set external "LIBRARY oodialog ctrlDlg_set_wantAllNotifications"
+
+::attribute resources get unguarded
+::attribute resources set external "LIBRARY oodialog psp_setResources_atr"
+
+::attribute tabIcon get unguarded
+::attribute tabIcon set external "LIBRARY oodialog psp_setTabIcon_atr"*/
+
+
+::method controlDlgInit private external "LIBRARY oodialog cd_controlDlgInit"
+
+::method beginExecution unguarded
+
+    dlgData. = self~dlgData
+
+    if self~startIt then do
+        if self~useStem then self~setDataStem(dlgData.)
+        else self~setData
+
+        do while self~automaticMethods~Items > 0
+            p = self~automaticMethods~pull
+            m = self~automaticMethods~pull
+            c = self~automaticMethods~pull
+            o = c~new(p, self)
+            o~start(m)
+        end
+
+        self~waitForDialog
+    end
+    else do
+       self~finished = .true
+       self~stopIt
+    end
+    return 0
+
+
+::method endExecution unguarded
+    use strict arg isOkay = .false
+
+    if isOkay, self~wasActivated then do
+        self~initCode = 1
+        if self~useStem then self~getDataStem(self~dlgData)
+        self~getData
+    end
+    else do
+        self~initCode = 2
+    end
+    self~finished = .true
+
+    self~stopIt
+    return self~initCode
+
+
+-- Return .true, it's okay to leave the page, .false it is not okay, stay on the page
+::method tabPageKillActive
+  use strict arg owner
+  say "In ControlDialog::tabPageKillActive dlg:" self
+  return .true
+
+
+::method initUpdateListView private
+  use strict arg lvID, pause = .005
+
+  self~addNewAttribute('updateListViewID', lvID, .true)
+
+  src = .array~new
+  src[1]  = "use strict arg hwnd"
+  src[2]  = ""
+  src[3]  = "lv = self~newListView(self~updateListViewID)"
+  src[4]  = "if lv == .nil then return .false"
+  src[5]  = ""
+  src[6]  = "if hwnd == lv~hwnd then do"
+  src[7]  = "  j = SysSleep("pause")"
+  src[8]  = "  self~redraw"
+  src[9]  = "  return .true"
+  src[10] = "end"
+  src[11] = "return .false"
+  self~setMethod('updateListView', src)
+
+  owner = self~ownerDialog
+
+  owner~addNewAttribute(updateListViewPageDialog, self, .true, .true)
+  owner~addNewAttribute(updateListViewLastFocused, 0, .true, .true)
+
+  src = .array~new
+  src[1]  = "expose updateListViewPageDialog updateListViewLastFocused"
+  src[2]  = "use arg flag, hwnd, hFocused, isMinimized"
+  src[3]  = ""
+  src[4]  = "reply .false"
+  src[5]  = ""
+  src[6]  = "if flag == INACTIVE then updateListViewLastFocused = hFocused"
+  src[7]  = "else updateListViewPageDialog~updateListView(updateListViewLastFocused)"
+  owner~addNewMethod('onUpdateListViewActivate', src, .true)
+
+  owner~connectActivate('onUpdateListViewActivate')
+
 
 ::class 'ResControlDialog' public subclass ResDialog inherit ControlDialog
+
+::method startIt
+
+   if self~startDialog(self~library, self~resourceID) then do
+      -- if autodetection is on, create the data attributes
+      if self~autoDetect then do
+         ids = self~getDataTableIDs
+         do id over ids
+            text = self~getControlText(id)
+            self~addAttribute(id, text)
+         end
+      end
+
+      self~initDialog
+      self~initializing = .false
+      return .true
+   end
+
+   return .false
 
 ::method startDialog private external "LIBRARY oodialog resCtrlDlg_startDialog_pvt"
 
 
+::method execute
+    self~start("BEGINEXECUTION")
+::method popup
+    self~start("BEGINEXECUTION")
+::method popupAsChild
+    self~start("BEGINEXECUTION")
+::method executeAsync abstract
+::method endAsyncExecution abstract
+
+
 ::class 'UserControlDialog' public subclass UserDialog inherit ControlDialog
 
--- Over-ride the superclass startIt().  The superclass startIt() creates a top-
--- level dialog and takes an 'icon' and a 'modeless' icon.  We need to accept
--- those arguments, but we don't use them.  So we just ignore all args
+-- Over-ride the superclass startIt().  This is invoked from
+-- ControlDialog::beginExecution.
 ::method startIt
 
-    if self~basePtr = 0 then return 0
+    if self~basePtr = 0 then return .false
 
-    if self~startChildDialog(self~basePtr, 0) == 0 then return 0
+    if self~startChildDialog(self~basePtr, 0) == 0 then return .false
 
     self~initDialog
     self~initializing = .false;
-    return self~dlgHandle
+    return .true
+
+
+::method execute
+    self~start("BEGINEXECUTION")
+::method popup
+    self~start("BEGINEXECUTION")
+::method popupAsChild
+    self~start("BEGINEXECUTION")
+::method executeAsync abstract
+::method endAsyncExecution abstract
 
 
 ::class 'RcControlDialog' subclass UserControlDialog public
 
 ::method init
-    use strict arg rcFile, idDlg, initData. = .nil, includeFile = "", options = "", expected = 200, ownerDlg = .nil
+    use strict arg rcFile, idDlg, initData. = .nil, includeFile = "", options = "", expected = 200, ownerData = .nil
 
     newArgs = .array~new(5)
     if arg(3, 'E') then newArgs[1] = arg(3)
@@ -111,9 +274,22 @@
     forward class (super) arguments (newArgs) continue
     if result <> 0 then return result
 
-    self~initCode = self~load(rcFile, idDlg, options, expected)
+    if \ self~isManaged then do
+      self~initCode = self~load(rcFile, idDlg, options, expected)
+    end
 
     return self~initCode
+
+
+::method execute
+    self~start("BEGINEXECUTION")
+::method popup
+    self~start("BEGINEXECUTION")
+::method popupAsChild
+    self~start("BEGINEXECUTION")
+::method executeAsync abstract
+::method endAsyncExecution abstract
+
 
 
 

@@ -308,7 +308,7 @@ callFailed:
       if i <= methods.0 then do
         /* add method name to list box */
         if methods.i.!INVKIND \= 4 then
-          j = lc~add(methods.i.!NAME, (methods.i.!INVKIND)/2)
+          j = lc~add(methods.i.!NAME, (methods.i.!INVKIND)%2)
         else                                     /* this is a property put, symbolize with "=" */
           j = lc~add(methods.i.!NAME||"=",2)
         end

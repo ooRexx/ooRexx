@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -187,9 +187,14 @@ DWORD WINAPI WindowLoopThread(void *arg)
     pCPlainBaseDialog pcpbd = args->pcpbd;
     bool *release = args->release;
 
-    // Pass the pointer to the CSelf for this dialog to WM_INITDIALOG.
+    DLGPROC dlgProc = (DLGPROC)RexxDlgProc;
+    if ( pcpbd->isTabOwnerDlg )
+    {
+        dlgProc = (DLGPROC)RexxTabOwnerDlgProc;
+    }
+
     pcpbd->hDlg = CreateDialogParam(pcpbd->hInstance, MAKEINTRESOURCE(args->resourceId), pcpbd->hOwnerDlg,
-                                    (DLGPROC)RexxDlgProc, (LPARAM)pcpbd);
+                                    dlgProc, (LPARAM)pcpbd);
 
     if ( pcpbd->hDlg == NULL )
     {
@@ -201,7 +206,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
 
     if ( pcpbd->autoDetect )
     {
-        args->autoDetectResult = doDataAutoDetection(pcpbd);
+        args->autoDetectResult = doDataAutoDetection(NULL, pcpbd);
         if ( args->autoDetectResult == OOD_MEMORY_ERR )
         {
             pcpbd->hDlgProcThread = NULL;
@@ -286,10 +291,10 @@ void setFontAttrib(RexxThreadContext *c, pCPlainBaseDialog pcpbd)
 
 
 RexxMethod7(RexxObjectPtr, resdlg_init, RexxObjectPtr, library, RexxObjectPtr, resourceID, OPTIONAL_RexxObjectPtr, dlgData,
-            OPTIONAL_RexxObjectPtr, includeFile, OPTIONAL_RexxObjectPtr, owner,
+            OPTIONAL_RexxObjectPtr, includeFile, OPTIONAL_RexxObjectPtr, ownerData,
             SUPER, super, OSELF, self)
 {
-    RexxArrayObject newArgs = context->NewArray(4);
+    RexxArrayObject newArgs = context->NewArray(5);
 
     context->ArrayPut(newArgs, library, 1);
     context->ArrayPut(newArgs, resourceID, 2);
@@ -301,22 +306,30 @@ RexxMethod7(RexxObjectPtr, resdlg_init, RexxObjectPtr, library, RexxObjectPtr, r
     {
         context->ArrayPut(newArgs, includeFile, 4);
     }
+    if ( argumentExists(5) )
+    {
+        context->ArrayPut(newArgs, ownerData, 5);
+    }
+
     RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, newArgs);
 
-    if ( isInt(0, result, context->threadContext) )
+    if ( result == TheZeroObj )
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->GetCSelf();
 
-        if ( argumentExists(5) )
+        if ( pcpbd->isControlDlg || pcpbd->isTabOwnerDlg)
         {
-            pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(context, owner, oodPlainBaseDialog, 5);
-            if ( ownerPcpbd == NULL )
+            RexxPointerObject p = context->NewPointer(pcpbd);
+
+            if ( pcpbd->isControlDlg )
             {
-                return TheOneObj;
+                result = context->SendMessage1(self, "CONTROLDLGINIT", p);
             }
 
-            pcpbd->rexxOwner = owner;
-            pcpbd->hOwnerDlg = ownerPcpbd->hDlg;
+            if ( pcpbd->isTabOwnerDlg && result == TheZeroObj )
+            {
+                result = context->SendMessage1(self, "TABOWNERDLGINIT", p);
+            }
         }
     }
 
@@ -341,7 +354,7 @@ RexxMethod5(logical_t, resdlg_startDialog_pvt, CSTRING, library, RexxObjectPtr, 
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
-    uint32_t dlgID = oodResolveSymbolicID(context, pcpbd->rexxSelf, _dlgID, -1, 2);
+    int32_t dlgID = oodResolveSymbolicID(context->threadContext, pcpbd->rexxSelf, _dlgID, -1, 2, true);
     if ( dlgID == OOD_ID_EXCEPTION )
     {
         return FALSE;
@@ -432,107 +445,6 @@ RexxMethod2(RexxArrayObject, resdlg_getDataTableIDs_pvt, CSELF, pCSelf, OSELF, s
 {
     return getDataTableIDs(context, (pCPlainBaseDialog)pCSelf, self);
 }
-
-
-/**
- *  Methods for the .ControlDialog class.
- */
-#define CONTROLDIALOG_CLASS        "ControlDialog"
-
-RexxMethod1(RexxObjectPtr, ctrlDlg_get_initializing, OSELF, self)
-{
-    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
-    if ( pcpbd != NULL )
-    {
-        return pcpbd->isInitializing ? TheTrueObj : TheFalseObj;
-    }
-
-    baseClassIntializationException(context);
-    return NULLOBJECT;
-}
-
-
-RexxMethod2(RexxObjectPtr, ctrlDlg_set_initializing, logical_t, initializing, OSELF, self)
-{
-    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
-    if ( pcpbd == NULL )
-    {
-        baseClassIntializationException(context);
-    }
-    else
-    {
-        pcpbd->isInitializing = initializing ? true : false;
-    }
-    return NULLOBJECT;
-}
-
-
-/**
- *  Methods for the .ResControlDialog class.
- */
-#define RESControlDialog_CLASS        "ResControlDialog"
-
-/** ResControlDialog::startDialog()
- *
- *  This method over-rides the superclass (ResDialog) startDialog().  It will be
- *  invoked from the superclass: self~startDialog(library, id, icon, modeless)
- *
- *  We only need library and id, the owner dialog we pull from the CSelf
- *  struct.  So, we just take the first 2 args and ignore the rest.
- */
-RexxMethod4(RexxObjectPtr, resCtrlDlg_startDialog_pvt, CSTRING, library, RexxObjectPtr, _dlgID, ARGLIST, args, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
-    if ( pcpbd == NULL )
-    {
-        goto err_out;
-    }
-
-    if ( ! validControlDlg(context, pcpbd) )
-    {
-        goto err_out;
-    }
-
-    uint32_t dlgID = oodResolveSymbolicID(context, pcpbd->rexxSelf, _dlgID, -1, 2);
-    if ( dlgID == OOD_ID_EXCEPTION )
-    {
-        goto err_out;
-    }
-    if ( dlgID == 0 )
-    {
-        wrongArgValueException(context->threadContext, 2, "a valid numeric resource ID or a valid symbolic ID", _dlgID);
-        goto err_out;
-    }
-
-    if ( !loadResourceDLL(pcpbd, library) )
-    {
-        goto err_out;
-    }
-
-    HWND hChild = (HWND)SendMessage(pcpbd->hOwnerDlg, WM_USER_CREATECONTROL_RESDLG, (WPARAM)pcpbd, (LPARAM)dlgID);
-    if ( hChild )
-    {
-        pcpbd->hDlg = hChild;
-        pcpbd->isActive = true;
-        pcpbd->childDlg[0] = hChild;
-
-        setDlgHandle(context->threadContext, pcpbd);
-        setFontAttrib(context->threadContext, pcpbd);
-
-        if ( pcpbd->autoDetect )
-        {
-            // TODO should we check result?
-            uint32_t result = doDataAutoDetection(pcpbd);
-        }
-
-        pcpbd->isInitializing = false;
-        return TheTrueObj;
-    }
-
-err_out:
-    return TheFalseObj;
-}
-
 
 
 /**

@@ -434,7 +434,8 @@
 -- can be started correctly for DS_CONTROL dialogs.
 ::method loadFrame private
    use arg resfile, dialogid, options, expected
-   if arg(4,"o") | expected = 0 then expected = 200
+
+   if arg(4,"O") | expected = 0 then expected = 200
    if options~translate~wordpos("CENTER") > 0 then internopts = "CENTER "
    else internopts = ""
 
@@ -446,6 +447,7 @@
       return 1
    end
 
+   global = .constDirUsage == 'use only'
    found = 0; n = 0
    fl = f~lines
    do while found = 0
@@ -462,8 +464,9 @@
             end
             when s~wordpos("#define") > 0 then do
                s = s~translate(" ", "9"x)
-               parse var s "#define " symb iid
-               self~ConstDir[symb~space(0)~translate] = iid
+               parse var s "#define " symb iid .
+               if global then .constDir[symb] = iid
+               else self~constDir[symb~space(0)~translate] = iid
             end
             otherwise
                nop
@@ -471,7 +474,7 @@
          -- End select
       end
       if (self~checkfile(f) = 1) then return 1
-      if arg(2,'o') = 1 | dialogid = "DIALOGID" then found = 1
+      if arg(2,'O') | dialogid = "DIALOGID" then found = 1
       else do
          foundID = s~word(n-1)~translate
          if foundID = dialogid~translate then found = 1
@@ -530,8 +533,9 @@
          end
          when s~wordpos("#define") > 0 then do
             s = s~translate(" ", "9"x)
-            parse var s "#define " symb iid
-            self~ConstDir[symb~space(0)~translate] = iid
+            parse var s "#define " symb iid .
+            if global then .constDir[symb] = iid
+            else self~constDir[symb~space(0)~translate] = iid
          end
          otherwise
             nop
@@ -560,23 +564,26 @@
       say "Resource file not found --> " op
       return 1
    end
-   if arg(3, "o") = 1 then loadOptions = ""; else loadOptions = loadOptions~translate
+
+   global = .constDirUsage == 'use only'
+   if arg(3, "O") then loadOptions = ""; else loadOptions = loadOptions~translate
    found = 0; n = 0
    fl = f~lines
    do while found = 0 & fl > 0
       do while n = 0 & fl > 0
          s = f~linein; fl = fl - 1
-         /* premission: #define only at the top of the RC and separated by a tab or a blank */
+         -- This seems redundent, #defines were probably already caught in loadFrame()
          if s~wordpos("#define") > 0 then do
              s = s~translate(" ", "9"x)
-             parse var s "#define " symb iid
-             self~ConstDir[symb~space(0)~translate] = iid
+             parse var s "#define " symb iid .
+             if global then .constDir[symb] = iid
+             else self~constDir[symb~space(0)~translate] = iid
          end
          n = s~wordpos("DIALOG")
          if n = 0 then n = s~wordpos("DIALOGEX")
       end
       if self~checkfile(f)=1 then return 1
-      if arg(2,'o') = 1 | dialogid = "DIALOGID" then found = 1
+      if arg(2, 'O') | dialogid = "DIALOGID" then found = 1
       else do
          foundID = s~word(n-1)~translate
          if foundID = dialogid~translate then found = 1
@@ -592,7 +599,7 @@
    end
    if self~checkfile(f)=1 then return 1
 
-   self~ProcessingLoad = 1
+   self~processingLoad = 1
    do while fl > 0 & s~wordpos("END") = 0 & s~pos("}") = 0
       s = f~linein; fl = fl - 1
       if s~wordpos("END") > 0 | s~pos("}") > 0 then leave;

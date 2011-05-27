@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -40,11 +40,15 @@
  * oodPackageEntry.cpp
  *
  * Contains the package entry point, routine and method declarations, and
- * routine and method tables for the native API.  Also contains the global
+ * routine and method tables for the native API.  Also contains all global
  * variables and DLLMain().
  */
 
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
+#include <shlwapi.h>
+#include <stdio.h>
+#include "APICommon.hpp"
+#include "oodCommon.hpp"
 
 
 HINSTANCE            MyInstance = NULL;
@@ -67,6 +71,13 @@ RexxObjectPtr       TheOneObj = NULLOBJECT;
 RexxObjectPtr       TheTwoObj = NULLOBJECT;
 RexxObjectPtr       TheNegativeOneObj = NULLOBJECT;
 
+// Initialized in the DlgUtil class init method (dlgutil_init_cls.)
+RexxObjectPtr       TheApplicationObj = NULLOBJECT;
+RexxDirectoryObject TheConstDir = NULLOBJECT;
+
+// Initialized here, can be changes by ApplicationClass::useGlobalConstDir()
+oodConstDir_t       TheConstDirUsage = globalNever;
+
 // Initialized in the PlainBaseDialog class init method (pbdlg_init_cls.)
 RexxClassObject     ThePlainBaseDialogClass = NULLOBJECT;
 
@@ -79,11 +90,17 @@ RexxClassObject     TheDialogControlClass = NULLOBJECT;
 // Initialized in the PropertySheetPage class init method (psp_init_cls.)
 RexxClassObject     ThePropertySheetPageClass = NULLOBJECT;
 
+// Initialized in the ControlDialog class init method (cd_init_cls.)
+RexxClassObject     TheControlDialogClass = NULLOBJECT;
+
 // Initialized in the Size class init method (size_init_cls.)
 RexxClassObject     TheSizeClass = NULLOBJECT;;
 
 // Initialized in the Rect class init method (rect_init_cls.)
 RexxClassObject     TheRectClass = NULLOBJECT;
+
+/* GdiplusStartupInput gdiplusStartupInput;
+ULONG_PTR           gdiplusToken; */
 
 
 #ifdef __cplusplus
@@ -112,15 +129,168 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 
-/* GdiplusStartupInput gdiplusStartupInput;
-ULONG_PTR           gdiplusToken; */
+/**
+ * Do not include ICC_STANDARD_CLASSES.  Some versions of Windows XP have a bug
+ * that causes InitCommonControlsEx() to fail when that flag is used.  The flag
+ * itself is not needed under any version of Windows.
+ *
+ * Note: These flags are valid under any supported CommCtrl32 version.  But, as
+ * ooDialog adds support for more dialog controls, it may become necessary to
+ * check the CommCtrl32 version and have a different set of flags for certain
+ * versions.
+ */
+#define INITCOMMONCONTROLS_CLASS_FLAGS    ICC_WIN95_CLASSES | ICC_DATE_CLASSES
 
 /**
- * RexxPackageLoader function.  This does nothing right now.
+ * Determines the version of comctl32.dll and compares it against a minimum
+ * required version.
  *
- * In a future release it will be used for the GDI+ startup initialization, and
- * some of the other startup function currently in DlgUtil init class will be
- * moved here.  Place holder for now.
+ * @param  context      The ooRexx method context.
+ * @param  pDllVersion  The loaded version of comctl32.dll is returned here as a
+ *                      packed unsigned long. This number is created using
+ *                      Microsoft's suggested process and can be used for
+ *                      numeric comparisons.
+ * @param  minVersion   The minimum acceptable version.
+ * @param  packageName  The name of the package initiating this check.
+ * @param  errTitle     The title for the error dialog if it is displayed.
+ *
+ * @note  If this function fails, an exception is raised.
+ */
+bool getComCtl32Version(RexxThreadContext *context, DWORD *pDllVersion, DWORD minVersion,
+                         CSTRING packageName, CSTRING errTitle)
+{
+    bool success = false;
+    *pDllVersion = 0;
+
+    HINSTANCE hinst = LoadLibrary(TEXT(COMMON_CONTROL_DLL));
+    if ( hinst )
+    {
+        DLLGETVERSIONPROC pDllGetVersion;
+
+        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinst, DLLGETVERSION_FUNCTION);
+        if ( pDllGetVersion )
+        {
+            HRESULT hr;
+            DLLVERSIONINFO info;
+
+            ZeroMemory(&info, sizeof(info));
+            info.cbSize = sizeof(info);
+
+            hr = (*pDllGetVersion)(&info);
+            if ( SUCCEEDED(hr) )
+            {
+                *pDllVersion = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
+                _snprintf(ComCtl32VersionStr, COMCTL32_VERSION_STRING_LEN, "ComCtl32 v%d.%d",
+                          info.dwMajorVersion, info.dwMinorVersion);
+                success = true;
+            }
+            else
+            {
+                systemServiceExceptionComCode(context, COM_API_FAILED_MSG, DLLGETVERSION_FUNCTION, hr);
+            }
+        }
+        else
+        {
+            systemServiceExceptionCode(context, NO_PROC_MSG, DLLGETVERSION_FUNCTION);
+        }
+        FreeLibrary(hinst);
+    }
+    else
+    {
+        systemServiceExceptionCode(context, NO_HMODULE_MSG, COMMON_CONTROL_DLL);
+    }
+
+    if ( *pDllVersion == 0 )
+    {
+        CHAR msg[256];
+        _snprintf(msg, sizeof(msg),
+                  "The version of the Windows Common Controls library (%s)\n"
+                  "could not be determined.  %s can not continue",
+                  COMMON_CONTROL_DLL, packageName);
+
+        internalErrorMsgBox(msg, errTitle);
+        success = false;
+    }
+    else if ( *pDllVersion < minVersion )
+    {
+        CHAR msg[256];
+        _snprintf(msg, sizeof(msg),
+                  "%s can not continue with this version of the Windows\n"
+                  "Common Controls library(%s.)  The minimum\n"
+                  "version required is: %s.\n\n"
+                  "This system has: %s\n",
+                  packageName, COMMON_CONTROL_DLL, comctl32VersionName(minVersion),
+                  comctl32VersionName(*pDllVersion));
+
+        internalErrorMsgBox(msg, errTitle);
+        *pDllVersion = 0;
+        success = false;
+    }
+    return success;
+}
+
+/**
+ * Initializes the common control library for the specified classes.
+ *
+ * @param classes       Flag specifing the classes to be initialized.
+ * @param  packageName  The name of the package initializing the classes.
+ * @param  errTitle     The title for the error dialog if it is displayed.
+ *
+ * @return True on success, otherwise false.
+ *
+ * @note   An exception has been raised when false is returned.
+ */
+bool initCommonControls(RexxThreadContext *context, DWORD classes, CSTRING packageName, CSTRING errTitle)
+{
+    INITCOMMONCONTROLSEX ctrlex;
+
+    ctrlex.dwSize = sizeof(ctrlex);
+    ctrlex.dwICC = classes;
+
+    if ( ! InitCommonControlsEx(&ctrlex) )
+    {
+        systemServiceExceptionCode(context, NO_COMMCTRL_MSG, "Common Control Library");
+
+        CHAR msg[128];
+        _snprintf(msg, sizeof(msg),
+                  "Initializing the Windows Common Controls\n"
+                  "library failed.  %s can not continue.\n\n"
+                  "Windows System Error Code: %d\n", packageName, GetLastError());
+
+        internalErrorMsgBox(msg, errTitle);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * RexxPackageLoader function.
+ *
+ * The package loader function is called when the library package is first
+ * loaded.  This makes it the ideal place for any initialization that must be
+ * done prior to ooDialog starting.
+ *
+ * Note that an exception raised here effectively terminates ooDialog before any
+ * user code is executed.
+ *
+ * This function:
+ *
+ * 1.) Determines the version of comctl32.dll and initializes the common
+ * controls.  The minimum acceptable version of 4.71 is supported on Windows 95
+ * with Internet Explorer 4.0, Windows NT 4.0 with Internet Explorer 4.0,
+ * Windows 98, and Windows 2000.
+ *
+ * 2.) Initializes some useful global variables, such as the TheTrueObj,
+ * TheFalseObj, etc..
+ *
+ * 3.) Initializes a null pointer Pointer object and places it in the .local
+ * directory. (.NullHandle)  This allows ooRexx code to use a null handle for an
+ * argument where appropriate.
+ *
+ * 4.) Places the SystemErrorCode (.SystemErrorCode) variable in the .local
+ * directory.
+ *
+ * 5.) In a future release it will be used for the GDI+ startup initialization.
  *
  * @param c  Thread context pointer passed from the intepreter when this package
  *           is loaded.
@@ -129,15 +299,60 @@ ULONG_PTR           gdiplusToken; */
  */
 void RexxEntry ooDialogLoad(RexxThreadContext *c)
 {
+    TheTrueObj    = c->True();
+    TheFalseObj   = c->False();
+    TheNilObj     = c->Nil();
+    TheNullPtrObj = c->NewPointer(NULL);
+    TheZeroObj    = TheFalseObj;
+    TheOneObj     = TheTrueObj;
+
+    if ( ! getComCtl32Version(c, &ComCtl32Version, COMCTL32_4_71, "ooDialog", COMCTL_ERR_TITLE) )
+    {
+        return;
+    }
+
+    if ( ! initCommonControls(c, INITCOMMONCONTROLS_CLASS_FLAGS, "ooDialog", COMCTL_ERR_TITLE) )
+    {
+        ComCtl32Version = 0;
+        return;
+    }
+
+    RexxDirectoryObject local = c->GetLocalEnvironment();
+    if ( local != NULLOBJECT )
+    {
+        TheDotLocalObj = local;
+
+        TheNegativeOneObj = c->WholeNumber(-1);
+        c->RequestGlobalReference(TheNegativeOneObj);
+
+        TheTwoObj = c->WholeNumber(2);
+        c->RequestGlobalReference(TheTwoObj);
+
+        c->DirectoryPut(local, TheNullPtrObj, "NULLHANDLE");
+        c->DirectoryPut(local, c->WholeNumberToObject(0), "SYSTEMERRORCODE");
+    }
+    else
+    {
+        severeErrorException(c, NO_LOCAL_ENVIRONMENT_MSG);
+        return;
+    }
+
     /* Initialize GDI+.
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);*/
 }
 
 /**
- * RexxPackageUnloader function.  Place holder for now, see comments above.
+ * RexxPackageUnloader function.
+ *
+ * The package unloader function is called when the library package is unloaded
+ * by the interpreter. The unloading process happens when the last interpreter
+ * instance is destroyed during the last cleanup stages.
+ *
+ * At this time, nothing is done, the function is just a place holder.  A
+ * furture version of ooDialog will use it to close down GDI+.
  *
  * @param c  Thread context pointer passed from the intepreter when this package
- *           is loaded.
+ *           is unloaded.
  *
  * @return Nothing is returned
  */
@@ -189,6 +404,10 @@ REXX_METHOD_PROTOTYPE(dlgutil_screenArea_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_threadID_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
+
+// ApplicationClass
+REXX_METHOD_PROTOTYPE(app_init);
+REXX_METHOD_PROTOTYPE(app_useGlobalConstDir);
 
 // OS
 REXX_METHOD_PROTOTYPE(os_is64bit);
@@ -329,6 +548,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 REXX_METHOD_PROTOTYPE(generic_subclassEdit);
+REXX_METHOD_PROTOTYPE(global_resolveSymbolicID);
 
 // DialogExtensions
 REXX_METHOD_PROTOTYPE(dlgext_setWindowRect);
@@ -406,9 +626,30 @@ REXX_METHOD_PROTOTYPE(resdlg_init);
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
 REXX_METHOD_PROTOTYPE(resdlg_startDialog_pvt);
 
+// TabOwnerDialog
+REXX_METHOD_PROTOTYPE(tod_tabOwnerDlgInit);
+REXX_METHOD_PROTOTYPE(tod_getTabPage);
+
+// TabOwnerDlgInfo
+REXX_METHOD_PROTOTYPE(todi_init);
+
+// ManagedTab
+REXX_METHOD_PROTOTYPE(mt_init);
+
 // ControlDialog
-REXX_METHOD_PROTOTYPE(ctrlDlg_get_initializing);
-REXX_METHOD_PROTOTYPE(ctrlDlg_set_initializing);
+REXX_METHOD_PROTOTYPE(cd_init_cls);
+REXX_METHOD_PROTOTYPE(cd_controlDlgInit);
+REXX_METHOD_PROTOTYPE(cd_get_isManaged);
+REXX_METHOD_PROTOTYPE(cd_get_wasActivated);
+REXX_METHOD_PROTOTYPE(cd_get_initializing);
+REXX_METHOD_PROTOTYPE(cd_set_initializing);
+REXX_METHOD_PROTOTYPE(cd_get_pageTitle);
+REXX_METHOD_PROTOTYPE(cd_set_pageTitle);
+
+// ControlDlgInfo
+REXX_METHOD_PROTOTYPE(cdi_set_title);
+REXX_METHOD_PROTOTYPE(cdi_init);
+REXX_METHOD_PROTOTYPE(cdi_setSize);
 
 // ResourceControlDialog
 REXX_METHOD_PROTOTYPE(resCtrlDlg_startDialog_pvt);
@@ -932,6 +1173,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_threadID_cls,           dlgutil_threadID_cls),
     REXX_METHOD(dlgutil_test_cls,               dlgutil_test_cls),
 
+    REXX_METHOD(app_init,                       app_init),
+    REXX_METHOD(app_useGlobalConstDir,          app_useGlobalConstDir),
+
     REXX_METHOD(os_is64bit,                     os_is64bit),
     REXX_METHOD(os_is32on64bit,                 os_is32on64bit),
     REXX_METHOD(os_isVersion,                   os_isVersion),
@@ -1056,12 +1300,13 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setTabGroup,              pbdlg_setTabGroup),
     REXX_METHOD(pbdlg_stopIt,                   pbdlg_stopIt),
     REXX_METHOD(pbdlg_newControl,               pbdlg_newControl),
-    REXX_METHOD(pbdlg_putControl,           pbdlg_putControl),
+    REXX_METHOD(pbdlg_putControl,               pbdlg_putControl),
     REXX_METHOD(pbdlg_dumpMessageTable,         pbdlg_dumpMessageTable),
     REXX_METHOD(pbdlg_unInit,                   pbdlg_unInit),
 
     REXX_METHOD(generic_setListTabulators,      generic_setListTabulators),
     REXX_METHOD(generic_subclassEdit,           generic_subclassEdit),
+    REXX_METHOD(global_resolveSymbolicID,       global_resolveSymbolicID),
 
     REXX_METHOD(dlgext_setWindowRect,           dlgext_setWindowRect),
     REXX_METHOD(dlgext_clearWindowRect,         dlgext_clearWindowRect),
@@ -1158,9 +1403,30 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(resdlg_getDataTableIDs_pvt,     resdlg_getDataTableIDs_pvt),
     REXX_METHOD(resdlg_startDialog_pvt,         resdlg_startDialog_pvt),
 
+    // TabOwnerDialog
+    REXX_METHOD(tod_tabOwnerDlgInit,            tod_tabOwnerDlgInit),
+    REXX_METHOD(tod_getTabPage,                 tod_getTabPage),
+
+    // TabOwnerDlgInfo
+    REXX_METHOD(todi_init,                      todi_init),
+
+    // ManagedTab
+    REXX_METHOD(mt_init,                        mt_init),
+
     // ControlDialog
-    REXX_METHOD(ctrlDlg_get_initializing,       ctrlDlg_get_initializing),
-    REXX_METHOD(ctrlDlg_set_initializing,       ctrlDlg_set_initializing),
+    REXX_METHOD(cd_init_cls,                    cd_init_cls),
+    REXX_METHOD(cd_controlDlgInit,              cd_controlDlgInit),
+    REXX_METHOD(cd_get_isManaged,               cd_get_isManaged),
+    REXX_METHOD(cd_get_wasActivated,            cd_get_wasActivated),
+    REXX_METHOD(cd_get_initializing,            cd_get_initializing),
+    REXX_METHOD(cd_set_initializing,            cd_set_initializing),
+    REXX_METHOD(cd_get_pageTitle,               cd_get_pageTitle),
+    REXX_METHOD(cd_set_pageTitle,               cd_set_pageTitle),
+
+    // ControlDlgInfo
+    REXX_METHOD(cdi_set_title,                  cdi_set_title),
+    REXX_METHOD(cdi_init,                       cdi_init),
+    REXX_METHOD(cdi_setSize,                    cdi_setSize),
 
     // ResControlDialog
     REXX_METHOD(resCtrlDlg_startDialog_pvt,     resCtrlDlg_startDialog_pvt),

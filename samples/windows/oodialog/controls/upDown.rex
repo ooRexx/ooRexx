@@ -50,7 +50,9 @@
  * the UpDown class.
  */
 
-  dlg = .AnUpDownDlg~new("upDown.rc", IDD_UP_DOWN, , "upDown.h" )
+  .application~useGlobalConstDir("O", "upDown.h")
+
+  dlg = .AnUpDownDlg~new("upDown.rc", IDD_UP_DOWN)
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   dlg~deinstall
 

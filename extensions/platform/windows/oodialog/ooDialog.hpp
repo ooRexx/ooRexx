@@ -56,6 +56,9 @@
 #define MAXCHILDDIALOGS         20
 #define MAXDIALOGS              20
 
+#define MAXTABPAGES           MAXPROPPAGES
+#define MAXMANAGEDTABS        4
+
 #define DEFAULT_FONTNAME            "MS Shell Dlg"
 #define DEFAULT_FONTSIZE              8
 #define MAX_DEFAULT_FONTNAME        256
@@ -229,11 +232,14 @@ typedef enum
 // Enum for the type of an ooDialog class.  Types to be added as needed.
 typedef enum
 {
-    oodPlainBaseDialog, oodCategoryDialog, oodUserDialog,    oodRcDialog,      oodResDialog,
-    oodControlDialog,   oodUserPSPDialog,  oodRcPSPDialog,   oodResPSPDialog,  oodDialogControl,
-    oodStaticControl,   oodButtonControl,  oodEditControl,   oodListBox,       oodProgressBar,
-    oodUnknown
+    oodPlainBaseDialog, oodCategoryDialog,    oodUserDialog,      oodRcDialog,         oodResDialog,
+    oodControlDialog,   oodUserControlDialog, oodRcControlDialog, oodResControlDialog, oodUserPSPDialog,
+    oodRcPSPDialog,     oodResPSPDialog,      oodDialogControl,   oodStaticControl,    oodButtonControl,
+    oodEditControl,     oodListBox,           oodProgressBar,     oodUnknown
 } oodClass_t;
+
+// How the Global constDir is to be used
+typedef enum {globalOnly, globalFirst, globalLast, globalNever} oodConstDir_t;
 
 
 inline LONG_PTR setWindowPtr(HWND hwnd, int index, LONG_PTR newPtr)
@@ -532,6 +538,7 @@ typedef struct _pbdCSelf {
     HWND                 hOwnerDlg;
     RexxObjectPtr        rexxParent;    // This dialog's Rexx parent dialog object
     void                *dlgPrivate;    // Subclasses can store data unique to the subclass
+    void                *initPrivate;   // Subclasses can store init data unique to the subclass
     DATATABLEENTRY      *DataTab;
     ICONTABLEENTRY      *IconTab;
     COLORTABLEENTRY     *ColorTab;
@@ -554,10 +561,11 @@ typedef struct _pbdCSelf {
     bool                 onTheTop;
     bool                 isCategoryDlg;  // Need to use IsNestedDialogMessage()
     bool                 isControlDlg;   // Dialog was created as DS_CONTROL | WS_CHILD
-    bool                 isInitializing; // ControlDialog attribute
     bool                 isOwnedDlg;     // Dialog has an owner dialog
+    bool                 isManagedDlg;   // Dialog has an owner dialog, which is a tab owner dialog
     bool                 isPageDlg;      // Dialog is a property sheet page dialog
     bool                 isPropSheetDlg; // Dialog is a property sheet dialog
+    bool                 isTabOwnerDlg;  // Dialog is a tab owner dialog
     bool                 sharedIcon;
     bool                 didChangeIcon;
     bool                 isActive;
@@ -596,6 +604,69 @@ typedef struct _ddCSelf {
     uint32_t           count;         // Dialog item count (dialogItemCount)
 } CDynamicDialog;
 typedef CDynamicDialog *pCDynamicDialog;
+
+
+/* Struct for the ControlDialogInfo object CSelf. */
+typedef struct _cdiCSelf {
+    SIZE              size;
+    RexxObjectPtr     owner;
+    char             *title;
+    HINSTANCE         hInstance;        // resources attribute, C++ part of .ResourceImage
+    HICON             hIcon;            // tabIcon attribute, C++ part if using .Image
+    uint32_t          iconID;           // tabIcon attribute, C++ part if using resource ID
+    bool              managed;
+} CControlDialogInfo;
+typedef CControlDialogInfo *pCControlDialogInfo;
+
+/* Struct for the ControlDialog object CSelf. */
+typedef struct _cdCSelf {
+    SIZE                size;
+    pCPlainBaseDialog   pcpbd;
+    RexxObjectPtr       rexxSelf;
+    char               *pageTitle;
+    oodClass_t          pageType;
+    HICON               hIcon;            // tabIcon attribute, C++ part if using .Image
+    uint32_t            iconID;           // tabIcon attribute, C++ part if using resource ID
+    uint32_t            pageNumber;       // Page number, zero-based index
+    bool                activated;        // Was the page visited by the user
+    bool                isInitializing;
+    bool                isManaged;
+} CControlDialog;
+typedef CControlDialog *pCControlDialog;
+
+
+/* Struct for the ManagedTab object CSelf. */
+typedef struct _mtCSelf {
+    RexxArrayObject      pages;              // Used to protect from garbage collection, until transferred to tab owner dialog
+    RexxObjectPtr       *rexxPages;
+    pCControlDialog     *cppPages;
+    uint32_t             tabID;              // tab resource ID
+    uint32_t             count;              // count of pages
+    bool                 wantNotifications;  // Send the dialog all tab notifications.
+} CManagedTab;
+typedef CManagedTab *pCManagedTab;
+
+/* Struct for the TabOwnerDlgInfo object CSelf. */
+typedef struct _todiCSelf {
+    RexxArrayObject   pages[MAXMANAGEDTABS]; // Used to protect from garbage collection, for a space.
+    pCManagedTab      mts[MAXMANAGEDTABS];
+    uint32_t          count;
+    bool              useResourceImage;
+} CTabOwnerDlgInfo;
+typedef CTabOwnerDlgInfo *pCTabOwnerDlgInfo;
+
+/* Struct for the TabOwnerDialog object CSelf. */
+typedef struct _todCSelf {
+    pCManagedTab         mts[MAXMANAGEDTABS];
+    uint32_t             tabIDs[MAXMANAGEDTABS];
+    RexxThreadContext   *dlgProcContext;
+    RexxObjectPtr        rexxSelf;
+    HWND                 hDlg;
+    pCPlainBaseDialog    pcpbd;
+    uint32_t             countMTs;
+} CTabOwnerDialog;
+typedef CTabOwnerDialog *pCTabOwnerDialog;
+
 
 /* Struct for the PropertySheetPage object CSelf. */
 typedef struct _pspCSelf {
@@ -681,6 +752,9 @@ extern RexxObjectPtr       TheZeroObj;
 extern RexxObjectPtr       TheTwoObj;
 extern RexxObjectPtr       TheOneObj;
 extern RexxObjectPtr       TheNegativeOneObj;
+extern RexxObjectPtr       TheApplicationObj;
+extern RexxDirectoryObject TheConstDir;
+extern oodConstDir_t       TheConstDirUsage;
 extern RexxDirectoryObject TheDotLocalObj;
 extern RexxPointerObject   TheNullPtrObj;
 
@@ -688,6 +762,7 @@ extern RexxClassObject ThePlainBaseDialogClass;
 extern RexxClassObject TheDynamicDialogClass;
 extern RexxClassObject TheDialogControlClass;
 extern RexxClassObject ThePropertySheetPageClass;
+extern RexxClassObject TheControlDialogClass;
 extern RexxClassObject TheSizeClass;
 extern RexxClassObject TheRectClass;
 

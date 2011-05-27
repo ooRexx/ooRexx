@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -54,8 +54,10 @@
  * will lead you straight to the documentation
  */
 
-  sysInfoDlg = .SystemClass~new('sysinfo.rc', SYSINFO_DLG, , 'sysInfo.h')
-  if sysInfoDlg~initCode = 0 then do
+  .application~useGlobalConstDir("O", 'sysInfo.h')
+
+  sysInfoDlg = .SystemClass~new('sysinfo.rc', SYSINFO_DLG)
+  if sysInfoDlg~initCode == 0 then do
     sysInfoDlg~execute("SHOWTOP")
   end
 

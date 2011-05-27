@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,11 +43,287 @@
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
-#include <shlwapi.h>
-#include <stdio.h>
+#include <stdio.h>          // For printf()
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodDeviceGraphics.hpp"
+#include "oodResourceIDs.hpp"
+
+/**
+ * Generic method implementations that may be used by different classes
+ */
+#define GENERIC_METHODS        "GenericMethods"
+
+/**
+ * Resolve a resource ID using the .ConstDir.
+ */
+RexxMethod1(int32_t, global_resolveSymbolicID, RexxObjectPtr, id)
+{
+    return oodGlobalID(context, id, 1, true);
+}
+
+
+/** ListBox::setTabulators()
+ *  PlainBaseDialog::setListTabulators()
+ *  CategoryDialog::setCategoryListTabulators()
+ *
+ *  Sets the tab stop positions in a list-box.
+ *
+ *  This is generic implementation used by several different classes.  The
+ *  resourceID and categoryId arguments are not always present.
+ *
+ *  @param resourceID  The resource ID (may be symbolic) of the list-box.
+ *
+ *  @param tabstop     The tab stop position.  This argument may repeat any
+ *                     number of times.  Each argument is the next succesive tab
+ *                     stop.  See the notes below for a fuller explanation.
+ *
+ *  @param categoryID  For a CategoryDialog, the catalog page that contains the
+ *                     ListBox.
+ *
+ *  @return 0 on success, -1 for an invalid resource ID, and 1 for an API
+ *          failure.
+ *
+ *  @note  The tab stop units are dialog template units. The tab stops must be
+ *         listed in ascending order. You can't place a tab stop behind a
+ *         previous tab stop.
+ *
+ *         If no tab stop is specified, than that signals the list-box to place
+ *         tab stops equidistant at the default of 2 dialog units.  If 1 tab
+ *         stop is specified, then equidistant tab stops are placed at the
+ *         distance specified.  Othewise, a tab stop is placed at each position
+ *         specified.
+ */
+RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
+{
+    HWND hControl = NULL;
+    int32_t  rc = -1;
+    int32_t id;
+    uint32_t *tabs = NULL;
+    oodClass_t objects[] = {oodCategoryDialog, oodPlainBaseDialog, oodListBox};
+
+    size_t count = context->ArrayItems((RexxArrayObject) args);
+    size_t tabStart = 1;
+
+    // Determine which object has invoked this method and parse the argument
+    // list.  The object class determines how to get the handle to the listbox,
+    // the count of tab stops, and at which arg position the tab stops start.
+    switch ( oodClass(context, self, objects, sizeof(objects) / sizeof(oodClass_t))  )
+    {
+        case oodListBox :
+        {
+            hControl = controlToHCtrl(context, self);
+        } break;
+
+        case oodPlainBaseDialog :
+        {
+            if ( count < 1 )
+            {
+                missingArgException(context->threadContext, 1);
+                goto done_out;
+            }
+
+            RexxObjectPtr resourceID = context->ArrayAt(args, 1);
+            if ( ! oodSafeResolveID(&id, context, self, resourceID, -1, 1, true) )
+            {
+                goto done_out;
+            }
+
+            pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+            hControl = GetDlgItem(pcpbd->hDlg, (int)id);
+            tabStart = 2;
+            count--;
+
+        } break;
+
+        case oodCategoryDialog :
+        {
+            if ( count < 2 )
+            {
+                missingArgException(context->threadContext, (count == 1 ? 2 : 1));
+                goto done_out;
+            }
+
+            RexxObjectPtr resourceID = context->ArrayAt(args, 1);
+            if ( ! oodSafeResolveID(&id, context, self, resourceID, -1, 1, true) )
+            {
+                goto done_out;
+            }
+
+            // CatagoryDialogs have this basic construct to hold the dialog
+            // handles for each page:
+            //  catalogDialog~catalog['handles'][categoryID] == hwndDialog
+
+            RexxDirectoryObject catalog = (RexxDirectoryObject)context->SendMessage0(self, "CATALOG");
+            if ( catalog == NULLOBJECT )
+            {
+                ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
+                goto done_out;
+            }
+
+            RexxArrayObject handles = (RexxArrayObject)context->DirectoryAt(catalog, "handles");
+            if ( handles == NULLOBJECT || ! context->IsArray(handles) )
+            {
+                ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
+                goto done_out;
+            }
+            RexxObjectPtr categoryID = context->ArrayAt(args, count);
+            RexxObjectPtr rxHwnd = context->SendMessage1(handles, "AT", categoryID);
+            if ( context->CheckCondition() )
+            {
+                goto done_out;
+            }
+
+            // From here on out, we might get NULL for window handles.  We just
+            // ignore that and let LB_SETTABSTOPS fail;
+            HWND hwnd = (HWND)string2pointer(context->ObjectToStringValue(rxHwnd));
+
+            hControl = GetDlgItem(hwnd, (int)id);
+            tabStart = 2;
+            count -= 2;
+
+        } break;
+
+        default :
+            ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
+            goto done_out;
+            break;
+    }
+
+    if ( count > 0 )
+    {
+        tabs = (uint32_t *)malloc(sizeof(uint32_t *) * count);
+        if ( tabs == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        uint32_t *p = tabs;
+        for ( size_t i = 0; i < count; i++, p++, tabStart++ )
+        {
+            RexxObjectPtr tab = context->ArrayAt(args, tabStart);
+            if ( tab == NULLOBJECT )
+            {
+                missingArgException(context->threadContext, tabStart);
+                goto done_out;
+            }
+            if ( ! context->ObjectToUnsignedInt32(tab, p) )
+            {
+                notPositiveArgException(context->threadContext, tabStart, tab);
+                goto done_out;
+            }
+        }
+    }
+
+    // LB_SETTABSTOPS returns true on success, otherwise false.  Reverse the
+    // return so that 0 is returned for success and 1 for failure.
+    rc = (SendMessage(hControl, LB_SETTABSTOPS, (WPARAM)count, (LPARAM)tabs) == 0);
+
+done_out:
+    safeFree(tabs);
+    return rc;
+}
+
+
+/**
+ *  Methods for the .ApplicationClass class.
+ */
+#define APPLICATIONCLASS_CLASS        "ApplicationClass"
+
+static void setConstDirUsage(RexxMethodContext *c)
+{
+    CSTRING mode;
+    switch ( TheConstDirUsage )
+    {
+        case globalOnly :
+            mode = "use only";
+            break;
+        case globalFirst :
+            mode = "use first";
+            break;
+        case globalLast :
+            mode = "use last";
+            break;
+        case globalNever :
+            mode = "use never";
+            break;
+        default :
+            mode = "error state";
+            break;
+
+    }
+    c->DirectoryPut(TheDotLocalObj, c->String(mode), "CONSTDIRUSAGE");
+}
+
+void putDefaultSymbols(RexxMethodContext *c, RexxDirectoryObject constDir)
+{
+    c->DirectoryPut(constDir, c->Int32(IDC_STATIC),       "IDC_STATIC");       // -1
+    c->DirectoryPut(constDir, c->Int32(IDOK      ),       "IDOK");             // 1
+    c->DirectoryPut(constDir, c->Int32(IDCANCEL  ),       "IDCANCEL");         // 2
+    c->DirectoryPut(constDir, c->Int32(IDABORT   ),       "IDABORT");          //  ...
+    c->DirectoryPut(constDir, c->Int32(IDRETRY   ),       "IDRETRY");
+    c->DirectoryPut(constDir, c->Int32(IDIGNORE  ),       "IDIGNORE");
+    c->DirectoryPut(constDir, c->Int32(IDYES     ),       "IDYES");
+    c->DirectoryPut(constDir, c->Int32(IDNO      ),       "IDNO");
+    c->DirectoryPut(constDir, c->Int32(IDCLOSE   ),       "IDCLOSE");
+    c->DirectoryPut(constDir, c->Int32(IDHELP    ),       "IDHELP");           // 9
+    c->DirectoryPut(constDir, c->Int32(IDTRYAGAIN),       "IDTRYAGAIN");       // 10
+    c->DirectoryPut(constDir, c->Int32(IDCONTINUE),       "IDCONTINUE");       // 11
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OODIALOG), "IDI_DLG_OODIALOG"); // This is 12
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON),  "IDI_DLG_APPICON");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON2), "IDI_DLG_APPICON2");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OOREXX),   "IDI_DLG_OOREXX");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
+}
+
+RexxMethod1(RexxObjectPtr, app_init, OSELF, self)
+{
+    TheConstDir = context->NewDirectory();
+    context->DirectoryPut(TheDotLocalObj, TheConstDir, "CONSTDIR");
+
+    setConstDirUsage(context);
+
+    context->SendMessage1(self, "CONSTDIR=", TheConstDir);
+    putDefaultSymbols(context, TheConstDir);
+
+    return NULLOBJECT;
+}
+
+
+RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxStringObject, hFile, OSELF, self)
+{
+    oodConstDir_t mode;
+
+    switch ( toupper(*_mode) )
+    {
+        case 'O' :
+            mode = globalOnly;
+            break;
+        case 'F' :
+            mode = globalFirst;
+            break;
+        case 'L' :
+            mode = globalLast;
+            break;
+        case 'N' :
+            mode = globalLast;
+            break;
+        default :
+            wrongArgOptionException(context->threadContext, 1, "[O]nly, [F]irst, [L]ast, or [N]ever", _mode);
+            return TheFalseObj;
+    }
+
+    TheConstDirUsage = mode;
+    setConstDirUsage(context);
+
+    if ( argumentExists(2) )
+    {
+        context->SendMessage1(self, "PARSEINCLUDEFILE", hFile);
+    }
+
+    return TheTrueObj;
+}
 
 
 /**
@@ -55,337 +331,33 @@
  */
 #define DLGUTIL_CLASS      "DlgUtil"
 
-/**
- * Do not include ICC_STANDARD_CLASSES.  Some versions of Windows XP have a bug
- * that causes InitCommonControlsEx() to fail when that flag is used.  The flag
- * itself is not needed under any version of Windows.
- *
- * Note: These flags are valid under any supported CommCtrl32 version.  But, as
- * ooDialog adds support for more dialog controls, it may become necessary to
- * check the CommCtrl32 version and have a different set of flags for certain
- * versions.
- */
-#define INITCOMMONCONTROLS_CLASS_FLAGS    ICC_WIN95_CLASSES | ICC_DATE_CLASSES
-
-const char *comctl32VersionPart(DWORD id, DWORD type)
-{
-    const char *part;
-    switch ( id )
-    {
-        case COMCTL32_4_0 :
-            if ( type == COMCTL32_NUMBER_PART )
-            {
-                part = "4.0";
-            }
-            else if ( type == COMCTL32_OS_PART )
-            {
-                part = "W95 / NT4";
-            }
-            else
-            {
-                part = "comctl32.dll version 4.0 (W95 / NT4)";
-            }
-            break;
-
-        case COMCTL32_4_7 :
-            if ( type == COMCTL32_NUMBER_PART )
-            {
-                part = "4.7";
-            }
-            else if ( type == COMCTL32_OS_PART )
-            {
-                part = "IE 3.x";
-            }
-            else
-            {
-                part = "comctl32.dll version 4.7 (IE 3.x)";
-            }
-            break;
-
-        case COMCTL32_4_71 :
-            if ( type == COMCTL32_NUMBER_PART )
-            {
-                part = "4.71";
-            }
-            else if ( type == COMCTL32_OS_PART )
-            {
-                part = "IE 4.0";
-            }
-            else
-            {
-                part = "comctl32.dll version 4.71 (IE 4.0)";
-            }
-            break;
-
-        case COMCTL32_4_72 :
-            if ( type == COMCTL32_NUMBER_PART )
-            {
-                part = "4.72";
-            }
-            else if ( type == COMCTL32_OS_PART )
-            {
-                part = "W98 / IE 4.01";
-            }
-            else
-            {
-                part = "comctl32.dll version 4.72 (W98 / IE 4.01)";
-            }
-            break;
-
-        case COMCTL32_5_8 :
-            if ( type == COMCTL32_NUMBER_PART )
-            {
-                part = "5.8";
-            }
-            else if ( type == COMCTL32_OS_PART )
-            {
-                part = "IE 5";
-            }
-            else
-            {
-                part = "comctl32.dll version 5.8 (IE 5)";
-            }
-            break;
-
-        case COMCTL32_5_81 :
-            if ( type == COMCTL32_NUMBER_PART )
-            {
-                part = "5.81";
-            }
-            else if ( type == COMCTL32_OS_PART )
-            {
-                part = "W2K / ME";
-            }
-            else
-            {
-                part = "comctl32.dll version 5.81 (W2K / ME)";
-            }
-            break;
-
-        case COMCTL32_6_0 :
-            if ( type == COMCTL32_NUMBER_PART )
-            {
-                part = "6.0";
-            }
-            else if ( type == COMCTL32_OS_PART )
-            {
-                part = "XP";
-            }
-            else
-            {
-                part = "comctl32.dll version 6.0 (XP)";
-            }
-            break;
-
-        case COMCTL32_6_10 :
-            if ( type == COMCTL32_NUMBER_PART )
-            {
-                part = "6.10";
-            }
-            else if ( type == COMCTL32_OS_PART )
-            {
-                part = "Vista SP2 / Windows 7";
-            }
-            else
-            {
-                part = "comctl32.dll version 6.10 (Vista SP2 / Windows 7)";
-            }
-            break;
-
-        default :
-            part = "Unknown";
-            break;
-    }
-    return part;
-}
-
-/**
- * Determines the version of comctl32.dll and compares it against a minimum
- * required version.
- *
- * @param  context      The ooRexx method context.
- * @param  pDllVersion  The loaded version of comctl32.dll is returned here as a
- *                      packed unsigned long. This number is created using
- *                      Microsoft's suggested process and can be used for
- *                      numeric comparisons.
- * @param  minVersion   The minimum acceptable version.
- * @param  packageName  The name of the package initiating this check.
- * @param  errTitle     The title for the error dialog if it is displayed.
- *
- * @note  If this function fails, an exception is raised.
- */
-bool getComCtl32Version(RexxMethodContext *context, DWORD *pDllVersion, DWORD minVersion,
-                         CSTRING packageName, CSTRING errTitle)
-{
-    bool success = false;
-    *pDllVersion = 0;
-
-    HINSTANCE hinst = LoadLibrary(TEXT(COMMON_CONTROL_DLL));
-    if ( hinst )
-    {
-        DLLGETVERSIONPROC pDllGetVersion;
-
-        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinst, DLLGETVERSION_FUNCTION);
-        if ( pDllGetVersion )
-        {
-            HRESULT hr;
-            DLLVERSIONINFO info;
-
-            ZeroMemory(&info, sizeof(info));
-            info.cbSize = sizeof(info);
-
-            hr = (*pDllGetVersion)(&info);
-            if ( SUCCEEDED(hr) )
-            {
-                *pDllVersion = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
-                _snprintf(ComCtl32VersionStr, COMCTL32_VERSION_STRING_LEN, "ComCtl32 v%d.%d",
-                          info.dwMajorVersion, info.dwMinorVersion);
-                success = true;
-            }
-            else
-            {
-                systemServiceExceptionComCode(context->threadContext, COM_API_FAILED_MSG, DLLGETVERSION_FUNCTION, hr);
-            }
-        }
-        else
-        {
-            systemServiceExceptionCode(context->threadContext, NO_PROC_MSG, DLLGETVERSION_FUNCTION);
-        }
-        FreeLibrary(hinst);
-    }
-    else
-    {
-        systemServiceExceptionCode(context->threadContext, NO_HMODULE_MSG, COMMON_CONTROL_DLL);
-    }
-
-    if ( *pDllVersion == 0 )
-    {
-        CHAR msg[256];
-        _snprintf(msg, sizeof(msg),
-                  "The version of the Windows Common Controls library (%s)\n"
-                  "could not be determined.  %s can not continue",
-                  COMMON_CONTROL_DLL, packageName);
-
-        internalErrorMsgBox(msg, errTitle);
-        success = false;
-    }
-    else if ( *pDllVersion < minVersion )
-    {
-        CHAR msg[256];
-        _snprintf(msg, sizeof(msg),
-                  "%s can not continue with this version of the Windows\n"
-                  "Common Controls library(%s.)  The minimum\n"
-                  "version required is: %s.\n\n"
-                  "This system has: %s\n",
-                  packageName, COMMON_CONTROL_DLL, comctl32VersionName(minVersion),
-                  comctl32VersionName(*pDllVersion));
-
-        internalErrorMsgBox(msg, errTitle);
-        *pDllVersion = 0;
-        success = false;
-    }
-    return success;
-}
-
-/**
- * Initializes the common control library for the specified classes.
- *
- * @param classes       Flag specifing the classes to be initialized.
- * @param  packageName  The name of the package initializing the classes.
- * @param  errTitle     The title for the error dialog if it is displayed.
- *
- * @return True on success, otherwise false.
- *
- * @note   An exception has been raised when false is returned.
- */
-bool initCommonControls(RexxMethodContext *context, DWORD classes, CSTRING packageName, CSTRING errTitle)
-{
-    INITCOMMONCONTROLSEX ctrlex;
-
-    ctrlex.dwSize = sizeof(ctrlex);
-    ctrlex.dwICC = classes;
-
-    if ( ! InitCommonControlsEx(&ctrlex) )
-    {
-        systemServiceExceptionCode(context->threadContext, NO_COMMCTRL_MSG, "Common Control Library");
-
-        CHAR msg[128];
-        _snprintf(msg, sizeof(msg),
-                  "Initializing the Windows Common Controls\n"
-                  "library failed.  %s can not continue.\n\n"
-                  "Windows System Error Code: %d\n", packageName, GetLastError());
-
-        internalErrorMsgBox(msg, errTitle);
-        return false;
-    }
-    return true;
-}
-
 /** DlgUtil::init() [class method]
  *
  * The .DlgUtil class init() method.  It executes when the .DlgUtil class is
  * constructed, which is done during the processing of the ::requires directive
- * for oodPlain.cls.  This makes it the ideal place for any initialization that
- * must be done prior to ooDialog starting.
+ * for ooDialog.cls.
  *
- * Note that an exception raised here effectively terminates ooDialog before any
- * user code is executed.
+ * We use this to create the an instance of the ApplicationClass and place it in
+ * the .local directory.  To do this, at this point, the ApplicationClass object
+ * must have already been constructed.  This in turn relies on the order of the
+ * classes in ooDialog.cls, being: .ResourceUtils, .ApplicationClass, and then
+ * .DlgUtils.
  *
- * The method:
- *
- * 1.) Determines the version of comctl32.dll and initializes the common
- * controls.  The minimum acceptable version of 4.71 is supported on Windows 95
- * with Internet Explorer 4.0, Windows NT 4.0 with Internet Explorer 4.0,
- * Windows 98, and Windows 2000.
- *
- * 2.) Initializes a null pointer Pointer object and places it in the .local
- * directory. (.NullHandle)  This allows ooRexx code to use a null handle for an
- * argument where appropriate.
- *
- * 3.) Places the SystemErrorCode (.SystemErrorCode) variable in the .local
- * directory.
- *
- * @return .true if comctl32.dll is at least version 4.71, otherwise .false.
+ * @return No return.
  */
-RexxMethod0(logical_t, dlgutil_init_cls)
+RexxMethod0(RexxObjectPtr, dlgutil_init_cls)
 {
-    RexxMethodContext *c = context;
-    TheTrueObj = context->True();
-    TheFalseObj = context->False();
-    TheNilObj = context->Nil();
-    TheNullPtrObj = context->NewPointer(NULL);
-    TheZeroObj = TheFalseObj;
-    TheOneObj = TheTrueObj;
-
-    if ( ! getComCtl32Version(context, &ComCtl32Version, COMCTL32_4_71, "ooDialog", COMCTL_ERR_TITLE) )
+    RexxClassObject appClass = context->FindContextClass(APPLICATIONCLASS_CLASS);
+    if ( appClass == NULLOBJECT )
     {
-        return false;
-    }
-
-    if ( ! initCommonControls(context, INITCOMMONCONTROLS_CLASS_FLAGS, "ooDialog", COMCTL_ERR_TITLE) )
-    {
-        ComCtl32Version = 0;
-        return false;
-    }
-
-    RexxDirectoryObject local = context->GetLocalEnvironment();
-    if ( local != NULLOBJECT )
-    {
-        TheDotLocalObj = local;
-        TheNegativeOneObj = context->WholeNumber(-1);
-        TheTwoObj = context->WholeNumber(2);
-        context->SetObjectVariable("THENEGATIVEONEOBJ", TheNegativeOneObj);
-        context->SetObjectVariable("THENTWOOBJ", TheTwoObj);
-        context->DirectoryPut(local, TheNullPtrObj, "NULLHANDLE");
-        context->DirectoryPut(local, context->WholeNumberToObject(0), "SYSTEMERRORCODE");
+        context->RaiseException1(Rexx_Error_Execution_noclass, context->String(APPLICATIONCLASS_CLASS));
     }
     else
     {
-        severeErrorException(context->threadContext, NO_LOCAL_ENVIRONMENT_MSG);
-        return false;
+        TheApplicationObj = context->SendMessage0(appClass, "NEW");
+        context->DirectoryPut(TheDotLocalObj, TheApplicationObj, "APPLICATION");
     }
-
-    return true;
+    return NULLOBJECT;
 }
 
 /** DlgUtil::comCtl32Version()  [class method]
@@ -713,169 +685,6 @@ RexxMethod3(uint32_t, dlgutil_test_cls, POINTERSTRING, hwnd, POINTERSTRING, hwnd
     return 0;
 }
 
-/** ListBox::setTabulators()
- *  PlainBaseDialog::setListTabulators()
- *  CategoryDialog::setCategoryListTabulators()
- *
- *  Sets the tab stop positions in a list-box.
- *
- *  This is generic implementation used by several different classes.  The
- *  resourceID and categoryId arguments are not always present.
- *
- *  @param resourceID  The resource ID (may be symbolic) of the list-box.
- *
- *  @param tabstop     The tab stop position.  This argument may repeat any
- *                     number of times.  Each argument is the next succesive tab
- *                     stop.  See the notes below for a fuller explanation.
- *
- *  @param categoryID  For a CategoryDialog, the catalog page that contains the
- *                     ListBox.
- *
- *  @return 0 on success, -1 for an invalid resource ID, and 1 for an API
- *          failure.
- *
- *  @note  The tab stop units are dialog template units. The tab stops must be
- *         listed in ascending order. You can't place a tab stop behind a
- *         previous tab stop.
- *
- *         If no tab stop is specified, than that signals the list-box to place
- *         tab stops equidistant at the default of 2 dialog units.  If 1 tab
- *         stop is specified, then equidistant tab stops are placed at the
- *         distance specified.  Othewise, a tab stop is placed at each position
- *         specified.
- */
-RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
-{
-    HWND hControl = NULL;
-    int  rc = -1;
-    uint32_t id;
-    uint32_t *tabs = NULL;
-    oodClass_t objects[] = {oodCategoryDialog, oodPlainBaseDialog, oodListBox};
-
-    size_t count = context->ArrayItems((RexxArrayObject) args);
-    size_t tabStart = 1;
-
-    // Determine which object has invoked this method and parse the argument
-    // list.  The object class determines how to get the handle to the listbox,
-    // the count of tab stops, and at which arg position the tab stops start.
-    switch ( oodClass(context, self, objects, sizeof(objects) / sizeof(oodClass_t))  )
-    {
-        case oodListBox :
-        {
-            hControl = controlToHCtrl(context, self);
-        } break;
-
-        case oodPlainBaseDialog :
-        {
-            if ( count < 1 )
-            {
-                missingArgException(context->threadContext, 1);
-                goto done_out;
-            }
-
-            RexxObjectPtr resourceID = context->ArrayAt(args, 1);
-            if ( ! oodSafeResolveID(&id, context, self, resourceID, -1, 1) )
-            {
-                goto done_out;
-            }
-
-            pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
-            hControl = GetDlgItem(pcpbd->hDlg, (int)id);
-            tabStart = 2;
-            count--;
-
-        } break;
-
-        case oodCategoryDialog :
-        {
-            if ( count < 2 )
-            {
-                missingArgException(context->threadContext, (count == 1 ? 2 : 1));
-                goto done_out;
-            }
-
-            RexxObjectPtr resourceID = context->ArrayAt(args, 1);
-            if ( ! oodSafeResolveID(&id, context, self, resourceID, -1, 1) )
-            {
-                goto done_out;
-            }
-
-            // CatagoryDialogs have this basic construct to hold the dialog
-            // handles for each page:
-            //  catalogDialog~catalog['handles'][categoryID] == hwndDialog
-
-            RexxDirectoryObject catalog = (RexxDirectoryObject)context->SendMessage0(self, "CATALOG");
-            if ( catalog == NULLOBJECT )
-            {
-                ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
-                goto done_out;
-            }
-
-            RexxArrayObject handles = (RexxArrayObject)context->DirectoryAt(catalog, "handles");
-            if ( handles == NULLOBJECT || ! context->IsArray(handles) )
-            {
-                ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
-                goto done_out;
-            }
-            RexxObjectPtr categoryID = context->ArrayAt(args, count);
-            RexxObjectPtr rxHwnd = context->SendMessage1(handles, "AT", categoryID);
-            if ( context->CheckCondition() )
-            {
-                goto done_out;
-            }
-
-            // From here on out, we might get NULL for window handles.  We just
-            // ignore that and let LB_SETTABSTOPS fail;
-            HWND hwnd = (HWND)string2pointer(context->ObjectToStringValue(rxHwnd));
-
-            hControl = GetDlgItem(hwnd, (int)id);
-            tabStart = 2;
-            count -= 2;
-
-        } break;
-
-        default :
-            ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
-            goto done_out;
-            break;
-    }
-
-    if ( count > 0 )
-    {
-        tabs = (uint32_t *)malloc(sizeof(uint32_t *) * count);
-        if ( tabs == NULL )
-        {
-            outOfMemoryException(context->threadContext);
-            goto done_out;
-        }
-
-        uint32_t *p = tabs;
-        for ( size_t i = 0; i < count; i++, p++, tabStart++ )
-        {
-            RexxObjectPtr tab = context->ArrayAt(args, tabStart);
-            if ( tab == NULLOBJECT )
-            {
-                missingArgException(context->threadContext, tabStart);
-                goto done_out;
-            }
-            if ( ! context->ObjectToUnsignedInt32(tab, p) )
-            {
-                notPositiveArgException(context->threadContext, tabStart, tab);
-                goto done_out;
-            }
-        }
-    }
-
-    // LB_SETTABSTOPS returns true on success, otherwise false.  Reverse the
-    // return so that 0 is returned for success and 1 for failure.
-    rc = (SendMessage(hControl, LB_SETTABSTOPS, (WPARAM)count, (LPARAM)tabs) == 0);
-
-done_out:
-    safeFree(tabs);
-    return rc;
-}
-
-
 /**
  *  Methods for the .OS class.
  */
@@ -995,7 +804,6 @@ RexxMethod1(int32_t, rsrcUtils_idError, RexxObjectPtr, rxID)
 }
 
 /** ResourceUtils::resolveSymbolicID
- *  ResourceUtils::resolveResourceID
  *  ResourceUtils::getResourceID
  *
  *  Returns the numeric value of an, assumed, resource ID.
@@ -1008,12 +816,15 @@ RexxMethod1(int32_t, rsrcUtils_idError, RexxObjectPtr, rxID)
  *
  *  @return  On success, the resolved interger value of the resource ID.
  *
- *  @remarks  resolveSymbolicID and resolveResourceID allow a resource ID of -1,
- *            and do not raise an exception if a symbolic ID can not be
- *            resolved.
+ *  @remarks  resolveSymbolicID() expects a positive ID returned on success and
+ *            -1 returned on error.  No exceptions can be raised, except an out
+ *             of memory exception.  This is the implementation for the original
+ *             ooDialog resolveSymbolicID().
  *
- *            getResourceID() does raises execeptions if a symbolic ID can not
- *            be resolved, o for a -1 ID.
+ *            getResourceID() raises an execeptions if a symbolic ID can not
+ *            be resolved, or resolves to a number less than 1. A return of
+ *            greater than 0 is expected for success and less than 1 for an
+ *            error.
  */
 RexxMethod3(int32_t, rsrcUtils_resolveResourceID, RexxObjectPtr, rxID, NAME, method, OSELF, self)
 {
@@ -1023,18 +834,7 @@ RexxMethod3(int32_t, rsrcUtils_resolveResourceID, RexxObjectPtr, rxID, NAME, met
     }
     else
     {
-        uint32_t result = oodResolveSymbolicID(context, self, rxID, -1, 1);
-        if ( result != OOD_ID_EXCEPTION )
-        {
-            if ( result == (int32_t)-1 || result == 0 )
-            {
-                wrongArgValueException(context->threadContext, 1, "a valid positive numeric ID or a valid symbolic ID" , rxID);
-            }
-        }
-
-        // At this point if result == OOD_ID_EXCEPTION or < 1 an exception has
-        // been raised and it does not matter what the value of result is.
-        return (int32_t)result;
+        return oodResolveSymbolicID(context, self, rxID, -1, 1, true);
     }
 }
 

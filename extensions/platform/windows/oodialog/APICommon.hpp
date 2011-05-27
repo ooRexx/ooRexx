@@ -77,6 +77,7 @@ extern void  missingIndexInDirectoryException(RexxThreadContext *c, int argPos, 
 extern void  directoryIndexException(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, RexxObjectPtr actual);
 extern void  wrongValueAtDirectoryIndexException(RexxThreadContext *, size_t pos, CSTRING index, CSTRING list, RexxObjectPtr actual);
 extern void  emptyArrayException(RexxThreadContext *c, int argPos);
+extern void  arrayToLargeException(RexxThreadContext *c, uint32_t found, uint32_t max, int argPos);
 extern void  sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index);
 extern void  nullObjectException(RexxThreadContext *c, CSTRING name, size_t pos);
 extern void  nullObjectException(RexxThreadContext *c, CSTRING name);
@@ -106,12 +107,14 @@ extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxThreadContext *c, CSTRING className);
-extern bool            checkForCondition(RexxThreadContext *c, bool clear);
-extern void            standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition);
-extern bool            isInt(int, RexxObjectPtr, RexxThreadContext *);
-extern bool            isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
-extern void            dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
-extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
+
+extern bool isOutOfMemoryException(RexxThreadContext *c);
+extern bool checkForCondition(RexxThreadContext *c, bool clear);
+extern void standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition);
+extern bool isInt(int, RexxObjectPtr, RexxThreadContext *);
+extern bool isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
+extern void dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
+extern void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
 
 /**

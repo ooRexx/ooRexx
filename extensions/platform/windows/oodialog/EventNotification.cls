@@ -52,49 +52,53 @@
 
 -- WM_HELP (F1)
 ::method connectHelp
-   use strict arg msgToRise
-   return self~addUserMsg(msgToRise, "0x00000053", "0xFFFFFFFF", 0, 0, 0, 0, 0x00000101)
+   use strict arg msgToRise = 'onHelp'
+   return self~addUserMsg(msgToRise, 0x00000053, 0xFFFFFFFF, 0, 0, 0, 0, 0x00000101)
 
 -- WM_SIZE
 ::method connectResize
-   use strict arg msgToRise
+   use strict arg msgToRise = 'onResize'
    return self~addUserMsg(msgToRise, 0x00000005, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- WM_SIZING
 ::method connectResizing
-   use strict arg msgToRise
+   use strict arg msgToRise = 'onResizing'
    return self~addUserMsg(msgToRise, 0x00000214, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- WM_MOVE
 ::method connectMove
-   use strict arg msgToRise
+   use strict arg msgToRise = 'onMove'
    return self~addUserMsg(msgToRise, 0x00000003, 0xFFFFFFFF, 0, 0, 0, 0)
+
+-- WM_ACTIVATE
+::method connectActivate
+   use strict arg msgToRise = 'onActivate'
+   return self~addUserMsg(msgToRise, 0x00000006, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- WM_EXITSIZEMOVE
 ::method connectSizeMoveEnded
-   use strict arg msgToRise, willReply = .true
+   use strict arg msgToRise = 'onSizeMoveEnded', willReply = .true
    tag = 0
    if willReply then tag = 0x02000000
    self~addUserMsg(msgToRise, "0x00000232", "0xFFFFFFFF", 0, 0, 0, 0, tag)
 
 -- WM_WINDOWPOSCHANGED
 ::method connectPosChanged
-   use strict arg msgToRise
+   use strict arg msgToRise = 'onPosChaged'
    return self~addUserMsg(msgToRise, 0x00000047, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- WM_DRAWITEM
 ::method connectDraw
-   use strict arg id = 0, msgToRaise = ""
+   use strict arg id = 0, msgToRaise = "onDraw"
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if msgToRaise == "" then msgToRaise = "onDraw"
 
    if id == 0 then return self~addUserMsg(msgToRaise, 0x0000002B, 0xFFFFFFFF, 0, 0, 0, 0)
    else return self~addUserMsg(msgToRaise, 0x0000002B, 0xFFFFFFFF, '0x0000'||id~d2x(4), 0xFFFFFFFF, 0, 0)
 
 -- WM_CAPTURECHANGED
 ::method connectMouseCapture
-   use strict arg msgToRise
+   use strict arg msgToRise = 'onCaptureChanged'
    return self~addUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
 
 -- These methods map or unmap keyboard events to a method, or query if the mapping exists.
@@ -144,7 +148,7 @@
 
 ::method connectButtonEvent
    use strict arg id, type, msgToRise = ""
-   if id~dataType("W") = 0 then id = self~resolveSymbolicId(id)
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    if msgToRise == "" then msgToRise = "on" || type
    type = type~translate

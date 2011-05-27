@@ -1210,26 +1210,51 @@ RexxMethod7(RexxObjectPtr, bc_dimBitmap, POINTERSTRING, hBmp, uint32_t, width, u
 }
 
 
-RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst,
-            RexxObjectPtr, idLast, RexxObjectPtr, idCheck)
+/** RadioButton::checkInGroup() [class method]
+ *
+ *  Checks the button specified in a group of buttons and unchecks all the rest.
+ *
+ *  @param dlg      [required]  Dialog that contains the radio buttons
+ *  @param idFirst  [required]  Fist button in group.
+ *  @param idLast   [required]  Second button in group.
+ *  @param idCheck  [optional]  If omitted all radio buttons are unchecked.  If
+ *                              0 or -1, all radio buttons are unchecked.
+ *                              Otherwise, this is the button checked.
+ *
+ *  @return  O on success, the system error code on error.
+ *
+ *  @notes   Sets the .SystemErrorCode.  Experimentation has shown, that with
+ *           many things that might be considered errors, the OS does not set
+ *           LastError().
+ *
+ */
+RexxMethod4(uint32_t, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst,
+            RexxObjectPtr, idLast, OPTIONAL_RexxObjectPtr, idCheck)
 {
-    int result = 0;
+    oodResetSysErrCode(context->threadContext);
+
+    uint32_t result = 0;
     if ( requiredClass(context->threadContext, dlg, "PlainBaseDialog", 1) )
     {
         HWND hwnd = dlgToHDlg(context, dlg);
 
-        int first = oodResolveSymbolicID(context, dlg, idFirst, -1, 2);
-        int last = oodResolveSymbolicID(context, dlg, idLast, -1, 3);
-        int check = oodResolveSymbolicID(context, dlg, idCheck, -1, 4);
+        if ( argumentOmitted(4) )
+        {
+            idCheck = TheZeroObj;
+        }
 
-        if ( first != OOD_ID_EXCEPTION && last != OOD_ID_EXCEPTION && check != OOD_ID_EXCEPTION )
+        int32_t first = oodResolveSymbolicID(context->threadContext, dlg, idFirst, -1, 2, true);
+        int32_t last = oodResolveSymbolicID(context->threadContext, dlg, idLast, -1, 3, true);
+        int32_t check = oodResolveSymbolicID(context->threadContext, dlg, idCheck, -1, 4, false);
+
+        if ( first != OOD_ID_EXCEPTION && last != OOD_ID_EXCEPTION  && check != OOD_ID_EXCEPTION )
         {
             if ( CheckRadioButton(hwnd, first, last, check) == 0 )
             {
-                result = (int)GetLastError();
+                uint32_t result = GetLastError();
+                oodSetSysErrCode(context->threadContext, result);
             }
         }
-
     }
     return result;
 }
@@ -1298,7 +1323,7 @@ RexxMethod1(int, bc_test, ARGLIST, args)
     return 0;
 }
 
-/** Button::test()  [class method]
+/** Button::test()              [class method]
  *
  *  This method is used as a convenient way to test code.
  */

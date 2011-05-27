@@ -47,7 +47,9 @@
  * a menu bar example.
  */
 
-  dlg = .SimpleDialog~new("UserMenuBar.rc", IDD_MAIN_DIALOG, , "UserMenuBar.h")
+  .application~useGlobalConstDir("O", "UserMenuBar.h")
+
+  dlg = .SimpleDialog~new("UserMenuBar.rc", IDD_MAIN_DIALOG)
   if dlg~initCode <> 0 then do
     return 99
   end
@@ -103,11 +105,10 @@ return 0
 ::method createMenuBar private
   expose menuBar
 
-  -- Create a menu bar that has a symbolic resource ID of IDM_MENUBAR, whose
-  -- constDir attribute is copied from this dialog's constdir, has no help ID,
-  -- does not attach to a dialog at this point, and autoconnects all command
+  -- Create a menu bar that has a symbolic resource ID of IDM_MENUBAR, has no
+  -- help ID, uses the default menu item count, and autoconnects all command
   -- menu items when it is attached to a dialog.
-  menuBar = .UserMenuBar~new(IDM_MENUBAR, self, , .false, .true)
+  menuBar = .UserMenuBar~new(IDM_MENUBAR, , , .true)
 
   -- Create the menu bar template.
   menuBar~addPopup(IDM_POP_FILES, "Files")

@@ -51,7 +51,9 @@
  *  comments in the DlgAreaDemoTwo.rex example.
  */
 
-  dlg = .ResizableDialog~new( , 'dlgAreaUDemo.h')
+  .application~useGlobalConstDir("O", 'dlgAreaUDemo.h')
+
+  dlg = .ResizableDialog~new
   dlg~execute('ShowTop')
 
   return 0

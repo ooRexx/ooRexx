@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -56,7 +56,7 @@
 #define OOD_MFS_UNHILITE  0x40000000
 
 #define TEMPLATE_TOO_SMALL_MSG       "the number of menu items has exceeded the storage allocated for the menu"
-#define CAN_NOT_ATTACH_ON_INIT_MSG   "can not attach menu unless arg 1 'src' is a ResDialog or arg 2 'symbolSrc' is a dialog object"
+#define CAN_NOT_ATTACH_ON_INIT_MSG   "can not attach menu unless arg 4 'attachTo' is a dialog object"
 #define INVALID_MENU_HANDLE_MSG      " menu handle"
 
 
@@ -122,7 +122,7 @@ public:
     inline bool argExists(size_t i) { return (c->arguments[i].flags & ARGUMENT_EXISTS) != 0; }
     inline bool argOmitted(size_t i) { return ! argExists(i); }
 
-    bool menuInit(RexxObjectPtr rxID, RexxObjectPtr symbolSrc, RexxObjectPtr rcFile);
+    void setMenuID(int id);
     bool setUpSysMenu(RexxObjectPtr dialog);
     logical_t revertSysMenu();
 

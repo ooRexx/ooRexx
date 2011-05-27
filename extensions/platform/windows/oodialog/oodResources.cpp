@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -905,29 +905,32 @@ void rxReleaseAllImages(RexxMethodContext *c, RexxArrayObject a, size_t last)
     }
 }
 
-RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject ids, HINSTANCE hModule,
+RexxArrayObject rxImagesFromArrayOfIDs(RexxMethodContext *c, RexxArrayObject ids, HINSTANCE hModule,
                                         uint8_t type, PSIZE s, uint32_t flags)
 {
-    int resourceID;
+    size_t i = 0;
     size_t count = c->ArraySize(ids);
     RexxArrayObject result = c->NewArray(count);
 
-    for ( size_t i = 1; i <= count; i++ )
+    for ( i = 1; i <= count; i++ )
     {
         RexxObjectPtr id = c->ArrayAt(ids, i);
-        if ( id == NULLOBJECT || ! c->Int32(id, &resourceID) )
+        if ( id == NULLOBJECT )
         {
-            // Shared images should not be released.
-            if ( (flags & LR_SHARED) == 0 )
-            {
-                rxReleaseAllImages(c, result, i - 1);
-            }
-            wrongObjInArrayException(c->threadContext, 1, i, "number");
-            result = NULLOBJECT;
-            goto out;
+            sparseArrayException(c->threadContext, 1, i);
+            goto err_out;
         }
 
-        HANDLE hImage = LoadImage(hModule, MAKEINTRESOURCE(resourceID), type, s->cx, s->cy, flags);
+        int32_t nID = oodGlobalID(c->threadContext, id, 1, true);
+        if ( nID == OOD_ID_EXCEPTION )
+        {
+            // We want to use our own exception, to be more clear.
+            c->ClearCondition();
+            wrongObjInArrayException(c->threadContext, 1, i, "valid resource ID", id);
+            goto err_out;
+        }
+
+        HANDLE hImage = LoadImage(hModule, MAKEINTRESOURCE(nID), type, s->cx, s->cy, flags);
         if ( hImage == NULL )
         {
             // Set the system error code and leave this slot in the array blank.
@@ -941,16 +944,21 @@ RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject id
             RexxObjectPtr image = rxNewValidImage(c, hImage, type, s, flags, true);
             if ( image == NULLOBJECT )
             {
-                if ( (flags & LR_SHARED) == 0 )
-                {
-                    rxReleaseAllImages(c, result, i - 1);
-                }
-                result = NULLOBJECT;
-                goto out;
+                goto err_out;
             }
             c->ArrayPut(result, image, i);
         }
     }
+    goto out;
+
+err_out:
+    // Shared images should not be released.
+    if ( (flags & LR_SHARED) == 0 )
+    {
+        rxReleaseAllImages(c, result, i - 1);
+    }
+    result = NULLOBJECT;
+
 out:
     return result;
 }
@@ -1132,12 +1140,16 @@ RexxMethod1(uint32_t, image_toID_cls, CSTRING, symbol)
 
 /** Image::getImage()  [class method]
  *
- *  Load a stand alone image from a file or one of the system images.
+ *  Instantiate an .Image object from one of the system OEM images, or loaded
+ *  from an image file (.bmp, .ico, etc..)
  *
- *  @param   id  Either the numeric resource id of a system image, or the file
- *               name of a stand-alone image file.
+ *  @param   id  Either the numeric resource id of an OEM system image, or the
+ *               file name of a stand-alone image file.
  *
- *  @note  This method is designed to always return an .Image object, or raise
+ *  @note  The programmer can use one of the .OEM constants to load a system
+ *         image, or the raw number if she knows it.
+ *
+ *         This method is designed to always return an .Image object, or raise
  *         an exception.  The user would need to test the returned .Image object
  *         for null to be sure it is good.  I.e.:
  *
@@ -1166,7 +1178,7 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
     {
         if ( ! context->IsString(id) )
         {
-            wrongArgValueException(context->threadContext, 1, "either an image file name, or a numeric system image ID", id);
+            wrongArgValueException(context->threadContext, 1, "either an image file name, or an OEM image ID", id);
             goto out;
         }
         name = context->ObjectToStringValue(id);
@@ -1253,7 +1265,7 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
         goto out;
     }
 
-    int32_t id = oodResolveSymbolicID(context, dlg, rxID, -1, 2);
+    int32_t id = oodResolveSymbolicID(context, dlg, rxID, -1, 2, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto out;
@@ -1361,6 +1373,12 @@ out:
     return result;
 }
 
+/** Image::fromIDs()   [class]
+ *
+ *  Return an array of .Image objects using an array of resource IDs.  Need to
+ *  doc that the IDs can be numeric or symbolic.
+ *
+ */
 RexxMethod4(RexxObjectPtr, image_fromIDs_cls, RexxArrayObject, ids, OPTIONAL_uint8_t, type,
             OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags)
 {
@@ -1373,7 +1391,7 @@ RexxMethod4(RexxObjectPtr, image_fromIDs_cls, RexxArrayObject, ids, OPTIONAL_uin
         goto out;
     }
 
-    result = rxImagesFromArrayOfInts(context, ids, NULL, type, &s, flags);
+    result = rxImagesFromArrayOfIDs(context, ids, NULL, type, &s, flags);
 
 out:
     return result;
@@ -1610,8 +1628,16 @@ err_out:
 
 /** ResourceImage::getImage()
  *
- * Loads an image from this resource binary.
+ * Loads an image resource from this resource binary.
  *
+ * @param   id     Resource ID of the image in the resource binary, may be
+ *                 symbolic or numeric.  If symbolic, the programmer must use
+ *                 the global .constDir.
+ *
+ * @param   type   Image type, IMAGE_BITMAP is the default if omitted.
+ *
+ * @param   size
+ * @param   flags
  *
  * @return  An instantiated .Image object, which may be a null Image if an error
  *          occurred.
@@ -1627,12 +1653,18 @@ err_out:
  *          -- error
  *        end
  */
-RexxMethod5(RexxObjectPtr, ri_getImage, int, id, OPTIONAL_uint8_t, type,
+RexxMethod5(RexxObjectPtr, ri_getImage, RexxObjectPtr, _id, OPTIONAL_uint8_t, type,
             OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags, CSELF, cself)
 {
-
     RexxObjectPtr result = NULLOBJECT;
     SIZE s = {0};
+
+    int32_t id = oodGlobalID(context->threadContext, _id, 1, true);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto out;
+    }
+
 
     PRESOURCEIMAGE ri = (PRESOURCEIMAGE)cself;
     if ( ! ri->isValid )
@@ -1681,7 +1713,7 @@ RexxMethod5(RexxObjectPtr, ri_getImages, RexxArrayObject, ids, OPTIONAL_uint8_t,
         goto out;
     }
 
-    result = rxImagesFromArrayOfInts(context, ids, ri->hMod, type, &s, flags);
+    result = rxImagesFromArrayOfIDs(context, ids, ri->hMod, type, &s, flags);
     if ( result == NULLOBJECT )
     {
         ri->lastError = oodGetSysErrCode(context->threadContext);

@@ -1469,8 +1469,8 @@ RexxObjectPtr dlgExtControlSetup(RexxMethodContext *c, RexxObjectPtr self, RexxO
         return TheOneObj;
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1, true) )
     {
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
         return TheNegativeOneObj;
@@ -2755,8 +2755,8 @@ RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkCol
         return 0;
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1, true) )
     {
         return -1;
     }

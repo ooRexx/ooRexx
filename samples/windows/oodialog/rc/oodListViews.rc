@@ -1,7 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,41 +34,59 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************
-
-oodlist1.rc
-
-produced by IBM Object REXX Resource Workshop
-
-*****************************************************************************/
 
 #include <windows.h>
+#include "oodListViews.h"
 
-#define DIALOG_1	1
-#define ID_MALE	101
-#define ID_FEMALE	102
-#define ID_FNAME	200
-#define ID_LNAME	201
-#define ID_STREET	202
-#define ID_CITY	203
-#define ID_AGE	204
-DIALOG_1 DIALOG 9, 23, 281, 140
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "DIALOG_1"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_ADDRESS DIALOG 9, 23, 281, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Add New Record"
 FONT 8, "MS Sans Serif"
 {
- AUTORADIOBUTTON "Male", ID_MALE, 58, 10, 27, 12, BS_AUTORADIOBUTTON | WS_GROUP
- AUTORADIOBUTTON "Female", ID_FEMALE, 99, 10, 41, 12
- LTEXT "First name", -1, 11, 32, 39, 8
- EDITTEXT ID_FNAME, 54, 31, 71, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
- LTEXT "Last name", -1, 134, 32, 40, 8
- EDITTEXT ID_LNAME, 178, 31, 93, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
- LTEXT "Street", -1, 11, 55, 38, 8
- EDITTEXT ID_STREET, 54, 54, 216, 12, WS_BORDER | WS_TABSTOP
- LTEXT "City", -1, 11, 75, 38, 8
- EDITTEXT ID_CITY, 54, 74, 216, 12, WS_BORDER | WS_TABSTOP
- LTEXT "Age", -1, 11, 98, 19, 8
- EDITTEXT ID_AGE, 54, 97, 23, 12, WS_BORDER | WS_TABSTOP
- DEFPUSHBUTTON "OK", IDOK, 143, 116, 50, 14
- PUSHBUTTON "Cancel", IDCANCEL, 209, 117, 50, 14
+    LTEXT           "First name:", -1, 11, 26, 39, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_FNAME, 54, 25, 71, 12, ES_AUTOHSCROLL
+    LTEXT           "Last name:", -1, 134, 26, 40, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_LNAME, 178, 25, 93, 12, ES_AUTOHSCROLL
+    LTEXT           "Street:", -1, 11, 49, 38, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_STREET, 54, 48, 217, 12
+    LTEXT           "City:", -1, 11, 69, 38, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_CITY, 54, 68, 73, 12
+    LTEXT           "State:", -1, 134, 69, 21, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_STATE, 159, 68, 19, 12, ES_UPPERCASE
+    LTEXT           "Zip Code:", -1, 198, 69, 37, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_ZIPCODE, 240, 68, 31, 12, ES_NUMBER | ES_UPPERCASE
+    LTEXT           "Age:", -1, 11, 92, 19, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_AGE, 54, 91, 23, 12, ES_NUMBER
+    AUTORADIOBUTTON "Male", IDC_RB_MALE, 100, 91, 27, 12, WS_GROUP
+    AUTORADIOBUTTON "Female", IDC_RB_FEMALE, 141, 91, 41, 12
+    DEFPUSHBUTTON   "OK", IDOK, 155, 116, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 221, 117, 50, 14
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_LISTVIEWS DIALOG 0, 0, 400, 219
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "List Views"
+FONT 8, "Ms Shell Dlg"
+{
+    CONTROL         "", IDC_TAB, WC_TABCONTROL, WS_TABSTOP, 10, 10, 380, 175
+    PUSHBUTTON      "Backward", IDC_PB_BACKWARD, 10, 195, 62, 14
+    PUSHBUTTON      "Forward", IDC_PB_FORWARD, 77, 195, 62, 14
+    PUSHBUTTON      "Add Record", IDC_PB_ADDRECORD, 167, 195, 62, 14
+    DEFPUSHBUTTON   "OK", IDOK, 261, 195, 62, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 328, 195, 62, 14
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_PAGE DIALOG 0, 0, 380, 160
+STYLE DS_CONTROL | DS_SHELLFONT | WS_CHILDWINDOW
+FONT 8, "Ms Shell Dlg"
+{
+    CONTROL         "", IDC_LISTVIEW, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_EDITLABELS | LVS_LIST, 3, 3, 368, 154
 }

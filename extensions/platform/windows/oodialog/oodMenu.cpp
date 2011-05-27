@@ -117,7 +117,7 @@
 
 
 // Local function prototypes.
-static uint32_t resolveItemID(RexxMethodContext *, RexxObjectPtr, logical_t, RexxObjectPtr, size_t);
+static uint32_t resolveItemID(RexxMethodContext *, RexxObjectPtr, logical_t, size_t);
 static bool getMII(CppMenu *, RexxObjectPtr, BOOL, uint32_t, uint32_t *, UINT, MENUITEMINFO *);
 static UINT getPopupTypeOpts(const char *, UINT);
 static UINT getPopupStateOpts(const char *, UINT);
@@ -224,7 +224,7 @@ logical_t CppMenu::addTemplateSepartor(RexxObjectPtr rxID, CSTRING opts)
     oodResetSysErrCode(c->threadContext);
     char *upperOpts = NULL;
 
-    uint32_t id = oodResolveSymbolicID(c, self, rxID, -1, 1);
+    int32_t id = oodGlobalID(c, rxID, 1, false);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -280,7 +280,7 @@ logical_t CppMenu::addTemplateItem(RexxObjectPtr rxID, CSTRING text, CSTRING opt
     oodResetSysErrCode(c->threadContext);
     char *upperOpts = NULL;
 
-    uint32_t id = oodResolveSymbolicID(c, self, rxID, -1, 1);
+    int32_t id = oodGlobalID(c, rxID, 1, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -348,6 +348,9 @@ done_out:
  * @return logical_t
  *
  * @note Text is required to not be null, the empty string is okay.
+ *
+ * @remarks  We need to allow 0 for rxID, so don't use 'strict' with
+ *           oodGlobalID().
  */
 logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING opts, RexxObjectPtr helpID)
 {
@@ -355,7 +358,7 @@ logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING op
     oodResetSysErrCode(c->threadContext);
     char *upperOpts = NULL;
 
-    uint32_t id = oodResolveSymbolicID(c, self, rxID, -1, 1);
+    int32_t id = oodGlobalID(c, rxID, 1, false);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -364,7 +367,7 @@ logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING op
     DWORD dwHelpID = 0;
     if ( helpID != NULLOBJECT )
     {
-        dwHelpID = oodResolveSymbolicID(c, self, helpID, -1, 4);
+        dwHelpID = oodGlobalID(c, helpID, 4, false);
         if ( id == OOD_ID_EXCEPTION )
         {
             goto done_out;
@@ -603,91 +606,25 @@ CppMenu::CppMenu(RexxObjectPtr s, MenuType t, RexxMethodContext *context) : self
 
 
 /**
- *  Finish up the basic initialization for the Rexx Menu object.  This sets up
- *  the constDir for the menu object so that symbolic IDs can be used.  Then,
- *  once the constDir is set up, the menu ID argument can be resolved.
+ *  Sets the menu ID for this menu.  The default ID of -1 is already set.
  *
- *  @param  rxID
- *  @param  symbolSrc
- *  @param  rcFile
+ *  @param  menuID   The ID of the menu, or 0 or -1 to signal no ID.
  *
- *  @return  True if things went okay, false if an exception was raised.
+ *  @return No return.
  *
- *  @remarks  Probably obvious, but we need to set up the constDir before we try
- *            to resolve the menu's resource ID.
+ *  @remarks  A menu ID was not used in earlier versions of ooDialog and it is
+ *  not clear if ooDialog programmers will use it much now that it is available.
+ *  wID is already set to -1 to signal no ID when the CppMenu is constructed.
+ *  So this method only needs to be called if the programmer does use an ID.
+ *
+ *  This could be inline of course, just saving this for the remarks.
  */
-bool CppMenu::menuInit(RexxObjectPtr rxID, RexxObjectPtr symbolSrc, RexxObjectPtr rcFile)
+void CppMenu::setMenuID(int menuID)
 {
-    oodResetSysErrCode(c->threadContext);
-    int idPos = ( type == PopupMenu || type == UserMenuBar ) ? 1 : 2;
-
-    if ( symbolSrc == NULLOBJECT || symbolSrc == TheNilObj )
+    if ( menuID > 0 )
     {
-        c->SendMessage1(self, "CONSTDIR=", c->NewDirectory());
-    }
-    else if ( c->IsDirectory(symbolSrc) )
-    {
-        c->SendMessage1(self, "CONSTDIR=", symbolSrc);
-    }
-    else if ( c->IsOfType(symbolSrc, "RESOURCEUTILS") )
-    {
-        c->SendMessage1(self, "CONSTDIR=", c->SendMessage0(symbolSrc, "CONSTDIR"));
-    }
-    else if ( c->IsString(symbolSrc) )
-    {
-        c->SendMessage1(self, "CONSTDIR=", c->NewDirectory());
-        if ( c->SendMessage1(self, "PARSEINCLUDEFILE", symbolSrc) == TheFalseObj )
-        {
-            invalidTypeException(c->threadContext, idPos + 1, ", readable, symbolic ID definition file");
-            goto err_out;
-        }
-    }
-    else
-    {
-        wrongArgValueException(c->threadContext, idPos + 1, "a Directory object, a ResourceUtils object, a file name, or .nil", symbolSrc);
-        goto err_out;
-    }
-
-    // A menu ID was not used in earlier versions of ooDialog and it is not
-    // clear if ooDialog programmers will use it much now that it is available.
-    // wID is already set to -1 to signal no ID.  Now that the constDir is set
-    // up, we'll try to resolve the, possible, ID argument used by the
-    // programmer.
-
-    if ( rxID != NULLOBJECT )
-    {
-        int menuID;
-
-        // If this is the init for a ScriptMenuBar, we need to do things a
-        // little different.  Symbolic IDs could be defined in the rc file
-        // itself, and id could be a string menu name rather than a symbolic
-        // menu ID.
-        if ( rcFile != NULLOBJECT )
-        {
-            c->SendMessage1(self, "PARSEINCLUDEFILE", rcFile);
-            if ( ! oodSafeResolveID((uint32_t *)&menuID, c, self, rxID, -1, idPos) )
-            {
-                // Could be a string menu name or a bad symbolic ID.
-                // SciptMenuBar::init() will need to sort that out by checking
-                // wID and whether id is a string.
-                menuID = -1;
-            }
-        }
-        else
-        {
-            menuID = oodResolveSymbolicID(c, self, rxID, -1, idPos);
-            if ( menuID == OOD_ID_EXCEPTION )
-            {
-                goto err_out;
-            }
-        }
-
         wID = menuID;
     }
-    return true;
-
-err_out:
-    return false;
 }
 
 
@@ -1140,28 +1077,26 @@ int CppMenu::getMaxHeight()
 
 void CppMenu::putSysCommands()
 {
-    RexxDirectoryObject constDir = (RexxDirectoryObject)c->SendMessage0(self, "CONSTDIR");
-
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF000), "SC_SIZE");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF010), "SC_MOVE");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF020), "SC_MINIMIZE");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF030), "SC_MAXIMIZE");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF040), "SC_NEXTWINDOW");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF050), "SC_PREVWINDOW");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF060), "SC_CLOSE");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF070), "SC_VSCROLL");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF080), "SC_HSCROLL");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF090), "SC_MOUSEMENU");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF100), "SC_KEYMENU");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF110), "SC_ARRANGE");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF120), "SC_RESTORE");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF130), "SC_TASKLIST");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF140), "SC_SCREENSAVE");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF150), "SC_HOTKEY");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF160), "SC_DEFAULT");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF170), "SC_MONITORPOWER");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF180), "SC_CONTEXTHELP");
-    c->DirectoryPut(constDir, c->UnsignedInt32(0xF00F), "SC_SEPARATOR");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF000), "SC_SIZE");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF010), "SC_MOVE");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF020), "SC_MINIMIZE");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF030), "SC_MAXIMIZE");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF040), "SC_NEXTWINDOW");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF050), "SC_PREVWINDOW");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF060), "SC_CLOSE");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF070), "SC_VSCROLL");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF080), "SC_HSCROLL");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF090), "SC_MOUSEMENU");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF100), "SC_KEYMENU");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF110), "SC_ARRANGE");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF120), "SC_RESTORE");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF130), "SC_TASKLIST");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF140), "SC_SCREENSAVE");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF150), "SC_HOTKEY");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF160), "SC_DEFAULT");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF170), "SC_MONITORPOWER");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF180), "SC_CONTEXTHELP");
+    c->DirectoryPut(TheConstDir, c->UnsignedInt32(0xF00F), "SC_SEPARATOR");
 }
 
 /**
@@ -1276,7 +1211,7 @@ logical_t CppMenu::connectCommandEvent(RexxObjectPtr rxID, CSTRING methodName, R
         goto done_out;
     }
 
-    uint32_t id = oodResolveSymbolicID(c, self, rxID, -1, 1);
+    int32_t id = oodGlobalID(c, rxID, 1, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -1931,7 +1866,7 @@ static bool getMII(CppMenu *cMenu, RexxObjectPtr rxItemID, BOOL byPosition, uint
     mii->cbSize = sizeof(MENUITEMINFO);
     mii->fMask = fMask | MIIM_FTYPE | MIIM_SUBMENU;
 
-    uint32_t itemID = resolveItemID(cMenu->getContext(), rxItemID, byPosition, cMenu->getSelf(), idArgPos);
+    uint32_t itemID = resolveItemID(cMenu->getContext(), rxItemID, byPosition, idArgPos);
     if ( itemID == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -1984,7 +1919,7 @@ HMENU getSubMenuHandle(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosit
     oodResetSysErrCode(cMenu->getThreadContext());
     MENUITEMINFO mii = {0};
 
-    uint32_t itemID = resolveItemID(cMenu->getContext(), rxItemID, byPosition, cMenu->getSelf(), 1);
+    uint32_t itemID = resolveItemID(cMenu->getContext(), rxItemID, byPosition, 1);
     if ( itemID == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -2043,10 +1978,6 @@ done_out:
  *  @param byPosition  If true, item ID must be a non-negative number. If false,
  *                     the item ID must be a valid resource ID.
  *
- *  @param self        The object used to resolve a symbolic ID.  This is
- *                     assumed to be a .ResourceUtils object, and the Menu self.
- *                     Although it could be any .ResourceUtils object.
- *
  *  @param argPos      The argument position of rxItemId, used for raised
  *                     exceptions.
  *
@@ -2057,8 +1988,7 @@ done_out:
  *             does not matter what is returned.  So, the return need not be
  *             checked.
  */
-static uint32_t resolveItemID(RexxMethodContext *c, RexxObjectPtr rxItemID, logical_t byPosition,
-                              RexxObjectPtr self, size_t argPos)
+static uint32_t resolveItemID(RexxMethodContext *c, RexxObjectPtr rxItemID, logical_t byPosition, size_t argPos)
 {
     uint32_t itemID = OOD_ID_EXCEPTION;
 
@@ -2073,7 +2003,8 @@ static uint32_t resolveItemID(RexxMethodContext *c, RexxObjectPtr rxItemID, logi
     }
     else
     {
-        itemID = oodResolveSymbolicID(c, self, rxItemID, -1, argPos);
+        itemID = (uint32_t)oodGlobalID(c, rxItemID, argPos, true);
+
     }
 
 done_out:
@@ -2303,7 +2234,7 @@ uint32_t *CppMenu::getAllIDs(RexxObjectPtr rxItemIDs, size_t *items, logical_t b
     }
     else
     {
-        itemID = resolveItemID(c, rxItemIDs, byPosition, self, 1);
+        itemID = resolveItemID(c, rxItemIDs, byPosition, 1);
         if ( itemID == OOD_ID_EXCEPTION )
         {
             goto done_out;
@@ -2326,7 +2257,7 @@ uint32_t *CppMenu::getAllIDs(RexxObjectPtr rxItemIDs, size_t *items, logical_t b
         for ( size_t i = 0; i < count; i++ )
         {
             rxID = c->ArrayAt(rxIDs, i + 1);
-            itemID = resolveItemID(c, rxID, byPosition, self, 1);
+            itemID = resolveItemID(c, rxID, byPosition, 1);
             if ( itemID == OOD_ID_EXCEPTION )
             {
                 free(result);
@@ -2799,7 +2730,7 @@ RexxMethod4(logical_t, menu_connectCommandEvent_cls, RexxObjectPtr, rxID, CSTRIN
         goto done_out;
     }
 
-    uint32_t id = oodResolveSymbolicID(context, dlg, rxID, -1, 1);
+    int32_t id = oodGlobalID(context, rxID, 1, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -3011,7 +2942,7 @@ RexxMethod3(logical_t, menu_isValidItemID, RexxObjectPtr, rxItemID, OPTIONAL_log
     BOOL result = FALSE;
     MENUITEMINFO mii = {0};
 
-    uint32_t itemID = resolveItemID(context, rxItemID, byPosition, cMenu->getSelf(), 1);
+    uint32_t itemID = resolveItemID(context, rxItemID, byPosition, 1);
     if ( context->CheckCondition() )
     {
         context->ClearCondition();
@@ -3490,17 +3421,17 @@ RexxMethod5(logical_t, menu_checkRadio, RexxObjectPtr, start, RexxObjectPtr, end
     oodResetSysErrCode(context->threadContext);
     logical_t success = FALSE;
 
-    int idStart = resolveItemID(context, start, byPosition, cMenu->getSelf(), 1);
+    int idStart = resolveItemID(context, start, byPosition, 1);
     if ( idStart == OOD_ID_EXCEPTION )
     {
         goto done_out;
     }
-    int idEnd = resolveItemID(context, end, byPosition, cMenu->getSelf(), 2);
+    int idEnd = resolveItemID(context, end, byPosition, 2);
     if ( idEnd == OOD_ID_EXCEPTION )
     {
         goto done_out;
     }
-    int idCheck = resolveItemID(context, check, byPosition, cMenu->getSelf(), 3);
+    int idCheck = resolveItemID(context, check, byPosition, 3);
     if ( idCheck == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -3550,13 +3481,13 @@ RexxMethod4(logical_t, menu_insertSeparator, RexxObjectPtr, before, RexxObjectPt
     logical_t success = FALSE;
     MENUITEMINFO mii = {0};
 
-    uint32_t idBefore = resolveItemID(context, before, byPosition, cMenu->getSelf(), 1);
+    uint32_t idBefore = resolveItemID(context, before, byPosition, 1);
     if ( idBefore == OOD_ID_EXCEPTION )
     {
         goto done_out;
     }
 
-    uint32_t id =  oodResolveSymbolicID(context, cMenu->getSelf(), rxID, -1, 2);
+    int32_t id =  oodGlobalID(context, rxID, 2, false);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -3678,12 +3609,12 @@ RexxMethod9(logical_t, menu_insertItem, RexxObjectPtr, rxBefore, RexxObjectPtr, 
     BOOL success = FALSE;
     MENUITEMINFO mii = {0};
 
-    uint32_t idBefore = resolveItemID(context, rxBefore, byPosition, cMenu->getSelf(), 1);
+    uint32_t idBefore = resolveItemID(context, rxBefore, byPosition, 1);
     if ( idBefore == OOD_ID_EXCEPTION )
     {
         goto done_out;
     }
-    uint32_t id = oodResolveSymbolicID(context, cMenu->getSelf(), rxID, -1, 2);
+    int32_t id = oodGlobalID(context, rxID, 2, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -3798,7 +3729,7 @@ RexxMethod8(logical_t, menu_insertPopup, RexxObjectPtr, rxBefore, RexxObjectPtr,
     logical_t success = FALSE;
     MENUITEMINFO mii = {0};
 
-    uint32_t idBefore = resolveItemID(context, rxBefore, byPosition, self, 1);
+    uint32_t idBefore = resolveItemID(context, rxBefore, byPosition, 1);
     if ( idBefore == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -3808,7 +3739,7 @@ RexxMethod8(logical_t, menu_insertPopup, RexxObjectPtr, rxBefore, RexxObjectPtr,
         wrongClassException(context->threadContext, 3, "PopupMenu");
         goto done_out;
     }
-    uint32_t id = oodResolveSymbolicID(context, self, rxID, -1, 2);
+    int32_t id = oodGlobalID(context, rxID, 2, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -4239,12 +4170,12 @@ RexxMethod4(logical_t, menu_setID, RexxObjectPtr, rxItemID, RexxObjectPtr, newID
     logical_t success = FALSE;
     MENUITEMINFO mii = {0};
 
-    uint32_t itemID = resolveItemID(context, rxItemID, byPosition, cMenu->getSelf(), 1);
+    uint32_t itemID = resolveItemID(context, rxItemID, byPosition, 1);
     if ( itemID == OOD_ID_EXCEPTION )
     {
         goto done_out;
     }
-    mii.wID = oodResolveSymbolicID(context, cMenu->getSelf(), newID, -1, 2);
+    mii.wID = oodGlobalID(context, newID, 2, true);
     if ( mii.wID == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -4289,7 +4220,7 @@ RexxMethod3(logical_t, menu_setHelpID, RexxObjectPtr, id, OPTIONAL_logical_t, re
     oodResetSysErrCode(context->threadContext);
     logical_t result = FALSE;
 
-    DWORD helpID = oodResolveSymbolicID(context, cMenu->getSelf(), id, -1, 1);
+    DWORD helpID = oodGlobalID(context, id, 1, true);
     if ( helpID == OOD_ID_EXCEPTION )
     {
         goto done_out;
@@ -5043,23 +4974,13 @@ RexxMethod1(logical_t, menuTemplate_isComplete, OSELF, self)
  *                       is -1 indicating no ID.  However, the ID is required if
  *                       src is a .ResDialog or a module file name.
  *
- *  @param  symbolSrc    [optional] Possible source of constDir.  Can be:
- *                       .nil           -> New empty directory is created
- *                       .directory     -> constDir is set to this directory
- *                       .ResourceUtils -> constDir is set to this object's
- *                                         constDir.
- *                       file name      -> Empty directory is created and the
- *                                         file is parsed for #defines
- *
  *  @param  helpID       [optional]  Context help ID for the menu.  The default
  *                       is 0 indicating no help ID.
  *
- *  @param  attach       [optional]  If true attach this menu to a dialog
- *                       specified as one of the other arguments.  The default
- *                       is false.  If specified, either src has to be a
- *                       .ResDialog, or symbolSrc has to be a .PlainBaseDialog
- *                       or subclass.  If not, an exception is raised. src is
- *                       checked first, then symbolSrc.
+ *  @param  attachTo     [optional]  If specified, attach this menu to the
+ *                       dialog. If specified, attachTo has to be a
+ *                       .PlainBaseDialog or subclass.  If not, an exception is
+ *                       raised.
  *
  *  @param  autoConnect  [optional]  Turn on auto connection if true.  Default
  *                       is false
@@ -5077,8 +4998,8 @@ RexxMethod1(logical_t, menuTemplate_isComplete, OSELF, self)
  *            help ID is set and there is a Windows API failure.  It hardly
  *            seems possible that this could happen.
  */
-RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_RexxObjectPtr, id, OPTIONAL_RexxObjectPtr, symbolSrc,
-            OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_logical_t, attach, OPTIONAL_logical_t, autoConnect,
+RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_RexxObjectPtr, _id,
+            OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_RexxObjectPtr, attachTo, OPTIONAL_logical_t, autoConnect,
             OPTIONAL_CSTRING, mName, OSELF, self)
 {
     RexxMethodContext *c = context;
@@ -5087,20 +5008,25 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
-    if ( ! cMenu->menuInit(id, symbolSrc, NULLOBJECT) )
+    if ( argumentExists(2) )
     {
-        goto done_out;
-    }
-
-    // Resolve the help id now, if specified, to get any errors out of the way.
-    DWORD dwHelpID = 0;
-    if ( argumentExists(4) )
-    {
-        dwHelpID = oodResolveSymbolicID(context, self, helpID, -1, 4);
-        if ( dwHelpID == OOD_ID_EXCEPTION )
+        int32_t id = oodGlobalID(context, _id, 2, false);
+        if ( id == OOD_ID_EXCEPTION )
         {
             goto done_out;
         }
+        cMenu->setMenuID(id);
+    }
+
+    DWORD dwHelpID = 0;
+    if ( argumentExists(3) )
+    {
+        int32_t tmp = oodGlobalID(context, helpID, 2, false);
+        if ( tmp == OOD_ID_EXCEPTION )
+        {
+            goto done_out;
+        }
+        dwHelpID = tmp;
     }
 
     HMENU hMenu = NULL;
@@ -5133,7 +5059,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
     }
     else if ( context->IsString(src) )
     {
-        ;  // Purposively do nothing.
+        ;  // Purposively do nothing because src could be a module file name.
     }
     else
     {
@@ -5143,13 +5069,8 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
     if ( hMenu == NULL )
     {
+        // src has to be a ResDialog or a module file name.
         HINSTANCE hinst = NULL;
-
-        if ( cMenu->wID == -1 )
-        {
-            wrongArgValueException(context->threadContext, 2, "a valid numeric ID or a valid symbolic ID" , id);
-            goto done_out;
-        }
 
         if ( isResDialog )
         {
@@ -5198,21 +5119,14 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         cMenu->setAutoConnection(TRUE, mName);
     }
 
-    if ( attach )
+    if ( argumentExists(4) )
     {
-        if ( isResDialog )
-        {
-            cMenu->attachToDlg(src);
-        }
-        else if ( symbolSrc != NULLOBJECT && c->IsOfType(symbolSrc, "PLAINBASEDIALOG") )
-        {
-            cMenu->attachToDlg(symbolSrc);
-        }
-        else
+        if ( ! c->IsOfType(attachTo, "PLAINBASEDIALOG") )
         {
             userDefinedMsgException(context->threadContext, CAN_NOT_ATTACH_ON_INIT_MSG);
             goto err_out;
         }
+        cMenu->attachToDlg(attachTo);
     }
 
     // TODO need to think about putting this Rexx object in the data word of the menu.
@@ -5241,42 +5155,16 @@ err_out:
  *
  *  @param  dialog     The dialog whose system menu is to be copied.
  *
- *  @param  symbolSrc  [optional]  Possible source of the constDir for the
- *                     SystemMenu.  If this argument is ommitted, the constDir
- *                     of the dialog is used.  This would be the usual case.
- *                     This can be over-ridden by using one of the following for
- *                     this argument:
- *
- *                     .nil           -> New empty directory is created
- *
- *                     .directory     -> constDir is set to this directory
- *
- *                     .ResourceUtils -> constDir is set to this object's
- *                                       constDir.
- *
- *                     file name      > Empty directory is created and the file
- *                                      is parsed for #defines
- *
- *
  *  @note  Raises exceptions for all failures.  If no exceptions, the menu is
  *         created successfully.
  */
-RexxMethod3(RexxObjectPtr, sysMenu_init, RexxObjectPtr, dialog, OPTIONAL_RexxObjectPtr, symbolSrc, OSELF, self)
+RexxMethod2(RexxObjectPtr, sysMenu_init, RexxObjectPtr, dialog, OSELF, self)
 {
     CppMenu *cMenu = new CppMenu(self, SystemMenu, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
     if ( ! requiredClass(context->threadContext, dialog, "PLAINBASEDIALOG", 1) )
-    {
-        goto done_out;
-    }
-    if ( argumentOmitted(2) )
-    {
-        symbolSrc = dialog;
-    }
-
-    if ( ! cMenu->menuInit(TheNegativeOneObj, symbolSrc, NULLOBJECT) )
     {
         goto done_out;
     }
@@ -5395,14 +5283,6 @@ done_out:
  *  @param  id           [optional]  The resource id of / for the menu.  Can be
  *                       -1 to indicate no ID.  The default is -1.
  *
- *  @param  symbolSrc    [optional]  Possible source of constDir.  Can be:
- *                       .nil           -> New empty directory is created
- *                       .directory     -> constDir is set to this directory
- *                       .ResourceUtils -> constDir is set to this object's
- *                                         constDir.
- *                       file name      -> Empty directory is created and the
- *                                         file is parsed for #defines
- *
  *  @param  helpID       [optional]  Context help ID for the menu.  The default
  *                       is 0 indicating no help ID.
  *
@@ -5421,27 +5301,35 @@ done_out:
  *            help ID is set and there is a Windows API failure.  It hardly
  *            seems possible that this could happen.
  */
-RexxMethod5(RexxObjectPtr, popMenu_init, OPTIONAL_RexxObjectPtr, id, OPTIONAL_RexxObjectPtr, symbolSrc,
-            OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_POINTER, handle, OSELF, self)
+RexxMethod4(RexxObjectPtr, popMenu_init, OPTIONAL_RexxObjectPtr, _id, OPTIONAL_RexxObjectPtr, helpID,
+            OPTIONAL_POINTER, handle, OSELF, self)
 {
     CppMenu *cMenu = new CppMenu(self, PopupMenu, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
-    if ( ! cMenu->menuInit(id, symbolSrc, NULLOBJECT) )
+    if ( argumentExists(1) )
     {
-        goto done_out;
-    }
-
-    // Resolve the help id now, if specified, to get any errors out of the way.
-    DWORD dwHelpID = 0;
-    if ( argumentExists(3) )
-    {
-        dwHelpID = oodResolveSymbolicID(context, self, helpID, -1, 3);
-        if ( dwHelpID == OOD_ID_EXCEPTION )
+        int32_t id = oodGlobalID(context, _id, 1, false);
+        if ( id == OOD_ID_EXCEPTION )
         {
             goto done_out;
         }
+        else
+        {
+            cMenu->setMenuID(id);
+        }
+    }
+
+    DWORD dwHelpID = 0;
+    if ( argumentExists(2) )
+    {
+        int32_t tmp = oodGlobalID(context, helpID, 2, false);
+        if ( tmp == OOD_ID_EXCEPTION )
+        {
+            goto done_out;
+        }
+        dwHelpID = tmp;
     }
 
     HMENU hMenu = NULL;
@@ -5692,21 +5580,12 @@ RexxMethod6(RexxObjectPtr, popMenu_show, RexxObjectPtr, location, OPTIONAL_RexxO
  *
  *  Initializes a .ScriptMenuBar object.  The underlying menu object is created
  *  in memory by parsing a resource script file.  The script is parsed and
- *  converted to a HMENU at once.  Any symbolic IDs found in the script are
- *  added to the constDir.
+ *  converted to a HMENU at once.
  *
  *  @param  rcFile       [required]  The file name of the resource script.
  *
  *  @param  id           [optional]  The resource id of the menu.  If omitted,
  *                       then the first menu found in the resource file is used.
- *
- *  @param  symbolSrc    [optional]  Possible source of constDir.  Can be:
- *                       .nil           -> New empty directory is created
- *                       .directory     -> constDir is set to this directory
- *                       .ResourceUtils -> constDir is set to this object's
- *                                         constDir.
- *                       file name      -> Empty directory is created and the
- *                                         file is parsed for #defines
  *
  *  @param  helpID       [optional]  Context help ID for the menu.  The default
  *                       is 0 indicating no help ID.
@@ -5721,10 +5600,10 @@ RexxMethod6(RexxObjectPtr, popMenu_show, RexxObjectPtr, location, OPTIONAL_RexxO
  *                       connectionRequested method of connecting menu items.
  *                       The default is false.
  *
- *  @param  attach       [optional]  If true attach this menu to the dialog
- *                       specified as symbolSrc.  The default is false.  If
- *                       specified, symbolSrc has to be a .PlainBaseDialog or
- *                       subclass.  If not, an exception is raised.
+ *  @param  attachTo     [optional]  If specified attach this menu to the
+ *                       dialog.  If specified, attachTo has to be a
+ *                       .PlainBaseDialog or subclass.  If not, an exception is
+ *                       raised.
  *
  *  @return  No return.
  *
@@ -5735,15 +5614,16 @@ RexxMethod6(RexxObjectPtr, popMenu_show, RexxObjectPtr, location, OPTIONAL_RexxO
  *            help ID is set and there is a Windows API failure.  It hardly
  *            seems possible that this could happen.
  *
- *            Script menu bars pose several problems relating to the MENU
- *            definition ID in the resource script file.  1.) A symbolic id
- *            could be defined in the file itself.  2.) The menu id can be a
- *            simple string.  We have to special case these things both in
- *            menuInit() and in the call to load().
+ *            Script menu bars pose some problems relating to the MENU
+ *            definition ID in the resource script file.  The menu id can be a
+ *            simple string.  Because of that, we can't raise an exception if
+ *            the ID does not resolve, because it could be a legimate string
+ *            name for the menu.  We need to wait and have load() raise an
+ *            exception if it can not locate the menu.
  */
-RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_RexxObjectPtr, id,
-            OPTIONAL_RexxObjectPtr, symbolSrc, OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_uint32_t, count,
-            OPTIONAL_logical_t, connect, OPTIONAL_logical_t, attach, OSELF, self)
+RexxMethod7(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_RexxObjectPtr, _id,
+            OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_uint32_t, count, OPTIONAL_logical_t, connect,
+            OPTIONAL_RexxObjectPtr, attachTo, OSELF, self)
 {
     CppMenu *cMenu = new CppMenu(self, ScriptMenuBar, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
@@ -5751,25 +5631,42 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_R
 
     bool idOmitted = argumentOmitted(2) ? true : false;
 
-    if ( ! cMenu->menuInit(id, symbolSrc, rcFile) )
+    if ( argumentExists(2) )
     {
-        goto done_out;
-    }
-
-    // Resolve the help id now, if specified, to get any errors out of the way.
-    DWORD dwHelpID = 0;
-    if ( argumentExists(4) )
-    {
-        dwHelpID = oodResolveSymbolicID(context, self, helpID, -1, 4);
-        if ( dwHelpID == OOD_ID_EXCEPTION )
+        int32_t id = oodGlobalID(context, _id, 2, true);
+        if ( id == OOD_ID_EXCEPTION )
         {
-            goto done_out;
+            context->ClearCondition();
+        }
+        else
+        {
+            cMenu->setMenuID(id);
         }
     }
 
-    if ( argumentOmitted(5) || count == 0 )
+    DWORD dwHelpID = 0;
+    if ( argumentExists(3) )
+    {
+        int32_t tmp = oodGlobalID(context, helpID, 3, false);
+        if ( tmp == OOD_ID_EXCEPTION )
+        {
+            goto done_out;
+        }
+        dwHelpID = tmp;
+    }
+
+    if ( argumentOmitted(4) || count == 0 )
     {
         count = DEFAULT_MENUITEM_COUNT;
+    }
+
+    if ( argumentExists(6) )
+    {
+        if ( ! context->IsOfType(attachTo, "PLAINBASEDIALOG") )
+        {
+            wrongClassException(context->threadContext, 6, "PlainBaseDialog");
+            goto done_out;
+        }
     }
 
     if ( ! cMenu->initTemplate(count, dwHelpID) )
@@ -5780,7 +5677,7 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_R
     // If wID == -1 and id was not ommitted, then id could be a string menu
     // name.  Or, it could be a bad symbolic ID.  If it is a bad symbol, then
     // load() will raise an exception, so that's ok.
-    RexxObjectPtr menuName = (cMenu->wID == -1 && ! idOmitted) ? id : context->NullString();
+    RexxObjectPtr menuName = (cMenu->wID == -1 && ! idOmitted) ? _id : context->NullString();
 
     RexxMethodContext *c = context;
     RexxArrayObject args = context->ArrayOfFour(rcFile, c->Int32(cMenu->wID), context->Logical(connect),
@@ -5808,18 +5705,9 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_R
         goto done_out;
     }
 
-    if ( attach )
+    if ( argumentExists(6) )
     {
-        if ( symbolSrc != NULLOBJECT && context->IsOfType(symbolSrc, "PLAINBASEDIALOG") )
-        {
-            cMenu->attachToDlg(symbolSrc);
-        }
-        else
-        {
-            userDefinedMsgException(context->threadContext, "Can not attach menu unless arg 3 'symbolSrc' is a dialog object");
-            DestroyMenu(cMenu->getHMenu());
-            cMenu->setHMenu(NULL);
-        }
+        cMenu->attachToDlg(attachTo);
     }
 
 done_out:
@@ -5837,15 +5725,6 @@ done_out:
  *
  *  @param  id           [optional]  The resource id of / for the menu.  Can be
  *                       -1 to indicate no ID.  The default is -1.
- *
- *  @param  symbolSrc    [optional]  Possible source of constDir.  Can be:
- *                       .nil           -> New empty directory is created
- *                       .directory     -> constDir is set to this directory
- *                       .ResourceUtils -> constDir is set to this object's
- *                                         constDir.
- *                       file name      -> Empty directory is created and the
- *                                         file is parsed for #defines
- *                       If omitted, the default is .nil.
  *
  *  @param  helpID       [optional]  Context help ID for the menu.  The default
  *                       is 0 indicating no help ID.
@@ -5871,35 +5750,42 @@ done_out:
  *  @note  Raises exceptions for all detected problems.  The menu is not
  *         actually created until complete() is invoked.
  *
+ *         To use symbolic IDs, the global .ConstDir must be enabled.
+ *
  *  @remarks  Note that when using the MENUEX_TEMPLATE_HEADER you are supposed
  *            to be able to set the help ID for the menu, but this does not seem
  *            to work.  So, for this class we save the help ID in CppMenu and
  *            then set it when the complete method is called.
  */
-RexxMethod7(RexxObjectPtr, userMenu_init, OPTIONAL_RexxObjectPtr, id, OPTIONAL_RexxObjectPtr, symbolSrc,
-            OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_uint32_t, count, OPTIONAL_logical_t, autoConnect,
-            OPTIONAL_CSTRING, mName, OSELF, self)
+RexxMethod6(RexxObjectPtr, userMenu_init, OPTIONAL_RexxObjectPtr, _id, OPTIONAL_RexxObjectPtr, helpID,
+            OPTIONAL_uint32_t, count, OPTIONAL_logical_t, autoConnect, OPTIONAL_CSTRING, mName, OSELF, self)
 {
     CppMenu *cMenu = new CppMenu(self, UserMenuBar, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
-    if ( ! cMenu->menuInit(id, symbolSrc, NULLOBJECT) )
+    if ( argumentExists(1) )
     {
-        goto done_out;
-    }
-
-    DWORD dwHelpID = 0;
-    if ( argumentExists(3) )
-    {
-        dwHelpID = oodResolveSymbolicID(context, self, helpID, -1, 3);
-        if ( dwHelpID == OOD_ID_EXCEPTION )
+        int32_t id = oodGlobalID(context, _id, 1, false);
+        if ( id == OOD_ID_EXCEPTION )
         {
             goto done_out;
         }
+        cMenu->setMenuID(id);
     }
 
-    if ( argumentOmitted(4) || count == 0 )
+    DWORD dwHelpID = 0;
+    if ( argumentExists(2) )
+    {
+        int32_t tmp = oodGlobalID(context, helpID, 2, false);
+        if ( tmp == OOD_ID_EXCEPTION )
+        {
+            goto done_out;
+        }
+        dwHelpID = tmp;
+    }
+
+    if ( argumentOmitted(3) || count == 0 )
     {
         count = DEFAULT_MENUITEM_COUNT;
     }

@@ -411,6 +411,13 @@ void emptyArrayException(RexxThreadContext *c, int argPos)
     userDefinedMsgException(c, buffer);
 }
 
+void arrayToLargeException(RexxThreadContext *c, uint32_t found, uint32_t max, int argPos)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Argument %d, array items (%d) exceeds maximum (%d) allowed (%d)", argPos, found, max);
+    userDefinedMsgException(c, buffer);
+}
+
 void sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index)
 {
     TCHAR buffer[256];
@@ -786,6 +793,23 @@ RexxObjectPtr rxNewBuiltinObject(RexxThreadContext *c, CSTRING className)
 RexxObjectPtr rxNewBuiltinObject(RexxMethodContext *c, CSTRING className)
 {
     return rxNewBuiltinObject(c->threadContext, className);
+}
+
+
+bool isOutOfMemoryException(RexxThreadContext *c)
+{
+    RexxCondition condition;
+    RexxDirectoryObject condObj = c->GetConditionInfo();
+
+    if ( condObj != NULLOBJECT )
+    {
+        c->DecodeConditionInfo(condObj, &condition);
+        if ( condition.code == 48900 )
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 

@@ -43,6 +43,8 @@
  * Bar, and Tab.
  */
 
+  .application~useGlobalConstDir("O", "rc\PropertySheetDemo.h")
+
   -- To run correctly, this program needs to be able to find its support files.
   -- But, we allow starting the program from anywhere.  To do this we:
   -- get the directory we are executing from, switch to the directory this
@@ -55,17 +57,17 @@
   mydir = directory(mydir)                    -- CD to the install direcotry.
 
   -- Create the 5 dialog pages.
-  p1 = .ListViewDlg~new("rc\PropertySheetDemo.rc", IDD_LISTVIEW_DLG, , "rc\PropertySheetDemo.h")
-  p2 = .TreeViewDlg~new("rc\PropertySheetDemo.rc", IDD_TREEVIEW_DLG, , "rc\PropertySheetDemo.h")
-  p3 = .ProgressBarDlg~new("rc\PropertySheetDemo.rc", IDD_PROGRESSBAR_DLG, , "rc\PropertySheetDemo.h")
-  p4 = .TrackBarDlg~new("rc\PropertySheetDemo.rc", IDD_TRACKBAR_DLG, , "rc\PropertySheetDemo.h")
-  p5 = .TabDlg~new("rc\PropertySheetDemo.rc", IDD_TAB_DLG, , "rc\PropertySheetDemo.h")
+  p1 = .ListViewDlg~new("rc\PropertySheetDemo.rc", IDD_LISTVIEW_DLG)
+  p2 = .TreeViewDlg~new("rc\PropertySheetDemo.rc", IDD_TREEVIEW_DLG)
+  p3 = .ProgressBarDlg~new("rc\PropertySheetDemo.rc", IDD_PROGRESSBAR_DLG)
+  p4 = .TrackBarDlg~new("rc\PropertySheetDemo.rc", IDD_TRACKBAR_DLG)
+  p5 = .TabDlg~new("rc\PropertySheetDemo.rc", IDD_TAB_DLG)
 
   -- Create the PropertySheetDialog using an array of the 5 dialog pages.  The
   -- order of the pages in the array will be the order of the pages in the tab
   -- control of the property sheet.
   pages = .array~of(p1, p2, p3, p4, p5)
-  propDlg = .PropertySheetDemoDlg~new(pages, "NOAPPLYNOW", "ooRexx Property Sheet with Controls", "rc\PropertySheetDemo.h")
+  propDlg = .PropertySheetDemoDlg~new(pages, "NOAPPLYNOW", "ooRexx Property Sheet with Controls")
 
   -- For the appliation icon of the dialog we will use the ooRexx icon which is
   -- available for general use from oodialog.dll.
@@ -116,7 +118,6 @@
     -- Fill the list-view with random data.
     do ch = "A"~c2d to "Z"~c2d
         q = random(200)
-        call msSleep 1
         yh = random(400)
         yh = max(yh, q)
         yl = random(100)

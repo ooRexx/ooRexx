@@ -84,7 +84,9 @@ use arg
   rcFile = "resources\imageButton.rc"
   symbolFile = "resources\imageButton.h"
 
-  dlg = .ImageListDlg~new(rcFile, IDD_IMAGELIST_BUTTON, , symbolFile)
+  .application~useGlobalConstDir("O", symbolFile)
+
+  dlg = .ImageListDlg~new(rcFile, IDD_IMAGELIST_BUTTON)
 
   if dlg~initCode <> 0 then do
     say "The Image List Dialog was not created correctly"

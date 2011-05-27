@@ -69,15 +69,15 @@
    -- then the menu bar is empty at this point, so there are no menu items to
    -- automatically connect.  In this case, we attach automatically, then when
    -- the menu bar is populated, we automatically connect all menu items.
-   menu = .BinaryMenuBar~new(.nil, 1000, self, , .true)
+   menu = .BinaryMenuBar~new(.nil, 1000, , self)
 
-   subMenu = .PopupMenu~new(1300, self)
-   subMenu~insertItem(0, 1301, "About")
+   subMenu = .PopupMenu~new(1300)
+   subMenu~insertItem(1301, 1301, "About")
 
-   menu~insertPopup(0, 1300, subMenu, "Help")
+   menu~insertPopup(1300, 1300, subMenu, "Help")
 
-   subMenu = .PopupMenu~new(1200, self)
-   subMenu~insertItem(0, IDOK, "Exit")
+   subMenu = .PopupMenu~new(1200)
+   subMenu~insertItem(IDOK, IDOK, "Exit")
    subMenu~insertItem(IDOK, 1201, "Leave")
    subMenu~insertItem(1201, 1202, "Test Item")
    subMenu~insertItem(1201, 1203, "Context")

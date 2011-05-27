@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2007-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,13 +48,14 @@
 ::class 'RcDialog' subclass UserDialog public
 
 ::method init
-  use arg rcFile, idDlg, initData., includeFile, options = "", expected = 200
+  use strict arg rcFile, idDlg, initData. = .nil, includeFile = "", options = "", expected = 200, ownerExtra = .nil
 
   newArgs = .array~new(5)
   if arg(3, 'E') then newArgs[1] = arg(3)
   if arg(4, 'E') then newArgs[2] = arg(4)
   newArgs[3] = rcFile
   newArgs[4] = idDlg
+  if arg(5, 'E') then newArgs[5] = ownerExtra
 
   forward class (super) arguments (newArgs) continue
   if result <> 0 then return result

@@ -61,9 +61,11 @@
  * underlying Windows dialog.
  */
 
-  dlg = .MainDialog~new( , "resources\useTools.h")
+  .application~useGlobalConstDir("O", "resources\useTools.h")
 
-  dlgTool = .ToolPaletteDlg~new( , "resources\useTools.h" )
+  dlg = .MainDialog~new
+
+  dlgTool = .ToolPaletteDlg~new
   dlgTool~ownerDialog = dlg
 
   -- Start the main dialog asynchronously so we continue and then can start the

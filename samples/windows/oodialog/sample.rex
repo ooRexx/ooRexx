@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,12 +51,11 @@
   sp = value('SOUNDPATH',,env)
   sp = value('SOUNDPATH',win';'mydir'\WAV;'sp,env)
 
-  d = .SampleDlg~new
-  if d~InitCode > 0 then exit
-  d~Execute("SHOWTOP")
-  d~deinstall
+  d = .SampleDlg~new("rc\sample.rc", 100)
+  if d~initCode <> 0 then return 99
+  d~execute("SHOWTOP")
   ret = directory(curdir)
-  return
+  return 0
 
 
 /*---------------------------- requires ------------------------------*/
@@ -65,14 +64,9 @@
 
 /*---------------------------- main dialog ---------------------------*/
 
-::class SampleDlg subclass UserDialog
-
-::method init
-   self~init:super()
-   self~InitCode = self~load("rc\sample.rc", 100)
+::class 'SampleDlg' subclass RcDialog
 
 ::method initDialog
-   self~InitDialog:super
    self~installBitmapButton(101, "VIDEO",    "bmp\s2arch.bmp"  ,,,,"FRAME STRETCH")
    self~installBitmapButton(102, "PET",      "bmp\s2anim.bmp"  ,,,,"FRAME STRETCH")
    self~installBitmapButton(103, "PHIL",     "bmp\s2philf.bmp" ,,,,"FRAME STRETCH")
@@ -85,63 +79,63 @@
    self~installBitmapButton(110, "LIST",     "bmp\s2list.bmp"  ,,,,"FRAME STRETCH")
    self~installBitmapButton(111, "PROGRESS", "bmp\s2prog.bmp"  ,,,,"FRAME STRETCH")
    self~installBitmapButton(112, "PROPERTY", "bmp\s2prop.bmp"  ,,,,"FRAME STRETCH")
-   self~BackgroundBitmap("bmp\s2backg.bmp", "USEPAL")
+   self~backgroundBitmap("bmp\s2backg.bmp", "USEPAL")
 
 ::method video
-   self~loadapp("oovideo.rex")
+   self~loadApp("oovideo.rex")
 
 ::method pet
-   self~loadapp("oopet.rex", 3000)
+   self~loadApp("oopet.rex", 3000)
 
 ::method phil
-   self~loadapp("oophil.rex")
+   self~loadApp("oophil.rex")
 
 ::method walker
-   self~loadapp("oowalker.rex")
+   self~loadApp("oowalker.rex")
 
 ::method bandit
-   self~loadapp("oobandit.rex", 3300)
+   self~loadApp("oobandit.rex", 3300)
 
 ::method graphd
-   self~loadapp("oograph.rex", 3000)
+   self~loadApp("oograph.rex", 3000)
 
 ::method user
-   self~loadapp("oostddlg.rex", 2800)
+   self~loadApp("oostddlg.rex", 2800)
 
 ::method wiz97
-   self~loadapp("ticketWizard.rex")
+   self~loadApp("ticketWizard.rex")
 
 ::method tree
-   self~loadapp("oodtree.rex")
+   self~loadApp("oodtree.rex")
 
 ::method list
-   self~loadapp("oodlist.rex")
+   self~loadApp("oodListViews.rex")
 
 ::method progress
-   self~loadapp("oodpbar.rex")
+   self~loadApp("oodpbar.rex")
 
 ::method property
-   self~loadapp("PropertySheetDemo.rex")
+   self~loadApp("PropertySheetDemo.rex")
 
 
 ::method cancel
-   call Play "byebye.wav"
-   self~CANCEL:super
+   call play "byebye.wav"
+   self~cancel:super
    return 0
 
-::method OK
+::method ok
    self~cancel
 
 ::method help                               /* About button */
-   call Play "sample.wav","YES"
+   call play "sample.wav", "YES"
    d = .TimedMessage~new("Illustration of ooDialog Function", ,
                          "Open Object Rexx ooDialog Samples", 5000)
    d~execute
    return 0
 
-::method loadapp
+::method loadApp
    use arg appname, pauseTime = 2000
-   ret = Play("start.wav", "yes")
+   ret = play("start.wav", "yes")
    d = .TimedMessage~new("Application will be started, please wait","Samples", pauseTime)
    d~execute
    /* save current directory */
@@ -151,4 +145,4 @@
    ret = Directory(curDir)
    /* make sure main window is enabled and the topmost window */
    self~enable
-   self~tothetop
+   self~toTheTop

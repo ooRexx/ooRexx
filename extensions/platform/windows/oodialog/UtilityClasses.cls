@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,9 +42,9 @@
  * Utility Classes, "short-cut" dialogs and routines, public routines, and
  * utility dialogs.
  *
- * Includes the .DlgUtil class which must be defined as the the first class.
- * The class init() method of .DlgUtil controls the basic set up for the
- * ooDialog framework.
+ * The mechanism for putting the .ApplicationClass object in the .local
+ * environment relies on maintaining the first class definitions in this file as
+ * being: .ResourceUtils, .ApplicationClass, and then .DlgUtils.
  *
  * Note:  This "class" file can not be used by itself, as for instance
  *        UserDialog.cls could.  It is intended to be merged into the main
@@ -52,6 +52,142 @@
  *        subclass other classes that will be present in the single framework
  *        file, but are not present in this file.
  */
+
+
+::class 'ResourceUtils' public mixinclass object
+
+/* Directory object containing symbolic constants */
+::attribute constDir get
+::attribute constDir set private
+
+::attribute processingLoad private    -- in loadItems ?
+
+::method parseIncludeFile
+  use strict arg hFile
+
+  if \ SysIsFile(hFile) then do
+    hFile = SysSearchPath("PATH", hFile)
+    if hFile == "" then do
+      msg = 'Unable to find header file "'hFile'"'
+      j = MessageDialog(msg, 0, "File Not Found Error", "OK", "WARNING", "SYSTEMMODAL")
+      return .false
+    end
+  end
+
+  f = .stream~new(hFile)
+  ret = f~open(read)
+  if ret \= "READY:" then do
+    msg = 'Header file "'hFile'" is not readable:' ret
+    j = MessageDialog(msg, 0, "File Open Error", "OK", "WARNING", "SYSTEMMODAL")
+    return .false
+  end
+
+  global = .constDirUsage == 'use only'
+
+  do while f~state == "READY"
+    line = f~linein~strip('L')
+
+    if line~abbrev("#ifdef") then do
+      self~skipThroughIfDefs(f, line)
+      iterate
+    end
+
+    if line~abbrev("#define") & line~words == 3 then do
+      parse var line def symbol numericID .
+      if numericID~datatype('W') then do
+        if global then .constDir[symbol] = numericID
+        else self~constDir[symbol~translate] = numericID
+      end
+    end
+  end
+  f~close
+  return .true
+
+::method skipThroughIfDefs private
+  use arg fObj, line
+
+  if \ line~abbrev("#ifdef") & \ line~abbrev("#ifndef") then return
+  ifDefStack = .queue~new
+  ifDefStack~push(line)
+  do while fObj~state == "READY"
+    l = fObj~linein~strip("L")
+    select
+      when l~abbrev("#endif") then ifDefStack~pull
+      when l~abbrev("#ifdef") then ifDefStack~push(l)
+      when l~abbrev("#ifndef") then ifDefStack~push(l)
+      otherwise nop
+    end
+    if ifDefStack~items == 0 then leave
+  end
+
+::method checkfile private
+   use arg f
+   if (f~lines = 0) then do
+      f~close
+      self~processingLoad = 0
+      ret = errorDialog("Error reading resource file!" f)
+      return 1
+   end
+   return 0
+
+::method errorfile private
+   use arg f, s
+   f~close
+   self~processingLoad = 0
+   ret = errorDialog("Error reading resource file:" f "("s")")
+
+::method idError private external "LIBRARY oodialog rsrcUtils_idError"
+::method resolveIconID private external "LIBRARY oodialog rsrcUtils_resolveIconID_pvt"
+::method resolveSymbolicId unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
+::method getResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
+::method checkID external "LIBRARY oodialog rsrcUtils_checkID"
+
+/**
+ * Return the symbolic ID from the ConstDir that matches the numeric ID.
+ * The docs will advise users of ooDialog to use unique numbers for all
+ * resources.
+ */
+::method resolveNumericID unguarded
+  use arg numericID
+  if \ numericID~datatype('W') then return -1
+  symbol = self~constDir~index(numericID)
+  if symbol == .nil then return -1
+  else return symbol
+
+::method mergeSymbols
+  use strict arg otherSymbolSrc
+
+  select
+    when otherSymbolSrc~isA(.directory) then do
+      if self~constDir == otherSymbolSrc then return 0
+      self~constDir~putAll(otherSymbolSrc)
+      otherSymbolSrc~putAll(self~constDir)
+    end
+
+    when otherSymbolSrc~isA(.ResourceUtils) then do
+      if self~constDir == otherSymbolSrc~constDir then return 0
+      self~constDir~putAll(otherSymbolSrc~constDir)
+      otherSymbolSrc~constDir~putAll(self~constDir)
+    end
+
+    otherwise return -1
+  end
+  -- End select
+  return 0
+
+
+::class 'ApplicationClass' public inherit ResourceUtils
+
+::method init external "LIBRARY oodialog app_init"
+::method useGlobalConstDir external "LIBRARY oodialog app_useGlobalConstDir"
+
+::method speak
+  say "Hello to you"
+
+::method add
+  use strict arg hFile
+  say 'In ApplicationClass::add()'
+  self~parseIncludeFile(hFile)
 
 ::class 'DlgUtil' public
 ::method init class external "LIBRARY oodialog dlgutil_init_cls"
@@ -75,7 +211,6 @@
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method threadID class external "LIBRARY oodialog dlgutil_threadID_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
-
 
 ::class 'OS' public
 ::method is64bit class external "LIBRARY oodialog os_is64bit"
@@ -496,6 +631,68 @@
 ::method key2name class external "LIBRARY oodialog vk_key2name"
 ::method key2name       external "LIBRARY oodialog vk_key2name"
 
+
+::class 'OEM' mixinclass Object public
+
+::constant OBM_CLOSE           32754
+::constant OBM_UPARROW         32753
+::constant OBM_DNARROW         32752
+::constant OBM_RGARROW         32751
+::constant OBM_LFARROW         32750
+::constant OBM_REDUCE          32749
+::constant OBM_ZOOM            32748
+::constant OBM_RESTORE         32747
+::constant OBM_REDUCED         32746
+::constant OBM_ZOOMD           32745
+::constant OBM_RESTORED        32744
+::constant OBM_UPARROWD        32743
+::constant OBM_DNARROWD        32742
+::constant OBM_RGARROWD        32741
+::constant OBM_LFARROWD        32740
+::constant OBM_MNARROW         32739
+::constant OBM_COMBO           32738
+::constant OBM_UPARROWI        32737
+::constant OBM_DNARROWI        32736
+::constant OBM_RGARROWI        32735
+::constant OBM_LFARROWI        32734
+::constant OBM_OLD_CLOSE       32767
+::constant OBM_SIZE            32766
+::constant OBM_OLD_UPARROW     32765
+::constant OBM_OLD_DNARROW     32764
+::constant OBM_OLD_RGARROW     32763
+::constant OBM_OLD_LFARROW     32762
+::constant OBM_BTSIZE          32761
+::constant OBM_CHECK           32760
+::constant OBM_CHECKBOXES      32759
+::constant OBM_BTNCORNERS      32758
+::constant OBM_OLD_REDUCE      32757
+::constant OBM_OLD_ZOOM        32756
+::constant OBM_OLD_RESTORE     32755
+
+::constant OCR_NORMAL          32512
+::constant OCR_IBEAM           32513
+::constant OCR_WAIT            32514
+::constant OCR_CROSS           32515
+::constant OCR_UP              32516
+::constant OCR_SIZENWSE        32642
+::constant OCR_SIZENESW        32643
+::constant OCR_SIZEWE          32644
+::constant OCR_SIZENS          32645
+::constant OCR_SIZEALL         32646
+::constant OCR_NO              32648
+::constant OCR_HAND            32649
+::constant OCR_APPSTARTING     32650
+
+::constant OIC_SAMPLE          32512
+::constant OIC_HAND            32513
+::constant OIC_QUES            32514
+::constant OIC_BANG            32515
+::constant OIC_NOTE            32516
+::constant OIC_WINLOGO         32517
+::constant OIC_WARNING         32515
+::constant OIC_ERROR           32513
+::constant OIC_INFORMATION     32516
+::constant OIC_SHIELD          32518
 
 
 /**
@@ -1517,9 +1714,9 @@ do forever
       else
           ObjId = ''       -- This createXXX method is ignored
 
-      ObjId = dlgObject~resolveResourceID(ObjId~space(0))
+      ObjId = dlgObject~resolveSymbolicID(ObjId~space(0))
 
-      if ObjId \= '', ObjId > 0 then
+      if ObjId > 0 then
          interpret 'dlgObjList~Insert(ObjId"@"'ObjX'"@"'ObjY'"@"'ObjW'"@"'ObjH')'
    end
    else do
@@ -1555,9 +1752,9 @@ do forever
             ObjId = ''     -- This addXXX method is ignored
       end
 
-      ObjId = dlgObject~resolveResourceID(ObjId~space(0))
+      ObjId = dlgObject~resolveSymbolicID(ObjId~space(0))
 
-      if ObjId \= '', ObjId > 0 then
+      if ObjId > 0 then
          interpret 'dlgObjList~Insert(ObjId"@"'ObjX'"@"'ObjY'"@"'ObjW'"@"'ObjH')'
    end
    else do
@@ -1612,13 +1809,13 @@ expose dlgObject noMove noResize
    do id over noMove
      id = noMove~remove(id)
      id = dlgObject~getResourceID(id)
-     if id > 0 then noMove~put(id)
+     noMove~put(id)
    end
 
    do id over noResize
      id = noResize~remove(id)
      id = dlgObject~getResourceID(id)
-     if id > 0 then noResize~put(id)
+     noResize~put(id)
    end
 
 

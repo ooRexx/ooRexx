@@ -76,7 +76,9 @@
  *  to redraw.
  */
 
-  dlg = .ResizableDialog~new( , 'dlgAreaUDemo.h')
+  .application~useGlobalConstDir("O", 'dlgAreaUDemo.h')
+
+  dlg = .ResizableDialog~new
   dlg~execute('ShowTop')
 
   return 0

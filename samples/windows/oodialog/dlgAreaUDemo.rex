@@ -36,7 +36,9 @@
 /*----------------------------------------------------------------------------*/
 /* DlgAreaDemo.Rex  --  Demonstrate DlgArea & DlgAreaU Classes  --  Feb 2006 */
 
-MyDlg=.MyDialog~new( , 'dlgAreaUDemo.h')
+.application~useGlobalConstDir("O", 'dlgAreaUDemo.h')
+
+MyDlg=.MyDialog~new
 MyDlg~execute('ShowTop')
 
 return 0
@@ -67,21 +69,21 @@ u=.dlgAreaU~new(self)                                         /* whole dlg   */
 if u~lastError \= .nil then call errorDialog u~lastError
 
 u~noResizePut(IDC_PB_0)
-e=.dlgArea~new(u~x       ,u~y       ,u~w('70%'),u~h('90%'))   /* edit   area */
-s=.dlgArea~new(u~x       ,u~y('90%'),u~w('70%'),u~hr      )   /* status area */
-b=.dlgArea~new(u~x('70%'),u~y       ,u~wr      ,u~hr      )   /* button area */
+e=.dlgArea~new(u~x       , u~y       , u~w('70%'), u~h('90%'))   /* edit   area */
+s=.dlgArea~new(u~x       , u~y('90%'), u~w('70%'), u~hr      )   /* status area */
+b=.dlgArea~new(u~x('70%'), u~y       , u~wr      , u~hr      )   /* button area */
 
-self~createEdit(IDC_EDIT,e~x,e~y,e~w,e~h,'multiline','text')
-self~createStaticText(IDC_ST_STATUS,s~x,s~y,s~w,s~h,,'Status info appears here')
+self~createEdit(IDC_EDIT, e~x, e~y, e~w, e~h, 'multiline', 'text')
+self~createStaticText(IDC_ST_STATUS, s~x, s~y, s~w, s~h, , 'Status info appears here')
 
-self~createPushButton(IDC_PB_0,b~x,b~y('00%'),b~w,b~h('9%'),,'Button' 0,'Button'||0)
-self~createPushButton(IDC_PB_1,b~x,b~y('10%'),b~w,b~h('9%'),,'Button' 1,'Button'||1)
-self~createPushButton(IDC_PB_2,b~x,b~y('20%'),b~w,b~h('9%'),,'Button' 2,'Button'||2)
-self~createPushButton(IDC_PB_3,b~x,b~y('30%'),b~w,b~h('9%'),,'Button' 3,'Button'||3)
-self~createPushButton(IDC_PB_4,b~x,b~y('40%'),b~w,b~h('9%'),,'Button' 4,'Button'||4)
-self~createPushButton(IDC_PB_5,b~x,b~y('50%'),b~w,b~h('9%'),,'Button' 5,'Button'||5)
-self~createPushButton(IDC_PB_6,b~x,b~y('60%'),b~w,b~h('9%'),,'Button' 6,'Button'||6)
-self~createPushButton(IDOK,b~x,b~y('90%'),b~w,b~h('9%'),'DEFAULT','Ok')
+self~createPushButton(IDC_PB_0, b~x, b~y('00%'), b~w, b~h('9%'), , 'Button' 0, 'Button'||0)
+self~createPushButton(IDC_PB_1, b~x, b~y('10%'), b~w, b~h('9%'), , 'Button' 1, 'Button'||1)
+self~createPushButton(IDC_PB_2, b~x, b~y('20%'), b~w, b~h('9%'), , 'Button' 2, 'Button'||2)
+self~createPushButton(IDC_PB_3, b~x, b~y('30%'), b~w, b~h('9%'), , 'Button' 3, 'Button'||3)
+self~createPushButton(IDC_PB_4, b~x, b~y('40%'), b~w, b~h('9%'), , 'Button' 4, 'Button'||4)
+self~createPushButton(IDC_PB_5, b~x, b~y('50%'), b~w, b~h('9%'), , 'Button' 5, 'Button'||5)
+self~createPushButton(IDC_PB_6, b~x, b~y('60%'), b~w, b~h('9%'), , 'Button' 6, 'Button'||6)
+self~createPushButton(IDOK, b~x, b~y('90%'), b~w, b~h('9%'), 'DEFAULT', 'Ok')
 
 /* ------------------------------------------------------------------------- */
 ::method onResize

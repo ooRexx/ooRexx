@@ -892,7 +892,17 @@
    return sr~start sr~end
 
 
-/******************* Tab Control Class ****************************************/
+/*********** Tab Control Class & Related **************************************/
+
+::class 'OwnedTabInfo' subclass Object public
+
+::attribute nID
+::attribute sID
+::attribute pages
+::attribute tab
+
+::method init
+  use strict arg id, pages = (.array~new)
 
 ::class 'TabControl' subclass DialogControl public
 ::class 'Tab' subclass TabControl public
@@ -906,6 +916,7 @@
 ::constant TCM_GETCURFOCUS     "0x132F"
 ::constant TCM_DELETEALLITEMS  "0x1309"
 ::constant TCM_DELETEITEM      "0x1308"
+::constant TCM_SETMINTABWIDTH  "0x1331"
 
 ::method items unguarded
    use strict arg
@@ -945,6 +956,10 @@
    use strict arg
    ret = self~sendWinIntMsg(self~TCM_DELETEALLITEMS, 0, 0)
    return ret == 0
+
+::method setMinTabWidth unguarded
+   use strict arg width
+   return self~sendWinIntMsg(self~TCM_SETMINTABWIDTH, 0, width)
 
 ::method getItemRect unguarded external "LIBRARY oodialog tab_getItemRect"
 ::method setPadding unguarded external "LIBRARY oodialog tab_setPadding"

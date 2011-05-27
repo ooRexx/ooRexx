@@ -195,118 +195,10 @@
    return 0
 
 
-::class 'ResourceUtils' public mixinclass object
-
-/* Directory object containing symbolic constants */
-::attribute constDir get
-::attribute constDir set private
-
-::attribute processingLoad private    -- in loadItems ?
-
-::method parseIncludeFile
-  use strict arg hFile
-
-  if \ SysIsFile(hFile) then do
-    -- TODO Revisit. Should a syntax condition be raised if the file is not found or readable?
-    hFile = SysSearchPath("PATH", hFile)
-    if hFile == "" then return .false
-  end
-
-  f = .stream~new(hFile)
-  f~open(read)
-
-  do while f~state == "READY"
-    line = f~linein~strip('L')
-
-    if line~abbrev("#ifdef") then do
-      self~skipThroughIfDefs(f, line)
-      iterate
-    end
-
-    if line~abbrev("#define") & line~words == 3 then do
-      parse var line def symbol numericID .
-      if numericID~datatype('W') then self~ConstDir[symbol~translate] = numericID
-    end
-  end
-  f~close
-  return .true
-
-::method skipThroughIfDefs private
-  use arg fObj, line
-
-  if \ line~abbrev("#ifdef") & \ line~abbrev("#ifndef") then return
-  ifDefStack = .queue~new
-  ifDefStack~push(line)
-  do while fObj~state == "READY"
-    l = fObj~linein~strip("L")
-    select
-      when l~abbrev("#endif") then ifDefStack~pull
-      when l~abbrev("#ifdef") then ifDefStack~push(l)
-      when l~abbrev("#ifndef") then ifDefStack~push(l)
-      otherwise nop
-    end
-    if ifDefStack~items == 0 then leave
-  end
-
-::method checkfile private
-   use arg f
-   if (f~lines = 0) then do
-      f~close
-      self~processingLoad = 0
-      ret = errorDialog("Error reading resource file!" f)
-      return 1
-   end
-   return 0
-
-::method errorfile private
-   use arg f, s
-   f~close
-   self~processingLoad = 0
-   ret = errorDialog("Error reading resource file:" f "("s")")
-
-::method idError private external "LIBRARY oodialog rsrcUtils_idError"
-::method resolveIconID private external "LIBRARY oodialog rsrcUtils_resolveIconID_pvt"
-::method resolveSymbolicId unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
-::method resolveResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
-::method getResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
-::method checkID external "LIBRARY oodialog rsrcUtils_checkID"
-
-/**
- * Return the symbolic ID from the ConstDir that matches the numeric ID.
- * The docs will advise users of ooDialog to use unique numbers for all
- * resources.
- */
-::method resolveNumericID unguarded
-  use arg numericID
-  if \ numericID~datatype('W') then return -1
-  symbol = self~constDir~index(numericID)
-  if symbol == .nil then return -1
-  else return symbol
-
-::method mergeSymbols
-  use strict arg otherSymbolSrc
-
-  select
-    when otherSymbolSrc~isA(.directory) then do
-      if self~constDir == otherSymbolSrc then return 0
-      self~constDir~putAll(otherSymbolSrc)
-      otherSymbolSrc~putAll(self~constDir)
-    end
-
-    when otherSymbolSrc~isA(.ResourceUtils) then do
-      if self~constDir == otherSymbolSrc~constDir then return 0
-      self~constDir~putAll(otherSymbolSrc~constDir)
-      otherSymbolSrc~constDir~putAll(self~constDir)
-    end
-
-    otherwise return -1
-  end
-  -- End select
-  return 0
-
 ::class 'Window' public inherit WindowBase
 ::method init  external "LIBRARY oodialog window_init"
 ::method unInit  external "LIBRARY oodialog window_unInit"
+
 
 /**
  * Used to return an object that is not a dialog object.  See the
@@ -642,7 +534,8 @@
    if dataStem.~items == 0 then return 1
    do k over dataStem.
       if k~dataType('W') then numericID = k
-      else numericID = self~ResolveSymbolicID(k)
+      else numericID = self~resolveSymbolicID(k)
+      if numericID == -1 then continue
       InternDlgData.numericID = dataStem.k
       if InternDlgData.numericID = "INTERNDLGDATA."numericID then InternDlgData.numericID = ""
    end
@@ -718,8 +611,8 @@
        attributeName = "DATA"id~space(0)
 
    self~dataConnection[id] = attributeName
-   self~setmethod(attributeName, "expose "attributeName"; return "attributeName)
-   self~setmethod(attributeName || "=", "expose "attributeName"; use arg "attributeName)
+   self~setMethod(attributeName, "expose "attributeName"; return "attributeName)
+   self~setMethod(attributeName || "=", "expose "attributeName"; use arg "attributeName)
    self~sendWith(attributeName || '=', .array~of(""))  /* initial value = "" */
    return id
 
@@ -744,6 +637,34 @@
 ::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"      -- Not to be doumented.
 ::method putControl unguarded external "LIBRARY oodialog pbdlg_putControl"                              -- Not to be doumented.
 
+
+-- Allow the user to dynamically add attributes or methods to a dialog.
+
+::method addNewAttribute
+   use strict arg name, value = "", makeUnguarded = .false, makePrivate = .false
+
+   self~setMethod(name, "expose "name"; return "name, "OBJECT")
+   self~setMethod(name || "=", "expose "name"; use arg "name, "OBJECT")
+
+   if makeUnguarded then do
+      self~instanceMethod(name)~setUnguarded
+      self~instanceMethod(name || '=')~setUnguarded
+   end
+
+   if makePrivate then do
+      self~instanceMethod(name)~setPrivate
+      self~instanceMethod(name || '=')~setPrivate
+   end
+
+   self~sendWith(name || '=', .array~of(value))
+
+::method addNewMethod
+   use strict arg name, src, makeUnguarded = .false, makePrivate = .false
+
+   self~setMethod(name, src, "OBJECT")
+
+   if makeUnguarded then self~instanceMethod(name)~setUnguarded
+   if makePrivate then self~instanceMethod(name)~setPrivate
 
 
 -- Methods to manipulate a ComboBox

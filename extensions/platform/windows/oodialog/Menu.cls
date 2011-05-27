@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -163,7 +163,7 @@
      menus.  It is the menu that appears when clicking on the icon in the upper
      left corner of a window.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-::class 'SystemMenu' public subclass Object inherit Menu ResourceUtils
+::class 'SystemMenu' public subclass Object inherit Menu
 
 ::constant WM_SYSCOMMAND     "0x0112"
 
@@ -197,7 +197,7 @@
      A menu bar menu created from a binary resource, or created as an empty
      menu.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-::class 'BinaryMenuBar' public subclass Object inherit MenuBar ResourceUtils
+::class 'BinaryMenuBar' public subclass Object inherit MenuBar
 
 ::method init external "LIBRARY oodialog binMenu_init"
 
@@ -206,7 +206,7 @@
      A popup menu.  (Popup menus are also called, at various times, submenus,
      drop down menus, or context menus.)
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-::class 'PopupMenu' public subclass Object inherit Menu ResourceUtils
+::class 'PopupMenu' public subclass Object inherit Menu
 
 ::method connectContextMenu class external "LIBRARY oodialog popMenu_connectContextMenu_cls"
 ::method init external "LIBRARY oodialog popMenu_init"
@@ -226,7 +226,7 @@
     memory.  This a private, internal use only, class.  The methods are doc-
     umented as part of the UserMenuBar, the class itself is not documented.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-::class 'MenuTemplate' private mixinclass ResourceUtils
+::class 'MenuTemplate' private mixinclass Object
 
 ::method addPopup external "LIBRARY oodialog menuTemplate_addPopup"
 ::method addItem external "LIBRARY oodialog menuTemplate_addItem"
@@ -251,6 +251,7 @@
 ::class 'ScriptMenuBar' public subclass Object inherit MenuBar MenuTemplate
 
 ::method init external "LIBRARY oodialog scriptMenu_init"
+::method resolveSymbolicID external "LIBRARY oodialog global_resolveSymbolicID"
 
 /** load() Parses a menu definition in a resource script file and loads it into
  *         memory (through a MenuTemplate.)  The MENU resource definition
@@ -313,7 +314,7 @@
 
      if noMenuID then found = 1
      else if menuid == -1, s~word(n-1)~translate == menuName then found = 1
-     else if menuid \== -1, self~resolveResourceID(s~word(n-1)) == menuid then found = 1
+     else if menuid \== -1, self~resolveSymbolicID(s~word(n-1)) == menuid then found = 1
      else n = 0
 
      if n \= 0, keyWord == "MENUEX" then isMenuEx = .true
@@ -405,6 +406,7 @@ syntax:
 
         when s~wordpos("MENUITEM") > 0 then do
            parse var s type '"'name'"'    "," id "," opt
+           id = id~strip
            if rcarray[i+1]~wordpos("END") > 0 | rcarray[i+1]~pos("}") > 0 then opt = opt || " END"
            if connect then
               self~addItem(id, name, opt, self~itemTextToMethodName(name))

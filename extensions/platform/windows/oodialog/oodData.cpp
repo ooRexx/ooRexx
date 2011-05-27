@@ -1124,17 +1124,23 @@ RexxArrayObject getDataTableIDs(RexxMethodContext *c, pCPlainBaseDialog pcpbd, R
  * subclasses) the data table entry is done for each createXXX() method when the
  * dialog control is added to the in-memory template.
  *
+ * @param c      Method context we are operating in.  This can be null under
+ *               some circumstances, but we just pass it along and let
+ *               addToDataTable() deal with it.  In most cases it is not null,
+ *               and if addToDataTable() does not return no error, an exceptions
+ *               has been raised.
+ *
  * @param pcpbd  Pointer to the CSelf struct of the ResDialog being created.
  *
- * @return A code indication success, or not.  The only failure here is an out
- *         of memory problem or the data table is full.
+ * @return A code indication success, or not.  The only possible failure here is
+ *         an out of memory problem.
  *
  * @remarks  This function is only called from the WindowLoopThread, which is
  *           creating a dialog from a resource DLL.  There is no valid method
  *           context.  If there is a failure in addToDataTable() we just pass
  *           the result code back and let the higher level handle it.
  */
-uint32_t doDataAutoDetection(pCPlainBaseDialog pcpbd)
+uint32_t doDataAutoDetection(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
 {
     uint32_t result = OOD_NO_ERROR;
 
@@ -1161,7 +1167,7 @@ uint32_t doDataAutoDetection(pCPlainBaseDialog pcpbd)
 
        if ( itemToAdd != winNotAControl )
        {
-           result = addToDataTable(NULL, pcpbd, GetWindowLong(current, GWL_ID), itemToAdd, 0);
+           result = addToDataTable(c, pcpbd, GetWindowLong(current, GWL_ID), itemToAdd, 0);
            if ( result != OOD_NO_ERROR )
            {
                break;

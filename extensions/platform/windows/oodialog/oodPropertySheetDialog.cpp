@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -155,66 +155,6 @@ void invalidPSNReturnListException(RexxThreadContext *c, CSTRING method, CSTRING
     psnCheckForCondition(c, pcpsd);
 }
 
-
-/**
- * Resolves a resource ID returned from an invocation of a Rexx method from a
- * dialog procdure. The resource ID may be numeric or symbolic.
- *
- * @param c          Thread context we are operating in.
- * @param oodObj     ooDialog object that has inherited .ResourceUtils.
- * @param id         Resource ID.
- *
- * @return The resolved numeric ID on success, OOD_MEMORY_ERR or
- *         OOD_ID_EXCEPTION on error.
- *
- * @remarks  Note that there is no exception raised in this version of
- *           oodResolveSymbolicID(), the caller must raise the exception.  Note
- *           also that 0 is considered okay, which may not always be the case.
- *           However, some of the current callers need 0 to be okay.
- *
- *           The caller must ensure that oodObj has inherited ResourceUtils, no
- *           check is done.
- *
- *           This is currently only used for PropertySheetDialogs, but could be
- *           made generic if needed for other dialogs.
- */
-uint32_t oodResolveSymbolicID(RexxThreadContext *c, RexxObjectPtr oodObj, RexxObjectPtr id)
-{
-    uint32_t result = OOD_ID_EXCEPTION;
-
-    char *symbol = NULL;
-
-    if ( ! c->ObjectToUnsignedInt32(id, &result) )
-    {
-        RexxDirectoryObject constDir = (RexxDirectoryObject)c->SendMessage0(oodObj, "CONSTDIR");
-        if ( constDir != NULLOBJECT )
-        {
-            /* The original ooDialog code uses:
-             *   self~ConstDir[id~space(0)~translate]
-             * Why they allowed a space in a symbolic ID, I don't understand.
-             * But, I guess we need to preserve that.
-             */
-
-            symbol = strdupupr_nospace(c->ObjectToStringValue(id));
-            if ( symbol == NULL )
-            {
-                result = OOD_MEMORY_ERR;
-                goto done_out;
-            }
-
-            RexxObjectPtr item = c->DirectoryAt(constDir, symbol);
-            if ( item != NULLOBJECT )
-            {
-                 c->ObjectToUnsignedInt32(item, &result);
-            }
-        }
-    }
-
-    safeFree(symbol);
-
-done_out:
-    return result;
-}
 
 RexxStringObject wm2string(RexxThreadContext *c, uint32_t wmMsg)
 {
@@ -481,7 +421,6 @@ PROPSHEETHOOKDATA *getPropSheetHookData(HWND hwnd)
  * be an Image object or a resource ID.
  *
  * @param c
- * @param pcpsd
  * @param image
  * @param argPos
  * @param isImage
@@ -506,11 +445,16 @@ INT_PTR getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr ima
     }
     else
     {
-        uint32_t id = oodResolveSymbolicID(c->threadContext, self, image);
+        int32_t id = oodResolveSymbolicID(c->threadContext, self, image, -1, argPos, true);
 
-        if ( id == OOD_ID_EXCEPTION || id == 0 )
+        if ( id == OOD_ID_EXCEPTION )
         {
-            wrongArgValueException(c->threadContext, 1, "a postive numeric ID, valid symbolic ID, or .Image object", image);
+            if ( ! isOutOfMemoryException(c->threadContext) )
+            {
+                // We want our own wording for the exception.
+                c->ClearCondition();
+                wrongArgValueException(c->threadContext, 1, "a postive numeric ID, valid symbolic ID, or .Image object", image);
+            }
         }
         else
         {
@@ -686,6 +630,12 @@ static void initializePropSheet(HWND hPropSheet)
  *
  * @param hPage
  * @param pcpsp
+ *
+ * @remarks  Note that we pass NULL into doDataAutoDetection() here because it
+ *           requires a method context rather than a thread context, which we
+ *           don't have.  However, the context is only used to raise an out of
+ *           memory exception, so we simply check for that condition and raise
+ *           the excepion here.
  */
 static void initializePropSheetPage(HWND hPage, pCPropertySheetPage pcpsp)
 {
@@ -708,7 +658,7 @@ static void initializePropSheetPage(HWND hPage, pCPropertySheetPage pcpsp)
 
         if ( pcpbd->autoDetect )
         {
-            if ( doDataAutoDetection(pcpbd) == OOD_MEMORY_ERR )
+            if ( doDataAutoDetection(NULL, pcpbd) == OOD_MEMORY_ERR )
             {
                 outOfMemoryException(c);
                 return;
@@ -834,67 +784,15 @@ void doSetActiveCommon(RexxThreadContext *c, pCPropertySheetPage pcpsp, HWND hPa
 
 
 /**
- * Common code to handle the return from the PSN_QUERYINITIALFOCUS or
- * PSN_WIZFINISH notification.
- *
- * Query initial focus allows the programmer to specify the dialog control on a
- * page that should get the focus.  Wiz finish allows the programmer to prevent
- * the wizard from finishing by specifying a dialog control on the page that
- * will then recieve the focus.  The code for implementing this is nearly
- * identical, even though the reason the the return is different.
- *
- * PSN_WIZFINISH also allows the programmer to return -1 to prevent the wizard
- * from finishing.  But, for this case there is no control over which window on
- * the page receives focus.  Accepting -1 for PSN_QUERYINITIALFOCUS is not
- * semantically correct, but the outcome is probaly acceptable.  It is unlikely
- * that any control on a page has a resource ID of 1, so the dialog control hwnd
- * will be null and focus will remain on the default.
- *
- * @param c
- * @param pcpsp
- * @param pcpsd
- * @param result
- * @param method
- */
-void pspSetFocus(RexxThreadContext *c, pCPropertySheetPage pcpsp, pCPropertySheetDialog pcpsd, RexxObjectPtr result,
-                 CSTRING method)
-{
-    HWND   hPage = pcpsp->hPage;
-    LPARAM reply = 0;
-
-    if ( goodReply(c, pcpsd, result, method) )
-    {
-        if ( isInt(-1, result, c) )
-        {
-            reply = TRUE;
-        }
-        else
-        {
-            uint32_t id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result);
-            if ( id == OOD_MEMORY_ERR )
-            {
-                psnMemoryErr(c, pcpsd);
-            }
-            else if ( id == OOD_ID_EXCEPTION )
-            {
-                invalidPSNReturnListException(c, method, "-1, 0, or a valid resource ID", result, pcpsd);
-            }
-            else if ( id != 0 )
-            {
-                reply = (LPARAM)GetDlgItem(hPage, id);
-            }
-        }
-    }
-    setWindowPtr(hPage, DWLP_MSGRESULT, reply);
-}
-
-
-/**
  * Handles the PSN_QUERYINITIALFOCUS notification.
  *
  * The Rexx programmer returns 0 to set the focus to the default control and
  * returns the dialog control resource ID to set that focus to that control.
  * The ID can be numeric or symbolic.
+ *
+ * The Windows return is 0 to set the focus to the default control and the
+ * handle of the dialog control to set the focuse to some control other than the
+ * default
  *
  * @param c
  * @param pcpsp
@@ -904,16 +802,40 @@ void pspSetFocus(RexxThreadContext *c, pCPropertySheetPage pcpsp, pCPropertyShee
  *           control that will receive the focus by default.  We use that to get
  *           the resource ID of that control and use that ID as the first
  *           argument sent to Rexx.
+ *
  */
 void doQueryInitialFocus(RexxThreadContext *c, pCPropertySheetPage pcpsp, LPARAM lParam)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
 
-    int id = GetDlgCtrlID((HWND)((LPPSHNOTIFY)lParam)->lParam);
+    int32_t id = GetDlgCtrlID((HWND)((LPPSHNOTIFY)lParam)->lParam);
 
     RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, QUERYINITIALFOCUS_MSG, c->Int32(id), pcpsd->rexxSelf);
 
-    pspSetFocus(c, pcpsp, pcpsd, result, QUERYINITIALFOCUS_MSG);
+    HWND   hPage = pcpsp->hPage;
+    LPARAM reply = 0;
+
+    if ( goodReply(c, pcpsd, result, QUERYINITIALFOCUS_MSG) )
+    {
+        // We need 0 to be okay, but not -1.
+        id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result, -1, 1, false);
+        if ( id == OOD_ID_EXCEPTION || id == -1 )
+        {
+            if ( isOutOfMemoryException(c) )
+            {
+                psnMemoryErr(c, pcpsd);
+            }
+            else
+            {
+                invalidPSNReturnListException(c, QUERYINITIALFOCUS_MSG, "0, or a valid resource ID", result, pcpsd);
+            }
+        }
+        else if ( id != 0 )
+        {
+            reply = (LPARAM)GetDlgItem(hPage, id);
+        }
+    }
+    setWindowPtr(hPage, DWLP_MSGRESULT, reply);
 }
 
 /**
@@ -942,7 +864,29 @@ void doWizFinish(RexxThreadContext *c, pCPropertySheetPage pcpsp)
 
     RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, WIZFINISH_MSG, pcpsd->rexxSelf);
 
-    pspSetFocus(c, pcpsp, pcpsd, result, WIZFINISH_MSG);
+    HWND   hPage = pcpsp->hPage;
+    LPARAM reply = 0;
+
+    if ( goodReply(c, pcpsd, result, WIZFINISH_MSG) )
+    {
+        int32_t id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result, -1, 1, false);
+        if ( id == OOD_ID_EXCEPTION )
+        {
+            if ( isOutOfMemoryException(c) )
+            {
+                psnMemoryErr(c, pcpsd);
+            }
+            else
+            {
+                invalidPSNReturnListException(c, WIZFINISH_MSG, "-1, 0, or a valid resource ID", result, pcpsd);
+            }
+        }
+        else if ( id != 0 )
+        {
+            reply = (LPARAM)GetDlgItem(hPage, id);
+        }
+    }
+    setWindowPtr(hPage, DWLP_MSGRESULT, reply);
 }
 
 
@@ -1314,7 +1258,6 @@ LRESULT CALLBACK RexxPropertySheetDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
         if ( isPSMsg(uMsg, lParam) )
         {
             return doPSMessage(pcpsp, pcpbd, uMsg, wParam, lParam);
-            return TRUE;
         }
 
         MsgReplyType searchReply = searchMessageTables(uMsg, wParam, lParam, pcpbd);
@@ -4001,6 +3944,8 @@ RexxMethod2(RexxObjectPtr, psp_getWantNotification, NAME, methName, CSELF, pCSel
     }
     return result;
 }
+
+
 RexxMethod3(RexxObjectPtr, psp_setWantNotification, logical_t, want, NAME, methName, CSELF, pCSelf)
 {
     pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
@@ -4028,7 +3973,7 @@ RexxMethod2(RexxObjectPtr, psp_setResources_atr, RexxObjectPtr, resourceImage, C
     if ( ri != NULL )
     {
         pcpsp->hInstance = ri->hMod;
-        context->SetObjectVariable("RESOURCES", resourceImage);
+        context->SetObjectVariable("RESOURCES", resourceImage); // TODO this won't work, did you test it? ;-)
     }
     return NULLOBJECT;
 }
@@ -4254,7 +4199,7 @@ RexxMethod9(RexxObjectPtr, rcpspdlg_init, RexxStringObject, scriptFile, RexxObje
 
     RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, newArgs);
 
-    if ( isInt(0, result, context->threadContext) )
+    if ( result == TheZeroObj )
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->GetCSelf();
         pCDynamicDialog pcdd = (pCDynamicDialog)context->ObjectToCSelf(self, TheDynamicDialogClass);
@@ -4344,22 +4289,13 @@ RexxMethod7(RexxObjectPtr, respspdlg_init, RexxStringObject, dllFile, RexxObject
 
     RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, newArgs);
 
-    if ( isInt(0, result, context->threadContext) )
+    if ( result == TheZeroObj )
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->GetCSelf();
 
-        uint32_t resID = oodResolveSymbolicID(context, self, resourceID, -1, 2);
+        int32_t resID = oodResolveSymbolicID(context->threadContext, self, resourceID, -1, 2, true);
         if ( resID == OOD_ID_EXCEPTION )
         {
-            result = TheOneObj;
-            pcpbd->wndBase->initCode = 1;
-            goto done_out;
-        }
-        if ( resID == 0 )
-        {
-            wrongArgValueException(context->threadContext, 2,
-                                   "a valid positive numeric resource ID or a valid symbolic ID", resourceID);
-
             result = TheOneObj;
             pcpbd->wndBase->initCode = 1;
             goto done_out;
@@ -4384,6 +4320,1128 @@ RexxMethod7(RexxObjectPtr, respspdlg_init, RexxStringObject, dllFile, RexxObject
 
 done_out:
     return result;
+}
+
+
+/**
+ *  Methods for the .TabOwnerDialog class.
+ */
+#define TABOWNERDIALOG_CLASS        "TabOwnerDialog"
+
+
+inline char *tcn2str(LPARAM lParam)
+{
+    switch ( ((NMHDR *)lParam)->code )
+    {
+        case TCN_FOCUSCHANGE :    return "TCN_FOCUSCHANGE";
+        case TCN_GETOBJECT :      return "TCN_GETOBJECT";
+        case TCN_KEYDOWN :        return "TCN_KEYDOWN";
+        case TCN_SELCHANGE :      return "TCN_SELCHANGE";
+        case TCN_SELCHANGING :    return "TCN_SELCHANGING";
+        case NM_CLICK :           return "NM_CLICK";
+        case NM_DBLCLK :          return "NM_DBLCLK";
+        case NM_RCLICK :          return "NM_RCLICK";
+        case NM_RDBLCLK :         return "NM_RDBLCLK";
+        case NM_RELEASEDCAPTURE : return "NM_RELEASEDCAPTURE";
+        default : return "Not a tab control notification";
     }
+}
+
+/**
+ * Filter for tab control notification messages.
+ *
+ * @param uMsg    The windowm message id.
+ * @param lParam  The LPARAM argument for the message.
+ *
+ * @return Return true if the message is a tab control notification message,
+ *         otherwise false.
+ */
+inline bool isTCNMsg(uint32_t uMsg, LPARAM lParam)
+{
+    if ( uMsg == WM_NOTIFY )
+    {
+        uint32_t code = ((NMHDR *)lParam)->code;
+        if ( code >= TCN_LAST && code <= TCN_FIRST )
+        {
+            return true;
+        }
+
+        UINT_PTR id = ((NMHDR *)lParam)->idFrom;
+        if ( id == 200 && (code == NM_CLICK || code == NM_DBLCLK || code == NM_RCLICK ||
+                           code == NM_RDBLCLK || code == NM_RELEASEDCAPTURE) )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Sets the owner dialog handle for the control dialogs managed by at tab owner
+ * dialog.
+ *
+ * The Rexx owner is set when the control dialogs are added to the tab owner,
+ * but at that time, the dialog handle is not known.  We set that here.
+ *
+ * @param pctod
+ */
+void setTabOwnerHandles(pCTabOwnerDialog pctod)
+{
+    HWND hOwner = pctod->hDlg;
+
+    for ( uint32_t i = 0; i < pctod->countMTs; i++ )
+    {
+        pCManagedTab pmt = pctod->mts[i];
+        for ( uint32_t j = 0; j < pmt->count; j++ )
+        {
+            pCPlainBaseDialog pcpbd = pmt->cppPages[j]->pcpbd;
+            pcpbd->hOwnerDlg = hOwner;
+        }
+    }
+}
+
+
+/**
+ * The dialog procedure function for TabOwnerDialog ooDialog dialogs.  Handles
+ * and processes all window messages for the dialog.
+ *
+ * @param hDlg
+ * @param uMsg
+ * @param wParam
+ * @param lParam
+ *
+ * @return LRESULT CALLBACK
+ *
+ * TODO rewrite comments.
+ *
+ * @remarks  The WM_INITDIALOG message.
+ *
+ *           In CreateDialogParam() / CreateDialogIndirectParam() we pass the
+ *           pointer to the PlainBaseDialog CSelf as the param.  The OS then
+ *           sends us this value as the LPARAM argument in the WM_INITDIALOG
+ *           message. The pointer is stored in the user data field of the window
+ *           words for this dialog.  We do the same thing for the child dialogs,
+ *           see the WM_USER_CREATECHILD message.
+ *
+ *           Note that when the child dialogs of the category dialog get
+ *           created, we recieve a WM_INITDIALOG for each of them.  These child
+ *           dialogs are all running on the same thread as the parent category
+ *           dialog.  We don't want to do a bunch of nested AttachThreads()
+ *           because we only do 1 DetachThread() for each window message loop.
+ *           So, we check to see if dlgProcContext is null before doing the
+ *           AttachThread().
+ *
+ *           The WM_USER_CREATECHILD message.
+ *
+ *           This user message's purpose is to create a child dialog of this
+ *           dialog and return its window handle. Child dialogs are only created
+ *           to implement the CategoryDialog and at this time are always created
+ *           dynamically (from an in-memory template.) The dialog template
+ *           pointer is passed here as the LPARAM arg from
+ *           DynamicDialog::startChildDialog().
+ *
+ *           These child dialogs do not have a backing Rexx dialog. There is no
+ *           unique CPlainBaseDialog struct for them.  Instead, at this time,
+ *           all interaction with the child dialogs is done through the
+ *           CPlainBaseDialog struct of the parent.  For each child dialog, we
+ *           set the CPlainBaseDialog struct of the parent in the window words
+ *           of the child dialog.  Prior to the conversion of ooDialog to the
+ *           C++ API, when a message came in for a child dialog, a search was
+ *           made through the DialogTable to try and find the parent dialog.
+ *           This has been disposed of and the CPlainBaseDialog struct is just
+ *           pulled out of the window words.
+ */
+LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if ( uMsg == WM_INITDIALOG )
+    {
+        pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)lParam;
+
+        if ( pcpbd == NULL )
+        {
+            // Theoretically impossible.  But ... if it should happen, abort.
+            return endDialogPremature(pcpbd, hDlg, NoPCPBDpased);
+        }
+        pCTabOwnerDialog pctod = (pCTabOwnerDialog)pcpbd->dlgPrivate;
+
+        printf("In WM_INITDIALOG for RexxTabOwnerDlgProc() pcpbd=%p pctod=%p\n", pcpbd, pctod);
+        printf("   Tab1 hwnd=%p Tab2 hwnd=%p\n", GetDlgItem(hDlg, 200), GetDlgItem(hDlg, 400));
+        if ( pcpbd->dlgProcContext == NULL )
+        {
+            RexxThreadContext *context;
+            if ( ! pcpbd->interpreter->AttachThread(&context) )
+            {
+                // Again, this shouldn't happen ... but
+                return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
+            }
+            pcpbd->dlgProcContext = context;
+
+            RexxSetProcessMessages(FALSE);
+
+            pctod->dlgProcContext = context;
+        }
+
+        pctod->hDlg = hDlg;
+        setTabOwnerHandles(pctod);
+
+        setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
+
+        return TRUE;
+    }
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(hDlg, GWLP_USERDATA);
+    if ( pcpbd == NULL )
+    {
+        // A number of messages arrive before WM_INITDIALOG, we just ignore them.
+        return FALSE;
+    }
+
+    if ( pcpbd->dlgProcContext == NULL )
+    {
+        if ( ! pcpbd->isActive )
+        {
+            return FALSE;
+        }
+
+        // Once again, theoretically impossible ...
+        return endDialogPremature(pcpbd, hDlg, NoThreadContext);
+    }
+
+    if ( uMsg == WM_DESTROY )
+    {
+        // Under all normal circumstances, WM_DESTROY never gets here.  But if
+        // it does, it is because of some unexplained / unanticpated error.
+        // PostQuitMessage() will cause the window message loop to quit and
+        // things should then (hopefully) unwind cleanly.
+        PostQuitMessage(3);
+        return TRUE;
+    }
+
+    bool msgEnabled = IsWindowEnabled(hDlg) ? true : false;
+
+    // Do not search message table for WM_PAINT to improve redraw.
+    if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
+    {
+        if ( isTCNMsg(uMsg, lParam) )
+        {
+            printf("RexxTabOwnerDlgProc() got TCN message: %s\n", tcn2str(lParam));
+        }
+
+        MsgReplyType searchReply = searchMessageTables(uMsg, wParam, lParam, pcpbd);
+        if ( searchReply != ContinueProcessing )
+        {
+            // Note pre 4.0.1, we always returned FALSE, (pass on to the system
+            // to process.) But, post 4.0.1 we sometimes reply TRUE, the message
+            // has been handled.
+            return (searchReply == ReplyTrue ? TRUE : FALSE);
+        }
+    }
+
+    switch ( uMsg )
+    {
+        case WM_PAINT:
+            if ( pcpbd->bkgBitmap != NULL )
+            {
+                drawBackgroundBmp(pcpbd, hDlg);
+            }
+            break;
+
+        case WM_DRAWITEM:
+            if ( lParam != 0 )
+            {
+                return drawBitmapButton(pcpbd, lParam, msgEnabled);
+            }
+            break;
+
+        case WM_CTLCOLORDLG:
+            if ( pcpbd->bkgBrush )
+            {
+                return(LRESULT)pcpbd->bkgBrush;
+            }
+            break;
+
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLORBTN:
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORMSGBOX:
+        case WM_CTLCOLORSCROLLBAR:
+        {
+            HBRUSH hbrush = NULL;
+
+            if ( pcpbd->CT_nextIndex > 0 )
+            {
+                // See of the user has set the dialog item with a different
+                // color.
+                long id = GetWindowLong((HWND)lParam, GWL_ID);
+                if ( id > 0 )
+                {
+                    register size_t i = 0;
+                    while ( i < pcpbd->CT_nextIndex && pcpbd->ColorTab[i].itemID != id )
+                    {
+                        i++;
+                    }
+                    if ( i < pcpbd->CT_nextIndex )
+                    {
+                        hbrush = pcpbd->ColorTab[i].ColorBrush;
+                    }
+
+                    if ( hbrush )
+                    {
+                        if ( pcpbd->ColorTab[i].isSysBrush )
+                        {
+                            SetBkColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorBk));
+                            if ( pcpbd->ColorTab[i].ColorFG != -1 )
+                            {
+                                SetTextColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorFG));
+                            }
+                        }
+                        else
+                        {
+                            SetBkColor((HDC)wParam, PALETTEINDEX(pcpbd->ColorTab[i].ColorBk));
+                            if ( pcpbd->ColorTab[i].ColorFG != -1 )
+                            {
+                                SetTextColor((HDC)wParam, PALETTEINDEX(pcpbd->ColorTab[i].ColorFG));
+                            }
+                        }
+                    }
+                }
+            }
+            if ( hbrush )
+                return(LRESULT)hbrush;
+            else
+                return DefWindowProc(hDlg, uMsg, wParam, lParam);
+        }
+
+        case WM_COMMAND:
+            switch ( LOWORD(wParam) )
+            {
+                case IDOK:
+                case IDCANCEL:
+
+                    // For both IDOK and IDCANCEL, the notification code
+                    // (the high word value) must be 0.
+                    if ( HIWORD(wParam) == 0 )
+                    {
+                        // We should never get here because both IDOK and
+                        // IDCANCEL should have be interecepted in
+                        // searchMessageTables().  But - sometimes we do, very
+                        // rarely.  It is on some abnormal error. See the
+                        // comments above for the WM_DESTROY message.
+                        pcpbd->abnormalHalt = true;
+                        DestroyWindow(hDlg);
+
+                        return TRUE;
+                    }
+            }
+            break;
+
+        case WM_QUERYNEWPALETTE:
+        case WM_PALETTECHANGED:
+            return paletteMessage(pcpbd, hDlg, uMsg, wParam, lParam);
+
+        case WM_USER_CREATECHILD:
+        {
+            HWND hChild = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)lParam, hDlg, (DLGPROC)RexxDlgProc,
+                                                    (LPARAM)pcpbd);
+            ReplyMessage((LRESULT)hChild);
+            return TRUE;
+        }
+
+        case WM_USER_CREATECONTROL_DLG:
+        {
+            pCPlainBaseDialog p = (pCPlainBaseDialog)wParam;
+            HWND hChild = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)lParam, p->hOwnerDlg, (DLGPROC)RexxChildDlgProc,
+                                                    wParam);
+            ReplyMessage((LRESULT)hChild);
+            return TRUE;
+        }
+
+        case WM_USER_CREATECONTROL_RESDLG:
+        {
+            pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)wParam;
+
+            HWND hChild = CreateDialogParam(pcpbd->hInstance, MAKEINTRESOURCE((uint32_t)lParam), pcpbd->hOwnerDlg,
+                                            (DLGPROC)RexxChildDlgProc, (LPARAM)pcpbd);
+
+            ReplyMessage((LRESULT)hChild);
+            return TRUE;
+        }
+
+        case WM_USER_CREATEPROPSHEET_DLG:
+        {
+            pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)lParam;
+
+            assignPSDThreadContext(pcpsd, pcpbd->dlgProcContext);
+
+            if ( setPropSheetHook(pcpsd) )
+            {
+                SetLastError(0);
+                INT_PTR ret = PropertySheet((PROPSHEETHEADER *)wParam);
+                ReplyMessage((LRESULT)ret);
+            }
+            else
+            {
+                ReplyMessage((LRESULT)-1);
+            }
+
+            return TRUE;
+        }
+
+        case WM_USER_INTERRUPTSCROLL:
+            pcpbd->stopScroll = wParam;
+            return TRUE;
+
+        case WM_USER_GETFOCUS:
+            ReplyMessage((LRESULT)GetFocus());
+            return TRUE;
+
+        case WM_USER_GETSETCAPTURE:
+            if ( wParam == 0 )
+            {
+                ReplyMessage((LRESULT)GetCapture());
+            }
+            else if ( wParam == 2 )
+            {
+                uint32_t rc = 0;
+                if ( ReleaseCapture() == 0 )
+                {
+                    rc = GetLastError();
+                }
+                ReplyMessage((LRESULT)rc);
+            }
+            else
+            {
+                ReplyMessage((LRESULT)SetCapture((HWND)lParam));
+            }
+            return TRUE;
+
+        case WM_USER_GETKEYSTATE:
+            ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
+            return TRUE;
+
+        case WM_USER_SUBCLASS:
+        {
+            SUBCLASSDATA *pData = (SUBCLASSDATA *)lParam;
+
+            pData->dlgProcContext = pcpbd->dlgProcContext;
+            pData->rexxDialog = pcpbd->rexxSelf;
+
+            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
+
+            ReplyMessage((LRESULT)success);
+            return TRUE;
+        }
+
+        case WM_USER_SUBCLASS_REMOVE:
+            ReplyMessage((LRESULT)RemoveWindowSubclass(GetDlgItem(hDlg, (int)lParam), (SUBCLASSPROC)wParam, (int)lParam));
+            return TRUE;
+
+        case WM_USER_HOOK:
+        {
+            SUBCLASSDATA *pData = (SUBCLASSDATA *)lParam;
+
+            pData->dlgProcContext = pcpbd->dlgProcContext;
+            pData->rexxDialog = pcpbd->rexxSelf;
+
+            ReplyMessage((LRESULT)SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)wParam, NULL, GetCurrentThreadId()));
+            return TRUE;
+        }
+
+        case WM_USER_CONTEXT_MENU:
+        {
+            PTRACKPOP ptp = (PTRACKPOP)wParam;
+            uint32_t cmd;
+
+            SetLastError(0);
+            cmd = (uint32_t)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
+                                             ptp->hWnd, ptp->lptpm);
+
+            // If TPM_RETURNCMD is specified, the return is the menu item
+            // selected.  Otherwise, the return is 0 for failure and
+            // non-zero for success.
+            if ( ! (ptp->flags & TPM_RETURNCMD) )
+            {
+                cmd = (cmd == 0 ? FALSE : TRUE);
+                if ( cmd == FALSE )
+                {
+                    ptp->dwErr = GetLastError();
+                }
+            }
+            ReplyMessage((LRESULT)cmd);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+static inline pCTabOwnerDialog validateTodCSelf(RexxMethodContext *c, void *pCSelf)
+{
+    pCTabOwnerDialog pctod = (pCTabOwnerDialog)pCSelf;
+    if ( pctod == NULL )
+    {
+        baseClassIntializationException(c);
+    }
+    return pctod;
+}
+
+static RexxObjectPtr findRexxPage(pCTabOwnerDialog pctod, int32_t id, uint32_t pageIndex)
+{
+    for ( uint32_t i = 0; i < pctod->countMTs; i++ )
+    {
+        if ( id == pctod->tabIDs[i] )
+        {
+            pCManagedTab pmt = pctod->mts[i];
+            if ( pageIndex < pmt->count )
+            {
+                return pmt->rexxPages[pageIndex];
+            }
+
+            // We found the right managed tab, no sense in looking any further.
+            break;
+        }
+    }
+    return NULLOBJECT;
+}
+
+/** TabOwnerDialog::init()  [private]
+ *
+ *  @param cpbd       Pointer to the PlainBaseDialog CSelf.
+ *  @param ownerData  Owner data.
+ */
+RexxMethod2(RexxObjectPtr, tod_tabOwnerDlgInit, POINTER, cpbd, OSELF, self)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)cpbd;
+
+
+    RexxBufferObject pcdBuffer = context->NewBuffer(sizeof(CTabOwnerDialog));
+    if ( pcdBuffer == NULLOBJECT )
+    {
+        return TheOneObj;
+    }
+    context->SetObjectVariable("CSELF", pcdBuffer);
+
+    pCTabOwnerDialog pctod = (pCTabOwnerDialog)context->BufferData(pcdBuffer);
+    memset(pctod, 0, sizeof(CTabOwnerDialog));
+
+    pcpbd->dlgPrivate = pctod;
+
+    pctod->pcpbd = pcpbd;
+    pctod->rexxSelf = self;
+
+    if ( pcpbd->initPrivate != NULL && pcpbd->initPrivate != TheNilObj )
+    {
+        RexxMethodContext *c = context;
+
+        pCTabOwnerDlgInfo pctodi = (pCTabOwnerDlgInfo)c->ObjectToCSelf((RexxObjectPtr)pcpbd->initPrivate);
+
+        printf("In TabOwnerDialog::init() PlainBaseDialog cSelf: %p initPrivate=%p pctodi=%p\n", pcpbd, pcpbd->initPrivate, pctodi);
+
+        RexxObjectPtr bag = rxNewBag(context);
+        context->SetObjectVariable("CONTROLDIALOGS_BAG", bag);
+
+        pctod->countMTs = pctodi->count;
+
+        for ( uint32_t i = 0; i < pctodi->count; i++)
+        {
+            pCManagedTab pmt = pctodi->mts[i];
+
+            pctod->tabIDs[i] = pmt->tabID;
+            pctod->mts[i] = pmt;
+
+            // For each control dialog, set ourself as the ownerDialog, and
+            // protect the Rexx control dialog from being garbage collected by
+            // storing it in the bag.
+
+            for ( uint32_t j = 0; j < pmt->count; j++)
+            {
+                pCPlainBaseDialog pcpbd = pmt->cppPages[j]->pcpbd;
+
+                pcpbd->rexxOwner = self;
+                pcpbd->isOwnedDlg = true;
+                // TODO pcpbd->isManaged = true;
+
+                c->SendMessage1(bag, "PUT", pmt->rexxPages[j]);
+            }
+            c->ReleaseGlobalReference(pmt->pages);
+            pmt->pages = NULLOBJECT;
+        }
+    }
+
+    return TheZeroObj;
+}
+
+/** TabOwnerDialog::getTabPage()
+ *
+ *
+ */
+RexxMethod3(RexxObjectPtr, tod_getTabPage, RexxObjectPtr, tabID, uint32_t, pageIndex, CSELF, pCSelf)
+{
+    RexxObjectPtr page = NULLOBJECT;
+
+    pCTabOwnerDialog pctod = validateTodCSelf(context, pCSelf);
+    if ( pctod == NULL )
+    {
+        goto done_out;
+    }
+
+    int32_t id = oodGlobalID(context->threadContext, tabID, 1, true);
+    if ( id == OOD_ID_EXCEPTION  )
+    {
+        goto done_out;
+    }
+
+    if ( pageIndex == 0 || pageIndex > MAXTABPAGES )
+    {
+        wrongRangeException(context->threadContext, 2, 1, MAXTABPAGES, pageIndex);
+        goto done_out;
+    }
+    pageIndex--;
+
+    page = findRexxPage(pctod, id, pageIndex);
+    if ( page == NULLOBJECT )
+    {
+        noSuchPageException(context, id, pageIndex);
+    }
+
+done_out:
+    return page;
+}
+
+
+/**
+ *  Methods for the .TabOwnerDlgInfo class.
+ */
+#define TABOWNERDLGINFO_CLASS        "TabOwnerDlgInfo"
+
+
+/** TabOwnerDlgInfo::init()
+ *
+ * use strict arg arrayOfMts, useResourceImage = .false
+ *
+ */
+RexxMethod3(RexxObjectPtr, todi_init, RexxArrayObject, mts, OPTIONAL_logical_t, useResourceImage, OSELF, self)
+{
+    uint32_t count = (uint32_t)context->ArrayItems(mts);
+    if ( count == 0 )
+    {
+        emptyArrayException(context->threadContext, 1);
+        goto done_out;
+    }
+    else if( count > MAXMANAGEDTABS )
+    {
+        arrayToLargeException(context->threadContext, count, MAXMANAGEDTABS, 1);
+        goto done_out;
+    }
+
+    RexxBufferObject obj = context->NewBuffer(sizeof(CTabOwnerDlgInfo));
+    if ( obj == NULLOBJECT )
+    {
+        goto done_out;
+    }
+    context->SetObjectVariable("CSELF", obj);
+
+    RexxMethodContext *c = context;
+
+    pCTabOwnerDlgInfo pctodi = (pCTabOwnerDlgInfo)context->BufferData(obj);
+    memset(pctodi, 0, sizeof(CTabOwnerDlgInfo));
+
+    printf("In TabOwnerDlgInfo init() pctodi=%p\n", pctodi);
+    pctodi->useResourceImage = useResourceImage ? true : false;
+    pctodi->count = count;
+
+    for ( uint32_t i = 1; i <= count; i++ )
+    {
+        RexxObjectPtr mTab = context->ArrayAt(mts, i);
+        if ( mTab == NULLOBJECT )
+        {
+            sparseArrayException(context->threadContext, 1, i);
+            goto done_out;
+        }
+        if ( ! context->IsOfType(mTab, "ManagedTab") )
+        {
+            wrongObjInArrayException(context->threadContext, 1, i, "a ManagedTab", mTab);
+            goto done_out;
+        }
+
+        RexxMethodContext *c = context;
+
+        pCManagedTab pcmt = (pCManagedTab)c->ObjectToCSelf(mTab);
+        pctodi->mts[i - 1] = pcmt;
+        pctodi->pages[1 - 1] = pcmt->pages;
+    }
+
+done_out:
+    return NULLOBJECT;
+}
+
+/**
+ *  Methods for the .ManagedTab class.
+ */
+#define ManagedTab_CLASS        "ManagedTab"
+
+
+/** ManagedTab::init()
+ *
+ * use strict arg tabID, pages, wantNotifications = .false
+ *
+ */
+RexxMethod4(RexxObjectPtr, mt_init, RexxObjectPtr, tabID, RexxArrayObject, pages, OPTIONAL_logical_t, wantNotifications, OSELF, self)
+{
+    printf("In ManagedTab init()\n");
+    RexxMethodContext *c = context;
+
+    uint32_t count = (uint32_t)context->ArrayItems(pages);
+    if ( count == 0 )
+    {
+        emptyArrayException(context->threadContext, 1);
+        goto done_out;
+    }
+    else if( count > MAXTABPAGES )
+    {
+        arrayToLargeException(context->threadContext, count, MAXTABPAGES, 1);
+        goto done_out;
+    }
+
+    RexxBufferObject obj = context->NewBuffer(sizeof(CManagedTab));
+    if ( obj == NULLOBJECT )
+    {
+        goto done_out;
+    }
+    context->SetObjectVariable("CSELF", obj);
+
+    pCManagedTab pcmt = (pCManagedTab)context->BufferData(obj);
+    memset(pcmt, 0, sizeof(CManagedTab));
+
+    int32_t id = oodGlobalID(context->threadContext, tabID, 1, true);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto done_out;
+    }
+
+    pcmt->wantNotifications = wantNotifications ? true : false;
+    pcmt->tabID = (uint32_t) id;
+
+    pcmt->count = count;
+
+    pCControlDialog *cppPages = (pCControlDialog *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(pCControlDialog *));
+    RexxObjectPtr *rexxPages = (RexxObjectPtr *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(RexxObjectPtr *));
+
+    if ( cppPages == NULL || rexxPages == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        goto done_out;
+    }
+
+    pCControlDialog *pPage = cppPages;
+    RexxObjectPtr *pRexxPage = rexxPages;
+    for ( uint32_t i = 1; i <= count; i++, pPage++, pRexxPage++ )
+    {
+        RexxObjectPtr dlg = context->ArrayAt(pages, i);
+        if ( dlg == NULLOBJECT )
+        {
+            sparseArrayException(context->threadContext, 1, i);
+            goto done_out;
+        }
+        if ( ! context->IsOfType(dlg, "CONTROLDIALOG") )
+        {
+            wrongObjInArrayException(context->threadContext, 1, i, "a ControlDlg", dlg);
+            goto done_out;
+        }
+
+        pCControlDialog pccd = dlgToCDCSelf(context, dlg);
+        pccd->pageNumber = i;
+
+        *pPage = pccd;
+        *pRexxPage = dlg;
+    }
+
+    pcmt->cppPages = cppPages;
+    pcmt->rexxPages = rexxPages;
+
+    // Prevent the Rexx pages object from being garbage collected. This then
+    // needs to be released when the TabOwner dialog retrieves them, or during
+    // delDialog.
+    c->RequestGlobalReference(pages);
+    pcmt->pages = pages;
+
+done_out:
+    return NULLOBJECT;
+}
+
+
+/**
+ *  Methods for the .ControlDlgInfo class.
+ */
+#define CONTROLDLGINFO_CLASS        "ControlDlgInfo"
+
+
+static bool setCdiTitle(RexxMethodContext *c, pCControlDialogInfo pccdi, CSTRING title)
+{
+    safeLocalFree(pccdi->title);
+
+    pccdi->title = (char *)LocalAlloc(LPTR, strlen(title) + 1);
+    if ( pccdi->title == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+
+    strcpy(pccdi->title, title);
+    return true;
+}
+
+static bool setCdiSize(RexxMethodContext *c, pCControlDialogInfo pccdi, RexxObjectPtr _size, bool exists, size_t argPos)
+{
+    if ( exists )
+    {
+        SIZE *s = rxGetSize(c, _size, argPos);
+        if ( s == NULL )
+        {
+            return false;
+        }
+        pccdi->size.cx = s->cx;
+        pccdi->size.cy = s->cy;
+    }
+    else
+    {
+        pccdi->size.cx = 200;
+        pccdi->size.cy = 150;
+    }
+    return true;
+}
+
+/** ControlDlgInfo::init()
+ *
+ * use strict arg owner = .nil,
+ *                title = "",
+ *                size = (.size~new(200, 150)),
+ *                wantNotifications = .false,
+ *                tabIcon = (-1),
+ *                resources = .nil,
+ *                managed = .false
+ *
+ */
+RexxMethod7(RexxObjectPtr, cdi_init, OPTIONAL_RexxObjectPtr, owner, OPTIONAL_CSTRING, title, OPTIONAL_RexxObjectPtr, _size,
+            OPTIONAL_RexxObjectPtr, tabIcon, OPTIONAL_RexxObjectPtr, resources,
+            OPTIONAL_logical_t, managed, OSELF, self)
+{
+    RexxBufferObject obj = context->NewBuffer(sizeof(CControlDialogInfo));
+    if ( obj == NULLOBJECT )
+    {
+        goto done_out;
+    }
+    context->SetObjectVariable("CSELF", obj);
+
+    RexxMethodContext *c = context;
+
+    pCControlDialogInfo pccdi = (pCControlDialogInfo)context->BufferData(obj);
+    memset(pccdi, 0, sizeof(CControlDialogInfo));
+
+    pccdi->managed = managed ? true : false;
+
+    if ( argumentExists(1) )
+    {
+        if ( ! c->IsOfType(owner, "PLAINBASEDIALOG") )
+        {
+            wrongClassException(c->threadContext, 1, "PlainBaseDialog");
+            goto done_out;
+        }
+        pccdi->owner = owner;
+    }
+
+    if ( argumentExists(2) )
+    {
+        if ( ! setCdiTitle(context, pccdi, title) )
+        {
+            goto done_out;
+        }
+    }
+
+    if ( ! setCdiSize(context, pccdi, _size, argumentExists(3), 3) )
+    {
+        goto  done_out;
+    }
+
+
+
+done_out:
+    return NULLOBJECT;
+}
+
+/** ControlDlgInfo::title()       [Attribute set]
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, cdi_set_title, CSTRING, title, CSELF, pCSelf)
+{
+    pCControlDialogInfo pccdi = (pCControlDialogInfo)pCSelf;
+    setCdiTitle(context, pccdi, title);
+    return NULLOBJECT;
+}
+
+
+/** ControlDlgInfo::setSize()
+ *
+ *  Allows the size attribute of a control dialog info object to be reset after
+ *  the object is instantiated.
+ *
+ *  @param size  [optional]  The new size value for this object.  If omitted,
+ *               the size is reset to the default 200 x 150.
+ */
+RexxMethod2(RexxObjectPtr, cdi_setSize, OPTIONAL_RexxObjectPtr, _size, CSELF, pCSelf)
+{
+    pCControlDialogInfo pccdi = (pCControlDialogInfo)pCSelf;
+    setCdiSize(context, pccdi, _size, argumentExists(1), 1);
+    return NULLOBJECT;
+}
+
+
+
+/**
+ *  Methods for the .ControlDialog class.
+ */
+#define CONTROLDIALOG_CLASS        "ControlDialog"
+
+static inline pCControlDialog validateCdCSelf(RexxMethodContext *c, void *pCSelf)
+{
+    pCControlDialog pccd = (pCControlDialog)pCSelf;
+    if ( pccd == NULL )
+    {
+        baseClassIntializationException(c);
+    }
+    return pccd;
+}
+
+
+/** ControlDialog::init()  [Class method]
+ *
+ *  Used to capture the ControlDialog class object.  This is used for scoped
+ *  look ups of the CSelf.
+ */
+RexxMethod1(RexxObjectPtr, cd_init_cls, OSELF, self)
+{
+    if ( isOfClassType(context, self, CONTROLDIALOG_CLASS) )
+    {
+        TheControlDialogClass = (RexxClassObject)self;
+    }
+    return NULLOBJECT;
+}
+
+
+/** ControlDialog::controlDlgInit()  [private]
+ *
+ *  @param cpbd       Pointer to the PlainBaseDialog CSelf.
+ *  @param ownerData  Owner data.
+ */
+RexxMethod2(RexxObjectPtr, cd_controlDlgInit, POINTER, cpbd, OSELF, self)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)cpbd;
+
+    RexxBufferObject pcdBuffer = context->NewBuffer(sizeof(CControlDialog));
+    if ( pcdBuffer == NULLOBJECT )
+    {
+        return TheOneObj;
+    }
+    context->SetObjectVariable("CSELF", pcdBuffer);
+
+    pCControlDialog pccd = (pCControlDialog)context->BufferData(pcdBuffer);
+    memset(pccd, 0, sizeof(CControlDialog));
+
+    pccd->pcpbd = pcpbd;
+    pccd->rexxSelf = self;
+    pccd->isInitializing = true;
+    pccd->pcpbd->dlgPrivate = pccd;
+
+    if ( context->IsOfType(self, "USERCONTROLDIALOG") )
+    {
+        pccd->pageType = oodUserControlDialog;
+    }
+    else if( context->IsOfType(self, "RCCONTROLDIALOG") )
+    {
+        pccd->pageType = oodRcControlDialog;
+    }
+    else
+    {
+        pccd->pageType = oodResControlDialog;
+    }
+
+    if ( pcpbd->initPrivate != NULL && pcpbd->initPrivate != TheNilObj )
+    {
+        pCControlDialogInfo pccdi = (pCControlDialogInfo)context->ObjectToCSelf((RexxObjectPtr)pcpbd->initPrivate);
+
+        pccd->isManaged = pccdi->managed;
+
+        if ( pccdi->title != NULL )
+        {
+            pccd->pageTitle = pccdi->title;
+            pccdi->title = NULL;
+        }
+
+        pccd->size.cx = pccdi->size.cx;
+        pccd->size.cy = pccdi->size.cy;
+    }
+
+
+    return TheZeroObj;
+}
+
+/** ControlDialog::isManaged()    [Attribute get]
+ */
+RexxMethod1(RexxObjectPtr, cd_get_isManaged, CSELF, pCSelf)
+{
+    pCControlDialog pccd = validateCdCSelf(context, pCSelf);
+    if ( pccd != NULL )
+    {
+        return pccd->isManaged ? TheTrueObj : TheFalseObj;
+    }
+    return NULLOBJECT;
+}
+
+/** ControlDialog::wasActivated()    [Attribute get]
+ */
+RexxMethod1(RexxObjectPtr, cd_get_wasActivated, CSELF, pCSelf)
+{
+    pCControlDialog pccd = validateCdCSelf(context, pCSelf);
+    if ( pccd != NULL )
+    {
+        return pccd->activated ? TheTrueObj : TheFalseObj;
+    }
+    return NULLOBJECT;
+}
+
+/** ControlDialog::initializing()    [Attribute get]
+ */
+RexxMethod1(RexxObjectPtr, cd_get_initializing, CSELF, pCSelf)
+{
+    pCControlDialog pccd = validateCdCSelf(context, pCSelf);
+    if ( pccd != NULL )
+    {
+        return pccd->isInitializing ? TheTrueObj : TheFalseObj;
+    }
+    return NULLOBJECT;
+}
+
+/** ControlDialog::initializing()    [Attribute set]
+ */
+RexxMethod2(RexxObjectPtr, cd_set_initializing, logical_t, initializing, CSELF, pCSelf)
+{
+    pCControlDialog pccd = validateCdCSelf(context, pCSelf);
+    if ( pccd != NULL )
+    {
+        pccd->isInitializing = initializing ? true : false;
+    }
+    return NULLOBJECT;
+}
+
+/** ControlDialog::pageTitle()       [Attribute get]
+ */
+RexxMethod1(RexxObjectPtr, cd_get_pageTitle, CSELF, pCSelf)
+{
+    pCControlDialog pccd = validateCdCSelf(context, pCSelf);
+    if ( pccd != NULL )
+    {
+        return pccd->pageTitle == NULL ? TheNilObj : context->String(pccd->pageTitle);
+    }
+    return NULLOBJECT;
+}
+
+
+/** ControlDialog::pageTitle()       [Attribute set]
+ */
+RexxMethod2(RexxObjectPtr, cd_set_pageTitle, CSTRING, text, CSELF, pCSelf)
+{
+    pCControlDialog pccd = validateCdCSelf(context, pCSelf);
+    if ( pccd != NULL )
+    {
+        goto out;
+    }
+
+    char *t = (char *)LocalAlloc(LPTR, strlen(text) + 1);
+    if ( t == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        goto out;
+    }
+
+    strcpy(t, text);
+
+    safeLocalFree(pccd->pageTitle);
+    pccd->pageTitle = t;
+
+out:
+    return TheZeroObj;
+}
+
+
+/**
+ *  Methods for the .ResControlDialog class.
+ */
+#define RESControlDialog_CLASS        "ResControlDialog"
+
+/** ResControlDialog::startDialog()
+ *
+ *  This method over-rides the superclass (ResDialog) startDialog().
+ *
+ *  We only need library and id, the owner dialog we pull from the CSelf
+ *  struct.
+ */
+RexxMethod3(RexxObjectPtr, resCtrlDlg_startDialog_pvt, CSTRING, library, RexxObjectPtr, _dlgID, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd == NULL )
+    {
+        goto err_out;
+    }
+
+    if ( ! validControlDlg(context, pcpbd) )
+    {
+        goto err_out;
+    }
+
+    int32_t dlgID = oodResolveSymbolicID(context->threadContext, pcpbd->rexxSelf, _dlgID, -1, 2, true);
+    if ( dlgID == OOD_ID_EXCEPTION )
+    {
+        goto err_out;
+    }
+    if ( dlgID == 0 )
+    {
+        wrongArgValueException(context->threadContext, 2, "a valid numeric resource ID or a valid symbolic ID", _dlgID);
+        goto err_out;
+    }
+
+    if ( !loadResourceDLL(pcpbd, library) )
+    {
+        goto err_out;
+    }
+
+    HWND hChild = (HWND)SendMessage(pcpbd->hOwnerDlg, WM_USER_CREATECONTROL_RESDLG, (WPARAM)pcpbd, (LPARAM)dlgID);
+    if ( hChild )
+    {
+        pcpbd->hDlg = hChild;
+        pcpbd->isActive = true;
+        ((pCControlDialog)pcpbd->dlgPrivate)->activated = true;
+        pcpbd->childDlg[0] = hChild;
+
+        setDlgHandle(context->threadContext, pcpbd);
+        setFontAttrib(context->threadContext, pcpbd);
+
+        if ( pcpbd->autoDetect )
+        {
+            if ( doDataAutoDetection(context, pcpbd) != OOD_NO_ERROR )
+            {
+                goto err_out;
+            }
+        }
+
+        return TheTrueObj;
+    }
+
+err_out:
+    return TheFalseObj;
+}
+
 
 

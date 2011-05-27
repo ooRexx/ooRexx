@@ -2532,8 +2532,8 @@ HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObje
     HWND hCtrl = NULL;
     oodResetSysErrCode(c->threadContext);
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1, true) )
     {
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
     }
@@ -2671,6 +2671,99 @@ RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd)
     return pointer2string(c, hwndPrevious);
 }
 
+/**
+ * Convenience function, called from PlainBaseDialog::init().
+ *
+ * @param c
+ * @param self
+ * @param pcpbd
+ * @param ownerData
+ *
+ * @return bool
+ */
+static bool checkDlgType(RexxMethodContext *c, RexxObjectPtr self, pCPlainBaseDialog pcpbd, RexxObjectPtr ownerData)
+{
+    bool arg5Exists = (c->arguments[5].flags & ARGUMENT_EXISTS) != 0;
+
+    if ( c->IsOfType(self, "CATEGORYDIALOG") )
+    {
+        pcpbd->isCategoryDlg = true;
+    }
+    else if ( c->IsOfType(self, "CONTROLDIALOG") )
+    {
+        if ( arg5Exists )
+        {
+            if ( c->IsOfType(ownerData, "PLAINBASEDIALOG") )
+            {
+                pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(c, ownerData, oodPlainBaseDialog, 5);
+                if ( ownerPcpbd == NULL )
+                {
+                    goto err_out;
+                }
+
+                pcpbd->isOwnedDlg = true;
+                pcpbd->rexxOwner = ownerData;
+                pcpbd->hOwnerDlg = ownerPcpbd->hDlg;
+                pcpbd->initPrivate = TheNilObj;
+            }
+            else if( c->IsOfType(ownerData, "CONTROLDLGINFO") )
+            {
+                pcpbd->initPrivate = ownerData;
+
+                pCControlDialogInfo pccid = (pCControlDialogInfo)c->ObjectToCSelf(ownerData);
+
+                // For a control dialog used with a tab owner dialog, it is not
+                // likely that the owner will be set yet.
+                if ( pccid->owner != NULLOBJECT )
+                {
+                    pCPlainBaseDialog ownerPcpbd = dlgToCSelf(c, pccid->owner);
+
+                    pcpbd->isOwnedDlg = true;
+                    pcpbd->rexxOwner = pccid->owner;
+                    pcpbd->hOwnerDlg = ownerPcpbd->hDlg;
+                }
+            }
+            else
+            {
+                wrongArgValueException(c->threadContext, 5, "a PlainBaseDialog or a ControlDialogInfo object", ownerData);
+                goto err_out;
+            }
+        }
+
+        pcpbd->isControlDlg = true;
+    }
+    else if ( c->IsOfType(self, "TABOWNERDIALOG") )
+    {
+        if ( arg5Exists )
+        {
+            if ( ! c->IsOfType(ownerData, "TABOWNERDLGINFO") )
+            {
+                wrongClassException(c->threadContext, 5, "TabOwnerDlgInfo");
+                goto err_out;
+            }
+            pcpbd->initPrivate = ownerData;
+        }
+        else
+        {
+            pcpbd->initPrivate = TheNilObj;
+        }
+        pcpbd->isTabOwnerDlg = true;
+    }
+    else if ( c->IsOfType(self, "PROPERTYSHEETDIALOG") )
+    {
+        pcpbd->isPropSheetDlg = true;
+    }
+    else if ( c->IsOfType(self, "PROPERTYSHEETPAGE") )
+    {
+        pcpbd->isPageDlg = true;
+    }
+
+    return true;
+
+err_out:
+    return false;
+}
+
 RexxMethod1(RexxObjectPtr, pbdlg_init_cls, OSELF, self)
 {
     if ( isOfClassType(context, self, PLAINBASEDIALOG_CLASS) )
@@ -2765,11 +2858,17 @@ done_out:
     return dlgObj;
 }
 
-
 /** PlainBaseDialog::init()
  *
  *  The initialization of the base dialog.
  *
+ *  @params  library      DLL or .rc file for ResDialog or RcDialog dialogs.
+ *  @params  resource     Resource ID for ResDialog or RcDialog dialogs.
+ *  @params  dlgDataStem  Data stem.
+ *  @params  hFile        Header file.
+ *  @params  ownerData    Owner data can be either a Rexx owner dialog if this
+ *                        is a ControlDialog, or a .directory object with
+ *                        initialization data if this is a TabOwnerDialog.
  *
  *  @remarks  Prior to 4.0.1, if something failed here, the 'init code' was set
  *            to non-zero.  One problem with this is that it relies on the user
@@ -2791,11 +2890,12 @@ done_out:
  *            number of active dialogs has been reached.  (See
  *            PlainBaseDialog::new().)
  */
-RexxMethod5(wholenumber_t, pbdlg_init, CSTRING, library, RexxObjectPtr, resource,
-            OPTIONAL_RexxObjectPtr, dlgDataStem, OPTIONAL_RexxObjectPtr, hFile, OSELF, self)
+RexxMethod6(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource,
+            OPTIONAL_RexxObjectPtr, dlgDataStem, OPTIONAL_RexxObjectPtr, hFile,
+            OPTIONAL_RexxObjectPtr, ownerData, OSELF, self)
 {
     // This is an error return, but see remarks.
-    wholenumber_t result = 1;
+    RexxObjectPtr result = TheOneObj;
 
     // Before processing the arguments, do everything that might raise an error
     // condition.
@@ -2806,6 +2906,7 @@ RexxMethod5(wholenumber_t, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     {
         goto terminate_out;
     }
+    context->SetObjectVariable("CSELF", cselfBuffer);
 
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->BufferData(cselfBuffer);
     memset(pcpbd, 0, sizeof(CPlainBaseDialog));
@@ -2841,30 +2942,14 @@ RexxMethod5(wholenumber_t, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     strcpy(pcpbd->library, library);
     pcpbd->resourceID = resource;
 
-    if ( context->IsOfType(self, "CONTROLDIALOG") )
+    if ( ! checkDlgType(context, self, pcpbd, ownerData) )
     {
-        pcpbd->isControlDlg = true;
-        pcpbd->isInitializing = true;
-    }
-    else if ( context->IsOfType(self, "CATEGORYDIALOG") )
-    {
-        pcpbd->isCategoryDlg = true;
-    }
-    else if ( context->IsOfType(self, "PROPERTYSHEETDIALOG") )
-    {
-        pcpbd->isPropSheetDlg = true;
-    }
-    else if ( context->IsOfType(self, "PROPERTYSHEETPAGE") )
-    {
-        pcpbd->isPageDlg = true;
+        goto terminate_out;
     }
 
-    pcpbd->interpreter  = context->threadContext->instance;
-    pcpbd->dlgAllocated = true;
-    pcpbd->autoDetect   = (pcpbd->isPropSheetDlg ? FALSE : TRUE);
-    pcpbd->rexxSelf     = self;
-
-    context->SetObjectVariable("CSELF", cselfBuffer);
+    pcpbd->interpreter = context->threadContext->instance;
+    pcpbd->autoDetect  = (pcpbd->isPropSheetDlg ? FALSE : TRUE);
+    pcpbd->rexxSelf    = self;
 
     // Set our default font to the PlainBaseDialog class default font.
     pCPlainBaseDialogClass pcpbdc = dlgToClassCSelf(context);
@@ -2880,9 +2965,10 @@ RexxMethod5(wholenumber_t, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
         CountDialogs++;
         DialogTable[pcpbd->tableIndex] = pcpbd;
     }
+    pcpbd->dlgAllocated = true;
 
     // Now process the arguments and do the rest of the initialization.
-    result = 0;
+    result = TheZeroObj;
 
     if ( argumentExists(3) )
     {
@@ -2906,37 +2992,20 @@ RexxMethod5(wholenumber_t, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     context->SendMessage1(self, "MENUBAR=", TheNilObj);
     context->SendMessage1(self, "ISLINKED=", TheFalseObj);
 
-    RexxDirectoryObject constDir = context->NewDirectory();
-    context->SendMessage1(self, "CONSTDIR=", constDir);                     // self~constDir = .directory~new
-
-    context->DirectoryPut(constDir, context->Int32(IDC_STATIC),       "IDC_STATIC");       // -1
-    context->DirectoryPut(constDir, context->Int32(IDOK      ),       "IDOK");             // 1
-    context->DirectoryPut(constDir, context->Int32(IDCANCEL  ),       "IDCANCEL");         // 2
-    context->DirectoryPut(constDir, context->Int32(IDABORT   ),       "IDABORT");          //  ...
-    context->DirectoryPut(constDir, context->Int32(IDRETRY   ),       "IDRETRY");
-    context->DirectoryPut(constDir, context->Int32(IDIGNORE  ),       "IDIGNORE");
-    context->DirectoryPut(constDir, context->Int32(IDYES     ),       "IDYES");
-    context->DirectoryPut(constDir, context->Int32(IDNO      ),       "IDNO");
-    context->DirectoryPut(constDir, context->Int32(IDCLOSE   ),       "IDCLOSE");
-    context->DirectoryPut(constDir, context->Int32(IDHELP    ),       "IDHELP");           // 9
-    context->DirectoryPut(constDir, context->Int32(IDTRYAGAIN),       "IDTRYAGAIN");       // 10
-    context->DirectoryPut(constDir, context->Int32(IDCONTINUE),       "IDCONTINUE");       // 11
-    context->DirectoryPut(constDir, context->Int32(IDI_DLG_OODIALOG), "IDI_DLG_OODIALOG"); // This is 12
-    context->DirectoryPut(constDir, context->Int32(IDI_DLG_APPICON),  "IDI_DLG_APPICON");
-    context->DirectoryPut(constDir, context->Int32(IDI_DLG_APPICON2), "IDI_DLG_APPICON2");
-    context->DirectoryPut(constDir, context->Int32(IDI_DLG_OOREXX),   "IDI_DLG_OOREXX");
-    context->DirectoryPut(constDir, context->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
+    if ( TheConstDirUsage == globalOnly )
+    {
+        context->SendMessage1(self, "CONSTDIR=", TheConstDir);              // self~constDir = .constDir (global)
+    }
+    else
+    {
+        RexxDirectoryObject constDir = context->NewDirectory();
+        context->SendMessage1(self, "CONSTDIR=", constDir);                 // self~constDir = .directory~new
+        putDefaultSymbols(context, constDir);
+    }
 
     if ( argumentExists(4) )
     {
         context->SendMessage1(self, "PARSEINCLUDEFILE", hFile);
-    }
-
-    if ( context->IsOfType(self, "OwnerDialog") )
-    {
-        RexxClassObject ownerClass = rxGetContextClass(context, "OWNERDIALOG");
-        RexxArrayObject args = context->ArrayOfOne(cselfBuffer);
-        context->ForwardMessage(NULL, NULL, ownerClass, args);
     }
 
     goto done_out;
@@ -2946,7 +3015,7 @@ terminate_out:
     return result;
 
 done_out:
-    pWB->initCode = result;
+    pWB->initCode = (result == TheZeroObj ? 0 : 1);
     return result;
 }
 
@@ -2970,8 +3039,10 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
 
         LeaveCriticalSection(&crit_sec);
 
+        // If we are terminating the interpreter from PlainBaseDialog::init on
+        // an error condition, it possible for pcwb to be NULL.
         pCWindowBase pcwb = pcpbd->wndBase;
-        if ( pcwb->rexxHwnd != TheZeroObj )
+        if ( pcwb != NULL && pcwb->rexxHwnd != TheZeroObj )
         {
             context->ReleaseGlobalReference(pcwb->rexxHwnd);
             pcwb->rexxHwnd = TheZeroObj;
@@ -4331,8 +4402,8 @@ RexxMethod3(RexxObjectPtr, pbdlg_getControlHandle, RexxObjectPtr, rxID, OPTIONAL
     oodResetSysErrCode(context->threadContext);
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1, true) )
     {
         oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
         return TheZeroObj;
@@ -4419,8 +4490,8 @@ RexxMethod4(RexxObjectPtr, pbdlg_setTabGroup, RexxObjectPtr, rxID, OPTIONAL_logi
         return TheFalseObj;
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1, true) )
     {
         return TheNegativeOneObj;
     }
@@ -4570,8 +4641,8 @@ RexxMethod3(RexxObjectPtr, pbdlg_getControlData, RexxObjectPtr, rxID, NAME, msgN
         return TheNegativeOneObj;
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1, true) )
     {
         return TheNegativeOneObj;
     }
@@ -4618,8 +4689,8 @@ RexxMethod4(int32_t, pbdlg_setControlData, RexxObjectPtr, rxID, CSTRING, data, N
         return -1;
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1, true) )
     {
         return -1;
     }
@@ -4736,8 +4807,8 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
         }
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1, true) )
     {
         goto out;
     }

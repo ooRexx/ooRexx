@@ -53,8 +53,6 @@
 #include "oodData.hpp"
 #include "oodPropertySheetDialog.hpp"
 
-static LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 /**
  * The dialog procedure function for all regular ooDialog dialogs.  Handles and
  * processes all window messages for the dialog.
@@ -2183,7 +2181,42 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
             {
                 handle = (HANDLE)lParam;
             }
-            else if( msg == WM_SIZING )
+            else if ( msg == WM_ACTIVATE)
+            {
+                RexxObjectPtr isMinimized = HIWORD(wParam) ? TheTrueObj : TheFalseObj;
+
+                RexxStringObject flag = c->NullString();
+                switch ( LOWORD(wParam) )
+                {
+                    case WA_ACTIVE :
+                        flag = c->String("ACTIVE");
+                        break;
+                    case WA_CLICKACTIVE :
+                        flag = c->String("CLICKACTIVE");
+                        break;
+                    case WA_INACTIVE :
+                        flag = c->String("INACTIVE");
+                        break;
+                }
+
+                RexxStringObject hwnd = pointer2string(c, (void *)lParam);
+                RexxStringObject hFocus = pointer2string(c, (void *)GetFocus());
+
+                MsgReplyType reply = ReplyFalse;
+                RexxArrayObject args = c->ArrayOfFour(flag, hwnd, hFocus, isMinimized);
+
+                RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+
+                if ( ! checkForCondition(c, false) )
+                {
+                    if ( msgReply == TheTrueObj )
+                    {
+                        reply = ReplyTrue;
+                    }
+                }
+                return reply;
+            }
+            else if ( msg == WM_SIZING )
             {
                 /* Args to ooRexx: The sizing RECT, WMSZ_xx keyword.
                  */
@@ -3657,8 +3690,8 @@ RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID, CSTRING, meth
 {
     pCEventNotification pcen = (pCEventNotification)pCSelf;
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
     {
         return -1;
     }
@@ -3761,8 +3794,8 @@ RexxMethod5(RexxObjectPtr, en_connectScrollBarEvent, RexxObjectPtr, rxID, CSTRIN
         return noWindowsDialogException(context, pcen->rexxSelf);
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
     {
         return TheNegativeOneObj;
     }
@@ -3843,8 +3876,8 @@ RexxMethod10(RexxObjectPtr, en_connectEachSBEvent, RexxObjectPtr, rxID, CSTRING,
         return noWindowsDialogException(context, pcen->rexxSelf);
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
     {
         return TheNegativeOneObj;
     }
@@ -4081,8 +4114,8 @@ RexxMethod7(RexxObjectPtr, en_connectAllSBEvents, RexxObjectPtr, rxID, CSTRING, 
         return noWindowsDialogException(context, pcen->rexxSelf);
     }
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
     {
         return TheNegativeOneObj;
     }
@@ -4239,8 +4272,8 @@ RexxMethod5(RexxObjectPtr, en_connectListViewEvent, RexxObjectPtr, rxID, CSTRING
 {
     pCEventNotification pcen = (pCEventNotification)pCSelf;
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
     {
         return TheNegativeOneObj;
     }
@@ -4327,7 +4360,7 @@ RexxMethod4(RexxObjectPtr, en_connectUpDownEvent, RexxObjectPtr, rxID, CSTRING, 
 {
     pCEventNotification pcen = (pCEventNotification)pCSelf;
 
-    uint32_t id = oodResolveSymbolicID(context, pcen->rexxSelf, rxID, -1, 1);
+    int32_t id = oodResolveSymbolicID(context->threadContext, pcen->rexxSelf, rxID, -1, 1, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto err_out;
@@ -4408,7 +4441,7 @@ RexxMethod5(RexxObjectPtr, en_connectDateTimePickerEvent, RexxObjectPtr, rxID, C
 {
     pCEventNotification pcen = (pCEventNotification)pCSelf;
 
-    uint32_t id = oodResolveSymbolicID(context, pcen->rexxSelf, rxID, -1, 1);
+    int32_t id = oodResolveSymbolicID(context->threadContext, pcen->rexxSelf, rxID, -1, 1, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto err_out;
@@ -4494,7 +4527,7 @@ RexxMethod5(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
 {
     pCEventNotification pcen = (pCEventNotification)pCSelf;
 
-    uint32_t id = oodResolveSymbolicID(context, pcen->rexxSelf, rxID, -1, 1);
+    int32_t id = oodResolveSymbolicID(context->threadContext, pcen->rexxSelf, rxID, -1, 1, true);
     if ( id == OOD_ID_EXCEPTION )
     {
         goto err_out;

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2010-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2010-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -39,6 +39,6 @@
 #define IDC_STATIC (-1)
 #endif
 
-#define IDC_TAB                                 1000
-#define IDC_PB_PREVIOUS                         1001
-#define IDC_PB_NEXT                             1002
+#define IDC_TAB                                 200
+#define IDC_PB_PREVIOUS                         201
+#define IDC_PB_NEXT                             202

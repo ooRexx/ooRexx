@@ -45,6 +45,6 @@ extern RexxObjectPtr   getControlData(RexxMethodContext *, pCPlainBaseDialog, ui
 extern int32_t         setControlData(RexxMethodContext *, pCPlainBaseDialog, uint32_t, CSTRING, HWND, oodControl_t);
 extern uint32_t        addToDataTable(RexxMethodContext *, pCPlainBaseDialog, int, oodControl_t, uint32_t);
 extern RexxArrayObject getDataTableIDs(RexxMethodContext *, pCPlainBaseDialog, RexxObjectPtr);
-extern uint32_t        doDataAutoDetection(pCPlainBaseDialog);
+extern uint32_t        doDataAutoDetection(RexxMethodContext *c, pCPlainBaseDialog);
 
 #endif
