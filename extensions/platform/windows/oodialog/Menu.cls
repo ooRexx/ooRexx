@@ -381,40 +381,40 @@ syntax:
      s = rcarray[i]
 
      select
-        when s~wordpos("POPUP") > 0 then do
+        when s~wordPos("POPUP") > 0 then do
            parse var s type '"'name'"'    "," opt
 
            j = i + 1;
            bracket = 0
            do until bracket = 0
-             if rcarray[j]~wordpos("BEGIN") > 0 | rcarray[j]~pos("{") > 0 then
+             if rcarray[j]~wordPos("BEGIN") > 0 | rcarray[j]~pos("{") > 0 then
                bracket += 1
-             else if rcarray[j]~wordpos("END") > 0 | rcarray[j]~pos("}") > 0 then
+             else if rcarray[j]~wordPos("END") > 0 | rcarray[j]~pos("}") > 0 then
                bracket -= 1
              j += 1
            end
 
-           if rcarray[j]~wordpos("END") > 0 | rcarray[j]~pos("}") > 0 then opt = opt || " END"
+           if rcarray[j]~wordPos("END") > 0 | rcarray[j]~pos("}") > 0 then opt = opt || " END"
            self~addPopup(0, name, opt, 0)
         end
 
-        when s~wordpos("SEPARATOR") > 0 then do
+        when s~wordPos("SEPARATOR") > 0 then do
            parse var s type sep opt
-           if rcarray[i+1]~wordpos("END") > 0 | rcarray[i+1]~pos("}") > 0 then opt = opt || " END"
+           if rcarray[i+1]~wordPos("END") > 0 | rcarray[i+1]~pos("}") > 0 then opt = opt || " END"
            self~addSeparator(0, opt)
         end
 
-        when s~wordpos("MENUITEM") > 0 then do
+        when s~wordPos("MENUITEM") > 0 then do
            parse var s type '"'name'"'    "," id "," opt
            id = id~strip
-           if rcarray[i+1]~wordpos("END") > 0 | rcarray[i+1]~pos("}") > 0 then opt = opt || " END"
+           if rcarray[i+1]~wordPos("END") > 0 | rcarray[i+1]~pos("}") > 0 then opt = opt || " END"
            if connect then
               self~addItem(id, name, opt, self~itemTextToMethodName(name))
            else
               self~addItem(id, name, opt)
         end
 
-        when s~wordpos("END") > 0 | s~pos("}") > 0 | s~wordpos("BEGIN") > 0 | s~pos("{") > 0 then nop;
+        when s~wordPos("END") > 0 | s~pos("}") > 0 | s~wordPos("BEGIN") > 0 | s~pos("{") > 0 then nop;
 
         otherwise do
           msg = "Error parsing MENU definition." || '  ' || "Resource file:" f || '  ' || "Line:" s
