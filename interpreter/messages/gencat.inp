@@ -1757,6 +1757,15 @@ $ Error_Invalid_expression_parse
 $ Error_Invalid_expression_call
 718 Missing expression for calculated CALL name
 
+$ Message_Translations_routine_invocation
+719 Routine &1 in package &2
+
+$ Message_Translations_method_invocation
+720 Method &1 with scope "&2" in package &3
+
+$ Error_Incorrect_method_multi_dimension
+721 Method argument &1 cannot have more than a single dimension
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */
