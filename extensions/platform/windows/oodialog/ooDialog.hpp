@@ -198,7 +198,7 @@ typedef enum
 #define NO_PCPBD_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PlainBaseDialog\nCSELF is null.\n\n\tpcpdb=%p\n\thDlg=%p\n"
 #define NO_PCPSP_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PropertySheetPage\nCSELF is null.\n\n\tpcpsp=%p\n\thDlg=%p\n"
 #define NO_THREAD_ATTACH_MSG   "RexxDlgProc() ERROR in WM_INITDIALOG.  Failed to attach\nthread context.\n\n\tpcpdb=%p\n\thDlg=%p\n"
-#define NO_THREAD_CONTEXT_MSG  "RexxDlgProc() ERROR.  Thread context is null.\n\n\\tdlgProcContext=%p\n\thDlg=%pn"
+#define NO_THREAD_CONTEXT_MSG  "RexxDlgProc() ERROR.  Thread context is null.\n\n\tdlgProcContext=%p\n\thDlg=%pn"
 
 
 // Enum for the type of Windows dialog control.
@@ -332,9 +332,10 @@ typedef struct {
 typedef struct {
     RexxThreadContext *dlgProcContext;  /* Attached thread context of dialog.     */
     RexxObjectPtr      rexxDialog;      /* Rexx dialog matching thread context.   */
+    RexxObjectPtr      rexxControl;     /* Rexx dialog control being subclassed.  */
+    HWND               hCtrl;           /* Window handle of subclassed control.   */
     void              *pData;           /* Pointer to subclass specific data.     */
     UINT               uID;             /* Resource ID of subclassed control.     */
-    HWND               hCtrl;           /* Window handle of subclassed control.   */
 } SUBCLASSDATA;
 
 /* Stuff for key press subclassing and keyboard hooks */

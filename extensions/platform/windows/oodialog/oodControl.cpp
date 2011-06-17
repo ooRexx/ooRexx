@@ -642,6 +642,7 @@ static keyPressErr_t connectKeyPressSubclass(RexxMethodContext *c, CSTRING metho
             goto done_out;
         }
 
+        pSubclassData->rexxControl = pcdc->rexxSelf;
         pSubclassData->hCtrl = pcdc->hCtrl;
         pSubclassData->uID = pcdc->id;
         pSubclassData->pData = pKeyPressData;
@@ -734,10 +735,10 @@ LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
     switch ( msg )
     {
         case WM_KEYDOWN:
-            if (  lParam & KEY_ISEXTENDED && isExtendedKeyEvent(wParam) )
+            if ( lParam & KEY_ISEXTENDED && isExtendedKeyEvent(wParam) )
             {
                 RexxThreadContext *c = pSubclassData->dlgProcContext;
-                RexxArrayObject args = getKeyEventRexxArgs(c, wParam);
+                RexxArrayObject args = getKeyEventRexxArgs(c, wParam, true, pSubclassData->rexxControl);
 
                 RexxObjectPtr reply = c->SendMessage(pSubclassData->rexxDialog, pKeyEvent->method, args);
 
@@ -751,7 +752,7 @@ LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
         case WM_CHAR:
         {
             RexxThreadContext *c = pSubclassData->dlgProcContext;
-            RexxArrayObject args = getKeyEventRexxArgs(c, wParam);
+            RexxArrayObject args = getKeyEventRexxArgs(c, wParam, false, pSubclassData->rexxControl);
 
             RexxObjectPtr reply = c->SendMessage(pSubclassData->rexxDialog, pKeyEvent->method, args);
 
@@ -771,7 +772,8 @@ LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                     }
                 }
             }
-        } break;
+            break;
+        }
 
         case WM_NCDESTROY:
             /* The window is being destroyed, remove the subclass, clean up
@@ -969,6 +971,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_connectKeyEvent, CSTRING, methodName, CSELF, 
     }
     strcpy(pKeyEventData->method, methodName);
 
+    pData->rexxControl = pcdc->rexxSelf;
     pData->hCtrl = pcdc->hCtrl;
     pData->uID = pcdc->id;
     pData->pData = pKeyEventData;

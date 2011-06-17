@@ -73,7 +73,7 @@ extern void            processKeyPress(SUBCLASSDATA *, WPARAM, LPARAM);
 extern void            freeKeyPressData(SUBCLASSDATA *);
 extern uint32_t        seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
 extern void            removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
-extern RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam);
+extern RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam, bool isExtended, RexxObjectPtr rexxControl);
 
 
 #endif

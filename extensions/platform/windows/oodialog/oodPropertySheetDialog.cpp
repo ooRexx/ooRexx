@@ -1803,67 +1803,67 @@ uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROP
  *           if it is a ResDialog page.
  */
 bool initPSP(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROPSHEETPAGE *psp, uint32_t i, bool isExteriorPage)
-    {
-        RexxObjectPtr       dlg   = pcpsd->rexxPages[i];
-        pCPropertySheetPage pcpsp = pcpsd->cppPages[i];
-        pCDynamicDialog     pcdd  = pcpsp->pcdd;
-        uint32_t            flags = pcpsp->pageFlags;
+{
+    RexxObjectPtr       dlg   = pcpsd->rexxPages[i];
+    pCPropertySheetPage pcpsp = pcpsd->cppPages[i];
+    pCDynamicDialog     pcdd  = pcpsp->pcdd;
+    uint32_t            flags = pcpsp->pageFlags;
     bool                success = false;
 
-        RexxObjectPtr result = c->SendMessage0(dlg, "INITTEMPLATE");
-        if ( result == TheFalseObj )
-        {
-            noWindowsPageDlgException(c, i + 1);
-            goto done_out;
-        }
+    RexxObjectPtr result = c->SendMessage0(dlg, "INITTEMPLATE");
+    if ( result == TheFalseObj )
+    {
+        noWindowsPageDlgException(c, i + 1);
+        goto done_out;
+    }
 
-        psp->dwSize      = sizeof(PROPSHEETPAGE);
-        psp->pfnDlgProc  = (DLGPROC)RexxPropertySheetDlgProc;
-        psp->lParam      = (LPARAM)pcpsp;
-        psp->pfnCallback = PropSheetPageCallBack;
+    psp->dwSize      = sizeof(PROPSHEETPAGE);
+    psp->pfnDlgProc  = (DLGPROC)RexxPropertySheetDlgProc;
+    psp->lParam      = (LPARAM)pcpsp;
+    psp->pfnCallback = PropSheetPageCallBack;
 
     if ( pcpsp->pageTitle != NULL )
+    {
+        flags |= PSP_USETITLE;
+        psp->pszTitle = pcpsp->pageTitle;
+    }
+
+    if ( pcpsp->pageType == oodResPSPDialog )
+    {
+        psp->hInstance   = pcpsp->pcpbd->hInstance;
+        psp->pszTemplate = MAKEINTRESOURCE(pcpsp->resID);
+    }
+    else
+    {
+        flags |= PSP_DLGINDIRECT;
+        psp->pResource = (PROPSHEETPAGE_RESOURCE)pcdd->base;
+
+        if ( pcpsp->hInstance != NULL )
         {
-            flags |= PSP_USETITLE;
-            psp->pszTitle = pcpsp->pageTitle;
+            psp->hInstance = pcpsp->hInstance;
+        }
+    }
+
+    flags |= maybeSetTabIcon(c, pcpsd, psp, i);
+
+    if ( (pcpsd->isWiz97 || pcpsd->isWizLite)  )
+    {
+        if ( pcpsp->headerTitle != NULL )
+        {
+            psp->pszHeaderTitle = pcpsp->headerTitle;
+            flags |= PSP_USEHEADERTITLE;
         }
 
-        if ( pcpsp->pageType == oodResPSPDialog )
+        if ( pcpsp->headerSubTitle != NULL )
         {
-            psp->hInstance   = pcpsp->pcpbd->hInstance;
-            psp->pszTemplate = MAKEINTRESOURCE(pcpsp->resID);
-        }
-        else
-        {
-            flags |= PSP_DLGINDIRECT;
-            psp->pResource = (PROPSHEETPAGE_RESOURCE)pcdd->base;
-
-            if ( pcpsp->hInstance != NULL )
-            {
-                psp->hInstance = pcpsp->hInstance;
-            }
+            psp->pszHeaderSubTitle = pcpsp->headerSubTitle;
+            flags |= PSP_USEHEADERSUBTITLE;
         }
 
-        flags |= maybeSetTabIcon(c, pcpsd, psp, i);
-
-        if ( (pcpsd->isWiz97 || pcpsd->isWizLite)  )
+        if ( pcpsp->headerTitle == NULL && pcpsp->headerSubTitle == NULL && isExteriorPage )
         {
-            if ( pcpsp->headerTitle != NULL )
-            {
-                psp->pszHeaderTitle = pcpsp->headerTitle;
-                flags |= PSP_USEHEADERTITLE;
-            }
-
-            if ( pcpsp->headerSubTitle != NULL )
-            {
-                psp->pszHeaderSubTitle = pcpsp->headerSubTitle;
-                flags |= PSP_USEHEADERSUBTITLE;
-            }
-
-            if ( pcpsp->headerTitle == NULL && pcpsp->headerSubTitle == NULL && isExteriorPage )
-            {
-                flags |= PSP_HIDEHEADER;
-            }
+            flags |= PSP_HIDEHEADER;
+        }
     }
 
     psp->dwFlags = flags;
@@ -4467,6 +4467,7 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
         printf("In WM_INITDIALOG for RexxTabOwnerDlgProc() pcpbd=%p pctod=%p\n", pcpbd, pctod);
         printf("   Tab1 hwnd=%p Tab2 hwnd=%p\n", GetDlgItem(hDlg, 200), GetDlgItem(hDlg, 400));
+        printf("   pcpbd->isActive=%d pcpbd->hDlg=%p\n", pcpbd->isActive, pcpbd->hDlg);
         if ( pcpbd->dlgProcContext == NULL )
         {
             RexxThreadContext *context;
@@ -4487,6 +4488,25 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
         setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
 
+        // Normally isActive is not set until later TODO
+        pcpbd->isActive = true; pcpbd->hDlg = hDlg;
+
+        RexxThreadContext *c = pctod->dlgProcContext;
+
+        pCManagedTab      pcmt = pctod->mts[0];
+        pCControlDialog   pccd = pcmt->cppPages[0];
+        pCPlainBaseDialog pcpbdTabdlg = pccd->pcpbd;
+
+        pCDynamicDialog pcdd = (pCDynamicDialog)c->ObjectToCSelf(pccd->rexxSelf, TheDynamicDialogClass);
+
+        pcpbdTabdlg->dlgProcContext = c;  // TODO need to check that this is proper place to do this.
+        RexxArrayObject args = c->ArrayOfFour(c->String(pcpbdTabdlg->library),
+                                              pcpbdTabdlg->resourceID,
+                                              c->NullString(),
+                                              c->Int32(pcdd->count));
+        c->SendMessage(pccd->rexxSelf, "LOAD", args);
+        c->SendMessage0(pccd->rexxSelf, "EXECUTE");
+
         return TRUE;
     }
 
@@ -4499,6 +4519,8 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
     if ( pcpbd->dlgProcContext == NULL )
     {
+        printf("In RexxTabOwnerDlgProc() dlgProcContext=%p isActive=%d\n",
+               pcpbd->dlgProcContext, pcpbd->isActive);
         if ( ! pcpbd->isActive )
         {
             return FALSE;
@@ -4857,11 +4879,12 @@ RexxMethod2(RexxObjectPtr, tod_tabOwnerDlgInit, POINTER, cpbd, OSELF, self)
 
             for ( uint32_t j = 0; j < pmt->count; j++)
             {
-                pCPlainBaseDialog pcpbd = pmt->cppPages[j]->pcpbd;
+                pCControlDialog pccd = pmt->cppPages[j];
+                pCPlainBaseDialog pcpbd = pccd->pcpbd;
 
                 pcpbd->rexxOwner = self;
                 pcpbd->isOwnedDlg = true;
-                // TODO pcpbd->isManaged = true;
+                pcpbd->isManagedDlg = pccd->isManaged;
 
                 c->SendMessage1(bag, "PUT", pmt->rexxPages[j]);
             }
@@ -5116,17 +5139,17 @@ static bool setCdiSize(RexxMethodContext *c, pCControlDialogInfo pccdi, RexxObje
 /** ControlDlgInfo::init()
  *
  * use strict arg owner = .nil,
+ *                managed = .false
  *                title = "",
  *                size = (.size~new(200, 150)),
  *                wantNotifications = .false,
  *                tabIcon = (-1),
  *                resources = .nil,
- *                managed = .false
  *
  */
-RexxMethod7(RexxObjectPtr, cdi_init, OPTIONAL_RexxObjectPtr, owner, OPTIONAL_CSTRING, title, OPTIONAL_RexxObjectPtr, _size,
-            OPTIONAL_RexxObjectPtr, tabIcon, OPTIONAL_RexxObjectPtr, resources,
-            OPTIONAL_logical_t, managed, OSELF, self)
+RexxMethod7(RexxObjectPtr, cdi_init, OPTIONAL_RexxObjectPtr, owner, OPTIONAL_logical_t, managed,
+            OPTIONAL_CSTRING, title, OPTIONAL_RexxObjectPtr, _size, OPTIONAL_RexxObjectPtr, tabIcon,
+            OPTIONAL_RexxObjectPtr, resources, OSELF, self)
 {
     RexxBufferObject obj = context->NewBuffer(sizeof(CControlDialogInfo));
     if ( obj == NULLOBJECT )
@@ -5171,6 +5194,18 @@ done_out:
     return NULLOBJECT;
 }
 
+/** ControlDlgInfo::managed()     [Attribute set]
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, cdi_set_managed, logical_t, managed, CSELF, pCSelf)
+{
+    pCControlDialogInfo pccdi = (pCControlDialogInfo)pCSelf;
+    pccdi->managed = managed ? true : false;
+    return NULLOBJECT;
+}
+
+
 /** ControlDlgInfo::title()       [Attribute set]
  *
  *
@@ -5183,7 +5218,7 @@ RexxMethod2(RexxObjectPtr, cdi_set_title, CSTRING, title, CSELF, pCSelf)
 }
 
 
-/** ControlDlgInfo::setSize()
+/** ControlDlgInfo::size()        [Attribute set]
  *
  *  Allows the size attribute of a control dialog info object to be reset after
  *  the object is instantiated.
@@ -5191,10 +5226,10 @@ RexxMethod2(RexxObjectPtr, cdi_set_title, CSTRING, title, CSELF, pCSelf)
  *  @param size  [optional]  The new size value for this object.  If omitted,
  *               the size is reset to the default 200 x 150.
  */
-RexxMethod2(RexxObjectPtr, cdi_setSize, OPTIONAL_RexxObjectPtr, _size, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, cdi_set_size, RexxObjectPtr, _size, CSELF, pCSelf)
 {
     pCControlDialogInfo pccdi = (pCControlDialogInfo)pCSelf;
-    setCdiSize(context, pccdi, _size, argumentExists(1), 1);
+    setCdiSize(context, pccdi, _size, true, 1);
     return NULLOBJECT;
 }
 

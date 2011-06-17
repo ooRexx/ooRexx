@@ -2844,17 +2844,22 @@ inline bool dtpnReplySignificant(uint32_t dtpn)
  * Creates a Rexx argument array for, presumably, the invocation of a Rexx
  * method connected to some type of key board event.
  *
- * @param c       Thread context we are operating in.
- * @param wParam  The WPARAM for the key event, which is presumed to be the
- *                charater code for the key event.
+ * @param c           Thread context we are operating in.
+ * @param wParam      The WPARAM for the key event, which is presumed to be the
+ *                    charater code for the key event.
+ * @param isExtended  Was this an extended key.
+ * @param rexxControl The rexx dialog control object.  May be null.
  *
  * @return RexxArrayObject
  *
  * @remarks  This function is currently called for connectKeyPress() and
  *           connectKeyEvent() processing and could probably be used for other
  *           key event connections if any are added to ooDialog.
+ *
+ *           The isExtended parameter is needed to be able to distinguish
+ *           between a WM_CHAR '.' and the extended Delete key.
  */
-RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam)
+RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam, bool isExtended, RexxObjectPtr rexxControl)
 {
     BOOL bShift = (GetAsyncKeyState(VK_SHIFT) & ISDOWN) ? 1 : 0;
     BOOL bControl = (GetAsyncKeyState(VK_CONTROL) & ISDOWN) ? 1 : 0;
@@ -2881,9 +2886,14 @@ RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam)
 
     GetKeyState(VK_SCROLL) & TOGGLED ? strcat(info, " scrollOn") : strcat(info, " scrollOff");
 
+    if ( isExtended )
+    {
+        strcat(info, " extended");
+    }
     RexxArrayObject args = c->ArrayOfFour(c->WholeNumber(wParam), c->Logical(bShift),
                                           c->Logical(bControl), c->Logical(bAlt));
     c->ArrayPut(args, c->String(info), 5);
+    c->ArrayPut(args, rexxControl ? rexxControl : TheNilObj, 6);
 
     return args;
 }
@@ -3147,7 +3157,7 @@ void processKeyPress(SUBCLASSDATA *pSubclassData, WPARAM wParam, LPARAM lParam)
     {
         RexxThreadContext *c = pSubclassData->dlgProcContext;
 
-        RexxArrayObject args = getKeyEventRexxArgs(c, wParam);
+        RexxArrayObject args = getKeyEventRexxArgs(c, wParam, lParam & KEY_ISEXTENDED ? true : false, pSubclassData->rexxControl);
         invokeDispatch(c, pSubclassData->rexxDialog, c->String(pMethod), args);
     }
 }

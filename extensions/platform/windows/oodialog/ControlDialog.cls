@@ -79,9 +79,10 @@
 
 ::class 'ControlDlgInfo' subclass Object public
 
+::attribute managed set external "LIBRARY oodialog cdi_set_managed"
 ::attribute title set external "LIBRARY oodialog cdi_set_title"
+::attribute size set external "LIBRARY oodialog cdi_set_size"
 ::method init external "LIBRARY oodialog cdi_init"
-::method setSize external "LIBRARY oodialog cdi_setSize"
 
 ::class 'ControlDialog' mixinclass Object public
 

@@ -647,9 +647,10 @@ REXX_METHOD_PROTOTYPE(cd_get_pageTitle);
 REXX_METHOD_PROTOTYPE(cd_set_pageTitle);
 
 // ControlDlgInfo
+REXX_METHOD_PROTOTYPE(cdi_set_managed);
 REXX_METHOD_PROTOTYPE(cdi_set_title);
+REXX_METHOD_PROTOTYPE(cdi_set_size);
 REXX_METHOD_PROTOTYPE(cdi_init);
-REXX_METHOD_PROTOTYPE(cdi_setSize);
 
 // ResourceControlDialog
 REXX_METHOD_PROTOTYPE(resCtrlDlg_startDialog_pvt);
@@ -1425,8 +1426,9 @@ RexxMethodEntry oodialog_methods[] = {
 
     // ControlDlgInfo
     REXX_METHOD(cdi_set_title,                  cdi_set_title),
+    REXX_METHOD(cdi_set_size,                   cdi_set_size),
+    REXX_METHOD(cdi_set_managed,                cdi_set_managed),
     REXX_METHOD(cdi_init,                       cdi_init),
-    REXX_METHOD(cdi_setSize,                    cdi_setSize),
 
     // ResControlDialog
     REXX_METHOD(resCtrlDlg_startDialog_pvt,     resCtrlDlg_startDialog_pvt),
