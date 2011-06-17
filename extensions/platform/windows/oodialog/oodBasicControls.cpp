@@ -1934,7 +1934,7 @@ RexxMethod4(RexxObjectPtr, e_showBallon, CSTRING, title, CSTRING, text, OPTIONAL
     }
     if ( strlen(text) > BALLON_MAX_TEXT )
     {
-        stringTooLongException(context->threadContext, 2, BALLON_MAX_TEXT, strlen(title));
+        stringTooLongException(context->threadContext, 2, BALLON_MAX_TEXT, strlen(text));
         return TheOneObj;
     }
 
