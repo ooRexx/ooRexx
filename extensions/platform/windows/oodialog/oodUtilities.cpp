@@ -307,7 +307,7 @@ RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxS
             mode = globalLast;
             break;
         case 'N' :
-            mode = globalLast;
+            mode = globalNever;
             break;
         default :
             wrongArgOptionException(context->threadContext, 1, "[O]nly, [F]irst, [L]ast, or [N]ever", _mode);
