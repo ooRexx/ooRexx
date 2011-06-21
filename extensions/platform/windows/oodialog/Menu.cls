@@ -425,10 +425,87 @@ syntax:
 
   return 0
 
--- TODO write code to actually parse a MENUEX resource.  By accident, the code
--- for parsing a MENU resource is adequate to produce an in-memory MENU
--- template.  It does not produce an in-memory MENUEX template.
+::method mergeTypeState private
+  use strict arg type, state
+
+  opt  = ""
+  if type~wordPos("MFT_BITMAP") > 0 then opt = "BITMAP"
+  else if type~wordPos("MFT_SEPARATOR") > 0 then opt = "SEPARATOR"
+  else if type~wordPos("MFT_STRING") > 0 then opt = "STRING"
+
+  if type~wordPos("MFT_MENUBARBREAK") > 0 then opt ||= " MENUBARBREAK"
+  if type~wordPos("MFT_MENUBREAK") > 0 then opt    ||= " MENUBREAK"
+  if type~wordPos("MFT_OWNERDRAW") > 0 then opt    ||= " OWNERDRAW"
+  if type~wordPos("MFT_RADIOCHECK") > 0 then opt   ||= " RADIOCHECK"
+  if type~wordPos("MFT_RIGHTJUSTIFY") > 0 then opt ||= " RIGHTJUSTIFY"
+  if type~wordPos("MFT_RIGHTORDER") > 0 then opt   ||= " RIGHTORDER"
+
+  if state~wordPos("MFS_CHECKED") > 0 then opt ||= " CHECKED"
+  if state~wordPos("MFS_DEFAULT") > 0 then opt ||= " DEFAULT"
+  if state~wordPos("MFS_DISABLED") > 0 then opt ||= " DISABLED"
+  if state~wordPos("MFS_ENABLED") > 0 then opt ||= " ENABLED"
+  if state~wordPos("MFS_GRAYED") > 0 then opt ||= " GRAYED"
+  if state~wordPos("MFS_HILITE") > 0 then opt ||= " HILITE"
+  if state~wordPos("MFS_UNCHECKED") > 0 then opt ||= " UNCHECKED"
+  if state~wordPos("MFS_UNHILITE") > 0 then opt ||= " UNHILITE"
+
+  return opt
+
+
 ::method parseMenuEx private
   use strict arg rcarray, arrcount, connect
-  forward message 'PARSEMENU'
+
+  do i = 1 to arrcount
+     s = rcarray[i]
+
+     select
+        when s~word(1) == "POPUP" then do
+           parse var s type '"'name'"' "," id "," type "," state "," helpID
+           id = id~strip; helpID = id~strip
+
+           j = i + 1;
+           bracket = 0
+           do until bracket = 0
+             if rcarray[j]~wordPos("BEGIN") > 0 | rcarray[j]~pos("{") > 0 then
+               bracket += 1
+             else if rcarray[j]~wordPos("END") > 0 | rcarray[j]~pos("}") > 0 then
+               bracket -= 1
+             j += 1
+           end
+
+           opt = self~mergeTypeState(type, state)
+           if rcarray[j]~wordPos("END") > 0 | rcarray[j]~pos("}") > 0 then opt ||= " END"
+
+           self~addPopup(id, name, opt, helpID)
+        end
+
+        when s~word(1) == "MENUITEM" then do
+           parse var s type '"'name'"' "," id "," type "," state
+           id = id~strip
+
+           opt = self~mergeTypeState(type, state)
+           if rcarray[i+1]~wordPos("END") > 0 | rcarray[i+1]~pos("}") > 0 then opt ||= " END"
+
+           if opt~wordPos("SEPARATOR") > 0 then do
+             self~addSeparator(id, opt)
+           end
+           else do
+             if connect then
+                self~addItem(id, name, opt, self~itemTextToMethodName(name))
+             else
+                self~addItem(id, name, opt)
+           end
+        end
+
+        when s~wordPos("END") > 0 | s~pos("}") > 0 | s~wordPos("BEGIN") > 0 | s~pos("{") > 0 then nop;
+
+        otherwise do
+          msg = "Error parsing MENUEX definition." || '  ' || "Resource file:" f || '  ' || "Line:" s
+          raise syntax 98.900 array (msg)
+        end
+    end /*select i = 1*/
+  end /* do while */
+
+  return 0
+
 
