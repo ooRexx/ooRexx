@@ -3069,7 +3069,7 @@ RexxMethod2(RexxObjectPtr, lv_getExtendedStyle, NAME, method, CSELF, pCSelf)
 }
 
 /** ListView::addExtendedStyle()
- *  ListView::clearExtendedStyle()
+ *  ListView::removeExtendedStyle()
  *
  */
 RexxMethod3(int32_t, lv_addClearExtendStyle, CSTRING, _style, NAME, method, CSELF, pCSelf)
@@ -3082,7 +3082,7 @@ RexxMethod3(int32_t, lv_addClearExtendStyle, CSTRING, _style, NAME, method, CSEL
 
     HWND hList = getDChCtrl(pCSelf);
 
-    if ( *method == 'C' )
+    if ( *method == 'R' )
     {
         ListView_SetExtendedListViewStyleEx(hList, style, 0);
     }
