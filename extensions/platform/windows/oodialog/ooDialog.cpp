@@ -4573,6 +4573,13 @@ RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTION
     // result will be the resolved resource ID, which may be -1 on error.
     RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
 
+    // If the user is using the global constDir and has mismatched case in the
+    // use of symbolic IDs, we could have a condition raised.
+    if ( checkForCondition(context->threadContext, true) )
+    {
+        return TheNegativeOneObj;
+    }
+
     int id;
     if ( ! context->Int32(result, &id) || id == -1 )
     {
