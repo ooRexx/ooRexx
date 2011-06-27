@@ -474,7 +474,7 @@
          -- End select
       end
       if (self~checkfile(f) = 1) then return 1
-      if arg(2,'O') | dialogid = "DIALOGID" then found = 1
+      if arg(2,'O') | dialogid = "DIALOGID" | dialogid = '' then found = 1
       else do
          foundID = s~word(n-1)~translate
          if foundID = dialogid~translate then found = 1
@@ -583,7 +583,7 @@
          if n = 0 then n = s~wordpos("DIALOGEX")
       end
       if self~checkfile(f)=1 then return 1
-      if arg(2, 'O') | dialogid = "DIALOGID" then found = 1
+      if arg(2, 'O') | dialogid = "DIALOGID" | dialogid = '' then found = 1
       else do
          foundID = s~word(n-1)~translate
          if foundID = dialogid~translate then found = 1

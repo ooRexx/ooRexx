@@ -540,6 +540,10 @@ RexxMethod7(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
 
     if ( isRCbasedDlg(context, self) )
     {
+        if ( argumentOmitted(4) )
+        {
+            resourceID = context->NullString();
+        }
         context->ArrayPut(newArgs, libOrOwnerData, 1);
         context->ArrayPut(newArgs, resourceID, 2);
 
