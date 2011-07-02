@@ -5021,7 +5021,7 @@ RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
     DWORD dwHelpID = 0;
     if ( argumentExists(3) )
     {
-        int32_t tmp = oodGlobalID(context, helpID, 2, false);
+        int32_t tmp = oodGlobalID(context, helpID, 3, false);
         if ( tmp == OOD_ID_EXCEPTION )
         {
             goto done_out;
