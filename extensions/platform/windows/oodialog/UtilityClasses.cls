@@ -42,9 +42,9 @@
  * Utility Classes, "short-cut" dialogs and routines, public routines, and
  * utility dialogs.
  *
- * The mechanism for putting the .ApplicationClass object in the .local
+ * The mechanism for putting the .ApplicationMgr object in the .local
  * environment relies on maintaining the first class definitions in this file as
- * being: .ResourceUtils, .ApplicationClass, and then .DlgUtils.
+ * being: .ResourceUtils, .ApplicationMgr, and then .DlgUtils.
  *
  * Note:  This "class" file can not be used by itself, as for instance
  *        UserDialog.cls could.  It is intended to be merged into the main
@@ -176,7 +176,7 @@
   return 0
 
 
-::class 'ApplicationClass' public inherit ResourceUtils
+::class 'ApplicationMgr' public inherit ResourceUtils
 
 ::method init external "LIBRARY oodialog app_init"
 ::method useGlobalConstDir external "LIBRARY oodialog app_useGlobalConstDir"
@@ -186,7 +186,7 @@
 
 ::method add
   use strict arg hFile
-  say 'In ApplicationClass::add()'
+  say 'In ApplicationMgr::add()'
   self~parseIncludeFile(hFile)
 
 ::class 'DlgUtil' public

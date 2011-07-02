@@ -227,9 +227,9 @@ done_out:
 
 
 /**
- *  Methods for the .ApplicationClass class.
+ *  Methods for the .ApplicationMgr class.
  */
-#define APPLICATIONCLASS_CLASS        "ApplicationClass"
+#define APPLICATIONMGR_CLASS        "ApplicationMgr"
 
 static void setConstDirUsage(RexxMethodContext *c)
 {
@@ -337,13 +337,17 @@ RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxS
  * constructed, which is done during the processing of the ::requires directive
  * for ooDialog.cls.
  *
- * We use this to create the an instance of the ApplicationClass and place it in
- * the .local directory.  To do this, at this point, the ApplicationClass object
+ * We use this to create the an instance of the ApplicationMgr and place it in
+ * the .local directory.  To do this, at this point, the ApplicationMgr object
  * must have already been constructed.  This in turn relies on the order of the
- * classes in ooDialog.cls, being: .ResourceUtils, .ApplicationClass, and then
+ * classes in ooDialog.cls, being: .ResourceUtils, .ApplicationMgr, and then
  * .DlgUtils.
  *
  * @return No return.
+ *
+ * TODO - need to send a .Pointer arg, with a special signature to the new
+ * method of the Application class so that an Application object can not be
+ * instantiated by the Rexx programmer.
  */
 RexxMethod0(RexxObjectPtr, dlgutil_init_cls)
 {

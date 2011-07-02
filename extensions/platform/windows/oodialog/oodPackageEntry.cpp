@@ -75,7 +75,7 @@ RexxObjectPtr       TheNegativeOneObj = NULLOBJECT;
 RexxObjectPtr       TheApplicationObj = NULLOBJECT;
 RexxDirectoryObject TheConstDir = NULLOBJECT;
 
-// Initialized here, can be changes by ApplicationClass::useGlobalConstDir()
+// Initialized here, can be changed by ApplicationMgr::useGlobalConstDir()
 oodConstDir_t       TheConstDirUsage = globalNever;
 
 // Initialized in the PlainBaseDialog class init method (pbdlg_init_cls.)
@@ -405,7 +405,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_threadID_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
-// ApplicationClass
+// ApplicationMgr
 REXX_METHOD_PROTOTYPE(app_init);
 REXX_METHOD_PROTOTYPE(app_useGlobalConstDir);
 
