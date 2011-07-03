@@ -227,9 +227,9 @@ done_out:
 
 
 /**
- *  Methods for the .ApplicationMgr class.
+ *  Methods for the .ApplicationManager class.
  */
-#define APPLICATIONMGR_CLASS        "ApplicationMgr"
+#define APPLICATIONMANAGER_CLASS        "ApplicationManager"
 
 static void setConstDirUsage(RexxMethodContext *c)
 {
@@ -337,11 +337,11 @@ RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxS
  * constructed, which is done during the processing of the ::requires directive
  * for ooDialog.cls.
  *
- * We use this to create the an instance of the ApplicationMgr and place it in
- * the .local directory.  To do this, at this point, the ApplicationMgr object
- * must have already been constructed.  This in turn relies on the order of the
- * classes in ooDialog.cls, being: .ResourceUtils, .ApplicationMgr, and then
- * .DlgUtils.
+ * We use this to create the an instance of the ApplicationManager and place it
+ * in the .local directory.  To do this, at this point, the ApplicationManager
+ * object must have already been constructed.  This in turn relies on the order
+ * of the classes in ooDialog.cls, being: .ResourceUtils, .ApplicationManager,
+ * and then .DlgUtils.
  *
  * @return No return.
  *
@@ -351,10 +351,10 @@ RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxS
  */
 RexxMethod0(RexxObjectPtr, dlgutil_init_cls)
 {
-    RexxClassObject appClass = context->FindContextClass(APPLICATIONCLASS_CLASS);
+    RexxClassObject appClass = context->FindContextClass(APPLICATIONMANAGER_CLASS);
     if ( appClass == NULLOBJECT )
     {
-        context->RaiseException1(Rexx_Error_Execution_noclass, context->String(APPLICATIONCLASS_CLASS));
+        context->RaiseException1(Rexx_Error_Execution_noclass, context->String(APPLICATIONMANAGER_CLASS));
     }
     else
     {

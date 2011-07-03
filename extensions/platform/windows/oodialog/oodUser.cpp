@@ -904,6 +904,30 @@ static bool hasCenterFlag(CSTRING opts)
     return false;
 }
 
+
+int32_t connectCreatedControl(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID, int32_t id,
+                              CSTRING attributeName, oodControl_t ctrl)
+{
+    char buf[64];
+    if ( attributeName == NULL || *attributeName == '\0' )
+    {
+        _snprintf(buf, sizeof(buf), "DATA%d", id);
+        attributeName = buf;
+    }
+
+    uint32_t category = getCategoryNumber(c, pcpbd->rexxSelf);
+
+    c->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, c->String(attributeName));
+
+    uint32_t result = addToDataTable(c, pcpbd, id, ctrl, category);
+    if ( result == OOD_MEMORY_ERR )
+    {
+        return -2;
+    }
+    return (int32_t)result;
+}
+
+
 int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
                          CSTRING opts, CSTRING text, pCDynamicDialog pcdd)
 {
@@ -970,7 +994,17 @@ int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y,
     {
         return -2;
     }
-    return 0;
+    int32_t result = 0;
+
+    // Connect the data attribute if we need to, and the id is not IDC_STATIC.
+    // This is done so that radio buttons within a group are detected, if the
+    // user has given the group style to a static label, and given the label a
+    // resource ID.  We have no attribute name, so we pass in null.
+    if ( pcpbd->autoDetect && id != -1 )
+    {
+        result = connectCreatedControl(c, pcpbd, rxID, id, NULL, winStatic);
+    }
+    return result;
 }
 
 int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
@@ -983,7 +1017,7 @@ int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
         return -2;
     }
 
-    uint32_t id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+    uint32_t id = checkID(c, rxID, pcpbd->rexxSelf);
     if ( id < 0 )
     {
         return id;
@@ -1007,7 +1041,17 @@ int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
     {
         return -2;
     }
-    return 0;
+
+    // Connect the data attribute if we need to, and the id is not IDC_STATIC.
+    // This is done so that setting radio buttons will work if the user has
+    // given the group style to the static image, which is possible but probably
+    // not likely.  We have no attribute name so we pass in null
+    int32_t result = 0;
+    if ( pcpbd->autoDetect && id != -1 )
+    {
+        result = connectCreatedControl(c, pcpbd, rxID, id, NULL, winStatic);
+    }
+    return result;
 }
 
 
@@ -1015,14 +1059,13 @@ int32_t createStaticFrame(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
                          CSTRING opts, CSTRING type, uint32_t frameStyle, pCDynamicDialog pcdd)
 {
     pCPlainBaseDialog pcpbd = pcdd->pcpbd;
-    int32_t id = IDC_STATIC;
 
     if ( pcdd->active == NULL )
     {
         return -2;
     }
 
-    id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+    int32_t id = checkID(c, rxID, pcpbd->rexxSelf);
     if ( id < IDC_STATIC )
     {
         return id;
@@ -1068,30 +1111,17 @@ int32_t createStaticFrame(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
     {
         return -2;
     }
-    return 0;
-}
+    int32_t result = 0;
 
-
-int32_t connectCreatedControl(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID, int32_t id,
-                              CSTRING attributeName, oodControl_t ctrl)
-{
-    char buf[64];
-    if ( attributeName == NULL || *attributeName == '\0' )
+    // Connect the data attribute if we need to, and the id is not IDC_STATIC.
+    // This is done so that setting radio buttons will work if the user has
+    // given the group style to the static frame, which is possible but probably
+    // not likely. We have no attribute name so we pass in null
+    if ( pcpbd->autoDetect && id != -1 )
     {
-        _snprintf(buf, sizeof(buf), "DATA%d", id);
-        attributeName = buf;
+        result = connectCreatedControl(c, pcpbd, rxID, id, NULL, winStatic);
     }
-
-    uint32_t category = getCategoryNumber(c, pcpbd->rexxSelf);
-
-    c->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, c->String(attributeName));
-
-    uint32_t result = addToDataTable(c, pcpbd, id, ctrl, category);
-    if ( result == OOD_MEMORY_ERR )
-    {
-        return -2;
-    }
-    return (int32_t)result;
+    return result;
 }
 
 
@@ -1909,7 +1939,19 @@ RexxMethod8(int32_t, dyndlg_createGroupBox, OPTIONAL_RexxObjectPtr, rxID, int, x
     {
         return -2;
     }
-    return 0;
+    int32_t result = 0;
+
+    // Connect the data attribute if we need to, and the id is not IDC_STATIC.
+    // This is done so that setting radio buttons will work if the user has
+    // given the group style to the group box, which is common practice.  We
+    // have no attribute name so we pass in null
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcpbd->autoDetect && id != -1 )
+    {
+        result = connectCreatedControl(context, pcpbd, rxID, id, NULL, winGroupBox);
+    }
+    return result;
 }
 
 
