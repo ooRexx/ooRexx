@@ -88,7 +88,7 @@
   ::METHOD createMenuBar
     expose menuBar
     say "CustomerView-createMenuBar-01"
-    menuBar = .ScriptMenuBar~new("CustomerView.rc", "IDR_MENU1", self, , , .true)
+    menuBar = .ScriptMenuBar~new("CustomerView.rc", "IDR_MENU1", , , .true, self)
     return .true
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
@@ -160,6 +160,15 @@
     self~enableControl("IDC_RECORD_CHANGES")
     custControls[btnRecordChanges]~state = "FOCUS"  -- Put focus on the button
     self~focusControl("IDC_EDIT_CUST_NAME")         -- place cursor in the CustName edit control.
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Actions->Print... - Not implemented - merely tells user this is not
+                        implemented.                                          */
+  ::METHOD print unguarded
+    msg = "Printing is not currently implemented"
+    hwnd = self~dlgHandle
+    answer = MessageDialog(msg,hwnd,"Print","OK","INFORMATION","APPLMODAL")
+    say "CustomerView-print-01: Printing not yet implemented."
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     LastOrder - "Actions" - "Show Last Order"
