@@ -535,7 +535,7 @@
    do k over dataStem.
       if k~dataType('W') then numericID = k
       else numericID = self~resolveSymbolicID(k)
-      if numericID == -1 then continue
+      if numericID == -1 then iterate
       InternDlgData.numericID = dataStem.k
       if InternDlgData.numericID = "INTERNDLGDATA."numericID then InternDlgData.numericID = ""
    end
