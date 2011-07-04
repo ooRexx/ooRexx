@@ -2853,7 +2853,7 @@ inline bool dtpnReplySignificant(uint32_t dtpn)
  * @return RexxArrayObject
  *
  * @remarks  This function is currently called for connectKeyPress() and
- *           connectKeyEvent() processing and could probably be used for other
+ *           connectCharEvent() processing and could probably be used for other
  *           key event connections if any are added to ooDialog.
  *
  *           The isExtended parameter is needed to be able to distinguish

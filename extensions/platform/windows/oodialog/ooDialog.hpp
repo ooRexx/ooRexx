@@ -362,12 +362,12 @@ typedef struct {
     UINT               nextFreeQ[MAX_KEYPRESS_METHODS];     /* Used only if existing connection removed */
 } KEYPRESSDATA;
 
-// It is anticpated that the connectKeyEvent() method will be extended some time
-// soon, so we have a KEYEVENTDATA struct even though it is not technically
+// It is anticpated that the connectCharEvent() method will be extended some time
+// soon, so we have a CHAREVENTDATA struct even though it is not technically
 // needed at this point.
 typedef struct {
     char              *method;          /* Name of method to invoke. */
-} KEYEVENTDATA;
+} CHAREVENTDATA;
 
 // Masks for lParam of key messages.  WM_KEYDOWN, WM_CHAR, etc..
 #define KEY_RELEASED          0x80000000  // Transition state: 1 key is being released / 0 key is being pressed.

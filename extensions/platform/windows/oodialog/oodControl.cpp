@@ -501,23 +501,23 @@ inline pCDialogControl validateDCCSelf(RexxMethodContext *c, void *pcdc)
 
 
 /**
- * Free subclass data for the KeyEventProc subclass.
+ * Free subclass data for the CharEventProc subclass.
  *
  * @assumes  The caller passed in a proper SUBCLASSDATA pointer, i.e., that
- *           pData->pData points to a KEYEVENTDATA struct.
+ *           pData->pData points to a CHAREVENTDATA struct.
  */
-void freeKeyEventData(SUBCLASSDATA *p)
+void freeCharEventData(SUBCLASSDATA *p)
 {
     if ( p != NULL )
     {
         if ( p->pData != NULL )
         {
-            KEYEVENTDATA *pKeyEvent = (KEYEVENTDATA *)p->pData;
-            if ( pKeyEvent->method != NULL )
+            CHAREVENTDATA *pCharEvent = (CHAREVENTDATA *)p->pData;
+            if ( pCharEvent->method != NULL )
             {
-                free(pKeyEvent->method);
+                free(pCharEvent->method);
             }
-            LocalFree(pKeyEvent);
+            LocalFree(pCharEvent);
         }
         LocalFree(p);
     }
@@ -687,7 +687,7 @@ done_out:
 
 /**
  * Tests if the key code is considered an extended key for the purposes of
- * connectKeyEvent().
+ * connectCharEvent().
  *
  * Note that PageUp is VK_PRIOR and PageDown is VK_NEXT.
  *
@@ -702,7 +702,7 @@ static inline bool isExtendedKeyEvent(WPARAM wParam)
 }
 
 /**
- * Subclass procedure for any dialog control that uses connectKeyEvent().
+ * Subclass procedure for any dialog control that uses connectCharEvent().
  *
  * Some what experimental for now.  To begin with, this is kept minimal to allow
  * for future expansion.
@@ -710,8 +710,10 @@ static inline bool isExtendedKeyEvent(WPARAM wParam)
  * When connected, (which would be the only time this subclass procedure is in
  * use,) all WM_CHAR messages are sent to the Rexx method.  The method can reply
  * false to NOT send the message on to the subclassed control, reply true to
- * pass the message on unchanged, and reply with a virtual key code which
- * replaces the actual virtual key code.
+ * pass the message on unchanged, and reply with a character key code which
+ * replaces the actual character key code.
+ *
+ * Replacing the character is no implemented yet.
  *
  * In addition, the extended key codes HOME END INS DEL PAGEUP PAGEDOWN and the
  * arrow keys are sent to the Rexx method.  For these, for now, the user can
@@ -723,14 +725,14 @@ static inline bool isExtendedKeyEvent(WPARAM wParam)
  *           thread of the dialog message loop.  So, for a thread context, we
  *           just grab it from the pCPlainBaseDialg.
  */
-LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
+LRESULT CALLBACK CharEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
 {
     SUBCLASSDATA *pSubclassData = (SUBCLASSDATA *)dwData;
     if ( ! pSubclassData )
     {
         return DefSubclassProc(hwnd, msg, wParam, lParam);
     }
-    KEYEVENTDATA *pKeyEvent = (KEYEVENTDATA *)pSubclassData->pData;
+    CHAREVENTDATA *pCharEvent = (CHAREVENTDATA *)pSubclassData->pData;
 
     switch ( msg )
     {
@@ -740,7 +742,7 @@ LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                 RexxThreadContext *c = pSubclassData->dlgProcContext;
                 RexxArrayObject args = getKeyEventRexxArgs(c, wParam, true, pSubclassData->rexxControl);
 
-                RexxObjectPtr reply = c->SendMessage(pSubclassData->rexxDialog, pKeyEvent->method, args);
+                RexxObjectPtr reply = c->SendMessage(pSubclassData->rexxDialog, pCharEvent->method, args);
 
                 if ( ! checkForCondition(c, false) && reply == TheFalseObj )
                 {
@@ -754,7 +756,7 @@ LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
             RexxThreadContext *c = pSubclassData->dlgProcContext;
             RexxArrayObject args = getKeyEventRexxArgs(c, wParam, false, pSubclassData->rexxControl);
 
-            RexxObjectPtr reply = c->SendMessage(pSubclassData->rexxDialog, pKeyEvent->method, args);
+            RexxObjectPtr reply = c->SendMessage(pSubclassData->rexxDialog, pCharEvent->method, args);
 
             if ( ! checkForCondition(c, false) && reply != NULLOBJECT )
             {
@@ -779,8 +781,8 @@ LRESULT CALLBACK KeyEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
             /* The window is being destroyed, remove the subclass, clean up
              * memory.
              */
-            RemoveWindowSubclass(hwnd, KeyEventProc, id);
-            freeKeyEventData(pSubclassData);
+            RemoveWindowSubclass(hwnd, CharEventProc, id);
+            freeCharEventData(pSubclassData);
             break;
     }
     return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -909,21 +911,21 @@ RexxMethod1(RexxObjectPtr, dlgctrl_assignFocus, CSELF, pCSelf)
     return TheZeroObj;
 }
 
-/** DialogControl::connectKeyEvent()
+/** DialogControl::connectCharEvent()
  *
- *  Experimental!  Connects a key event to a method in the Rexx dialog.
+ *  Connects a WM_CHAR message to a method in the Rexx dialog.
  *
  *
  *  @return True for success, false for error
  *
  *
  */
-RexxMethod2(RexxObjectPtr, dlgctrl_connectKeyEvent, CSTRING, methodName, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, dlgctrl_connectCharEvent, CSTRING, methodName, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
 
     RexxObjectPtr result = TheFalseObj;
-    if ( ! requiredComCtl32Version(context, "connectKeyEvent", COMCTL32_6_0) )
+    if ( ! requiredComCtl32Version(context, "connectCharEvent", COMCTL32_6_0) )
     {
         goto done_out;
     }
@@ -936,7 +938,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_connectKeyEvent, CSTRING, methodName, CSELF, 
     pCDialogControl pcdc = (pCDialogControl)pCSelf;
 
     SUBCLASSDATA *pData = NULL;
-    BOOL success = GetWindowSubclass(pcdc->hCtrl, KeyEventProc, pcdc->id, (DWORD_PTR *)&pData);
+    BOOL success = GetWindowSubclass(pcdc->hCtrl, CharEventProc, pcdc->id, (DWORD_PTR *)&pData);
 
     // Nothing fancy yet, we could allow removing the subclass.
 
@@ -954,7 +956,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_connectKeyEvent, CSTRING, methodName, CSELF, 
         goto done_out;
     }
 
-    KEYEVENTDATA *pKeyEventData = (KEYEVENTDATA *)LocalAlloc(LPTR, sizeof(KEYEVENTDATA));
+    CHAREVENTDATA *pKeyEventData = (CHAREVENTDATA *)LocalAlloc(LPTR, sizeof(CHAREVENTDATA));
     if ( pKeyEventData == NULL )
     {
         LocalFree(pData);
@@ -965,7 +967,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_connectKeyEvent, CSTRING, methodName, CSELF, 
     pKeyEventData->method = (char *)malloc(strlen(methodName) + 1);
     if ( pKeyEventData->method == NULL )
     {
-        freeKeyEventData(pData);
+        freeCharEventData(pData);
         outOfMemoryException(context->threadContext);
         goto done_out;
     }
@@ -976,10 +978,10 @@ RexxMethod2(RexxObjectPtr, dlgctrl_connectKeyEvent, CSTRING, methodName, CSELF, 
     pData->uID = pcdc->id;
     pData->pData = pKeyEventData;
 
-    if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyEventProc, (LPARAM)pData) == 0 )
+    if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)CharEventProc, (LPARAM)pData) == 0 )
     {
         // The subclass was not installed, free memeory, set error code.
-        freeKeyEventData(pData);
+        freeCharEventData(pData);
         oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
         goto done_out;
     }
