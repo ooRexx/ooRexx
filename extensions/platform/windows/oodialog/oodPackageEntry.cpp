@@ -1380,7 +1380,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_init_cls,               dlgctrl_init_cls),
     REXX_METHOD(dlgctrl_init,                   dlgctrl_init),
     REXX_METHOD(dlgctrl_unInit,                 dlgctrl_unInit),
-    REXX_METHOD(dlgctrl_connectCharEvent,        dlgctrl_connectCharEvent),
+    REXX_METHOD(dlgctrl_connectCharEvent,       dlgctrl_connectCharEvent),
     REXX_METHOD(dlgctrl_connectKeyPress,        dlgctrl_connectKeyPress),
     REXX_METHOD(dlgctrl_connectFKeyPress,       dlgctrl_connectFKeyPress),
     REXX_METHOD(dlgctrl_disconnectKeyPress,     dlgctrl_disconnectKeyPress),
