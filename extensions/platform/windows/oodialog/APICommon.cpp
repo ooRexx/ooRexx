@@ -411,7 +411,7 @@ void emptyArrayException(RexxThreadContext *c, int argPos)
 void arrayToLargeException(RexxThreadContext *c, uint32_t found, uint32_t max, int argPos)
 {
     TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Argument %d, array items (%d) exceeds maximum (%d) allowed (%d)", argPos, found, max);
+    _snprintf(buffer, sizeof(buffer), "Argument %d, array items (%d) exceeds maximum (%d) allowed", argPos, found, max);
     userDefinedMsgException(c, buffer);
 }
 
