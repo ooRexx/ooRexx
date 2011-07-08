@@ -1753,7 +1753,7 @@ RexxMethod5(RexxObjectPtr, wb_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTRING
             HDC hdc = (HDC)string2pointer(fontSrc);
             if ( hdc == NULL )
             {
-                invalidTypeException(context->threadContext, 3, " handle to a device context");
+                invalidTypeException(context->threadContext, 3, "handle to a device context");
                 goto error_out;
             }
             GetTextExtentPoint32(hdc, text, (int)strlen(text), &size);
@@ -3408,7 +3408,7 @@ RexxMethod6(RexxObjectPtr, pbdlg_sendMessageToControl, RexxObjectPtr, rxID, CSTR
         }
         else
         {
-            return invalidTypeException(context->threadContext, 1, " resource ID, there is no matching dialog control");
+            return invalidTypeException(context->threadContext, 1, "resource ID, there is no matching dialog control");
         }
     }
 

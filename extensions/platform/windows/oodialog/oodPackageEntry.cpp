@@ -408,6 +408,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 // ApplicationManager
 REXX_METHOD_PROTOTYPE(app_init);
 REXX_METHOD_PROTOTYPE(app_useGlobalConstDir);
+REXX_METHOD_PROTOTYPE(app_addToConstDir);
 
 // OS
 REXX_METHOD_PROTOTYPE(os_is64bit);
@@ -1176,6 +1177,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(app_init,                       app_init),
     REXX_METHOD(app_useGlobalConstDir,          app_useGlobalConstDir),
+    REXX_METHOD(app_addToConstDir,              app_addToConstDir),
 
     REXX_METHOD(os_is64bit,                     os_is64bit),
     REXX_METHOD(os_is32on64bit,                 os_is32on64bit),

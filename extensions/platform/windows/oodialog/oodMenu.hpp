@@ -57,7 +57,7 @@
 
 #define TEMPLATE_TOO_SMALL_MSG       "the number of menu items has exceeded the storage allocated for the menu"
 #define CAN_NOT_ATTACH_ON_INIT_MSG   "can not attach menu unless arg 4 'attachTo' is a dialog object"
-#define INVALID_MENU_HANDLE_MSG      " menu handle"
+#define INVALID_MENU_HANDLE_MSG      "menu handle"
 
 
 inline UINT byPositionFlag(logical_t byPosition)

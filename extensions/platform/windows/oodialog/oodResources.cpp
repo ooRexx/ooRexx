@@ -335,7 +335,7 @@ RexxMethod1(RexxObjectPtr, il_init, POINTER, p)
     int cx = 2, cy = 2;
     if ( ! ImageList_GetIconSize(himl, &cx, &cy) )
     {
-        invalidTypeException(context->threadContext, 1, " ImageList handle");
+        invalidTypeException(context->threadContext, 1, "ImageList handle");
         goto out;
     }
     context->SetObjectVariable("CSELF", context->NewPointer(himl));
@@ -1284,7 +1284,7 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
     }
     if ( fileName == NULL )
     {
-        invalidTypeException(context->threadContext, 2, " resource ID for a user icon");
+        invalidTypeException(context->threadContext, 2, "resource ID for a user icon");
         goto out;
     }
 

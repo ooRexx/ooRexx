@@ -82,7 +82,7 @@
     return .false
   end
 
-  global = .constDirUsage == 'use only'
+  global = (self~isA(.ApplicationManager) | .constDirUsage == 'use only')
 
   do while f~state == "READY"
     line = f~linein~strip('L')
@@ -148,46 +148,35 @@
  * resources.
  */
 ::method resolveNumericID unguarded
-  use arg numericID
+  use strict arg numericID
   if \ numericID~datatype('W') then return -1
-  symbol = self~constDir~index(numericID)
+
+  if self~isA(.ApplicationManger) | .constDirUsage == "use only" then do
+    symbol = .constDir~index(numericID)
+  end
+  else do
+    if .constDirUsage == "use first" then do
+      symbol = .constDir~index(numericID)
+      if symbol == .nil then symbol = self~constDir~index(numericID)
+    end
+    else if .constDirUsage == "use last" then do
+      symbol = self~constDir~index(numericID)
+      if symbol == .nil then symbol = .constDir~index(numericID)
+    end
+    else do
+      symbol = self~constDir~index(numericID)
+    end
+  end
+
   if symbol == .nil then return -1
   else return symbol
-
-::method mergeSymbols
-  use strict arg otherSymbolSrc
-
-  select
-    when otherSymbolSrc~isA(.directory) then do
-      if self~constDir == otherSymbolSrc then return 0
-      self~constDir~putAll(otherSymbolSrc)
-      otherSymbolSrc~putAll(self~constDir)
-    end
-
-    when otherSymbolSrc~isA(.ResourceUtils) then do
-      if self~constDir == otherSymbolSrc~constDir then return 0
-      self~constDir~putAll(otherSymbolSrc~constDir)
-      otherSymbolSrc~constDir~putAll(self~constDir)
-    end
-
-    otherwise return -1
-  end
-  -- End select
-  return 0
 
 
 ::class 'ApplicationManager' public inherit ResourceUtils
 
 ::method init external "LIBRARY oodialog app_init"
 ::method useGlobalConstDir external "LIBRARY oodialog app_useGlobalConstDir"
-
-::method speak
-  say "Hello to you"
-
-::method add
-  use strict arg hFile
-  say 'In ApplicationManager::add()'
-  self~parseIncludeFile(hFile)
+::method addToConstDir external "LIBRARY oodialog app_addToConstDir"
 
 ::class 'DlgUtil' public
 ::method init class external "LIBRARY oodialog dlgutil_init_cls"

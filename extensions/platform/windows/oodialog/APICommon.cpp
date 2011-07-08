@@ -240,14 +240,11 @@ RexxObjectPtr wrongClassException(RexxThreadContext *c, size_t pos, const char *
  * @param c    Thread context we are executing in.
  * @param pos  Argumet position
  * @param msg  "Some message"
- *
- * @note  There is no space after 'valid' the caller must provide it in msg if
- *        it is needed
  */
 RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char *type)
 {
     TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Argument %d is not a valid%s", pos, type);
+    _snprintf(buffer, sizeof(buffer), "Argument %d is not a valid %s", pos, type);
     userDefinedMsgException(c, buffer);
     return NULLOBJECT;
 }
@@ -705,7 +702,7 @@ bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t po
     *number = _strtoui64(str, &end, 0);
     if ( (end - str != strlen(str)) || errno == EINVAL || *number == _UI64_MAX )
     {
-        invalidTypeException(c->threadContext, pos, " number");
+        invalidTypeException(c->threadContext, pos, "number");
         return false;
     }
     return true;
@@ -722,7 +719,7 @@ bool rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, size_t 
     *number = strtoul(str, &end, 0);
     if ( (end - str != strlen(str)) || errno == ERANGE )
     {
-        invalidTypeException(c->threadContext, pos, " number");
+        invalidTypeException(c->threadContext, pos, "number");
         return false;
     }
     return true;

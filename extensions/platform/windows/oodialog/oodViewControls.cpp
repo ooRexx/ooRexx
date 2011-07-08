@@ -4255,7 +4255,7 @@ RexxMethod4(RexxObjectPtr, tv_setImageList, RexxObjectPtr, ilSrc,
 
     if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
     {
-        invalidTypeException(context->threadContext, 2, " TVSIL_XXX flag");
+        invalidTypeException(context->threadContext, 2, "TVSIL_XXX flag");
         goto err_out;
     }
 
@@ -4283,7 +4283,7 @@ RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     }
     else if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
     {
-        return invalidTypeException(context->threadContext, 2, " TVSIL_XXX flag");
+        return invalidTypeException(context->threadContext, 2, "TVSIL_XXX flag");
     }
 
     RexxObjectPtr result = context->GetObjectVariable(tvGetAttributeName(type));

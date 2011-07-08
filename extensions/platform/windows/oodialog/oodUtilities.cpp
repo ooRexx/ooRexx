@@ -231,6 +231,19 @@ done_out:
  */
 #define APPLICATIONMANAGER_CLASS        "ApplicationManager"
 
+inline bool checkApplicationMagic(RexxMethodContext *c, RexxObjectPtr magic)
+{
+    if ( c->IsBuffer(magic) )
+    {
+        uint32_t *d = (uint32_t *)c->BufferData((RexxBufferObject)magic);
+        if ( d != NULL && *d == APPLICATION_MANAGER_MAGIC )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void setConstDirUsage(RexxMethodContext *c)
 {
     CSTRING mode;
@@ -277,8 +290,14 @@ void putDefaultSymbols(RexxMethodContext *c, RexxDirectoryObject constDir)
     c->DirectoryPut(constDir, c->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
 }
 
-RexxMethod1(RexxObjectPtr, app_init, OSELF, self)
+RexxMethod2(RexxObjectPtr, app_init, RexxObjectPtr, magic, OSELF, self)
 {
+    if ( ! checkApplicationMagic(context, magic) )
+    {
+        severeErrorException(context->threadContext, BAD_APPLICATION_MSG);
+        return NULLOBJECT;
+    }
+
     TheConstDir = context->NewDirectory();
     context->DirectoryPut(TheDotLocalObj, TheConstDir, "CONSTDIR");
 
@@ -326,6 +345,25 @@ RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxS
 }
 
 
+RexxMethod2(uint32_t, app_addToConstDir, RexxObjectPtr, src, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    if ( context->HasMethod(src, "SUPPLIER") )
+    {
+        context->SendMessage1(TheConstDir, "PUTALL", src);
+    }
+    else if( context->IsString(src) )
+    {
+        context->SendMessage1(self, "PARSEINCLUDEFILE", src);
+    }
+    else
+    {
+        wrongArgValueException(context->threadContext, 1, "a collection class object, or a file name", src);
+    }
+    return 0;
+}
+
+
 /**
  * Defines, structs, and methods for the DlgUtil class.
  */
@@ -344,10 +382,6 @@ RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxS
  * and then .DlgUtils.
  *
  * @return No return.
- *
- * TODO - need to send a .Pointer arg, with a special signature to the new
- * method of the Application class so that an Application object can not be
- * instantiated by the Rexx programmer.
  */
 RexxMethod0(RexxObjectPtr, dlgutil_init_cls)
 {
@@ -358,8 +392,16 @@ RexxMethod0(RexxObjectPtr, dlgutil_init_cls)
     }
     else
     {
-        TheApplicationObj = context->SendMessage0(appClass, "NEW");
-        context->DirectoryPut(TheDotLocalObj, TheApplicationObj, "APPLICATION");
+        RexxMethodContext *c = context;
+
+        RexxBufferObject m = c->NewBuffer(sizeof(uint32_t *));
+        *((uint32_t *)c->BufferData(m)) = APPLICATION_MANAGER_MAGIC;
+
+        TheApplicationObj = context->SendMessage1(appClass, "NEW", m);
+        if ( TheApplicationObj != NULLOBJECT )
+        {
+            context->DirectoryPut(TheDotLocalObj, TheApplicationObj, "APPLICATION");
+        }
     }
     return NULLOBJECT;
 }
@@ -856,7 +898,7 @@ RexxMethod2(RexxObjectPtr, window_init, POINTERSTRING, hwnd, OSELF, self)
 {
     if ( !IsWindow((HWND)hwnd) )
     {
-        invalidTypeException(context->threadContext, 1, " window handle");
+        invalidTypeException(context->threadContext, 1, "window handle");
     }
     else
     {

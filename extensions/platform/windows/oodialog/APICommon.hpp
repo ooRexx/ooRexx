@@ -49,6 +49,7 @@
 #define MSG_WINCTRL_FAILED_MSG    "the '%s' message of the Windows '%s' control failed"
 #define NO_LOCAL_ENVIRONMENT_MSG  "the .local environment was not found"
 #define NO_SIZE_CLASS_MSG         "the .Size class was not found"
+#define BAD_APPLICATION_MSG       "the .Application object already exists"
 
 extern void  severeErrorException(RexxThreadContext *c, char *msg);
 extern void  systemServiceException(RexxThreadContext *context, char *msg);

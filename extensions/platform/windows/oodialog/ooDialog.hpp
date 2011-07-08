@@ -241,6 +241,7 @@ typedef enum
 // How the Global constDir is to be used
 typedef enum {globalOnly, globalFirst, globalLast, globalNever} oodConstDir_t;
 
+#define APPLICATION_MANAGER_MAGIC  0xdeadfeed
 
 inline LONG_PTR setWindowPtr(HWND hwnd, int index, LONG_PTR newPtr)
 {
