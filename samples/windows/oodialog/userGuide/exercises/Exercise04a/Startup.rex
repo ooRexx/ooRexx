@@ -34,20 +34,24 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide
-   Exercise 04a: The Order Management Application
-   Startup.rex 	v00-01 04Apr11
+/* ooDialog User Guide							      
+   Exercise 04a: The CustomerView Class             
+   
+   Contains: program "Startup";
+
+   Description:   The "application" or "root" or "starter" part for the 
+   		  sample CustomerView component.   		      
+   
+   Changes:
+   v01-00  15Jly11
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-  This file is the "application" or "root" or "starter" part
-  of the sample Order Management application.
- ******************************************************************************/
 
-.application~useGlobalConstDir('O', 'CustomerView.h')
 call startCustomerView		-- a routine in CustomerView.rex
 
-::requires "ooDialog.cls"
-::requires "CustomerView.rex"
+say "Startup-02: Finished."
+
+::requires "ooDialog.cls"  
+::requires "CustomerView.rex" 
 
 /******************************************************************************/
