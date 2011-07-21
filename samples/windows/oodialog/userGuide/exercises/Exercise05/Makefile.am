@@ -37,6 +37,9 @@
 
 .NOTPARALLEL:
 
+SUBDIRS		= res
+DIST_SUBDIRS		= res
+
 MAINTAINERCLEANFILES	= Makefile.in *~
 
 EXTRA_DIST		= *.rex *.rc *.h

@@ -479,8 +479,13 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/sysinfo/Makefile
         samples/windows/oodialog/tutorial/Makefile
         samples/windows/oodialog/userGuide/Makefile
+        samples/windows/oodialog/userGuide/appendix/Makefile
+        samples/windows/oodialog/userGuide/appendix/DlgData/Makefile
+        samples/windows/oodialog/userGuide/appendix/DlgData/res/Makefile
         samples/windows/oodialog/userGuide/exercises/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise04/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise05/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise05/res/Makefile
         samples/windows/oodialog/wav/Makefile
         samples/windows/oodialog/winsystem/Makefile
         samples/windows/rexutils/Makefile
