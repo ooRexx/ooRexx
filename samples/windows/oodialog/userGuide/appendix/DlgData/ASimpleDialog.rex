@@ -36,52 +36,48 @@
 /*----------------------------------------------------------------------------*/
 
 /* ooDialog User Guide
-   Samples\DlgData             
-   ASimpleDialog2.rex 	v01-00 12JLY11
- 
-   A Simple Dialog 2 - identical to ASimpleDialog.rex except that:
-   - this is a subclass of ResEdit
-   - uses .Application to specify the *.h file.
-   
-   This Dialog is intended to illustrate the use of DlgData. It is a very simple
-   dialog that displays some text, allows the user to change the text and to 
-   indicate agreement or disagreement with the text. On pressing OK or Cancel,
-   a messagebox provides a response.   
+   Samples\DlgData
+   ASimpleDialog.rex 	v01-00 12JLY11
 
-   Associated files: ASimpleDialog.dll  ASimpleDialog.h 
+   This Dialog is intended to illustrate the use of DlgData. It is a very simple
+   dialog that displays some text, allows the user to change the text, and also
+   to indicate agreement or disagreement with the text. A response is provided
+   in a message box.
+
+   Associated files: ASimpleDialog.rc  ASimpleDialog.h
 ------------------------------------------------------------------------------*/
 
--- (0) Add .h file to GlobalConstDir: 
+-- (0) Add the symbolic IDs in ASimpleDialog.h file to GlobalConstDir:
 .Application~useGlobalConstDir("O", "ASimpleDialog.h")
- 
+
 -- (1) Set text in the edit control:
 statement = "It's a fine day today."
 dlgData.IDC_EDIT1 = statement
 
 -- (2a) Create the dialog defined by the .rc file:
-dlg = .ASimpleDialog~new("ASimpleDialog.dll", IDD_DIALOG1, dlgData.)			 
+dlg = .ASimpleDialog~new("ASimpleDialog.rc", IDD_DIALOG1, dlgData.)
 
 -- (2b) Display the dialog:
-ret = dlg~execute("SHOWTOP", IDI_DLG_OOREXX) 
+ret = dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
--- (3) When the dialog is closed, and if the user pressed OK, then retrieve 
+-- (3) When the dialog is closed, and if the user pressed OK, then retrieve
 --     the data provided by the user:
-if ret == 1 then do			-- if the user pressed OK		
-  statement2 = dlgData.1002		-- get data from the edit control		
-  agree = dlgData.IDC_RADIO1		-- get the state of the radio buttons: 
+if ret == 1 then do			-- if the user pressed OK
+  statement2 = dlgData.1002		-- get data from the edit control
+  agree = dlgData.IDC_RADIO1		-- get the state of the radio buttons:
   disagree = dlgData.1004
 
 -- (4) Set up the appropriate message to display:
   choice = .true				-- Assume user selected a radio button
-  if \agree & \disagree then choice = .false	-- If neither radio button selected. 
+  if \agree & \disagree then choice = .false	-- If neither radio button selected.
   if statement2 \= statement then -		-- If data in edit control changed
-    newStmt = .true 
+    newStmt = .true
   else newStmt = .false
-  	  
+
   -- Set some initial values for the message:
   title  = 'Response Received'
   icon   = 'INFORMATION'
-  
+
   -- Build the appropriate response message:
   msg = "Thank you for"
   if newStmt then do			-- New statement entered:
@@ -90,7 +86,7 @@ if ret == 1 then do			-- if the user pressed OK
       msg = msg "but you have not indicated whether or not you agree with it."
     end
     else do  -- a choice was made
-      if agree then msg = msg "and for your agreement with it." 
+      if agree then msg = msg "and for your agreement with it."
       else msg = msg "even though you disagree with it."
     end
   end
@@ -119,7 +115,7 @@ ret = MessageDialog(msg, 0, title, 'OK', icon, 'TOPMOST')
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::requires "ooDialog.cls"
 
-::CLASS ASimpleDialog SUBCLASS ResDialog
+::CLASS ASimpleDialog SUBCLASS RcDialog
 
 /*============================================================================*/
 

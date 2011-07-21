@@ -37,8 +37,8 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= exercises
-DIST_SUBDIRS		= exercises
+SUBDIRS			= exercises appendix
+DIST_SUBDIRS		= exercises appendix
 
 MAINTAINERCLEANFILES	= Makefile.in *~
 
