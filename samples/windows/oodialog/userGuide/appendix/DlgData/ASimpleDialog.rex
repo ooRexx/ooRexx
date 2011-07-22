@@ -107,7 +107,7 @@ else do							-- if Cancel Pressed
 end
 
 -- (5) Display a message to respond to the user's choices:
-ret = MessageDialog(msg, 0, title, 'OK', icon, 'TOPMOST')
+ret = MessageDialog(msg, 0, title, 'OK', icon, 'SETFOREGROUND')
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\

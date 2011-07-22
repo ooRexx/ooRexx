@@ -671,6 +671,11 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\res\" "ProductIcon.bmp"
 
   ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\support
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\support\" "*.cls"
+
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\wav
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.wav"

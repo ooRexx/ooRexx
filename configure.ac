@@ -486,6 +486,7 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/userGuide/exercises/Exercise04/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise05/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise05/res/Makefile
+        samples/windows/oodialog/userGuide/support/Makefile
         samples/windows/oodialog/wav/Makefile
         samples/windows/oodialog/winsystem/Makefile
         samples/windows/rexutils/Makefile

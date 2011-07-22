@@ -37,10 +37,7 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= appendix exercises support
-DIST_SUBDIRS		= appendix exercises support
-
 MAINTAINERCLEANFILES	= Makefile.in *~
 
-EXTRA_DIST		= ReadMe.txt
+EXTRA_DIST		= *.cls
 
