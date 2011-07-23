@@ -225,7 +225,7 @@ CD  %OR_OODIALOGSAMPLES%\res
 IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_OODIALOGSAMPLES%\userGuide\appendix\DlgData\res
+CD  %OR_OODIALOGSAMPLES%\userGuide\exercises\Samples\DlgData\res
 IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
 if ERRORLEVEL 1 goto error
 

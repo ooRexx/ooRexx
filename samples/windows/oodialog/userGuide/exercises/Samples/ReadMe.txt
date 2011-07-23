@@ -37,8 +37,8 @@
 
   	ReadMe
 
-  1.  ooDialog - Programs to Accompany the ooDialog User Guide Appendix
-  ---------------------------------------------------------------------
+  1.  ooDialog - Additional Examples to Accompany the ooDialog User Guide
+  -----------------------------------------------------------------------
 
   This subdirectory tree contains the example programs referred to in the
   appendix of the ooDialog User Guide.  The programs are intended to give
