@@ -36,31 +36,38 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide							      
    Exercise 03b: Re-structuring the "Words of Wisdom" application             
-   Exercise03b-bus.rex 	v00-02 29Mar11
+   Exercise03b-Model.rex 					  v00-03 29Jly11
+   Changes:
+     v00-03 - Changes to WowPicker
 ------------------------------------------------------------------------------*/
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  WowPicker							  v00-02 29Mar11
+  WowPicker							  v00-03 29Jly11
   ---------
   A class that returns a Words of Wisdom string, selected randomly from a set 
   of such Words of Wisdom. 
   (Potential enhancements: Request a different set from the WowData class; 
   			   Have the size of the set configurable.)
+  Changes:
+    v00-03: Changed to get data array in activate method instead of
+      	      pickWow method.
+
   interface{ 
     activate( )
-    pickWow( out string wow )
+    arrWowSet pickWow( )
   }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS WowPicker Public
 
 /*----------------------------------------------------------------------------
-    init - gets an initial Wow set from the WowData object.		
+    activate - gets an initial Wow set from the WowData object.		
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
   ::METHOD activate
-    expose wowSet
-    wowSet = .nil
+    expose arrWowSet
+    dataSource = .local~my.idWowData
+    arrWowSet = dataSource~readWowSet
     return 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
@@ -68,13 +75,9 @@
     pickWow - picks a Word of Wisdom from the current wowSet and returns it.		
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
   ::METHOD pickWow
-    expose wowSet
-    if wowSet = .nil then do
-      dataSource = .local~my.idWowData    
-      wowSet = dataSource~readWowSet
-    end
+    expose arrWowSet
     i = random(1,7)
-    return wowSet[i]
+    return arrWowSet[i]
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 /*============================================================================*/

@@ -35,11 +35,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView class
+   Exercise 04b: ProductView.rex - The ProductView component      v00-02 28Jly11
 
    Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h.
-   		   NumberOnlyEditEx.cls (from ooDialog Samples)
+   		   Support\NumberOnlyEditEx.cls (copied from ooDialog Samples)
 
    Description: A sample Product View component - part of the sample
         	Order Management application.
@@ -47,7 +47,8 @@
    Outstanding Problems: None reported.
 
    Changes:
-   v01-00: 21Jly11
+   v00-01: 21Jly11
+   v00-02: 28Jly11 - Added a constants class for user-visible messages.
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -281,9 +282,7 @@
     prodData[uom]       = data~prodUOM
     prodData[prodDescr] = data~prodDescr
     prodData[prodSize]  = data~prodSize
---trace i
     say "ProductView-getData-02: data:"; data~list
---trace off
     return prodData
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */

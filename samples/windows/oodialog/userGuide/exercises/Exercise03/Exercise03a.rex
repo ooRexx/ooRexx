@@ -35,14 +35,15 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-/* Exercise 03: Re-structuring the "Words of Wisdom" application               */
+/* Exercise 03: Re-structuring the "Words of Wisdom" application              */
 
 /*******************************************************************************
   ooDialog User Guide
-    Exercise03a							v00-02 01Apr11
-    -----------
-
-  A re-structuring of the "Words of Wisdom" code.
+    Exercise03a.rex						  v00-03 29Jly11
+    A re-structuring of the "Words of Wisdom" code.
+    
+    Changes:
+    v00-03: added an InitDialog method so do 'self~newStatic(902)' only once.
 
  ******************************************************************************/
 
@@ -54,7 +55,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  UI - Class 'MyDialog'						v00-01  24Mar11
+  UI - Class 'MyDialog'						v00-02  29Jly11
   ---------------------
   Defines the UI
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -75,26 +76,32 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   /*----------------------------------------------------------------------------
     defineDialog - defines the "Words of Wisdom" controls
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::method defineDialog		-- Invoked automatically by ooDialog.
+  ::method defineDialog		-- Invoked automatically.
     self~createPushButton(901, 142, 99, 50, 14, "DEFAULT", "More wisdom", OkClicked)
     self~createPushButton(IDCANCEL, 197, 99, 50, 14, ,"Cancel")
     self~createStaticText(902, 40, 40, 200, 40, , "Click 'More wisdom'")
-
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
+  
+  /*----------------------------------------------------------------------------
+    initDialog - invoked automatically after the dialog has been created.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::method initDialog  
+    expose newText
+    newText = self~newStatic(902)
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  
   /*----------------------------------------------------------------------------
     okClicked - Actions the "More wisdom" control
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method okClicked
-    expose wowPicker
-    newText = self~newStatic(902)
+    expose wowPicker newText
     wow = wowPicker~pickWow
     newText~setText(wow)
     return
-
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 /*============================================================================*/
+
 
 
 /*//////////////////////////////////////////////////////////////////////////////
@@ -130,13 +137,18 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
     return wowSet[i]
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+/*============================================================================*/
+
+
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  WowData							v00-01 24Mar11
+  WowData							v00-02 29Jly11
   -------------
   Has access to WOW data, and returns a set to requester. The size of the set
   can be set via configuration (but not in this version).
+  Changes:
+    v00-02: Corrected comments on readWowSet method.
 
   interface{
     readWowSet    (out array wowSet)
@@ -171,8 +183,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
-    read<method name> - <description>
-		<description continued if necessary>
+    read - Returns a wowSet
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD readWowSet
     expose arrWow

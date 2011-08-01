@@ -34,27 +34,30 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
-   Exercise 03b: Re-structuring the "Words of Wisdom" application             
-   Exercise03b-dat.rex 	v00-02 29Mar11
+/* ooDialog User Guide
+   Exercise 03b: Re-structuring the "Words of Wisdom" application
+   Exercise03b-Data.rex 					  v00-03 29Jly11
 ------------------------------------------------------------------------------*/
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  WowData							  v00-01 24Mar11
-  -------------
+  WowData							  v00-03 29Jly11
+  -------
   Has access to WOW data, and returns a set to requester. 
-  Potential enhancement: Dwefine the size of a set through configuration. 
-  
+  Potential enhancement: Define the size of a set through configuration. 
+  Changes:
+    v00-02: minor changes to comments.
+    v00-03: minor change to comment on activate method.
+
   interface{
-    readWowSet    (out array wowSet)
+    arrWow readWowSet( )
   }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
-::CLASS WowData Public
+::CLASS WowData PUBLIC
 
   /*----------------------------------------------------------------------------
-    init - reads initial Wow Set from disk (but not in this version)
+    activate - reads initial Wow Set from disk (but not in this version)
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
   ::METHOD activate
     expose arrWow
@@ -78,8 +81,7 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
-    read<method name> - <description>
-		<description continued if necessary>
+    readWowSet - returns the Wow set as an array.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
   ::METHOD readWowSet
     expose arrWow

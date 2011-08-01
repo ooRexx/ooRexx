@@ -36,7 +36,14 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide							      
    Exercise 03b: Re-structuring the "Words of Wisdom" application             
-   Exercise03b-app.rex 	v00-02 29Mar11
+
+   Exercise03b-Startup.rex 					  v00-04 29Jly11
+   Changes: 
+     v00-02:
+     v00-03: Changed file names.
+     v00-04: Changed sequence of activating; also minor change to match text
+             in Chapter 3.
+
 ------------------------------------------------------------------------------*/
 
 /*******************************************************************************
@@ -45,18 +52,17 @@
   contain only classes.          	      		      
  ******************************************************************************/
 
-.local~my.idWowPicker = .WowPicker~new
 .local~my.idWowData = .WowData~new
- 
+.local~my.idWowPicker = .WowPicker~new
 dlg = .MyDialog~new
 
-.local~my.idWowPicker~activate
 .local~my.idWowData~activate
-dlg~activate				-- Must be the last statement. 
+.local~my.idWowPicker~activate
+dlg~activate 
 
 ::requires "ooDialog.cls"  
-::requires "exercise03b-gui.rex" 
-::requires "exercise03b-bus.rex"
-::requires "exercise03b-dat.rex"
+::requires "exercise03b-View.rex" 
+::requires "exercise03b-Model.rex"
+::requires "exercise03b-Data.rex"
 
 /******************************************************************************/

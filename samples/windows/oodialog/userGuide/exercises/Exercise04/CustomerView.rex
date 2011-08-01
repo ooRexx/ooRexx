@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide							      
-   Exercise 04a: The CustomerView class             
+   Exercise 04: The CustomerView component             		  v00-05 29Jly11
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".    
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -44,21 +44,30 @@
         	Order Management application.
       
    Changes:
-   v00-02: Prevented close on enter key by providing no-op "ok" method.
-           Changed tab order on window by changing sequence of controls in .rc file
-   v00-03: Changed symbolic IDs to conform with naming convention
-           Added initAutoDetection method because deleted dlgData. from 
-	     dlg~new statement in starter.rex.
+   v00-02: CustomerView class and also the Customer.h file.
+   v00-03: CustomerView class 
+   v00-04: CustomerView class
+   v00-05: CustomerView class  
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
 
+
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerView							  v01-00 11Jly11
+  CustomerView							  v00-05 29Jly11
   -------------
-  The "view" (or "gui") part of the Customer component. 
-  It is part of the sample Order Management application.           	      		      
+  The "view" (or "gui") part of the Customer component - part of the sample
+  Order Management application.
+  Changes:
+    v00-02: Prevented close on enter key by providing no-op "ok" method.
+            Changed tab order on window by changing sequence of controls in .rc file
+    v00-03: Changed symbolic IDs to conform with naming convention
+            Added initAutoDetection method because deleted dlgData. from 
+	    dlg~new statement in starter.rex.
+    v00-04: Took out the OK method - include that in Exercise05. 
+    v00-05: Modified to use CustomerData and CustomerModel classes.
+  
   [interface (idl format)]
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -72,7 +81,7 @@
     Init - creates the dialog instance but does not make it visible.        --*/		
   ::METHOD init
     expose menuBar
-    say "CustomerView-init-01"
+    say "CustomerView-init-01."
 
     forward class (super) continue
 
@@ -86,7 +95,7 @@
     Create Menu Bar - Creates the menu bar on the dialog.                   --*/
   ::METHOD createMenuBar
     expose menuBar
-    say "CustomerView-createMenuBar-01"
+    say "CustomerView-createMenuBar-01."
     menuBar = .ScriptMenuBar~new("CustomerView.rc", IDR_CUST_MENU, , , .true, self)
     return .true	
 
@@ -94,7 +103,7 @@
   /*-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
     Activate - Shows the Dialog - i.e. makes it visible to the user.        --*/
   ::METHOD activate unguarded
-    say "CustomerView-activate-01"
+    say "CustomerView-activate-01."
     self~execute("SHOWTOP")
     return 
 
@@ -103,7 +112,7 @@
     InitDialog - Called by ooDialog 					   -- */
   ::METHOD initDialog
     expose menuBar custControls
-    say "CustomerView-initDialog-01"
+    say "CustomerView-initDialog-01."
     menuBar~attachTo(self)
 
     -- Create objects that map to the edit controls defined by the "customer.rc" 
@@ -131,6 +140,7 @@
   initAutoDetection - invoked by superclass after init - prevents controls being
                       set to blanks.       				    --*/
   ::method initAutoDetection
+    say "CustomerView-initAutoDetection-01."
     self~noAutoDetection
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
   
@@ -201,7 +211,7 @@
     if result then say "CustomerView-recordChanges-01: There were changes!"
     else say "CustomerView-recordChanges-02: No Changes Found"
   
-    /* Send new data to be checked by CustomerModel object (not implemented). */  
+    /* Send new data to be checked by CustomerModel (not implemented). */  
     
     /* Disable controls that were enabled by menu "File-Update" selection: */
     custControls[ecCustName]~setReadOnly(.true)
@@ -223,35 +233,17 @@
 
     
   /*----------------------------------------------------------------------------
-    "OK" - This no-op method is provided to over-ride the default Windows action
-           resulting from pressing the Enter key. The default action is to close 
-           the window - even if there is no "OK" button on the dialog.      --*/
-  ::METHOD ok unguarded
-
-  
-  /*----------------------------------------------------------------------------
     Application Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
-    Get Data - gets data from the CustomerModel component (but data is hard-coded 
-    	       in this version) and displays it in the appropriate controls.   
-    	       The data would be returned from the CustomerModel component; 
-    	       in this version the data is hard coded.                      --*/ 
+    Get Data - gets data from the CustomerModel component and displays it in the
+    	       appropriate controls.			                    --*/ 
   ::METHOD getData	
     expose custData
-    
-    custData = .directory~new
-    arrCustAddr = .array~new
-    arrCustAddr[1] = "28 Frith Street"
-    arrCustAddr[2] = "Hardington"
-    arrCustAddr[3] = "Blockshire"
-    custData[custNo]      = "AB15784"
-    custData[custName]    = "Joe Bloggs & Co Ltd"
-    custData[CustAddr] = arrCustAddr 
-    custData[custZip]     = "LB7 4EJ"
-    custData[custDiscount]= "B1"
- 
+    say "CustomerView-getData-01."
+    idCustomerModel = .local~my.idCustomerModel
+    custData = idCustomerModel~query    
 
   /*----------------------------------------------------------------------------
     showData - displays data in the dialog's controls.                        */  
@@ -326,11 +318,10 @@
 
 /*============================================================================*/
 ::ROUTINE StartCustomerView PUBLIC
-  
-  say "StartCustomerView Routine-01: .CustomerView~new..."
+  say "StartCustomerView Routine-01: Start."
   .application~useGlobalConstDir("O", "CustomerView.h")
   dlg = .CustomerView~new("CustomerView.rc", "IDD_CUST_DIALOG")
-  say "StartCustomerView Routine-02: dlg~activate..."
-  dlg~activate	
-  say "StartCustomerView Routine-01: Finished."
+  say "StartCustomerView Routine-02: dlg~activate."
+  dlg~activate
+  say "StartCustomerView Routine-03: End."
 /*============================================================================*/

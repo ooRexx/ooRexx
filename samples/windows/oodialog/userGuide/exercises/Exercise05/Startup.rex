@@ -35,19 +35,19 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide							      
-   Exercise 05: The Order Management Application             
-   Startup.rex 	v01-00 21Jly11
+   Exercise 05: The Product component				  v00-02 29Jly11
+   Startup.rex - the starter" for the Product component.   		      
+   Changes:
+     v00-01: 15Jly11
+     v00-02  29Jly11 - Modified to take into account the added Model and Data
+                       classes.
+
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-  This file is an "application" or "root" or "starter" part 
-  of the sample Order Management application.   		      
- ******************************************************************************/
-
-.local~my.idProductModel = .ProductModel~new	-- create Product Model instance
-.local~my.idProductData  = .ProductData~new	-- create Product Data instance
-.local~my.idProductModel~activate		
+.local~my.idProductData  = .ProductData~newInstance	-- create a ProductData instance
+.local~my.idProductModel = .ProductModel~newInstance	-- create a ProductModel instance
 .local~my.idProductData~activate
+.local~my.idProductModel~activate		
 
 .ProductView~newInstance
 

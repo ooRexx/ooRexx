@@ -36,14 +36,18 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide							      
    Exercise 03b: Re-structuring the "Words of Wisdom" application             
-   Exercise03b-gui.rex 	v00-02 29Mar11
+   Exercise03b-View.rex 					  v00-03 27Jly11
+   Changes:
+     v00-03: Changes to class MyDialog.
 ------------------------------------------------------------------------------*/
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  MyDialog							 v00-02  29Mar11
+  MyDialog							 v00-03  29Mar11
   --------
   A class that defines the User Interface for the Wow application.
+  Changes:
+    v00-03: Added an initDialog method in which "newText" is created.
 
   interface{ 
     activate( )    
@@ -71,7 +75,15 @@
     self~createPushButton(IDCANCEL, 197, 99, 50, 14, ,"Cancel")
     self~createStaticText(902, 40, 40, 200, 40, , "Click 'More wisdom'")
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
+  
+  /*----------------------------------------------------------------------------
+    initDialog - invoked automatically after the dialog has been created.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::method initDialog  
+    expose newText
+    newText = self~newStatic(902)
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  
   /*----------------------------------------------------------------------------
     activate - gets id for wowPicker, shows the dialog.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
@@ -86,8 +98,7 @@
     okClicked - Actions the "More wisdom" control
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
   ::method okClicked
-    expose wowPicker
-    newText = self~newStatic(902)
+    expose wowPicker newText
     wow = wowPicker~pickWow
     newText~setText(wow)
     return
