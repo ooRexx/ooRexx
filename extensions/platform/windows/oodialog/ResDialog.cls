@@ -75,8 +75,9 @@
 -- DEPRECATED
 ::method setMenu
   use strict arg id
-  menuBar = .BinaryMenuBar~new(self, id, self, 0, .true)
+  menuBar = .BinaryMenuBar~new(self, id, 0, self)
   if menuBar == 0 then return .false
   self~menuBar = menuBar
+  .constDir~putAll(self~constDir)
   return .true
 

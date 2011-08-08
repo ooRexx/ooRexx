@@ -81,8 +81,9 @@
     use strict arg count = 100
 
     -- menuBar is either good, or a condition was raised.
-    menuBar = .UserMenuBar~new(-1, self, 0, count)
+    menuBar = .UserMenuBar~new(-1, 0, count)
     self~menuBar = menuBar
+    .constDir~putAll(self~constDir)
     return .true;
 
 ::method addPopupMenu
@@ -125,6 +126,7 @@
   if loadopts~caselessWordPos("CONNECTITEMS") <> 0 then connect = .true
 
   -- menuBar is either good, or a condition was raised.
-  menuBar = .ScriptMenuBar~new(resFile, menuid, self, 0, count, connect)
+  menuBar = .ScriptMenuBar~new(resFile, menuid, 0, count, connect)
   self~menuBar = menuBar
+  .constDir~putAll(self~constDir)
   return 0
