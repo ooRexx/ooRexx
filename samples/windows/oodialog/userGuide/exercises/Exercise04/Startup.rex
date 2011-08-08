@@ -36,12 +36,13 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide							      
    Exercise 04: The Customer Component             
-   Startup.rex  						    v00-02 29Jly
+   Startup.rex  						  v00-03 03Aug11
                 The starter" for the Customer component.   		      
    Changes:
      v00-01: 15Jly11
      v00-02  29Jly11 - Modified to take into account the added Model and Data
                        classes.
+     v00-03  03Aug11 - Deleted ::requires ooDialog.cls (not required here).
 ------------------------------------------------------------------------------*/
 
 .local~my.idCustomerData  = .CustomerData~new	-- create Customer Data instance
@@ -53,7 +54,6 @@ call startCustomerView		-- a routine in CustomerView.rex
 
 say "Startup-01: Finished."
 
-::REQUIRES "ooDialog.cls"  
 ::REQUIRES "CustomerView.rex" 
 ::REQUIRES "CustomerModelData.rex"
 /******************************************************************************/

@@ -35,29 +35,31 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide							      
-   Exercise 04b: The ProductModel and ProductData Classes  	  v00-02 29Jly11
+   Exercise 04b: The ProductModel and ProductData Classes         v00-03 08Aug11
    
-   Contains: 	   classes "ProductModel", "ProductResource", and "ProductDT".    
+   Contains:  classes "ProductModel", "ProductResource", and "ProductDT".    
    Pre-requisites: None.
    		   
    Outstanding Problems: 
    None.
    
    Changes:
-   v00-02: 29Jly11
+   v00-02: 21Jly11
+   v00-03: Correct "return" statement not in right place (typo in code!!)
+           Renamed the ProductDT attributes (initial "prod" deemed extraneous)
 ------------------------------------------------------------------------------*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductModel							  v01-00 12Jly11
+  ProductModel							  v00-02 12Jly11
   ------------
   The "model" part of the Product component.
   
   interface productModel{
-    ProductModel newInstance()  -- Class method.
+    aProductModel newInstance()  -- Class method.
     null	  activate()
-    ProductDT     query() 
+    aProductDT     query() 
   };
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -119,12 +121,12 @@
   ::METHOD activate PUBLIC
     expose data
     data = .ProductDT~new
-    data~prodNo    = "CF300/X"
-    data~prodName  = "Widget Box"
-    data~prodPrice = "2895"
-    data~prodUOM   = "6"
-    data~prodDescr = "A 10 litre case with flat sides capable of holding quite a lot of stuff."
-    data~prodSize  = "M"
+    data~number    = "CF300/X"
+    data~name  = "Widget Box"
+    data~price = "2895"
+    data~uom   = "6"
+    data~description = "A 10 litre case with flat sides capable of holding quite a lot of stuff."
+    data~size  = "M"
     return
     
 
@@ -136,9 +138,10 @@
 /*============================================================================*/
 
 
+
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductDT - A business data type for Product data.		  v00-01 20Jly11
+  ProductDT - A business data type for Product data.		  v00-02 07Aug11
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =*/
 
 ::CLASS ProductDT PUBLIC
@@ -146,20 +149,20 @@
   --		dtName		XML Name	Description			
   --		---------	----------	-------------------------------
   --		ProductDT	product
-  ::ATTRIBUTE	prodNo		-- number	Product Number 
-  ::ATTRIBUTE	prodName	-- name		Product Description
-  ::ATTRIBUTE	prodPrice	-- price	Product Price (rightmost two digits are 100ths of currency unit)
+  ::ATTRIBUTE	number		-- number	Product Number 
+  ::ATTRIBUTE	name		-- name		Product Description
+  ::ATTRIBUTE	price		-- price	Product Price (rightmost two digits are 100ths of currency unit)
 --::ATTRIBUTE   currency	-- currency	Three-letter currency code
-  ::ATTRIBUTE	prodUOM		-- uom		Product Unit of Measure
-  ::ATTRIBUTE   prodDescr	-- descrip	Product Description
-  ::ATTRIBUTE   prodSize	-- size		Produce Size Category (S/M/L)
+  ::ATTRIBUTE	uom		-- uom		Product Unit of Measure
+  ::ATTRIBUTE   description	-- descrip	Product Description
+  ::ATTRIBUTE   size		-- size		Produce Size Category (S/M/L)
   
   ::METHOD list PUBLIC
-    expose prodNo prodName prodPrice prodUOM prodDescr prodSize
+    expose number name price uom description size
     say "---------------"
     say "ProductDT-List:"
-    say "ProdNo: " prodNo   "ProdName:" prodName 
-    say "ProdPrice:" prodPrice "ProdUOM:" prodUOM  "ProdSize:" prodSize
-    say "ProdDescr:" prodDescr 
+    say "Number: " number   "Name:" name 
+    say "Price:" price "UOM:" uom  "Size:" size
+    say "Description:" description 
     say "---------------"    
-/*============================================================================*/
+/*============================================================================*/    
