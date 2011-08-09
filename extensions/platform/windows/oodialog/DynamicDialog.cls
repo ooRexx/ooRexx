@@ -864,6 +864,7 @@
    else if kind = "LB" then do
       if style~wordpos("LBS_USETABSTOPS") > 0 then ret = ret || " COLUMNS"
       if style~wordpos("LBS_STANDARD") > 0 then ret = ret|| " SORT"
+      else if style~wordpos("LBS_SORT") > 0 then ret = ret|| " SORT"
       if style~wordpos("LBS_NOTIFY") > 0 then ret = ret || " NOTIFY"
       if style~wordpos("LBS_MULTIPLESEL") > 0 then ret = ret || " MULTI"
       if style~wordpos("LBS_MULTICOLUMN") > 0 then ret = ret || " MCOLUMN"
