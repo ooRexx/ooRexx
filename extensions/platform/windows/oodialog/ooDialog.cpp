@@ -4789,6 +4789,12 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
     bool isCategoryDlg = false;
     HWND hDlg = ((pCPlainBaseDialog)pCSelf)->hDlg;
 
+    // If the underlying dialog is not created yet, just return.
+    if ( hDlg == NULL )
+    {
+        return result;
+    }
+
     if ( c->IsOfType(self, "CATEGORYDIALOG") )
     {
         isCategoryDlg = true;
