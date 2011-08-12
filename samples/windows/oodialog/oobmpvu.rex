@@ -50,7 +50,6 @@
  d = .BmpDialog~new(b.)
  d~createCenter(300, 200, "Bitmap Viewer")
  d~execute("SHOWTOP")
- d~deinstall
  ret = directory(curdir)
  return
 

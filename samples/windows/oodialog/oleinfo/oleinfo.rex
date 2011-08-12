@@ -49,7 +49,6 @@
 MainDialog = .OLEINFO~new
 if MainDialog~InitCode = 0 then do
   rc = MainDialog~Execute("SHOWTOP")
-  MainDialog~deinstall
 end
 
 exit   /* leave program */
@@ -172,7 +171,6 @@ callFailed:
   temp = .HelpDialog~new(data.)
   if temp~InitCode = 0 then do
     rc = temp~execute("SHOWTOP")
-    temp~deinstall
   end
 
   /* Method Lookup is connected to item 103 */
@@ -223,7 +221,6 @@ callFailed:
       picked = combo~title
       self~ok
     end
-    temp~deinstall
   end
   cb = self~newComboBox(100)
   if cb \= .nil then do
@@ -427,7 +424,6 @@ callFailed:
   aDialog=.invokeDialog~new(,params.)
   aDialog~create(100,100,200,26+13*params.0,"Method invocation:" methods.i.!NAME)
   rc = aDialog~execute("showtop")
-  aDialog~deinstall
   if rc = 1 then do
     execString = methods.i.!name
     usesOutParms = .FALSE
@@ -472,7 +468,6 @@ callFailed:
            self~newComboBox(100)~title = self~currentObjectName
            self~updateView
         end
-        temp~deinstall
       end
     end
 

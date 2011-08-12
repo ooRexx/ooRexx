@@ -54,7 +54,6 @@
 
   dlg = .AnUpDownDlg~new("upDown.rc", IDD_UP_DOWN)
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
-  dlg~deinstall
 
 return 0
 -- End of entry point.

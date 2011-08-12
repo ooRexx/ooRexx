@@ -58,7 +58,6 @@
  d = .peddialog~new("RES\OOPet.DLL",103, b.)
  if d~InitCode \= 0 then exit
  d~execute("SHOWTOP")
- d~deinstall
  ret = directory(curdir)
  return
 

@@ -88,7 +88,6 @@
     "type" logfile
  end
 
- dlg~deinstall
  ret = directory(curdir)
  return
 

@@ -395,7 +395,6 @@ return .true
   if dlg~initCode == 0 then do
     dlg~useTree(tree)
     dlg~execute("SHOWTOP")
-    dlg~deinstall
     return .true
   end
 
@@ -799,7 +798,6 @@ return populatedMenubar
 
   self~init:super("winSystemDlgs.rc", IDD_MENU_TREE, , "winSystemDlgs.h")
   self~execute("SHOWTOP")
-  self~deinstall
 
 /** initDialog()
  * Initializes the dialog controls for this dialog.  The only control is the

@@ -63,7 +63,6 @@
 dlg = .WindowListDlg~new("winSystemDlgs.rc", IDD_WINDOW_List)
 if dlg~initCode == 0 then do
   dlg~execute("SHOWTOP")
-  dlg~deinstall
   return 0
 end
 else do
