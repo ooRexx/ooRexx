@@ -997,12 +997,30 @@ int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y,
     int32_t result = 0;
 
     // Connect the data attribute if we need to, and the id is not IDC_STATIC.
-    // This is done so that radio buttons within a group are detected, if the
-    // user has given the group style to a static label, and given the label a
-    // resource ID.  We have no attribute name, so we pass in null.
+    // This is done to fix a bug where radio buttons within a group are not
+    // detected if the user has given the group style to a static label, and
+    // given the label a resource ID.
+    //
+    // However, this has the potential of breaking old programs because
+    // originally no static control was added to the data table.  Now, by adding
+    // it, the text will get set to "" if auto detection is on and the attribute
+    // is not set to some text. (Which it will be in old programs. We know the
+    // attribute name should be "DATA" || id, so we create that name here.  On
+    // return, we set the attribute to the text of the control.
+    //
+    // This also makes auto detection work more consistently.
+
     if ( pcpbd->autoDetect && id != -1 )
     {
-        result = connectCreatedControl(c, pcpbd, rxID, id, NULL, winStatic);
+        char name[64];
+        _snprintf(name, sizeof(name), "DATA%d", id);
+
+        result = connectCreatedControl(c, pcpbd, rxID, id, name, winStatic);
+        if ( result == OOD_NO_ERROR )
+        {
+            strcat(name, "=");
+            c->SendMessage1(pcdd->rexxSelf, name, c->String(text));
+        }
     }
     return result;
 }
