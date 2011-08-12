@@ -735,6 +735,13 @@ typedef struct _psdCSelf {
 } CPropertySheetDialog;
 typedef CPropertySheetDialog *pCPropertySheetDialog;
 
+/* Struct for the AppliationManager object CSelf. */
+typedef struct _amCSelf {
+    RexxObjectPtr     rexxSelf;
+    bool              autoDetect;
+} CApplicationManager;
+typedef CApplicationManager *pCApplicationManager;
+
 #define COMCTL32_VERSION_STRING_LEN  31
 
 // All global variables are defined in oodPackageEntry.cpp

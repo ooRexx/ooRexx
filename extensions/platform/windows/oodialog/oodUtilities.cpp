@@ -298,6 +298,20 @@ RexxMethod2(RexxObjectPtr, app_init, RexxObjectPtr, magic, OSELF, self)
         return NULLOBJECT;
     }
 
+    RexxBufferObject obj = context->NewBuffer(sizeof(CApplicationManager));
+    if ( obj == NULLOBJECT )
+    {
+        goto done_out;
+    }
+
+    pCApplicationManager pcam = (pCApplicationManager)context->BufferData(obj);
+    memset(pcam, 0, sizeof(CApplicationManager));
+
+    pcam->autoDetect = true;
+    pcam->rexxSelf = self;
+
+    context->SetObjectVariable("CSELF", obj);
+
     TheConstDir = context->NewDirectory();
     context->DirectoryPut(TheDotLocalObj, TheConstDir, "CONSTDIR");
 
@@ -306,12 +320,14 @@ RexxMethod2(RexxObjectPtr, app_init, RexxObjectPtr, magic, OSELF, self)
     context->SendMessage1(self, "CONSTDIR=", TheConstDir);
     putDefaultSymbols(context, TheConstDir);
 
+done_out:
     return NULLOBJECT;
 }
 
 
-RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxStringObject, hFile, OSELF, self)
+RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxStringObject, hFile, CSELF, pCSelf)
 {
+    pCApplicationManager pcam = (pCApplicationManager)pCSelf;
     oodConstDir_t mode;
 
     switch ( toupper(*_mode) )
@@ -338,27 +354,78 @@ RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxS
 
     if ( argumentExists(2) )
     {
-        context->SendMessage1(self, "PARSEINCLUDEFILE", hFile);
+        context->SendMessage1(pcam->rexxSelf, "PARSEINCLUDEFILE", hFile);
     }
 
     return TheTrueObj;
 }
 
 
-RexxMethod2(uint32_t, app_addToConstDir, RexxObjectPtr, src, OSELF, self)
+RexxMethod2(uint32_t, app_addToConstDir, RexxObjectPtr, src, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
+    pCApplicationManager pcam = (pCApplicationManager)pCSelf;
+
     if ( context->HasMethod(src, "SUPPLIER") )
     {
         context->SendMessage1(TheConstDir, "PUTALL", src);
     }
     else if( context->IsString(src) )
     {
-        context->SendMessage1(self, "PARSEINCLUDEFILE", src);
+        context->SendMessage1(pcam->rexxSelf, "PARSEINCLUDEFILE", src);
     }
     else
     {
         wrongArgValueException(context->threadContext, 1, "a collection class object, or a file name", src);
+    }
+    return 0;
+}
+
+
+/** ApplicationManager::autoDetection()
+ *
+ *  Sets the global auto detection to that specified.
+ *
+ *  @param on  If true sets the default auto detection to on, if false the
+ *             default is set to off.  If omitted, auto detection is turned off.
+ *
+ *  @return    Returns 0 always.
+ *
+ *  @notes  By default auto detection is on in all dialogs.  The application
+ *          manager can change that default for all dialogs instantiated in the
+ *          current application.
+ *
+ */
+RexxMethod2(uint32_t, app_autoDetection, OPTIONAL_logical_t, on, CSELF, pCSelf)
+{
+    pCApplicationManager pcam = (pCApplicationManager)pCSelf;
+    pcam->autoDetect = on ? true : false;
+    return 0;
+}
+
+
+/** ApplicationManager::initAutoDetection()
+ *
+ *  Called internally by the framework to set the auto detection for the dialog
+ *  specified.  Not meant to be documented for the user.
+ *
+ *  This works by setting the auto detect attribute of the dialog to the same
+ *  value as the application manager has.  The application manager's auto detect
+ *  value is by default true, the same as the default for the dialog.
+ *
+ *  @params  dlg  The dialog whose auto detect attribute is to be set.
+ *
+ *  @remarks  We could probably skip the requiredDlgCSelf(), but the method is
+ *            public so theoretically a user could invoke it even if it is not
+ *            documented.
+ */
+RexxMethod2(uint32_t, app_initAutoDetection, RexxObjectPtr, dlg, CSELF, pCSelf)
+{
+    pCApplicationManager pcam  = (pCApplicationManager)pCSelf;
+
+    pCPlainBaseDialog pcpbd = requiredDlgCSelf(context, dlg, oodPlainBaseDialog, 1);
+    if ( pcpbd != NULL )
+    {
+        pcpbd->autoDetect = pcam->autoDetect;
     }
     return 0;
 }

@@ -456,9 +456,8 @@
 
 
 -- initAutoDetection() is invoked by init() to set the default for automatic data field detection.
--- Therefore, subclasses can over-ride this method to change the default, which is enabled.
 ::method initAutoDetection private                                                               -- First data attribute method
-   self~autoDetection            -- autodetection is enabled by default
+   .application~initAutoDetection(self)
 
 ::method noAutoDetection
    self~autoDetect = .false      -- disable autodetection
