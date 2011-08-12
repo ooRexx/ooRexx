@@ -620,6 +620,7 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.h"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide

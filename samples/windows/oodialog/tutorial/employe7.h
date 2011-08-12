@@ -1,7 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,73 +35,29 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-#include <windows.h>
-#include <commctrl.h>
-#include <winuser.h>
-#include "employe7.h"
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
 
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDM_MENUBAR MENU
-{
-    POPUP "&File"
-    {
-        MENUITEM "&Cancel", IDCANCEL
-        MENUITEM "E&xit", IDOK
-    }
-    POPUP "&Employees"
-    {
-        MENUITEM "&Add", IDM_ADD
-        MENUITEM "&Print", IDM_PRINT
-        MENUITEM SEPARATOR
-        MENUITEM "&List", IDM_LIST, GRAYED
-    }
-    POPUP "&Help"
-    {
-        MENUITEM SEPARATOR
-        MENUITEM "&About", IDM_ABOUT
-    }
-}
-
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDD_EMPLOYEE_LIST DIALOG 6, 15, 278, 117
-STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-CAPTION "List of Employees"
-FONT 12, "Courier New"
-{
-    LISTBOX         IDC_LB_EMPLOYEES_LIST, 10, 22, 258, 66, WS_VSCROLL | LBS_USETABSTOPS | LBS_NOTIFY
-    LTEXT           "Name", -1, 10, 7, 26, 8, SS_LEFT
-    LTEXT           "Profession", -1, 101, 7, 60, 8, SS_LEFT
-    LTEXT           "City", -1, 201, 7, 60, 8, SS_LEFT
-    DEFPUSHBUTTON   "OK", IDOK, 218, 93, 50, 14
-}
-
-
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDD_EMPLOYEES7 DIALOG 6, 15, 235, 194
-STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-CAPTION "Employees Version 7"
-FONT 10, "Tahoma"
-{
-    GROUPBOX        "Mode", IDC_GB2, 165, 10, 60, 44, WS_GROUP
-    AUTORADIOBUTTON "&Adding", IDC_RB_ADD, 174, 20, 46, 12, WS_TABSTOP
-    AUTORADIOBUTTON "&Browsing", IDC_RB_BROWSE, 174, 37, 46, 12
-    LTEXT           "Person:", -1, 12, 20, 30, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_NAME, 40, 20, 120, 12
-    CONTROL         "", IDC_UPD, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 150, 20, 10, 12
-    LTEXT           "City:", -1, 12, 37, 16, 8, SS_LEFT
-    COMBOBOX        IDC_CB_CITY, 40, 37, 120, 56, WS_TABSTOP | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT           "Position:", -1, 12, 58, 30, 8, SS_LEFT
-    LISTBOX         IDC_LB_POSITION, 10, 68, 150, 82, WS_TABSTOP | WS_VSCROLL | LBS_SORT | LBS_NOTIFY
-    GROUPBOX        "Statistics", IDC_GB1, 165, 65, 60, 66, WS_GROUP
-    AUTORADIOBUTTON "&Male", IDC_RB_MALE, 174, 80, 46, 12, WS_TABSTOP
-    AUTORADIOBUTTON "&Female", IDC_RB_FEMALE, 174, 95, 46, 12
-    AUTOCHECKBOX    "Ma&rried", IDC_CHK_MARRIED, 174, 112, 46, 12, WS_GROUP
-    PUSHBUTTON      "A&dd", IDC_PB_ADD, 165, 135, 60, 14
-    PUSHBUTTON      "&Print", IDC_PB_PRINT, 10, 160, 45, 14
-    PUSHBUTTON      "&List Employees", IDC_PB_LIST, 60, 160, 65, 14
-    DEFPUSHBUTTON   "D&one", IDOK, 130, 160, 45, 14
-    PUSHBUTTON      "&Cancel", IDCANCEL, 180, 160, 45, 14
-}
+#define IDD_EMPLOYEES7                          206
+#define IDD_EMPLOYEE_LIST                       207
+#define IDM_MENUBAR                             208
+#define IDC_GB1                                 1000
+#define IDC_CB_CITY                             1001
+#define IDC_UPD                                 1002
+#define IDC_LB_POSITION                         1003
+#define IDC_EDIT_NAME                           1004
+#define IDC_PB_ADD                              1005
+#define IDC_RB_MALE                             1006
+#define IDC_RB_FEMALE                           1007
+#define IDC_CHK_MARRIED                         1008
+#define IDC_PB_PRINT                            1009
+#define IDC_GB2                                 1010
+#define IDC_LB_EMPLOYEES_LIST                   1010
+#define IDC_PB_LIST                             1011
+#define IDC_RB_ADD                              1014
+#define IDC_RB_BROWSE                           1015
+#define IDM_ADD                                 40000
+#define IDM_PRINT                               40001
+#define IDM_LIST                                40002
+#define IDM_ABOUT                               40003

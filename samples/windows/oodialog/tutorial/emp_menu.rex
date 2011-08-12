@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,163 +35,252 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: EMP_MENU.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/* Description: Sample to demonstrate ooDialog menus.                       */
-/*                                                                          */
-/****************************************************************************/
 
-signal on any name CleanUp
+/**
+ * Name: emp_menu.rex
+ * Type: Open Object REXX Script
+ *
+ * Description: Example demonstrating ooDialog menus.
+ */
 
-dlg = .MyDialogClass~new
-if dlg~InitCode <> 0 then exit
-dlg~Execute("SHOWTOP")
-dlg~deinstall
-exit
+.application~useGlobalConstDir('O', 'employe7.h')
+.application~autoDetection(.false)
 
-/* ------- signal handler to destroy dialog if condition trap happens  -----*/
-CleanUp:
-   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
-                     || "a"x || condition("o")~message
-   if dlg~isDialogActive then do
-      dlg~finished = .true
-      dlg~stopIt
-   end
+dlg = .MyDialogClass~new("employe7.rc", IDD_EMPLOYEES7)
+if dlg~initCode <> 0 then return 99
+dlg~execute("SHOWTOP")
+
+return 0
 
 
 ::requires "ooDialog.cls"
 
-::class MyDialogClass subclass UserDialog
+::class 'MyDialogClass' subclass RcDialog
 
-::method Employees attribute
-::method Emp_count attribute
-::method Emp_current attribute
+::attribute employees
+::attribute empCount
+::attribute empCurrent
 
-::method Init
+::method init
     expose menuBar
-    ret = self~init:super;
-    if ret = 0 then ret = self~Load("EMPLOYE7.RC", 100)
-    if ret = 0 then self~Employees = .array~new(10)
-    if ret = 0 then do
-        self~Emp_count = 1
-        self~Emp_current = 1
-        self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
-        self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
-        self~connectButtonEvent(13, "CLICKED", "Emp_List")
-        menuBar = .ScriptMenuBar~new("EMPLOYE7.RC", 200, self)
-        menuBar~connectSelect(201, "Add", self)
-        menuBar~connectSelect(202, "Print", self)
-        menuBar~connectSelect(203, "Emp_List", self)
-        menuBar~connectSelect(204, "About", self)
-    end
-    self~InitCode = ret
-    return ret
 
-::method InitDialog
-    expose menuBar
-    self~City = "New York"
-    self~Male = 1
-    self~Female = 0
-    self~AddComboEntry(22, "Munich")
-    self~AddComboEntry(22, "New York")
-    self~AddComboEntry(22, "San Francisco")
-    self~AddComboEntry(22, "Stuttgart")
-    self~AddListEntry(23, "Business Manager")
-    self~AddListEntry(23, "Software Developer")
-    self~AddListEntry(23, "Broker")
-    self~AddListEntry(23, "Police Man")
-    self~AddListEntry(23, "Lawyer")
-    self~connectEachSBEvent(11, "Emp_Previous", "Emp_Next")
-    self~DisableItem(11)
-    self~DisableItem(13)
+    forward class (super) continue
+    if self~initCode <> 0 then return self~initCode
+
+    self~employees = .array~new(10)
+    self~empCount = 0
+    self~empCurrent = 1
+
+    self~connectButtonEvent(IDC_PB_PRINT, "CLICKED", "print")
+    self~connectButtonEvent(IDC_PB_ADD, "CLICKED", "add")
+    self~connectButtonEvent(IDC_PB_LIST, "CLICKED", "empList")
+    self~connectButtonEvent(IDC_RB_ADD, "CLICKED", "onAdding")
+    self~connectButtonEvent(IDC_RB_BROWSE, "CLICKED", "onBrowsing")
+
+    self~connectEditEvent(IDC_EDIT_NAME, "CHANGE", onNameChange)
+    self~connectUpDownEvent(IDC_UPD, "DELTAPOS", onEmpChange)
+
+    menuBar = .ScriptMenuBar~new("employe7.rc", IDM_MENUBAR, 0)
+    menuBar~connectCommandEvent(IDM_ADD, "add", self)
+    menuBar~connectCommandEvent(IDM_PRINT, "print", self)
+    menuBar~connectCommandEvent(IDM_LIST, "empList", self)
+    menuBar~connectCommandEvent(IDM_ABOUT, "about", self)
+
+    return self~initCode
+
+::method initDialog
+    expose menuBar cbCity lbPosition
+
     menuBar~attachTo(self)
 
-::method Print
-    self~GetData
-    if self~Male = 1 then title = "Mr."; else title = "Ms."
-    if self~Married = 1 then addition = " (married) "; else addition = ""
-    call infoDialog title self~Name addition || "A"x || "City:" self~City || "A"x || "Profession:" self~Profession
+    cbCity = self~newComboBox(IDC_CB_CITY)
+    cbCity~add("Munich")
+    cbCity~add("New York")
+    cbCity~add("San Francisco")
+    cbCity~add("Stuttgart")
+    cbCity~add("San Diego")
+    cbCity~add("Tucson")
+    cbCity~add("Houston")
+    cbCity~add("Las Angles")
 
-::method Add
-    expose menuBar
-    self~Employees[self~Emp_count] = .directory~new
-    self~Employees[self~Emp_count]['NAME'] = self~getControlData(21)
-    self~Employees[self~Emp_count]['CITY'] = self~getControlData(22)
-    self~Employees[self~Emp_count]['PROFESSION'] = self~getControlData(23)
-    if self~getControlData(31) = 1 then sex = 1; else sex = 2
-    self~Employees[self~Emp_count]['SEX'] = sex
-    self~Employees[self~Emp_count]['MARRIED'] = self~getControlData(41)
-    self~Emp_count = self~Emp_count +1
-    self~Emp_current = self~Emp_count
-    self~setControlData(21, "");
-    self~SetSBRange(11, 1, self~Emp_count)
-    self~SetSBPos(11, self~Emp_count)
-    self~EnableItem(11)
-    self~EnableItem(13)
-    menuBar~enable(203)
+    lbPosition = self~newListBox(IDC_LB_POSITION)
+    lbPosition~add("Business Manager")
+    lbPosition~add("Engineering Manager")
+    lbPosition~add("Software Developer")
+    lbPosition~add("Software QA")
+    lbPosition~add("Accountant")
+    lbPosition~add("Security")
+    lbPosition~add("Secretary")
+    lbPosition~add("Recptionist")
+    lbPosition~add("Lab Manager")
+    lbPosition~add("Lawyer")
+    lbPosition~add("CEO")
 
+    self~setControls
+    self~defaultForm
 
-::method Set
-    self~setControlData(21, self~Employees[self~Emp_current]['NAME'])
-    self~setControlData(22, self~Employees[self~Emp_current]['CITY'])
-    self~setControlData(23, self~Employees[self~Emp_current]['PROFESSION'])
-    if self~Employees[self~Emp_current]['SEX'] = 1 then do
-       self~setControlData(31, 1);self~setControlData(32, 0); end
+::method print
+    expose cbCity lbPosition rbMale chkMarried editName
+
+    title = "Acme Software - Employee:"
+
+    if rbMale~checked then msg = "Mr."; else msg = "Ms."
+    msg ||= editName~getText
+    if chkMarried~checked then msg ||= " (married) "
+    msg ||= "A"x || "City:" cbCity~selected || "A"x || "Profession:" lbPosition~selected
+
+    j = MessageDialog(msg, self~hwnd, title, , INFORMATION)
+
+::method add
+    expose menuBar cbCity lbPosition rbMale chkMarried editName pbList upDown rbBrowse
+
+    self~empCount += 1
+    self~employees[self~empCount] = .directory~new
+    self~employees[self~empCount]['NAME'] = editName~getText
+    self~employees[self~empCount]['CITY'] = cbCity~selected
+    self~employees[self~empCount]['POSITION'] = lbPosition~selected
+
+    if rbMale~checked then sex = 1; else sex = 2
+    self~employees[self~empCount]['SEX'] = sex
+    self~employees[self~empCount]['MARRIED'] = chkMarried~checked
+
+    upDown~setRange(1, self~empCount)
+    if self~empCount == 1 then do
+      rbBrowse~enable
+      upDown~setPosition(1)
+    end
+
+    self~empCurrent = self~empCount  -- TODO don't need?
+
+    self~defaultForm
+
+::method onNameChange
+    expose menuBar editName pbAdd rbAdd
+
+    if rbAdd~checked then do
+        if editName~getText~strip~length == 0 then do
+            pbAdd~disable
+            menuBar~disable(IDM_ADD)
+        end
+        else do
+            pbAdd~enable
+            menuBar~enable(IDM_ADD)
+        end
+    end
+
+::method onEmpChange
+    use arg curPos, increment
+    self~setEmpRecord(curPos + increment)
+
+::method onAdding
+    self~defaultForm
+
+::method onBrowsing
+    expose upDown pbAdd menuBar
+
+    pbAdd~disable
+    menuBar~disable(IDM_ADD)
+    upDown~enable
+    self~setEmpRecord(upDown~getPosition)
+
+::method setEmpRecord
+    expose upDown editName cbCity lbPosition rbMale rbFemale chkMarried
+    use strict arg emp
+
+    if emp < 1 then return self~noRecord('bottom')
+    else if emp > upDown~getRange~max then return self~noRecord('top')
+
+    editName~setText(self~employees[emp]['NAME'])
+
+    cbCity~select(self~employees[emp]['CITY'])
+    lbPosition~select(self~employees[emp]['POSITION'])
+
+    if self~employees[emp]['SEX'] = 1 then do
+        rbMale~check
+        rbFemale~uncheck
+    end
     else do
-       self~setControlData(31, 0);self~setControlData(32, 1); end
-    self~setControlData(41, self~Employees[self~Emp_current]['MARRIED'])
+        rbFemale~check
+        rbMale~uncheck
+    end
 
-::method Emp_Previous
-   if self~Emp_count = 1 then return
-   if self~Emp_current > 1 then do
-       self~Emp_current = self~Emp_current - 1
-       self~SetSBPos(11, self~Emp_current)
-       self~Set
-   end; else
-       call TimedMessage "You reached the top!","Info",1000
-
-::method Emp_Next
-   if self~Emp_count = 1 then return
-   if self~Emp_current < self~Emp_count-1 then do
-       self~Emp_current = self~Emp_current + 1
-       self~SetSBPos(11, self~Emp_current)
-       self~Set
-   end; else
-       call TimedMessage "You reached the bottom!","Info",1000
-
-::method Emp_List
-   ldlg = .EmployeeListClass~new(self)
-   ldlg~Execute("SHOWTOP")
+    if self~employees[emp]['MARRIED'] then chkMarried~check
+    else chkMarried~uncheck
 
 
-::method FillList
-   use arg subdlg, id
-   do i = 1 to self~Emp_count-1
-       if self~Employees[i]['SEX'] = 1 then title = "Mr."; else title = "Ms."
-       addstring = title self~Employees[i]['NAME']
-       addstring = addstring || "9"x || self~Employees[i]['PROFESSION']
-       addstring = addstring || "9"x || self~Employees[i]['CITY']
-       subdlg~AddListEntry(id, addstring)
-   end
-
-::method About
-   call infoDialog "Sample to demonstrate ooDialog menus."
+::method empList
+   lDlg = .EmployeeListClass~new("employe7.rc", IDD_EMPLOYEE_LIST)
+   lDlg~parent = self
+   lDlg~execute("SHOWTOP")
 
 
-::class EmployeeListClass subclass UserDialog
+::method fillList
+    use strict arg list
+    do id = 1 to self~empCount
+        if self~employees[id]['SEX'] = 1 then title = "Mr."; else title = "Ms."
+        addstring = title self~employees[id]['NAME']
+        addstring = addstring || "9"x || self~employees[id]['POSITION']
+        addstring = addstring || "9"x || self~employees[id]['CITY']
+        list~insert(id, addstring)
+    end
 
-::method Parent attribute
+::method about
+    call infoDialog "Sample to demonstrate ooDialog menus."
 
-::method Init
-   use arg ParentDlg
-   self~Parent = ParentDlg
-   ret = self~init:super
-   if ret = 0 then ret = self~Load("EMPLOYE7.RC", 101)
-   self~InitCode = ret
-   return ret
+::method setControls private
+    expose rbMale rbFemale rbAdd rbBrowse chkMarried editName pbList pbAdd upDown
 
-::method InitDialog
-   self~parent~FillList(self, 101)
-   self~SetListTabulators(101, 98, 198)
+    pbAdd      = self~newPushButton(IDC_PB_ADD)
+    pbList     = self~newPushButton(IDC_PB_LIST)
+    rbMale     = self~newRadioButton(IDC_RB_MALE)
+    rbFemale   = self~newRadioButton(IDC_RB_FEMALE)
+    rbAdd      = self~newRadioButton(IDC_RB_ADD)
+    rbBrowse   = self~newRadioButton(IDC_RB_BROWSE)
+    chkMarried = self~newCheckBox(IDC_CHK_MARRIED)
+    editName   = self~newEdit(IDC_EDIT_NAME)
+    upDown     = self~newUpDown(IDC_UPD)
+
+::method defaultForm private
+    expose menuBar cbCity lbPosition rbMale rbFemale chkMarried editName pbAdd pbList rbAdd rbBrowse upDown
+
+    editName~setText("")
+    cbCity~select("New York")
+    lbPosition~select("Software Developer")
+
+    rbMale~check
+    rbFemale~uncheck
+    chkMarried~uncheck
+
+    rbAdd~check
+    pbAdd~disable
+    menuBar~disable(IDM_ADD)
+    upDown~disable
+
+    editName~assignFocus
+
+    if self~empCount == 0 then do
+        pbList~disable
+        rbBrowse~disable
+        upDown~setRange(0, 0)
+        upDown~setPosition(0)
+    end
+
+    if self~empCount == 1 then do
+        pbList~enable
+        menuBar~enable(IDM_LIST)
+    end
+
+::method noRecord private
+    use strict arg direction
+    return MessageDialog('At the' direction 'of the records', self~hwnd, -
+                         'Employee Records')
+
+
+::class 'EmployeeListClass' subclass RcDialog
+
+::attribute parent
+
+::method initDialog
+    lb = self~newListBox(IDC_LB_EMPLOYEES_LIST)
+    self~parent~fillList(lb)
+    lb~setTabulators(90, 190)
