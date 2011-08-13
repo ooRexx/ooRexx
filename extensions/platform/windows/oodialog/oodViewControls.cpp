@@ -1483,7 +1483,7 @@ RexxMethod2(RexxObjectPtr, mc_getGridInfo, RexxObjectPtr, _gridInfo, CSELF, pCSe
     else if ( stricmp(partName, "CELL")     == 0 ) info.dwPart = MCGIP_CALENDARCELL;
     else
     {
-        wrongValueAtDirectoryIndexException(context->threadContext, 1, "PART", MC_GRIDINFO_PART_NAMES, _part);
+        directoryIndexExceptionList(context->threadContext, 1, "PART", MC_GRIDINFO_PART_NAMES, _part);
         goto err_out;
     }
 
@@ -1493,7 +1493,7 @@ RexxMethod2(RexxObjectPtr, mc_getGridInfo, RexxObjectPtr, _gridInfo, CSELF, pCSe
 
     if ( info.dwFlags == 0 )
     {
-        directoryIndexException(context->threadContext, 1, "WHAT", MC_GRIDINFO_WHAT_FLAG_ERR_MSG, _what);
+        directoryIndexExceptionMsg(context->threadContext, 1, "WHAT", MC_GRIDINFO_WHAT_FLAG_ERR_MSG, _what);
         goto err_out;
     }
 

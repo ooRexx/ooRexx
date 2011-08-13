@@ -369,11 +369,11 @@ void missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING 
  *
  * @return RexxObjectPtr
  */
-void wrongValueAtDirectoryIndexException(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING list, RexxObjectPtr actual)
+void directoryIndexExceptionList(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING list, RexxObjectPtr actual)
 {
     TCHAR buffer[512];
     _snprintf(buffer, sizeof(buffer),
-              "Index, %s, of argument %d, must be one of %s; found \"%s\"",
+              "Index, %s, of argument %d must be one of %s; found \"%s\"",
               index, pos, list, c->ObjectToStringValue(actual));
     userDefinedMsgException(c, buffer);
 }
@@ -381,8 +381,8 @@ void wrongValueAtDirectoryIndexException(RexxThreadContext *c, size_t pos, CSTRI
 /**
  * Index, <index>, of argument <pos> <msg>; found "<actual>"
  *
- * Index, PART, of argument 1 must contain one or more of the keywords calendar,
- * next, prev, or none; found "today"
+ * Index, PART, of argument 1 must contain at least one of the keywords: date,
+ * rect, or name; found "today"
  *
  * @param c
  * @param pos
@@ -392,11 +392,11 @@ void wrongValueAtDirectoryIndexException(RexxThreadContext *c, size_t pos, CSTRI
  *
  * @return RexxObjectPtr
  */
-void directoryIndexException(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, RexxObjectPtr actual)
+void directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, RexxObjectPtr actual)
 {
     TCHAR buffer[512];
     _snprintf(buffer, sizeof(buffer),
-              "Index, %s, of argument %d, must be one of %s; found \"%s\"",
+              "Index, %s, of argument %d %s; found \"%s\"",
               index, pos, msg, c->ObjectToStringValue(actual));
     userDefinedMsgException(c, buffer);
 }
