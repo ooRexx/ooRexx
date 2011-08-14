@@ -179,6 +179,8 @@
 ::method addToConstDir external "LIBRARY oodialog app_addToConstDir"
 ::method autoDetection external "LIBRARY oodialog app_autoDetection"
 ::method initAutoDetection external "LIBRARY oodialog app_initAutoDetection"  -- Internal use only.
+::method defaultFont external "LIBRARY oodialog app_defaultFont"
+::method setDefaults external "LIBRARY oodialog app_setDefaults"
 
 ::class 'DlgUtil' public
 ::method init class external "LIBRARY oodialog dlgutil_init_cls"

@@ -231,6 +231,10 @@ done_out:
  */
 #define APPLICATIONMANAGER_CLASS        "ApplicationManager"
 
+#define CONST_DIR_USAGE_OPTS            "[O]nly, [F]irst, [L]ast, or [N]ever"
+#define CONST_DIR_SYMBOL_SRC_OPTS       "a collection class object, or a file name"
+
+
 inline bool checkApplicationMagic(RexxMethodContext *c, RexxObjectPtr magic)
 {
     if ( c->IsBuffer(magic) )
@@ -242,31 +246,6 @@ inline bool checkApplicationMagic(RexxMethodContext *c, RexxObjectPtr magic)
         }
     }
     return false;
-}
-
-static void setConstDirUsage(RexxMethodContext *c)
-{
-    CSTRING mode;
-    switch ( TheConstDirUsage )
-    {
-        case globalOnly :
-            mode = "use only";
-            break;
-        case globalFirst :
-            mode = "use first";
-            break;
-        case globalLast :
-            mode = "use last";
-            break;
-        case globalNever :
-            mode = "use never";
-            break;
-        default :
-            mode = "error state";
-            break;
-
-    }
-    c->DirectoryPut(TheDotLocalObj, c->String(mode), "CONSTDIRUSAGE");
 }
 
 void putDefaultSymbols(RexxMethodContext *c, RexxDirectoryObject constDir)
@@ -290,6 +269,192 @@ void putDefaultSymbols(RexxMethodContext *c, RexxDirectoryObject constDir)
     c->DirectoryPut(constDir, c->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
 }
 
+static RexxObjectPtr setConstDirUsage(RexxMethodContext *c, CSTRING _mode, size_t argPos, CSTRING index)
+{
+    CSTRING cMode;
+    oodConstDir_t mode;
+
+    switch ( toupper(*_mode) )
+    {
+        case 'O' :
+            mode = globalOnly;
+            cMode = "use only";
+            break;
+        case 'F' :
+            mode = globalFirst;
+            cMode = "use first";
+            break;
+        case 'L' :
+            mode = globalLast;
+            cMode = "use last";
+            break;
+        case 'N' :
+            mode = globalNever;
+            cMode = "use never";
+            break;
+        default :
+            if ( index == NULL )
+            {
+                wrongArgOptionException(c->threadContext, argPos, CONST_DIR_USAGE_OPTS, _mode);
+            }
+            else
+            {
+                directoryIndexExceptionList(c->threadContext, argPos, index, CONST_DIR_USAGE_OPTS, _mode);
+            }
+            return TheFalseObj;
+    }
+
+    TheConstDirUsage = mode;
+    c->DirectoryPut(TheDotLocalObj, c->String(cMode), "CONSTDIRUSAGE");
+
+    return TheTrueObj;
+}
+
+static RexxObjectPtr addToConstDir(RexxMethodContext *c, pCApplicationManager pcam, RexxObjectPtr src,
+                                   size_t argPos, CSTRING index)
+{
+    RexxObjectPtr result = TheTrueObj;
+
+    if ( c->HasMethod(src, "SUPPLIER") )
+    {
+        c->SendMessage1(TheConstDir, "PUTALL", src);
+    }
+    else if( c->IsString(src) )
+    {
+        result = c->SendMessage1(pcam->rexxSelf, "PARSEINCLUDEFILE", src);
+    }
+    else
+    {
+        if ( index == NULL )
+        {
+            wrongArgValueException(c->threadContext, 1, CONST_DIR_SYMBOL_SRC_OPTS, src);
+        }
+        else
+        {
+            directoryIndexExceptionList(c->threadContext, argPos, index, CONST_DIR_SYMBOL_SRC_OPTS, src);
+        }
+        result = TheFalseObj;
+    }
+    return result;
+}
+
+
+static RexxObjectPtr setGlobalFont(RexxMethodContext *c, CSTRING name, uint32_t size, size_t argPos)
+{
+    RexxObjectPtr result = TheTrueObj;
+
+    if ( strlen(name) > (MAX_DEFAULT_FONTNAME - 1) )
+    {
+        stringTooLongException(c->threadContext, argPos, MAX_DEFAULT_FONTNAME, strlen(name));
+        result = TheFalseObj;
+    }
+    else
+    {
+        pCPlainBaseDialogClass pcpbdc = (pCPlainBaseDialogClass)c->ObjectToCSelf(ThePlainBaseDialogClass);
+
+        if ( strlen(name) != 0 )
+        {
+            strcpy(pcpbdc->fontName, name);
+        }
+
+        if ( size != 0 )
+        {
+            pcpbdc->fontSize = size;
+        }
+    }
+    return result;
+}
+
+
+static RexxObjectPtr setDefaults(RexxMethodContext *c, pCApplicationManager pcam, RexxDirectoryObject prefs)
+{
+    RexxObjectPtr result;
+
+    RexxObjectPtr val = c->DirectoryAt(prefs, "CONSTDIRUSAGE");
+    if ( val != NULLOBJECT )
+    {
+        result = setConstDirUsage(c, c->ObjectToStringValue(val), 1, "CONSTDIRUSAGE");
+        if ( result == TheFalseObj )
+        {
+            goto done_out;
+        }
+    }
+
+    val = c->DirectoryAt(prefs, "SYMBOLSRC");
+    if ( val != NULLOBJECT )
+    {
+        result = addToConstDir(c, pcam, val, 1, "SYMBOLSRC");
+        if ( result == TheFalseObj )
+        {
+            goto done_out;
+        }
+    }
+
+    val = c->DirectoryAt(prefs, "AUTODETECTION");
+    if ( val != NULLOBJECT )
+    {
+        logical_t on;
+        if ( ! c->Logical(val, &on) )
+        {
+            directoryIndexExceptionList(c->threadContext, 1, "AUTODETECTION", ".true or .false", val);
+            result = TheFalseObj;
+            goto done_out;
+        }
+        pcam->autoDetect = on ? true : false;
+    }
+
+    RexxObjectPtr fontName = c->DirectoryAt(prefs, "FONTNAME");
+    RexxObjectPtr fontSize = c->DirectoryAt(prefs, "FONTSIZE");
+
+    if ( ! (fontName == NULLOBJECT && fontSize == NULLOBJECT) )
+    {
+        CSTRING  name;
+        uint32_t size;
+
+        if ( fontName == NULLOBJECT )
+        {
+            name = "";
+        }
+        else if ( fontName == TheNilObj )
+        {
+            name = DEFAULT_FONTNAME;
+        }
+        else
+        {
+            name = c->ObjectToStringValue(fontName);
+        }
+
+        if ( fontSize == NULLOBJECT )
+        {
+            size = 0;
+        }
+        else if ( fontSize == TheNilObj )
+        {
+            size = DEFAULT_FONTSIZE;
+        }
+        else if ( ! c->UnsignedInt32(fontSize, &size) )
+        {
+            directoryIndexExceptionMsg(c->threadContext, 1, "FONTSIZE", "must be a positive whole number", fontSize);
+            result = TheFalseObj;
+            goto done_out;
+        }
+
+        result = setGlobalFont(c, name, size, 1);
+    }
+
+done_out:
+    return result;
+}
+
+/** ApplicationManager::init()
+ *
+ *  Initializes a new ApplicationManager object.  This is done internally by the
+ *  framework and is designed to prevent the Rexx programmer from instantiating
+ *  an application manager object.
+ *
+ *  A single object is instantiated by the framework and placed in the .local
+ *  environment as the .application object.
+ */
 RexxMethod2(RexxObjectPtr, app_init, RexxObjectPtr, magic, OSELF, self)
 {
     if ( ! checkApplicationMagic(context, magic) )
@@ -315,69 +480,43 @@ RexxMethod2(RexxObjectPtr, app_init, RexxObjectPtr, magic, OSELF, self)
     TheConstDir = context->NewDirectory();
     context->DirectoryPut(TheDotLocalObj, TheConstDir, "CONSTDIR");
 
-    setConstDirUsage(context);
-
     context->SendMessage1(self, "CONSTDIR=", TheConstDir);
     putDefaultSymbols(context, TheConstDir);
+
+    // The default for the the const dir usage is never.
+    setConstDirUsage(context, "N", 0, NULL);
 
 done_out:
     return NULLOBJECT;
 }
 
 
-RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxStringObject, hFile, CSELF, pCSelf)
+/** ApplicationManger::useGlobalConstDir()
+ *
+ *
+ */
+RexxMethod3(RexxObjectPtr, app_useGlobalConstDir, CSTRING, _mode, OPTIONAL_RexxObjectPtr, symbolSrc, CSELF, pCSelf)
 {
     pCApplicationManager pcam = (pCApplicationManager)pCSelf;
-    oodConstDir_t mode;
 
-    switch ( toupper(*_mode) )
+    RexxObjectPtr result = setConstDirUsage(context, _mode, 1, NULL);
+
+    if ( result == TheTrueObj && argumentExists(2) )
     {
-        case 'O' :
-            mode = globalOnly;
-            break;
-        case 'F' :
-            mode = globalFirst;
-            break;
-        case 'L' :
-            mode = globalLast;
-            break;
-        case 'N' :
-            mode = globalNever;
-            break;
-        default :
-            wrongArgOptionException(context->threadContext, 1, "[O]nly, [F]irst, [L]ast, or [N]ever", _mode);
-            return TheFalseObj;
+        result = addToConstDir(context, pcam, symbolSrc, 2, NULL);
     }
 
-    TheConstDirUsage = mode;
-    setConstDirUsage(context);
-
-    if ( argumentExists(2) )
-    {
-        context->SendMessage1(pcam->rexxSelf, "PARSEINCLUDEFILE", hFile);
-    }
-
-    return TheTrueObj;
+    return result;
 }
 
 
-RexxMethod2(uint32_t, app_addToConstDir, RexxObjectPtr, src, CSELF, pCSelf)
+/** ApplicationManager::addToConstDir()
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, app_addToConstDir, RexxObjectPtr, src, CSELF, pCSelf)
 {
-    pCApplicationManager pcam = (pCApplicationManager)pCSelf;
-
-    if ( context->HasMethod(src, "SUPPLIER") )
-    {
-        context->SendMessage1(TheConstDir, "PUTALL", src);
-    }
-    else if( context->IsString(src) )
-    {
-        context->SendMessage1(pcam->rexxSelf, "PARSEINCLUDEFILE", src);
-    }
-    else
-    {
-        wrongArgValueException(context->threadContext, 1, "a collection class object, or a file name", src);
-    }
-    return 0;
+    return addToConstDir(context, (pCApplicationManager)pCSelf, src, 1, NULL);
 }
 
 
@@ -414,6 +553,8 @@ RexxMethod2(uint32_t, app_autoDetection, OPTIONAL_logical_t, on, CSELF, pCSelf)
  *
  *  @params  dlg  The dialog whose auto detect attribute is to be set.
  *
+ *  @return  Zero, always.
+ *
  *  @remarks  We could probably skip the requiredDlgCSelf(), but the method is
  *            public so theoretically a user could invoke it even if it is not
  *            documented.
@@ -428,6 +569,114 @@ RexxMethod2(uint32_t, app_initAutoDetection, RexxObjectPtr, dlg, CSELF, pCSelf)
         pcpbd->autoDetect = pcam->autoDetect;
     }
     return 0;
+}
+
+
+/** ApplicationManager::defaultFont()
+ *
+ *  Sets the global font.
+ *
+ *  @param  name  [optional]  The new font, the name of the font.  If omitted
+ *                the global font name is not changed.  However, if both name
+ *                and size are omitted the font is set back to the default font
+ *                and size. (See remarks.)
+ *
+ *  @param  size  [optional]  The new size of the global font.  If omitted the
+ *                global font size is not changed.  However, if both name and
+ *                szie are omitted the font is set back to the default font and
+ *                size. (See remarks.)
+ *
+ *  @return True on success, otherwise false.
+ *
+ *  @notes  The programmer can change the global font back to the default font
+ *          and font size by omitting both arguments.
+ *
+ *          The length of the font name must be less than 256 characters,
+ *          otherwise a syntax condition is raised.  This is the only possible
+ *          cause of failure.
+ *
+ *          Since a syntax condition has been raised on error, false will never
+ *          actually be returned.
+ */
+RexxMethod3(RexxObjectPtr, app_defaultFont, OPTIONAL_CSTRING, name, OPTIONAL_uint32_t, size, CSELF, pCSelf)
+{
+    pCApplicationManager pcam = (pCApplicationManager)pCSelf;
+
+    if ( argumentOmitted(1) && argumentOmitted(2) )
+    {
+        name = DEFAULT_FONTNAME;
+        size = DEFAULT_FONTSIZE;
+    }
+    else if ( argumentOmitted(1) )
+    {
+        name = "";
+    }
+    else if ( argumentOmitted(2) )
+    {
+        size = 0;
+    }
+
+    return setGlobalFont(context, name, size, 1);
+}
+
+/** ApplicationManager::setDefaults()
+ *
+ *  Sets a number of default values for the application in a single method call.
+ *  Each default being set could also be set in a single-purpose method.  If the
+ *  first argument is a .directory object, then the defaults values are
+ *  specified by indexes of the .directory.  Otherwise, the opitonal arguments
+ *  specify individual settings.
+ *
+ */
+RexxMethod6(RexxObjectPtr, app_setDefaults, OPTIONAL_RexxObjectPtr, usage, OPTIONAL_RexxObjectPtr, symbolSrc,
+            OPTIONAL_logical_t, autoDetect, OPTIONAL_CSTRING, fontName, OPTIONAL_uint32_t, fontSize, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    pCApplicationManager pcam  = (pCApplicationManager)pCSelf;
+    RexxObjectPtr        result = TheTrueObj;
+
+    if ( argumentExists(1) && c->IsDirectory(usage) )
+    {
+        return setDefaults(context, pcam, (RexxDirectoryObject)usage);
+    }
+
+    if ( argumentExists(1) )
+    {
+        result = setConstDirUsage(context, context->ObjectToStringValue(usage), 1, NULL);
+        if ( result == TheFalseObj )
+        {
+            goto done_out;
+        }
+    }
+
+    if ( argumentExists(2) )
+    {
+        result = addToConstDir(context, pcam, symbolSrc, 2, NULL);
+        if ( result == TheFalseObj )
+        {
+            goto done_out;
+        }
+    }
+
+    if ( argumentExists(3) )
+    {
+        pcam->autoDetect = autoDetect ? true : false;
+    }
+
+    if ( argumentExists(4) || argumentExists(5) )
+    {
+        if ( argumentOmitted(4) )
+        {
+            fontName = "";
+        }
+
+        // If the fontSize argument is omitted, its value is already 0.
+
+        result = setGlobalFont(c, fontName, fontSize, 1);
+    }
+
+done_out:
+    return result;
 }
 
 

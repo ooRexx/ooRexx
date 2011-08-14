@@ -64,7 +64,7 @@ extern void  userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg)
 extern void  userDefinedMsgException(RexxMethodContext *c, CSTRING msg);
 extern void  userDefinedMsgException(RexxMethodContext *c, size_t pos, CSTRING msg);
 extern void  invalidImageException(RexxThreadContext *c, size_t pos, CSTRING type, CSTRING actual);
-extern void  stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen);
+extern void  stringTooLongException(RexxThreadContext *c, size_t pos, size_t len, size_t realLen);
 extern void  numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
 extern void  notNonNegativeException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
 extern void  notPositiveException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
@@ -75,8 +75,8 @@ extern void *executionErrorException(RexxThreadContext *c, CSTRING msg);
 extern void  doOverException(RexxThreadContext *c, RexxObjectPtr obj);
 extern void  failedToRetrieveException(RexxThreadContext *c, CSTRING item, RexxObjectPtr source);
 extern void  missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index);
-extern void  directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, RexxObjectPtr actual);
-extern void  directoryIndexExceptionList(RexxThreadContext *, size_t pos, CSTRING index, CSTRING list, RexxObjectPtr actual);
+extern void  directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, CSTRING actual);
+extern void  directoryIndexExceptionList(RexxThreadContext *, size_t pos, CSTRING index, CSTRING list, CSTRING actual);
 extern void  emptyArrayException(RexxThreadContext *c, int argPos);
 extern void  arrayToLargeException(RexxThreadContext *c, uint32_t found, uint32_t max, int argPos);
 extern void  sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index);
@@ -171,6 +171,44 @@ inline RexxObjectPtr notPositiveArgException(RexxThreadContext *c, size_t argPos
 {
     c->RaiseException2(Rexx_Error_Incorrect_method_nonnegative, c->WholeNumber(argPos), actual);
     return NULLOBJECT;
+}
+
+/**
+ * Index, <index>, of argument <pos> must be one of <list>; found "<actual>"
+ *
+ * Index, PART, of argument 1 must be one of calendar, next, prev, or none;
+ * found "today"
+ *
+ * @param c
+ * @param pos
+ * @param index
+ * @param list
+ * @param actual
+ *
+ * @return RexxObjectPtr
+ */
+inline void directoryIndexExceptionList(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING list, RexxObjectPtr actual)
+{
+    directoryIndexExceptionList(c, pos, index, list, c->ObjectToStringValue(actual));
+}
+
+/**
+ * Index, <index>, of argument <pos> <msg>; found "<actual>"
+ *
+ * Index, PART, of argument 1 must contain at least one of the keywords: date,
+ * rect, or name; found "today"
+ *
+ * @param c
+ * @param pos
+ * @param index
+ * @param list
+ * @param actual
+ *
+ * @return RexxObjectPtr
+ */
+inline void directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, RexxObjectPtr actual)
+{
+    directoryIndexExceptionMsg(c, pos, index, msg, c->ObjectToStringValue(actual));
 }
 
 /**

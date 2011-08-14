@@ -269,7 +269,7 @@ void invalidImageException(RexxThreadContext *c, size_t pos, CSTRING type, CSTRI
  * @param len      Fixed length
  * @param realLen  Actual length
  */
-void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen)
+void stringTooLongException(RexxThreadContext *c, size_t pos, size_t len, size_t realLen)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Argument %d must be less than %d characters in length; length is %d",
@@ -369,12 +369,11 @@ void missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING 
  *
  * @return RexxObjectPtr
  */
-void directoryIndexExceptionList(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING list, RexxObjectPtr actual)
+void directoryIndexExceptionList(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING list, CSTRING actual)
 {
     TCHAR buffer[512];
     _snprintf(buffer, sizeof(buffer),
-              "Index, %s, of argument %d must be one of %s; found \"%s\"",
-              index, pos, list, c->ObjectToStringValue(actual));
+              "Index, %s, of argument %d must be one of %s; found \"%s\"", index, pos, list, actual);
     userDefinedMsgException(c, buffer);
 }
 
@@ -392,12 +391,11 @@ void directoryIndexExceptionList(RexxThreadContext *c, size_t pos, CSTRING index
  *
  * @return RexxObjectPtr
  */
-void directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, RexxObjectPtr actual)
+void directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, CSTRING actual)
 {
     TCHAR buffer[512];
     _snprintf(buffer, sizeof(buffer),
-              "Index, %s, of argument %d %s; found \"%s\"",
-              index, pos, msg, c->ObjectToStringValue(actual));
+              "Index, %s, of argument %d %s; found \"%s\"", index, pos, msg, actual);
     userDefinedMsgException(c, buffer);
 }
 
