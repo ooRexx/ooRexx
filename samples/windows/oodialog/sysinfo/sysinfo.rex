@@ -54,7 +54,7 @@
  * will lead you straight to the documentation
  */
 
-  .application~useGlobalConstDir("O", 'sysInfo.h')
+  .application~setDefaults("O", 'sysInfo.h', .false)
 
   sysInfoDlg = .SystemClass~new('sysinfo.rc', SYSINFO_DLG)
   if sysInfoDlg~initCode == 0 then do
@@ -214,5 +214,3 @@ return 0
     self~setCursorPos(oldCursorPosition)
   end
 
-::method initAutoDetection
-  self~noAutoDetection

@@ -56,7 +56,8 @@
  *
  */
 
-.application~useGlobalConstDir("O", "winSystemDlgs.h")
+-- Use the global .constDir for symbolic IDs and turn auto detection off.
+.application~setDefaults("O", "winSystemDlgs.h", .false)
 
 -- Create and show our ooDialog dialog.  The logic of the program is contained
 -- within the WindowListDlg class.
@@ -76,14 +77,6 @@ end
 ::requires "windowsSystem.frm"
 
 ::class 'WindowListDlg' public subclass RcDialog
-
-/** initAutoDetection()
- * Prevent ooDialog from fooling with the initialization of our dialog controls.
- * We will initialize the controls the way we want them.
- */
-::method initAutoDetection
-  self~noAutoDetection
-
 
 /** initdialog()
  * Initialize the state of our dialog controls.

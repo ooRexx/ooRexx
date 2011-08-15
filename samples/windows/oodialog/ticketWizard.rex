@@ -1248,7 +1248,6 @@
   return self~ok:super
 
 
-2
 ::routine setFont
 
     oldFont = .directory~new

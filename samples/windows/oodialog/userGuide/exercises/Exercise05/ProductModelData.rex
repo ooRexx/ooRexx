@@ -34,15 +34,15 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
+/* ooDialog User Guide
    Exercise 04b: The ProductModel and ProductData Classes         v00-03 08Aug11
-   
-   Contains:  classes "ProductModel", "ProductResource", and "ProductDT".    
+
+   Contains:  classes "ProductModel", "ProductResource", and "ProductDT".
    Pre-requisites: None.
-   		   
-   Outstanding Problems: 
+
+   Outstanding Problems:
    None.
-   
+
    Changes:
    v00-02: 21Jly11
    v00-03: Correct "return" statement not in right place (typo in code!!)
@@ -55,11 +55,11 @@
   ProductModel							  v00-02 12Jly11
   ------------
   The "model" part of the Product component.
-  
+
   interface productModel{
     aProductModel newInstance()  -- Class method.
     null	  activate()
-    aProductDT     query() 
+    aProductDT     query()
   };
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -74,30 +74,30 @@
     aProductModel = self~new
     return aProductModel
 
-    
+
 /*----------------------------------------------------------------------------
     Instance Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    
+
   ::METHOD activate PUBLIC
-    -- Gets its data from ProductData. 
+    -- Gets its data from ProductData.
     expose data
     idProductData = .local~my.idProductData
     data = idProductData~getData
-    
-    
+
+
   ::METHOD query PUBLIC
     -- Returns data requested (no argument = return all)
     expose data
-    return data 
+    return data
 /*============================================================================*/
 
-   
+
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
   ProductData							  v01-00 20Jly11
   ------------
-  The "data" part of the Product component. 
+  The "data" part of the Product component.
   [interface (idl format)]
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -116,7 +116,7 @@
 /*----------------------------------------------------------------------------
     Instance Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate PUBLIC
     expose data
@@ -128,12 +128,12 @@
     data~description = "A 10 litre case with flat sides capable of holding quite a lot of stuff."
     data~size  = "M"
     return
-    
+
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD getData PUBLIC
     expose data
-    return data 
+    return data
 
 /*============================================================================*/
 
@@ -146,23 +146,23 @@
 
 ::CLASS ProductDT PUBLIC
 
-  --		dtName		XML Name	Description			
+  --		dtName		XML Name	Description
   --		---------	----------	-------------------------------
   --		ProductDT	product
-  ::ATTRIBUTE	number		-- number	Product Number 
+  ::ATTRIBUTE	number		-- number	Product Number
   ::ATTRIBUTE	name		-- name		Product Description
   ::ATTRIBUTE	price		-- price	Product Price (rightmost two digits are 100ths of currency unit)
 --::ATTRIBUTE   currency	-- currency	Three-letter currency code
   ::ATTRIBUTE	uom		-- uom		Product Unit of Measure
   ::ATTRIBUTE   description	-- descrip	Product Description
   ::ATTRIBUTE   size		-- size		Produce Size Category (S/M/L)
-  
+
   ::METHOD list PUBLIC
     expose number name price uom description size
     say "---------------"
     say "ProductDT-List:"
-    say "Number: " number   "Name:" name 
+    say "Number: " number   "Name:" name
     say "Price:" price "UOM:" uom  "Size:" size
-    say "Description:" description 
-    say "---------------"    
-/*============================================================================*/    
+    say "Description:" description
+    say "---------------"
+/*============================================================================*/

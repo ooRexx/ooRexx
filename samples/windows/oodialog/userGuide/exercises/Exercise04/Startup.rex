@@ -34,10 +34,10 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
-   Exercise 04: The Customer Component             
+/* ooDialog User Guide
+   Exercise 04: The Customer Component
    Startup.rex  						  v00-03 03Aug11
-                The starter" for the Customer component.   		      
+                The starter" for the Customer component.
    Changes:
      v00-01: 15Jly11
      v00-02  29Jly11 - Modified to take into account the added Model and Data
@@ -48,12 +48,12 @@
 .local~my.idCustomerData  = .CustomerData~new	-- create Customer Data instance
 .local~my.idCustomerModel = .CustomerModel~new	-- create Customer Model instance
 .local~my.idCustomerData~activate
-.local~my.idCustomerModel~activate		
+.local~my.idCustomerModel~activate
 
 call startCustomerView		-- a routine in CustomerView.rex
 
 say "Startup-01: Finished."
 
-::REQUIRES "CustomerView.rex" 
+::REQUIRES "CustomerView.rex"
 ::REQUIRES "CustomerModelData.rex"
 /******************************************************************************/

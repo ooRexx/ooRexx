@@ -43,12 +43,11 @@
  * Description: Example demonstrating ooDialog menus.
  */
 
-.application~useGlobalConstDir('O', 'employe7.h')
-.application~autoDetection(.false)
+    .application~setDefaults('O', 'employe7.h', .false)
 
-dlg = .MyDialogClass~new("employe7.rc", IDD_EMPLOYEES7)
-if dlg~initCode <> 0 then return 99
-dlg~execute("SHOWTOP")
+    dlg = .MyDialogClass~new("employe7.rc", IDD_EMPLOYEES7)
+    if dlg~initCode <> 0 then return 99
+    dlg~execute("SHOWTOP")
 
 return 0
 
@@ -59,7 +58,6 @@ return 0
 
 ::attribute employees
 ::attribute empCount
-::attribute empCurrent
 
 ::method init
     expose menuBar
@@ -69,7 +67,6 @@ return 0
 
     self~employees = .array~new(10)
     self~empCount = 0
-    self~empCurrent = 1
 
     self~connectButtonEvent(IDC_PB_PRINT, "CLICKED", "print")
     self~connectButtonEvent(IDC_PB_ADD, "CLICKED", "add")
@@ -149,8 +146,6 @@ return 0
       rbBrowse~enable
       upDown~setPosition(1)
     end
-
-    self~empCurrent = self~empCount  -- TODO don't need?
 
     self~defaultForm
 

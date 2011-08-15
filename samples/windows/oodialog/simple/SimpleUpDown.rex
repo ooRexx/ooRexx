@@ -39,6 +39,8 @@
  * A simple UserDialog with an UpDown control.
  */
 
+  .application~autoDetection(.false)
+
   dlg = .SimpleDialog~new
 
   dlg~execute("SHOWTOP")
@@ -77,6 +79,3 @@ return 0
   self~constDir[IDC_UPD]        = 200
   self~constDir[IDC_EDIT_BUDDY] = 205
 
-
-::method initAutoDetection
-  self~noAutoDetection

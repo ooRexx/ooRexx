@@ -34,18 +34,18 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
+/* ooDialog User Guide
    Exercise 04b: ProductView.rex - The ProductView component      v00-03 06Aug11
-   
-   Contains: 	   classes "ProductView" and "AboutDialog".    
+
+   Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h.
    		   Support\NumberOnlyEditEx.cls (copied from ooDialog Samples)
-   		   
-   Description: A sample Product View component - part of the sample 
+
+   Description: A sample Product View component - part of the sample
         	Order Management application.
-   			
+
    Outstanding Problems: None reported.
-   
+
    Changes:
    v00-01: 21Jly11
    v00-02: 28Jly11 - Added a constants class for user-visible messages.
@@ -65,7 +65,7 @@
   ==============================================================================
   ProductView							  v01-00 12Jly11
   -----------
-  The "view" part of the Product component. 
+  The "view" part of the Product component.
   [interface (idl format)]
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -77,18 +77,18 @@
 
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
     say ".ProductView-newInstance-01: Start."
-    -- Enable use of symbolic IDs in menu creation:
-    .application~useGlobalConstDir("O", "ProductView.h")
+    -- Enable use of symbolic IDs in menu creation and turn auto detecion off:
+    .application~setDefaults("O", "ProductView.h", .false)
     -- Create an instance of ProductView and show it:
     dlg = .ProductView~new("res\ProductView.dll", IDD_PRODUCT_VIEW)
     say ".ProductView-newInstance-02: dlg~Activate."
-    dlg~activate 
+    dlg~activate
 
-    
+
   /*----------------------------------------------------------------------------
     Instance Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    
+
   /*----------------------------------------------------------------------------
     Dialog Setup Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -99,13 +99,6 @@
     -- called first (result of .ProductView~new)
     forward class (super) continue
 
-    
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::method initAutoDetection
-    -- Prevents ooDialog setting data to blank after initDialog
-    say "ProductView-initAutoDetection-01."
-    self~noAutoDetection
-
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate UNGUARDED
@@ -113,14 +106,14 @@
     self~execute("SHOWTOP","IDB_PROD_ICON")
     return
 
-   
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initDialog
     expose menuBar prodControls prodData
     say "ProductView-initDialog-01"
- 
+
     menuBar = .BinaryMenuBar~new(self, IDR_PRODUCT_VIEW_MENU, , self, .true)
- 
+
     prodControls = .Directory~new
     prodControls[ecProdNo]         = self~newEdit("IDC_PROD_NO")
     prodControls[ecProdName]       = self~newEdit("IDC_PROD_NAME")
@@ -133,26 +126,26 @@
     prodControls[rbLarge]          = self~newRadioButton("IDC_PROD_RADIO_LARGE")
     prodControls[pbSaveChanges]    = self~newPushButton("IDC_PROD_SAVE_CHANGES")
     self~connectButtonEvent("IDC_PROD_SAVE_CHANGES","CLICKED",saveChanges)
-   
-    -- Use NumberOnlyEditEx.cls to enforce numeric only entry for Price and UOM: 
+
+    -- Use NumberOnlyEditEx.cls to enforce numeric only entry for Price and UOM:
     prodControls[ecProdPrice]~initDecimalOnly(2,.false)		-- 2 decimal places, no sign.
     prodControls[ecUOM]~initDecimalOnly(0,.false)		-- 0 decimal places, no sign.
     prodControls[ecProdPrice]~connectCharEvent(onChar)
     prodControls[ecUOM]~connectCharEvent(onChar)
-    
+
     prodData = self~getData	-- Gets data from ProductModel into prodData
     self~showData	-- Show the data
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  
+
   /*----------------------------------------------------------------------------
     Event Handler Methods - MenuBar Events:
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD updateProduct UNGUARDED
     expose prodControls
-  
+
     -- Enable the controls to allow changes to the data:
     prodControls[ecProdName]~setReadOnly(.false)
     prodControls[ecProdPrice]~setReadOnly(.false)
@@ -165,97 +158,97 @@
     prodControls[pbSaveChanges]~state = "FOCUS"  -- Put input focus on the button
     self~tabToNext()				 -- put text cursor on Product Description
     						 --   (as if the user had pressed tab)
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD refreshData UNGUARDED
     self~disableControl("IDC_PROD_SAVE_CHANGES")
     self~showData
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD print UNGUARDED
     say "ProductView-print-01"
-    
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD close UNGUARDED
     say "ProductView-close-01"
     return self~cancel:super
-    
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD about UNGUARDED
     say "ProductView-about-01"
     dlg = .AboutDialog~new("ProductView.dll", IDD_PRODUCT_VIEW_ABOUT)
     dlg~execute("SHOWTOP")
-  
+
 
   /*----------------------------------------------------------------------------
     Event Handler Methods - PushButton Events
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
-    "Save Changes" - Collects new data, checks if there has indeed been a 
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    "Save Changes" - Collects new data, checks if there has indeed been a
                      change, and if not, issues a warning msg. Disables the
-                     button when valid changes made.                          */ 
-  ::METHOD saveChanges UNGUARDED  
+                     button when valid changes made.                          */
+  ::METHOD saveChanges UNGUARDED
     expose prodControls prodData
-    
-    -- Transform data from view format (as in controls) to app format (a directory): 
+
+    -- Transform data from view format (as in controls) to app format (a directory):
     newProdData = self~xformView2App(prodControls)
-    
+
     -- Check if anything's changed; if not, show msgbox and exit with controls enabled.
-    -- If changed, go on to validate data. 
+    -- If changed, go on to validate data.
     result = self~checkForChanges(newProdData)
     if result = .false then do
       msg = .HRS~nilSaved
       hwnd = self~dlgHandle
-      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","WARNING","DEFBUTTON2 APPLMODAL") 
+      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","WARNING","DEFBUTTON2 APPLMODAL")
       return
     end
 
     -- Now validate data:
     result = self~validate(newProdData)		-- returns a null string or error messages.
          					-- Better would be a set of error numbers.
-    -- If no problems, then show msgbox and go on to disable controls. 
+    -- If no problems, then show msgbox and go on to disable controls.
     if result = "" then do
       msg = .HRS~saved
       hwnd = self~dlgHandle
-      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","INFORMATION","DEFBUTTON1 APPLMODAL") 
+      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","INFORMATION","DEFBUTTON1 APPLMODAL")
     end
     -- If problems, then show msgbox and leave user to try again or refresh or exit.
-    else do        
+    else do
       msg = result||.EndOfLine||.HRS~notSaved
       hwnd = self~dlgHandle
-      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","ERROR","DEFBUTTON1 APPLMODAL") 
+      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","ERROR","DEFBUTTON1 APPLMODAL")
       return
     end
-  
-    -- Send new data to be checked by CustomerModel object (not implemented).   
-    
+
+    -- Send new data to be checked by CustomerModel object (not implemented).
+
     -- Disable controls that were enabled by menu "ActionsFile-->Update" selection:
     prodControls[ecProdName]~setReadOnly(.true)
     prodControls[ecProdDescr]~setReadOnly(.true)
     prodControls[ecProdPrice]~setReadOnly(.true)
     prodControls[ecUom]~setReadOnly(.true)
-    if newProdData~size \= "S" then prodControls[rbSmall]~disable 
+    if newProdData~size \= "S" then prodControls[rbSmall]~disable
     if newProdData~size \= "M" then prodControls[rbMedium]~disable
     if newProdData~size \= "L" then prodControls[rbLarge]~disable
     self~disableControl("IDC_PROD_SAVE_CHANGES")
 
     prodData = newProdData
     prodData~list
-    return    
-    
+    return
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  
+
   /*----------------------------------------------------------------------------
     Event Handler Methods - Keyboard Events
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD onChar UNGUARDED 
+  ::METHOD onChar UNGUARDED
     -- called for each character entered in the price or UOM fields.
     forward to (arg(6))
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     "OK" - This is a no-op method that over-rides the default Windows action
            of 'close window' for an Enter key 				    --*/
   ::METHOD ok unguarded
@@ -266,32 +259,32 @@
            of 'cancel window' for an Escape key.			    --*/
   ::METHOD cancel
     return
-    
-    
+
+
   /*----------------------------------------------------------------------------
     Application Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD getData
-    -- Get data from the ProductModel: 
+    -- Get data from the ProductModel:
     --expose prodData
     say "ProductView-getData-01."
     idProductModel = .local~my.idProductModel
     prodData = idProductModel~query		-- prodData is of type ProductDT
     return prodData
 
-    
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD showData
-    -- Transfrom data (where necessary) to display format, and then disable controls. 
+    -- Transfrom data (where necessary) to display format, and then disable controls.
     expose prodControls prodData
     say "ProductView-showData-01."
     -- Set data in controls:
     prodControls[ecProdNo]~setText(   prodData~number       )
     prodControls[ecProdName]~setText( prodData~name         )
     -- Price in prodData has no decimal point - 2 decimal places are implied - hence /100 for display.
-    prodControls[ecProdPrice]~setText(prodData~price/100    )  
+    prodControls[ecProdPrice]~setText(prodData~price/100    )
     prodControls[ecUOM]~settext(      proddata~uom          )
     prodControls[ecProdDescr]~setText(prodData~description  )
     size = prodData~size
@@ -303,7 +296,7 @@
     prodControls[rbSmall]~disable
     prodControls[rbMedium]~disable
     prodControls[rbLarge]~disable
-    -- But check correct button and enable it to highlight it to the user: 
+    -- But check correct button and enable it to highlight it to the user:
     select
       when size = "S" then do
         .RadioButton~checkInGroup(self,"IDC_PROD_RADIO_SMALL","IDC_PROD_RADIO_LARGE","IDC_PROD_RADIO_SMALL")
@@ -318,15 +311,15 @@
         prodcontrols[rbLarge]~enable
       end
     end
-    
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */    
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD checkForChanges
-    -- Check whether any data has actually changed when "Save Changes" button 
-    -- has been pressed. Return .true if data changed, else returns .false.  
+    -- Check whether any data has actually changed when "Save Changes" button
+    -- has been pressed. Return .true if data changed, else returns .false.
     expose prodData
     use arg newProdData
-    
+
     changed = .false
     select
       when newProdData~name        \= prodData~name        then changed = .true
@@ -336,18 +329,18 @@
       when newProdData~size        \= ProdData~size        then changed = .true
       otherwise nop
     end
-    return changed 
-    
+    return changed
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */    
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD validate
     -- Validation: 1. Check price/UOM not changed > 50% up or down.
     --             2. Cannot change from Large to Small without UOM increasing
-    --                 by at least 100%; nor from Small to Large without 
+    --                 by at least 100%; nor from Small to Large without
     --                 decreasing by more than 50%.
     --             3. Product Description <= 100 characters.
     --             4. Product Name <= 30 characters.
-    --  Returns string of messages - the null string if all OK. 
+    --  Returns string of messages - the null string if all OK.
     expose prodData
     use arg newProdData
     msg = ""
@@ -360,31 +353,31 @@
     end
 
     -- Check Size vs UOM:
-    if prodData~size = "L" & newProdData~size = "S" -    -- Large to Small  
+    if prodData~size = "L" & newProdData~size = "S" -    -- Large to Small
         & prodData~uom/2 < newProdData~uom then do
       msg = msg||.HRS~uomTooBig||" "
     end
-      if prodData~size = "S" & newProdData~size = "L" -    -- Small to Large  
+      if prodData~size = "S" & newProdData~size = "L" -    -- Small to Large
         & prodData~uom*2 > newProdData~uom then do
       msg = msg||.HRS~uomTooSmall||" "
     end
-    
+
     -- Check Product Description length:
     if newProdData.description~length > 80 then do
       msg = msg||.HRS~descrTooBig||" "
     end
-    
+
     -- Check Product Name length:
     if newProdData~name~length > 30 then do
       msg = msg||.HRS~prodNameTooBig
     end
-    
+
     return msg
-    
-  
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */    
-  ::METHOD xformView2App    
-    -- Transforms Product Data from View form (in the GUI controls) to  
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD xformView2App
+    -- Transforms Product Data from View form (in the GUI controls) to
     --   App form (a directory with address as an array).
     expose prodControls
     prodData = .ProductDT~new
@@ -407,9 +400,9 @@
       when prodControls[rbMedium]~checked then prodData~size = "M"
       otherwise prodData~size = "L"
     end
- 
+
     return prodData
-    
+
 /*============================================================================*/
 
 
@@ -417,38 +410,38 @@
   ==============================================================================
   AboutDialog							v01-00 17May11
   -------------
-  The "About" class - shows a dialog box that includes a bitmap - part of the 
-  ProductView component. 
+  The "About" class - shows a dialog box that includes a bitmap - part of the
+  ProductView component.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS AboutDialog SUBCLASS ResDialog
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method initDialog
     expose font image
     resImage = .ResourceImage~new( "", self)			  -- Create an instance of a resource image
     image = resImage~getImage(IDB_PROD_ICON)			  -- Create an image from the Product bitmap
-    stImage = self~newStatic(IDC_PRODABT_ICON_PLACE)~setImage(image) -- Create a static text control and set the image in it 
+    stImage = self~newStatic(IDC_PRODABT_ICON_PLACE)~setImage(image) -- Create a static text control and set the image in it
     font = self~createFontEx("Ariel", 12)			  -- Create up a largish font with which to display text and ...
     self~newStatic(IDC_PRODABT_STATIC2)~setFont(font)		  -- ... set the static text to use that font.
     -- Provide for a double-click in Product icon:
     self~connectStaticNotify("IDC_PRODABT_ICON_PLACE", "DBLCLK", showMsgBox)
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method showMsgBox
     say "AboutDialog-showMsgBox-01."
     ans = MessageDialog(.HRS~AboutDblClick)
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
-  
-  
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method leaving
     expose font image
     self~deleteFont(font)
     image~release()
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */   
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 /*============================================================================*/
 
@@ -457,7 +450,7 @@
   ==============================================================================
   Human-Readable Strings (HRS)					  v00-02 08Aug11
   --------
-   The HRS class provides constant character strings for user-visible messages. 
+   The HRS class provides constant character strings for user-visible messages.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS HRS PRIVATE		-- Human-Readable Strings

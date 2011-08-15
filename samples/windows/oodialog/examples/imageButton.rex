@@ -84,7 +84,7 @@ use arg
   rcFile = "resources\imageButton.rc"
   symbolFile = "resources\imageButton.h"
 
-  .application~useGlobalConstDir("O", symbolFile)
+  .application~setDefaults("O", symbolFile, .false)
 
   dlg = .ImageListDlg~new(rcFile, IDD_IMAGELIST_BUTTON)
 
@@ -509,9 +509,6 @@ return .true
   end
 
   return self~ok:super
-
-::method initAutoDetection
-   self~noAutoDetection
 
 ::method alignment2text private
   use strict arg alignment

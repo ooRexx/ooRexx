@@ -34,9 +34,9 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
+/* ooDialog User Guide
    Exercise 05: The Product component				  v00-02 29Jly11
-   Startup.rex - the starter" for the Product component.   		      
+   Startup.rex - the starter" for the Product component.
    Changes:
      v00-01: 15Jly11
      v00-02  29Jly11 - Modified to take into account the added Model and Data
@@ -47,11 +47,11 @@
 .local~my.idProductData  = .ProductData~newInstance	-- create a ProductData instance
 .local~my.idProductModel = .ProductModel~newInstance	-- create a ProductModel instance
 .local~my.idProductData~activate
-.local~my.idProductModel~activate		
+.local~my.idProductModel~activate
 
 .ProductView~newInstance
 
-::requires "ProductView.rex" 
+::requires "ProductView.rex"
 ::requires "ProductModelData.rex"
 
 /******************************************************************************/

@@ -47,7 +47,7 @@
  * a menu bar example.
  */
 
-  .application~useGlobalConstDir("O", "UserMenuBar.h")
+  .application~setDefaults("O", "UserMenuBar.h", .false)
 
   dlg = .SimpleDialog~new("UserMenuBar.rc", IDD_MAIN_DIALOG)
   if dlg~initCode <> 0 then do
@@ -366,10 +366,6 @@ return 0
   menuBar~checkRadio(ID_EDITCONTROL_LOWER, ID_EDITCONTROL_UNRESTRICTED, item)
 
 
-::method initAutoDetection
-  self~noAutoDetection
-
-
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 --  The following classes all implement a single dialog that is used to collect
 --  information, from the user, needed to carry out one of the menu item
@@ -396,9 +392,6 @@ return 0
 
   self~ok:super
 
-::method initAutoDetection
-  self~noAutoDetection
-
 
 ::class 'SelectDialog' subclass RcDialog
 
@@ -424,8 +417,6 @@ return 0
   self~selection = .Point~new(updStart~getPosition, updEnd~getPosition)
   self~ok:super
 
-::method initAutoDetection
-  self~noAutoDetection
 
 
 ::class 'AccelDialog' subclass RcDialog
@@ -508,9 +499,6 @@ return 0
   self~acceleration = aa
   self~ok:super
 
-::method initAutoDetection
-  self~noAutoDetection
-
 
 ::class 'RangeDialog' subclass RcDialog
 
@@ -543,9 +531,6 @@ return 0
   self~range = .Point~new(updLow~getPosition, updHigh~getPosition)
   self~ok:super
 
-::method initAutoDetection
-  self~noAutoDetection
-
 
 ::class 'PositionDialog' subclass RcDialog
 
@@ -565,9 +550,6 @@ return 0
 
   self~position = upd~getPosition
   self~ok:super
-
-::method initAutoDetection
-  self~noAutoDetection
 
 
 ::class 'AboutDialog' subclass RcDialog
