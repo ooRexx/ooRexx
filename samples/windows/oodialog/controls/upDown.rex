@@ -50,7 +50,7 @@
  * the UpDown class.
  */
 
-  .application~useGlobalConstDir("O", "upDown.h")
+  .application~setDefaults("O", "upDown.h", .false)
 
   dlg = .AnUpDownDlg~new("upDown.rc", IDD_UP_DOWN)
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
@@ -575,9 +575,3 @@ return 0
   db[19] = .array~of("Walter Perkins", 50, "male", "yes")
   db[20] = .array~of("Zoe Sharpe", 28, "female", "no")
 
-
--- initAutoDetection()
--- We don't use auto detection, we initialize the controls to the state we want
--- in the initDialog() method.
-::method initAutoDetection
-  self~noAutoDetection

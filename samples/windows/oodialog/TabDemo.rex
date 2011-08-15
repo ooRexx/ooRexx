@@ -46,8 +46,8 @@
  * Much of the code is simply copied from the PropertySheetDemo.rex program.
  */
 
-  .application~useGlobalConstDir("O", "rc\TabDemo.h")
-  .application~parseIncludeFile("rc\PropertySheetDemo.h")
+  .application~setDefaults("O", "rc\TabDemo.h", .false)
+  .application~addToConstDir("rc\PropertySheetDemo.h")
 
   -- To run correctly, this program needs to be able to find its support files.
   -- But, we allow starting the program from anywhere.  To do this we:
@@ -681,9 +681,6 @@
 ::method leaving
     expose font1
     self~deleteFont(font1)
-
-::method initAutoDetection
-    self~noAutoDetection
 
 
 ::class 'TabDlg' subclass RcControlDialog

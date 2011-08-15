@@ -43,7 +43,7 @@
  * Bar, and Tab.
  */
 
-  .application~useGlobalConstDir("O", "rc\PropertySheetDemo.h")
+  .application~setDefaults("O", "rc\PropertySheetDemo.h", .false)
 
   -- To run correctly, this program needs to be able to find its support files.
   -- But, we allow starting the program from anywhere.  To do this we:
@@ -471,9 +471,6 @@
 ::method leaving
     expose font1
     self~deleteFont(font1)
-
-::method initAutoDetection
-    self~noAutoDetection
 
 
 ::class 'TabDlg' subclass RcPSPDialog
