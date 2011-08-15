@@ -905,6 +905,41 @@ static bool hasCenterFlag(CSTRING opts)
 }
 
 
+/**
+ * Gets the attribute name for a dialog control from the dataConnection array
+ * for the specified ID.
+ *
+ *
+ * @param c
+ * @param pcpbd
+ * @param id
+ * @param name
+ * @param bufLength
+ *
+ * @return bool
+ */
+bool getAttributeName(RexxMethodContext *c, pCPlainBaseDialog pcpbd, int32_t id, char *name, size_t bufLength)
+{
+    if ( id > 0 )
+    {
+        RexxArrayObject dataConnection = (RexxArrayObject)c->SendMessage0(pcpbd->rexxSelf, "DATACONNECTION");
+        if ( dataConnection != NULLOBJECT )
+        {
+            RexxObjectPtr rxName = c->ArrayAt(dataConnection, (size_t)id);
+            if ( rxName!= NULLOBJECT )
+            {
+                CSTRING cName = c->ObjectToStringValue(rxName);
+                if ( strlen(cName) < bufLength )
+                {
+                    strcpy(name, cName);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 int32_t connectCreatedControl(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID, int32_t id,
                               CSTRING attributeName, oodControl_t ctrl)
 {
@@ -926,7 +961,6 @@ int32_t connectCreatedControl(RexxMethodContext *c, pCPlainBaseDialog pcpbd, Rex
     }
     return (int32_t)result;
 }
-
 
 int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
                          CSTRING opts, CSTRING text, pCDynamicDialog pcdd)
@@ -1004,26 +1038,33 @@ int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y,
     // However, this has the potential of breaking old programs because
     // originally no static control was added to the data table.  Now, by adding
     // it, the text will get set to "" if auto detection is on and the attribute
-    // is not set to some text. (Which it will be in old programs. We know the
-    // attribute name should be "DATA" || id, so we create that name here.  On
-    // return, we set the attribute to the text of the control.
+    // is not set to some text. (Which it will be in old programs.) The only
+    // certain way to know the attribute name is to fetch it from the
+    // dataConnection attribute of dialog, after addAttribute() has executed. On
+    // return, we fetch the newly created attribute name, and set the attribute
+    // to the text of the control.
     //
     // This also makes auto detection work more consistently.
 
     if ( pcpbd->autoDetect && id != -1 )
     {
-        char name[64];
-        _snprintf(name, sizeof(name), "DATA%d", id);
-
-        result = connectCreatedControl(c, pcpbd, rxID, id, name, winStatic);
+        result = connectCreatedControl(c, pcpbd, rxID, id, NULL, winStatic);
         if ( result == OOD_NO_ERROR )
         {
+            char name[256];
+
+            if ( ! getAttributeName(c, pcpbd, id, name, 256) )
+            {
+                return -1;
+            }
+
             strcat(name, "=");
-            c->SendMessage1(pcdd->rexxSelf, name, c->String(text));
+            c->SendMessage1(pcpbd->rexxSelf, name, c->String(text));
         }
     }
     return result;
 }
+
 
 int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
                          CSTRING opts, pCDynamicDialog pcdd)
