@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView component      v00-03 06Aug11
+   Exercise 04b: ProductView.rex - The ProductView component      v00-04 17Aug11
 
    Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h.
@@ -47,13 +47,16 @@
    Outstanding Problems: None reported.
 
    Changes:
-   v00-01: 21Jly11
-   v00-02: 28Jly11 - Added a constants class for user-visible messages.
-   v00-03: 04Aug11 - corrected typos in some comments.
-   		   - deleted a commented-out statement that shouldn't have been
-                     left in the file, plus another typo in a comment corrected.
-                   - use of a ProductDT rather than directory for data.
-                   - Changed class name of strings to HRS.
+   v00-01 21Jly11
+   v00-02 28Jly11: Added a constants class for user-visible messages.
+   v00-03 06Aug11: corrected typos in some comments.
+   		   deleted a commented-out statement that shouldn't have been
+                   left in the file, plus another typo in a comment corrected.
+                   use of a ProductDT rather than directory for data.
+                   Changed class name of strings to HRS.
+   v00-04 17Aug11: Changed to .Application~setDefaults in newInstance method,
+                   and deleted autoDetection methods - not now needed as turn
+                   off autoDetection in .Application~setDefaults().
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -77,8 +80,9 @@
 
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
     say ".ProductView-newInstance-01: Start."
-    -- Enable use of symbolic IDs in menu creation and turn auto detecion off:
-    .application~setDefaults("O", "ProductView.h", .false)
+    -- Enable use of symbolic IDs in menu creation, and turn off AutoDetection
+    -- (the third parameter:
+    .Application~setDefaults("O", "ProductView.h", .false)
     -- Create an instance of ProductView and show it:
     dlg = .ProductView~new("res\ProductView.dll", IDD_PRODUCT_VIEW)
     say ".ProductView-newInstance-02: dlg~Activate."

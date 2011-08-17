@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The CustomerView component             		  v00-05 29Jly11
+   Exercise 04: The CustomerView component             		  v00-06 17Aug11
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -47,7 +47,11 @@
    v00-02: CustomerView class and also the Customer.h file.
    v00-03: CustomerView class
    v00-04: CustomerView class
-   v00-05: CustomerView class
+   v00-05: CustomerView class (note - date of file changed to 16Aug11 because
+           I did a simple test then set everything back as it was.)
+   v00-06 17Aug11: Changed to .Application~setDefaults in newInstance method,
+                   and deleted autoDetection methods - not now needed as turn
+                   off autoDetection in .Application~setDefaults().
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -67,8 +71,6 @@
 	    dlg~new statement in starter.rex.
     v00-04: Took out the OK method - include that in Exercise05.
     v00-05: Modified to use CustomerData and CustomerModel classes.
-    v00-06: Removed initAutoDetection() in favor of using the .application method
-            setDefaults() to ture auto detection off.
 
   [interface (idl format)]
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -116,7 +118,6 @@
     expose menuBar custControls
     say "CustomerView-initDialog-01."
     menuBar~attachTo(self)
-
     -- Create objects that map to the edit controls defined by the "customer.rc"
     --   so they can be programmatically used elsewhere in the class:
     custControls = .Directory~new
@@ -165,7 +166,7 @@
     custControls[ecCustDiscount]~setReadOnly(.false)
     self~enableControl("IDC_CUST_BTN_RECORDCHANGES")
     custControls[btnRecordChanges]~state = "FOCUS"  -- Put focus on the button
-    self~focusControl("IDC_CUST_EDT_CUSTNAME")         -- place cursor in the CustName edit control.
+    self~focusControl("IDC_CUST_EDT_CUSTNAME")      -- place cursor in the CustName edit control.
 
 
   /*-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -242,6 +243,7 @@
     showData - displays data in the dialog's controls.                        */
   ::METHOD showData
     expose custData custControls
+    say "CustomerView-showData-01."
     -- Show CustNo and CustName:
     custControls[ecCustNo]~setText(custData[custNo])
     custControls[ecCustName]~setText(custData[custName])
@@ -298,7 +300,7 @@
       msg = "CustomerView-checkForChanges-01: Nothing was changed! Update not done."
       hwnd = self~dlgHandle
       answer = MessageDialog(msg,hwnd,"Update Customer","OK","WARNING","DEFBUTTON2 APPLMODAL")
-    end
+      end
     else do
       say "CustomerView-checkForChanges-02: changed =" changed
       custData = newCustData
@@ -312,7 +314,7 @@
 /*============================================================================*/
 ::ROUTINE StartCustomerView PUBLIC
   say "StartCustomerView Routine-01: Start."
-  .application~setDefaults("O", "CustomerView.h", .false)
+  .Application~setDefaults("O", "CustomerView.h", .false)
   dlg = .CustomerView~new("CustomerView.rc", "IDD_CUST_DIALOG")
   say "StartCustomerView Routine-02: dlg~activate."
   dlg~activate
