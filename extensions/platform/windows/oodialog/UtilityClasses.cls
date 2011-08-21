@@ -1707,7 +1707,8 @@ do forever
       else
           ObjId = ''       -- This createXXX method is ignored
 
-      ObjId = dlgObject~resolveSymbolicID(ObjId~space(0))
+      ObjId = ObjId~space(0)~strip( , "'")~strip( , '"')
+      ObjId = dlgObject~resolveSymbolicID(ObjId)
 
       if ObjId > 0 then
          interpret 'dlgObjList~Insert(ObjId"@"'ObjX'"@"'ObjY'"@"'ObjW'"@"'ObjH')'
@@ -1745,7 +1746,8 @@ do forever
             ObjId = ''     -- This addXXX method is ignored
       end
 
-      ObjId = dlgObject~resolveSymbolicID(ObjId~space(0))
+      ObjId = ObjId~space(0)~strip( , "'")~strip( , '"')
+      ObjId = dlgObject~resolveSymbolicID(ObjId)
 
       if ObjId > 0 then
          interpret 'dlgObjList~Insert(ObjId"@"'ObjX'"@"'ObjY'"@"'ObjW'"@"'ObjH')'
