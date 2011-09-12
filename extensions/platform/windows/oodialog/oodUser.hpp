@@ -41,8 +41,10 @@
 
 #define DEFAULT_EXPECTED_DIALOG_ITEMS   200
 
-extern bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATEEX **ppBase, pCDynamicDialog pcdd,
+extern bool startDialogTemplate(RexxThreadContext *c, DLGTEMPLATEEX **ppBase, pCDynamicDialog pcdd,
                                 int x, int y, int cx, int cy, const char *dlgClass, const char *title,
-                                const char *fontName, int fontSize, uint32_t style);
+                                const char *fontName, int fontSize, uint32_t style, uint32_t exStyle);
 
+
+extern void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd);
 #endif

@@ -1037,7 +1037,7 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
  * value was used. So that function was replaced by getDataTableIDs() which
  * returns an array of all the resource IDs for every table entry.
  *
- * @param c       Method context we are operating in, or null.
+ * @param c       Thread context we are operating in, or null.
  * @param pcpbd
  * @param id      The resource ID of the control.
  * @param type
@@ -1046,11 +1046,11 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
  * @return 0 on succes, and 1 for error.
  *
  * @remarks  addToDataTable() can be called from the WindowLoopThread, where we
- *           don't have a valid method context.  In this case, we don't do an
+ *           don't have a valid thread context.  In this case, we don't do an
  *           out of memory exception, just pass back the return code and let the
  *           higher level deal with it.
  */
-uint32_t addToDataTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, int id, oodControl_t type, uint32_t category)
+uint32_t addToDataTable(RexxThreadContext *c, pCPlainBaseDialog pcpbd, int id, oodControl_t type, uint32_t category)
 {
     if ( pcpbd->DataTab == NULL )
     {
@@ -1059,7 +1059,7 @@ uint32_t addToDataTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, int id, o
         {
             if ( c != NULL )
             {
-                outOfMemoryException(c->threadContext);
+                outOfMemoryException(c);
             }
             return OOD_MEMORY_ERR;
         }
@@ -1124,7 +1124,7 @@ RexxArrayObject getDataTableIDs(RexxMethodContext *c, pCPlainBaseDialog pcpbd, R
  * subclasses) the data table entry is done for each createXXX() method when the
  * dialog control is added to the in-memory template.
  *
- * @param c      Method context we are operating in.  This can be null under
+ * @param c      Thread context we are operating in.  This can be null under
  *               some circumstances, but we just pass it along and let
  *               addToDataTable() deal with it.  In most cases it is not null,
  *               and if addToDataTable() does not return no error, an exceptions
@@ -1135,12 +1135,12 @@ RexxArrayObject getDataTableIDs(RexxMethodContext *c, pCPlainBaseDialog pcpbd, R
  * @return A code indication success, or not.  The only possible failure here is
  *         an out of memory problem.
  *
- * @remarks  This function is only called from the WindowLoopThread, which is
- *           creating a dialog from a resource DLL.  There is no valid method
- *           context.  If there is a failure in addToDataTable() we just pass
- *           the result code back and let the higher level handle it.
+ * @remarks  When this function is called from the WindowLoopThread, which is
+ *           creating a dialog from a resource DLL, there is no valid method or
+ *           thread context.  If there is a failure in addToDataTable() we just
+ *           pass the result code back and let the higher level handle it.
  */
-uint32_t doDataAutoDetection(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
+uint32_t doDataAutoDetection(RexxThreadContext *c, pCPlainBaseDialog pcpbd)
 {
     uint32_t result = OOD_NO_ERROR;
 

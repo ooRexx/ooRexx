@@ -65,11 +65,35 @@
 ::class 'TabOwnerDlgInfo' subclass Object public
 
 ::method init external "LIBRARY oodialog todi_init"
+::method add external "LIBRARY oodialog todi_add"
 
 ::class 'TabOwnerDialog' mixinclass Object public
 
 ::method tabOwnerDlginit external "LIBRARY oodialog tod_tabOwnerDlgInit"
 ::method getTabPage external "LIBRARY oodialog tod_getTabPage"
+::method tabOwnerOk external "LIBRARY oodialog tod_tabOwnerOk"
+::method tabOwnerCancel external "LIBRARY oodialog tod_tabOwnerCancel"
+
+-- Return .true, it's okay to leave the page, .false it is not okay, stay on the page
+::method tabOwnerKillActive unguarded
+  use strict arg pageDlg, tab
+  say "In TabOwnerDialog::tabOwnerKillActive dlg:" self 'page:' pageDlg 'tab:' tab
+  return .true
+
+-- Return 0, accept the activation, otherwise page number of alternate page to set focus to.
+::method tabOwnerSetActive unguarded
+  use strict arg pageDlg, tab
+  say "In TabOwnerDialog::tabOwnerSetActive dlg:" self 'page:' pageDlg 'tab:' tab
+  return 0
+
+::method tabOwnerSelChange unguarded
+  use strict arg pageDlg, pageNumber
+  return 0
+
+::method tabOwnerSelChanging unguarded
+  use strict arg pageDlg, pageNumber
+  return 0
+
 
 
 ::class 'ManagedTab' subclass Object public
@@ -100,6 +124,9 @@
 ::attribute pageTitle get external "LIBRARY oodialog cd_get_pageTitle"
 ::attribute pageTitle set external "LIBRARY oodialog cd_set_pageTitle"
 
+::attribute extraOptions get external "LIBRARY oodialog cd_get_extraOptions"
+::attribute extraOptions set external "LIBRARY oodialog cd_set_extraOptions"
+
 /*::attribute size get external "LIBRARY oodialog ctrlDlg_get_size"
 ::attribute size set external "LIBRARY oodialog ctrlDlg_set_size"
 
@@ -119,24 +146,27 @@
 
     dlgData. = self~dlgData
 
-    if self~startIt then do
-        if self~useStem then self~setDataStem(dlgData.)
-        else self~setData
-
-        do while self~automaticMethods~Items > 0
-            p = self~automaticMethods~pull
-            m = self~automaticMethods~pull
-            c = self~automaticMethods~pull
-            o = c~new(p, self)
-            o~start(m)
+    if \ self~isManaged then do
+        if \ self~startIt then do
+            self~finished = .true
+            self~stopIt
+            return 0
         end
+    end
 
-        self~waitForDialog
+    if self~useStem then self~setDataStem(dlgData.)
+    else self~setData
+
+    do while self~automaticMethods~Items > 0
+        p = self~automaticMethods~pull
+        m = self~automaticMethods~pull
+        c = self~automaticMethods~pull
+        o = c~new(p, self)
+        o~start(m)
     end
-    else do
-       self~finished = .true
-       self~stopIt
-    end
+
+    self~waitForDialog
+
     return 0
 
 
@@ -158,11 +188,16 @@
 
 
 -- Return .true, it's okay to leave the page, .false it is not okay, stay on the page
-::method tabPageKillActive
-  use strict arg owner
-  say "In ControlDialog::tabPageKillActive dlg:" self
+::method tabPageKillActive unguarded
+  use strict arg owner, tab
+  say "In ControlDialog::tabPageKillActive dlg:" self 'owner:' owner 'tab:' tab
   return .true
 
+-- Return 0, accept the activation, otherwise page number of alternate page to set focus to.
+::method tabPageSetActive unguarded
+  use strict arg owner, tab
+  say "In ControlDialog::tabPageSetActive dlg:" self 'owner:' owner 'tab:' tab
+  return 0
 
 ::method initUpdateListView private
   use strict arg lvID, pause = .005
@@ -177,7 +212,7 @@
   src[5]  = ""
   src[6]  = "if hwnd == lv~hwnd then do"
   src[7]  = "  j = SysSleep("pause")"
-  src[8]  = "  self~redraw"
+  src[8]  = "  lv~redraw"
   src[9]  = "  return .true"
   src[10] = "end"
   src[11] = "return .false"
@@ -275,12 +310,23 @@
     forward class (super) arguments (newArgs) continue
     if result <> 0 then return result
 
+    self~extraOptions = options
+
     if \ self~isManaged then do
       self~initCode = self~load(rcFile, idDlg, options, expected)
     end
 
     return self~initCode
 
+::method startTemplate external "LIBRARY oodialog rcCtrlDlg_startTemplate"
+
+::method loadFrameRCCD
+  use strict arg expected
+  return self~loadFrame:super(self~library, self~resourceID, "", expected)
+
+::method loadItemsRCCD
+  use strict arg opts
+  return self~loadItems:super(self~library, self~resourceID, opts)
 
 ::method execute
     self~start("BEGINEXECUTION")
@@ -582,7 +628,7 @@
   use strict arg expected
   return self~loadFrame:super(self~library, self~resourceID, "", expected)
 
-::method loadItems
+::method loadItems private
   use strict arg opts
   return self~loadItems:super(self~library, self~resourceID, opts)
 

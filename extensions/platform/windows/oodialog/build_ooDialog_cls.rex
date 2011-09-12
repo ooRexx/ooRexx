@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -71,10 +71,10 @@ end
 
 -- Files are in the order they are read and written out. UtilityClasses.cls must be kept first, otherwise
 -- the order should not make any difference.
-srcFiles = .array~of("UtilityClasses.cls",    "AnimatedButton.cls",  "BaseDialog.cls",       "CategoryDialog.cls",  -
-                     "DeprecatedClasses.cls", "DialogControls.cls",  "DialogExtensions.cls", "DynamicDialog.cls",   -
-                     "EventNotification.cls", "Menu.cls",            "PlainBaseDialog.cls",  "PropertySheet.cls",   -
-                     "RcDialog.cls",          "ResDialog.cls",       "UserDialog.cls",       "ControlDialog.cls")
+srcFiles = .array~of("UtilityClasses.cls",  "AnimatedButton.cls",   "BaseDialog.cls",    "ControlDialog.cls",     -
+                     "DialogControls.cls",  "DialogExtensions.cls", "DynamicDialog.cls", "EventNotification.cls", -
+                     "PlainBaseDialog.cls", "RcDialog.cls",          "Menu.cls",         "ResDialog.cls",         -
+                     "UserDialog.cls",      "DeprecatedClasses.cls")
 
 outFile = .stream~new(outdir || outname[3])
 if outFile~open("WRITE REPLACE") \= "READY:" then return 9

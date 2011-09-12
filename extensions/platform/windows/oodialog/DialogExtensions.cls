@@ -44,7 +44,9 @@
 
 ::class 'DialogExtensions' public mixinclass Object
 
--- Like execute(), but does not wait for the dialog to close.
+-- Like execute(), but does not wait for the dialog to close. Do not document
+-- modeless, it is an implementation detail that may be removed if true modal
+-- dialog are ever implemented. sleepTime on the other hand *was* documented.
 ::method executeAsync unguarded
    use strict arg sleepTime = 1, sh = "NORMAL", icon = 0, modeless = .false
 

@@ -49,6 +49,7 @@
  */
 ::requires "UserDialog.cls"
 
+/* Deprecated */
 ::class 'CategoryDialog' subclass UserDialog public
 
 -- A directory that contains internal data.  This should be private, but I'm not sure of the
@@ -143,7 +144,7 @@
    self~initDialog
    return self~dlgHandle
 
-::method defineDialog protected
+::method defineDialog
    if self~basePtr = 0 then return 0
    if self~catStyle~wordpos('DROPDOWN') = 0 then
       do i = 9001 to (9000 + self~catalog['count'])
@@ -289,7 +290,7 @@
 
 ::method createCategoryDialog private external "LIBRARY oodialog catdlg_createCategoryDialog"
 
-::method initDialog protected
+::method initDialog
    /* set the mark to the first radio button */
    if self~catStyle~wordpos('DROPDOWN') > 0 then do
       do i = 1 to self~catalog['count']

@@ -346,10 +346,18 @@ void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd)
  *           allocation, so we could just skip setting things to 0, but it's
  *           nice to see what fields are available.
  *
- *           We use 0 for exStyle because  MSDN say exStyle is ignored for
- *           dialog boxes.  We set cDlgItems to the expected count.  We know it
- *           is not correct, but the field is updated right before the template
- *           is actually used.
+ *           We originally used 0 for exStyle because MSDN says exStyle is
+ *           ignored for dialog boxes.  However, experiment has shown that that
+ *           is not the case.  For example, WS_EX_TOOLWINDOW, WS_EX_CONTEXTHELP,
+ *           and WS_EX_TRANSPARENT do work.  However, transparent is not much
+ *           use, context help does put the question mark icon on the title bar,
+ *           but does not seem to generate the WM_HELP event.  Tool window works
+ *           as documented.  All in all, some investigation should be done and
+ *           we could not parse for all the extended styles.
+ *
+ *           We set cDlgItems to the expected count. We know it is not correct,
+ *           but the field is updated right before the template is actually
+ *           used.
  *
  *           Both the menu and the windowClass fields can be variable length
  *           strings, but since we are using 0 we treat them as fixed length.
@@ -366,23 +374,23 @@ void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd)
  *           italic and character set.  For italic, true sets the font as
  *           italic.  Both italic and character set are byte sized.
  */
-bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATEEX **ppBase, pCDynamicDialog pcdd,
+bool startDialogTemplate(RexxThreadContext *c, DLGTEMPLATEEX **ppBase, pCDynamicDialog pcdd,
                            int x, int y, int cx, int cy, const char *dlgClass, const char *title,
-                           const char *fontName, int fontSize, uint32_t style)
+                           const char *fontName, int fontSize, uint32_t style, uint32_t exStyle)
 {
     size_t s = calcTemplateSize(pcdd->expected);
 
     WORD *p = (PWORD)LocalAlloc(LPTR, s);
     if ( p == NULL )
     {
-        outOfMemoryException(c->threadContext);
+        outOfMemoryException(c);
         return false;
     }
 
     if ( calcHeaderSize(title, fontName) >  s )
     {
         cleanUpDialogTemplate(p, pcdd);
-        executionErrorException(c->threadContext, DLGTEMPLATE_TOO_SMALL_MSG);
+        executionErrorException(c, DLGTEMPLATE_TOO_SMALL_MSG);
         return false;
     }
 
@@ -391,13 +399,12 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATEEX **ppBase, pCDynamic
     pcdd->base = (DLGTEMPLATEEX *)p;
     pcdd->endOfTemplate = (BYTE *)p + s;
 
-
     DLGTEMPLATEEX *pDlg = (DLGTEMPLATEEX *)p;
 
     pDlg->dlgVer      = 0x1;            // Dialog version, must be 1.
     pDlg->signature   = 0xFFFF;         // Extended dialog template signature.
     pDlg->helpID      = 0;              // Help ID.  Not used yet
-    pDlg->exStyle     = 0;              // Extended style.
+    pDlg->exStyle     = exStyle;        // Extended style.
     pDlg->style       = style;
     pDlg->cDlgItems   = pcdd->expected;
     pDlg->x           = x;
@@ -954,7 +961,7 @@ int32_t connectCreatedControl(RexxMethodContext *c, pCPlainBaseDialog pcpbd, Rex
 
     c->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, c->String(attributeName));
 
-    uint32_t result = addToDataTable(c, pcpbd, id, ctrl, category);
+    uint32_t result = addToDataTable(c->threadContext, pcpbd, id, ctrl, category);
     if ( result == OOD_MEMORY_ERR )
     {
         return -2;
@@ -1305,24 +1312,41 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
         return FALSE;
     }
 
-    uint32_t style = DS_SETFONT | WS_CAPTION | WS_SYSMENU;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
     dlgClass = NULL;        // The dialog class is always ignored, at this time.
+
+    uint32_t style = DS_SETFONT | WS_CAPTION | WS_SYSMENU;
+    if ( pcpbd->isControlDlg )
+    {
+        style = DS_SETFONT | DS_CONTROL | WS_CHILD;
+    }
+
+    uint32_t exStyle = 0;
+    if ( pcpbd->isTabOwnerDlg )
+    {
+        exStyle = WS_EX_CONTROLPARENT;
+    }
 
     if ( argumentOmitted(5) )
     {
         title = "";
     }
 
-    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
-
     if ( argumentExists(6) )
     {
         if ( pcpbd->isControlDlg || StrStrI(opts, "CONTROL") != NULL )
         {
-            style = DS_SETFONT | DS_CONTROL;
-            if ( StrStrI(opts, "NOTCHILD") == NULL )
+            // The correct style for a ControlDialog is set above.  Here we just
+            // want to catch the "CONTROL" keyword and make sure the user does
+            // not set the wrong style for a ControlDialog.
+            if ( ! pcpbd->isControlDlg )
             {
-                style |= WS_CHILD;
+                style = DS_SETFONT | DS_CONTROL;
+                if ( StrStrI(opts, "NOTCHILD") == NULL )
+                {
+                    style |= WS_CHILD;
+                }
             }
         }
         else
@@ -1345,6 +1369,32 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
         {
             style |= WS_VISIBLE;
         }
+
+        // Allow extended styles.  We don't check that the style makes sense for
+        // a dialog box, we just let the user assign them if they want.  At some
+        // point we could determine if any of the styles should not be used.
+
+        if ( StrStrI(opts, "EX_ACCEPTFILES")      != NULL ) exStyle |= WS_EX_ACCEPTFILES;
+        if ( StrStrI(opts, "EX_APPWINDOW")        != NULL ) exStyle |= WS_EX_APPWINDOW;
+        if ( StrStrI(opts, "EX_CLIENTEDGE")       != NULL ) exStyle |= WS_EX_CLIENTEDGE;
+        if ( StrStrI(opts, "EX_CONTEXTHELP")      != NULL ) exStyle |= WS_EX_CONTEXTHELP;
+        if ( StrStrI(opts, "EX_CONTROLPARENT")    != NULL ) exStyle |= WS_EX_CONTROLPARENT;
+        if ( StrStrI(opts, "EX_DLGMODALFRAME")    != NULL ) exStyle |= WS_EX_DLGMODALFRAME;
+        if ( StrStrI(opts, "EX_LEFTSCROLLBAR")    != NULL ) exStyle |= WS_EX_LEFTSCROLLBAR;
+        else if ( StrStrI(opts, "EX_LEFT")        != NULL ) exStyle |= WS_EX_LEFT;
+        if ( StrStrI(opts, "EX_LTRREADING")       != NULL ) exStyle |= WS_EX_LTRREADING;
+        if ( StrStrI(opts, "EX_MDICHILD")         != NULL ) exStyle |= WS_EX_MDICHILD;
+        if ( StrStrI(opts, "EX_NOPARENTNOTIFY")   != NULL ) exStyle |= WS_EX_NOPARENTNOTIFY;
+        if ( StrStrI(opts, "EX_OVERLAPPEDWINDOW") != NULL ) exStyle |= WS_EX_OVERLAPPEDWINDOW;
+        if ( StrStrI(opts, "EX_PALETTEWINDOW")    != NULL ) exStyle |= WS_EX_PALETTEWINDOW;
+        if ( StrStrI(opts, "EX_RIGHTSCROLLBAR")   != NULL ) exStyle |= WS_EX_RIGHTSCROLLBAR;
+        else if ( StrStrI(opts, "EX_RIGHT")       != NULL ) exStyle |= WS_EX_RIGHT;
+        if ( StrStrI(opts, "EX_RTLREADING")       != NULL ) exStyle |= WS_EX_RTLREADING;
+        if ( StrStrI(opts, "EX_STATICEDGE")       != NULL ) exStyle |= WS_EX_STATICEDGE;
+        if ( StrStrI(opts, "EX_TOOLWINDOW")       != NULL ) exStyle |= WS_EX_TOOLWINDOW;
+        if ( StrStrI(opts, "EX_TOPMOST")          != NULL ) exStyle |= WS_EX_TOPMOST;
+        if ( StrStrI(opts, "EX_TRANSPARENT")      != NULL ) exStyle |= WS_EX_TRANSPARENT;
+        if ( StrStrI(opts, "EX_WINDOWEDGE")       != NULL ) exStyle |= WS_EX_WINDOWEDGE;
     }
 
     if ( ! adjustDialogFont(context, args, pcpbd) )
@@ -1363,8 +1413,8 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     // track of the different child dialog base addresses.
     DLGTEMPLATEEX *pBase;
 
-    if ( ! startDialogTemplate(context, &pBase, pcdd, x, y, cx, cy, dlgClass, title,
-                               pcpbd->fontName, pcpbd->fontSize, style) )
+    if ( ! startDialogTemplate(context->threadContext, &pBase, pcdd, x, y, cx, cy, dlgClass, title,
+                               pcpbd->fontName, pcpbd->fontSize, style, exStyle) )
     {
        goto err_out;
     }
@@ -2805,7 +2855,7 @@ RexxMethod8(logical_t, catdlg_createCategoryDialog, int32_t, x, int32_t, y, uint
     pcdd->expected = expected;
 
     DLGTEMPLATEEX *pBase;
-    if ( ! startDialogTemplate(context, &pBase, pcdd, x, y, cx, cy, NULL, NULL, fontName, fontSize, style) )
+    if ( ! startDialogTemplate(context->threadContext, &pBase, pcdd, x, y, cx, cy, NULL, NULL, fontName, fontSize, style, 0) )
     {
         return FALSE;
     }

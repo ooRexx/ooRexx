@@ -726,9 +726,10 @@ bool rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, size_t 
 /**
  * Gets a Class object.
  *
- * This is for use for classes visible within the scope of the context, like say
+ * This is for classes visible within the scope of a method context, like say
  * .PlainBaseDialog, or .Rect.  Use c->FindClass() to directly get classes from
- * the environment like .Bag or .Directory.
+ * the environment like .Bag or .Directory.  Use rxGetPackageClass() to get a
+ * class from a thread context when a method context is not available.
  *
  * @param c     The method context we are operating in.
  * @param name  The name of the class to try and find.
@@ -748,6 +749,48 @@ RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name)
     if ( theClass == NULL )
     {
         c->RaiseException1(Rexx_Error_Execution_noclass, c->String(name));
+    }
+    return theClass;
+}
+
+/**
+ * Gets a Class object.
+ *
+ * This is for use when a method context is not available.  Use
+ * rxGetContextClass() for classes visible within the scope of a method context,
+ * like say .PlainBaseDialog, or .Rect.  Use c->FindClass() to directly get
+ * classes from the environment like .Bag or .Directory.
+ *
+ * @param c        The thread context we are operating in.
+ * @param pkgName  The name of the package the class is located in.
+ * @param clsName  The name of the class to try and find.
+ *
+ * @return The class object or null on failure.
+ *
+ * @remarks  When null is returned an error has been raised: 98.909
+ *
+ *   98: The language processor detected a specific error during execution. The
+ *   associated error gives the reason for the error.
+ *
+ *   909: Class "class" not found
+ *
+ *           This function will load the package named by pkgName.  If the
+ *           pacakge is already loaded this should be relatively expensive.
+ *           This also implies that this function could be used to load a
+ *           package that has not been loaded.
+ */
+RexxClassObject rxGetPackageClass(RexxThreadContext *c, CSTRING pkgName, CSTRING clsName)
+{
+    RexxClassObject theClass = NULL;
+
+    RexxPackageObject pkg = c->LoadPackage(pkgName);
+    if ( pkg != NULL )
+    {
+        theClass = c->FindPackageClass(pkg, clsName);
+    }
+    if ( theClass == NULL )
+    {
+        c->RaiseException1(Rexx_Error_Execution_noclass, c->String(clsName));
     }
     return theClass;
 }
@@ -777,12 +820,35 @@ RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr v
 }
 
 
+/**
+ * Return a new object of one of the builtin ooRexx classes.
+ *
+ * This should never fail, provided the caller sends the right class name,
+ * but, raise an exception if it does.
+ *
+ * @param c
+ * @param className
+ *
+ * @return RexxObjectPtr
+ */
 RexxObjectPtr rxNewBuiltinObject(RexxThreadContext *c, CSTRING className)
 {
-    // This should never fail, provided the caller sends the right class name,
-    // do we need an exception if it does?
+    RexxObjectPtr o = NULLOBJECT;
     RexxClassObject classObj = c->FindClass(className);
-    return c->SendMessage0(classObj, "NEW");
+
+    if ( classObj != NULL )
+    {
+        o = c->SendMessage0(classObj, "NEW");
+        if ( o == NULLOBJECT )
+        {
+            c->RaiseException2(Rexx_Error_No_method_name, classObj, c->String("NEW"));
+        }
+    }
+    else
+    {
+        c->RaiseException1(Rexx_Error_Execution_noclass, c->String(className));
+    }
+    return o;
 }
 
 RexxObjectPtr rxNewBuiltinObject(RexxMethodContext *c, CSTRING className)

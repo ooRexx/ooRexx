@@ -637,6 +637,9 @@ REXX_METHOD_PROTOTYPE(tod_getTabPage);
 
 // TabOwnerDlgInfo
 REXX_METHOD_PROTOTYPE(todi_init);
+REXX_METHOD_PROTOTYPE(todi_add);
+REXX_METHOD_PROTOTYPE(tod_tabOwnerOk);
+REXX_METHOD_PROTOTYPE(tod_tabOwnerCancel);
 
 // ManagedTab
 REXX_METHOD_PROTOTYPE(mt_init);
@@ -646,6 +649,8 @@ REXX_METHOD_PROTOTYPE(cd_init_cls);
 REXX_METHOD_PROTOTYPE(cd_controlDlgInit);
 REXX_METHOD_PROTOTYPE(cd_get_isManaged);
 REXX_METHOD_PROTOTYPE(cd_get_wasActivated);
+REXX_METHOD_PROTOTYPE(cd_get_extraOptions);
+REXX_METHOD_PROTOTYPE(cd_set_extraOptions);
 REXX_METHOD_PROTOTYPE(cd_get_initializing);
 REXX_METHOD_PROTOTYPE(cd_set_initializing);
 REXX_METHOD_PROTOTYPE(cd_get_pageTitle);
@@ -657,8 +662,11 @@ REXX_METHOD_PROTOTYPE(cdi_set_title);
 REXX_METHOD_PROTOTYPE(cdi_set_size);
 REXX_METHOD_PROTOTYPE(cdi_init);
 
-// ResourceControlDialog
+// ResControlDialog
 REXX_METHOD_PROTOTYPE(resCtrlDlg_startDialog_pvt);
+
+// RcControlDialog
+REXX_METHOD_PROTOTYPE(rcCtrlDlg_startTemplate);
 
 // PropertySheetDialog
 REXX_METHOD_PROTOTYPE(psdlg_getPages_atr);
@@ -1417,9 +1425,12 @@ RexxMethodEntry oodialog_methods[] = {
     // TabOwnerDialog
     REXX_METHOD(tod_tabOwnerDlgInit,            tod_tabOwnerDlgInit),
     REXX_METHOD(tod_getTabPage,                 tod_getTabPage),
+    REXX_METHOD(tod_tabOwnerOk,                 tod_tabOwnerOk),
+    REXX_METHOD(tod_tabOwnerCancel,             tod_tabOwnerCancel),
 
     // TabOwnerDlgInfo
     REXX_METHOD(todi_init,                      todi_init),
+    REXX_METHOD(todi_add,                       todi_add),
 
     // ManagedTab
     REXX_METHOD(mt_init,                        mt_init),
@@ -1429,6 +1440,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(cd_controlDlgInit,              cd_controlDlgInit),
     REXX_METHOD(cd_get_isManaged,               cd_get_isManaged),
     REXX_METHOD(cd_get_wasActivated,            cd_get_wasActivated),
+    REXX_METHOD(cd_get_extraOptions,            cd_get_extraOptions),
+    REXX_METHOD(cd_set_extraOptions,            cd_set_extraOptions),
     REXX_METHOD(cd_get_initializing,            cd_get_initializing),
     REXX_METHOD(cd_set_initializing,            cd_set_initializing),
     REXX_METHOD(cd_get_pageTitle,               cd_get_pageTitle),
@@ -1442,6 +1455,9 @@ RexxMethodEntry oodialog_methods[] = {
 
     // ResControlDialog
     REXX_METHOD(resCtrlDlg_startDialog_pvt,     resCtrlDlg_startDialog_pvt),
+
+    // RcControlDialog
+    REXX_METHOD(rcCtrlDlg_startTemplate,       rcCtrlDlg_startTemplate),
 
     // PropertySheetDialog
     REXX_METHOD(psdlg_getPages_atr,             psdlg_getPages_atr),

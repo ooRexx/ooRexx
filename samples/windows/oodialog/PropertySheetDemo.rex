@@ -238,6 +238,10 @@
     -- allows us to suppport drag and drop (using the default behaviour.
     self~connectTreeViewEvent(IDC_TV_MAIN, "BeginDrag", "DefTreeDragHandler")
 
+::method setActive unguarded
+    use arg propSheet
+    say "TreeViewDlg::setActive() return page 3"
+    reply 3
 
 ::class 'ProgressBarDlg' subclass RcPSPDialog
 
@@ -256,8 +260,8 @@
 ::method setActive unguarded
     expose threadsStarted processes
     use arg propSheet
-
-    reply 0
+    say "ProgressBarDlg::setActive() return page 2"
+    reply 2
 
     -- If no threads are running, start a thread to run each progress bar
     -- asynchronously.

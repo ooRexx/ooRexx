@@ -105,6 +105,7 @@ extern size_t          rxArgCount(RexxMethodContext * context);
 extern bool            rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t pos);
 extern bool            rxStr2Number32(RexxMethodContext *c, CSTRING str, uint32_t *number, size_t pos);
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
+extern RexxClassObject rxGetPackageClass(RexxThreadContext *c, CSTRING pkgName, CSTRING clsName);
 extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxThreadContext *c, CSTRING className);

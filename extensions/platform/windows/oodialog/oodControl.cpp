@@ -259,6 +259,21 @@ RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlT
 }
 
 
+RexxClassObject oodClass4controlType(RexxThreadContext *c, oodControl_t controlType)
+{
+    RexxClassObject controlClass = NULLOBJECT;
+    const char *className = controlType2className(controlType);
+
+    controlClass = rxGetPackageClass(c, "ooDialog.cls", className);
+    if ( controlClass == NULLOBJECT )
+    {
+        // An exception has been raised, which we don't want.  So, clear it.
+        c->ClearCondition();
+    }
+    return controlClass;
+}
+
+
 /**
  * Produce a string representation of an "object state."
  *
@@ -317,19 +332,19 @@ RexxStringObject objectStateToString(RexxMethodContext *c, uint32_t state)
  * The control object can, almost, be created entirely from within the C / C++
  * environment.  A method context and the Rexx parent dialog are needed.
  *
- * @param c
+ * @param c               Thread context we are operating in.
  * @param hControl
  * @param hDlg
  * @param id
  * @param controlType
- * @param self
+ * @param self            Rexx dialog object that contains the dialog control.
  * @param isCategoryDlg
  * @param putInBag
  *
  * @return RexxObjectPtr
  */
-RexxObjectPtr createRexxControl(RexxMethodContext *c, HWND hControl, HWND hDlg, uint32_t id, oodControl_t controlType,
-                                RexxObjectPtr self, bool isCategoryDlg, bool putInBag)
+RexxObjectPtr createRexxControl(RexxThreadContext *c, HWND hControl, HWND hDlg, uint32_t id, oodControl_t controlType,
+                                RexxObjectPtr self, RexxClassObject controlCls, bool isCategoryDlg, bool putInBag)
 {
     RexxObjectPtr result = TheNilObj;
 
@@ -350,13 +365,7 @@ RexxObjectPtr createRexxControl(RexxMethodContext *c, HWND hControl, HWND hDlg, 
     PNEWCONTROLPARAMS pArgs = (PNEWCONTROLPARAMS)malloc(sizeof(NEWCONTROLPARAMS));
     if ( pArgs == NULL )
     {
-        outOfMemoryException(c->threadContext);
-        goto out;
-    }
-
-    RexxClassObject controlCls = oodClass4controlType(c, controlType);
-    if ( controlCls == NULLOBJECT )
-    {
+        outOfMemoryException(c);
         goto out;
     }
 
@@ -429,7 +438,69 @@ RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCPlainBaseDialog pcpb
 
     uint32_t id = (uint32_t)GetDlgCtrlID(hCtrl);
 
-    result = createRexxControl(c, hCtrl, pcpbd->hDlg, id, type, pcpbd->rexxSelf, false, putInBag);
+    RexxClassObject controlCls = oodClass4controlType(c, type);
+    if ( controlCls == NULLOBJECT )
+    {
+        goto done_out;
+    }
+
+    result = createRexxControl(c->threadContext, hCtrl, pcpbd->hDlg, id, type, pcpbd->rexxSelf, controlCls, false, putInBag);
+
+done_out:
+    return result;
+}
+
+
+/**
+ * Creates a Rexx dialog control from within a thread context, using the window
+ * handle of the control.
+ *
+ * In the Windows API it is easy to get the window handle of a control within a
+ * dialog.  Normally we create Rexx dialog control objects from within Rexx
+ * code, but it is convenient to be able to create the Rexx dialog control from
+ * within native code.
+ *
+ * This function is similar to the other createControlFromHwnd() functions, but
+ * it uses a thread context rather than a method context.  This allows it to be
+ * used from inside a Windows dialog procedure where there is no method context
+ * available.
+ *
+ * @param c         The thread context we are operating in.
+ * @param pcpbd     The CSelf struct of the dialog the control resides in.
+ * @param hCtrl     The window handle of the dialog control.  This can be
+ *                  null, in which case .nil is returned, making it safe to use
+ *                  without first checking the handle.
+ * @param type      The type of the dialog control.
+ * @param putInBag  Whether the new Rexx dialog control object should be
+ *                  protected from garbage collection by being placed in the
+ *                  Rexx dialog object's control bag.
+ *
+ * @return A Rexx dialog control object that represents the dialo control, or
+ *         .nil if the object is not instantiated.
+ *
+ * @remarks  The second from the last argument to createRexxControl() is true if
+ *           the parent dialog is a CategoryDialog, otherwise false.  Since the
+ *           CategoryDialog is now deprecated, we just pass false.
+ */
+RexxObjectPtr createControlFromHwnd(RexxThreadContext *c, pCPlainBaseDialog pcpbd, HWND hCtrl,
+                                    oodControl_t type, bool putInBag)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    if ( hCtrl == NULL )
+    {
+        goto done_out;
+    }
+
+    uint32_t id = (uint32_t)GetDlgCtrlID(hCtrl);
+
+    RexxClassObject controlCls = oodClass4controlType(c, type);
+    if ( controlCls == NULLOBJECT )
+    {
+        goto done_out;
+    }
+
+    result = createRexxControl(c, hCtrl, pcpbd->hDlg, id, type, pcpbd->rexxSelf, controlCls, false, putInBag);
 
 done_out:
     return result;
@@ -471,10 +542,16 @@ RexxObjectPtr createControlFromHwnd(RexxMethodContext *c, pCDialogControl pcdc, 
         goto done_out;
     }
 
+    RexxClassObject controlCls = oodClass4controlType(c, type);
+    if ( controlCls == NULLOBJECT )
+    {
+        goto done_out;
+    }
+
     bool     isCategoryDlg = (c->IsOfType(pcdc->oDlg, "CATEGORYDIALOG") ? true : false);
     uint32_t id = (uint32_t)GetDlgCtrlID(hCtrl);
 
-    result = createRexxControl(c, hCtrl, pcdc->hDlg, id, type, pcdc->oDlg, isCategoryDlg, putInBag);
+    result = createRexxControl(c->threadContext, hCtrl, pcdc->hDlg, id, type, pcdc->oDlg, controlCls, isCategoryDlg, putInBag);
 
 done_out:
     return result;

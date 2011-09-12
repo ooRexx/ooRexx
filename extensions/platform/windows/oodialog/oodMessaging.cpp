@@ -438,7 +438,6 @@ LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         }
 
         setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
-
         return TRUE;
     }
 
@@ -874,7 +873,7 @@ BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
     {
         pcpbd->abnormalHalt = true;
 
-        if ( pcpbd->isPropSheetDlg && ! ((pCPropertySheetDialog)(pcpbd->dlgPrivate))->modeless  )
+        if ( pcpbd->isPropSheetDlg && ! ((pCPropertySheetDialog)(pcpbd->dlgPrivate))->modeless )
         {
             abortPropertySheet((pCPropertySheetDialog)pcpbd->dlgPrivate, hDlg, t);
             return FALSE;
@@ -965,7 +964,7 @@ LRESULT paletteMessage(pCPlainBaseDialog pcpbd, HWND hDlg, UINT msg, WPARAM wPar
  *           connections, so that the Rexx programmer does not inadvertently
  *           block the message loop.
  */
-static MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringObject method, RexxArrayObject args)
+MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringObject method, RexxArrayObject args)
 {
     c->SendMessage2(obj, "STARTWITH", method, args);
     return ReplyTrue;

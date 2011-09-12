@@ -290,7 +290,8 @@
 
 -- Creates the dialog, shows it, and destroys it.  Dialog "data" is set and received.
 -- The sleepTime arg is ignored.  This arg was never documented, but people might have
--- used it anyway, so it is left in the arg list.
+-- used it anyway, so it is left in the arg list. Do not document modeless, it is an
+-- implementation detail that may be removed if true modal dialog are ever implemented
 ::method execute unguarded
    expose dlgData.
    use strict arg sh = "NORMAL", icon = 0, sleepTime = 1, modeless = .false
@@ -332,7 +333,7 @@
   * to be altered.
   */
 
-::method initDialog unguarded private
+::method initDialog
    return 0
 
  /** ok()

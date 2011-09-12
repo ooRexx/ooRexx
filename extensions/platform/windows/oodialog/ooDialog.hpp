@@ -101,9 +101,9 @@
 #define ICON_OODIALOG             0x00000002
 #define ICON_DLL                  0x00000004
 
-/* Defines for the different possible versions of comctl32.dll up to Windows
- * XP SP2. These DWORD "packed version" numbers are calculated using the
- * following macro:
+/* Defines for the different possible versions of comctl32.dll up to Windows 7.
+ * These DWORD "packed version" numbers are calculated using the following
+ * macro:
  */
 #define MAKEVERSION(major,minor) MAKELONG(minor,major)
 
@@ -523,7 +523,7 @@ typedef struct _pbdCSelf {
     void                *previous;      // Previous pCPlainBaseDialog used for stored dialogs
     size_t               tableIndex;    // Index of this dialog in the stored dialog table
     HWND                 activeChild;   // The active child dialog, used for CategoryDialogs
-    HWND                 childDlg[MAXCHILDDIALOGS+1];
+    HWND                 childDlg[+1];
     HINSTANCE            hInstance;     // Handle to loaded DLL instance, ooDialog.dll or a resource DLL for a ResDialog
     HANDLE               hDlgProcThread;
     RexxInstance        *interpreter;
@@ -568,6 +568,7 @@ typedef struct _pbdCSelf {
     bool                 isPageDlg;      // Dialog is a property sheet page dialog
     bool                 isPropSheetDlg; // Dialog is a property sheet dialog
     bool                 isTabOwnerDlg;  // Dialog is a tab owner dialog
+    bool                 isDlgHwndSet;   // Has setDlgHandle() been executed
     bool                 sharedIcon;
     bool                 didChangeIcon;
     bool                 isActive;
@@ -624,36 +625,52 @@ typedef CControlDialogInfo *pCControlDialogInfo;
 typedef struct _cdCSelf {
     SIZE                size;
     pCPlainBaseDialog   pcpbd;
+    pCDynamicDialog     pcdd;             // DynmicDialog CSelf, may be null.
     RexxObjectPtr       rexxSelf;
+    RexxStringObject    extraOpts;        // Storage for extra options, used by RcControlDialog, available for other uses.
     char               *pageTitle;
     oodClass_t          pageType;
     HICON               hIcon;            // tabIcon attribute, C++ part if using .Image
     uint32_t            iconID;           // tabIcon attribute, C++ part if using resource ID
     uint32_t            pageNumber;       // Page number, zero-based index
+    uint32_t            resID;            // Resource ID of dlg template for a ResPSPDialog (converted from symbolic if needed.)
     bool                activated;        // Was the page visited by the user
     bool                isInitializing;
     bool                isManaged;
+    bool                isPositioned;
 } CControlDialog;
 typedef CControlDialog *pCControlDialog;
 
 
 /* Struct for the ManagedTab object CSelf. */
 typedef struct _mtCSelf {
-    RexxArrayObject      pages;              // Used to protect from garbage collection, until transferred to tab owner dialog
-    RexxObjectPtr       *rexxPages;
-    pCControlDialog     *cppPages;
-    uint32_t             tabID;              // tab resource ID
-    uint32_t             count;              // count of pages
-    bool                 wantNotifications;  // Send the dialog all tab notifications.
+    RECT                 displayRect;            // The area of the tab used to display the page content.
+    RexxObjectPtr        rexxOwner;              // The tab owner dialog Rexx self;
+    pCPlainBaseDialog    pcpbd;                  // The tab owner dialog CSelf
+    RexxObjectPtr        rexxSelf;               // Rexx MangageTab object
+    RexxObjectPtr       *rexxPages;              // Array of Rexx page dialogs (control dialogs.)
+    pCControlDialog     *cppPages;               // Array of page dialog CSelfs
+    RexxObjectPtr        rexxTab;                // tab control Rexx object
+    HWND                 hTab;                   // tab control hwnd.
+    RexxObjectPtr        rxTabID;                // tab control resource ID as a Rexx object
+    uint32_t             tabID;                  // tab control resource ID
+    uint32_t             count;                  // count of pages
+    uint32_t             startPage;              // initial page displayed in tab. zero-based index.
+    uint32_t             showing;                // The current visible page.
+    bool                 wantNotifications;      // Send the page dialog all tab notifications, includes NM_xx.
+    bool                 needDisplayRect;        // Is the display rectangle of the tab calculated yet.
+    bool                 ownerWantsSelChange;    // Also send owner TCN_SELCHANGE
+	bool                 ownerWantsSelChanging;  // Also send owner TCN_SELCHANGING
+    bool                 ownerWantsSetActive;    // Send setActive to owner, not ot page dialog
+	bool                 ownerWantsKillActive;   // Send killActive to owner, not ot page dialog
+    bool                 doingStartPage;         // Initializing start page which is not page 1.
 } CManagedTab;
 typedef CManagedTab *pCManagedTab;
 
 /* Struct for the TabOwnerDlgInfo object CSelf. */
 typedef struct _todiCSelf {
-    RexxArrayObject   pages[MAXMANAGEDTABS]; // Used to protect from garbage collection, for a space.
     pCManagedTab      mts[MAXMANAGEDTABS];
     uint32_t          count;
-    bool              useResourceImage;
 } CTabOwnerDlgInfo;
 typedef CTabOwnerDlgInfo *pCTabOwnerDlgInfo;
 
@@ -734,6 +751,30 @@ typedef struct _psdCSelf {
     bool                 isAeroWiz;
 } CPropertySheetDialog;
 typedef CPropertySheetDialog *pCPropertySheetDialog;
+
+/*
+ * Struct for the page dialog information.  This is used for initializin the
+ * dialog template pointer for either a property sheet page dialog or a managed
+ * tab page dialog.  (A managed tab page dialog is a ControlDialog in a
+ * ManagedTab.)
+ */
+typedef struct _pdi {
+    pCPlainBaseDialog   pcpbd;            // PlainBaseDialog CSelf
+    pCDynamicDialog     pcdd;             // DynamicDialog CSelf
+    void               *pPageCSelf;
+    RexxObjectPtr       rexxSelf;
+    RexxStringObject    extraOpts;
+    char               *pageTitle;        // Page title (could be null.)
+    char               *newTitle;         // If pagetitle is null, this is the generated page title
+    INT_PTR             pageID;           // Returned, but only used by property sheet pages.
+    oodClass_t          pageType;
+    uint32_t            resID;
+    uint32_t            pageNumber;       // Page number, zero-based index
+    uint32_t            cx;               // Width and height of the dialog.
+    uint32_t            cy;
+} PageDialogInfo;
+typedef PageDialogInfo *pPageDialogInfo;
+
 
 /* Struct for the AppliationManager object CSelf. */
 typedef struct _amCSelf {

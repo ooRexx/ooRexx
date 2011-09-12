@@ -38,6 +38,14 @@
 #ifndef oodPropertySheetDialog_Included
 #define oodPropertySheetDialog_Included
 
+// Mangaged Tab / Control Dialog notification method names
+#define TABPAGESETACTIVE_MSG        "tabPageSetActive"
+#define TABPAGEKILLACTIVE_MSG       "tabPageKillActive"
+
+#define TABOWNERSETACTIVE_MSG       "tabOwnerSetActive"
+#define TABOWNERKILLACTIVE_MSG      "tabOwnerKillActive"
+#define TABOWNERSELCHANGE_MSG       "tabOwnerSelChange"
+#define TABOWNERSELCHANGING_MSG     "tabOwnerSelChanging"
 
 // PSN_* notification method names
 #define TRANSLATEACCELERATOR_MSG    "translateAccelerator"

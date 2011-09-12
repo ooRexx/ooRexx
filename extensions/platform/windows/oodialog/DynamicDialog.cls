@@ -68,7 +68,7 @@
 
 -- This method should be over-ridden in subclasses and provides the opportunity for the subclass to
 -- add dialog controls to the dialog template.
-::method defineDialog private
+::method defineDialog
    return 0
 
 ::method create external "LIBRARY oodialog dyndlg_create"
@@ -612,7 +612,7 @@
          style = style~translate(" ", "|")
          extStyle = extStyle~translate(" ", "|")
          select
-            when class = '"BUTTON"' then do
+            when class = '"BUTTON"' | class = WC_BUTTON then do
                if style~wordpos("BS_AUTORADIOBUTTON") > 0 | style~wordpos("BS_RADIOBUTTON") > 0 then
                   self~createRadioButton(id, x, y, w, h, self~getRCStyle(style, "BTN", "R"), name, , loadOptions)
                else if style~wordpos("BS_AUTOCHECKBOX") > 0 | style~wordpos("BS_CHECKBOX") > 0 then

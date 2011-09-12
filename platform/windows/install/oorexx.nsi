@@ -575,7 +575,6 @@ Section "${LONGNAME} Samples" SecDemo
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\res
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\oodialog\res\" "*.res"
   ${File} "${SRCDIR}\samples\windows\oodialog\res\" "*.dll"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\simple
@@ -600,7 +599,6 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "build_ooDialog_cls.rex"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "AnimatedButton.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "BaseDialog.cls"
-  ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "CategoryDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "ControlDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "DeprecatedClasses.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "DialogControls.cls"
@@ -609,7 +607,6 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "EventNotification.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "Menu.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "PlainBaseDialog.cls"
-  ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "PropertySheet.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "RcDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "ResDialog.cls"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "UserDialog.cls"

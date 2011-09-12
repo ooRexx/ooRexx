@@ -2601,13 +2601,18 @@ int32_t stopDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
  */
 void setDlgHandle(RexxThreadContext *c, pCPlainBaseDialog pcpbd)
 {
-    HWND hDlg = pcpbd->hDlg;
+    if ( ! pcpbd->isDlgHwndSet )
+    {
+        HWND hDlg = pcpbd->hDlg;
 
-    pcpbd->enCSelf->hDlg = hDlg;
-    pcpbd->weCSelf->hwnd = hDlg;
+        pcpbd->enCSelf->hDlg = hDlg;
+        pcpbd->weCSelf->hwnd = hDlg;
 
-    pcpbd->wndBase->hwnd = hDlg;
-    pcpbd->wndBase->rexxHwnd = c->RequestGlobalReference(pointer2string(c, hDlg));
+        pcpbd->wndBase->hwnd = hDlg;
+        pcpbd->wndBase->rexxHwnd = c->RequestGlobalReference(pointer2string(c, hDlg));
+
+        pcpbd->isDlgHwndSet = true;
+    }
 }
 
 
@@ -2866,9 +2871,14 @@ done_out:
  *  @params  resource     Resource ID for ResDialog or RcDialog dialogs.
  *  @params  dlgDataStem  Data stem.
  *  @params  hFile        Header file.
- *  @params  ownerData    Owner data can be either a Rexx owner dialog if this
- *                        is a ControlDialog, or a .directory object with
- *                        initialization data if this is a TabOwnerDialog.
+ *
+ *  @params  initData     Init data can be any object used to initialize a
+ *                        specific concrete dialog class.  Around ooDialog 4.2.0
+ *                        it was decided that rather than continually adding
+ *                        optional init parameters to new dialog classes, we
+ *                        would simply use a single init object that is passed
+ *                        on to the concrete class.  Which in turn knows how to
+ *                        use that init object.
  *
  *  @remarks  Prior to 4.0.1, if something failed here, the 'init code' was set
  *            to non-zero.  One problem with this is that it relies on the user
@@ -2885,9 +2895,9 @@ done_out:
  *            instance to do a Halt(), which pretty much shuts everything down.
  *
  *            As ooDialog was being converted to the C++ APIs, the initCode
- *            attribute came to have less and less meaning.  With this change,
- *            it is mostly not needed.  The one exception is when the maximum
- *            number of active dialogs has been reached.  (See
+ *            attribute came to have less and less meaningingful.  With this
+ *            change, it is mostly not needed.  The one exception is when the
+ *            maximum number of active dialogs has been reached.  (See
  *            PlainBaseDialog::new().)
  */
 RexxMethod6(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource,
@@ -2985,12 +2995,12 @@ RexxMethod6(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     context->SetObjectVariable("PROCESSINGLOAD", TheFalseObj);
 
     context->SendMessage1(self, "CHILDDIALOGS=", rxNewList(context));       // self~childDialogs = .list~new
-    context->SendMessage0(self, "INITAUTODETECTION");                       // self~initAutoDetection
     context->SendMessage1(self, "DATACONNECTION=", context->NewArray(50));  // self~dataConnection = .array~new(50)
     context->SendMessage1(self, "AUTOMATICMETHODS=", rxNewQueue(context));  // self~autoMaticMethods = .queue~new
-
     context->SendMessage1(self, "MENUBAR=", TheNilObj);
     context->SendMessage1(self, "ISLINKED=", TheFalseObj);
+
+    context->SendMessage0(self, "INITAUTODETECTION");                       // self~initAutoDetection
 
     if ( TheConstDirUsage == globalOnly )
     {
@@ -4587,7 +4597,7 @@ RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTION
     }
 
     uint32_t category = getCategoryNumber(context, self);
-    return ( addToDataTable(context, pcpbd, id, type, category) == OOD_NO_ERROR ? TheZeroObj : TheOneObj );
+    return ( addToDataTable(context->threadContext, pcpbd, id, type, category) == OOD_NO_ERROR ? TheZeroObj : TheOneObj );
 }
 
 
@@ -4849,7 +4859,13 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
         goto out;
     }
 
-    result = createRexxControl(context, hControl, hDlg, id, controlType, self, isCategoryDlg, true);
+    RexxClassObject controlCls = oodClass4controlType(context, controlType);
+    if ( controlCls == NULLOBJECT )
+    {
+        goto out;
+    }
+
+    result = createRexxControl(context->threadContext, hControl, hDlg, id, controlType, self, controlCls, isCategoryDlg, true);
 
 out:
     return result;

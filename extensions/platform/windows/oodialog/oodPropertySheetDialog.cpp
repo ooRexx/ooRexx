@@ -75,24 +75,49 @@ public:
 #define VALID_PSNRET_MSG_LIST   "PSNRET_NOERROR or PSNRET_MESSAGEHANDLED"
 #define VALID_PROPSHEET_BUTTONS  "APPLYNOW, BACK, CANCEL, FINISH, HELP, NEXT, or OK"
 
-bool psnCheckForCondition(RexxThreadContext *c, pCPropertySheetDialog pcpsd)
+/**
+ * The following set of helper functions, some of which are named tcXXX (for
+ * thread context), are used by both PropertySheetDialog and TabOwnerDialog.
+ */
+
+/**
+ *
+ * Checks for raised conditions during the sending of messages to a Rexx object
+ * during the window message loop procedures.
+ *
+ * @param c
+ * @param pcpbd
+ *
+ * @return bool
+ */
+bool tcCheckForCondition(RexxThreadContext *c, pCPlainBaseDialog pcpbd)
 {
     if ( checkForCondition(c, true) )
     {
-        endDialogPremature(pcpsd->pcpbd, pcpsd->hDlg, RexxConditionRaised);
+        endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
         return true;
     }
     return false;
 }
 
-bool goodReply(RexxThreadContext *c, pCPropertySheetDialog pcpsd, RexxObjectPtr r, CSTRING method)
+/**
+ * Checks that the reply from sending a message to a Rexx object is not null.
+ *
+ * @param c
+ * @param pcpbd
+ * @param r
+ * @param method
+ *
+ * @return bool
+ */
+bool goodReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr r, CSTRING method)
 {
-    if ( ! psnCheckForCondition(c, pcpsd) )
+    if ( ! tcCheckForCondition(c, pcpbd) )
     {
         if ( r == NULLOBJECT )
         {
             c->RaiseException1(Rexx_Error_No_result_object_message, c->String(method));
-            psnCheckForCondition(c, pcpsd);
+            tcCheckForCondition(c, pcpbd);
             return false;
         }
         return true;
@@ -100,10 +125,16 @@ bool goodReply(RexxThreadContext *c, pCPropertySheetDialog pcpsd, RexxObjectPtr 
     return false;
 }
 
-inline void psnMemoryErr(RexxThreadContext *c, pCPropertySheetDialog pcpsd)
+/**
+ * Raises an out of memory exception, prints it, and ends the dialog.
+ *
+ * @param c
+ * @param pcpbd
+ */
+inline void tcMemoryErr(RexxThreadContext *c, pCPlainBaseDialog pcpbd)
 {
     outOfMemoryException(c);
-    psnCheckForCondition(c, pcpsd);
+    tcCheckForCondition(c, pcpbd);
 }
 
 
@@ -120,15 +151,15 @@ inline void psnMemoryErr(RexxThreadContext *c, pCPropertySheetDialog pcpsd)
  *
  *  The exception is raised, printed, and the dialog is ended.
  */
-void wrongPSNRangeException(RexxThreadContext *c, CSTRING method, int32_t min, int32_t max, RexxObjectPtr actual,
-                            pCPropertySheetDialog pcpsd)
+void tcWrongRangeException(RexxThreadContext *c, CSTRING method, int32_t min, int32_t max, RexxObjectPtr actual,
+                            pCPlainBaseDialog pcpbd)
 {
     TCHAR buf[256];
     _snprintf(buf, sizeof(buf), "The return from method %s() must be a whole number from %d to %d; found %s",
               method, min, max, c->ObjectToStringValue(actual));
 
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
-    psnCheckForCondition(c, pcpsd);
+    tcCheckForCondition(c, pcpbd);
 }
 
 
@@ -144,15 +175,15 @@ void wrongPSNRangeException(RexxThreadContext *c, CSTRING method, int32_t min, i
  *
  *  The exception is raised, printed, and the dialog is ended.
  */
-void invalidPSNReturnListException(RexxThreadContext *c, CSTRING method, CSTRING list, RexxObjectPtr actual,
-                                   pCPropertySheetDialog pcpsd)
+void tcInvalidReturnListException(RexxThreadContext *c, CSTRING method, CSTRING list, RexxObjectPtr actual,
+                                   pCPlainBaseDialog pcpbd)
 {
     TCHAR buf[256];
     _snprintf(buf, sizeof(buf), "The return from method %s() must be one of %s; found %s",
               method, list, c->ObjectToStringValue(actual));
 
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
-    psnCheckForCondition(c, pcpsd);
+    tcCheckForCondition(c, pcpbd);
 }
 
 
@@ -271,11 +302,7 @@ INT_PTR getSetActiveValue(RexxThreadContext *c, pCPropertySheetDialog pcpsd, Rex
     int32_t index;
     if ( ! c->Int32(result, &index) || (index < -1 || index > max) )
     {
-        TCHAR buf[256];
-        _snprintf(buf, sizeof(buf), "The return from method %s() must be a whole number from %d to %d; found %s",
-                  name, -1, max, c->ObjectToStringValue(result));
-
-        c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
+        tcWrongRangeException(c, name, -1, max, result, pcpsd->pcpbd);
         return ret;
     }
 
@@ -630,12 +657,6 @@ static void initializePropSheet(HWND hPropSheet)
  *
  * @param hPage
  * @param pcpsp
- *
- * @remarks  Note that we pass NULL into doDataAutoDetection() here because it
- *           requires a method context rather than a thread context, which we
- *           don't have.  However, the context is only used to raise an out of
- *           memory exception, so we simply check for that condition and raise
- *           the excepion here.
  */
 static void initializePropSheetPage(HWND hPage, pCPropertySheetPage pcpsp)
 {
@@ -658,9 +679,8 @@ static void initializePropSheetPage(HWND hPage, pCPropertySheetPage pcpsp)
 
         if ( pcpbd->autoDetect )
         {
-            if ( doDataAutoDetection(NULL, pcpbd) == OOD_MEMORY_ERR )
+            if ( doDataAutoDetection(c, pcpbd) == OOD_MEMORY_ERR )
             {
-                outOfMemoryException(c);
                 return;
             }
         }
@@ -774,10 +794,10 @@ void doSetActiveCommon(RexxThreadContext *c, pCPropertySheetPage pcpsp, HWND hPa
 
     RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, name, pcpsd->rexxSelf);
 
-    if ( goodReply(c, pcpsd, result, name) )
+    if ( goodReply(c, pcpsd->pcpbd, result, name) )
     {
         reply = getSetActiveValue(c, pcpsd, result, name);
-        psnCheckForCondition(c, pcpsd);
+        tcCheckForCondition(c, pcpsd->pcpbd);
     }
     setWindowPtr(hPage, DWLP_MSGRESULT, (LPARAM)reply);
 }
@@ -815,7 +835,7 @@ void doQueryInitialFocus(RexxThreadContext *c, pCPropertySheetPage pcpsp, LPARAM
     HWND   hPage = pcpsp->hPage;
     LPARAM reply = 0;
 
-    if ( goodReply(c, pcpsd, result, QUERYINITIALFOCUS_MSG) )
+    if ( goodReply(c, pcpsd->pcpbd, result, QUERYINITIALFOCUS_MSG) )
     {
         // We need 0 to be okay, but not -1.
         id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result, -1, 1, false);
@@ -823,11 +843,11 @@ void doQueryInitialFocus(RexxThreadContext *c, pCPropertySheetPage pcpsp, LPARAM
         {
             if ( isOutOfMemoryException(c) )
             {
-                psnMemoryErr(c, pcpsd);
+                tcMemoryErr(c, pcpsd->pcpbd);
             }
             else
             {
-                invalidPSNReturnListException(c, QUERYINITIALFOCUS_MSG, "0, or a valid resource ID", result, pcpsd);
+                tcInvalidReturnListException(c, QUERYINITIALFOCUS_MSG, "0, or a valid resource ID", result, pcpsd->pcpbd);
             }
         }
         else if ( id != 0 )
@@ -867,18 +887,18 @@ void doWizFinish(RexxThreadContext *c, pCPropertySheetPage pcpsp)
     HWND   hPage = pcpsp->hPage;
     LPARAM reply = 0;
 
-    if ( goodReply(c, pcpsd, result, WIZFINISH_MSG) )
+    if ( goodReply(c, pcpsd->pcpbd, result, WIZFINISH_MSG) )
     {
         int32_t id = oodResolveSymbolicID(c, pcpsp->rexxSelf, result, -1, 1, false);
         if ( id == OOD_ID_EXCEPTION )
         {
             if ( isOutOfMemoryException(c) )
             {
-                psnMemoryErr(c, pcpsd);
+                tcMemoryErr(c, pcpsd->pcpbd);
             }
             else
             {
-                invalidPSNReturnListException(c, WIZFINISH_MSG, "-1, 0, or a valid resource ID", result, pcpsd);
+                tcInvalidReturnListException(c, WIZFINISH_MSG, "-1, 0, or a valid resource ID", result, pcpsd->pcpbd);
             }
         }
         else if ( id != 0 )
@@ -898,11 +918,11 @@ int queryFromSibling(RexxThreadContext *c, pCPropertySheetPage pcpsp, WPARAM wPa
     RexxArrayObject args   = c->ArrayOfThree((RexxObjectPtr)wParam, (RexxObjectPtr)lParam, pcpsd->rexxSelf);
     RexxObjectPtr   result = c->SendMessage(pcpsp->rexxSelf, QUERYFROMSIBLING_MSG, args);
 
-    if ( goodReply(c, pcpsd, result, QUERYFROMSIBLING_MSG) )
+    if ( goodReply(c, pcpsd->pcpbd, result, QUERYFROMSIBLING_MSG) )
     {
         if ( ! c->Int32(result, &reply) )
         {
-            wrongPSNRangeException(c, QUERYFROMSIBLING_MSG, MININT, MAXINT, result, pcpsd);
+            tcWrongRangeException(c, QUERYFROMSIBLING_MSG, MININT, MAXINT, result, pcpsd->pcpbd);
         }
     }
     return reply;
@@ -951,11 +971,11 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
 
             RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, APPLY_MSG, isOkButton, pcpsd->rexxSelf);
 
-            if ( goodReply(c, pcpsd, result, APPLY_MSG) )
+            if ( goodReply(c, pcpsd->pcpbd, result, APPLY_MSG) )
             {
                 if ( ! c->UnsignedInt32(result, &reply) || ! (reply >= PSNRET_NOERROR && reply <= PSNRET_INVALID_NOCHANGEPAGE) )
                 {
-                    invalidPSNReturnListException(c, APPLY_MSG, VALID_PSNRET_LIST, result, pcpsd);
+                    tcInvalidReturnListException(c, APPLY_MSG, VALID_PSNRET_LIST, result, pcpsd->pcpbd);
                 }
             }
             setWindowPtr(hPage, DWLP_MSGRESULT, (LPARAM)reply);
@@ -976,7 +996,7 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
         case PSN_HELP :
         {
             RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, HELP_MSG, pcpsd->rexxSelf);
-            goodReply(c, pcpsd, result, HELP_MSG);
+            goodReply(c, pcpsd->pcpbd, result, HELP_MSG);
             break;
         }
 
@@ -988,11 +1008,11 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
 
             RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, KILLACTIVE_MSG, pcpsd->rexxSelf);
 
-            if ( goodReply(c, pcpsd, result, KILLACTIVE_MSG) )
+            if ( goodReply(c, pcpsd->pcpbd, result, KILLACTIVE_MSG) )
             {
                 if ( result != TheTrueObj && result != TheFalseObj )
                 {
-                    invalidPSNReturnListException(c, KILLACTIVE_MSG, "true or false", result, pcpsd);
+                    tcInvalidReturnListException(c, KILLACTIVE_MSG, "true or false", result, pcpsd->pcpbd);
                 }
                 else if ( result == TheFalseObj )
                 {
@@ -1014,11 +1034,11 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
             {
                 RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, QUERYCANCEL_MSG, pcpsd->rexxSelf);
 
-                if ( goodReply(c, pcpsd, result, QUERYCANCEL_MSG) )
+                if ( goodReply(c, pcpsd->pcpbd, result, QUERYCANCEL_MSG) )
                 {
                     if ( result != TheTrueObj && result != TheFalseObj )
                     {
-                        invalidPSNReturnListException(c, QUERYCANCEL_MSG, "true or false", result, pcpsd);
+                        tcInvalidReturnListException(c, QUERYCANCEL_MSG, "true or false", result, pcpsd->pcpbd);
                     }
                     else if ( result == TheFalseObj )
                     {
@@ -1037,7 +1057,7 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
             RexxObjectPtr isCancelButton = lppsn->lParam ? TheTrueObj : TheFalseObj;
 
             RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, RESET_MSG, isCancelButton, pcpsd->rexxSelf);
-            goodReply(c, pcpsd, result, RESET_MSG);
+            goodReply(c, pcpsd->pcpbd, result, RESET_MSG);
             break;
         }
 
@@ -1051,11 +1071,11 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
             RexxArrayObject args = getTranslateAccelatorArgs(c, pMsg->message, pMsg->wParam, pMsg->lParam, pcpsd->rexxSelf);
             RexxObjectPtr result = c->SendMessage(pcpsp->rexxSelf, TRANSLATEACCELERATOR_MSG, args);
 
-            if ( goodReply(c, pcpsd, result, TRANSLATEACCELERATOR_MSG) )
+            if ( goodReply(c, pcpsd->pcpbd, result, TRANSLATEACCELERATOR_MSG) )
             {
                 if ( ! c->UnsignedInt32(result, &reply) || (reply != PSNRET_NOERROR && reply != PSNRET_MESSAGEHANDLED) )
                 {
-                    invalidPSNReturnListException(c, TRANSLATEACCELERATOR_MSG, VALID_PSNRET_MSG_LIST, result, pcpsd);
+                    tcInvalidReturnListException(c, TRANSLATEACCELERATOR_MSG, VALID_PSNRET_MSG_LIST, result, pcpsd->pcpbd);
                 }
             }
             setWindowPtr(hPage, DWLP_MSGRESULT, reply);
@@ -1562,11 +1582,11 @@ uint32_t CALLBACK PropSheetPageCallBack(HWND hwnd, uint32_t msg, LPPROPSHEETPAGE
 
             RexxObjectPtr result = c->SendMessage0(pcpsp->rexxSelf, PAGECREATE_MSG);
 
-            if ( goodReply(c, pcpsd, result, PAGECREATE_MSG) )
+            if ( goodReply(c, pcpsd->pcpbd, result, PAGECREATE_MSG) )
             {
                 if ( result != TheTrueObj && result != TheFalseObj )
                 {
-                   invalidPSNReturnListException(c, PAGECREATE_MSG, "true or false", result, pcpsd);
+                   tcInvalidReturnListException(c, PAGECREATE_MSG, "true or false", result, pcpsd->pcpbd);
                 }
                 else
                 {
@@ -2626,7 +2646,7 @@ PROPSHEETPAGE *getPSPMemory(RexxMethodContext *c, pCPropertySheetDialog pcpsd, p
 
 done_out:
     return psp;
-    }
+}
 
 
 /**
@@ -3567,6 +3587,8 @@ done_out:
  */
 RexxMethod1(RexxObjectPtr, psdlg_test, CSELF, pCSelf)
 {
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    printf("PropertySheetDialog pcpsd-hDlg=%p pcpsd->pcpbd->hDlg=%p\n", pcpsd->hDlg, pcpsd->pcpbd->hDlg);
     printf("No test set up at this time\n");
     printf("Make version for 6.1=%d\n", MAKEVERSION(6, 1));
     printf("Make version for 6.01=%d\n", MAKEVERSION(6, 01));
@@ -3583,7 +3605,7 @@ RexxMethod1(RexxObjectPtr, psdlg_test, CSELF, pCSelf)
 /**
  * Performs the initialization of the PropertySheetPage mixin class.
  *
- * We create the CSelf struct for the class and then send te struct to the
+ * We create the CSelf struct for the class and then send the struct to the
  * init_propertySheetPage() method.  That method will raise an exception if its
  * arg is not a RexxBufferObject.  This implies that the PropertySheetPage mixin
  * class can only be initialized through the native API.
@@ -3619,6 +3641,7 @@ bool initPropertySheetPage(RexxMethodContext *c, pCPlainBaseDialog pcpbd, pCDyna
     pcpsp->rexxPropSheet = TheNilObj;
     pcpsp->rexxSelf      = self;
     pcpsp->interpreter   = pcpbd->interpreter;
+    pcpsp->extraOpts     = c->NullString();
 
     pcpbd->dlgPrivate = pcpsp;
 
@@ -3666,37 +3689,63 @@ static void parsePageOpts(RexxMethodContext *c, pCPropertySheetPage pcpsp, CSTRI
     pcpsp->pageFlags = opts;
 }
 
-bool initPageDlgFrame(RexxMethodContext *c, pCPropertySheetPage pcpsp)
+bool initPageDlgFrame(RexxThreadContext *c, pPageDialogInfo ppdi)
 {
-    pCPlainBaseDialog pcpbd = pcpsp->pcpbd;
-    pCDynamicDialog pcdd = pcpsp->pcdd;
+    pCPlainBaseDialog pcpbd = ppdi->pcpbd;
+    pCDynamicDialog pcdd = ppdi->pcdd;
 
-    if ( pcpsp->pageTitle == NULL )
+    if ( ppdi->pageTitle == NULL )
     {
-        char buf[32];
-        _snprintf(buf, sizeof(buf), "Page %d", pcpsp->pageNumber);
-
-        if ( ! setPageText(c, pcpsp, buf, pageText) )
+        char *t = (char *)LocalAlloc(LPTR, 32);
+        if ( t == NULL )
         {
+            outOfMemoryException(c);
             return false;
         }
+
+        _snprintf(t, 32, "Page %d", ppdi->pageNumber + 1);
+        ppdi->newTitle = t;
     }
 
-    pcpbd->wndBase->sizeX = pcpsp->cx;
-    pcpbd->wndBase->sizeY = pcpsp->cy;
+    pcpbd->wndBase->sizeX = ppdi->cx;
+    pcpbd->wndBase->sizeY = ppdi->cy;
 
-    uint32_t style = DS_SHELLFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_TABSTOP;
+    // MSDN docs say that if a property sheet page dialog has the DS_SHELLFONT
+    // style, the property sheet page manager will size the dialog according to
+    // the font specified in the template.  Whereas, the doc also says,
+    // concerning dialogs in general, that DS_SHELLFONT no effect if the
+    // typeface is not MS Shell Dlg.  Implying that you need to use DS_SETFONT
+    // if the font specified is other than MS Shell Dlg.  So here we always use
+    // DS_SHELLFONT for property sheet page dialogs and DS_SETFONT for control
+    // dialogs.  However, tests seem to show that DS_SHELLFONT would be fine for
+    // all cases.
+
+    uint32_t style = DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_TABSTOP;
+    if ( ppdi->pageType == oodUserPSPDialog || ppdi->pageType == oodRcPSPDialog )
+    {
+        style |= DS_SHELLFONT;
+    }
+    else
+    {
+        style |= DS_SETFONT;
+    }
 
     DLGTEMPLATEEX *pBase;
 
-    return startDialogTemplate(c, &pBase, pcdd, 0, 0, pcpsp->cx, pcpsp->cy, NULL, "", pcpbd->fontName, pcpbd->fontSize, style);
+    // TODO Need to allow / see what makes sense for extended window styles
+    uint32_t exStyle = 0;
+
+    return startDialogTemplate(c, &pBase, pcdd, 0, 0, ppdi->cx, ppdi->cy, NULL, "", pcpbd->fontName, pcpbd->fontSize,
+                               style, exStyle);
 }
 
 /**
- * Creates the in-memory dialog template for a user property sheet page.
+ * Creates the in-memory dialog template for a user property sheet page or a
+ * managed tab user control dialog.
  *
  * @param c      Method context we are operating in.
- * @param pcpsp  Pointer to the property sheet page CSelf
+ * @param pcpsp  Pointer to a page dialog information struct.  This struct is
+ *               filled in by the caller.
  *
  * @return True on success false on error.
  *
@@ -3705,21 +3754,22 @@ bool initPageDlgFrame(RexxMethodContext *c, pCPropertySheetPage pcpsp)
  *           we create one for him.  When the
  *           see that the pageTitle field is not null and add the PSP
  */
-RexxObjectPtr initUserTemplate(RexxMethodContext *c, pCPropertySheetPage pcpsp)
+RexxObjectPtr initUserTemplate(RexxThreadContext *c, pPageDialogInfo ppdi)
 {
-    if ( ! initPageDlgFrame(c, pcpsp) )
+    pCPlainBaseDialog pcpbd = ppdi->pcpbd;
+
+    if ( ! initPageDlgFrame(c, ppdi) )
     {
         goto err_out;
     }
 
-    pCPlainBaseDialog pcpbd = pcpsp->pcpbd;
-    pCDynamicDialog pcdd = pcpsp->pcdd;
+    pCDynamicDialog pcdd = ppdi->pcdd;
 
-    RexxObjectPtr result = c->SendMessage0(pcpbd->rexxSelf, "DEFINEDIALOG");
+    RexxObjectPtr result = c->SendMessage0(ppdi->rexxSelf, "DEFINEDIALOG");
 
     if ( ! c->CheckCondition() && pcdd->active != NULL )
     {
-        pcpsp->pageID = (INT_PTR)pcdd->base;
+        ppdi->pageID = (INT_PTR)pcdd->base;
 
         // Set the number of dialog items field in the dialog template.
         ((DLGTEMPLATEEX *)pcdd->base)->cDlgItems = (WORD)pcdd->count;
@@ -3731,40 +3781,62 @@ err_out:
     // No underlying windows dialog can be created.  We still need to clean up
     // the CSelf struct, which was allocated when the Rexx dialog object was
     // instantiated.  But I'm not sure it needs to be done here.
-    stopDialog(pcpbd, c->threadContext);
+    stopDialog(pcpbd, c);
     return TheFalseObj;
 }
 
-RexxObjectPtr initRcTemplate(RexxMethodContext *c, pCPropertySheetPage pcpsp)
+RexxObjectPtr initRcTemplate(RexxThreadContext *c, pPageDialogInfo ppdi)
 {
-    pCPlainBaseDialog pcpbd = pcpsp->pcpbd;
-    pCDynamicDialog pcdd = pcpsp->pcdd;
+    pCPlainBaseDialog pcpbd = ppdi->pcpbd;
+    pCDynamicDialog pcdd = ppdi->pcdd;
 
-    RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, "LOADFRAME", c->UnsignedInt32(pcdd->expected));
+    CSTRING msg = (ppdi->pageType == oodRcPSPDialog) ? "LOADFRAME" : "LOADFRAMERCCD";
+    RexxObjectPtr result = c->SendMessage1(ppdi->rexxSelf, msg, c->UnsignedInt32(pcdd->expected));
 
     // Checking that result is 1 is probably sufficient.
-    if ( ! isInt(0, result, c->threadContext) || c->CheckCondition() )
+    if ( ! isInt(0, result, c) || c->CheckCondition() )
     {
         goto err_out;
     }
 
-    if ( ! initPageDlgFrame(c, pcpsp) )
+    // For a RcPSPDialog or a RcControlDialog the caller did not know the
+    // correct cx, cy, and probably title because it is determined by parsing
+    // the .rc file in loadFrame().  So, we set it now.
+    if ( ppdi->pageType == oodRcPSPDialog )
+    {
+        pCPropertySheetPage pcpsp = (pCPropertySheetPage)ppdi->pPageCSelf;
+
+        ppdi->cx = pcpsp->cx;
+        ppdi->cy = pcpsp->cy;
+        ppdi->pageTitle = pcpsp->pageTitle;
+    }
+    else
+    {
+        pCControlDialog pccd = (pCControlDialog)ppdi->pPageCSelf;
+
+        ppdi->cx = pccd->size.cx;
+        ppdi->cy = pccd->size.cy;
+        ppdi->pageTitle = pccd->pageTitle;
+    }
+
+    if ( ! initPageDlgFrame(c, ppdi) )
     {
         goto err_out;
     }
 
-    result = c->SendMessage1(pcpsp->rexxSelf, "LOADITEMS", pcpsp->extraOpts);
+    msg = (ppdi->pageType == oodRcPSPDialog) ? "LOADITEMS" : "LOADITEMSRCCD";
+    result = c->SendMessage1(ppdi->rexxSelf, msg, ppdi->extraOpts);
 
-    if ( ! isInt(0, result, c->threadContext) || pcdd->active == NULL )
+    if ( ! isInt(0, result, c) || pcdd->active == NULL )
     {
         goto err_out;
     }
 
-    result = c->SendMessage0(pcpbd->rexxSelf, "DEFINEDIALOG");
+    result = c->SendMessage0(ppdi->rexxSelf, "DEFINEDIALOG");
 
     if ( ! c->CheckCondition() && pcdd->active != NULL )
     {
-        pcpsp->pageID = (INT_PTR)pcdd->base;
+        ppdi->pageID = (INT_PTR)pcdd->base;
 
         // Set the number of dialog items field in the dialog template.
         ((DLGTEMPLATEEX *)pcdd->base)->cDlgItems = (WORD)pcdd->count;
@@ -3776,19 +3848,19 @@ err_out:
     // No underlying windows dialog can be created.  We still need to clean up
     // the CSelf struct, which was allocated when the Rexx dialog object was
     // instantiated.  But I'm not sure it needs to be done here.
-    stopDialog(pcpbd, c->threadContext);
+    stopDialog(pcpbd, c);
     return TheFalseObj;
 }
 
-RexxObjectPtr initResTemplate(RexxMethodContext *c, pCPropertySheetPage pcpsp)
+RexxObjectPtr initResTemplate(RexxThreadContext *c, pPageDialogInfo ppdi)
 {
-    pCPlainBaseDialog pcpbd = pcpsp->pcpbd;
+    pCPlainBaseDialog pcpbd = ppdi->pcpbd;
 
     if ( ! loadResourceDLL(pcpbd, pcpbd->library) )
     {
         goto err_out;
     }
-    pcpsp->pageID = (INT_PTR)pcpsp->resID;
+    ppdi->pageID = (INT_PTR)ppdi->resID;
 
     return TheTrueObj;
 
@@ -3796,7 +3868,7 @@ err_out:
     // No underlying windows dialog can be created.  We still need to clean up
     // the CSelf struct, which was allocated when the Rexx dialog object was
     // instantiated.  But I'm not sure it needs to be done here.
-    stopDialog(pcpbd, c->threadContext);
+    stopDialog(pcpbd, c);
     return TheFalseObj;
 }
 
@@ -4050,25 +4122,55 @@ RexxMethod1(RexxObjectPtr, psp_initTemplate, CSELF, pCSelf)
     // TODO validate CSelf.
     pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
 
+    PageDialogInfo pdi = {0};
+    pdi.pageTitle  = pcpsp->pageTitle;
+    pdi.pageType   = pcpsp->pageType;
+    pdi.pageNumber = pcpsp->pageNumber;
+    pdi.pcdd       = pcpsp->pcdd;
+    pdi.pcpbd      = pcpsp->pcpbd;
+    pdi.rexxSelf   = pcpsp->rexxSelf;
+    pdi.extraOpts  = pcpsp->extraOpts;
+    pdi.resID      = pcpsp->resID;
+    pdi.cx         = pcpsp->cx;
+    pdi.cy         = pcpsp->cy;
+    pdi.pPageCSelf = pcpsp;
+
+    RexxObjectPtr result = TheFalseObj;
+
     switch ( pcpsp->pageType )
     {
         case oodUserPSPDialog :
-            return initUserTemplate(context, pcpsp);
+            result = initUserTemplate(context->threadContext, &pdi);
             break;
 
         case oodRcPSPDialog :
-            return initRcTemplate(context, pcpsp);
+            result = initRcTemplate(context->threadContext, &pdi);
             break;
 
         case oodResPSPDialog :
-            return initResTemplate(context, pcpsp);
+            result = initResTemplate(context->threadContext, &pdi);
             break;
 
         default :
             break;
-
     }
-    return TheFalseObj;
+
+    if ( result == TheTrueObj )
+    {
+        pcpsp->pageID = pdi.pageID;
+
+        if ( pdi.newTitle != NULL )
+        {
+            if ( ! setPageText(context, pcpsp, pdi.newTitle, pageText) )
+            {
+                result = TheFalseObj;
+            }
+        }
+    }
+
+    safeLocalFree(pdi.newTitle);
+
+    return result;
 }
 
 
@@ -4219,7 +4321,10 @@ RexxMethod9(RexxObjectPtr, rcpspdlg_init, RexxStringObject, scriptFile, RexxObje
         pcdd->expected = (expected == 0 ? DEFAULT_EXPECTED_DIALOG_ITEMS : expected);
         pcpbd->isPageDlg = true;
 
-        pcpsp->extraOpts = (argumentExists(6) ? connectOpts : context->NullString());
+        if ( argumentExists(6) )
+        {
+            pcpsp->extraOpts = connectOpts;
+        }
     }
 
 done_out:
@@ -4230,8 +4335,11 @@ done_out:
 RexxMethod7(RexxObjectPtr, rcpspdlg_startTemplate, uint32_t, cx, uint32_t, cy, CSTRING, title, CSTRING, fontName,
             uint32_t, fontSize, uint32_t, expected, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd == NULL )
+    {
+        return TheOneObj;
+    }
     pCPropertySheetPage pcpsp = (pCPropertySheetPage)pcpbd->dlgPrivate;
     pCDynamicDialog pcdd = pcpsp->pcdd;
 
@@ -4247,7 +4355,7 @@ RexxMethod7(RexxObjectPtr, rcpspdlg_startTemplate, uint32_t, cx, uint32_t, cy, C
 
     if ( len > (MAX_DEFAULT_FONTNAME - 1) )
     {
-        stringTooLongException(c->threadContext, 4, MAX_DEFAULT_FONTNAME, len);
+        stringTooLongException(context->threadContext, 4, MAX_DEFAULT_FONTNAME, len);
         return TheOneObj;
     }
     if ( len > 0 )
@@ -4326,10 +4434,62 @@ done_out:
 /**
  *  Methods for the .TabOwnerDialog class.
  */
-#define TABOWNERDIALOG_CLASS        "TabOwnerDialog"
+#define TABOWNERDIALOG_CLASS          "TabOwnerDialog"
+#define TOD_MANAGEDTABBAG_ATTRIBUTE   "TabOwnerDialogManagedTabBag"
 
 
-inline char *tcn2str(LPARAM lParam)
+static inline pCTabOwnerDialog validateTodCSelf(RexxMethodContext *c, void *pCSelf)
+{
+    pCTabOwnerDialog pctod = (pCTabOwnerDialog)pCSelf;
+    if ( pctod == NULL )
+    {
+        baseClassIntializationException(c);
+    }
+    return pctod;
+}
+
+static RexxObjectPtr tooManyMTsException(RexxMethodContext *c, uint32_t count)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "%d exceeds the maximum (%d) of allowable mangaged tabs", count, MAXMANAGEDTABS);
+
+    userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
+}
+
+static void todAdjustMethods(RexxMethodContext *c, RexxObjectPtr self)
+{
+    char *mSrc = "self~tabOwnerOk\n";
+    RexxMethodObject m = c->NewMethod("OK", mSrc, strlen(mSrc));
+    c->SendMessage2(self, "SETMETHOD", c->String("OK"), m);
+
+    mSrc = "self~tabOwnerCancel\n";
+    m = c->NewMethod("CANCEL", mSrc, strlen(mSrc));
+    c->SendMessage2(self, "SETMETHOD", c->String("CANCEL"), m);
+}
+
+static RexxObjectPtr findRexxPage(pCTabOwnerDialog pctod, int32_t id, uint32_t pageIndex)
+{
+    for ( uint32_t i = 0; i < pctod->countMTs; i++ )
+    {
+        if ( id == pctod->tabIDs[i] )
+        {
+            pCManagedTab pmt = pctod->mts[i];
+            if ( pageIndex < pmt->count )
+            {
+                return pmt->rexxPages[pageIndex];
+            }
+
+            // We found the right managed tab, but the passed in pageIndex is no
+            // good, No sense in looking any further.
+            break;
+        }
+    }
+    return NULLOBJECT;
+}
+
+/* Temp function. */
+static inline char *tcn2str(LPARAM lParam)
 {
     switch ( ((NMHDR *)lParam)->code )
     {
@@ -4348,57 +4508,607 @@ inline char *tcn2str(LPARAM lParam)
 }
 
 /**
- * Filter for tab control notification messages.
+ * Filter for our tab control notification messages.
  *
+ * @param pctod   Pointer to the tab owner CSelf.
  * @param uMsg    The windowm message id.
  * @param lParam  The LPARAM argument for the message.
+ * @param index   Index to the managed tab CSelf if found.  Returned.
  *
- * @return Return true if the message is a tab control notification message,
- *         otherwise false.
+ * @return Return true if the message is a tab control notification message for
+ *         one of our managed tabs, otherwise false.
  */
-inline bool isTCNMsg(uint32_t uMsg, LPARAM lParam)
+inline bool isTCNMsg(pCTabOwnerDialog pctod, uint32_t uMsg, LPARAM lParam, uint32_t *index)
 {
     if ( uMsg == WM_NOTIFY )
     {
+        UINT_PTR id = ((NMHDR *)lParam)->idFrom;
+
+        // First see if the control ID matches one of our managed tabs.
+        size_t count = pctod->countMTs;
+        register size_t i = 0;
+
+        while ( i < count && pctod->mts[i]->tabID != id )
+        {
+            i++;
+        }
+
+        if ( i >= count )
+        {
+            return false;
+        }
+        *index = i;
+
         uint32_t code = ((NMHDR *)lParam)->code;
         if ( code >= TCN_LAST && code <= TCN_FIRST )
         {
             return true;
         }
 
-        UINT_PTR id = ((NMHDR *)lParam)->idFrom;
-        if ( id == 200 && (code == NM_CLICK || code == NM_DBLCLK || code == NM_RCLICK ||
-                           code == NM_RDBLCLK || code == NM_RELEASEDCAPTURE) )
+        if ( pctod->mts[i]->wantNotifications )
         {
-            return true;
+            if ( code == NM_CLICK || code == NM_DBLCLK || code == NM_RCLICK ||
+                 code == NM_RDBLCLK || code == NM_RELEASEDCAPTURE )
+            {
+                return true;
+            }
         }
     }
     return false;
 }
 
+void setRexxTab(pCTabOwnerDialog pctod, pCManagedTab pmt)
+{
+    RexxClassObject ctrlCls = oodClass4controlType(pctod->dlgProcContext, winTab);
+    if ( ctrlCls != NULL )
+    {
+        pmt->rexxTab = createRexxControl(pctod->dlgProcContext, pmt->hTab, pctod->hDlg, pmt->tabID, winTab,
+                                         pctod->rexxSelf, ctrlCls, false, true);
+    }
+    else
+    {
+        pmt->rexxTab = TheNilObj;
+    }
+}
 
 /**
- * Sets the owner dialog handle for the control dialogs managed by at tab owner
- * dialog.
+ * Sets up fields in the managed tab and page dialogs CSelfs that are not knonw
+ * until the underlying tab owner dialog is created.  Adds a tab in the tab
+ * control for each page dialog.
  *
- * The Rexx owner is set when the control dialogs are added to the tab owner,
- * but at that time, the dialog handle is not known.  We set that here.
+ * For example, the Rexx owner is set when the page`dialogs are added to the tab
+ * owner, but at that time, the dialog handle is not known.
  *
  * @param pctod
  */
-void setTabOwnerHandles(pCTabOwnerDialog pctod)
+void setMangedTabDetails(pCTabOwnerDialog pctod)
 {
     HWND hOwner = pctod->hDlg;
+    TCITEM tci;
+    tci.mask = TCIF_TEXT;
 
     for ( uint32_t i = 0; i < pctod->countMTs; i++ )
     {
         pCManagedTab pmt = pctod->mts[i];
+
+        HWND hTab = GetDlgItem(hOwner, pmt->tabID);
+        pmt->hTab = hTab;
+
+        setRexxTab(pctod, pmt);
+
         for ( uint32_t j = 0; j < pmt->count; j++ )
         {
-            pCPlainBaseDialog pcpbd = pmt->cppPages[j]->pcpbd;
-            pcpbd->hOwnerDlg = hOwner;
+            pCControlDialog pccd = pmt->cppPages[j];
+
+            pccd->pcpbd->hOwnerDlg = hOwner;
+
+            tci.pszText = pccd->pageTitle;
+            TabCtrl_InsertItem(hTab, pccd->pageNumber, &tci);
         }
     }
+}
+
+
+/**
+ * Returns a pointer to the dialog template in a resource only DLL (for a
+ * ResDialog.)
+ *
+ * @param c
+ * @param pccd
+ *
+ * @return DLGTEMPLATEEX*
+ *
+ * @remarks  This function follows an example from the MSDN library.  The doc
+ *           specifically says pLocked does not need to be freed, but doesn't
+ *           say whether it can be freed.  The doc does not say anything about
+ *           freeing the other handles, and the example does not free them.
+ */
+DLGTEMPLATEEX *getDialogResource(RexxThreadContext *c, pCControlDialog pccd)
+{
+    DLGTEMPLATEEX *pDlg = NULL;
+    HRSRC          hResource = NULL;   // Handle to dialog resource in DLL.
+    HRSRC          hLoaded = NULL;     // Handle to resource loaded into memory.
+    LPVOID         pLocked;            // Pointer to resource locked in memory.
+
+    pCPlainBaseDialog pcpbd = pccd->pcpbd;
+
+    // Find the dialog template resource.
+    hResource = FindResource(pcpbd->hInstance, (LPCSTR)pccd->resID, RT_DIALOG);
+    if (hResource == NULL)
+    {
+        systemServiceExceptionCode(c, API_FAILED_MSG, "FindResource");
+        goto done_out;
+    }
+
+    // Load the dialog template into global memory.
+    hLoaded = (HRSRC)LoadResource(pcpbd->hInstance, hResource);
+    if (hLoaded == NULL)
+    {
+        systemServiceExceptionCode(c, API_FAILED_MSG, "LoadResource");
+        goto done_out;
+    }
+
+    // Lock the dialog template into global memory.
+    pLocked = LockResource(hLoaded);
+    if (pLocked == NULL)
+    {
+        systemServiceExceptionCode(c, API_FAILED_MSG, "LockResource");
+        goto done_out;
+    }
+
+    pDlg = (DLGTEMPLATEEX *)pLocked;
+
+done_out:
+    return pDlg;
+}
+
+
+DLGTEMPLATEEX *getTemplate(RexxThreadContext *c, pCControlDialog pccd)
+{
+    DLGTEMPLATEEX *pDlg = NULL;
+
+    PageDialogInfo pdi = {0};
+    pdi.pageTitle  = pccd->pageTitle;
+    pdi.pageType   = pccd->pageType;
+    pdi.pageNumber = pccd->pageNumber;
+    pdi.pcdd       = pccd->pcdd;
+    pdi.pcpbd      = pccd->pcpbd;
+    pdi.rexxSelf   = pccd->rexxSelf;
+    pdi.extraOpts  = pccd->extraOpts;
+    pdi.resID      = pccd->resID;
+    pdi.cx         = pccd->size.cx;
+    pdi.cy         = pccd->size.cy;
+    pdi.pPageCSelf = pccd;
+
+    RexxObjectPtr result = TheFalseObj;
+
+    switch ( pdi.pageType )
+    {
+        case oodUserControlDialog :
+            result = initUserTemplate(c, &pdi);
+            break;
+
+        case oodRcControlDialog :
+            result = initRcTemplate(c, &pdi);
+            break;
+
+        case oodResControlDialog :
+            result = initResTemplate(c, &pdi);
+            break;
+
+        default :
+            break;
+    }
+
+    if ( result == TheTrueObj )
+    {
+        if ( pdi.newTitle != NULL )
+        {
+            safeLocalFree(pccd->pageTitle);
+            pccd->pageTitle = pdi.newTitle;
+            pdi.newTitle = NULL;
+        }
+
+        if ( pccd->pageType == oodResControlDialog )
+        {
+            pDlg = getDialogResource(c, pccd);
+        }
+        else
+        {
+            pDlg = pdi.pcdd->base;
+        }
+    }
+
+    /*
+     * We could have allocated newTitle, but then had an error.  In that case we
+     * need to free newTitle.
+     */
+    safeLocalFree(pdi.newTitle);
+
+    return pDlg;
+}
+
+HWND createMTPageDlg(RexxThreadContext *c, pCControlDialog pccd, DLGTEMPLATEEX *pTemplate, pCPlainBaseDialog pcpbdOwner)
+{
+    printf("Enter createMTPageDlg() dlg=%s\n", c->ObjectToStringValue(pccd->rexxSelf));
+
+    pCPlainBaseDialog pcpbd = pccd->pcpbd;
+
+    /* Set the thread context because it is not done in RexxChildDlgProc. */
+    pcpbd->dlgProcContext = c;
+
+    HWND hPage = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)pTemplate, pcpbd->hOwnerDlg,
+                                           (DLGPROC)RexxChildDlgProc, (LPARAM)pcpbd);
+
+    if ( hPage )
+    {
+        pcpbd->hDlg = hPage;
+        pcpbd->isActive = true;
+        pccd->activated = true;
+
+        // I don't think this whole childDlg thing is used anymore.  It is a
+        // hold over from the CategoryDialog implementation.
+        pcpbd->childDlg[0] = hPage;
+        if ( pccd->pageNumber > MAXCHILDDIALOGS )
+        {
+            pcpbdOwner->childDlg[pccd->pageNumber + 1] = hPage;
+        }
+
+        setDlgHandle(c, pcpbd);
+
+        if ( pccd->pageType == oodResControlDialog )
+        {
+            setFontAttrib(c, pcpbd);
+
+            if ( pcpbd->autoDetect )
+            {
+                // We ignore any error from doDataAutoDetection().  It could be
+                // an out of memory error, in which case an exception is raised.
+                // This should sort itself out the next time control is returned
+                // to the interpreter (?).
+                doDataAutoDetection(c, pcpbd);
+            }
+        }
+        else
+        {
+            pCDynamicDialog pcdd = pccd->pcdd;
+            cleanUpDialogTemplate(pTemplate, pcdd);
+        }
+
+        c->SendMessage0(pccd->rexxSelf, "INITDIALOG");
+        pccd->isInitializing = false;
+
+        c->SendMessage0(pccd->rexxSelf, "EXECUTE");
+    }
+    else
+    {
+        c->SendMessage1(pcpbd->rexxSelf, "FINISHED=", TheFalseObj);
+        stopDialog(pcpbd, c);
+    }
+
+    printf("Leave createMTPageDlg() dlg=%s\n", c->ObjectToStringValue(pccd->rexxSelf));
+    return hPage;
+}
+
+
+/**
+ *
+ *
+ * @param c
+ * @param pccd
+ * @param pcmt
+ * @param show  If true, size, position and show the dialog.  If false only size
+ *              and position.
+ *
+ * @remarks  TODO need to check that GetWindowRect(), etc., succeed or not.
+ *           Should probably return true or false.
+ */
+void sizeAndPositionPage(RexxThreadContext *c, pCControlDialog pccd, pCManagedTab pcmt, bool show)
+{
+    HWND hTab  = pcmt->hTab;
+    HWND hPage = pccd->pcpbd->hDlg;
+    HWND hDlg  = pccd->pcpbd->hOwnerDlg;
+
+    if ( pcmt->needDisplayRect )
+    {
+        RECT r;
+
+        GetWindowRect(hTab, &r);
+        TabCtrl_AdjustRect(hTab, FALSE, &r);
+
+        SIZE s;
+        s.cx = r.right - r.left;
+        s.cy = r.bottom - r.top;
+
+        POINT p;
+        p.x = r.left;
+        p.y = r.top;
+
+        ScreenToClient(hDlg, &p);
+        pcmt->displayRect.left   = p.x;
+        pcmt->displayRect.top    = p.y;
+        pcmt->displayRect.right  = s.cx;
+        pcmt->displayRect.bottom = s.cy;
+        pcmt->needDisplayRect    = false;
+    }
+
+    uint32_t flags = show ? SWP_SHOWWINDOW | SWP_NOOWNERZORDER : SWP_HIDEWINDOW | SWP_NOOWNERZORDER;
+
+    SetWindowPos(hPage, hTab, pcmt->displayRect.left, pcmt->displayRect.top, pcmt->displayRect.right,
+                 pcmt->displayRect.bottom, flags);
+
+    pccd->isPositioned = true;
+    if ( show )
+    {
+        pcmt->showing = pccd->pageNumber;
+    }
+}
+
+/**
+ * For each managned tab in the tab owner dialog: creates the starting tab page
+ * dialog, positions it, and starts the Rexx dialog executing.
+ *
+ * @param pctod
+ *
+ * @remarks  Although it does not make a lot of sense, the user is allowed to
+ *           have a managed tab without any pages in it.  Pages can be added and
+ *           deleted from the managed tab.
+ */
+void initStartPages(pCTabOwnerDialog pctod)
+{
+    RexxThreadContext *c = pctod->dlgProcContext;
+
+    for ( uint32_t i = 0; i < pctod->countMTs; i++ )
+    {
+        pCManagedTab    pcmt = pctod->mts[i];
+        pCControlDialog pccd = pcmt->cppPages[pcmt->startPage];
+
+        DLGTEMPLATEEX *pTemplate = getTemplate(c, pccd);
+        if ( pTemplate == NULL )
+        {
+            return;
+        }
+
+        HWND hPage = createMTPageDlg(c, pccd, pTemplate, pctod->pcpbd);
+        if ( hPage == NULL )
+        {
+            return;
+        }
+        sizeAndPositionPage(c, pccd, pcmt, true);
+
+        if ( pcmt->startPage != 0 )
+        {
+            pcmt->doingStartPage = true;
+            TabCtrl_SetCurFocus(pcmt->hTab, pccd->pageNumber);
+        }
+    }
+}
+
+/**
+ * Initializes, positions, and shows a tab page dialog that has not yet been
+ * activated.
+ *
+ * @param pctod
+ */
+void initPage(pCTabOwnerDialog pctod, pCManagedTab pcmt, pCControlDialog pccd)
+{
+    RexxThreadContext *c = pctod->dlgProcContext;
+
+    DLGTEMPLATEEX *pTemplate = getTemplate(c, pccd);
+    if ( pTemplate == NULL )
+    {
+        return;
+    }
+
+    HWND hPage = createMTPageDlg(c, pccd, pTemplate, pctod->pcpbd);
+    if ( hPage == NULL )
+    {
+        return;
+    }
+
+    sizeAndPositionPage(c, pccd, pcmt, false);
+}
+
+/**
+ * Checks the reply to a set active notification.  The programmer can reply 0 to
+ * accept the activation, or the page number of another page in the managed tab
+ * to veto the activation and set the activation to the other page.
+ *
+ * @param c
+ * @param pcmt
+ * @param result
+ * @param name
+ *
+ * @return -1 on error and an exception has been raised.  Or 0, the activation
+ *         is accepted, or the one-based index of some other page to set the
+ *         focus to.
+ */
+static int32_t getSetActiveReply(RexxThreadContext *c, pCManagedTab pcmt, RexxObjectPtr result, CSTRING name)
+{
+    int     max = (int)pcmt->count;
+    int32_t index;
+
+    if ( ! c->Int32(result, &index) || (index < 0 || index > max) )
+    {
+        tcWrongRangeException(c, name, 0, max, result, pcmt->pcpbd);
+        return -1;
+    }
+    return index;
+}
+
+
+static int32_t tcnSetActive(RexxThreadContext *c, pCManagedTab pcmt, pCControlDialog pccdNew)
+{
+    RexxObjectPtr receiver;
+    RexxObjectPtr arg1;
+    CSTRING       msgName;
+    int32_t       ret;
+    RexxObjectPtr owner = pcmt->rexxOwner;
+
+    if ( pcmt->ownerWantsSetActive )
+    {
+        receiver = owner;
+        arg1     = pccdNew->rexxSelf;
+        msgName  = TABOWNERSETACTIVE_MSG;
+    }
+    else
+    {
+        receiver = pccdNew->rexxSelf;
+        arg1     = owner;
+        msgName  = TABPAGESETACTIVE_MSG;
+    }
+
+    RexxObjectPtr result = c->SendMessage2(receiver, msgName, arg1, pcmt->rexxTab);
+
+    if ( goodReply(c, pcmt->pcpbd, result, msgName) )
+    {
+        ret = getSetActiveReply(c, pcmt, result, msgName);
+        if ( ret == -1 )
+        {
+            tcCheckForCondition(c, pcmt->pcpbd);
+        }
+    }
+    return ret;
+}
+
+static LRESULT doTCNSelChange(pCTabOwnerDialog pctod, pCManagedTab pcmt)
+{
+    if ( pcmt->doingStartPage )
+    {
+        pcmt->doingStartPage = false;
+        return TRUE;
+    }
+
+    int32_t cur  = TabCtrl_GetCurSel(pcmt->hTab);
+    if ( cur == -1 )
+    {
+        // I don't know how this could happen, but it did happen to me during
+        // testing.  We will crash if we use -1.  TODO we should try to
+        // investigate this, see if it is the best solution, or even if it is
+        // possible to get here.
+        cur = TabCtrl_GetCurFocus(pcmt->hTab);
+        if ( cur == -1 )
+        {
+            // Give up, although TabCtrl_GetCurFocus is not documented as returning -1.
+            return FALSE;
+        }
+    }
+
+    pCControlDialog    pccdNew = pcmt->cppPages[cur];
+    pCControlDialog    pccdOld = pcmt->cppPages[pcmt->showing];
+    RexxThreadContext *c       = pctod->dlgProcContext ;
+
+    if ( ! pccdNew->activated )
+    {
+        // This will position but not show the dialog, because ... the about to
+        // be actived dialog could veto it
+        initPage(pctod, pcmt, pccdNew);
+    }
+
+    int32_t page = tcnSetActive(c, pcmt, pccdNew);
+    switch (page)
+    {
+        case -1 :
+            // Error - an exception has been raised.
+            break;
+
+        case 0 :
+            ShowWindow(pccdOld->pcpbd->hDlg, SW_HIDE);
+            ShowWindow(pccdNew->pcpbd->hDlg, SW_SHOW);
+            pcmt->showing = cur;
+
+            if ( pcmt->ownerWantsSelChange )
+            {
+                RexxArrayObject args = c->ArrayOfTwo(pccdNew->rexxSelf, c->UnsignedInt32(cur + 1));
+                invokeDispatch(c, pcmt->rexxOwner, c->String(TABOWNERSELCHANGE_MSG), args);
+            }
+            break;
+
+        default :
+            TabCtrl_SetCurFocus(pcmt->hTab, page - 1);
+            break;
+    }
+    return TRUE;
+}
+
+static LRESULT handleTCNMsg(pCTabOwnerDialog pctod, pCPlainBaseDialog pcpbd, uint32_t index, uint32_t uMsg,
+                            WPARAM wParam, LPARAM lParam)
+{
+    pCManagedTab   pcmt   = pctod->mts[index];
+    HWND           hTab   = pcmt->hTab;
+    HWND           hOwner = pctod->hDlg;
+    RexxObjectPtr  owner  = pctod->rexxSelf;
+
+    RexxThreadContext *c = pcpbd->dlgProcContext;
+
+    // TODO implement some type of TCN_QUERYSIBLINGS.
+
+    switch ( ((NMHDR *)lParam)->code )
+    {
+        case TCN_FOCUSCHANGE :
+        {
+            printf("RexxTabOwnerDlgProc() got TCN message: %s\n", tcn2str(lParam));
+            break;
+        }
+
+        case TCN_GETOBJECT :
+        {
+            printf("RexxTabOwnerDlgProc() got TCN message: %s\n", tcn2str(lParam));
+            break;
+        }
+
+        case TCN_KEYDOWN :
+        {
+            printf("RexxTabOwnerDlgProc() got TCN message: %s\n", tcn2str(lParam));
+            break;
+        }
+
+        case TCN_SELCHANGE :
+        {
+            printf("RexxTabOwnerDlgProc() got TCN message: %s doingStartPage=%d\n", tcn2str(lParam), pcmt->doingStartPage);
+            return doTCNSelChange(pctod, pcmt);
+
+            break;
+        }
+
+        case TCN_SELCHANGING :
+        {
+            printf("RexxTabOwnerDlgProc() got TCN message: %s doingStartPage=%d\n", tcn2str(lParam), pcmt->doingStartPage);
+
+            if ( pcmt->doingStartPage )
+            {
+                // Nothing showing yet, user asked for a start page other than 1.
+                return TRUE;
+            }
+
+            int cur = TabCtrl_GetCurSel(hTab);
+            RexxObjectPtr dlg = pcmt->rexxPages[cur];
+
+            RexxObjectPtr ret = c->SendMessage2(dlg, "tabPageKillActive", owner, pcmt->rexxSelf);
+
+            if ( checkForCondition(c, true) )
+            {
+                endDialogPremature(pcpbd, hOwner, RexxConditionRaised);
+            }
+
+            break;
+        }
+
+        case NM_CLICK :
+        case NM_DBLCLK :
+        case NM_RCLICK :
+        case NM_RDBLCLK :
+        case NM_RELEASEDCAPTURE :
+        {
+            printf("RexxTabOwnerDlgProc() got TCN message: %s\n", tcn2str(lParam));
+            break;
+        }
+
+
+        default :
+            break;
+    }
+    return TRUE;
 }
 
 
@@ -4465,9 +5175,6 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
         }
         pCTabOwnerDialog pctod = (pCTabOwnerDialog)pcpbd->dlgPrivate;
 
-        printf("In WM_INITDIALOG for RexxTabOwnerDlgProc() pcpbd=%p pctod=%p\n", pcpbd, pctod);
-        printf("   Tab1 hwnd=%p Tab2 hwnd=%p\n", GetDlgItem(hDlg, 200), GetDlgItem(hDlg, 400));
-        printf("   pcpbd->isActive=%d pcpbd->hDlg=%p\n", pcpbd->isActive, pcpbd->hDlg);
         if ( pcpbd->dlgProcContext == NULL )
         {
             RexxThreadContext *context;
@@ -4477,35 +5184,24 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
                 return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
             }
             pcpbd->dlgProcContext = context;
+            pctod->dlgProcContext = context;
 
             RexxSetProcessMessages(FALSE);
-
-            pctod->dlgProcContext = context;
         }
-
-        pctod->hDlg = hDlg;
-        setTabOwnerHandles(pctod);
 
         setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
 
-        // Normally isActive is not set until later TODO
-        pcpbd->isActive = true; pcpbd->hDlg = hDlg;
+        pctod->hDlg = hDlg;
 
-        RexxThreadContext *c = pctod->dlgProcContext;
+        // Since we will (probably) be starting a page dialog executing and its
+        // initDialog will be run, to be on the safe side, set isActive and call
+        // the setDlgHandle() function now.
+        pcpbd->hDlg = hDlg;
+        pcpbd->isActive = true;
+        setDlgHandle(pcpbd->dlgProcContext, pcpbd);
 
-        pCManagedTab      pcmt = pctod->mts[0];
-        pCControlDialog   pccd = pcmt->cppPages[0];
-        pCPlainBaseDialog pcpbdTabdlg = pccd->pcpbd;
-
-        pCDynamicDialog pcdd = (pCDynamicDialog)c->ObjectToCSelf(pccd->rexxSelf, TheDynamicDialogClass);
-
-        pcpbdTabdlg->dlgProcContext = c;  // TODO need to check that this is proper place to do this.
-        RexxArrayObject args = c->ArrayOfFour(c->String(pcpbdTabdlg->library),
-                                              pcpbdTabdlg->resourceID,
-                                              c->NullString(),
-                                              c->Int32(pcdd->count));
-        c->SendMessage(pccd->rexxSelf, "LOAD", args);
-        c->SendMessage0(pccd->rexxSelf, "EXECUTE");
+        setMangedTabDetails(pctod);
+        initStartPages(pctod);
 
         return TRUE;
     }
@@ -4519,8 +5215,6 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
     if ( pcpbd->dlgProcContext == NULL )
     {
-        printf("In RexxTabOwnerDlgProc() dlgProcContext=%p isActive=%d\n",
-               pcpbd->dlgProcContext, pcpbd->isActive);
         if ( ! pcpbd->isActive )
         {
             return FALSE;
@@ -4545,9 +5239,12 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
     // Do not search message table for WM_PAINT to improve redraw.
     if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
     {
-        if ( isTCNMsg(uMsg, lParam) )
+        pCTabOwnerDialog pctod = (pCTabOwnerDialog)pcpbd->dlgPrivate;
+        uint32_t         index;
+
+        if ( isTCNMsg(pctod, uMsg, lParam, &index) )
         {
-            printf("RexxTabOwnerDlgProc() got TCN message: %s\n", tcn2str(lParam));
+            return handleTCNMsg(pctod, pcpbd, index, uMsg, wParam, lParam);
         }
 
         MsgReplyType searchReply = searchMessageTables(uMsg, wParam, lParam, pcpbd);
@@ -4673,10 +5370,12 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
         case WM_USER_CREATECONTROL_DLG:
         {
+            printf("Enter WM_USER_CREATECONTROL_DLG\n");
             pCPlainBaseDialog p = (pCPlainBaseDialog)wParam;
             HWND hChild = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)lParam, p->hOwnerDlg, (DLGPROC)RexxChildDlgProc,
                                                     wParam);
             ReplyMessage((LRESULT)hChild);
+            printf("Leave WM_USER_CREATECONTROL_DLG\n");
             return TRUE;
         }
 
@@ -4799,35 +5498,6 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
     return FALSE;
 }
 
-static inline pCTabOwnerDialog validateTodCSelf(RexxMethodContext *c, void *pCSelf)
-{
-    pCTabOwnerDialog pctod = (pCTabOwnerDialog)pCSelf;
-    if ( pctod == NULL )
-    {
-        baseClassIntializationException(c);
-    }
-    return pctod;
-}
-
-static RexxObjectPtr findRexxPage(pCTabOwnerDialog pctod, int32_t id, uint32_t pageIndex)
-{
-    for ( uint32_t i = 0; i < pctod->countMTs; i++ )
-    {
-        if ( id == pctod->tabIDs[i] )
-        {
-            pCManagedTab pmt = pctod->mts[i];
-            if ( pageIndex < pmt->count )
-            {
-                return pmt->rexxPages[pageIndex];
-            }
-
-            // We found the right managed tab, no sense in looking any further.
-            break;
-        }
-    }
-    return NULLOBJECT;
-}
-
 /** TabOwnerDialog::init()  [private]
  *
  *  @param cpbd       Pointer to the PlainBaseDialog CSelf.
@@ -4853,29 +5523,28 @@ RexxMethod2(RexxObjectPtr, tod_tabOwnerDlgInit, POINTER, cpbd, OSELF, self)
     pctod->pcpbd = pcpbd;
     pctod->rexxSelf = self;
 
+    RexxObjectPtr bag = rxNewBag(context);
+    context->SetObjectVariable(TOD_MANAGEDTABBAG_ATTRIBUTE, bag);
+
     if ( pcpbd->initPrivate != NULL && pcpbd->initPrivate != TheNilObj )
     {
-        RexxMethodContext *c = context;
-
-        pCTabOwnerDlgInfo pctodi = (pCTabOwnerDlgInfo)c->ObjectToCSelf((RexxObjectPtr)pcpbd->initPrivate);
-
-        printf("In TabOwnerDialog::init() PlainBaseDialog cSelf: %p initPrivate=%p pctodi=%p\n", pcpbd, pcpbd->initPrivate, pctodi);
-
-        RexxObjectPtr bag = rxNewBag(context);
-        context->SetObjectVariable("CONTROLDIALOGS_BAG", bag);
+        pCTabOwnerDlgInfo pctodi = (pCTabOwnerDlgInfo)context->ObjectToCSelf((RexxObjectPtr)pcpbd->initPrivate);
 
         pctod->countMTs = pctodi->count;
 
         for ( uint32_t i = 0; i < pctodi->count; i++)
         {
             pCManagedTab pmt = pctodi->mts[i];
+            pmt->rexxOwner = self;
+            pmt->pcpbd     = pcpbd;
+
+            context->SendMessage2(bag, "PUT", pmt->rexxSelf, pmt->rexxSelf);
 
             pctod->tabIDs[i] = pmt->tabID;
             pctod->mts[i] = pmt;
 
-            // For each control dialog, set ourself as the ownerDialog, and
-            // protect the Rexx control dialog from being garbage collected by
-            // storing it in the bag.
+            // For each control dialog, set ourself as the ownerDialog, and that
+            // the dialog is both owned and managed.
 
             for ( uint32_t j = 0; j < pmt->count; j++)
             {
@@ -4884,17 +5553,16 @@ RexxMethod2(RexxObjectPtr, tod_tabOwnerDlgInit, POINTER, cpbd, OSELF, self)
 
                 pcpbd->rexxOwner = self;
                 pcpbd->isOwnedDlg = true;
-                pcpbd->isManagedDlg = pccd->isManaged;
-
-                c->SendMessage1(bag, "PUT", pmt->rexxPages[j]);
+                pcpbd->isManagedDlg = true;
             }
-            c->ReleaseGlobalReference(pmt->pages);
-            pmt->pages = NULLOBJECT;
         }
     }
 
+    todAdjustMethods(context, self);
+
     return TheZeroObj;
 }
+
 
 /** TabOwnerDialog::getTabPage()
  *
@@ -4934,31 +5602,158 @@ done_out:
 }
 
 
+/** TabOwner::tabOwnerOk
+ *
+ *  The ok and cancel methods of the tab owner dialog are removed and replaced
+ *  by the tabOwnerOk() and tabOwnerCancel() methods.
+ *
+ *  This allows us to operate like a property sheet, asking the individual tab
+ *  pages if ok or cancel should be allowed, and to shut down all the tab page
+ *  dialogs properly.
+ *
+ */
+RexxMethod1(RexxObjectPtr, tod_tabOwnerOk, CSELF, pCSelf)
+{
+    pCTabOwnerDialog pctod = validateTodCSelf(context, pCSelf);
+    if ( pctod == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    for ( uint32_t i = 0; i < pctod->countMTs; i++ )
+    {
+        pCManagedTab pmt = pctod->mts[i];
+
+        for ( uint32_t j = 0; j < pmt->count; j++ )
+        {
+            pCControlDialog pccd = pmt->cppPages[j];
+            context->SendMessage1(pccd->rexxSelf, "ENDEXECUTION", TheTrueObj);
+        }
+
+        pctod->pcpbd->wndBase->initCode = 1;
+        context->SendMessage1(pctod->rexxSelf, "ENSUREFINISHED", TheFalseObj);
+    }
+    return TheTrueObj;
+}
+
+
+/** TabOwner::tabOwnerCancel
+ *
+ *  The ok and cancel methods of the tab owner dialog are removed and replaced
+ *  by the tabOwnerOk() and tabOwnerCancel() methods.
+ *
+ *  This allows us to operate like a property sheet, asking the individual tab
+ *  pages if ok or cancel should be allowed, and to shut down all the tab page
+ *  dialogs properly.
+ *
+ */
+RexxMethod1(RexxObjectPtr, tod_tabOwnerCancel, CSELF, pCSelf)
+{
+    pCTabOwnerDialog pctod = validateTodCSelf(context, pCSelf);
+    if ( pctod == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    for ( uint32_t i = 0; i < pctod->countMTs; i++ )
+    {
+        pCManagedTab pmt = pctod->mts[i];
+
+        for ( uint32_t j = 0; j < pmt->count; j++ )
+        {
+            pCControlDialog pccd = pmt->cppPages[j];
+            context->SendMessage1(pccd->rexxSelf, "ENDEXECUTION", TheFalseObj);
+        }
+
+        pctod->pcpbd->wndBase->initCode = 2;
+        context->SendMessage1(pctod->rexxSelf, "ENSUREFINISHED", TheFalseObj);
+    }
+    return TheTrueObj;
+}
+
+
 /**
  *  Methods for the .TabOwnerDlgInfo class.
  */
 #define TABOWNERDLGINFO_CLASS        "TabOwnerDlgInfo"
 
 
-/** TabOwnerDlgInfo::init()
- *
- * use strict arg arrayOfMts, useResourceImage = .false
- *
- */
-RexxMethod3(RexxObjectPtr, todi_init, RexxArrayObject, mts, OPTIONAL_logical_t, useResourceImage, OSELF, self)
+RexxObjectPtr todiAddMTs(RexxMethodContext *c, pCTabOwnerDlgInfo pctodi, RexxObjectPtr mts)
 {
-    uint32_t count = (uint32_t)context->ArrayItems(mts);
-    if ( count == 0 )
+    if ( c->IsOfType(mts, "ManagedTab") )
     {
-        emptyArrayException(context->threadContext, 1);
-        goto done_out;
+        if ( pctodi->count >= MAXMANAGEDTABS )
+        {
+            return tooManyMTsException(c, 5);
+        }
+
+        pCManagedTab pcmt = (pCManagedTab)c->ObjectToCSelf(mts);
+        pctodi->mts[pctodi->count] = pcmt;
+        pctodi->count++;
     }
-    else if( count > MAXMANAGEDTABS )
+    else if ( c->IsOfType(mts, "Array"))
     {
-        arrayToLargeException(context->threadContext, count, MAXMANAGEDTABS, 1);
+        RexxArrayObject _mts = (RexxArrayObject)mts;
+
+        uint32_t count = (uint32_t)c->ArrayItems(_mts);
+        if( count + pctodi->count > MAXMANAGEDTABS )
+        {
+            return tooManyMTsException(c, count + pctodi->count);
+        }
+
+        for ( uint32_t i = 1; i <= count; i++ )
+        {
+            RexxObjectPtr mTab = c->ArrayAt(_mts, i);
+            if ( mTab == NULLOBJECT )
+            {
+                sparseArrayException(c->threadContext, 1, i);
+                goto done_out;
+            }
+            if ( ! c->IsOfType(mTab, "ManagedTab") )
+            {
+                wrongObjInArrayException(c->threadContext, 1, i, "a ManagedTab", mTab);
+                goto done_out;
+            }
+
+            pCManagedTab pcmt = (pCManagedTab)c->ObjectToCSelf(mTab);
+            pctodi->mts[pctodi->count] = pcmt;
+            pctodi->count++;
+        }
+    }
+    else
+    {
+        wrongArgValueException(c->threadContext, 1, "an Array or a ManagedTab", mts);
         goto done_out;
     }
 
+    return TheTrueObj;
+
+done_out:
+    return TheFalseObj;
+}
+
+/** TabOwnerDlgInfo::init()
+ *
+ * A tab owner dialog information object can be used to intialize a tab owner
+ * dialog during its instantiation.
+ *
+ * Since the array of managed tabs is the only information at this time, it does
+ * not make much sense to make the array optional, or empty.  However, if more
+ * information is added to the object, it might make some sense for the array to
+ * be optional or empty.  So we allow it here, even though there is not much use
+ * for the object then.
+ *
+ * @param  mts  [optiona] an array of managed tab objects.
+ *
+ * @remarks  Originally, there was the optional useResourceImage.  But after
+ *           consideration that really seems unneeded.  If the only information
+ *           remains an array of managed tabs, this object could be done away
+ *           with altogether and the PlainBaseDialog init could be changed to
+ *           check for an array object rather than a tab owner dialog
+ *           information object.
+ */
+RexxMethod2(RexxObjectPtr, todi_init, OPTIONAL_RexxObjectPtr, mts, OSELF, self)
+{
     RexxBufferObject obj = context->NewBuffer(sizeof(CTabOwnerDlgInfo));
     if ( obj == NULLOBJECT )
     {
@@ -4966,66 +5761,144 @@ RexxMethod3(RexxObjectPtr, todi_init, RexxArrayObject, mts, OPTIONAL_logical_t, 
     }
     context->SetObjectVariable("CSELF", obj);
 
-    RexxMethodContext *c = context;
-
     pCTabOwnerDlgInfo pctodi = (pCTabOwnerDlgInfo)context->BufferData(obj);
     memset(pctodi, 0, sizeof(CTabOwnerDlgInfo));
 
-    printf("In TabOwnerDlgInfo init() pctodi=%p\n", pctodi);
-    pctodi->useResourceImage = useResourceImage ? true : false;
-    pctodi->count = count;
-
-    for ( uint32_t i = 1; i <= count; i++ )
+    if ( argumentExists(1) )
     {
-        RexxObjectPtr mTab = context->ArrayAt(mts, i);
-        if ( mTab == NULLOBJECT )
-        {
-            sparseArrayException(context->threadContext, 1, i);
-            goto done_out;
-        }
-        if ( ! context->IsOfType(mTab, "ManagedTab") )
-        {
-            wrongObjInArrayException(context->threadContext, 1, i, "a ManagedTab", mTab);
-            goto done_out;
-        }
-
-        RexxMethodContext *c = context;
-
-        pCManagedTab pcmt = (pCManagedTab)c->ObjectToCSelf(mTab);
-        pctodi->mts[i - 1] = pcmt;
-        pctodi->pages[1 - 1] = pcmt->pages;
+        todiAddMTs(context, pctodi, mts);
     }
 
 done_out:
     return NULLOBJECT;
 }
 
+/** TabOwnerDlgInfo::add()
+ *
+ *  Adds a managed tab or managed tabs to the tab owner dialog information
+ *  object.
+ *
+ *  @param  mts  A single ManagedTab object, or an array of ManagedTab objects.
+ *
+ */
+RexxMethod2(RexxObjectPtr, todi_add, RexxObjectPtr, mts, CSELF, pCSelf)
+{
+    pCTabOwnerDlgInfo pctodi = (pCTabOwnerDlgInfo)pCSelf;
+    if ( pctodi == NULL )
+    {
+        return (RexxObjectPtr)baseClassIntializationException(context);
+    }
+
+    return todiAddMTs(context, pctodi, mts);
+}
+
 /**
  *  Methods for the .ManagedTab class.
  */
-#define ManagedTab_CLASS        "ManagedTab"
+#define ManagedTab_CLASS           "ManagedTab"
+#define MT_DIALOGBAG_ATTRIBUTE     "ManagedTabDialogBag"
 
+/**
+ * Keeps a reference to each Rexx page dialog of the managed tab by putting it
+ * in a Rexx bag.  The bag is set as a context variable.
+ *
+ * @param c            The method context we are operating in.
+ * @param controlDlg   The Rexx page dialog we are saving a reference to.
+ * @param self         The managed tab Rexx self.
+ *
+ * @return True on success, false otherwise.
+ *
+ * @remarks  Each managed tab object saves a reference to each Rexx page dialog.
+ *           Each tab owner dialog saves a reference to each of its Rexx managed
+ *           tabs.  This protects each Rexx page dialog from garbage collection
+ *           as long as the tab owner dialog exists.
+ *
+ *           When a managed tab is initialized, the dialog bag context variable
+ *           is added and each Rexx page dialog is put directly in the bag.
+ *           However, the managed tab can have pages added, so we need this
+ *           function.
+ */
+bool mtPutDialog(RexxMethodContext *c, RexxObjectPtr controlDlg, RexxObjectPtr self)
+{
+    RexxObjectPtr bag = c->GetObjectVariable(MT_DIALOGBAG_ATTRIBUTE);
+    if ( bag == NULLOBJECT )
+    {
+        bag = rxNewBag(c);
+        c->SetObjectVariable(MT_DIALOGBAG_ATTRIBUTE, bag);
+    }
+    if ( bag != NULLOBJECT )
+    {
+        c->SendMessage2(bag, "PUT", controlDlg, controlDlg);
+    }
+
+    return bag != NULLOBJECT;
+}
 
 /** ManagedTab::init()
  *
- * use strict arg tabID, pages, wantNotifications = .false
+ *  Initialize a managed tab object.
+ *
+ *  Managed tabs can have pages added, so we allow the user to instantiate a
+ *  managed tab with no pages, although it seems unlikely that that would be of
+ *  much use.
+ *
+ *  We never allow the start page to be set to any value that does not have a
+ *  backing page.  I.e., if there are no pages, the start page can not be set to
+ *  1.
+ *
+ *  @param tabID  [required] The resource ID of the tab to be managed. May be
+ *                symbolic, but the user must use the global .constDir
+ *
+ *  @param pages  [optional] May be omitted to instantiate the managed tab with
+ *                no pages.  If used, must be an array.  The array can not be
+ *                sparse.
+ *
+ *  @param opts       [optional] Keywords specifying miscellaneous styles.
+ *                               SELCHANGE    owner wants SELCHANGE notice
+ *                               SELCHANGING  owner wants SELCHANGE notice
+ *
+ *  @param startPage  [opitonal] One-based index. Defaults to the first page.
+ *                    Must be within range of the actual number of pages.
+ *
+ *  @param wantNotifications  [optional] Defaults to false.  If the user wants
+ *                            the NM_xx notifications in addition to the TCN_xx
+ *                            notifications
+ *
+ *
+ * use strict arg tabID, pages, startPage = 1, wantNotifications = .false
  *
  */
-RexxMethod4(RexxObjectPtr, mt_init, RexxObjectPtr, tabID, RexxArrayObject, pages, OPTIONAL_logical_t, wantNotifications, OSELF, self)
+RexxMethod6(RexxObjectPtr, mt_init, RexxObjectPtr, tabID, OPTIONAL_RexxArrayObject, pages, OPTIONAL_CSTRING, opts,
+            OPTIONAL_uint32_t, startPage, OPTIONAL_logical_t, wantNotifications, OSELF, self)
 {
-    printf("In ManagedTab init()\n");
     RexxMethodContext *c = context;
 
-    uint32_t count = (uint32_t)context->ArrayItems(pages);
-    if ( count == 0 )
+    int32_t id = oodGlobalID(context->threadContext, tabID, 1, true);
+    if ( id == OOD_ID_EXCEPTION )
     {
-        emptyArrayException(context->threadContext, 1);
         goto done_out;
     }
-    else if( count > MAXTABPAGES )
+
+    uint32_t count = 0;
+    if ( argumentExists(2) )
     {
-        arrayToLargeException(context->threadContext, count, MAXTABPAGES, 1);
-        goto done_out;
+        count = (uint32_t)context->ArrayItems(pages);
+        if( count > MAXTABPAGES )
+        {
+            arrayToLargeException(context->threadContext, count, MAXTABPAGES, 2);
+            goto done_out;
+        }
+    }
+
+    // If startPage is omitted, its value is 0, which is also the default.
+    if ( argumentExists(4) )
+    {
+        if ( startPage < 1 || startPage > count )
+        {
+            wrongRangeException(context->threadContext, 3, 1, count, startPage);
+            goto done_out;
+        }
+        startPage--;
     }
 
     RexxBufferObject obj = context->NewBuffer(sizeof(CManagedTab));
@@ -5038,57 +5911,76 @@ RexxMethod4(RexxObjectPtr, mt_init, RexxObjectPtr, tabID, RexxArrayObject, pages
     pCManagedTab pcmt = (pCManagedTab)context->BufferData(obj);
     memset(pcmt, 0, sizeof(CManagedTab));
 
-    int32_t id = oodGlobalID(context->threadContext, tabID, 1, true);
-    if ( id == OOD_ID_EXCEPTION )
-    {
-        goto done_out;
-    }
-
+    pcmt->rxTabID           = tabID;
+    pcmt->tabID             = (uint32_t)id;
+    pcmt->startPage         = startPage;
     pcmt->wantNotifications = wantNotifications ? true : false;
-    pcmt->tabID = (uint32_t) id;
+    pcmt->needDisplayRect   = true;
+    pcmt->count             = count;
+    pcmt->showing           = (uint32_t)-1;
+    pcmt->rexxSelf          = self;
 
-    pcmt->count = count;
-
-    pCControlDialog *cppPages = (pCControlDialog *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(pCControlDialog *));
-    RexxObjectPtr *rexxPages = (RexxObjectPtr *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(RexxObjectPtr *));
-
-    if ( cppPages == NULL || rexxPages == NULL )
+    if ( argumentExists(3) )
     {
-        outOfMemoryException(context->threadContext);
-        goto done_out;
+        if ( StrStrI(opts, "SELCHANGE")   != NULL ) pcmt->ownerWantsSelChange = true;
+        if ( StrStrI(opts, "SELCHANGING") != NULL ) pcmt->ownerWantsSelChanging = true;
+        if ( StrStrI(opts, "SETACTIVE")   != NULL ) pcmt->ownerWantsSetActive = true;
+        if ( StrStrI(opts, "KILLACTIVE")  != NULL ) pcmt->ownerWantsKillActive = true;
     }
 
-    pCControlDialog *pPage = cppPages;
-    RexxObjectPtr *pRexxPage = rexxPages;
-    for ( uint32_t i = 1; i <= count; i++, pPage++, pRexxPage++ )
+    RexxObjectPtr bag = rxNewBag(context);
+    context->SetObjectVariable(MT_DIALOGBAG_ATTRIBUTE, bag);
+
+    pCControlDialog *cppPages = NULL;
+    RexxObjectPtr   *rexxPages = NULL;
+
+    if ( count > 0 )
     {
-        RexxObjectPtr dlg = context->ArrayAt(pages, i);
-        if ( dlg == NULLOBJECT )
+        pCControlDialog *cppPages = (pCControlDialog *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(pCControlDialog *));
+        RexxObjectPtr *rexxPages = (RexxObjectPtr *)LocalAlloc(LPTR, MAXPROPPAGES * sizeof(RexxObjectPtr *));
+
+        if ( cppPages == NULL || rexxPages == NULL )
         {
-            sparseArrayException(context->threadContext, 1, i);
-            goto done_out;
-        }
-        if ( ! context->IsOfType(dlg, "CONTROLDIALOG") )
-        {
-            wrongObjInArrayException(context->threadContext, 1, i, "a ControlDlg", dlg);
+            outOfMemoryException(context->threadContext);
             goto done_out;
         }
 
-        pCControlDialog pccd = dlgToCDCSelf(context, dlg);
-        pccd->pageNumber = i;
+        pCControlDialog *pPage = cppPages;
+        RexxObjectPtr *pRexxPage = rexxPages;
+        for ( uint32_t i = 1; i <= count; i++, pPage++, pRexxPage++ )
+        {
+            RexxObjectPtr dlg = context->ArrayAt(pages, i);
+            if ( dlg == NULLOBJECT )
+            {
+                sparseArrayException(context->threadContext, 1, i);
+                goto err_out;
+            }
+            if ( ! context->IsOfType(dlg, "CONTROLDIALOG") )
+            {
+                wrongObjInArrayException(context->threadContext, 1, i, "a ControlDlg", dlg);
+                goto err_out;
+            }
 
-        *pPage = pccd;
-        *pRexxPage = dlg;
+            pCControlDialog pccd = dlgToCDCSelf(context, dlg);
+
+            pccd->pageNumber = i - 1;  // Zero based index in C++ struct.
+            pccd->isManaged = true;    // It is managed now.
+
+            *pPage = pccd;
+            *pRexxPage = dlg;
+
+            context->SendMessage2(bag, "PUT", dlg, dlg);
+        }
+
+        pcmt->cppPages = cppPages;
+        pcmt->rexxPages = rexxPages;
     }
 
-    pcmt->cppPages = cppPages;
-    pcmt->rexxPages = rexxPages;
+    goto done_out;
 
-    // Prevent the Rexx pages object from being garbage collected. This then
-    // needs to be released when the TabOwner dialog retrieves them, or during
-    // delDialog.
-    c->RequestGlobalReference(pages);
-    pcmt->pages = pages;
+err_out:
+    safeLocalFree(cppPages);
+    safeLocalFree(rexxPages);
 
 done_out:
     return NULLOBJECT;
@@ -5266,14 +6158,38 @@ RexxMethod1(RexxObjectPtr, cd_init_cls, OSELF, self)
 }
 
 
+static bool setCdTitle(RexxMethodContext *c, pCControlDialog pccd, CSTRING title)
+{
+    safeLocalFree(pccd->pageTitle);
+
+    pccd->pageTitle = (char *)LocalAlloc(LPTR, strlen(title) + 1);
+    if ( pccd->pageTitle == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+
+    strcpy(pccd->pageTitle, title);
+    return true;
+}
+
 /** ControlDialog::controlDlgInit()  [private]
  *
  *  @param cpbd       Pointer to the PlainBaseDialog CSelf.
  *  @param ownerData  Owner data.
+ *
+ *  @remarks  Note that the order of the IsOfType() checks are done is
+ *            important.  A RcControlDialog is a UserControlDialog.
  */
 RexxMethod2(RexxObjectPtr, cd_controlDlgInit, POINTER, cpbd, OSELF, self)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)cpbd;
+    pCPlainBaseDialog   pcpbd = (pCPlainBaseDialog)cpbd;
+    pCControlDialogInfo pccdi = NULL;
+
+    if ( pcpbd->initPrivate != NULL && pcpbd->initPrivate != TheNilObj )
+    {
+        pccdi = (pCControlDialogInfo)context->ObjectToCSelf((RexxObjectPtr)pcpbd->initPrivate);
+    }
 
     RexxBufferObject pcdBuffer = context->NewBuffer(sizeof(CControlDialog));
     if ( pcdBuffer == NULLOBJECT )
@@ -5287,26 +6203,39 @@ RexxMethod2(RexxObjectPtr, cd_controlDlgInit, POINTER, cpbd, OSELF, self)
 
     pccd->pcpbd = pcpbd;
     pccd->rexxSelf = self;
+    pccd->extraOpts = context->NullString();
     pccd->isInitializing = true;
     pccd->pcpbd->dlgPrivate = pccd;
 
-    if ( context->IsOfType(self, "USERCONTROLDIALOG") )
-    {
-        pccd->pageType = oodUserControlDialog;
-    }
-    else if( context->IsOfType(self, "RCCONTROLDIALOG") )
+    if( context->IsOfType(self, "RCCONTROLDIALOG") )
     {
         pccd->pageType = oodRcControlDialog;
+    }
+    else if ( context->IsOfType(self, "USERCONTROLDIALOG") )
+    {
+        pccd->pageType = oodUserControlDialog;
     }
     else
     {
         pccd->pageType = oodResControlDialog;
     }
 
-    if ( pcpbd->initPrivate != NULL && pcpbd->initPrivate != TheNilObj )
+    if ( pccd->pageType != oodResControlDialog )
     {
-        pCControlDialogInfo pccdi = (pCControlDialogInfo)context->ObjectToCSelf((RexxObjectPtr)pcpbd->initPrivate);
+        // The dynamic dialog init is finished before control dialog init.
+        pccd->pcdd = (pCDynamicDialog)context->ObjectToCSelf(self, TheDynamicDialogClass);
+    }
 
+    int32_t resID = oodResolveSymbolicID(context->threadContext, self, pcpbd->resourceID, -1, 2, true);
+    if ( resID == OOD_ID_EXCEPTION )
+    {
+        pcpbd->wndBase->initCode = 1;
+        goto err_out;
+    }
+    pccd->resID = resID;
+
+    if ( pccdi != NULL )
+    {
         pccd->isManaged = pccdi->managed;
 
         if ( pccdi->title != NULL )
@@ -5319,8 +6248,14 @@ RexxMethod2(RexxObjectPtr, cd_controlDlgInit, POINTER, cpbd, OSELF, self)
         pccd->size.cy = pccdi->size.cy;
     }
 
-
     return TheZeroObj;
+
+err_out:
+    if ( pccdi != NULL )
+    {
+        safeLocalFree(pccdi->title);
+    }
+    return TheOneObj;
 }
 
 /** ControlDialog::isManaged()    [Attribute get]
@@ -5343,6 +6278,30 @@ RexxMethod1(RexxObjectPtr, cd_get_wasActivated, CSELF, pCSelf)
     if ( pccd != NULL )
     {
         return pccd->activated ? TheTrueObj : TheFalseObj;
+    }
+    return NULLOBJECT;
+}
+
+/** ControlDialog::extraOptions()    [Attribute get]
+ */
+RexxMethod1(RexxObjectPtr, cd_get_extraOptions, CSELF, pCSelf)
+{
+    pCControlDialog pccd = validateCdCSelf(context, pCSelf);
+    if ( pccd != NULL )
+    {
+        return pccd->extraOpts;
+    }
+    return NULLOBJECT;
+}
+
+/** ControlDialog::extraOptions()    [Attribute set]
+ */
+RexxMethod2(RexxObjectPtr, cd_set_extraOptions, RexxStringObject, opts, CSELF, pCSelf)
+{
+    pCControlDialog pccd = validateCdCSelf(context, pCSelf);
+    if ( pccd != NULL )
+    {
+        pccd->extraOpts = opts;
     }
     return NULLOBJECT;
 }
@@ -5391,23 +6350,9 @@ RexxMethod2(RexxObjectPtr, cd_set_pageTitle, CSTRING, text, CSELF, pCSelf)
     pCControlDialog pccd = validateCdCSelf(context, pCSelf);
     if ( pccd != NULL )
     {
-        goto out;
+        setCdTitle(context, pccd, text);
     }
-
-    char *t = (char *)LocalAlloc(LPTR, strlen(text) + 1);
-    if ( t == NULL )
-    {
-        outOfMemoryException(context->threadContext);
-        goto out;
-    }
-
-    strcpy(t, text);
-
-    safeLocalFree(pccd->pageTitle);
-    pccd->pageTitle = t;
-
-out:
-    return TheZeroObj;
+    return NULLOBJECT;
 }
 
 
@@ -5465,7 +6410,7 @@ RexxMethod3(RexxObjectPtr, resCtrlDlg_startDialog_pvt, CSTRING, library, RexxObj
 
         if ( pcpbd->autoDetect )
         {
-            if ( doDataAutoDetection(context, pcpbd) != OOD_NO_ERROR )
+            if ( doDataAutoDetection(context->threadContext, pcpbd) == OOD_MEMORY_ERR )
             {
                 goto err_out;
             }
@@ -5478,5 +6423,58 @@ err_out:
     return TheFalseObj;
 }
 
+
+/**
+ *  Methods for the .RcControlDialog class.
+ */
+#define RcControlDialog_CLASS        "RcControlDialog"
+
+
+RexxMethod7(RexxObjectPtr, rcCtrlDlg_startTemplate, uint32_t, cx, uint32_t, cy, CSTRING, title, CSTRING, fontName,
+            uint32_t, fontSize, uint32_t, expected, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd == NULL )
+    {
+        return TheOneObj;
+    }
+
+    pCControlDialog pccd = (pCControlDialog)pcpbd->dlgPrivate;
+    pCDynamicDialog pcdd = pccd->pcdd;
+
+    pccd->size.cx = cx;
+    pccd->size.cy = cy;
+
+    if ( strlen(title) > 0 )
+    {
+        if ( ! setCdTitle(context, pccd, title) )
+        {
+            goto err_out;
+        }
+    }
+
+    size_t len = strlen(fontName);
+
+    if ( len > (MAX_DEFAULT_FONTNAME - 1) )
+    {
+        stringTooLongException(context->threadContext, 4, MAX_DEFAULT_FONTNAME, len);
+        goto err_out;
+    }
+    if ( len > 0 )
+    {
+        strcpy(pcpbd->fontName, fontName);
+    }
+
+    if ( fontSize != 0 )
+    {
+        pcpbd->fontSize = fontSize;
+    }
+    pcdd->expected = expected;
+
+    return TheZeroObj;
+
+err_out:
+    return TheOneObj;
+}
 
 

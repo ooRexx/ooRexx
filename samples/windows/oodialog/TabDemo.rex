@@ -38,16 +38,15 @@
 
 /** Tab Control / Dialog Controls / ControlDialog Example
  *
- * This example demonstrates how to use the ControlDialog class to populate a
- * Tab control.  It is basically the same as the PropertySheetDemo.rex example,
- * but uses a Tab control with ControlDialog objects rather than using a
- * PropertySheetDialog.
+ * This example demonstrates how to use the ControlDialog class to provide the
+ * pages / content of a Tab control.  It is basically the same as the
+ * PropertySheetDemo.rex example, but uses a Tab control with ControlDialog
+ * objects rather than using a PropertySheetDialog.
  *
  * Much of the code is simply copied from the PropertySheetDemo.rex program.
  */
 
-  .application~setDefaults("O", "rc\TabDemo.h", .false)
-  .application~addToConstDir("rc\PropertySheetDemo.h")
+  .application~setDefaults("O", "rc\PropertySheetDemo.h", .false)
 
   -- To run correctly, this program needs to be able to find its support files.
   -- But, we allow starting the program from anywhere.  To do this we:
@@ -60,8 +59,47 @@
   mydir = me~left(me~lastpos('\') - 1)        -- Directory we are installed in.
   mydir = directory(mydir)                    -- CD to the install direcotry.
 
+  -- The original version of this example would take a longish period of time to
+  -- appear on the screen.  Too much was being done in the initDialog() method
+  -- of the .NewControlsDialog.  To improve the time between starting the
+  -- program and the dialog's appearance on the screen, several steps were
+  -- taken.
+  --
+  -- 1.) All dialogs were made ResDialog dialogs.
+  --
+  -- 2.) The instantiation of the dialogs used for the pages of the tab control
+  --     was moved out of the initDialog() method and placed here.  Some of the
+  --     work done in the initDialog() method was moved to the prep() method,
+  --     which is invoked before the dialog is started executing.
+  --
+  -- 3.) The dialog is created with the VISIBLE style.  This causes the dialog
+  --     to appear on the screen before the list view is populated, rather than
+  --     having the list view populated first and then showing the dialog.
+  --
+  -- Instantiate all the control dialogs and pass them to the prep() method in
+  -- an array.
+  t1 = .ListViewDlg~new("res\PropertySheetDemo.dll", IDD_LISTVIEW_DLG)
+  t2 = .TreeViewDlg~new("res\PropertySheetDemo.dll", IDD_TREEVIEW_DLG)
+  t3 = .ProgressBarDlg~new("rc\PropertySheetDemo.rc", IDD_PROGRESSBAR_DLG)
+  t4 = .TrackBarDlg~new("res\PropertySheetDemo.dll", IDD_TRACKBAR_DLG)
+  t5 = .TabDlg~new("res\PropertySheetDemo.dll", IDD_TAB_DLG)
+
+  tabContent = .array~of(t1, t2, t3, t4, t5)
+
   -- Create the main dialog.
-  dlg = .NewControlsDialog~new
+  dlg = .NewControlsDialog~new('res\PropertySheetDemo.dll', IDD_NEWCONTROLS_DLG)
+
+  -- Invoke the prep() methods of the list view and progress bar dialogs to do
+  -- some initial set up before we start executing the main dialog.  Note that
+  -- the list view (t1) dialog needs to have its owner dialog set before
+  -- invoking the prep method.
+  t1~ownerDialog = dlg
+  t1~prep
+  t3~prep
+
+  -- Invoke the main dialog's prep() method to do some initial set up before the
+  -- dialog is started executing.
+  dlg~prep(tabContent)
 
   -- Show and run the dialog.
   dlg~execute('SHOWTOP', IDI_DLG_OODIALOG)
@@ -72,69 +110,64 @@
 
 ::requires "ooDialog.cls"
 
-::class 'NewControlsDialog' subclass UserDialog
+::class 'NewControlsDialog' subclass ResDialog
 
-::method init
+::attribute tabContent
 
-  forward class (super) continue
-  if self~initCode <> 0 then return
-
-  self~createCenter(325, 300, "Example using ControlDialog objects", , , "Arial", 9)
-
-::method defineDialog
-
-  self~createTab(IDC_TAB, 10, 5, 305, 265)
-
-  self~createPushButton(IDC_PB_PREVIOUS, 10, 278, 60, 14, , "Previous Control", onPrevious)
-  self~createPushButton(IDC_PB_NEXT, 80, 278, 60, 14, , "Next Control", onNext)
-  self~createPushButton(IDOK, 185, 278, 60, 14, "DEFAULT", "Ok")
-  self~createPushButton(IDCANCEL, 255, 278, 60, 14, , "Cancel")
-
-  self~connectTabEvent(IDC_TAB, SELCHANGE, onNewTab)
-
-/** initDialog()
+/** prep()
  *
- * Initialize the underlying Windows dialog.  This includes setting up the tab
- * control and creating 5 control dialogs.  The dialogs are used for the display
- * area of the tab control, one control dialog for each tab of the tab control.
+ * This method is invoked before the dialog is executed.  It does some initial
+ * set up that would normally be done (by the author) in initDialog().  The
+ * tabContent argument is an array of the 5 ControlDialog dialogs used as the
+ * content for the 5 pages of the tab control.  This array is saved in the
+ * tabContent attribute so the dialogs can be accessed when needed.
  */
-::method initDialog
-  expose tabContent tabControl displayRect lastSelected havePositioned pbNext pbPrevious
+::method prep
+  expose tabContent lastSelected havePositioned
+  use strict arg tabContent
 
-  -- We create the control dialog for the first tab in the tab control, and
-  -- start it running now, because it takes some finite time for the underlying
-  -- dialog to be created.  We can not resize and reposition the control dialog
-  -- until the underlying dialog is created, so we get it started, then do our
-  -- other tasks.
-  t1 = .ListViewDlg~new("rc\PropertySheetDemo.rc", IDD_LISTVIEW_DLG)
-  t1~ownerDialog = self
-  t1~execute
-
-  -- Add the tabs to the tab control.
-  tabControl = self~newTab(IDC_TAB)
-  tabControl~addSequence("List View", "Tree View", "Progress Bar", "Track Bar", "Tab")
-
-  -- Create the other 4 control dialogs.
-  t2 = .TreeViewDlg~new("rc\PropertySheetDemo.rc", IDD_TREEVIEW_DLG)
-  t3 = .ProgressBarDlg~new("rc\PropertySheetDemo.rc", IDD_PROGRESSBAR_DLG)
-  t4 = .TrackBarDlg~new("rc\PropertySheetDemo.rc", IDD_TRACKBAR_DLG)
-  t5 = .TabDlg~new("rc\PropertySheetDemo.rc", IDD_TAB_DLG)
-
-  -- Save the 5 dialogs so we can access them when needed.
-  tabContent = .array~of(t1, t2, t3, t4, t5)
-
-  -- Mark them all as not having been positioned yet
+  -- The havePositioned array is used to determine of the page dialogs have been
+  -- positioned or not.  Mark all 5 dialogs as not having been positioned yet.
   havePositioned = .array~of(.false, .false, .false, .false, .false)
 
   -- No tab has been selected yet
   lastSelected = 0
 
+  -- Connect the event handling methods to the events we are interested in.
+  self~connectButtonEvent(IDC_PB_PREVIOUS, CLICKED, onPrevious)
+  self~connectButtonEvent(IDC_PB_NEXT, CLICKED, onNext)
+  self~connectTabEvent(IDC_TAB, SELCHANGE, onNewTab)
+
+
+/** initDialog()
+ *
+ * Initialize the underlying Windows dialog.  This includes setting up the tab
+ * control tabs, executing the dialog used for the first tab, and positioning
+ * the dialog over the display area of the tab control.  There are 5
+ * .ControlDialog dialogs.  The dialogs are used for the display
+ * area of the tab control, one control dialog for each tab of the tab control.
+ */
+::method initDialog
+  expose tabContent tabControl pbNext pbPrevious
+
+  -- Start executing the control dialog for the first tab in the tab control.
+  -- We can not resize and reposition the control dialog until the underlying
+  -- dialog is created, so we get it started, then do our other tasks.
+  dlg = tabContent[1]
+  dlg~execute
+
+  -- Add the tabs to the tab control.
+  tabControl = self~newTab(IDC_TAB)
+  tabControl~addSequence("List View", "Tree View", "Progress Bar", "Track Bar", "Tab")
+
   -- Save a reference to the push buttons.
   pbNext = self~newPushButton(IDC_PB_NEXT)
   pbPrevious = self~newPushButton(IDC_PB_PREVIOUS)
 
+  -- Determine the position and size of the display area of the tab control.
   self~calculateDisplayArea
 
+  -- Position and show the control dialog used for the first page of the tab.
   self~positionAndShow(1)
 
 
@@ -290,14 +323,10 @@
 
 
 
-::class 'ListViewDlg' subclass RcControlDialog
+::class 'ListViewDlg' subclass ResControlDialog
 
 ::method initDialog
-    expose lv
-
-    -- Initialize the internal fix for the list-view redrawing problem when a
-    -- list-view is used in a tab control.
-    self~initUpdateListView(IDC_LV_MAIN)
+    expose lv imageList listData
 
     -- Instantiate a Rexx list view object that represents the underlying
     -- Windows list-view.  The list-view style is report.
@@ -310,44 +339,32 @@
     lv~insertColumn(3, "Year low", 50)
     lv~insertColumn(4, "Description", 120)
 
-    -- Set the images for the items in the list-view.  The list-view control was
-    -- created without the SHAREIMAGES styles, so it takes care of releasing the
-    -- image list when the program ends.
-    image = .Image~getImage("bmp\propertySheetDemoListView.bmp")
-    imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
-    if \image~isNull,  \imageList~isNull then do
-        imageList~add(image)
-        lv~setImageList(imageList, .Image~toID(LVSIL_SMALL))
-
-        -- The image list makes a copy of the bitmap, so we can release it now
-        -- to free up some (small) amount of system resources.  This is not
-        -- necessary, the OS will release the resource automatically when the
-        -- program ends.
-        image~release
-    end
+    lv~setImageList(imageList, .Image~toID(LVSIL_SMALL))
 
     -- Fill the list-view with random data.
-    do ch = "A"~c2d to "Z"~c2d
-        q = random(200)
-        yh = random(400)
-        yh = max(yh, q)
-        yl = random(100)
-        yl = min(yl, q)
-        lv~addRow( , random(3), "_" || ch~d2c~copies(3) || "_", "$" || q, "$" || yh, "$" || yl, -
-                  ch~d2c~copies(3) "is a fictitious company.")
+    do row over listData
+        lv~addRow( , row[1], row[2], row[3], row[4], row[5], row[6])
     end
 
     -- Add full row select and the ability to drag and drop the columns to the
     -- list-view.
     lv~addExtendedStyle("FULLROWSELECT HEADERDRAGDROP")
 
-    -- Connect 2 list-view events to Rexx methods in this dialog.  The double-
-    -- click on a list-view item, and the click on a column header events.
-    self~connectListViewEvent(IDC_LV_MAIN, "ACTIVATE", "onActivate")
-    self~connectListViewEvent(IDC_LV_MAIN, "COLUMNCLICK")
+    -- There is a known redrawing problem when a list view is used in a tab
+    -- control.  ooDialog has an internal fix for that (see initUpdateListView.)
+    -- But, when the list view is the first page of the tab control, the list
+    -- view needs to have gained the focus before the dialog is covered up by
+    -- another window, for the fix to work.  Assigning the focus here prevents
+    -- the very rare occurrence of a user opening the dialog, immediately
+    -- switching to another window, and then switching back to the dialog, and
+    -- the fix not working.
+    lv~assignFocus
 
--- Invoked when a list-view item is double-clicked.  We display a message and
--- set the focus to the next item in the list.
+/** onActivate
+ *
+ * Invoked when a list-view item is double-clicked.  We display a message and
+ * set the focus to the next item in the list.
+ */
 ::method onActivate
     expose lv
 
@@ -373,14 +390,77 @@
     lv~focus(selectedItem)
     lv~select(selectedItem)
 
--- Invoked when a column header of the list-view is clicked.  We just show a
--- message box so that the user has some feedback.
-::method OnColumnClick
+
+/** onColumnClick()
+ *
+ * Invoked when a column header of the list-view is clicked.  We just show a
+ * message box so that the user has some feedback.
+ */
+::method onColumnClick
    use arg id, column
-   j = MessageDialog("Column" column + 1 "was clicked in control" id, self~hwnd, "List-View Notification")
+
+   msg = "Column" column + 1 "was clicked in control" id
+   j = MessageDialog(msg, self~hwnd, "List-View Notification")
 
 
-::class 'TreeViewDlg' subclass RcControlDialog
+/** prep()
+ *
+ * Does some initial set up for the list view dialog.  This is moved out of the
+ * initDialog() method to, perhaps, help populate the list view a little
+ * quicker.
+ */
+::method prep
+    expose imageList listData
+
+    -- Initialize the internal fix for the list-view redrawing problem when a
+    -- list-view is used in a tab control.
+    self~initUpdateListView(IDC_LV_MAIN)
+
+    -- Create the image list for the list-view. The image list will consist of
+    -- 4 images.  The images are used as the icons for each item in the list
+    -- view.  Each item is assigned 1 image, at random, when the item is added
+    -- to the list-view.
+    --
+    -- The list-view control is created without the SHAREIMAGES styles, so it
+    -- takes care of releasing the image list when the program ends.
+    image = .Image~getImage("bmp\propertySheetDemoListView.bmp")
+    imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
+    if \image~isNull,  \imageList~isNull then do
+        imageList~add(image)
+
+        -- The image list makes a copy of the bitmap, so we can release it now
+        -- to free up some (small) amount of system resources.  This is not
+        -- necessary, the OS will release the resource automatically when the
+        -- program ends.
+        image~release
+    end
+
+    -- Create the data for each item (row) in the list view.  The rows are
+    -- added to the list view in the initDialog() method
+    listData = .array~new(26)
+    do ch = "A"~c2d to "Z"~c2d
+        q = random(200)
+        yh = random(400)
+        yh = max(yh, q)
+        yl = random(100)
+        yl = min(yl, q)
+        row = .array~new(6)
+        row[1] = random(3)
+        row[2] = "_" || ch~d2c~copies(3) || "_"
+        row[3] = "$" || q
+        row[4] = "$" || yh
+        row[5] = "$" || yl
+        row[6] = ch~d2c~copies(3) "is a fictitious company."
+        listData~append(row)
+    end
+
+    -- Connect 2 list-view events to Rexx methods in this dialog.  The double-
+    -- click on a list-view item, and the click on a column header events.
+    self~connectListViewEvent(IDC_LV_MAIN, "ACTIVATE", "onActivate")
+    self~connectListViewEvent(IDC_LV_MAIN, "COLUMNCLICK")
+
+
+::class 'TreeViewDlg' subclass ResControlDialog
 
 ::method initDialog
 
@@ -452,7 +532,7 @@
 
 ::class 'ProgressBarDlg' subclass RcControlDialog
 
-::method initDialog
+::method prep
   expose threadsStarted processes
 
   threadsStarted = 0
@@ -465,7 +545,6 @@
 -- start the progress bar animation threads.
 ::method activateThreads unguarded
     expose threadsStarted processes
-    use arg propSheet
 
     reply 0
 
@@ -478,9 +557,8 @@
         end
     end
 
--- This is the generic method that simulates some type of processing that takes
--- a long time.  The progress of this processing is displayed by the progress
--- bar. to simulate a process of which the progress is displayed by a progress bar */
+-- This is a generic method that simulates some type of processing that takes a
+-- long time.  The progress of this processing is displayed by the progress bar.
 ::method animateProgress unguarded
    use arg progressBar, label, step, iterations, tsleep
 
@@ -553,7 +631,7 @@
     threadsStarted -= 1
 
 
-::class 'TrackBarDlg' subclass RcControlDialog
+::class 'TrackBarDlg' subclass ResControlDialog
 
 ::method initDialog
     expose font1 trackBars tbLabels
@@ -683,10 +761,10 @@
     self~deleteFont(font1)
 
 
-::class 'TabDlg' subclass RcControlDialog
+::class 'TabDlg' subclass ResControlDialog
 
 ::method initDialog
-   expose font2 font3 imageList iconsRemoved needWrite
+   expose font2 font3 imageList iconsRemoved needWrite pb
 
    -- Set the iconsRemoved and needWrite to false.  These flags are used in
    -- the OnDrawTabRect() method.
@@ -766,8 +844,8 @@
 -- This causes the button to redraw and the onDrawTabRect() method gets invoked,
 -- which actually does the drawing.
 ::method onTabSelChange
-   button = self~newPushButton(IDC_PB_OWNERDRAW)
-   button~update
+   expose pb
+   pb~update
 
 
 -- Fill the owner-drawn button with the color matching the tab's label and write
