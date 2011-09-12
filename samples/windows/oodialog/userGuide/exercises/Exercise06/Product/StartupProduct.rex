@@ -34,24 +34,27 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
-   Exercise 05: The Product component				  v00-02 29Jly11
-   Startup.rex - the starter" for the Product component.   		      
-   Changes:
-     v00-01: 15Jly11
-     v00-02  29Jly11 - Modified to take into account the added Model and Data
-                       classes.
+/* ooDialog User Guide
+   Exercise06: 		Stand-alone startup for Product
+   startupProduct.rex 						  v01-00 12Sep11
 
-------------------------------------------------------------------------------*/
+   Contains: 	   Startup code.
+   Pre-requisites: Must be run from the parent folder of the Product folder.
+
+   Changes:
+   v01-00 12Sep11: First Version
+
+   Outstanding Problems: None reported.
+*******************************************************************************/
 
 .local~my.idProductData  = .ProductData~newInstance	-- create a ProductData instance
 .local~my.idProductModel = .ProductModel~newInstance	-- create a ProductModel instance
 .local~my.idProductData~activate
-.local~my.idProductModel~activate	
+.local~my.idProductModel~activate
 
 .ProductView~newInstance("SA")
 
-::requires "Product\ProductView.rex" 
+::requires "Product\ProductView.rex"
 ::requires "Product\ProductModelData.rex"
 
 /******************************************************************************/

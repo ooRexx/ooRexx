@@ -35,18 +35,24 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The ProductList component			  v00-01 10Sep11
-   Startup.rex - the starter" for the Product component.
+   Exercise06: 		Stand-alone startup for CustomerView
+   startupCustomer.rex 						  v01-00 12Sep11
+
+   Contains: 	   Startup code.
+   Pre-requisites: Must be run from the parent folder of the Customer folder.
+
    Changes:
-     v00-01: 15Jly11
-     v00-02  29Jly11 - Modified to take into account the added Model and Data
-                       classes.
+   v01-00 12Sep11: First Version
 
-------------------------------------------------------------------------------*/
+   Outstanding Problems: None reported.
+*******************************************************************************/
 
-.ProductListView~newInstance("SA")
+.local~my.idCustomerData  = .CustomerData~new	-- create Customer Data instance
+.local~my.idCustomerModel = .CustomerModel~new	-- create Customer Model instance
+.local~my.idCustomerData~activate
+.local~my.idCustomerModel~activate
 
-::requires "Product\ProductListView.rex"
+.CustomerView~newInstance("SA")
 
-
-/******************************************************************************/
+::REQUIRES "Customer\CustomerView.rex"
+::REQUIRES "Customer\CustomerModelData.rex"
