@@ -233,6 +233,10 @@ CD  %OR_OODIALOGSAMPLES%\userGuide\exercises\Exercise05\res
 IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
 if ERRORLEVEL 1 goto error
 
+CD  %OR_OODIALOGSAMPLES%\userGuide\exercises\Exercise06\Product\res
+IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
+if ERRORLEVEL 1 goto error
+
 goto arounderr
 
 :error

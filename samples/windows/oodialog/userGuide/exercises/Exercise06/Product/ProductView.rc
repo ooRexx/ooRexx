@@ -86,4 +86,4 @@ FONT 8, "Ms Shell Dlg"
 // Icon resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_PROD_DLGICON   ICON           ".\\product\\res\\Product.ico"
+IDI_PROD_DLGICON   ICON           ".\\res\\Product.ico"

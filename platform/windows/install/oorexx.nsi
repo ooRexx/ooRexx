@@ -661,6 +661,56 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\res\" "ProductIcon.bmp"
 
   ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\" "*.rex"
+
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Customer
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\" "*.rex"
+
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Customer\bmp
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\bmp\" "*.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\bmp\" "*.ico"
+
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Order
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\" "*.rex"
+
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Order\bmp
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\bmp\" "*.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\bmp\" "*.ico"
+
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\OrderMgmt
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\OrderMgmt\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\OrderMgmt\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\OrderMgmt\" "*.rex"
+
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Product
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\" "*.rex"
+
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Product\res
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\res\" "res.mak"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\res\" "*.dll"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\res\" "*.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\res\" "*.ico"
+
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Samples
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Samples\" "ReadMe.txt"
