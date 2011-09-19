@@ -35,15 +35,16 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView component      v02-00 09Sep11
+   Exercise 06: ProductView.rex - The ProductView component      v02-01 19Sep11
 
    Contains: 	   classes "ProductView" and "AboutDialog".
-   Pre-requisites: ProductView.dll, ProductView.h.
+   Pre-requisites: ProductView.dll, ProductView.h, Pproduct.ico, ProductIcon.bmp,
    		   Support\NumberOnlyEditEx.cls (copied from ooDialog Samples
    		   into the folder Exercise06\Support)
 
    Description: A sample Product View component - part of the sample
         	Order Management application.
+        	This is a "leaf" component - invoked by ProductList.
 
    Outstanding Problems: None reported.
 
@@ -51,8 +52,9 @@
    v01-00 Initial version for Exercise05.
    v02-00 09Sep11: Changed to be invoked from its own folder. This has meant
                    changing file references to include the Product folder.
+   v02-01 19Sep11: Changed to provide for standalone invocation.
 ------------------------------------------------------------------------------*/
-say "*** In Product Folder ***"
+
 ::requires "ooDialog.cls"
 ::requires "..\Support\NumberOnlyEditEx.cls"
 ::requires "Product\ProductModelData.rex"
@@ -69,24 +71,19 @@ say "*** In Product Folder ***"
 
 ::CLASS ProductView SUBCLASS ResDialog PUBLIC
 
-  ::ATTRIBUTE hasParent CLASS	-- set to .false if stand-alone operation
-  				-- desired for testing.
-
   /*----------------------------------------------------------------------------
     Class Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
-    expose hasParent
-    use arg parent, root, productNo			--ADDED FOR EXERCISE06.
+    use arg rootDlg, productNo			--ADDED FOR EXERCISE06.
     if parent = "SA" then hasParent = .false; else hasParent = .true
-    say ".ProductView-newInstance-01: Start; hasParent =" hasParent
+    say ".ProductView-newInstance-01: rootDlg =" rootDlg
     -- Enable use of symbolic IDs in menu creation, and turn off AutoDetection
     -- (the third parameter:
     .Application~setDefaults("O", "Product\ProductView.h", .false)
     -- Create an instance of ProductView and show it:
     dlg = .ProductView~new("Product\res\ProductView.dll", IDD_PRODUCT_VIEW)  -- Exercise06 - but move to res folder later.
-    say ".ProductView-newInstance-02: root =" root	-- CHANGED FOR EXERCISE06.
-    dlg~activate(root, productNo)			-- CHANGED FOR EXERCISE06.
+    dlg~activate(rootDlg, productNo)			-- CHANGED FOR EXERCISE06.
 
 
   /*----------------------------------------------------------------------------
@@ -106,12 +103,10 @@ say "*** In Product Folder ***"
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate UNGUARDED
-    use arg parentDlg					--ADDED FOR EXERCISE06.
-    say "ProductView-activate-01: parentDlg =" parentDlg
-trace i
-    if .ProductView~hasParent then,
-      self~popUpAsChild(parentDlg,"SHOWTOP",,"IDI_PROD_DLGICON")		--ADDED FOR EXERCISE06.
-    else self~execute("SHOWTOP","IDI_PROD_DLGICON")				--ADDED FOR EXERCISE06.
+    use arg rootDlg, productNo					--ADDED FOR EXERCISE06.
+    say "ProductView-activate-01: rootDlg =" rootDlg
+    if rootDlg = "SA" then self~execute("SHOWTOP","IDI_PROD_DLGICON")		--ADDED FOR EXERCISE06.
+    else self~popUpAsChild(rootDlg,"SHOWTOP",,"IDI_PROD_DLGICON")		--ADDED FOR EXERCISE06.
     return
 
 

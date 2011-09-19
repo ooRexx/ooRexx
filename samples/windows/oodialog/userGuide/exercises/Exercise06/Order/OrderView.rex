@@ -35,24 +35,94 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: RequiresList.rex 				  v00-02 19Sep11
+   Exercise 06: The OrderView class				  v00-02 19Aug11
+   OrderFormView.rex
 
-   Contains: 	   The list of View components that OrderMgmtView requires.
+   Contains: class "OrderView".
+   Pre-requisite files: OrderView.rc, OrderView.h.
 
-
-   Pre-requisites: Class "OrderMgmtView
-
-   Description: This script is called by OrderMgmtView.
+   Description: A sample Order View component - part of the sample
+        	Order Management application.
+        	This is a "leaf" component - invoked by OrderListView.
 
    Outstanding Problems: None reported.
 
    Changes:
-   v00-01 21Aug11: First version.
-   v00-02 19Sep11: Added required copyright notice. 
+   v00-01 25Aug11.
+   v00-02 19Sep11: Corrected standalone invocation.
+
 ------------------------------------------------------------------------------*/
 
-say "RequiresList."
+::REQUIRES "ooDialog.cls"
+::REQUIRES "Order\OrderModelData.rex"
 
-::REQUIRES "Customer\CustomerListView.rex"
-::REQUIRES "Product\ProductListView.rex"
-::REQUIRES "Order\OrderView.rex"
+
+/*==============================================================================
+  OrderFormView							  v00-02 19Sep11
+  -------------
+  The "view" (or "gui") part of the Order component - part of the sample
+  Order Management application.
+
+  interface iOrderFormView {
+    void new();
+    void activate();
+  }
+  = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
+
+::CLASS OrderView SUBCLASS RcDialog PUBLIC
+
+  ::METHOD newInstance CLASS PUBLIC
+    expose rootDlg
+    use arg rootDlg, orderNo
+    say ".OrderView-newInstance: rootDlg =" rootDlg
+    .Application~useGlobalConstDir("O","Order\OrderView.h")
+    dlg = self~new("Order\OrderView.rc", "IDD_ORDFORM_DIALOG")
+    dlg~activate(rootDlg, orderNo)
+
+  /*----------------------------------------------------------------------------
+    Dialog Setup Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD init
+    -- creates the dialog instance but does not make it visible.
+    expose menuBar
+    say "OrderView-init-01"
+
+    forward class (super) continue
+
+    if \ self~createMenuBar then do		-- if there was a problem
+      self~initCode = 1
+      return
+    end
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD createMenuBar
+    -- Creates the menu bar on the dialog.
+    expose menuBar
+    say "OrderView-createMenuBar-01"
+    menuBar = .ScriptMenuBar~new("Order\OrderView.rc", IDR_ORDFORM_MENU, , , .true, self)
+
+    return .true
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD activate unguarded
+    use arg rootDlg
+    -- Shows the Dialog - i.e. makes it visible to the user.
+    say "OrderView-activate-01"
+    if rootDlg = "SA" then self~execute("SHOWTOP","IDI_ORDFORM_DLGICON")
+    else self~popUpAsChild(rootDlg,"SHOWTOP",,"IDI_ORDFORM_DLGICON")
+    return
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD initDialog
+    -- Called by ooDialog after SHOWTOP.
+    expose menuBar custControls
+    say "OrderView-initDialog-01"
+
+    menuBar~attachTo(self)
+
+    return

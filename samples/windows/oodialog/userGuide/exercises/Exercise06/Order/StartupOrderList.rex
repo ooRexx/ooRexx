@@ -34,53 +34,21 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+/* ooDialog User Guide
+   Exercise06: 		Stand-alone startup for OrderForm
+   startupOrderForm.rex						  v01-00 12Sep11
 
-#include <windows.h>
-#include <commctrl.h>
-#include <richedit.h>
-#include "orderformview.h"
+   Contains: 	   Startup code.
+   Pre-requisites: Must be run from the parent folder of the Order folder.
 
+   Changes:
+   v01-00 12Sep11: First Version
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDR_ORDFORM_MENU MENU
-{
-    POPUP "Actions"
-    {
-        MENUITEM "DoThis", IDM_DOTHIS1
-    }
-    POPUP "Help"
-    {
-        MENUITEM "About", IDM_ABOUT1
-    }
-}
+   Outstanding Problems: None reported.
+*******************************************************************************/
 
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDD_ORDFORM_DIALOG DIALOG 0, 0, 272, 271
-STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_GROUP | WS_POPUP | WS_SYSMENU
-CAPTION "Order Form"
-FONT 8, "Ms Shell Dlg"
-{
-    CONTROL         "", IDC_ORDFORM_DATE, DATETIMEPICK_CLASS, WS_TABSTOP | DTS_RIGHTALIGN, 185, 15, 70, 15
-    EDITTEXT        IDC_ORDFORM_ORDNO, 215, 35, 40, 14, ES_AUTOHSCROLL
-    EDITTEXT        IDC_ORDFORM_CUSTNO, 215, 55, 40, 14, ES_AUTOHSCROLL
-    LTEXT           "Order No.", IDC_STATIC, 174, 38, 32, 8, SS_LEFT
-    LTEXT           "Customer No.", IDC_STATIC, 170, 58, 44, 8, SS_LEFT
-    CONTROL         "", IDC_ORDFORM_ITEMS, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_ICON, 20, 75, 240, 115
-    LTEXT           "Date", IDC_STATIC, 158, 18, 16, 8, SS_LEFT
-    LTEXT           "Total Cost:", IDC_STATIC, 116, 200, 35, 8, SS_LEFT
-    LTEXT           "Discount", IDC_STATIC, 116, 214, 29, 8, SS_LEFT
-    DEFPUSHBUTTON   "Place Order", IDC_ORDFORM_PLACEORDER, 200, 245, 50, 14
-    LTEXT           "Tax", IDC_STATIC, 116, 228, 13, 8, SS_LEFT
-    RTEXT           "0.00", IDC_STATIC, 164, 214, 40, 8, SS_RIGHT
-    RTEXT           "0.00", IDC_STATIC, 164, 228, 40, 8, SS_RIGHT
-    RTEXT           "0.00", IDC_STATIC, 215, 228, 40, 8, SS_RIGHT
-    RTEXT           "0.00", IDC_STATIC, 215, 200, 40, 8, SS_RIGHT
-    RTEXT           "0.00", IDC_STATIC, 215, 214, 40, 8, SS_RIGHT
-    EDITTEXT        IDC_ORDFORM_NAMEADDR, 20, 30, 103, 39, ES_AUTOHSCROLL
-    LTEXT           "Customer:", IDC_STATIC, 28, 16, 32, 8, SS_LEFT
-}
 
+.OrderListView~newInstance("SA")
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_ORDFORM_DLGICON ICON           ".\\Order\\bmp\\OrderForm.ico"
+::REQUIRES "Order\OrderListView.rex"

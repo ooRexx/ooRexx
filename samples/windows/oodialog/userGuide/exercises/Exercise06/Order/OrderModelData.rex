@@ -35,91 +35,110 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderFormView class				  v00-01 25Aug11
-   OrderFormView.rex
+   Exercise 04: The OrderModel and OrderData Classes	  	  v00-01 19Sep11
 
-   Contains: class "OrderFormView".
-   Pre-requisite files: OrderFormView.rc, OrderFormView.h.
+   Contains: 	   classes "OrderModel" and "OrderResource".
+   Pre-requisites: None.
+
+   Outstanding Problems:
+   None.
 
    Changes:
-
+   v00-01: 29Jly11
 ------------------------------------------------------------------------------*/
 
-::requires "ooDialog.cls"
 
+/*//////////////////////////////////////////////////////////////////////////////
+  ==============================================================================
+  OrderModel							  v00-01 19Sep11
+  ------------
+  The "model" part of the Order component.
 
-/*==============================================================================
-  OrderFormView							  v00-01 25Aug11
-  -------------
-  The "view" (or "gui") part of the OrderForm component - part of the sample
-  Order Management application.
-
-  interface iOrderFormView {
-    void new();
-    void activate();
-  }
+  interface OrderModel{
+    cusstomerModel newInstance()  -- Class method.
+    null	  activate()
+    aDirectory    query()	  -- Returns Order Data in a directory instance.
+  };
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
-::CLASS OrderFormView SUBCLASS RcDialog PUBLIC
+::CLASS OrderModel PUBLIC
 
-  ::ATTRIBUTE hasParent CLASS
+/*----------------------------------------------------------------------------
+    Class Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD newInstance CLASS PUBLIC
-    expose hasParent
-    use arg parent, root, orderNo
-    if parent = "SA" then hasParent = .false; else hasParent = .true
-    .Application~useGlobalConstDir("O","Order\OrderFormView.h")
-    dlg = self~new("Order\OrderFormView.rc", "IDD_ORDFORM_DIALOG")
-    say ".OrderFormView-newInstance: root =" root
-    dlg~activate(root, orderNo)
+    -- Creates an instance and returns it.
+    aOrderModel = self~new
+    return aOrderModel
 
-  /*----------------------------------------------------------------------------
-    Dialog Setup Methods
+
+/*----------------------------------------------------------------------------
+    Instance Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  ::METHOD activate PUBLIC
+    -- Gets its data from ProductData.
+    expose idOrderData
+    idOrderData = .local~my.idOrderData
+
+
+  ::METHOD query PUBLIC
+    -- Returns data requested (no argument = return all)
+    expose idOrderData
+    say "OrderModel-query-01."
+    data = idOrderData~getData
+    return data
+/*============================================================================*/
+
+
+
+/*//////////////////////////////////////////////////////////////////////////////
+  ==============================================================================
+  OrderData							  v00-01 19Sep11
+  ------------
+  The "data" part of the Order component.
+  [interface (idl format)]
+  = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
+
+::CLASS OrderData PUBLIC
+
+/*----------------------------------------------------------------------------
+    Class Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD init
-    -- creates the dialog instance but does not make it visible.
-    expose menuBar
-    say "OrderFormView-init-01"
+  ::METHOD newInstance CLASS PUBLIC
+    aOrderData = self~new
+    return aOrderData
 
-    forward class (super) continue
 
-    if \ self~createMenuBar then do		-- if there was a problem
-      self~initCode = 1
-      return
-    end
-
+/*----------------------------------------------------------------------------
+    Instance Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD createMenuBar
-    -- Creates the menu bar on the dialog.
-    expose menuBar
-    say "OrderFormView-createMenuBar-01"
-    menuBar = .ScriptMenuBar~new("Order\OrderFormView.rc", IDR_ORDFORM_MENU, , , .true, self)
-
-    return .true
-
-
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD activate unguarded
-    use arg parentDlg
-    -- Shows the Dialog - i.e. makes it visible to the user.
-    say "OrderFormView-activate-01"
-    -- version 01.00: self~execute("SHOWTOP")		-- MUST be last!
-    --self~popup("SHOWTOP") -- This blocks the code that did the dlg~new.
-    if .OrderFormView~hasParent then,
-      self~popUpAsChild(parentDlg,"SHOWTOP",,"IDI_ORDFORM_DLGICON")
-    else self~execute("SHOWTOP","IDI_ORDFORM_DLGICON")
+  ::METHOD activate PUBLIC
+    expose custData
+    custData = .directory~new
+    custData[custNo]      = "AB15784"
+    custData[custName]    = "Joe Bloggs & Co Ltd"
+    arrCustAddr = .array~new
+    arrCustAddr[1]        = "28 Frith Street"
+    arrCustAddr[2]        = "Hardington"
+    arrCustAddr[3]        = "Blockshire"
+    custData[CustAddr]    = arrCustAddr
+    custData[custZip]     = "LB7 4EJ"
+    custData[custDiscount]= "B1"
     return
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD initDialog
-    -- Called by ooDialog after SHOWTOP.
-    expose menuBar custControls
-    say "OrderFormView-initDialog-01"
+  ::METHOD getData PUBLIC
+    expose custData
+    say "OrderData-getData-01."
+    return custData
 
-    menuBar~attachTo(self)
+/*============================================================================*/
 
-    return
+

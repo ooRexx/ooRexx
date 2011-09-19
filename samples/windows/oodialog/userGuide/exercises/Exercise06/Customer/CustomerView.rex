@@ -35,24 +35,27 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The CustomerView component             		  v02-00 06Sep11
+   Exercise 06: The CustomerView component             		  v02-01 18Sep11
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
 
    Description: A sample Customer View component - part of the sample
-        	Order Management application.
+        	Order Management application. This is a "leaf" component -
+        	it does not invoke other components.
 
    Changes:
-   v02-00: 06Sep11
+   v02-00 06Sep11.
+   v02-01 18Sep11: Corrected stand-alone invocation.
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
 ::requires "CustomerModelData.rex"
 
+
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerView							  v00-07 26Aug11
+  CustomerView							  v00-08 19Sep11
   -------------
   The "view" (or "gui") part of the Customer component - part of the sample
   Order Management application.
@@ -65,13 +68,12 @@
     v00-04: Took out the OK method - include that in Exercise05.
     v00-05: Modified to use CustomerData and CustomerModel classes.
     v00-07: Added "newInstance" class method - removed routine "StartCustomerView".
+    v00-08 19Sep11: Corrected for stand-alone invocation.
 
   [interface (idl format)]
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS CustomerView SUBCLASS RcDialog PUBLIC
-
-  ::ATTRIBUTE hasParent  CLASS							--Rel2StartupDir.
 
   /*----------------------------------------------------------------------------
     Class Methods
@@ -81,15 +83,13 @@
     expose hasParent							--Rel2StartupDir.
     -- ADDED FOR EXERCISE06. Statements in the old "StartCustomerView" Routine
     -- have been moved here. The ~activate statement has also changed.
-    use arg parent, root, customerNo
-    if parent = "SA" then hasParent = .false; else hasParent = .true
-    say ".CustomerView-newInstance-01: Start."
+    use arg rootDlg, customerNo
+    --say ".CustomerView-newInstance-01: Start."
     .Application~setDefaults("O", "Customer\CustomerView.h", .false)		--Rel2StartupDir.
     -- Create an instance of CustomerView and show it:
-    say ".CustomerView-newInstance-01b: rcFile =  ==>"||rcFile||"<=="
     dlg = .CustomerView~new("Customer\CustomerView.rc", "IDD_CUST_DIALOG")	--Rel2StartupDir.
-    say ".CustomerView-newInstance-02: root =" root
-    dlg~activate(root, customerNo)
+    --say ".CustomerView-newInstance-02: root =" rootDlg
+    dlg~activate(rootDlg, customerNo)
 
 
   /*----------------------------------------------------------------------------
@@ -100,7 +100,7 @@
     Init - creates the dialog instance but does not make it visible.        --*/
   ::METHOD init
     expose menuBar
-    say "CustomerView-init-01."
+    --say "CustomerView-init-01."
 
     forward class (super) continue
 
@@ -114,7 +114,7 @@
     Create Menu Bar - Creates the menu bar on the dialog.                   --*/
   ::METHOD createMenuBar
     expose menuBar
-    say "CustomerView-createMenuBar-01."
+    --say "CustomerView-createMenuBar-01."
     menuBar = .ScriptMenuBar~new("Customer\CustomerView.rc", "IDR_CUST_MENU", , , .true, self)	--Rel2StartupDir.
     return .true
 
@@ -122,12 +122,10 @@
   /*-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Activate - Shows the Dialog - i.e. makes it visible to the user.        --*/
   ::METHOD activate unguarded
-    use arg parentDlg					-- ADDED FOR EXERCISE06.
-    say "CustomerView-activate-01."
-    trace i
-    if .CustomerView~hasParent then,
-      self~popUpAsChild(parentDlg,"SHOWTOP",,"IDI_CUST_DLGICON")		--ADDED FOR EXERCISE06.
-    else self~execute("SHOWTOP","IDI_CUST_DLGICON")				--ADDED FOR EXERCISE06.
+    use arg rootDlg, customerNo					-- ADDED FOR EXERCISE06.
+    --say "CustomerView-activate-01."
+    if rootDlg = "SA" then self~execute("SHOWTOP","IDI_CUST_DLGICON")		--ADDED FOR EXERCISE06.
+    else self~popUpAsChild(rootDlg,"SHOWTOP",,"IDI_CUST_DLGICON")		--ADDED FOR EXERCISE06.
     return
 
 
@@ -135,7 +133,7 @@
     InitDialog - Called by ooDialog 					   -- */
   ::METHOD initDialog
     expose menuBar custControls
-    say "CustomerView-initDialog-01."
+    --say "CustomerView-initDialog-01."
     menuBar~attachTo(self)
     -- Create objects that map to the edit controls defined by the "customer.rc"
     --   so they can be programmatically used elsewhere in the class:
@@ -170,7 +168,7 @@
           "Would you like to open the Customer List now?"
     hwnd = self~dlgHandle
     answer = MessageDialog(msg,hwnd,"Create New Customer","YESNO","WARNING","DEFBUTTON2 APPLMODAL")
-    if answer = 6 then say "CustomerView-newCustomer-01: Customer List not yet implemented."
+    if answer = 6 then say "CustomerView-newCustomer-01: Customer List invocation not yet implemented."
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -208,7 +206,7 @@
                        the button.                                          --*/
   ::METHOD recordChanges unguarded
     expose custControls custData newCustData
-    say "CustomerView-recordChanges-01"
+    --say "CustomerView-recordChanges-01"
 
     newCustData = .directory~new
     newCustData[custName] = custControls[ecCustName]~getLine(1)
@@ -254,7 +252,7 @@
     	       appropriate controls.			                    --*/
   ::METHOD getData
     expose custData
-    say "CustomerView-getData-01."
+    --say "CustomerView-getData-01."
     idCustomerModel = .local~my.idCustomerModel
     custData = idCustomerModel~query
 
@@ -262,7 +260,7 @@
     showData - displays data in the dialog's controls.                        */
   ::METHOD showData
     expose custData custControls
-    say "CustomerView-showData-01."
+    --say "CustomerView-showData-01."
     -- Show CustNo and CustName:
     custControls[ecCustNo]~setText(custData[custNo])
     custControls[ecCustName]~setText(custData[custName])
@@ -328,14 +326,3 @@
 
 /*============================================================================*/
 
-
-
-/*============================================================================*/
-::ROUTINE StartCustomerView PUBLIC
-  say "StartCustomerView Routine-01: Start."
-  .Application~setDefaults("O", "CustomerView.h", .false)
-  dlg = .CustomerView~new("CustomerView.rc", "IDD_CUST_DIALOG")
-  say "StartCustomerView Routine-02: dlg~activate."
-  dlg~activate
-  say "StartCustomerView Routine-03: End."
-/*============================================================================*/

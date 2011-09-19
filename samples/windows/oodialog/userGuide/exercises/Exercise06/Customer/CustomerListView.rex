@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The CustomerListView class
-   CustomerList.rex 						  v01-00 10Sep11
+   CustomerList.rex 						  v01-01 19Sep11
 
    Contains: class "CustomerListView"
    Pre-requisite files: CustomerListView.rc, CustomerListView.h.
@@ -45,8 +45,11 @@
 
    Description: Provides a list of Customers and supports viewing any given
                 Customer via a double-click on that Customer's item in the list.
+                This is an "Intermediate" component - it is invoked by OrderMgmt,
+                and invokes CustomerView.
 
-   v00-01 10Sep11 First Version
+   v01-00 10Sep11: First Version
+   v01-01 19Sep11: Corrected for stand-alone invocation.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
@@ -56,21 +59,17 @@
 
 ::CLASS CustomerListView SUBCLASS RcDialog PUBLIC
 
-  ::ATTRIBUTE hasParent CLASS
-
   /*----------------------------------------------------------------------------
     Class Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD newInstance CLASS PUBLIC
-    expose root hasParent
-    use arg parent, root
-    if parent = "SA" then hasParent = .false; else hasParent = .true
+    use arg rootDlg
     .Application~useGlobalConstDir("O","Customer\CustomerListView.h")
-    say ".CustomerListView-newInstance-01: root =" root
+    say ".CustomerListView-newInstance-01: root =" rootDlg
     dlg = self~new("Customer\CustomerListView.rc", "IDD_DIALOG1")
     say ".CustomerListView-newInstance-02."
-    dlg~activate(parent, root)				-- Must be the last statement.
+    dlg~activate(rootDlg)				-- Must be the last statement.
 
 
   /*----------------------------------------------------------------------------
@@ -96,13 +95,15 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate unguarded
-    expose root
-    use arg parent, root
-    say "CustomerListView-activate-01: root =" root
-    trace i
-    if .CustomerListView~hasParent then,
-      self~popupAsChild(root, "SHOWTOP", ,"IDI_CUSTLIST_DLGICON")
-    else self~execute("SHOWTOP","IDI_CUSTLIST_DLGICON")
+    expose rootDlg
+    use arg rootDlg
+    say "CustomerListView-activate-01: root =" rootDlg
+    --trace i
+    if rootDlg = "SA" then do			-- If standalone operation required
+      rootDlg = self				      -- To pass on to children
+      self~execute("SHOWTOP","IDI_CUSTLIST_DLGICON")
+    end
+    else self~popupAsChild(rootDlg, "SHOWTOP", ,"IDI_CUSTLIST_DLGICON")
     return
 
 
@@ -163,20 +164,19 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD showCustomer unguarded
-    expose lvCustomers root
+    expose lvCustomers rootDlg
     item = lvCustomers~selected
     say "CustomerListView-showCustomer-01: item selected =" item
     info=.Directory~new
     if lvCustomers~getItemInfo(item, info) then do
       say "CustomerListView-showCustomer-02: info~text =" info~text
       --call startCustomerView self
-      say "CustomerListView-showCustomer-03; root =" root
-.local~my.idCustomerData  = .CustomerData~new	-- create Customer Data instance
-.local~my.idCustomerModel = .CustomerModel~new	-- create Customer Model instance
-.local~my.idCustomerData~activate
-.local~my.idCustomerModel~activate
-      if .CustomerListView~hasParent then .CustomerView~newInstance(self,root,"CU003")
-      else .CustomerView~newInstance(self,self,"CU003")
+      say "CustomerListView-showCustomer-03; root =" rootDlg
+      .local~my.idCustomerData  = .CustomerData~new	-- create Customer Data instance
+      .local~my.idCustomerModel = .CustomerModel~new	-- create Customer Model instance
+      .local~my.idCustomerData~activate
+      .local~my.idCustomerModel~activate
+      .CustomerView~newInstance(rootDlg,"CU003")
       say "CustomerListView-showCustomer-03: after startCustomerView"
     end
     else do
