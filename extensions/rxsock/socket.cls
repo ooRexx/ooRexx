@@ -541,11 +541,14 @@ if len < 1 then raise syntax 93.907 array (1, len)
 if \address~isA(.InetAddress) then ,
  raise syntax 93.914 array (1, 'an InetAddress', address)
 stem. = address~makeStem()
-retc = SockRecvFrom(s, 'xxx', len, 'stem.')
+retc = SockRecvFrom(s, 'xxx', len, 'stem.!')
 if retc = -1 then do
    errno = self~convert_err_number(SockSock_errno())
    return .nil
    end
+address~family= self~convert_address_family(stem.!family)
+address~address=Stem.!addr
+address~port=   Stem.!port
 if retc = 0 & xxx~length > 0 then do
    errno = self~convert_err_number(SockSock_errno())
    if xxx~length > 0 then return xxx
