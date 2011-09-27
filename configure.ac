@@ -34,7 +34,7 @@ dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 
 dnl Process this file with autoconf to produce a configure script
-AC_INIT(oorexx, 4.2.0)
+AC_INIT(ooRexx, 4.2.0, , ooRexx)
 AC_PREFIX_DEFAULT(/usr)
 
 PACKAGE=ooRexx
@@ -42,7 +42,7 @@ VERSION=4.2.0
 
 AC_CANONICAL_SYSTEM
 
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
+AM_INIT_AUTOMAKE([1.9 tar-pax])
 
 AM_CONFIG_HEADER(config.h)
 
