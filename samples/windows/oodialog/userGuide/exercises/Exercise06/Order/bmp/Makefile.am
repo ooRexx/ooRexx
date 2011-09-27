@@ -39,5 +39,5 @@
 
 MAINTAINERCLEANFILES	= Makefile.in *~
 
-EXTRA_DIST		= *.BMP *.ico
+EXTRA_DIST		= *.bmp *.ico
 
