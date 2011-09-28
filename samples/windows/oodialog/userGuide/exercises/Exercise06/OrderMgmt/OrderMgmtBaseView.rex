@@ -36,14 +36,15 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The OrderManagementBaseView class
-   OrderMgmtBaseView.rex					  v00-01 22Aug11
+   OrderMgmtBaseView.rex					  v00-02 28Sep11
 
    Contains: classes "OrderMgmtBaseBase", HRS (private).
 
    Pre-requisite files: OrderManagementBaseView.rc, OrderManagementBaseView.h.
 
    Changes:
-     v00-01: First version.
+     v00-01 22Aug11: First version.
+     v00-02 28Sep11: Add OrderList icon.
 
    To Do: - Fix close by system (top right icon on window) - should bring up "are you sure" msg.
           - Try a size instruction to fix wrong size at start - when click on border,
@@ -361,14 +362,17 @@
     expose normalIcons
     imgCustList = .Image~getImage("customer\bmp\CustList.bmp") -- test1.ico did not work.
     imgProdList = .Image~getImage("product\res\ProdList.bmp")
+    imgOrderList = .Image~getImage("order\bmp\OrderList.bmp")
     imgOrderForm = .Image~getImage("order\bmp\OrderForm.bmp")
     tmpIL = .ImageList~create(.Size~new(64, 64), .Image~toID(ILC_COLOR4), 4, 0)
     if \imgCustList~isNull,  \tmpIL~isNull then do  -- check for errors in images/imagelist
-      tmpIL~add(imgCustList)  -- item 0 in the list
-      tmpIL~add(imgProdList)  -- item 1 in the list
-      tmpIL~add(imgOrderForm)  -- item 2 in the list
+      tmpIL~add(imgCustList)   -- item 0 in the list
+      tmpIL~add(imgProdList)   -- item 1 in the list
+      tmpIL~add(imgOrderList)  -- item 2 in the list
+      tmpIL~add(imgOrderForm)  -- item 3 in the list
       imgCustList~release
       imgProdList~release
+      imgOrderList~release
       imgOrderForm~release
       normalIcons = tmpIL
     end
