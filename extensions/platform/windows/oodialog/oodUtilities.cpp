@@ -818,6 +818,16 @@ RexxMethod1(uint16_t, dlgutil_loWord_cls, uint32_t, dw) { return LOWORD(dw); }
 RexxMethod2(intptr_t, dlgutil_makeLPARAM_cls, int16_t, loWord, int16_t, hiWord) { return MAKELPARAM(loWord, hiWord); }
 RexxMethod2(uintptr_t, dlgutil_makeWPARAM_cls, int16_t, loWord, int16_t, hiWord) { return MAKEWPARAM(loWord, hiWord); }
 
+RexxMethod1(uintptr_t, dlgutil_unsigned_cls, intptr_t, n1)
+{
+    return (uintptr_t)n1;
+}
+
+RexxMethod1(intptr_t, dlgutil_signed_cls, uintptr_t, n1)
+{
+    return (intptr_t)n1;
+}
+
 RexxMethod2(uint64_t, dlgutil_shiftLeft_cls, uint64_t, n1, uint16_t, amount)
 {
     return n1 << amount;

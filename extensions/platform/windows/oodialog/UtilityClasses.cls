@@ -192,6 +192,8 @@
 ::method sLoWord class external "LIBRARY oodialog dlgutil_sloWord_cls"
 ::method makeWParam class external "LIBRARY oodialog dlgutil_makeWPARAM_cls"
 ::method makeLParam class external "LIBRARY oodialog dlgutil_makeLPARAM_cls"
+::method unsigned class external "LIBRARY oodialog dlgutil_unsigned_cls"
+::method signed class external "LIBRARY oodialog dlgutil_signed_cls"
 ::method and class external "LIBRARY oodialog dlgutil_and_cls"
 ::method or class external "LIBRARY oodialog dlgutil_or_cls"
 ::method shiftLeft class external "LIBRARY oodialog dlgutil_shiftLeft_cls"
