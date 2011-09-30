@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: OrderMgmtView.rex 				  v00-01 21Aug11
+   Exercise 06: OrderMgmtView.rex 				  v00-02 30Sep11
 
    Contains: 	   class: "OrderMgmtView"
 
@@ -51,6 +51,7 @@
 
    Changes:
    v00-01 21Aug11: First version.
+   v00-02 30Sep11: Added OrderForm.
 ------------------------------------------------------------------------------*/
 
 call "OrderMgmt\RequiresList.rex"
@@ -83,19 +84,28 @@ call "OrderMgmt\RequiresList.rex"
 
   ::METHOD initRecords PRIVATE  -- called from superclass' init method.
     expose records
-    records = .array~new(3)
+    records = .array~new()
+
     rec = .directory~new
     rec~ID = "CustomerList"
     rec~name = "Customer List"
     records[1] = rec
+
     rec = .directory~new
     rec~ID = "ProductList"
     rec~name = "Product List"
     records[2] = rec
+
+    rec = .directory~new
+    rec~ID = "OrderList"
+    rec~name = "Sales Orders"
+    records[3] = rec
+
     rec = .directory~new
     rec~ID = "OrderForm"
     rec~name = "New Order"
-    records[3] = rec
+    records[4] = rec
+
     return records
 
 
@@ -125,9 +135,8 @@ call "OrderMgmt\RequiresList.rex"
     className = record~ID
     say "OrderMgmtView-showModel-01: className =" className
     viewClassName = className||"View"
-    root = self
-    interpret "."||viewClassName||"~newInstance(self,root)"
+    --root = self
+    interpret "."||viewClassName||"~newInstance(self)"
     say "OrderMgmtView-showModel-02:"
     --.CustomerListView~newInstance(self,root)
-
 

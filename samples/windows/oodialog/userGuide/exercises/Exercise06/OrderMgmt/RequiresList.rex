@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: RequiresList.rex 				  v00-02 19Sep11
+   Exercise 06: RequiresList.rex 				  v00-03 28Sep11
 
    Contains: 	   The list of View components that OrderMgmtView requires.
 
@@ -48,11 +48,14 @@
 
    Changes:
    v00-01 21Aug11: First version.
-   v00-02 19Sep11: Added required copyright notice. 
+   v00-02 19Sep11: Added required copyright notice.
+   v00-03 28Sep11: Added OrderListView.
 ------------------------------------------------------------------------------*/
 
 say "RequiresList."
 
 ::REQUIRES "Customer\CustomerListView.rex"
 ::REQUIRES "Product\ProductListView.rex"
-::REQUIRES "Order\OrderView.rex"
+::REQUIRES "Order\OrderListView.rex"
+::REQUIRES "Order\OrderFormView.rex"
+
