@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The OrderManagementBaseView class
-   OrderMgmtBaseView.rex					  v00-02 28Sep11
+   OrderMgmtBaseView.rex					  v00-03 30Sep11
 
    Contains: classes "OrderMgmtBaseBase", HRS (private).
 
@@ -44,19 +44,19 @@
 
    Changes:
      v00-01 22Aug11: First version.
-     v00-02 28Sep11: Add OrderList icon.
+     v00-02 28Sep11: Add OrderList icon (a bitmap).
+     v00-03 29Sep11: Corrected wrong window size on open.
 
-   To Do: - Fix close by system (top right icon on window) - should bring up "are you sure" msg.
-          - Try a size instruction to fix wrong size at start - when click on border,
-            get right size and onSizeMoveEnded method is driven. Code in here might
-            be the right approach.
+   To Do: - Fix close by system (top right icon on window) - should bring up
+            "are you sure" msg.
           - Fix no-warning close when hit enter.
-    /*
-    To Do: add Order List, Find Customer, Find Product
-    (Are last two buttons or menu items?
-     How about a configure option to allow user to decide?
-     That would show dynamic adding of menu items, buttons, icons.)
-    */
+          - Add Find Customer, Find Product (buttons or menu items?)
+          - Tidy up comments in code.
+
+   Possible future additions:
+          - A configure option to allow user to decide whether to use buttons or
+            menus for find Customer/Product/Order (this could illustrate dynamic
+            adding of menu items, buttons, icons.)
 
 ------------------------------------------------------------------------------*/
 
@@ -109,7 +109,7 @@
 
     forward class (super) continue
 
-    success = self~createCenter(310, 200, .HRS~omWindowTitle,     -
+    success = self~createCenter(310, 220, .HRS~omWindowTitle,     -
                                 'ThickFrame MinimizeBox MaximizeBox', , -
                                 'MS Sans Serif', 8)
     if \ success then do
@@ -163,13 +163,13 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate UNGUARDED
     say "OrderMgmtBaseView-activate."
-    self~execute('SHOWTOP')
-
+    self~execute('SHOWTOP') -- Try showing dialog at end of initDialog to get sizing right.
+    --self~execute("HIDE")
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initDialog
-    expose minWidth minHeight normalIcons records menuBar u --lv
-
+    expose minWidth minHeight normalIcons records menuBar u lastSizeInfo sizing --lv
+    say "OrderMgmtBaseView-initDialog."
     menuBar~attachTo(self)
 
     -- Create a proxy for the List View and set icons into it.
@@ -190,6 +190,24 @@
     -- width and height
     minWidth = self~pixelCX
     minHeight = self~pixelCY
+
+    -- Make sure the height of the menubar is taken into account (DlgAreaU does
+    -- not take this into account so have to fix things manually here.)
+    -- (1) Get the height of a single line menu bar in pixels ("SM_CYMENU" is one
+    -- of the many MSDN System Metrics; it has a value of 15.)
+    SM_CYMENU = 15
+    height = .DlgUtil~getSystemMetrics(SM_CYMENU)
+
+    -- Get the actual size of the dialog in pixels.
+    s = self~getRealSize
+
+    lastSizeInfo = .DlgUtil~makeLParam(s~width, s~height)
+    sizing = .true
+
+    s~height += height
+    self~resizeTo(s)
+    self~onSizeMoveEnded
+
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -306,7 +324,8 @@
   ::METHOD onResize unguarded
   expose u sizing minMaximized lastSizeInfo
   use arg sizingType, sizeinfo
-  --say "onResize." --os - this methed sent while re-sizing.
+  say "OrderMgmtBaseView-onResize."
+  --os - this methed sent while re-sizing.
   -- Save the size information so we know the final size of the dialog.
   lastSizeInfo = sizeInfo
 
@@ -360,8 +379,8 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD createImageLists private
     expose normalIcons
-    imgCustList = .Image~getImage("customer\bmp\CustList.bmp") -- test1.ico did not work.
-    imgProdList = .Image~getImage("product\res\ProdList.bmp")
+    imgCustList  = .Image~getImage("customer\bmp\CustList.bmp")
+    imgProdList  = .Image~getImage("product\res\ProdList.bmp")
     imgOrderList = .Image~getImage("order\bmp\OrderList.bmp")
     imgOrderForm = .Image~getImage("order\bmp\OrderForm.bmp")
     tmpIL = .ImageList~create(.Size~new(64, 64), .Image~toID(ILC_COLOR4), 4, 0)
@@ -391,6 +410,10 @@
     response = askDialog(.HRS~omQExit, "N")
     if response = 1 then forward class (super)
 
+  ::METHOD ok
+    -- Invoked when enter key pressed - if passed to superclass, cancels dialog.
+    return  -- do not close dialog - appears as a no-op to the user.
+
 
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ::METHOD resetIcons
@@ -415,4 +438,3 @@
   ::CONSTANT omReset        "Reset Icons"
   ::CONSTANT omExit         "Exit Application"
   ::CONSTANT omQExit        "Are you sure you want to close all windows and exit the application?"
-
