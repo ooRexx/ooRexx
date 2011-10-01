@@ -135,8 +135,6 @@ call "OrderMgmt\RequiresList.rex"
     className = record~ID
     say "OrderMgmtView-showModel-01: className =" className
     viewClassName = className||"View"
-    --root = self
     interpret "."||viewClassName||"~newInstance(self)"
     say "OrderMgmtView-showModel-02:"
-    --.CustomerListView~newInstance(self,root)
 
