@@ -35,10 +35,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
-#include "productlistview.h"
+#include "ProductListView.h"
 
 
 
@@ -56,6 +57,7 @@ IDR_PRODLIST_MENU MENU
 }
 
 
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDD_PRODLIST_DIALOG DIALOG 0, 0, 225, 273
 STYLE DS_3DLOOK | DS_CENTER | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_GROUP | WS_POPUP | WS_THICKFRAME | WS_SYSMENU
@@ -65,8 +67,9 @@ FONT 8, "Ms Shell Dlg"
 {
     PUSHBUTTON      "Cancel", IDCANCEL, 150, 235, 50, 14
     CONTROL         "", IDC_PRODLIST_LISTVIEW, WC_LISTVIEW, WS_BORDER | LVS_ALIGNLEFT | LVS_REPORT | LVS_SORTASCENDING, 15, 10, 190, 215
-    DEFPUSHBUTTON   "Show Product", IDC_SHOW_PRODUCT, 90, 235, 50, 14, WS_DISABLED
+    DEFPUSHBUTTON   "Show Product", IDC_PRODLIST_SHOWPRODUCT, 90, 235, 50, 14, WS_DISABLED
 }
+
 
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL

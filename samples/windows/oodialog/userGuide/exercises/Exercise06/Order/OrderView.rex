@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderView class				  v00-02 19Aug11
+   Exercise 06: The OrderView class				  v00-03 28Sep11
    OrderFormView.rex
 
    Contains: class "OrderView".
@@ -50,6 +50,7 @@
    Changes:
    v00-01 25Aug11.
    v00-02 19Sep11: Corrected standalone invocation.
+   v00-03 28Sep11: Minor mod to comment.
 
 ------------------------------------------------------------------------------*/
 
@@ -63,7 +64,7 @@
   The "view" (or "gui") part of the Order component - part of the sample
   Order Management application.
 
-  interface iOrderFormView {
+  interface iOrderView {
     void new();
     void activate();
   }
@@ -76,7 +77,7 @@
     use arg rootDlg, orderNo
     say ".OrderView-newInstance: rootDlg =" rootDlg
     .Application~useGlobalConstDir("O","Order\OrderView.h")
-    dlg = self~new("Order\OrderView.rc", "IDD_ORDFORM_DIALOG")
+    dlg = self~new("Order\OrderView.rc", "IDD_ORDER_DIALOG")
     dlg~activate(rootDlg, orderNo)
 
   /*----------------------------------------------------------------------------
@@ -102,7 +103,7 @@
     -- Creates the menu bar on the dialog.
     expose menuBar
     say "OrderView-createMenuBar-01"
-    menuBar = .ScriptMenuBar~new("Order\OrderView.rc", IDR_ORDFORM_MENU, , , .true, self)
+    menuBar = .ScriptMenuBar~new("Order\OrderView.rc", IDR_ORDER_MENU, , , .true, self)
 
     return .true
 
@@ -112,8 +113,8 @@
     use arg rootDlg
     -- Shows the Dialog - i.e. makes it visible to the user.
     say "OrderView-activate-01"
-    if rootDlg = "SA" then self~execute("SHOWTOP","IDI_ORDFORM_DLGICON")
-    else self~popUpAsChild(rootDlg,"SHOWTOP",,"IDI_ORDFORM_DLGICON")
+    if rootDlg = "SA" then self~execute("SHOWTOP","IDI_ORDER_DLGICON")
+    else self~popUpAsChild(rootDlg,"SHOWTOP",,"IDI_ORDER_DLGICON")
     return
 
 

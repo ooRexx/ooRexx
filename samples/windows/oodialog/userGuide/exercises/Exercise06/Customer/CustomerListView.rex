@@ -67,7 +67,7 @@
     use arg rootDlg
     .Application~useGlobalConstDir("O","Customer\CustomerListView.h")
     say ".CustomerListView-newInstance-01: root =" rootDlg
-    dlg = self~new("Customer\CustomerListView.rc", "IDD_DIALOG1")
+    dlg = self~new("Customer\CustomerListView.rc", "IDD_CUSTLIST_DIALOG")
     say ".CustomerListView-newInstance-02."
     dlg~activate(rootDlg)				-- Must be the last statement.
 
@@ -89,7 +89,7 @@
     -- Creates the menu bar on the dialog.
     expose menuBar
     say "CustomerListView-createMenuBar-01."
-    menuBar = .ScriptMenuBar~new("Customer\CustomerListView.rc", "IDR_MENU1", , , .true, self)
+    menuBar = .ScriptMenuBar~new("Customer\CustomerListView.rc", "IDR_CUSTLIST_MENU", , , .true, self)
     return .true
 
 
@@ -115,15 +115,15 @@
     menuBar~attachTo(self)
 
     say "CustomerListView-initDialog-01"; say
-    lvCustomers = self~newListView("IDC_LIST1");
+    lvCustomers = self~newListView("IDC_CUSTLIST_LIST");
     lvCustomers~addExtendedStyle(GRIDLINES FULLROWSELECT)
     lvCustomers~insertColumnPX(0,"Number",60,"LEFT")
     lvCustomers~insertColumnPX(1,"Name",220,"LEFT")
     lvCustomers~insertColumnPX(2,"Zip",80,"LEFT")
-    self~connectListViewEvent("IDC_LIST1","CLICK",itemSelected)
-    self~connectListViewEvent("IDC_LIST1","ACTIVATE",openItem)
-    self~connectButtonEvent("IDC_SHOW_CUSTOMER","CLICKED",showCustomer)
-    --btnShowCustomer = self~newPushButton("IDC_SHOW_CUSTOMER")
+    self~connectListViewEvent("IDC_CUSTLIST_LIST","CLICK",itemSelected)
+    self~connectListViewEvent("IDC_CUSTLIST_LIST","ACTIVATE",openItem)
+    self~connectButtonEvent("IDC_CUSTLIST_SHOWCUST","CLICKED",showCustomer)
+    --btnShowCustomer = self~newPushButton("IDC_CUSTLIST_SHOWCUST")
 
     self~loadList
 
@@ -150,7 +150,7 @@
     use arg id, itemIndex, columnIndex, keyState
     say "CustomerListView-itemSelected: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
     say "CustomerListView-itemSelected: item selected is:"lvCustomers~selected
-    self~enableControl("IDC_SHOW_CUSTOMER")
+    self~enableControl("IDC_CUSTLIST_SHOWCUST")
     --text = list~itemText(itemIndex)
     --colText = list~itemText(itemIndex, 1)
     --parent~insertNewItem(text, colText)

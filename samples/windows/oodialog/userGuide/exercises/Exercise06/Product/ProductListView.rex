@@ -137,7 +137,7 @@
     lvProducts~insertColumnPX(2,"Zip",50,"LEFT")
     self~connectListViewEvent("IDC_PRODLIST_LISTVIEW","CLICK",itemSelected)
     self~connectListViewEvent("IDC_PRODLIST_LISTVIEW","ACTIVATE",openItem)
-    self~connectButtonEvent("IDC_SHOW_PRODUCT","CLICKED",showProduct)
+    self~connectButtonEvent("IDC_PRODLIST_SHOWPRODUCT","CLICKED",showProduct)
 
     self~loadList
 
@@ -151,7 +151,7 @@
     use arg id, itemIndex, columnIndex, keyState
     say "ProductListView-itemSelected: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
     say "ProductListView-itemSelected: item selected is:"lvProducts~selected
-    self~enableControl("IDC_SHOW_PRODUCT")
+    self~enableControl("IDC_PRODLIST_SHOWPRODUCT")
     --text = list~itemText(itemIndex)
     --colText = list~itemText(itemIndex, 1)
     --parent~insertNewItem(text, colText)

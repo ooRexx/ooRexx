@@ -45,25 +45,39 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDR_ORDMGMT_MENU MENU
 {
-    POPUP "Actions"
+    POPUP "Orders"
     {
-        MENUITEM "New Customer...", IDM_ORDMGMT_NEWCUST
-        MENUITEM "New Product...", IDM_ORDMGMT_NEWPROD
+        MENUITEM "New Order...", IDM_ORDMGMT_NEWORDER
+        MENUITEM "Order List...", IDM_ORDMGMT_ORDERLIST
+        MENUITEM "Order Search...", IDM_ORDMGMT_ORDERSEARCH
     }
-    POPUP "Lists"
+    POPUP "Customers"
     {
         MENUITEM "Customer List...", IDM_ORDMGMT_CUSTLIST
+        MENUITEM "Customer Search...", IDM_ORDMGMT_CUSTSEARCH
+    }
+    POPUP "Products"
+    {
         MENUITEM "Product List...", IDM_ORDMGMT_PRODLIST
+        MENUITEM SEPARATOR
+        MENUITEM "Product Search...", IDM_ORDMGMT_PRODSEARCH
+    }
+    POPUP "New"
+    {
+        MENUITEM "Product...", IDM_ORDMGMT_PRODNEW
+        MENUITEM "Customer...", IDM_ORDMGMT_CUSTNEW
+        MENUITEM "Order...", IDM_ORDMGMT_ORDERNEW
     }
     POPUP "Help"
     {
-        MENUITEM "About...", IDM_ORDMGMT_ABOUT
+        MENUITEM "About", IDM_ORDMGMT_ABOUT
     }
 }
 
 
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDD_ORDMGMT DIALOG 0, 0, 310, 200
+IDD_ORDMGMT DIALOG 0, 0, 310, 220
 STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
 CAPTION "Dialog"
 FONT 8, "Ms Shell Dlg"
