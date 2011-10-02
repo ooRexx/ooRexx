@@ -4525,8 +4525,8 @@ inline bool isTCNMsg(pCTabOwnerDialog pctod, uint32_t uMsg, LPARAM lParam, uint3
         UINT_PTR id = ((NMHDR *)lParam)->idFrom;
 
         // First see if the control ID matches one of our managed tabs.
-        size_t count = pctod->countMTs;
-        register size_t i = 0;
+        uint32_t count = pctod->countMTs;
+        register uint32_t i = 0;
 
         while ( i < count && pctod->mts[i]->tabID != id )
         {
