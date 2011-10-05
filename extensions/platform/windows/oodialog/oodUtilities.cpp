@@ -789,6 +789,11 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
 {
     char buf[64];
 
+    if ( argumentOmitted(1) )
+    {
+        format = "F";
+    }
+
     switch ( toupper(*format) )
     {
         case 'L' :
