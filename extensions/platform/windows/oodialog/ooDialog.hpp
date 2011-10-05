@@ -130,6 +130,7 @@
 
 #define TAG_NOTHING               0x00000000
 #define TAG_DIALOG                0x00000001
+#define TAG_MOUSE                 0x00000002
 #define TAG_BUTTON                0x00000004
 #define TAG_TREEVIEW              0x00000006
 #define TAG_LISTVIEW              0x00000007
@@ -170,8 +171,11 @@
 #define TAG_MSGHANDLED            0x01000000
 
 // The message reply comes from Rexx.  I.e., from the programmer.  The return
-// will be a .Pointer, unwrap it and use it as the message reply.  (This is a
-// first cut at this, may change.)
+// is specific to the message, and may simply be ignored.  Many of the event
+// connection methods now let the programmer specify if he wants the window
+// message handling loop to wait for the reply, even when Windows ignores the
+// reply.  When the programmer specifies to not wait, the event handler method
+// is invoked through startWith(), which of course returns immediately.
 #define TAG_REPLYFROMREXX         0x02000000
 
 // Describes how a message searched for in the message table should be handled.
@@ -338,6 +342,15 @@ typedef struct {
     void              *pData;           /* Pointer to subclass specific data.     */
     UINT               uID;             /* Resource ID of subclassed control.     */
 } SUBCLASSDATA;
+
+// Struct for the Edit::ignoreMouseWheel() method, used as pData in SUBCLASSDATA
+typedef struct {
+    RexxThreadContext   *dlgProcContext;  // Thread context of the owner dialog's window procedure.
+    RexxObjectPtr        ownerDlg;        // Edit control, Rexx dialog object.
+    char                *method;          // Name of method to invoke.
+    bool                 willReply;       // User wants event handler invoked directly, or not.
+} MOUSEWHEELDATA;
+typedef MOUSEWHEELDATA *PMOUSEWHEELDATA;
 
 /* Stuff for key press subclassing and keyboard hooks */
 
@@ -813,6 +826,7 @@ extern RexxClassObject TheDynamicDialogClass;
 extern RexxClassObject TheDialogControlClass;
 extern RexxClassObject ThePropertySheetPageClass;
 extern RexxClassObject TheControlDialogClass;
+extern RexxClassObject ThePointClass;
 extern RexxClassObject TheSizeClass;
 extern RexxClassObject TheRectClass;
 

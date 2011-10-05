@@ -199,6 +199,7 @@
 ::method getStyle unguarded external "LIBRARY oodialog e_style"
 ::method noContextMenu unguarded external "LIBRARY oodialog e_noContextMenu"
 ::method disableInternalResize unguarded external "LIBRARY oodialog e_disableInternalResize"
+::method ignoreMouseWheel unguarded external "LIBRARY oodialog e_ignoreMouseWheel"
 
 ::method canUndo unguarded
     use strict arg

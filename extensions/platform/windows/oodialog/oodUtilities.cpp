@@ -1259,6 +1259,16 @@ RexxMethod1(RexxObjectPtr, window_unInit, CSELF, pCSelf)
 #define POINT_CLASS  "Point"
 
 
+RexxMethod1(RexxObjectPtr, point_init_cls, OSELF, self)
+{
+    if ( isOfClassType(context, self, POINT_CLASS) )
+    {
+        ThePointClass = (RexxClassObject)self;
+        context->RequestGlobalReference(ThePointClass);
+    }
+    return NULLOBJECT;
+}
+
 RexxMethod2(RexxObjectPtr, point_init, OPTIONAL_int32_t,  x, OPTIONAL_int32_t, y)
 {
     RexxBufferObject obj = context->NewBuffer(sizeof(POINT));
@@ -1367,6 +1377,25 @@ RexxMethod3(RexxObjectPtr, point_decr, OPTIONAL_int32_t, x, OPTIONAL_int32_t, y,
     }
 
     return NULLOBJECT;
+}
+
+/** Point::inRect
+ *
+ *  Determines if this point is in the specified rectangle.  The rectangle must
+ *  be normalized, that is, rect.right must be greater than rect.left and
+ *  rect.bottom must be greater than rect.top. If the rectangle is not
+ *  normalized, a point is never considered inside of the rectangle.
+ */
+RexxMethod2(logical_t, point_inRect, RexxObjectPtr, rect, CSELF, p)
+{
+    PRECT r = rxGetRect(context, rect, 1);
+    if ( r != NULL )
+    {
+        POINT pt = {((POINT *)p)->x, ((POINT *)p)->y};
+        return PtInRect(r, pt);
+    }
+
+    return FALSE;
 }
 
 /**

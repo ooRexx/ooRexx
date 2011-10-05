@@ -93,6 +93,9 @@ RexxClassObject     ThePropertySheetPageClass = NULLOBJECT;
 // Initialized in the ControlDialog class init method (cd_init_cls.)
 RexxClassObject     TheControlDialogClass = NULLOBJECT;
 
+// Initialized in the Point class init method (point_init_cls.)
+RexxClassObject     ThePointClass = NULLOBJECT;;
+
 // Initialized in the Size class init method (size_init_cls.)
 RexxClassObject     TheSizeClass = NULLOBJECT;;
 
@@ -868,6 +871,7 @@ REXX_METHOD_PROTOTYPE(bc_test_cls);
 
 // Edit
 REXX_METHOD_PROTOTYPE(e_noContextMenu);
+REXX_METHOD_PROTOTYPE(e_ignoreMouseWheel);
 REXX_METHOD_PROTOTYPE(e_isSingleLine);
 REXX_METHOD_PROTOTYPE(e_selection);
 REXX_METHOD_PROTOTYPE(e_replaceSelText);
@@ -1064,6 +1068,7 @@ REXX_METHOD_PROTOTYPE(rect_setRight);
 REXX_METHOD_PROTOTYPE(rect_setBottom);
 
 // .Point
+REXX_METHOD_PROTOTYPE(point_init_cls);
 REXX_METHOD_PROTOTYPE(point_init);
 REXX_METHOD_PROTOTYPE(point_x);
 REXX_METHOD_PROTOTYPE(point_setX);
@@ -1073,6 +1078,7 @@ REXX_METHOD_PROTOTYPE(point_add);
 REXX_METHOD_PROTOTYPE(point_subtract);
 REXX_METHOD_PROTOTYPE(point_incr);
 REXX_METHOD_PROTOTYPE(point_decr);
+REXX_METHOD_PROTOTYPE(point_inRect);
 
 // .Size
 REXX_METHOD_PROTOTYPE(size_init_cls);
@@ -1636,6 +1642,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     // Edit
     REXX_METHOD(e_noContextMenu,                e_noContextMenu),
+    REXX_METHOD(e_ignoreMouseWheel,             e_ignoreMouseWheel),
     REXX_METHOD(e_isSingleLine,                 e_isSingleLine),
     REXX_METHOD(e_selection,                    e_selection),
     REXX_METHOD(e_replaceSelText,               e_replaceSelText),
@@ -1823,6 +1830,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(rect_setTop,                    rect_setTop),
     REXX_METHOD(rect_setRight,                  rect_setRight),
     REXX_METHOD(rect_setBottom,                 rect_setBottom),
+    REXX_METHOD(point_init_cls,                 point_init_cls),
     REXX_METHOD(point_init,                     point_init),
     REXX_METHOD(point_x,                        point_x),
     REXX_METHOD(point_setX,                     point_setX),
@@ -1832,6 +1840,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(point_subtract,                 point_subtract),
     REXX_METHOD(point_incr,                     point_incr),
     REXX_METHOD(point_decr,                     point_decr),
+    REXX_METHOD(point_inRect,                   point_inRect),
     REXX_METHOD(size_init_cls,                  size_init_cls),
     REXX_METHOD(size_init,                      size_init),
     REXX_METHOD(size_cx,                        size_cx),

@@ -240,6 +240,7 @@
 ::attribute bottom set external "LIBRARY oodialog rect_setBottom"
 
 ::class 'Point' public
+::method init class external "LIBRARY oodialog point_init_cls"
 ::method init external "LIBRARY oodialog point_init"
 ::attribute x get external "LIBRARY oodialog point_x"
 ::attribute x set external "LIBRARY oodialog point_setX"
@@ -247,8 +248,9 @@
 ::attribute y set external "LIBRARY oodialog point_setY"
 ::method '+' external "LIBRARY oodialog point_add"
 ::method '-' external "LIBRARY oodialog point_subtract"
-::method 'incr' external "LIBRARY oodialog point_incr"
-::method 'decr' external "LIBRARY oodialog point_decr"
+::method incr external "LIBRARY oodialog point_incr"
+::method decr external "LIBRARY oodialog point_decr"
+::method inRect external "LIBRARY oodialog point_inRect"
 
 ::class 'Size' public
 ::method init class external "LIBRARY oodialog size_init_cls"

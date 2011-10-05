@@ -1518,17 +1518,15 @@ PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, size_t argPos)
 }
 
 
-RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y)
+RexxObjectPtr rxNewPoint(RexxThreadContext *c, long x, long y)
 {
-    RexxObjectPtr point = NULL;
-    RexxClassObject PointClass = rxGetContextClass(c, "POINT");
-    if ( PointClass != NULL )
-    {
-        point = c->SendMessage2(PointClass, "NEW", c->WholeNumber(x), c->WholeNumber(y));
-    }
-    return point;
+    return c->SendMessage2(ThePointClass, "NEW", c->WholeNumber(x), c->WholeNumber(y));;
 }
 
+RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y)
+{
+    return rxNewPoint(c->threadContext, x, y);
+}
 
 PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, size_t argPos)
 {

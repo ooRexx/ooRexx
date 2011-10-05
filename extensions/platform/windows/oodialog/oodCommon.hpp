@@ -127,6 +127,7 @@ extern bool       requiredComCtl32Version(RexxMethodContext *context, const char
 extern bool       requiredComCtl32Version(RexxMethodContext *context, DWORD minimum, const char *msg);
 
 extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, size_t argPos);
+extern RexxObjectPtr rxNewPoint(RexxThreadContext *c, long x, long y);
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
 extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, size_t argPos);
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b);

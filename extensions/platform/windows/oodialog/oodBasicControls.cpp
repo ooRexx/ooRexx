@@ -49,6 +49,7 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
+#include "oodMessaging.hpp"
 #include "oodResources.hpp"
 
 
@@ -1530,6 +1531,250 @@ RexxMethod2(RexxObjectPtr, e_noContextMenu, OPTIONAL_logical_t, undo, CSELF, pCS
     }
 
     result = TheTrueObj;
+
+done_out:
+    return result;
+}
+
+/**
+ * Convenience function to free the subclass data used for a mouse wheel event.
+ *
+ * @param pData  Struct to feee, may be NULL.
+ */
+static void freeMouseWheelData(SUBCLASSDATA *pData)
+{
+    if ( pData != NULL )
+    {
+        PMOUSEWHEELDATA  mwd = (PMOUSEWHEELDATA)pData->pData;
+        if ( mwd != NULL )
+        {
+            safeLocalFree(mwd->method);
+            LocalFree(mwd);
+        }
+        LocalFree(pData);
+    }
+}
+
+/**
+ * Subclass window procedure for an edit control that prevents the edit control
+ * from handling the WM_MOUSEWHEEL message.
+ *
+ * Normally, a multi-line edit control processes the WM_MOUSEWHEEL and scrolls
+ * the text appropriately.  This prevents the Rexx programmer from doing any
+ * custom handling of the message.  The message never makes it to the dialog
+ * procedure.
+ *
+ * Here, we prevent the edit window from receiving the message by either passing
+ * the message on to DefWindowProc() or returning TRUE.
+ *
+ * When the message is passed on to DefWindowProc(), it gets sent on to the
+ * dialog window procedure.  However, if the Rexx programmer specified an event
+ * handler, (by specifying the event handler method,) we inovke the Rexx dialog
+ * method directly using mouseWheelNotify()
+ *
+ * Note that mouseWheelNotify() returns true for success and false if a
+ * condition was raised in the Rexx event handler.  If a condition was raised,
+ * the condition message is printed to the screen, but not, at this time,
+ * cleared.  For now we just ignore the return from mouseWheelNotify().
+ *
+ *
+ * @param hwnd
+ * @param msg
+ * @param wParam
+ * @param lParam
+ * @param id
+ * @param dwData
+ *
+ * @return LRESULT CALLBACK
+ */
+LRESULT CALLBACK EditMouseWheelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
+{
+    switch ( msg )
+    {
+        case WM_MOUSEWHEEL:
+        {
+            PMOUSEWHEELDATA mwd = (PMOUSEWHEELDATA)((SUBCLASSDATA *)dwData)->pData;
+
+            // Do not let the edit control handle get the mouse wheel message.
+            if ( mwd == NULL )
+            {
+                return DefWindowProc(hwnd, msg, wParam, lParam);
+            }
+            else
+            {
+                mouseWheelNotify(mwd, wParam, lParam);
+                return TRUE;
+            }
+        }
+
+        case WM_NCDESTROY:
+            /* The window is being destroyed, remove the subclass, clean up
+             * memory.
+             */
+            RemoveWindowSubclass(hwnd, EditMouseWheelProc, id);
+            freeMouseWheelData((SUBCLASSDATA *)dwData);
+            break;
+    }
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+
+/** Edit::ignoreMouseWheel()
+ *
+ *  The edit control will handle the mouse wheel internally.  There are times
+ *  when the ooDialog programmer may want to handle the mouse wheel herself.
+ *
+ *  The ignoreMouseWheel method can be used to prevent the edit control from
+ *  handling the mouse wheel.
+ *
+ *  @param ignore     [optional] If true, force the edit control to ignore the
+ *                    mouse wheel.  If false, re-enable the default behavior, if
+ *                    it has been ignoring the mouse wheel.  The default is
+ *                    true.
+ *
+ *  @param method     [optional]  If a method name is used, the mouse wheel
+ *                    event notification will be sent to a method by that name
+ *                    in the edit control's parent dialog.  By defualt no method
+ *                    is invoked.
+ *
+ *  @param willReply  [optional]  If the windows message loop should wait for a
+ *                    reply.  The default is .true.
+ *
+ *
+ *  @return  True on success, false on failure.
+ *
+ *  @notes  Requires ComCtl version 6.0 or higher.
+ *
+ *          Sets the .SystemErrorCode.  These codes may be set, by the ooDialog
+ *          framework, the OS does not set any:
+ *
+ * ERROR_NOT_SUPPORTED   The request is not supported.
+ *   Meaning:  Asked to ignore the mouse wheel when it is already being ignored,
+ *             or asked to re-ennable the default behavior when it is not
+ *             disabled to begin with.
+ *
+ * ERROR_SIGNAL_REFUSED  The recipient process has refused the signal.
+ *   Meaning:  Tried to re-enable the edit control's handling of the mouse
+ *             wheel, but failed.
+ *
+ *  @remarks  The above doc is for oodialg.pdf of course.  Internally this
+ *            method is implemented by subclassing the edit control.  The
+ *            subclass swallows the WM_MOUSEWHEEL messages, and optionally sends
+ *            the message on to the dialog.
+ */
+RexxMethod4(RexxObjectPtr, e_ignoreMouseWheel, OPTIONAL_logical_t, ignore, OPTIONAL_CSTRING, method,
+            OPTIONAL_logical_t, willReply, CSELF, pCSelf)
+{
+    SUBCLASSDATA    *pData = NULL;
+
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr result = TheFalseObj;
+    if ( ! requiredComCtl32Version(context, "ignoreMouseWhell", COMCTL32_6_0) )
+    {
+        goto done_out;
+    }
+
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    if ( argumentOmitted(1) )
+    {
+        ignore = TRUE;
+    }
+
+    // See if the subclass is already installed.
+    BOOL success = GetWindowSubclass(pcdc->hCtrl, EditMouseWheelProc, pcdc->id, (DWORD_PTR *)&pData);
+
+    // See if we are asked to remove the subclass
+    if ( ! ignore )
+    {
+        if ( pData == NULL )
+        {
+            // The subclass is not installed, we call this an error.
+            oodSetSysErrCode(context->threadContext, ERROR_NOT_SUPPORTED);
+            goto done_out;
+        }
+
+        // pData is not null, the subclass is installed.  Remove it.
+        if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)EditMouseWheelProc, (LPARAM)pcdc->id) == 0 )
+        {
+            // The subclass is not removed, we can't free pData because the
+            // subclass procedure may (will) still access it.
+            oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        }
+        else
+        {
+            freeMouseWheelData(pData);
+            result = TheTrueObj;
+        }
+        goto done_out;
+    }
+
+    if ( pData != NULL )
+    {
+        // The subclass is already installed, we call this an error.
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_SUPPORTED);
+        goto done_out;
+    }
+
+    pData = (SUBCLASSDATA *)LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
+    if ( pData == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        goto err_out;
+    }
+
+    pData->hCtrl = pcdc->hCtrl;
+    pData->uID = pcdc->id;
+    pData->pData = NULL;
+
+    if ( argumentExists(2) && strlen(method) > 0)
+    {
+        if ( argumentOmitted(3) )
+        {
+            willReply = TRUE;
+        }
+
+        PMOUSEWHEELDATA  mwd = (PMOUSEWHEELDATA)LocalAlloc(LPTR, sizeof(MOUSEWHEELDATA));
+        if ( mwd != NULL )
+        {
+            mwd->method = (char *)LocalAlloc(LPTR, strlen(method) + 1);
+            if ( mwd->method != NULL )
+            {
+                // In order to send a message to the owner dialog from the
+                // subclass procedure we need to get the thread context stored
+                // in the owner dialog's CSelf struct.
+                pCPlainBaseDialog pcpbd = dlgToCSelf(context, pcdc->oDlg);
+
+                mwd->willReply      = willReply == TRUE ? true : false;
+                mwd->dlgProcContext = pcpbd->dlgProcContext;
+                mwd->ownerDlg = pcdc->oDlg;
+                strcpy(mwd->method, method);
+
+                pData->pData = mwd;
+            }
+        }
+
+        if ( pData->pData == NULL )
+        {
+            // One of the memory allocations failed.
+            outOfMemoryException(context->threadContext);
+            goto err_out;
+        }
+    }
+
+    if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)EditMouseWheelProc, (LPARAM)pData) == 0 )
+    {
+        // The subclass was not installed, set the error code and leave.
+        oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        goto err_out;
+    }
+
+    result = TheTrueObj;
+    goto done_out;
+
+
+err_out:
+    freeMouseWheelData(pData);
 
 done_out:
     return result;

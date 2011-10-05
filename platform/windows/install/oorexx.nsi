@@ -555,6 +555,12 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.rc"
   ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\mouse
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.rc"
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\oleinfo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.rex"

@@ -76,5 +76,6 @@ extern void            removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
 extern RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam, bool isExtended, RexxObjectPtr rexxControl);
 
 extern MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringObject method, RexxArrayObject args);
+extern bool         mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lParam);
 
 #endif

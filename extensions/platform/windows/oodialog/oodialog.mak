@@ -83,9 +83,9 @@ OODCONTROL_SOURCEF = $(OR_OUTDIR)\oodBarControls.obj $(OR_OUTDIR)\oodBaseDialog.
                      $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oodViewControls.obj
 
 # All Source files that include oodMessaging.hpp
-OODMESSAGING_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodDeviceGraphics.obj \
-                       $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR)\oodMessaging.obj \
-                       $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodUser.obj
+OODMESSAGING_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodBasicControls.obj $(OR_OUTDIR)\oodControl.obj \
+                       $(OR_OUTDIR)\oodDeviceGraphics.obj $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj        \
+                       $(OR_OUTDIR)\oodMessaging.obj $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodUser.obj
 
 # All Source files that include oodResources.hpp
 OODRESOURCES_SOURCEF = $(OR_OUTDIR)\oodBasicControls.obj $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodResources.obj \

@@ -53,6 +53,7 @@ typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
 
 enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
 
+
 // Defined in oodUser.cpp
 extern uint32_t      listViewStyle(CSTRING opts, uint32_t style);
 extern uint32_t      monthCalendarStyle(CSTRING opts, uint32_t style);
