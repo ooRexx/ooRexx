@@ -188,8 +188,8 @@
     font1 = self~createFontEx("Verdana", 12, "BOLD")  -- From the Wizard97 specification.
 
     st1 = self~newStatic(IDC_ST_INTRO_MSG)
-  st1~setFont(font1)
-  st1~setText(msg)
+    st1~setFont(font1)
+    st1~setText(msg)
 
     info = "This wizard will help you select a ticket, or tickets, for the movie(s) of your choice.  For each" -
            "ticket you will specify the theater and time for the movie you wish to see." || .endOfLine~copies(2) || -
@@ -199,6 +199,9 @@
 
     msg = "Select the Next button to continue"
     self~newStatic(IDC_ST_INTRO_LAST_MSG)~setText(msg)
+
+::method initAutoDetection
+  self~noAutoDetection
 
 
 -- MoviesDlg
