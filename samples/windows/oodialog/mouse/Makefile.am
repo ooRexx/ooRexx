@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,10 +37,7 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= bmp controls examples menus mouse oleinfo ooRexxTry rc res simple sysinfo tutorial userGuide wav winsystem
-DIST_SUBDIRS 	= bmp controls examples menus mouse oleinfo ooRexxTry rc res simple sysinfo tutorial userGuide wav winsystem
-
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
-EXTRA_DIST = *.rex *.h *.inp *.ico
+EXTRA_DIST = *.rex *.rc *.h
 
