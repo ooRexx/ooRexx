@@ -804,7 +804,7 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
             _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
             break;
 
-        case '\0' :
+        case 'F' :
         default :
             _snprintf(buf, sizeof(buf), "ooDialog Version %u.%u.%u.%u (an ooRexx Windows Extension)",
                       ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);

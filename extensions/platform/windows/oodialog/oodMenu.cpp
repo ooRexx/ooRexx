@@ -2468,7 +2468,7 @@ RexxObjectPtr newPopupFromHandle(RexxMethodContext *c, HMENU hPopup, RexxObjectP
         goto done_out;
     }
 
-    RexxArrayObject args = c->ArrayOfFour(subMenuID, self, TheZeroObj, c->NewPointer(hPopup));
+    RexxArrayObject args = c->ArrayOfThree(subMenuID, TheZeroObj, c->NewPointer(hPopup));
     RexxObjectPtr popupMenu = c->SendMessage(popupClass, "NEW", args);
     if ( popupMenu == NULLOBJECT )
     {
