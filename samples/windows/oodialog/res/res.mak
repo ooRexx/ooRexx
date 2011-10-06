@@ -39,7 +39,7 @@
 
 rcflags_common = /DWIN32 /v
 
-all:  oopet.dll oowalk2.dll PropertySheetDemo.dll
+all:  oopet.dll oowalk2.dll PropertySheetDemo.dll TabOwnerDemo.dll
 
 oopet.dll: oopet.res
     link $(@B).res /NOENTRY /DLL -out:$(@B).dll
@@ -48,6 +48,9 @@ oowalk2.dll: oowalk2.res
     link $(@B).res /NOENTRY /DLL -out:$(@B).dll
 
 PropertySheetDemo.dll: PropertySheetDemo.res
+    link $(@B).res /NOENTRY /DLL -out:$(@B).dll
+
+TabOwnerDemo.dll: TabOwnerDemo.res
     link $(@B).res /NOENTRY /DLL -out:$(@B).dll
 
 # Create .res from .rc
@@ -59,3 +62,6 @@ oowalk2.res: ..\rc\walker.rc
 
 PropertySheetDemo.res: ..\rc\PropertySheetDemo.rc
         rc $(rcflags_common) -r -fo$(@B).res ..\rc\PropertySheetDemo.rc
+
+TabOwnerDemo.res: ..\rc\TabOwnerDemo.rc
+        rc $(rcflags_common) -r -fo$(@B).res ..\rc\TabOwnerDemo.rc
