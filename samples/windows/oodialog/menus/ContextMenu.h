@@ -51,6 +51,8 @@
 #define IDM_LV_JUMBLE                           20002
 #define IDM_LV_REVERSE                          20003
 #define IDM_LV_SEP1                             20004
-#define IDM_LV_FNAME                            20005
-#define IDM_LV_LNAME                            20006
-#define IDM_LV_PROFESSION                       20007
+#define IDM_LV_SEP2                             20005
+#define IDM_LV_FNAME                            20006
+#define IDM_LV_LNAME                            20007
+#define IDM_LV_PROFESSION                       20008
+#define IDM_LV_RESTORE                          20009
