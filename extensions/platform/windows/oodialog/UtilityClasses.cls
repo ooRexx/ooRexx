@@ -207,6 +207,24 @@
 ::method threadID class external "LIBRARY oodialog dlgutil_threadID_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
+::class 'SPI' public
+::method init class external "LIBRARY oodialog spi_init_cls"
+::attribute updateFlag get class external "LIBRARY oodialog spi_getUpdateFlag_cls"
+::attribute updateFlag set class external "LIBRARY oodialog spi_setUpdateFlag_cls"
+
+::attribute wheelScrollLines get class external "LIBRARY oodialog spi_getWheelScrollLines_cls"
+::attribute wheelScrollLines set class external "LIBRARY oodialog spi_setWheelScrollLines_cls"
+::attribute workArea get class external "LIBRARY oodialog spi_getWorkArea_cls"
+::attribute workArea set class external "LIBRARY oodialog spi_setWorkArea_cls"
+
+::class 'SM' public
+::attribute cMouseButtons get class external "LIBRARY oodialog sm_cMouseButtons_cls"
+::attribute cxCursor get class external      "LIBRARY oodialog sm_cxCursor_cls"
+::attribute cxVscroll get class external     "LIBRARY oodialog sm_cxVScroll_cls"
+::attribute cyCaption get class external     "LIBRARY oodialog sm_cyCaption_cls"
+::attribute cyCursor get class external      "LIBRARY oodialog sm_cyCursor_cls"
+::attribute cyHscroll get class external     "LIBRARY oodialog sm_cyHScroll_cls"
+
 ::class 'OS' public
 ::method is64bit class external "LIBRARY oodialog os_is64bit"
 ::method is32on64bit class external "LIBRARY oodialog os_is32on64bit"

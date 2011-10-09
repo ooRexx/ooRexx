@@ -424,6 +424,23 @@ REXX_METHOD_PROTOTYPE(os_is64bit);
 REXX_METHOD_PROTOTYPE(os_is32on64bit);
 REXX_METHOD_PROTOTYPE(os_isVersion);
 
+// SPI
+REXX_METHOD_PROTOTYPE(spi_init_cls);
+REXX_METHOD_PROTOTYPE(spi_getUpdateFlag_cls);
+REXX_METHOD_PROTOTYPE(spi_setUpdateFlag_cls);
+REXX_METHOD_PROTOTYPE(spi_getWorkArea_cls);
+REXX_METHOD_PROTOTYPE(spi_setWorkArea_cls);
+REXX_METHOD_PROTOTYPE(spi_getWheelScrollLines_cls);
+REXX_METHOD_PROTOTYPE(spi_setWheelScrollLines_cls);
+
+// SM
+REXX_METHOD_PROTOTYPE(sm_cMouseButtons_cls);
+REXX_METHOD_PROTOTYPE(sm_cxCursor_cls);
+REXX_METHOD_PROTOTYPE(sm_cxVScroll_cls);
+REXX_METHOD_PROTOTYPE(sm_cyCaption_cls);
+REXX_METHOD_PROTOTYPE(sm_cyCursor_cls);
+REXX_METHOD_PROTOTYPE(sm_cyHScroll_cls);
+
 // ResourceUtils
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveIconID_pvt);
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveResourceID);
@@ -1205,9 +1222,27 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(app_defaultFont,                app_defaultFont),
     REXX_METHOD(app_setDefaults,                app_setDefaults),
 
+    // OS
     REXX_METHOD(os_is64bit,                     os_is64bit),
     REXX_METHOD(os_is32on64bit,                 os_is32on64bit),
     REXX_METHOD(os_isVersion,                   os_isVersion),
+
+    // SPI
+    REXX_METHOD(spi_init_cls,                   spi_init_cls),
+    REXX_METHOD(spi_getUpdateFlag_cls,          spi_getUpdateFlag_cls),
+    REXX_METHOD(spi_setUpdateFlag_cls,          spi_setUpdateFlag_cls),
+    REXX_METHOD(spi_getWorkArea_cls,            spi_getWorkArea_cls),
+    REXX_METHOD(spi_setWorkArea_cls,            spi_setWorkArea_cls),
+    REXX_METHOD(spi_getWheelScrollLines_cls,    spi_getWheelScrollLines_cls),
+    REXX_METHOD(spi_setWheelScrollLines_cls,    spi_setWheelScrollLines_cls),
+
+    // SM
+    REXX_METHOD(sm_cMouseButtons_cls,           sm_cMouseButtons_cls),
+    REXX_METHOD(sm_cxCursor_cls,                sm_cxCursor_cls),
+    REXX_METHOD(sm_cxVScroll_cls,               sm_cxVScroll_cls),
+    REXX_METHOD(sm_cyCaption_cls,               sm_cyCaption_cls),
+    REXX_METHOD(sm_cyCursor_cls,                sm_cyCursor_cls),
+    REXX_METHOD(sm_cyHScroll_cls,               sm_cyHScroll_cls),
 
     REXX_METHOD(rsrcUtils_resolveIconID_pvt,    rsrcUtils_resolveIconID_pvt),
     REXX_METHOD(rsrcUtils_resolveResourceID,    rsrcUtils_resolveResourceID),

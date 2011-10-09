@@ -1004,6 +1004,18 @@ done_out:
     return result;
 }
 
+RexxObjectPtr SPI_getWorkArea(RexxMethodContext *c)
+{
+    oodResetSysErrCode(c->threadContext);
+
+    RECT r = {0};
+    if ( ! SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0) )
+    {
+        oodSetSysErrCode(c->threadContext);
+    }
+
+    return rxNewRect(c, &r);
+}
 
 /** DlgUtil::screenArea()  [class method]
  *
@@ -1014,18 +1026,12 @@ done_out:
  *  @return  The work area as a .Rect object.
  *
  *  @note Sets the .SystemErrorCode.
+ *
+ *        This method is the same as the .SPI~workArea get attribute.
  */
 RexxMethod0(RexxObjectPtr, dlgutil_screenArea_cls)
 {
-    oodResetSysErrCode(context->threadContext);
-    RexxMethodContext *c = context;
-    RECT r = {0};
-    if ( ! SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0) )
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
-
-    return rxNewRect(context, &r);
+    return SPI_getWorkArea(context);
 }
 
 /**
@@ -1060,6 +1066,175 @@ RexxMethod3(uint32_t, dlgutil_test_cls, POINTERSTRING, hwnd, POINTERSTRING, hwnd
         return GetLastError();
     }
     return 0;
+}
+
+/**
+ *  Methods for the .SPI (SystemParametersInfo) class.
+ */
+#define SPI_CLASS        "SPI"
+
+
+/** SPI::new()
+ *
+ *  Sets up the CSelf for the .SPI class object.
+ *
+ */
+RexxMethod1(RexxObjectPtr, spi_init_cls, OSELF, self)
+{
+    RexxBufferObject obj = context->NewBuffer(sizeof(CSpi));
+    context->SetObjectVariable("CSELF", obj);
+
+    pCSpi spi = (pCSpi)context->BufferData(obj);
+    spi->fWinIni = 0;
+
+    return NULLOBJECT;
+}
+
+
+/** SPI::updateFlag  [class attribute get]
+ *
+ */
+RexxMethod1(RexxStringObject, spi_getUpdateFlag_cls, CSELF, pCSelf)
+{
+    char *flag;
+    switch ( ((pCSpi)pCSelf)->fWinIni )
+    {
+        case SPIF_UPDATEINIFILE :
+            flag = "UpdateProfile";
+            break;
+        case SPIF_SENDCHANGE :
+            flag = "SendChange";
+            break;
+        default :
+            flag = "None";
+            break;
+    }
+    return context->String(flag);
+}
+
+
+/** SPI::updateFlag  [class attribute set]
+ *
+ */
+RexxMethod2(RexxStringObject, spi_setUpdateFlag_cls, CSTRING, flag, CSELF, pCSelf)
+{
+    pCSpi spi = (pCSpi)pCSelf;
+
+    switch ( toupper(*flag) )
+    {
+        case 'U' :
+            spi->fWinIni = SPIF_UPDATEINIFILE;
+            break;
+        case 'S' :
+            spi->fWinIni = SPIF_SENDCHANGE;
+            break;
+        case 'N' :
+            spi->fWinIni = 0;
+            break;
+        default :
+            spi->fWinIni = 0;
+            wrongArgOptionException (context->threadContext, 1, "[U]pdateProfile, [S]endChange, or [N]one", flag);
+            break;
+
+    }
+    return NULLOBJECT;
+}
+
+
+/** SPI::workArea()  [class attribute get]
+ *
+ *  Gets the usable screen area (work area.) on the primary display monitor. The
+ *  work area is the portion of the screen not obscured by the system taskbar or
+ *  by application desktop toolbars.
+ *
+ *  @return  The work area as a .Rect object.  On error the rectangle will be
+ *           all zeros.
+ *
+ *  @note Sets the .SystemErrorCode.
+ *
+ *        The .DlgUtil screenArea() method produces the same results.
+ */
+RexxMethod0(RexxObjectPtr, spi_getWorkArea_cls)
+{
+    return SPI_getWorkArea(context);
+}
+
+
+RexxMethod2(RexxObjectPtr, spi_setWorkArea_cls, RexxObjectPtr, rect, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    PRECT r = rxGetRect(context, rect, 1);
+    if ( r != NULL )
+    {
+        if ( ! SystemParametersInfo(SPI_SETWORKAREA, 0, &r, ((pCSpi)pCSelf)->fWinIni) )
+        {
+            oodSetSysErrCode(context->threadContext);
+        }
+    }
+
+    return NULLOBJECT;
+}
+
+
+RexxMethod0(uint32_t, spi_getWheelScrollLines_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    uint32_t lines = 0;
+    if ( ! SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &lines, 0) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return lines;
+}
+
+RexxMethod2(RexxObjectPtr, spi_setWheelScrollLines_cls, uint32_t, lines, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    uint32_t fWinIni = ((pCSpi)pCSelf)->fWinIni;
+    fWinIni = SPIF_SENDCHANGE | SPIF_UPDATEINIFILE;
+
+    if ( ! SystemParametersInfo(SPI_SETWHEELSCROLLLINES, lines, NULL, fWinIni) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return NULLOBJECT;
+}
+
+
+/**
+ *  Methods for the .SM class.
+ *
+ *  Notes: GetLastError() does NOT provide extended error information.
+ *         All heights and widths are in pixels
+ *         All true / false metrics are 0 for false, non-zero for true.
+ */
+#define SM_CLASS        "SM"
+
+RexxMethod0(int32_t, sm_cMouseButtons_cls)
+{
+    return GetSystemMetrics(SM_CMOUSEBUTTONS);
+}
+RexxMethod0(int32_t, sm_cxCursor_cls)
+{
+    return GetSystemMetrics(SM_CXCURSOR);
+}
+RexxMethod0(int32_t, sm_cxVScroll_cls)
+{
+    return GetSystemMetrics(SM_CXVSCROLL);
+}
+RexxMethod0(int32_t, sm_cyCaption_cls)
+{
+    return GetSystemMetrics(SM_CYCAPTION);
+}
+RexxMethod0(int32_t, sm_cyHScroll_cls)
+{
+    return GetSystemMetrics(SM_CYHSCROLL);
+}
+RexxMethod0(int32_t, sm_cyCursor_cls)
+{
+    return GetSystemMetrics(SM_CYCURSOR);
 }
 
 /**

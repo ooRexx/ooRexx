@@ -796,6 +796,17 @@ typedef struct _amCSelf {
 } CApplicationManager;
 typedef CApplicationManager *pCApplicationManager;
 
+
+/* Struct for the SPI class object CSelf. */
+typedef struct _spiCSelf {
+    // Flag used when setting a system parameter to have the setting written to
+    // the user profile.  And possibly broadcasts the WM_SETTINGSCHANGE message
+    // after updating the user profile.
+    uint32_t  fWinIni;
+} CSpi;
+typedef CSpi *pCSpi;
+
+
 #define COMCTL32_VERSION_STRING_LEN  31
 
 // All global variables are defined in oodPackageEntry.cpp
