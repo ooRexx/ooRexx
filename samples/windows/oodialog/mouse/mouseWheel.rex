@@ -51,8 +51,27 @@
  *  turning the mouse scroll wheel, the text is scrolled 3 lines instead of 1.
  *  If the control key is down, the text is scrolled 1 page and if both the
  *  shift and control keys are down, the text is scrolled 3 pages.
+ *
+ *  The Help button in the dialog displays text explaining the dialog.  Use the
+ *  help button to see the expected behavior of the dialog and compare the
+ *  behavior with the implementing code in this file.
  */
 
+  -- When programmers wish to use symbolic resource IDs in their programs, as
+  -- this program does, it is much easier to use the global constant directory,
+  -- (.constDir,) rather than the constDir attribute of a dialog.  Using the
+  -- .constDir Only is by far the most efficient way to use symbolic IDs.
+  --
+  -- The use of the global constant directory is controlled by the .Application
+  -- object.  The .Application object is also used to set other application-wide
+  -- defaults or values.  In this program, we also want to make the default for
+  -- automatic data detection to be off.  Both of these requirements can be done
+  -- with one method call to the .Application object.  As a convenience, the
+  -- setDefaults() method will also populate the .constDir with symbols.
+  --
+  -- In this invokcation, the application is set to use the .constDir only, "O",
+  -- symbols are loaded into the .constDir from the file: ContextMenu.h, and the
+  -- default for automatic data detection is set to off (.false.)
 .application~setDefaults('O', 'mouseWheel.h', .false)
 
 dlg = .MouseDemo~new("mouseWheel.rc", IDD_MOUSE_DLG)
@@ -71,24 +90,56 @@ return 0
 
 ::class 'MouseDemo' subclass RcDialog
 
+/** initDialog()
+ *
+ * The ooDialog framework automatically invokes the initDialog() method
+ * immediately after the underlying Windows dialog is created.  This makes it
+ * the correct place to do any initialization that requires the underlying
+ * dialog and dialog controls to exist.
+ *
+ * This is a typical initDialog(), but take note of these points.  The mouse
+ * wheel event notification is sent by the operating system to the window with
+ * the current input focus.  If the window does not process the message, then
+ * the OS sends the message to the parent window of that window.  This continues
+ * on up the parent / child window chain until either a window does process the
+ * notification or the top of the chain is reached.
+ *
+ * Multi-line edit controls *do* process the notification and normally handle
+ * their own scrolling.  Because of this, if the multi-line edit control in this
+ * dialog has the focus, our dialog will never get the notification.  (Single-
+ * line edit controls do not handle the notification.)
+ *
+ * By using the ignoreMouseWheel() method of the Edit class, we force the under-
+ * lying edit control to not process the mouse wheel event notification.  So
+ * that we can process it in this dialog.  This allows all mouse wheel events to
+ * reach this dialog.
+ */
 ::method initDialog
   expose eData pbOk eCommand process
 
+  -- Connect the help key event to our onHelp() method.
   self~connectHelp(onHelp)
 
   eData = self~newEdit(IDC_EDIT_DATA)
 
-  -- Disable the edit control's handling of the mouse wheel message, and invoke
-  -- our onEditMouseWheel method.  Note that onEditMouseWheel will only be
-  -- invoked when the IDC_EDIT_DATA edit control has the focus.
+  -- Disable the edit control's handling of the mouse wheel message.  The second
+  -- opitonal argument tells the edit control to directly invoke a method in the
+  -- owner dialog.  In this case we specify the onEditMouseWheel() method.
+  --
+  -- Note that onEditMouseWheel() method will only be invoked when the
+  -- IDC_EDIT_DATA edit control has the focus.
   eData~ignoreMouseWheel( , onEditMouseWheel)
 
-  -- Connect all mouse wheel events to our method, (the default method name is
-  -- is onMouseWheel.)  Note that this method will never be invoked if the
+  -- Connect all mouse wheel events that reach the dialog to a method in this
+  -- dialog.  The default method name is onMouseWheel, so we omit the arugment
+  -- and name our method onMousWheel.
+  --
+  -- Note that this onMouseWheel() method will never be invoked if the
   -- IDC_EDIT_DATA edit control has the focus.
   self~connectMouseWheel
 
-  -- Set up the radio buttons
+  -- Set up the radio buttons, connect a click event on any of them to our
+  -- single onRbSelect() method.
   self~connectButtonEvent(IDC_RB_ANYWHERE        , 'CLICKED', onRbSelect)
   self~connectButtonEvent(IDC_RB_DIALOG          , 'CLICKED', onRbSelect)
   self~connectButtonEvent(IDC_RB_ON_EDIT_OK      , 'CLICKED', onRbSelect)
@@ -96,13 +147,13 @@ return 0
   self~connectButtonEvent(IDC_RB_FOCUSED_DIALOG  , 'CLICKED', onRbSelect)
   self~connectButtonEvent(IDC_RB_FOCUSED_EDIT    , 'CLICKED', onRbSelect)
 
+  -- Set the initial checked state to the 'Mouse is anywhere' radio button.
   self~newRadioButton(IDC_RB_ANYWHERE)~check
   process = "ANYWHERE"
 
   -- Save a reference to the ok push button and the single-line edit control.
   pbOk = self~newPushButton(IDOK)
   eCommand = self~newEdit(IDC_EDIT_COMMAND)
-
 
   -- Fill the edit control with data so we can see the scrolling.
   text = ''
@@ -111,12 +162,58 @@ return 0
   end
   eData~setText(text)
 
+
+/** onMouseWheel()
+ *
+ * This is an event handler for the mouse wheel event.  Three arguments are
+ * sent to the event handler by the ooDialog framework.
+ *
+ * @param  delta  A whole number that represents the amount the scroll wheel was
+ *                turned.  The number will always be a multiple of 120 because
+ *                that is what the operating system sends.  If the number is
+ *                positive, the user turned the wheel away from herself and
+ *                indicates to scroll up.  When negative the user turned the
+ *                wheel towards himself, and indicates to scroll down.
+ *
+ *                At this point in time (c. 2011) the OS sends the event
+ *                notification for each notch of the scroll wheel and so delta
+ *                will always be 120 or -120.
+ *
+ * @param  state  A list of keywords that indicate the keyboard and mouse button
+ *                modifiers.  The list of possible words is exactly:
+ *
+ *                None Control lButton mButton rButton Shift xButton1 xButton2
+ *
+ *                The none keyword will always be by itself, otherwise, the list
+ *                can consist of one or more of the keywords.
+ *
+ * @param pos     A .Point object that represents the position of the mouse
+ *                pointer on the screen.  This is in screen co-ordinates, in
+ *                pixels.
+ *
+ * Because of the 2 connectMouseWheel() calls in initDialog() the method will
+ * only be called when the dialog is the active window and the multi-line edit
+ * control does *not* have the focus.  We simply delegate to the maybeScroll()
+ * method, passing on the 3 arguments and .false to indicate the edit control
+ * does not have the focus.
+ */
 ::method onMouseWheel unguarded
   use arg delta, state, pos
 
   return self~maybeScroll(delta, state, pos, .false)
 
 
+/** onEditMouseWheel
+ *
+ * This is an event handler for the mouse wheel event.  The arguments are
+ * explained in the comment header for onMouseWheel().
+ *
+ * Because of the 2 connectMouseWheel() calls in initDialog() this method will
+ * *only* be called when the edit control has the focus.
+ *
+ * We simply delegate to the maybeScroll() method, passing on the 3 arguments
+ * and .true to indicate the edit control has the focus.
+ */
 ::method onEditMouseWheel unguarded
   use arg delta, state, pos
 
@@ -142,6 +239,11 @@ return 0
   -- End select
 
 
+/** scrollOnDialog()
+ *
+ * Determines if the position of the cursor (pos) is over the dialog window.  If
+ * it is, we scroll, otherwise we do not scroll.
+ */
 ::method scrollOnDialog private
   use strict arg delta, state, pos
 
@@ -149,6 +251,11 @@ return 0
 
   return 0
 
+/** scrollOnEdit()
+ *
+ * Determines if the position of the cursor (pos) is over the multi-line edit
+ * control.  If it is, we scroll, otherwise we do not scroll.
+ */
 ::method scrollOnEdit private
   expose eData
   use strict arg delta, state, pos
@@ -158,18 +265,35 @@ return 0
   return 0
 
 
+/** scrollOnControls()
+ *
+ * Determines if the position of the cursor (pos) is over one of the edit
+ * controls, or over the Ok button.  If it is, we scroll, otherwise we do not
+ * scroll.
+ */
 ::method scrollOnControls private
   expose eData pbOk eCommand
   use strict arg delta, state, pos
 
-  if pos~inRect(eData~windowRect) then return self~scroll(delta, state)
-  if pos~inRect(eCommand~windowRect) then return self~scroll(delta, state)
-  if pos~inRect(pbOk~windowRect) then return self~scroll(delta, state)
+  if pos~inRect(eData~windowRect) | pos~inRect(eCommand~windowRect) | -
+     pos~inRect(pbOk~windowRect) then do
+       return self~scroll(delta, state)
+  end
 
   return 0
 
 
-
+/** scroll()
+ *
+ * This private method is where the scrolling is actually done.  It is called
+ * by other methods that have determined the mouse is in the correct place for
+ * scrolling to happen.  delta and state are the orignal arguments sent to the
+ * mouse wheel event handler.  See onMouseWheel() and onEditMouseWheel() for
+ * the explanation of the arguments.
+ *
+ * Based on the arguments, we have the edit control scroll the appropriate
+ * amount.
+ */
 ::method scroll private
   expose eData
   use strict arg delta, state
@@ -184,7 +308,7 @@ return 0
       end
 
       when state~wordPos('Control') <> 0 then do
-        -- Scroll pages down.
+        -- Scroll page down.
         eData~scrollCommand('PAGEDOWN')
       end
 
@@ -211,7 +335,7 @@ return 0
       end
 
       when state~wordPos('Control') <> 0 then do
-        -- Scroll pages down.
+        -- Scroll page down.
         eData~scrollCommand('PAGEUP')
       end
 
@@ -231,6 +355,28 @@ return 0
   return 0
 
 
+/** onRbSelect()
+ *
+ * This is the event handler for a button click on one of the radio buttons.
+ *
+ * With auto radio buttons, (which the radio buttons in this program are,) when
+ * a radio button is clicked, it is automatically set to the selected state.
+ *
+ * Each time a radio button becomes the selected button, we update the process
+ * variable.  That way 'process' always reflects which radio button is currently
+ * selected.
+ *
+ * The event handler is sent two arguments.  The first argument is a whole
+ * number containing information about the click.  Note that several button
+ * events and menu item selections generate the same event notification in
+ * Windows.  The information in the first argument allow the programmer to
+ * determine exactly what caused the event.
+ *
+ * However, the low word of the number is always the resource ID of the dialog
+ * control or menu item. The resource ID is all we need.  The second argument,
+ * for a dialog control, is the window handle of the control.  For a menu item
+ * it is always 0.
+ */
 ::method onRbSelect
   expose process
   use arg info, handle
@@ -296,7 +442,7 @@ return 0
 ::class 'MouseDemoHelp' subclass RcDialog
 
 ::method initDialog
-  expose newFont e
+  expose newFont e visibleLines
 
   -- Connect the mouse wheel event to a method in this dialog.  We don't specify
   -- a method name, we'll just accept the default name of onMouseWheel.
@@ -306,7 +452,7 @@ return 0
 
   -- Prevent the edit control from handling the mouse wheel event, but do not
   -- pass in a method name.  This causes the edit control to ignore the mouse
-  -- wheel event, to not invoke any method. The event notification will then
+  -- wheel event, and to not invoke any method. The event notification will then
   -- be passed on up the parent / child window chain until it reaches our
   -- underlying Windows dialog, where we will intercept it.
   e~ignoreMouseWheel
@@ -319,19 +465,132 @@ return 0
   e~setFont(newFont)
   e~setText(getHelpText())
 
+  -- visibleLines is the number of visible lines in the edit control.  It is
+  -- only used if the user scrolls the help text using the mouse wheel.  So, we
+  -- use lazy evaluation.  It is only calculated if needed.
+  visibleLines = 0
+
 
 /** onMouseWheel
  *
- * This is the event handler for the mouse wheel.  We connected the event to
- * this method through the connectMouseWheel() method in initDialog().
+ * This is the event handler for the mouse wheel event.  We connected the event
+ * to this method through the connectMouseWheel() method in initDialog().
  *
+ * The comment header for the onMouseWheel() event handler in the maid dialog
+ * explains the arguments in detail.
  *
+ * The system-wide wheelScrollLines parameter is used to indicate how much to
+ * scroll for 1 notch of a turn of the mouse wheel.  The system default is 3,
+ * but the user can set this to what they want.
+ *
+ * Microsoft says this about the wheel scroll lines parameter: it is the
+ * suggested number of lines to scroll when there are no modifier keys; if the
+ * value is 0, no scrolling should be done; if the value is greater than the
+ * number of visible lines, or its value is WHEEL_PAGESCROLL, it should be
+ * interpreted as clicking once in the page down or page up area of the scroll
+ * bar.
  */
 ::method onMouseWheel unguarded
-  expose e
+  expose e visibleLines
   use arg delta, state, pos
 
+  if visibleLines == 0 then visibleLines = self~calcVisibleLines(e)
 
+  if delta > 0 then direction = 'up'
+  else direction = 'down'
+
+  scrollLines = .SPI~wheelScrollLines
+
+  -- scrollLines is only meant to indicate the number of lines to scroll when
+  -- there are no modifier keys or mouse buttons.
+  if state \== 'None' then do
+    select
+      when state~wordPos("Shift") <> 0, state~wordPos('Control') <> 0 then do
+        if direction == 'up' then e~scrollCommand('PAGEUP', 3)
+        else e~scrollCommand('PAGEDOWN', 3)
+        return 0
+      end
+
+      when state~wordPos('Shift') then do
+        if direction == 'up' then e~scrollCommand('UP', 3)
+        else e~scrollCommand('DOWN', 3)
+        return 0
+      end
+
+      when state~wordPos('Control') then do
+        if direction == 'up' then e~scrollCommand('PAGEUP')
+        else e~scrollCommand('PAGEDOWN')
+        return 0
+      end
+
+      otherwise do
+        -- Some other modifier, key or mouse, is active.  There are a lot of
+        -- things we could do, but for simplicity we are going to just ignore
+        -- this.
+        return 0
+      end
+    end
+    -- End select
+  end
+
+  -- No modifiers, we use the system scroll lines value to decide how much to
+  -- scroll.
+  select
+    when scrollLines == 0 then do
+      -- Indicates to not scroll
+    end
+
+    when scrollLines == .SPI~WHEEL_PAGESCROLL then do
+      -- This setting indicates to scroll 1 page.
+      if direction == 'up' then e~scrollCommand('PAGEUP')
+      else e~scrollCommand('PAGEDOWN')
+    end
+
+    when scrollLines > visibleLines then do
+      -- Scroll 1 page.
+      if direction == 'up' then e~scrollCommand('PAGEUP')
+      else e~scrollCommand('PAGEDOWN')
+    end
+
+    otherwise do
+      -- Scroll the number of lines specified by  wheel scroll lines parameter.
+      if direction == 'up' then e~scrollCommand('UP', scrollLines)
+      else e~scrollCommand('DOWN', scrollLines)
+    end
+  end
+  -- End select
+
+  return 0
+
+
+/** caclVisibleLines()
+ *
+ * Calculates the number of visible lines in the edit control.  This is done
+ * by gettting the size of the edit control formatting rectangle in pixels and
+ * the size of a string in the edit controls in pixels.  The height of the
+ * formatting rectangle is then divided by the height of a line of text.
+ *
+ * When getting the height of a line in the edit control, any string can be used
+ * because we only need the height of the string.  The length does not matter.
+ *
+ * On my first try at this, I used the client rect of the edit control for the
+ * calculation.  But, it was off by 1.  The proper way to calculate the height
+ * is to use the formatting rectangle.  The edit control does all its drawing
+ * within that rectangle.
+ */
+::method calcVisibleLines private
+  use strict arg editCtrl
+
+  fRect = editCtrl~getRect
+
+  height     = fRect~bottom - fRect~top
+  lineHeight = editCtrl~getTextSizePX("Any string will do for this")~height
+
+  -- Note that we return a whole number here, not a fraction.  The number is
+  -- exactly the number of *whole* lines in the edit control.  Quite often in a
+  -- dialog, a multi-line edit control will contain a partial line, (as does
+  -- this dialog.)
+  return height % lineHeight
 
 /** leaving()
  *
