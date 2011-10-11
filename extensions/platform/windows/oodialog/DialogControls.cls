@@ -193,6 +193,8 @@
 ::method showBalloon unguarded external "LIBRARY oodialog e_showBallon"
 ::method getCue unguarded external "LIBRARY oodialog e_getCue"
 ::method setCue unguarded external "LIBRARY oodialog e_setCue"
+::method getRect unguarded external "LIBRARY oodialog e_getRect"
+::method setRect unguarded external "LIBRARY oodialog e_setRect"
 ::method replaceStyle unguarded external "LIBRARY oodialog e_style"
 ::method addStyle unguarded external "LIBRARY oodialog e_style"
 ::method removeStyle unguarded external "LIBRARY oodialog e_style"

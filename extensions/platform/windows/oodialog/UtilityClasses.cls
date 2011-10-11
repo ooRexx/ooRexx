@@ -208,6 +208,7 @@
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
 ::class 'SPI' public
+::constant WHEEL_PAGESCROLL   4294267295
 ::method init class external "LIBRARY oodialog spi_init_cls"
 ::attribute updateFlag get class external "LIBRARY oodialog spi_getUpdateFlag_cls"
 ::attribute updateFlag set class external "LIBRARY oodialog spi_setUpdateFlag_cls"

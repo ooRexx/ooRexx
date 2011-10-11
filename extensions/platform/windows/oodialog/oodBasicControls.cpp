@@ -2283,6 +2283,76 @@ RexxMethod1(RexxStringObject, e_getCue, CSELF, pCSelf)
 }
 
 
+/** Edit::setRect()
+ *
+ *  Sets the formatting rectangle for the edit control.
+ *
+ *  @param rect  [required]  Either a .Rect object specifying the new formatting
+ *               rectangle, or 0.  If rect is 0, the formatting rectangle is set
+ *               back to its default.
+ *
+ *  @param redraw  [optional] Specifies whether or not to have the edit control
+ *                 redraw itself.  If true, the edit controls will redraw
+ *                 itself, if false it will not redraw.  The default is true.
+ *
+ *  @return  Zero, always.
+ *
+ */
+RexxMethod3(RexxObjectPtr, e_setRect, RexxObjectPtr, rect, OPTIONAL_logical_t, redraw, CSELF, pCSelf)
+{
+    HWND hwnd = getDChCtrl(pCSelf);
+
+    if ( argumentOmitted(2) )
+    {
+        redraw = TRUE;
+    }
+
+    PRECT r = NULL;
+
+    if ( rect != TheZeroObj )
+    {
+        r = rxGetRect(context, rect, 1);
+        if ( r == NULL )
+        {
+            goto done_out;
+        }
+    }
+
+    if ( redraw )
+    {
+        SendMessage(hwnd, EM_SETRECT, 0, (LPARAM)r);
+    }
+    else
+    {
+        SendMessage(hwnd, EM_SETRECTNP, 0, (LPARAM)r);
+    }
+
+done_out:
+    return TheZeroObj;
+}
+
+
+/** Edit::getRect()
+ *
+ *  Retrieves the formatting rectangle for the edit control
+ *
+ *  @return  The cue banner text on success, or the empty string on error and if
+ *           no cue is set
+ *
+ *  @remarks  This simply does not seem to work under XP.  However, it does work
+ *            in Vista and Windows 7.
+ */
+RexxMethod1(RexxObjectPtr, e_getRect, CSELF, pCSelf)
+{
+    HWND hwnd = getDChCtrl(pCSelf);
+    RECT r;
+
+    SendMessage(hwnd, EM_GETRECT, 0, (LPARAM)&r);
+
+    return rxNewRect(context, &r);
+}
+
+
 LRESULT CALLBACK EditSizeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
 {
     switch ( msg )
