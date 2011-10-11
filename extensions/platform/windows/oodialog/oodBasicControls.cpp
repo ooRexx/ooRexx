@@ -2336,11 +2336,8 @@ done_out:
  *
  *  Retrieves the formatting rectangle for the edit control
  *
- *  @return  The cue banner text on success, or the empty string on error and if
- *           no cue is set
- *
- *  @remarks  This simply does not seem to work under XP.  However, it does work
- *            in Vista and Windows 7.
+ *  @return  The the current formatting rectangle of the edit control as a .Rect
+ *           object.
  */
 RexxMethod1(RexxObjectPtr, e_getRect, CSELF, pCSelf)
 {
