@@ -36,9 +36,9 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise06: ProductListView
-   productListView.rex -  A list of products. 			  v00-03 12Sep11
+   productListView.rex -  A list of products. 			  v00-03 12Oct11
 
-   Contains: 	   class "ProductListView.
+   Contains: 	   class "ProductListView; class HRS (for human-readable strings)
    Pre-requisites: ProductListView.rc, ProductListView.h, ProdList.ico
 
    Description: An "intermediate" component - called by OrderMgmt,
@@ -48,6 +48,7 @@
    v00-01 26Aug11.
    v00-02 19Sep11: Corrected for standalone invocation.
    v00-03 12Oct11: Added methods for menu items (show msg box - "Not Implemented")
+		   Also added calss HRS for display strings.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
