@@ -1116,7 +1116,7 @@ RexxMethod1(RexxStringObject, spi_getUpdateFlag_cls, CSELF, pCSelf)
 /** SPI::updateFlag  [class attribute set]
  *
  */
-RexxMethod2(RexxStringObject, spi_setUpdateFlag_cls, CSTRING, flag, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, spi_setUpdateFlag_cls, CSTRING, flag, CSELF, pCSelf)
 {
     pCSpi spi = (pCSpi)pCSelf;
 
@@ -1219,6 +1219,14 @@ RexxMethod0(int32_t, sm_cMouseButtons_cls)
 RexxMethod0(int32_t, sm_cxCursor_cls)
 {
     return GetSystemMetrics(SM_CXCURSOR);
+}
+RexxMethod0(int32_t, sm_cxScreen_cls)
+{
+    return GetSystemMetrics(SM_CXSCREEN);
+}
+RexxMethod0(int32_t, sm_cyScreen_cls)
+{
+    return GetSystemMetrics(SM_CYSCREEN);
 }
 RexxMethod0(int32_t, sm_cxVScroll_cls)
 {

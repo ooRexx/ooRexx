@@ -436,10 +436,12 @@ REXX_METHOD_PROTOTYPE(spi_setWheelScrollLines_cls);
 // SM
 REXX_METHOD_PROTOTYPE(sm_cMouseButtons_cls);
 REXX_METHOD_PROTOTYPE(sm_cxCursor_cls);
+REXX_METHOD_PROTOTYPE(sm_cxScreen_cls);
 REXX_METHOD_PROTOTYPE(sm_cxVScroll_cls);
 REXX_METHOD_PROTOTYPE(sm_cyCaption_cls);
 REXX_METHOD_PROTOTYPE(sm_cyCursor_cls);
 REXX_METHOD_PROTOTYPE(sm_cyHScroll_cls);
+REXX_METHOD_PROTOTYPE(sm_cyScreen_cls);
 
 // ResourceUtils
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveIconID_pvt);
@@ -1241,10 +1243,12 @@ RexxMethodEntry oodialog_methods[] = {
     // SM
     REXX_METHOD(sm_cMouseButtons_cls,           sm_cMouseButtons_cls),
     REXX_METHOD(sm_cxCursor_cls,                sm_cxCursor_cls),
+    REXX_METHOD(sm_cxScreen_cls,                sm_cxScreen_cls),
     REXX_METHOD(sm_cxVScroll_cls,               sm_cxVScroll_cls),
     REXX_METHOD(sm_cyCaption_cls,               sm_cyCaption_cls),
     REXX_METHOD(sm_cyCursor_cls,                sm_cyCursor_cls),
     REXX_METHOD(sm_cyHScroll_cls,               sm_cyHScroll_cls),
+    REXX_METHOD(sm_cyScreen_cls,                sm_cyScreen_cls),
 
     REXX_METHOD(rsrcUtils_resolveIconID_pvt,    rsrcUtils_resolveIconID_pvt),
     REXX_METHOD(rsrcUtils_resolveResourceID,    rsrcUtils_resolveResourceID),
