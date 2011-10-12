@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The CustomerView component             		  v00-06 17Aug11
+   Exercise 04: The CustomerView component             		  v00-07 04Oct11
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -52,6 +52,7 @@
    v00-06 17Aug11: Changed to .Application~setDefaults in newInstance method,
                    and deleted autoDetection methods - not now needed as turn
                    off autoDetection in .Application~setDefaults().
+   v00-07 Ex04 04Oct11: Added msgbox for unimplemented menu items.
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -177,6 +178,13 @@
     orderDate="31/12/11";   orderNum = "ZZ999";   orderTotal = "$999.99"
     lastOrder = orderDate "   " orderNum "   " orderTotal
     custControls[stLastOrder]~setText(lastOrder)
+
+
+  /*-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Print - Not implemented yet                                             --*/
+  ::METHOD print unguarded
+    msg = "The 'Print...' menu item is not yet implemented."
+    ret = MessageDialog(msg, self~hwnd, '*CustomerName*', 'WARNING')
 
 
   /*----------------------------------------------------------------------------

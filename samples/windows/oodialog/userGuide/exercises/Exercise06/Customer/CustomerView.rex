@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The CustomerView component             		  v02-01 18Sep11
+   Exercise 06: The CustomerView component             		  v02-02 10Oct11
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -47,6 +47,7 @@
    Changes:
    v02-00 06Sep11.
    v02-01 18Sep11: Corrected stand-alone invocation.
+   v02-02 10Oct11: Corrected msgbox text when select "Show Cust List".
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -55,7 +56,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerView							  v00-08 19Sep11
+  CustomerView							  v00-09 04Oct11
   -------------
   The "view" (or "gui") part of the Customer component - part of the sample
   Order Management application.
@@ -69,6 +70,7 @@
     v00-05: Modified to use CustomerData and CustomerModel classes.
     v00-07: Added "newInstance" class method - removed routine "StartCustomerView".
     v00-08 19Sep11: Corrected for stand-alone invocation.
+    v00-09 04Oct11: Added msgbox for unimplemented menu item.
 
   [interface (idl format)]
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -164,11 +166,8 @@
     New Customer... Not fully implemented - merely tells user to use the
                     Customer List object.           		            --*/
   ::METHOD newCustomer unguarded
-    msg = "You must use the Customer List to create a new Customer."||.endofline||,
-          "Would you like to open the Customer List now?"
-    hwnd = self~dlgHandle
-    answer = MessageDialog(msg,hwnd,"Create New Customer","YESNO","WARNING","DEFBUTTON2 APPLMODAL")
-    if answer = 6 then say "CustomerView-newCustomer-01: Customer List invocation not yet implemented."
+    msg = "You must use the Customer List to create a new Customer."
+    answer = MessageDialog(msg, self~hwnd,"Create New Customer","INFORMATION")
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -194,6 +193,13 @@
     orderDate="31/12/11";   orderNum = "ZZ999";   orderTotal = "$999.99"
     lastOrder = orderDate "   " orderNum "   " orderTotal
     custControls[stLastOrder]~setText(lastOrder)
+
+
+  /*-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Print - Not implemented yet                                             --*/
+  ::METHOD print unguarded
+    msg = "The 'Print...' menu item is not yet implemented."
+    ret = MessageDialog(msg, self~hwnd, '*CustomerName*', 'WARNING')
 
 
   /*----------------------------------------------------------------------------

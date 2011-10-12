@@ -35,7 +35,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-
 #ifndef IDC_STATIC
 #define IDC_STATIC (-1)
 #endif
@@ -46,5 +45,4 @@
 #define IDC_CUSTLIST_LIST                       1001
 #define IDM_CUSTLIST_NEWCUST                    40000
 #define IDC_CUSTLIST_SHOWCUST                   40001
-#define IDM_CUSTLIST_ABOUT                      40001
-
+#define IDM_CUSTLIST_ABOUT                      40002

@@ -83,4 +83,4 @@ FONT 8, "Ms Shell Dlg"
 
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_ORDFORM_DLGICON ICON           ".\\bmp\\OrderForm.ico"
+IDI_ORDFORM_DLGICON ICON           ".\\Order\\bmp\\OrderForm.ico"

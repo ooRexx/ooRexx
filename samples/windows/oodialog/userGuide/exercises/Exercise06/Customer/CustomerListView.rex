@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The CustomerListView class
-   CustomerList.rex 						  v01-01 19Sep11
+   CustomerList.rex 						  v01-02 12Oct11
 
    Contains: class "CustomerListView"
    Pre-requisite files: CustomerListView.rc, CustomerListView.h.
@@ -50,6 +50,9 @@
 
    v01-00 10Sep11: First Version
    v01-01 19Sep11: Corrected for stand-alone invocation.
+   v01-02 12Oct11: Tidy up code.
+   		   Added code to catch menu selections - displays "no function"
+   		   msg box.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
@@ -76,6 +79,10 @@
     Instance Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+  /*----------------------------------------------------------------------------
+    Dialog Setup Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
   ::METHOD init
     forward class (super) continue
     if \ self~createMenuBar then do		-- if there was a problem
@@ -94,7 +101,7 @@
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD activate unguarded
+  ::METHOD activate UNGUARDED
     expose rootDlg
     use arg rootDlg
     say "CustomerListView-activate-01: root =" rootDlg
@@ -120,8 +127,8 @@
     lvCustomers~insertColumnPX(0,"Number",60,"LEFT")
     lvCustomers~insertColumnPX(1,"Name",220,"LEFT")
     lvCustomers~insertColumnPX(2,"Zip",80,"LEFT")
-    self~connectListViewEvent("IDC_CUSTLIST_LIST","CLICK",itemSelected)
-    self~connectListViewEvent("IDC_CUSTLIST_LIST","ACTIVATE",openItem)
+    self~connectListViewEvent("IDC_CUSTLIST_LIST","CLICK",itemSelected)		-- Single click
+    self~connectListViewEvent("IDC_CUSTLIST_LIST","ACTIVATE",openItem)	 	-- Double-click
     self~connectButtonEvent("IDC_CUSTLIST_SHOWCUST","CLICKED",showCustomer)
     --btnShowCustomer = self~newPushButton("IDC_CUSTLIST_SHOWCUST")
 
@@ -143,17 +150,35 @@
     end*/
     lvCustomers~setColumnWidth(1)	-- set width of 2nd column to longest text entry.
 
+  /*----------------------------------------------------------------------------
+    Event-Handler Methods - Menu Events
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD newCustomer UNGUARDED
+    self~noMenuFunction(.HRS~clNewCust)
+
+  /*- - Help - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD about UNGUARDED
+    self~noMenuFunction(.HRS~clHelpAbout)
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD noMenuFunction UNGUARDED
+    use arg title
+    ret = MessageDialog(.HRS~clNoMenu, self~hwnd, title, 'WARNING')
+
+
+  /*----------------------------------------------------------------------------
+    Application Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD itemSelected unguarded
-    expose lvCustomers --btnShowCustomer
+    expose lvCustomers
     use arg id, itemIndex, columnIndex, keyState
-    say "CustomerListView-itemSelected: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
-    say "CustomerListView-itemSelected: item selected is:"lvCustomers~selected
+    --say "CustomerListView-itemSelected-1: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
+    --say "CustomerListView-itemSelected-2: item selected is:" lvCustomers~selected
     self~enableControl("IDC_CUSTLIST_SHOWCUST")
-    --text = list~itemText(itemIndex)
-    --colText = list~itemText(itemIndex, 1)
-    --parent~insertNewItem(text, colText)
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -163,7 +188,7 @@
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD showCustomer unguarded
+  ::METHOD showCustomer UNGUARDED
     expose lvCustomers rootDlg
     item = lvCustomers~selected
     say "CustomerListView-showCustomer-01: item selected =" item
@@ -178,8 +203,27 @@
       .local~my.idCustomerModel~activate
       .CustomerView~newInstance(rootDlg,"CU003")
       say "CustomerListView-showCustomer-03: after startCustomerView"
+      self~disableControl("IDC_CUSTLIST_SHOWCUST")
     end
     else do
       say "NO ITEM SeLeCTED!"
     end
 /*============================================================================*/
+
+
+/*//////////////////////////////////////////////////////////////////////////////
+  ==============================================================================
+  HRS (Human-Readable Strings for CustomerListView)		  v00-01 14Oct11
+  ---
+  The HRS class provides constant character strings for user-visible messages
+  issued by the CustomerListView class.
+  = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
+
+
+::CLASS HRS PRIVATE		-- Human-Readable Strings
+  ::CONSTANT clNoMenu       "This menu item is not yet implemented."
+  ::CONSTANT clNewCust      "New Customer"
+  ::CONSTANT clHelpAbout    "Help - About"
+
+/*============================================================================*/
+
