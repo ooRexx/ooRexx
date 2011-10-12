@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The OrderListView class
-   OrderList.rex 						  v01-00 19Sep11
+   OrderList.rex 						  v01-01 12Oct11
 
    Contains: class "OrderListView"
    Pre-requisite files: OrderListView.rc, OrderListView.h.
@@ -49,6 +49,8 @@
                 and invokes OrderView.
 
    v01-00 19Sep11: First Version
+   v01-01 12Oct11: Added menu select methods (all saying not implemented).
+   		   Added an HRS class for text strings.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
@@ -144,6 +146,28 @@
     lvOrders~setColumnWidth(1)	-- set width of 2nd column to longest text entry.
 
 
+  /*----------------------------------------------------------------------------
+    Event-Handler Methods - Menu Events
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD newOrder UNGUARDED
+    self~noMenuFunction(.HRS~olNewOrder)
+
+  /*- - Help - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD about UNGUARDED
+    self~noMenuFunction(.HRS~olHelpAbout)
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD noMenuFunction UNGUARDED
+    use arg title
+    ret = MessageDialog(.HRS~olNoMenu, self~hwnd, title, 'WARNING')
+
+
+  /*----------------------------------------------------------------------------
+    Application Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD itemSelected unguarded
     expose lvOrders --btnShowOrder
@@ -183,3 +207,22 @@
       say "NO ITEM SeLeCTED!"
     end
 /*============================================================================*/
+
+
+/*//////////////////////////////////////////////////////////////////////////////
+  ==============================================================================
+  HRS (Human-Readable Strings for OrderListView)		  v00-01 12Oct11
+  ---
+  The HRS class provides constant character strings for user-visible messages
+  issued by the CustomerListView class.
+  = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
+
+
+::CLASS HRS PRIVATE		-- Human-Readable Strings
+  ::CONSTANT olNoMenu       "This menu item is not yet implemented."
+  ::CONSTANT olNewOrder     "New Order"
+  ::CONSTANT olHelpAbout    "Help - About"
+
+/*============================================================================*/
+
+

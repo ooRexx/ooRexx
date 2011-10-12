@@ -1,4 +1,4 @@
-/*----------------------------------------------------------------------------*/
+//*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
@@ -35,7 +35,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
@@ -43,12 +42,18 @@
 
 
 
+
+//
+// Menu resources
+//
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDR_ORDFORM_MENU MENU
 {
     POPUP "Actions"
     {
-        MENUITEM "DoThis", IDM_ORDFORM_DOTHIS
+        MENUITEM "Place Order...", IDM_ORDFORM_PLACE
+        MENUITEM "Save Order...", IDM_ORDFORM_SAVE
+        MENUITEM "Cancel Order", IDM_ORDFORM_CANCEL
     }
     POPUP "Help"
     {
@@ -58,29 +63,36 @@ IDR_ORDFORM_MENU MENU
 
 
 
+//
+// Dialog resources
+//
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDD_ORDFORM_DIALOG DIALOG 0, 0, 272, 271
+IDD_ORDFORM_DIALOG DIALOG 0, 0, 272, 278
 STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_GROUP | WS_POPUP | WS_SYSMENU
 CAPTION "Order Form"
 FONT 8, "Ms Shell Dlg"
 {
-    CONTROL         "", IDC_ORDFORM_DATE, DATETIMEPICK_CLASS, WS_TABSTOP | DTS_RIGHTALIGN, 185, 15, 70, 15
-    EDITTEXT        IDC_ORDFORM_ORDNO, 50, 15, 40, 14, ES_AUTOHSCROLL
-    LTEXT           "Order No.", IDC_STATIC, 10, 20, 32, 8, SS_LEFT
-    LTEXT           "Date", IDC_STATIC, 158, 18, 16, 8, SS_LEFT
-    LTEXT           "Total Cost:", IDC_STATIC, 116, 200, 35, 8, SS_LEFT
-    LTEXT           "Discount", IDC_STATIC, 116, 214, 29, 8, SS_LEFT
-    DEFPUSHBUTTON   "Place Order", IDC_ORDFORM_PLACEORDER, 200, 245, 50, 14
-    LTEXT           "Tax", IDC_STATIC, 116, 228, 13, 8, SS_LEFT
-    RTEXT           "0.00", IDC_STATIC, 164, 214, 40, 8, SS_RIGHT
-    RTEXT           "0.00", IDC_STATIC, 164, 228, 40, 8, SS_RIGHT
-    RTEXT           "0.00", IDC_STATIC, 215, 228, 40, 8, SS_RIGHT
-    RTEXT           "0.00", IDC_STATIC, 215, 200, 40, 8, SS_RIGHT
-    RTEXT           "0.00", IDC_STATIC, 215, 214, 40, 8, SS_RIGHT
-    CONTROL         "", IDC_ORDFORM_TABS, WC_TABCONTROL, 0, 15, 50, 245, 135
+    CONTROL         "", IDC_ORDFORM_DATE, DATETIMEPICK_CLASS, WS_TABSTOP | DTS_RIGHTALIGN, 185, 9, 70, 15
+    EDITTEXT        IDC_ORDFORM_ORDNO, 50, 9, 40, 14, ES_AUTOHSCROLL
+    LTEXT           "Order No.", IDC_STATIC, 10, 14, 32, 8, SS_LEFT
+    LTEXT           "Date", IDC_STATIC, 158, 12, 16, 8, SS_LEFT
+    LTEXT           "Total Cost:", IDC_STATIC, 116, 194, 35, 8, SS_LEFT
+    LTEXT           "Discount", IDC_STATIC, 116, 208, 29, 8, SS_LEFT
+    PUSHBUTTON      "Place Order", IDC_ORDFORM_PLACEORDER, 200, 244, 50, 14
+    LTEXT           "Tax", IDC_STATIC, 116, 222, 13, 8, SS_LEFT
+    RTEXT           "0.00", IDC_STATIC, 164, 208, 40, 8, SS_RIGHT
+    RTEXT           "0.00", IDC_STATIC, 164, 222, 40, 8, SS_RIGHT
+    RTEXT           "0.00", IDC_STATIC, 215, 222, 40, 8, SS_RIGHT
+    RTEXT           "0.00", IDC_STATIC, 215, 194, 40, 8, SS_RIGHT
+    RTEXT           "0.00", IDC_STATIC, 215, 208, 40, 8, SS_RIGHT
+    CONTROL         "", IDC_ORDFORM_TABS, WC_TABCONTROL, 0, 15, 44, 245, 135
+    PUSHBUTTON      "Cancel Order", IDC_CANCEL, 132, 244, 46, 14
 }
 
 
 
+//
+// Icon resources
+//
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_ORDFORM_DLGICON ICON           ".\\Order\\bmp\\OrderForm.ico"

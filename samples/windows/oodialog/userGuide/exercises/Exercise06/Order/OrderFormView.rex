@@ -35,10 +35,10 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderFormView class				  v00-03 30Sep11
+   Exercise 06: The OrderFormView class				  v00-04 12Oct11
    OrderFormView.rex
 
-   Contains: class "OrderFormView".
+   Contains: class "OrderFormView", class "HRS".
    Pre-requisite files: OrderFormView.rc, OrderFormView.h.
 
    Changes:
@@ -46,7 +46,10 @@
    v00-02 28Sep11: Changed to be the beginnings of a "new order" - will be a
    		   tabbed dialog. Old order form is now view got from OrderList.
    v00-03 30Sep11: Added msgbox for when user hits Esc (cancel). Also added
-                   class for user-visible strings.
+                   HRS class for user-visible strings.
+   v00-04 12Oct11: Changed DoThis menu item and added two more - now have
+   		   Cancel/Place/Save Order. Also added "not implemented" message
+   		   for each menu item.
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -118,29 +121,72 @@
 
     menuBar~attachTo(self)
 
+    btnCancelOrder = self~newPushButton("IDC_CANCEL")
+    btnPlaceOrder = self~newPushButton("IDC_ORDFORM_PLACEORDER")
+    self~connectButtonEvent("IDC_CANCEL","CLICKED",cancel)
+    self~connectButtonEvent("IDC_ORDFORM_PLACEORDER","CLICKED",placeOrderBtn)
+
     return
 
+  /*----------------------------------------------------------------------------
+    Event-Handler Methods - Menu Events
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    "Cancel" - This is a no-op method that over-rides the default Windows action
-           of 'cancel window' for an Escape key.			    --*/
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD placeOrder UNGUARDED
+    self~noMenuFunction(.HRS~ofPlaceOrder)
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD saveOrder UNGUARDED
+    self~noMenuFunction(.HRS~ofSaveOrder)
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD CancelOrder UNGUARDED
+    self~cancel
+
+  /*- - Help - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD about UNGUARDED
+    self~noMenuFunction(.HRS~ofHelpAbout)
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD noMenuFunction UNGUARDED
+    use arg title
+    ret = MessageDialog(.HRS~ofNoMenu, self~hwnd, title, 'WARNING')
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+    -- "Cancel" - This method over-rides the default Windows action of
+    -- 'cancel window' for an Escape key.
   ::METHOD cancel
     response = askDialog(.HRS~ofQExit, "N")
     if response = 1 then forward class (super)
     return
 
 
+  /*----------------------------------------------------------------------------
+    Event-Handler Methods - Button Events
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  ::METHOD placeOrderBtn UNGUARDED
+    ret = MessageDialog(.HRS~ofNoBtn, self~hwnd, "Place Order Button", 'WARNING')
+
 /*============================================================================*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  Human-Readable Strings (HRS)					  v00-01 30Sep11
+  Human-Readable Strings (HRS)					  v00-02 12Oct11
   --------
    The HRS class provides constant character strings for user-visible messages.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS HRS PRIVATE		-- Human-Readable Strings
-  ::CONSTANT ofQExit     "Are you sure you want to cancel this Order and throw away all changes?"
+  ::CONSTANT ofQExit       "Are you sure you want to cancel this Order and throw away all changes?"
+  ::CONSTANT ofNoMenu      "This menu item is not yet implemented."
+  ::CONSTANT ofNoBtn       "This button is not yet implemented."
+  ::CONSTANT ofPlaceOrder  "Place Order"
+  ::CONSTANT ofSaveOrder   "Save Order"
+  ::CONSTANT ofCancelOrder "Cancel Order"
+  ::CONSTANT ofHelpAbout   "Help - About"
+
 /*============================================================================*/
 
