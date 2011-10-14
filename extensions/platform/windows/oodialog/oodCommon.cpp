@@ -712,19 +712,23 @@ int32_t oodResolveSymbolicID(RexxThreadContext *c, RexxObjectPtr oodObj, RexxObj
             if ( item != NULLOBJECT )
             {
                  c->ObjectToInt32(item, &result);
-                 if ( strict && result < 1 )
-                 {
-                     result = OOD_ID_EXCEPTION;
-                 }
-                 else if ( result < -1 )
-                 {
-                     result = OOD_ID_EXCEPTION;
-                 }
             }
         }
     }
 
     safeFree(symbol);
+
+    if ( result != OOD_ID_EXCEPTION )
+    {
+        if ( strict && result < 1 )
+        {
+            result = OOD_ID_EXCEPTION;
+        }
+        else if ( result < -1 )
+        {
+            result = OOD_ID_EXCEPTION;
+        }
+    }
 
     if ( result == OOD_ID_EXCEPTION )
     {
