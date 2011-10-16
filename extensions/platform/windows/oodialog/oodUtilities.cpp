@@ -233,6 +233,7 @@ done_out:
 
 #define CONST_DIR_USAGE_OPTS            "[O]nly, [F]irst, [L]ast, or [N]ever"
 #define CONST_DIR_SYMBOL_SRC_OPTS       "a collection class object, or a file name"
+#define SETDEFAULTS_INDEXES             "constDirUsage, symbolSrc, autoDetction, fontName, or fontSize"
 
 
 inline bool checkApplicationMagic(RexxMethodContext *c, RexxObjectPtr magic)
@@ -368,7 +369,8 @@ static RexxObjectPtr setGlobalFont(RexxMethodContext *c, CSTRING name, uint32_t 
 
 static RexxObjectPtr setDefaults(RexxMethodContext *c, pCApplicationManager pcam, RexxDirectoryObject prefs)
 {
-    RexxObjectPtr result;
+    RexxObjectPtr result = TheTrueObj;
+    size_t        count = 0;
 
     RexxObjectPtr val = c->DirectoryAt(prefs, "CONSTDIRUSAGE");
     if ( val != NULLOBJECT )
@@ -378,6 +380,7 @@ static RexxObjectPtr setDefaults(RexxMethodContext *c, pCApplicationManager pcam
         {
             goto done_out;
         }
+        count++;
     }
 
     val = c->DirectoryAt(prefs, "SYMBOLSRC");
@@ -388,6 +391,7 @@ static RexxObjectPtr setDefaults(RexxMethodContext *c, pCApplicationManager pcam
         {
             goto done_out;
         }
+        count++;
     }
 
     val = c->DirectoryAt(prefs, "AUTODETECTION");
@@ -397,10 +401,10 @@ static RexxObjectPtr setDefaults(RexxMethodContext *c, pCApplicationManager pcam
         if ( ! c->Logical(val, &on) )
         {
             directoryIndexExceptionList(c->threadContext, 1, "AUTODETECTION", ".true or .false", val);
-            result = TheFalseObj;
-            goto done_out;
+            goto err_out;
         }
         pcam->autoDetect = on ? true : false;
+        count++;
     }
 
     RexxObjectPtr fontName = c->DirectoryAt(prefs, "FONTNAME");
@@ -415,35 +419,48 @@ static RexxObjectPtr setDefaults(RexxMethodContext *c, pCApplicationManager pcam
         {
             name = "";
         }
-        else if ( fontName == TheNilObj )
-        {
-            name = DEFAULT_FONTNAME;
-        }
         else
         {
             name = c->ObjectToStringValue(fontName);
+            if ( strlen(name) == 0 )
+            {
+                directoryIndexExceptionMsg(c->threadContext, 1, "FONTNAME", "can not be the empty string", fontName);
+                goto err_out;
+            }
+            if ( strlen(name) > (MAX_DEFAULT_FONTNAME - 1))
+            {
+                // We do this check here rather than letting setGlobalFont()
+                // handle it to give a better message for the condition.
+                directoryIndexExceptionMsg(c->threadContext, 1, "FONTNAME", "can not be the empty string", fontName);
+                goto err_out;
+            }
         }
 
         if ( fontSize == NULLOBJECT )
         {
             size = 0;
         }
-        else if ( fontSize == TheNilObj )
-        {
-            size = DEFAULT_FONTSIZE;
-        }
         else if ( ! c->UnsignedInt32(fontSize, &size) )
         {
             directoryIndexExceptionMsg(c->threadContext, 1, "FONTSIZE", "must be a positive whole number", fontSize);
-            result = TheFalseObj;
-            goto done_out;
+            goto err_out;
         }
 
         result = setGlobalFont(c, name, size, 1);
+        count++;
+    }
+
+    if ( count == 0 )
+    {
+        missingIndexesInDirectoryException(c->threadContext, 1, SETDEFAULTS_INDEXES);
+        goto err_out;
     }
 
 done_out:
     return result;
+
+err_out:
+    return TheFalseObj;
 }
 
 /** ApplicationManager::init()
@@ -669,6 +686,10 @@ RexxMethod6(RexxObjectPtr, app_setDefaults, OPTIONAL_RexxObjectPtr, usage, OPTIO
         {
             fontName = "";
         }
+        else if (strlen(fontName) == 0)
+        {
+            context->RaiseException1(Rexx_Error_Invalid_argument_null, context->WholeNumber(4));
+        }
 
         // If the fontSize argument is omitted, its value is already 0.
 
@@ -833,24 +854,52 @@ RexxMethod1(intptr_t, dlgutil_signed_cls, uintptr_t, n1)
     return (intptr_t)n1;
 }
 
-RexxMethod2(uint64_t, dlgutil_shiftLeft_cls, uint64_t, n1, uint16_t, amount)
+inline bool inBounds(RexxThreadContext *c, size_t pos, uint32_t n, uint32_t upperLimit)
 {
+    if ( n >= 0 && n <= upperLimit )
+    {
+        return true;
+    }
+    wrongRangeException(c, pos, 0, upperLimit, n);
+    return false;
+}
+
+RexxMethod2(uint64_t, dlgutil_shiftLeft_cls, uint64_t, n1, OPTIONAL_uint8_t, amount)
+{
+    if ( ! inBounds(context->threadContext, 2, amount, 63) )
+    {
+        return 0;
+    }
     return n1 << amount;
 }
 
-RexxMethod2(uint64_t, dlgutil_shiftRight_cls, uint64_t, n1, uint16_t, amount)
+RexxMethod2(uint64_t, dlgutil_shiftRight_cls, uint64_t, n1, OPTIONAL_uint8_t, amount)
 {
+    if ( ! inBounds(context->threadContext, 2, amount, 63) )
+    {
+        return 0;
+    }
     return n1 >> amount;
 }
 
-RexxMethod2(wholenumber_t, dlgutil_sShiftLeft_cls, int64_t, n1, uint16_t, amount)
+RexxMethod2(wholenumber_t, dlgutil_sShiftLeft_cls, int64_t, n1, OPTIONAL_uint8_t, amount)
 {
+    if ( ! inBounds(context->threadContext, 2, amount, 63) )
+    {
+        return 0;
+    }
+
     uint64_t un1 = (uint64_t)n1;
     return (wholenumber_t)(un1 << amount);
 }
 
-RexxMethod2(wholenumber_t, dlgutil_sShiftRight_cls, int64_t, n1, uint16_t, amount)
+RexxMethod2(wholenumber_t, dlgutil_sShiftRight_cls, int64_t, n1, OPTIONAL_uint8_t, amount)
 {
+    if ( ! inBounds(context->threadContext, 2, amount, 63) )
+    {
+        return 0;
+    }
+
     uint64_t un1 = (uint64_t)n1;
     return (wholenumber_t)(un1 >> amount);
 }
@@ -1058,14 +1107,9 @@ RexxMethod0(uint32_t, dlgutil_threadID_cls)
  *
  *  Simple method to use for testing.
  */
-RexxMethod3(uint32_t, dlgutil_test_cls, POINTERSTRING, hwnd, POINTERSTRING, hwndBehind, RexxObjectPtr, pos)
+RexxMethod1(uint64_t, dlgutil_test_cls, int64_t, n)
 {
-    POINT *pt = rxGetPoint(context, pos, 3);
-    if ( ! SetWindowPos((HWND)hwnd, (HWND)hwndBehind, pt->x, pt->y, 0, 0, SWP_NOSIZE) )
-    {
-        return GetLastError();
-    }
-    return 0;
+    return (uint64_t)n;
 }
 
 /**

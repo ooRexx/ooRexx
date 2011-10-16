@@ -80,14 +80,14 @@
    use strict arg msgToRise = 'onSizeMoveEnded', willReply = .true
    tag = 0
    if willReply then tag = 0x02000000
-   self~addUserMsg(msgToRise, "0x00000232", "0xFFFFFFFF", 0, 0, 0, 0, tag)
+   return self~addUserMsg(msgToRise, "0x00000232", "0xFFFFFFFF", 0, 0, 0, 0, tag)
 
 -- WM_MOUSEWHEEL
 ::method connectMouseWheel
    use strict arg msgToRise = 'onMouseWheel', willReply = .true
    tag = 0x00000003
    if willReply then tag = 0x02000002
-   self~addUserMsg(msgToRise, "0x0000020a", "0xFFFFFFFF", 0, 0, 0, 0, tag)
+   return self~addUserMsg(msgToRise, "0x0000020a", "0xFFFFFFFF", 0, 0, 0, 0, tag)
 
 -- WM_WINDOWPOSCHANGED
 ::method connectPosChanged

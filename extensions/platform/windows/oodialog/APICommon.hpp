@@ -77,6 +77,7 @@ extern void  failedToRetrieveException(RexxThreadContext *c, CSTRING item, RexxO
 extern void  missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index);
 extern void  directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, CSTRING actual);
 extern void  directoryIndexExceptionList(RexxThreadContext *, size_t pos, CSTRING index, CSTRING list, CSTRING actual);
+extern void  missingIndexesInDirectoryException(RexxThreadContext *c, int argPos, CSTRING indexes);
 extern void  emptyArrayException(RexxThreadContext *c, int argPos);
 extern void  arrayToLargeException(RexxThreadContext *c, uint32_t found, uint32_t max, int argPos);
 extern void  sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index);
@@ -210,6 +211,22 @@ inline void directoryIndexExceptionList(RexxThreadContext *c, size_t pos, CSTRIN
 inline void directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index, CSTRING msg, RexxObjectPtr actual)
 {
     directoryIndexExceptionMsg(c, pos, index, msg, c->ObjectToStringValue(actual));
+}
+
+/**
+ * Aargument <pos> must contain at least one of the indexes: <indexes>"
+ *
+ * Argument 1 must contain at least one of the indexes: constDirUsage,
+ * symbolSrc, autoDetction, fontName, or fontSize
+ *
+ *
+ * @param c
+ * @param argPos
+ * @param indexes
+ */
+inline void missingIndexesInDirectoryException(RexxMethodContext *c, int argPos, CSTRING indexes)
+{
+    missingIndexesInDirectoryException(c->threadContext, argPos, indexes);
 }
 
 /**

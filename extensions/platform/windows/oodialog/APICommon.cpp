@@ -356,6 +356,26 @@ void missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING 
 }
 
 /**
+ * Aargument <pos> must contain at least one of the indexes: <indexes>"
+ *
+ * Argument 1 must contain at least one of the indexes: constDirUsage,
+ * symbolSrc, autoDetction, fontName, or fontSize
+ *
+ *
+ * @param c
+ * @param argPos
+ * @param indexes
+ */
+void missingIndexesInDirectoryException(RexxThreadContext *c, int argPos, CSTRING indexes)
+{
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer),
+              "The directory object, argument %d, most contain at least one of the indexes, %s",
+              argPos, indexes);
+    userDefinedMsgException(c, buffer);
+}
+
+/**
  * Index, <index>, of argument <pos> must be one of <list>; found "<actual>"
  *
  * Index, PART, of argument 1 must be one of calendar, next, prev, or none;
