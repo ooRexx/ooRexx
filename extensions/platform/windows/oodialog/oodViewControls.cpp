@@ -1750,8 +1750,9 @@ inline bool isGridPart(LRESULT hit)
  *
  *  @note  Indexes for row, column, and calendar offset are 1-based.
  *
- *  @remarks  This does not seem to work on XP, may have to mark it as Vista
- *            only.
+ *  @remarks  If we are not on Vista or later, we need to be sure to set cbSize
+ *            for MCHITTESTINFO to exclude the Vista only fields.  Otherwise
+ *            MonthCal_HitTest fails completely.
  *
  */
 RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
