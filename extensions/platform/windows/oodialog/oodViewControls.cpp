@@ -126,10 +126,14 @@ RexxMethod2(RexxObjectPtr, generic_subclassEdit, NAME, method, CSELF, pCSelf)
 #define DATETIMEPICKER_CLASS     "DateTimePicker"
 #define DATETIMEPICKER_WINNAME   "Date and Time Picker"
 
-// This is used for MonthCalendar also
+// The following are used for DateTimePicker and MonthCalendar.
 #define SYSTEMTIME_MIN_YEAR               1601
 #define SYSTEMTIME_RANGE_EXCEPTION_MSG    "indexes 1 and 2 of argument 1, the array object, can not both be missing"
 
+#define MC_PART_NAMES                     "BACKGROUND, MONTHBK, TEXT, TITLEBK, TITLETEXT, or TRAILINGTEXT"
+#define MC_VIEW_NAMES                     "MONTHLY ANNUAL DECADE CENTURY"
+#define MC_GRIDINFO_PART_NAMES            "control, next, prev, footer, calendard, header, body, row, cell"
+#define MC_GRIDINFO_WHAT_FLAG_ERR_MSG     "must contain at least one of the keywords: date, rect, or name"
 
 /**
  * Converts a DateTime object to a SYSTEMTIME structure.  The fields of the
@@ -404,18 +408,30 @@ void sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTi
 }
 
 
-static uint32_t calPart2flag(CSTRING part)
+/**
+ * Converts the string part to the month calendar part flage
+ *
+ * @param part   Keyword for the calendar part.
+ *
+ * @return The calendar part flag, or -1 on error.
+ */
+static uint32_t calPart2flag(RexxMethodContext *c, CSTRING part, size_t argPos)
 {
     // This is an invalid flag.  When used in the DateTime_xx or MonthCalenddar_XX
     // macros, the macros then return the error code.
     uint32_t flag = (uint32_t)-1;
 
-    if (      StrStrI(part, "BACKGROUND"  ) != NULL ) flag = MCSC_BACKGROUND;
-    else if ( StrStrI(part, "MONTHBK"     ) != NULL ) flag = MCSC_MONTHBK;
-    else if ( StrStrI(part, "TEXT"        ) != NULL ) flag = MCSC_TEXT;
-    else if ( StrStrI(part, "TITLEBK"     ) != NULL ) flag = MCSC_TITLEBK;
-    else if ( StrStrI(part, "TITLETEXT"   ) != NULL ) flag = MCSC_TITLETEXT;
-    else if ( StrStrI(part, "TRAILINGTEXT") != NULL ) flag = MCSC_TRAILINGTEXT;
+    if (      stricmp(part, "BACKGROUND"  ) == 0 ) flag = MCSC_BACKGROUND;
+    else if ( stricmp(part, "MONTHBK"     ) == 0 ) flag = MCSC_MONTHBK;
+    else if ( stricmp(part, "TEXT"        ) == 0 ) flag = MCSC_TEXT;
+    else if ( stricmp(part, "TITLEBK"     ) == 0 ) flag = MCSC_TITLEBK;
+    else if ( stricmp(part, "TITLETEXT"   ) == 0 ) flag = MCSC_TITLETEXT;
+    else if ( stricmp(part, "TRAILINGTEXT") == 0 ) flag = MCSC_TRAILINGTEXT;
+    else
+    {
+        wrongArgValueException(c->threadContext, argPos, MC_PART_NAMES, part);
+    }
+
     return flag;
 }
 
@@ -675,7 +691,12 @@ RexxMethod1(RexxObjectPtr, dtp_getMonthCal, CSELF, pCSelf)
  */
 RexxMethod2(uint32_t, dtp_getMonthCalColor, CSTRING, calPart, CSELF, pCSelf)
 {
-    return (COLORREF)DateTime_GetMonthCalColor(getDChCtrl(pCSelf), calPart2flag(calPart));
+    int32_t flag = calPart2flag(context, calPart, 1);
+    if ( flag == -1 )
+    {
+        return CLR_INVALID;
+    }
+    return (COLORREF)DateTime_GetMonthCalColor(getDChCtrl(pCSelf), flag);
 }
 
 
@@ -812,7 +833,12 @@ RexxMethod2(logical_t, dtp_setFormat, CSTRING, format, CSELF, pCSelf)
  */
 RexxMethod3(uint32_t, dtp_setMonthCalColor, CSTRING, calPart, uint32_t, color, CSELF, pCSelf)
 {
-    return (COLORREF)DateTime_SetMonthCalColor(getDChCtrl(pCSelf), calPart2flag(calPart), color);
+    int32_t flag = calPart2flag(context, calPart, 1);
+    if ( flag == -1 )
+    {
+        return CLR_INVALID;
+    }
+    return (COLORREF)DateTime_SetMonthCalColor(getDChCtrl(pCSelf), flag, color);
 }
 
 
@@ -894,8 +920,6 @@ inline HWND getMonthCalendar(RexxMethodContext *c, void *pCSelf)
     return hMC;
 }
 
-#define MC_GRIDINFO_PART_NAMES             "control, next, prev, footer, calendard, header, body, row, cell"
-#define MC_GRIDINFO_WHAT_FLAG_ERR_MSG      "must contain at least one of the keywords: date, rect, or name"
 
 /* Determine if a month calendar is a multi-selection month calendar. */
 inline bool isMultiSelectionMonthCalendar(HWND hCtrl)
@@ -1346,8 +1370,12 @@ RexxMethod2(uint32_t, mc_getColor, CSTRING, calPart, CSELF, pCSelf)
         return 0;
     }
 
-    uint32_t part = calPart2flag(calPart);
-    return (COLORREF)MonthCal_GetColor(hMC, part);
+    int32_t flag = calPart2flag(context, calPart, 1);
+    if ( flag == -1 )
+    {
+        return CLR_INVALID;
+    }
+    return (COLORREF)MonthCal_GetColor(hMC, flag);
 }
 
 RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
@@ -1867,21 +1895,22 @@ RexxMethod2(RexxObjectPtr, mc_setCALID, CSTRING, id, CSELF, pCSelf)
 
     uint32_t calID = CAL_GREGORIAN;
 
-    if (      StrStrI(id, "GREGORIAN"                 ) != NULL ) calID = CAL_GREGORIAN ;
-    else if ( StrStrI(id, "GREGORIAN_US"              ) != NULL ) calID = CAL_GREGORIAN_US;
-    else if ( StrStrI(id, "JAPAN"                     ) != NULL ) calID = CAL_JAPAN;
-    else if ( StrStrI(id, "TAIWAN"                    ) != NULL ) calID = CAL_TAIWAN;
-    else if ( StrStrI(id, "KOREA"                     ) != NULL ) calID = CAL_KOREA;
-    else if ( StrStrI(id, "HIJRI"                     ) != NULL ) calID = CAL_HIJRI;
-    else if ( StrStrI(id, "THAI"                      ) != NULL ) calID = CAL_THAI;
-    else if ( StrStrI(id, "HEBREW"                    ) != NULL ) calID = CAL_HEBREW;
-    else if ( StrStrI(id, "GREGORIAN_ME_FRENCH"       ) != NULL ) calID = CAL_GREGORIAN_ME_FRENCH;
-    else if ( StrStrI(id, "GREGORIAN_ARABIC"          ) != NULL ) calID = CAL_GREGORIAN_ARABIC;
-    else if ( StrStrI(id, "CAL_GREGORIAN_XLIT_ENGLISH") != NULL ) calID = CAL_GREGORIAN_XLIT_ENGLISH;
-    else if ( StrStrI(id, "CAL_GREGORIAN_XLIT_FRENCH" ) != NULL ) calID = CAL_GREGORIAN_XLIT_FRENCH;
-    else if ( StrStrI(id, "UMALQURA"                  ) != NULL ) calID = CAL_UMALQURA;
+    if (      stricmp(id, "GREGORIAN"                 ) == 0 ) calID = CAL_GREGORIAN;
+    else if ( stricmp(id, "GREGORIAN_US"              ) == 0 ) calID = CAL_GREGORIAN_US;
+    else if ( stricmp(id, "JAPAN"                     ) == 0 ) calID = CAL_JAPAN;
+    else if ( stricmp(id, "TAIWAN"                    ) == 0 ) calID = CAL_TAIWAN;
+    else if ( stricmp(id, "KOREA"                     ) == 0 ) calID = CAL_KOREA;
+    else if ( stricmp(id, "HIJRI"                     ) == 0 ) calID = CAL_HIJRI;
+    else if ( stricmp(id, "THAI"                      ) == 0 ) calID = CAL_THAI;
+    else if ( stricmp(id, "HEBREW"                    ) == 0 ) calID = CAL_HEBREW;
+    else if ( stricmp(id, "GREGORIAN_ME_FRENCH"       ) == 0 ) calID = CAL_GREGORIAN_ME_FRENCH;
+    else if ( stricmp(id, "GREGORIAN_ARABIC"          ) == 0 ) calID = CAL_GREGORIAN_ARABIC;
+    else if ( stricmp(id, "CAL_GREGORIAN_XLIT_ENGLISH") == 0 ) calID = CAL_GREGORIAN_XLIT_ENGLISH;
+    else if ( stricmp(id, "CAL_GREGORIAN_XLIT_FRENCH" ) == 0 ) calID = CAL_GREGORIAN_XLIT_FRENCH;
+    else if ( stricmp(id, "UMALQURA"                  ) == 0 ) calID = CAL_UMALQURA;
 
     MonthCal_SetCALID(hMC, calID);
+
     return TheZeroObj;
 }
 
@@ -1890,8 +1919,8 @@ RexxMethod2(RexxObjectPtr, mc_setCALID, CSTRING, id, CSELF, pCSelf)
  *
  *  Sets the color for a given part of a month calendar control.
  *
- *  @param  which  Specifies which portion will have its color set.
- *  @param  color  A COLORREF specifying the color for the calendar part.
+ *  @param  calPart  Specifies which portion will have its color set.
+ *  @param  color    A COLORREF specifying the color for the calendar part.
  *
  *  @return  The previous color for the part of the month calendar specified,
  *           or CLR_INVALID on error.
@@ -1904,8 +1933,12 @@ RexxMethod2(RexxObjectPtr, mc_setCALID, CSTRING, id, CSELF, pCSelf)
  *            -- some error routine
  *          end
  *
+ *          A syntax condition is raised if calPart is not valid.
+ *
+ *          setColor() only seems to work if the theme is Windows Classic.
+ *
  */
-RexxMethod3(uint32_t, mc_setColor, CSTRING, which, uint32_t, color, CSELF, pCSelf)
+RexxMethod3(uint32_t, mc_setColor, CSTRING, calPart, uint32_t, color, CSELF, pCSelf)
 {
     HWND hMC = getMonthCalendar(context, pCSelf);
     if ( hMC == NULL )
@@ -1913,16 +1946,19 @@ RexxMethod3(uint32_t, mc_setColor, CSTRING, which, uint32_t, color, CSELF, pCSel
         return 0;
     }
 
-    uint32_t flag = calPart2flag(which);
+    int32_t flag = calPart2flag(context, calPart, 1);
+    if ( flag == -1 )
+    {
+        return CLR_INVALID;
+    }
     return (COLORREF)MonthCal_SetColor(hMC, flag, color);
 }
-
 
 RexxMethod2(RexxObjectPtr, mc_setCurrentView, CSTRING, view, CSELF, pCSelf)
 {
     if ( ! _isAtLeastVista() )
     {
-        return wrongWindowsVersionException(context, "getBorder", "Vista");
+        return wrongWindowsVersionException(context, "setCurrentView", "Vista");
     }
 
     HWND hMC = getMonthCalendar(context, pCSelf);
@@ -1933,10 +1969,14 @@ RexxMethod2(RexxObjectPtr, mc_setCurrentView, CSTRING, view, CSELF, pCSelf)
 
     uint32_t mcmv = MCMV_MONTH;
 
-    if (      StrStrI(view, "MONTHLY") != NULL ) mcmv = MCMV_MONTH;
-    else if ( StrStrI(view, "ANNUAL")  != NULL ) mcmv = MCMV_YEAR;
-    else if ( StrStrI(view, "DECADE")  != NULL ) mcmv = MCMV_DECADE;
-    else if ( StrStrI(view, "CENTURY") != NULL ) mcmv = MCMV_CENTURY;
+    if (      stricmp(view, "MONTHLY") == 0 ) mcmv = MCMV_MONTH;
+    else if ( stricmp(view, "ANNUAL")  == 0 ) mcmv = MCMV_YEAR;
+    else if ( stricmp(view, "DECADE")  == 0 ) mcmv = MCMV_DECADE;
+    else if ( stricmp(view, "CENTURY") == 0 ) mcmv = MCMV_CENTURY;
+    else
+    {
+        return wrongArgValueException(context->threadContext, 1, MC_VIEW_NAMES, view);
+    }
 
     return (MonthCal_SetCurrentView(hMC, mcmv) ? TheTrueObj : TheFalseObj);
 }
