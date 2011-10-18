@@ -936,6 +936,21 @@ inline CSTRING day2dayName(int32_t iDay)
     }
 }
 
+/*
+ * Hit test flags for areas that are part of the calendar grid, and thus have
+ * valid row and column info.
+ */
+inline bool isGridPart(LRESULT hit)
+{
+    if ( hit == MCHT_CALENDARDATE     || hit == MCHT_CALENDARDATENEXT ||
+         hit == MCHT_CALENDARDATEPREV || hit == MCHT_CALENDARDATEMAX  ||
+         hit == MCHT_CALENDARDATEMIN )
+    {
+        return true;
+    }
+    return false;
+}
+
 
 static int32_t dayName2day(CSTRING day)
 {
@@ -1732,17 +1747,6 @@ RexxMethod1(RexxObjectPtr, mc_getToday, CSELF, pCSelf)
         sysTime2dt(context->threadContext, &sysTime, &result, dtDate);
     }
     return result;
-}
-
-inline bool isGridPart(LRESULT hit)
-{
-    if ( hit == MCHT_CALENDARDATE     || hit == MCHT_CALENDARDATENEXT ||
-         hit == MCHT_CALENDARDATEPREV || hit == MCHT_CALENDARDATEMAX  ||
-         hit == MCHT_CALENDARDATEMIN )
-    {
-        return true;
-    }
-    return false;
 }
 
 /** MonthCalendar::hitTest()
