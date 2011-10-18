@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1024,7 +1024,7 @@ static void firstDay2directory(RexxMethodContext *c, uint32_t firstDay, RexxDire
 
 bool putHitInfo(RexxMethodContext *c, RexxDirectoryObject hitInfo, MCHITTESTINFO *info)
 {
-    bool done = true;  // TODO TODO logic seems backwards here - default should be false, set to true if MCHT_NOWHERE
+    bool done = false;
     bool needDate = false;
 
     switch ( info->uHit )
@@ -1070,7 +1070,7 @@ bool putHitInfo(RexxMethodContext *c, RexxDirectoryObject hitInfo, MCHITTESTINFO
 
         case MCHT_NOWHERE :
             c->DirectoryPut(hitInfo, c->String("NoWhere"), "HIT");
-            done = false;
+            done = true;
             break;
 
         case MCHT_TITLEBK :
@@ -1094,7 +1094,6 @@ bool putHitInfo(RexxMethodContext *c, RexxDirectoryObject hitInfo, MCHITTESTINFO
             break;
 
         case MCHT_TODAYLINK :
-            // Not documented, so not sure if this is ever returned.
             c->DirectoryPut(hitInfo, c->String("TodayLink"), "HIT");
             break;
 
@@ -1735,11 +1734,24 @@ RexxMethod1(RexxObjectPtr, mc_getToday, CSELF, pCSelf)
     return result;
 }
 
+inline bool isGridPart(LRESULT hit)
+{
+    if ( hit == MCHT_CALENDARDATE     || hit == MCHT_CALENDARDATENEXT ||
+         hit == MCHT_CALENDARDATEPREV || hit == MCHT_CALENDARDATEMAX  ||
+         hit == MCHT_CALENDARDATEMIN )
+    {
+        return true;
+    }
+    return false;
+}
 
 /** MonthCalendar::hitTest()
  *
  *
  *  @note  Indexes for row, column, and calendar offset are 1-based.
+ *
+ *  @remarks  This does not seem to work on XP, may have to mark it as Vista
+ *            only.
  *
  */
 RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
@@ -1753,7 +1765,14 @@ RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
     RexxDirectoryObject hitInfo = context->NewDirectory();
 
     MCHITTESTINFO info = {0};
-    info.cbSize = sizeof(MCHITTESTINFO);
+    if ( ComCtl32Version <=  COMCTL32_6_0 )
+    {
+        info.cbSize = MCHITTESTINFO_V1_SIZE;
+    }
+    else
+    {
+        info.cbSize = sizeof(MCHITTESTINFO);
+    }
 
     PPOINT pt = rxGetPoint(context, _pt, 1);
     if ( pt == NULL )
@@ -1765,7 +1784,7 @@ RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
     info.pt.x = pt->x;
     info.pt.y = pt->y;
 
-    MonthCal_HitTest(hMC, &info);
+    LRESULT hit = MonthCal_HitTest(hMC, &info);
 
     bool done = putHitInfo(context, hitInfo, &info);
 
@@ -1774,8 +1793,20 @@ RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
         context->DirectoryPut(hitInfo, rxNewRect(context, &info.rc), "RECT");
 
         context->DirectoryPut(hitInfo, context->WholeNumber(info.iOffset + 1), "OFFSET");
-        context->DirectoryPut(hitInfo, context->WholeNumber(info.iRow + 1), "ROW");
-        context->DirectoryPut(hitInfo, context->WholeNumber(info.iCol + 1), "COLUMN");
+
+        if ( isGridPart(info.uHit)  )
+        {
+            context->DirectoryPut(hitInfo, context->WholeNumber(info.iRow + 1), "ROW");
+            context->DirectoryPut(hitInfo, context->WholeNumber(info.iCol + 1), "COLUMN");
+        }
+        else if ( info.uHit == MCHT_CALENDARDAY)
+        {
+            context->DirectoryPut(hitInfo, context->WholeNumber(info.iCol + 1), "COLUMN");
+        }
+        else if ( info.uHit == MCHT_CALENDARWEEKNUM )
+        {
+            context->DirectoryPut(hitInfo, context->WholeNumber(info.iRow + 1), "ROW");
+        }
     }
 
 done_out:

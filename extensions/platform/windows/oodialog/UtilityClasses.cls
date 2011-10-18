@@ -221,10 +221,12 @@
 ::class 'SM' public
 ::attribute cMouseButtons get class external "LIBRARY oodialog sm_cMouseButtons_cls"
 ::attribute cxCursor get class external      "LIBRARY oodialog sm_cxCursor_cls"
+::attribute cxFixedFrame get class external      "LIBRARY oodialog sm_cxFixedFrame_cls"
 ::attribute cxScreen get class external      "LIBRARY oodialog sm_cxScreen_cls"
 ::attribute cxVscroll get class external     "LIBRARY oodialog sm_cxVScroll_cls"
 ::attribute cyCaption get class external     "LIBRARY oodialog sm_cyCaption_cls"
 ::attribute cyCursor get class external      "LIBRARY oodialog sm_cyCursor_cls"
+::attribute cyFixedFrame get class external      "LIBRARY oodialog sm_cyFixedFrame_cls"
 ::attribute cyHscroll get class external     "LIBRARY oodialog sm_cyHScroll_cls"
 ::attribute cyScreen get class external      "LIBRARY oodialog sm_cyScreen_cls"
 

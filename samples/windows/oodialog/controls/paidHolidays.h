@@ -41,3 +41,4 @@
 
 #define IDD_HOLIDAY_DLG                         101
 #define IDC_MC_HOLIDAYS                         1003
+#define IDC_ST_MSG                              1004

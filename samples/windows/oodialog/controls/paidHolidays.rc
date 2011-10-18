@@ -47,7 +47,7 @@ STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_POP
 CAPTION "2011 Calendar - US - Paid Holidays"
 FONT 8, "Ms Shell Dlg"
 {
+    CONTROL         "", IDC_MC_HOLIDAYS, MONTHCAL_CLASS, WS_TABSTOP | MCS_DAYSTATE | MCS_WEEKNUMBERS, 10, 10, 122, 93
+    LTEXT           "Holiday calendar for 2011.  Paid holidays are in bold.", IDC_ST_MSG, 137, 18, 60, 46, SS_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 152, 103, 50, 14
-    CONTROL         "", IDC_MC_HOLIDAYS, MONTHCAL_CLASS, WS_TABSTOP | MCS_DAYSTATE, 9, 10, 122, 93
-    LTEXT           "Holiday calendar for 2011.  Paid holidays are in bold.", IDC_STATIC, 136, 18, 60, 46, SS_LEFT
 }

@@ -134,11 +134,69 @@ return 0
 -- needed for the calendar.  We then use the return to adjust the size of the
 -- calendar, while leaving the postion of the top, left corner of the calendar
 -- at the same spot.
+--
+-- The dialog was originally designed on XP using a resource editor, and looked
+-- great.  But, on Vista and Windows 7, the calendar takes up more room and
+-- overlaps the static text and Ok button controls.  So, if it is Vista or
+-- later, we adjust the size of the dialog and the position of those controls.
+-- The adjustment is really just a matter of getting some data, (sizes and
+-- current positions,) and doing the math.
+--
+-- The same relative positioning of the controls is done.  I.e., in the original
+-- dialog template the top of the Ok button is placed at the bottom edge of the
+-- month calendar control.  The static text control is placed 1/2 the margin to
+-- the right of calendar, etc..
 ::method sizeCalendar private
   use strict arg calendar
 
   r = .Rect~new
-  if calendar~getMinRect(r) then calendar~resizeTo(.Size~new(r~right, r~bottom))
+  if \ calendar~getMinRect(r) then return 0
+
+  calendar~resizeTo(.Size~new(r~right, r~bottom))
+
+  if .OS~isAtLeastVista then do
+    static = self~newStatic(IDC_ST_MSG)
+    button = self~newPushButton(IDOK)
+
+    -- Get the current window rectangles of the controls and mapped them to the
+    -- client area of the dialog.
+    mcRect = calendar~windowRect
+    self~screen2client(mcRect)
+
+    stRect = static~windowRect
+    self~screen2client(stRect)
+
+    okRect = button~windowRect
+    self~screen2client(okRect)
+
+    -- The position of the top left corner of the month calendar control defines
+    -- the margins
+    marginLeft = mcRect~left
+    marginTop  = mcRect~top
+
+    -- Calculate what the new size of the dialog will need to be to contain the
+    -- moved controls and resize the dialog to that.
+    newWidth = (marginLeft * 2) + (marginLeft % 2) + (mcRect~right - mcRect~left) + (stRect~right - stRect~left)
+    newHeight = (marginTop * 2) + (mcRect~bottom - mcRect~top) + (okRect~bottom - okRect~top)
+
+    -- The new size of the dialog has to take into account the size of the
+    -- window frame and the caption bar.
+    newWidth  += .SM~cxFixedFrame * 2
+    newHeight += (.SM~cyFixedFrame * 2) + .SM~cyCaption
+    self~resizeTo(newWidth, newHeight)
+
+    -- Move the static control to the right of the month calendar with a space
+    -- 1/2 the width of the marging between them
+    newX = mcRect~right + (marginLeft % 2)
+    static~moveTo(newX, stRect~top)
+
+    -- Move the Ok button so that the top edge of the button aligns with the
+    -- bottom edge of the month calendar and the right edge of the button is
+    -- even with the margin on the right.  (Left and right margins are equal.)
+    clRect = self~clientRect
+    newX = clRect~right - marginLeft - (okRect~right - okRect~left)
+    button~moveTo(newX, mcRect~bottom)
+  end
 
 
 -- This function returns an array of .DayState objects for the specified months.
