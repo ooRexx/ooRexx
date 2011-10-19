@@ -1846,6 +1846,24 @@ RexxObjectPtr quickDayStateBuffer(RexxMethodContext *c, uint32_t ds1, uint32_t d
     return mdsBuf;
 }
 
+RexxObjectPtr makeQuickDayStateBuffer(RexxMethodContext *c, RexxObjectPtr _ds1, RexxObjectPtr _ds2,
+                                      RexxObjectPtr _ds3, LPMONTHDAYSTATE *ppmds)
+{
+    RexxObjectPtr result = NULLOBJECT;
+
+    if ( requiredClass(c->threadContext, _ds1, "DAYSTATE", 1) &&
+         requiredClass(c->threadContext, _ds2, "DAYSTATE", 2) &&
+         requiredClass(c->threadContext, _ds3, "DAYSTATE", 3) )
+    {
+        PDAYSTATE ds1 = (PDAYSTATE)c->ObjectToCSelf(_ds1);
+        PDAYSTATE ds2 = (PDAYSTATE)c->ObjectToCSelf(_ds2);
+        PDAYSTATE ds3 = (PDAYSTATE)c->ObjectToCSelf(_ds3);
+
+        result = quickDayStateBuffer(c, ds1->val, ds2->val, ds3->val, ppmds);
+    }
+    return result;
+}
+
 RexxMethod1(RexxObjectPtr, dss_makeDayStateBuffer, RexxArrayObject, list)
 {
     size_t count = context->ArrayItems(list);
@@ -1854,19 +1872,7 @@ RexxMethod1(RexxObjectPtr, dss_makeDayStateBuffer, RexxArrayObject, list)
 
 RexxMethod3(RexxObjectPtr, dss_quickDayStateBuffer, RexxObjectPtr, _ds1, RexxObjectPtr, _ds2, RexxObjectPtr, _ds3)
 {
-    RexxObjectPtr result = NULLOBJECT;
-
-    if ( requiredClass(context->threadContext, _ds1, "DAYSTATE", 1) &&
-         requiredClass(context->threadContext, _ds2, "DAYSTATE", 2) &&
-         requiredClass(context->threadContext, _ds3, "DAYSTATE", 3) )
-    {
-        PDAYSTATE ds1 = (PDAYSTATE)context->ObjectToCSelf(_ds1);
-        PDAYSTATE ds2 = (PDAYSTATE)context->ObjectToCSelf(_ds2);
-        PDAYSTATE ds3 = (PDAYSTATE)context->ObjectToCSelf(_ds3);
-
-        result = quickDayStateBuffer(context, ds1->val, ds2->val, ds3->val, NULL);
-    }
-    return result;
+    return makeQuickDayStateBuffer(context, _ds1, _ds2, _ds3, NULL);
 }
 
 

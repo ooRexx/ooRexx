@@ -1996,7 +1996,7 @@ RexxMethod2(RexxObjectPtr, mc_setDayState, RexxArrayObject, list, CSELF, pCSelf)
     return setDayState(hMC, pmds, (int)count, result);
 }
 
-RexxMethod4(RexxObjectPtr, mc_setDayStateQuick, uint32_t, ds1, uint32_t, ds2, uint32_t, ds3, CSELF, pCSelf)
+RexxMethod4(RexxObjectPtr, mc_setDayStateQuick, RexxObjectPtr, _ds1, RexxObjectPtr, _ds2, RexxObjectPtr, _ds3, CSELF, pCSelf)
 {
     HWND hMC = getMonthCalendar(context, pCSelf);
     if ( hMC == NULL )
@@ -2005,7 +2005,7 @@ RexxMethod4(RexxObjectPtr, mc_setDayStateQuick, uint32_t, ds1, uint32_t, ds2, ui
     }
 
     LPMONTHDAYSTATE pmds;
-    RexxObjectPtr result = quickDayStateBuffer(context, ds1, ds2, ds3, &pmds);
+    RexxObjectPtr result = makeQuickDayStateBuffer(context, _ds1, _ds2, _ds3, &pmds);
     return setDayState(hMC, pmds, 3, result);
 }
 

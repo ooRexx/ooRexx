@@ -160,6 +160,7 @@ extern uint32_t getCategoryNumber(RexxMethodContext *, RexxObjectPtr);
 
 // These functions are defined in oodUtilities.cpp
 extern RexxObjectPtr makeDayStateBuffer(RexxMethodContext *c, RexxArrayObject list, size_t count, LPMONTHDAYSTATE *ppmds);
+extern RexxObjectPtr makeQuickDayStateBuffer(RexxMethodContext *c, RexxObjectPtr _ds1, RexxObjectPtr _ds2, RexxObjectPtr _ds3, LPMONTHDAYSTATE *ppmds);
 extern RexxObjectPtr quickDayStateBuffer(RexxMethodContext *c, uint32_t ds1, uint32_t ds2, uint32_t ds3, LPMONTHDAYSTATE *ppmds);
 extern void          putDefaultSymbols(RexxMethodContext *c, RexxDirectoryObject constDir);
 
