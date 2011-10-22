@@ -514,9 +514,18 @@ RexxMethod2(RexxObjectPtr, dtp_closeMonthCal, RexxObjectPtr, _size, CSELF, pCSel
  *  @returns  A DateTime object representing the current selected system time of
  *            the control, or the .nil object if the control is in the
  *            'no date' state.
+ *
+ *  @note    The ooDialog framework will set this .systemErrorCode if GDT_ERROR
+ *           is returned from  DateTime_GetSystemtime()
+ *
+ *           1002  ERROR_INVALID_MESSAGE
+ *
+ *           The window cannot act on the sent message.
  */
 RexxMethod1(RexxObjectPtr, dtp_getDateTime, CSELF, pCSelf)
 {
+    oodResetSysErrCode(c->threadContext);
+
     SYSTEMTIME sysTime = {0};
     RexxObjectPtr dateTime = TheNilObj;
 
@@ -534,8 +543,9 @@ RexxMethod1(RexxObjectPtr, dtp_getDateTime, CSELF, pCSelf)
 
         case GDT_ERROR:
         default :
-            // Some error with the DTP, raise an exception.
-            controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "DateTime_GetSystemtime", DATETIMEPICKER_WINNAME);
+            // Some error with the DTP, set .systemErrorCode.
+            oodSetSysErrCode(c->threadContext, 1002);
+            dateTime = TheZeroObj;
             break;
     }
     return dateTime;
