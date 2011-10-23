@@ -1044,6 +1044,7 @@ REXX_METHOD_PROTOTYPE(get_mc_date);
 REXX_METHOD_PROTOTYPE(set_mc_date);
 REXX_METHOD_PROTOTYPE(mc_addRemoveStyle);
 REXX_METHOD_PROTOTYPE(mc_replaceStyle);
+REXX_METHOD_PROTOTYPE(mc_getStyle);
 REXX_METHOD_PROTOTYPE(mc_getCalendarBorder);
 REXX_METHOD_PROTOTYPE(mc_getCalendarCount);
 REXX_METHOD_PROTOTYPE(mc_getCALID);
@@ -1813,6 +1814,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(set_mc_date,                    set_mc_date),
     REXX_METHOD(mc_addRemoveStyle,              mc_addRemoveStyle),
     REXX_METHOD(mc_replaceStyle,                mc_replaceStyle),
+    REXX_METHOD(mc_getStyle,                    mc_getStyle),
     REXX_METHOD(mc_getCalendarBorder,           mc_getCalendarBorder),
     REXX_METHOD(mc_getCalendarCount,            mc_getCalendarCount),
     REXX_METHOD(mc_getCALID,                    mc_getCALID),

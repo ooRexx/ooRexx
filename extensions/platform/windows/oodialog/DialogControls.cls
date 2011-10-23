@@ -1481,6 +1481,7 @@
 ::method addStyle unguarded external "LIBRARY oodialog mc_addRemoveStyle"
 ::method removeStyle unguarded external "LIBRARY oodialog mc_addRemoveStyle"
 ::method replaceStyle unguarded external "LIBRARY oodialog mc_replaceStyle"
+::method getStyle unguarded external "LIBRARY oodialog mc_getStyle"
 
 ::method getCalendarBorder unguarded external "LIBRARY oodialog mc_getCalendarBorder"
 ::method getCalendarCount unguarded external "LIBRARY oodialog mc_getCalendarCount"

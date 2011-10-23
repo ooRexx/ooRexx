@@ -458,26 +458,6 @@ static RexxStringObject mcStyle2String(RexxMethodContext *c, uint32_t style)
 }
 
 
-/**
- * Produce a Month Calendar's style from a string of keywords.
- */
-static uint32_t string2mcStyle(CSTRING style)
-{
-    uint32_t flags = 0;
-
-    if ( StrStrI(style, "DAYSTATE"   ) != NULL ) flags |= MCS_DAYSTATE;
-    if ( StrStrI(style, "MULTI"      ) != NULL ) flags |= MCS_MULTISELECT;
-    if ( StrStrI(style, "NOTODAY"    ) != NULL ) flags |= MCS_NOTODAY;
-    if ( StrStrI(style, "NOCIRCLE"   ) != NULL ) flags |= MCS_NOTODAYCIRCLE;
-    if ( StrStrI(style, "WEEKNUMBERS") != NULL ) flags |= MCS_WEEKNUMBERS;
-    if ( StrStrI(style, "NOTRAILING" ) != NULL ) flags |= MCS_NOTRAILINGDATES;
-    if ( StrStrI(style, "SHORTDAYS"  ) != NULL ) flags |= MCS_SHORTDAYSOFWEEK;
-    if ( StrStrI(style, "NOSELCHANGE") != NULL ) flags |= MCS_NOSELCHANGEONNAV;
-
-    return flags;
-}
-
-
 /** DateTimePicker::closeMonthCal()
  *
  *  Closes the drop down month calendar control of the date time picker.
@@ -493,7 +473,7 @@ RexxMethod2(RexxObjectPtr, dtp_closeMonthCal, RexxObjectPtr, _size, CSELF, pCSel
 {
     if ( ! _isAtLeastVista() )
     {
-        wrongWindowsVersionException(context, "getIdelaSize", "Vista");
+        wrongWindowsVersionException(context, "closeMonthCal", "Vista");
         return TheZeroObj;
     }
 
@@ -524,7 +504,7 @@ RexxMethod2(RexxObjectPtr, dtp_closeMonthCal, RexxObjectPtr, _size, CSELF, pCSel
  */
 RexxMethod1(RexxObjectPtr, dtp_getDateTime, CSELF, pCSelf)
 {
-    oodResetSysErrCode(c->threadContext);
+    oodResetSysErrCode(context->threadContext);
 
     SYSTEMTIME sysTime = {0};
     RexxObjectPtr dateTime = TheNilObj;
@@ -544,7 +524,7 @@ RexxMethod1(RexxObjectPtr, dtp_getDateTime, CSELF, pCSelf)
         case GDT_ERROR:
         default :
             // Some error with the DTP, set .systemErrorCode.
-            oodSetSysErrCode(c->threadContext, 1002);
+            oodSetSysErrCode(context->threadContext, 1002);
             dateTime = TheZeroObj;
             break;
     }
@@ -872,7 +852,7 @@ RexxMethod2(RexxObjectPtr, dtp_setMonthCalStyle, CSTRING, newStyle, CSELF, pCSel
         return TheZeroObj;
     }
 
-    uint32_t style = (uint32_t)DateTime_SetMonthCalStyle(getDChCtrl(pCSelf), string2mcStyle(newStyle));
+    uint32_t style = (uint32_t)DateTime_SetMonthCalStyle(getDChCtrl(pCSelf), monthCalendarStyle(newStyle, 0));
     return mcStyle2String(context, style);
 }
 
@@ -1280,6 +1260,22 @@ RexxMethod3(uint32_t, mc_addRemoveStyle, CSTRING, style, NAME, method, CSELF, pC
 RexxMethod3(uint32_t, mc_replaceStyle, CSTRING, removeStyle, CSTRING, additionalStyle, CSELF, pCSelf)
 {
     return mcChangeStyle(context, (pCDialogControl)pCSelf, removeStyle, additionalStyle, true);
+}
+
+
+/** MonthCalendar::getStyle()
+ *
+ */
+RexxMethod1(RexxStringObject, mc_getStyle, CSELF, pCSelf)
+{
+    HWND hMC = getMonthCalendar(context, pCSelf);
+    if ( hMC == NULL )
+    {
+        return 0;
+    }
+
+    uint32_t _style = GetWindowLong(hMC, GWL_STYLE);
+    return mcStyle2String(context, _style);
 }
 
 
