@@ -1014,7 +1014,8 @@ static uint32_t mcChangeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTR
 
     if ( remove )
     {
-        newStyle &= ~monthCalendarStyle(_style, 0);
+        newStyle = oldStyle & ~monthCalendarStyle(_style, 0);
+
         if ( _additionalStyle != NULL )
         {
             newStyle = monthCalendarStyle(_additionalStyle, newStyle);
