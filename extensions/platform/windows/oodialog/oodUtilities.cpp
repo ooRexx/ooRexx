@@ -1711,6 +1711,15 @@ RexxMethod2(RexxObjectPtr, rect_setTop, CSELF, pRect, int32_t, top) { ((RECT *)p
 RexxMethod2(RexxObjectPtr, rect_setRight, CSELF, pRect, int32_t, right) { ((RECT *)pRect)->right = right; return NULLOBJECT; }
 RexxMethod2(RexxObjectPtr, rect_setBottom, CSELF, pRect, int32_t, bottom) { ((RECT *)pRect)->bottom = bottom; return NULLOBJECT; }
 
+RexxMethod1(RexxStringObject, rect_string, CSELF, pRect)
+{
+    PRECT pR = (PRECT)pRect;
+
+    TCHAR buf[128];
+    _snprintf(buf, sizeof(buf), "a Rect (%d, %d, %d, %d)", pR->left, pR->top, pR->right, pR->bottom);
+
+    return context->String(buf);
+}
 
 /**
  * Methods for the ooDialog .VK class.

@@ -1090,6 +1090,7 @@ REXX_METHOD_PROTOTYPE(rect_setLeft);
 REXX_METHOD_PROTOTYPE(rect_setTop);
 REXX_METHOD_PROTOTYPE(rect_setRight);
 REXX_METHOD_PROTOTYPE(rect_setBottom);
+REXX_METHOD_PROTOTYPE(rect_string);
 
 // .Point
 REXX_METHOD_PROTOTYPE(point_init_cls);
@@ -1879,6 +1880,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(rect_setTop,                    rect_setTop),
     REXX_METHOD(rect_setRight,                  rect_setRight),
     REXX_METHOD(rect_setBottom,                 rect_setBottom),
+    REXX_METHOD(rect_string,                    rect_string),
     REXX_METHOD(point_init_cls,                 point_init_cls),
     REXX_METHOD(point_init,                     point_init),
     REXX_METHOD(point_x,                        point_x),

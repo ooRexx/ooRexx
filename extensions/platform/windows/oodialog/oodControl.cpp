@@ -291,6 +291,9 @@ RexxStringObject objectStateToString(RexxMethodContext *c, uint32_t state)
     char buf[512];
     buf[0] = '\0';
 
+    if ( state & STATE_SYSTEM_ALERT_HIGH)      strcat(buf, "ALERT_HIGH ");
+    if ( state & STATE_SYSTEM_ALERT_LOW)       strcat(buf, "ALERT_LOW ");
+    if ( state & STATE_SYSTEM_ALERT_MEDIUM)    strcat(buf, "ALERT_MEDIUM ");
     if ( state & STATE_SYSTEM_ANIMATED)        strcat(buf, "ANIMATED ");
     if ( state & STATE_SYSTEM_BUSY)            strcat(buf, "BUSY ");
     if ( state & STATE_SYSTEM_CHECKED)         strcat(buf, "CHECKED ");
@@ -307,6 +310,7 @@ RexxStringObject objectStateToString(RexxMethodContext *c, uint32_t state)
     if ( state & STATE_SYSTEM_INVISIBLE)       strcat(buf, "INVISIBLE ");
     if ( state & STATE_SYSTEM_LINKED)          strcat(buf, "LINKED ");
     if ( state & STATE_SYSTEM_MARQUEED)        strcat(buf, "MARQUEED ");
+    if ( state & STATE_SYSTEM_MIXED)           strcat(buf, "MIXED ");
     if ( state & STATE_SYSTEM_MOVEABLE)        strcat(buf, "MOVEABLE ");
     if ( state & STATE_SYSTEM_MULTISELECTABLE) strcat(buf, "MULTISELECTABLE ");
     if ( state & STATE_SYSTEM_OFFSCREEN)       strcat(buf, "OFFSCREEN ");

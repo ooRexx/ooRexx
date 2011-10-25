@@ -819,7 +819,7 @@ RexxMethod2(logical_t, dtp_setFormat, CSTRING, format, CSELF, pCSelf)
  *                   the month calendar.
  *
  *  @return  The previous color for the part specified as a COLORREF, or
- *           CLR_NONE on error.
+ *           CLR_INVALID on error.
  */
 RexxMethod3(uint32_t, dtp_setMonthCalColor, CSTRING, calPart, uint32_t, color, CSELF, pCSelf)
 {
@@ -993,7 +993,8 @@ static int32_t dayName2day(CSTRING day)
  *  @remarks  MSDN suggests setting last error to 0 before calling
  *            GetWindowLong() as the correct way to determine error.
  */
-static uint32_t mcChangeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTRING _style, CSTRING _additionalStyle, bool remove)
+static RexxStringObject mcChangeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTRING _style,
+                                      CSTRING _additionalStyle, bool remove)
 {
     oodResetSysErrCode(c->threadContext);
     SetLastError(0);
@@ -1030,7 +1031,7 @@ static uint32_t mcChangeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTR
     {
         goto err_out;
     }
-    return oldStyle;
+    return mcStyle2String(c, oldStyle);
 
 err_out:
     oodSetSysErrCode(c->threadContext);
@@ -1248,7 +1249,7 @@ RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, CSELF, pCSelf)
  *
  *  @note  Sets the .SystemErrorCode.
  */
-RexxMethod3(uint32_t, mc_addRemoveStyle, CSTRING, style, NAME, method, CSELF, pCSelf)
+RexxMethod3(RexxStringObject, mc_addRemoveStyle, CSTRING, style, NAME, method, CSELF, pCSelf)
 {
     return mcChangeStyle(context, (pCDialogControl)pCSelf, style, NULL, (*method == 'R'));
 }
@@ -1258,7 +1259,7 @@ RexxMethod3(uint32_t, mc_addRemoveStyle, CSTRING, style, NAME, method, CSELF, pC
  *
  *  @note  Sets the .SystemErrorCode.
  */
-RexxMethod3(uint32_t, mc_replaceStyle, CSTRING, removeStyle, CSTRING, additionalStyle, CSELF, pCSelf)
+RexxMethod3(RexxStringObject, mc_replaceStyle, CSTRING, removeStyle, CSTRING, additionalStyle, CSELF, pCSelf)
 {
     return mcChangeStyle(context, (pCDialogControl)pCSelf, removeStyle, additionalStyle, true);
 }
