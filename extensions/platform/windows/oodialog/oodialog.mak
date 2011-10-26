@@ -122,6 +122,7 @@ $(OR_OUTDIR)\oodialog.dll:     $(SOURCEF)
     COMDLG32.LIB \
     COMCTL32.LIB \
     shlwapi.lib \
+    Oleacc.lib \
     -def:$(OR_OODIALOGSRC)\ooDialog.def \
     -out:$(OR_OUTDIR)\$(@B).dll
 

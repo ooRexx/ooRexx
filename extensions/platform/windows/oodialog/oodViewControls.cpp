@@ -572,18 +572,12 @@ RexxMethod1(RexxObjectPtr, dtp_getInfo, CSELF, pCSelf)
 
     DateTime_GetDateTimePickerInfo(hDTP, &info);
 
-    // TODO need to test this on Vista and see what the actual values are
-    // depending on the style of the DTP.
-
     context->DirectoryPut(result, rxNewRect(context, &(info.rcCheck)), "CHECKRECT");
     context->DirectoryPut(result, objectStateToString(context, info.stateCheck), "CHECKSTATE");
 
     context->DirectoryPut(result, rxNewRect(context, &(info.rcButton)), "BUTTONRECT");
     context->DirectoryPut(result, objectStateToString(context, info.stateButton), "BUTTONSTATE");
 
-    // TODO this really needs testing.  MSN docs do not specifically say this is
-    // a month calendar control, rather they call it a drop down grid??
-    // Assuming for now it is a month calendar.
     RexxObjectPtr ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndDropDown, winMonthCalendar, false);
     context->DirectoryPut(result, ctrl, "DROPDOWN");
 

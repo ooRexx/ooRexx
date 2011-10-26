@@ -282,50 +282,49 @@ RexxClassObject oodClass4controlType(RexxThreadContext *c, oodControl_t controlT
  * any time.
  *
  * This is used in a few places in ooDialog.  MSDN is not explicit in describing
- * what state constants are valid in these places.  So this function includes
- * all the valid state contstants, even though most of them are probably not
- * used.
+ * what state constants are valid in these places.
+ *
+ * This function retrieves a localized string that describes an object's state,
+ * exactly what that string will be for any given situation, I don't know.
+ *
+ * @remarks  In testing DateTimePicker::getInfo() I see the state is equla to 0
+ *           quite often.  Passing in 0 to the GetStateText() function returns a
+ *           string -> "normal".  So, we will consider that valid.
  */
 RexxStringObject objectStateToString(RexxMethodContext *c, uint32_t state)
 {
-    char buf[512];
-    buf[0] = '\0';
+    char result[512];
+    result[0] = '\0';
 
-    if ( state & STATE_SYSTEM_ALERT_HIGH)      strcat(buf, "ALERT_HIGH ");
-    if ( state & STATE_SYSTEM_ALERT_LOW)       strcat(buf, "ALERT_LOW ");
-    if ( state & STATE_SYSTEM_ALERT_MEDIUM)    strcat(buf, "ALERT_MEDIUM ");
-    if ( state & STATE_SYSTEM_ANIMATED)        strcat(buf, "ANIMATED ");
-    if ( state & STATE_SYSTEM_BUSY)            strcat(buf, "BUSY ");
-    if ( state & STATE_SYSTEM_CHECKED)         strcat(buf, "CHECKED ");
-    if ( state & STATE_SYSTEM_COLLAPSED)       strcat(buf, "COLLAPSED ");
-    if ( state & STATE_SYSTEM_DEFAULT)         strcat(buf, "DEFAULT ");
-    if ( state & STATE_SYSTEM_EXPANDED)        strcat(buf, "EXPANDED ");
-    if ( state & STATE_SYSTEM_EXTSELECTABLE)   strcat(buf, "EXTSELECTABLE ");
-    if ( state & STATE_SYSTEM_FLOATING)        strcat(buf, "FLOATING ");
-    if ( state & STATE_SYSTEM_FOCUSABLE)       strcat(buf, "FOCUSABLE ");
-    if ( state & STATE_SYSTEM_FOCUSED)         strcat(buf, "FOCUSED ");
-    if ( state & STATE_SYSTEM_HASPOPUP)        strcat(buf, "HASPOPUP ");
-    if ( state & STATE_SYSTEM_HOTTRACKED)      strcat(buf, "HOTTRACKED ");
-    if ( state & STATE_SYSTEM_INDETERMINATE)   strcat(buf, "INDETERMINATE ");
-    if ( state & STATE_SYSTEM_INVISIBLE)       strcat(buf, "INVISIBLE ");
-    if ( state & STATE_SYSTEM_LINKED)          strcat(buf, "LINKED ");
-    if ( state & STATE_SYSTEM_MARQUEED)        strcat(buf, "MARQUEED ");
-    if ( state & STATE_SYSTEM_MIXED)           strcat(buf, "MIXED ");
-    if ( state & STATE_SYSTEM_MOVEABLE)        strcat(buf, "MOVEABLE ");
-    if ( state & STATE_SYSTEM_MULTISELECTABLE) strcat(buf, "MULTISELECTABLE ");
-    if ( state & STATE_SYSTEM_OFFSCREEN)       strcat(buf, "OFFSCREEN ");
-    if ( state & STATE_SYSTEM_PRESSED)         strcat(buf, "PRESSED ");
-    if ( state & STATE_SYSTEM_PROTECTED)       strcat(buf, "PROTECTED ");
-    if ( state & STATE_SYSTEM_READONLY)        strcat(buf, "READONLY ");
-    if ( state & STATE_SYSTEM_SELECTABLE)      strcat(buf, "SELECTABLE ");
-    if ( state & STATE_SYSTEM_SELECTED)        strcat(buf, "SELECTED ");
-    if ( state & STATE_SYSTEM_SELFVOICING)     strcat(buf, "SELFVOICING ");
-    if ( state & STATE_SYSTEM_SIZEABLE)        strcat(buf, "SIZEABLE ");
-    if ( state & STATE_SYSTEM_TRAVERSED)       strcat(buf, "TRAVERSED ");
-    if ( state & STATE_SYSTEM_UNAVAILABLE)     strcat(buf, "UNAVAILABLE ");
+    char stateStr[256];
+    stateStr[0] = '\0';
 
-    *(buf + strlen(buf)) = '\0';
-    return c->String(buf);
+    if ( state == 0 )
+    {
+        GetStateText(state, result, sizeof(result));
+    }
+    else
+    {
+        // We need mask to be valid when we enter the for loop.
+        uint32_t mask = 1;
+        for ( uint32_t i = 1; i < 32 && (mask & STATE_SYSTEM_VALID); i++ )
+        {
+            if ( mask & state )
+            {
+                if ( GetStateText(mask & state, stateStr, sizeof(stateStr)) > 0 )
+                {
+                    if ( strlen(result) > 0 )
+                    {
+                        strcat(result, ", ");
+                    }
+                    strcat(result, stateStr);
+                }
+            }
+            mask = 1 << i;
+        }
+    }
+
+    return c->String(result);
 }
 
 
