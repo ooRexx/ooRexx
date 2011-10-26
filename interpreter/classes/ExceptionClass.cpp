@@ -162,6 +162,7 @@ void ExceptionClass::live(size_t liveMark)
     memory_mark(this->stackFrames);
     memory_mark(this->traceBack);
     memory_mark(this->condition);
+    memory_mark(this->objectVariables);
 }
 
 void ExceptionClass::liveGeneral(int reason)
@@ -177,6 +178,7 @@ void ExceptionClass::liveGeneral(int reason)
     memory_mark_general(this->stackFrames);
     memory_mark_general(this->traceBack);
     memory_mark_general(this->condition);
+    memory_mark_general(this->objectVariables);
 }
 
 void ExceptionClass::flatten(RexxEnvelope *envelope)
@@ -194,6 +196,7 @@ void ExceptionClass::flatten(RexxEnvelope *envelope)
   flatten_reference(newThis->stackFrames, envelope);
   flatten_reference(newThis->traceBack, envelope);
   flatten_reference(newThis->condition, envelope);
+  flatten_reference(newThis->objectVariables, envelope);
 
   cleanUpFlatten
 }

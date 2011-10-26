@@ -114,6 +114,7 @@ void StackFrameClass::live(size_t liveMark)
     memory_mark(this->traceLine);
     memory_mark(this->arguments);
     memory_mark(this->target);
+    memory_mark(this->objectVariables);
 }
 
 void StackFrameClass::liveGeneral(int reason)
@@ -126,6 +127,7 @@ void StackFrameClass::liveGeneral(int reason)
     memory_mark_general(this->traceLine);
     memory_mark_general(this->arguments);
     memory_mark_general(this->target);
+    memory_mark_general(this->objectVariables);
 }
 
 void StackFrameClass::flatten(RexxEnvelope *envelope)
@@ -140,6 +142,7 @@ void StackFrameClass::flatten(RexxEnvelope *envelope)
   newThis->traceLine = OREF_NULL;
   newThis->arguments = OREF_NULL;
   newThis->target = OREF_NULL;
+  newThis->objectVariables = OREF_NULL;
 
   cleanUpFlatten
 }

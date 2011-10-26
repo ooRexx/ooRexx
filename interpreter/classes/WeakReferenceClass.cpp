@@ -100,7 +100,9 @@ void WeakReference::live(size_t liveMark)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    // we need to get called, but we don't do any marking
+    // we need to get called, but we don't do any marking of the referent.
+    // we do, however, need to mark the object variables in case this is a subclass.
+    memory_mark(this->objectVariables);
 }
 
 
@@ -109,6 +111,8 @@ void WeakReference::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
+    // this might be a subclass, so we need to mark the object variables always
+    memory_mark_general(this->objectVariables);
     // these references are only marked during a save or restore image process.
     // NOTE:  WeakReference objects saved in the Rexx image get removed from the
     // weak reference list and just become normal objects.  Since the weak references
@@ -127,7 +131,8 @@ void WeakReference::flatten(RexxEnvelope *envelope)
 /******************************************************************************/
 {
   setUpFlatten(WeakReference)
-
+   // not normally needed, but this might be a subclass
+   flatten_reference(newThis->objectVariables, envelope);
    flatten_reference(newThis->referentObject, envelope);
 
    // make sure the new version has nulled out list pointers
