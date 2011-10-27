@@ -1104,6 +1104,7 @@ REXX_METHOD_PROTOTYPE(point_subtract);
 REXX_METHOD_PROTOTYPE(point_incr);
 REXX_METHOD_PROTOTYPE(point_decr);
 REXX_METHOD_PROTOTYPE(point_inRect);
+REXX_METHOD_PROTOTYPE(point_string);
 
 // .Size
 REXX_METHOD_PROTOTYPE(size_init_cls);
@@ -1112,6 +1113,9 @@ REXX_METHOD_PROTOTYPE(size_cx);
 REXX_METHOD_PROTOTYPE(size_setCX);
 REXX_METHOD_PROTOTYPE(size_cy);
 REXX_METHOD_PROTOTYPE(size_setCY);
+REXX_METHOD_PROTOTYPE(size_compare);
+REXX_METHOD_PROTOTYPE(size_equateTo);
+REXX_METHOD_PROTOTYPE(size_string);
 
 // .VK
 REXX_METHOD_PROTOTYPE(vk_key2name);
@@ -1892,12 +1896,16 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(point_incr,                     point_incr),
     REXX_METHOD(point_decr,                     point_decr),
     REXX_METHOD(point_inRect,                   point_inRect),
+    REXX_METHOD(point_string,                   point_string),
     REXX_METHOD(size_init_cls,                  size_init_cls),
     REXX_METHOD(size_init,                      size_init),
     REXX_METHOD(size_cx,                        size_cx),
     REXX_METHOD(size_setCX,                     size_setCX),
     REXX_METHOD(size_cy,                        size_cy),
     REXX_METHOD(size_setCY,                     size_setCY),
+    REXX_METHOD(size_compare,                   size_compare),
+    REXX_METHOD(size_equateTo,                  size_equateTo),
+    REXX_METHOD(size_string,                    size_string),
     REXX_METHOD(vk_key2name,                    vk_key2name),
 
     // Menu classes methods

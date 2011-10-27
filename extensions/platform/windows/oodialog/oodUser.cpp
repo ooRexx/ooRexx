@@ -789,7 +789,7 @@ uint32_t dateTimePickerStyle(CSTRING opts, uint32_t style)
         style |= DTS_TIMEFORMAT;
     }
 
-    if ( StrStrI(opts, "PARSE"   ) != NULL ) style |= DTS_APPCANPARSE;
+    if ( StrStrI(opts, "CANPARSE") != NULL ) style |= DTS_APPCANPARSE;
     if ( StrStrI(opts, "RIGHT"   ) != NULL ) style |= DTS_RIGHTALIGN;
     if ( StrStrI(opts, "SHOWNONE") != NULL ) style |= DTS_SHOWNONE;
     if ( StrStrI(opts, "UPDOWN"  ) != NULL ) style |= DTS_UPDOWN;

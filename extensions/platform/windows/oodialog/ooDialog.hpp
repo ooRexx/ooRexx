@@ -343,15 +343,6 @@ typedef struct {
     UINT               uID;             /* Resource ID of subclassed control.     */
 } SUBCLASSDATA;
 
-// Struct for the Edit::ignoreMouseWheel() method, used as pData in SUBCLASSDATA
-typedef struct {
-    RexxThreadContext   *dlgProcContext;  // Thread context of the owner dialog's window procedure.
-    RexxObjectPtr        ownerDlg;        // Edit control, Rexx dialog object.
-    char                *method;          // Name of method to invoke.
-    bool                 willReply;       // User wants event handler invoked directly, or not.
-} MOUSEWHEELDATA;
-typedef MOUSEWHEELDATA *PMOUSEWHEELDATA;
-
 /* Stuff for key press subclassing and keyboard hooks */
 
 #define MAX_KEYPRESS_METHODS  63
@@ -807,6 +798,15 @@ typedef struct _spiCSelf {
 typedef CSpi *pCSpi;
 
 
+// Struct for the Edit::ignoreMouseWheel() method, used as pData in SUBCLASSDATA
+typedef struct {
+    RexxThreadContext   *dlgProcContext;  // Thread context of the owner dialog's window procedure.
+    pCPlainBaseDialog    pcpbd;           // The owner dialog CSelf.
+    RexxObjectPtr        ownerDlg;        // Edit control, Rexx dialog object.
+    char                *method;          // Name of method to invoke.
+    bool                 willReply;       // User wants event handler invoked directly, or not.
+} MOUSEWHEELDATA;
+typedef MOUSEWHEELDATA *PMOUSEWHEELDATA;
 #define COMCTL32_VERSION_STRING_LEN  31
 
 // All global variables are defined in oodPackageEntry.cpp

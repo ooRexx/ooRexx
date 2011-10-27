@@ -1745,9 +1745,10 @@ RexxMethod4(RexxObjectPtr, e_ignoreMouseWheel, OPTIONAL_logical_t, ignore, OPTIO
                 // in the owner dialog's CSelf struct.
                 pCPlainBaseDialog pcpbd = dlgToCSelf(context, pcdc->oDlg);
 
-                mwd->willReply      = willReply == TRUE ? true : false;
                 mwd->dlgProcContext = pcpbd->dlgProcContext;
-                mwd->ownerDlg = pcdc->oDlg;
+                mwd->willReply      = willReply == TRUE ? true : false;
+                mwd->pcpbd          = pcpbd;
+                mwd->ownerDlg       = pcdc->oDlg;
                 strcpy(mwd->method, method);
 
                 pData->pData = mwd;

@@ -1638,6 +1638,18 @@ RexxMethod2(logical_t, point_inRect, RexxObjectPtr, rect, CSELF, p)
     return FALSE;
 }
 
+RexxMethod1(RexxStringObject, point_string, CSELF, p)
+{
+    PPOINT pt = (PPOINT)p;
+
+    TCHAR buf[128];
+    _snprintf(buf, sizeof(buf), "a Point (%d, %d)", pt->x, pt->y);
+
+    return context->String(buf);
+}
+
+
+
 /**
  * Methods for the ooDialog .Size class.
  */
@@ -1670,6 +1682,92 @@ RexxMethod1(int32_t, size_cx, CSELF, s) { return ((SIZE *)s)->cx; }
 RexxMethod1(int32_t, size_cy, CSELF, s) { return ((SIZE *)s)->cy; }
 RexxMethod2(RexxObjectPtr, size_setCX, CSELF, s, int32_t, cx) { ((SIZE *)s)->cx = cx; return NULLOBJECT; }
 RexxMethod2(RexxObjectPtr, size_setCY, CSELF, s, int32_t, cy) { ((SIZE *)s)->cy = cy; return NULLOBJECT; }
+
+RexxMethod1(RexxStringObject, size_string, CSELF, s)
+{
+    PSIZE size = (PSIZE)s;
+
+    TCHAR buf[128];
+    _snprintf(buf, sizeof(buf), "a Size (%d, %d)", size->cx, size->cy);
+
+    return context->String(buf);
+}
+
+RexxMethod2(logical_t, size_equateTo, RexxObjectPtr, other, CSELF, s)
+{
+    PSIZE size = (PSIZE)s;
+    PSIZE pOther = rxGetSize(context, other, 1);
+    if ( pOther == NULL )
+    {
+        return FALSE;
+    }
+
+    size->cx = pOther->cx;
+    size->cy = pOther->cy;
+
+    return TRUE;
+}
+
+RexxMethod3(logical_t, size_compare, RexxObjectPtr, other, NAME, method, CSELF, s)
+{
+    PSIZE size = (PSIZE)s;
+    PSIZE pOther = rxGetSize(context, other, 1);
+    if ( pOther == NULL )
+    {
+        return 0;
+    }
+
+    if ( strcmp(method, "=") == 0 )
+    {
+        return (size->cx * size->cy) == (pOther->cx * pOther->cy);
+    }
+    else if ( strcmp(method, "==") == 0 )
+    {
+        return (size->cx == pOther->cx) && (size->cy == pOther->cy);
+    }
+    else if ( strcmp(method, "\\=") == 0 )
+    {
+        return (size->cx * size->cy) != (pOther->cx * pOther->cy);
+    }
+    else if ( strcmp(method, "\\==") == 0 )
+    {
+        return (size->cx != pOther->cx) && (size->cy != pOther->cy);
+    }
+    else if ( strcmp(method, "<") == 0 )
+    {
+        return (size->cx * size->cy) < (pOther->cx * pOther->cy);
+    }
+    else if ( strcmp(method, "<<") == 0 )
+    {
+        return (size->cx < pOther->cx) && (size->cy < pOther->cy);
+    }
+    else if ( strcmp(method, "<=") == 0 )
+    {
+        return (size->cx * size->cy) <= (pOther->cx * pOther->cy);
+    }
+    else if ( strcmp(method, "<<=") == 0 )
+    {
+        return (size->cx <= pOther->cx) && (size->cy <= pOther->cy);
+    }
+    else if ( strcmp(method, ">") == 0 )
+    {
+        return (size->cx * size->cy) > (pOther->cx * pOther->cy);
+    }
+    else if ( strcmp(method, ">>") == 0 )
+    {
+        return (size->cx > pOther->cx) && (size->cy > pOther->cy);
+    }
+    else if ( strcmp(method, ">=") == 0 )
+    {
+        return (size->cx * size->cy) >= (pOther->cx * pOther->cy);
+    }
+    else if ( strcmp(method, ">>=") == 0 )
+    {
+        return (size->cx >= pOther->cx) && (size->cy >= pOther->cy);
+    }
+
+    return FALSE;
+}
 
 /**
  * Methods for the ooDialog .Rect class.

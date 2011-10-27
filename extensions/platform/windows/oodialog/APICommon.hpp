@@ -121,6 +121,28 @@ extern void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
 
 /**
+ *  Message "msg" did not return a result
+ *
+ *  Message "onFormat" did not return a result
+ *
+ *  Raises 91.999
+ *
+ * @param c    The thread context we are operating under.
+ * @param msg  The message (method) name that did not return a value
+ *
+ * @return NULLOBJECT
+ */
+inline RexxObjectPtr noMsgReturnException(RexxThreadContext *c, RexxStringObject msg)
+{
+    c->RaiseException1(Rexx_Error_No_result_object_message, msg);
+    return NULLOBJECT;
+}
+inline RexxObjectPtr noMsgReturnException(RexxThreadContext *c, CSTRING msg)
+{
+    return noMsgReturnException(c, c->String(msg));
+}
+
+/**
  *  Missing argument; argument 'argument' is required
  *
  *  Missing argument; argument 2 is required

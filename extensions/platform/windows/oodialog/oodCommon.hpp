@@ -435,7 +435,7 @@ inline pCPlainBaseDialogClass dlgToClassCSelf(RexxMethodContext *c)
  * the direct object the method was invoked on.  This performs a scoped CSelf
  * lookup.
  *
- * @param c    The method context we are operating in.
+ * @param c    The method (or thread) context we are operating in.
  * @param dlg  The dialog object whose CSelf pointer is needed.
  *
  * @return A pointer to the CSelf of the dlg object.
@@ -444,6 +444,10 @@ inline pCPlainBaseDialogClass dlgToClassCSelf(RexxMethodContext *c)
  *           object.
  */
 inline pCPlainBaseDialog dlgToCSelf(RexxMethodContext *c, RexxObjectPtr dlg)
+{
+    return (pCPlainBaseDialog)c->ObjectToCSelf(dlg, ThePlainBaseDialogClass);
+}
+inline pCPlainBaseDialog dlgToCSelf(RexxThreadContext *c, RexxObjectPtr dlg)
 {
     return (pCPlainBaseDialog)c->ObjectToCSelf(dlg, ThePlainBaseDialogClass);
 }
