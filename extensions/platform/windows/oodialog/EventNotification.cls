@@ -85,7 +85,7 @@
 -- WM_MOUSEWHEEL
 ::method connectMouseWheel
    use strict arg msgToRise = 'onMouseWheel', willReply = .true
-   tag = 0x00000003
+   tag = 0x00000002
    if willReply then tag = 0x02000002
    return self~addUserMsg(msgToRise, "0x0000020a", "0xFFFFFFFF", 0, 0, 0, 0, tag)
 
@@ -154,11 +154,14 @@
 
 
 ::method connectButtonEvent
-   use strict arg id, type, msgToRise = ""
+   use strict arg id, type, msgToRise = "", willReply = .false
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
+
    if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
+   tag = 0
+   if willReply then tag = 0x02000000
    select
        when type = "CLICKED"   then do
           if id < 3 | id = 9 then return 0
@@ -174,12 +177,13 @@
 
        when type = "HOTITEM"   then do
          -- Sends WM_NOTIFY and notify code is: BCN_HOTITEMCHANGE=0xfffffb1f (decimal=-1249) TAG_BUTTON = 0x00000004
-         return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", 0xFFFFFB1F, "0xFFFFFFFF", 4)
+         tag = .DlgUtil~or(tag, 0x00000004)
+         return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", 0xFFFFFB1F, "0xFFFFFFFF", tag)
        end
 
        otherwise return -1
    end
-   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* buttons sends WM_COMMAND when BS_NOTIFY */
+   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0, tag) /* buttons sends WM_COMMAND when BS_NOTIFY */
 
 
 ::method connectEditEvent

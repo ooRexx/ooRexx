@@ -972,18 +972,15 @@ MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringO
 
 bool checkMsgReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING methodName, bool clear)
 {
-    if ( reply == NULLOBJECT )
+    bool haveCondition = checkForCondition(c, clear);
+
+    if ( ! haveCondition && reply == NULLOBJECT )
     {
         noMsgReturnException(c, methodName);
-    }
-
-    bool result = checkForCondition(c, false);
-
-    if ( reply == NULLOBJECT )
-    {
+        haveCondition = checkForCondition(c, clear);
         endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
     }
-    return result;
+    return haveCondition;
 }
 /**
  * Invokes the Rexx dialog's event handling method for a Windows message.
