@@ -80,12 +80,21 @@ return 0
     self~connectButtonEvent(i, 'CLICKED', onRbClick, .true)
   end
 
+  self~connectButtonEvent(IDC_PB_PRINT, 'CLICKED', onPrint)
 
 ::method initDialog
   expose dtp currentType
 
   dtp = self~newDateTimePicker(IDC_DTP_REPORT);
   self~newRadioButton(IDC_RB_BAL_SHEET)~check
+
+  -- Set up the range of the DTP control.  We say we can't print a report in the
+  -- future, so the maximum date is set to the current time.  We say the company
+  -- first opened its doors on 3/2/1998 (which happens to be a Monday) at 8 AM,
+  -- so a report can not start prior to that date.
+  now = .DateTime~new
+  start = .DateTime~fromIsoDate('1998-03-02T08:00:00.000000')
+  dtp~setRange(.Array~of(start, now))
 
   -- This is our format string with 3 call back fields in it.  Each call back
   -- field is designated by using a capital X. The number of X's allow you to
@@ -205,10 +214,13 @@ return 0
  * keystroke.
  *
  * Each time the date and time in the DTP control is modified, the DTP control
- * sends the FORMAT notification.  This is what drives our program.
+ * sends the FORMAT notification.  This is what drives our program.  When the
+ * user presses the up or down arrow, home, end, page up, or page down keys in
+ * one of the call back fields we send a modified date and time back to the DTP
+ * control.  The DTP control generates a FORMAT event, and in our FORMAT event
+ * handler we return the updated value for the call back field.
  */
 ::method onKeyDown
-  expose periods numbers currentType currentPeriod
   use arg field, dt, vKey, idFrom, hwndFrom
 
   select
@@ -228,6 +240,24 @@ return 0
 
   return newDT
 
+
+/** onRbClick()
+ *
+ * This is the event handler for the click event of a radio button.  We
+ * connected the event for every radio button to this one method.  Each time the
+ * user clicks on a radio button, it selects a new report type.  In our program,
+ * when a new report type is selected, the initial date for the report is set to
+ * the first day of the current period.  I.e., if the current period is 'month'
+ * and the date is 7/10/2008, then the first day of the period is 7/1/2008.
+ *
+ * As explained in the comments for the onFormat() method above, when the date
+ * and time is changed in the DTP control, the control generates a FORMAT event.
+ * Here we update the index to the type of report, and set the new date and
+ * time.  In the FORMAT event handler, the updated report type index causes the
+ * event handler to return the text for the new report type.  And the display in
+ * the DTP control is automatically updated to reflect the user's report
+ * selection.
+ */
 ::method onRbClick unguarded
   expose dtp currentType
   use arg info, hwnd
@@ -262,7 +292,7 @@ return 0
     end
 
     otherwise do
-      -- Should be impossible
+      -- Should be impossible to get here.
       nop
     end
   end
@@ -418,6 +448,51 @@ return 0
   return newDT
 
 
+/** onPrint()
+ *
+ * The event handler for the CLICK event for the 'Print' push button.  A real
+ * program would of course print the report using the details specified by the
+ * user through the DTP control.  This is just an example program, we simply
+ * put up a message box.
+ */
+::method onPrint unguarded
+  expose types currentType dtp
+  use arg info, hwndFrom
+
+  select
+    when currentType == 1 then report = 'Balance Sheet'
+    when currentType == 2 then report = 'Payroll'
+    when currentType == 3 then report = 'Cash Flow'
+    when currentType == 4 then report = 'Income Statement'
+    when currentType == 5 then report = 'Earnings'
+    otherwise report = 'Error Report NOT Found'
+  end
+  -- End select
+
+  dt = dtp~getDateTime
+
+  if report~word(1) == 'Error' then do
+    title = report
+    msg   = 'An internal software error has occurred preventing'.endOfLine     || -
+            'the printing of the report.' || .endOfLine~copies(2)              || -
+            'Please contact IT at "internalsupport@acmewidgets.com"'.endOfLine || -
+            'to resolve this issue.'
+
+    icon = 'ERROR'
+  end
+  else do
+    title = "Printing the" report "Report"
+    msg   = 'The' report 'report is being sent to the default'.endOfLine    || -
+            'printer' || .endOfLine~copies(3)                               || -
+            'Report Start Time:' || '09'x || dt~civilTime  || .endOfLine    || -
+            'Report Start Date:' || '09'x || dt~languageDate
+
+    icon = 'INFORMATION'
+  end
+
+  j = MessageDialog(msg, self~hwnd, title, 'OK', icon)
+
+
 /** updatePeriod()
  *
  * This method is invoked during the event handler for the key down event when
@@ -468,6 +543,18 @@ return 0
   return newDT
 
 
+/** updateReport()
+ *
+ * This method is invoked during the event handler for the key down event when
+ * the call back field is the report type (balance, cash flow, etc...)  The user
+ * can use the up / down arrows, home, end, page up, and page down keys to cycle
+ * through the periods.  All other keys are simply ignored.
+ *
+ * Note that when the report type changes, the date gets set to the first day of
+ * the period, and the selected radio button gets changed.  For the user, the
+ * effect of using one of the arrow keys in the report type call back field is
+ * exactly the same as selecting a report by using the radio buttons.
+ */
 ::method updateReport unguarded private
   expose types currentType
   use strict arg dt, vkey
@@ -542,9 +629,9 @@ return 0
  *
  * Returns the number word (first, second, etc., for the specified date based on
  * the current period.  I.e., if the date is 7/4/1999 and current period is
- * month then the number word is 7
+ * month then the number word is Seventh.
  */
-::method getPeriodNumber private
+::method getPeriodNumber unguarded private
   expose numbers periods currentPeriod
   use strict arg dt
 
@@ -572,6 +659,19 @@ return 0
   return word
 
 
+/** getFirstDayOfPeriod()
+ *
+ * Returns a .DateTime object that represents the first day of the period.  The
+ * first day of the period is based on the currently selected date in the DTP
+ * control and the setting of the period.  I.e., if the date is 5/13/2003 and
+ * the period is quarter, then the first day of the period is 4/1/2003.
+ *
+ * Note that the .DateTime object returned here is used to update the DTP
+ * control, where we need the DTP control to generate a FORMAT event.  If the
+ * returned date is exactly the same as the currently selected date, the DTP
+ * control does nothing.  So, we check for that possibility and add 1 second to
+ * the return.  This is enough to force the FORMAT event notification we need.
+ */
 ::method getFirstDayOfPeriod private
   expose dtp
   use strict arg
@@ -586,6 +686,20 @@ return 0
   return dt
 
 
+/** calcSize()
+ *
+ * Calculates the size needed to fully display the largest string in the
+ * specified call back field.  The DTP control uses this size to ensure that
+ * the display is formatted correctly.
+ *
+ * For the specified call back field, we iterate over the items for the field,
+ * calculate the size in pixels needed for the item, and save the biggest size.
+ * We could have just eye-balled the biggest item in the field and calculated
+ * its size.  For instance, 'quarter' looks to be the biggest item in the period
+ * call back.  However, doing it this way ensures we get the correct display
+ * size and allows the program to be enhanced by adding items to any of the call
+ * back fields without having to change this method.
+ */
 ::method calcSize unguarded private
   expose dtp periods numbers types
   use strict arg which
@@ -594,19 +708,23 @@ return 0
   size   = .Size~new
 
   select
-    when which == 'XX' then a = numbers
-    when which == 'XXX' then a = periods
-    otherwise a = types
+    when which == 'XX' then array = numbers
+    when which == 'XXX' then array = periods
+    otherwise array = types
   end
   -- End select
 
-  do text over a
+  do text over array
     dtp~textSize(text, size)
     if biggest < size then biggest~equateTo(size)
   end
 
   return biggest
 
+/** setUpArrays()
+ *
+ * Simple house keeping, initialize an array of items for each call back field.
+ */
 ::method setUpArrays private
   expose periods numbers types currentPeriod currentType
 
@@ -618,5 +736,6 @@ return 0
 
   types = .Array~of('balance', 'payroll', 'cash flow', 'income', 'earnings')
 
+  -- Set the starting period, 'quarter', and report, 'balance'.
   currentPeriod = 2
   currentType = 1
