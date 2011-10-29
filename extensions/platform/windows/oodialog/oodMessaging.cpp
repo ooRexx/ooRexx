@@ -1047,7 +1047,7 @@ inline MsgReplyType genericNotifyInvoke(RexxThreadContext *c, pCPlainBaseDialog 
  * LPARAM paramters of the WM_COMMAND message.
  *
  * Note that for WM_COMMAND messages, lParam is always the window handle of the
- * dialog control, if a control iniated the message.  For menu items and
+ * dialog control, if a control initiated the message.  For menu items and
  * accelerators, it is always 0. So, converting to a pseudo pointer is always
  * the correct thing to do.
  */
@@ -1059,7 +1059,8 @@ static MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog
     if ( tag & TAG_REPLYFROMREXX )
     {
         // We only get here for messages where what the Rexx method returns is
-        // discarded / ignored. TODO, this needs to be double checked.
+        // discarded / ignored.  This is true now, but we need to be careful
+        // when adding new event connections to ooDialog.
         invokeDirect(c, pcpbd, methodName, args);
         return ReplyTrue;
     }
@@ -1701,7 +1702,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                     }
                     else
                     {
-                        wrongClassReplyException(c, "DateTime");
+                        wrongClassReplyException(c, methodName, "DateTime");
                     }
                     checkForCondition(c, false);
                 }
@@ -1817,7 +1818,7 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                 }
                 else
                 {
-                    ; // TODO we need to raise an exception here.
+                    wrongClassReplyException(c, methodName, "DayStateBuffer");
                 }
             }
 
@@ -1943,7 +1944,7 @@ MsgReplyType processUDN(RexxThreadContext *c, CSTRING methodName, LPARAM lParam,
             }
             else
             {
-                ; // TODO we need to raise an exception here.
+                wrongClassReplyException(c, methodName, "PositionChangeReplyBuffer");
             }
         }
     }
@@ -2004,6 +2005,8 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 }
 
                 // TODO should we terminate the interpreter if checkForCondition() returns true??
+                // We could let the user decide through use of the .application
+                // object.
 
                 case TAG_TAB :
                     return processTCN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
@@ -2076,10 +2079,7 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
         }
     }
 
-    // TODO - this doesn't seem right, we are only invoked if it is a WM_NOTIFY
-    // message. We searched the whole notify table and didn't match.  Shouldn't
-    // we be done?  I.e., ReplyFalse or ReplyTrue.
-    return ContinueProcessing;
+    return ReplyFalse;
 }
 
 /**
@@ -2211,7 +2211,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                                 }
                                 else
                                 {
-                                    ; // TODO need to raise an exception.
+                                    wrongReplyListException(c, m[i].rexxMethod, ".true or .false", msgReply);
                                 }
                             }
                             return reply;
@@ -2246,7 +2246,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                                 }
                                 else
                                 {
-                                    ; // TODO need to raise an exception.
+                                    wrongReplyListException(c, m[i].rexxMethod, ".true or .false", msgReply);
                                 }
                             }
                             return reply;
@@ -2325,7 +2325,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                     }
                     else if ( msgReply != TheFalseObj )
                     {
-                        ; // TODO need to raise an exception.
+                        wrongReplyListException(c, m[i].rexxMethod, ".true or .false", msgReply);
                     }
                 }
                 return reply;
@@ -2357,7 +2357,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                     }
                     else if ( msgReply != TheFalseObj )
                     {
-                        ; // TODO need to raise an exception.
+                        wrongReplyListException(c, m[i].rexxMethod, ".true or .false", msgReply);
                     }
                 }
                 return reply;
@@ -4666,9 +4666,8 @@ RexxMethod5(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
     {
         goto err_out;
     }
-    if ( notificationCode == MCN_VIEWCHANGE && ! _isAtLeastVista() )
+    if ( notificationCode == MCN_VIEWCHANGE && ! requiredOS(context, Vista_OS, "ViewChange notification", "Vista") )
     {
-        wrongWindowsVersionException(context, "connectMonthCalendarEvent", "Vista");
         goto err_out;
     }
 

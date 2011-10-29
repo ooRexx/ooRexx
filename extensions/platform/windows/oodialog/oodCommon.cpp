@@ -313,20 +313,57 @@ void *noWindowsPageDlgException(RexxMethodContext *c, size_t pageID)
  *
  *  900 User message.
  *
- *  The windows message reply must be of the 'class' class
+ *  The reply from the event handler, ('mName,) must be of the 'n' class
  *
- *  The windows message reply must be of the DateTime class
+ *  The reply from the event handler (onKeyDown) must be of the DateTime class
  *
- * @param c    The thread context we are operating under.
- * @param n    The name of the class expected.
+ * @param c      The thread context we are operating under.
+ * @param mName  The method name of the event handler
+ * @param n      The name of the class expected.
  *
  * @return Pointer to void, could be used in the return statement of a method
  *         to return NULLOBJECT after the exeception is raised.
+ *
+ * @notes  This exception is meant to be used when the reply from a Rexx event
+ *         handler is incorrect.
  */
-void *wrongClassReplyException(RexxThreadContext *c, const char *n)
+void *wrongClassReplyException(RexxThreadContext *c, const char *mName, const char *n)
 {
     TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "The windows message reply must be of the %s class", n);
+    _snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) must be of the %s class", mName, n);
+    return executionErrorException(c, buffer);
+}
+
+/**
+ *  Error 98.900
+ *
+ *  98 The language processor detected a specific error during execution. The
+ *  associated error gives the reason for the error.
+ *
+ *  900 User message.
+ *
+ *  The reply from the event handler, ('mName,) must be one of 'list'; found
+ *  'actual'
+ *
+ *  The reply from the event handler (onSysCommand) must be of .true or .false;
+ *  found 17
+ *
+ * @param c      The thread context we are operating under.
+ * @param mName  The method name of the event handler
+ * @param list   A list of the values expected.
+ * @param actual Actual reply object
+ *
+ * @return Pointer to void, could be used in the return statement of a method
+ *         to return NULLOBJECT after the exeception is raised.
+ *
+ * @notes  This exception is meant to be used when the reply from a Rexx event
+ *         handler is incorrect.
+ */
+void *wrongReplyListException(RexxThreadContext *c, const char *mName, const char *list, RexxObjectPtr actual)
+{
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) must be one of %s; found %s",
+              mName, list, c->ObjectToStringValue(actual));
     return executionErrorException(c, buffer);
 }
 
@@ -343,15 +380,6 @@ void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char
     char msg[128];
     _snprintf(msg, sizeof(msg), "This %s does not have the %s style", obj, style);
     userDefinedMsgException(c->threadContext, msg);
-}
-
-// TODO replace all usage of this function with requiredOS(0
-RexxObjectPtr wrongWindowsVersionException(RexxMethodContext *context, const char *methodName, const char *windows)
-{
-    char msg[256];
-    _snprintf(msg, sizeof(msg), "The %s() method requires Windows %s or later", methodName, windows);
-    context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(msg));
-    return NULLOBJECT;
 }
 
 

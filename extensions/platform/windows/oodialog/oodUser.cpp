@@ -122,8 +122,8 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
                 if ( result == -1 )
                 {
                     break;
-                }                                          // TODO why did I have this here, seems wrong
-                if ( ! IsDialogMessage(pcpbd->hDlg, &msg) /*&& ! IsDialogMessage(pcpbd->activeChild, &msg)*/ )
+                }
+                if ( ! IsDialogMessage(pcpbd->hDlg, &msg)  )
                 {
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
@@ -3019,13 +3019,18 @@ extern BOOL SHIFTkey = FALSE;
  * @param lpmsg
  *
  * @return BOOL
+ *
+ * @remarks  This function is *only* called if the dialog is a CategoryDialog.
+ *           CategoryDialogs are deprecated and the intent is to not fix bugs in
+ *           deprecated classes or methods.  This function is unchanged from the
+ *           original.  If there is a bug in it, then that's the way it is.
  */
 BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, PMSG  lpmsg)
 {
     HWND hW, hParent, hW2;
     bool prev = false;
 
-    if ( ! pcpbd->childDlg || ! pcpbd->activeChild )   // childDlg[] Is this expression correct?  TODO
+    if ( ! pcpbd->childDlg || ! pcpbd->activeChild )
     {
         return IsDialogMessage(pcpbd->hDlg, lpmsg);
     }

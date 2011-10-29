@@ -1500,12 +1500,23 @@ err_out:
 /** WindowExtensions::write()
  *
  *
+ *  @notes  Sets the .SystemErrorCode.
+ *
+ *          Note that in one of the lower called functions, drawFontToDC(), the
+ *          Windows SelectObject() function does not set the system error code
+ *          (according to the docs.)  It is unlikely that it fails, but just for
+ *          completedness, we set it to ERROR_SIGNAL_REFUSED if it does fail.
+ *
  *  @remarks  This method uses the correct process to create the font.
  *
  *            Note:  In order for the argument positions to match other methods
  *            that call the common oodWriteToWindow() function, xPos must be the
  *            *second* arg.  So, in contrast to most method functions, CSELF is
  *             placed at the front.
+ *
+ *            The return from write() was never documented in ooRexx 3.2.0, but
+ *            it returned 0 for success and 1 for failure.  Even though we use
+ *            logical_t for the return, we maintain the 0 for success.
  */
 RexxMethod9(logical_t, winex_write, CSELF, pCSelf, int32_t, xPos, int32_t, yPos, CSTRING, text,
             OPTIONAL_CSTRING, fontName, OPTIONAL_uint32_t, fontSize, OPTIONAL_CSTRING, fontStyle,

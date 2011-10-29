@@ -4045,7 +4045,7 @@ RexxMethod2(RexxObjectPtr, psp_setResources_atr, RexxObjectPtr, resourceImage, C
     if ( ri != NULL )
     {
         pcpsp->hInstance = ri->hMod;
-        context->SetObjectVariable("RESOURCES", resourceImage); // TODO this won't work, did you test it? ;-)
+        context->SetObjectVariable("RESOURCES", resourceImage);
     }
     return NULLOBJECT;
 }

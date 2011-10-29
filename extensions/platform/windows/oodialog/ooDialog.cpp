@@ -4817,8 +4817,9 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
         // In addition, the original Rexx code would check if the category page
         // ID was greater than 9000 and if so treat things as though the control
         // were part of the parent dialog, not one of the child dialog's
-        // controls.  That is done here.  TODO - need to test that this part is
-        // working correctly.
+        // controls.  That is done here.  The CategoryDialog is deprecated, and
+        // this is just maintained for backwards compatibility.  The intent is
+        // to not fix any bugs in deprecated classes or methods.
 
         if ( ! (argumentExists(2) && (categoryPageID == 0 || categoryPageID > 9000)) )
         {

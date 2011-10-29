@@ -471,9 +471,8 @@ static RexxStringObject mcStyle2String(RexxMethodContext *c, uint32_t style)
  */
 RexxMethod2(RexxObjectPtr, dtp_closeMonthCal, RexxObjectPtr, _size, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "closeMonthCal", "Vista", Vista_OS) )
     {
-        wrongWindowsVersionException(context, "closeMonthCal", "Vista");
         return TheZeroObj;
     }
 
@@ -559,9 +558,9 @@ RexxMethod1(RexxObjectPtr, dtp_getDateTime, CSELF, pCSelf)
  */
 RexxMethod1(RexxObjectPtr, dtp_getInfo, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "getInfo", "Vista", Vista_OS) )
     {
-        return wrongWindowsVersionException(context, "getInfo", "Vista");
+        return NULLOBJECT;
     }
 
     HWND hDTP = getDChCtrl(pCSelf);
@@ -606,9 +605,8 @@ RexxMethod1(RexxObjectPtr, dtp_getInfo, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, dtp_getIdealSize, RexxObjectPtr, _size, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "getIdealSize", "Vista", Vista_OS) )
     {
-        wrongWindowsVersionException(context, "getIdelaSize", "Vista");
         return TheZeroObj;
     }
 
@@ -698,9 +696,8 @@ RexxMethod2(uint32_t, dtp_getMonthCalColor, CSTRING, calPart, CSELF, pCSelf)
  */
 RexxMethod1(RexxObjectPtr, dtp_getMonthCalStyle, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "getMonthCalStyle", "Vista", Vista_OS) )
     {
-        wrongWindowsVersionException(context, "getMonthCalStyle", "Vista");
         return TheZeroObj;
     }
 
@@ -840,9 +837,8 @@ RexxMethod3(uint32_t, dtp_setMonthCalColor, CSTRING, calPart, uint32_t, color, C
  */
 RexxMethod2(RexxObjectPtr, dtp_setMonthCalStyle, CSTRING, newStyle, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "setMonthCalStyle", "Vista", Vista_OS) )
     {
-        wrongWindowsVersionException(context, "setMonthCalStyle", "Vista");
         return TheZeroObj;
     }
 
@@ -1277,9 +1273,8 @@ RexxMethod1(RexxStringObject, mc_getStyle, CSELF, pCSelf)
 
 RexxMethod1(uint32_t, mc_getCalendarBorder, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "getBorder", "Vista", Vista_OS) )
     {
-        wrongWindowsVersionException(context, "getBorder", "Vista");
         return 0;
     }
 
@@ -1295,9 +1290,8 @@ RexxMethod1(uint32_t, mc_getCalendarBorder, CSELF, pCSelf)
 
 RexxMethod1(uint32_t, mc_getCalendarCount, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "getCount", "Vista", Vista_OS) )
     {
-        wrongWindowsVersionException(context, "getCount", "Vista");
         return 0;
     }
 
@@ -1313,9 +1307,9 @@ RexxMethod1(uint32_t, mc_getCalendarCount, CSELF, pCSelf)
 
 RexxMethod1(RexxObjectPtr, mc_getCALID, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "getCALID", "Vista", Vista_OS) )
     {
-        return wrongWindowsVersionException(context, "getCALID", "Vista");
+        return NULLOBJECT;
     }
 
     HWND hMC = getMonthCalendar(context, pCSelf);
@@ -1382,9 +1376,9 @@ RexxMethod2(uint32_t, mc_getColor, CSTRING, calPart, CSELF, pCSelf)
 
 RexxMethod1(RexxObjectPtr, mc_getCurrentView, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "getCurrentView", "Vista", Vista_OS) )
     {
-        return wrongWindowsVersionException(context, "getCurrentView", "Vista");
+        return NULLOBJECT;
     }
 
     HWND hMC = getMonthCalendar(context, pCSelf);
@@ -1460,9 +1454,9 @@ RexxMethod2(int32_t, mc_getFirstDayOfWeek, OPTIONAL_RexxObjectPtr, result, CSELF
  */
 RexxMethod2(RexxObjectPtr, mc_getGridInfo, RexxObjectPtr, _gridInfo, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "getGridInfo", "Vista", Vista_OS) )
     {
-        return wrongWindowsVersionException(context, "getGridInfo", "Vista");
+        return NULLOBJECT;
     }
 
     HWND hMC = getMonthCalendar(context, pCSelf);
@@ -1499,7 +1493,6 @@ RexxMethod2(RexxObjectPtr, mc_getGridInfo, RexxObjectPtr, _gridInfo, CSELF, pCSe
 
     if ( _calIndex == NULLOBJECT )
     {
-        // TODO MSDN doc does not say if this is 0-based or 1-based. ???
         info.iCalendar = 0;
         context->DirectoryPut(gridInfo, TheOneObj, "INDEX");
     }
@@ -1851,9 +1844,9 @@ done_out:
 
 RexxMethod2(RexxObjectPtr, mc_setCalendarBorder, OPTIONAL_uint32_t, border, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "setBorder", "Vista", Vista_OS) )
     {
-        return wrongWindowsVersionException(context, "setBorder", "Vista");
+        return NULLOBJECT;
     }
 
     HWND hMC = getMonthCalendar(context, pCSelf);
@@ -1884,9 +1877,9 @@ RexxMethod2(RexxObjectPtr, mc_setCalendarBorder, OPTIONAL_uint32_t, border, CSEL
  */
 RexxMethod2(RexxObjectPtr, mc_setCALID, CSTRING, id, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "setCALID", "Vista", Vista_OS) )
     {
-        return wrongWindowsVersionException(context, "setCALID", "Vista");
+        return NULLOBJECT;
     }
 
     HWND hMC = getMonthCalendar(context, pCSelf);
@@ -1958,9 +1951,9 @@ RexxMethod3(uint32_t, mc_setColor, CSTRING, calPart, uint32_t, color, CSELF, pCS
 
 RexxMethod2(RexxObjectPtr, mc_setCurrentView, CSTRING, view, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "setCurrentView", "Vista", Vista_OS) )
     {
-        return wrongWindowsVersionException(context, "setCurrentView", "Vista");
+        return NULLOBJECT;
     }
 
     HWND hMC = getMonthCalendar(context, pCSelf);
@@ -2185,9 +2178,8 @@ done_out:
  */
 RexxMethod2(RexxObjectPtr, mc_sizeRectToMin, RexxObjectPtr, _rect, CSELF, pCSelf)
 {
-    if ( ! _isAtLeastVista() )
+    if ( ! requiredOS(context, "sizeRectToMin", "Vista", Vista_OS) )
     {
-        wrongWindowsVersionException(context, "sizeRectToMin", "Vista");
         goto done_out;
     }
 

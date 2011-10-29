@@ -152,48 +152,129 @@ static RexxObjectPtr drawButton(HWND hDlg, HWND hCtrl, uint32_t id)
     return result;
 }
 
-static void drawFontToDC(HDC hDC, int32_t x, int32_t y, const char * text, uint32_t fontSize, const char * opts,
-                         const char * fontName, int32_t fgColor, int32_t bkColor)
+/**
+ * This function is (currently) only called from oodWriteToWindow(). Previously,
+ * none of the return codes were checked for error. Now we just check them in
+ * order to set the .SystemErrorCode.
+ *
+ * SelectObject() does not set the system error code (according to the docs.)
+ * It is unlikely that it fails, but just for completedness, we set it to
+ * ERROR_SIGNAL_REFUSED.
+ *
+ * @param hDC
+ * @param x
+ * @param y
+ * @param text
+ * @param fontSize
+ * @param opts
+ * @param fontName
+ * @param fgColor
+ * @param bkColor
+ *
+ * @return logical_t
+ *
+ * Even through we return logical_t, the ooDialog methods that use this base
+ * function return 0 for success, 1 for failure.  Need to keep that in mind.
+ */
+static logical_t drawFontToDC(RexxThreadContext *c, HDC hDC, int32_t x, int32_t y, const char * text, uint32_t fontSize,
+                              const char * opts, const char * fontName, int32_t fgColor, int32_t bkColor)
 {
-   HFONT hFont = oodGenericFont(fontName, fontSize, opts);
-   HFONT oldFont = (HFONT)SelectObject(hDC, hFont);
+    logical_t ret = 0;
+    int       oldMode = 0;
+    COLORREF  oldFg = CLR_INVALID;
+    COLORREF  oldBk = CLR_INVALID;
 
-   int oldMode = 0;
-   if ( StrStrI(opts, "TRANSPARENT") != NULL )
-   {
-       oldMode = SetBkMode(hDC, TRANSPARENT);
-   }
-   else if ( StrStrI(opts, "OPAQUE") != NULL )
-   {
-       oldMode = SetBkMode(hDC, OPAQUE);
-   }
+    HFONT hFont = oodGenericFont(fontName, fontSize, opts);
+    if ( hFont == NULL )
+    {
+        oodSetSysErrCode(c);
+        return 1;
+    }
 
-   COLORREF oldFg, oldBk;
-   if ( fgColor != -1 )
-   {
-       oldFg = SetTextColor(hDC, PALETTEINDEX(fgColor));
-   }
-   if  (bkColor != -1 )
-   {
-       oldBk = SetBkColor(hDC, PALETTEINDEX(bkColor));
-   }
+    HFONT oldFont = (HFONT)SelectObject(hDC, hFont);
+    if ( oldFont == NULL )
+    {
+        oodSetSysErrCode(c, ERROR_SIGNAL_REFUSED);
+        ret = 1;
+        goto clean_up;
+    }
 
-   TextOut(hDC, x, y, text, (int)strlen(text));
+    if ( StrStrI(opts, "TRANSPARENT") != NULL )
+    {
+        oldMode = SetBkMode(hDC, TRANSPARENT);
+        if ( oldMode == 0 )
+        {
+            oodSetSysErrCode(c);
+            ret = 1;
+            goto clean_up;
+        }
+    }
+    else if ( StrStrI(opts, "OPAQUE") != NULL )
+    {
+        oldMode = SetBkMode(hDC, OPAQUE);
+        if ( oldMode == 0 )
+        {
+            oodSetSysErrCode(c);
+            ret = 1;
+            goto clean_up;
+        }
+    }
 
-   SelectObject(hDC, oldFont);
-   DeleteObject(hFont);
-   if ( oldMode != 0 )
-   {
-       SetBkMode(hDC, oldMode);
-   }
-   if ( fgColor != -1 )
-   {
-       SetTextColor(hDC, oldFg);
-   }
-   if ( bkColor != -1 )
-   {
-       SetBkColor(hDC, oldBk);
-   }
+    if ( fgColor != -1 )
+    {
+        oldFg = SetTextColor(hDC, PALETTEINDEX(fgColor));
+        if ( oldFg == CLR_INVALID )
+        {
+            oodSetSysErrCode(c);
+            ret = 1;
+            goto clean_up;
+        }
+    }
+    if ( bkColor != -1 )
+    {
+        oldBk = SetBkColor(hDC, PALETTEINDEX(bkColor));
+        if ( oldFg == CLR_INVALID )
+        {
+            oodSetSysErrCode(c);
+            ret = 1;
+            goto clean_up;
+        }
+    }
+
+    if ( ! TextOut(hDC, x, y, text, (int)strlen(text)) )
+    {
+        oodSetSysErrCode(c);
+        ret = 1;
+    }
+
+clean_up:
+
+    // We don't check for errors here.  Presumably, if something fails, it would
+    // be because of an error above.  In which case the correct system error
+    // code for the failure should be set and we do not want to change it.
+
+    if ( oldFont != NULL )
+    {
+        SelectObject(hDC, oldFont);
+    }
+
+    // hFont is not null, or we would have already returned.
+    DeleteObject(hFont);
+
+    if ( oldMode != 0 )
+    {
+        SetBkMode(hDC, oldMode);
+    }
+    if ( fgColor != CLR_INVALID )
+    {
+        SetTextColor(hDC, oldFg);
+    }
+    if ( bkColor != CLR_INVALID )
+    {
+        SetBkColor(hDC, oldBk);
+    }
+
+    return ret;
 }
 
 
@@ -563,8 +644,11 @@ HFONT oodGenericFont(const char *fontName, uint32_t fontSize, const char *opts)
 
 
 /**
- * TODO we could be setting .SystemErrorCode on error.
+ * We set the .SystemErrorCode from here on out.
  *
+ * Note that in drawFontToDC(), the SelectObject() function does not set the
+ * system error code (according to the docs.)  It is unlikely that it fails, but
+ * just for completedness, we set it to ERROR_SIGNAL_REFUSED if it does fail.
  *
  * @param context
  * @param hwnd
@@ -578,10 +662,16 @@ HFONT oodGenericFont(const char *fontName, uint32_t fontSize, const char *opts)
  * @param bkColor
  *
  * @return logical_t
+ *
+ * Even through we return logical_t, the ooDialog methods that use this base
+ * function return 0 for success, 1 for failure.  Need to keep that in mind.
  */
 logical_t oodWriteToWindow(RexxMethodContext *context, HWND hwnd, int32_t xPos, int32_t yPos, CSTRING text,
                            CSTRING fontName, uint32_t fontSize, CSTRING fontStyle, int32_t fgColor, int32_t bkColor)
 {
+    oodResetSysErrCode(context->threadContext);
+
+    logical_t ret = 0;
     fontName  = (argumentOmitted(5) ? "System" : fontName);
     fontSize  = (argumentOmitted(6) ? 10       : fontSize);
     fontStyle = (argumentOmitted(7) ? ""       : fontStyle);
@@ -599,11 +689,15 @@ logical_t oodWriteToWindow(RexxMethodContext *context, HWND hwnd, int32_t xPos, 
     }
     if ( hDC != NULL )
     {
-        drawFontToDC(hDC, xPos, yPos, text, fontSize, fontStyle, fontName, fgColor, bkColor);
+        ret = drawFontToDC(context->threadContext, hDC, xPos, yPos, text, fontSize, fontStyle, fontName, fgColor, bkColor);
         ReleaseDC(hwnd, hDC);
-        return 0;
     }
-    return 1;
+    else
+    {
+        oodSetSysErrCode(context->threadContext);
+        ret = 1;
+    }
+    return ret;
 }
 
 /**
@@ -2769,7 +2863,19 @@ RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkCol
 /** DialogExtensions::writeToWindow()
  *
  *
+ *  @notes  Sets the .SystemErrorCode.
+ *
+ *          Note that in one of the lower called functions, drawFontToDC(), the
+ *          Windows SelectObject() function does not set the system error code
+ *          (according to the docs.)  It is unlikely that it fails, but just for
+ *          completedness, we set it to ERROR_SIGNAL_REFUSED if it does fail.
+ *
  *  @remarks  This method uses the correct process to create the font.
+ *
+ *            The return from writeToWindow() was never documented in ooRexx
+ *            3.2.0, but it returned 0 for success and 1 for failure.  Even
+ *            though we use logical_t for the return, we maintain the 0 for
+ *            success.
  */
 RexxMethod9(logical_t, dlgext_writeToWindow, POINTERSTRING, hwnd, int32_t, xPos, int32_t, yPos, CSTRING, text,
             OPTIONAL_CSTRING, fontName, OPTIONAL_uint32_t, fontSize, OPTIONAL_CSTRING, fontStyle,
