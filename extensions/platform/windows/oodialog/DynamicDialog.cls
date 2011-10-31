@@ -975,7 +975,7 @@
         if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
    end
    else if kind = "DTP" then do
-        if style~wordpos("DTS_APPCANPARSE") > 0 then ret = ret || " PARSE"
+        if style~wordpos("DTS_APPCANPARSE") > 0 then ret = ret || " CANPARSE"
         if style~wordpos("DTS_RIGHTALIGN") > 0 then ret = ret || " RIGHT"
         if style~wordpos("DTS_SHOWNONE  ") > 0 then ret = ret || " SHOWNONE"
         if style~wordpos("DTS_UPDOWN    ") > 0 then ret = ret || " UPDOWN"

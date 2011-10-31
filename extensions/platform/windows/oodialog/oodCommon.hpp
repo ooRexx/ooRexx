@@ -306,6 +306,7 @@ extern RexxObjectPtr  noSuchPageException(RexxMethodContext *c, int32_t id, uint
 extern void          *noWindowsPageDlgException(RexxMethodContext *c, size_t pos);
 extern void          *wrongClassReplyException(RexxThreadContext *c, const char *mName, const char *n);
 extern void          *wrongReplyListException(RexxThreadContext *c, const char *mName, const char *list, RexxObjectPtr actual);
+extern void          *wrongReplyMsgException(RexxThreadContext *c, const char *mName, const char *msg);
 extern void           controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
 extern void           wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
 extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, RexxObjectPtr rxDlg, CSTRING msg);

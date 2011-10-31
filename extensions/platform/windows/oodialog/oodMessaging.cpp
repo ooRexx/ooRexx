@@ -970,17 +970,30 @@ MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringO
     return ReplyTrue;
 }
 
-bool checkMsgReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING methodName, bool clear)
+/**
+ * Checks that reply is not null and that the context doe not a pending
+ * condition.
+ *
+ * @param c
+ * @param pcpbd
+ * @param reply
+ * @param methodName
+ * @param clear
+ *
+ * @return True if reply is not null and there is no pending condition.
+ */
+bool msgReplyIsGood(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING methodName, bool clear)
 {
     bool haveCondition = checkForCondition(c, clear);
 
     if ( ! haveCondition && reply == NULLOBJECT )
     {
         noMsgReturnException(c, methodName);
-        haveCondition = checkForCondition(c, clear);
+        haveCondition = true;
+        checkForCondition(c, clear);
         endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
     }
-    return haveCondition;
+    return ! haveCondition;
 }
 /**
  * Invokes the Rexx dialog's event handling method for a Windows message.
@@ -993,7 +1006,8 @@ bool checkMsgReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr 
  * @param args    The argument array for the method being invoked
  *
  * @return True for no problems, false if a condition was raised during the
- *         execution of the Rexx method.
+ *         execution of the Rexx method or if no value was returned from the
+ *         method.
  *
  * @remarks  Earlier versions of ooDialog, on the C++ side, constructed a method
  *           invocation string, placed it on a queue, and returned immediately
@@ -1011,8 +1025,7 @@ bool checkMsgReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr 
 static bool invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, RexxArrayObject args)
 {
     RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-    return checkMsgReply(c, pcpbd, rexxReply, methodName, false);
-    //return checkForCondition(c, false);
+    return msgReplyIsGood(c, pcpbd, rexxReply, methodName, false);
 }
 
 /**
@@ -1584,7 +1597,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-            if ( ! checkMsgReply(c, pcpbd, rexxReply, methodName, false) )
+            if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
             {
                 CSTRING display = c->ObjectToStringValue(rexxReply);
                 if ( strlen(display) < 64 )
@@ -1611,7 +1624,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-            if ( ! checkMsgReply(c, pcpbd, rexxReply, methodName, false) )
+            if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
             {
                 PSIZE size = (PSIZE)c->ObjectToCSelf(_size);
 
@@ -1626,49 +1639,35 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
         {
             LPNMDATETIMESTRING pdts = (LPNMDATETIMESTRING)lParam;
 
-            RexxDirectoryObject d = (RexxDirectoryObject)rxNewBuiltinObject(c, "DIRECTORY");
-            c->DirectoryPut(d, c->String(pdts->pszUserString), "USERSTRING");
-            c->DirectoryPut(d, TheNilObj, "DATETIME");
-            c->DirectoryPut(d, TheFalseObj, "VALID");
+            RexxObjectPtr dt;
+            sysTime2dt(c, &(pdts->st), &dt, dtFull);
 
-            // Fill in the date time string struct with error values.
-            dt2sysTime(c, NULLOBJECT, &(pdts->st), dtNow);
-            pdts->dwFlags = GDT_ERROR;
+            RexxStringObject userString = c->String(pdts->pszUserString);
 
-            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, c->ArrayOfThree(d, idFrom, hwndFrom));
+            RexxArrayObject args = c->ArrayOfFour(dt, userString, idFrom, hwndFrom);
 
-            if ( ! checkMsgReply(c, pcpbd, rexxReply, methodName, false) )
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+            if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
             {
-                RexxObjectPtr dt = c->DirectoryAt(d, "DATETIME");
-                if ( ! c->IsOfType(dt, "DATETIME") )
+                if ( c->IsOfType(rexxReply, "DATETIME") )
                 {
-                    wrongObjInDirectoryException(c, 1, "DATETIME", "a DateTime object", dt);
-                    checkForCondition(c, false);
-                    goto done_out;
-                }
-
-                if ( ! dt2sysTime(c, dt, &(pdts->st), dtFull) )
-                {
-                    checkForCondition(c, false);
-                    goto done_out;
-                }
-
-                if ( isShowNoneDTP(pdts->nmhdr.hwndFrom) )
-                {
-                    RexxObjectPtr _valid = c->DirectoryAt(d, "VALID");
-                    int32_t val = getLogical(c, _valid);
-
-                    if ( val == -1 )
+                    if ( ! dt2sysTime(c, rexxReply, &(pdts->st), dtFull) )
                     {
-                        wrongObjInDirectoryException(c, 1, "VALID", "Logical", _valid);
                         checkForCondition(c, false);
                         goto done_out;
                     }
-                    pdts->dwFlags = (val == 1 ? GDT_VALID : GDT_NONE);
-                }
-                else
-                {
                     pdts->dwFlags = GDT_VALID;
+                }
+                else if ( rexxReply == TheNilObj )
+                {
+                    if ( ! isShowNoneDTP(pdts->nmhdr.hwndFrom) )
+                    {
+                        wrongReplyMsgException(c, methodName, "can only be .nil if the DTP control has the SHOWNONE style");
+                        checkForCondition(c, false);
+                        goto done_out;
+                    }
+                    pdts->dwFlags = GDT_NONE;
                 }
             }
 
@@ -1692,7 +1691,7 @@ MsgReplyType processDTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-            if ( ! checkMsgReply(c, pcpbd, rexxReply, methodName, false) )
+            if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
             {
                 if ( rexxReply != dt )
                 {
@@ -1774,7 +1773,7 @@ MsgReplyType processTCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
                 // The Rexx programmer returns .true, changing the tab is okay, or .false do not change tabs.
                 rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, idFrom, hwndFrom);
 
-                if ( ! checkMsgReply(c, pcpbd, rexxReply, methodName, false) )
+                if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
                 {
                     // Return true to prevent the change.
                     setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT,  rexxReply == TheTrueObj ? FALSE : TRUE);
@@ -1810,7 +1809,7 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
             rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-            if ( ! checkMsgReply(c, pcpbd, rexxReply, methodName, false) )
+            if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
             {
                 if ( c->IsOfType(rexxReply, "BUFFER") )
                 {
@@ -1925,7 +1924,7 @@ MsgReplyType processUDN(RexxThreadContext *c, CSTRING methodName, LPARAM lParam,
 
     RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
 
-    if ( ! checkMsgReply(c, pcpbd, msgReply, methodName, false) )
+    if ( msgReplyIsGood(c, pcpbd, msgReply, methodName, false) )
     {
         if ( msgReply != TheFalseObj )
         {
@@ -1939,7 +1938,6 @@ MsgReplyType processUDN(RexxThreadContext *c, CSTRING methodName, LPARAM lParam,
                 else
                 {
                     pUPD->iDelta = pdpr->newDelta;
-
                 }
             }
             else
@@ -2198,7 +2196,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
                             RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
 
-                            if ( ! checkMsgReply(c, pcpbd, msgReply, m[i].rexxMethod, false) )
+                            if ( msgReplyIsGood(c, pcpbd, msgReply, m[i].rexxMethod, false) )
                             {
                                 if ( msgReply == TheTrueObj )
                                 {
@@ -2233,7 +2231,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
                             RexxObjectPtr msgReply = c->SendMessage1(pcpbd->rexxSelf, m[i].rexxMethod, rxHMenu);
 
-                            if ( ! checkMsgReply(c, pcpbd, msgReply, m[i].rexxMethod, false) )
+                            if ( msgReplyIsGood(c, pcpbd, msgReply, m[i].rexxMethod, false) )
                             {
                                 if ( msgReply == TheTrueObj )
                                 {
@@ -2317,7 +2315,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
                 RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
 
-                if ( ! checkMsgReply(c, pcpbd, msgReply, m[i].rexxMethod, false) )
+                if ( msgReplyIsGood(c, pcpbd, msgReply, m[i].rexxMethod, false) )
                 {
                     if ( msgReply == TheTrueObj )
                     {
@@ -2344,7 +2342,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
                 RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
 
-                if ( ! checkMsgReply(c, pcpbd, msgReply, m[i].rexxMethod, false) )
+                if ( msgReplyIsGood(c, pcpbd, msgReply, m[i].rexxMethod, false) )
                 {
                     if ( msgReply == TheTrueObj )
                     {

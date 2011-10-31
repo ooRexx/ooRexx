@@ -1,0 +1,63 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+#include <windows.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include "userStringDTP.h"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_SYSTEMTIME DIALOGEX 0, 0, 247, 150
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Adjust System Date & Time"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    GROUPBOX        "Change the System Date and / or the Time", IDC_STATIC, 11, 10, 226, 101, WS_GROUP
+    LTEXT           "Current Date:", IDC_ST_CUR_DATE, 23, 27, 45, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_CUR_DATE, 71, 25, 48, 14, NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Current Time:", IDC_ST_CUR_TIME, 23, 46, 45, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_CUR_TIME, 71, 44, 48, 14, NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "New Date:", IDC_ST_NEW_DATE, 143, 27, 35, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_NEW_DATE, 181, 25, 48, 14, NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "New Time:", IDC_ST_NEW_TIME, 143, 46, 35, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_NEW_TIME, 181, 44, 48, 14, NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "", IDC_DTP_SYSTIME, DATETIMEPICK_CLASS, WS_TABSTOP | DTS_LONGDATEFORMAT | DTS_APPCANPARSE, 11, 69, 226, 15
+    LTEXT           "Invalid shortcut string: 05/12/3011 08:09:22", IDC_ST_INVALID, 23, 93, 206, 8, SS_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 132, 126, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 187, 126, 50, 14
+}

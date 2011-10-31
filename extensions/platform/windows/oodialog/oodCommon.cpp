@@ -367,6 +367,36 @@ void *wrongReplyListException(RexxThreadContext *c, const char *mName, const cha
     return executionErrorException(c, buffer);
 }
 
+/**
+ *  Error 98.900
+ *
+ *  98 The language processor detected a specific error during execution. The
+ *  associated error gives the reason for the error.
+ *
+ *  900 User message.
+ *
+ *  The reply from the event handler, ('mName,) 'msg'
+ *
+ *  The reply from the event handler (onUserString) can only be .nil if the DTP
+ *  control has the CANPARSE style.
+ *
+ * @param c      The thread context we are operating under.
+ * @param mName  The method name of the event handler
+ * @param msg    Custom message
+ *
+ * @return Pointer to void, could be used in the return statement of a method
+ *         to return NULLOBJECT after the exeception is raised.
+ *
+ * @notes  This exception is meant to be used when the reply from a Rexx event
+ *         handler is incorrect.
+ */
+void *wrongReplyMsgException(RexxThreadContext *c, const char *mName, const char *msg)
+{
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) %s", mName, msg);
+    return executionErrorException(c, buffer);
+}
+
 void controlFailedException(RexxThreadContext *c, const char *msg, const char *func, const char *control)
 {
     TCHAR buffer[256];

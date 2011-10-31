@@ -67,3 +67,12 @@
     DateTimePicker control and how to respond to the FORMATQUERY, FORMAT,
     and KEYDOWN notifications.
 
+    - userStringDTP.rex
+
+    Demonstrates how to use the DateTimePicker control.  This example
+    focuses on the USERSTRING notification.  The USERSTRING notification is
+    sent when the user finishes editing in the DTP control.  Only DTP
+    controls with the CANPARSE style send this notification.  It allows the
+    program to provide the user with the capability of typing within the DTP
+    control.  The program can then provide a custom response when the user
+    has finished typing.
