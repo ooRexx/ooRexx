@@ -661,18 +661,18 @@ uint32_t getCommonButtonStyles(uint32_t style, CSTRING opts, oodControl_t button
     if ( StrStrI(opts, "OWNER")     != NULL ) style |= BS_OWNERDRAW;
     if ( StrStrI(opts, "BITMAP")    != NULL ) style |= BS_BITMAP;
     if ( StrStrI(opts, "ICON")      != NULL ) style |= BS_ICON;
+    if ( StrStrI(opts, "LEFT")      != NULL ) style |= BS_LEFT;
+    if ( StrStrI(opts, "RIGHT")     != NULL ) style |= BS_RIGHT;
     if ( StrStrI(opts, "HCENTER")   != NULL ) style |= BS_CENTER;
     if ( StrStrI(opts, "TOP")       != NULL ) style |= BS_TOP;
     if ( StrStrI(opts, "BOTTOM")    != NULL ) style |= BS_BOTTOM;
     if ( StrStrI(opts, "VCENTER")   != NULL ) style |= BS_VCENTER;
-    if ( StrStrI(opts, "PUSHLIKE")  != NULL ) style |= BS_PUSHLIKE;
     if ( StrStrI(opts, "MULTILINE") != NULL ) style |= BS_MULTILINE;
     if ( StrStrI(opts, "NOTIFY")    != NULL ) style |= BS_NOTIFY;
+    if ( StrStrI(opts, "PUSHLIKE")  != NULL ) style |= BS_PUSHLIKE;
     if ( StrStrI(opts, "FLAT")      != NULL ) style |= BS_FLAT;
     if ( StrStrI(opts, "LTEXT")     != NULL ) style |= BS_LEFTTEXT;
-    if ( StrStrI(opts, "LEFT")      != NULL ) style |= BS_LEFT;
     if ( StrStrI(opts, "RBUTTON")   != NULL ) style |= BS_RIGHTBUTTON;
-    if ( StrStrI(opts, "RIGHT")     != NULL ) style |= BS_RIGHT;
 
     return style;
 }

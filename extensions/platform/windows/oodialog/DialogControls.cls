@@ -663,16 +663,6 @@
 ::constant RIGHT            7
 ::constant ENDSCROLL        8
 
-::method getRange unguarded external "LIBRARY oodialog sb_getRange"
-::method setRange unguarded external "LIBRARY oodialog sb_setRange"
-::method getPos unguarded external "LIBRARY oodialog sb_getPosition"
-::method setPos unguarded external "LIBRARY oodialog sb_setPosition"
-::method position unguarded external "LIBRARY oodialog sb_getPosition"
-
-::method range unguarded
-   r = self~getRange
-   return r~min r~max
-
 ::method determinePosition unguarded
    use strict arg posdata, single = 1, page = 10
    code = .DlgUtil~loWord(posdata)
@@ -688,7 +678,7 @@
       /* page up */
       when code == self~PAGEUP then pos = max(r~min, pos - page)
       /* page down */
-      when code =- self~PAGEDOWN then pos = min(r~max, pos + page)
+      when code == self~PAGEDOWN then pos = min(r~max, pos + page)
       /* track position */
       when code == self~THUMBPOSITION then pos = .DlgUtil~hiWord(posdata)
       /* tracking */
@@ -701,6 +691,16 @@
    end
    self~setPos(pos)
    return pos
+
+::method getPos unguarded external "LIBRARY oodialog sb_getPosition"
+::method getRange unguarded external "LIBRARY oodialog sb_getRange"
+::method position unguarded external "LIBRARY oodialog sb_getPosition"
+::method range unguarded
+   r = self~getRange
+   return r~min r~max
+
+::method setPos unguarded external "LIBRARY oodialog sb_setPosition"
+::method setRange unguarded external "LIBRARY oodialog sb_setRange"
 
 
 /********* Progress Bar Class *************************************************/
@@ -716,35 +716,35 @@
 ::constant PBM_SETBARCOLOR     "0x0409"
 ::constant PBM_SETBKCOLOR      "0x2001"
 
+::method backgroundColor unguarded
+   use strict arg newColor
+   return self~sendWinUintMsg(self~PBM_SETBKCOLOR, 0, newColor)
+
+::method barColor unguarded
+   use strict arg newColor
+   return self~sendWinUintMsg(self~PBM_SETBARCOLOR, 0, newColor)
+
+::method getFullRange unguarded external "LIBRARY oodialog pbc_getFullRange"
+::method getPos unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~PBM_GETPOS, 0, 0)
+
+::method setFullRange unguarded external "LIBRARY oodialog pbc_setFullRange"
+::method setMarquee unguarded external "LIBRARY oodialog pbc_setMarquee"
+::method setPos unguarded
+   use strict arg position
+   return self~sendWinIntMsg(self~PBM_SETPOS, position, 0)
+
+::method setStep unguarded
+  use strict arg newStep = 10
+   return self~sendWinIntMsg(self~PBM_SETSTEP, newStep, 0)
+
 ::method step unguarded
    use strict arg delta = 0
    msg = self~PBM_STEPIT
    if arg(1, 'E') then msg = self~PBM_DELTAPOS
    return self~sendWinIntMsg(msg, delta, 0)
 
-::method setPos unguarded
-   use strict arg position
-   return self~sendWinIntMsg(self~PBM_SETPOS, position, 0)
-
-::method getPos unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~PBM_GETPOS, 0, 0)
-
-::method setStep unguarded
-  use strict arg newStep = 10
-   return self~sendWinIntMsg(self~PBM_SETSTEP, newStep, 0)
-
-::method barColor unguarded
-   use strict arg newColor
-   return self~sendWinUintMsg(self~PBM_SETBARCOLOR, 0, newColor)
-
-::method backgroundColor unguarded
-   use strict arg newColor
-   return self~sendWinUintMsg(self~PBM_SETBKCOLOR, 0, newColor)
-
-::method getFullRange unguarded external "LIBRARY oodialog pbc_getFullRange"
-::method setFullRange unguarded external "LIBRARY oodialog pbc_setFullRange"
-::method setMarquee unguarded external "LIBRARY oodialog pbc_setMarquee"
 
 -- DEPRECATED
 ::method getRange unguarded external "LIBRARY oodialog pbc_getFullRange"

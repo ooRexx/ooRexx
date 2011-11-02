@@ -1775,8 +1775,15 @@ MsgReplyType processTCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
 
                 if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
                 {
-                    // Return true to prevent the change.
-                    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT,  rexxReply == TheTrueObj ? FALSE : TRUE);
+                    if ( rexxReply == TheTrueObj || rexxReply == TheFalseObj  )
+                    {
+                        // Return true to prevent the change.
+                        setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT,  rexxReply == TheTrueObj ? FALSE : TRUE);
+                    }
+                    else
+                    {
+                        wrongReplyListException(c, methodName, ".true or .false", rexxReply);
+                    }
                 }
                 return ReplyTrue;
             }
@@ -4226,7 +4233,7 @@ err_out:
  * @param  pos       [optional]
  */
 RexxMethod7(RexxObjectPtr, en_connectAllSBEvents, RexxObjectPtr, rxID, CSTRING, msg,
-             OPTIONAL_int32_t, min, OPTIONAL_int32_t, max, OPTIONAL_int32_t, pos,
+            OPTIONAL_int32_t, min, OPTIONAL_int32_t, max, OPTIONAL_int32_t, pos,
             OPTIONAL_logical_t, willReply, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
@@ -4721,8 +4728,7 @@ err_out:
  *                       between messages.  This is an internal mechanism not to
  *                       be documented publicly.
  *
- *  @return  0 on success, 1 on failure.  One possible source of error is the
- *           message table being full.
+ *  @return  0 on success, 1 on failure.
  *
  *  @note     Method name can not be the empty string. The Window message,
  *            WPARAM, and LPARAM arguments can not all be 0.
