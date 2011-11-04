@@ -2695,7 +2695,7 @@ static bool keyword2sbn(CSTRING keyword, uint32_t *flag)
     uint32_t sbn;
 
     if ( StrCmpI(keyword,      "UP"       ) == 0 ) sbn = SB_LINEUP;        // Old word, confusing.
-    if ( StrCmpI(keyword,      "LINEUP"   ) == 0 ) sbn = SB_LINEUP;
+    else if ( StrCmpI(keyword, "LINEUP"   ) == 0 ) sbn = SB_LINEUP;
     else if ( StrCmpI(keyword, "LINELEFT" ) == 0 ) sbn = SB_LINELEFT;
     else if ( StrCmpI(keyword, "DOWN"     ) == 0 ) sbn = SB_LINEDOWN;      // Old word, confusing.
     else if ( StrCmpI(keyword, "LINEDOWN" ) == 0 ) sbn = SB_LINEDOWN;
@@ -3909,6 +3909,14 @@ RexxMethod3(int32_t, en_connectCommandEvents, RexxObjectPtr, rxID, CSTRING, meth
  *         Raises syntax conditions if incorrect arguments are detected.  Sets
  *         the .SystemErrorCode.
  *
+ *         In addition to scroll bar controls, scroll bars can be added to any
+ *         window by simply using the WS_VSCROLL or WS_HSCROLL styles to the
+ *         window. In this case there is no resource ID for the scroll bar, or
+ *         window handle.  We've added support here to connect the event by
+ *         using 0 for rxID, but there is still no support in ooDialog for using
+ *         the scroll bar methods in this case.  To be added later after 4.2.0
+ *         is released.
+ *
  *  @remarks   For the current keywords, if a symbolic ID is  used and it can
  *             not be resolved to a numeric number -1 has to be returned for
  *             backwards compatibility.  Essentially, for this method, all
@@ -3928,9 +3936,12 @@ RexxMethod5(RexxObjectPtr, en_connectScrollBarEvent, RexxObjectPtr, rxID, CSTRIN
     }
 
     int32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
+    if ( ! context->ObjectToInt32(rxID, &id) )
     {
-        return TheNegativeOneObj;
+        if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
+        {
+            return TheNegativeOneObj;
+        }
     }
 
     uint32_t notificationCode;
@@ -3940,7 +3951,7 @@ RexxMethod5(RexxObjectPtr, en_connectScrollBarEvent, RexxObjectPtr, rxID, CSTRIN
     }
 
     HWND hCtrl = GetDlgItem(pcen->hDlg, id);
-    if ( hCtrl == NULL )
+    if ( id != 0 && hCtrl == NULL )
     {
         oodSetSysErrCode(context->threadContext);
         return TheNegativeOneObj;
@@ -4010,13 +4021,16 @@ RexxMethod10(RexxObjectPtr, en_connectEachSBEvent, RexxObjectPtr, rxID, CSTRING,
     }
 
     int32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
+    if ( ! context->ObjectToInt32(rxID, &id) )
     {
-        return TheNegativeOneObj;
+        if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
+        {
+            return TheNegativeOneObj;
+        }
     }
 
     HWND hCtrl = GetDlgItem(pcen->hDlg, id);
-    if ( hCtrl == NULL )
+    if ( id != 0 && hCtrl == NULL )
     {
         oodSetSysErrCode(context->threadContext);
         return TheNegativeOneObj;
@@ -4248,13 +4262,16 @@ RexxMethod7(RexxObjectPtr, en_connectAllSBEvents, RexxObjectPtr, rxID, CSTRING, 
     }
 
     int32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
+    if ( ! context->ObjectToInt32(rxID, &id) )
     {
-        return TheNegativeOneObj;
+        if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
+        {
+            return TheNegativeOneObj;
+        }
     }
 
     HWND hCtrl = GetDlgItem(pcen->hDlg, id);
-    if ( hCtrl == NULL )
+    if ( id != 0 && hCtrl == NULL )
     {
         oodSetSysErrCode(context->threadContext);
         return TheNegativeOneObj;
