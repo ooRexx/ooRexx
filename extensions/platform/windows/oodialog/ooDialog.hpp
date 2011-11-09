@@ -527,7 +527,7 @@ typedef struct _pbdCSelf {
     void                *previous;      // Previous pCPlainBaseDialog used for stored dialogs
     size_t               tableIndex;    // Index of this dialog in the stored dialog table
     HWND                 activeChild;   // The active child dialog, used for CategoryDialogs
-    HWND                 childDlg[+1];
+    HWND                 childDlg[MAXCHILDDIALOGS + 1];
     HINSTANCE            hInstance;     // Handle to loaded DLL instance, ooDialog.dll or a resource DLL for a ResDialog
     HANDLE               hDlgProcThread;
     RexxInstance        *interpreter;
