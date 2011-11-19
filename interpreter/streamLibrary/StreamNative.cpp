@@ -632,27 +632,24 @@ const char *StreamInfo::handleOpen(const char *options)
             // position at the end, and set the write position
             setPosition(size(), charWritePosition);
 
-            if (!write_only)
+            char   char_buffer = ' ';
+            size_t bytesRead;
+            // read the last character of the buffer.
+            // we don't call readBuffer() for this because it
+            // moves the read pointer
+            if (!fileInfo.read(&char_buffer, 1, bytesRead))
             {
-                char   char_buffer;
-                size_t bytesRead;
-                // read the last character of the buffer.
-                // we don't call readBuffer() for this because it
-                // moves the read pointer
-                if (!fileInfo.read(&char_buffer, 1, bytesRead))
-                {
-                    notreadyError();
-                }
+                if (!write_only) notreadyError();
+            }
 
-                // if the last character is not a ctrl_z, we need to
-                // step past it.
-                if (ctrl_z != char_buffer)
-                {
-                    charWritePosition++;
-                    /* error on Windows so we had to put in that */
-                    /* explicitly set the position       */
-                    setPosition(charWritePosition, charWritePosition);
-                }
+            // if the last character is not a ctrl_z, we need to
+            // step past it.
+            if (ctrl_z != char_buffer)
+            {
+                charWritePosition++;
+                /* error on Windows so we had to put in that */
+                /* explicitly set the position       */
+                setPosition(charWritePosition, charWritePosition);
             }
         }
         lineWritePosition = 0;
@@ -796,27 +793,24 @@ void StreamInfo::implicitOpen(int type)
             // position at the end, and set the write position
             setPosition(size(), charWritePosition);
 
-            if (!write_only)
+            char   char_buffer = ' ';
+            size_t bytesRead;
+            // read the last character of the buffer.
+            // we don't call readBuffer() for this because it
+            // moves the read pointer
+            if (!fileInfo.read(&char_buffer, 1, bytesRead))
             {
-                char   char_buffer;
-                size_t bytesRead;
-                // read the last character of the buffer.
-                // we don't call readBuffer() for this because it
-                // moves the read pointer
-                if (!fileInfo.read(&char_buffer, 1, bytesRead))
-                {
-                    notreadyError();
-                }
+                if (!write_only) notreadyError();
+            }
 
-                // if the last character is not a ctrl_z, we need to
-                // step past it.
-                if (ctrl_z != char_buffer)
-                {
-                    charWritePosition++;
-                    /* error on Windows so we had to put in that */
-                    /* explicitly set the position       */
-                    setPosition(charWritePosition, charWritePosition);
-                }
+            // if the last character is not a ctrl_z, we need to
+            // step past it.
+            if (ctrl_z != char_buffer)
+            {
+                charWritePosition++;
+                /* error on Windows so we had to put in that */
+                /* explicitly set the position       */
+                setPosition(charWritePosition, charWritePosition);
             }
         }
         // set default line positioning
@@ -2435,27 +2429,24 @@ const char *StreamInfo::streamOpen(const char *options)
             // position at the end, and set the write position
             setPosition(size(), charWritePosition);
 
-            if (!write_only)
+            char   char_buffer = ' ';
+            size_t bytesRead;
+            // read the last character of the buffer.
+            // we don't call readBuffer() for this because it
+            // moves the read pointer
+            if (!fileInfo.read(&char_buffer, 1, bytesRead))
             {
-                char   char_buffer;
-                size_t bytesRead;
-                // read the last character of the buffer.
-                // we don't call readBuffer() for this because it
-                // moves the read pointer
-                if (!fileInfo.read(&char_buffer, 1, bytesRead))
-                {
-                    notreadyError();
-                }
+                if (!write_only) notreadyError();
+            }
 
-                // if the last character is not a ctrl_z, we need to
-                // step past it.
-                if (ctrl_z != char_buffer)
-                {
-                    charWritePosition++;
-                    /* error on Windows so we had to put in that */
-                    /* explicitly set the position       */
-                    setPosition(charWritePosition, charWritePosition);
-                }
+            // if the last character is not a ctrl_z, we need to
+            // step past it.
+            if (ctrl_z != char_buffer)
+            {
+                charWritePosition++;
+                /* error on Windows so we had to put in that */
+                /* explicitly set the position       */
+                setPosition(charWritePosition, charWritePosition);
             }
         }
         /* set default line positioning      */
