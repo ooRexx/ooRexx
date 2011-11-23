@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView component      v00-04 17Aug11
+   Exercise 04b: ProductView.rex - The ProductView component      v00-05 23Nov11
 
    Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h.
@@ -57,6 +57,10 @@
    v00-04 17Aug11: Changed to .Application~setDefaults in newInstance method,
                    and deleted autoDetection methods - not now needed as turn
                    off autoDetection in .Application~setDefaults().
+   v00-05 23Nov11: Allow for standard close actions. These were disabled in
+                   previous versions to illustrate the point, but this fails the
+                   principle of least astonishment. Guide modified to discuss
+                   this briefly.
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -252,17 +256,14 @@
     -- called for each character entered in the price or UOM fields.
     forward to (arg(6))
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    "OK" - This is a no-op method that over-rides the default Windows action
-           of 'close window' for an Enter key 				    --*/
-  ::METHOD ok unguarded
-    return
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    "Cancel" - This is a no-op method that over-rides the default Windows action
-           of 'cancel window' for an Escape key.			    --*/
-  ::METHOD cancel
-    return
+    "Cancel" - This method over-rides the default Windows action of
+               'cancel window' for an Escape key. However it is commented out
+               since to over-ride standard Windows user function is rather
+               bad practice.						    --*/
+  -- ::METHOD cancel
+  --  return
 
 
   /*----------------------------------------------------------------------------
