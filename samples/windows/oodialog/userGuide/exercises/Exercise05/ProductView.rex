@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView component      v00-05 23Nov11
+   Exercise 04b: ProductView.rex - The ProductView component      v00-06 26Nov11
 
    Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h.
@@ -61,6 +61,9 @@
                    previous versions to illustrate the point, but this fails the
                    principle of least astonishment. Guide modified to discuss
                    this briefly.
+   v00-06 26Nov11: Provide a "status" attribute so that close (e.g. pressing Esc)
+                   can issue a "changes made but not committed - are you sure"
+                   type of message.
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -77,6 +80,8 @@
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS ProductView SUBCLASS ResDialog PUBLIC
+
+  ::ATTRIBUTE dialogState PRIVATE	-- States are: 'closable' or 'inUpdate".
 
   /*----------------------------------------------------------------------------
     Class Methods
@@ -111,6 +116,7 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate UNGUARDED
     say "ProductView-activate-01."
+    self~dialogState = "closable"
     self~execute("SHOWTOP","IDB_PROD_ICON")
     return
 
@@ -153,7 +159,7 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD updateProduct UNGUARDED
     expose prodControls
-
+say "ProductView-updateProduct-01."
     -- Enable the controls to allow changes to the data:
     prodControls[ecProdName]~setReadOnly(.false)
     prodControls[ecProdPrice]~setReadOnly(.false)
@@ -166,10 +172,13 @@
     prodControls[pbSaveChanges]~state = "FOCUS"  -- Put input focus on the button
     self~tabToNext()				 -- put text cursor on Product Description
     						 --   (as if the user had pressed tab)
+    self~dialogState = "inUpdate"
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD refreshData UNGUARDED
     self~disableControl("IDC_PROD_SAVE_CHANGES")
     self~showData
+    self~dialogState = "closable"
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD print UNGUARDED
@@ -178,7 +187,7 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD close UNGUARDED
     say "ProductView-close-01"
-    return self~cancel:super
+    self~cancel
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD about UNGUARDED
@@ -239,6 +248,7 @@
     if newProdData~size \= "M" then prodControls[rbMedium]~disable
     if newProdData~size \= "L" then prodControls[rbLarge]~disable
     self~disableControl("IDC_PROD_SAVE_CHANGES")
+    self~dialogState = "closable"
 
     prodData = newProdData
     prodData~list
@@ -256,14 +266,14 @@
     -- called for each character entered in the price or UOM fields.
     forward to (arg(6))
 
-
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    "Cancel" - This method over-rides the default Windows action of
-               'cancel window' for an Escape key. However it is commented out
-               since to over-ride standard Windows user function is rather
-               bad practice.						    --*/
-  -- ::METHOD cancel
-  --  return
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD cancel
+    say "ProductView-cancel-01."
+    if self~dialogState = "inUpdate" then do
+      ans = MessageDialog(.HRS~closeInUpdate, self~dlgHandle, .HRS~updateIP, "OKCANCEL", "WARNING", "DEFBUTTON2")
+      if ans = 1 then return self~cancel:super
+    end
+    else return self~cancel:super
 
 
   /*----------------------------------------------------------------------------
@@ -437,7 +447,7 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method showMsgBox
     say "AboutDialog-showMsgBox-01."
-    ans = MessageDialog(.HRS~AboutDblClick)
+    ans = MessageDialog(.HRS~aboutDblClick)
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 
@@ -459,13 +469,15 @@
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS HRS PRIVATE		-- Human-Readable Strings
-  ::CONSTANT AboutDblClick  "You double-clicked!"
+  ::CONSTANT aboutDblClick  "You double-clicked!"
   ::CONSTANT badRatio	    "The new price/UOM ratio cannot be changed more than 50% up or down."
-  ::CONSTANT nilSaved       "Nothing was changed! Data not saved."
-  ::CONSTANT saved	    "Changes saved."
-  ::CONSTANT uomTooSmall    "The new UOM is too small."
-  ::CONSTANT uomTooBig      "The new UOM is too large."
-  ::CONSTANT notSaved       "Changes Not Saved!"
   ::CONSTANT descrTooBig    "The Product Description is too long."
+  ::CONSTANT nilSaved       "Nothing was changed! Data not saved."
+  ::CONSTANT notSaved       "Changes Not Saved!"
   ::CONSTANT prodNameTooBig "The Product Name is too long."
+  ::CONSTANT saved	    "Changes saved."
+  ::CONSTANT uomTooBig      "The new UOM is too large."
+  ::CONSTANT uomTooSmall    "The new UOM is too small."
   ::CONSTANT updateProd     "Update Product"
+  ::CONSTANT closeInUpdate  "Any changes made will be lost. Exit anyway?"
+  ::CONSTANT updateIP       "Update in process"
