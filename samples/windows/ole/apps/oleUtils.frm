@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) 2008-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -41,14 +41,12 @@
     Provides some useful utilities for working with the .OLEObject class.
 
   Assumes:
-    ooRexx version 3.1.2 as a minimum.
+    ooRexx version 4.0.0 as a minimum.
 
   Notes:
-    This framework was originally written to work on ooRexx 3.1.2, and it still
-    does.  Because of that it has some utility functions that would not be
-    needed on later versions of ooRexx.  The toLower() function for instance.
-    It also does not use some constructs like:  'use strict arg' that would make
-    things easier.
+    This framework was originally written to work on ooRexx 3.1.2.  However,
+    that was in the previous decade.  This version of OleUtils.frm now requires
+    ooRexx 4.0.0 at a minimum.
 
   Public Routines:
     This is a list of the public routines and their syntax.  Arguments in square
@@ -56,12 +54,11 @@
     header comments for each routine.
 
       oleOjbect = createOleOjbect(id, [verbose])
-      boolean = displayKnownMethods(oleObj, [verbose])
-      boolean = displayKnownConstants(oleObj)
-      boolean = toLower(str)
-      boolean = isRexxTrue(obj)
-      boolean = isOORexx4OrLater()
-      mode = getAddressingMode()
+      boolean   = displayKnownMethods(oleObj, [verbose])
+      boolean   = displayKnownConstants(oleObj)
+      boolean   = isRexxTrue(obj)
+      boolean   = isOORexx4OrLater()
+      mode      = getAddressingMode()
 
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -89,16 +86,16 @@
     An instance of .OLEObject on success, .nil on failure.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::routine  createOleObject public
-  use arg id, verbose
+  use strict arg id, verbose = .false
 
-  if isRexxTrue( arg( 2 ) ) then
+  if isRexxTrue(verbose) then
     verbose = .true
   else
     verbose = .false
 
   signal on syntax name returnNil
 
-  oleObject = .OLEObject~new( id,"NOEVENTS" )
+  oleObject = .OLEObject~new(id, "NOEVENTS")
   signal on syntax
   return oleObject
 
@@ -114,8 +111,7 @@ returnNil:
 
   Formats and displays the known methods of an .OLEObject instance.  Known
   methods can only be displayed for OLE / COM objects that provide TypeInfo.  If
-  the there is no known information, a simple string stating as much is
-  displayed.
+  there is no known information, a simple string stating as much is displayed.
 
   Input:
     oleObj REQUIRED
@@ -131,21 +127,21 @@ returnNil:
     otherwise 1.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::routine  displayKnownMethods public
-  use arg oleObj, verbose
+  use strict arg oleObj, verbose = .false
 
-  if \ oleObj~isInstanceOf( .OLEObject ) then do
+  if \ oleObj~isInstanceOf(.OLEObject) then do
     say "Known methods can only be displayed for instances of the .OLEObject."
     say "  Arg 1 class:" oleObj~class
     return 0
   end
 
-  if isRexxTrue( arg( 2 ) ) then
+  if isRexxTrue(verbose) then
     verbose = .true
   else
     verbose = .false
 
   say
-  j = printInstanceInfo( oleObj )
+  j = printInstanceInfo(oleObj)
 
   known. = oleObj~getKnownMethods
 
@@ -155,12 +151,12 @@ returnNil:
   end
 
   say "Containing Type Library:" known.!LIBNAME
-  if known.!LIBDOC~left( 2 ) <> "!L" then
+  if known.!LIBDOC~left(2) <> "!L" then
     say "Library Description:    " known.!LIBDOC
   say
 
   say "COM Class:        " known.!COCLASSNAME
-  if known.!COCLASSDOC~left( 2 ) <> "!C" then
+  if known.!COCLASSDOC~left(2) <> "!C" then
     say "Class Description:" known.!COCLASSDOC
   say "Known methods:    " known.0
   say
@@ -181,16 +177,16 @@ returnNil:
 
     say " " name
 
-    if doc~pos( "!DOC" ) == 0 then
+    if doc~pos("!DOC") == 0 then
       say "    Decscription:" doc
 
-    say "   " invkindToString( invk ) "returns" ret
+    say "   " invkindToString(invk) "returns" ret
     say
 
     if ret == "VT_VOID" then
       line = "      obj~"name
     else
-      line = "      " || changeVariant( ret ) || "= obj~"name
+      line = "      " || changeVariant(ret) || "= obj~"name
 
     select
       when invk == 2 then
@@ -201,7 +197,7 @@ returnNil:
 
       otherwise do
         line   = line"( "
-        indent = " "~copies( line~length )
+        indent = " "~copies(line~length)
 
         do j = 1 to known.i.!PARAMS.0
           param = known.i.!PARAMS.j.!TYPE known.i.!PARAMS.j.!FLAGS             -
@@ -249,16 +245,16 @@ return 1
     0 if the oleObj argument was not an instance of .OLEObject, otherwise 1.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::routine  displayKnownConstants public
-  use arg oleObj
+  use strict arg oleObj
 
-  if \ oleObj~isInstanceOf( .OLEObject ) then do
+  if \ oleObj~isInstanceOf(.OLEObject) then do
     say "Known constants can only be displayed for instances of the .OLEObject."
     say "  Arg 1 class:" oleObj~class
     return 0
   end
 
   say
-  j = printInstanceInfo( oleObj )
+  j = printInstanceInfo(oleObj)
 
   constants = oleObj~getConstant
   if constants == .nil | constants~items == 0 then do
@@ -270,36 +266,13 @@ return 1
   say
 
   -- Some of Microsoft's constant names are very long.
-  line = " "~copies( 42 ) || "= "
+  line = " "~copies(42) || "= "
   do name over constants
-    say line~overlay( name~substr( 2 ), 3 ) || constants[name]
+    say line~overlay(name~substr(2), 3) || constants[name]
   end
 
 return 1
 -- End displayKnownConstants( oleObj )
-
-/* toLower( str )- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
-
-  Changes the specified string to lower case.
-
-  Input:
-    str REQUIRED
-      The string to work with.
-
-  Returns:
-    The string with all upper case letters changed to lower case.
-\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-::routine  toLower public
-  use arg str
-
-  if str~class <> .string then
-    return str
-
-  lower = str~translate( "abcdefghijklmnopqrstuvwxyz",                          -
-                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ" )
-
-return lower
--- End toLower( str )
 
 /* isRexxTrue( obj ) - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
 
@@ -314,10 +287,10 @@ return lower
     True if obj is strictly true, otherwise false.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::routine  isRexxTrue public
-  use arg obj
+  use strict arg obj
 
   if obj~class == .string then
-    if obj~datatype( 'W' ) then
+    if obj~datatype('W') then
       if obj == 1 then
         return .true
 
@@ -335,6 +308,7 @@ return .false
     True if this is ooRexx 4.0.0 or later, otherwise false.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::routine  isOORexx4OrLater public
+  use strict arg
 
   parse version interpreterName languageLevel interpreterDate
   parse var interpreterName junk "_" ver "." moreJunk
@@ -347,6 +321,7 @@ return .false
  * Determine if this is a 32-bit or 64-bit interpreter.
  */
 ::routine  getAddressingMode public
+  use strict arg
 
   tmpOutFile = 'tmpXXX_delete.me'
 
@@ -374,12 +349,13 @@ return mode
     The prettified version of the specified VARTYPE.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::routine  changeVariant
-  use arg vt
+  use strict arg vt
 
   -- TODO: it would be nice to turn VT_I4 to something like int4ByteObj, VT_R4
   -- to float4ByteObj, etc.
+  retStr = vt~substr(4) || "Obj"
 
-return toLower( vt~substr( 4 ) ) || "Obj"
+return retStr~toLower
 -- End changeVariant( vt )
 
 /* invkindToString( kind ) - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -394,7 +370,7 @@ return toLower( vt~substr( 4 ) ) || "Obj"
     Returns the enumeration symbol, (string symbol) for the specified kind.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::routine  invkindToString
-  use arg kind
+  use strict arg kind
 
   select
     when kind == 1 then
@@ -425,12 +401,12 @@ return kindString
     0, always.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::routine  printInstanceInfo
-  use arg oleObj
+  use strict arg oleObj
 
-  progID   = oleObj~!getVar( "!PROGID" )
-  clsID    = oleObj~!getVar( "!CLSID" )
-  disp     = oleObj~!getVar( "!IDISPATCH" )
-  typeInfo = oleObj~!getVar( "!ITYPEINFO" )
+  progID   = oleObj~!getVar("!PROGID")
+  clsID    = oleObj~!getVar("!CLSID")
+  disp     = oleObj~!getVar("!IDISPATCH")
+  typeInfo = oleObj~!getVar("!ITYPEINFO")
 
   if isOORexx4OrLater() then do
     if progID == .nil then
@@ -443,13 +419,13 @@ return kindString
       typeInfo = "null"
   end
   else do
-    if progID~left( 2 ) == "!P" then
+    if progID~left(2) == "!P" then
       progID = "null"
-    if clsID~left( 2 ) == "!C" then
+    if clsID~left(2) == "!C" then
       clsID = "null"
-    if disp~left( 3 ) == "!ID" then
+    if disp~left(3) == "!ID" then
       disp = "null"
-    if typeInfo~left( 3 ) == "!IT" then
+    if typeInfo~left(3) == "!IT" then
       typeInfo = "null"
   end
 
@@ -464,4 +440,4 @@ return 0
 
 
 
-/* - - - - - - - - - - End of file: OleUtils.rex- - - - - - - - - - - - - - - */
+/* - - - - - - - - - - End of file: OleUtils.frm- - - - - - - - - - - - - - - */
