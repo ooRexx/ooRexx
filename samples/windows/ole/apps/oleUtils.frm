@@ -355,7 +355,7 @@ return mode
   -- to float4ByteObj, etc.
   retStr = vt~substr(4) || "Obj"
 
-return retStr~toLower
+return retStr~lower
 -- End changeVariant( vt )
 
 /* invkindToString( kind ) - - - - - - - - - - - - - - - - - - - - - - - - - -*\
