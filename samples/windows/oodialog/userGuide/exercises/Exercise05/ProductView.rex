@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView component      v00-06 26Nov11
+   Exercise 04b: ProductView.rex - The ProductView component      v00-07 29Nov11
 
    Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h.
@@ -61,9 +61,11 @@
                    previous versions to illustrate the point, but this fails the
                    principle of least astonishment. Guide modified to discuss
                    this briefly.
-   v00-06 26Nov11: Provide a "status" attribute so that close (e.g. pressing Esc)
-                   can issue a "changes made but not committed - are you sure"
-                   type of message.
+   v00-06 26Nov11: Provide a status attribute (dialogState) so that close (e.g.
+   		   pressing Esc) can issue a "changes made but not committed
+   		   - are you sure" message.
+   v00-07 29Nov11: Added a comment to the cancel method. No change in function.
+
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -268,6 +270,8 @@ say "ProductView-updateProduct-01."
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD cancel
+    -- If in the process of updating a product, then ask whether any changes
+    -- should be thrown away, else close by calling the superclass.
     say "ProductView-cancel-01."
     if self~dialogState = "inUpdate" then do
       ans = MessageDialog(.HRS~closeInUpdate, self~dlgHandle, .HRS~updateIP, "OKCANCEL", "WARNING", "DEFBUTTON2")
@@ -471,6 +475,7 @@ say "ProductView-updateProduct-01."
 ::CLASS HRS PRIVATE		-- Human-Readable Strings
   ::CONSTANT aboutDblClick  "You double-clicked!"
   ::CONSTANT badRatio	    "The new price/UOM ratio cannot be changed more than 50% up or down."
+  ::CONSTANT closeInUpdate  "Any changes made will be lost. Exit anyway?"
   ::CONSTANT descrTooBig    "The Product Description is too long."
   ::CONSTANT nilSaved       "Nothing was changed! Data not saved."
   ::CONSTANT notSaved       "Changes Not Saved!"
@@ -478,6 +483,6 @@ say "ProductView-updateProduct-01."
   ::CONSTANT saved	    "Changes saved."
   ::CONSTANT uomTooBig      "The new UOM is too large."
   ::CONSTANT uomTooSmall    "The new UOM is too small."
-  ::CONSTANT updateProd     "Update Product"
-  ::CONSTANT closeInUpdate  "Any changes made will be lost. Exit anyway?"
   ::CONSTANT updateIP       "Update in process"
+  ::CONSTANT updateProd     "Update Product"
+
