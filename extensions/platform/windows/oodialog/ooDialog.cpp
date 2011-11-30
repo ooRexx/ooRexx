@@ -4608,6 +4608,12 @@ RexxMethod2(uint32_t, pbdlg_setDlgDataFromStem_pvt, RexxStemObject, internDlgDat
     {
         return 0;
     }
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd->rexxSelf);
+        return TheNegativeOneObj;
+    }
+
     return setDlgDataFromStem(context, pcpbd, internDlgData);
 }
 
@@ -4619,6 +4625,12 @@ RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData,
     {
         return 0;
     }
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd->rexxSelf);
+        return TheNegativeOneObj;
+    }
+
     return putDlgDataInStem(context, pcpbd, internDlgData);
 }
 
@@ -4692,10 +4704,10 @@ RexxMethod3(RexxObjectPtr, pbdlg_getControlData, RexxObjectPtr, rxID, NAME, msgN
  *  @return  0 for success, 1 for error, -1 for bad resource ID.
  *
  *  @remarks  The control type is determined by the invoking method name.  When
- *            the general purpose SETCONTROLDATA + 3 name is passed to
- *            oodName2controlType() it won't resolve and winUnknown will be
- *            returned.  This is the value that signals setControlData() to do a
- *            data table look up by resource ID.
+ *            the general purpose setControlDate name (msgName + 3 is
+ *            ControlData) is passed to oodName2controlType() it won't resolve
+ *            and winUnknown will be returned.  This is the value that signals
+ *            setControlData() to do a data table look up by resource ID.
  */
 RexxMethod4(int32_t, pbdlg_setControlData, RexxObjectPtr, rxID, CSTRING, data, NAME, msgName, CSELF, pCSelf)
 {
