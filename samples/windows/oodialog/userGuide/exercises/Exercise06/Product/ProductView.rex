@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: ProductView.rex - The ProductView component      v02-02 29Nov11
+   Exercise 06: ProductView.rex - The ProductView component      v02-03 01Dec11
 
    Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h, Pproduct.ico, ProductIcon.bmp,
@@ -55,6 +55,7 @@
    v02-01 19Sep11: Changed to provide for standalone invocation.
    v02-02 29Nov11: Brought up to date with Ex05 version (added state attribute
                    plus better "cancel" method).
+   v02-03 01Dec11: Changed OK/Cancel to Yes/No on "cancel while in update" dialog.
 
 ------------------------------------------------------------------------------*/
 
@@ -65,7 +66,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductView							  v02-00 09Sep11
+  ProductView							  v02-03 01Dec11
   -----------
   The "view" part of the Product component. Now designed to operate from its own
   folder. Should be invoked from immediately outside the Product folder.
@@ -267,15 +268,15 @@
   ::METHOD ok unguarded
     return
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    "Cancel" - This is a no-op method that over-rides the default Windows action
-           of 'cancel window' for an Escape key.			    --*/
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD cancel
-    -- If in the process of updating a product, then ask whether any changes
-    -- should be thrown away, else close by calling the superclass.
+    -- If in the process of updating, then ask whether any changes should be 
+    -- thrown away and dialog closed. If yes then close by calling the superclass,
+    -- else nop. If not in update, then close immediately
     if self~dialogState = "inUpdate" then do
-      ans = MessageDialog(.HRS~closeInUpdate, self~dlgHandle, .HRS~updateIP, "OKCANCEL", "WARNING", "DEFBUTTON2")
-      if ans = 1 then return self~cancel:super
+      ans = MessageDialog(.HRS~closeInUpdate, self~dlgHandle, .HRS~updateIP, "YESNO", "WARNING", "DEFBUTTON2")
+      if ans = .PlainBaseDialog~IDYES then return self~cancel:super
+      else nop
     end
     else return self~cancel:super
 

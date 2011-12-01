@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView component      v00-07 29Nov11
+   Exercise 04b: ProductView.rex - The ProductView component      v00-08 01Dec11
 
    Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h.
@@ -65,6 +65,7 @@
    		   pressing Esc) can issue a "changes made but not committed
    		   - are you sure" message.
    v00-07 29Nov11: Added a comment to the cancel method. No change in function.
+   v00-08 01Dec11: Changed OK/Cancel to Yes/No on "cancel while in update" dialog.
 
 ------------------------------------------------------------------------------*/
 
@@ -270,12 +271,14 @@ say "ProductView-updateProduct-01."
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD cancel
-    -- If in the process of updating a product, then ask whether any changes
-    -- should be thrown away, else close by calling the superclass.
+    -- If in the process of updating, then ask whether any changes should be 
+    -- thrown away and dialog closed. If yes then close by calling the superclass,
+    -- else nop. If not in update, then close immediately
     say "ProductView-cancel-01."
     if self~dialogState = "inUpdate" then do
-      ans = MessageDialog(.HRS~closeInUpdate, self~dlgHandle, .HRS~updateIP, "OKCANCEL", "WARNING", "DEFBUTTON2")
-      if ans = 1 then return self~cancel:super
+      ans = MessageDialog(.HRS~closeInUpdate, self~dlgHandle, .HRS~updateIP, "YESNO", "WARNING", "DEFBUTTON2")
+      if ans = .PlainBaseDialog~IDYES then return self~cancel:super
+      else nop
     end
     else return self~cancel:super
 
