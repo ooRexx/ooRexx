@@ -596,6 +596,8 @@ REXX_METHOD_PROTOTYPE(dlgext_setControlColor);
 REXX_METHOD_PROTOTYPE(dlgext_installBitmapButton);
 REXX_METHOD_PROTOTYPE(dlgext_changeBitmapButton);
 REXX_METHOD_PROTOTYPE(dlgext_drawBitmap);
+REXX_METHOD_PROTOTYPE(dlgext_dimBitmap);
+REXX_METHOD_PROTOTYPE(dlgext_scrollButton);
 REXX_METHOD_PROTOTYPE(dlgext_drawButton);
 REXX_METHOD_PROTOTYPE(dlgext_getBitmapPosition);
 REXX_METHOD_PROTOTYPE(dlgext_setBitmapPosition);
@@ -876,8 +878,6 @@ REXX_METHOD_PROTOTYPE(bc_getImage);
 REXX_METHOD_PROTOTYPE(bc_setImage);
 REXX_METHOD_PROTOTYPE(bc_setImageList);
 REXX_METHOD_PROTOTYPE(bc_getImageList);
-REXX_METHOD_PROTOTYPE(bc_scroll);
-REXX_METHOD_PROTOTYPE(bc_dimBitmap);
 REXX_METHOD_PROTOTYPE(rb_checkInGroup_cls);
 REXX_METHOD_PROTOTYPE(rb_getCheckState);
 REXX_METHOD_PROTOTYPE(rb_checked);
@@ -1401,6 +1401,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_setControlColor,         dlgext_setControlColor),
     REXX_METHOD(dlgext_installBitmapButton,     dlgext_installBitmapButton),
     REXX_METHOD(dlgext_changeBitmapButton,      dlgext_changeBitmapButton),
+    REXX_METHOD(dlgext_dimBitmap,               dlgext_dimBitmap),
+    REXX_METHOD(dlgext_scrollButton,            dlgext_scrollButton),
     REXX_METHOD(dlgext_drawBitmap,              dlgext_drawBitmap),
     REXX_METHOD(dlgext_drawButton,              dlgext_drawButton),
     REXX_METHOD(dlgext_getBitmapPosition,       dlgext_getBitmapPosition),
@@ -1677,8 +1679,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_setImage,                    bc_setImage),
     REXX_METHOD(bc_setImageList,                bc_setImageList),
     REXX_METHOD(bc_getImageList,                bc_getImageList),
-    REXX_METHOD(bc_scroll,                      bc_scroll),
-    REXX_METHOD(bc_dimBitmap,                   bc_dimBitmap),
     REXX_METHOD(rb_checkInGroup_cls,            rb_checkInGroup_cls),
     REXX_METHOD(rb_checked,                     rb_checked),
     REXX_METHOD(rb_check,                       rb_check),

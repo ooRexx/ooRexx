@@ -1536,6 +1536,10 @@ pCPlainBaseDialog dlgExtSetup(RexxMethodContext *c, RexxObjectPtr dlg)
  * Note that we want to be able to call this, some times, before the underlying
  * dialog has been created, so we bypass dlgExtSetup().
  *
+ * Passing in null for phCtrl, signals that the underlying dialog does not need
+ * to be created yet.  If phCtrl is not null, then that signals that the method
+ * requires the underlying dialog to exist.
+ *
  * @param c
  * @param self
  * @param rxID
@@ -2514,6 +2518,212 @@ RexxMethod3(RexxObjectPtr, dlgext_getBitmapSize, RexxObjectPtr, rxID, NAME, meth
         }
     }
     return TheNegativeOneObj;
+}
+
+
+/** DialogExtensions:scrollButton()
+ *
+ *  Moves the specified rectangle within the button and redraws the uncovered
+ *  area with the button background color.  This method is used to move bitmaps
+ *  within bitmap buttons.
+ *
+ *  @note  Sets .SystemErrorCode.
+ *
+ *  @remarks  TODO convert to using an options .Rect arg.
+ *
+ *            The original ooDialog external function had an option whether or
+ *            not to redraw the uncovered portion of the button.  The option was
+ *            not documented and internally the function was always called with
+ *            true.  That option was therefore eliminated
+ *
+ *            This method was originally a Button method, the scroll() method.
+ *            But it belongs in the rather silly bitmap button category.  Since
+ *            the majority of these methods were implemented in the dialog
+ *            extensions class, this method was moved here.
+ *
+ *            The DialogExtensions class already had the scrollButton() method,
+ *            which simply forwarded to the Button::scroll() method.  So we just
+ *            reversed the logic and have the Button::scroll() method forward to
+ *            this method.
+ *
+ *            For backwards compatibility, the Button::scroll() method has to be
+ *            maintained.  It now simply forwards to this method.  The button
+ *            method is deprecated, and therefore no longer documented.
+ */
+RexxMethod8(logical_t, dlgext_scrollButton, RexxObjectPtr, rxID, int32_t, xPos, int32_t, yPos, int32_t, left, int32_t, top,
+            int32_t, right, int32_t, bottom, OSELF, self)
+{
+    pCPlainBaseDialog pcpbd;
+    HWND hwnd;
+
+    if ( dlgExtControlSetup(context, self, rxID, &pcpbd, NULL, &hwnd) != TheZeroObj )
+    {
+        return FALSE;
+    }
+
+    // Enforce that this is a button control.
+    oodControl_t controlType = oodName2controlType("PUSHBUTTON");
+    if ( ! isControlMatch(hControl, controlType) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    RECT r;
+    if ( GetWindowRect(hwnd, &r) )
+    {
+        RECT rs;
+        HDC hDC = GetDC(hwnd);
+
+        rs.left = left;
+        rs.top = top;
+        rs.right = right;
+        rs.bottom = bottom;
+
+        r.right = r.right - r.left;
+        r.bottom = r.bottom - r.top;
+        r.left = 0;
+        r.top = 0;
+
+        if ( ScrollDC(hDC, xPos, yPos, &rs, &r, NULL, NULL) == 0 )
+        {
+            oodSetSysErrCode(context->threadContext);
+            goto err_out;
+        }
+
+        // Draw uncovered rectangle with background color.
+        HBRUSH hBrush, hOldBrush;
+        HPEN hOldPen, hPen;
+
+        if ( pcpbd->bkgBrush )
+        {
+            hBrush = pcpbd->bkgBrush;
+        }
+        else
+        {
+            hBrush = GetSysColorBrush(COLOR_BTNFACE);
+        }
+
+        hPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
+        hOldPen = (HPEN)SelectObject(hDC, hPen);
+        hOldBrush = (HBRUSH)SelectObject(hDC, hBrush);
+
+        if ( xPos > 0 )
+        {
+            Rectangle(hDC, rs.left, rs.top, rs.left + xPos, rs.bottom);
+        }
+        else if ( xPos < 0 )
+        {
+            Rectangle(hDC, rs.right + xPos, rs.top, rs.right, rs.bottom);
+        }
+
+        if ( yPos > 0 )
+        {
+            Rectangle(hDC, rs.left, rs.top, rs.right, rs.top + yPos);
+        }
+        else if ( yPos < 0 )
+        {
+            Rectangle(hDC, rs.left, rs.bottom + yPos, rs.right, rs.bottom);
+        }
+
+        SelectObject(hDC, hOldBrush);
+        SelectObject(hDC, hOldPen);
+        DeleteObject(hPen);
+
+        ReleaseDC(hwnd, hDC);
+        return 0;
+    }
+
+err_out:
+    return 1;
+}
+
+
+/** Button::dimBitmap()
+ *
+ *  Draws a bitmap on the client area of the button control step by step.
+ *
+ *  @param  id    The resource ID of the bitmap button.  Can be numeric or
+ *                symbolic.
+ *  @param  hBmp  A handle to the bitmap loaded with loadBitmap.
+ *
+ *  @param  cx, cy [required] The width and height of the bitmap.
+ *
+ *  @param  stepx, stepy [optional] The number of pixels to increment the x and
+ *                       y position of the bitmap at each step. The default is 2
+ *                       pixels for both cx and cy.
+ *
+ *  @param  steps [optional]  The number of iterations used to draw the bitmap.
+ *                            The bitmap is redrawn at each step. The default is
+ *                            10.
+ *
+ *  @notes  We enforce that the control must be a button.
+ *
+ *  @remarks  This method was originally a Button method, but it belongs in the
+ *            rather silly bitmap button category.  Since the majority of these
+ *            methods were implemented in the dialog extensions class, this
+ *            method was moved here.
+ *
+ *            For backwards compatibility, the Button::dimBitmap() method has to
+ *            be maintained.  It now simply forwards to this method.  The button
+ *            method is deprecated, and therefore no longer documented.
+ */
+RexxMethod8(RexxObjectPtr, dlgext_dimBitmap, RexxObjectPtr, rxID, POINTERSTRING, hBmp, uint32_t, width, uint32_t, height,
+            OPTIONAL_uint32_t, stepX, OPTIONAL_uint32_t, stepY, OPTIONAL_uint32_t, steps, OSELF, self)
+{
+    HWND hwnd;
+
+    if ( dlgExtControlSetup(context, self, rxID, NULL, NULL, &hwnd) != TheZeroObj )
+    {
+        return TheNegativeOneObj;
+    }
+
+    // Enforce that this is a button control.
+    oodControl_t controlType = oodName2controlType("PUSHBUTTON");
+    if ( ! isControlMatch(hControl, controlType) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    stepX = (argumentOmitted(4) ? 2  : stepX);
+    stepY = (argumentOmitted(5) ? 2  : stepY);
+    steps = (argumentOmitted(6) ? 10 : steps);
+
+    HDC hDC = GetWindowDC(hwnd);
+
+    LOGBRUSH logicalBrush;
+    logicalBrush.lbStyle = BS_DIBPATTERNPT;
+    logicalBrush.lbColor = DIB_RGB_COLORS;
+    logicalBrush.lbHatch = (ULONG_PTR)hBmp;
+
+    HBRUSH hBrush = CreateBrushIndirect(&logicalBrush);
+    HPEN hPen = CreatePen(PS_NULL, 0, PALETTEINDEX(0));
+
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hDC, hBrush);
+    HPEN oldPen = (HPEN)SelectObject(hDC, hPen);
+
+    uint32_t diffY = steps * stepY;
+    uint32_t diffX = steps * stepX;
+
+    uint32_t a, i, j, x, y;
+
+    for ( a = 0; a < steps; a++ )
+    {
+       for ( y = a * stepY, i = 0; i < height / steps; y += diffY, i++ )
+       {
+          for ( x = a * stepX, j = 0; j < width / steps; x += diffX, j++ )
+          {
+              Rectangle(hDC, x - a * stepX, y - a * stepY, x + stepX + 1, y + stepY + 1);
+          }
+       }
+    }
+
+    SelectObject(hDC, oldBrush);
+    SelectObject(hDC, oldPen);
+    DeleteObject(oldBrush);
+    DeleteObject(oldPen);
+    ReleaseDC(hwnd, hDC);
+
+    return TheZeroObj;
 }
 
 

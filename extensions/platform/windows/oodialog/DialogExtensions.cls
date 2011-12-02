@@ -346,11 +346,15 @@
      || "," || moveY || "," || sizeX || "," || sizeY || "," || delay || "," || xNow || "," || yNow)
 
 -- Draw the bitmap step by step.
-::method dimBitmap unguarded
-   use strict arg id, bmp, cx, cy, stepX = 2, stepY = 2, steps = 10
-   button = self~newPushButton(id)
+::method dimBitmap unguarded external "LIBRARY oodialog dlgext_dimBitmap"
+
+-- This method moves the rectangle within a button.  TODO be sure can take a .Rect for arg
+::method scrollButton unguarded
+   -- use arg id, xPos, yPos, left, top, right, bottom
+   newArgs = arg(2, "A")
+   button = self~newPushButton(arg(1))
    if button == .nil then return -1
-   return button~dimBitmap(bmp, cx, cy, stepX, stepY, steps)
+   return button~sendWith("scroll", newArgs)
 
 -- Scroll a bitmap from one position to another within a button.
 ::method scrollBitmapFromTo unguarded
@@ -490,14 +494,6 @@
    button = self~newPushButton(arg(1))
    if button == .nil then return -1
    else return button~write(xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor)
-
--- This method moves the rectangle within a button.  TODO be sure can take a .Rect for arg
-::method scrollButton unguarded
-   -- use arg id, xPos, yPos, left, top, right, bottom
-   newArgs = arg(2, "A")
-   button = self~newPushButton(arg(1))
-   if button == .nil then return -1
-   return button~sendWith("scroll", newArgs)
 
 ::method getWindowDC unguarded external "LIBRARY oodialog dlgext_getWindowDC"
 ::method getButtonDC unguarded

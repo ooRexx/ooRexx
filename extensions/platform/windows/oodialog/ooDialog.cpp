@@ -4611,7 +4611,7 @@ RexxMethod2(uint32_t, pbdlg_setDlgDataFromStem_pvt, RexxStemObject, internDlgDat
     if ( pcpbd->hDlg == NULL )
     {
         noWindowsDialogException(context, pcpbd->rexxSelf);
-        return TheNegativeOneObj;
+        return 0;
     }
 
     return setDlgDataFromStem(context, pcpbd, internDlgData);
@@ -4628,7 +4628,7 @@ RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData,
     if ( pcpbd->hDlg == NULL )
     {
         noWindowsDialogException(context, pcpbd->rexxSelf);
-        return TheNegativeOneObj;
+        return 0;
     }
 
     return putDlgDataInStem(context, pcpbd, internDlgData);
