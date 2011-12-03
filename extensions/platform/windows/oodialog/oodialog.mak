@@ -79,8 +79,9 @@ OODDATA_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\ooDialog.cpp $(OR_
 
 # All Source files that include oodControl.hpp
 OODCONTROL_SOURCEF = $(OR_OUTDIR)\oodBarControls.obj $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodBasicControls.obj \
-                     $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\ooDialog.cpp \
-                     $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oodViewControls.obj
+                     $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodDevicGraphics.obj \
+                     $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodPropertySheetDialog.obj $(OR_OUTDIR)\oodUser.obj \
+                     $(OR_OUTDIR)\oodViewControls.obj
 
 # All Source files that include oodMessaging.hpp
 OODMESSAGING_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodBasicControls.obj $(OR_OUTDIR)\oodControl.obj \

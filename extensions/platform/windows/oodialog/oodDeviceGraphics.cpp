@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,6 +47,7 @@
  * are only partially concerned with GDI.
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
+#include "oodControl.hpp"
 
 #include <stdio.h>
 #include <dlgs.h>
@@ -2470,7 +2471,8 @@ RexxMethod3(RexxObjectPtr, dlgext_setBitmapPosition, RexxObjectPtr, rxID, ARGLIS
     return TheOneObj;
 }
 
-/** DialogExtensions::getBitmapSizeX()
+/** DialogExtensions::getBitmapSize()
+ *  DialogExtensions::getBitmapSizeX()
  *  DialogExtensions::getBitmapSizeY()
  *
  *
@@ -2514,7 +2516,6 @@ RexxMethod3(RexxObjectPtr, dlgext_getBitmapSize, RexxObjectPtr, rxID, NAME, meth
                 return context->Int32(y);
             default :
                 break;
-
         }
     }
     return TheNegativeOneObj;
@@ -2549,6 +2550,9 @@ RexxMethod3(RexxObjectPtr, dlgext_getBitmapSize, RexxObjectPtr, rxID, NAME, meth
  *            For backwards compatibility, the Button::scroll() method has to be
  *            maintained.  It now simply forwards to this method.  The button
  *            method is deprecated, and therefore no longer documented.
+ *
+ *            Although we use logical_t for the return, the actual return is 0
+ *            for success and 1 for failure.
  */
 RexxMethod8(logical_t, dlgext_scrollButton, RexxObjectPtr, rxID, int32_t, xPos, int32_t, yPos, int32_t, left, int32_t, top,
             int32_t, right, int32_t, bottom, OSELF, self)
@@ -2558,14 +2562,14 @@ RexxMethod8(logical_t, dlgext_scrollButton, RexxObjectPtr, rxID, int32_t, xPos, 
 
     if ( dlgExtControlSetup(context, self, rxID, &pcpbd, NULL, &hwnd) != TheZeroObj )
     {
-        return FALSE;
+        goto err_out;
     }
 
     // Enforce that this is a button control.
     oodControl_t controlType = oodName2controlType("PUSHBUTTON");
-    if ( ! isControlMatch(hControl, controlType) )
+    if ( ! isControlMatch(hwnd, controlType) )
     {
-        return TheNegativeOneObj;
+        goto err_out;
     }
 
     RECT r;
@@ -2679,7 +2683,7 @@ RexxMethod8(RexxObjectPtr, dlgext_dimBitmap, RexxObjectPtr, rxID, POINTERSTRING,
 
     // Enforce that this is a button control.
     oodControl_t controlType = oodName2controlType("PUSHBUTTON");
-    if ( ! isControlMatch(hControl, controlType) )
+    if ( ! isControlMatch(hwnd, controlType) )
     {
         return TheNegativeOneObj;
     }
