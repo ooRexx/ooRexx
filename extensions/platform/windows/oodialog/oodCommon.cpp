@@ -698,17 +698,19 @@ int32_t oodGlobalID(RexxThreadContext *c, RexxObjectPtr id, size_t argPosID, boo
  * can not be resolved, or depending on the other args if it is less than 1.
  *
  * @param c          Thread context for the method call.
+ *
  * @param oodObj     ooDialog object that has inherited .ResourceUtils.
  *                   <Assumed>
  * @param id         Resource ID.
+ *
  * @param argPosObj  Arg position of the assumed ooDialog object.  Used for
  *                   raised exceptions.  If this is -1, then oodObj is not
  *                   checked to ensure it is a .ResourceUtils
+ *
  * @param argPosID   Arg position of the ID, used for raised exceptions.
- * @param strict     If 0 and -1 are considered valid resource IDs.  If true,
- *                   then 0 and -1 can be returned without generating an
- *                   exception.  If false, if the resource ID resolves to 0 or
- *                   -1, than an exceptions is raised.
+ *
+ * @param strict    If true the resolved ID must be 1 or greater, if false the
+ *                  resolved ID must be -1 or greater.
  *
  * @return The resolved numeric ID on success, OOD_ID_EXCEPTION or
  *         ODD_MEMORY_ERR on error.

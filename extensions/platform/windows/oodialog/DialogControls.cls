@@ -92,6 +92,17 @@
 ::method data unguarded external "LIBRARY oodialog dlgctrl_data"
 ::method "data=" unguarded external "LIBRARY oodialog dlgctrl_dataEquals"
 
+::method connectCharEvent unguarded external "LIBRARY oodialog dlgctrl_connectCharEvent"
+::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
+::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
+::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
+::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
+::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
+
+-- DEPRECATED START
+::method captureMouse unguarded
+   forward to (self~oDlg) array (self~hwnd)
+
 ::method getMouseCapture unguarded
    forward to (self~oDlg)
 
@@ -101,15 +112,6 @@
 ::method isMouseButtonDown unguarded
    forward to (self~oDlg)
 
-::method captureMouse unguarded external "LIBRARY oodialog dlgctrl_captureMouse"
-::method connectCharEvent unguarded external "LIBRARY oodialog dlgctrl_connectCharEvent"
-::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
-::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
-::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
-::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
-::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
-
--- DEPRECATED START
 ::method processMessage
    forward message "sendMessage"
 

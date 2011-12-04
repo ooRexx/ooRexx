@@ -855,7 +855,6 @@ REXX_METHOD_PROTOTYPE(dlgctrl_redrawRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_clearRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_textSize);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
-REXX_METHOD_PROTOTYPE(dlgctrl_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgctrl_setColor);
 REXX_METHOD_PROTOTYPE(dlgctrl_data);
 REXX_METHOD_PROTOTYPE(dlgctrl_dataEquals);
@@ -1472,7 +1471,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_redrawRect,             dlgctrl_redrawRect),
     REXX_METHOD(dlgctrl_textSize,               dlgctrl_textSize),
     REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
-    REXX_METHOD(dlgctrl_captureMouse,           dlgctrl_captureMouse),
     REXX_METHOD(dlgctrl_setColor,               dlgctrl_setColor),
     REXX_METHOD(dlgctrl_data,                   dlgctrl_data),
     REXX_METHOD(dlgctrl_dataEquals,             dlgctrl_dataEquals),

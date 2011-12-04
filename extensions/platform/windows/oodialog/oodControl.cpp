@@ -1429,26 +1429,6 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
 }
 
 
-/** DialogControl::captureMouse
- *
- *  Sets the mouse capture to this dialog control.  captureMouse() captures
- *  mouse input either when the mouse is over the control, or when the mouse
- *  button was pressed while the mouse was over the control and the button is
- *  still down. Only one window at a time can capture the mouse.
- *
- *  If the mouse cursor is over a window created by another thread, the system
- *  will direct mouse input to the specified window only if a mouse button is
- *  down.
- *
- *  @return  The window handle of the window that previously had captured the
- *           mouse, or the null handle if there was no such window.
- */
-RexxMethod1(RexxObjectPtr, dlgctrl_captureMouse, CSELF, pCSelf)
-{
-    HWND oldCapture = (HWND)SendMessage(getDChDlg(pCSelf), WM_USER_GETSETCAPTURE, 1, (LPARAM)getDChCtrl(pCSelf));
-    return pointer2string(context, oldCapture);
-}
-
 /** DialogControl::setColor()
  *  DialogControl::setSysColor
  */

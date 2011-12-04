@@ -492,9 +492,9 @@
 ::method writeToWindow unguarded external "LIBRARY oodialog dlgext_writeToWindow"
 
 ::method writeToControl unguarded
-   use strict arg id, xPos, yPos, text, fontName = "System", fontSize = 10, fontStyle = "", fgColor = (-1), bkColor = (-1)
-   hwnd = self~getControlHandle(id)
-   return self~writeToWindow(hwdn, xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor)
+   argArray = arg(1,"A")
+   argArray[1] = self~getControlHandle(arg(1))
+   forward message 'writeToWindow' arguments (argArray)
 
 ::method getWindowDC unguarded external "LIBRARY oodialog dlgext_getWindowDC"
 ::method getControlDC unguarded
