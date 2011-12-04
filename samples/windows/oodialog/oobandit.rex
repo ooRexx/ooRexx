@@ -212,7 +212,7 @@
 
    speedCtrl = self~newEdit(1205)
    speedCtrl~setLimit(maxSpeed~length - 1)
-   ret = speedCtrl~connectKeyEvent(onKey)
+   ret = speedCtrl~connectCharEvent(onKey)
 
    jackPotCtrl = self~newStatic(1200)
 
