@@ -66,7 +66,7 @@ extern LPBITMAPINFO  loadDIB(const char *szFile, uint32_t *);
 extern WORD          numDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 extern BOOL          drawBackgroundBmp(pCPlainBaseDialog, HWND);
 extern BOOL          drawBitmapButton(pCPlainBaseDialog, LPARAM, bool);
-
+extern bool          getSystemColor(RexxMethodContext *c, RexxObjectPtr clr, int32_t *color, size_t argPos);
 
 extern bool  parseFontStyleArg(CSTRING fontStyle, int *weight, BOOL *italic, BOOL *underline, BOOL *strikeout);
 extern bool  getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, RexxObjectPtr, PSIZE);

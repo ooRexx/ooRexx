@@ -1469,6 +1469,79 @@ inline bool isIntResource(CSTRING bmp)
     return false;
 }
 
+/**
+ * Retrieves the system color index number from a Rexx object that may be the
+ * actual number or the color keyword.
+ *
+ * @param c       Method context we are operating in.
+ * @param clr     Rexx object, presumably the system color number or keyword.
+ * @param color   The color index is returned here on success
+ * @param argPos  The argument position of the Rexx object.
+ *
+ * @return True on success, othewise false.
+ *
+ * @remarks  Currently this is only called when clr is an argument to a method.
+ *           If called under other circumstances, the logic may need to be
+ *           adjusted.
+ *
+ *           Raises a syntax condition on failure to convert clr.
+ */
+bool getSystemColor(RexxMethodContext *c, RexxObjectPtr clr, int32_t *color, size_t argPos)
+{
+    if ( c->Int32(clr, color) )
+    {
+        return true;
+    }
+
+    CSTRING keyword = c->ObjectToStringValue(clr);
+
+    if (      StrStrI(keyword, "3DDKSHADOW             ") != NULL) *color =21;
+    else if ( StrStrI(keyword, "3DFACE                 ") != NULL) *color =15;
+    else if ( StrStrI(keyword, "3DHIGHLIGHT            ") != NULL) *color =20;
+    else if ( StrStrI(keyword, "3DHILIGHT              ") != NULL) *color =20;
+    else if ( StrStrI(keyword, "3DLIGHT                ") != NULL) *color =22;
+    else if ( StrStrI(keyword, "3DSHADOW               ") != NULL) *color =16;
+    else if ( StrStrI(keyword, "ACTIVEBORDER           ") != NULL) *color =10;
+    else if ( StrStrI(keyword, "ACTIVECAPTION          ") != NULL) *color = 2;
+    else if ( StrStrI(keyword, "APPWORKSPACE           ") != NULL) *color =12;
+    else if ( StrStrI(keyword, "BACKGROUND             ") != NULL) *color = 1;
+    else if ( StrStrI(keyword, "BTNFACE                ") != NULL) *color =15;
+    else if ( StrStrI(keyword, "BTNHIGHLIGHT           ") != NULL) *color =20;
+    else if ( StrStrI(keyword, "BTNHILIGHT             ") != NULL) *color =20;
+    else if ( StrStrI(keyword, "BTNSHADOW              ") != NULL) *color =16;
+    else if ( StrStrI(keyword, "BTNTEXT                ") != NULL) *color =18;
+    else if ( StrStrI(keyword, "CAPTIONTEXT            ") != NULL) *color = 9;
+    else if ( StrStrI(keyword, "DESKTOP                ") != NULL) *color = 1;
+    else if ( StrStrI(keyword, "GRADIENTACTIVECAPTION  ") != NULL) *color =27;
+    else if ( StrStrI(keyword, "GRADIENTINACTIVECAPTION") != NULL) *color =28;
+    else if ( StrStrI(keyword, "GRAYTEXT               ") != NULL) *color =17;
+    else if ( StrStrI(keyword, "HIGHLIGHT              ") != NULL) *color =13;
+    else if ( StrStrI(keyword, "HIGHLIGHTTEXT          ") != NULL) *color =14;
+    else if ( StrStrI(keyword, "HOTLIGHT               ") != NULL) *color =26;
+    else if ( StrStrI(keyword, "INACTIVEBORDER         ") != NULL) *color =11;
+    else if ( StrStrI(keyword, "INACTIVECAPTION        ") != NULL) *color = 3;
+    else if ( StrStrI(keyword, "INACTIVECAPTIONTEXT    ") != NULL) *color =19;
+    else if ( StrStrI(keyword, "INFOBK                 ") != NULL) *color =24;
+    else if ( StrStrI(keyword, "INFOTEXT               ") != NULL) *color =23;
+    else if ( StrStrI(keyword, "MENU                   ") != NULL) *color = 4;
+    else if ( StrStrI(keyword, "MENUHILIGHT            ") != NULL) *color =29;
+    else if ( StrStrI(keyword, "MENUBAR                ") != NULL) *color =30;
+    else if ( StrStrI(keyword, "MENUTEXT               ") != NULL) *color = 7;
+    else if ( StrStrI(keyword, "SCROLLBAR              ") != NULL) *color = 0;
+    else if ( StrStrI(keyword, "WINDOW                 ") != NULL) *color = 5;
+    else if ( StrStrI(keyword, "WINDOWFRAME            ") != NULL) *color = 6;
+    else if ( StrStrI(keyword, "WINDOWTEXT             ") != NULL) *color = 8;
+    else
+    {
+        TCHAR buffer[512];
+        _snprintf(buffer, sizeof(buffer), "Argument %d is not a valid system color keyword; found %s", argPos, keyword);
+        userDefinedMsgException(c, buffer);
+
+        return false;
+    }
+    return true;
+}
+
 void assignBitmap(pCPlainBaseDialog pcpbd, size_t index, CSTRING bmp, PUSHBUTTON_STATES type, bool isInMemory)
 {
     HBITMAP hBmp = NULL;
@@ -3045,7 +3118,6 @@ RexxMethod2(RexxObjectPtr, dlgext_isMouseButtonDown, OPTIONAL_CSTRING, whichButt
     return ((short)SendMessage(pcpbd->hDlg, WM_USER_GETKEYSTATE, mb, 0) & ISDOWN) ? TheTrueObj : TheFalseObj;
 }
 
-
 /** DialogExtensions::setForegroundWindow()
  *
  *  Brings the specified wind to the foreground.
@@ -3089,8 +3161,15 @@ RexxMethod1(RexxObjectPtr, dlgext_setForgroundWindow, RexxStringObject, hwnd)
 
 /** DialogExtensions::setControlColor()
  *  DialogExtensions::setControlSysColor()
+ *
+ *  @remarks  For sys color we accept keyword IDs, but not for regular colors.
+ *            At some point we might convert regular colors to accept keywords
+ *            also.
+ *
+ *            Since accepting keywords is a 4.2.0 or later feature, we raise a
+ *            syntax error if an unsupported keyword is used.
  */
-RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkColor, OPTIONAL_int32_t, fgColor,
+RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, RexxObjectPtr, rxBG, OPTIONAL_RexxObjectPtr, rxFG,
             NAME, method, OSELF, self)
 {
     pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
@@ -3106,8 +3185,31 @@ RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, int32_t, bkCol
         return -1;
     }
 
-    return (int32_t)oodColorTable(context, pcpbd, id, bkColor, (argumentOmitted(3) ? -1 : fgColor),
-                                  (method[10] == 'S'));
+    bool    useSysColor = (method[10] == 'S');
+    int32_t bkColor = 0;
+    int32_t fgColor = -1;
+
+    RexxMethodContext *c = context;
+    if ( useSysColor )
+    {
+        if ( ! getSystemColor(context, rxBG, &bkColor, 2) )
+        {
+            return -1;
+        }
+        if ( argumentExists(3) && ! getSystemColor(context, rxFG, &fgColor, 3) )
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        if ( ! context->Int32(rxBG, &bkColor) || (argumentExists(3) && ! context->Int32(rxBG, &fgColor)) )
+        {
+            return -1;
+        }
+    }
+
+    return (int32_t)oodColorTable(context, pcpbd, id, bkColor, fgColor, useSysColor);
 }
 
 

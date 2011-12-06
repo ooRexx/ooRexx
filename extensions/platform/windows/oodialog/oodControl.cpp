@@ -1432,15 +1432,39 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
 /** DialogControl::setColor()
  *  DialogControl::setSysColor
  */
-RexxMethod4(logical_t, dlgctrl_setColor, int32_t, bkColor, OPTIONAL_int32_t, fgColor, NAME, method, CSELF, pCSelf)
+RexxMethod4(int32_t, dlgctrl_setColor, RexxObjectPtr, rxBG, OPTIONAL_RexxObjectPtr, rxFG, NAME, method, CSELF, pCSelf)
 {
     pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
     if ( pcdc == NULL )
     {
         return 0;
     }
-    return oodColorTable(context, dlgToCSelf(context, pcdc->oDlg), pcdc->id, bkColor,
-                         argumentOmitted(2) ? -1 : fgColor, method[3] == 'S');
+
+    bool    useSysColor = (method[10] == 'S');
+    int32_t bkColor = 0;
+    int32_t fgColor = -1;
+
+    if ( useSysColor )
+    {
+        if ( ! getSystemColor(context, rxBG, &bkColor, 2) )
+        {
+            return -1;
+        }
+        if ( argumentExists(3) && ! getSystemColor(context, rxFG, &fgColor, 3) )
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        if ( ! context->Int32(rxBG, &bkColor) || (argumentExists(3) && ! context->Int32(rxBG, &fgColor)) )
+        {
+            return -1;
+        }
+    }
+
+    return (int32_t)oodColorTable(context, dlgToCSelf(context, pcdc->oDlg), pcdc->id, bkColor,
+                                  argumentOmitted(2) ? -1 : fgColor, useSysColor);
 }
 
 /** DialogControl::data()

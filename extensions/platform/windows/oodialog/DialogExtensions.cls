@@ -131,12 +131,6 @@
    if sb == .nil then return -1
    return sb~determinePosition
 
-::method setListWidthPx unguarded
-   use strict arg id, pixels
-   listBox = self~newListBox(id)
-   if listBox == .nil then return -1
-   return listBox~setWidthPx(pixels)
-
 ::method getListWidthPx unguarded
    use strict arg id
    listBox = self~newListBox(id)
@@ -155,6 +149,13 @@
    listBox = self~newListBox(id)
    if listBox == .nil then return -1
    listBox~listItemHeightPx = pixels
+   return 0
+
+::method setListWidthPx unguarded
+   use strict arg id, pixels
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   listBox~setWidthPx(pixels)
    return 0
 
 ::method getListItemHeightPx unguarded
