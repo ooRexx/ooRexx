@@ -775,6 +775,25 @@ done_out:
 }
 
 
+/**
+ * Adds a menu command item to the connection que so that the command event can
+ * be connected to a dialog at a later time.
+ *
+ * @param id
+ * @param methodName
+ *
+ * @return bool
+ *
+ * @remarks  Default menu item count is 100, which should be adequate most of
+ *           the time.  The idea was to increase the queue using GlobalReAlloc()
+ *           if a programmer is using more menu items.
+ *
+ *           However, in a real world program where the menu items equal 114,
+ *           GlobalReAlloc() always returns null at the point the queue needs to
+ *           be increased.  Testing shows that GlobalAlloc() succeeds in
+ *           allocating the new memory amount.  Not sure if that is user error,
+ *           or what.  So, for now, we just do it the hard way.
+ */
 bool CppMenu::addToConnectionQ(uint32_t id, CSTRING methodName)
 {
     bool result = false;
@@ -796,13 +815,15 @@ bool CppMenu::addToConnectionQ(uint32_t id, CSTRING methodName)
     // If the connection queue is full, double its size.
     if ( connectionQIndex >= connectionQSize )
     {
-        MapItem **pNew = (MapItem **)GlobalReAlloc(connectionQ, 2 * connectionQSize, GMEM_ZEROINIT);
+        MapItem **pNew = (MapItem **)GlobalAlloc(GPTR, 2 * connectionQSize * sizeof(MapItem *));
         if ( pNew == NULL )
         {
             releaseConnectionQ();
             outOfMemoryException(c->threadContext);
             goto done_out;
         }
+        memmove(pNew, connectionQ, connectionQSize * sizeof(MapItem *));
+        GlobalFree(connectionQ);
         connectionQ = pNew;
         connectionQSize = 2 * connectionQSize;
     }
