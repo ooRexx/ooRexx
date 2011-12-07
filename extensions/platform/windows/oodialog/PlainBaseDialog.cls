@@ -247,40 +247,42 @@
 ::method getFontSize class external "LIBRARY oodialog pbdlg_getFontSize_cls"
 ::method new class external "LIBRARY oodialog pbdlg_new_cls"
 
-::attribute library get unguarded private external "LIBRARY oodialog pbdlg_getLibrary"          -- Internal use do not document
-::attribute resourceID get unguarded private external "LIBRARY oodialog pbdlg_getResourceID"    -- Internal use do not document
+-- A queue containing the methods that will be started concurrently before execution of the dialog
+::attribute automaticMethods private                                                            -- Protected in 3.0.1 do not document
 
--- Automatic data field detection on/off
-::attribute autoDetect get external "LIBRARY oodialog pbdlg_getAutoDetect"
-::attribute autoDetect set external "LIBRARY oodialog pbdlg_setAutoDetect"
-
-::attribute dataConnection private  -- store connections between ids and class attributes
-::attribute useStem private         -- flag whether to use a stem to set/get data or not
-
--- finsished is now a boolean, when set to .true, the dialog ends.  Older ooDialog set it
--- to 2 on an abnormal termination of the underlying dialog.  This is no longer done.
-::attribute finished get external "LIBRARY oodialog pbdlg_getFinished"
-::attribute finished set external "LIBRARY oodialog pbdlg_setFinished"
-
-::method dlgData private
+::attribute dataConnection private  -- store connections between ids and class attributes       -- Protected in 3.0.1 do not document
+::method dlgData private                                                                        -- Internal use do not document
    expose dlgData.
    return dlgData.
 
-::attribute parentDlg get private external "LIBRARY oodialog pbdlg_getParentDlg_pvt"
-::attribute parentDlg set private external "LIBRARY oodialog pbdlg_setParentDlg_pvt"
-::attribute childDialogs
+::attribute library get unguarded private external "LIBRARY oodialog pbdlg_getLibrary"          -- Internal use do not document
+::attribute parentDlg get private external "LIBRARY oodialog pbdlg_getParentDlg_pvt"            -- Protected in 3.0.1 do not document
+::attribute parentDlg set private external "LIBRARY oodialog pbdlg_setParentDlg_pvt"            -- Protected in 3.0.1 do not document
+::attribute childDialogs                                                                        -- Internal use do not document
+::attribute resourceID get unguarded private external "LIBRARY oodialog pbdlg_getResourceID"    -- Internal use do not document
+::attribute useStem private         -- flag whether to use a stem to set/get data or not        -- Protected in 3.0.1 do not document
 
-::attribute ownerDialog get  external "LIBRARY oodialog pbdlg_getOwnerDialog"
-::attribute ownerDialog set  external "LIBRARY oodialog pbdlg_setOwnerDialog"
+-- Documented attributes:
+::attribute autoDetect get external "LIBRARY oodialog pbdlg_getAutoDetect"
+::attribute autoDetect set external "LIBRARY oodialog pbdlg_setAutoDetect"
 
 ::attribute dlgHandle get unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
+
+-- finsished is now a boolean, when set to .true, the dialog ends.  Older ooDialog set it
+-- to 2 on an abnormal termination of the underlying dialog.  This is no longer done.
+-- finished presents a problem because it was documented, mostly *incorrectly* in earlier
+-- versions of ooDialog. The programmer should *not* set this attribute.  It will no longer
+-- be documented because it is really an internal use only attribute.
+::attribute finished get external "LIBRARY oodialog pbdlg_getFinished"
+::attribute finished set external "LIBRARY oodialog pbdlg_setFinished"
+
 ::attribute fontName get external "LIBRARY oodialog pbdlg_getFontNameSize"
 ::attribute fontName set private external "LIBRARY oodialog pbdlg_setFontName_pvt"
 ::attribute fontSize get external "LIBRARY oodialog pbdlg_getFontNameSize"
 ::attribute fontSize set private external "LIBRARY oodialog pbdlg_setFontSize_pvt"
+::attribute ownerDialog get  external "LIBRARY oodialog pbdlg_getOwnerDialog"
+::attribute ownerDialog set  external "LIBRARY oodialog pbdlg_setOwnerDialog"
 
--- A queue containing the methods that will be started concurrently before execution of the dialog
-::attribute automaticMethods private
 
 /** PlainBaseDialog::init()  Performs the necessary intialization, including the
  * set up of the dialog management block, for all dialogs.
