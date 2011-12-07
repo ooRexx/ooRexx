@@ -69,18 +69,6 @@
    use strict arg
    return (self~sendWinIntMsg(self~CCM_GETUNICODEFORMAT, 0, 0) <> 0)
 
-::method getFocus unguarded
-   forward to (self~oDlg)
-
-::method setFocus unguarded
-   forward to (self~oDlg)
-
-::method tabToNext unguarded
-   forward to (self~oDlg)
-
-::method tabToPrevious unguarded
-   forward to (self~oDlg)
-
 ::method assignFocus unguarded external "LIBRARY oodialog dlgctrl_assignFocus"
 ::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
@@ -103,11 +91,15 @@
 ::method captureMouse unguarded
    forward to (self~oDlg) array (self~hwnd)
 
+::method getFocus unguarded
+   forward to (self~oDlg)
+
 ::method getMouseCapture unguarded
    forward to (self~oDlg)
 
-::method releaseMouseCapture unguarded
-   forward to (self~oDlg)
+::method getTextSize unguarded
+   forward message "getTextSizeDlg" continue
+   return result~width result~height
 
 ::method isMouseButtonDown unguarded
    forward to (self~oDlg)
@@ -115,9 +107,17 @@
 ::method processMessage
    forward message "sendMessage"
 
-::method getTextSize unguarded
-   forward message "getTextSizeDlg" continue
-   return result~width result~height
+::method releaseMouseCapture unguarded
+   forward to (self~oDlg)
+
+::method setFocus unguarded
+   forward to (self~oDlg)
+
+::method tabToPrevious unguarded
+   forward to (self~oDlg)
+
+::method tabToNext unguarded
+   forward to (self~oDlg)
 
 ::method value unguarded external "LIBRARY oodialog dlgctrl_data"
 ::method "value=" unguarded external "LIBRARY oodialog dlgctrl_dataEquals"
