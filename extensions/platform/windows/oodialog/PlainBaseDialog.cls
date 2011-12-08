@@ -667,7 +667,7 @@
 
    if makeUnguarded then self~instanceMethod(name)~setUnguarded
    if makePrivate then self~instanceMethod(name)~setPrivate
-
+   return 0
 
 -- Methods to manipulate a ComboBox
 
