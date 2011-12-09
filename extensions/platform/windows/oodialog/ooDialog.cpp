@@ -713,29 +713,22 @@ static inline pCWindowBase validateWbCSelf(RexxMethodContext *c, void *pCSelf)
     return pcwb;
 }
 
-static inline HWND getWBWindow(void *pCSelf)
+static inline HWND getWBWindow(RexxMethodContext *c, void *pCSelf)
 {
-    return ((pCWindowBase)pCSelf)->hwnd;
+    pCWindowBase pcwb = validateWbCSelf(c, pCSelf);
+    return pcwb == NULL ? NULL : pcwb->hwnd;
 }
 
 static HWND wbSetUp(RexxMethodContext *c, void *pCSelf)
 {
-    HWND hwnd = NULL;
+    oodResetSysErrCode(c->threadContext);
 
-    if ( pCSelf == NULL )
+    HWND hwnd = getWBWindow(c, pCSelf);
+    if ( hwnd == NULL )
     {
-        baseClassIntializationException(c);
+        noWindowsDialogException(c, ((pCWindowBase)pCSelf)->rexxSelf);
     }
-    else
-    {
-        oodResetSysErrCode(c->threadContext);
 
-        hwnd = getWBWindow(pCSelf);
-        if ( hwnd == NULL )
-        {
-            noWindowsDialogException(c, ((pCWindowBase)pCSelf)->rexxSelf);
-        }
-    }
     return hwnd;
 }
 
@@ -1203,7 +1196,7 @@ RexxMethod1(uint32_t, wb_getPixelCY, CSELF, pCSelf)
 RexxMethod5(RexxObjectPtr, wb_sendMessage, CSTRING, wm_msg, RexxObjectPtr, _wParam, RexxObjectPtr, _lParam,
             NAME, method, CSELF, pCSelf)
 {
-    HWND hwnd = getWBWindow(pCSelf);
+    HWND hwnd = getWBWindow(context, pCSelf);
     bool doIntReturn = (strlen(method) == 11 ? true : false);
 
     return sendWinMsgGeneric(context, hwnd, wm_msg, _wParam, _lParam, 1, doIntReturn);
@@ -1395,17 +1388,17 @@ RexxMethod1(logical_t, wb_enable, CSELF, pCSelf)
     {
         enable = FALSE;
     }
-    return EnableWindow(getWBWindow(pCSelf), enable);
+    return EnableWindow(getWBWindow(context, pCSelf), enable);
 }
 
 RexxMethod1(logical_t, wb_isEnabled, CSELF, pCSelf)
 {
-    return IsWindowEnabled(getWBWindow(pCSelf));
+    return IsWindowEnabled(getWBWindow(context, pCSelf));
 }
 
 RexxMethod1(logical_t, wb_isVisible, CSELF, pCSelf)
 {
-    return IsWindowVisible(getWBWindow(pCSelf));
+    return IsWindowVisible(getWBWindow(context, pCSelf));
 }
 
 /** WindowBase::show() / WindowBase::hide()
@@ -1423,7 +1416,7 @@ RexxMethod1(logical_t, wb_isVisible, CSELF, pCSelf)
  */
 RexxMethod2(logical_t, wb_show, NAME, method, CSELF, pCSelf)
 {
-    return showWindow(getWBWindow(pCSelf), (*method == 'S' ? 'N' : 'H'));
+    return showWindow(getWBWindow(context, pCSelf), (*method == 'S' ? 'N' : 'H'));
 }
 
 /** WindowBase::showFast() / WindowBase::hideFast()
@@ -1438,13 +1431,16 @@ RexxMethod2(logical_t, wb_show, NAME, method, CSELF, pCSelf)
  */
 RexxMethod1(uint32_t, wb_showFast, CSELF, pCSelf)
 {
-    return showFast(getWBWindow(pCSelf), msgAbbrev(context));
+    return showFast(getWBWindow(context, pCSelf), msgAbbrev(context));
 }
 
 /** WindowBase::display()
  *
  *
  *  @return  0 for success, 1 for error.  An error is highly unlikely.
+ *
+ *  @notes   Sets the .SystemErrorCode.  The underlying dialog must have been
+ *           created or a synatx exceptions is raised.
  *
  *  @remarks display() is a method that was originally in WindowExtentions,
  *           making it a method of both a dialog and a dialog object. It is one
@@ -1461,7 +1457,12 @@ RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
     char type;
     uint32_t ret = 0;
     bool doFast = false;
-    HWND hwnd = getWBWindow(pCSelf);
+    HWND hwnd = wbSetUp(context, pCSelf);
+
+    if ( hwnd == NULL )
+    {
+        return 1;
+    }
 
     if ( opts != NULL && StrStrI(opts, "FAST") != NULL )
     {
@@ -1537,7 +1538,7 @@ done_out:
  */
 RexxMethod2(RexxObjectPtr, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSelf)
 {
-    HWND hwnd = getWBWindow(pCSelf);
+    HWND hwnd = getWBWindow(context, pCSelf);
     char flag = msgAbbrev(context);
     bool doErase;
     bool doUpdate = true;
@@ -1569,7 +1570,7 @@ RexxMethod2(RexxObjectPtr, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSe
 RexxMethod1(RexxObjectPtr, wb_redraw, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    if ( RedrawWindow(getWBWindow(pCSelf), NULL, NULL,
+    if ( RedrawWindow(getWBWindow(context, pCSelf), NULL, NULL,
                       RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
@@ -1595,7 +1596,7 @@ RexxMethod1(RexxObjectPtr, wb_redraw, CSELF, pCSelf)
 RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
 {
     RexxStringObject result = context->NullString();
-    HWND hwnd = getWBWindow(pCSelf);
+    HWND hwnd = getWBWindow(context, pCSelf);
 
     // Whether this fails or succeeds doesn't matter, we just return result.
     rxGetWindowText(context, hwnd, &result);
@@ -1622,7 +1623,7 @@ RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
 RexxMethod2(wholenumber_t, wb_setText, CSTRING, text, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    if ( SetWindowText(getWBWindow(pCSelf), text) == 0 )
+    if ( SetWindowText(getWBWindow(context, pCSelf), text) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return 1;
@@ -1828,7 +1829,7 @@ error_out:
  */
 RexxMethod2(RexxObjectPtr, wb_windowRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
 {
-    HWND hwnd = (argumentOmitted(1) ? getWBWindow(pCSelf) : (HWND)_hwnd);
+    HWND hwnd = (argumentOmitted(1) ? getWBWindow(context, pCSelf) : (HWND)_hwnd);
     return oodGetWindowRect(context, hwnd);
 }
 
@@ -1852,7 +1853,7 @@ RexxMethod2(RexxObjectPtr, wb_windowRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, 
  *  @note  Sets the .SystemErrorCode.
  *
  *  @remarks  The clientRect() method supplies an alternative to the
- *            getClinetRect(hwnd) method, to allow returning a .Rect object
+ *            getClientRect(hwnd) method, to allow returning a .Rect object
  *            rather than a string of blank separated values.
  *
  *            Pre 4.0.1, getClientRect() was in WindowExtensions.  The need to
@@ -1863,7 +1864,7 @@ RexxMethod2(RexxObjectPtr, wb_windowRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, 
  */
 RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
 {
-    HWND hwnd = (argumentOmitted(1) ? getWBWindow(pCSelf) : (HWND)_hwnd);
+    HWND hwnd = (argumentOmitted(1) ? getWBWindow(context, pCSelf) : (HWND)_hwnd);
 
     RECT r = {0};
     oodGetClientRect(context, (HWND)hwnd, &r);
@@ -2092,7 +2093,7 @@ RexxMethod2(RexxObjectPtr, wb_getSizePos, NAME, method, CSELF, pCSelf)
     }
 
     RECT r = {0};
-    if ( GetWindowRect(getWBWindow(pCSelf), &r) == 0 )
+    if ( GetWindowRect(getWBWindow(context, pCSelf), &r) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
     }
@@ -2354,7 +2355,7 @@ done_out:
  */
 RexxMethod1(RexxObjectPtr, wb_clear, CSELF, pCSelf)
 {
-    HWND hwnd = getWBWindow(pCSelf);
+    HWND hwnd = getWBWindow(context, pCSelf);
 
     RECT r = {0};
     if ( oodGetClientRect(context, hwnd, &r) == TheOneObj )
@@ -2419,7 +2420,7 @@ RexxMethod4(logical_t, wb_screenClient, RexxObjectPtr, pt, NAME, method, OSELF, 
     oodResetSysErrCode(context->threadContext);
     BOOL success = FALSE;
 
-    HWND hwnd = getWBWindow(pCSelf);
+    HWND hwnd = getWBWindow(context, pCSelf);
     if ( hwnd == NULL )
     {
         noWindowsDialogException(context, self);
@@ -2497,7 +2498,7 @@ done_out:
  */
 RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
 {
-    return GetWindowLong(getWBWindow(pCSelf), flag);
+    return GetWindowLong(getWBWindow(context, pCSelf), flag);
 }
 
 

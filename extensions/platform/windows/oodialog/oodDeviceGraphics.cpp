@@ -1694,7 +1694,7 @@ RexxMethod2(RexxObjectPtr, dlgext_clearWindowRect, POINTERSTRING, hwnd, OSELF, s
 
 /** DialogExtensions::clearRect()
  *
- *  'Clears' a rectangle in the specified Window.
+ *  'Clears' a bounding rectangle in the specified Window.
  *
  *  @param hwnd         The window of the dialog or dialog control to act on.
  *  @param coordinates  The coordinates of the rectangle, given in pixels.
@@ -1768,6 +1768,11 @@ RexxMethod3(RexxObjectPtr, dlgext_clearRect, POINTERSTRING, hwnd, ARGLIST, args,
  *            This method is essentially WindowBase::setRect() but works
  *            wit a supplied window handle rather then the window handle of the
  *            Rexx object.
+ *
+ *            There is no syntax exception if the underlying Windows dialog does
+ *            not exist.  There is no reason why the dialog would need to exist,
+ *            since we are using the window handle to position a window.  If the
+ *            hwnd arg is not a window, the system error code will get set.
  */
 RexxMethod3(RexxObjectPtr, dlgext_setWindowRect, POINTERSTRING, hwnd, ARGLIST, args, OSELF, self)
 {
