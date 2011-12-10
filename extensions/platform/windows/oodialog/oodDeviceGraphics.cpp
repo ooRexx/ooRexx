@@ -1860,8 +1860,8 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawWindowRect, OPTIONAL_POINTERSTRING, _hwn
 
 /** DialogExtensions::redrawRect()
  *
- *  Immediately redraws the specified rectangle in the specified window, (a
- *  dialog or a dialog control.)
+ *  Immediately redraws the specified rectangle in the client area of the
+ *  specified window.
  *
  *  @param hwnd   [OPITONAL]  The window of the dialog or dialog control to act
  *                on.  The default is this dialog.
