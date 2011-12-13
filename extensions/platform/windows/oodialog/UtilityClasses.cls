@@ -301,6 +301,11 @@
 ::method equateTo external "LIBRARY oodialog size_equateTo"
 
 
+::class 'Mouse' public
+::method trackEvent external "LIBRARY oodialog mouse_trackEvent"
+::method dragDetect external "LIBRARY oodialog mouse_dragDetect"
+
+
 ::class 'DayState' public
 ::method init external "LIBRARY oodialog ds_init"
 ::method value external "LIBRARY oodialog ds_value"
@@ -730,7 +735,6 @@
 ::constant OIC_ERROR           32513
 ::constant OIC_INFORMATION     32516
 ::constant OIC_SHIELD          32518
-
 
 /**
  * Standard Dialog Control Classes.  Some simple short cut dialogs.

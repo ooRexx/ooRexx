@@ -425,11 +425,11 @@ uint32_t parseShowOptions(CSTRING options)
 
     if ( options != NULL )
     {
-       if ( StrStrI(options, "NOMOVE"    ) ) opts |= SWP_NOMOVE;
-       if ( StrStrI(options, "NOSIZE"    ) ) opts |= SWP_NOSIZE;
-       if ( StrStrI(options, "HIDEWINDOW") ) opts |= SWP_HIDEWINDOW;
-       if ( StrStrI(options, "SHOWWINDOW") ) opts |= SWP_SHOWWINDOW;
-       if ( StrStrI(options, "NOREDRAW"  ) ) opts |= SWP_NOREDRAW;
+       if ( StrStrI(options, "NOMOVE"    ) != NULL ) opts |= SWP_NOMOVE;
+       if ( StrStrI(options, "NOSIZE"    ) != NULL ) opts |= SWP_NOSIZE;
+       if ( StrStrI(options, "HIDEWINDOW") != NULL ) opts |= SWP_HIDEWINDOW;
+       if ( StrStrI(options, "SHOWWINDOW") != NULL ) opts |= SWP_SHOWWINDOW;
+       if ( StrStrI(options, "NOREDRAW"  ) != NULL ) opts |= SWP_NOREDRAW;
     }
     return opts;
 }
@@ -1495,42 +1495,42 @@ bool getSystemColor(RexxMethodContext *c, RexxObjectPtr clr, int32_t *color, siz
 
     CSTRING keyword = c->ObjectToStringValue(clr);
 
-    if (      StrStrI(keyword, "3DDKSHADOW             ") != NULL) *color =21;
-    else if ( StrStrI(keyword, "3DFACE                 ") != NULL) *color =15;
-    else if ( StrStrI(keyword, "3DHIGHLIGHT            ") != NULL) *color =20;
-    else if ( StrStrI(keyword, "3DHILIGHT              ") != NULL) *color =20;
-    else if ( StrStrI(keyword, "3DLIGHT                ") != NULL) *color =22;
-    else if ( StrStrI(keyword, "3DSHADOW               ") != NULL) *color =16;
-    else if ( StrStrI(keyword, "ACTIVEBORDER           ") != NULL) *color =10;
-    else if ( StrStrI(keyword, "ACTIVECAPTION          ") != NULL) *color = 2;
-    else if ( StrStrI(keyword, "APPWORKSPACE           ") != NULL) *color =12;
-    else if ( StrStrI(keyword, "BACKGROUND             ") != NULL) *color = 1;
-    else if ( StrStrI(keyword, "BTNFACE                ") != NULL) *color =15;
-    else if ( StrStrI(keyword, "BTNHIGHLIGHT           ") != NULL) *color =20;
-    else if ( StrStrI(keyword, "BTNHILIGHT             ") != NULL) *color =20;
-    else if ( StrStrI(keyword, "BTNSHADOW              ") != NULL) *color =16;
-    else if ( StrStrI(keyword, "BTNTEXT                ") != NULL) *color =18;
-    else if ( StrStrI(keyword, "CAPTIONTEXT            ") != NULL) *color = 9;
-    else if ( StrStrI(keyword, "DESKTOP                ") != NULL) *color = 1;
-    else if ( StrStrI(keyword, "GRADIENTACTIVECAPTION  ") != NULL) *color =27;
-    else if ( StrStrI(keyword, "GRADIENTINACTIVECAPTION") != NULL) *color =28;
-    else if ( StrStrI(keyword, "GRAYTEXT               ") != NULL) *color =17;
-    else if ( StrStrI(keyword, "HIGHLIGHT              ") != NULL) *color =13;
-    else if ( StrStrI(keyword, "HIGHLIGHTTEXT          ") != NULL) *color =14;
-    else if ( StrStrI(keyword, "HOTLIGHT               ") != NULL) *color =26;
-    else if ( StrStrI(keyword, "INACTIVEBORDER         ") != NULL) *color =11;
-    else if ( StrStrI(keyword, "INACTIVECAPTION        ") != NULL) *color = 3;
-    else if ( StrStrI(keyword, "INACTIVECAPTIONTEXT    ") != NULL) *color =19;
-    else if ( StrStrI(keyword, "INFOBK                 ") != NULL) *color =24;
-    else if ( StrStrI(keyword, "INFOTEXT               ") != NULL) *color =23;
-    else if ( StrStrI(keyword, "MENU                   ") != NULL) *color = 4;
-    else if ( StrStrI(keyword, "MENUHILIGHT            ") != NULL) *color =29;
-    else if ( StrStrI(keyword, "MENUBAR                ") != NULL) *color =30;
-    else if ( StrStrI(keyword, "MENUTEXT               ") != NULL) *color = 7;
-    else if ( StrStrI(keyword, "SCROLLBAR              ") != NULL) *color = 0;
-    else if ( StrStrI(keyword, "WINDOW                 ") != NULL) *color = 5;
-    else if ( StrStrI(keyword, "WINDOWFRAME            ") != NULL) *color = 6;
-    else if ( StrStrI(keyword, "WINDOWTEXT             ") != NULL) *color = 8;
+    if (      StrCmpI(keyword, "3DDKSHADOW")              == 0) *color =21;
+    else if ( StrCmpI(keyword, "3DFACE")                  == 0) *color =15;
+    else if ( StrCmpI(keyword, "3DHIGHLIGHT")             == 0) *color =20;
+    else if ( StrCmpI(keyword, "3DHILIGHT")               == 0) *color =20;
+    else if ( StrCmpI(keyword, "3DLIGHT")                 == 0) *color =22;
+    else if ( StrCmpI(keyword, "3DSHADOW")                == 0) *color =16;
+    else if ( StrCmpI(keyword, "ACTIVEBORDER")            == 0) *color =10;
+    else if ( StrCmpI(keyword, "ACTIVECAPTION")           == 0) *color = 2;
+    else if ( StrCmpI(keyword, "APPWORKSPACE")            == 0) *color =12;
+    else if ( StrCmpI(keyword, "BACKGROUND")              == 0) *color = 1;
+    else if ( StrCmpI(keyword, "BTNFACE")                 == 0) *color =15;
+    else if ( StrCmpI(keyword, "BTNHIGHLIGHT")            == 0) *color =20;
+    else if ( StrCmpI(keyword, "BTNHILIGHT")              == 0) *color =20;
+    else if ( StrCmpI(keyword, "BTNSHADOW")               == 0) *color =16;
+    else if ( StrCmpI(keyword, "BTNTEXT")                 == 0) *color =18;
+    else if ( StrCmpI(keyword, "CAPTIONTEXT")             == 0) *color = 9;
+    else if ( StrCmpI(keyword, "DESKTOP")                 == 0) *color = 1;
+    else if ( StrCmpI(keyword, "GRADIENTACTIVECAPTION")   == 0) *color =27;
+    else if ( StrCmpI(keyword, "GRADIENTINACTIVECAPTION") == 0) *color =28;
+    else if ( StrCmpI(keyword, "GRAYTEXT")                == 0) *color =17;
+    else if ( StrCmpI(keyword, "HIGHLIGHT")               == 0) *color =13;
+    else if ( StrCmpI(keyword, "HIGHLIGHTTEXT")           == 0) *color =14;
+    else if ( StrCmpI(keyword, "HOTLIGHT")                == 0) *color =26;
+    else if ( StrCmpI(keyword, "INACTIVEBORDER")          == 0) *color =11;
+    else if ( StrCmpI(keyword, "INACTIVECAPTION")         == 0) *color = 3;
+    else if ( StrCmpI(keyword, "INACTIVECAPTIONTEXT")     == 0) *color =19;
+    else if ( StrCmpI(keyword, "INFOBK")                  == 0) *color =24;
+    else if ( StrCmpI(keyword, "INFOTEXT")                == 0) *color =23;
+    else if ( StrCmpI(keyword, "MENU")                    == 0) *color = 4;
+    else if ( StrCmpI(keyword, "MENUHILIGHT")             == 0) *color =29;
+    else if ( StrCmpI(keyword, "MENUBAR")                 == 0) *color =30;
+    else if ( StrCmpI(keyword, "MENUTEXT")                == 0) *color = 7;
+    else if ( StrCmpI(keyword, "SCROLLBAR")               == 0) *color = 0;
+    else if ( StrCmpI(keyword, "WINDOW")                  == 0) *color = 5;
+    else if ( StrCmpI(keyword, "WINDOWFRAME")             == 0) *color = 6;
+    else if ( StrCmpI(keyword, "WINDOWTEXT")              == 0) *color = 8;
     else
     {
         TCHAR buffer[512];
@@ -3099,9 +3099,9 @@ RexxMethod2(RexxObjectPtr, dlgext_isMouseButtonDown, OPTIONAL_CSTRING, whichButt
     int mb = VK_LBUTTON;
     if ( argumentExists(1) )
     {
-        if ( StrStrI(whichButton, "LEFT"  ) ) mb = VK_LBUTTON;
-        else if ( StrStrI(whichButton, "RIGHT" ) ) mb = VK_RBUTTON;
-        else if ( StrStrI(whichButton, "MIDDLE") ) mb = VK_MBUTTON;
+        if ( StrCmpI(whichButton, "LEFT"       ) == 0 ) mb = VK_LBUTTON;
+        else if ( StrCmpI(whichButton, "RIGHT" ) == 0 ) mb = VK_RBUTTON;
+        else if ( StrCmpI(whichButton, "MIDDLE") == 0 ) mb = VK_MBUTTON;
         else
         {
             return wrongArgValueException(context->threadContext, 1, "LEFT, RIGHT, MIDDLE", whichButton);
@@ -3991,3 +3991,117 @@ error_out:
 }
 
 
+/**
+ *  Methods for the .Mouse class.
+ */
+#define MOUSE_CLASS        "Mouse"
+
+#define TRACK_MOUSE_KEYWORDS    "CANCEL, HOVER, LEAVE, NONCLIENT, or QUERY"
+
+
+RexxMethod5(RexxObjectPtr, mouse_trackEvent, POINTERSTRING, hwnd, OPTIONAL_CSTRING, event, OPTIONAL_uint32_t, hoverTime,
+            OPTIONAL_RexxObjectPtr, _answer, OSELF, self)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    TRACKMOUSEEVENT tme = {0};
+    tme.cbSize = sizeof(TRACKMOUSEEVENT);
+
+    DWORD flags = 0;
+    if ( argumentOmitted(2) )
+    {
+        flags = TME_LEAVE;
+    }
+    else
+    {
+        if ( StrStrI(event, "CANCEL"   ) != NULL ) flags =  TME_CANCEL;
+        if ( StrStrI(event, "HOVER"    ) != NULL ) flags |= TME_HOVER;
+        if ( StrStrI(event, "LEAVE"    ) != NULL ) flags |= TME_LEAVE;
+        if ( StrStrI(event, "NONCLIENT") != NULL ) flags |= TME_NONCLIENT;
+        if ( StrStrI(event, "QUERY"    ) != NULL ) flags |= TME_QUERY;
+    }
+
+    if ( flags & TME_QUERY )
+    {
+        if ( argumentOmitted(4) )
+        {
+            userDefinedMsgException(context->threadContext, 4, "is required when the QUERY keyword is used");
+            goto error_out;
+        }
+
+        if ( ! requiredClass(context->threadContext, _answer, "Directory", 4) )
+        {
+            goto error_out;
+        }
+        RexxDirectoryObject answer = (RexxDirectoryObject)_answer;
+
+        tme.dwFlags   = flags;
+        tme.hwndTrack = (HWND)hwnd;
+
+        if ( TrackMouseEvent(&tme) == 0 )
+        {
+            oodSetSysErrCode(context->threadContext);
+            goto error_out;
+        }
+
+        char buf[512] = {'\0'};
+        if ( tme.dwFlags & TME_CANCEL    ) strcat(buf, "CANCEL ");
+        if ( tme.dwFlags & TME_HOVER     ) strcat(buf, "HOVER ");
+        if ( tme.dwFlags & TME_LEAVE     ) strcat(buf, "LEAVE ");
+        if ( tme.dwFlags & TME_NONCLIENT ) strcat(buf, "NONCLIENT ");
+        if ( tme.dwFlags & TME_QUERY     ) strcat(buf, "QUERY ");
+
+        if ( buf[strlen(buf)] == ' ' )
+        {
+            buf[strlen(buf)] = '\0';
+        }
+
+        context->DirectoryPut(answer, context->String(buf), "EVENT");
+        context->DirectoryPut(answer, pointer2string(context, tme.hwndTrack), "HWND");
+        context->DirectoryPut(answer, context->UnsignedInt32(tme.dwHoverTime), "HOVERTIME");
+
+        goto good_out;
+    }
+    else
+    {
+        tme.dwFlags   = flags;
+        tme.hwndTrack = (HWND)hwnd;
+
+        if ( flags & TME_HOVER )
+        {
+            if ( argumentOmitted(3) )
+            {
+                tme.dwHoverTime = HOVER_DEFAULT;
+            }
+            else
+            {
+                tme.dwHoverTime = hoverTime;
+            }
+        }
+
+        if ( TrackMouseEvent(&tme) == 0 )
+        {
+            oodSetSysErrCode(context->threadContext);
+            goto error_out;
+        }
+    }
+
+good_out:
+    return TheTrueObj;
+
+error_out:
+    return TheFalseObj;
+}
+
+
+RexxMethod3(RexxObjectPtr, mouse_dragDetect, POINTERSTRING, hwnd, OPTIONAL_RexxObjectPtr, _pt, OSELF, self)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    PPOINT pt = rxGetPoint(context, _pt, 2);
+    if ( pt == NULL )
+    {
+        return TheFalseObj;
+    }
+    return DragDetect((HWND)hwnd, *pt) ? TheTrueObj : TheFalseObj;
+}
