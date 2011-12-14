@@ -1200,8 +1200,14 @@ REXX_METHOD_PROTOTYPE(menuTemplate_addItem);
 REXX_METHOD_PROTOTYPE(menuTemplate_addPopup);
 
 // Mouse
+REXX_METHOD_PROTOTYPE(mouse_new_cls);
+REXX_METHOD_PROTOTYPE(mouse_init);
+REXX_METHOD_PROTOTYPE(mouse_uninit);
 REXX_METHOD_PROTOTYPE(mouse_trackEvent);
 REXX_METHOD_PROTOTYPE(mouse_dragDetect);
+REXX_METHOD_PROTOTYPE(mouse_get_release_capture);
+REXX_METHOD_PROTOTYPE(mouse_capture);
+REXX_METHOD_PROTOTYPE(mouse_connectEvent);
 
 RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_init_cls,               dlgutil_init_cls),
@@ -1990,8 +1996,14 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(menuTemplate_addPopup,          menuTemplate_addPopup),
 
     // Mouse
+    REXX_METHOD(mouse_new_cls,                  mouse_new_cls),
+    REXX_METHOD(mouse_init,                     mouse_init),
+    REXX_METHOD(mouse_uninit,                   mouse_uninit),
     REXX_METHOD(mouse_trackEvent,               mouse_trackEvent),
     REXX_METHOD(mouse_dragDetect,               mouse_dragDetect),
+    REXX_METHOD(mouse_get_release_capture,      mouse_get_release_capture),
+    REXX_METHOD(mouse_capture,                  mouse_capture),
+    REXX_METHOD(mouse_connectEvent,             mouse_connectEvent),
 
     REXX_LAST_METHOD()
 };

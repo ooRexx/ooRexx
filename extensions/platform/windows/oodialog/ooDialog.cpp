@@ -441,6 +441,14 @@ int32_t delDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
     }
     pcpbd->isActive = false;
 
+    if ( pcpbd->mouseCSelf != NULL )
+    {
+        pCMouse pcm = (pCMouse)pcpbd->mouseCSelf;
+        pcm->dlgCSelf = NULL;
+        pcpbd->rexxMouse  = NULLOBJECT;
+        pcpbd->mouseCSelf = NULL;
+    }
+
     // Swap back the saved icons, if needed.  See the remarks in the function
     // header.
     if ( pcpbd->hDlg && pcpbd->didChangeIcon )
@@ -3036,7 +3044,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
-#if 0
+#if 1
         printf("PlainBaseDialog::uninit() hDlg=%p isAllocated=%d  Dialog is a ", pcpbd->hDlg, pcpbd->dlgAllocated);
         dbgPrintClassID(context, pcpbd->rexxSelf);
 #endif

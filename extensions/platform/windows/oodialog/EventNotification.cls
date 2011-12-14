@@ -103,11 +103,6 @@
    if id == 0 then return self~addUserMsg(msgToRaise, 0x0000002B, 0xFFFFFFFF, 0, 0, 0, 0)
    else return self~addUserMsg(msgToRaise, 0x0000002B, 0xFFFFFFFF, '0x0000'||id~d2x(4), 0xFFFFFFFF, 0, 0)
 
--- WM_CAPTURECHANGED
-::method connectMouseCapture
-   use strict arg msgToRise = 'onCaptureChanged'
-   return self~addUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
-
 -- These methods map or unmap keyboard events to a method, or query if the mapping exists.
 ::method connectKeyPress unguarded external "LIBRARY oodialog en_connectKeyPress"
 ::method connectFKeyPress unguarded external "LIBRARY oodialog en_connectFKeyPress"
@@ -541,4 +536,10 @@
 ::method connectListLeftDoubleClick
    use strict arg id, msgToRise
    return self~connectListBoxEvent(id, "DBLCLK", msgToRaise)
+
+-- WM_CAPTURECHANGED
+::method connectMouseCapture
+   use strict arg methodName = 'onCaptureChanged'
+   mouse = .Mouse~new(self)
+   return (mouse~connectEvent('CAPTURECHANGED', methodName, .false) \== .true)
 

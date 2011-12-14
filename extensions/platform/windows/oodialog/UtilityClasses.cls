@@ -302,8 +302,15 @@
 
 
 ::class 'Mouse' public
+::method new class external "LIBRARY oodialog mouse_new_cls"
+::method init external "LIBRARY oodialog mouse_init"
+::method uninit external "LIBRARY oodialog mouse_uninit"
 ::method trackEvent external "LIBRARY oodialog mouse_trackEvent"
 ::method dragDetect external "LIBRARY oodialog mouse_dragDetect"
+::method capture external "LIBRARY oodialog mouse_capture"
+::method getCapture external "LIBRARY oodialog mouse_get_release_capture"
+::method releaseCapture external "LIBRARY oodialog mouse_get_release_capture"
+::method connectEvent external "LIBRARY oodialog mouse_connectEvent"
 
 
 ::class 'DayState' public

@@ -136,7 +136,7 @@ void *baseClassIntializationException(RexxMethodContext *c)
 RexxObjectPtr methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, RexxObjectPtr rxDlg, CSTRING msg)
 {
     TCHAR buf[512];
-    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s %s.", methodName, c->ObjectToStringValue(rxDlg), msg);
+    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s %s", methodName, c->ObjectToStringValue(rxDlg), msg);
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
 }
@@ -149,18 +149,24 @@ RexxObjectPtr methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING metho
  *
  *  The "methName" method can not be invoked on "objectName" when the "msg"
  *
- *  The connectEdit method can not be invoked on a StyleDlg when the Windows
- *  dialog does not exist.
+ *  The new method can not be invoked on a Mouse when the windows dialog has
+ *  executed and been closed.
  *
- * @param c
- * @param rxDlg
+ * @param c           The method context we are operationg in.
+ * @param methodName  Method name, used to over-ride the other
+ *                    methodCanNotBeInvokedException()
  * @param msg
+ * @param rxObj
+ *
+ * @note  This is an argument rearrangement to produce a message similar to, but
+ *        slightly different, than the other methodCanNotBeInvokedExeception
+ *        functions.
  */
-RexxObjectPtr methodCanNotBeInvokedException(RexxMethodContext *c, RexxObjectPtr rxDlg, CSTRING msg)
+RexxObjectPtr methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, CSTRING msg, RexxObjectPtr rxObj)
 {
     TCHAR buf[512];
-    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the %s.",
-              c->GetMessageName(), c->ObjectToStringValue(rxDlg), msg);
+    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the %s",
+              methodName, c->ObjectToStringValue(rxObj), msg);
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
     return NULLOBJECT;
 }

@@ -310,8 +310,28 @@ extern void          *wrongReplyMsgException(RexxThreadContext *c, const char *m
 extern void           controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
 extern void           wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
 extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, RexxObjectPtr rxDlg, CSTRING msg);
-extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, RexxObjectPtr rxDlg, CSTRING msg);
+extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, CSTRING msg, RexxObjectPtr rxDlg);
 extern RexxObjectPtr  invalidAttributeException(RexxMethodContext *c, RexxObjectPtr rxDlg);
+
+/**
+ *  93.900
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
+ *  The "methName" method can not be invoked on "objectName" when the "msg"
+ *
+ *  The connectEdit method can not be invoked on a StyleDlg when the Windows
+ *  dialog does not exist.
+ *
+ * @param c
+ * @param rxDlg
+ * @param msg
+ */
+inline RexxObjectPtr methodCanNotBeInvokedException(RexxMethodContext *c, RexxObjectPtr rxDlg, CSTRING msg)
+{
+    return methodCanNotBeInvokedException(c, c->GetMessageName(), msg, rxDlg);
+}
 
 /**
  *  93.900

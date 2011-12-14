@@ -835,8 +835,8 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
     return context->String(buf);
 }
 
-RexxMethod1(int16_t, dlgutil_shiWord_cls, uint32_t, dw) { return HIWORD(dw); }
-RexxMethod1(int16_t, dlgutil_sloWord_cls, uint32_t, dw) { return LOWORD(dw); }
+RexxMethod1(int16_t, dlgutil_shiWord_cls, int32_t, dw) { return HIWORD(dw); }
+RexxMethod1(int16_t, dlgutil_sloWord_cls, int32_t, dw) { return LOWORD(dw); }
 
 RexxMethod1(uint16_t, dlgutil_hiWord_cls, uint32_t, dw) { return HIWORD(dw); }
 RexxMethod1(uint16_t, dlgutil_loWord_cls, uint32_t, dw) { return LOWORD(dw); }

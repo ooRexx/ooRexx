@@ -91,6 +91,11 @@
 
 #define WM_USER_CREATEPROPSHEET_DLG    WM_USER + 0x060C
 
+// Flags for WM_USER_GETSETCAPTURE
+#define MF_GETCAPTURE       0
+#define MF_SETCAPTURE       1
+#define MF_RELEASECAPTURE   2
+
 #define OODDLL                      "oodialog.dll"
 #define OOD_LVL_MAJOR               4
 #define OOD_LVL_MINOR               2
@@ -545,6 +550,8 @@ typedef struct _pbdCSelf {
     RexxObjectPtr        rexxParent;    // This dialog's Rexx parent dialog object
     void                *dlgPrivate;    // Subclasses can store data unique to the subclass
     void                *initPrivate;   // Subclasses can store init data unique to the subclass
+    void                *mouseCSelf;
+    RexxObjectPtr        rexxMouse;
     DATATABLEENTRY      *DataTab;
     ICONTABLEENTRY      *IconTab;
     COLORTABLEENTRY     *ColorTab;
@@ -611,6 +618,17 @@ typedef struct _ddCSelf {
     uint32_t           count;         // Dialog item count (dialogItemCount)
 } CDynamicDialog;
 typedef CDynamicDialog *pCDynamicDialog;
+
+/* Struct for the Mouse object CSelf. */
+typedef struct _mCSelf {
+    RexxObjectPtr      rexxSelf;      // Rexx Mouse object.
+    HWND               hWindow;       // Window handle of owner window - only dialogs are supported now.
+    RexxObjectPtr      rexxWindow;    // Rexx owner window object
+    pCPlainBaseDialog  dlgCSelf;      // Pointer to dialog owner CSelf struct, if owner is a dialog window
+    pCDialogControl    controlCSelf;  // Pointer to dialog control owner CSelf struct, if owner is a dialog control window
+    bool               isDlgWindow;   // True if owner window is a dialog, false if owner window is a dialog control
+} CMouse;
+typedef CMouse *pCMouse;
 
 
 /* Struct for the ControlDialogInfo object CSelf. */

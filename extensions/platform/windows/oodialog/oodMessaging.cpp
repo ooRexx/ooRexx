@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -50,6 +50,7 @@
 #include "oodControl.hpp"
 #include "oodDeviceGraphics.hpp"
 #include "oodMessaging.hpp"
+#include "oodMouse.hpp"
 #include "oodData.hpp"
 #include "oodPropertySheetDialog.hpp"
 
@@ -971,7 +972,7 @@ MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringO
 }
 
 /**
- * Checks that reply is not null and that the context doe not a pending
+ * Checks that reply is not null and that the context does not have a pending
  * condition.
  *
  * @param c
@@ -994,38 +995,6 @@ bool msgReplyIsGood(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr
         endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
     }
     return ! haveCondition;
-}
-/**
- * Invokes the Rexx dialog's event handling method for a Windows message.
- *
- * The method invocation is done directly by sending a message to the method.
- *
- * @param c       Thread context we are operating in.
- * @param obj     The Rexx dialog whose method will be invoked.
- * @param method  The name of the method being invoked
- * @param args    The argument array for the method being invoked
- *
- * @return True for no problems, false if a condition was raised during the
- *         execution of the Rexx method or if no value was returned from the
- *         method.
- *
- * @remarks  Earlier versions of ooDialog, on the C++ side, constructed a method
- *           invocation string, placed it on a queue, and returned immediately
- *           to the message processing loop.  On the Rexx side, the string was
- *           pulled from the queue and the event handler method invoked through
- *           interpret.  This meant that the Rexx programmer could never block
- *           the window loop, but also could never reply to any window message.
- *
- *           This function should be used when:
- *
- *           a.) The reply to the window message is ignored and either the
- *           default behaviour is to wait for the reply, or the Rexx programmer
- *           has specified to wait for a reply.
- */
-static bool invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, RexxArrayObject args)
-{
-    RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-    return msgReplyIsGood(c, pcpbd, rexxReply, methodName, false);
 }
 
 /**
@@ -1081,6 +1050,39 @@ static MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog
     {
         return invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
     }
+}
+
+/**
+ * Invokes the Rexx dialog's event handling method for a Windows message.
+ *
+ * The method invocation is done directly by sending a message to the method.
+ *
+ * @param c       Thread context we are operating in.
+ * @param obj     The Rexx dialog whose method will be invoked.
+ * @param method  The name of the method being invoked
+ * @param args    The argument array for the method being invoked
+ *
+ * @return True for no problems, false if a condition was raised during the
+ *         execution of the Rexx method or if no value was returned from the
+ *         method.
+ *
+ * @remarks  Earlier versions of ooDialog, on the C++ side, constructed a method
+ *           invocation string, placed it on a queue, and returned immediately
+ *           to the message processing loop.  On the Rexx side, the string was
+ *           pulled from the queue and the event handler method invoked through
+ *           interpret.  This meant that the Rexx programmer could never block
+ *           the window loop, but also could never reply to any window message.
+ *
+ *           This function should be used when:
+ *
+ *           a.) The reply to the window message is ignored and either the
+ *           default behaviour is to wait for the reply, or the Rexx programmer
+ *           has specified to wait for a reply.
+ */
+bool invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, RexxArrayObject args)
+{
+    RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+    return msgReplyIsGood(c, pcpbd, rexxReply, methodName, false);
 }
 
 /**
@@ -1274,63 +1276,6 @@ static void getItemIndexFromHitPoint(LPNMITEMACTIVATE pIA, HWND hwnd)
         }
     }
 }
-
-/**
- * Generic function to send a WM_MOUSEWHEEL notification to the Rexx dialog
- * object.
- *
- * It is used for Edit::ignoreMouseWheel() and also
- * EventNotification::connectMouseWheel().
- *
- *
- * @param mwd
- * @param wParam
- * @param lParam
- *
- * @return bool
- */
-bool mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lParam)
-{
-    RexxThreadContext *c = mwd->dlgProcContext;
-
-    int   state    = GET_KEYSTATE_WPARAM(wParam);
-    short delta    = GET_WHEEL_DELTA_WPARAM(wParam);
-    char  buf[256] = {0};
-
-    if ( state == 0 )
-    {
-        strcpy(buf, "None");
-    }
-    else
-    {
-        if ( state & MK_CONTROL  ) strcat(buf, "Control ");
-        if ( state & MK_LBUTTON  ) strcat(buf, "lButton ");
-        if ( state & MK_MBUTTON  ) strcat(buf, "mButton ");
-        if ( state & MK_RBUTTON  ) strcat(buf, "rButton ");
-        if ( state & MK_SHIFT    ) strcat(buf, "Shift ");
-        if ( state & MK_XBUTTON1 ) strcat(buf, "xButton1 ");
-        if ( state & MK_XBUTTON1 ) strcat(buf, "xButton2 ");
-
-        buf[strlen(buf)] = '\0';
-    }
-
-    RexxObjectPtr    rxDelta = c->WholeNumber(delta);
-    RexxStringObject rxState = c->String(buf);
-    RexxObjectPtr    rxPoint = rxNewPoint(c, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-
-    RexxArrayObject args = c->ArrayOfThree(rxDelta, rxState, rxPoint);
-
-    if ( mwd->willReply )
-    {
-        return invokeDirect(c, mwd->pcpbd, mwd->method, args);
-    }
-    else
-    {
-        invokeDispatch(c, mwd->ownerDlg, c->String(mwd->method), args);
-    }
-    return true;
-}
-
 
 MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
 {
@@ -2087,6 +2032,112 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
     return ReplyFalse;
 }
 
+
+/**
+ * Process window messages relating to mouse messages.  All messages diverted
+ * here have been tagged by the ooDialog framework with the mouse tag.
+ *
+ * @param c
+ * @param methodName
+ * @param tag
+ * @param msg
+ * @param wParam
+ * @param lParam
+ * @param pcpbd
+ *
+ * @return MsgReplyType
+ *
+ * @remarks  For the mouse object, I don't think we can be here without a valid
+ *           mouse object in pcpbd, but we will check any way.
+ */
+MsgReplyType processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t tag, uint32_t msg,
+                             WPARAM wParam, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    bool willReply = (tag & TAG_EXTRAMASK) == TAG_REPLYFROMREXX;
+
+    switch ( msg )
+    {
+        case WM_CAPTURECHANGED :
+        {
+            // Send the window losing capture handle and the mouse object.
+            RexxObjectPtr arg2 = pcpbd->rexxMouse ? pcpbd->rexxMouse : TheNilObj;
+
+            RexxArrayObject args = c->ArrayOfTwo(pointer2string(c, (void *)lParam), arg2);
+
+            if ( willReply )
+            {
+                invokeDirect(c, pcpbd, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+            return ReplyTrue;
+        }
+        break;
+
+        case WM_LBUTTONDOWN :
+        case WM_LBUTTONUP :
+        case WM_MOUSEHOVER :
+        case WM_MOUSEMOVE :
+        {
+            RexxArrayObject args = getMouseArgs(c, pcpbd, wParam, lParam, 3);
+
+            if ( willReply )
+            {
+                invokeDirect(c, pcpbd, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+            return ReplyTrue;
+        }
+        break;
+
+        case WM_MOUSELEAVE :
+        {
+            // Send the mouse object, and not even sure we need to do that..
+            RexxObjectPtr arg1 = pcpbd->rexxMouse ? pcpbd->rexxMouse : TheNilObj;
+
+            RexxArrayObject args = c->ArrayOfOne(arg1);
+
+            if ( willReply )
+            {
+                invokeDirect(c, pcpbd, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+            return ReplyTrue;
+        }
+        break;
+
+        case WM_MOUSEWHEEL :
+        {
+            MOUSEWHEELDATA mwd;
+
+            mwd.dlgProcContext = c;
+            mwd.pcpbd          = pcpbd;
+            mwd.ownerDlg       = pcpbd->rexxSelf;
+            mwd.method         = methodName;
+            mwd.willReply      = willReply;
+
+            mouseWheelNotify(&mwd, wParam, lParam);
+
+            return ReplyTrue;
+        }
+        break;
+
+        default :
+            break;
+
+    }
+    return ReplyFalse;
+}
+
+
 /**
  * Searches through the miscellaneous (anything not WM_COMMAND or WM_NOTIFY)
  * message table for a table entry that matches the message and its parameters.
@@ -2264,29 +2315,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                     break;
 
                 case TAG_MOUSE :
-                    switch ( msg )
-                    {
-                        case WM_MOUSEWHEEL :
-                        {
-                            MOUSEWHEELDATA mwd;
-
-                            mwd.dlgProcContext = c;
-                            mwd.pcpbd          = pcpbd;
-                            mwd.ownerDlg       = pcpbd->rexxSelf;
-                            mwd.method         = m[i].rexxMethod;
-                            mwd.willReply      = (m[i].tag & TAG_EXTRAMASK) == TAG_REPLYFROMREXX;
-
-                            mouseWheelNotify(&mwd, wParam, lParam);
-
-                            return ReplyTrue;
-                        }
-                        break;
-
-                        default :
-                            break;
-
-                    }
-                    break;
+                    return processMouseMsg(c, m[i].rexxMethod, m[i].tag, msg, wParam, lParam, pcpbd);
 
                 default :
                     break;
