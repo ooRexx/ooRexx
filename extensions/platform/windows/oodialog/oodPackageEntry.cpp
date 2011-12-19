@@ -573,6 +573,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_getControlData);
 REXX_METHOD_PROTOTYPE(pbdlg_setControlData);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_newControl);
+REXX_METHOD_PROTOTYPE(pbdlg_getNewControl);
 REXX_METHOD_PROTOTYPE(pbdlg_putControl);
 REXX_METHOD_PROTOTYPE(pbdlg_dumpMessageTable);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
@@ -607,9 +608,6 @@ REXX_METHOD_PROTOTYPE(dlgext_freeWindowDC);
 REXX_METHOD_PROTOTYPE(dlgext_scrollText);
 REXX_METHOD_PROTOTYPE(dlgext_writeToWindow);
 REXX_METHOD_PROTOTYPE(dlgext_createBrush);
-REXX_METHOD_PROTOTYPE(dlgext_mouseCapture);
-REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
-REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
 
 // UserDialog
 REXX_METHOD_PROTOTYPE(userdlg_init);
@@ -772,10 +770,6 @@ REXX_METHOD_PROTOTYPE(winex_createFont);
 REXX_METHOD_PROTOTYPE(winex_getScrollPos);
 REXX_METHOD_PROTOTYPE(winex_setScrollPos);
 REXX_METHOD_PROTOTYPE(winex_scroll);
-REXX_METHOD_PROTOTYPE(winex_setCursorShape);
-REXX_METHOD_PROTOTYPE(winex_setCursorPos);
-REXX_METHOD_PROTOTYPE(winex_getCursorPos);
-REXX_METHOD_PROTOTYPE(winex_restoreCursorShape);
 REXX_METHOD_PROTOTYPE(winex_writeDirect);
 REXX_METHOD_PROTOTYPE(winex_loadBitmap);
 REXX_METHOD_PROTOTYPE(winex_removeBitmap);
@@ -1201,13 +1195,21 @@ REXX_METHOD_PROTOTYPE(menuTemplate_addPopup);
 
 // Mouse
 REXX_METHOD_PROTOTYPE(mouse_new_cls);
+REXX_METHOD_PROTOTYPE(mouse_getDoubleClickTime_cls);
+REXX_METHOD_PROTOTYPE(mouse_setDoubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_init);
 REXX_METHOD_PROTOTYPE(mouse_uninit);
 REXX_METHOD_PROTOTYPE(mouse_trackEvent);
 REXX_METHOD_PROTOTYPE(mouse_dragDetect);
 REXX_METHOD_PROTOTYPE(mouse_get_release_capture);
 REXX_METHOD_PROTOTYPE(mouse_capture);
+REXX_METHOD_PROTOTYPE(mouse_isButtonDown);
+REXX_METHOD_PROTOTYPE(mouse_getCursorPos);
+REXX_METHOD_PROTOTYPE(mouse_restoreCursor);
+REXX_METHOD_PROTOTYPE(mouse_setCursor);
+REXX_METHOD_PROTOTYPE(mouse_setCursorPos);
 REXX_METHOD_PROTOTYPE(mouse_connectEvent);
+REXX_METHOD_PROTOTYPE(mouse_test);
 
 RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_init_cls,               dlgutil_init_cls),
@@ -1388,6 +1390,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setTabGroup,              pbdlg_setTabGroup),
     REXX_METHOD(pbdlg_stopIt,                   pbdlg_stopIt),
     REXX_METHOD(pbdlg_newControl,               pbdlg_newControl),
+    REXX_METHOD(pbdlg_getNewControl,            pbdlg_getNewControl),
     REXX_METHOD(pbdlg_putControl,               pbdlg_putControl),
     REXX_METHOD(pbdlg_dumpMessageTable,         pbdlg_dumpMessageTable),
     REXX_METHOD(pbdlg_unInit,                   pbdlg_unInit),
@@ -1416,9 +1419,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_getBitmapPosition,       dlgext_getBitmapPosition),
     REXX_METHOD(dlgext_setBitmapPosition,       dlgext_setBitmapPosition),
     REXX_METHOD(dlgext_getBitmapSize,           dlgext_getBitmapSize),
-    REXX_METHOD(dlgext_mouseCapture,            dlgext_mouseCapture),
-    REXX_METHOD(dlgext_captureMouse,            dlgext_captureMouse),
-    REXX_METHOD(dlgext_isMouseButtonDown,       dlgext_isMouseButtonDown),
     REXX_METHOD(dlgext_getWindowDC,             dlgext_getWindowDC),
     REXX_METHOD(dlgext_freeWindowDC,            dlgext_freeWindowDC),
     REXX_METHOD(dlgext_writeToWindow,           dlgext_writeToWindow),
@@ -1605,10 +1605,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(winex_getScrollPos,             winex_getScrollPos),
     REXX_METHOD(winex_setScrollPos,        	    winex_setScrollPos),
     REXX_METHOD(winex_scroll,        	        winex_scroll),
-    REXX_METHOD(winex_setCursorShape,           winex_setCursorShape),
-    REXX_METHOD(winex_setCursorPos,             winex_setCursorPos),
-    REXX_METHOD(winex_getCursorPos,             winex_getCursorPos),
-    REXX_METHOD(winex_restoreCursorShape,       winex_restoreCursorShape),
     REXX_METHOD(winex_writeDirect,              winex_writeDirect),
     REXX_METHOD(winex_loadBitmap,               winex_loadBitmap),
     REXX_METHOD(winex_removeBitmap,             winex_removeBitmap),
@@ -1997,13 +1993,21 @@ RexxMethodEntry oodialog_methods[] = {
 
     // Mouse
     REXX_METHOD(mouse_new_cls,                  mouse_new_cls),
+    REXX_METHOD(mouse_getDoubleClickTime_cls,   mouse_getDoubleClickTime_cls),
+    REXX_METHOD(mouse_setDoubleClickTime_cls,   mouse_setDoubleClickTime_cls),
     REXX_METHOD(mouse_init,                     mouse_init),
     REXX_METHOD(mouse_uninit,                   mouse_uninit),
     REXX_METHOD(mouse_trackEvent,               mouse_trackEvent),
     REXX_METHOD(mouse_dragDetect,               mouse_dragDetect),
     REXX_METHOD(mouse_get_release_capture,      mouse_get_release_capture),
     REXX_METHOD(mouse_capture,                  mouse_capture),
+    REXX_METHOD(mouse_isButtonDown,             mouse_isButtonDown),
+    REXX_METHOD(mouse_getCursorPos,             mouse_getCursorPos),
+    REXX_METHOD(mouse_restoreCursor,            mouse_restoreCursor),
+    REXX_METHOD(mouse_setCursor,                mouse_setCursor),
+    REXX_METHOD(mouse_setCursorPos,             mouse_setCursorPos),
     REXX_METHOD(mouse_connectEvent,             mouse_connectEvent),
+    REXX_METHOD(mouse_test,                     mouse_test),
 
     REXX_LAST_METHOD()
 };

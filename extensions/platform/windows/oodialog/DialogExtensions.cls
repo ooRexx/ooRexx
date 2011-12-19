@@ -508,10 +508,6 @@
    hwnd = self~getControlHandle(id)
    return self~freeWindowDC(hwnd, dc)
 
-::method captureMouse external "LIBRARY oodialog dlgext_captureMouse"
-::method getMouseCapture external "LIBRARY oodialog dlgext_mouseCapture"
-::method releaseMouseCapture external "LIBRARY oodialog dlgext_mouseCapture"
-::method isMouseButtonDown external "LIBRARY oodialog dlgext_isMouseButtonDown"
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -550,6 +546,34 @@ syntax:
   self~menuBar = .nil
   self~isLinked = .false
   return menu
+
+-- Deprecated to end of file.
+::method captureMouse
+  use strict arg id = (-1)
+
+  if arg(1, 'O') then do
+    mouse = .Mouse~new(self)
+  end
+  else do
+    ctrlSelf = self~newControl(id)
+    mouse = .Mouse~new(ctrlSelf);
+  end
+  return mouse~capture
+
+::method getMouseCapture
+  use strict arg
+  mouse = .Mouse~new(self)
+  return mouse~getCapture
+
+::method releaseMouseCapture
+  use strict arg
+  mouse = .Mouse~new(self)
+  return mouse~releaseCapture
+
+::method isMouseButtonDown
+  use strict arg whichButton = "LEFT"
+  mouse = .Mouse~new(self)
+  return mouse~isButtonDown(whichButton)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   The following menu bar methods are deprecated, instead, use the Menu classes

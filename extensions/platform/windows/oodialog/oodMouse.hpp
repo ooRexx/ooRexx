@@ -38,6 +38,14 @@
 #ifndef oodMouse_Included
 #define oodMouse_Included
 
+typedef struct newMouseParams
+{
+    pCPlainBaseDialog  dlgCSelf;      // Pointer to dialog owner CSelf struct, if owner is a dialog window
+    pCDialogControl    controlCSelf;  // Pointer to dialog control owner CSelf struct, if owner is a dialog control window
+    bool               isDlgWindow;   // True if owner window is a dialog, false if owner window is a dialog control
+} NEWMOUSEPARAMS;
+typedef NEWMOUSEPARAMS *PNEWMOUSEPARAMS;
+
 extern bool            mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lParam);
 extern RexxArrayObject getMouseArgs(RexxThreadContext *c, pCPlainBaseDialog pcpbd, WPARAM wParam, LPARAM lParam, uint32_t count);
 

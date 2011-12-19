@@ -580,7 +580,7 @@ RexxMethod2(uint32_t, app_initAutoDetection, RexxObjectPtr, dlg, CSELF, pCSelf)
 {
     pCApplicationManager pcam  = (pCApplicationManager)pCSelf;
 
-    pCPlainBaseDialog pcpbd = requiredDlgCSelf(context, dlg, oodPlainBaseDialog, 1);
+    pCPlainBaseDialog pcpbd = requiredDlgCSelf(context, dlg, oodPlainBaseDialog, 1, NULL);
     if ( pcpbd != NULL )
     {
         pcpbd->autoDetect = pcam->autoDetect;

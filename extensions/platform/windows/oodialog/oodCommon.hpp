@@ -102,7 +102,7 @@ extern char *            strdup_nospace(const char *str);
 extern char *            strdup_2methodName(const char *str);
 extern void              checkModal(pCPlainBaseDialog previous, logical_t modeless);
 
-extern pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos);
+extern pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos, pCDialogControl *ppcdc);
 
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern DWORD         oodGetSysErrCode(RexxThreadContext *);
@@ -296,6 +296,17 @@ inline bool hasStyle(HWND hwnd, LONG style)
     return false;
 }
 
+/**
+ * Determines if the currently executing thread is the same thread as the
+ * dialog's message processing loop thread.
+ *
+ * @param pcpbd
+ * @return bool
+ */
+inline bool isDlgThread(pCPlainBaseDialog pcpbd)
+{
+    return pcpbd->dlgProcThreadID == GetCurrentThreadId();
+}
 
 extern void           ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern void          *baseClassIntializationException(RexxMethodContext *c);
@@ -304,6 +315,8 @@ extern RexxObjectPtr  noSuchPageException(RexxMethodContext *c, RexxObjectPtr pa
 extern RexxObjectPtr  noWindowsPageException(RexxMethodContext *c, size_t pageID, size_t pos);
 extern RexxObjectPtr  noSuchPageException(RexxMethodContext *c, int32_t id, uint32_t index);
 extern void          *noWindowsPageDlgException(RexxMethodContext *c, size_t pos);
+extern RexxObjectPtr  noSuchControlException(RexxMethodContext *c, int32_t id, RexxObjectPtr rxDlg, size_t pos);
+extern RexxObjectPtr  controlNotSupportedException(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr rxDlg, size_t pos, RexxStringObject controlName);
 extern void          *wrongClassReplyException(RexxThreadContext *c, const char *mName, const char *n);
 extern void          *wrongReplyListException(RexxThreadContext *c, const char *mName, const char *list, RexxObjectPtr actual);
 extern void          *wrongReplyMsgException(RexxThreadContext *c, const char *mName, const char *msg);

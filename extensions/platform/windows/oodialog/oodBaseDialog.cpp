@@ -69,6 +69,18 @@ public:
 /**
  * Checks that a ControlDialog has a proper, active, running, owner dialog.
  *
+ * The window message processing function of a control dialog executes in the
+ * same thread as the owner dialog, so we copy the thread context and thread ID
+ * from the owner dialog.  This ensures the thread context and thread ID are set
+ * for all ControlDialog dialogs, except for PropertySheetPage dialogs and
+ * ControlDialogs in a ManagedTab tab.
+ *
+ * For PropertySheetPage dialogs, the PropertySheetDialog code handles setting
+ * the thread context and ID in assignPSDThreadContext() and updatePageCSelf().
+ *
+ * For ControlDialog dialogs in a ManagedTab tab, the TabOwnerDialog code sets
+ * the thread context and ID in createMTPageDlg()
+ *
  *
  * @param c      Method context we are operating under.
  * @param pcpbd  Pointer to the CSelf struct of the ControlDialog
@@ -85,7 +97,7 @@ bool validControlDlg(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
         goto err_out;
     }
 
-    pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(c, pcpbd->rexxOwner, oodPlainBaseDialog, 0);
+    pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(c, pcpbd->rexxOwner, oodPlainBaseDialog, 0, NULL);
     if ( ownerPcpbd == NULL )
     {
         goto err_out;
@@ -124,7 +136,7 @@ err_out:
  */
 bool processOwnedDialog(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
 {
-    pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(c, pcpbd->rexxOwner, oodPlainBaseDialog, 0);
+    pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(c, pcpbd->rexxOwner, oodPlainBaseDialog, 0, NULL);
     if ( ownerPcpbd == NULL )
     {
         goto err_out;
@@ -413,7 +425,7 @@ RexxMethod5(logical_t, resdlg_startDialog_pvt, CSTRING, library, RexxObjectPtr, 
         // Set the thread priority higher for faster drawing.
         SetThreadPriority(pcpbd->hDlgProcThread, THREAD_PRIORITY_ABOVE_NORMAL);
         pcpbd->onTheTop = true;
-        pcpbd->threadID = thID;
+        pcpbd->dlgProcThreadID = thID;
 
         // Is this to be a modal dialog?
         checkModal((pCPlainBaseDialog)pcpbd->previous, modeless);
@@ -724,174 +736,6 @@ RexxMethod2(RexxObjectPtr, winex_scroll, ARGLIST, args, CSELF, pCSelf)
         return TheOneObj;
     }
     return TheZeroObj;
-}
-
-
-/** WindowExtensions::Cursor_Arrow()
- *  WindowExtensions::Cursor_AppStarting()
- *  WindowExtensions::Cursor_Cross()
- *  WindowExtensions::Cursor_No()
- *  WindowExtensions::Cursor_Wait()
- *
- *
- *
- *
- */
-RexxMethod2(RexxObjectPtr, winex_setCursorShape, NAME, method, CSELF, pCSelf)
-{
-    HCURSOR oldCursor = NULL;
-
-    HWND hwnd = winExtSetup(context, pCSelf);
-    if ( hwnd == NULL )
-    {
-        goto done_out;
-    }
-
-    LPTSTR cursor = IDC_ARROW;
-    switch ( method[7] )
-    {
-        case 'A' :
-            cursor = (method[8] == 'R' ? IDC_ARROW : IDC_APPSTARTING);
-            break;
-        case 'C' :
-            cursor = IDC_CROSS;
-            break;
-        case 'N' :
-            cursor = IDC_NO;
-            break;
-        case 'W' :
-            cursor = IDC_WAIT;
-            break;
-    }
-
-    HCURSOR hCursor = LoadCursor(NULL, cursor);
-    if ( hCursor == NULL )
-    {
-        oodSetSysErrCode(context->threadContext);
-        goto done_out;
-    }
-
-    oldCursor = (HCURSOR)setClassPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)hCursor);
-    SetCursor(hCursor);
-
-done_out:
-    return pointer2string(context, oldCursor);
-}
-
-
-/** WindowExtensions::setCursorPos()
- *
- *  Moves the cursor to the specified position.
- *
- *  @param  newPos  The new position (x, y), in pixels. The amount can be
- *                  specified in these formats:
- *
- *      Form 1:  A .Point object.
- *      Form 2:  x, y
- *
- *  @return  0 for success, 1 on error.
- *
- *  @note  Sets the .SystemErrorCode.
- *
- *  @remarks  No effort is made to ensure that a .Size object, not a .Point
- *            object is used.
- */
-RexxMethod2(RexxObjectPtr, winex_setCursorPos, ARGLIST, args, CSELF, pCSelf)
-{
-    HWND hwnd = winExtSetup(context, pCSelf);
-    if ( hwnd == NULL )
-    {
-        return NULLOBJECT;
-    }
-
-    size_t sizeArray;
-    size_t argsUsed;
-    POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
-    {
-        return NULLOBJECT;
-    }
-
-    if ( argsUsed == 1 && sizeArray == 2)
-    {
-        return tooManyArgsException(context->threadContext, 1);
-    }
-
-    if ( SetCursorPos(point.x, point.y) == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
-    }
-    return TheZeroObj;
-}
-
-
-/** WindowExtensions::getCursorPos()
- *
- *  Retrieves the current cursor position in pixels.
- *
- *  @return The cursor position as a .Point object.
- *
- *  @note  Sets the .SystemErrorCode.
- */
-RexxMethod1(RexxObjectPtr, winex_getCursorPos, CSELF, pCSelf)
-{
-    HWND hwnd = winExtSetup(context, pCSelf);
-    if ( hwnd == NULL )
-    {
-        return NULLOBJECT;
-    }
-
-    POINT p = {0};
-    if ( GetCursorPos(&p) == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
-    return rxNewPoint(context, p.x, p.y);
-}
-
-
-/** WindowExtensions::restoreCursorShape()
- *
- *  Sets the cursor to the specified cursor.
- *
- *  @param  newCursor  [OPTIONAL]  A handle to the new cursor.  If this argument
- *                     is omitted, the cursor is set to the arrow cursor.
- *
- *  @return  A handle to the previous cursor, or a null handle if there was no
- *           previous cursor.
- *
- *  @note  Sets the .SystemErrorCode.
- */
-RexxMethod2(RexxObjectPtr, winex_restoreCursorShape, OPTIONAL_POINTERSTRING, newCursor, CSELF, pCSelf)
-{
-    HCURSOR oldCursor = NULL;
-
-    HWND hwnd = winExtSetup(context, pCSelf);
-    if ( hwnd == NULL )
-    {
-        goto done_out;
-    }
-
-    HCURSOR hCursor;
-    if ( argumentExists(1) )
-    {
-        hCursor = (HCURSOR)newCursor;
-    }
-    else
-    {
-        hCursor = LoadCursor(NULL, IDC_ARROW);
-        if ( hCursor == NULL )
-        {
-            oodSetSysErrCode(context->threadContext);
-            goto done_out;
-        }
-    }
-    oldCursor = (HCURSOR)setClassPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)hCursor);
-    SetCursor(hCursor);
-
-done_out:
-    return pointer2string(context, oldCursor);
 }
 
 
@@ -1240,7 +1084,7 @@ RexxMethod3(RexxStringObject, winex_loadBitmap, CSTRING, bitmapFile, OPTIONAL_CS
     }
     else
     {
-        pCPlainBaseDialog pcpbd = requiredDlgCSelf(context, self, oodUnknown, 0);
+        pCPlainBaseDialog pcpbd = requiredDlgCSelf(context, self, oodUnknown, 0, NULL);
         if ( pcpbd == NULL )
         {
             return NULLOBJECT;

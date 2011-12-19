@@ -856,6 +856,7 @@
 ::method newMonthCalendar unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newDateTimePicker unguarded external "LIBRARY oodialog pbdlg_newControl"
 ::method newUpDown unguarded external "LIBRARY oodialog pbdlg_newControl"
+::method newControl unguarded external "LIBRARY oodialog pbdlg_getNewControl"           -- Do not document for 4.2.0, maybe doc later
 ::method dumpMessageTable unguarded external "LIBRARY oodialog pbdlg_dumpMessageTable"  -- Do not document for 4.2.0, maybe doc later
 
 

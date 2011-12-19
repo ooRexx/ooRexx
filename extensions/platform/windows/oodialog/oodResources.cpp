@@ -82,7 +82,6 @@ RexxObjectPtr rxNewImageList(RexxMethodContext *, HIMAGELIST);
 CSTRING getImageTypeName(uint8_t);
 RexxObjectPtr rxNewImageFromControl(RexxMethodContext *, HWND, HANDLE, uint8_t, oodControl_t);
 RexxObjectPtr rxNewEmptyImage(RexxMethodContext *, DWORD);
-RexxObjectPtr rxNewValidImage(RexxMethodContext *, HANDLE, uint8_t, PSIZE, uint32_t, bool);
 
 POODIMAGE rxGetImageBitmap(RexxMethodContext *, RexxObjectPtr, size_t);
 
@@ -728,6 +727,32 @@ POODIMAGE rxGetImageIcon(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
             return oi;
         }
         wrongArgValueException(c->threadContext, pos, "Icon, Cursor", oi->typeName);
+    }
+    return NULL;
+}
+
+/**
+ * Extracts a valid oodImage pointer from a RexxObjectPtr, ensuring that the
+ * image is a cursor.  (Cursors are icons, but this function strictly enforces
+ * that the image is a cursor.)
+ *
+ * @param c    The method context we are executing in.
+ * @param o    The, assumed, .Image object.
+ * @param pos  The argument position in the invocation from ooRexx.  Used for
+ *             exception messages.
+ *
+ * @return A pointer to an OODIMAGE struct on success, othewise NULL.
+ */
+POODIMAGE rxGetImageCursor(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
+{
+    POODIMAGE oi = rxGetOodImage(c, o, pos);
+    if ( oi != NULL )
+    {
+        if ( oi->type == IMAGE_CURSOR )
+        {
+            return oi;
+        }
+        wrongArgValueException(c->threadContext, pos, "Cursor", oi->typeName);
     }
     return NULL;
 }

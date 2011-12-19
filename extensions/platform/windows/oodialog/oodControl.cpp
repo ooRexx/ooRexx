@@ -156,6 +156,18 @@ oodControl_t control2controlType(HWND hControl)
     return type;
 }
 
+RexxStringObject controlWindow2rexxString(RexxMethodContext *c, HWND hControl)
+{
+    RexxStringObject result = c->NullString();
+
+    TCHAR buf[512];
+    if ( RealGetWindowClass(hControl, buf, sizeof(buf)) == 0)
+    {
+        _snprintf(buf, sizeof(buf), "Unknown control System Error Code: %d\n", GetLastError());
+    }
+    return c->String(buf);
+}
+
 /**
  * Determine if a dialog control belongs to the specified dialog control class.
  *
@@ -244,6 +256,15 @@ oodControl_t oodName2controlType(CSTRING name)
     else return winUnknown;
 }
 
+/**
+ * Returns the Rexx control class for the specified ooDialog control type and
+ * does not raise an exception on error.
+ *
+ * @param c             Method context we are executing in.
+ * @param controlType   ooDialog control type
+ *
+ * @return  The Rexx class object on success and NULLOBJECT on error.
+ */
 RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlType)
 {
     RexxClassObject controlClass = NULLOBJECT;
@@ -259,6 +280,34 @@ RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlT
 }
 
 
+/**
+ * Returns the Rexx control class for the specified ooDialog control type and
+ * raises an exception on error.
+ *
+ * @param controlType   ooDialog control type
+ * @param c             Method context we are executing in.
+ *
+ * @return  The Rexx class object on success and NULLOBJECT on error.
+ */
+RexxClassObject oodClass4controlType(oodControl_t controlType, RexxMethodContext *c)
+{
+    const char *className = controlType2className(controlType);
+    return rxGetContextClass(c, className);
+}
+
+
+/**
+ * Returns the Rexx control class for the specified ooDialog control type and
+ * does not raise an exception on error.
+ *
+ * This function is for use from a thread context because the FindContextClass()
+ * API is not available.
+ *
+ * @param c             Thread context we are executing in.
+ * @param controlType   ooDialog control type
+ *
+ * @return  The Rexx class object on success and NULLOBJECT on error.
+ */
 RexxClassObject oodClass4controlType(RexxThreadContext *c, oodControl_t controlType)
 {
     RexxClassObject controlClass = NULLOBJECT;
@@ -668,6 +717,11 @@ LRESULT CALLBACK KeyPressSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
  *
  * If for some reason remvoing the subclass fails, we can not free the memory
  * because the subclass procedure may (will) still acess it.
+ *
+ * @remarks  Note that the return from SendMessage is invalid if we are running
+ *           in the same thread as the dialog's message processing loop.
+ *           Currently, that is unlikely to happen, but it is a possible source
+ *           of an error here.
  */
 static BOOL removeKeyPressSubclass(SUBCLASSDATA *pData, HWND hDlg, INT id)
 {
@@ -680,6 +734,22 @@ static BOOL removeKeyPressSubclass(SUBCLASSDATA *pData, HWND hDlg, INT id)
 }
 
 
+/**
+ *
+ *
+ * @param c
+ * @param methodName
+ * @param keys
+ * @param filter
+ * @param pcdc
+ *
+ * @return keyPressErr_t
+ *
+ * @remarks  Note that the return from SendMessage is invalid if we are running
+ *           in the same thread as the dialog's message processing loop.
+ *           Currently, that is unlikely to happen, but it is a possible source
+ *           of an error here.
+ */
 static keyPressErr_t connectKeyPressSubclass(RexxMethodContext *c, CSTRING methodName, CSTRING keys, CSTRING filter,
                                              pCDialogControl pcdc)
 {
@@ -998,7 +1068,10 @@ RexxMethod1(RexxObjectPtr, dlgctrl_assignFocus, CSELF, pCSelf)
  *
  *  @return True for success, false for error
  *
- *
+ * @remarks  Note that the return from SendMessage is invalid if we are running
+ *           in the same thread as the dialog's message processing loop.
+ *           Currently, that is unlikely to happen, but it is a possible source
+ *           of an error here.
  */
 RexxMethod2(RexxObjectPtr, dlgctrl_connectCharEvent, CSTRING, methodName, CSELF, pCSelf)
 {
@@ -1093,6 +1166,13 @@ RexxMethod2(int32_t, dlgctrl_connectFKeyPress, CSTRING, methodName, CSELF, pCSel
     return -(int32_t)result;
 }
 
+/**
+ *
+ * @remarks  Note that the return from SendMessage is invalid if we are running
+ *           in the same thread as the dialog's message processing loop.
+ *           Currently, that is unlikely to happen, but it is a possible source
+ *           of an error here.
+ */
 RexxMethod2(int32_t, dlgctrl_disconnectKeyPress, OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
 {
     char *tmpName = NULL;

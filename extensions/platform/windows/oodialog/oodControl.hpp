@@ -58,22 +58,24 @@ enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
 extern uint32_t      listViewStyle(CSTRING opts, uint32_t style);
 extern uint32_t      monthCalendarStyle(CSTRING opts, uint32_t style);
 
-extern RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlType);
-extern RexxClassObject oodClass4controlType(RexxThreadContext *c, oodControl_t controlType);
-extern oodControl_t    control2controlType(HWND hControl);
-extern oodControl_t    winName2controlType(const char *className);
-extern const char     *controlType2winName(oodControl_t control);
-extern oodControl_t    oodName2controlType(CSTRING name);
-extern bool            isControlMatch(HWND, oodControl_t);
+extern RexxClassObject    oodClass4controlType(RexxMethodContext *c, oodControl_t controlType);
+extern RexxClassObject    oodClass4controlType(oodControl_t controlType, RexxMethodContext *c);
+extern RexxClassObject    oodClass4controlType(RexxThreadContext *c, oodControl_t controlType);
+extern oodControl_t       control2controlType(HWND hControl);
+extern oodControl_t       winName2controlType(const char *className);
+extern const char        *controlType2winName(oodControl_t control);
+extern RexxStringObject   controlWindow2rexxString(RexxMethodContext *c, HWND hControl);
+extern oodControl_t       oodName2controlType(CSTRING name);
+extern bool               isControlMatch(HWND, oodControl_t);
 
-extern RexxStringObject  cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
-extern void              sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part);
-extern bool              dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part);
-extern RexxStringObject  objectStateToString(RexxMethodContext *c, uint32_t state);
-extern RexxObjectPtr     createRexxControl(RexxThreadContext *, HWND, HWND, uint32_t, oodControl_t, RexxObjectPtr, RexxClassObject, bool, bool);
-extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *, pCDialogControl, HWND, oodControl_t, bool);
-extern RexxObjectPtr     createControlFromHwnd(RexxMethodContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
-extern RexxObjectPtr     createControlFromHwnd(RexxThreadContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
+extern RexxStringObject   cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t index, oodControl_t ctrl);
+extern void               sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part);
+extern bool               dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part);
+extern RexxStringObject   objectStateToString(RexxMethodContext *c, uint32_t state);
+extern RexxObjectPtr      createRexxControl(RexxThreadContext *, HWND, HWND, uint32_t, oodControl_t, RexxObjectPtr, RexxClassObject, bool, bool);
+extern RexxObjectPtr      createControlFromHwnd(RexxMethodContext *, pCDialogControl, HWND, oodControl_t, bool);
+extern RexxObjectPtr      createControlFromHwnd(RexxMethodContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
+extern RexxObjectPtr      createControlFromHwnd(RexxThreadContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081

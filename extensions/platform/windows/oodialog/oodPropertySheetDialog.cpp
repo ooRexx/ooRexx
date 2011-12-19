@@ -640,7 +640,7 @@ static void initializePropSheet(HWND hPropSheet)
         setFontAttrib(c, pcpbd);
 
         pcpbd->onTheTop = true;
-        pcpbd->threadID = GetCurrentThreadId();
+        pcpbd->dlgProcThreadID = GetCurrentThreadId();
 
         // Do we have a modal dialog?  TODO need to check this for modeless property sheet.
         checkModal((pCPlainBaseDialog)pcpbd->previous, pcpsd->modeless);
@@ -1137,7 +1137,8 @@ DWORD WINAPI PropSheetLoopThread(void *arg)
 
     RexxSetProcessMessages(FALSE);
     pcpbd->dlgProcContext = c;
-    assignPSDThreadContext(pcpsd, c);
+    pcpbd->dlgProcThreadID = GetCurrentThreadId();
+    assignPSDThreadContext(pcpsd, c, pcpbd->dlgProcThreadID);
 
     HWND hPropSheet = NULL;
 
@@ -1705,7 +1706,7 @@ err_out:
  */
 static HWND checkPropSheetOwner(RexxMethodContext *c, RexxObjectPtr owner, size_t argPos)
 {
-    pCPlainBaseDialog pcpbdOwner = requiredDlgCSelf(c, owner, oodPlainBaseDialog, argPos);
+    pCPlainBaseDialog pcpbdOwner = requiredDlgCSelf(c, owner, oodPlainBaseDialog, argPos, NULL);
     if ( pcpbdOwner == NULL )
     {
         return NULL;
@@ -1727,15 +1728,18 @@ static HWND checkPropSheetOwner(RexxMethodContext *c, RexxObjectPtr owner, size_
 }
 
 
-void assignPSDThreadContext(pCPropertySheetDialog pcpsd, RexxThreadContext *c)
+void assignPSDThreadContext(pCPropertySheetDialog pcpsd, RexxThreadContext *c, uint32_t threadID)
 {
     pcpsd->dlgProcContext = c;
+    pcpsd->dlgProcThreadID = threadID;
 
     uint32_t count = pcpsd->pageCount;
     for ( uint32_t i = 0; i < count; i++ )
     {
         pcpsd->cppPages[i]->dlgProcContext = c;
+        pcpsd->cppPages[i]->dlgProcThreadID = threadID;
         pcpsd->cppPages[i]->pcpbd->dlgProcContext = c;
+        pcpsd->cppPages[i]->pcpbd->dlgProcThreadID = threadID;
     }
 }
 
@@ -2495,7 +2499,7 @@ RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, 
     INT_PTR ret;
     if ( hParent == NULL )
     {
-        assignPSDThreadContext(pcpsd, context->threadContext);
+        assignPSDThreadContext(pcpsd, context->threadContext, GetCurrentThreadId());
 
         if ( setPropSheetHook(pcpsd) )
         {
@@ -2573,6 +2577,9 @@ RexxMethod2(RexxObjectPtr, psdlg_popup, NAME, methodName, CSELF, pCSelf)
     }
     LeaveCriticalSection(&crit_sec);
 
+    // Note we do not need to set pcpbd->dlgProcThreadID here.  It is set in
+    // PropSheetLoopThread because that function also sets dlgProcContext and
+    // dlgProcThreadID for all the property sheet page dialogs.
     if ( pcpbd->hDlgProcThread != NULL )
     {
         return TheTrueObj;
@@ -2672,7 +2679,8 @@ void updatePageCSelf(pCPropertySheetDialog pcpsd, pCPropertySheetPage pcpsp, uin
     pcpsp->cppPropSheet = pcpsd;
     pcpsp->isWizardPage = ! pcpsd->isNotWizard;
 
-    pcpsp->dlgProcContext = pcpsd->dlgProcContext;
+    pcpsp->dlgProcContext  = pcpsd->dlgProcContext;
+    pcpsp->dlgProcThreadID = pcpsd->dlgProcThreadID;
     pcpsp->pcpbd->dlgProcContext = pcpsd->dlgProcContext;
 }
 
@@ -4728,14 +4736,29 @@ DLGTEMPLATEEX *getTemplate(RexxThreadContext *c, pCControlDialog pccd)
     return pDlg;
 }
 
+/**
+ *  Create Managed Tab Page dialog.  Creates the control dialog that serves as a
+ *  page of tab control in a TabOwner dialog.  This function is executing in the
+ *  same thread as the tab owner dialog's window message processing function.
+ *
+ *
+ * @param c
+ * @param pccd
+ * @param pTemplate
+ * @param pcpbdOwner
+ *
+ * @return HWND
+ */
 HWND createMTPageDlg(RexxThreadContext *c, pCControlDialog pccd, DLGTEMPLATEEX *pTemplate, pCPlainBaseDialog pcpbdOwner)
 {
     printf("Enter createMTPageDlg() dlg=%s\n", c->ObjectToStringValue(pccd->rexxSelf));
 
     pCPlainBaseDialog pcpbd = pccd->pcpbd;
 
-    /* Set the thread context because it is not done in RexxChildDlgProc. */
+    /* Set the thread context and ID because it is not done in RexxChildDlgProc.
+     */
     pcpbd->dlgProcContext = c;
+    pcpbd->dlgProcThreadID = GetCurrentThreadId();
 
     HWND hPage = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)pTemplate, pcpbd->hOwnerDlg,
                                            (DLGPROC)RexxChildDlgProc, (LPARAM)pcpbd);
@@ -4747,9 +4770,10 @@ HWND createMTPageDlg(RexxThreadContext *c, pCControlDialog pccd, DLGTEMPLATEEX *
         pccd->activated = true;
 
         // I don't think this whole childDlg thing is used anymore.  It is a
-        // hold over from the CategoryDialog implementation.
+        // hold over from the CategoryDialog implementation.  TODO we need to
+        // do away with this.
         pcpbd->childDlg[0] = hPage;
-        if ( pccd->pageNumber > MAXCHILDDIALOGS )
+        if ( pccd->pageNumber < MAXCHILDDIALOGS )
         {
             pcpbdOwner->childDlg[pccd->pageNumber + 1] = hPage;
         }
@@ -5394,7 +5418,7 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
         {
             pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)lParam;
 
-            assignPSDThreadContext(pcpsd, pcpbd->dlgProcContext);
+            assignPSDThreadContext(pcpsd, pcpbd->dlgProcContext, GetCurrentThreadId());
 
             if ( setPropSheetHook(pcpsd) )
             {

@@ -53,9 +53,10 @@
  * no matter whether they are dialogs or dialog controls.  It's an extension to
  * the WindowBase mixin-class.
  *
- * Note that this mixinclass contains many methods that should not be a part of
- * a dialog control class.  The original comment above, does not seem to have
- * been followed through on.
+ * Note that this mixin class contains (did contian) many methods that should
+ * not be a part of a dialog control class.  It also contains (did contain) many
+ * methods that would be bettor off in a separate class.  The original comment
+ * above, does not seem to have been followed through on.
  */
 
 ::class 'WindowExtensions' public mixinclass Object
@@ -78,19 +79,6 @@
 
 ::method loadBitmap unguarded external "LIBRARY oodialog winex_loadBitmap"
 ::method removeBitmap unguarded external "LIBRARY oodialog winex_removeBitmap"
-
-::method setCursorPos unguarded external "LIBRARY oodialog winex_setCursorPos"
-::method getCursorPos unguarded external "LIBRARY oodialog winex_getCursorPos"
-::method restoreCursorShape unguarded external "LIBRARY oodialog winex_restoreCursorShape"
-::method cursor_Arrow unguarded external "LIBRARY oodialog winex_setCursorShape"
-::method cursor_AppStarting unguarded external "LIBRARY oodialog winex_setCursorShape"
-::method cursor_Cross unguarded external "LIBRARY oodialog winex_setCursorShape"
-::method cursor_No unguarded external "LIBRARY oodialog winex_setCursorShape"
-::method cursor_Wait unguarded external "LIBRARY oodialog winex_setCursorShape"
-
-::method cursorPos unguarded       -- old method, returns a string
-   forward message "getCursorPos" continue
-   return result~x result~y
 
 ::method write unguarded external "LIBRARY oodialog winex_write"
 ::method writeDirect unguarded external "LIBRARY oodialog winex_writeDirect"
@@ -121,6 +109,14 @@
 
 
 -- DEPRECATED
+::method absRect2LogRect unguarded
+   parse arg l, t, r, b
+   ret.left = l/self~factorX
+   ret.right = r/self~factorX
+   ret.top = t/self~factorY
+   ret.bottom = b/self~factorY
+   return ret.
+
 ::method logRect2AbsRect unguarded
    parse arg l, t, r, b
    ret.left = l*self~factorX
@@ -129,13 +125,37 @@
    ret.bottom = b*self~factorY
    return ret.
 
-::method absRect2LogRect unguarded
-   parse arg l, t, r, b
-   ret.left = l/self~factorX
-   ret.right = r/self~factorX
-   ret.top = t/self~factorY
-   ret.bottom = b/self~factorY
-   return ret.
+::method cursorPos unguarded
+   forward to (.Mouse~new(self)) message 'GETCURSORPOS' continue
+   return result~x result~y
+
+--::method getCursorPos unguarded  -- Not deprecated, never released  Remove this when doc is correct.
+
+::method restoreCursorShape unguarded
+  forward to (.Mouse~new(self)) message 'RESTORECURSOR'
+
+::method setCursorPos unguarded
+  forward to (.Mouse~new(self)) message 'SETCURSORPOS'
+
+::method cursor_Arrow unguarded
+  use strict arg
+  forward to (.Mouse~new(self)) message 'ARROW'
+
+::method cursor_AppStarting unguarded
+  use strict arg
+  forward to (.Mouse~new(self)) message 'APPSTARTING'
+
+::method cursor_Cross unguarded
+  use strict arg
+  forward to (.Mouse~new(self)) message 'CROSS'
+
+::method cursor_No unguarded
+  use strict arg
+  forward to (.Mouse~new(self)) message 'NO'
+
+::method cursor_Wait unguarded
+  use strict arg
+  forward to (.Mouse~new(self)) message 'WAIT'
 
 
 ::class 'ResourceImage' public

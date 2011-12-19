@@ -2628,17 +2628,26 @@ void setDlgHandle(RexxThreadContext *c, pCPlainBaseDialog pcpbd)
 /**
  * Gets the window handle of the dialog control that has the focus.  The call to
  * GetFocus() needs to run in the window thread of the dialog to ensure that the
- * correct handle is obtained.
+ * correct handle is obtained. However, we could executing on that thread.
  *
- * @param c       Method context we are operating in.
- * @param hDlg    Handle to the dialog of interest.
+ * @param c                Method context we are operating in.
+ * @param hDlg             Handle to the dialog of interest.
+ * @param isDlgProcThread  Is this the dialog message processing thread?
  *
  * @return  The window handle of the dialog control with the focus, or 0 on
  *          failure.
  */
-RexxObjectPtr oodGetFocus(RexxMethodContext *c, HWND hDlg)
+RexxObjectPtr oodGetFocus(RexxMethodContext *c, HWND hDlg, bool isDlgProcThread)
 {
-   HWND hwndFocus = (HWND)SendMessage(hDlg, WM_USER_GETFOCUS, 0,0);
+   HWND hwndFocus;
+   if ( isDlgProcThread )
+   {
+       hwndFocus = GetFocus();
+   }
+   else
+   {
+       hwndFocus = (HWND)SendMessage(hDlg, WM_USER_GETFOCUS, 0, 0);
+   }
    return pointer2string(c, hwndFocus);
 }
 
@@ -2709,7 +2718,7 @@ static bool checkDlgType(RexxMethodContext *c, RexxObjectPtr self, pCPlainBaseDi
         {
             if ( c->IsOfType(ownerData, "PLAINBASEDIALOG") )
             {
-                pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(c, ownerData, oodPlainBaseDialog, 5);
+                pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(c, ownerData, oodPlainBaseDialog, 5, NULL);
                 if ( ownerPcpbd == NULL )
                 {
                     goto err_out;
@@ -3230,7 +3239,7 @@ RexxMethod2(RexxObjectPtr, pbdlg_setOwnerDialog, RexxObjectPtr, owner, CSELF, pC
         return NULLOBJECT;
     }
 
-    pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(context, owner, oodPlainBaseDialog, 1);
+    pCPlainBaseDialog ownerPcpbd = requiredDlgCSelf(context, owner, oodPlainBaseDialog, 1, NULL);
     if ( ownerPcpbd != NULL )
     {
         if ( ! isValidOwner(ownerPcpbd) )
@@ -3835,7 +3844,7 @@ RexxMethod3(RexxObjectPtr, pbdlg_center, OPTIONAL_CSTRING, options, OPTIONAL_log
     oodResetSysErrCode(context->threadContext);
 
     HWND hwnd = getPBDWindow(context, pCSelf);
-    if ( hwnd = NULL )
+    if ( hwnd == NULL )
     {
         return TheFalseObj;
     }
@@ -3931,7 +3940,7 @@ RexxMethod2(wholenumber_t, pbdlg_setWindowText, POINTERSTRING, hwnd, CSTRING, te
 RexxMethod1(RexxObjectPtr, pbdlg_toTheTop, CSELF, pCSelf)
 {
     HWND hwnd = getPBDWindow(context, pCSelf);
-    if ( hwnd = NULL )
+    if ( hwnd == NULL )
     {
         return TheZeroObj;
     }
@@ -3947,11 +3956,11 @@ RexxMethod1(RexxObjectPtr, pbdlg_toTheTop, CSELF, pCSelf)
 RexxMethod1(RexxObjectPtr, pbdlg_getFocus, CSELF, pCSelf)
 {
     HWND hwnd = getPBDWindow(context, pCSelf);
-    if ( hwnd = NULL )
+    if ( hwnd == NULL )
     {
         return TheZeroObj;
     }
-    return oodGetFocus(context, hwnd);
+    return oodGetFocus(context, hwnd, isDlgThread((pCPlainBaseDialog)pCSelf));
 }
 
 /** PlainBaseDialog::setFocus()
@@ -3990,7 +3999,7 @@ RexxMethod3(RexxObjectPtr, pbdlg_setFocus, RexxStringObject, hwnd, NAME, method,
         return TheNegativeOneObj;
     }
 
-    RexxObjectPtr previousFocus = oodGetFocus(context, hDlg);
+    RexxObjectPtr previousFocus = oodGetFocus(context, hDlg, isDlgThread((pCPlainBaseDialog)pCSelf));
     if ( strlen(method) > 7 )
     {
         if ( oodSetForegroundWindow(context, focusNext) == TheZeroObj )
@@ -4033,7 +4042,7 @@ RexxMethod2(RexxObjectPtr, pbdlg_tabTo, NAME, method, CSELF, pCSelf)
         return TheNegativeOneObj;
     }
 
-    RexxObjectPtr previousFocus = oodGetFocus(context, hDlg);
+    RexxObjectPtr previousFocus = oodGetFocus(context, hDlg, isDlgThread((pCPlainBaseDialog)pCSelf));
     if ( method[5] == 'N' )
     {
         SendMessage(hDlg, WM_NEXTDLGCTL, 0, FALSE);
@@ -4888,6 +4897,63 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
     }
 
     result = createRexxControl(context->threadContext, hControl, hDlg, id, controlType, self, controlCls, isCategoryDlg, true);
+
+out:
+    return result;
+}
+
+/** PlainBaseDialog::getNewControl()
+ *
+ *  Returns an instantiated dialog control object from the specified resoure ID.
+ *
+ *  @param  Dialog control resource ID, may be symbolic or numeric.
+ *
+ *  @return The Rexx dialog control object, or .nil on error.  However, a
+ *          condition is raised for *all* errors.
+ *
+ *  @remarks  The method is written for use by the ooDialog framework in certain
+ *            special circumstances.  Currently the only special circumstance is
+ *            to provide backward compatibility for deprecated methods.  It may,
+ *            or may not, be documented for the user.  Not decided yet.
+ */
+RexxMethod3(RexxObjectPtr, pbdlg_getNewControl, RexxObjectPtr, rxID, OSELF, self, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    RexxObjectPtr result = TheNilObj;
+
+    HWND hDlg = getPBDWindow(context, pCSelf);
+    if ( hDlg == NULL )
+    {
+        goto out;
+    }
+
+    int32_t id = oodResolveSymbolicID(context, self, rxID, -1, 1, true);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto out;
+    }
+
+    HWND hControl = GetDlgItem(hDlg, (int)id);
+    if ( hControl == NULL )
+    {
+        noSuchControlException(context, id, self, 1);
+        goto out;
+    }
+
+    oodControl_t controlType = control2controlType(hControl);
+    if ( controlType == winUnknown )
+    {
+        controlNotSupportedException(context, rxID, self, 1, controlWindow2rexxString(context, hControl));
+        goto out;
+    }
+
+    RexxClassObject controlCls = oodClass4controlType(controlType, context);
+    if ( controlCls == NULLOBJECT )
+    {
+        goto out;
+    }
+
+    result = createRexxControl(context->threadContext, hControl, hDlg, id, controlType, self, controlCls, false, true);
 
 out:
     return result;

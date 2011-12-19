@@ -1617,6 +1617,12 @@ void CppMenu::setAutoConnection(logical_t on, CSTRING methodName)
  *           set up a TRACKPOP structure to pass on the parameters that
  *           TrackPopupEx() needs.
  *
+ *           NOTE that currently the Rexx event handler method is invoked using
+ *           invokeDispatch(), so the event handler *is* running in a different
+ *           thread.  If that should change for some reason, then we need to
+ *           check here for the thread ID and determine whether or not to use
+ *           SendMessage().
+ *
  *           TrackPopupEx expects screen coordinates, be sure to document that
  *           and how to use dlg~clientToScreen() to get the right values.  Also
  *           note that MS doc on WM_CONTEXTMENU is wrong.  x value is in low

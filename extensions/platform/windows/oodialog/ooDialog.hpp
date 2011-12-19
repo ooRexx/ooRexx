@@ -88,7 +88,6 @@
 #define WM_USER_CONTEXT_MENU           WM_USER + 0x0609
 #define WM_USER_CREATECONTROL_DLG      WM_USER + 0x060A
 #define WM_USER_CREATECONTROL_RESDLG   WM_USER + 0x060B
-
 #define WM_USER_CREATEPROPSHEET_DLG    WM_USER + 0x060C
 
 // Flags for WM_USER_GETSETCAPTURE
@@ -569,7 +568,7 @@ typedef struct _pbdCSelf {
     WPARAM               stopScroll;
     HPALETTE             colorPalette;
     logical_t            autoDetect;
-    DWORD                threadID;
+    DWORD                dlgProcThreadID;
     uint32_t             fontSize;
     bool                 onTheTop;
     bool                 isCategoryDlg;  // Need to use IsNestedDialogMessage()
@@ -604,6 +603,8 @@ typedef struct _dcCSelf {
     HWND           hCtrl;    // Handle of the dialog control
     RexxObjectPtr  oDlg;     // The Rexx owner dialog object
     HWND           hDlg;     // Handle of the dialog the control is in.
+    void          *mouseCSelf;
+    RexxObjectPtr  rexxMouse;
 } CDialogControl;
 typedef CDialogControl *pCDialogControl;
 
@@ -619,14 +620,21 @@ typedef struct _ddCSelf {
 } CDynamicDialog;
 typedef CDynamicDialog *pCDynamicDialog;
 
-/* Struct for the Mouse object CSelf. */
+/* Struct for the Mouse object CSelf. Note that the owner window can be a dialog
+ * window, or a dialog control window.  If the owner window is a dialog control,
+ * then there is, still, a dialog CSelf and a dialog window handle.  These are
+ * the dialog control's owner dialog, which are present for all dialog controls.
+ */
 typedef struct _mCSelf {
-    RexxObjectPtr      rexxSelf;      // Rexx Mouse object.
-    HWND               hWindow;       // Window handle of owner window - only dialogs are supported now.
-    RexxObjectPtr      rexxWindow;    // Rexx owner window object
-    pCPlainBaseDialog  dlgCSelf;      // Pointer to dialog owner CSelf struct, if owner is a dialog window
-    pCDialogControl    controlCSelf;  // Pointer to dialog control owner CSelf struct, if owner is a dialog control window
-    bool               isDlgWindow;   // True if owner window is a dialog, false if owner window is a dialog control
+    RexxObjectPtr      rexxSelf;        // Rexx Mouse object.
+    HWND               hWindow;         // Window handle of owner window
+    RexxObjectPtr      rexxWindow;      // Rexx owner window object
+    RexxObjectPtr      rexxDlg;         // Dialog Rexx self
+    HWND               hDlg;            // Dialog window handle
+    pCPlainBaseDialog  dlgCSelf;        // Dialog CSelf struct pointer
+    pCDialogControl    controlCSelf;    // Pointer to dialog control owner CSelf struct, if owner is a dialog control window
+    uint32_t           dlgProcThreadID; // Dialog window message processing function thread.
+    bool               isDlgWindow;     // True if owner window is a dialog, false if owner window is a dialog control
 } CMouse;
 typedef CMouse *pCMouse;
 
@@ -730,6 +738,7 @@ typedef struct _pspCSelf {
     char                   *headerTitle;
     char                   *headerSubTitle;
     oodClass_t              pageType;
+    uint32_t                dlgProcThreadID;
     uint32_t                cx;               // Width and height of the dialog.
     uint32_t                cy;
     uint32_t                pageFlags;
@@ -762,6 +771,7 @@ typedef struct _psdCSelf {
     HPALETTE             hplWatermark;     // Palette to use when drawing watermark and / or header bitmap
     HIMAGELIST           imageList;        // imageList attribute, C++ part of .ImageList
     uint32_t             startPage;        // Index of start page, 1-based.  If 0 not set;
+    uint32_t             dlgProcThreadID;
     char                *caption;
     uint32_t             pageCount;
     uint32_t             propSheetFlags;

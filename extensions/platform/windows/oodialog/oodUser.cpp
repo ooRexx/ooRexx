@@ -1518,7 +1518,7 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
         // Set the thread priority higher for faster drawing.
         SetThreadPriority(pcpbd->hDlgProcThread, THREAD_PRIORITY_ABOVE_NORMAL);
         pcpbd->onTheTop = true;
-        pcpbd->threadID = thID;
+        pcpbd->dlgProcThreadID = thID;
 
         // Do we have a modal dialog?
         checkModal((pCPlainBaseDialog)pcpbd->previous, modeless);
@@ -1566,7 +1566,10 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
  *
  *  @return  The handle of the underlying Windows dialog, 0 on error.
  *
- *  @remarks  The child dialog needs to be created in the window procedure
+ *  @remarks  TODO these comments need to be rewritten, they are very out of
+ *            date and inaccurate.
+ *
+ *            The child dialog needs to be created in the window procedure
  *            thread of the parent.  SendMessage() is used to send a user
  *            message to the message loop thread.  The child dialog is then
  *            created in that thread and the dialog handle returned.  On error,

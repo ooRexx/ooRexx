@@ -245,6 +245,61 @@ RexxObjectPtr noSuchPageException(RexxMethodContext *c, RexxObjectPtr page, size
  *        The specified method, built-in function, or external routine exists,
  *        but you used it incorrectly.
  *
+ *  Argument <pos> (resource ID <id>) is not an ID of a control in the <rxDlg>
+ *  dialog
+ *
+ *  Argument 1 (resource ID 201) is not an ID of a control in the SimpleDlg
+ *  dialog
+ *
+ * @param c
+ * @param id
+ * @param rxDlg
+ * @param pos
+ */
+RexxObjectPtr noSuchControlException(RexxMethodContext *c, int32_t id, RexxObjectPtr rxDlg, size_t pos)
+{
+    TCHAR buf[256];
+    _snprintf(buf, sizeof(buf), "Argument %d (resource ID %d) is not an ID of a control in the %s dialog",
+              pos, id, c->ObjectToStringValue(rxDlg));
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
+    return NULLOBJECT;
+}
+
+
+/**
+ *  93.900
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
+ *  Argument <pos> (resource ID <id>) is not an ID of a control in this dialog
+ *  (<rxDlg>)
+ *
+ *  Argument 1, (resource ID 201) the SysIPAddress32 control in the SimpleDlg
+ *  dialog is not supported by ooDialog.
+ *
+ * @param c
+ * @param id
+ * @param rxDlg
+ * @param pos
+ */
+RexxObjectPtr controlNotSupportedException(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr rxDlg, size_t pos,
+                                           RexxStringObject controlName)
+{
+    TCHAR buf[256];
+    _snprintf(buf, sizeof(buf), "Argument %d (resource ID %d) the %s control in the %s dialog is not supported by ooDialog",
+              pos, c->ObjectToStringValue(rxID), c->ObjectToStringValue(controlName), c->ObjectToStringValue(rxDlg));
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
+    return NULLOBJECT;
+}
+
+
+/**
+ *  93.900
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
  *  There is no tab control with ID (id) and a page at index (index)
  *
  *  There is no tab control with ID 200 and a page at index 15
@@ -701,7 +756,8 @@ int32_t oodGlobalID(RexxThreadContext *c, RexxObjectPtr id, size_t argPosID, boo
 /**
  * Resolves a resource ID used in a native API method call to its numeric value.
  * The resource ID may be numeric or symbolic.  An exception is raised if the ID
- * can not be resolved, or depending on the other args if it is less than 1.
+ * can not be resolved, or if the ID is not valid.  Valid depends on the value
+ * of 'strict'.
  *
  * @param c          Thread context for the method call.
  *
@@ -718,8 +774,8 @@ int32_t oodGlobalID(RexxThreadContext *c, RexxObjectPtr id, size_t argPosID, boo
  * @param strict    If true the resolved ID must be 1 or greater, if false the
  *                  resolved ID must be -1 or greater.
  *
- * @return The resolved numeric ID on success, OOD_ID_EXCEPTION or
- *         ODD_MEMORY_ERR on error.
+ * @return The resolved numeric ID on success, or OOD_ID_EXCEPTION on error.  On
+ *         error, an exception has been raised.
  *
  * @remarks  New methods / functions added to ooDialog will raise an exception
  *           if the resource ID can not be resolved.  But, older existing
@@ -1493,7 +1549,8 @@ void checkModal(pCPlainBaseDialog previous, logical_t modeless)
 
 /**
  * Convenience function to retrieve the dialog CSelf struct from a generic
- * ooDialog Rexx object.
+ * ooDialog Rexx object, and opitonally the dialog control CSelf struct if the
+ * generic objec is a dialog control.
  *
  * This function is safe to call for any object, including NULLOBJECT.  It will
  * fail for any object that is not a dialog or a dialog control object.
@@ -1507,13 +1564,28 @@ void checkModal(pCPlainBaseDialog previous, logical_t modeless)
  *                  argument exception is raised.  If it is 0, then a base class
  *                  initialization is raised.
  *
+ * @param ppcdc     Pointer to a pointer to a dialog control CSelf struct.  If
+ *                  this is not null, and if the Rexx object is a DialogControl,
+ *                  this is set to the pCDialogControl stuct of the dialog
+ *                  control.
+ *
  * @return A pointer to the dialog CSelf on success, or NULL on failure.
  *
  * @note  An exception is always raised on failure.
+ *
+ *        For dialog controls, if ppcdc is not null, then the value of *ppcdc
+ *        is set to NULL on entry.  If on return *ppcdc is not null, then you
+ *        know the Rexx object is a dialog control object.
  */
-pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos)
+pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos,
+                                   pCDialogControl *ppcdc)
 {
     pCPlainBaseDialog pcpbd = NULL;
+
+    if ( ppcdc != NULL )
+    {
+        *ppcdc = NULL;
+    }
 
     if ( self != NULLOBJECT )
     {
@@ -1537,6 +1609,10 @@ pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, ood
                 if ( pcdc != NULLOBJECT )
                 {
                     pcpbd = dlgToCSelf(c, pcdc->oDlg);
+                    if ( ppcdc != NULL )
+                    {
+                        *ppcdc = pcdc;
+                    }
                 }
             }
             else if ( argPos > 0)
@@ -1557,6 +1633,10 @@ pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, ood
                 if ( pcdc != NULLOBJECT )
                 {
                     pcpbd = dlgToCSelf(c, pcdc->oDlg);
+                    if ( ppcdc != NULL )
+                    {
+                        *ppcdc = pcdc;
+                    }
                 }
             }
             else if ( argPos > 0 )

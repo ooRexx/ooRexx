@@ -1319,6 +1319,10 @@ LRESULT CALLBACK NoEditContextMenu(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
  * ERROR_NOT_SUPPORTED   The request is not supported.
  * ERROR_SIGNAL_REFUSED  The recipient process has refused the signal.
  *
+ * @remarks  Note that the return from SendMessage is invalid if we are running
+ *           in the same thread as the dialog's message processing loop.
+ *           Currently, that is unlikely to happen, but it is a possible source
+ *           of an error here.
  */
 RexxMethod2(RexxObjectPtr, e_noContextMenu, OPTIONAL_logical_t, undo, CSELF, pCSelf)
 {
@@ -1510,10 +1514,15 @@ LRESULT CALLBACK EditMouseWheelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
  *   Meaning:  Tried to re-enable the edit control's handling of the mouse
  *             wheel, but failed.
  *
- *  @remarks  The above doc is for oodialg.pdf of course.  Internally this
- *            method is implemented by subclassing the edit control.  The
- *            subclass swallows the WM_MOUSEWHEEL messages, and optionally sends
- *            the message on to the dialog.
+ * @remarks The above doc is for oodialg.pdf of course.  Internally this
+ *           method is implemented by subclassing the edit control.  The
+ *           subclass swallows the WM_MOUSEWHEEL messages, and optionally sends
+ *           the message on to the dialog.
+ *
+ * @remarks  Note that the return from SendMessage is invalid if we are running
+ *           in the same thread as the dialog's message processing loop.
+ *           Currently, that is unlikely to happen, but it is a possible source
+ *           of an error here.
  */
 RexxMethod4(RexxObjectPtr, e_ignoreMouseWheel, OPTIONAL_logical_t, ignore, OPTIONAL_CSTRING, method,
             OPTIONAL_logical_t, willReply, CSELF, pCSelf)
@@ -2256,6 +2265,11 @@ LRESULT CALLBACK EditSizeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
  *            subclass swallows the WM_SIZE messages.  You might think that this
  *            would prevent the programmer from resizing the control, but it
  *            does not.
+ *
+ * @remarks  Note that the return from SendMessage is invalid if we are running
+ *           in the same thread as the dialog's message processing loop.
+ *           Currently, that is unlikely to happen, but it is a possible source
+ *           of an error here.
  */
 RexxMethod2(RexxObjectPtr, e_disableInternalResize, OPTIONAL_logical_t, disable, CSELF, pCSelf)
 {
