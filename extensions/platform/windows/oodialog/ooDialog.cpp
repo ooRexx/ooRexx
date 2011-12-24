@@ -3053,7 +3053,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     {
         pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
-#if 1
+#if 0
         printf("PlainBaseDialog::uninit() hDlg=%p isAllocated=%d  Dialog is a ", pcpbd->hDlg, pcpbd->dlgAllocated);
         dbgPrintClassID(context, pcpbd->rexxSelf);
 #endif

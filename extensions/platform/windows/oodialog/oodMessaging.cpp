@@ -334,29 +334,45 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ReplyMessage((LRESULT)GetFocus());
             return TRUE;
 
-        case WM_USER_GETSETCAPTURE:
-            if ( wParam == MF_GETCAPTURE )
+        case WM_USER_MOUSE_MISC:
+        {
+            switch ( wParam )
             {
-                ReplyMessage((LRESULT)GetCapture());
-            }
-            else if ( wParam == MF_RELEASECAPTURE )
-            {
-                uint32_t rc = 0;
-                if ( ReleaseCapture() == 0 )
+                case MF_RELEASECAPTURE :
                 {
-                    rc = GetLastError();
+                    uint32_t rc = 0;
+                    if ( ReleaseCapture() == 0 )
+                    {
+                        rc = GetLastError();
+                    }
+                    ReplyMessage((LRESULT)rc);
+                    break;
                 }
-                ReplyMessage((LRESULT)rc);
-            }
-            else if (wParam == MF_SETCAPTURE)
-            {
-                ReplyMessage((LRESULT)SetCapture((HWND)lParam));
-            }
-            return TRUE;
 
-        case WM_USER_GETKEYSTATE:
-            ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
+                case MF_GETCAPTURE :
+                    ReplyMessage((LRESULT)GetCapture());
+                    break;
+
+                case MF_SETCAPTURE :
+                    ReplyMessage((LRESULT)SetCapture((HWND)lParam));
+                    break;
+
+                case MF_BUTTONDOWN :
+                    ReplyMessage((LRESULT)GetAsyncKeyState((int)lParam));
+                    break;
+
+                case MF_SHOWCURSOR :
+                    ReplyMessage((LRESULT)ShowCursor((BOOL)lParam));
+                    break;
+
+                default :
+                    // Maybe we should raise an internal exception here.  But,
+                    // as long as the internal code is consistent, we can not
+                    // get here.
+                    break;
+            }
             return TRUE;
+        }
 
         case WM_USER_SUBCLASS:
         {
@@ -576,29 +592,45 @@ LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             ReplyMessage((LRESULT)GetFocus());
             return TRUE;
 
-        case WM_USER_GETSETCAPTURE:
-            if ( wParam == 0 )
+        case WM_USER_MOUSE_MISC:
+        {
+            switch ( wParam )
             {
-                ReplyMessage((LRESULT)GetCapture());
-            }
-            else if ( wParam == 2 )
-            {
-                uint32_t rc = 0;
-                if ( ReleaseCapture() == 0 )
+                case MF_RELEASECAPTURE :
                 {
-                    rc = GetLastError();
+                    uint32_t rc = 0;
+                    if ( ReleaseCapture() == 0 )
+                    {
+                        rc = GetLastError();
+                    }
+                    ReplyMessage((LRESULT)rc);
+                    break;
                 }
-                ReplyMessage((LRESULT)rc);
-            }
-            else
-            {
-                ReplyMessage((LRESULT)SetCapture((HWND)lParam));
-            }
-            return TRUE;
 
-        case WM_USER_GETKEYSTATE:
-            ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
+                case MF_GETCAPTURE :
+                    ReplyMessage((LRESULT)GetCapture());
+                    break;
+
+                case MF_SETCAPTURE :
+                    ReplyMessage((LRESULT)SetCapture((HWND)lParam));
+                    break;
+
+                case MF_BUTTONDOWN :
+                    ReplyMessage((LRESULT)GetAsyncKeyState((int)lParam));
+                    break;
+
+                case MF_SHOWCURSOR :
+                    ReplyMessage((LRESULT)ShowCursor((BOOL)lParam));
+                    break;
+
+                default :
+                    // Maybe we should raise an internal exception here.  But,
+                    // as long as the internal code is consistent, we can not
+                    // get here.
+                    break;
+            }
             return TRUE;
+        }
 
         case WM_USER_SUBCLASS:
         {

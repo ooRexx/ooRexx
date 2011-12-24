@@ -397,7 +397,7 @@ bool mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lParam)
 }
 
 
-/** Mouse::new()                [Class method]
+/** Mouse::new()                  [Class method]
  *
  *
  */
@@ -457,7 +457,7 @@ done_out:
     return mouse;
 }
 
-/** Mouse::getDoubleClickTime() [Class method]
+/** Mouse::getDoubleClickTime()   [Class method]
  *
  * Gets the current double-click time for the mouse. A double-click is a
  * series of two clicks of the mouse button, the second occurring within a
@@ -475,7 +475,7 @@ RexxMethod0(uint32_t, mouse_getDoubleClickTime_cls)
     return GetDoubleClickTime();
 }
 
-/** Mouse::setDoubleClickTime() [Class method]
+/** Mouse::setDoubleClickTime()   [Class method]
  *
  * Sets the double-click time for the mouse.
  *
@@ -507,6 +507,150 @@ RexxMethod1(RexxObjectPtr, mouse_setDoubleClickTime_cls, uint32_t, interval)
     }
     return TheTrueObj;
 }
+
+
+/** Mouse::swapButton()   [Class method]
+ *
+ * Reverses or restores the meaning of the left and right mouse buttons.
+ *
+ * @param  swap  [Optional]  Specifies whether the meaning of the mouse buttons
+ *               are reversed or restored.
+ *
+ *               If .true, the left button generates right-button messages
+ *               and the right button generates left-button messages. If .false,
+ *               the buttons are restored to their original meanings.  The
+ *               default is .true
+ *
+ * @return  If the buttons were swapped before this method is invoked, the
+ *          return is .true, if the buttons were not swapped, the return is
+ *          .false.
+ *
+ * @notes   The .SystemErrorCode is set back to 0 by this method, but there is
+ *          no situation that would cause it to be changed to an error code.
+ *
+ *          Button swapping is provided by Windows as a convenience to people
+ *          who use the mouse with their left hands. The button swapping
+ *          functionality is usually done through the Control Panel only.
+ *          Although any application is free to use this functionality, the
+ *          mouse is a shared resource and reversing the meaning of its buttons
+ *          affects the entire system.
+ *
+ * @remarks  We do not even need the CSelf struct for this method, so we do not
+ *           use.
+ */
+RexxMethod1(logical_t, mouse_swapButton_cls, logical_t, swap)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( argumentOmitted(1) )
+    {
+        swap = TRUE;
+    }
+    return SwapMouseButton((BOOL)swap);
+}
+
+
+/** Mouse::loadCursor()  [Class method]
+ *
+ *  Returns one of the shared pre-defined system cursors.
+ *
+ *  @param  cursorName  [Required] Identifies the system cursor to be returned.
+ *
+ *                      Acceptable keywords are: APPSTARTING, ARROW, CROSS,
+ *                      HAND, HELP, IBEAM, NO, SIZEALL, SIZENESW, SIZENS,
+ *                      SIZENWSE, SIZEWE, UPARROW, or WAIT
+ *
+ *  @return  The requested cursor as a .Image object on success, or 0 on error.
+ *
+ *  @notes  Sets the .SystemErrorCode variable.  Raises syntax conditions when
+ *          incorrect usage is detected.  The returned .Image object is a shared
+ *          image and should not be released.  The ooDialog framework will
+ *          ignore any requests to release the object.
+ *
+ *  @remarks  According to MSDN docs, the OCR_* constants can be used in the
+ *            LoadCusorFromFile() API.  But doing so always causes a crash.
+ *            Some google searches turn up info suggesting that the docs are
+ *            incorrect.
+ */
+RexxMethod2(RexxObjectPtr, mouse_loadCursor_cls, CSTRING, name, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr result  = TheZeroObj;
+
+    CSTRING cursor = keyword2cursor(context, name);
+    if ( cursor == NULL )
+    {
+        goto done_out;
+    }
+
+    HCURSOR hCursor = (HCURSOR)LoadImage(NULL, cursor, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+
+    if ( hCursor == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto done_out;
+    }
+
+    SIZE s;
+    s.cx = GetSystemMetrics(SM_CXCURSOR);
+    s.cy = GetSystemMetrics(SM_CYCURSOR);
+
+    // Note that we use true for the last arg, even though we are creating this
+    // from a handle, because we are pretty sure of the size and the flags.
+    result = rxNewValidImage(context, hCursor, IMAGE_CURSOR, &s, LR_DEFAULTSIZE | LR_SHARED, true);
+
+done_out:
+    return result;
+}
+
+
+/** Mouse::loadCursorFromfiles()  [Class method]
+ *
+ *  Creates a cursor based on data from a file.
+ *
+ *  @param  fileName  [Required] Identifies the file that the cursor is created
+ *                    from.  This argument can either be a fully qualified or a
+ *                    relative file name.
+ *
+ *  @return  The requested cursor as a .Image object on success, or 0 on error.
+ *
+ *  @notes  Sets the .SystemErrorCode variable.  Raises syntax conditions when
+ *          incorrect usage is detected.  The returned .Image object is not a
+ *          shared image and can be released when no longer needed, if desired
+ *          to free up some (small) amount of system resources..
+ *
+ *  @remarks  According to MSDN docs, the OCR_* constants can be used in the
+ *            LoadCusorFromFile() API.  But doing so always causes a crash.
+ *            Some google searches turn up info suggesting that the docs are
+ *            incorrect.
+ *
+ */
+RexxMethod2(RexxObjectPtr, mouse_loadCursorFromFile_cls, CSTRING, fName, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr result  = TheZeroObj;
+
+    HCURSOR hCursor = LoadCursorFromFile(fName);
+    if ( hCursor == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto done_out;
+    }
+
+    SIZE s;
+    s.cx = GetSystemMetrics(SM_CXCURSOR);
+    s.cy = GetSystemMetrics(SM_CYCURSOR);
+
+    // Note that we use true for the last arg, even though we are creating this
+    // from a handle, because we are pretty sure of the size and the flags.
+    result = rxNewValidImage(context, hCursor, IMAGE_CURSOR, &s, LR_DEFAULTSIZE | LR_LOADFROMFILE, true);
+
+done_out:
+    return result;
+}
+
 
 /** Mouse::init()
  *
@@ -581,6 +725,7 @@ done_out:
 
 /** Mouse::uninit()
  *
+ *  TODO I don't think we need an uninit() method after all.
  *
  */
 RexxMethod1(RexxObjectPtr, mouse_uninit, CSELF, pCSelf)
@@ -781,7 +926,7 @@ RexxMethod2(RexxObjectPtr, mouse_get_release_capture, NAME, method, CSELF, pCSel
             }
             else
             {
-                hwnd = (HWND)SendMessage(hDlg, WM_USER_GETSETCAPTURE, MF_GETCAPTURE, 0);
+                hwnd = (HWND)SendMessage(hDlg, WM_USER_MOUSE_MISC, MF_GETCAPTURE, 0);
             }
             result = pointer2string(context, hwnd);
         }
@@ -798,7 +943,7 @@ RexxMethod2(RexxObjectPtr, mouse_get_release_capture, NAME, method, CSELF, pCSel
             }
             else
             {
-                rc = (uint32_t)SendMessage(hDlg, WM_USER_GETSETCAPTURE, MF_RELEASECAPTURE, 0);
+                rc = (uint32_t)SendMessage(hDlg, WM_USER_MOUSE_MISC, MF_RELEASECAPTURE, 0);
             }
 
             if ( rc != 0 )
@@ -844,7 +989,7 @@ RexxMethod1(RexxObjectPtr, mouse_capture, CSELF, pCSelf)
         }
         else
         {
-            oldCapture = (HWND)SendMessage(pcm->hDlg, WM_USER_GETSETCAPTURE, MF_SETCAPTURE, (LPARAM)pcm->hWindow);
+            oldCapture = (HWND)SendMessage(pcm->hDlg, WM_USER_MOUSE_MISC, MF_SETCAPTURE, (LPARAM)pcm->hWindow);
         }
         result = pointer2string(context, oldCapture);
     }
@@ -905,11 +1050,11 @@ RexxMethod2(RexxObjectPtr, mouse_isButtonDown, OPTIONAL_CSTRING, whichButton, CS
     short state;
     if ( isDlgThread(pcm->dlgCSelf) )
     {
-        state = (short)SendMessage(pcm->hDlg, WM_USER_GETKEYSTATE, mb, 0);
+        state = (short)GetAsyncKeyState(mb);
     }
     else
     {
-        state = (short)GetAsyncKeyState(mb);
+        state = (short)SendMessage(pcm->hDlg, WM_USER_MOUSE_MISC, MF_BUTTONDOWN, mb);
     }
 
     return (state & ISDOWN) ? TheTrueObj : TheFalseObj;
@@ -1117,6 +1262,7 @@ done_out:
     return result;
 }
 
+
 /** Mouse::restoreCursor()
  *
  *  Restores the cursor.  This is a convenience method, the same function could
@@ -1176,6 +1322,175 @@ RexxMethod2(RexxObjectPtr, mouse_restoreCursor, OPTIONAL_RexxObjectPtr, newCurso
 
 done_out:
     return result;
+}
+
+
+/** Mouse::showCursor()
+ *
+ * Displays or hides the cursor
+ *
+ * @param  show  [Optional]  Specifies whether the internal display counter is
+ *               to be incremented or decremented.
+ *
+ *               If .true, the display count is incremented by one. If .false,
+ *               the display count is decremented by one.  The defualt is .true.
+ *
+ * @return  The new display count.
+ *
+ * @notes   The .SystemErrorCode is set back to 0 by this method, but there is
+ *          no situation that would cause it to be changed to an error code.
+ *
+ *          The operating system maintains an internal display counter that
+ *          determines whether the cursor should be displayed. The cursor is
+ *          displayed only if the display count is greater than or equal to 0.
+ *          If a mouse is installed, the initial display count is set to 0. If
+ *          no mouse is installed, the display count is –1.
+ *
+ *          In early versions of Windows the internal counter was system wide,
+ *          but now it is thread specific.  What this means in terms of ooDialog
+ *          is that the cursor state, shown or hidden, will apply to the dialog
+ *          and all its child windows.  The dialog control windows, and any
+ *          ControlDialog windows if present.
+ *
+ *          Note that this method does not hide or show the cursor, it changes
+ *          the internal counter. This implies that if the programmer invokes
+ *          this method 10 times with show equal to .false, it will take at
+ *          least 10 invocations of the method with show equal to .true to get
+ *          the cursor to show.
+ */
+RexxMethod2(int32_t, mouse_showCursor, OPTIONAL_logical_t, show, CSELF, pCSelf)
+{
+    pCMouse pcm = getMouseCSelf(context, pCSelf);
+    if ( pcm == NULL )
+    {
+        return 0;
+    }
+
+    if ( argumentOmitted(1) )
+    {
+        show = TRUE;
+    }
+
+    if ( isDlgThread(pcm->dlgCSelf) )
+    {
+        return ShowCursor((BOOL)show);
+    }
+    else
+    {
+        return (int32_t)SendMessage(pcm->hDlg, WM_USER_MOUSE_MISC, MF_SHOWCURSOR, (LPARAM)show);
+    }
+}
+
+
+/** Mouse::clipCursor()
+ *
+ *  Confines the cursor to a rectangular area on the screen. Once the cursor has
+ *  been configned, if the cursor is moved outside the rectangle, the operating
+ *  system automatically adjusts the position to keep the cursor inside the
+ *  rectangular area.
+ *
+ *  @param  [OPTIONAL] A bounding rectangle specified as a .Rect object that
+ *          defines the area the cursor is confined to.  If this object is
+ *          omitted then any previous confinement is removed.
+ *
+ *  @return  If the method succeeds the return is .true.  On error the return is
+ *           .false and .SystemErrorCode will be set to the operating system
+ *           error code.
+ *
+ *  @notes   Sets the .SystemErrorCode.
+ *
+ *           The cursor is a shared resource. If an application confines the
+ *           cursor, it must release the cursor at some point by using
+ *           clipCursor(.nil) before the user can move to another application
+ *           using the mouse.
+ *
+ *           Although the MSDN documentation does not explicity state this,
+ *           experimentation shows that if the user brings up the Alt-Tab
+ *           switching dialog and moves to another application in that manner,
+ *           the cursor is no lnoger confined.  If the user closes the dialog,
+ *           the mouse is no longer confined.
+ *
+ *           TODO need to test this with a regular user account on Vista an
+ *           Win7.  MDSN says: The calling process must have
+ *           WINSTA_WRITEATTRIBUTES access to the window station.
+ *
+ *           TODO using ARGLIST, if all arguments are omitted, there is a syntax
+ *           error raised saying arg 1 is required.  This seems an interpreter
+ *           bug, or mis-design.  Using .nil is just a work around, need to
+ *           check why the syntax condition is raised.
+ */
+RexxMethod2(logical_t, mouse_clipCursor, ARGLIST, args, CSELF, pCSelf)
+{
+    pCMouse pcm = getMouseCSelf(context, pCSelf);
+    if ( pcm == NULL )
+    {
+        return 0;
+    }
+
+    RECT  r = {0};
+    PRECT clipArea;
+
+    RexxObjectPtr arg1 = context->GetArgument(1);
+
+    if ( arg1 == TheNilObj )
+    {
+        clipArea = NULL;
+    }
+    else
+    {
+        size_t arraySize;
+        size_t argsUsed;
+
+        if ( ! getRectFromArglist(context, args, &r, true, 1, 4, &arraySize, &argsUsed) )
+        {
+            return FALSE;
+        }
+        if ( argsUsed < arraySize )
+        {
+            tooManyArgsException(context->threadContext, argsUsed);
+            return FALSE;
+        }
+        clipArea = &r;
+    }
+
+    if ( ClipCursor(clipArea) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+
+/** Mouse::getClipCursor()
+ *
+ *  Retrieves the screen coordinates of the rectangular area to which the cursor
+ *  is confined.
+ *
+ *  @param  rect  [Required]  A .Rect object in which the coordinates are
+ *                returned.
+ *
+ *  @return  True on success, false on error.
+ *
+ *  @notes  Sets the .SystemErrorCode variable.
+ *
+ *          If the cursor is not confined, on return the .Rect object will
+ *          contain the dimensions of the screen.
+ */
+RexxMethod1(logical_t, mouse_getClipCursor, RexxObjectPtr, _rect)
+{
+    PRECT r = rxGetRect(context, _rect, 1);
+    if ( r == NULL )
+    {
+        return FALSE;
+    }
+
+    if ( GetClipCursor(r) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 

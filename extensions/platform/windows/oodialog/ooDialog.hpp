@@ -80,20 +80,21 @@
 #define WM_USER_CREATECHILD            WM_USER + 0x0601
 #define WM_USER_INTERRUPTSCROLL        WM_USER + 0x0602
 #define WM_USER_GETFOCUS               WM_USER + 0x0603
-#define WM_USER_GETSETCAPTURE          WM_USER + 0x0604
-#define WM_USER_GETKEYSTATE            WM_USER + 0x0605
-#define WM_USER_SUBCLASS               WM_USER + 0x0606
-#define WM_USER_SUBCLASS_REMOVE        WM_USER + 0x0607
-#define WM_USER_HOOK                   WM_USER + 0x0608
-#define WM_USER_CONTEXT_MENU           WM_USER + 0x0609
-#define WM_USER_CREATECONTROL_DLG      WM_USER + 0x060A
-#define WM_USER_CREATECONTROL_RESDLG   WM_USER + 0x060B
-#define WM_USER_CREATEPROPSHEET_DLG    WM_USER + 0x060C
+#define WM_USER_MOUSE_MISC             WM_USER + 0x0604
+#define WM_USER_SUBCLASS               WM_USER + 0x0605
+#define WM_USER_SUBCLASS_REMOVE        WM_USER + 0x0606
+#define WM_USER_HOOK                   WM_USER + 0x0607
+#define WM_USER_CONTEXT_MENU           WM_USER + 0x0608
+#define WM_USER_CREATECONTROL_DLG      WM_USER + 0x0609
+#define WM_USER_CREATECONTROL_RESDLG   WM_USER + 0x060A
+#define WM_USER_CREATEPROPSHEET_DLG    WM_USER + 0x060B
 
-// Flags for WM_USER_GETSETCAPTURE
+// Flags for WM_USER_MOUSE_MISC
 #define MF_GETCAPTURE       0
 #define MF_SETCAPTURE       1
 #define MF_RELEASECAPTURE   2
+#define MF_BUTTONDOWN       3
+#define MF_SHOWCURSOR       4
 
 #define OODDLL                      "oodialog.dll"
 #define OOD_LVL_MAJOR               4

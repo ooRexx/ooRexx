@@ -482,6 +482,7 @@ RexxRoutine8(RexxObjectPtr, fileNameDlg_rtn,
 
     char *filterBuf = NULL;
     OpenFileName.lpstrFilter = "Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+    OpenFileName.nFilterIndex = 1L;
 
     if ( argumentExists(3) )
     {
@@ -502,8 +503,12 @@ RexxRoutine8(RexxObjectPtr, fileNameDlg_rtn,
 
             OpenFileName.lpstrFilter = filterBuf;
         }
+        else
+        {
+            OpenFileName.lpstrFilter = NULL;
+            OpenFileName.nFilterIndex = 0;
+        }
     }
-    OpenFileName.nFilterIndex = 1L;
 
     // Open or save file dialog.  Allow mutiple file selection on open, or not.
     bool open = true;

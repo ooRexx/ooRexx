@@ -1195,8 +1195,11 @@ REXX_METHOD_PROTOTYPE(menuTemplate_addPopup);
 
 // Mouse
 REXX_METHOD_PROTOTYPE(mouse_new_cls);
+REXX_METHOD_PROTOTYPE(mouse_loadCursor_cls);
+REXX_METHOD_PROTOTYPE(mouse_loadCursorFromFile_cls);
 REXX_METHOD_PROTOTYPE(mouse_getDoubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_setDoubleClickTime_cls);
+REXX_METHOD_PROTOTYPE(mouse_swapButton_cls);
 REXX_METHOD_PROTOTYPE(mouse_init);
 REXX_METHOD_PROTOTYPE(mouse_uninit);
 REXX_METHOD_PROTOTYPE(mouse_trackEvent);
@@ -1208,6 +1211,9 @@ REXX_METHOD_PROTOTYPE(mouse_getCursorPos);
 REXX_METHOD_PROTOTYPE(mouse_restoreCursor);
 REXX_METHOD_PROTOTYPE(mouse_setCursor);
 REXX_METHOD_PROTOTYPE(mouse_setCursorPos);
+REXX_METHOD_PROTOTYPE(mouse_showCursor);
+REXX_METHOD_PROTOTYPE(mouse_clipCursor);
+REXX_METHOD_PROTOTYPE(mouse_getClipCursor);
 REXX_METHOD_PROTOTYPE(mouse_connectEvent);
 REXX_METHOD_PROTOTYPE(mouse_test);
 
@@ -1993,8 +1999,11 @@ RexxMethodEntry oodialog_methods[] = {
 
     // Mouse
     REXX_METHOD(mouse_new_cls,                  mouse_new_cls),
+    REXX_METHOD(mouse_loadCursor_cls,           mouse_loadCursor_cls),
+    REXX_METHOD(mouse_loadCursorFromFile_cls,   mouse_loadCursorFromFile_cls),
     REXX_METHOD(mouse_getDoubleClickTime_cls,   mouse_getDoubleClickTime_cls),
     REXX_METHOD(mouse_setDoubleClickTime_cls,   mouse_setDoubleClickTime_cls),
+    REXX_METHOD(mouse_swapButton_cls,           mouse_swapButton_cls),
     REXX_METHOD(mouse_init,                     mouse_init),
     REXX_METHOD(mouse_uninit,                   mouse_uninit),
     REXX_METHOD(mouse_trackEvent,               mouse_trackEvent),
@@ -2006,6 +2015,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(mouse_restoreCursor,            mouse_restoreCursor),
     REXX_METHOD(mouse_setCursor,                mouse_setCursor),
     REXX_METHOD(mouse_setCursorPos,             mouse_setCursorPos),
+    REXX_METHOD(mouse_showCursor,               mouse_showCursor),
+    REXX_METHOD(mouse_clipCursor,               mouse_clipCursor),
+    REXX_METHOD(mouse_getClipCursor,            mouse_getClipCursor),
     REXX_METHOD(mouse_connectEvent,             mouse_connectEvent),
     REXX_METHOD(mouse_test,                     mouse_test),
 
