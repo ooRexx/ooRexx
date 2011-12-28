@@ -838,7 +838,8 @@ REXX_METHOD_PROTOTYPE(dlgctrl_new_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init);
 REXX_METHOD_PROTOTYPE(dlgctrl_unInit);
-REXX_METHOD_PROTOTYPE(dlgctrl_connectCharEvent);
+REXX_METHOD_PROTOTYPE(dlgctrl_connectEvent);
+REXX_METHOD_PROTOTYPE(dlgctrl_checkForComCtl6);
 REXX_METHOD_PROTOTYPE(dlgctrl_connectKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_disconnectKeyPress);
@@ -884,8 +885,6 @@ REXX_METHOD_PROTOTYPE(bc_test);
 REXX_METHOD_PROTOTYPE(bc_test_cls);
 
 // Edit
-REXX_METHOD_PROTOTYPE(e_noContextMenu);
-REXX_METHOD_PROTOTYPE(e_ignoreMouseWheel);
 REXX_METHOD_PROTOTYPE(e_isSingleLine);
 REXX_METHOD_PROTOTYPE(e_selection);
 REXX_METHOD_PROTOTYPE(e_replaceSelText);
@@ -900,7 +899,6 @@ REXX_METHOD_PROTOTYPE(e_getCue);
 REXX_METHOD_PROTOTYPE(e_setCue);
 REXX_METHOD_PROTOTYPE(e_getRect);
 REXX_METHOD_PROTOTYPE(e_setRect);
-REXX_METHOD_PROTOTYPE(e_disableInternalResize);
 REXX_METHOD_PROTOTYPE(e_style);
 
 // ComboBox
@@ -1475,7 +1473,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_init_cls,               dlgctrl_init_cls),
     REXX_METHOD(dlgctrl_init,                   dlgctrl_init),
     REXX_METHOD(dlgctrl_unInit,                 dlgctrl_unInit),
-    REXX_METHOD(dlgctrl_connectCharEvent,       dlgctrl_connectCharEvent),
+    REXX_METHOD(dlgctrl_connectEvent,           dlgctrl_connectEvent),
+    REXX_METHOD(dlgctrl_checkForComCtl6,        dlgctrl_checkForComCtl6),
     REXX_METHOD(dlgctrl_connectKeyPress,        dlgctrl_connectKeyPress),
     REXX_METHOD(dlgctrl_connectFKeyPress,       dlgctrl_connectFKeyPress),
     REXX_METHOD(dlgctrl_disconnectKeyPress,     dlgctrl_disconnectKeyPress),
@@ -1701,8 +1700,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_test_cls,                    bc_test_cls),
 
     // Edit
-    REXX_METHOD(e_noContextMenu,                e_noContextMenu),
-    REXX_METHOD(e_ignoreMouseWheel,             e_ignoreMouseWheel),
     REXX_METHOD(e_isSingleLine,                 e_isSingleLine),
     REXX_METHOD(e_selection,                    e_selection),
     REXX_METHOD(e_replaceSelText,               e_replaceSelText),
@@ -1718,7 +1715,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(e_setCue,                       e_setCue),
     REXX_METHOD(e_getRect,                      e_getRect),
     REXX_METHOD(e_setRect,                      e_setRect),
-    REXX_METHOD(e_disableInternalResize,        e_disableInternalResize),
 
     // ComboBox
     REXX_METHOD(cb_getText,                     cb_getText),

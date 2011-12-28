@@ -52,6 +52,7 @@
 
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodControl.hpp"
 #include "oodMessaging.hpp"
 #include "oodResources.hpp"
 #include "oodMouse.hpp"
@@ -315,7 +316,7 @@ done_out:
  *
  * @return RexxArrayObject
  */
-RexxArrayObject getMouseArgs(RexxThreadContext *c, pCPlainBaseDialog pcpbd, WPARAM wParam, LPARAM lParam, uint32_t count)
+RexxArrayObject getMouseArgs(RexxThreadContext *c, RexxObjectPtr rxMouse, WPARAM wParam, LPARAM lParam, uint32_t count)
 {
     char  buf[256] = {0};
     int   state    = GET_KEYSTATE_WPARAM(wParam);
@@ -339,11 +340,6 @@ RexxArrayObject getMouseArgs(RexxThreadContext *c, pCPlainBaseDialog pcpbd, WPAR
 
     RexxStringObject rxState = c->String(buf);
     RexxObjectPtr    rxPoint = rxNewPoint(c, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-
-    // Send the window losing capture and the mouse object.  Note, I
-    // don't think we can be here without a valid mouse object in pcpbd,
-    // but we will check any way.
-    RexxObjectPtr rxMouse = pcpbd->rexxMouse ? pcpbd->rexxMouse : TheNilObj;
 
     RexxArrayObject args;
     if ( count > 3 )
@@ -378,9 +374,9 @@ RexxArrayObject getMouseArgs(RexxThreadContext *c, pCPlainBaseDialog pcpbd, WPAR
  */
 bool mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lParam)
 {
-    RexxThreadContext *c = mwd->dlgProcContext;
+    RexxThreadContext *c = mwd->pcpbd->dlgProcContext;
 
-    RexxArrayObject args = getMouseArgs(c, mwd->pcpbd, wParam, lParam, 4);
+    RexxArrayObject args = getMouseArgs(c, mwd->mouse, wParam, lParam, 4);
 
     RexxObjectPtr rxDelta = c->WholeNumber(GET_WHEEL_DELTA_WPARAM(wParam));
     c->ArrayPut(args, rxDelta, 4);
@@ -391,7 +387,7 @@ bool mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lParam)
     }
     else
     {
-        invokeDispatch(c, mwd->ownerDlg, c->String(mwd->method), args);
+        invokeDispatch(c, mwd->pcpbd->rexxSelf, c->String(mwd->method), args);
     }
     return true;
 }
@@ -1496,17 +1492,26 @@ RexxMethod1(logical_t, mouse_getClipCursor, RexxObjectPtr, _rect)
 
 /** Mouse::connectEvent()
  *
+ *  @param  event       [required]  Event keyword.
+ *  @param  methodName  [optional]  methodName.
+ *  @param  willReply   [optional]  If the interpreter should wait for the reply
+ *                                  from the connected method in the window
+ *                                  procedure.  The default is true.
+ *  @param  opts        [optional]  Additional keyword options used for dialog
+ *                                  control mouse windows.  Ignrored if the
+ *                                  mouse is a dialog window mouse.
  *
  * @return  True on success, false on error.
  */
-RexxMethod4(RexxObjectPtr, mouse_connectEvent, CSTRING, event, OPTIONAL_CSTRING, methodName,
-            OPTIONAL_logical_t, _willReply, CSELF, pCSelf)
+RexxMethod5(RexxObjectPtr, mouse_connectEvent, CSTRING, event, OPTIONAL_CSTRING, methodName,
+            OPTIONAL_logical_t, _willReply, OPTIONAL_CSTRING, opts, CSELF, pCSelf)
 {
     pCEventNotification pcen = getMousePCEN(context, (pCMouse)pCSelf);
     if ( pcen == NULL )
     {
         goto err_out;
     }
+    pCMouse pcm = (pCMouse)pCSelf;
 
     uint32_t wmMsg;
     if ( ! keyword2wm(context, event, &wmMsg) )
@@ -1519,14 +1524,41 @@ RexxMethod4(RexxObjectPtr, mouse_connectEvent, CSTRING, event, OPTIONAL_CSTRING,
         methodName = wm2name(wmMsg);
     }
 
-    uint32_t tag = TAG_MOUSE;
     bool willReply = argumentOmitted(3) || _willReply;
+    uint32_t tag = TAG_MOUSE;
 
-    tag |= willReply ? TAG_REPLYFROMREXX : 0;
-
-    if ( addMiscMessage(pcen, context, wmMsg, 0xFFFFFFFF, 0, 0, 0, 0, methodName, tag) )
+    if ( pcm->isDlgWindow )
     {
-        return TheTrueObj;
+        tag |= willReply ? TAG_REPLYFROMREXX : 0;
+
+        if ( addMiscMessage(pcen, context, wmMsg, 0xFFFFFFFF, 0, 0, 0, 0, methodName, tag) )
+        {
+            return TheTrueObj;
+        }
+    }
+    else
+    {
+        tag = CTRLTAG_MOUSE;
+        tag |= willReply ? CTRLTAG_REPLYFROMREXX : 0;
+
+        if ( argumentExists(4) )
+        {
+            if ( ! parseTagOpts(context->threadContext, opts, &tag, 4) )
+            {
+                goto err_out;
+            }
+        }
+
+        WinMessageFilter wmf = {0};
+        wmf.wm       = wmMsg;
+        wmf.wmFilter = 0xFFFFFFFF;
+        wmf.method   = methodName;
+        wmf.tag      = tag;
+
+        if ( addSubclassMessage(context, pcm->controlCSelf, &wmf) )
+        {
+            return TheTrueObj;
+        }
     }
 
 err_out:

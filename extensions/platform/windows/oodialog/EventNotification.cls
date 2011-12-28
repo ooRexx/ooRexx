@@ -82,13 +82,6 @@
    if willReply then tag = 0x02000000
    return self~addUserMsg(msgToRise, "0x00000232", "0xFFFFFFFF", 0, 0, 0, 0, tag)
 
--- WM_MOUSEWHEEL
-::method connectMouseWheel
-   use strict arg msgToRise = 'onMouseWheel', willReply = .true
-   tag = 0x00000002
-   if willReply then tag = 0x02000002
-   return self~addUserMsg(msgToRise, "0x0000020a", "0xFFFFFFFF", 0, 0, 0, 0, tag)
-
 -- WM_WINDOWPOSCHANGED
 ::method connectPosChanged
    use strict arg msgToRise = 'onPosChaged'

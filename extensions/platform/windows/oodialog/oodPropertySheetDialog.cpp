@@ -1431,12 +1431,9 @@ LRESULT CALLBACK RexxPropertySheetDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
         case WM_USER_SUBCLASS:
         {
-            SUBCLASSDATA *pData = (SUBCLASSDATA *)lParam;
+            pSubClassData pData = (pSubClassData)lParam;
 
-            pData->dlgProcContext = pcpbd->dlgProcContext;
-            pData->rexxDialog = pcpbd->rexxSelf;
-
-            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
+            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->id, (DWORD_PTR)pData);
 
             ReplyMessage((LRESULT)success);
             return TRUE;
@@ -5500,12 +5497,9 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
         case WM_USER_SUBCLASS:
         {
-            SUBCLASSDATA *pData = (SUBCLASSDATA *)lParam;
+            pSubClassData pData = (pSubClassData)lParam;
 
-            pData->dlgProcContext = pcpbd->dlgProcContext;
-            pData->rexxDialog = pcpbd->rexxSelf;
-
-            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
+            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->id, (DWORD_PTR)pData);
 
             ReplyMessage((LRESULT)success);
             return TRUE;
@@ -5517,11 +5511,6 @@ LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
         case WM_USER_HOOK:
         {
-            SUBCLASSDATA *pData = (SUBCLASSDATA *)lParam;
-
-            pData->dlgProcContext = pcpbd->dlgProcContext;
-            pData->rexxDialog = pcpbd->rexxSelf;
-
             ReplyMessage((LRESULT)SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)wParam, NULL, GetCurrentThreadId()));
             return TRUE;
         }

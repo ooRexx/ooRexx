@@ -39,9 +39,10 @@
  *  An example program showing how to work with the mouse wheel.
  *
  *  The ooDialog programmer can capture mouse wheel event by using the
- *  connectMouseWheel() method.  The event handler for the connection will be
- *  invoked each time the user turns the scroll wheel on the mouse.  The event
- *  handler can then use the arguments passed to it to do custom scrolling.
+ *  connectEvent() method of the .Mouse class.  The event handler for the
+ *  connection will be invoked each time the user turns the scroll wheel on the
+ *  mouse.  The event handler can then use the arguments passed to it to do
+ *  custom scrolling.
  *
  *  Read throught the code comments to understand how this works.
  *
@@ -105,14 +106,9 @@ return 0
  * notification or the top of the chain is reached.
  *
  * Multi-line edit controls *do* process the notification and normally handle
- * their own scrolling.  Because of this, if the multi-line edit control in this
- * dialog has the focus, our dialog will never get the notification.  (Single-
- * line edit controls do not handle the notification.)
- *
- * By using the ignoreMouseWheel() method of the Edit class, we force the under-
- * lying edit control to not process the mouse wheel event notification.  So
- * that we can process it in this dialog.  This allows all mouse wheel events to
- * reach this dialog.
+ * their own scrolling.  Because of this, we need to get two mouse objects.  One
+ * for this dialog and one for the edit control.  We then connect the mouse
+ * wheel event in both mouse objects to a method in this dialog.
  */
 ::method initDialog
   expose eData pbOk eCommand process
@@ -122,21 +118,28 @@ return 0
 
   eData = self~newEdit(IDC_EDIT_DATA)
 
-  -- Disable the edit control's handling of the mouse wheel message.  The second
-  -- opitonal argument tells the edit control to directly invoke a method in the
-  -- owner dialog.  In this case we specify the onEditMouseWheel() method.
+  -- Get a mouse object for the edit control and connect the mouse wheel event.
+  -- There are several options of how to handle this.  We could, using options
+  -- to connectEvent(), either have the edit control's mouse wheel events
+  -- connect to the same method as we connect the the dialog's mouse wheel
+  -- events to, or have them connect to a separate method.
+  --
+  -- In this case we choose the later, and specify the onEditMouseWheel()
+  -- method.
   --
   -- Note that onEditMouseWheel() method will only be invoked when the
   -- IDC_EDIT_DATA edit control has the focus.
-  eData~ignoreMouseWheel( , onEditMouseWheel)
+  mouse = .Mouse~new(eData)
+  mouse~connectEvent('WHEEL', onEditMouseWheel)
 
   -- Connect all mouse wheel events that reach the dialog to a method in this
-  -- dialog.  The default method name is onMouseWheel, so we omit the arugment
-  -- and name our method onMousWheel.
+  -- dialog.  The default method name is onMouseWheel, so we omit the method
+  -- name arugment and name our method onMousWheel.
   --
   -- Note that this onMouseWheel() method will never be invoked if the
   -- IDC_EDIT_DATA edit control has the focus.
-  self~connectMouseWheel
+  mouse = .Mouse~new(self)
+  mouse~connectEvent('WHEEL')
 
   -- Set up the radio buttons, connect a click event on any of them to our
   -- single onRbSelect() method.
@@ -168,6 +171,21 @@ return 0
  * This is an event handler for the mouse wheel event.  Three arguments are
  * sent to the event handler by the ooDialog framework.
  *
+ * @param  state  A list of keywords that indicate the keyboard and mouse button
+ *                modifiers.  The list of possible words is exactly:
+ *
+ *                None Control lButton mButton rButton Shift xButton1 xButton2
+ *
+ *                The none keyword will always be by itself, otherwise, the list
+ *                can consist of one or more of the keywords.
+ *
+ * @param  pos    A .Point object that represents the position of the mouse
+ *                pointer on the screen.  This is in screen co-ordinates, in
+ *                pixels.
+ *
+ * @param  mouse  The mouse object that connected this event.  For our purposes
+ *                we don't need the mouse so we just ignore this argument.
+ *
  * @param  delta  A whole number that represents the amount the scroll wheel was
  *                turned.  The number will always be a multiple of 120 because
  *                that is what the operating system sends.  If the number is
@@ -178,18 +196,6 @@ return 0
  *                At this point in time (c. 2011) the OS sends the event
  *                notification for each notch of the scroll wheel and so delta
  *                will always be 120 or -120.
- *
- * @param  state  A list of keywords that indicate the keyboard and mouse button
- *                modifiers.  The list of possible words is exactly:
- *
- *                None Control lButton mButton rButton Shift xButton1 xButton2
- *
- *                The none keyword will always be by itself, otherwise, the list
- *                can consist of one or more of the keywords.
- *
- * @param pos     A .Point object that represents the position of the mouse
- *                pointer on the screen.  This is in screen co-ordinates, in
- *                pixels.
  *
  * Because of the 2 connectMouseWheel() calls in initDialog() the method will
  * only be called when the dialog is the active window and the multi-line edit
@@ -446,16 +452,19 @@ return 0
 
   -- Connect the mouse wheel event to a method in this dialog.  We don't specify
   -- a method name, we'll just accept the default name of onMouseWheel.
-  self~connectMouseWheel
+  .Mouse~new(self)~connectEvent('WHEEL')
 
   e = self~newEdit(IDC_HELP_TEXT)
 
-  -- Prevent the edit control from handling the mouse wheel event, but do not
-  -- pass in a method name.  This causes the edit control to ignore the mouse
-  -- wheel event, and to not invoke any method. The event notification will then
-  -- be passed on up the parent / child window chain until it reaches our
-  -- underlying Windows dialog, where we will intercept it.
-  e~ignoreMouseWheel
+  -- In this case we have the edit control not process the mouse wheel, but
+  -- rather pass the message on to the dialog.  The third optional parameter of
+  -- DEFWINPROC is a keyword that causes the mouse wheel notfication to be
+  -- passed on up parent / child window chain and not sent to the edit control.
+  --
+  -- The effect of this is that the edit control never even sees the
+  -- notification, allowing our onMouseWheel() method to handle all mouse wheel
+  -- notifications, not matter where the mouse is over out dialog.
+  .Mouse~new(e)~connectEvent('WHEEL', 'NOOP', , "DEFWINPROC")
 
   -- Create a mono-spaced font for the edit control that displays the help text.
   newFont = self~createFontEx('Courier New', 9)
@@ -492,7 +501,7 @@ return 0
  */
 ::method onMouseWheel unguarded
   expose e visibleLines
-  use arg delta, state, pos
+  use arg state, pos, mouse, delta
 
   if visibleLines == 0 then visibleLines = self~calcVisibleLines(e)
 

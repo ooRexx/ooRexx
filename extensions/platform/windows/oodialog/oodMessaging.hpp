@@ -56,7 +56,9 @@ extern BOOL    APIENTRY RexxSetProcessMessages(BOOL onoff);
 extern LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 extern LRESULT CALLBACK RexxTabOwnerDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 extern LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-extern BOOL             endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
+
+extern bool parseWinMessageFilter(RexxMethodContext *context, pWinMessageFilter pwmf);
+extern BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
 
 extern LRESULT       paletteMessage(pCPlainBaseDialog, HWND, UINT, WPARAM, LPARAM);
 extern MsgReplyType  searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog);
@@ -69,8 +71,8 @@ extern bool          addMiscMessage(pCEventNotification, RexxMethodContext *, ui
 // Shared functions for keyboard hooks, key press and key event subclassing.
 extern void            removeKBHook(pCEventNotification);
 extern keyPressErr_t   setKeyPressData(KEYPRESSDATA *, CSTRING, CSTRING, CSTRING);
-extern void            processKeyPress(SUBCLASSDATA *, WPARAM, LPARAM);
-extern void            freeKeyPressData(SUBCLASSDATA *);
+extern void            processKeyPress(pSubClassData, WPARAM, LPARAM);
+extern void            freeKeyPressData(pSubClassData);
 extern uint32_t        seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
 extern void            removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
 extern RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam, bool isExtended, RexxObjectPtr rexxControl);

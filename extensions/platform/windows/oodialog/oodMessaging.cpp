@@ -376,12 +376,9 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_USER_SUBCLASS:
         {
-            SUBCLASSDATA *pData = (SUBCLASSDATA *)lParam;
+            pSubClassData pData = (pSubClassData)lParam;
 
-            pData->dlgProcContext = pcpbd->dlgProcContext;
-            pData->rexxDialog = pcpbd->rexxSelf;
-
-            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
+            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->id, (DWORD_PTR)pData);
 
             ReplyMessage((LRESULT)success);
             return TRUE;
@@ -393,11 +390,6 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_USER_HOOK:
         {
-            SUBCLASSDATA *pData = (SUBCLASSDATA *)lParam;
-
-            pData->dlgProcContext = pcpbd->dlgProcContext;
-            pData->rexxDialog = pcpbd->rexxSelf;
-
             ReplyMessage((LRESULT)SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)wParam, NULL, GetCurrentThreadId()));
             return TRUE;
         }
@@ -634,12 +626,9 @@ LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_USER_SUBCLASS:
         {
-            SUBCLASSDATA *pData = (SUBCLASSDATA *)lParam;
+            pSubClassData pData = (pSubClassData)lParam;
 
-            pData->dlgProcContext = pcpbd->dlgProcContext;
-            pData->rexxDialog = pcpbd->rexxSelf;
-
-            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->uID, (DWORD_PTR)pData);
+            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->id, (DWORD_PTR)pData);
 
             ReplyMessage((LRESULT)success);
             return TRUE;
@@ -843,6 +832,109 @@ inline bool matchSelect(uint32_t tag, LPNMLISTVIEW p)
 inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
 {
     return ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (focusDidChange(p));
+}
+
+
+/**
+ *  Converts arguments to a Rexx method to their C values when adding a window
+ *  message filter to a MESSAGETABLE.  Used by both the dialog object and the
+ *  dialog control object.
+ *
+ *  Should go without saying that the arguments to any Rexx method that uses
+ *  this helper function need be the same and in the same argument position.
+ *
+ * @param pwmf  Pointer to a WinMessageFilter struct that is used to pass in the
+ *              Rexx arguments and return their C values on success.
+ *
+ * @return  True on success, false on error.  On error, an exceptions has been
+ *          raised.
+ */
+bool parseWinMessageFilter(RexxMethodContext *context, pWinMessageFilter pwmf)
+{
+    bool result = false;
+
+    if ( pwmf->method[0] == '\0' )
+    {
+        context->RaiseException1(Rexx_Error_Invalid_argument_null, TheOneObj);
+        goto done_out;
+    }
+
+    uint32_t winMessage;
+    uint32_t wmFilter;
+    if ( ! rxStr2Number32(context, pwmf->_wm, &winMessage, 2) )
+    {
+        goto done_out;
+    }
+
+    if ( argumentOmitted(3) )
+    {
+        wmFilter = 0xFFFFFFFF;
+    }
+    else
+    {
+        if ( ! rxStr2Number32(context, pwmf->_wmFilter, &wmFilter, 3) )
+        {
+            goto done_out;
+        }
+    }
+
+    uint64_t  filter;
+    WPARAM    wParam;
+    ULONG_PTR wpFilter;
+
+    if ( ! oodGetWParam(context, pwmf->_wp, &wParam, 4, false) )
+    {
+        goto done_out;
+    }
+    if ( argumentOmitted(5) )
+    {
+        wpFilter = 0;
+    }
+    else
+    {
+        if ( ! rxStr2Number(context, pwmf->_wpFilter, &filter, 5) )
+        {
+            goto done_out;
+        }
+        wpFilter = (filter == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)filter);
+    }
+
+    LPARAM    lParam;
+    ULONG_PTR lpFilter;
+
+    if ( ! oodGetLParam(context, pwmf->_lp, &lParam, 6, false) )
+    {
+        goto done_out;
+    }
+    if ( argumentOmitted(7) )
+    {
+        lpFilter = 0;
+    }
+    else
+    {
+        if ( ! rxStr2Number(context, pwmf->_lpFilter, &filter, 7) )
+        {
+            goto done_out;
+        }
+        lpFilter = (filter == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)filter);
+    }
+
+    if ( (winMessage | wParam | lParam) == 0 )
+    {
+        userDefinedMsgException(context->threadContext, "The wm, wp, and lp arguements can not all be 0" );
+        goto done_out;
+    }
+
+    pwmf->wm       = winMessage;
+    pwmf->wmFilter = wmFilter;
+    pwmf->wp       = wParam;
+    pwmf->wpFilter = wpFilter;
+    pwmf->lp       = lParam;
+    pwmf->lpFilter = lpFilter;
+    result = true;
+
+done_out:
+  return result;
 }
 
 
@@ -2115,7 +2207,7 @@ MsgReplyType processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t ta
         case WM_MOUSEHOVER :
         case WM_MOUSEMOVE :
         {
-            RexxArrayObject args = getMouseArgs(c, pcpbd, wParam, lParam, 3);
+            RexxArrayObject args = getMouseArgs(c, pcpbd->rexxMouse, wParam, lParam, 3);
 
             if ( willReply )
             {
@@ -2151,11 +2243,9 @@ MsgReplyType processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t ta
         case WM_MOUSEWHEEL :
         {
             MOUSEWHEELDATA mwd;
-
-            mwd.dlgProcContext = c;
-            mwd.pcpbd          = pcpbd;
-            mwd.ownerDlg       = pcpbd->rexxSelf;
             mwd.method         = methodName;
+            mwd.mouse          = pcpbd->rexxMouse;
+            mwd.pcpbd          = pcpbd;
             mwd.willReply      = willReply;
 
             mouseWheelNotify(&mwd, wParam, lParam);
@@ -3130,14 +3220,15 @@ LRESULT CALLBACK keyboardHookProc(int code, WPARAM wParam, LPARAM lParam)
         return 0;
     }
 
-    pCEventNotification pcen = DialogTable[i]->enCSelf;
-    KEYPRESSDATA *pKeyPressData = (KEYPRESSDATA *)pcen->pHookData->pData;
+    pCEventNotification pcen    = DialogTable[i]->enCSelf;
+    pSubClassData       pSCData = (pSubClassData)pcen->pHookData;
+    KEYPRESSDATA *pKeyPressData = (KEYPRESSDATA *)pSCData->pData;
 
     if ( (code == HC_ACTION) && pKeyPressData->key[wParam] )
     {
         if ( !(lParam & KEY_RELEASED) && !(lParam & KEY_WASDOWN) )
         {
-            processKeyPress(pcen->pHookData, wParam, lParam);
+            processKeyPress(pSCData, wParam, lParam);
         }
     }
 	return CallNextHookEx(pcen->hHook, code, wParam, lParam);
@@ -3156,7 +3247,7 @@ static keyPressErr_t setKBHook(pCEventNotification pcen)
     pcen->hHook = (HHOOK)SendMessage(pcen->hDlg, WM_USER_HOOK, (WPARAM)&keyboardHookProc, (LPARAM)pcen->pHookData);
     if ( ! pcen->hHook )
     {
-        freeKeyPressData(pcen->pHookData);
+        freeKeyPressData((pSubClassData)pcen->pHookData);
         pcen->pHookData = NULL;
         return winAPIErr;
     }
@@ -3172,8 +3263,8 @@ static keyPressErr_t setKBHook(pCEventNotification pcen)
  */
 static keyPressErr_t installKBHook(pCEventNotification pcen, CSTRING method, CSTRING keys, CSTRING filter)
 {
-    SUBCLASSDATA *pSubclassData = (SUBCLASSDATA *)LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
-    if ( pSubclassData == NULL )
+    pSubClassData pSCData = (pSubClassData)LocalAlloc(LPTR, sizeof(SubClassData));
+    if ( pSCData == NULL )
     {
         return memoryErr;
     }
@@ -3181,22 +3272,22 @@ static keyPressErr_t installKBHook(pCEventNotification pcen, CSTRING method, CST
     KEYPRESSDATA *pKeyData = (KEYPRESSDATA *)LocalAlloc(LPTR, sizeof(KEYPRESSDATA));
     if ( pKeyData == NULL )
     {
-        LocalFree(pSubclassData);
+        LocalFree(pSCData);
         return memoryErr;
     }
 
     keyPressErr_t result = setKeyPressData(pKeyData, method, keys, filter);
     if ( result == noErr )
     {
-        pSubclassData->pData = pKeyData;
-        pcen->pHookData = pSubclassData;
+        pSCData->pData = pKeyData;
+        pcen->pHookData = pSCData;
 
         // Note that setKBHook() frees all memeory if it fails;
         result = setKBHook(pcen);
     }
     else
     {
-        freeKeyPressData(pSubclassData);
+        freeKeyPressData(pSCData);
     }
 
     return result;
@@ -3246,7 +3337,9 @@ static keyPressErr_t connectKeyPressHook(RexxMethodContext *c, pCEventNotificati
         return installKBHook(pcen, methodName, keys, filter);
     }
 
-    return setKeyPressData((KEYPRESSDATA *)pcen->pHookData->pData, methodName, keys, filter);
+
+    pSubClassData pSCData = (pSubClassData)pcen->pHookData;
+    return setKeyPressData((KEYPRESSDATA *)pSCData->pData, methodName, keys, filter);
 }
 
 
@@ -3260,7 +3353,7 @@ void removeKBHook(pCEventNotification pcen)
         UnhookWindowsHookEx(pcen->hHook);
     }
 
-    freeKeyPressData(pcen->pHookData);
+    freeKeyPressData((pSubClassData)pcen->pHookData);
     pcen->hHook = 0;
     pcen->pHookData = NULL;
 }
@@ -3300,9 +3393,9 @@ void removeKBHook(pCEventNotification pcen)
  *           can specify that she wants to detect this situation by adding
  *           'VIRT' to the key filter.
  */
-void processKeyPress(SUBCLASSDATA *pSubclassData, WPARAM wParam, LPARAM lParam)
+void processKeyPress(pSubClassData pSCData, WPARAM wParam, LPARAM lParam)
 {
-    KEYPRESSDATA *pKeyData = (KEYPRESSDATA *)pSubclassData->pData;
+    KEYPRESSDATA *pKeyData = (KEYPRESSDATA *)pSCData->pData;
 
     BOOL passed   = TRUE;
     BOOL bShift   = FALSE;
@@ -3348,10 +3441,10 @@ void processKeyPress(SUBCLASSDATA *pSubclassData, WPARAM wParam, LPARAM lParam)
 
     if ( passed )
     {
-        RexxThreadContext *c = pSubclassData->dlgProcContext;
+        RexxThreadContext *c = pSCData->pcpbd->dlgProcContext;
 
-        RexxArrayObject args = getKeyEventRexxArgs(c, wParam, lParam & KEY_ISEXTENDED ? true : false, pSubclassData->rexxControl);
-        invokeDispatch(c, pSubclassData->rexxDialog, c->String(pMethod), args);
+        RexxArrayObject args = getKeyEventRexxArgs(c, wParam, lParam & KEY_ISEXTENDED ? true : false, pSCData->pcdc->rexxSelf);
+        invokeDispatch(c, pSCData->pcpbd->rexxSelf, c->String(pMethod), args);
     }
 }
 
@@ -3401,22 +3494,22 @@ void removeKeyPressMethod(KEYPRESSDATA *pData, uint32_t index)
  * Frees the key press data structure.  Note that methods can be removed leaving
  * holes in the array.
  *
- * @assumes Caller has passed in the correct pointer, i.e., that pSubclassData's
- *          pData points to a KEYPRESSDATA struct.
+ * @assumes Caller has passed in the correct pointer, i.e., that pSCData's pData
+ *          points to a KEYPRESSDATA struct.
  */
-void freeKeyPressData(SUBCLASSDATA *pSubclassData)
+void freeKeyPressData(pSubClassData pSCData)
 {
     size_t i;
-    if ( pSubclassData )
+    if ( pSCData )
     {
-        KEYPRESSDATA *p = (KEYPRESSDATA *)pSubclassData->pData;
+        KEYPRESSDATA *p = (KEYPRESSDATA *)pSCData->pData;
         for ( i = 1; i <= MAX_KEYPRESS_METHODS; i++ )
         {
             safeLocalFree((void *)p->pMethods[i]);
             safeLocalFree((void *)p->pFilters[i]);
         }
         LocalFree((void *)p);
-        LocalFree((void *)pSubclassData);
+        LocalFree((void *)pSCData);
     }
 }
 
@@ -3785,7 +3878,8 @@ RexxMethod2(int32_t, en_disconnectKeyPress, OPTIONAL_CSTRING, methodName, CSELF,
 
     if ( pcen->hHook && pcen->pHookData )
     {
-        KEYPRESSDATA *pKeyPressData = (KEYPRESSDATA *)pcen->pHookData->pData;
+        pSubClassData pSCData = (pSubClassData)pcen->pHookData;
+        KEYPRESSDATA *pKeyPressData = (KEYPRESSDATA *)pSCData->pData;
 
         // If there is no methodName argument, remove the entire hook, otherwise
         // disconnect the named method.
@@ -3859,7 +3953,9 @@ RexxMethod2(logical_t, en_hasKeyPressConnection, OPTIONAL_CSTRING, methodName, C
         return FALSE;
     }
 
-    BOOL exists = (seekKeyPressMethod((KEYPRESSDATA *)pcen->pHookData->pData, tmpName) > 0);
+    pSubClassData pSCData = (pSubClassData)pcen->pHookData;
+
+    BOOL exists = (seekKeyPressMethod((KEYPRESSDATA *)pSCData->pData, tmpName) > 0);
     free(tmpName);
     return exists;
 }
@@ -4811,7 +4907,7 @@ err_out:
  *  @param  lp           [optional]  LPARAM for the message.
  *  @param  _lpFilter    [optional]  Filter applied to LPARAM.  If omitted the
  *                       filter is all hex Fs.
- *  @param  -tag         [optional]  A tag that allows a further differentiation
+ *  @param  _tag         [optional]  A tag that allows a further differentiation
  *                       between messages.  This is an internal mechanism not to
  *                       be documented publicly.
  *
@@ -4825,6 +4921,10 @@ err_out:
  *  @remarks  Although it would make more sense to return true on succes and
  *            false on failure, there is too much old code that relies on 0 for
  *            success and 1 for error.
+ *
+ *            Then only reason we pass methodName to parseWinMessageFilter() is
+ *            to have the function check for the emtpy string.  We use
+ *            methodName as is if there is no error.
  */
 RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIONAL_CSTRING, _wmFilter,
             OPTIONAL_RexxObjectPtr, wp, OPTIONAL_CSTRING, _wpFilter, OPTIONAL_RexxObjectPtr, lp, OPTIONAL_CSTRING, _lpFilter,
@@ -4833,73 +4933,22 @@ RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIO
     pCEventNotification pcen = (pCEventNotification)pCSelf;
     uint32_t result = 1;
 
-    if ( *methodName == '\0' )
+    WinMessageFilter wmf = {0};
+    wmf.method   = methodName;
+    wmf._wm       = wm;
+    wmf._wmFilter = _wmFilter;
+    wmf._wp       = wp;
+    wmf._wpFilter = _wpFilter;
+    wmf._lp       = lp;
+    wmf._lpFilter = _lpFilter;
+
+    if ( ! parseWinMessageFilter(context, &wmf) )
     {
-        context->RaiseException1(Rexx_Error_Invalid_argument_null, TheOneObj);
         goto done_out;
     }
 
-    uint32_t winMessage;
-    uint32_t wmFilter;
-    if ( ! rxStr2Number32(context, wm, &winMessage, 2) )
-    {
-        goto done_out;
-    }
-
-    if ( argumentOmitted(3) )
-    {
-        wmFilter = 0xFFFFFFFF;
-    }
-    else
-    {
-        if ( ! rxStr2Number32(context, _wmFilter, &wmFilter, 3) )
-        {
-            goto done_out;
-        }
-    }
-
-    uint64_t  filter;
-    WPARAM    wParam;
-    ULONG_PTR wpFilter;
-
-    if ( ! oodGetWParam(context, wp, &wParam, 4, false) )
-    {
-        goto done_out;
-    }
-    if ( argumentOmitted(5) )
-    {
-        wpFilter = 0;
-    }
-    else
-    {
-        if ( ! rxStr2Number(context, _wpFilter, &filter, 5) )
-        {
-            goto done_out;
-        }
-        wpFilter = (filter == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)filter);
-    }
-
-    LPARAM    lParam;
-    ULONG_PTR lpFilter;
-
-    if ( ! oodGetLParam(context, lp, &lParam, 6, false) )
-    {
-        goto done_out;
-    }
-    if ( argumentOmitted(7) )
-    {
-        lpFilter = 0;
-    }
-    else
-    {
-        if ( ! rxStr2Number(context, _lpFilter, &filter, 7) )
-        {
-            goto done_out;
-        }
-        lpFilter = (filter == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)filter);
-    }
-
-    ULONG tag = 0;
+    uint64_t filter;
+    uint32_t tag = 0;
     if ( argumentExists(8) )
     {
         if ( ! rxStr2Number(context, _tag, &filter, 8) )
@@ -4909,28 +4958,21 @@ RexxMethod9(uint32_t, en_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIO
         tag = (ULONG)filter;
     }
 
-    if ( (winMessage | wParam | lParam) == 0 )
+    bool success;
+    if ( (wmf.wm & wmf.wmFilter) == WM_COMMAND )
     {
-        userDefinedMsgException(context->threadContext, "The wm, wp, and lp arguements can not all be 0" );
+        success = addCommandMessage(pcen, context, wmf.wp, wmf.wpFilter, wmf.lp, wmf.lpFilter, methodName, tag);
+    }
+    else if ( (wmf.wm & wmf.wmFilter) == WM_NOTIFY )
+    {
+        success = addNotifyMessage(pcen, context, wmf.wp, wmf.wpFilter, wmf.lp, wmf.lpFilter, methodName, tag);
     }
     else
     {
-        bool success;
-        if ( (winMessage & wmFilter) == WM_COMMAND )
-        {
-            success = addCommandMessage(pcen, context, wParam, wpFilter, lParam, lpFilter, methodName, tag);
-        }
-        else if ( (winMessage & wmFilter) == WM_NOTIFY )
-        {
-            success = addNotifyMessage(pcen, context, wParam, wpFilter, lParam, lpFilter, methodName, tag);
-        }
-        else
-        {
-            success = addMiscMessage(pcen, context, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag);
-        }
-
-        result = (success ? 0 : 1);
+        success = addMiscMessage(pcen, context, wmf.wm, wmf.wmFilter, wmf.wp, wmf.wpFilter, wmf.lp, wmf.lpFilter, methodName, tag);
     }
+
+    result = (success ? 0 : 1);
 
 done_out:
     return result;

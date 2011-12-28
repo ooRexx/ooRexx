@@ -47,6 +47,6 @@ typedef struct newMouseParams
 typedef NEWMOUSEPARAMS *PNEWMOUSEPARAMS;
 
 extern bool            mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lParam);
-extern RexxArrayObject getMouseArgs(RexxThreadContext *c, pCPlainBaseDialog pcpbd, WPARAM wParam, LPARAM lParam, uint32_t count);
+extern RexxArrayObject getMouseArgs(RexxThreadContext *c, RexxObjectPtr rxMouse, WPARAM wParam, LPARAM lParam, uint32_t count);
 
 #endif

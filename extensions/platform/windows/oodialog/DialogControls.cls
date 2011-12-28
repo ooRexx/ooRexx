@@ -80,12 +80,18 @@
 ::method data unguarded external "LIBRARY oodialog dlgctrl_data"
 ::method "data=" unguarded external "LIBRARY oodialog dlgctrl_dataEquals"
 
-::method connectCharEvent unguarded external "LIBRARY oodialog dlgctrl_connectCharEvent"
+::method checkForComCtl6 private unguarded external "LIBRARY oodialog dlgctrl_checkForComCtl6"
+::method connectEvent unguarded external "LIBRARY oodialog dlgctrl_connectEvent"
 ::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
 ::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
 ::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
 ::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
+
+::method connectCharEvent unguarded
+  use strict arg methodName = 'onChar'
+  self~checkForComCtl6('connectCharEvent')
+  return self~connectEvent('CHAR', methodName)
 
 -- DEPRECATED START
 ::method captureMouse unguarded
@@ -201,9 +207,16 @@
 ::method addStyle unguarded external "LIBRARY oodialog e_style"
 ::method removeStyle unguarded external "LIBRARY oodialog e_style"
 ::method getStyle unguarded external "LIBRARY oodialog e_style"
-::method noContextMenu unguarded external "LIBRARY oodialog e_noContextMenu"
-::method disableInternalResize unguarded external "LIBRARY oodialog e_disableInternalResize"
-::method ignoreMouseWheel unguarded external "LIBRARY oodialog e_ignoreMouseWheel"
+
+::method noContextMenu unguarded
+  use strict arg
+  self~checkComCtl6('noContextMenu')
+  return self~connectEvent('CONTEXTMENU')
+
+::method disableInternalResize unguarded
+  use strict arg
+  self~checkComCtl6('disableInternalResize')
+  return self~connectEvent('WM_SIZE')
 
 ::method canUndo unguarded
     use strict arg

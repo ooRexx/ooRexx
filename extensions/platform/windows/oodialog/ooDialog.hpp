@@ -337,17 +337,6 @@ typedef struct {
     DWORD       dwErr;
 } TRACKPOP, *PTRACKPOP;
 
-// A generic structure used for subclassing controls with the Windows
-// subclassing helper functions and for the keyboard hook function.
-typedef struct {
-    RexxThreadContext *dlgProcContext;  /* Attached thread context of dialog.     */
-    RexxObjectPtr      rexxDialog;      /* Rexx dialog matching thread context.   */
-    RexxObjectPtr      rexxControl;     /* Rexx dialog control being subclassed.  */
-    HWND               hCtrl;           /* Window handle of subclassed control.   */
-    void              *pData;           /* Pointer to subclass specific data.     */
-    UINT               uID;             /* Resource ID of subclassed control.     */
-} SUBCLASSDATA;
-
 /* Stuff for key press subclassing and keyboard hooks */
 
 #define MAX_KEYPRESS_METHODS  63
@@ -371,13 +360,6 @@ typedef struct {
     KEYFILTER         *pFilters[MAX_KEYPRESS_METHODS + 1];  /* If null, no filter                       */
     UINT               nextFreeQ[MAX_KEYPRESS_METHODS];     /* Used only if existing connection removed */
 } KEYPRESSDATA;
-
-// It is anticpated that the connectCharEvent() method will be extended some time
-// soon, so we have a CHAREVENTDATA struct even though it is not technically
-// needed at this point.
-typedef struct {
-    char              *method;          /* Name of method to invoke. */
-} CHAREVENTDATA;
 
 // Masks for lParam of key messages.  WM_KEYDOWN, WM_CHAR, etc..
 #define KEY_RELEASED          0x80000000  // Transition state: 1 key is being released / 0 key is being pressed.
@@ -472,6 +454,27 @@ typedef struct {
 } DLGITEMTEMPLATEEX;
 
 
+/* Struct for window message filtering. */
+typedef struct _wmf {
+    RexxObjectPtr  _wp;
+    CSTRING        _wpFilter;
+    RexxObjectPtr  _lp;
+    CSTRING        _lpFilter;
+    CSTRING        _wm;
+    CSTRING        _wmFilter;
+    WPARAM         wp;
+    ULONG_PTR      wpFilter;
+    LPARAM         lp;
+    ULONG_PTR      lpFilter;
+    CSTRING        method;
+    void          *pData;
+    void          *pfn;
+    uint32_t       wm;
+    uint32_t       wmFilter;
+    uint32_t       tag;
+} WinMessageFilter;
+typedef WinMessageFilter *pWinMessageFilter;
+
 
 /* Struct for the WindowBase object CSelf. */
 typedef struct _wbCSelf {
@@ -500,7 +503,7 @@ typedef struct _enCSelf {
     HWND                hDlg;
     RexxObjectPtr       rexxSelf;
     HHOOK               hHook;
-    SUBCLASSDATA       *pHookData;
+    void               *pHookData;
 } CEventNotification;
 typedef CEventNotification *pCEventNotification;
 
@@ -589,25 +592,61 @@ typedef struct _pbdCSelf {
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
 
+
+// It is anticpated that the connectCharEvent() method will be extended some time
+// soon, so we have a CHAREVENTDATA struct even though it is not technically
+// needed at this point.
+typedef struct {
+    char              *method;          /* Name of method to invoke. */
+} CHAREVENTDATA;
+
+// Struct for mouse wheel notify processing.
+typedef struct {
+    pCPlainBaseDialog    pcpbd;           // The owner dialog CSelf.
+    RexxObjectPtr        mouse;           // The Rexx mouse object
+    char                *method;          // Name of method to invoke.
+    bool                 willReply;       // User wants event handler invoked directly, or not.
+} MOUSEWHEELDATA;
+typedef MOUSEWHEELDATA *PMOUSEWHEELDATA;
+
+
 // Struct for the DialogControl object CSelf.
 //
 // Note that for a control in a category dialog page, the hDlg is the handle of
 // the actual dialog the control resides in.  This is differnent than the dialog
 // handle of the Rexx owner dialog.
 typedef struct _dcCSelf {
-    bool           isInCategoryDlg;
-    uint32_t       id;
-    oodControl_t   controlType;
-    int            lastItem;
-    pCWindowBase   wndBase;
-    RexxObjectPtr  rexxSelf; // The Rexx dialog control object
-    HWND           hCtrl;    // Handle of the dialog control
-    RexxObjectPtr  oDlg;     // The Rexx owner dialog object
-    HWND           hDlg;     // Handle of the dialog the control is in.
-    void          *mouseCSelf;
-    RexxObjectPtr  rexxMouse;
+    RexxObjectPtr       rexxSelf;        // The Rexx dialog control object
+    HWND                hCtrl;           // Handle of the dialog control
+    RexxObjectPtr       oDlg;            // The Rexx owner dialog object
+    pCPlainBaseDialog   pcpbd;           // The Rexx owner dialog CSelf
+    HWND                hDlg;            // Handle of the dialog the control is in.
+    pCWindowBase        wndBase;
+    void               *pscd;            // Pointer to subclass data struct, usually null.
+    void               *mouseCSelf;      // Mouse CSelf struct
+    RexxObjectPtr       rexxMouse;       // Rexx mouse object if there is one.
+    int32_t             lastItem;        // Index of the last item added to the control
+    uint32_t            id;              // Resouce ID of the control
+    oodControl_t        controlType;     // Enum value for control type
+    bool                isInCategoryDlg;
 } CDialogControl;
 typedef CDialogControl *pCDialogControl;
+
+// A generic structure used for subclassing controls with the Windows
+// subclassing helper functions and for the keyboard hook function.
+typedef struct _subClassData {
+    pCPlainBaseDialog   pcpbd;           // The Rexx owner dialog CSelf
+    pCDialogControl     pcdc;            // The Rexx control dialog CSelf
+    HWND                hCtrl;           // Window handle of subclassed control.
+    void               *pData;           // Pointer to subclass specific data.
+    void               *pfn;             // Pointer to subclass specific free data function.
+    MESSAGETABLEENTRY  *msgs;            // Message table for generiec subclass
+    size_t              mSize;           // Size of  message table.
+    size_t              mNextIndex;      // Next free index in message table.
+    uint32_t            id;              // Resource ID of subclassed control.
+} SubClassData;
+typedef SubClassData *pSubClassData;
+
 
 /* Struct for the DynamicDialog object CSelf. */
 typedef struct _ddCSelf {
@@ -827,15 +866,6 @@ typedef struct _spiCSelf {
 typedef CSpi *pCSpi;
 
 
-// Struct for the Edit::ignoreMouseWheel() method, used as pData in SUBCLASSDATA
-typedef struct {
-    RexxThreadContext   *dlgProcContext;  // Thread context of the owner dialog's window procedure.
-    pCPlainBaseDialog    pcpbd;           // The owner dialog CSelf.
-    RexxObjectPtr        ownerDlg;        // Edit control, Rexx dialog object.
-    char                *method;          // Name of method to invoke.
-    bool                 willReply;       // User wants event handler invoked directly, or not.
-} MOUSEWHEELDATA;
-typedef MOUSEWHEELDATA *PMOUSEWHEELDATA;
 #define COMCTL32_VERSION_STRING_LEN  31
 
 // All global variables are defined in oodPackageEntry.cpp

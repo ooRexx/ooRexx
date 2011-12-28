@@ -40,23 +40,86 @@
 #define oodControl_Included
 
 
+/**
+ *  A 'tag' is used in processing the mapping of Windows messages to user
+ *  defined methods.  It allows the user mapping to dictate different processing
+ *  of a Windows message based on the tag.
+ *
+ *  These tags are based on the dialog tags, but are used solely by the dialog
+ *  control subclassing functionality.  The tags are a work in progress, it is
+ *  possible that they may end up not being needed.
+ *
+ *  The least significant byte is used to segrate groups of messages.  This byte
+ *  can be isolated using CTRLTAG_MASK.
+ */
+#define CTRLTAG_MASK              0x000000FF
+
+#define CTRLTAG_NOTHING           0x00000000
+#define CTRLTAG_CONTROL           0x00000001
+#define CTRLTAG_MOUSE             0x00000002
+#define CTRLTAG_DIALOG            0x00000003
+#define CTRLTAG_EDIT              0x00000004
+
+/**
+ * The next 2 bytes are generic 'flags' that can be isolated using TAG_FLAGMASK.
+ * The individual flags are not necessarily unique, but rather are unique when
+ * combined with a specific CTRTAGL byte.  For instance, if the least
+ * significant byte is CTRLTAG_DIALOG, it could have a flag value that is the
+ * same as a flag value that is used for CTRLTAG_MOUSE and have a completely
+ * different meaning.
+ */
+#define CTRLTAG_FLAGMASK          0x00FFFF00
+
+/**
+ * The last byte is for, well 'extra' information.  Use TAG_EXTRAMASK to
+ * isolate the byte.
+ */
+#define CTRLTAG_EXTRAMASK                0xFF000000
+
+// Return TRUE in the subclass procedure.  Do not pass on to DefSubclassProc(),
+// do not send message to the dialog.
+#define CTRLTAG_REPLYTRUE                0x01000000
+
+// Return TRUE in the subclass procedure.  Do not pass on to DefSubclassProc(),
+// do not send message to the dialog.
+#define CTRLTAG_REPLYZERO                0x02000000
+
+// Send the message to the dialog.  I.e.:
+//   return SendMessage((hDlg, msg, wParam, lParam);
+#define CTRLTAG_SENDTODLG                0x04000000
+
+// Send the message to the default window procedure.  I.e.:
+//   return DefWindowProc(hwnd, msg, wParam, lParam);
+#define CTRLTAG_SENDTODEFWINDOWPROC      0x08000000
+
+// Wait in the subclass procedure for the return from invoking the Rexx method.
+// I.e., use invokeDirect() rather than invokeDispatch.
+#define CTRLTAG_REPLYFROMREXX            0x10000000
+
+// The defualt size for the control's subclass message table.
+#define DEF_CONTROL_MSGS          10
+
+#define SUBCLASS_TAG_KEYWORDS      "SendToDlg, ReplyTrue, ReplyZero, or NoWait"
+#define USERSUBCLASS_TAG_KEYWORDS  "A string in conventional hexidecimal, SendToDlg, ReplyTrue, ReplyZero, or NoWait"
+
 typedef struct newControlParams
 {
-    bool           isCatDlg;
-    oodControl_t   controlType;
-    HWND           hwnd;
-    uint32_t       id;
-    HWND           hwndDlg;
-    RexxObjectPtr  parentDlg;
+    pCPlainBaseDialog   pcpbd;           // Rexx parent dialog CSelf.
+    HWND                hwnd;            // Window handle of the control
+    oodControl_t        controlType;
+    uint32_t            id;
+    bool                isCatDlg;
 } NEWCONTROLPARAMS;
 typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
 
 enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
 
+typedef void (*pfnFreeSubclassData)(pSubClassData pSCData);
 
 // Defined in oodUser.cpp
 extern uint32_t      listViewStyle(CSTRING opts, uint32_t style);
 extern uint32_t      monthCalendarStyle(CSTRING opts, uint32_t style);
+extern bool          parseTagOpts(RexxThreadContext *c, CSTRING opts, uint32_t *pTag, size_t argPos);
 
 extern RexxClassObject    oodClass4controlType(RexxMethodContext *c, oodControl_t controlType);
 extern RexxClassObject    oodClass4controlType(oodControl_t controlType, RexxMethodContext *c);
@@ -76,6 +139,7 @@ extern RexxObjectPtr      createRexxControl(RexxThreadContext *, HWND, HWND, uin
 extern RexxObjectPtr      createControlFromHwnd(RexxMethodContext *, pCDialogControl, HWND, oodControl_t, bool);
 extern RexxObjectPtr      createControlFromHwnd(RexxMethodContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
 extern RexxObjectPtr      createControlFromHwnd(RexxThreadContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
+extern bool               addSubclassMessage(RexxMethodContext *c, pCDialogControl pcdc, pWinMessageFilter pwmf);
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081
@@ -135,7 +199,6 @@ inline uint32_t getDCinsertIndex(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->lastItem + 1);
 }
-
 
 
 #endif
