@@ -874,7 +874,7 @@ LRESULT CALLBACK ControlSubclassProc(HWND hwnd, uint32_t msg, WPARAM wParam, LPA
         return DefSubclassProc(hwnd, msg, wParam, lParam);
     }
 
-    size_t tableSize = pData->mSize;
+    size_t tableSize = pData->mNextIndex;
     register size_t i = 0;
 
     for ( i = 0; i < tableSize; i++ )
@@ -1375,7 +1375,7 @@ RexxMethod3(RexxObjectPtr, dlgctrl_connectEvent, CSTRING, event, OPTIONAL_CSTRIN
         }
         goto done_out;
     }
-    else if ( StrCmpI(event, "CHAR") )
+    else if ( StrCmpI(event, "CHAR") == 0 )
     {
         if ( argumentOmitted(2) )
         {
