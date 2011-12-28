@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -709,7 +709,7 @@ bool parseTagOpts(RexxThreadContext *c, CSTRING opts, uint32_t *pTag, size_t arg
 
     if ( StrCmpI(opts, "NOWAIT" ) == 0 )
     {
-        tag &= CTRLTAG_REPLYFROMREXX;
+        tag &= ~CTRLTAG_REPLYFROMREXX;
         foundKeyWord = true;
     }
 
@@ -799,7 +799,9 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
         {
             if ( msg == WM_MOUSEWHEEL )
             {
-                if ( (tag & CTRLTAG_EXTRAMASK) == CTRLTAG_SENDTODEFWINDOWPROC )
+                uint32_t extra = tag & CTRLTAG_EXTRAMASK;
+
+                if ( (extra & CTRLTAG_SENDTODEFWINDOWPROC) == CTRLTAG_SENDTODEFWINDOWPROC )
                 {
                     return DefWindowProc(hwnd, msg, wParam, lParam);
                 }
@@ -808,7 +810,7 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
                 mwd.method         = method;
                 mwd.mouse          = pData->pcdc->rexxMouse;
                 mwd.pcpbd          = pData->pcpbd;
-                mwd.willReply      = (tag & CTRLTAG_EXTRAMASK) == CTRLTAG_REPLYFROMREXX;
+                mwd.willReply      = (extra & CTRLTAG_REPLYFROMREXX) == CTRLTAG_REPLYFROMREXX;
 
                 mouseWheelNotify(&mwd, wParam, lParam);
                 return TRUE;

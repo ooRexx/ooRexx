@@ -134,7 +134,7 @@ return 0
 
   -- Connect all mouse wheel events that reach the dialog to a method in this
   -- dialog.  The default method name is onMouseWheel, so we omit the method
-  -- name arugment and name our method onMousWheel.
+  -- name arugment and name our method in this dialog: 'onMousWheel'.
   --
   -- Note that this onMouseWheel() method will never be invoked if the
   -- IDC_EDIT_DATA edit control has the focus.
@@ -197,14 +197,14 @@ return 0
  *                notification for each notch of the scroll wheel and so delta
  *                will always be 120 or -120.
  *
- * Because of the 2 connectMouseWheel() calls in initDialog() the method will
+ * Because of the 2 mouse~connectEvent() calls in initDialog() the method will
  * only be called when the dialog is the active window and the multi-line edit
  * control does *not* have the focus.  We simply delegate to the maybeScroll()
- * method, passing on the 3 arguments and .false to indicate the edit control
+ * method, passing on 3 of the arguments and .false to indicate the edit control
  * does not have the focus.
  */
 ::method onMouseWheel unguarded
-  use arg delta, state, pos
+  use arg state, pos, mouse, delta
 
   return self~maybeScroll(delta, state, pos, .false)
 
@@ -221,7 +221,7 @@ return 0
  * and .true to indicate the edit control has the focus.
  */
 ::method onEditMouseWheel unguarded
-  use arg delta, state, pos
+  use arg state, pos, mouse, delta
 
   return self~maybeScroll(delta, state, pos, .true)
 
