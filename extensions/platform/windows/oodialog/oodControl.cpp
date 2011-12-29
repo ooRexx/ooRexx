@@ -650,7 +650,7 @@ static inline bool isExtendedKeyEvent(WPARAM wParam)
 /**
  * Free the subclass data used for the ControlSubclassProc().
  *
- * @param pData  Struct to fee.
+ * @param pData  Struct to free.
  */
 void freeSubclassData(pSubClassData p)
 {
@@ -957,8 +957,10 @@ LRESULT CALLBACK ControlSubclassProc(HWND hwnd, uint32_t msg, WPARAM wParam, LPA
 
     if ( msg == WM_NCDESTROY )
     {
-        /* The window is being destroyed, remove the subclass, clean up
-         * memory.
+        /* The window is being destroyed, remove the subclass, clean up memory.
+         * Note that with the current ooDialog architecture, this message never
+         * gets here.  Freeing the subclass data struct has to be done in the
+         * dialog control uninit().
          */
         RemoveWindowSubclass(hwnd, ControlSubclassProc, pData->id);
         freeSubclassData(pData);
@@ -1145,8 +1147,10 @@ LRESULT CALLBACK KeyPressSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
             break;
 
         case WM_NCDESTROY:
-            /* The window is being destroyed, remove the subclass, clean up
-             * memory.
+            /* The window is being destroyed, remove the subclass, clean up memory.
+             * Note that with the current ooDialog architecture, this message never
+             * gets here.  Freeing the subclass data struct has to be done in the
+             * dialog control uninit().
              */
             RemoveWindowSubclass(hwnd, KeyPressSubclassProc, id);
             freeKeyPressData(pSCData);
@@ -1213,8 +1217,7 @@ static keyPressErr_t connectKeyPressSubclass(RexxMethodContext *c, CSTRING metho
         goto done_out;
     }
 
-    pSubClassData pSCData = NULL;
-    BOOL success = GetWindowSubclass(pcdc->hCtrl, KeyPressSubclassProc, pcdc->id, (DWORD_PTR *)&pSCData);
+    pSubClassData pSCData = (pSubClassData)pcdc->pKeyPress;
 
     // If pSCData is null, the subclass is not installed.  The data block needs
     // to be allocated and then install the subclass.  Otherwise, just update
@@ -1237,40 +1240,48 @@ static keyPressErr_t connectKeyPressSubclass(RexxMethodContext *c, CSTRING metho
         }
 
         pSCData->hCtrl = pcdc->hCtrl;
-        pSCData->id = pcdc->id;
+        pSCData->id    = pcdc->id;
         pSCData->pData = pKeyPressData;
+        pSCData->pcdc  = pcdc;
+        pSCData->pcpbd = pcdc->pcpbd;
 
         // The subclass is not installed, abort and clean up if there is any
         // error in setKeyPressData()
         result = setKeyPressData(pKeyPressData, methodName, keys, filter);
-        if ( result == noErr )
+        if ( result != noErr )
         {
-            if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pSCData) == 0 )
-            {
-                // Subclassing failed, we need to clean up memory, or else it
-                // will leak.
-                freeKeyPressData(pSCData);
-                result = winAPIErr;
-            }
+            freeKeyPressData(pSCData);
+            goto done_out;
+        }
+
+        BOOL success;
+
+        if ( isDlgThread(pcdc->pcpbd) )
+        {
+            success = SetWindowSubclass(pSCData->hCtrl, KeyPressSubclassProc, pSCData->id, (DWORD_PTR)pSCData);
         }
         else
         {
+            success = (BOOL)SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pSCData);
+        }
+
+        if ( success )
+        {
+            pcdc->pKeyPress = pSCData;
+        }
+        else
+        {
+            // Subclassing failed, clean up memory and report the error.
             freeKeyPressData(pSCData);
+            result = winAPIErr;
         }
     }
     else
     {
-        // The subclass is installed, it has a valid key press data table.  If
-        // there are any errors, the error is reported, but the existing data
-        // table is left alone.
-        if ( success )
-        {
-            result = setKeyPressData((KEYPRESSDATA *)pSCData->pData, methodName, keys, filter);
-        }
-        else
-        {
-            result = winAPIErr;
-        }
+        // The subclass is already installed, it has a valid key press data
+        // table. If there are any errors in setKeyPressData(), the error is
+        // reported, but the existing data table is left alone.
+        result = setKeyPressData((KEYPRESSDATA *)pSCData->pData, methodName, keys, filter);
     }
 
 done_out:
@@ -1380,28 +1391,48 @@ done_out:
 
 /** DialogControl::unInit()
  *
- *  Release the global reference for CWindowBase::rexxHwnd.
+ *  Release the global reference for CWindowBase::rexxHwnd and free any subclass
+ *  data structures.
  *
+ *  @remarks  Because the current architecture of ooDialog closes the window
+ *            message processing loop before it does a DestroyWindow(), no
+ *            WM_DESTROY or WM_NCDESTROY messages make it to any dialog or
+ *            dialog control windows.  This prevents freeing the subclass data
+ *            structures in any subclass window procedure.  Instead the pointer
+ *            to the struct is placed in the dialog control CSelf and freed here
+ *            in uninit().
  */
 RexxMethod1(RexxObjectPtr, dlgctrl_unInit, CSELF, pCSelf)
 {
-#if 1
+#if 0
     printf("In dlgctrl_unInit() pCSelf=%p\n", pCSelf);
 #endif
 
     if ( pCSelf != NULLOBJECT )
     {
-#if 1
-    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+        pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+#if 0
     printf("In dlgctrl_unInit() hCtrl=%p pscd=%p rexxSelf=%p\n", pcdc->hCtrl, pcdc->pscd, pcdc->rexxSelf);
 #endif
+        if ( pcdc->pscd != NULL )
+        {
+            freeSubclassData((pSubClassData)pcdc->pscd);
+        }
+
+        if ( pcdc->pKeyPress != NULL )
+        {
+            freeKeyPressData((pSubClassData)pcdc->pscd);
+        }
+
         pCWindowBase pcwb = ((pCDialogControl)pCSelf)->wndBase;
         if ( pcwb->rexxHwnd != TheZeroObj )
         {
             context->ReleaseGlobalReference(pcwb->rexxHwnd);
             pcwb->rexxHwnd = TheZeroObj;
         }
-    } return NULLOBJECT;
+    }
+    return NULLOBJECT;
 }
 
 RexxMethod1(RexxObjectPtr, dlgctrl_assignFocus, CSELF, pCSelf)

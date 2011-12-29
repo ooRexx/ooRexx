@@ -3539,6 +3539,12 @@ void freeKeyPressData(pSubClassData pSCData)
             safeLocalFree((void *)p->pFilters[i]);
         }
         LocalFree((void *)p);
+
+        if ( pSCData->pcdc != NULL )
+        {
+            pSCData->pcdc->pKeyPress = NULL;
+        }
+
         LocalFree((void *)pSCData);
     }
 }

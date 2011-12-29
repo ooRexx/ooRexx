@@ -622,7 +622,8 @@ typedef struct _dcCSelf {
     pCPlainBaseDialog   pcpbd;           // The Rexx owner dialog CSelf
     HWND                hDlg;            // Handle of the dialog the control is in.
     pCWindowBase        wndBase;
-    void               *pscd;            // Pointer to subclass data struct, usually null.
+    void               *pscd;            // Pointer to general subclass data struct, usually null.
+    void               *pKeyPress;       // Pointer to KeyPress subclass data struct, usually null.
     void               *mouseCSelf;      // Mouse CSelf struct
     RexxObjectPtr       rexxMouse;       // Rexx mouse object if there is one.
     int32_t             lastItem;        // Index of the last item added to the control
