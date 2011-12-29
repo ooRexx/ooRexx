@@ -63,12 +63,14 @@
 /**
  * The next 2 bytes are generic 'flags' that can be isolated using TAG_FLAGMASK.
  * The individual flags are not necessarily unique, but rather are unique when
- * combined with a specific CTRTAGL byte.  For instance, if the least
- * significant byte is CTRLTAG_DIALOG, it could have a flag value that is the
- * same as a flag value that is used for CTRLTAG_MOUSE and have a completely
- * different meaning.
+ * combined with a specific CTRLTAG least significant byte.  For instance, if
+ * the least significant byte is CTRLTAG_DIALOG, it could have a flag value that
+ * is the same as a flag value that is used for CTRLTAG_MOUSE and have a
+ * completely different meaning.
  */
 #define CTRLTAG_FLAGMASK          0x00FFFF00
+
+#define CTRLTAG_ISOLATE           0x00000100
 
 /**
  * The last byte is for, well 'extra' information.  Use TAG_EXTRAMASK to

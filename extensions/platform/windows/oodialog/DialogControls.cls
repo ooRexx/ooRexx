@@ -69,6 +69,7 @@
    use strict arg
    return (self~sendWinIntMsg(self~CCM_GETUNICODEFORMAT, 0, 0) <> 0)
 
+::method addUserSubclass unguarded external "LIBRARY oodialog dlgctrl_addUserSubclass"
 ::method assignFocus unguarded external "LIBRARY oodialog dlgctrl_assignFocus"
 ::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
@@ -80,7 +81,6 @@
 ::method data unguarded external "LIBRARY oodialog dlgctrl_data"
 ::method "data=" unguarded external "LIBRARY oodialog dlgctrl_dataEquals"
 
-::method checkForComCtl6 private unguarded external "LIBRARY oodialog dlgctrl_checkForComCtl6"
 ::method connectEvent unguarded external "LIBRARY oodialog dlgctrl_connectEvent"
 ::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
 ::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
@@ -90,7 +90,6 @@
 
 ::method connectCharEvent unguarded
   use strict arg methodName = 'onChar'
-  self~checkForComCtl6('connectCharEvent')
   return self~connectEvent('CHAR', methodName)
 
 -- DEPRECATED START
@@ -210,12 +209,10 @@
 
 ::method noContextMenu unguarded
   use strict arg
-  self~checkComCtl6('noContextMenu')
   return self~connectEvent('CONTEXTMENU')
 
 ::method disableInternalResize unguarded
   use strict arg
-  self~checkComCtl6('disableInternalResize')
   return self~connectEvent('WM_SIZE')
 
 ::method canUndo unguarded

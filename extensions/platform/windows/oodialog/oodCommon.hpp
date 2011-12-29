@@ -591,9 +591,13 @@ inline HWND dlgToHDlg(RexxMethodContext *c, RexxObjectPtr dlg)
  * @assumes  The caller has ensured ctrl is in fact a ooDialog Rexx dialog
  *           control object.
  */
-inline pCDialogControl controlToCSelf(RexxMethodContext *c, RexxObjectPtr ctrl)
+inline pCDialogControl controlToCSelf(RexxThreadContext *c, RexxObjectPtr ctrl)
 {
     return (pCDialogControl)c->ObjectToCSelf(ctrl, TheDialogControlClass);
+}
+inline pCDialogControl controlToCSelf(RexxMethodContext *c, RexxObjectPtr ctrl)
+{
+    return controlToCSelf(c->threadContext, ctrl);
 }
 
 /**

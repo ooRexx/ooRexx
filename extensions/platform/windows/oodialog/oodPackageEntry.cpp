@@ -838,21 +838,21 @@ REXX_METHOD_PROTOTYPE(dlgctrl_new_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init);
 REXX_METHOD_PROTOTYPE(dlgctrl_unInit);
-REXX_METHOD_PROTOTYPE(dlgctrl_connectEvent);
-REXX_METHOD_PROTOTYPE(dlgctrl_checkForComCtl6);
-REXX_METHOD_PROTOTYPE(dlgctrl_connectKeyPress);
-REXX_METHOD_PROTOTYPE(dlgctrl_connectFKeyPress);
-REXX_METHOD_PROTOTYPE(dlgctrl_disconnectKeyPress);
-REXX_METHOD_PROTOTYPE(dlgctrl_hasKeyPressConnection);
+REXX_METHOD_PROTOTYPE(dlgctrl_addUserSubclass);
 REXX_METHOD_PROTOTYPE(dlgctrl_assignFocus);
-REXX_METHOD_PROTOTYPE(dlgctrl_tabGroup);
-REXX_METHOD_PROTOTYPE(dlgctrl_redrawRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_clearRect);
-REXX_METHOD_PROTOTYPE(dlgctrl_textSize);
-REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
-REXX_METHOD_PROTOTYPE(dlgctrl_setColor);
+REXX_METHOD_PROTOTYPE(dlgctrl_connectEvent);
+REXX_METHOD_PROTOTYPE(dlgctrl_connectFKeyPress);
+REXX_METHOD_PROTOTYPE(dlgctrl_connectKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_data);
 REXX_METHOD_PROTOTYPE(dlgctrl_dataEquals);
+REXX_METHOD_PROTOTYPE(dlgctrl_disconnectKeyPress);
+REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
+REXX_METHOD_PROTOTYPE(dlgctrl_hasKeyPressConnection);
+REXX_METHOD_PROTOTYPE(dlgctrl_redrawRect);
+REXX_METHOD_PROTOTYPE(dlgctrl_setColor);
+REXX_METHOD_PROTOTYPE(dlgctrl_tabGroup);
+REXX_METHOD_PROTOTYPE(dlgctrl_textSize);
 
 // Static
 REXX_METHOD_PROTOTYPE(stc_getIcon);
@@ -1473,21 +1473,21 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_init_cls,               dlgctrl_init_cls),
     REXX_METHOD(dlgctrl_init,                   dlgctrl_init),
     REXX_METHOD(dlgctrl_unInit,                 dlgctrl_unInit),
-    REXX_METHOD(dlgctrl_connectEvent,           dlgctrl_connectEvent),
-    REXX_METHOD(dlgctrl_checkForComCtl6,        dlgctrl_checkForComCtl6),
-    REXX_METHOD(dlgctrl_connectKeyPress,        dlgctrl_connectKeyPress),
-    REXX_METHOD(dlgctrl_connectFKeyPress,       dlgctrl_connectFKeyPress),
-    REXX_METHOD(dlgctrl_disconnectKeyPress,     dlgctrl_disconnectKeyPress),
-    REXX_METHOD(dlgctrl_hasKeyPressConnection,  dlgctrl_hasKeyPressConnection),
+    REXX_METHOD(dlgctrl_addUserSubclass,        dlgctrl_addUserSubclass),
     REXX_METHOD(dlgctrl_assignFocus,            dlgctrl_assignFocus),
-    REXX_METHOD(dlgctrl_tabGroup,               dlgctrl_tabGroup),
     REXX_METHOD(dlgctrl_clearRect,              dlgctrl_clearRect),
-    REXX_METHOD(dlgctrl_redrawRect,             dlgctrl_redrawRect),
-    REXX_METHOD(dlgctrl_textSize,               dlgctrl_textSize),
-    REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
-    REXX_METHOD(dlgctrl_setColor,               dlgctrl_setColor),
+    REXX_METHOD(dlgctrl_connectEvent,           dlgctrl_connectEvent),
+    REXX_METHOD(dlgctrl_connectFKeyPress,       dlgctrl_connectFKeyPress),
+    REXX_METHOD(dlgctrl_connectKeyPress,        dlgctrl_connectKeyPress),
     REXX_METHOD(dlgctrl_data,                   dlgctrl_data),
     REXX_METHOD(dlgctrl_dataEquals,             dlgctrl_dataEquals),
+    REXX_METHOD(dlgctrl_disconnectKeyPress,     dlgctrl_disconnectKeyPress),
+    REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
+    REXX_METHOD(dlgctrl_hasKeyPressConnection,  dlgctrl_hasKeyPressConnection),
+    REXX_METHOD(dlgctrl_redrawRect,             dlgctrl_redrawRect),
+    REXX_METHOD(dlgctrl_setColor,               dlgctrl_setColor),
+    REXX_METHOD(dlgctrl_tabGroup,               dlgctrl_tabGroup),
+    REXX_METHOD(dlgctrl_textSize,               dlgctrl_textSize),
 
     REXX_METHOD(window_init,                    window_init),
     REXX_METHOD(window_unInit,                  window_unInit),

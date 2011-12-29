@@ -80,7 +80,8 @@
  *           dialog.  We don't want to do a bunch of nested AttachThreads()
  *           because we only do 1 DetachThread() for each window message loop.
  *           So, we check to see if dlgProcContext is null before doing the
- *           AttachThread().
+ *           AttachThread().  Note that as of ooDialog 4.2.0, the CategoryDialog
+ *           class is deprecated.
  *
  *           The WM_USER_CREATECHILD message.
  *
@@ -100,7 +101,36 @@
  *           C++ API, when a message came in for a child dialog, a search was
  *           made through the DialogTable to try and find the parent dialog.
  *           This has been disposed of and the CPlainBaseDialog struct is just
- *           pulled out of the window words.
+ *           pulled out of the window words.  Note that as of ooDialog 4.2.0,
+ *           the CategoryDialog class is deprecated.
+ *
+ *           The WM_USER_CREATECONTROL_DLG
+ *               WM_USER_CREATECONTROL_RESDLG messages.
+ *
+ *           These user messages create true child dialogs with a backing Rexx
+ *           dialog and individual CSelfs (CPlainBaseDialog structs).
+ *
+ *           The WM_USER_CREATEPROPSHEET_DLG message.
+ *
+ *           This user messages creates a modeless Windows PropertySheet dialog.
+ *           This dialog does have a backing Rexx dialog along with an
+ *           individual CSelf.
+ *
+ *   @remarks  The existing, old, architecture of ooDialog uses delDialog() to
+ *             both terminate the dialog and clean up the CSelf struct. No
+ *             WM_COSE is sent to the window procdure.  Rather, in delDialog() a
+ *             DestroyWindow() and PostQuitMessage() is done.  But, the
+ *             PostQuitMessage() is done before DestroyWindow() AND
+ *             DestroyWindow() can not be used on a window in a different
+ *             thread.  Because of this, 1.) This procedure never gets a
+ *             WM_DESTROY message.  2.) The DestroyWindow() probably usually
+ *             fails.  This is likely the cause of memory leaks.
+ *
+ *             This whole architecture need to be re-thought out.  Rather than
+ *             use delDialog() to terminate the dialog, it seems to me it would
+ *             be better to send a WM_CLOSE message, do a DestroyWindow() in the
+ *             WM_CLOSE processing, and use the WM_DESTROY processing to clean
+ *             up.  I.e., use the normal Windows strategy.
  */
 LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -122,7 +152,6 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 return endDialogPremature(pcpbd, hDlg, NoThreadAttach);
             }
             pcpbd->dlgProcContext = context;
-            //pcpbd->dlgProcThreadID = GetCurrentThreadId();  TODO check this
 
             RexxSetProcessMessages(FALSE);
         }
@@ -155,7 +184,8 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // Under all normal circumstances, WM_DESTROY never gets here.  But if
         // it does, it is because of some unexplained / unanticpated error.
         // PostQuitMessage() will cause the window message loop to quit and
-        // things should then (hopefully) unwind cleanly.
+        // things should then (hopefully) unwind cleanly.  See the remarks in he
+        // header comment.
         PostQuitMessage(3);
         return TRUE;
     }

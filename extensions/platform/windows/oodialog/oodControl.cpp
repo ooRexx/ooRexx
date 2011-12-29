@@ -656,11 +656,29 @@ void freeSubclassData(pSubClassData p)
 {
     if ( p != NULL )
     {
+        printf("Entered freeSubclassData()\n");
         if ( p->pData != NULL && p->pfn != NULL )
         {
             pfnFreeSubclassData extraFree = (pfnFreeSubclassData)p->pfn;
             extraFree(p);
         }
+
+        size_t i;
+
+        for ( i = 0; i < p->mNextIndex; i++ )
+        {
+            safeLocalFree(p->msgs[i].rexxMethod);
+        }
+
+        LocalFree(p->msgs);
+        p->msgs = NULL;
+        p->mSize = 0;
+        p->mNextIndex = 0;
+        if ( p->pcdc != NULL )
+        {
+            p->pcdc->pscd = NULL;
+        }
+
         LocalFree(p);
     }
 }
@@ -753,14 +771,21 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
 
         case CTRLTAG_CONTROL :
         {
-            if ( msg == WM_KEYDOWN && isExtendedKeyEvent(wParam))
+            if ( msg == WM_KEYDOWN )
             {
-                RexxArrayObject args  = getKeyEventRexxArgs(c, wParam, true, pData->pcdc->rexxSelf);
-                RexxObjectPtr   reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
-
-                if ( ! checkForCondition(c, false) && reply == TheFalseObj )
+                if ( tag & CTRLTAG_ISOLATE )
                 {
-                    return TRUE; // I think this should be 0.
+                    if ( isExtendedKeyEvent(wParam) )
+                    {
+                        RexxArrayObject args  = getKeyEventRexxArgs(c, wParam, true, pData->pcdc->rexxSelf);
+                        RexxObjectPtr   reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
+
+                        if ( ! checkForCondition(c, false) && reply == TheFalseObj )
+                        {
+                            return 0; // I think this should be 0.
+                        }
+                    }
+                    return DefSubclassProc(hwnd, msg, wParam, lParam);
                 }
             }
             else if ( msg == WM_CHAR )
@@ -775,14 +800,13 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
                         // Swallow the message.
                         return TRUE;
                     }
-                    else if ( reply == TheTrueObj )
+                    else if ( reply != TheTrueObj )
                     {
-                        // Do nothing.
-                        return DefSubclassProc(hwnd, msg, wParam, lParam);
-                    }
-                    else
-                    {
-                        // Replace the char with the char sent back to us.
+                        // If reply did equal TheTrueObj, it means 'do nothing.'
+                        // We will drop through and return DefSubclassProc().
+                        // When it is neither true or false, the reply is a
+                        // charcter that Replaces the char with the char sent
+                        // back to us.
                         uint32_t chr;
                         if ( c->UnsignedInt32(reply, &chr) )
                         {
@@ -790,18 +814,19 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
                         }
                     }
                 }
+
+                // On errors or a return of TheTrueObj:
+                return DefSubclassProc(hwnd, msg, wParam, lParam);
             }
 
-            return DefSubclassProc(pData->hCtrl, msg, wParam, lParam);
+            break;
         }
 
         case CTRLTAG_MOUSE :
         {
             if ( msg == WM_MOUSEWHEEL )
             {
-                uint32_t extra = tag & CTRLTAG_EXTRAMASK;
-
-                if ( (extra & CTRLTAG_SENDTODEFWINDOWPROC) == CTRLTAG_SENDTODEFWINDOWPROC )
+                if ( tag & CTRLTAG_SENDTODEFWINDOWPROC )
                 {
                     return DefWindowProc(hwnd, msg, wParam, lParam);
                 }
@@ -810,13 +835,13 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
                 mwd.method         = method;
                 mwd.mouse          = pData->pcdc->rexxMouse;
                 mwd.pcpbd          = pData->pcpbd;
-                mwd.willReply      = (extra & CTRLTAG_REPLYFROMREXX) == CTRLTAG_REPLYFROMREXX;
+                mwd.willReply      = (tag & CTRLTAG_REPLYFROMREXX) ? true : false;
 
                 mouseWheelNotify(&mwd, wParam, lParam);
-                return TRUE;
+                return 0;
             }
 
-            return DefSubclassProc(pData->hCtrl, msg, wParam, lParam);
+            break;
         }
 
         case CTRLTAG_DIALOG :
@@ -830,11 +855,54 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
                 return 0;
             }
 
-            return DefSubclassProc(hwnd, msg, wParam, lParam);
+            break;
         }
 
         default :
             break;
+    }
+
+    // We dropped through without processing the message, but this message did
+    // match an entry in the message table.
+    if ( tag & CTRLTAG_REPLYTRUE )
+    {
+        // Note that I'm not sure it is correct to reply true ??
+        return TRUE;
+    }
+    else if ( tag & CTRLTAG_REPLYZERO )
+    {
+        return 0;
+    }
+    else if ( tag & CTRLTAG_SENDTODEFWINDOWPROC )
+    {
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+    else
+    {
+        // Note that here, if we use invokeDispatch(), we drop through and
+        // DefSubclassProc() is invoked.  If we invoke the method directly and
+        // wait for the reply, if there is no condition and if the reply is 0,
+        // we return 0, which means the message was processed for most messages.
+        // Oherwise we again drop through and DefSubclassProc() is invoked.
+
+        RexxArrayObject args = c->ArrayOfThree(c->Uintptr(wParam), c->Intptr(lParam), pData->pcdc->rexxSelf);
+
+        if ( tag & CTRLTAG_REPLYFROMREXX )
+        {
+            RexxObjectPtr reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
+            if ( ! checkForCondition(c, false) && reply != NULLOBJECT )
+            {
+                if ( isInt(0, reply, c) )
+                {
+                    // Swallow the message.
+                    return 0;
+                }
+            }
+        }
+        else
+        {
+            invokeDispatch(c, pData->pcpbd->rexxSelf, c->String(method), args);
+        }
     }
 
     return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -1317,8 +1385,16 @@ done_out:
  */
 RexxMethod1(RexxObjectPtr, dlgctrl_unInit, CSELF, pCSelf)
 {
+#if 1
+    printf("In dlgctrl_unInit() pCSelf=%p\n", pCSelf);
+#endif
+
     if ( pCSelf != NULLOBJECT )
     {
+#if 1
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+    printf("In dlgctrl_unInit() hCtrl=%p pscd=%p rexxSelf=%p\n", pcdc->hCtrl, pcdc->pscd, pcdc->rexxSelf);
+#endif
         pCWindowBase pcwb = ((pCDialogControl)pCSelf)->wndBase;
         if ( pcwb->rexxHwnd != TheZeroObj )
         {
@@ -1344,12 +1420,18 @@ RexxMethod1(RexxObjectPtr, dlgctrl_assignFocus, CSELF, pCSelf)
  *
  *  @return True for success, false for error
  *
+ *  @remarks  Note that we have to use a method name or addSubclassMessage()
+ *            will crash.  We use 'NOOP'.  Originally, it was intended for NOOP
+ *            to signal some special processing, but that was never followed
+ *            through on.
+ *
  */
 RexxMethod3(RexxObjectPtr, dlgctrl_connectEvent, CSTRING, event, OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
 {
     RexxObjectPtr result = TheFalseObj;
 
     WinMessageFilter wmf = {0};
+    wmf.method = "NOOP";
 
     pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
     if ( pcdc == NULL )
@@ -1362,7 +1444,6 @@ RexxMethod3(RexxObjectPtr, dlgctrl_connectEvent, CSTRING, event, OPTIONAL_CSTRIN
         goto done_out;
     }
 
-    // Need keyword processor
     if ( StrCmpI(event, "CONTEXTMENU") == 0 )
     {
         wmf.wm       = WM_CONTEXTMENU;
@@ -1387,7 +1468,7 @@ RexxMethod3(RexxObjectPtr, dlgctrl_connectEvent, CSTRING, event, OPTIONAL_CSTRIN
         wmf.lp       = KEY_ISEXTENDED;
         wmf.lpFilter = KEY_ISEXTENDED;
         wmf.method   = methodName;
-        wmf.tag      = CTRLTAG_CONTROL;
+        wmf.tag      = CTRLTAG_CONTROL | CTRLTAG_ISOLATE;
 
         if ( ! addSubclassMessage(context, pcdc, &wmf) )
         {
@@ -1422,21 +1503,6 @@ RexxMethod3(RexxObjectPtr, dlgctrl_connectEvent, CSTRING, event, OPTIONAL_CSTRIN
 
 done_out:
     return result;
-}
-
-/** DialogControl::checkForComCtl6()
- *
- *  Raises an exception if comctl32 version 6 or later is not loaded.
- *
- *  @return True for success, false for error
- */
-RexxMethod1(RexxObjectPtr, dlgctrl_checkForComCtl6, CSTRING, name)
-{
-    if ( ! requiredComCtl32Version(context, name, COMCTL32_6_0) )
-    {
-        return TheFalseObj;
-    }
-    return TheTrueObj;
 }
 
 RexxMethod4(int32_t, dlgctrl_connectKeyPress, CSTRING, methodName, CSTRING, keys, OPTIONAL_CSTRING, filter,
