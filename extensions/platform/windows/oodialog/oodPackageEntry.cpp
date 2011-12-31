@@ -493,6 +493,7 @@ REXX_METHOD_PROTOTYPE(wb_clientRect);
 REXX_METHOD_PROTOTYPE(wb_clear);
 REXX_METHOD_PROTOTYPE(wb_foreGroundWindow);
 REXX_METHOD_PROTOTYPE(wb_screenClient);
+REXX_METHOD_PROTOTYPE(wb_mapWindowPoints);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 
 // EventNotification
@@ -951,6 +952,7 @@ REXX_METHOD_PROTOTYPE(lv_insert);
 REXX_METHOD_PROTOTYPE(lv_add);
 REXX_METHOD_PROTOTYPE(lv_addRow);
 REXX_METHOD_PROTOTYPE(lv_addFullRow);
+REXX_METHOD_PROTOTYPE(lv_hitTestInfo);
 REXX_METHOD_PROTOTYPE(lv_modify);
 REXX_METHOD_PROTOTYPE(lv_setItemText);
 REXX_METHOD_PROTOTYPE(lv_itemText);
@@ -1199,7 +1201,6 @@ REXX_METHOD_PROTOTYPE(mouse_getDoubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_setDoubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_swapButton_cls);
 REXX_METHOD_PROTOTYPE(mouse_init);
-REXX_METHOD_PROTOTYPE(mouse_uninit);
 REXX_METHOD_PROTOTYPE(mouse_trackEvent);
 REXX_METHOD_PROTOTYPE(mouse_dragDetect);
 REXX_METHOD_PROTOTYPE(mouse_get_release_capture);
@@ -1319,6 +1320,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_clientRect,                  wb_clientRect),
     REXX_METHOD(wb_clear,                       wb_clear),
     REXX_METHOD(wb_foreGroundWindow,            wb_foreGroundWindow),
+    REXX_METHOD(wb_mapWindowPoints,             wb_mapWindowPoints),
     REXX_METHOD(wb_screenClient,                wb_screenClient),
     REXX_METHOD(wb_getWindowLong_pvt,           wb_getWindowLong_pvt),
 
@@ -1751,6 +1753,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_add,                         lv_add),
     REXX_METHOD(lv_addRow,                      lv_addRow),
     REXX_METHOD(lv_addFullRow,         	        lv_addFullRow),
+    REXX_METHOD(lv_hitTestInfo,                 lv_hitTestInfo),
     REXX_METHOD(lv_modify,                      lv_modify),
     REXX_METHOD(lv_getItemPos,                  lv_getItemPos),
     REXX_METHOD(lv_setItemPos,                  lv_setItemPos),
@@ -2001,7 +2004,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(mouse_setDoubleClickTime_cls,   mouse_setDoubleClickTime_cls),
     REXX_METHOD(mouse_swapButton_cls,           mouse_swapButton_cls),
     REXX_METHOD(mouse_init,                     mouse_init),
-    REXX_METHOD(mouse_uninit,                   mouse_uninit),
     REXX_METHOD(mouse_trackEvent,               mouse_trackEvent),
     REXX_METHOD(mouse_dragDetect,               mouse_dragDetect),
     REXX_METHOD(mouse_get_release_capture,      mouse_get_release_capture),

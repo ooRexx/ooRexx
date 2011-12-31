@@ -168,6 +168,7 @@
    return rect~left rect~top rect~right rect~bottom
 
 ::method foregroundWindow unguarded external "LIBRARY oodialog wb_foreGroundWindow"
+::method mapWindowPoints unguarded external "LIBRARY oodialog wb_mapWindowPoints"
 ::method screen2client unguarded external "LIBRARY oodialog wb_screenClient"
 ::method client2screen unguarded external "LIBRARY oodialog wb_screenClient"
 

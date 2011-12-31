@@ -304,7 +304,6 @@
 ::class 'Mouse' public
 ::method new class external "LIBRARY oodialog mouse_new_cls"
 ::method init external "LIBRARY oodialog mouse_init"
-::method uninit external "LIBRARY oodialog mouse_uninit"
 
 ::method getDoubleClickTime class external "LIBRARY oodialog mouse_getDoubleClickTime_cls"
 ::method loadCursor class external "LIBRARY oodialog mouse_loadCursor_cls"

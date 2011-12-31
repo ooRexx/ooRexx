@@ -2490,6 +2490,66 @@ done_out:
     return success;
 }
 
+
+/** WindowBase:: mapWindowPoints()
+ *
+ *
+ */
+RexxMethod3(logical_t, wb_mapWindowPoints, POINTERSTRING, hwndTo, RexxObjectPtr, points, CSELF, pCSelf)
+{
+    BOOL result = FALSE;
+
+    HWND hwndFrom = wbSetUp(context, pCSelf);
+    if ( hwndFrom != NULL )
+    {
+        PPOINT pts;
+        uint32_t count = 1;
+
+        RexxMethodContext *c = context;
+        if ( c->IsOfType(points, "POINT") )
+        {
+            pts = rxGetPoint(context, points, 1);
+            if ( pts == NULL )
+            {
+                goto done_out;
+            }
+        }
+        else if ( c->IsOfType(points, "RECT") )
+        {
+            RECT *r = rxGetRect(context, points, 1);
+            if ( r == NULL )
+            {
+                goto done_out;
+            }
+            pts = (LPPOINT)r;
+            count = 2;
+        }
+        else
+        {
+            wrongArgValueException(context->threadContext, 1, "Point or Rect", points);
+        }
+
+        SetLastError(0);
+        uint32_t rc = 0;
+
+        MapWindowPoints(hwndFrom, (HWND)hwndTo, pts, count);
+
+        rc = GetLastError();
+        if ( rc == 0 )
+        {
+            result = TRUE;
+        }
+        else
+        {
+            oodSetSysErrCode(context->threadContext, rc);
+        }
+    }
+
+done_out:
+    return result;
+}
+
+
 /** WindowBase::getWindowLong()  [private]
  *
  *  Retrieves information about this window.  Specifically, the information

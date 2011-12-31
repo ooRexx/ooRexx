@@ -2464,7 +2464,7 @@ err_out:
  * @param args         The arg list array (ARGLIST) passed to the native API
  * @param point        [IN/OUT] Pointer to a point struct, this is filled in on
  *                     success.
- * @param startArg     The argument number in the arg array where the rectangle
+ * @param startArg     The argument number in the arg array where the point
  *                     specifications start.
  * @param maxArgs      The maximum number of args allowed.
  * @param arraySize    [IN/OUT] The size of the argument array, returned.

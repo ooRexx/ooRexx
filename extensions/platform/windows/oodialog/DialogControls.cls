@@ -1199,6 +1199,7 @@
 ::method add unguarded external "LIBRARY oodialog lv_add"
 ::method addRow unguarded external "LIBRARY oodialog lv_addRow"
 ::method addFullRow unguarded external "LIBRARY oodialog lv_addFullRow"  -- TODO review implementation before release
+::method hitTestInfo unguarded external "LIBRARY oodialog lv_hitTestInfo"
 ::method modify unguarded external "LIBRARY oodialog lv_modify"
 ::method setItemState unguarded external "LIBRARY oodialog lv_setItemState"
 ::method getExtendedStyle unguarded external "LIBRARY oodialog lv_getExtendedStyle"

@@ -656,7 +656,6 @@ void freeSubclassData(pSubClassData p)
 {
     if ( p != NULL )
     {
-        printf("Entered freeSubclassData()\n");
         if ( p->pData != NULL && p->pfn != NULL )
         {
             pfnFreeSubclassData extraFree = (pfnFreeSubclassData)p->pfn;
@@ -824,24 +823,7 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
 
         case CTRLTAG_MOUSE :
         {
-            if ( msg == WM_MOUSEWHEEL )
-            {
-                if ( tag & CTRLTAG_SENDTODEFWINDOWPROC )
-                {
-                    return DefWindowProc(hwnd, msg, wParam, lParam);
-                }
-
-                MOUSEWHEELDATA mwd;
-                mwd.method         = method;
-                mwd.mouse          = pData->pcdc->rexxMouse;
-                mwd.pcpbd          = pData->pcpbd;
-                mwd.willReply      = (tag & CTRLTAG_REPLYFROMREXX) ? true : false;
-
-                mouseWheelNotify(&mwd, wParam, lParam);
-                return 0;
-            }
-
-            break;
+            return processMouseMsg(c, method, tag, msg, hwnd, wParam, lParam, pData->pcdc);
         }
 
         case CTRLTAG_DIALOG :

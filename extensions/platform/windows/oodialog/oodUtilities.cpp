@@ -1515,7 +1515,6 @@ RexxMethod2(RexxObjectPtr, point_init, OPTIONAL_int32_t,  x, OPTIONAL_int32_t, y
     context->SetObjectVariable("CSELF", obj);
 
     POINT *p = (POINT *)context->BufferData(obj);
-
     p->x = argumentExists(1) ? x : 0;
     p->y = argumentExists(2) ? y : p->x;
 

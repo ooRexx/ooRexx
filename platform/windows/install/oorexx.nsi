@@ -560,6 +560,8 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.cur"
+  ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.txt"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\oleinfo
   ; Distribution files...

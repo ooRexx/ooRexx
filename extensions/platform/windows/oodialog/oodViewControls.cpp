@@ -3612,6 +3612,147 @@ done_out:
 }
 
 
+/** ListView::hitTestInfo()
+ *
+ *  Determine the location of a point relative to the list-view control.
+ *
+ *  @param  pt  [required]  The position, x and y co-ordinates of the point to
+ *              test. This can be specified in two forms.
+ *
+ *      Form 1:  arg 1 is a .Point object.
+ *      Form 2:  arg 1 is the x co-ordinate and arg2 is the y co-ordinate.
+ *
+ *  @param  info  [optional in/out]  A directory object in which all hit info is
+ *                returned.  If the directory is supplied, on return the
+ *                directory will have these indexes:
+ *
+ *                info    Keywords concerning the location of the point.
+ *
+ *                infoEx  Extended keywords concerning the location of the
+ *                        point.  Vista and later.
+ *
+ *                item    Same value as the return.  The item index if the point
+ *                        hits an item, otherwise -1.  (Because list-views are 0
+ *                        based indexes in ooDialog.)
+ *
+ *                subItem The subitem index if the point hits a subitem.
+ *
+ *                group   Vista and later.  Group index of the item hit (read
+ *                        only). Valid only for owner data. If the point is
+ *                        within an item that is displayed in multiple groups
+ *                        then group will specify the group index of the item.
+ *
+ *  @return  The index of the item hit, or -1 if the point does not hit an item.
+ *
+ *  @note    Sometimes the returned index of the hit spot is all that is needed.
+ *           In these cases, there is no need to supply the optional directory
+ *           object.  However, other times the complete hit test information may
+ *           be desired.
+ *
+ *           Any x, y coordinates will work.  I.e. -6000, -7000 will work. The
+ *           item will be -1 and location will be "ABOVE TOLEFT"
+ */
+RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
+{
+    int32_t result = -1;
+
+    HWND hwnd = getDChCtrl(pCSelf);
+
+    size_t sizeArray;
+    size_t argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 3, &sizeArray, &argsUsed) )
+    {
+        goto done_out;
+    }
+
+    bool haveDirectory = (sizeArray > argsUsed) ? true : false;
+    RexxDirectoryObject info;
+
+    // Check arg count against expected.
+    if ( sizeArray > (haveDirectory ? argsUsed + 1 : argsUsed) )
+    {
+        tooManyArgsException(context->threadContext, (haveDirectory ? argsUsed + 1 : argsUsed));
+        goto done_out;
+    }
+
+    if ( haveDirectory )
+    {
+        RexxObjectPtr _info = context->ArrayAt(args, argsUsed + 1);
+        if ( _info == NULLOBJECT || ! context->IsDirectory(_info) )
+        {
+            wrongClassException(context->threadContext, argsUsed + 1, "Directory");
+            goto done_out;
+        }
+
+        info = (RexxDirectoryObject)_info;
+    }
+
+    LVHITTESTINFO hti;
+    hti.pt = point;
+
+    char buf[128];
+    *buf = '\0';
+
+    if ( _isAtLeastVista() )
+    {
+        result = ListView_HitTestEx(hwnd, &hti);
+
+        if ( haveDirectory )
+        {
+            context->DirectoryPut(info, context->Int32(hti.iGroup), "GROUP");
+
+            if ( hti.flags & LVHT_EX_FOOTER          ) strcat(buf, "FOOTER ");
+            if ( hti.flags & LVHT_EX_GROUP           ) strcat(buf, "GROUP ");
+            if ( hti.flags & LVHT_EX_GROUP_BACKGROUND) strcat(buf, "GROUPBACKGROUND ");
+            if ( hti.flags & LVHT_EX_GROUP_COLLAPSE  ) strcat(buf, "GROUPCOLLAPSE ");
+            if ( hti.flags & LVHT_EX_GROUP_FOOTER    ) strcat(buf, "GROUPFOOTER ");
+            if ( hti.flags & LVHT_EX_GROUP_HEADER    ) strcat(buf, "GROUPHEADER ");
+            if ( hti.flags & LVHT_EX_GROUP_STATEICON ) strcat(buf, "GROUPSTATEICON ");
+            if ( hti.flags & LVHT_EX_GROUP_SUBSETLINK) strcat(buf, "GROUPSUBSETLINK ");
+            if ( hti.flags & LVHT_EX_ONCONTENTS      ) strcat(buf, "ONCONTENTS ");
+
+            if ( *buf != '\0' )
+            {
+                *(buf + strlen(buf) - 1) = '\0';
+            }
+            context->DirectoryPut(info, context->String(buf), "INFOEX");
+        }
+    }
+    else
+    {
+        result = ListView_HitTest(hwnd, &hti);
+    }
+
+    if ( haveDirectory )
+    {
+        context->DirectoryPut(info, context->Int32(hti.iItem), "ITEM");
+        context->DirectoryPut(info, context->Int32(hti.iSubItem), "SUBITEM");
+
+        *buf = '\0';
+
+        if ( hti.flags & LVHT_ABOVE          ) strcat(buf, "ABOVE ");
+        if ( hti.flags & LVHT_BELOW          ) strcat(buf, "BELOW ");
+        if ( hti.flags & LVHT_TORIGHT        ) strcat(buf, "TORIGHT ");
+        if ( hti.flags & LVHT_TOLEFT         ) strcat(buf, "TOLEFT ");
+        if ( hti.flags & LVHT_NOWHERE        ) strcat(buf, "NOWHERE ");
+        if ( hti.flags & LVHT_ONITEMICON     ) strcat(buf, "ONICON ");
+        if ( hti.flags & LVHT_ONITEMLABEL    ) strcat(buf, "ONLABEL ");
+        if ( hti.flags & LVHT_ONITEMSTATEICON) strcat(buf, "ONSTATEICON ");
+        if ( hti.flags & LVHT_ONITEM         ) strcat(buf, "ONITEM ");
+
+        if ( *buf != '\0' )
+        {
+            *(buf + strlen(buf) - 1) = '\0';
+        }
+        context->DirectoryPut(info, context->String(buf), "INFO");
+    }
+
+done_out:
+    return result;
+}
+
+
 RexxMethod2(RexxObjectPtr, lv_getItemPos, uint32_t, index, CSELF, pCSelf)
 {
     HWND hList = getDChCtrl(pCSelf);

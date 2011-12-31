@@ -1,0 +1,113 @@
+# This list of top NFL players was compiled by Berkeley Miesfeld.
+#
+#
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+Tom Brady, New England Patriots, QB, *****
+Cam Newton, Carolina Panthers, QB, ***+
+Matt Hasselbeck, Tennessee Titans, QB, **+
+Tim Tebow, Denver Broncos, QB, ***
+Chris Johnson, Tennessee Titans, RB, ***+
+Maurice Jones-Drew, Jacksonville Jaguars, RB, *****
+Frank Gore, San Francisco 49ers, RB, ****
+Marshawn Lynch, Seattle Seahawks, RB, ***
+Vonta Leach, Baltimore Ravens, FB, *****
+Ovie Mughelli, Atlanta Falcons, FB, *****
+Leonard Weaver, Philadelphia Eagles, FB, *****
+Tony Richardson, New York Jets, FB, *****
+Rob Gronkowski, New England Patriots, TE, ****+
+Vernon Davis, San Francisco 49ers, TE, ***
+Kellen Winslow, Tampa Bay Buccaneers, TE, **+
+Brent Celek, Philadelphia Eagles, TE, ***-
+Wes Welker, New England Patriots, WR, *****
+Percy Harvin, Minnesota Vikings, WR, ***
+Dwayne Bowe, Kansas City Chiefs, WR, ****-
+Hakeem Nicks, New York Giants, WR, ***-
+Kris Dielman, San Diego Chargers, G, *****
+Carl Nicks, New York Giants, G, *****
+Steve Hutchinson, Minnesota Vikings, G, ****
+Michael Roos, Tennessee Titans, T, ***+
+Tyson Clabo, Atlanta Falcons, T, ***
+Ryan Clady, Denver Broncos, T, ***
+Nick Mangold, New York Jets, C, *****
+Andre Gurode, Dallas Cowboys, C, ****
+Maurkice Pouncey, Steelers, C, ***+
+Johnathan Babineax, Tennessee Titans, DT, ***+
+Vince Wilfork, New England Patriots, DT, ****+
+Richard Seymour, Oakland Raiders, DT, ****
+Domata Peko, Cincinnati Bengals, DT, ***+
+Ndamukong Suh, Detriot Lions, DT, ****-
+Jay Ratliff, Dallas Cowboys, DT, ****
+Antonio Garay, San Diego Chargers, DT, ***
+Jared Allen, Minnesota Vikings, DE, *****
+Jason Babin, Philadelphia Eagles, DE, *****
+Haloti Ngata, Baltimore Ravens, DE, ****
+Jason Pierre-Paul, New York Giants, DE, ***+
+Osi Umemyiora, New York Giants, DE, ****
+Julius Peppers, Chicago Bears, DE, *****
+James Laurinitis, Saint Louis Rams, LB, ***
+Daryl Smith, Jacksonvile Jaguars, LB, ****
+Clay Matthews, Green Bay Packers, LB, *****
+Jon Beason, Carolina Panthers, LB, *****
+Takeo Spikes, San Diego Chargers, LB, ***-
+Brian Urlacher, Chicago Bears, LB, ****
+David Harris, New York Jets, LB, ***+
+Rolando McClain, Oakland Raiders, LB, ****-
+Jerod Mayo, New England Patriots, LB, ****-
+London Fletcher, Washington Redskins, LB, *****-
+Michael Griffin, Tennessee Titans, S, ****+
+Oj Atogwe, Washington Redskins, S, ****+
+Laron Landry, Washington Redskins, S, ****+
+Adrian Wilson, Arizona Cardinals, S, *****
+Bob Sanders, San Diego Chargers, S, ***
+Tyvon Branch, Oakland Raiders, S, ***+
+Nnamdi Asumogha, Philadelphia Eagles, CB, *****
+Darrelle Revis, New York Jets, CB, *****
+Asante Samuel, Philadelphia Eagles, CB, ****+
+Charles Woodson, Green Bay Packers, CB, ****+
+Chris Gamble, Carolina Panthers, CB, ***+
+Cortland Finnegan, Tennessee Titans, CB, ****
+Antoine Winfield, Minnesota Vikings, CB, ****+
+Mike Nugent, Cincinnati Bengals, K, ****
+David Akers, San Francisco 49ers, K, *****
+Billy Cundiff, Baltimore Ravens, K, ****+
+Adam Vinateri, Indianapolis Colts, K, ***
+Shane Lechler, Oakland Raiders, P, *****
+Andy Lee, San Francisco 49ers, P, *****
+Pat McAfee, Indianapolis Colts, P, ***+
+Britton Colquitt, Denver Broncos, P, ****
