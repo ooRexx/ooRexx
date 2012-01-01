@@ -857,7 +857,7 @@ const char *mystrstr(const char *haystack, const char *needle)
         haystackCopy[i] = toupper(haystackCopy[i]);
     }
 
-    const char *result = (haystackCopy, needle);
+    const char *result = strstr(haystackCopy, needle);
     free(haystackCopy);
     return result;
 }
