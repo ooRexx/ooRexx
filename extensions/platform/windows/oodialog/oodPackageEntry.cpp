@@ -952,6 +952,7 @@ REXX_METHOD_PROTOTYPE(lv_insert);
 REXX_METHOD_PROTOTYPE(lv_add);
 REXX_METHOD_PROTOTYPE(lv_addRow);
 REXX_METHOD_PROTOTYPE(lv_addFullRow);
+REXX_METHOD_PROTOTYPE(lv_deselectAll);
 REXX_METHOD_PROTOTYPE(lv_hitTestInfo);
 REXX_METHOD_PROTOTYPE(lv_modify);
 REXX_METHOD_PROTOTYPE(lv_setItemText);
@@ -1753,6 +1754,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_add,                         lv_add),
     REXX_METHOD(lv_addRow,                      lv_addRow),
     REXX_METHOD(lv_addFullRow,         	        lv_addFullRow),
+    REXX_METHOD(lv_deselectAll,                 lv_deselectAll),
     REXX_METHOD(lv_hitTestInfo,                 lv_hitTestInfo),
     REXX_METHOD(lv_modify,                      lv_modify),
     REXX_METHOD(lv_getItemPos,                  lv_getItemPos),

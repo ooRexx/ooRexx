@@ -2727,6 +2727,30 @@ RexxMethod3(int32_t, lv_getNextItem, OPTIONAL_int32_t, startItem, NAME, method, 
     return ListView_GetNextItem(getDChCtrl(pCSelf), startItem, flag);
 }
 
+/** ListView::deselectAll()
+ *
+ *
+ */
+RexxMethod1(uint32_t, lv_deselectAll, CSELF, pCSelf)
+{
+    int32_t  nextItem = -1;
+    uint32_t flag     = LVNI_SELECTED;
+    uint32_t count    = 0;
+    HWND     hLV      = getDChCtrl(pCSelf);
+
+    while ( TRUE )
+    {
+        nextItem = ListView_GetNextItem(hLV, nextItem, flag);
+        if ( nextItem == -1 )
+        {
+            break;
+        }
+        ListView_SetItemState(hLV, nextItem, 0, LVIS_SELECTED);
+        count++;
+    }
+    return count;
+}
+
 /** ListView::selected()
  *  ListView::focused()
  *  ListView::dropHighlighted()

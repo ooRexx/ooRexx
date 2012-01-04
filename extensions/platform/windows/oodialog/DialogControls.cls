@@ -1069,9 +1069,7 @@
 ::constant LVM_DELETEITEM         "0x1008"
 ::constant LVM_GETTOPINDEX        "0x1027"
 
-::method firstVisible unguarded
-   return self~sendWinIntMsg(self~LVM_GETTOPINDEX , 0, 0)
-
+::method arrange unguarded external "LIBRARY oodialog lv_arrange"
 ::method delete unguarded
    use strict arg index
    return self~sendWinIntMsg(self~LVM_DELETEITEM, index, 0) <> 0
@@ -1080,6 +1078,8 @@
    use strict arg
    return self~sendWinIntMsg(self~LVM_DELETEALLITEMS, 0, 0) <> 0
 
+::method deselect unguarded external "LIBRARY oodialog lv_setSpecificState"
+::method deselectAll unguarded external "LIBRARY oodialog lv_deselectAll"
 ::method edit unguarded
    use strict arg index
    if self~usingUnicode then return self~sendWinHandle2MsgH(self~LVM_EDITLABELW, index, 0)
@@ -1089,6 +1089,9 @@
    use strict arg
    if self~usingUnicode then return self~sendWinHandle2MsgH(self~LVM_EDITLABELW, -1, 0)
    else return self~sendWinHandle2MsgH(self~LVM_EDITLABELA, -1, 0)
+
+::method firstVisible unguarded
+   return self~sendWinIntMsg(self~LVM_GETTOPINDEX , 0, 0)
 
 ::method items unguarded
    return self~sendWinIntMsg(self~LVM_GETITEMCOUNT , 0, 0)
@@ -1141,7 +1144,6 @@
 ::method itemsPerPage unguarded
    return self~sendWinIntMsg(self~LVM_GETCOUNTPERPAGE, 0, 0)
 
-::method arrange unguarded external "LIBRARY oodialog lv_arrange"
 ::method snapToGrid unguarded external "LIBRARY oodialog lv_arrange"
 ::method alignLeft unguarded external "LIBRARY oodialog lv_arrange"
 ::method alignTop unguarded external "LIBRARY oodialog lv_arrange"
@@ -1260,7 +1262,6 @@
 ::method findPartial unguarded external "LIBRARY oodialog lv_find"
 ::method findNearestXY unguarded external "LIBRARY oodialog lv_findNearestXY"
 ::method select unguarded external "LIBRARY oodialog lv_setSpecificState"
-::method deselect unguarded external "LIBRARY oodialog lv_setSpecificState"
 ::method focus unguarded external "LIBRARY oodialog lv_setSpecificState"
 ::method getItemPos unguarded external "LIBRARY oodialog lv_getItemPos"
 ::method setItemPos unguarded external "LIBRARY oodialog lv_setItemPos"

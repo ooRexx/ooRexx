@@ -133,7 +133,7 @@
 
   di = .DragItem~new(lv, index, p, mouse)
 
-  cursorIsNoDrop = .false
+  cursorIsNoDrop = .true
   dragging       = .true
 
   return di
@@ -147,6 +147,10 @@
 
   if keyState \== 'lButton' | index = -1 then return .false
 
+  lvNFL~assignFocus
+  lvNFL~focus(index)
+  lvNFL~select(index)
+
   if mouse~dragDetect(p) then do
     dragItem = self~doDrag(lvNFL, index, p, mouse)
     return .true
@@ -159,13 +163,25 @@
   use arg keyState, p, mouse
 
   if dragging then do
-    mouse~setCursor(oldCursor)
-    dragging = .false
-    mouse~releaseCapture
+    okayToDrop = (cusorIsNoDrop \== .true)
 
-    if \ cursorIsNoDrop & dragItem \== .nil then do
-      if p~inRect(nfl2west) then dragItem~target = lvWest
-      else dragItem~target = lvEast
+    dragging = .false
+    cursorIsNoDrop = .false
+    mouse~releaseCapture
+    mouse~setCursor(oldCursor)
+
+    if okayToDrop & dragItem \== .nil then do
+      if p~inRect(nfl2west) then do
+        dragItem~target = lvWest
+      end
+      else if p~inRect(nfl2east) then do
+        dragItem~target = lvEast
+      end
+      else do
+        -- Theoretically this can not happen, but just to be sure...
+        dragItem = .nil
+        return 0
+      end
 
       -- The point p is in client coordinates of the NFL list view.  We are
       -- going to map that point back to the client coordinates of the list view
@@ -216,6 +232,10 @@
 
   if keyState \== 'lButton' | index = -1 then return .false
 
+  lvWest~assignFocus
+  lvWest~focus(index)
+  lvWest~select(index)
+
   if mouse~dragDetect(p) then do
     dragItem = self~doDrag(lvWest, index, p, mouse)
     return .true
@@ -229,13 +249,25 @@
   use arg keyState, p, mouse
 
   if dragging then do
-    mouse~setCursor(oldCursor)
-    dragging = .false
-    mouse~releaseCapture
+    okayToDrop = (cusorIsNoDrop \== .true)
 
-    if \ cursorIsNoDrop & dragItem \== .nil then do
-      if p~inRect(west2nfl) then dragItem~target = lvNFL
-      else dragItem~target = lvEast
+    dragging = .false
+    cursorIsNoDrop = .false
+    mouse~releaseCapture
+    mouse~setCursor(oldCursor)
+
+    if okayToDrop & dragItem \== .nil then do
+      if p~inRect(west2nfl) then do
+        dragItem~target = lvNFL
+      end
+      else if p~inRect(west2east) then do
+        dragItem~target = lvEast
+      end
+      else do
+        -- Theoretically this can not happen, but just to be sure...
+        dragItem = .nil
+        return 0
+      end
 
       -- The point p is in client coordinates of the West list view.  We are
       -- going to map that point back to the client coordinates of the list view
@@ -286,6 +318,10 @@
 
   if keyState \== 'lButton' | index = -1 then return .false
 
+  lvEast~assignFocus
+  lvEast~focus(index)
+  lvEast~select(index)
+
   if mouse~dragDetect(p) then do
     dragItem = self~doDrag(lvEast, index, p, mouse)
     return .true
@@ -299,13 +335,25 @@
   use arg keyState, p, mouse
 
   if dragging then do
-    mouse~setCursor(oldCursor)
-    dragging = .false
-    mouse~releaseCapture
+    okayToDrop = (cusorIsNoDrop \== .true)
 
-    if \ cursorIsNoDrop & dragItem \== .nil then do
-      if p~inRect(east2nfl) then dragItem~target = lvNFL
-      else dragItem~target = lvWest
+    dragging = .false
+    cursorIsNoDrop = .false
+    mouse~releaseCapture
+    mouse~setCursor(oldCursor)
+
+    if okayToDrop & dragItem \== .nil then do
+      if p~inRect(east2nfl) then do
+        dragItem~target = lvNFL
+      end
+      else if p~inRect(east2west) then do
+        dragItem~target = lvWest
+      end
+      else do
+        -- Theoretically this can not happen, but just to be sure...
+        dragItem = .nil
+        return 0
+      end
 
       -- The point p is in client coordinates of the East list view.  We are
       -- going to map that point back to the client coordinates of the list view
@@ -423,15 +471,6 @@
 ::method init
   expose lv index row target
   use arg lv, index, p, mouse
-
-  selectedItem = lv~selected
-  lv~focus(index)
-  lv~select(index)
-  if selectedItem \= -1 then lv~deselect(selectedItem)
-
-  p~incr
-  lv~client2screen(p)
-  mouse~setCursorPos(p)
 
   row = .Directory~new
   lv~getItemInfo(index, row)
