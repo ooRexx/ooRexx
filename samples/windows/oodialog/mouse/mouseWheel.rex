@@ -130,7 +130,7 @@ return 0
   -- Note that onEditMouseWheel() method will only be invoked when the
   -- IDC_EDIT_DATA edit control has the focus.
   mouse = .Mouse~new(eData)
-  mouse~connectEvent('WHEEL', onEditMouseWheel)
+  mouse~connectEvent('MOUSEWHEEL', onEditMouseWheel)
 
   -- Connect all mouse wheel events that reach the dialog to a method in this
   -- dialog.  The default method name is onMouseWheel, so we omit the method
@@ -139,7 +139,7 @@ return 0
   -- Note that this onMouseWheel() method will never be invoked if the
   -- IDC_EDIT_DATA edit control has the focus.
   mouse = .Mouse~new(self)
-  mouse~connectEvent('WHEEL')
+  mouse~connectEvent('MOUSEWHEEL')
 
   -- Set up the radio buttons, connect a click event on any of them to our
   -- single onRbSelect() method.
@@ -214,7 +214,7 @@ return 0
  * This is an event handler for the mouse wheel event.  The arguments are
  * explained in the comment header for onMouseWheel().
  *
- * Because of the 2 connectMouseWheel() calls in initDialog() this method will
+ * Because of the 2 mouse~connectEvent() calls in initDialog() this method will
  * *only* be called when the edit control has the focus.
  *
  * We simply delegate to the maybeScroll() method, passing on the 3 arguments
@@ -452,7 +452,7 @@ return 0
 
   -- Connect the mouse wheel event to a method in this dialog.  We don't specify
   -- a method name, we'll just accept the default name of onMouseWheel.
-  .Mouse~new(self)~connectEvent('WHEEL')
+  .Mouse~new(self)~connectEvent('MOUSEWHEEL')
 
   e = self~newEdit(IDC_HELP_TEXT)
 
@@ -464,7 +464,7 @@ return 0
   -- The effect of this is that the edit control never even sees the
   -- notification, allowing our onMouseWheel() method to handle all mouse wheel
   -- notifications, not matter where the mouse is over out dialog.
-  .Mouse~new(e)~connectEvent('WHEEL', 'NOOP', , "DEFWINPROC")
+  .Mouse~new(e)~connectEvent('MOUSEWHEEL', 'NOOP', , "DEFWINPROC")
 
   -- Create a mono-spaced font for the edit control that displays the help text.
   newFont = self~createFontEx('Courier New', 9)
@@ -483,7 +483,7 @@ return 0
 /** onMouseWheel
  *
  * This is the event handler for the mouse wheel event.  We connected the event
- * to this method through the connectMouseWheel() method in initDialog().
+ * to this method through the Mouse connectEvent() method in initDialog().
  *
  * The comment header for the onMouseWheel() event handler in the maid dialog
  * explains the arguments in detail.

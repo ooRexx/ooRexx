@@ -2875,10 +2875,68 @@ err_out:
     return -1;
 }
 
-RexxMethod4(RexxObjectPtr, lv_setItemText, uint32_t, index, OPTIONAL_uint32_t, subitem, CSTRING, text, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, lv_getItemData, uint32_t, index, CSELF, pCSelf)
 {
-    ListView_SetItemText(getDChCtrl(pCSelf), index, subitem, (LPSTR)text);
-    return TheZeroObj;
+    LVITEM        lvi    = {LVIF_PARAM, index};
+    RexxObjectPtr result = TheNilObj;
+
+    if ( ListView_GetItem(getDChCtrl(pCSelf), &lvi) != 0 && lvi.lParam != 0 )
+    {
+        result = (RexxObjectPtr)lvi.lParam;
+    }
+    return result;
+}
+
+RexxMethod2(RexxObjectPtr, lv_removeItemData, uint32_t, index, CSELF, pCSelf)
+{
+    LVITEM        lvi    = {LVIF_PARAM, index};
+    RexxObjectPtr result = TheNilObj;
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return result;
+    }
+    if ( ListView_GetItem(pcdc->hCtrl, &lvi) != 0 && lvi.lParam != 0 )
+    {
+        result = (RexxObjectPtr)lvi.lParam;
+
+        lvi.lParam = 0;
+        ListView_SetItem(pcdc->hCtrl, &lvi);
+
+        if ( pcdc->rexxBag != NULL )
+        {
+            context->SendMessage1(pcdc->rexxBag, "REMOVE", result);
+        }
+    }
+    return result;
+}
+
+RexxMethod3(RexxObjectPtr, lv_setItemData, uint32_t, index, RexxObjectPtr, data, CSELF, pCSelf)
+{
+    LVITEM        lvi = {LVIF_PARAM, index};
+    RexxObjectPtr result = TheNilObj;
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return TheFalseObj;
+    }
+
+    lvi.lParam = (LPARAM)data;
+    if ( ListView_SetItem(pcdc->hCtrl, &lvi) != 0 )
+    {
+        if ( pcdc->rexxBag == NULL )
+        {
+            context->SendMessage1(pcdc->rexxSelf, "PUTINBAG", data);
+        }
+        else
+        {
+            context->SendMessage2(pcdc->rexxBag, "PUT", data, data);
+        }
+        return TheTrueObj;
+    }
+    return TheFalseObj;
 }
 
 RexxMethod3(RexxStringObject, lv_itemText, uint32_t, index, OPTIONAL_uint32_t, subitem, CSELF, pCSelf)
@@ -2886,6 +2944,12 @@ RexxMethod3(RexxStringObject, lv_itemText, uint32_t, index, OPTIONAL_uint32_t, s
     char buf[256];
     ListView_GetItemText(getDChCtrl(pCSelf), index, subitem, buf, sizeof(buf));
     return context->String(buf);
+}
+
+RexxMethod4(RexxObjectPtr, lv_setItemText, uint32_t, index, OPTIONAL_uint32_t, subitem, CSTRING, text, CSELF, pCSelf)
+{
+    ListView_SetItemText(getDChCtrl(pCSelf), index, subitem, (LPSTR)text);
+    return TheZeroObj;
 }
 
 RexxMethod2(RexxStringObject, lv_itemState, uint32_t, index, CSELF, pCSelf)
@@ -3978,6 +4042,13 @@ RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     }
     return result;
 }
+
+
+/**
+ *  Methods for the .LvItem class.
+ */
+#define LVITEM_CLASS            "LvItem"
+
 
 
 /**

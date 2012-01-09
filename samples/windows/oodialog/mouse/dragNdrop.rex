@@ -407,15 +407,15 @@
 
   mLVnfl~connectEvent('LBUTTONDOWN', nflOnLBdown)
   mLVnfl~connectEvent('LBUTTONUP', nflOnLBup)
-  mLVnfl~connectEvent('MOVE', nflOnMove)
+  mLVnfl~connectEvent('MOUSEMOVE', nflOnMove)
 
   mLVwest~connectEvent('LBUTTONDOWN', westOnLBdown)
   mLVwest~connectEvent('LBUTTONUP', westOnLBup)
-  mLVwest~connectEvent('MOVE', westOnMove)
+  mLVwest~connectEvent('MOUSEMOVE', westOnMove)
 
   mLVeast~connectEvent('LBUTTONDOWN', eastOnLBdown)
   mLVeast~connectEvent('LBUTTONUP', eastOnLBup)
-  mLVeast~connectEvent('MOVE', eastOnMove)
+  mLVeast~connectEvent('MOUSEMOVE', eastOnMove)
 
 ::method setUpListView private
   use strict arg lv

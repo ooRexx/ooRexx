@@ -48,19 +48,41 @@
 -- Base class for all dialog controls
 ::class 'DialogControl' public inherit WindowBase WindowExtensions
 
+::constant CCM_SETUNICODEFORMAT     "0x2005"
+::constant CCM_GETUNICODEFORMAT     "0x2006"
+
 ::method new class external "LIBRARY oodialog dlgctrl_new_cls"
 ::method init class external "LIBRARY oodialog dlgctrl_init_cls"
-
-::method init external "LIBRARY oodialog dlgctrl_init"
-::method unInit external "LIBRARY oodialog dlgctrl_unInit"
 
 ::attribute id get unguarded    -- The numerical resource ID for this control
 ::attribute oDlg get unguarded  -- The ooRexx dialog object this control belongs to
 ::attribute hDlg get unguarded  -- The window handle of that dialog
 
-::constant CCM_SETUNICODEFORMAT     "0x2005"
-::constant CCM_GETUNICODEFORMAT     "0x2006"
+::method init external "LIBRARY oodialog dlgctrl_init"
+::method unInit external "LIBRARY oodialog dlgctrl_unInit"
 
+::method addUserSubclass unguarded external "LIBRARY oodialog dlgctrl_addUserSubclass"
+::method assignFocus unguarded external "LIBRARY oodialog dlgctrl_assignFocus"
+::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
+::method connectCharEvent unguarded
+  use strict arg methodName = 'onChar'
+  return self~connectEvent('CHAR', methodName)
+
+::method connectEvent unguarded external "LIBRARY oodialog dlgctrl_connectEvent"
+::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
+::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
+::method data unguarded external "LIBRARY oodialog dlgctrl_data"
+::method "data=" unguarded external "LIBRARY oodialog dlgctrl_dataEquals"
+::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
+::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
+::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
+::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
+::method putInBag unguarded external "LIBRARY oodialog dlgctrl_putInBag"  -- Internal use only.
+::method redrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
+::method setColor unguarded external "LIBRARY oodialog dlgctrl_setColor"
+::method setSysColor unguarded external "LIBRARY oodialog dlgctrl_setColor"
+::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
+::method textSize unguarded external "LIBRARY oodialog dlgctrl_textSize"
 ::method useUnicode unguarded
    use strict arg doUseUnicode
    return self~sendWinIntMsg(self~CCM_SETUNICODEFORMAT, doUseUnicode, 0)
@@ -68,29 +90,6 @@
 ::method usingUnicode unguarded
    use strict arg
    return (self~sendWinIntMsg(self~CCM_GETUNICODEFORMAT, 0, 0) <> 0)
-
-::method addUserSubclass unguarded external "LIBRARY oodialog dlgctrl_addUserSubclass"
-::method assignFocus unguarded external "LIBRARY oodialog dlgctrl_assignFocus"
-::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
-::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
-::method textSize unguarded external "LIBRARY oodialog dlgctrl_textSize"
-::method redrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
-::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
-::method setColor unguarded external "LIBRARY oodialog dlgctrl_setColor"
-::method setSysColor unguarded external "LIBRARY oodialog dlgctrl_setColor"
-::method data unguarded external "LIBRARY oodialog dlgctrl_data"
-::method "data=" unguarded external "LIBRARY oodialog dlgctrl_dataEquals"
-
-::method connectEvent unguarded external "LIBRARY oodialog dlgctrl_connectEvent"
-::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
-::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
-::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
-::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
-::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
-
-::method connectCharEvent unguarded
-  use strict arg methodName = 'onChar'
-  return self~connectEvent('CHAR', methodName)
 
 -- DEPRECATED START
 ::method captureMouse unguarded
@@ -1046,9 +1045,6 @@
 ::class 'ListControl' subclass DialogControl public
 ::class 'ListView' subclass ListControl public
 
-::method subclassEdit unguarded external "LIBRARY oodialog generic_subclassEdit"
-::method restoreEditClass unguarded external "LIBRARY oodialog generic_subclassEdit"
-
 -- LVM_FIRST = 0x1000  == 4096
 ::constant LVM_GETCOLUMNWIDTH     "0x101D"
 ::constant LVM_SETHOVERTIME       "0x1047"
@@ -1069,101 +1065,19 @@
 ::constant LVM_DELETEITEM         "0x1008"
 ::constant LVM_GETTOPINDEX        "0x1027"
 
-::method arrange unguarded external "LIBRARY oodialog lv_arrange"
-::method delete unguarded
-   use strict arg index
-   return self~sendWinIntMsg(self~LVM_DELETEITEM, index, 0) <> 0
-
-::method deleteAll unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~LVM_DELETEALLITEMS, 0, 0) <> 0
-
-::method deselect unguarded external "LIBRARY oodialog lv_setSpecificState"
-::method deselectAll unguarded external "LIBRARY oodialog lv_deselectAll"
-::method edit unguarded
-   use strict arg index
-   if self~usingUnicode then return self~sendWinHandle2MsgH(self~LVM_EDITLABELW, index, 0)
-   else return self~sendWinHandle2MsgH(self~LVM_EDITLABELA, index, 0)
-
-::method endEdit unguarded
-   use strict arg
-   if self~usingUnicode then return self~sendWinHandle2MsgH(self~LVM_EDITLABELW, -1, 0)
-   else return self~sendWinHandle2MsgH(self~LVM_EDITLABELA, -1, 0)
-
-::method firstVisible unguarded
-   return self~sendWinIntMsg(self~LVM_GETTOPINDEX , 0, 0)
-
-::method items unguarded
-   return self~sendWinIntMsg(self~LVM_GETITEMCOUNT , 0, 0)
-
-::method selectedItems unguarded
-   return self~sendWinIntMsg(self~LVM_GETSELECTEDCOUNT , 0, 0)
-
-::method redrawItems unguarded
-   use strict arg first = 0, last = (self~items)
-   return self~sendWinIntMsg(self~LVM_REDRAWITEMS, first, last) <> 0
-
-::method updateItem unguarded
-   use strict arg index
-   return self~sendWinIntMsg(self~LVM_UPDATE, index, 0) <> 0
-
-::method ensureVisible unguarded
-   use strict arg index, partial = .false
-   return self~sendWinIntMsg(self~LVM_ENSUREVISIBLE, index, partial) <> 0
-
-::method deleteColumn unguarded
-   use strict arg index
-   return self~sendWinIntMsg(self~LVM_DELETECOLUMN, index, 0) <> 0
-
-::method columnWidthPx unguarded
-   use strict arg column
-   return self~sendWinIntMsg(self~LVM_GETCOLUMNWIDTH, column, 0)
-
-::method smallSpacing unguarded
-   return self~sendWinIntMsg(self~LVM_GETITEMSPACING, 1, 0)
-
-::method spacing unguarded
-   return self~sendWinIntMsg(self~LVM_GETITEMSPACING, 0, 0)
-
-::method setHoverTime unguarded
-   use strict arg time = (-1)
-   if time < -1 then time = -1
-   return self~sendWinIntMsg(self~LVM_SETHOVERTIME, 0, time)
-
-::method getHoverTime unguarded
-   return self~sendWinIntMsg(self~LVM_GETHOVERTIME, 0, 0)
-
-::method prepare4nItems unguarded
-   use strict arg countItems
-   return self~sendWinIntMsg(self~LVM_SETITEMCOUNT, countItems, 0)
-
-::method scroll unguarded
-   use strict arg x = 0, y = 0
-   return self~sendWinIntMsg(self~LVM_SCROLL, x, y) <> 0
-
-::method itemsPerPage unguarded
-   return self~sendWinIntMsg(self~LVM_GETCOUNTPERPAGE, 0, 0)
-
-::method snapToGrid unguarded external "LIBRARY oodialog lv_arrange"
+::method add unguarded external "LIBRARY oodialog lv_add"
+::method addExtendedStyle unguarded external "LIBRARY oodialog lv_addClearExtendStyle"
+::method addRow unguarded external "LIBRARY oodialog lv_addRow"
+::method addFullRow unguarded external "LIBRARY oodialog lv_addFullRow"  -- TODO review implementation before release
 ::method alignLeft unguarded external "LIBRARY oodialog lv_arrange"
 ::method alignTop unguarded external "LIBRARY oodialog lv_arrange"
 ::method addStyle unguarded external "LIBRARY oodialog lv_addRemoveStyle"
-::method removeStyle unguarded external "LIBRARY oodialog lv_addRemoveStyle"
-::method replaceStyle unguarded external "LIBRARY oodialog lv_replaceStyle"
-
-::method stringWidthPx unguarded external "LIBRARY oodialog lv_stringWidthPx"
-::method getColumnCount unguarded external "LIBRARY oodialog lv_getColumnCount"
-::method getColumnOrder unguarded external "LIBRARY oodialog lv_getColumnOrder"
-::method insertColumnPx unguarded external "LIBRARY oodialog lv_insertColumnPx"
-::method modifyColumnPx unguarded external "LIBRARY oodialog lv_modifyColumnPx"
-::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
-::method setColumnWidthPx unguarded external "LIBRARY oodialog lv_setColumnWidthPx"
-
-::method stringWidth unguarded  -- Dialog units, not accurate.
-   use strict arg text
-   return self~stringWidthPx(text) / self~factorX
-
-::method getColumnInfo unguarded  external "LIBRARY oodialog lv_getColumnInfo"
+::method arrange unguarded external "LIBRARY oodialog lv_arrange"
+::method bkColor unguarded external "LIBRARY oodialog lv_getColor"
+::method "bkColor=" unguarded external "LIBRARY oodialog lv_setColor"
+::method check unguarded external "LIBRARY oodialog lv_checkUncheck"
+::method checkAll unguarded
+   return self~check(-1)
 ::method columnInfo unguarded  -- Dialog units, not accurate.
    use strict arg index
    d = .Directory~new
@@ -1182,40 +1096,73 @@
    use strict arg colNum
    return self~columnWidthPx(colNum) / self~factorX
 
-::method setColumnWidth unguarded  -- Dialog units, not accurate.
-   use strict arg index, width = "AUTO"
-   if width~datatype("W") then width = width * self~factorX
-   return self~setColumnWidthPx(index, width)
+::method columnWidthPx unguarded
+   use strict arg column
+   return self~sendWinIntMsg(self~LVM_GETCOLUMNWIDTH, column, 0)
 
-::method modifyColumn unguarded  -- Dialog units, not accurate.
-   use strict arg index, label = "", width = (-8), align = ""
-   if arg(3,'E'), width~datatype('W') then width = width * self~factorX
-   return self~modifyColumnPx(index, label, width, align)
+::method delete unguarded
+   use strict arg index
+   return self~sendWinIntMsg(self~LVM_DELETEITEM, index, 0) <> 0
 
+::method deleteAll unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~LVM_DELETEALLITEMS, 0, 0) <> 0
+
+::method deleteColumn unguarded
+   use strict arg index
+   return self~sendWinIntMsg(self~LVM_DELETECOLUMN, index, 0) <> 0
+
+::method deselect unguarded external "LIBRARY oodialog lv_setSpecificState"
+::method deselectAll unguarded external "LIBRARY oodialog lv_deselectAll"
+::method dropHighlighted unguarded external "LIBRARY oodialog lv_getNextItemWithState"
+::method edit unguarded
+   use strict arg index
+   if self~usingUnicode then return self~sendWinHandle2MsgH(self~LVM_EDITLABELW, index, 0)
+   else return self~sendWinHandle2MsgH(self~LVM_EDITLABELA, index, 0)
+
+::method endEdit unguarded
+   use strict arg
+   if self~usingUnicode then return self~sendWinHandle2MsgH(self~LVM_EDITLABELW, -1, 0)
+   else return self~sendWinHandle2MsgH(self~LVM_EDITLABELA, -1, 0)
+
+::method ensureVisible unguarded
+   use strict arg index, partial = .false
+   return self~sendWinIntMsg(self~LVM_ENSUREVISIBLE, index, partial) <> 0
+
+::method find unguarded external "LIBRARY oodialog lv_find"
+::method findNearestXY unguarded external "LIBRARY oodialog lv_findNearestXY"
+::method findPartial unguarded external "LIBRARY oodialog lv_find"
+::method firstVisible unguarded
+   return self~sendWinIntMsg(self~LVM_GETTOPINDEX , 0, 0)
+
+::method focus unguarded external "LIBRARY oodialog lv_setSpecificState"
+::method focused unguarded external "LIBRARY oodialog lv_getNextItemWithState"
+::method getCheck unguarded external "LIBRARY oodialog lv_getCheck"
+::method getColumnCount unguarded external "LIBRARY oodialog lv_getColumnCount"
+::method getColumnInfo unguarded  external "LIBRARY oodialog lv_getColumnInfo"
+::method getColumnOrder unguarded external "LIBRARY oodialog lv_getColumnOrder"
+::method getExtendedStyle unguarded external "LIBRARY oodialog lv_getExtendedStyle"
+::method getExtendedStyleRaw unguarded external "LIBRARY oodialog lv_getExtendedStyle"
+::method getHoverTime unguarded
+   return self~sendWinIntMsg(self~LVM_GETHOVERTIME, 0, 0)
+
+::method getItemData unguarded external "LIBRARY oodialog lv_getItemData"
+::method getItemInfo unguarded external "LIBRARY oodialog lv_getItemInfo"
+::method getItemPos unguarded external "LIBRARY oodialog lv_getItemPos"
+::method getImageList unguarded external "LIBRARY oodialog lv_getImageList"
+::method hasCheckBoxes unguarded external "LIBRARY oodialog lv_hasCheckBoxes"
+::method hitTestInfo unguarded external "LIBRARY oodialog lv_hitTestInfo"
+::method insert unguarded external "LIBRARY oodialog lv_insert"
 ::method insertColumn unguarded -- Dialog units, not accurate.
    use strict arg nr = 0, text, width, fmt = "L"
    width = trunc(width * self~factorX)
    return self~insertColumnPx(nr, text, width, fmt)
 
-::method insert unguarded external "LIBRARY oodialog lv_insert"
-::method add unguarded external "LIBRARY oodialog lv_add"
-::method addRow unguarded external "LIBRARY oodialog lv_addRow"
-::method addFullRow unguarded external "LIBRARY oodialog lv_addFullRow"  -- TODO review implementation before release
-::method hitTestInfo unguarded external "LIBRARY oodialog lv_hitTestInfo"
-::method modify unguarded external "LIBRARY oodialog lv_modify"
-::method setItemState unguarded external "LIBRARY oodialog lv_setItemState"
-::method getExtendedStyle unguarded external "LIBRARY oodialog lv_getExtendedStyle"
-::method getExtendedStyleRaw unguarded external "LIBRARY oodialog lv_getExtendedStyle"
-::method replaceExtendedStyle unguarded external "LIBRARY oodialog lv_replaceExtendStyle"
-::method addExtendedStyle unguarded external "LIBRARY oodialog lv_addClearExtendStyle"
-::method removeExtendedStyle unguarded external "LIBRARY oodialog lv_addClearExtendStyle"
-::method check unguarded external "LIBRARY oodialog lv_checkUncheck"
-::method uncheck unguarded external "LIBRARY oodialog lv_checkUncheck"
+::method insertColumnPx unguarded external "LIBRARY oodialog lv_insertColumnPx"
 ::method isChecked unguarded external "LIBRARY oodialog lv_isChecked"
-::method hasCheckBoxes unguarded external "LIBRARY oodialog lv_hasCheckBoxes"
-::method getCheck unguarded external "LIBRARY oodialog lv_getCheck"
+::method items unguarded
+   return self~sendWinIntMsg(self~LVM_GETITEMCOUNT , 0, 0)
 
-::method getItemInfo unguarded external "LIBRARY oodialog lv_getItemInfo"
 ::method itemInfo
    use strict arg index, subItem = 0
    d = .Directory~new
@@ -1227,12 +1174,17 @@
    end
    return -1
 
-::method checkAll unguarded
-   return self~check(-1)
+::method itemPos unguarded
+   use strict arg item
+   p = self~getItemPos(item)
+   if p == 0 then return p
+   else return p~x p~y
 
-::method uncheckAll unguarded
-   return self~uncheck(-1)
+::method itemsPerPage unguarded
+   return self~sendWinIntMsg(self~LVM_GETCOUNTPERPAGE, 0, 0)
 
+::method itemState unguarded external "LIBRARY oodialog lv_itemState"
+::method itemText unguarded external "LIBRARY oodialog lv_itemText"
 ::method last unguarded
    return self~items - 1
 
@@ -1240,40 +1192,85 @@
    if self~itemState(self~last)~wordpos("SELECTED") > 0 then  return self~last
    return self~previousSelected(self~last)
 
-::method itemPos unguarded
-   use strict arg item
-   p = self~getItemPos(item)
-   if p == 0 then return p
-   else return p~x p~y
+::method modify unguarded external "LIBRARY oodialog lv_modify"
+::method modifyColumn unguarded  -- Dialog units, not accurate.
+   use strict arg index, label = "", width = (-8), align = ""
+   if arg(3,'E'), width~datatype('W') then width = width * self~factorX
+   return self~modifyColumnPx(index, label, width, align)
 
-::method itemState unguarded external "LIBRARY oodialog lv_itemState"
-::method itemText unguarded external "LIBRARY oodialog lv_itemText"
-::method setItemText unguarded external "LIBRARY oodialog lv_setItemText"
+::method modifyColumnPx unguarded external "LIBRARY oodialog lv_modifyColumnPx"
 ::method next unguarded external "LIBRARY oodialog lv_getNextItem"
-::method nextSelected unguarded external "LIBRARY oodialog lv_getNextItem"
 ::method nextLeft unguarded external "LIBRARY oodialog lv_getNextItem"
 ::method nextRight unguarded external "LIBRARY oodialog lv_getNextItem"
+::method nextSelected unguarded external "LIBRARY oodialog lv_getNextItem"
+::method prepare4nItems unguarded
+   use strict arg countItems
+   return self~sendWinIntMsg(self~LVM_SETITEMCOUNT, countItems, 0)
+
 ::method previous unguarded external "LIBRARY oodialog lv_getNextItem"
 ::method previousSelected unguarded external "LIBRARY oodialog lv_getNextItem"
-::method selected unguarded external "LIBRARY oodialog lv_getNextItemWithState"
-::method focused unguarded external "LIBRARY oodialog lv_getNextItemWithState"
-::method dropHighlighted unguarded external "LIBRARY oodialog lv_getNextItemWithState"
-::method find unguarded external "LIBRARY oodialog lv_find"
-::method findPartial unguarded external "LIBRARY oodialog lv_find"
-::method findNearestXY unguarded external "LIBRARY oodialog lv_findNearestXY"
-::method select unguarded external "LIBRARY oodialog lv_setSpecificState"
-::method focus unguarded external "LIBRARY oodialog lv_setSpecificState"
-::method getItemPos unguarded external "LIBRARY oodialog lv_getItemPos"
-::method setItemPos unguarded external "LIBRARY oodialog lv_setItemPos"
-::method setImageList unguarded external "LIBRARY oodialog lv_setImageList"
-::method getImageList unguarded external "LIBRARY oodialog lv_getImageList"
+::method redrawItems unguarded
+   use strict arg first = 0, last = (self~items)
+   return self~sendWinIntMsg(self~LVM_REDRAWITEMS, first, last) <> 0
 
-::method "bkColor=" unguarded external "LIBRARY oodialog lv_setColor"
-::method "textColor=" unguarded external "LIBRARY oodialog lv_setColor"
-::method "textBkColor=" unguarded external "LIBRARY oodialog lv_setColor"
-::method bkColor unguarded external "LIBRARY oodialog lv_getColor"
+::method removeExtendedStyle unguarded external "LIBRARY oodialog lv_addClearExtendStyle"
+::method removeItemData unguarded external "LIBRARY oodialog lv_removeItemData"
+::method removeStyle unguarded external "LIBRARY oodialog lv_addRemoveStyle"
+::method replaceExtendedStyle unguarded external "LIBRARY oodialog lv_replaceExtendStyle"
+::method replaceStyle unguarded external "LIBRARY oodialog lv_replaceStyle"
+::method restoreEditClass unguarded external "LIBRARY oodialog generic_subclassEdit"
+::method scroll unguarded
+   use strict arg x = 0, y = 0
+   return self~sendWinIntMsg(self~LVM_SCROLL, x, y) <> 0
+
+::method select unguarded external "LIBRARY oodialog lv_setSpecificState"
+::method selected unguarded external "LIBRARY oodialog lv_getNextItemWithState"
+::method selectedItems unguarded
+   return self~sendWinIntMsg(self~LVM_GETSELECTEDCOUNT , 0, 0)
+
+::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
+::method setColumnWidth unguarded  -- Dialog units, not accurate.
+   use strict arg index, width = "AUTO"
+   if width~datatype("W") then width = width * self~factorX
+   return self~setColumnWidthPx(index, width)
+
+::method setColumnWidthPx unguarded external "LIBRARY oodialog lv_setColumnWidthPx"
+::method setHoverTime unguarded
+   use strict arg time = (-1)
+   if time < -1 then time = -1
+   return self~sendWinIntMsg(self~LVM_SETHOVERTIME, 0, time)
+
+::method setImageList unguarded external "LIBRARY oodialog lv_setImageList"
+::method setItemData unguarded external "LIBRARY oodialog lv_setItemData"
+::method setItemPos unguarded external "LIBRARY oodialog lv_setItemPos"
+::method setItemState unguarded external "LIBRARY oodialog lv_setItemState"
+::method setItemText unguarded external "LIBRARY oodialog lv_setItemText"
+::method smallSpacing unguarded
+   return self~sendWinIntMsg(self~LVM_GETITEMSPACING, 1, 0)
+
+::method snapToGrid unguarded external "LIBRARY oodialog lv_arrange"
+::method spacing unguarded
+   return self~sendWinIntMsg(self~LVM_GETITEMSPACING, 0, 0)
+
+::method stringWidth unguarded  -- Dialog units, not accurate.
+   use strict arg text
+   return self~stringWidthPx(text) / self~factorX
+
+::method stringWidthPx unguarded external "LIBRARY oodialog lv_stringWidthPx"
+::method subclassEdit unguarded external "LIBRARY oodialog generic_subclassEdit"
 ::method textColor unguarded external "LIBRARY oodialog lv_getColor"
+::method "textColor=" unguarded external "LIBRARY oodialog lv_setColor"
 ::method textBkColor unguarded external "LIBRARY oodialog lv_getColor"
+::method "textBkColor=" unguarded external "LIBRARY oodialog lv_setColor"
+::method uncheck unguarded external "LIBRARY oodialog lv_checkUncheck"
+::method uncheckAll unguarded
+   return self~uncheck(-1)
+
+::method updateItem unguarded
+   use strict arg index
+   return self~sendWinIntMsg(self~LVM_UPDATE, index, 0) <> 0
+
+
 
 -- DEPRECATED
 ::method setSmallImages unguarded

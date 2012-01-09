@@ -64,7 +64,7 @@
 #define MOUSE_CLASS        "Mouse"
 
 #define TRACK_MOUSE_KEYWORDS    "CANCEL, HOVER, LEAVE, NONCLIENT, or QUERY"
-#define WM_MOUSE_KEYWORDS       "Move, Wheel, Leave, Hover, lButtonUp, lButtonDown, or CaptureChanged"
+#define WM_MOUSE_KEYWORDS       "MouseMove, MouseWheel, MouseLeave, MouseHover, lButtonUp, lButtonDown, or CaptureChanged"
 #define MOUSE_BUTTON_KEYWORDS   "LEFT, RIGHT, MIDDLE, XBUTTON1, or XBUTTON2"
 #define SYSTEM_CURSOR_KEYWORDS  "APPSTARTING, ARROW, CROSS, HAND, HELP, IBEAM, NO, SIZEALL, SIZENESW, SIZENS, " \
                                 "SIZENWSE, SIZEWE, UPARROW, or WAIT"
@@ -195,10 +195,10 @@ static bool keyword2wm(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
 {
     uint32_t wmMsg;
 
-    if ( StrCmpI(keyword,      "MOVE")           == 0 ) wmMsg = WM_MOUSEMOVE;
-    else if ( StrCmpI(keyword, "WHEEL")          == 0 ) wmMsg = WM_MOUSEWHEEL;
-    else if ( StrCmpI(keyword, "LEAVE")          == 0 ) wmMsg = WM_MOUSELEAVE;
-    else if ( StrCmpI(keyword, "HOVER")          == 0 ) wmMsg = WM_MOUSEHOVER;
+    if ( StrCmpI(keyword,      "MOUSEMOVE")      == 0 ) wmMsg = WM_MOUSEMOVE;
+    else if ( StrCmpI(keyword, "MOUSEWHEEL")     == 0 ) wmMsg = WM_MOUSEWHEEL;
+    else if ( StrCmpI(keyword, "MOUSELEAVE")     == 0 ) wmMsg = WM_MOUSELEAVE;
+    else if ( StrCmpI(keyword, "MOUSEHOVER")     == 0 ) wmMsg = WM_MOUSEHOVER;
     else if ( StrCmpI(keyword, "LBUTTONDOWN")    == 0 ) wmMsg = WM_LBUTTONDOWN;
     else if ( StrCmpI(keyword, "LBUTTONUP")      == 0 ) wmMsg = WM_LBUTTONUP;
     else if ( StrCmpI(keyword, "LBUTTONDBLCLK")  == 0 ) wmMsg = WM_LBUTTONDBLCLK;

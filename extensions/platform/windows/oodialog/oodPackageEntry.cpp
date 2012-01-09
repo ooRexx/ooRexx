@@ -854,6 +854,7 @@ REXX_METHOD_PROTOTYPE(dlgctrl_redrawRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_setColor);
 REXX_METHOD_PROTOTYPE(dlgctrl_tabGroup);
 REXX_METHOD_PROTOTYPE(dlgctrl_textSize);
+REXX_METHOD_PROTOTYPE(dlgctrl_putInBag);
 
 // Static
 REXX_METHOD_PROTOTYPE(stc_getIcon);
@@ -948,47 +949,50 @@ REXX_METHOD_PROTOTYPE(ud_getAcceleration);
 REXX_METHOD_PROTOTYPE(ud_setAcceleration);
 
 // ListView
-REXX_METHOD_PROTOTYPE(lv_insert);
 REXX_METHOD_PROTOTYPE(lv_add);
-REXX_METHOD_PROTOTYPE(lv_addRow);
+REXX_METHOD_PROTOTYPE(lv_addClearExtendStyle);
 REXX_METHOD_PROTOTYPE(lv_addFullRow);
+REXX_METHOD_PROTOTYPE(lv_addRemoveStyle);
+REXX_METHOD_PROTOTYPE(lv_addRow);
+REXX_METHOD_PROTOTYPE(lv_arrange);
+REXX_METHOD_PROTOTYPE(lv_checkUncheck);
 REXX_METHOD_PROTOTYPE(lv_deselectAll);
-REXX_METHOD_PROTOTYPE(lv_hitTestInfo);
-REXX_METHOD_PROTOTYPE(lv_modify);
-REXX_METHOD_PROTOTYPE(lv_setItemText);
-REXX_METHOD_PROTOTYPE(lv_itemText);
-REXX_METHOD_PROTOTYPE(lv_itemState);
-REXX_METHOD_PROTOTYPE(lv_setItemState);
-REXX_METHOD_PROTOTYPE(lv_setSpecificState);
-REXX_METHOD_PROTOTYPE(lv_getItemInfo);
-REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
-REXX_METHOD_PROTOTYPE(lv_getColumnInfo);
-REXX_METHOD_PROTOTYPE(lv_getColumnCount);
-REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
-REXX_METHOD_PROTOTYPE(lv_setColumnWidthPx);
-REXX_METHOD_PROTOTYPE(lv_modifyColumnPx);
-REXX_METHOD_PROTOTYPE(lv_insertColumnPx);
-REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
-REXX_METHOD_PROTOTYPE(lv_getItemPos);
-REXX_METHOD_PROTOTYPE(lv_setItemPos);
-REXX_METHOD_PROTOTYPE(lv_getNextItem);
-REXX_METHOD_PROTOTYPE(lv_getNextItemWithState);
 REXX_METHOD_PROTOTYPE(lv_find);
 REXX_METHOD_PROTOTYPE(lv_findNearestXY);
-REXX_METHOD_PROTOTYPE(lv_arrange);
-REXX_METHOD_PROTOTYPE(lv_setColor);
-REXX_METHOD_PROTOTYPE(lv_getColor);
-REXX_METHOD_PROTOTYPE(lv_addRemoveStyle);
-REXX_METHOD_PROTOTYPE(lv_replaceStyle);
-REXX_METHOD_PROTOTYPE(lv_getExtendedStyle);
-REXX_METHOD_PROTOTYPE(lv_replaceExtendStyle);
-REXX_METHOD_PROTOTYPE(lv_addClearExtendStyle);
-REXX_METHOD_PROTOTYPE(lv_hasCheckBoxes);
-REXX_METHOD_PROTOTYPE(lv_isChecked);
 REXX_METHOD_PROTOTYPE(lv_getCheck);
-REXX_METHOD_PROTOTYPE(lv_checkUncheck);
-REXX_METHOD_PROTOTYPE(lv_setImageList);
+REXX_METHOD_PROTOTYPE(lv_getColor);
+REXX_METHOD_PROTOTYPE(lv_getColumnCount);
+REXX_METHOD_PROTOTYPE(lv_getColumnInfo);
+REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
+REXX_METHOD_PROTOTYPE(lv_getExtendedStyle);
 REXX_METHOD_PROTOTYPE(lv_getImageList);
+REXX_METHOD_PROTOTYPE(lv_getItemData);
+REXX_METHOD_PROTOTYPE(lv_getItemInfo);
+REXX_METHOD_PROTOTYPE(lv_getItemPos);
+REXX_METHOD_PROTOTYPE(lv_getNextItem);
+REXX_METHOD_PROTOTYPE(lv_getNextItemWithState);
+REXX_METHOD_PROTOTYPE(lv_hasCheckBoxes);
+REXX_METHOD_PROTOTYPE(lv_hitTestInfo);
+REXX_METHOD_PROTOTYPE(lv_insert);
+REXX_METHOD_PROTOTYPE(lv_insertColumnPx);
+REXX_METHOD_PROTOTYPE(lv_isChecked);
+REXX_METHOD_PROTOTYPE(lv_itemText);
+REXX_METHOD_PROTOTYPE(lv_itemState);
+REXX_METHOD_PROTOTYPE(lv_modify);
+REXX_METHOD_PROTOTYPE(lv_modifyColumnPx);
+REXX_METHOD_PROTOTYPE(lv_removeItemData);
+REXX_METHOD_PROTOTYPE(lv_replaceExtendStyle);
+REXX_METHOD_PROTOTYPE(lv_replaceStyle);
+REXX_METHOD_PROTOTYPE(lv_setColor);
+REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
+REXX_METHOD_PROTOTYPE(lv_setColumnWidthPx);
+REXX_METHOD_PROTOTYPE(lv_setImageList);
+REXX_METHOD_PROTOTYPE(lv_setItemState);
+REXX_METHOD_PROTOTYPE(lv_setItemText);
+REXX_METHOD_PROTOTYPE(lv_setSpecificState);
+REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
+REXX_METHOD_PROTOTYPE(lv_setItemData);
+REXX_METHOD_PROTOTYPE(lv_setItemPos);
 
 // TreeView
 REXX_METHOD_PROTOTYPE(tv_getSpecificItem);
@@ -1491,6 +1495,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_setColor,               dlgctrl_setColor),
     REXX_METHOD(dlgctrl_tabGroup,               dlgctrl_tabGroup),
     REXX_METHOD(dlgctrl_textSize,               dlgctrl_textSize),
+    REXX_METHOD(dlgctrl_putInBag,               dlgctrl_putInBag),
 
     REXX_METHOD(window_init,                    window_init),
     REXX_METHOD(window_unInit,                  window_unInit),
@@ -1740,47 +1745,50 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lb_addDirectory,                lb_addDirectory),
 
     // ListView
-    REXX_METHOD(lv_setImageList,                lv_setImageList),
-    REXX_METHOD(lv_getImageList,                lv_getImageList),
-    REXX_METHOD(lv_getItemInfo,                 lv_getItemInfo),
-    REXX_METHOD(lv_getColumnInfo,               lv_getColumnInfo),
-    REXX_METHOD(lv_getColumnOrder,              lv_getColumnOrder),
-    REXX_METHOD(lv_setColumnOrder,              lv_setColumnOrder),
-    REXX_METHOD(lv_setColumnWidthPx,            lv_setColumnWidthPx),
-    REXX_METHOD(lv_modifyColumnPx,              lv_modifyColumnPx),
-    REXX_METHOD(lv_insertColumnPx,              lv_insertColumnPx),
-    REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
-    REXX_METHOD(lv_insert,                      lv_insert),
     REXX_METHOD(lv_add,                         lv_add),
-    REXX_METHOD(lv_addRow,                      lv_addRow),
+    REXX_METHOD(lv_addClearExtendStyle,         lv_addClearExtendStyle),
     REXX_METHOD(lv_addFullRow,         	        lv_addFullRow),
+    REXX_METHOD(lv_addRemoveStyle,              lv_addRemoveStyle),
+    REXX_METHOD(lv_addRow,                      lv_addRow),
+    REXX_METHOD(lv_arrange,                     lv_arrange),
+    REXX_METHOD(lv_checkUncheck,                lv_checkUncheck),
     REXX_METHOD(lv_deselectAll,                 lv_deselectAll),
-    REXX_METHOD(lv_hitTestInfo,                 lv_hitTestInfo),
-    REXX_METHOD(lv_modify,                      lv_modify),
-    REXX_METHOD(lv_getItemPos,                  lv_getItemPos),
-    REXX_METHOD(lv_setItemPos,                  lv_setItemPos),
-    REXX_METHOD(lv_setItemText,                 lv_setItemText),
-    REXX_METHOD(lv_itemText,                    lv_itemText),
-    REXX_METHOD(lv_itemState,                   lv_itemState),
-    REXX_METHOD(lv_setItemState,                lv_setItemState),
-    REXX_METHOD(lv_setSpecificState,            lv_setSpecificState),
-    REXX_METHOD(lv_getNextItem,                 lv_getNextItem),
-    REXX_METHOD(lv_getNextItemWithState,        lv_getNextItemWithState),
     REXX_METHOD(lv_find,                        lv_find),
     REXX_METHOD(lv_findNearestXY,               lv_findNearestXY),
-    REXX_METHOD(lv_arrange,                     lv_arrange),
-    REXX_METHOD(lv_getColor,                    lv_getColor),
-    REXX_METHOD(lv_setColor,                    lv_setColor),
-    REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
-    REXX_METHOD(lv_addRemoveStyle,              lv_addRemoveStyle),
-    REXX_METHOD(lv_replaceStyle,                lv_replaceStyle),
-    REXX_METHOD(lv_getExtendedStyle,            lv_getExtendedStyle),
-    REXX_METHOD(lv_replaceExtendStyle,          lv_replaceExtendStyle),
-    REXX_METHOD(lv_addClearExtendStyle,         lv_addClearExtendStyle),
-    REXX_METHOD(lv_hasCheckBoxes,               lv_hasCheckBoxes),
-    REXX_METHOD(lv_isChecked,                   lv_isChecked),
     REXX_METHOD(lv_getCheck,                    lv_getCheck),
-    REXX_METHOD(lv_checkUncheck,                lv_checkUncheck),
+    REXX_METHOD(lv_getColor,                    lv_getColor),
+    REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
+    REXX_METHOD(lv_getColumnInfo,               lv_getColumnInfo),
+    REXX_METHOD(lv_getColumnOrder,              lv_getColumnOrder),
+    REXX_METHOD(lv_getExtendedStyle,            lv_getExtendedStyle),
+    REXX_METHOD(lv_getImageList,                lv_getImageList),
+    REXX_METHOD(lv_getItemData,                 lv_getItemData),
+    REXX_METHOD(lv_getItemInfo,                 lv_getItemInfo),
+    REXX_METHOD(lv_getItemPos,                  lv_getItemPos),
+    REXX_METHOD(lv_getNextItem,                 lv_getNextItem),
+    REXX_METHOD(lv_getNextItemWithState,        lv_getNextItemWithState),
+    REXX_METHOD(lv_hasCheckBoxes,               lv_hasCheckBoxes),
+    REXX_METHOD(lv_hitTestInfo,                 lv_hitTestInfo),
+    REXX_METHOD(lv_insert,                      lv_insert),
+    REXX_METHOD(lv_insertColumnPx,              lv_insertColumnPx),
+    REXX_METHOD(lv_isChecked,                   lv_isChecked),
+    REXX_METHOD(lv_itemText,                    lv_itemText),
+    REXX_METHOD(lv_itemState,                   lv_itemState),
+    REXX_METHOD(lv_modify,                      lv_modify),
+    REXX_METHOD(lv_modifyColumnPx,              lv_modifyColumnPx),
+    REXX_METHOD(lv_removeItemData,   	        lv_removeItemData),
+    REXX_METHOD(lv_replaceExtendStyle,          lv_replaceExtendStyle),
+    REXX_METHOD(lv_replaceStyle,                lv_replaceStyle),
+    REXX_METHOD(lv_setColor,                    lv_setColor),
+    REXX_METHOD(lv_setColumnOrder,              lv_setColumnOrder),
+    REXX_METHOD(lv_setColumnWidthPx,            lv_setColumnWidthPx),
+    REXX_METHOD(lv_setImageList,                lv_setImageList),
+    REXX_METHOD(lv_setItemData,                 lv_setItemData),
+    REXX_METHOD(lv_setItemPos,                  lv_setItemPos),
+    REXX_METHOD(lv_setItemState,                lv_setItemState),
+    REXX_METHOD(lv_setItemText,                 lv_setItemText),
+    REXX_METHOD(lv_setSpecificState,            lv_setSpecificState),
+    REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
 
     // TreeView
     REXX_METHOD(tv_getSpecificItem,             tv_getSpecificItem),

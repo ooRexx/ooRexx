@@ -626,6 +626,7 @@ typedef struct _dcCSelf {
     void               *pKeyPress;       // Pointer to KeyPress subclass data struct, usually null.
     void               *mouseCSelf;      // Mouse CSelf struct
     RexxObjectPtr       rexxMouse;       // Rexx mouse object if there is one.
+    RexxObjectPtr       rexxBag;         // A Rexx Bag to put things in, if there is one.
     int32_t             lastItem;        // Index of the last item added to the control
     uint32_t            id;              // Resouce ID of the control
     oodControl_t        controlType;     // Enum value for control type

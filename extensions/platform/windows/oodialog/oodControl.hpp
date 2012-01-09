@@ -39,6 +39,18 @@
 #ifndef oodControl_Included
 #define oodControl_Included
 
+/**
+ * Many of the Windows controls allow the user to store a user defined value
+ * either with the control, or with each item of a control.  A good example is
+ * the list view control where the programmer can store / associate a value with
+ * each item in the list view.
+ *
+ * In ooDialog, where a dialog control object allows the Rexx programmer to take
+ * advantage of the Windows function each user value is put in the dialog
+ * control object's bag to prevent garbage collection until the dialog control
+ * object itself is garbage collected.
+ */
+#define DIALOGCONTROL_BAG_ATTRIBUTE  "DialogControlBagAttribute"
 
 /**
  *  A 'tag' is used in processing the mapping of Windows messages to user
@@ -201,6 +213,20 @@ inline uint32_t getDCinsertIndex(void *pCSelf)
 {
     return (((pCDialogControl)pCSelf)->lastItem + 1);
 }
+
+/**
+ * Validates that the CSelf pointer for a DialogControl object is not null.
+ */
+inline pCDialogControl validateDCCSelf(RexxMethodContext *c, void *pcdc)
+{
+    oodResetSysErrCode(c->threadContext);
+    if ( pcdc == NULL )
+    {
+        baseClassIntializationException(c);
+    }
+    return (pCDialogControl)pcdc;
+}
+
 
 
 #endif
