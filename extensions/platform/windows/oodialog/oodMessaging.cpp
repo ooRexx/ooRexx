@@ -1009,6 +1009,9 @@ BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
         case NoThreadAttach :
             _snprintf(buf, sizeof(buf), NO_THREAD_ATTACH_MSG, pcpbd, hDlg);
             break;
+        case NoThreadAttachOther :
+            _snprintf(buf, sizeof(buf), NO_THREAD_ATTACH_OTHER_MSG, pcpbd, hDlg);
+            break;
         case NoThreadContext :
             _snprintf(buf, sizeof(buf), NO_THREAD_CONTEXT_MSG, pcpbd->dlgProcContext, hDlg);
             break;
@@ -1622,6 +1625,27 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             break;
         }
 
+        case LVN_COLUMNCLICK :
+        {
+            RexxObjectPtr rxLV = createControlFromHwnd(c, pcpbd, ((NMHDR *)lParam)->hwndFrom, winListView, true);
+            uint32_t      col = (ULONG)((NM_LISTVIEW *)lParam)->iSubItem;
+
+            msgReply = ReplyTrue;
+
+            RexxArrayObject args = c->ArrayOfThree(idFrom, c->UnsignedInt32(col), rxLV);
+
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+
+            break;
+        }
+
         default :
             break;
     }
@@ -2167,12 +2191,6 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 wParam = ((NMHDR *)lParam)->idFrom;
                 sprintf(tmpBuffer, "%d %d", ((NM_TREEVIEW *)lParam)->ptDrag.x, ((NM_TREEVIEW *)lParam)->ptDrag.y);
                 np = tmpBuffer;
-            }
-            /* do we have a column click in a report? */
-            else if ( code == LVN_COLUMNCLICK )
-            {
-                wParam = ((NMHDR *)lParam)->idFrom;
-                lParam = (ULONG)((NM_LISTVIEW *)lParam)->iSubItem;  /* which column is pressed */
             }
             else if ( code == BCN_HOTITEMCHANGE )
             {
@@ -2854,7 +2872,6 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
     else if ( StrCmpI(keyword, "DELETEALL")   == 0 ) lvn = LVN_DELETEALLITEMS;
     else if ( StrCmpI(keyword, "BEGINEDIT")   == 0 ) lvn = LVN_BEGINLABELEDIT;
     else if ( StrCmpI(keyword, "ENDEDIT")     == 0 ) lvn = LVN_ENDLABELEDIT;
-    else if ( StrCmpI(keyword, "COLUMNCLICK") == 0 ) lvn = LVN_COLUMNCLICK;
     else if ( StrCmpI(keyword, "BEGINDRAG")   == 0 ) lvn = LVN_BEGINDRAG;
     else if ( StrCmpI(keyword, "BEGINRDRAG")  == 0 ) lvn = LVN_BEGINRDRAG;
     else if ( StrCmpI(keyword, "ACTIVATE")    == 0 ) lvn = LVN_ITEMACTIVATE;
@@ -2869,6 +2886,11 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
     {
         lvn = LVN_ITEMCHANGED;
         *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_CHECKBOXCHANGED;
+    }
+    else if ( StrCmpI(keyword, "COLUMNCLICK") == 0 )
+    {
+        lvn = LVN_COLUMNCLICK;
+        *tag = TAG_LISTVIEW;
     }
     else if ( StrCmpI(keyword, "SELECTCHANGED") == 0 )
     {

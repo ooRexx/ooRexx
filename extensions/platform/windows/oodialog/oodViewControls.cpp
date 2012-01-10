@@ -48,6 +48,7 @@
 
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodMessaging.hpp"
 #include "oodControl.hpp"
 #include "oodResources.hpp"
 
@@ -2442,6 +2443,50 @@ static int getColumnWidthArg(RexxMethodContext *context, RexxObjectPtr _width, s
 
 
 /**
+ * A list view item sort callback function that works by invoking a method in
+ * the Rexx dialog that does the actual comparison.
+ *
+ * @param lParam1
+ * @param lParam2
+ * @param lParamSort
+ *
+ * @return int32_t
+ *
+ * @remarks  The Rexx programmer will have had to set the lParam user data field
+ *           for each list view item of this to work.
+ *
+ *           Testing shows that this call back is always invoked on the dialog's
+ *           window message processing thread, so we do no need to worry about
+ *           doing an AttachThread(), with its subsequent problems of how to do
+ *           a DetachThread().
+ */
+int32_t CALLBACK LvRexxCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    pCRexxSort pcrs = (pCRexxSort)lParamSort;
+    RexxThreadContext *c = pcrs->threadContext;
+
+    RexxArrayObject args = c->ArrayOfThree((RexxObjectPtr)lParam1, (RexxObjectPtr)lParam2, pcrs->rexxLV);
+
+    RexxObjectPtr reply = c->SendMessage(pcrs->rexxDlg, pcrs->method, args);
+    if ( msgReplyIsGood(c, pcrs->pcpbd, reply, pcrs->method, false) )
+    {
+        int32_t answer;
+        if ( c->Int32(reply, &answer) )
+        {
+            return answer;
+        }
+
+        // Not sure what raising a condition here will do ...
+        wrongReplyListException(c, pcrs->method, "-1, 0, or 1", reply);
+    }
+
+    // There was some error if we are here ...
+    return -1;
+}
+
+
+
+/**
  * Inserts a new list view item or a new subitem into in an existing list view
  * item.
  *
@@ -2873,6 +2918,50 @@ RexxMethod2(int32_t, lv_findNearestXY, ARGLIST, args, CSELF, pCSelf)
 
 err_out:
     return -1;
+}
+
+
+/** ListView::sortItems()
+ *
+ *
+ */
+RexxMethod2(logical_t, lv_sortItems, CSTRING, method, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return FALSE;
+    }
+
+    pCRexxSort pcrs = pcdc->pcrs;
+    if ( pcrs == NULL )
+    {
+        pcrs = (pCRexxSort)LocalAlloc(LPTR, sizeof(CRexxSort));
+        if ( pcrs == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            return FALSE;
+        }
+        pcdc->pcrs = pcrs;
+    }
+
+    safeLocalFree(pcrs->method);
+    memset(pcrs, 0, sizeof(CRexxSort));
+
+    pcrs->method = (char *)LocalAlloc(LPTR, strlen(method));
+    if ( pcrs->method == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        return FALSE;
+    }
+
+    strcpy(pcrs->method, method);
+    pcrs->pcpbd         = pcdc->pcpbd;
+    pcrs->rexxDlg       = pcdc->pcpbd->rexxSelf;
+    pcrs->rexxLV        = pcdc->rexxSelf;
+    pcrs->threadContext = pcdc->pcpbd->dlgProcContext;
+
+    return ListView_SortItems(pcdc->hCtrl, LvRexxCompareFunc, pcrs);
 }
 
 RexxMethod2(RexxObjectPtr, lv_getItemData, uint32_t, index, CSELF, pCSelf)
@@ -3374,6 +3463,25 @@ RexxMethod3(RexxObjectPtr, lv_getColumnInfo, uint32_t, index, RexxObjectPtr, _d,
     context->DirectoryPut(d, context->String(align), "FMT");
 
     return TheTrueObj;
+}
+
+RexxMethod2(RexxStringObject, lv_getColumnText, uint32_t, index, CSELF, pCSelf)
+{
+    HWND hList = getDChCtrl(pCSelf);
+
+    LVCOLUMN lvi;
+    char buf[256];
+
+    lvi.mask = LVCF_TEXT;
+    lvi.pszText = buf;
+    lvi.cchTextMax = 255;
+
+    if ( ! ListView_GetColumn(hList, index, &lvi) )
+    {
+        buf[0] = '\0';
+    }
+
+    return context->String(buf);
 }
 
 RexxMethod3(RexxObjectPtr, lv_setColumnWidthPx, uint32_t, index, OPTIONAL_RexxObjectPtr, _width, CSELF, pCSelf)

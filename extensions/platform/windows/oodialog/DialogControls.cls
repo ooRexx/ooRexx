@@ -1141,6 +1141,7 @@
 ::method getColumnCount unguarded external "LIBRARY oodialog lv_getColumnCount"
 ::method getColumnInfo unguarded  external "LIBRARY oodialog lv_getColumnInfo"
 ::method getColumnOrder unguarded external "LIBRARY oodialog lv_getColumnOrder"
+::method getColumnText unguarded external "LIBRARY oodialog lv_getColumnText"
 ::method getExtendedStyle unguarded external "LIBRARY oodialog lv_getExtendedStyle"
 ::method getExtendedStyleRaw unguarded external "LIBRARY oodialog lv_getExtendedStyle"
 ::method getHoverTime unguarded
@@ -1249,6 +1250,7 @@
    return self~sendWinIntMsg(self~LVM_GETITEMSPACING, 1, 0)
 
 ::method snapToGrid unguarded external "LIBRARY oodialog lv_arrange"
+::method sortItems unguarded external "LIBRARY oodialog lv_sortItems"
 ::method spacing unguarded
    return self~sendWinIntMsg(self~LVM_GETITEMSPACING, 0, 0)
 

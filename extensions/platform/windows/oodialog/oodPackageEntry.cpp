@@ -964,6 +964,7 @@ REXX_METHOD_PROTOTYPE(lv_getColor);
 REXX_METHOD_PROTOTYPE(lv_getColumnCount);
 REXX_METHOD_PROTOTYPE(lv_getColumnInfo);
 REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
+REXX_METHOD_PROTOTYPE(lv_getColumnText);
 REXX_METHOD_PROTOTYPE(lv_getExtendedStyle);
 REXX_METHOD_PROTOTYPE(lv_getImageList);
 REXX_METHOD_PROTOTYPE(lv_getItemData);
@@ -976,8 +977,8 @@ REXX_METHOD_PROTOTYPE(lv_hitTestInfo);
 REXX_METHOD_PROTOTYPE(lv_insert);
 REXX_METHOD_PROTOTYPE(lv_insertColumnPx);
 REXX_METHOD_PROTOTYPE(lv_isChecked);
-REXX_METHOD_PROTOTYPE(lv_itemText);
 REXX_METHOD_PROTOTYPE(lv_itemState);
+REXX_METHOD_PROTOTYPE(lv_itemText);
 REXX_METHOD_PROTOTYPE(lv_modify);
 REXX_METHOD_PROTOTYPE(lv_modifyColumnPx);
 REXX_METHOD_PROTOTYPE(lv_removeItemData);
@@ -987,12 +988,13 @@ REXX_METHOD_PROTOTYPE(lv_setColor);
 REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
 REXX_METHOD_PROTOTYPE(lv_setColumnWidthPx);
 REXX_METHOD_PROTOTYPE(lv_setImageList);
+REXX_METHOD_PROTOTYPE(lv_setItemData);
+REXX_METHOD_PROTOTYPE(lv_setItemPos);
 REXX_METHOD_PROTOTYPE(lv_setItemState);
 REXX_METHOD_PROTOTYPE(lv_setItemText);
 REXX_METHOD_PROTOTYPE(lv_setSpecificState);
+REXX_METHOD_PROTOTYPE(lv_sortItems);
 REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
-REXX_METHOD_PROTOTYPE(lv_setItemData);
-REXX_METHOD_PROTOTYPE(lv_setItemPos);
 
 // TreeView
 REXX_METHOD_PROTOTYPE(tv_getSpecificItem);
@@ -1760,6 +1762,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
     REXX_METHOD(lv_getColumnInfo,               lv_getColumnInfo),
     REXX_METHOD(lv_getColumnOrder,              lv_getColumnOrder),
+    REXX_METHOD(lv_getColumnText,               lv_getColumnText),
     REXX_METHOD(lv_getExtendedStyle,            lv_getExtendedStyle),
     REXX_METHOD(lv_getImageList,                lv_getImageList),
     REXX_METHOD(lv_getItemData,                 lv_getItemData),
@@ -1788,6 +1791,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_setItemState,                lv_setItemState),
     REXX_METHOD(lv_setItemText,                 lv_setItemText),
     REXX_METHOD(lv_setSpecificState,            lv_setSpecificState),
+    REXX_METHOD(lv_sortItems,                   lv_sortItems),
     REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
 
     // TreeView

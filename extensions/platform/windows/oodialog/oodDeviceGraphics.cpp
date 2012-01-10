@@ -47,7 +47,6 @@
  * are only partially concerned with GDI.
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
-#include "oodControl.hpp"
 
 #include <stdio.h>
 #include <dlgs.h>
@@ -67,6 +66,7 @@
 
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodControl.hpp"
 #include "oodMessaging.hpp"
 #include "oodDeviceGraphics.hpp"
 

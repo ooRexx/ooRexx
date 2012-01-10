@@ -79,5 +79,6 @@ extern RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam, 
 
 extern bool         invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, RexxArrayObject args);
 extern MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringObject method, RexxArrayObject args);
+extern bool         msgReplyIsGood(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING methodName, bool clear);
 
 #endif

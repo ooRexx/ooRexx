@@ -193,21 +193,24 @@ typedef enum
 } MsgReplyType;
 
 
-// Identifies an error, that should never happen, discovered in RexxDlgProc().
-// Used in endDialogPremature() to determine what message to display.
+// Identifies an error, that should never happen, discovered in RexxDlgProc(),
+// or some other placing trying to do a therad attach. Used in
+// endDialogPremature() to determine what message to display.
 typedef enum
 {
-    NoPCPBDpased        = 0,    // pCPlainBaseDialog not passed in the WM_INITDIALOG message
-    NoPCPSPpased        = 1,    // pCPropertySheet not passed in the WM_INITDIALOG message
-    NoThreadAttach      = 2,    // Failed to attach the thread context.
-    NoThreadContext     = 3,    // The thread context pointer is null.
-    RexxConditionRaised = 4,    // The invocation of a Rexx event handler method raised a condition.
+    NoPCPBDpased         = 0,    // pCPlainBaseDialog not passed in the WM_INITDIALOG message
+    NoPCPSPpased         = 1,    // pCPropertySheet not passed in the WM_INITDIALOG message
+    NoThreadAttach       = 2,    // Failed to attach the thread context in RexxDlgProc().
+    NoThreadAttachOther  = 3,    // Failed to attach the thread context some other place.
+    NoThreadContext      = 4,    // The thread context pointer is null.
+    RexxConditionRaised  = 5,    // The invocation of a Rexx event handler method raised a condition.
 } DlgProcErrType;
 
-#define NO_PCPBD_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PlainBaseDialog\nCSELF is null.\n\n\tpcpdb=%p\n\thDlg=%p\n"
-#define NO_PCPSP_PASSED_MSG    "RexxDlgProc() ERROR in WM_INITDIALOG.  PropertySheetPage\nCSELF is null.\n\n\tpcpsp=%p\n\thDlg=%p\n"
-#define NO_THREAD_ATTACH_MSG   "RexxDlgProc() ERROR in WM_INITDIALOG.  Failed to attach\nthread context.\n\n\tpcpdb=%p\n\thDlg=%p\n"
-#define NO_THREAD_CONTEXT_MSG  "RexxDlgProc() ERROR.  Thread context is null.\n\n\tdlgProcContext=%p\n\thDlg=%pn"
+#define NO_PCPBD_PASSED_MSG         "RexxDlgProc() ERROR in WM_INITDIALOG.  PlainBaseDialog\nCSELF is null.\n\n\tpcpdb=%p\n\thDlg=%p\n"
+#define NO_PCPSP_PASSED_MSG         "RexxDlgProc() ERROR in WM_INITDIALOG.  PropertySheetPage\nCSELF is null.\n\n\tpcpsp=%p\n\thDlg=%p\n"
+#define NO_THREAD_ATTACH_MSG        "RexxDlgProc() ERROR in WM_INITDIALOG.  Failed to attach\nthread context.\n\n\tpcpdb=%p\n\thDlg=%p\n"
+#define NO_THREAD_ATTACH_OTHER_MSG  "Internal Windows ERROR.  Failed to attach\nthread context.\n\n\tpcpdb=%p\n\thDlg=%p\n"
+#define NO_THREAD_CONTEXT_MSG       "RexxDlgProc() ERROR.  Thread context is null.\n\n\tdlgProcContext=%p\n\thDlg=%pn"
 
 
 // Enum for the type of Windows dialog control.
@@ -610,6 +613,19 @@ typedef struct {
 typedef MOUSEWHEELDATA *PMOUSEWHEELDATA;
 
 
+// Struct for sorting list view items when the sorting is done by invoking a
+// method in the Rexx dialog.
+typedef struct _lvRexxSort{
+    pCPlainBaseDialog    pcpbd;            // The Rexx owner dialog CSelf
+    RexxThreadContext   *threadContext;    // Thread context of the sort function
+    RexxObjectPtr        rexxDlg;          // The Rexx dialog object
+    RexxObjectPtr        rexxLV;           // The Rexx list view object
+    char                *method;           // Name of method to invoke.
+} CRexxSort;
+typedef CRexxSort *pCRexxSort;
+
+
+
 // Struct for the DialogControl object CSelf.
 //
 // Note that for a control in a category dialog page, the hDlg is the handle of
@@ -625,6 +641,7 @@ typedef struct _dcCSelf {
     void               *pscd;            // Pointer to general subclass data struct, usually null.
     void               *pKeyPress;       // Pointer to KeyPress subclass data struct, usually null.
     void               *mouseCSelf;      // Mouse CSelf struct
+    pCRexxSort          pcrs;            // Pointer to Rexx sort struct used for sorting list view items, usuall null.
     RexxObjectPtr       rexxMouse;       // Rexx mouse object if there is one.
     RexxObjectPtr       rexxBag;         // A Rexx Bag to put things in, if there is one.
     int32_t             lastItem;        // Index of the last item added to the control
