@@ -396,7 +396,7 @@ do i = 1 to msg~Recipients~items
    if i < msg~Recipients~items then suffix = ','
    else suffix = ''
    if i = 1 then retc = self~strmsock~lineout('To:' msg~Recipients[i] || suffix)
-   else retc = self~strmsock('   ' msg~Recipients[i] || suffix)
+   else retc = self~strmsock~lineout('   ' msg~Recipients[i] || suffix)
    end
 retc = self~strmsock~lineout('Subject:' msg~Subject)
 -- retc = self~strmsock~lineout('')
