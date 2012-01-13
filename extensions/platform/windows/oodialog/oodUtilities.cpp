@@ -1134,6 +1134,28 @@ RexxMethod1(RexxObjectPtr, spi_init_cls, OSELF, self)
     return NULLOBJECT;
 }
 
+RexxMethod2(RexxObjectPtr, spi_setDragHeight_cls, uint32_t, pixels, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( ! SystemParametersInfo(SPI_SETDRAGHEIGHT, pixels, NULL, ((pCSpi)pCSelf)->fWinIni) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return NULLOBJECT;
+}
+
+RexxMethod2(RexxObjectPtr, spi_setDragWidth_cls, uint32_t, pixels, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( ! SystemParametersInfo(SPI_SETDRAGWIDTH, pixels, NULL, ((pCSpi)pCSelf)->fWinIni) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return NULLOBJECT;
+}
+
 
 /** SPI::updateFlag  [class attribute get]
  *
@@ -1236,10 +1258,8 @@ RexxMethod0(uint32_t, spi_getWheelScrollLines_cls)
 RexxMethod2(RexxObjectPtr, spi_setWheelScrollLines_cls, uint32_t, lines, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    uint32_t fWinIni = ((pCSpi)pCSelf)->fWinIni;
-    fWinIni = SPIF_SENDCHANGE | SPIF_UPDATEINIFILE;
 
-    if ( ! SystemParametersInfo(SPI_SETWHEELSCROLLLINES, lines, NULL, fWinIni) )
+    if ( ! SystemParametersInfo(SPI_SETWHEELSCROLLLINES, lines, NULL, ((pCSpi)pCSelf)->fWinIni) )
     {
         oodSetSysErrCode(context->threadContext);
     }
@@ -1264,6 +1284,10 @@ RexxMethod0(int32_t, sm_cxCursor_cls)
 {
     return GetSystemMetrics(SM_CXCURSOR);
 }
+RexxMethod0(int32_t, sm_cxDrag_cls)
+{
+    return GetSystemMetrics(SM_CXDRAG);
+}
 RexxMethod0(int32_t, sm_cxFixedFrame_cls)
 {
     return GetSystemMetrics(SM_CXFIXEDFRAME);
@@ -1283,6 +1307,10 @@ RexxMethod0(int32_t, sm_cyCaption_cls)
 RexxMethod0(int32_t, sm_cyCursor_cls)
 {
     return GetSystemMetrics(SM_CYCURSOR);
+}
+RexxMethod0(int32_t, sm_cyDrag_cls)
+{
+    return GetSystemMetrics(SM_CYDRAG);
 }
 RexxMethod0(int32_t, sm_cyFixedFrame_cls)
 {

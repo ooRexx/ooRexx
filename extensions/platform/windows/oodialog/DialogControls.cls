@@ -93,26 +93,33 @@
 
 -- DEPRECATED START
 ::method captureMouse unguarded
-   forward to (self~oDlg) array (self~hwnd)
+   mouse = .Mouse~new(self)
+   return mouse~capture
 
 ::method getFocus unguarded
    forward to (self~oDlg)
 
 ::method getMouseCapture unguarded
-   forward to (self~oDlg)
+   use strict arg
+   mouse = .Mouse~new(self)
+   return mouse~getCapture
 
 ::method getTextSize unguarded
    forward message "getTextSizeDlg" continue
    return result~width result~height
 
 ::method isMouseButtonDown unguarded
-   forward to (self~oDlg)
+   use strict arg whichButton = "LEFT"
+   mouse = .Mouse~new(self)
+   return mouse~isButtonDown(whichButton)
 
 ::method processMessage
    forward message "sendMessage"
 
 ::method releaseMouseCapture unguarded
-   forward to (self~oDlg)
+   use strict arg
+   mouse = .Mouse~new(self)
+   return mouse~releaseCapture
 
 ::method setFocus unguarded
    forward to (self~oDlg)
@@ -1068,7 +1075,7 @@
 ::method add unguarded external "LIBRARY oodialog lv_add"
 ::method addExtendedStyle unguarded external "LIBRARY oodialog lv_addClearExtendStyle"
 ::method addRow unguarded external "LIBRARY oodialog lv_addRow"
-::method addFullRow unguarded external "LIBRARY oodialog lv_addFullRow"  -- TODO review implementation before release
+::method addFullRow unguarded external "LIBRARY oodialog lv_addFullRow"
 ::method alignLeft unguarded external "LIBRARY oodialog lv_arrange"
 ::method alignTop unguarded external "LIBRARY oodialog lv_arrange"
 ::method addStyle unguarded external "LIBRARY oodialog lv_addRemoveStyle"
@@ -1273,7 +1280,6 @@
    return self~sendWinIntMsg(self~LVM_UPDATE, index, 0) <> 0
 
 
-
 -- DEPRECATED
 ::method setSmallImages unguarded
    newArgs = arg(1, 'A')
@@ -1290,6 +1296,54 @@
 -- DEPRECATED
 ::method removeImages unguarded
    return self~removeImageList(.nil, 0)
+
+
+::class 'LvItem' public
+::method init external "LIBRARY oodialog lvi_init"
+::method unInit external "LIBRARY oodialog lvi_unInit"
+
+::attribute index get external "LIBRARY oodialog lvi_index"
+::attribute index set external "LIBRARY oodialog lvi_setIndex"
+::attribute mask get external "LIBRARY oodialog lvi_mask"
+::attribute mask set external "LIBRARY oodialog lvi_setMask"
+::attribute text get external "LIBRARY oodialog lvi_text"
+::attribute text set external "LIBRARY oodialog lvi_setText"
+::attribute imageIndex get external "LIBRARY oodialog lvi_imageIndex"
+::attribute imageIndex set external "LIBRARY oodialog lvi_setImageIndex"
+::attribute userData get external "LIBRARY oodialog lvi_userData"
+::attribute userData set external "LIBRARY oodialog lvi_setUserData"
+::attribute itemState get external "LIBRARY oodialog lvi_itemState"
+::attribute itemState set external "LIBRARY oodialog lvi_setItemState"
+::attribute itemStateMask get external "LIBRARY oodialog lvi_itemStateMask"
+::attribute itemStateMask set external "LIBRARY oodialog lvi_setItemStateMask"
+::attribute indent get external "LIBRARY oodialog lvi_indent"
+::attribute indent set external "LIBRARY oodialog lvi_setIndent"
+::attribute groupID get external "LIBRARY oodialog lvi_groupID"
+::attribute groupID set external "LIBRARY oodialog lvi_setGroupID"
+::attribute columns get external "LIBRARY oodialog lvi_columns"
+::attribute columns set external "LIBRARY oodialog lvi_setColumns"
+
+
+::class 'LvSubItem' public
+::method init external "LIBRARY oodialog lvsi_init"
+::method unInit external "LIBRARY oodialog lvsi_unInit"
+
+::attribute item get external "LIBRARY oodialog lvsi_item"
+::attribute item set external "LIBRARY oodialog lvsi_setItem"
+::attribute subItem get external "LIBRARY oodialog lvsi_subItem"
+::attribute subItem set external "LIBRARY oodialog lvsi_setSubItem"
+::attribute mask get external "LIBRARY oodialog lvsi_mask"
+::attribute mask set external "LIBRARY oodialog lvsi_setMask"
+::attribute text get external "LIBRARY oodialog lvsi_text"
+::attribute text set external "LIBRARY oodialog lvsi_setText"
+::attribute imageIndex get external "LIBRARY oodialog lvsi_imageIndex"
+::attribute imageIndex set external "LIBRARY oodialog lvsi_setImageIndex"
+
+
+::class 'LvFullRow' public
+::method init external "LIBRARY oodialog lvfr_init"
+::method unInit external "LIBRARY oodialog lvfr_unInit"
+
 
 
 /************* Tree Control Class *********************************************/

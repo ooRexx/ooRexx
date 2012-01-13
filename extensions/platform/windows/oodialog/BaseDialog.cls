@@ -117,26 +117,6 @@
    ret.bottom = b/self~factorY
    return ret.
 
-::method logRect2AbsRect unguarded
-   parse arg l, t, r, b
-   ret.left = l*self~factorX
-   ret.right = r*self~factorX
-   ret.top = t*self~factorY
-   ret.bottom = b*self~factorY
-   return ret.
-
-::method cursorPos unguarded
-   forward to (.Mouse~new(self)) message 'GETCURSORPOS' continue
-   return result~x result~y
-
---::method getCursorPos unguarded  -- Not deprecated, never released  Remove this when doc is correct.
-
-::method restoreCursorShape unguarded
-  forward to (.Mouse~new(self)) message 'RESTORECURSOR'
-
-::method setCursorPos unguarded
-  forward to (.Mouse~new(self)) message 'SETCURSORPOS'
-
 ::method cursor_Arrow unguarded
   use strict arg
   forward to (.Mouse~new(self)) message 'ARROW'
@@ -156,6 +136,24 @@
 ::method cursor_Wait unguarded
   use strict arg
   forward to (.Mouse~new(self)) message 'WAIT'
+
+::method cursorPos unguarded
+   forward to (.Mouse~new(self)) message 'GETCURSORPOS' continue
+   return result~x result~y
+
+::method logRect2AbsRect unguarded
+   parse arg l, t, r, b
+   ret.left = l*self~factorX
+   ret.right = r*self~factorX
+   ret.top = t*self~factorY
+   ret.bottom = b*self~factorY
+   return ret.
+
+::method restoreCursorShape unguarded
+  forward to (.Mouse~new(self)) message 'RESTORECURSOR'
+
+::method setCursorPos unguarded
+  forward to (.Mouse~new(self)) message 'SETCURSORPOS'
 
 
 ::class 'ResourceImage' public

@@ -549,15 +549,8 @@ syntax:
 
 -- Deprecated to end of file.
 ::method captureMouse
-  use strict arg id = (-1)
-
-  if arg(1, 'O') then do
-    mouse = .Mouse~new(self)
-  end
-  else do
-    ctrlSelf = self~newControl(id)
-    mouse = .Mouse~new(ctrlSelf);
-  end
+  use strict arg
+  mouse = .Mouse~new(self)
   return mouse~capture
 
 ::method getMouseCapture
@@ -565,15 +558,15 @@ syntax:
   mouse = .Mouse~new(self)
   return mouse~getCapture
 
-::method releaseMouseCapture
-  use strict arg
-  mouse = .Mouse~new(self)
-  return mouse~releaseCapture
-
 ::method isMouseButtonDown
   use strict arg whichButton = "LEFT"
   mouse = .Mouse~new(self)
   return mouse~isButtonDown(whichButton)
+
+::method releaseMouseCapture
+  use strict arg
+  mouse = .Mouse~new(self)
+  return mouse~releaseCapture
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   The following menu bar methods are deprecated, instead, use the Menu classes

@@ -210,6 +210,11 @@
 ::class 'SPI' public
 ::constant WHEEL_PAGESCROLL   4294267295
 ::method init class external "LIBRARY oodialog spi_init_cls"
+
+-- Note, no 'get' for drag height and width, use SM class cxDrag and cyDrag
+::attribute dragHeight set class external "LIBRARY oodialog spi_setDragHeight_cls"
+::attribute dragWidth set class external "LIBRARY oodialog spi_setDragWidth_cls"
+
 ::attribute updateFlag get class external "LIBRARY oodialog spi_getUpdateFlag_cls"
 ::attribute updateFlag set class external "LIBRARY oodialog spi_setUpdateFlag_cls"
 
@@ -221,12 +226,14 @@
 ::class 'SM' public
 ::attribute cMouseButtons get class external "LIBRARY oodialog sm_cMouseButtons_cls"
 ::attribute cxCursor get class external      "LIBRARY oodialog sm_cxCursor_cls"
-::attribute cxFixedFrame get class external      "LIBRARY oodialog sm_cxFixedFrame_cls"
+::attribute cxDrag get class external        "LIBRARY oodialog sm_cyDrag_cls"
+::attribute cxFixedFrame get class external  "LIBRARY oodialog sm_cxFixedFrame_cls"
 ::attribute cxScreen get class external      "LIBRARY oodialog sm_cxScreen_cls"
 ::attribute cxVscroll get class external     "LIBRARY oodialog sm_cxVScroll_cls"
 ::attribute cyCaption get class external     "LIBRARY oodialog sm_cyCaption_cls"
 ::attribute cyCursor get class external      "LIBRARY oodialog sm_cyCursor_cls"
-::attribute cyFixedFrame get class external      "LIBRARY oodialog sm_cyFixedFrame_cls"
+::attribute cyDrag get class external        "LIBRARY oodialog sm_cyDrag_cls"
+::attribute cyFixedFrame get class external  "LIBRARY oodialog sm_cyFixedFrame_cls"
 ::attribute cyHscroll get class external     "LIBRARY oodialog sm_cyHScroll_cls"
 ::attribute cyScreen get class external      "LIBRARY oodialog sm_cyScreen_cls"
 

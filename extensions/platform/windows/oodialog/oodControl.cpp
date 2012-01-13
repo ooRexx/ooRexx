@@ -1393,6 +1393,13 @@ RexxMethod1(RexxObjectPtr, dlgctrl_unInit, CSELF, pCSelf)
             freeKeyPressData((pSubClassData)pcdc->pscd);
         }
 
+        if ( pcdc->pcrs != NULL )
+        {
+            safeLocalFree(pcdc->pcrs->method);
+            LocalFree(pcdc->pcrs);
+            pcdc->pcrs = NULL;
+        }
+
         pCWindowBase pcwb = ((pCDialogControl)pCSelf)->wndBase;
         if ( pcwb->rexxHwnd != TheZeroObj )
         {

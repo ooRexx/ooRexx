@@ -126,6 +126,21 @@ typedef struct newControlParams
 } NEWCONTROLPARAMS;
 typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
 
+/* Struct for the LvFullRow object CSelf. */
+typedef struct _lvFullRow
+{
+    uint32_t          magic;         // Indentifies this struct
+    LPLVITEM         *subItems;      // Subitem[0] is actually the item the rest are the subitems
+    RexxObjectPtr    *rxSubItems;    // The Rexx subitems rxSubItems[0] is a LvItem, the rest LvSubItems
+    RexxObjectPtr     rexxSelf;      // The LvFullRow Rexx object
+    uint32_t          subItemCount;  // The number of subItems
+    uint32_t          size;          // The allocated size of the subItem array.
+} CLvFullRow;
+typedef CLvFullRow *pCLvFullRow;
+
+#define LVFULLROW_MAGIC              0xCafeDeaf  // Magic number to identify a CLvFullRow struct
+#define LVFULLROW_DEF_SUBITEMS       10          // Initial size of the subItems array
+
 enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
 
 typedef void (*pfnFreeSubclassData)(pSubClassData pSCData);
