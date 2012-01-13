@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2012 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -34,8 +34,8 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
-   Exercise 03b: Re-structuring the "Words of Wisdom" application             
+/* ooDialog User Guide
+   Exercise 03b: Re-structuring the "Words of Wisdom" application
    Exercise03b-Data.rex 					  v00-03 29Jly11
 ------------------------------------------------------------------------------*/
 
@@ -43,8 +43,8 @@
   ==============================================================================
   WowData							  v00-03 29Jly11
   -------
-  Has access to WOW data, and returns a set to requester. 
-  Potential enhancement: Define the size of a set through configuration. 
+  Has access to WOW data, and returns a set to requester.
+  Potential enhancement: Define the size of a set through configuration.
   Changes:
     v00-02: minor changes to comments.
     v00-03: minor change to comment on activate method.
@@ -59,7 +59,7 @@
 
   /*----------------------------------------------------------------------------
     activate - reads initial Wow Set from disk (but not in this version)
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate
     expose arrWow
     arrWow = .array~new
@@ -78,15 +78,15 @@
   	      "Adding manpower to a late software project makes it later."
     arrWow[7] = "Grossman's Misquote of H. L. Mencken" -
   	      "Complex problems have simple, easy-to-understand wrong answers."
-    return 
+    return
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
     readWowSet - returns the Wow set as an array.
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD readWowSet
     expose arrWow
     return arrWow
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  
-/*============================================================================*/  
+
+/*============================================================================*/

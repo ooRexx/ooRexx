@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2012 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -34,8 +34,8 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
-   Exercise 03b: Re-structuring the "Words of Wisdom" application             
+/* ooDialog User Guide
+   Exercise 03b: Re-structuring the "Words of Wisdom" application
    Exercise03b-Model.rex 					  v00-03 29Jly11
    Changes:
      v00-03 - Changes to WowPicker
@@ -45,15 +45,15 @@
   ==============================================================================
   WowPicker							  v00-03 29Jly11
   ---------
-  A class that returns a Words of Wisdom string, selected randomly from a set 
-  of such Words of Wisdom. 
-  (Potential enhancements: Request a different set from the WowData class; 
+  A class that returns a Words of Wisdom string, selected randomly from a set
+  of such Words of Wisdom.
+  (Potential enhancements: Request a different set from the WowData class;
   			   Have the size of the set configurable.)
   Changes:
     v00-03: Changed to get data array in activate method instead of
       	      pickWow method.
 
-  interface{ 
+  interface{
     activate( )
     arrWowSet pickWow( )
   }
@@ -62,18 +62,18 @@
 ::CLASS WowPicker Public
 
 /*----------------------------------------------------------------------------
-    activate - gets an initial Wow set from the WowData object.		
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
+    activate - gets an initial Wow set from the WowData object.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate
     expose arrWowSet
     dataSource = .local~my.idWowData
     arrWowSet = dataSource~readWowSet
-    return 
+    return
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
-    pickWow - picks a Word of Wisdom from the current wowSet and returns it.		
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */ 
+    pickWow - picks a Word of Wisdom from the current wowSet and returns it.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD pickWow
     expose arrWowSet
     i = random(1,7)

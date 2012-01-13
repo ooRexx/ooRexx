@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2012 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -271,7 +271,7 @@ say "ProductView-updateProduct-01."
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD cancel
-    -- If in the process of updating, then ask whether any changes should be 
+    -- If in the process of updating, then ask whether any changes should be
     -- thrown away and dialog closed. If yes then close by calling the superclass,
     -- else nop. If not in update, then close immediately
     say "ProductView-cancel-01."

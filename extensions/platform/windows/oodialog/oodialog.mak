@@ -1,7 +1,7 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
 #/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-#/* Copyright (c) 2005-2010 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,13 +42,14 @@
 # NMAKE-compatible MAKE file for ooDialog
 
 OOD_OUTDIR=$(OR_OUTDIR)
+OOD_OODIALOGSRC=$(OR_OODIALOGSRC)
 
-all:  $(OR_OUTDIR)\oodialog.dll
+all:  $(OOD_OUTDIR)\oodialog.dll
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
 C=cl
 OPTIONS= $(cflags_common) $(cflags_dll) $(OR_ORYXINCL)
-OR_LIB=$(OOD_OUTDIR)
+OR_LIB=$(OR_OUTDIR)
 
 # All Source Files
 SOURCEF= $(OOD_OUTDIR)\APICommon.obj $(OOD_OUTDIR)\oodBarControls.obj $(OOD_OUTDIR)\oodBaseDialog.obj $(OOD_OUTDIR)\oodBasicControls.obj \

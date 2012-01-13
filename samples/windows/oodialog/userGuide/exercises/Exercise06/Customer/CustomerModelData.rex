@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2012 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -34,15 +34,15 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ooDialog User Guide							      
-   Exercise 04: The CustomerModel and CustomerData Classes	  v00-01 29Jly11             
-   
-   Contains: 	   classes "CustomerModel" and "CustomerResource".    
+/* ooDialog User Guide
+   Exercise 04: The CustomerModel and CustomerData Classes	  v00-01 29Jly11
+
+   Contains: 	   classes "CustomerModel" and "CustomerResource".
    Pre-requisites: None.
-   		   
-   Outstanding Problems: 
+
+   Outstanding Problems:
    None.
-   
+
    Changes:
    v00-01: 29Jly11
 ------------------------------------------------------------------------------*/
@@ -53,11 +53,11 @@
   CustomerModel							  v00-01 29Jly11
   ------------
   The "model" part of the Customer component.
-  
+
   interface customerModel{
     cusstomerModel newInstance()  -- Class method.
     null	  activate()
-    aDirectory    query()	  -- Returns Customer Data in a directory instance. 
+    aDirectory    query()	  -- Returns Customer Data in a directory instance.
   };
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -72,32 +72,32 @@
     aCustomerModel = self~new
     return aCustomerModel
 
-    
+
 /*----------------------------------------------------------------------------
     Instance Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    
+
   ::METHOD activate PUBLIC
-    -- Gets its data from ProductData. 
+    -- Gets its data from ProductData.
     expose idCustomerData
     idCustomerData = .local~my.idCustomerData
 
-    
+
   ::METHOD query PUBLIC
-    -- Returns data requested (no argument = return all)    
+    -- Returns data requested (no argument = return all)
     expose idCustomerData
     say "CustomerModel-query-01."
     data = idCustomerData~getData
-    return data 
+    return data
 /*============================================================================*/
 
 
-   
+
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
   CustomerData							  v00-01 29Jly11
   ------------
-  The "data" part of the Customer component. 
+  The "data" part of the Customer component.
   [interface (idl format)]
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -116,7 +116,7 @@
 /*----------------------------------------------------------------------------
     Instance Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate PUBLIC
     expose custData
@@ -127,17 +127,17 @@
     arrCustAddr[1]        = "28 Frith Street"
     arrCustAddr[2]        = "Hardington"
     arrCustAddr[3]        = "Blockshire"
-    custData[CustAddr]    = arrCustAddr 
+    custData[CustAddr]    = arrCustAddr
     custData[custZip]     = "LB7 4EJ"
     custData[custDiscount]= "B1"
     return
-    
+
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD getData PUBLIC
     expose custData
     say "CustomerData-getData-01."
-    return custData 
+    return custData
 
 /*============================================================================*/
 
