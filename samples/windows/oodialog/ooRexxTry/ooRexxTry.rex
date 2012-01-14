@@ -126,7 +126,7 @@ exit
     self~createPushButton(IDCANCEL,ed~x + 40,ed~y + ed~h + 2,35,10,,'E&xit')
 
 ----------
-    menuBar = .UserMenuBar~new(500,self,0,65)
+    menuBar = .UserMenuBar~new(500,0,65)
 
     menuBar~addPopup(510, '&File')
        menuBar~addItem(22,'&Run'   ,     ,'RunIt')
@@ -217,7 +217,6 @@ exit
     if \.useDefault then
         do
             -- Read oorexxtry.ini position & size the dialog based on its values
-            handle = self~getSelf
             k1 = SysIni('oorexxtry.ini','oorexxtry','k1')
             k2 = SysIni('oorexxtry.ini','oorexxtry','k2')
             k3 = SysIni('oorexxtry.ini','oorexxtry','k3')
@@ -226,19 +225,31 @@ exit
                 nop -- First exection will not find the ini file
             else
                 do
-                    self~setWindowRect(handle,k1,k2,k3-k1,k4-k2)
+                    r = .Rect~new(k1,k2,k3-k1,k4-k2)
+                    self~setWindowPos(TOP,r)
                     self~ensureVisible
                 end
         end
 
+
 -- Run menu option
 ::method RunIt
     expose args_input code_input result_input say_input errors_input
-    parse value code_input~getPos() with siX siY
-    parse value code_input~getSize() with siW siH
-    ch1 = code_input~cursor_Wait
-    parse value self~cursorPos with preCX preCY
-    code_input~setCursorPos((siX+(siW/2))*self~FactorX,(siY+(siH/2))*self~FactorY)
+
+    -- Calculate the center point of the code_input edit control, in screen
+    -- co-ordinates.
+    r = code_input~clientRect
+    centerPoint = .Point~new((r~right - r~left) % 2, (r~bottom - r~top) % 2)
+    code_input~client2screen(centerPoint)
+
+    -- Get and save the current mouse position.
+    mouse = .Mouse~new(code_input)
+    oldCursorPos = mouse~getCursorPos
+
+    -- Set the cursor to the busy symbol / move the cursor to our center point
+    oldCursor = mouse~wait
+    mouse~setCursorPos(centerPoint)
+
     arg_array = self~getText(args_input,.true)
     .local~si = say_input
     w1 = code_input~selected~word(1)
@@ -339,8 +350,10 @@ exit
         end
     if \.silent then        -- Let the user know when code execution is complete
         call beep 150,150
-    code_input~RestoreCursorShape(ch1)
-    self~setCursorPos(preCX,preCY)
+
+    mouse~restoreCursor(oldCursor)
+    mouse~setCursorPos(oldCursorPos)
+
     self~returnFocus
 return
 
@@ -361,20 +374,21 @@ ArgSyntax:
     .local~emsg = ''
     self~focusItem(12)
     args_input~select(1,1)
-    code_input~restoreCursorShape(ch1)
-    self~setCursorPos(preCX,preCY)
+
+    mouse~restoreCursor(oldCursor)
+    mouse~setCursorPos(oldCursorPos)
 return
 
 ::method cancel
-    handle = self~getSelf
-    sp = self~getWindowRect(handle)
+
+    r = self~windowRect
     -- Write out the size,position,fontname,fontsize, & silent to the .ini file
     if \self~isMinimized & \self~isMaximized then
         do
-            rv = SysIni('oorexxtry.ini','oorexxtry','k1',sp~word(1))
-            rv = SysIni('oorexxtry.ini','oorexxtry','k2',sp~word(2))
-            rv = SysIni('oorexxtry.ini','oorexxtry','k3',sp~word(3))
-            rv = SysIni('oorexxtry.ini','oorexxtry','k4',sp~word(4))
+            rv = SysIni('oorexxtry.ini','oorexxtry','k1',r~left)
+            rv = SysIni('oorexxtry.ini','oorexxtry','k2',r~top)
+            rv = SysIni('oorexxtry.ini','oorexxtry','k3',r~right)
+            rv = SysIni('oorexxtry.ini','oorexxtry','k4',r~bottom)
         end
     rv = SysIni('oorexxtry.ini','oorexxtry','fn',.fontname)
     rv = SysIni('oorexxtry.ini','oorexxtry','fs',.fontsize)
@@ -582,17 +596,17 @@ return self~ok:super
 
 ::method SaveSettings
     use arg msg, args
-    handle = self~getSelf
-    sp = self~getWindowRect(handle)
+
+    r = self~windowRect
     select
         when msg = 72 then
             do
                 if \self~isMinimized & \self~isMaximized then
                     do
-                        rv = SysIni('oorexxtry.ini','oorexxtry','k1',sp~word(1))
-                        rv = SysIni('oorexxtry.ini','oorexxtry','k2',sp~word(2))
-                        rv = SysIni('oorexxtry.ini','oorexxtry','k3',sp~word(3))
-                        rv = SysIni('oorexxtry.ini','oorexxtry','k4',sp~word(4))
+                        rv = SysIni('oorexxtry.ini','oorexxtry','k1',r~left)
+                        rv = SysIni('oorexxtry.ini','oorexxtry','k2',r~top)
+                        rv = SysIni('oorexxtry.ini','oorexxtry','k3',r~right)
+                        rv = SysIni('oorexxtry.ini','oorexxtry','k4',r~bottom)
                     end
                 rv = SysIni('oorexxtry.ini','oorexxtry','fn',.fontname)
                 rv = SysIni('oorexxtry.ini','oorexxtry','fs',.fontsize)
@@ -796,7 +810,7 @@ return
             -- Load the says and returns into environment variables for updating the dialog areas
             .local~run_results['returns'] = my_result
             -- Redirect STDOUT back to what it was (probably the screen)
-            .outputdDestination()
+            .output~Destination()
         end
 return .run_results
 
@@ -899,7 +913,8 @@ return 0
               "  Rexx home:         "||value("REXX_HOME",,"ENVIRONMENT")||"\doc\ooRexxTry.pdf" || .endOfLine -
               || .endOfLine || -
               "Sorry, no help is available"
-        call errorDialog msg
+        title = 'ooRexx Try for the 21st Century - Error'
+        j = MessageDialog(msg, self~hwnd, title, 'Ok', 'WARNING')
         return
     end
     'start "ooRexxTry Online Documentation"' '"'||helpDoc||'"'
