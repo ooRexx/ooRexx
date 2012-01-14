@@ -681,7 +681,7 @@ done_out:
     return mouse;
 }
 
-/** Mouse::getDoubleClickTime()   [Class method]
+/** Mouse::doubleClickTime()   [Class method]
  *
  * Gets the current double-click time for the mouse. A double-click is a
  * series of two clicks of the mouse button, the second occurring within a
@@ -694,7 +694,7 @@ done_out:
  * @remarks  We do not even need the CSelf struct for this method, so we do not
  *           use.
  */
-RexxMethod0(uint32_t, mouse_getDoubleClickTime_cls)
+RexxMethod0(uint32_t, mouse_doubleClickTime_cls)
 {
     return GetDoubleClickTime();
 }
@@ -719,8 +719,12 @@ RexxMethod0(uint32_t, mouse_getDoubleClickTime_cls)
  *
  * @remarks  We do not even need the CSelf struct for this method, so we do not
  *           use.
+ *
+ *           Note that if interval is omitted, the value of interval will be 0.
+ *           Since this is the default for interval, we do not need to check if
+ *           the argument was omitted or not.
  */
-RexxMethod1(RexxObjectPtr, mouse_setDoubleClickTime_cls, uint32_t, interval)
+RexxMethod1(RexxObjectPtr, mouse_setDoubleClickTime_cls, OPTIONAL_uint32_t, interval)
 {
     oodResetSysErrCode(context->threadContext);
 
@@ -762,7 +766,7 @@ RexxMethod1(RexxObjectPtr, mouse_setDoubleClickTime_cls, uint32_t, interval)
  * @remarks  We do not even need the CSelf struct for this method, so we do not
  *           use.
  */
-RexxMethod1(logical_t, mouse_swapButton_cls, logical_t, swap)
+RexxMethod1(logical_t, mouse_swapButton_cls, OPTIONAL_logical_t, swap)
 {
     oodResetSysErrCode(context->threadContext);
 
@@ -1452,6 +1456,10 @@ RexxMethod3(RexxObjectPtr, mouse_setCursor, OPTIONAL_RexxObjectPtr, _cursor, NAM
     }
 
     result = mouseSetCursor(context, pcm, hCursor);
+    if ( result == NULL )
+    {
+        result == TheZeroObj;
+    }
 
 done_out:
     return result;

@@ -1134,6 +1134,22 @@ RexxMethod1(RexxObjectPtr, spi_init_cls, OSELF, self)
     return NULLOBJECT;
 }
 
+/** SPI::dragHeight  [class attribute get]
+ *
+ *  @remarks  SystemParametersInfo() can not be used to get the drag height or
+ *            width.  So originally the attribute was going to be a set only
+ *            attribute.  But, on reflection this seems silly, there is no
+ *            reason the SPI class has to *only* use SystemParametersInfo().  We
+ *            can just use GetSystemMetrics().
+ */
+RexxMethod0(uint32_t, spi_getDragHeight_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+    return (uint32_t)GetSystemMetrics(SM_CYDRAG);
+}
+
+/** SPI::dragHeight  [class attribute set]
+ */
 RexxMethod2(RexxObjectPtr, spi_setDragHeight_cls, uint32_t, pixels, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
@@ -1145,6 +1161,22 @@ RexxMethod2(RexxObjectPtr, spi_setDragHeight_cls, uint32_t, pixels, CSELF, pCSel
     return NULLOBJECT;
 }
 
+/** SPI::dragWidth  [class attribute get]
+ *
+ *  @remarks  SystemParametersInfo() can not be used to get the drag height or
+ *            width.  So originally the attribute was going to be a set only
+ *            attribute.  But, on reflection this seems silly, there is no
+ *            reason the SPI class has to *only* use SystemParametersInfo().  We
+ *            can just use GetSystemMetrics().
+ */
+RexxMethod0(uint32_t, spi_getDragWidth_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+    return (uint32_t)GetSystemMetrics(SM_CXDRAG);
+}
+
+/** SPI::dragWidth  [class attribute set]
+ */
 RexxMethod2(RexxObjectPtr, spi_setDragWidth_cls, uint32_t, pixels, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);

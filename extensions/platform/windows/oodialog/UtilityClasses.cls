@@ -211,8 +211,9 @@
 ::constant WHEEL_PAGESCROLL   4294267295
 ::method init class external "LIBRARY oodialog spi_init_cls"
 
--- Note, no 'get' for drag height and width, use SM class cxDrag and cyDrag
+::attribute dragHeight get class external "LIBRARY oodialog spi_getDragHeight_cls"
 ::attribute dragHeight set class external "LIBRARY oodialog spi_setDragHeight_cls"
+::attribute dragWidth get class external "LIBRARY oodialog spi_getDragWidth_cls"
 ::attribute dragWidth set class external "LIBRARY oodialog spi_setDragWidth_cls"
 
 ::attribute updateFlag get class external "LIBRARY oodialog spi_getUpdateFlag_cls"
@@ -312,7 +313,7 @@
 ::method new class external "LIBRARY oodialog mouse_new_cls"
 ::method init external "LIBRARY oodialog mouse_init"
 
-::method getDoubleClickTime class external "LIBRARY oodialog mouse_getDoubleClickTime_cls"
+::method doubleClickTime class external "LIBRARY oodialog mouse_doubleClickTime_cls"
 ::method loadCursor class external "LIBRARY oodialog mouse_loadCursor_cls"
 ::method loadCursorFromFile class external "LIBRARY oodialog mouse_loadCursorFromFile_cls"
 ::method setDoubleClickTime class external "LIBRARY oodialog mouse_setDoubleClickTime_cls"

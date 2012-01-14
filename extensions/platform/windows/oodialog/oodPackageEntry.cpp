@@ -426,7 +426,9 @@ REXX_METHOD_PROTOTYPE(os_isVersion);
 
 // SPI
 REXX_METHOD_PROTOTYPE(spi_init_cls);
+REXX_METHOD_PROTOTYPE(spi_getDragHeight_cls);
 REXX_METHOD_PROTOTYPE(spi_setDragHeight_cls);
+REXX_METHOD_PROTOTYPE(spi_getDragWidth_cls);
 REXX_METHOD_PROTOTYPE(spi_setDragWidth_cls);
 REXX_METHOD_PROTOTYPE(spi_getUpdateFlag_cls);
 REXX_METHOD_PROTOTYPE(spi_setUpdateFlag_cls);
@@ -1250,7 +1252,7 @@ REXX_METHOD_PROTOTYPE(menuTemplate_addPopup);
 REXX_METHOD_PROTOTYPE(mouse_new_cls);
 REXX_METHOD_PROTOTYPE(mouse_loadCursor_cls);
 REXX_METHOD_PROTOTYPE(mouse_loadCursorFromFile_cls);
-REXX_METHOD_PROTOTYPE(mouse_getDoubleClickTime_cls);
+REXX_METHOD_PROTOTYPE(mouse_doubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_setDoubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_swapButton_cls);
 REXX_METHOD_PROTOTYPE(mouse_init);
@@ -1309,7 +1311,9 @@ RexxMethodEntry oodialog_methods[] = {
 
     // SPI
     REXX_METHOD(spi_init_cls,                   spi_init_cls),
+    REXX_METHOD(spi_getDragHeight_cls,          spi_getDragHeight_cls),
     REXX_METHOD(spi_setDragHeight_cls,          spi_setDragHeight_cls),
+    REXX_METHOD(spi_getDragWidth_cls,           spi_getDragWidth_cls),
     REXX_METHOD(spi_setDragWidth_cls,           spi_setDragWidth_cls),
     REXX_METHOD(spi_getUpdateFlag_cls,          spi_getUpdateFlag_cls),
     REXX_METHOD(spi_setUpdateFlag_cls,          spi_setUpdateFlag_cls),
@@ -2106,7 +2110,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(mouse_new_cls,                  mouse_new_cls),
     REXX_METHOD(mouse_loadCursor_cls,           mouse_loadCursor_cls),
     REXX_METHOD(mouse_loadCursorFromFile_cls,   mouse_loadCursorFromFile_cls),
-    REXX_METHOD(mouse_getDoubleClickTime_cls,   mouse_getDoubleClickTime_cls),
+    REXX_METHOD(mouse_doubleClickTime_cls,   mouse_doubleClickTime_cls),
     REXX_METHOD(mouse_setDoubleClickTime_cls,   mouse_setDoubleClickTime_cls),
     REXX_METHOD(mouse_swapButton_cls,           mouse_swapButton_cls),
     REXX_METHOD(mouse_init,                     mouse_init),
