@@ -544,6 +544,36 @@ RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const cha
 }
 
 /**
+ * Similar to 93.914
+ *
+ * Method argument <pos>, must contain one or more of <list>; found "<actual>"
+ *
+ * Method argument 2 must contain one or more of SKIPINVISIBLE, SKIPDISABLED,
+ * SKIPTRANSPARENT, or ALL; found "BOGUS NOTVISIBLE"
+ *
+ * @param c       Thread context
+ * @param pos
+ * @param list
+ * @param actual
+ *
+ * @return RexxObjectPtr
+ */
+RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual)
+{
+
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer), "Method argument %d, must contain one or more of %s; found \"%s\"",
+              pos, list, actual);
+    userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
+}
+
+RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual)
+{
+    return wrongArgOptionException(c, pos, list, c->ObjectToStringValue(actual));
+}
+
+/**
  * Similar to 93.915 and 93.914  (actually a combination of the two.)
  *
  * Method argument <pos>, option must be one of <list>; found "<actual>"

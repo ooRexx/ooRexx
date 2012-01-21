@@ -4021,10 +4021,17 @@ RexxMethod4(RexxObjectPtr, lv_setItemPos, uint32_t, index, OPTIONAL_RexxObjectPt
  *         image determines the number of images.  The image list is created
  *         using the ILC_COLOR8 flag, only.  No mask can be used.  No room is
  *         reserved for adding more images to the image list, etc..
+ *
+ *  @remarks  It is possible for this method to fail, without an exception
+ *            raised.  Therefore returning NULLOBJECT on all errors is not
+ *            viable.  The question is whether to return .nil on error, or 0.
+ *            For now, 0 is returned for an error.
  */
 RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
             OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, CSELF, pCSelf)
 {
+    RexxObjectPtr result = TheNilObj;
+
     HWND hwnd = getDChCtrl(pCSelf);
     oodResetSysErrCode(context->threadContext);
 
@@ -4059,6 +4066,7 @@ RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
         imageList = oodILFromBMP(context, &himl, ilSrc, width, height, hwnd);
         if ( imageList == NULLOBJECT )
         {
+            result = TheZeroObj;
             goto err_out;
         }
 
@@ -4078,7 +4086,7 @@ RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
     return rxSetObjVar(context, getLVAttributeName(type), imageList);
 
 err_out:
-    return NULLOBJECT;
+    return result;
 }
 
 /** ListView::getImageList()

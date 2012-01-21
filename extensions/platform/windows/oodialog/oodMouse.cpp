@@ -1458,7 +1458,7 @@ RexxMethod3(RexxObjectPtr, mouse_setCursor, OPTIONAL_RexxObjectPtr, _cursor, NAM
     result = mouseSetCursor(context, pcm, hCursor);
     if ( result == NULL )
     {
-        result == TheZeroObj;
+        result = TheZeroObj;
     }
 
 done_out:
@@ -1604,8 +1604,8 @@ RexxMethod2(int32_t, mouse_showCursor, OPTIONAL_logical_t, show, CSELF, pCSelf)
  *
  *           The cursor is a shared resource. If an application confines the
  *           cursor, it must release the cursor at some point by using
- *           clipCursor(.nil) before the user can move to another application
- *           using the mouse.
+ *           releaseClipCursor() before the user can move to another
+ *           application using the mouse.
  *
  *           Although the MSDN documentation does not explicity state this,
  *           experimentation shows that if the user brings up the Alt-Tab
@@ -1613,14 +1613,19 @@ RexxMethod2(int32_t, mouse_showCursor, OPTIONAL_logical_t, show, CSELF, pCSelf)
  *           the cursor is no lnoger confined.  If the user closes the dialog,
  *           the mouse is no longer confined.
  *
- *           TODO need to test this with a regular user account on Vista an
+ *  @remarks TODO need to test this with a regular user account on Vista an
  *           Win7.  MDSN says: The calling process must have
  *           WINSTA_WRITEATTRIBUTES access to the window station.
  *
  *           TODO using ARGLIST, if all arguments are omitted, there is a syntax
  *           error raised saying arg 1 is required.  This seems an interpreter
- *           bug, or mis-design.  Using .nil is just a work around, need to
- *           check why the syntax condition is raised.
+ *           bug, or mis-design.  To work around this, releaseClipCursor() is
+ *           implemented.  There is no ReleaseClipCursor in the Windows API, but
+ *           releaseClipCursor() in the Mouse class follows the same pattern as
+ *           capture() / getCapture() / releaseCapture for the mouse.  We now
+ *           have clipCursor() / getClipCursor() / releaseClipCursor(), which
+ *           may actually be preferable.  Still need to check why the syntax
+ *           condition is raised.
  */
 RexxMethod2(logical_t, mouse_clipCursor, ARGLIST, args, CSELF, pCSelf)
 {
@@ -1630,33 +1635,57 @@ RexxMethod2(logical_t, mouse_clipCursor, ARGLIST, args, CSELF, pCSelf)
         return 0;
     }
 
-    RECT  r = {0};
-    PRECT clipArea;
+    RECT   r = {0};
+    size_t arraySize;
+    size_t argsUsed;
 
-    RexxObjectPtr arg1 = context->GetArgument(1);
-
-    if ( arg1 == TheNilObj )
+    if ( ! getRectFromArglist(context, args, &r, true, 1, 4, &arraySize, &argsUsed) )
     {
-        clipArea = NULL;
+        return FALSE;
     }
-    else
+    if ( argsUsed < arraySize )
     {
-        size_t arraySize;
-        size_t argsUsed;
-
-        if ( ! getRectFromArglist(context, args, &r, true, 1, 4, &arraySize, &argsUsed) )
-        {
-            return FALSE;
-        }
-        if ( argsUsed < arraySize )
-        {
-            tooManyArgsException(context->threadContext, argsUsed);
-            return FALSE;
-        }
-        clipArea = &r;
+        tooManyArgsException(context->threadContext, argsUsed);
+        return FALSE;
     }
 
-    if ( ClipCursor(clipArea) == 0 )
+    if ( ClipCursor(&r) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+
+/** Mouse::releaseClipCursor
+ *
+ *  Releases the cursor so that it is free to move anywhere on the screen.
+ *
+ *  @return  True on success, false on error.
+ *
+ *  @notes   Sets the .SystemErrorCode.
+ *
+ *           The cursor is a shared resource. If an application confines the
+ *           cursor, it must release the cursor at some point by using
+ *           releaseClipCursor() before the user can move to another
+ *           application using the mouse.
+ *
+ *           Although the MSDN documentation does not explicity state this,
+ *           experimentation shows that if the user brings up the Alt-Tab
+ *           switching dialog and moves to another application in that manner,
+ *           the cursor is no lnoger confined.  If the user closes the dialog,
+ *           the mouse is no longer confined.
+ */
+RexxMethod1(logical_t, mouse_releaseClipCursor, CSELF, pCSelf)
+{
+    pCMouse pcm = getMouseCSelf(context, pCSelf);
+    if ( pcm == NULL )
+    {
+        return 0;
+    }
+
+    if ( ClipCursor(NULL) == 0 )
     {
         oodSetSysErrCode(context->threadContext);
         return FALSE;

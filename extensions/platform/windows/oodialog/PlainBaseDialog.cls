@@ -75,77 +75,60 @@
 ::attribute pixelCX get external "LIBRARY oodialog wb_getPixelCX"
 ::attribute pixelCY get external "LIBRARY oodialog wb_getPixelCY"
 
-::method sendMessage unguarded external "LIBRARY oodialog wb_sendMessage"
-::method sendMessageHandle unguarded external "LIBRARY oodialog wb_sendMessage"
-
--- These shortcut methods are for internal use, do not document.
-::method sendWinIntMsg unguarded external "LIBRARY oodialog wb_sendWinIntMsg"           -- Internal use do not document
-::method sendWinIntMsgH unguarded external "LIBRARY oodialog wb_sendWinIntMsg"          -- Internal use do not document
-::method sendWinUintMsg unguarded external "LIBRARY oodialog wb_sendWinUintMsg"         -- Internal use do not document
-::method sendWinHandleMsg unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"     -- Internal use do not document
-::method sendWinHandleMsgH unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"    -- Internal use do not document
-::method sendWinHandle2Msg unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"   -- Internal use do not document
-::method sendWinHandle2MsgH unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"  -- Internal use do not document
-
-::method enable unguarded external "LIBRARY oodialog wb_enable"
+::method childWindowFromPoint unguarded external "LIBRARY oodialog wb_childWindowFromPoint"
+::method clear unguarded external "LIBRARY oodialog wb_clear"
+::method client2screen unguarded external "LIBRARY oodialog wb_screenClient"
+::method clientRect unguarded external "LIBRARY oodialog wb_clientRect"
 ::method disable unguarded external "LIBRARY oodialog wb_enable"
-::method isVisible unguarded external "LIBRARY oodialog wb_isVisible"
-::method isEnabled unguarded external "LIBRARY oodialog wb_isEnabled"
-
-::method show unguarded external "LIBRARY oodialog wb_show"
-::method hide unguarded external "LIBRARY oodialog wb_show"
-::method showFast unguarded external "LIBRARY oodialog wb_showFast"
-::method hideFast unguarded external "LIBRARY oodialog wb_showFast"
 ::method display unguarded external "LIBRARY oodialog wb_display"
-
-::method update unguarded external "LIBRARY oodialog wb_redrawClient"
 ::method draw unguarded external "LIBRARY oodialog wb_redrawClient"
-::method redrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
-::method redraw unguarded external "LIBRARY oodialog wb_redraw"
-
-::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt" -- Not intending to document getWindowLong, at this point
-::method getID unguarded
-  return self~getWindowLong(-12)
-
-::method getStyleRaw unguarded
-  return self~getWindowLong(-16)
-
+::method enable unguarded external "LIBRARY oodialog wb_enable"
+::method foregroundWindow unguarded external "LIBRARY oodialog wb_foreGroundWindow"
+::method hide unguarded external "LIBRARY oodialog wb_show"
 ::method getExStyleRaw unguarded
   return self~getWindowLong(-20)
 
-::method setText unguarded external "LIBRARY oodialog wb_setText"
+::method getID unguarded
+  return self~getWindowLong(-12)
+
+::method getRealPos unguarded external "LIBRARY oodialog wb_getSizePos"
+::method getRealSize unguarded external "LIBRARY oodialog wb_getSizePos"
+::method getStyleRaw unguarded
+  return self~getWindowLong(-16)
+
 ::method getText unguarded external "LIBRARY oodialog wb_getText"
-::method "title=" unguarded external "LIBRARY oodialog wb_setText"
-::method setTitle unguarded external "LIBRARY oodialog wb_setText"
-::method title unguarded external "LIBRARY oodialog wb_getText"
 ::method getTextSizePx unguarded external "LIBRARY oodialog wb_getTextSizePx"
 ::method getTextSizeScreen unguarded external "LIBRARY oodialog wb_getTextSizeScreen"
-
-::method setRect unguarded external "LIBRARY oodialog wb_setRect"
-::method resizeTo unguarded external "LIBRARY oodialog wb_resizeMove"
+::method hideFast unguarded external "LIBRARY oodialog wb_showFast"
+::method isEnabled unguarded external "LIBRARY oodialog wb_isEnabled"
+::method isVisible unguarded external "LIBRARY oodialog wb_isVisible"
+::method mapWindowPoints unguarded external "LIBRARY oodialog wb_mapWindowPoints"
 ::method moveTo unguarded external "LIBRARY oodialog wb_resizeMove"
-::method setWindowPos unguarded external "LIBRARY oodialog wb_setWindowPos"
 ::method moveWindow unguarded external "LIBRARY oodialog wb_moveSizeWindow"
+::method redraw unguarded external "LIBRARY oodialog wb_redraw"
+::method redrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
+::method resizeTo unguarded external "LIBRARY oodialog wb_resizeMove"
+::method screen2client unguarded external "LIBRARY oodialog wb_screenClient"
+::method sendMessage unguarded external "LIBRARY oodialog wb_sendMessage"
+::method sendMessageHandle unguarded external "LIBRARY oodialog wb_sendMessage"
+::method setRect unguarded external "LIBRARY oodialog wb_setRect"
+::method setText unguarded external "LIBRARY oodialog wb_setText"
+::method setTitle unguarded external "LIBRARY oodialog wb_setText"
+::method setWindowPos unguarded external "LIBRARY oodialog wb_setWindowPos"
+::method show unguarded external "LIBRARY oodialog wb_show"
+::method showFast unguarded external "LIBRARY oodialog wb_showFast"
 ::method sizeWindow unguarded external "LIBRARY oodialog wb_moveSizeWindow"
-::method getRealSize unguarded external "LIBRARY oodialog wb_getSizePos"
-::method getRealPos unguarded external "LIBRARY oodialog wb_getSizePos"
+::method title unguarded external "LIBRARY oodialog wb_getText"
+::method "title=" unguarded external "LIBRARY oodialog wb_setText"
+::method update unguarded external "LIBRARY oodialog wb_redrawClient"
 ::method windowRect unguarded external "LIBRARY oodialog wb_windowRect"
-::method clientRect unguarded external "LIBRARY oodialog wb_clientRect"
-::method clear unguarded external "LIBRARY oodialog wb_clear"
 
-::method resize unguarded           -- old method, this is not accurate.
-   use strict arg width, height, showOptions = ""
-   p = .Point~new(0, 0)
-   s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
-   if self~setRect(p, s, "NOMOVE " || showOptions) then return 0
-   else return 1
 
-::method move unguarded             -- old method, this is not accurate.
-   use strict arg xPos, yPos, showOptions = ""
-   p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
-   s = .Size~new(0, 0)
-   if self~setRect(p, s, "NOSIZE " || showOptions) then return 0
-   else return 1
+::method clientToScreen unguarded   -- old method returns coordinates as a string
+    use strict arg x, y
+    p = .Point~new(x, y)
+    if self~client2screen(p) then return p~x p~y
+    else return 0 0
 
 ::method getSize unguarded          -- old method, this is not accurate.
    forward message "getRealSize" continue
@@ -167,10 +150,19 @@
    rect = result
    return rect~left rect~top rect~right rect~bottom
 
-::method foregroundWindow unguarded external "LIBRARY oodialog wb_foreGroundWindow"
-::method mapWindowPoints unguarded external "LIBRARY oodialog wb_mapWindowPoints"
-::method screen2client unguarded external "LIBRARY oodialog wb_screenClient"
-::method client2screen unguarded external "LIBRARY oodialog wb_screenClient"
+::method move unguarded             -- old method, this is not accurate.
+   use strict arg xPos, yPos, showOptions = ""
+   p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
+   s = .Size~new(0, 0)
+   if self~setRect(p, s, "NOSIZE " || showOptions) then return 0
+   else return 1
+
+::method resize unguarded           -- old method, this is not accurate.
+   use strict arg width, height, showOptions = ""
+   p = .Point~new(0, 0)
+   s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
+   if self~setRect(p, s, "NOMOVE " || showOptions) then return 0
+   else return 1
 
 ::method screenToClient unguarded   -- old method returns coordinates as a string
     use strict arg x, y
@@ -178,22 +170,26 @@
     if self~screen2client(p) then return p~x p~y
     else return 0 0
 
-::method clientToScreen unguarded   -- old method returns coordinates as a string
-    use strict arg x, y
-    p = .Point~new(x, y)
-    if self~client2screen(p) then return p~x p~y
-    else return 0 0
+-- These shortcut methods are for internal use, do not document.
+::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt" -- Not intending to document getWindowLong, at this point
+::method sendWinHandle2Msg unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"   -- Internal use do not document
+::method sendWinHandle2MsgH unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"  -- Internal use do not document
+::method sendWinHandleMsg unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"     -- Internal use do not document
+::method sendWinHandleMsgH unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"    -- Internal use do not document
+::method sendWinIntMsg unguarded external "LIBRARY oodialog wb_sendWinIntMsg"           -- Internal use do not document
+::method sendWinIntMsgH unguarded external "LIBRARY oodialog wb_sendWinIntMsg"          -- Internal use do not document
+::method sendWinUintMsg unguarded external "LIBRARY oodialog wb_sendWinUintMsg"         -- Internal use do not document
 
 ::method unknown unguarded
    use arg msgname
    call errorDialog msgname || " is not a method of " || self
 
+::method assignWindow               -- DEPRECATED
+   return 0
+
 ::method getSystemMetrics unguarded -- DEPRECATED
    use strict arg index
    return .DlgUtil~getSystemMetrics(index)
-
-::method assignWindow               -- DEPRECATED
-   return 0
 
 
 ::class 'Window' public inherit WindowBase

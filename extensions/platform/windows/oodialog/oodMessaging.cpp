@@ -1646,6 +1646,29 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             break;
         }
 
+        case LVN_KEYDOWN :
+        {
+            RexxObjectPtr rxLV = createControlFromHwnd(c, pcpbd, ((NMHDR *)lParam)->hwndFrom, winListView, true);
+            uint16_t      vKey = ((NMLVKEYDOWN *)lParam)->wVKey;
+
+            // The third argument is whether it is an extended key or not.  That
+            // is the only way to tell between ...
+            RexxArrayObject args  = getKeyEventRexxArgs(c, (WPARAM)vKey, false, rxLV);
+
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd, methodName, args);
+            }
+            else
+            {
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+            }
+
+            msgReply = ReplyTrue;
+
+            break;
+        }
+
         default :
             break;
     }
@@ -2892,15 +2915,20 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
         lvn = LVN_COLUMNCLICK;
         *tag = TAG_LISTVIEW;
     }
-    else if ( StrCmpI(keyword, "SELECTCHANGED") == 0 )
-    {
-        lvn = LVN_ITEMCHANGED;
-        *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_SELECTCHANGED;
-    }
     else if ( StrCmpI(keyword, "FOCUSCHANGED") == 0 )
     {
         lvn = LVN_ITEMCHANGED;
         *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_FOCUSCHANGED;
+    }
+    else if ( StrCmpI(keyword, "KEYDOWNEX") == 0 )
+    {
+        lvn = LVN_KEYDOWN;
+        *tag = TAG_LISTVIEW;
+    }
+    else if ( StrCmpI(keyword, "SELECTCHANGED") == 0 )
+    {
+        lvn = LVN_ITEMCHANGED;
+        *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_SELECTCHANGED;
     }
     else if ( StrCmpI(keyword, "SELECTFOCUS") == 0 )
     {
@@ -2927,8 +2955,6 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
  */
 inline CSTRING lvn2name(uint32_t lvn, uint32_t tag)
 {
-    tag &= ~(TAG_REPLYFROMREXX | TAG_LISTVIEW | TAG_STATECHANGED);
-
     switch ( lvn )
     {
         case LVN_ITEMCHANGING   : return "onChanging";
@@ -2941,10 +2967,20 @@ inline CSTRING lvn2name(uint32_t lvn, uint32_t tag)
         case LVN_BEGINDRAG      : return "onBegindrag";
         case LVN_BEGINRDRAG     : return "onBeginrdrag";
         case LVN_ITEMACTIVATE   : return "onActivate";
-        case LVN_KEYDOWN        : return "onKeydown";
         case NM_CLICK           : return "onClick";
+        case LVN_KEYDOWN :
+            if ( tag & TAG_LISTVIEW )
+            {
+                return "onKeyDownEx";
+            }
+            else
+            {
+                return "onKeydown";
+            }
 
         case LVN_ITEMCHANGED :
+            tag &= ~(TAG_REPLYFROMREXX | TAG_LISTVIEW | TAG_STATECHANGED);
+
             switch ( tag )
             {
                 case TAG_NOTHING :
@@ -4490,24 +4526,24 @@ err_out:
  *  @param  event       Keyword specifying which event to connect.  Keywords at
  *                      this time:
  *
- *                      CHANGING
- *                      CHANGED
- *                      INSERTED
- *                      DELETE
- *                      DELETEALL
- *                      BEGINEDIT
- *                      ENDEDIT
- *                      DEFAULTEDIT
- *                      COLUMNCLICK
+ *                      ACTIVATE
  *                      BEGINDRAG
  *                      BEGINRDRAG
- *                      ACTIVATE
+ *                      BEGINEDIT
+ *                      CHANGED
+ *                      CHANGING
+ *                      COLUMNCLICK
+ *                      DEFAULTEDIT
+ *                      DELETE
+ *                      DELETEALL
+ *                      ENDEDIT
+ *                      INSERTED
  *                      KEYDOWN
  *
- *                      CLICK
  *                      CHECKBOXCHANGED
- *                      SELECTCHANGED
+ *                      CLICK
  *                      FOCUSCHANGED
+ *                      SELECTCHANGED
  *                      SELECTFOCUS
  *
  *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the

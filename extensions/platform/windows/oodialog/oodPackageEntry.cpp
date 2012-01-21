@@ -408,6 +408,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenArea_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_threadID_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_windowFromPoint_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
 // ApplicationManager
@@ -495,6 +496,7 @@ REXX_METHOD_PROTOTYPE(wb_setWindowPos);
 REXX_METHOD_PROTOTYPE(wb_moveSizeWindow);
 REXX_METHOD_PROTOTYPE(wb_getSizePos);
 REXX_METHOD_PROTOTYPE(wb_windowRect);
+REXX_METHOD_PROTOTYPE(wb_childWindowFromPoint);
 REXX_METHOD_PROTOTYPE(wb_clientRect);
 REXX_METHOD_PROTOTYPE(wb_clear);
 REXX_METHOD_PROTOTYPE(wb_foreGroundWindow);
@@ -1147,6 +1149,7 @@ REXX_METHOD_PROTOTYPE(point_x);
 REXX_METHOD_PROTOTYPE(point_setX);
 REXX_METHOD_PROTOTYPE(point_y);
 REXX_METHOD_PROTOTYPE(point_setY);
+REXX_METHOD_PROTOTYPE(point_copy);
 REXX_METHOD_PROTOTYPE(point_add);
 REXX_METHOD_PROTOTYPE(point_subtract);
 REXX_METHOD_PROTOTYPE(point_incr);
@@ -1250,25 +1253,26 @@ REXX_METHOD_PROTOTYPE(menuTemplate_addPopup);
 
 // Mouse
 REXX_METHOD_PROTOTYPE(mouse_new_cls);
+REXX_METHOD_PROTOTYPE(mouse_doubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_loadCursor_cls);
 REXX_METHOD_PROTOTYPE(mouse_loadCursorFromFile_cls);
-REXX_METHOD_PROTOTYPE(mouse_doubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_setDoubleClickTime_cls);
 REXX_METHOD_PROTOTYPE(mouse_swapButton_cls);
 REXX_METHOD_PROTOTYPE(mouse_init);
-REXX_METHOD_PROTOTYPE(mouse_trackEvent);
-REXX_METHOD_PROTOTYPE(mouse_dragDetect);
-REXX_METHOD_PROTOTYPE(mouse_get_release_capture);
 REXX_METHOD_PROTOTYPE(mouse_capture);
-REXX_METHOD_PROTOTYPE(mouse_isButtonDown);
+REXX_METHOD_PROTOTYPE(mouse_clipCursor);
+REXX_METHOD_PROTOTYPE(mouse_connectEvent);
+REXX_METHOD_PROTOTYPE(mouse_dragDetect);
+REXX_METHOD_PROTOTYPE(mouse_getClipCursor);
 REXX_METHOD_PROTOTYPE(mouse_getCursorPos);
+REXX_METHOD_PROTOTYPE(mouse_get_release_capture);
+REXX_METHOD_PROTOTYPE(mouse_isButtonDown);
+REXX_METHOD_PROTOTYPE(mouse_releaseClipCursor);
 REXX_METHOD_PROTOTYPE(mouse_restoreCursor);
 REXX_METHOD_PROTOTYPE(mouse_setCursor);
 REXX_METHOD_PROTOTYPE(mouse_setCursorPos);
 REXX_METHOD_PROTOTYPE(mouse_showCursor);
-REXX_METHOD_PROTOTYPE(mouse_clipCursor);
-REXX_METHOD_PROTOTYPE(mouse_getClipCursor);
-REXX_METHOD_PROTOTYPE(mouse_connectEvent);
+REXX_METHOD_PROTOTYPE(mouse_trackEvent);
 REXX_METHOD_PROTOTYPE(mouse_test);
 
 RexxMethodEntry oodialog_methods[] = {
@@ -1294,6 +1298,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_getSystemMetrics_cls,   dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls,    dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_threadID_cls,           dlgutil_threadID_cls),
+    REXX_METHOD(dlgutil_windowFromPoint_cls,    dlgutil_windowFromPoint_cls),
     REXX_METHOD(dlgutil_test_cls,               dlgutil_test_cls),
 
     REXX_METHOD(app_init,                       app_init),
@@ -1355,35 +1360,36 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_setSizeY,                    wb_setSizeY),
     REXX_METHOD(wb_getPixelCX,                  wb_getPixelCX),
     REXX_METHOD(wb_getPixelCY,                  wb_getPixelCY),
-    REXX_METHOD(wb_sendMessage,                 wb_sendMessage),
-    REXX_METHOD(wb_sendWinIntMsg,               wb_sendWinIntMsg),
-    REXX_METHOD(wb_sendWinUintMsg,              wb_sendWinUintMsg),
-    REXX_METHOD(wb_sendWinHandleMsg,            wb_sendWinHandleMsg),
-    REXX_METHOD(wb_sendWinHandle2Msg,           wb_sendWinHandle2Msg),
-    REXX_METHOD(wb_enable,                      wb_enable),
-    REXX_METHOD(wb_isEnabled,                   wb_isEnabled),
-    REXX_METHOD(wb_isVisible,                   wb_isVisible),
-    REXX_METHOD(wb_show,                        wb_show),
-    REXX_METHOD(wb_showFast,                    wb_showFast),
-    REXX_METHOD(wb_display,                     wb_display),
-    REXX_METHOD(wb_redrawClient,                wb_redrawClient),
-    REXX_METHOD(wb_redraw,                      wb_redraw),
-    REXX_METHOD(wb_getText,                     wb_getText),
-    REXX_METHOD(wb_setText,                     wb_setText),
-    REXX_METHOD(wb_getTextSizePx,               wb_getTextSizePx),
-    REXX_METHOD(wb_getTextSizeScreen,           wb_getTextSizeScreen),
-    REXX_METHOD(wb_setRect,                     wb_setRect),
-    REXX_METHOD(wb_resizeMove,                  wb_resizeMove),
-    REXX_METHOD(wb_setWindowPos,                wb_setWindowPos),
-    REXX_METHOD(wb_moveSizeWindow,              wb_moveSizeWindow),
-    REXX_METHOD(wb_getSizePos,                  wb_getSizePos),
-    REXX_METHOD(wb_windowRect,                  wb_windowRect),
+    REXX_METHOD(wb_childWindowFromPoint,        wb_childWindowFromPoint),
     REXX_METHOD(wb_clientRect,                  wb_clientRect),
     REXX_METHOD(wb_clear,                       wb_clear),
+    REXX_METHOD(wb_display,                     wb_display),
+    REXX_METHOD(wb_enable,                      wb_enable),
     REXX_METHOD(wb_foreGroundWindow,            wb_foreGroundWindow),
-    REXX_METHOD(wb_mapWindowPoints,             wb_mapWindowPoints),
-    REXX_METHOD(wb_screenClient,                wb_screenClient),
+    REXX_METHOD(wb_getSizePos,                  wb_getSizePos),
+    REXX_METHOD(wb_getText,                     wb_getText),
+    REXX_METHOD(wb_getTextSizePx,               wb_getTextSizePx),
+    REXX_METHOD(wb_getTextSizeScreen,           wb_getTextSizeScreen),
     REXX_METHOD(wb_getWindowLong_pvt,           wb_getWindowLong_pvt),
+    REXX_METHOD(wb_isEnabled,                   wb_isEnabled),
+    REXX_METHOD(wb_isVisible,                   wb_isVisible),
+    REXX_METHOD(wb_mapWindowPoints,             wb_mapWindowPoints),
+    REXX_METHOD(wb_moveSizeWindow,              wb_moveSizeWindow),
+    REXX_METHOD(wb_redraw,                      wb_redraw),
+    REXX_METHOD(wb_redrawClient,                wb_redrawClient),
+    REXX_METHOD(wb_resizeMove,                  wb_resizeMove),
+    REXX_METHOD(wb_screenClient,                wb_screenClient),
+    REXX_METHOD(wb_setRect,                     wb_setRect),
+    REXX_METHOD(wb_setText,                     wb_setText),
+    REXX_METHOD(wb_sendMessage,                 wb_sendMessage),
+    REXX_METHOD(wb_sendWinIntMsg,               wb_sendWinIntMsg),
+    REXX_METHOD(wb_sendWinHandleMsg,            wb_sendWinHandleMsg),
+    REXX_METHOD(wb_sendWinHandle2Msg,           wb_sendWinHandle2Msg),
+    REXX_METHOD(wb_sendWinUintMsg,              wb_sendWinUintMsg),
+    REXX_METHOD(wb_setWindowPos,                wb_setWindowPos),
+    REXX_METHOD(wb_show,                        wb_show),
+    REXX_METHOD(wb_showFast,                    wb_showFast),
+    REXX_METHOD(wb_windowRect,                  wb_windowRect),
 
     REXX_METHOD(en_init_eventNotification,      en_init_eventNotification),
     REXX_METHOD(en_connectKeyPress,             en_connectKeyPress),
@@ -2009,6 +2015,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(point_setX,                     point_setX),
     REXX_METHOD(point_y,                        point_y),
     REXX_METHOD(point_setY,                     point_setY),
+    REXX_METHOD(point_copy,                     point_copy),
     REXX_METHOD(point_add,                      point_add),
     REXX_METHOD(point_subtract,                 point_subtract),
     REXX_METHOD(point_incr,                     point_incr),
@@ -2108,25 +2115,26 @@ RexxMethodEntry oodialog_methods[] = {
 
     // Mouse
     REXX_METHOD(mouse_new_cls,                  mouse_new_cls),
+    REXX_METHOD(mouse_doubleClickTime_cls,      mouse_doubleClickTime_cls),
     REXX_METHOD(mouse_loadCursor_cls,           mouse_loadCursor_cls),
     REXX_METHOD(mouse_loadCursorFromFile_cls,   mouse_loadCursorFromFile_cls),
-    REXX_METHOD(mouse_doubleClickTime_cls,   mouse_doubleClickTime_cls),
     REXX_METHOD(mouse_setDoubleClickTime_cls,   mouse_setDoubleClickTime_cls),
     REXX_METHOD(mouse_swapButton_cls,           mouse_swapButton_cls),
     REXX_METHOD(mouse_init,                     mouse_init),
-    REXX_METHOD(mouse_trackEvent,               mouse_trackEvent),
-    REXX_METHOD(mouse_dragDetect,               mouse_dragDetect),
-    REXX_METHOD(mouse_get_release_capture,      mouse_get_release_capture),
     REXX_METHOD(mouse_capture,                  mouse_capture),
-    REXX_METHOD(mouse_isButtonDown,             mouse_isButtonDown),
+    REXX_METHOD(mouse_clipCursor,               mouse_clipCursor),
+    REXX_METHOD(mouse_connectEvent,             mouse_connectEvent),
+    REXX_METHOD(mouse_dragDetect,               mouse_dragDetect),
+    REXX_METHOD(mouse_getClipCursor,            mouse_getClipCursor),
     REXX_METHOD(mouse_getCursorPos,             mouse_getCursorPos),
+    REXX_METHOD(mouse_get_release_capture,      mouse_get_release_capture),
+    REXX_METHOD(mouse_isButtonDown,             mouse_isButtonDown),
+    REXX_METHOD(mouse_releaseClipCursor,        mouse_releaseClipCursor),
     REXX_METHOD(mouse_restoreCursor,            mouse_restoreCursor),
     REXX_METHOD(mouse_setCursor,                mouse_setCursor),
     REXX_METHOD(mouse_setCursorPos,             mouse_setCursorPos),
     REXX_METHOD(mouse_showCursor,               mouse_showCursor),
-    REXX_METHOD(mouse_clipCursor,               mouse_clipCursor),
-    REXX_METHOD(mouse_getClipCursor,            mouse_getClipCursor),
-    REXX_METHOD(mouse_connectEvent,             mouse_connectEvent),
+    REXX_METHOD(mouse_trackEvent,               mouse_trackEvent),
     REXX_METHOD(mouse_test,                     mouse_test),
 
     REXX_LAST_METHOD()

@@ -741,6 +741,27 @@ static HWND wbSetUp(RexxMethodContext *c, void *pCSelf)
 }
 
 
+#define CWP_KEYWORDS    "SKIPDISABLED, SKIPINVISIBLE, SKIPTRANSPARENT, or ALL"
+
+uint32_t flags2cwp(CSTRING flags)
+{
+    uint32_t opts = 0xFFFFFFFF;
+
+    if ( StrStrI(flags, "ALL") )
+    {
+        opts = CWP_ALL;
+    }
+    else
+    {
+        opts = 0;
+        if ( StrStrI(flags, "SKIPDISABLED"   ) ) opts |= CWP_SKIPDISABLED;
+        if ( StrStrI(flags, "SKIPINVISIBLE"  ) ) opts |= CWP_SKIPINVISIBLE;
+        if ( StrStrI(flags, "SKIPTRANSPARENT") ) opts |= CWP_SKIPTRANSPARENT;
+    }
+    return opts;
+}
+
+
 /**
  * Interface to the Windows API: SendMessage().
  *
@@ -1841,6 +1862,41 @@ RexxMethod2(RexxObjectPtr, wb_windowRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, 
     return oodGetWindowRect(context, hwnd);
 }
 
+
+/** WindowBse::childWindowFromPoint()
+ *
+ *
+ */
+RexxMethod3(RexxStringObject, wb_childWindowFromPoint, RexxObjectPtr, pt, OPTIONAL_CSTRING, _flags, CSELF, pCSelf)
+{
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        goto err_out;
+    }
+
+    PPOINT p = rxGetPoint(context, pt, 1);
+    if ( p == NULL )
+    {
+        goto err_out;
+    }
+
+    uint32_t flags = CWP_SKIPINVISIBLE | CWP_SKIPDISABLED | CWP_SKIPTRANSPARENT;
+    if ( argumentExists(2) )
+    {
+        flags = flags2cwp(_flags);
+        if ( flags == 0xFFFFFFFF )
+        {
+            wrongArgKeywordsException(context->threadContext, 2, CWP_KEYWORDS, _flags);
+            goto err_out;
+        }
+    }
+
+    return pointer2string(context, ChildWindowFromPointEx(hwnd, *p, flags));
+
+err_out:
+    return NULLOBJECT;
+}
 
 /** WindowBase::clientRect()
  *

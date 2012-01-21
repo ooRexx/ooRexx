@@ -88,6 +88,8 @@ extern void  nullPointerException(RexxThreadContext *c, int pos);
 extern RexxObjectPtr wrongClassException(RexxThreadContext *c, size_t pos, const char *n);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, const char *actual);
+extern RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual);
+extern RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, int actual);
 extern RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
