@@ -58,17 +58,23 @@
  */
 
 -- First, give the user a clue as to what is happening.
-msg = "This ooRexx example program demonstrates controlling a" || '0d0a'x || -
-      "Windows application using the winsystm.cls classes." || '0d0a0d0a'x || -
-      "Information will be displayed using message boxes like" || '0d0a'x || -
-      "this one.  Push the ok button in them to continue the" || '0d0a'x || -
-      "demonstration." || '0d0a0d0a'x || -
-      "You will see both the Calculator and Notepad programs" || '0d0a'x || -
-      "appear on you screen.  There are some short pauses" || '0d0a'x || -
-      "between actions.  Be patient during them.  The appli-" || '0d0a'x || -
-      "cations will be closed automatically" || '0d0a0d0a'x || -
-      "In particular watch the Calculator program to see the" || '0d0a'x || -
-      "changes as it is remotely controlled."
+msg = "This ooRexx example program demonstrates controlling a"     || .endOfLine           || -
+      "Windows application using the winsystm.cls classes."        || .endOfLine~copies(2) || -
+      "Information will be displayed using message boxes like"     || .endOfLine           || -
+      "this one.  Push the ok button in them to continue the"      || .endOfLine           || -
+      "demonstration."                                             || .endOfLine~copies(2) || -
+      "You will see the Calculator and Notepad programs appear"    || .endOfLine           || -
+      "on your screen, one at a time.  There are some short"       || .endOfLine           || -
+      "pauses between actions.  Be patient during them."           || .endOfLine~copies(2) || -
+      "On the other hand, if the pauses are too short for you,"    || .endOfLine           || -
+      "you can increase the pauses by editing the code.  This"     || .endOfLine           || -
+      "will provide a good excuse to explore the code, which"      || .endOfLine           || -
+      "is an excellent way to learn.  Simply search for 'call"     || .endOfLine           || -
+      "SysSleep' in the code and increase the sleep amount for"    || .endOfLine           || -
+      "any pause that is is too short."                            || .endOfLine~copies(2) || -
+      "In particular watch the Calculator program to see the"      || .endOfLine           || -
+      "changes as it is remotely controlled.  The applications"    || .endOfLine           || -
+      "will be closed automatically"
 
 j = infoDialog(msg)
 
