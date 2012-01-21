@@ -107,16 +107,16 @@ OODUSER_SOURCEF = $(OOD_OUTDIR)\oodPropertySheetDialog.obj $(OOD_OUTDIR)\oodUser
 #
 # *** .cpp -> .obj rules
 #
-{$(OR_OODIALOGSRC)}.cpp{$(OOD_OUTDIR)}.obj:
+{$(OOD_OODIALOGSRC)}.cpp{$(OOD_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OOD_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_OODIALOGSRC)\$(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OOD_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OOD_OODIALOGSRC)\$(@B).cpp
 
 
-{$(OR_OODIALOGSRC)}.c{$(OOD_OUTDIR)}.obj:
+{$(OOD_OODIALOGSRC)}.c{$(OOD_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OOD_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_OODIALOGSRC)\$(@B).c
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OOD_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OOD_OODIALOGSRC)\$(@B).c
 
 
 $(OOD_OUTDIR)\oodialog.dll:     $(SOURCEF)
@@ -130,15 +130,15 @@ $(OOD_OUTDIR)\oodialog.dll:     $(SOURCEF)
     COMCTL32.LIB \
     shlwapi.lib \
     Oleacc.lib \
-    -def:$(OR_OODIALOGSRC)\ooDialog.def \
+    -def:$(OOD_OODIALOGSRC)\ooDialog.def \
     -out:$(OOD_OUTDIR)\$(@B).dll
 
 
 # Update the version information block
-$(OOD_OUTDIR)\oodialog.res: $(OR_OODIALOGSRC)\oodialog.rc
+$(OOD_OUTDIR)\oodialog.res: $(OOD_OODIALOGSRC)\oodialog.rc
     @ECHO .
     @ECHO ResourceCompiling $(@B).res
-        $(rc) $(rcflags_common) /i $(OR_OODIALOGSRC) /i $(OR_WINKERNELSRC) -r -fo$(OOD_OUTDIR)\$(@B).res $(OR_OODIALOGSRC)\$(@B).rc
+        $(rc) $(rcflags_common) /i $(OOD_OODIALOGSRC) /i $(OR_WINKERNELSRC) -r -fo$(OOD_OUTDIR)\$(@B).res $(OOD_OODIALOGSRC)\$(@B).rc
 
 # Recompile everything if the make file changes.
 $(SOURCEF) : oodialog.mak
