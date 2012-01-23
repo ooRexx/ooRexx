@@ -1592,9 +1592,10 @@ RexxMethod2(int32_t, mouse_showCursor, OPTIONAL_logical_t, show, CSELF, pCSelf)
  *  system automatically adjusts the position to keep the cursor inside the
  *  rectangular area.
  *
- *  @param  [OPTIONAL] A bounding rectangle specified as a .Rect object that
- *          defines the area the cursor is confined to.  If this object is
- *          omitted then any previous confinement is removed.
+ *  @param  [REQUITED] A bounding rectangle specified as a .Rect object that
+ *          defines the area the cursor is confined to.  Use
+ *          Mouse::releaseClipCursor() to allow the cursor to move anywhere on
+ *          the screen.
  *
  *  @return  If the method succeeds the return is .true.  On error the return is
  *           .false and .SystemErrorCode will be set to the operating system
@@ -1613,7 +1614,7 @@ RexxMethod2(int32_t, mouse_showCursor, OPTIONAL_logical_t, show, CSELF, pCSelf)
  *           the cursor is no lnoger confined.  If the user closes the dialog,
  *           the mouse is no longer confined.
  *
- *  @remarks TODO need to test this with a regular user account on Vista an
+ *  @remarks TODO need to test this with a regular user account on Vista and
  *           Win7.  MDSN says: The calling process must have
  *           WINSTA_WRITEATTRIBUTES access to the window station.
  *
