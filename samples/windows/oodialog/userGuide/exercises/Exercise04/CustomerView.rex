@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2011 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The CustomerView component             		  v00-07 04Oct11
+   Exercise 04: The CustomerView component             		  v00-08 25Jan12
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -53,6 +53,8 @@
                    and deleted autoDetection methods - not now needed as turn
                    off autoDetection in .Application~setDefaults().
    v00-07 Ex04 04Oct11: Added msgbox for unimplemented menu items.
+          08Jan12 - temp change to check on sequence of methods - removed after check.
+   v00-08 25Jan12 - very minor change to msgbox obtained from Print menu item.
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
@@ -184,7 +186,7 @@
     Print - Not implemented yet                                             --*/
   ::METHOD print unguarded
     msg = "The 'Print...' menu item is not yet implemented."
-    ret = MessageDialog(msg, self~hwnd, '*CustomerName*', 'WARNING')
+    ret = MessageDialog(msg, self~hwnd, 'Print', 'WARNING')
 
 
   /*----------------------------------------------------------------------------
