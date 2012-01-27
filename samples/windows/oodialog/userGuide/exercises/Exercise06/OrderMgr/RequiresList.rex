@@ -34,55 +34,29 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+/* ooDialog User Guide
+   Exercise 06: RequiresList.rex 				  v00-04 03Oct11
 
-#include <windows.h>
-#include <commctrl.h>
-#include <richedit.h>
-#include "OrderMgmtBaseView.h"
-
+   Contains: 	   The list of View components that OrderMgrView requires.
 
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDR_ORDMGMT_MENU MENU
-{
-    POPUP "Orders"
-    {
-        MENUITEM "New Order...", IDM_ORDMGMT_NEWORDER
-        MENUITEM "Order List...", IDM_ORDMGMT_ORDERLIST
-        MENUITEM "Order Search...", IDM_ORDMGMT_ORDERSEARCH
-    }
-    POPUP "Customers"
-    {
-        MENUITEM "Customer List...", IDM_ORDMGMT_CUSTLIST
-        MENUITEM "Customer Search...", IDM_ORDMGMT_CUSTSEARCH
-    }
-    POPUP "Products"
-    {
-        MENUITEM "Product List...", IDM_ORDMGMT_PRODLIST
-        MENUITEM SEPARATOR
-        MENUITEM "Product Search...", IDM_ORDMGMT_PRODSEARCH
-    }
-    POPUP "New"
-    {
-        MENUITEM "Product...", IDM_ORDMGMT_PRODNEW
-        MENUITEM "Customer...", IDM_ORDMGMT_CUSTNEW
-        MENUITEM "Order...", IDM_ORDMGMT_ORDERNEW
-    }
-    POPUP "Help"
-    {
-        MENUITEM "About", IDM_ORDMGMT_ABOUT
-    }
-}
+   Pre-requisites: Class "OrderMgrView
 
+   Description: This script is called by OrderMgrView.
 
+   Outstanding Problems: None reported.
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDD_ORDMGMT DIALOG 0, 0, 310, 220
-STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "Ms Shell Dlg"
-{
-    PUSHBUTTON      "Exit Application", IDC_ORDMGMT_EXIT, 253, 183, 53, 14
-    PUSHBUTTON      "Reset Icons", IDC_ORDMGMT_RESET, 5, 183, 43, 14
-    CONTROL         "", IDC_ORDMGMT_ICONS, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_ICON, 5, 5, 300, 175
-}
+   Changes:
+   v00-01 21Aug11: First version.
+   v00-02 19Sep11: Added required copyright notice.
+   v00-03 28Sep11: Added OrderListView.
+   v00-04 03Oct11: Commented out 'say'.
+------------------------------------------------------------------------------*/
+
+--say "RequiresList."
+
+::REQUIRES "Customer\CustomerListView.rex"
+::REQUIRES "Product\ProductListView.rex"
+::REQUIRES "Order\OrderListView.rex"
+::REQUIRES "Order\OrderFormView.rex"
+

@@ -35,17 +35,17 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: OrderMgmtView.rex 				  v00-03 12Oct11
+   Exercise 06: OrderMgrView.rex 				  v00-04 26Jan12
 
-   Contains: 	   class: "OrderMgmtView"
+   Contains: 	   class: "OrderMgrView"
 
-   This is a subclass of OrderMgmtBaseView, and provides only the "application"
+   This is a subclass of OrderMgrBaseView, and provides only the "application"
    function of Order Management.
 
-   Pre-requisites: Class "OrderMgmtBaseView
+   Pre-requisites: Class "OrderMgrBaseView
 
-   Description: A sample Order Management View clas - part of the sample
-        	Order Management component.
+   Description: A sample Order Manager View clas - part of the sample
+        	Order Manager component.
 
    Outstanding Problems: None reported.
 
@@ -55,27 +55,29 @@
    v00-03 12Oct11: Re-factored - moved all ListView matters (except re-sizing)
                    from OrderMgmtBaseView to here.
                    Add methods for menu items.
+   v00-04 26Jan12: Changed call orderMgmt\RequiresList.rex to
+                   call orderMgr\RequiresList.rex
 ------------------------------------------------------------------------------*/
 
-call "OrderMgmt\RequiresList.rex"
+call "OrderMgr\RequiresList.rex"
 
 ::REQUIRES "ooDialog.cls"
-::REQUIRES "OrderMgmt\OrderMgmtBaseView.rex"
+::REQUIRES "OrderMgr\OrderMgrBaseView.rex"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderManagementView						  v00-03 12Oct11
+  OrderManagerView						  v00-03 12Oct11
   --------------------
-  The "application" part of the OrderManagement View" component. This class
-  provides for all function except re-sizing and basic setup (OrderMgmtBaseView
+  The "application" part of the OrderManager View" component. This class
+  provides for all function except re-sizing and basic setup (OrderMgrBaseView
   has the .h file and the .rc file for the menu).
 
-  interface iOrderManagementView {
+  interface iOrderManagerView {
     void newInstance();
   }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
-::CLASS OrderMgmtView SUBCLASS OrderMgmtBaseView PUBLIC
+::CLASS OrderMgrView SUBCLASS OrderMgrBaseView PUBLIC
 
   /*----------------------------------------------------------------------------
     Instance Methods
@@ -87,7 +89,7 @@ call "OrderMgmt\RequiresList.rex"
 
   ::METHOD init
     expose records
-    say "OrderMgmtView-init."
+    say "OrderMgrView-init."
     self~init:super
     self~createIconList
     records = self~initRecords
@@ -98,7 +100,7 @@ call "OrderMgmt\RequiresList.rex"
     -- The icon data is loaded into 'iconList' which is an 'ImageList' as
     -- required by the ListView control.
     expose iconList
-    say "OrdermgmtView-createIconList."
+    say "OrderMgrView-createIconList."
     --trace i
     imgCustList  = .Image~getImage("customer\bmp\CustList.bmp")
     imgProdList  = .Image~getImage("product\res\ProdList.bmp")
@@ -147,7 +149,7 @@ call "OrderMgmt\RequiresList.rex"
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initDialog
     expose records iconList
-    say "OrderMgmtView-initDialog."
+    say "OrderMgrView-initDialog."
     self~initDialog:super
     -- Add the Image List to the ListView:
     self~lv~setImageList(iconList, .Image~toID(LVSIL_NORMAL))
@@ -164,7 +166,7 @@ call "OrderMgmt\RequiresList.rex"
   /*- - Orders  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD newOrder UNGUARDED
     expose records
-    --say "OrdermgmtView-newOrder."
+    --say "OrderMgrView-newOrder."
     self~showModel(records[4])
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -225,12 +227,12 @@ call "OrderMgmt\RequiresList.rex"
   ::METHOD onDoubleClick UNGUARDED
     expose records
     --use arg id
-    say "OrderMgmtView-Double-Clicked-01."
+    say "OrderMgrView-Double-Clicked-01."
     -- Get the index of the item with the focus, use the index to retrieve
     -- the item's record:
     index = self~lv~focused		-- lv is an attribute of the superclass.
     record = records[index+1]
-    say "OrderMgmtView-02-onDoubleClick: Record ID =" record~ID
+    say "OrderMgrView-02-onDoubleClick: Record ID =" record~ID
     self~showModel(record)
 
 
@@ -269,11 +271,11 @@ call "OrderMgmt\RequiresList.rex"
        In this version, get as many as you like - but all have the same data!.*/
     use arg record				-- record is a directory object.
     className = record~ID
-    say "OrderMgmtView-showModel-01: className =" className
+    say "OrderMgrView-showModel-01: className =" className
     viewClassName = className||"View"
     --root = self
     interpret "."||viewClassName||"~newInstance(self)"
-    say "OrderMgmtView-showModel-02:"
+    say "OrderMgrView-showModel-02:"
     --.CustomerListView~newInstance(self,root)
 
 /*============================================================================*/
@@ -281,17 +283,17 @@ call "OrderMgmt\RequiresList.rex"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRS (Human-Readable Strings for OrderMgmtViewBase)		  v00-01 03Oct11
+  HRS (Human-Readable Strings for OrderMgrViewBase)		  v00-01 03Oct11
   ---
   The HRS class provides constant character strings for user-visible messages
-  issued by the OrderMgmtBaseView class.
+  issued by the OrderMgrBaseView class.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 
 ::CLASS HRS PRIVATE		-- Human-Readable Strings
   ::CONSTANT omQExit        "Are you sure you want to close all windows and exit the application?"
   ::CONSTANT omNoMenu       "This menu item is not yet implemented."
-  ::CONSTANT omOM           "Order Management"
+  ::CONSTANT omOM           "Order Manager"
   ::CONSTANT omOrdSrch      "Order Search"
   ::CONSTANT omCustSrch     "Customer Search"
   ::CONSTANT omProdSrch     "Product Search"
