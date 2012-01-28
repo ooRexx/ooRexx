@@ -35,16 +35,16 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: OrderMgrView.rex 				  v00-04 26Jan12
+   Exercise 06: OrderMgrView.rex 				  v00-05 28Jan12
 
-   Contains: 	   class: "OrderMgrView"
+   Contains: 	   class: "OrderMgrView", "HRSomv"
 
    This is a subclass of OrderMgrBaseView, and provides only the "application"
    function of Order Management.
 
    Pre-requisites: Class "OrderMgrBaseView
 
-   Description: A sample Order Manager View clas - part of the sample
+   Description: A sample Order Manager View class - part of the sample
         	Order Manager component.
 
    Outstanding Problems: None reported.
@@ -57,6 +57,10 @@
                    Add methods for menu items.
    v00-04 26Jan12: Changed call orderMgmt\RequiresList.rex to
                    call orderMgr\RequiresList.rex
+   v00-05 28Jan12: Very minor changes to some "say"s.
+        	   Changed class name HRS to HRSomv to allow for multiple
+     		   HRS classes in same file at some future time.
+
 ------------------------------------------------------------------------------*/
 
 call "OrderMgr\RequiresList.rex"
@@ -89,7 +93,7 @@ call "OrderMgr\RequiresList.rex"
 
   ::METHOD init
     expose records
-    say "OrderMgrView-init."
+    --say "OrderMgrView-init."
     self~init:super
     self~createIconList
     records = self~initRecords
@@ -100,7 +104,7 @@ call "OrderMgr\RequiresList.rex"
     -- The icon data is loaded into 'iconList' which is an 'ImageList' as
     -- required by the ListView control.
     expose iconList
-    say "OrderMgrView-createIconList."
+    --say "OrderMgrView-createIconList."
     --trace i
     imgCustList  = .Image~getImage("customer\bmp\CustList.bmp")
     imgProdList  = .Image~getImage("product\res\ProdList.bmp")
@@ -149,7 +153,7 @@ call "OrderMgr\RequiresList.rex"
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initDialog
     expose records iconList
-    say "OrderMgrView-initDialog."
+    --say "OrderMgrView-initDialog."
     self~initDialog:super
     -- Add the Image List to the ListView:
     self~lv~setImageList(iconList, .Image~toID(LVSIL_NORMAL))
@@ -176,7 +180,7 @@ call "OrderMgr\RequiresList.rex"
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD orderSearch UNGUARDED
-    self~noMenuFunction(.HRS~omOrdSrch)
+    self~noMenuFunction(.HRSomv~OrdSrch)
 
   /*- - Customers - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD customerList UNGUARDED
@@ -185,7 +189,7 @@ call "OrderMgr\RequiresList.rex"
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD customerSearch UNGUARDED
-    self~noMenuFunction(.HRS~omCustSrch)
+    self~noMenuFunction(.HRSomv~CustSrch)
 
   /*- - Products  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD productList
@@ -194,15 +198,15 @@ call "OrderMgr\RequiresList.rex"
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD productSearch UNGUARDED
-    self~noMenuFunction(.HRS~omProdSrch)
+    self~noMenuFunction(.HRSomv~ProdSrch)
 
   /*- - New - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD product UNGUARDED
-    self~noMenuFunction(.HRS~omNewProd)
+    self~noMenuFunction(.HRSomv~NewProd)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD customer UNGUARDED
-    self~noMenuFunction(.HRS~omNewCust)
+    self~noMenuFunction(.HRSomv~NewCust)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD order UNGUARDED
@@ -210,13 +214,13 @@ call "OrderMgr\RequiresList.rex"
 
   /*- - Help - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD about UNGUARDED
-    self~noMenuFunction(.HRS~omHelpAbout)
+    self~noMenuFunction(.HRSomv~HelpAbout)
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD noMenuFunction UNGUARDED
     use arg title
-    ret = MessageDialog(.HRS~omNoMenu, self~hwnd, title, 'WARNING')
+    ret = MessageDialog(.HRSomv~NoMenu, self~hwnd, title, 'WARNING')
 
 
   /*----------------------------------------------------------------------------
@@ -227,14 +231,13 @@ call "OrderMgr\RequiresList.rex"
   ::METHOD onDoubleClick UNGUARDED
     expose records
     --use arg id
-    say "OrderMgrView-Double-Clicked-01."
+    --say "OrderMgrView-onDoubleClick-01."
     -- Get the index of the item with the focus, use the index to retrieve
     -- the item's record:
     index = self~lv~focused		-- lv is an attribute of the superclass.
     record = records[index+1]
-    say "OrderMgrView-02-onDoubleClick: Record ID =" record~ID
+    --say "OrderMgrView-onDoubleClick-02: Record ID =" record~ID
     self~showModel(record)
-
 
 
   /*----------------------------------------------------------------------------
@@ -247,11 +250,13 @@ call "OrderMgr\RequiresList.rex"
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD exitApp UNGUARDED
+    --say "OrderMgrView-exitApp-01."
     self~cancel
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD cancel
-    response = askDialog(.HRS~omQExit, "N")
+    --say "OrderMgrView-cancel-01."
+    response = askDialog(.HRSomv~QExit, "N")
     if response = 1 then forward class (super)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -271,34 +276,33 @@ call "OrderMgr\RequiresList.rex"
        In this version, get as many as you like - but all have the same data!.*/
     use arg record				-- record is a directory object.
     className = record~ID
-    say "OrderMgrView-showModel-01: className =" className
+    --say "OrderMgrView-showModel-01: className =" className
     viewClassName = className||"View"
     --root = self
     interpret "."||viewClassName||"~newInstance(self)"
-    say "OrderMgrView-showModel-02:"
-    --.CustomerListView~newInstance(self,root)
+    --say "OrderMgrView-showModel-02:"
 
 /*============================================================================*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRS (Human-Readable Strings for OrderMgrViewBase)		  v00-01 03Oct11
+  HRSomv (Human-Readable Strings for OrderMgrView)		  v00-01 03Oct11
   ---
-  The HRS class provides constant character strings for user-visible messages
+  The HRSomv class provides constant character strings for user-visible messages
   issued by the OrderMgrBaseView class.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 
-::CLASS HRS PRIVATE		-- Human-Readable Strings
-  ::CONSTANT omQExit        "Are you sure you want to close all windows and exit the application?"
-  ::CONSTANT omNoMenu       "This menu item is not yet implemented."
-  ::CONSTANT omOM           "Order Manager"
-  ::CONSTANT omOrdSrch      "Order Search"
-  ::CONSTANT omCustSrch     "Customer Search"
-  ::CONSTANT omProdSrch     "Product Search"
-  ::CONSTANT omNewCust      "New Customer"
-  ::CONSTANT omNewProd      "New Product"
-  ::CONSTANT omHelpAbout    "Help - About"
+::CLASS HRSomv PRIVATE		-- Human-Readable Strings
+  ::CONSTANT QExit        "Are you sure you want to close all windows and exit the application?"
+  ::CONSTANT NoMenu       "This menu item is not yet implemented."
+  ::CONSTANT OM           "Order Manager"
+  ::CONSTANT OrdSrch      "Order Search"
+  ::CONSTANT CustSrch     "Customer Search"
+  ::CONSTANT ProdSrch     "Product Search"
+  ::CONSTANT NewCust      "New Customer"
+  ::CONSTANT NewProd      "New Product"
+  ::CONSTANT HelpAbout    "Help - About"
 
 /*============================================================================*/

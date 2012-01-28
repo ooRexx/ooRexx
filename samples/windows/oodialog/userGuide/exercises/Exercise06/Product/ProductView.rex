@@ -37,7 +37,7 @@
 /* ooDialog User Guide
    Exercise 06: ProductView.rex - The ProductView component      v02-03 01Dec11
 
-   Contains: 	   classes "ProductView" and "AboutDialog".
+   Contains: 	   classes "ProductView", "AboutDialog", and "HRSpv".
    Pre-requisites: ProductView.dll, ProductView.h, Pproduct.ico, ProductIcon.bmp,
    		   Support\NumberOnlyEditEx.cls (copied from ooDialog Samples
    		   into the folder Exercise06\Support)
@@ -270,7 +270,7 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD cancel
-    -- If in the process of updating, then ask whether any changes should be
+    -- If in the process of updating, then ask whether any changes should be 
     -- thrown away and dialog closed. If yes then close by calling the superclass,
     -- else nop. If not in update, then close immediately
     if self~dialogState = "inUpdate" then do

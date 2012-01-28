@@ -35,13 +35,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderListView class
-   OrderList.rex 						  v01-01 12Oct11
+   Exercise 06: The Order ListView 				  v01-02 28Jan12
 
-   Contains: class "OrderListView"
+   Contains: class "OrderListView", "HRSolv"
+
    Pre-requisite files: OrderListView.rc, OrderListView.h.
-
-   Changes: This is the first version.
 
    Description: Provides a list of Orders and supports viewing any given
                 Order via a double-click on that Order's item in the list.
@@ -51,12 +49,28 @@
    v01-00 19Sep11: First Version
    v01-01 12Oct11: Added menu select methods (all saying not implemented).
    		   Added an HRS class for text strings.
+   v01-02 28Jan12: Changed class name HRS to HRSolv to allow for multiple
+     		   HRS classes in same file at some future time.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
 
 ::REQUIRES "ooDialog.cls"
 ::REQUIRES "Order\OrderView.rex"
+
+
+/*//////////////////////////////////////////////////////////////////////////////
+  ==============================================================================
+  OrderListView						  	  v00-03 28Jan12
+  -------------
+  The view of a list of products.
+  Changes:
+    v00-01: First version
+    v00-02: Corrected for standalone invocation.
+    v00-03 28Jan12: Changed name of HRS class to HRSplv.
+
+  [interface (idl format)]  <<optional>>
+  = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderListView SUBCLASS RcDialog PUBLIC
 
@@ -67,7 +81,7 @@
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg
     .Application~useGlobalConstDir("O","Order\OrderListView.h")
-    say ".OrderListView-newInstance-01: root =" rootDlg
+    say ".OrderListView-newInstance-01: root =" "'"||rootDlg||"'"
     dlg = self~new("Order\OrderListView.rc", "IDD_ORDLIST_LISTVIEW")
     say ".OrderListView-newInstance-02."
     dlg~activate(rootDlg)				-- Must be the last statement.
@@ -75,6 +89,10 @@
 
   /*----------------------------------------------------------------------------
     Instance Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  /*----------------------------------------------------------------------------
+    Dialog Setup Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD init
@@ -125,10 +143,77 @@
     self~connectListViewEvent("IDC_ORDLIST_LIST","CLICK",itemSelected)
     self~connectListViewEvent("IDC_ORDLIST_LIST","ACTIVATE",openItem)
     self~connectButtonEvent("IDC_ORDLIST_SHOWORDER","CLICKED",showOrder)
-    --btnShowOrder = self~newPushButton("IDC_SHOW_Order")
 
     self~loadList
 
+
+  /*----------------------------------------------------------------------------
+    Event-Handler Methods - Menu Events
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD newOrder UNGUARDED
+    self~noMenuFunction(.HRSolv~newOrder)
+
+  /*- - Help - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD about UNGUARDED
+    self~noMenuFunction(.HRSolv~helpAbout)
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD noMenuFunction UNGUARDED
+    use arg title
+    ret = MessageDialog(.HRSolv~noMenu, self~hwnd, title, 'WARNING')
+
+
+  /*----------------------------------------------------------------------------
+    Event Handling Methods - List Items
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  ::METHOD itemSelected unguarded
+    expose lvOrders --btnShowOrder
+    use arg id, itemIndex, columnIndex, keyState
+    --say "OrderListView-itemSelected: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
+    --say "OrderListView-itemSelected: item selected is:"lvOrders~selected
+    if itemIndex > -1 then self~enableControl("IDC_ORDLIST_SHOWORDER")
+    else self~disableControl("IDC_ORDLIST_SHOWORDER")
+    --text = list~itemText(itemIndex)
+    --colText = list~itemText(itemIndex, 1)
+    --parent~insertNewItem(text, colText)
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD openItem UNGUARDED
+    say "OrderListView-openItem-01: item selected =" item
+    self~showOrder
+
+
+  /*----------------------------------------------------------------------------
+    Application Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD showOrder unguarded
+    expose lvOrders rootDlg
+    item = lvOrders~selected
+    say "OrderListView-showOrder-01: item selected =" item
+    if item = -1 then do		-- if no item selected.
+      ret = MessageDialog(.HRSolv~nilSelected, self~hwnd, title, 'WARNING')
+      return
+    end
+    info=.Directory~new
+    if lvOrders~getItemInfo(item, info) then do
+      say "OrderListView-showOrder-02: info~text =" info~text
+      .local~my.idOrderData  = .OrderData~new	-- create Order Data instance
+      .local~my.idOrderModel = .OrderModel~new	-- create Order Model instance
+      .local~my.idOrderData~activate
+      .local~my.idOrderModel~activate
+      .OrderView~newInstance(rootDlg,"DM00263")
+      --say "OrderListView-showOrder-03: after startOrderView"
+      self~disableControl("IDC_ORDLIST_SHOWORDER")
+    end
+    else do
+      say "OrderListView-showOrder-04: ~getItemInfo returned .false."
+    end
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD loadList
@@ -146,82 +231,23 @@
     lvOrders~setColumnWidth(1)	-- set width of 2nd column to longest text entry.
 
 
-  /*----------------------------------------------------------------------------
-    Event-Handler Methods - Menu Events
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD newOrder UNGUARDED
-    self~noMenuFunction(.HRS~olNewOrder)
-
-  /*- - Help - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD about UNGUARDED
-    self~noMenuFunction(.HRS~olHelpAbout)
-
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD noMenuFunction UNGUARDED
-    use arg title
-    ret = MessageDialog(.HRS~olNoMenu, self~hwnd, title, 'WARNING')
-
-
-  /*----------------------------------------------------------------------------
-    Application Methods
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD itemSelected unguarded
-    expose lvOrders --btnShowOrder
-    use arg id, itemIndex, columnIndex, keyState
-    say "OrderListView-itemSelected: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
-    say "OrderListView-itemSelected: item selected is:"lvOrders~selected
-    self~enableControl("IDC_ORDLIST_SHOWORDER")
-    --text = list~itemText(itemIndex)
-    --colText = list~itemText(itemIndex, 1)
-    --parent~insertNewItem(text, colText)
-
-
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD openItem UNGUARDED
-    say "OrderListView-openItem-01: item selected =" item
-    self~showOrder
-
-
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD showOrder unguarded
-    expose lvOrders rootDlg
-    item = lvOrders~selected
-    say "OrderListView-showOrder-01: item selected =" item
-    info=.Directory~new
-    if lvOrders~getItemInfo(item, info) then do
-      say "OrderListView-showOrder-02: info~text =" info~text
-      --call startOrderView self
-      say "OrderListView-showOrder-03; root =" rootDlg
-      .local~my.idOrderData  = .OrderData~new	-- create Order Data instance
-      .local~my.idOrderModel = .OrderModel~new	-- create Order Model instance
-      .local~my.idOrderData~activate
-      .local~my.idOrderModel~activate
-      .OrderView~newInstance(rootDlg,"DM00263")
-      say "OrderListView-showOrder-03: after startOrderView"
-    end
-    else do
-      say "NO ITEM SeLeCTED!"
-    end
 /*============================================================================*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRS (Human-Readable Strings for OrderListView)		  v00-01 12Oct11
+  HRSolv (Human-Readable Strings for OrderListView)		  v00-02 28Jan12
   ---
-  The HRS class provides constant character strings for user-visible messages
-  issued by the CustomerListView class.
+  The HRSolv class provides constant character strings for user-visible messages
+  issued by the OrderListView class.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 
-::CLASS HRS PRIVATE		-- Human-Readable Strings
-  ::CONSTANT olNoMenu       "This menu item is not yet implemented."
-  ::CONSTANT olNewOrder     "New Order"
-  ::CONSTANT olHelpAbout    "Help - About"
+::CLASS HRSolv PRIVATE		-- Human-Readable Strings
+  ::CONSTANT noMenu       "This menu item is not yet implemented."
+  ::CONSTANT newOrder     "New Order"
+  ::CONSTANT helpAbout    "Help - About"
+  ::CONSTANT nilSelected  "Please select an item first."
 
 /*============================================================================*/
 

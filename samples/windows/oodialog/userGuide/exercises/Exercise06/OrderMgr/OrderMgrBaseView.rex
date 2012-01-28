@@ -36,9 +36,9 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The OrderManagementBaseView class
-   OrderMgrBaseView.rex					  v00-04 03Oct11
+   OrderMgrBaseView.rex					  v00-05 28Jan12
 
-   Contains: classes "OrderMgrBaseBase", HRS (private).
+   Contains: classes "OrderMgrBaseBase", HRSombv (private).
 
    Pre-requisite files: OrderManagementBaseView.rc, OrderManagementBaseView.h.
 
@@ -49,6 +49,8 @@
      v00-04 03Oct11: Re-factor code to move all app function (including ListView
                      setup) to the OrderMgrView sublcass. No function/appearance
                      change.
+     v00-05 28Jan12: Changed class name HRS to HRSombv to allow for multiple
+     		     HRS classes in same file at some future time.
 
    To Do: - Fix close by system (top right icon on window) - should bring up
             "are you sure" msg.
@@ -88,14 +90,14 @@
   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
-    say ".OrderMgrBaseView-newInstance-01: Start."
+    --say ".OrderMgrBaseView-newInstance-01: Start."
     -- Enable use of symbolic IDs in menu creation, and turn off AutoDetection
     -- (the third parameter:
     .Application~setDefaults("O", "OrderMgr\OrderMgrBaseView.h", .false)
     -- Create an instance of OrderMgrBaseView and show it:
     dlg = self~new
 
-    say ".OrderMgrBaseView-newInstance-02: dlg~Activate."
+    --say ".OrderMgrBaseView-newInstance-02: dlg~Activate."
     dlg~activate
 
 
@@ -112,7 +114,7 @@
 
     forward class (super) continue
 
-    success = self~createCenter(310, 220, .HRS~omWindowTitle,     -
+    success = self~createCenter(310, 220, .HRSombv~WindowTitle,     -
                                 'ThickFrame MinimizeBox MaximizeBox', , -
                                 'MS Sans Serif', 8)
     if \ success then do
@@ -150,8 +152,8 @@
 
     -- Note - in the following, use of single or double quotes around the symbolic ID produces a "could not parse" error message.
     self~createListView(IDC_ORDMGR_ICONS,   e~x,       e~y, e~w,        e~h,        "ICON")
-    self~createPushButton(IDC_ORDMGR_RESET, s~x('0%'), s~y, s~w('20%'), s~h('95%'), ,.HRS~omReset, resetIcons)
-    self~createPushButton(IDC_ORDMGR_EXIT,  s~x(-60),  s~y, s~w('20%'), s~h('95%'), ,.HRS~omExit, exitApp)
+    self~createPushButton(IDC_ORDMGR_RESET, s~x('0%'), s~y, s~w('20%'), s~h('95%'), ,.HRSombv~Reset, resetIcons)
+    self~createPushButton(IDC_ORDMGR_EXIT,  s~x(-60),  s~y, s~w('20%'), s~h('95%'), ,.HRSombv~ExitApp, exitApp)
 
     self~connectListViewEvent(IDC_ORDMGR_ICONS, "ACTIVATE", "onDoubleClick")
     -- Following line required to allow icons to be dragged around the listview.
@@ -159,14 +161,14 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate UNGUARDED
-    say "OrderMgrBaseView-activate."
+    --say "OrderMgrBaseView-activate."
     self~execute('SHOWTOP') -- Try showing dialog at end of initDialog to get sizing right.
     --self~execute("HIDE")
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initDialog
     expose minWidth minHeight iconList records menuBar u lastSizeInfo sizing
-    say "OrderMgrBaseView-initDialog."
+    --say "OrderMgrBaseView-initDialog."
     menuBar~attachTo(self)
 
     -- Create a proxy for the List View and store in instance variable 'lv'.
@@ -222,7 +224,7 @@
     when direction == 'TOP' then do
       if r~bottom - r~top < minHeight then do
         r~top = r~bottom - minHeight
-        say "r~top:" r~top "   r~bottom:" r~bottom
+        --say "r~top:" r~top "   r~bottom:" r~bottom
         return .true
       end
     end
@@ -315,7 +317,7 @@
   ::METHOD onResize unguarded
   expose u sizing minMaximized lastSizeInfo
   use arg sizingType, sizeinfo
-  say "OrderMgrBaseView-onResize."
+  --say "OrderMgrBaseView-onResize."
   --os - this methed sent while re-sizing.
   -- Save the size information so we know the final size of the dialog.
   lastSizeInfo = sizeInfo
@@ -352,7 +354,7 @@
 
   ::METHOD onSizeMoveEnded UNGUARDED
     expose u sizing lastSizeInfo
-    say "OrderMgrBaseView-onSizeMoveEnded."
+    --say "OrderMgrBaseView-onSizeMoveEnded."
     -- If we were resizing, force the dialog controls to redraw themselves.
     if sizing then do
       u~resize(self, lastSizeInfo)
@@ -367,15 +369,15 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRS (Human-Readable Strings for OrderMgrViewBase)		  v00-01 21Aug11
+  HRSombv (Human-Readable Strings for OrderMgrViewBase)		  v00-01 21Aug11
   ---
-  The HRS class provides constant character strings for user-visible messages
+  The OmHRS class provides constant character strings for user-visible messages
   issued by the OrderMgrBaseView class.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 
-::CLASS HRS PRIVATE		-- Human-Readable Strings
-  ::CONSTANT omWindowTitle  "Sales Order Management"
-  ::CONSTANT omReset        "Reset Icons"
-  ::CONSTANT omExit         "Exit Application"
+::CLASS HRSombv PRIVATE	  -- Human-Readable Strings
+  ::CONSTANT WindowTitle  "Sales Order Management"	-- Dialog Caption
+  ::CONSTANT Reset        "Reset Icons"			-- PushButton
+  ::CONSTANT ExitApp      "Exit Application"		-- PushButton
 /*============================================================================*/

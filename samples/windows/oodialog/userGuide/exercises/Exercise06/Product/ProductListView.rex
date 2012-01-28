@@ -35,10 +35,10 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise06: ProductListView
-   productListView.rex -  A list of products. 			  v00-03 12Oct11
+   Exercise06: The Product List View				  v00-04 28Jan12
 
-   Contains: 	   class "ProductListView; class HRS (for human-readable strings)
+   Contains: classes "ProductListView, HRSplv (for human-readable strings)
+
    Pre-requisites: ProductListView.rc, ProductListView.h, ProdList.ico
 
    Description: An "intermediate" component - called by OrderMgmt,
@@ -48,7 +48,9 @@
    v00-01 26Aug11.
    v00-02 19Sep11: Corrected for standalone invocation.
    v00-03 12Oct11: Added methods for menu items (show msg box - "Not Implemented")
-		   Also added calss HRS for display strings.
+		   Also added class HRS for display strings.
+   v00-04 28Jan11  Change name of class HRS to HRSplv to allow for multiple
+     		   HRS classes in same file at some future time.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
@@ -59,12 +61,13 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductListView						  v00-01 26Aug11
+  ProductListView						  v00-03 28Jan12
   -------------
   The view of a list of products.
   Changes:
     v00-01: First version
-    v00-02: Corrected for standalone invocawtion.
+    v00-02: Corrected for standalone invocation.
+    v00-03 28Jan12: Changed name of HRS class to HRSplv.
 
   [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -76,7 +79,6 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD newInstance CLASS PUBLIC
-    expose rootDlg
     use arg rootDlg
     .Application~useGlobalConstDir("O","Product\ProductListView.h")
     --say ".ProductListView-newInstance-01: rootDlg =" rootDlg
@@ -105,7 +107,7 @@
   ::METHOD createMenuBar
     -- Creates the menu bar on the dialog.
     expose menuBar
-    say "ProductListView-createMenuBar-01."
+    --say "ProductListView-createMenuBar-01."
     menuBar = .ScriptMenuBar~new("Product\ProductListView.rc", "IDR_PRODLIST_MENU", , , .true, self)
     return .true
 
@@ -131,7 +133,7 @@
 
     menuBar~attachTo(self)
 
-    say "ProductListView-initDialog-01"; say
+    --say "ProductListView-initDialog-01"; say
     lvProducts = self~newListView("IDC_PRODLIST_LISTVIEW");
     lvProducts~addExtendedStyle(GRIDLINES FULLROWSELECT)
     lvProducts~insertColumnPX(0,"Number",60,"LEFT")
@@ -143,28 +145,23 @@
 
     self~loadList
 
+
   /*----------------------------------------------------------------------------
     Event-Handler Methods - Menu Events
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD newProduct UNGUARDED
-    self~noMenuFunction(.HRS~plNewCust)
+    self~noMenuFunction(.HRSplv~newProd)
 
   /*- - Help - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD about UNGUARDED
-    self~noMenuFunction(.HRS~plHelpAbout)
+    self~noMenuFunction(.HRSplv~helpAbout)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD noMenuFunction UNGUARDED
-    use arg title
-    ret = MessageDialog(.HRS~plNoMenu, self~hwnd, title, 'WARNING')
-
-
-  /*----------------------------------------------------------------------------
-    Application Methods
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
+    use arg caption
+    ret = MessageDialog(.HRSplv~noMenu, self~hwnd, caption, 'WARNING')
 
   /*----------------------------------------------------------------------------
     Event Handling Methods - List Items
@@ -173,46 +170,46 @@
   ::METHOD itemSelected unguarded
     expose lvProducts
     use arg id, itemIndex, columnIndex, keyState
-    say "ProductListView-itemSelected: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
-    say "ProductListView-itemSelected: item selected is:"lvProducts~selected
-    self~enableControl("IDC_PRODLIST_SHOWPRODUCT")
-    --text = list~itemText(itemIndex)
-    --colText = list~itemText(itemIndex, 1)
-    --parent~insertNewItem(text, colText)
+    --say "ProductListView-itemSelected: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
+    --say "ProductListView-itemSelected: item selected is:"lvProducts~selected
+    if itemIndex > -1 then self~enableControl("IDC_PRODLIST_SHOWPRODUCT")
+    else self~disableControl("IDC_PRODLIST_SHOWPRODUCT")
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD openItem UNGUARDED
-    say "ProductListView-openItem-01: item selected =" item
+    --say "ProductListView-openItem-01: item selected =" item
     self~showProduct
 
+  /*----------------------------------------------------------------------------
+    Application Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD showProduct UNGUARDED
     expose lvProducts rootDlg
     item = lvProducts~selected
     say "ProductListView-showProduct-01: item selected =" item
+    if item = -1 then do		-- if no item selected.
+      ret = MessageDialog(.HRSplv~nilSelected, self~hwnd, title, 'WARNING')
+      return
+    end
     info=.Directory~new
     if lvProducts~getItemInfo(item, info) then do
       --say "ProductListView-showProduct-02: info~text =" info~text
       --say "ProductListView-showProduct-03; root =" root
--- NEXT 4 STMTS ADDED FOR EXERCISE06:
       .local~my.idProductData  = .ProductData~newInstance	-- create a ProductData instance
       .local~my.idProductModel = .ProductModel~newInstance	-- create a ProductModel instance
       .local~my.idProductData~activate
       .local~my.idProductModel~activate
       .ProductView~newInstance(rootDlg,"CU003")
       --say "ProductListView-showProduct-04: after startProductView"
+      self~disableControl("IDC_PRODLIST_SHOWPRODUCT")
     end
     else do
-      say "NO ITEM SeLeCTED!"
+      say "ProductListView-showProduct-05: ~getItemInfo returned .false."
     end
 
-
-  /*----------------------------------------------------------------------------
-    Application Methods
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD loadList
     expose lvProducts
     lvProducts~addRow(2, ,"CU003","Widget, 5in")
@@ -221,24 +218,25 @@
     do i = 1 to 50
       lvProducts~addRow(i, , "Line" i, i)
     end
-    lvProducts~setColumnWidth(1)	-- set width of 2nd coluimn to longest text entry.
+    lvProducts~setColumnWidth(1)	-- set width of 2nd column to longest text entry.
 
 /*============================================================================*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRS (Human-Readable Strings for CustomerListView)		  v00-01 12Oct11
-  ---
+  HRSplv (Human-Readable Strings for ProductListView)		  v00-02 28Jan12
+  ------
   The HRS class provides constant character strings for user-visible messages
-  issued by the CustomerListView class.
+  issued by the ProductListView class.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 
-::CLASS HRS PRIVATE		-- Human-Readable Strings
-  ::CONSTANT plNoMenu       "This menu item is not yet implemented."
-  ::CONSTANT plNewCust      "New Product"
-  ::CONSTANT plHelpAbout    "Help - About"
+::CLASS HRSplv PRIVATE		-- Human-Readable Strings
+  ::CONSTANT noMenu       "This menu item is not yet implemented."
+  ::CONSTANT newProd      "New Product"
+  ::CONSTANT helpAbout    "Help - About"
+  ::CONSTANT nilSelected  "Please select an item first."
 
 /*============================================================================*/
 
