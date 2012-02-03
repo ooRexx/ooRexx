@@ -2109,7 +2109,7 @@ size_t RexxEntry SysFileTree(const char *name, size_t numargs, CONSTRXSTRING arg
   /* zero terminate, RXVALIDSTRING() guarentees strlength is not 0.  */
   FileSpec[args[0].strlength] = 0x00;
 
-  // If FileSpec ends in \ then append *.*  *
+  // If FileSpec ends in \ then append *.*
   if (FileSpec[args[0].strlength-1] == '\\')
   {
     strcat(FileSpec, "*.*");
@@ -2117,18 +2117,18 @@ size_t RexxEntry SysFileTree(const char *name, size_t numargs, CONSTRXSTRING arg
   else if (FileSpec[args[0].strlength-1] == '.')
   {
     // when '.' or '..' are used as directory specifiers append wildcard '\*.*'
-    if ( (args[0].strlength > 1) && FileSpec[args[0].strlength-2] != '\\' && FileSpec[args[0].strlength-2] != '.' )
+
+    // There is also the case where the '.' is not used as a directory
+    // specifier, but rather is tacked on to the end of a file name. Windows has
+    // a sometimes used convention that a '.' at the end of a file name can be
+    // used to indicate the file has no extension. For example, given a file
+    // named: MyFile a command of dir MyFile. will produce a listing of MyFile.
+    // In this case we want to leave the mask alone.  A command of dir *. will
+    // produce a directory listing of all files that do not have an extension.
+    if ( args[0].strlength == 1 || (args[0].strlength > 1  &&
+         (FileSpec[args[0].strlength-2] == '\\' || FileSpec[args[0].strlength-2] == '.')) )
     {
-      // The '.' is not used as a directory specifier, but rather is tacked on
-      // to the end of a file name. Windows has a sometimes used convention that
-      // a '.' at the end of a file name can be used to indicate the file has
-      // no extension. For example, given a file named: MyFile a command of
-      // dir MyFile. will produce a listing of MyFile  Just remove the '.'
-      FileSpec[args[0].strlength-1] = '\0';
-    }
-    else
-    {
-      strcat(FileSpec, "\\*.*");
+        strcat(FileSpec, "\\*.*");
     }
   }
 
