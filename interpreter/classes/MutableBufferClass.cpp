@@ -418,23 +418,29 @@ RexxMutableBuffer *RexxMutableBuffer::replaceAt(RexxObject *str, RexxObject *pos
     char padChar = optionalPadArgument(pad, ' ', ARG_FOUR);
     size_t finalLength;
 
-    // will this extend beyond the end of the string, we require
-    // space for the position + the replacement string length
-    if (begin + newLength > dataLength)
+    // if replaceLength extends beyond the end of the string
+    //    then we cut it.
+    if (begin > dataLength)
     {
-        finalLength = begin + newLength;
+       replaceLength = 0;
     }
-    // we could be replacing a substring that runs over the
-    // end of the start...in that case, the result with be
-    // the same as above
     else if (begin + replaceLength > dataLength)
     {
-        finalLength = begin + newLength;
+       replaceLength = dataLength - begin;
+    }
+
+    // We need to add the delta between the excised string and the inserted
+    // replacement string.
+    //
+    // If this extends beyond the end of the string, then we require space for
+    // the position + the replacement string length.  Else we find the required
+    // size (may be smaller than before)
+    if (begin > dataLength)
+    {
+        finalLength = begin - replaceLength + newLength;
     }
     else
     {
-        // we need to add the delta between the excised string and the inserted
-        // replacement string
         finalLength = dataLength - replaceLength + newLength;
     }
 
