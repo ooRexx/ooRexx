@@ -491,7 +491,7 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/userGuide/exercises/Exercise06/Customer/bmp/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise06/Order/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise06/Order/bmp/Makefile
-        samples/windows/oodialog/userGuide/exercises/Exercise06/OrderMgmt/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise06/OrderMgr/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise06/Product/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise06/Product/res/Makefile
         samples/windows/oodialog/userGuide/exercises/Samples/Makefile

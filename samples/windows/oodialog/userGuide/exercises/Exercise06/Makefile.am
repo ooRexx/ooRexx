@@ -37,8 +37,8 @@
 
 .NOTPARALLEL:
 
-SUBDIRS		= Customer Order OrderMgmt Product
-DIST_SUBDIRS		= Customer Order OrderMgmt Product
+SUBDIRS		= Customer Order OrderMgr Product
+DIST_SUBDIRS		= Customer Order OrderMgr Product
 
 MAINTAINERCLEANFILES	= Makefile.in *~
 
