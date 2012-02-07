@@ -36,11 +36,11 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The OrderManagementBaseView class
-   OrderMgrBaseView.rex					  v00-05 28Jan12
+   OrderMgrBaseView.rex						  v00-06 05Feb12
 
    Contains: classes "OrderMgrBaseBase", HRSombv (private).
 
-   Pre-requisite files: OrderManagementBaseView.rc, OrderManagementBaseView.h.
+   Pre-requisite files: OrderMgrBaseView.rc, OrderMgrBaseView.h.
 
    Changes:
      v00-01 22Aug11: First version.
@@ -51,6 +51,7 @@
                      change.
      v00-05 28Jan12: Changed class name HRS to HRSombv to allow for multiple
      		     HRS classes in same file at some future time.
+     v00-06 15Feb12: Changes to comments only.
 
    To Do: - Fix close by system (top right icon on window) - should bring up
             "are you sure" msg.
@@ -69,14 +70,14 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderMgrBaseView						  v00-01 22Aug11
+  OrderMgrBaseView						  v00-06 05Feb12
   -----------------
-  The base "view" (or "gui") part of the OrderManagement component (part of the
+  The base "view" (or "gui") part of the OrderMgr component (part of the
   sample Order Management application). This class provides for (a) handling
   of a re-sizeable dilaog, and also for providing the icons for the main control
   in the dialog which is a ListView control.
 
-  interface iOrderManagementBaseView {
+  interface iOrderMgrBaseView {
     void newInstance();
   }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -178,7 +179,7 @@
     -- they are contained in is resized.  We don't want that, so we disable that
     -- behavior in any underlying edit control as follows (e.g):
     --      self~newEdit(IDC_EDIT)~disableInternalResize
-    -- (But no edit controls in OrderManagement View.)
+    -- (But no edit controls in OrderMgr View.)
 
     -- Restrict the minimum width and minimum height to the original
     -- width and height

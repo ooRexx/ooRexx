@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 03: Wow3.rex - Re-structuring the "Words 		  v00-04 11Aug11
+   Exercise 03: Wow3.rex - Re-structuring the "Words 		  v00-05 06Feb12
    			   of Wisdom" application.
 
    Contains:       Startup statements
@@ -48,6 +48,8 @@
      v00-03: Added an InitDialog method so do 'self~newStatic(902)' only once.
      v00-04: Change filename from Exercise03a.rex to Wow3.rex, and classname
              to WowView.
+     v00-05 06Feb12: Changed resource ID of text from -1 to 101
+                     (-1 not valid - change in ooDialog)
 
    Outstanding Problems: None reported.
 
@@ -85,7 +87,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   ::METHOD defineDialog		-- Invoked automatically.
     self~createPushButton(901, 142, 99, 50, 14, "DEFAULT", "More wisdom", OkClicked)
     self~createPushButton(IDCANCEL, 197, 99, 50, 14, ,"Cancel")
-    self~createStaticText(-1, 40, 40, 200, 40, , "Click 'More wisdom'")
+    self~createStaticText(101, 40, 40, 200, 40, , "Click 'More wisdom'")
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
@@ -93,7 +95,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initDialog
     expose newText
-    newText = self~newStatic(-1)
+    newText = self~newStatic(101)
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------

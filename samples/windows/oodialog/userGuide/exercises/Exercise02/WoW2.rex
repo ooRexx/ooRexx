@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 02: Making the Controls Work	 		  v00-02 11Aug11
+   Exercise 02: Making the Controls Work	 		  v00-03 06Feb12
 
    File Contents:   class "WordsOfWisdom2"
    Pre-requisites:  None.
@@ -44,8 +44,10 @@
 
    Changes:
    v00-01: First version (was called "Exercise02b.rex").
-   v00-02: Correction since static text did not display due to chnage in
-           ooDialog, plus mods to comments.
+   v00-02 11Aug11: Correction since static text did not display due to change in
+                   ooDialog, plus mods to comments.
+   v00-03 06Feb12: Corrected id of static text - ooDialog does not now support
+                   -1 when later used to set text (as per latest ooDialog Reference).
 
 ------------------------------------------------------------------------------*/
 
@@ -65,8 +67,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   ::METHOD defineDialog		-- Invoked automatically by ooDialog.
     self~createPushButton(901, 142, 99, 50, 14, "DEFAULT", "More wisdom", OkClicked)
     self~createPushButton(IDCANCEL, 197, 99, 50, 14, ,"Cancel")
-    self~createStaticText(-1, 40, 40, 200, 40, , "Click 'More wisdom'")
-
+    self~createStaticText(101, 40, 40, 200, 40, , "Click 'More wisdom'")
 
   ::METHOD okClicked
     arrWow = .array~new
@@ -88,7 +89,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
     say "'More wisdom' button clicked"
 
-    newText = self~newStatic(-1)
+    newText = self~newStatic(101)
     i = random(1,7)
     newText~setText(arrWow[i])
     return

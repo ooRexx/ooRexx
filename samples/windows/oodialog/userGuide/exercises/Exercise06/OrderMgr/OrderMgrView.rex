@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: OrderMgrView.rex 				  v00-05 28Jan12
+   Exercise 06: OrderMgrView.rex 				  v00-06 05Feb12
 
    Contains: 	   class: "OrderMgrView", "HRSomv"
 
@@ -60,6 +60,7 @@
    v00-05 28Jan12: Very minor changes to some "say"s.
         	   Changed class name HRS to HRSomv to allow for multiple
      		   HRS classes in same file at some future time.
+   v00-06 15Feb12: Changes to comments only (change "OrderManagement" to "OrderMgr")
 
 ------------------------------------------------------------------------------*/
 
@@ -70,13 +71,13 @@ call "OrderMgr\RequiresList.rex"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderManagerView						  v00-03 12Oct11
+  OrderMgrView							  v00-06 05Feb12
   --------------------
-  The "application" part of the OrderManager View" component. This class
+  The "application" part of the "Order Manager View" component. This class
   provides for all function except re-sizing and basic setup (OrderMgrBaseView
   has the .h file and the .rc file for the menu).
 
-  interface iOrderManagerView {
+  interface iOrderMgrView {
     void newInstance();
   }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -100,7 +101,7 @@ call "OrderMgr\RequiresList.rex"
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD createIconList PRIVATE
-    -- This method simulates getting the icon "data" for the OrderManagement view.
+    -- This method simulates getting the icon "data" for the OrderMgr view.
     -- The icon data is loaded into 'iconList' which is an 'ImageList' as
     -- required by the ListView control.
     expose iconList
@@ -124,7 +125,7 @@ call "OrderMgr\RequiresList.rex"
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initRecords PRIVATE
-    -- This method simulates getting the "data" for the OrderManagement view.
+    -- This method simulates getting the "data" for the OrderMgr view.
     expose records
     records = .array~new()
 

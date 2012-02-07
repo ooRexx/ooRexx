@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise03 Part 2:	Re-structuring the "Words of Wisdom" application
-   WowView.rex    	The Wow View component		  	  v00-04 11Aug11
+   WowView.rex    	The Wow View component		  	  v00-05 06Feb12
 
    Contains: 	   class "WowView.
    Pre-requisites: None
@@ -44,6 +44,9 @@
    Changes:
      v00-03: Changes to class MyDialog.
      v00-04: Name change - MyDialog to WowView.
+     v00-05 06Feb12: Changed resource ID of text from -1 to 101
+                     (-1 not valid - change in ooDialog)
+
 *******************************************************************************/
 
 /*//////////////////////////////////////////////////////////////////////////////
@@ -77,7 +80,7 @@
   ::METHOD defineDialog		-- Invoked automatically by ooDialog.
     self~createPushButton(901, 142, 99, 50, 14, "DEFAULT", "More wisdom", OkClicked)
     self~createPushButton(IDCANCEL, 197, 99, 50, 14, ,"Cancel")
-    self~createStaticText(-1, 40, 40, 200, 40, , "Click 'More wisdom'")
+    self~createStaticText(101, 40, 40, 200, 40, , "Click 'More wisdom'")
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
@@ -85,7 +88,7 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initDialog
     expose newText
-    newText = self~newStatic(-1)
+    newText = self~newStatic(101)
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
