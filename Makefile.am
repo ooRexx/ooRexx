@@ -5,7 +5,7 @@
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
 #/* distribution. A copy is also available at the following address:           */
-#/* http://www.oorexx.org/license.html                          */
+#/* http://www.oorexx.org/license.html                                         */
 #/*                                                                            */
 #/* Redistribution and use in source and binary forms, with or                 */
 #/* without modification, are permitted provided that the following            */
@@ -494,7 +494,7 @@ librexxapi_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                           -I$(build_common_dir) \
                           -I$(build_common_platform_dir)
 
-librexxapi_la_LDFLAGS = $(VERSION_INFO)
+librexxapi_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_OS_EXTRA@
 
 #################### librexx.so ##########################
 # Sources for librexx.so
@@ -903,7 +903,7 @@ librxsock_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
 #
 # Extra libraries for librxsock.so (maybe)
 #
-librxsock_la_LIBADD  = @ORX_LIBADD_LIBRARY@
+librxsock_la_LIBADD  = @ORX_LIBADD_LIBRARY@ @ORX_LDFLAGS_OS_EXTRA@
 librxsock_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 
 #################### librxregexp.so ################
