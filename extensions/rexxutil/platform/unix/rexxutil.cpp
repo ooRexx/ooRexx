@@ -4324,8 +4324,9 @@ RexxRoutine3(int, SysStemInsert, RexxStemObject, toStem, stringsize_t, position,
         context->SetStemArrayElement(toStem, index + 1, value);
     }
 
-    // now set the new value
+    // now set the new value and increase the count at stem.0
     context->SetStemArrayElement(toStem, position, newValue);
+    context->SetStemArrayElement(toStem, 0, context->WholeNumber(count + 1));
     return 0;
 }
 
