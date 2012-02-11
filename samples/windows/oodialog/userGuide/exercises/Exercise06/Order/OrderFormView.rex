@@ -35,10 +35,10 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderFormView class				  v00-04 12Oct11
+   Exercise 06: The OrderFormView class				  v00-05 11Feb12
    OrderFormView.rex
 
-   Contains: class "OrderFormView", class "HRS".
+   Contains: class "OrderFormView", class "HRSofv".
    Pre-requisite files: OrderFormView.rc, OrderFormView.h.
 
    Changes:
@@ -50,15 +50,24 @@
    v00-04 12Oct11: Changed DoThis menu item and added two more - now have
    		   Cancel/Place/Save Order. Also added "not implemented" message
    		   for each menu item.
+   v00-05 11Feb12: OrderFormView - Changed .application() & HRS class
+
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
 
 
 /*==============================================================================
-  OrderFormView							  v00-02 28Sep11
+  OrderFormView							  v00-03 11Feb12
   -------------
   The "view" (or "gui") Data Entry part of the Sales Order component.
+
+  Changes:
+  v00-01: First Version
+  v00-02: Second version
+  v00-03: 11Feb12: Moved .application~setDefaults() to app startup file.
+                    changed to .application~addToConstDir() here.
+                    Changed name fo HRS class to HRSofv.
 
   interface iOrderFormView {
     void new();
@@ -70,7 +79,7 @@
 
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg, orderNo
-    .Application~useGlobalConstDir("O","Order\OrderFormView.h")
+    .Application~addToConstDir("Order\OrderFormView.h")
     dlg = self~new("Order\OrderFormView.rc", "IDD_ORDFORM_DIALOG")
     --say ".OrderFormView-newInstance: rootDlg =" rootDlg
     dlg~activate(rootDlg, orderNo)
@@ -134,11 +143,11 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD placeOrder UNGUARDED
-    self~noMenuFunction(.HRS~ofPlaceOrder)
+    self~noMenuFunction(.HRSofv~PlaceOrder)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD saveOrder UNGUARDED
-    self~noMenuFunction(.HRS~ofSaveOrder)
+    self~noMenuFunction(.HRSofv~SaveOrder)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD CancelOrder UNGUARDED
@@ -146,18 +155,18 @@
 
   /*- - Help - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD about UNGUARDED
-    self~noMenuFunction(.HRS~ofHelpAbout)
+    self~noMenuFunction(.HRSofv~HelpAbout)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD noMenuFunction UNGUARDED
     use arg title
-    ret = MessageDialog(.HRS~ofNoMenu, self~hwnd, title, 'WARNING')
+    ret = MessageDialog(.HRSofv~NoMenu, self~hwnd, title, 'WARNING')
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
     -- "Cancel" - This method over-rides the default Windows action of
     -- 'cancel window' for an Escape key.
   ::METHOD cancel
-    response = askDialog(.HRS~ofQExit, "N")
+    response = askDialog(.HRSofv~QExit, "N")
     if response = 1 then forward class (super)
     return
 
@@ -167,26 +176,26 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD placeOrderBtn UNGUARDED
-    ret = MessageDialog(.HRS~ofNoBtn, self~hwnd, "Place Order Button", 'WARNING')
+    ret = MessageDialog(.HRSofv~NoBtn, self~hwnd, "Place Order Button", 'WARNING')
 
 /*============================================================================*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  Human-Readable Strings (HRS)					  v00-02 12Oct11
+  Human-Readable Strings (HRSofv)				  v00-03 11Feb12
   --------
-   The HRS class provides constant character strings for user-visible messages.
+   The HRSofv class provides constant character strings for user-visible messages.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
-::CLASS HRS PRIVATE		-- Human-Readable Strings
-  ::CONSTANT ofQExit       "Are you sure you want to cancel this Order and throw away all changes?"
-  ::CONSTANT ofNoMenu      "This menu item is not yet implemented."
-  ::CONSTANT ofNoBtn       "This button is not yet implemented."
-  ::CONSTANT ofPlaceOrder  "Place Order"
-  ::CONSTANT ofSaveOrder   "Save Order"
-  ::CONSTANT ofCancelOrder "Cancel Order"
-  ::CONSTANT ofHelpAbout   "Help - About"
+::CLASS HRSofv PRIVATE	   -- Human-Readable Strings
+  ::CONSTANT QExit       "Are you sure you want to cancel this Order and throw away all changes?"
+  ::CONSTANT NoMenu      "This menu item is not yet implemented."
+  ::CONSTANT NoBtn       "This button is not yet implemented."
+  ::CONSTANT PlaceOrder  "Place Order"
+  ::CONSTANT SaveOrder   "Save Order"
+  ::CONSTANT CancelOrder "Cancel Order"
+  ::CONSTANT HelpAbout   "Help - About"
 
 /*============================================================================*/
 

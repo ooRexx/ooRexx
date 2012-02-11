@@ -36,18 +36,19 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise06: 		Stand-alone startup for OrderForm
-   startupOrderForm.rex						  v01-00 28Sep11
+   startupOrderForm.rex						  v01-01 11Feb12
 
    Contains: 	   Startup code.
    Pre-requisites: Must be run from the parent folder of the Order folder.
 
    Changes:
    v01-00 28Sep11: First Version
+   v01-01 11Feb12: Add .application~setDefaults to this file.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
 
-
+.Application~setDefaults("O", , .false)
 
 .OrderFormView~newInstance("SA")
 

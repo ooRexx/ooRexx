@@ -36,16 +36,19 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise06: 		Stand-alone startup for ProductList
-   startupProductList.rex					  v01-00 12Sep11
+   startupProductList.rex					  v01-01 11Feb12
 
    Contains: 	   Startup code.
    Pre-requisites: Must be run from the parent folder of the Product folder.
 
    Changes:
    v01-00 12Sep11: First Version
+   v01-01 11Feb12: Add .application~setDefaults to this file.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
+
+.Application~setDefaults("O", , .false)
 
 .ProductListView~newInstance("SA")
 

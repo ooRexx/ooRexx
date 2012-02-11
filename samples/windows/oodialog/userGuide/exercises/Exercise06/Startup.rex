@@ -36,12 +36,14 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The Order Management Application
-   Startup.rex 							  v00-03 02Dec11
+   Startup.rex 							  v00-04 11Feb12
 
    Changes:
    v00-01 21Aug11: First version.
    v00-02 03Oct11: Deleted a bebug "say" instruction.
    v00-03 02Dec11: Changed name from OrderMgmt to OrderMgr.
+   v00-04 11Feb12: Added .application... to startup (and changed it to 
+                   .application~addToConstDir in component files).
 
 ------------------------------------------------------------------------------*/
 
@@ -49,6 +51,10 @@
   This file is the "application" or "root" or "starter" part
   of the sample Order Management application.
  ******************************************************************************/
+
+
+-- Set application defaults:
+.Application~setDefaults("O", , .false)
 
 
 parse arg pwOption

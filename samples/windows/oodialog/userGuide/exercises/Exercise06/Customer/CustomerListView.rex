@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The Customer ListView				  v01-03 28Jan12
+   Exercise 06: The Customer ListView				  v01-04 12Feb12
 
    Contains: classes "CustomerListView" and "HRSclv".
 
@@ -53,7 +53,7 @@
    		   msg box.
    v01-03 28Jan12: Changed class name HRS to HRSclv to allow for multiple
      		   HRS classes in same file at some future time.
-
+   v01-04 11Feb12: CustomerListView - Changed .application()
 
 
    Outstanding Problems: None reported.
@@ -65,13 +65,16 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerListView						  v00-03 28Jan12
-  -------------
+  CustomerListView						  v00-04 11Feb12
+  ----------------
   The view of a list of products.
   Changes:
     v00-01: First version
     v00-02: Corrected for standalone invocation.
     v00-03 28Jan12: Changed name of HRS class to HRSplv.
+    v00-04 11Feb12: moved .application~setDefaults() to app startup file.
+                    changed to .application~addToConstDir() here.
+
 
   [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -84,7 +87,7 @@
 
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg
-    .Application~useGlobalConstDir("O","Customer\CustomerListView.h")
+    .Application~addToConstDir("Customer\CustomerListView.h")
     --say ".CustomerListView-newInstance-01: root =" rootDlg
     dlg = self~new("Customer\CustomerListView.rc", "IDD_CUSTLIST_DIALOG")
     --say ".CustomerListView-newInstance-02."

@@ -36,16 +36,20 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise06: 		Stand-alone startup for CustomerList
-   startupCustomerList.rex 					  v01-00 12Sep11
+   startupCustomerList.rex 					  v01-01 11Feb12
 
    Contains: 	   Startup code.
    Pre-requisites: Must be run from the parent folder of the Customer folder.
 
    Changes:
    v01-00 12Sep11: First Version
+   v01-01 11Feb12: Add .application~setDefaults to this file.
+
 
    Outstanding Problems: None reported.
 *******************************************************************************/
+
+.Application~setDefaults("O", , .false)
 
 .CustomerListView~newInstance("SA")
 

@@ -61,13 +61,14 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductListView						  v00-03 28Jan12
+  ProductListView						  v00-04 11Feb12
   -------------
   The view of a list of products.
   Changes:
     v00-01: First version
     v00-02: Corrected for standalone invocation.
     v00-03 28Jan12: Changed name of HRS class to HRSplv.
+    v00-04 11Feb12: Add .application~addToConstDir to this file.
 
   [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -80,7 +81,7 @@
 
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg
-    .Application~useGlobalConstDir("O","Product\ProductListView.h")
+    .Application~addToConstDir("Product\ProductListView.h")
     --say ".ProductListView-newInstance-01: rootDlg =" rootDlg
     dlg = self~new("Product\ProductListView.rc", "IDD_PRODLIST_DIALOG")
     --say ".ProductListView-newInstance-02."

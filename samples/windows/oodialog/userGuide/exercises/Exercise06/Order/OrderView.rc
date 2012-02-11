@@ -47,7 +47,7 @@ IDR_ORDER_MENU MENU
 {
     POPUP "Actions"
     {
-        MENUITEM "DoThis", IDM_ORDER_DOTHIS
+        MENUITEM "An Action", IDM_ORDER_DOTHIS
     }
     POPUP "Help"
     {

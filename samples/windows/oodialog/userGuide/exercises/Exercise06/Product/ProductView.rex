@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: ProductView.rex - The ProductView component      v02-03 01Dec11
+   Exercise 06: ProductView.rex - The ProductView component      v02-04 11Feb12
 
    Contains: 	   classes "ProductView", "AboutDialog", and "HRSpv".
    Pre-requisites: ProductView.dll, ProductView.h, Pproduct.ico, ProductIcon.bmp,
@@ -56,6 +56,8 @@
    v02-02 29Nov11: Brought up to date with Ex05 version (added state attribute
                    plus better "cancel" method).
    v02-03 01Dec11: Changed OK/Cancel to Yes/No on "cancel while in update" dialog.
+   v02-04 11Feb12: ProductView - Changed .application()
+                   HRS class name changed to HRSpv
 
 ------------------------------------------------------------------------------*/
 
@@ -66,11 +68,16 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductView							  v02-03 01Dec11
+  ProductView							  v02-04 11Feb12
   -----------
   The "view" part of the Product component. Now designed to operate from its own
   folder. Should be invoked from immediately outside the Product folder.
   [interface (idl format)]
+
+  Changes:
+  v02-04 11Feb12: Moved .application~setDefaults() to app startup file.
+                  Changed to .application~addToConstDir() here.
+
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS ProductView SUBCLASS ResDialog PUBLIC
@@ -86,7 +93,7 @@
     say ".ProductView-newInstance-01: rootDlg =" rootDlg
     -- Enable use of symbolic IDs in menu creation, and turn off AutoDetection
     -- (the third parameter:
-    .Application~setDefaults("O", "Product\ProductView.h", .false)
+    .Application~addToConstDir("Product\ProductView.h")
     -- Create an instance of ProductView and show it:
     dlg = .ProductView~new("Product\res\ProductView.dll", IDD_PRODUCT_VIEW)  -- Exercise06 - but move to res folder later.
     dlg~activate(rootDlg, productNo)			-- CHANGED FOR EXERCISE06.
@@ -210,9 +217,9 @@
     -- If changed, go on to validate data.
     result = self~checkForChanges(newProdData)
     if result = .false then do
-      msg = .HRS~nilSaved
+      msg = .HRSpv~nilSaved
       hwnd = self~dlgHandle
-      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","WARNING","DEFBUTTON2 APPLMODAL")
+      answer = MessageDialog(msg,hwnd,.HRSpv~updateProd,"OK","WARNING","DEFBUTTON2 APPLMODAL")
       return
     end
 
@@ -221,15 +228,15 @@
          					-- Better would be a set of error numbers.
     -- If no problems, then show msgbox and go on to disable controls.
     if result = "" then do
-      msg = .HRS~saved
+      msg = .HRSpv~saved
       hwnd = self~dlgHandle
-      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","INFORMATION","DEFBUTTON1 APPLMODAL")
+      answer = MessageDialog(msg,hwnd,.HRSpv~updateProd,"OK","INFORMATION","DEFBUTTON1 APPLMODAL")
     end
     -- If problems, then show msgbox and leave user to try again or refresh or exit.
     else do
-      msg = result||.EndOfLine||.HRS~notSaved
+      msg = result||.EndOfLine||.HRSpv~notSaved
       hwnd = self~dlgHandle
-      answer = MessageDialog(msg,hwnd,.HRS~updateProd,"OK","ERROR","DEFBUTTON1 APPLMODAL")
+      answer = MessageDialog(msg,hwnd,.HRSpv~updateProd,"OK","ERROR","DEFBUTTON1 APPLMODAL")
       return
     end
 
@@ -274,7 +281,7 @@
     -- thrown away and dialog closed. If yes then close by calling the superclass,
     -- else nop. If not in update, then close immediately
     if self~dialogState = "inUpdate" then do
-      ans = MessageDialog(.HRS~closeInUpdate, self~dlgHandle, .HRS~updateIP, "YESNO", "WARNING", "DEFBUTTON2")
+      ans = MessageDialog(.HRSpv~closeInUpdate, self~dlgHandle, .HRSpv~updateIP, "YESNO", "WARNING", "DEFBUTTON2")
       if ans = .PlainBaseDialog~IDYES then return self~cancel:super
       else nop
     end
@@ -369,27 +376,27 @@
     price = prodData~price; newPrice = newProdData~price
     oldUom   = prodData~uom;       newUom   = newProdData~uom 	-- 'oldUom - avoids name conflict with 'uom' in newProddata~uom.
     if ((price/oldUom)*1.5 < newPrice/newUom) | (newPrice/newUom < (price/oldUom)/2) then do
-      msg = msg||.HRS~badRatio||" "
+      msg = msg||.HRSpv~badRatio||" "
     end
 
     -- Check Size vs UOM:
     if prodData~size = "L" & newProdData~size = "S" -    -- Large to Small
         & prodData~uom/2 < newProdData~uom then do
-      msg = msg||.HRS~uomTooBig||" "
+      msg = msg||.HRSpv~uomTooBig||" "
     end
       if prodData~size = "S" & newProdData~size = "L" -    -- Small to Large
         & prodData~uom*2 > newProdData~uom then do
-      msg = msg||.HRS~uomTooSmall||" "
+      msg = msg||.HRSpv~uomTooSmall||" "
     end
 
     -- Check Product Description length:
     if newProdData.description~length > 80 then do
-      msg = msg||.HRS~descrTooBig||" "
+      msg = msg||.HRSpv~descrTooBig||" "
     end
 
     -- Check Product Name length:
     if newProdData~name~length > 30 then do
-      msg = msg||.HRS~prodNameTooBig
+      msg = msg||.HRSpv~prodNameTooBig
     end
 
     return msg
@@ -452,7 +459,7 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method showMsgBox
     say "AboutDialog-showMsgBox-01."
-    ans = MessageDialog(.HRS~AboutDblClick)
+    ans = MessageDialog(.HRSpv~AboutDblClick)
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 
@@ -468,12 +475,15 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  Human-Readable Strings (HRS)					  v00-02 08Aug11
-  --------
-   The HRS class provides constant character strings for user-visible messages.
+  Human-Readable Strings (HRSpv)				  v00-03 11Feb12
+  ------------------------------
+   The HRSpv class provides constant character strings for user-visible messages.
+
+  Changes:
+  v00-03 11Feb12: Changed class name NRS to HRSpv
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
-::CLASS HRS PRIVATE		-- Human-Readable Strings
+::CLASS HRSpv PRIVATE		-- Human-Readable Strings
   ::CONSTANT AboutDblClick  "You double-clicked!"
   ::CONSTANT badRatio	    "The new price/UOM ratio cannot be changed more than 50% up or down."
   ::CONSTANT closeInUpdate  "Any changes made will be lost. Exit anyway?"
@@ -486,4 +496,6 @@
   ::CONSTANT uomTooSmall    "The new UOM is too small."
   ::CONSTANT updateIP       "Update in process"
   ::CONSTANT updateProd     "Update Product"
+
+/*============================================================================*/
 

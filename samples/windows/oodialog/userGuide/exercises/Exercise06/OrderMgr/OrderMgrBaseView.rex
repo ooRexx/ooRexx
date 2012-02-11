@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The OrderManagementBaseView class
-   OrderMgrBaseView.rex						  v00-06 05Feb12
+   OrderMgrBaseView.rex						  v00-07 11Feb12
 
    Contains: classes "OrderMgrBaseBase", HRSombv (private).
 
@@ -52,11 +52,9 @@
      v00-05 28Jan12: Changed class name HRS to HRSombv to allow for multiple
      		     HRS classes in same file at some future time.
      v00-06 15Feb12: Changes to comments only.
+     v00-07 11Feb12: Add .application~setDefaults to this file.
 
-   To Do: - Fix close by system (top right icon on window) - should bring up
-            "are you sure" msg.
-          - Fix no-warning close when hit enter.
-          - Add Find Customer, Find Product (buttons or menu items?)
+   To Do: - Add Find Customer, Find Product (buttons or menu items?)
           - Tidy up comments in code.
 
    Possible future additions:
@@ -70,12 +68,18 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderMgrBaseView						  v00-06 05Feb12
+  OrderMgrBaseView						  v00-06 11Feb12
   -----------------
   The base "view" (or "gui") part of the OrderMgr component (part of the
   sample Order Management application). This class provides for (a) handling
   of a re-sizeable dilaog, and also for providing the icons for the main control
   in the dialog which is a ListView control.
+
+   Changes:
+   v00-06 11Feb12: Moved .application~setDefaults() to app startup file.
+                   changed to .application~addToConstDir() here.
+
+  
 
   interface iOrderMgrBaseView {
     void newInstance();
@@ -94,7 +98,7 @@
     --say ".OrderMgrBaseView-newInstance-01: Start."
     -- Enable use of symbolic IDs in menu creation, and turn off AutoDetection
     -- (the third parameter:
-    .Application~setDefaults("O", "OrderMgr\OrderMgrBaseView.h", .false)
+    .Application~addToConstDir("OrderMgr\OrderMgrBaseView.h")
     -- Create an instance of OrderMgrBaseView and show it:
     dlg = self~new
 
