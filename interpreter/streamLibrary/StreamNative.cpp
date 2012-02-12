@@ -469,6 +469,30 @@ void StreamInfo::close()
 }
 
 /**
+ * Helper function to determine if opts contains the no buffer option.
+ *
+ * @param opts   String to search in for NOBUFFER.
+ *
+ * @return True if nobuffer, caseless, is in opts, otherwise false.
+ */
+bool hasNoBufferOption(const char *opts)
+{
+    char *tmp = (char *)malloc(strlen(opts) + 1);
+    if (tmp == NULL)
+    {
+        return false;
+    }
+
+    strcpy(tmp, opts);
+    Utilities::strupper(tmp);
+
+    bool result = strstr(tmp, "NOBUFFER") != NULL ? true : false;
+    free(tmp);
+
+    return result;
+}
+
+/**
  * Open a standard stream, using the provided options string.
  *
  * @param options Open parameters, in character string form.
@@ -504,7 +528,7 @@ const char *StreamInfo::openStd(const char *options)
    }
 
    // check to see if buffering is allowed.
-   if (options != NULL && !Utilities::strCaselessCompare(options, "NOBUFFER"))
+   if (options != NULL && hasNoBufferOption(options))
    {
        nobuffer = 1;
    }
