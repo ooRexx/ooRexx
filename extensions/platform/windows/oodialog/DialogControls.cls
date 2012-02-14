@@ -1093,7 +1093,7 @@
      colInfo.!WIDTH = d~width / self~factorX
      colInfo.!COLUMN = d~subItem
      colInfo.!ALIGN = d~alignment
-     return colInfo
+     return colInfo.
    end
 
    colInfo.!WIDTH = 0

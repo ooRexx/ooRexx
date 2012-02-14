@@ -226,6 +226,12 @@ return 0
   return self~maybeScroll(delta, state, pos, .true)
 
 
+/** maybeScroll
+ * Based on the arguments, we determine whether to scroll or not.
+ *
+ * In all cases .true is returned, which is eventually returned by the
+ * event handler.  This indicates that the event message was processed.
+ */
 ::method maybeScroll private
   expose process eData
   use strict arg delta, state, pos, focused
@@ -239,7 +245,7 @@ return 0
     when process == "ON_EDIT_OK" then return self~scrollOnControls(delta, state, pos)
     when process == "FOCUSED_EDIT", focused then return self~scrollOnEdit(delta, state, pos)
     otherwise do
-      return 0
+      return .true
     end
   end
   -- End select
@@ -249,18 +255,24 @@ return 0
  *
  * Determines if the position of the cursor (pos) is over the dialog window.  If
  * it is, we scroll, otherwise we do not scroll.
+ *
+ * In all cases .true is returned, which is eventually returned by the
+ * event handler.  This indicates that the event message was processed.
  */
 ::method scrollOnDialog private
   use strict arg delta, state, pos
 
   if pos~inRect(self~windowRect) then return self~scroll(delta, state)
 
-  return 0
+  return .true
 
 /** scrollOnEdit()
  *
  * Determines if the position of the cursor (pos) is over the multi-line edit
  * control.  If it is, we scroll, otherwise we do not scroll.
+ *
+ * In all cases .true is returned, which is eventually returned by the
+ * event handler.  This indicates that the event message was processed.
  */
 ::method scrollOnEdit private
   expose eData
@@ -268,7 +280,7 @@ return 0
 
   if pos~inRect(eData~windowRect) then return self~scroll(delta, state)
 
-  return 0
+  return .true
 
 
 /** scrollOnControls()
@@ -276,6 +288,9 @@ return 0
  * Determines if the position of the cursor (pos) is over one of the edit
  * controls, or over the Ok button.  If it is, we scroll, otherwise we do not
  * scroll.
+ *
+ * In all cases .true is returned, which is eventually returned by the
+ * event handler.  This indicates that the event message was processed.
  */
 ::method scrollOnControls private
   expose eData pbOk eCommand
@@ -286,7 +301,7 @@ return 0
        return self~scroll(delta, state)
   end
 
-  return 0
+  return .true
 
 
 /** scroll()
@@ -298,7 +313,8 @@ return 0
  * the explanation of the arguments.
  *
  * Based on the arguments, we have the edit control scroll the appropriate
- * amount.
+ * amount.  In all cases we return .true which is eventually returned by the
+ * event handler.  This indicates that the event message was processed.
  */
 ::method scroll private
   expose eData
@@ -358,7 +374,7 @@ return 0
     -- End select
   end
 
-  return 0
+  return .true
 
 
 /** onRbSelect()
@@ -457,14 +473,15 @@ return 0
   e = self~newEdit(IDC_HELP_TEXT)
 
   -- In this case we have the edit control not process the mouse wheel, but
-  -- rather pass the message on to the dialog.  The third optional parameter of
-  -- DEFWINPROC is a keyword that causes the mouse wheel notfication to be
-  -- passed on up parent / child window chain and not sent to the edit control.
+  -- rather pass the message on to the dialog.  The fourth optional parameter of
+  -- SENDTODLG is a keyword that causes the mouse wheel notfication to be
+  -- passed on up the parent / child window chain and not sent to the edit
+  -- control.
   --
   -- The effect of this is that the edit control never even sees the
   -- notification, allowing our onMouseWheel() method to handle all mouse wheel
-  -- notifications, not matter where the mouse is over out dialog.
-  .Mouse~new(e)~connectEvent('MOUSEWHEEL', 'NOOP', , "DEFWINPROC")
+  -- notifications, not matter where the mouse is over our dialog.
+  .Mouse~new(e)~connectEvent('MOUSEWHEEL', 'NOOP', , "SENDTODLG")
 
   -- Create a mono-spaced font for the edit control that displays the help text.
   newFont = self~createFontEx('Courier New', 9)
@@ -517,26 +534,26 @@ return 0
       when state~wordPos("Shift") <> 0, state~wordPos('Control') <> 0 then do
         if direction == 'up' then e~scrollCommand('PAGEUP', 3)
         else e~scrollCommand('PAGEDOWN', 3)
-        return 0
+        return .true
       end
 
       when state~wordPos('Shift') then do
         if direction == 'up' then e~scrollCommand('UP', 3)
         else e~scrollCommand('DOWN', 3)
-        return 0
+        return .true
       end
 
       when state~wordPos('Control') then do
         if direction == 'up' then e~scrollCommand('PAGEUP')
         else e~scrollCommand('PAGEDOWN')
-        return 0
+        return .true
       end
 
       otherwise do
         -- Some other modifier, key or mouse, is active.  There are a lot of
         -- things we could do, but for simplicity we are going to just ignore
         -- this.
-        return 0
+        return .false
       end
     end
     -- End select
@@ -569,7 +586,7 @@ return 0
   end
   -- End select
 
-  return 0
+  return .true
 
 
 /** caclVisibleLines()

@@ -38,6 +38,7 @@
 #ifndef oodMouse_Included
 #define oodMouse_Included
 
+// Struct for instantiating a new Rexx Mouse object.
 typedef struct newMouseParams
 {
     pCPlainBaseDialog  dlgCSelf;      // Pointer to dialog owner CSelf struct, if owner is a dialog window
@@ -46,9 +47,19 @@ typedef struct newMouseParams
 } NEWMOUSEPARAMS;
 typedef NEWMOUSEPARAMS *PNEWMOUSEPARAMS;
 
-extern bool            mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lParam);
-extern RexxArrayObject getMouseArgs(RexxThreadContext *c, RexxObjectPtr rxMouse, WPARAM wParam,
-                                    LPARAM lParam, uint32_t count);
+// Struct for mouse wheel notify processing.
+typedef struct {
+    pCPlainBaseDialog    pcpbd;           // The owner dialog CSelf.
+    RexxObjectPtr        mouse;           // The Rexx mouse object
+    HWND                 hwnd;            // Window handle of window receiving WM_MOUSEWHEEL.
+    char                *method;          // Name of method to invoke.
+    uint32_t             tag;             // The internal ooDialog event message tag.
+    bool                 isControlMouse;  // True if a dialog control mouse processing, false if a dialog mouse processing.
+    bool                 willReply;       // User wants event handler invoked directly, or not.
+} MOUSEWHEELDATA;
+typedef MOUSEWHEELDATA *PMOUSEWHEELDATA;
+
+
 extern MsgReplyType    processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t tag, uint32_t msg, WPARAM wParam,
                                        LPARAM lParam, pCPlainBaseDialog pcpbd);
 extern LRESULT         processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t tag, uint32_t msg, HWND hwnd,

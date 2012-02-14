@@ -694,6 +694,11 @@ bool parseTagOpts(RexxThreadContext *c, CSTRING opts, uint32_t *pTag, size_t arg
         tag |= CTRLTAG_SENDTODLG;
         foundKeyWord = true;
     }
+    else if ( StrCmpI(opts, "SENDTOCONTROL" ) == 0 )
+    {
+        tag |= CTRLTAG_SENDTOCONTROL;
+        foundKeyWord = true;
+    }
     else if ( StrCmpI(opts, "REPLYZERO" ) == 0 )
     {
         tag |= CTRLTAG_REPLYZERO;
@@ -702,6 +707,11 @@ bool parseTagOpts(RexxThreadContext *c, CSTRING opts, uint32_t *pTag, size_t arg
     else if ( StrCmpI(opts, "REPLYTRUE" ) == 0 )
     {
         tag |= CTRLTAG_REPLYTRUE;
+        foundKeyWord = true;
+    }
+    else if ( StrCmpI(opts, "REPLYFALSE" ) == 0 )
+    {
+        tag |= CTRLTAG_REPLYFALSE;
         foundKeyWord = true;
     }
     else if ( StrCmpI(opts, "DEFWINPROC" ) == 0 )
@@ -1886,24 +1896,24 @@ RexxMethod4(int32_t, dlgctrl_setColor, RexxObjectPtr, rxBG, OPTIONAL_RexxObjectP
         return 0;
     }
 
-    bool    useSysColor = (method[10] == 'S');
+    bool    useSysColor = (method[3] == 'S');
     int32_t bkColor = 0;
     int32_t fgColor = -1;
 
     if ( useSysColor )
     {
-        if ( ! getSystemColor(context, rxBG, &bkColor, 2) )
+        if ( ! getSystemColor(context, rxBG, &bkColor, 1) )
         {
             return -1;
         }
-        if ( argumentExists(3) && ! getSystemColor(context, rxFG, &fgColor, 3) )
+        if ( argumentExists(2) && ! getSystemColor(context, rxFG, &fgColor, 2) )
         {
             return -1;
         }
     }
     else
     {
-        if ( ! context->Int32(rxBG, &bkColor) || (argumentExists(3) && ! context->Int32(rxBG, &fgColor)) )
+        if ( ! context->Int32(rxBG, &bkColor) || (argumentExists(2) && ! context->Int32(rxFG, &fgColor)) )
         {
             return -1;
         }

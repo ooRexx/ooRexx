@@ -94,27 +94,37 @@
 // do not send message to the dialog.
 #define CTRLTAG_REPLYTRUE                0x01000000
 
-// Return TRUE in the subclass procedure.  Do not pass on to DefSubclassProc(),
-// do not send message to the dialog.
-#define CTRLTAG_REPLYZERO                0x02000000
+// Return FALSE in the subclass procedure.  Do not pass on to DefSubclassProc(),
+// do not send message to the dialog.  This actually should have the same effect
+// as CTRLTAG_REPLYZERO, but in some Rexx methods, a keyword of ReplyFalse makes
+// more sense than ReplyZero.
+#define CTRLTAG_REPLYFALSE               0x02000000
+
+// Return 0 in the subclass procedure.  Do not pass on to DefSubclassProc(), do
+// not send message to the dialog.
+#define CTRLTAG_REPLYZERO                0x04000000
 
 // Send the message to the dialog.  I.e.:
 //   return SendMessage((hDlg, msg, wParam, lParam);
-#define CTRLTAG_SENDTODLG                0x04000000
+#define CTRLTAG_SENDTODLG                0x08000000
+
+// Pass the message on to DefSubclassProc().  I.e.:
+//   return DefSubclassProc(hwnd, msg, wParam, lParam);
+#define CTRLTAG_SENDTOCONTROL            0x10000000
 
 // Send the message to the default window procedure.  I.e.:
 //   return DefWindowProc(hwnd, msg, wParam, lParam);
-#define CTRLTAG_SENDTODEFWINDOWPROC      0x08000000
+#define CTRLTAG_SENDTODEFWINDOWPROC      0x20000000
 
 // Wait in the subclass procedure for the return from invoking the Rexx method.
 // I.e., use invokeDirect() rather than invokeDispatch.
-#define CTRLTAG_REPLYFROMREXX            0x10000000
+#define CTRLTAG_REPLYFROMREXX            0x40000000
 
 // The defualt size for the control's subclass message table.
 #define DEF_CONTROL_MSGS          10
 
-#define SUBCLASS_TAG_KEYWORDS      "SendToDlg, ReplyTrue, ReplyZero, or NoWait"
-#define USERSUBCLASS_TAG_KEYWORDS  "A string in conventional hexidecimal, SendToDlg, ReplyTrue, ReplyZero, or NoWait"
+#define SUBCLASS_TAG_KEYWORDS      "SendToDlg, SendToControl, ReplyTrue, ReplyZero, or NoWait"
+#define USERSUBCLASS_TAG_KEYWORDS  "A string in conventional hexidecimal, SendToDlg, SendToControl, ReplyTrue, ReplyZero, or NoWait"
 
 typedef struct newControlParams
 {

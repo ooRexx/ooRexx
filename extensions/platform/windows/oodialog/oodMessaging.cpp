@@ -3306,6 +3306,8 @@ static keyPressErr_t connectKeyPressHook(RexxMethodContext *c, pCEventNotificati
         return nameErr;
     }
 
+    pSubClassData pSCData;
+
     HWND hDlg = pcen->hDlg;
     if ( hDlg == NULL || ! IsWindow(hDlg) )
     {
@@ -3318,11 +3320,17 @@ static keyPressErr_t connectKeyPressHook(RexxMethodContext *c, pCEventNotificati
      */
     if ( pcen->hHook == NULL )
     {
-        return installKBHook(pcen, methodName, keys, filter);
+        keyPressErr_t result = installKBHook(pcen, methodName, keys, filter);
+        if ( result == noErr )
+        {
+            pSCData = (pSubClassData)pcen->pHookData;
+            pSCData->pcpbd = dlgToCSelf(c, pcen->rexxSelf);
+        }
+
+        return result;
     }
 
-
-    pSubClassData pSCData = (pSubClassData)pcen->pHookData;
+    pSCData = (pSubClassData)pcen->pHookData;
     return setKeyPressData((KEYPRESSDATA *)pSCData->pData, methodName, keys, filter);
 }
 
@@ -3350,17 +3358,26 @@ void removeKBHook(pCEventNotification pcen)
  * It is possible for the key event to be filtered out and no ooDialog method is
  * then invoked.
  *
- * The ooDialog event method gets 5 arguments:
- *   key:      decimal value of the key code.
- *   shift:    true / false, true if the shift key was depressed for this event.
- *   control:  true / false, true if control key was depressed.
- *   alt:      true / false, ditto.
- *   info:     Keyword string that specifies if right or left shift / control /
- *             alt were down and the state of the num lock, caps lock, and
- *             scroll lock keys.  The string contains some combination of:
+ * The ooDialog event method gets 6 arguments:
+ *   key:         decimal value of the key code.
  *
- *             rShift, lShift, rControl lControl, rAlt, lAlt, numOn, numOff,
- *             capsOn, capsOff, scrollOn, scrollOf
+ *   shift:       true / false, true if the shift key was depressed for this
+ *                event.
+ *
+ *   control:     true / false, true if control key was depressed.
+ *
+ *   alt:         true / false, ditto.
+ *
+ *   info:        Keyword string that specifies if right or left shift / control
+ *                / alt were down and the state of the num lock, caps lock, and
+ *                scroll lock keys.  The string contains some combination of:
+ *
+ *                rShift, lShift, rControl lControl, rAlt, lAlt, numOn, numOff,
+ *                capsOn, capsOff, scrollOn, scrollOf
+ *
+ *   rexxControl: If key press is connected to a dialog control window, this is
+ *                the Rexx dialog control.  If connected to a dialog window,
+ *                this is .nil
  *
  * @remarks  The method name (pMethod) can not be longer than 197 chars.  This
  *           is checked for in setKeyPressData()
@@ -3427,7 +3444,9 @@ void processKeyPress(pSubClassData pSCData, WPARAM wParam, LPARAM lParam)
     {
         RexxThreadContext *c = pSCData->pcpbd->dlgProcContext;
 
-        RexxArrayObject args = getKeyEventRexxArgs(c, wParam, lParam & KEY_ISEXTENDED ? true : false, pSCData->pcdc->rexxSelf);
+        RexxArrayObject args = getKeyEventRexxArgs(c, wParam,
+                                                   lParam & KEY_ISEXTENDED ? true : false,
+                                                   pSCData->pcdc == NULL   ? NULL : pSCData->pcdc->rexxSelf);
         invokeDispatch(c, pSCData->pcpbd->rexxSelf, c->String(pMethod), args);
     }
 }

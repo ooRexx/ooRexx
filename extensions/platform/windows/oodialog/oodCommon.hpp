@@ -96,6 +96,7 @@ extern void              pointer2string(char *, void *pointer);
 extern RexxStringObject  pointer2string(RexxMethodContext *, void *);
 extern RexxStringObject  pointer2string(RexxThreadContext *c, void *pointer);
 extern RexxStringObject  dword2string(RexxMethodContext *, uint32_t);
+extern RexxObjectPtr     convertToTrueOrFalse(RexxThreadContext *c, RexxObjectPtr obj);
 extern char *            strdupupr(const char *str);
 extern char *            strdupupr_nospace(const char *str);
 extern char *            strdup_nospace(const char *str);
@@ -282,6 +283,11 @@ inline bool isEmptyString(const char * s)
     return s != NULL && *s == '\0';
 }
 
+inline RexxObjectPtr convertToTrueOrFalse(RexxMethodContext *c, RexxObjectPtr obj)
+{
+    return convertToTrueOrFalse(c->threadContext, obj);
+}
+
 inline const char *comctl32VersionName(DWORD id)
 {
     return comctl32VersionPart(id, COMCTL32_FULL_PART);
@@ -320,6 +326,7 @@ extern RexxObjectPtr  controlNotSupportedException(RexxMethodContext *c, RexxObj
 extern void          *wrongClassReplyException(RexxThreadContext *c, const char *mName, const char *n);
 extern void          *wrongReplyListException(RexxThreadContext *c, const char *mName, const char *list, RexxObjectPtr actual);
 extern void          *wrongReplyMsgException(RexxThreadContext *c, const char *mName, const char *msg);
+extern void          *wrongReplyNotBooleanException(RexxThreadContext *c, const char *mName, RexxObjectPtr actual);
 extern void           controlFailedException(RexxThreadContext *, CSTRING, CSTRING, CSTRING);
 extern void           wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
 extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, RexxObjectPtr rxDlg, CSTRING msg);

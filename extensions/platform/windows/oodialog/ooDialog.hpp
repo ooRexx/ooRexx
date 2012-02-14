@@ -183,6 +183,13 @@
 // is invoked through startWith(), which of course returns immediately.
 #define TAG_REPLYFROMREXX         0x02000000
 
+// Reply FALSE in the dialog procedure, not TRUE.  Reply FALSE passes message on
+// to the system for processing.  TRUE indicates the message was handled.
+// Previously, the default was always to reply FALSE, so only TAG_MSGHANDLED was
+// needed.  However, now some event connections have the default to be reply
+// TRUE and we need some way for the user to change that default.
+#define TAG_REPLYFALSE            0x04000000
+
 // Describes how a message searched for in the message table should be handled.
 typedef enum
 {
@@ -602,16 +609,6 @@ typedef CPlainBaseDialog *pCPlainBaseDialog;
 typedef struct {
     char              *method;          /* Name of method to invoke. */
 } CHAREVENTDATA;
-
-// Struct for mouse wheel notify processing.
-typedef struct {
-    pCPlainBaseDialog    pcpbd;           // The owner dialog CSelf.
-    RexxObjectPtr        mouse;           // The Rexx mouse object
-    char                *method;          // Name of method to invoke.
-    bool                 willReply;       // User wants event handler invoked directly, or not.
-} MOUSEWHEELDATA;
-typedef MOUSEWHEELDATA *PMOUSEWHEELDATA;
-
 
 // Struct for sorting list view items when the sorting is done by invoking a
 // method in the Rexx dialog.

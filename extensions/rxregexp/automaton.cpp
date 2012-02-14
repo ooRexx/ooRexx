@@ -201,10 +201,6 @@ int automaton::parse(const char *regexp)
                     printf("%d\t%d\n",next1[i],next2[i]);
                 }
             }
-                else
-            {
-                    printf("%d\n",next1[i]);
-            }
             else
             {
                 printf("%d\n",next1[i]);

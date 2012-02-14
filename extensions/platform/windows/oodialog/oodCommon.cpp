@@ -403,7 +403,7 @@ void *wrongClassReplyException(RexxThreadContext *c, const char *mName, const ch
  *
  *  900 User message.
  *
- *  The reply from the event handler, ('mName,) must be one of 'list'; found
+ *  The reply from the event handler, ('mName',) must be one of 'list'; found
  *  'actual'
  *
  *  The reply from the event handler (onSysCommand) must be of .true or .false;
@@ -455,6 +455,39 @@ void *wrongReplyMsgException(RexxThreadContext *c, const char *mName, const char
 {
     TCHAR buffer[512];
     _snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) %s", mName, msg);
+    return executionErrorException(c, buffer);
+}
+
+/**
+ *  Error 98.900
+ *
+ *  98 The language processor detected a specific error during execution. The
+ *  associated error gives the reason for the error.
+ *
+ *  900 User message.
+ *
+ *  The reply from the event handler, ('mName',) must be true or false; found
+ *  'actual'
+ *
+ *  The reply from the event handler (onMouseWheel) must be .true or .false;
+ *  found 17
+ *
+ * @param c      The thread context we are operating under.
+ * @param mName  The method name of the event handler
+ * @param list   A list of the values expected.
+ * @param actual Actual reply object
+ *
+ * @return Pointer to void, could be used in the return statement of a method
+ *         to return NULLOBJECT after the exeception is raised.
+ *
+ * @notes  This exception is meant to be used when the reply from a Rexx event
+ *         handler is incorrect.
+ */
+void *wrongReplyNotBooleanException(RexxThreadContext *c, const char *mName, RexxObjectPtr actual)
+{
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) must be .true or .false; found %s",
+              mName, c->ObjectToStringValue(actual));
     return executionErrorException(c, buffer);
 }
 
@@ -1365,6 +1398,41 @@ RexxStringObject dword2string(RexxMethodContext *c, uint32_t num)
 }
 
 /**
+ * Converts a Rexx object to TheTrueObj or TheFalseObj.
+ *
+ * In many places in ooDialog we require the user to use .true or .false.  But,
+ * really ooRexx allows 1 or 0 to equal .true or .false, so we need to
+ * accomadate that.  If we compare a Rexx object to TheTrueObj, it will fail if
+ * the Rexx object is 1, same thing with TheFalseObj.
+ *
+ * @param c
+ * @param obj
+ *
+ * @return NULLOBJECT if the conversion failed.
+ */
+RexxObjectPtr convertToTrueOrFalse(RexxThreadContext *c, RexxObjectPtr obj)
+{
+    if ( obj == TheTrueObj || obj == TheFalseObj )
+    {
+        return obj;
+    }
+
+    uint32_t tmp;
+    if ( c->UnsignedInt32(obj, &tmp) )
+    {
+        if ( tmp == 1 )
+        {
+            return TheTrueObj;
+        }
+        else if ( tmp == 0 )
+        {
+            return TheFalseObj;
+        }
+    }
+    return NULLOBJECT;
+}
+
+/**
  * Returns an upper-cased copy of the string.
  *
  * @param str   The string to copy and upper case.
@@ -1656,7 +1724,6 @@ pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, ood
     }
     return pcpbd;
 }
-
 
 PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, size_t argPos)
 {
