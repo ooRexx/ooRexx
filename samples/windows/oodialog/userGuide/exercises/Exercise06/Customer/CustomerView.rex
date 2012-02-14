@@ -93,12 +93,12 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
-    expose hasParent		
+    expose hasParent
     -- ADDED FOR EXERCISE06. Statements in the old "StartCustomerView" Routine
     -- have been moved here. The ~activate statement has also changed.
     use arg rootDlg, customerNo
     --say ".CustomerView-newInstance-01: Start."
-    .Application~addToConstDir("Customer\CustomerView.h")		
+    .Application~addToConstDir("Customer\CustomerView.h")
     -- Create an instance of CustomerView and show it:
     dlg = .CustomerView~new("Customer\CustomerView.rc", "IDD_CUST_DIALOG")
     --say ".CustomerView-newInstance-02: root =" rootDlg
