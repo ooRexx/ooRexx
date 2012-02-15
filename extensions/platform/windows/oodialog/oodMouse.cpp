@@ -64,7 +64,7 @@
 #define MOUSE_CLASS        "Mouse"
 
 #define TRACK_MOUSE_KEYWORDS    "CANCEL, HOVER, LEAVE, NONCLIENT, or QUERY"
-#define WM_MOUSE_KEYWORDS       "MouseMove, MouseWheel, MouseLeave, MouseHover, lButtonUp, lButtonDown, or CaptureChanged"
+#define WM_MOUSE_KEYWORDS       "MouseMove, MouseWheel, MouseLeave, MouseHover, NcMouseLeave, NcMouseHover, lButtonUp, lButtonDown, or CaptureChanged"
 #define MOUSE_BUTTON_KEYWORDS   "LEFT, RIGHT, MIDDLE, XBUTTON1, or XBUTTON2"
 #define SYSTEM_CURSOR_KEYWORDS  "APPSTARTING, ARROW, CROSS, HAND, HELP, IBEAM, NO, SIZEALL, SIZENESW, SIZENS, " \
                                 "SIZENWSE, SIZEWE, UPARROW, or WAIT"
@@ -199,6 +199,8 @@ static bool keyword2wm(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
     else if ( StrCmpI(keyword, "MOUSEWHEEL")     == 0 ) wmMsg = WM_MOUSEWHEEL;
     else if ( StrCmpI(keyword, "MOUSELEAVE")     == 0 ) wmMsg = WM_MOUSELEAVE;
     else if ( StrCmpI(keyword, "MOUSEHOVER")     == 0 ) wmMsg = WM_MOUSEHOVER;
+    else if ( StrCmpI(keyword, "NCMOUSELEAVE")   == 0 ) wmMsg = WM_NCMOUSELEAVE;
+    else if ( StrCmpI(keyword, "NCMOUSEHOVER")   == 0 ) wmMsg = WM_NCMOUSEHOVER;
     else if ( StrCmpI(keyword, "LBUTTONDOWN")    == 0 ) wmMsg = WM_LBUTTONDOWN;
     else if ( StrCmpI(keyword, "LBUTTONUP")      == 0 ) wmMsg = WM_LBUTTONUP;
     else if ( StrCmpI(keyword, "LBUTTONDBLCLK")  == 0 ) wmMsg = WM_LBUTTONDBLCLK;
@@ -263,6 +265,8 @@ inline CSTRING wm2name(uint32_t mcn)
         case WM_MOUSEWHEEL     : return "onMouseWheel";
         case WM_MOUSELEAVE     : return "onMouseLeave";
         case WM_MOUSEHOVER     : return "onMouseHover";
+        case WM_NCMOUSELEAVE   : return "onNcMouseLeave";
+        case WM_MCMOUSEHOVER   : return "onNcMouseHover";
         case WM_LBUTTONDOWN    : return "onLButtonDown";
         case WM_LBUTTONUP      : return "onLButtonUp";
         case WM_LBUTTONDBLCLK  : return "onLButtonDblClk";
@@ -275,6 +279,38 @@ inline CSTRING wm2name(uint32_t mcn)
         case WM_CAPTURECHANGED : return "onCaptureChanged";
     }
     return "onWM";
+}
+
+inline CSTRING ncHitTest2string(wParam hit)
+{
+    switch ( hit )
+    {
+        case HTERROR       : return "ERROR";
+        case HTTRANSPARENT : return "TRANSPARENT";
+        case HTNOWHERE     : return "NOWHERE";
+        case HTCLIENT      : return "CLIENT";
+        case HTCAPTION     : return "CAPTION";
+        case HTSYSMENU     : return "SYSMENU";
+        case HTGROWBOX     : return "GROWBOX";
+        case HTMENU        : return "MENU";
+        case HTHSCROLL     : return "HSCROLL";
+        case HTVSCROLL     : return "VSCROLL";
+        case HTMINBUTTON   : return "MINBUTTON";
+        case HTMAXBUTTON   : return "MAXBUTTON";
+        case HTLEFT        : return "LEFT";
+        case HTRIGHT       : return "RIGHT";
+        case HTTOP         : return "TOP";
+        case HTTOPLEFT     : return "TOPLEFT";
+        case HTTOPRIGHT    : return "TOPRIGHT";
+        case HTBOTTOM      : return "BOTTOM";
+        case HTBOTTOMLEFT  : return "BOTTOMLEFT";
+        case HTBOTTOMRIGHT : return "BOTTOMRIGHT";
+        case HTBORDER      : return "BORDER";
+        case HTOBJECT      : return "OBJECT";
+        case HTCLOSE       : return "CLOSE";
+        case HTHELP        : return "HELP";
+    }
+    return "err";
 }
 
 
@@ -627,9 +663,21 @@ LRESULT processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t tag, ui
         break;
 
         case WM_MOUSELEAVE :
+        case WM_NCMOUSELEAVE:
         {
             // Send the mouse object, and not even sure we need to do that..
             RexxArrayObject args = c->ArrayOfOne(pcdc->rexxMouse);
+
+            return invokeControlMethod(c, pcpbd, methodName, args, tag, willReply, msg, hwnd, wParam, lParam);
+        }
+        break;
+
+        case WM_NCMOUSEHOVER :
+        {
+            RexxObjectPtr rxPoint = rxNewPoint(c, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            CSTRING flags         = ncHitTest2string(wParam)
+
+            RexxArrayObject args = c->ArrayOfThree(c->String(flags), rxPoint, pcdc->rexxMouse);
 
             return invokeControlMethod(c, pcpbd, methodName, args, tag, willReply, msg, hwnd, wParam, lParam);
         }
@@ -710,11 +758,23 @@ MsgReplyType processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t ta
         break;
 
         case WM_MOUSELEAVE :
+        case WM_NCMOUSELEAVE:
         {
             // Send the mouse object, and not even sure we need to do that..
             RexxArrayObject args = c->ArrayOfOne(pcpbd->rexxMouse);
 
             return invokeDialogMethod(c, pcpbd, methodName, args, tag);
+        }
+        break;
+
+        case WM_NCMOUSEHOVER :
+        {
+            RexxObjectPtr rxPoint = rxNewPoint(c, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            CSTRING hit           = ncHitTest2string(wParam)
+
+            RexxArrayObject args = c->ArrayOfThree(c->String(hit), rxPoint, pcdc->rexxMouse);
+
+            return invokeControlMethod(c, pcpbd, methodName, args, tag, willReply, msg, hwnd, wParam, lParam);
         }
         break;
 
@@ -1134,7 +1194,6 @@ RexxMethod4(RexxObjectPtr, mouse_trackEvent, OPTIONAL_CSTRING, event, OPTIONAL_u
         buf[strlen(buf)] = '\0';
 
         context->DirectoryPut(answer, context->String(buf), "EVENT");
-        context->DirectoryPut(answer, pointer2string(context, tme.hwndTrack), "HWND");
         context->DirectoryPut(answer, context->UnsignedInt32(tme.dwHoverTime), "HOVERTIME");
 
         goto good_out;
@@ -1649,7 +1708,7 @@ done_out:
 
 /** Mouse::showCursor()
  *
- * Displays or hides the cursor
+ * Displays or hides the cursor.
  *
  * @param  show  [Optional]  Specifies whether the internal display counter is
  *               to be incremented or decremented.
