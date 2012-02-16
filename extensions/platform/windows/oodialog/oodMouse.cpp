@@ -266,7 +266,7 @@ inline CSTRING wm2name(uint32_t mcn)
         case WM_MOUSELEAVE     : return "onMouseLeave";
         case WM_MOUSEHOVER     : return "onMouseHover";
         case WM_NCMOUSELEAVE   : return "onNcMouseLeave";
-        case WM_MCMOUSEHOVER   : return "onNcMouseHover";
+        case WM_NCMOUSEHOVER   : return "onNcMouseHover";
         case WM_LBUTTONDOWN    : return "onLButtonDown";
         case WM_LBUTTONUP      : return "onLButtonUp";
         case WM_LBUTTONDBLCLK  : return "onLButtonDblClk";
@@ -281,7 +281,7 @@ inline CSTRING wm2name(uint32_t mcn)
     return "onWM";
 }
 
-inline CSTRING ncHitTest2string(wParam hit)
+inline CSTRING ncHitTest2string(WPARAM hit)
 {
     switch ( hit )
     {
@@ -675,7 +675,7 @@ LRESULT processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t tag, ui
         case WM_NCMOUSEHOVER :
         {
             RexxObjectPtr rxPoint = rxNewPoint(c, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            CSTRING flags         = ncHitTest2string(wParam)
+            CSTRING flags         = ncHitTest2string(wParam);
 
             RexxArrayObject args = c->ArrayOfThree(c->String(flags), rxPoint, pcdc->rexxMouse);
 
@@ -770,11 +770,11 @@ MsgReplyType processMouseMsg(RexxThreadContext *c, char *methodName, uint32_t ta
         case WM_NCMOUSEHOVER :
         {
             RexxObjectPtr rxPoint = rxNewPoint(c, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            CSTRING hit           = ncHitTest2string(wParam)
+            CSTRING hit           = ncHitTest2string(wParam);
 
-            RexxArrayObject args = c->ArrayOfThree(c->String(hit), rxPoint, pcdc->rexxMouse);
+            RexxArrayObject args = c->ArrayOfThree(c->String(hit), rxPoint, pcpbd->rexxMouse);
 
-            return invokeControlMethod(c, pcpbd, methodName, args, tag, willReply, msg, hwnd, wParam, lParam);
+            return invokeDialogMethod(c, pcpbd, methodName, args, tag);
         }
         break;
 
