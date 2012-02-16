@@ -92,6 +92,7 @@ extern RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos,
 extern RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int max, int actual);
+extern RexxObjectPtr wrongRangeException(RexxMethodContext *c, size_t pos, uint32_t min, uint32_t max, uint32_t actual);
 extern RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual);

@@ -1206,6 +1206,94 @@ RexxMethod2(RexxObjectPtr, spi_setDragWidth_cls, uint32_t, pixels, CSELF, pCSelf
 }
 
 
+/** SPI::mouseHoverHeight  [class attribute get]
+ */
+RexxMethod0(uint32_t, spi_getMouseHoverHeight_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    uint32_t height = 0;
+    if ( ! SystemParametersInfo(SPI_GETMOUSEHOVERHEIGHT, 0, &height, 0) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return height;
+}
+
+/** SPI::mouseHoverHeight  [class attribute set]
+ */
+RexxMethod2(RexxObjectPtr, spi_setMouseHoverHeight_cls, uint32_t, pixels, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( ! SystemParametersInfo(SPI_SETMOUSEHOVERHEIGHT, pixels, NULL, ((pCSpi)pCSelf)->fWinIni) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return NULLOBJECT;
+}
+
+
+/** SPI::mouseHoverTime  [class attribute get]
+ */
+RexxMethod0(uint32_t, spi_getMouseHoverTime_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    uint32_t ms = 0;
+    if ( ! SystemParametersInfo(SPI_GETMOUSEHOVERTIME, 0, &ms, 0) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return ms;
+}
+
+/** SPI::mouseHoverTime  [class attribute set]
+ */
+RexxMethod2(RexxObjectPtr, spi_setMouseHoverTime_cls, uint32_t, ms, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( ms < USER_TIMER_MINIMUM || ms > USER_TIMER_MAXIMUM )
+    {
+        wrongRangeException(context->threadContext, 1, USER_TIMER_MINIMUM, USER_TIMER_MAXIMUM, ms);
+    }
+    else if ( ! SystemParametersInfo(SPI_SETMOUSEHOVERTIME, ms, NULL, ((pCSpi)pCSelf)->fWinIni) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return NULLOBJECT;
+}
+
+
+/** SPI::mouseHoverWidth  [class attribute get]
+ */
+RexxMethod0(uint32_t, spi_getMouseHoverWidth_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    uint32_t width = 0;
+    if ( ! SystemParametersInfo(SPI_GETMOUSEHOVERWIDTH, 0, &width, 0) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return width;
+}
+
+/** SPI::mouseHoverWidth  [class attribute set]
+ */
+RexxMethod2(RexxObjectPtr, spi_setMouseHoverWidth_cls, uint32_t, pixels, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( ! SystemParametersInfo(SPI_SETMOUSEHOVERWIDTH, pixels, NULL, ((pCSpi)pCSelf)->fWinIni) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return NULLOBJECT;
+}
+
+
 /** SPI::updateFlag  [class attribute get]
  *
  */

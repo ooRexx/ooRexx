@@ -531,6 +531,16 @@ RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int
     return wrongRangeException(c, pos, min, max, c->WholeNumber(actual));
 }
 
+RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, uint32_t min, uint32_t max, uint32_t actual)
+{
+    c->RaiseException(Rexx_Error_Invalid_argument_range,
+                      c->ArrayOfFour(c->StringSize(pos),
+                                     c->UnsignedInt32(min),
+                                     c->UnsignedInt32(max),
+                                     c->UnsignedInt32(actual)));
+    return NULLOBJECT;
+}
+
 RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, RexxObjectPtr actual)
 {
     c->RaiseException(Rexx_Error_Invalid_argument_list,

@@ -217,6 +217,12 @@
 ::attribute dragHeight set class external "LIBRARY oodialog spi_setDragHeight_cls"
 ::attribute dragWidth get class external "LIBRARY oodialog spi_getDragWidth_cls"
 ::attribute dragWidth set class external "LIBRARY oodialog spi_setDragWidth_cls"
+::attribute mouseHoverHeight get class external "LIBRARY oodialog spi_getMouseHoverHeight_cls"
+::attribute mouseHoverHeight set class external "LIBRARY oodialog spi_getMouseHoverHeight_cls"
+::attribute mouseHoverTime get class external "LIBRARY oodialog spi_getMouseHoverTime_cls"
+::attribute mouseHoverTime set class external "LIBRARY oodialog spi_getMouseHoverTime_cls"
+::attribute mouseHoverWidth get class external "LIBRARY oodialog spi_getMouseHoverWidth_cls"
+::attribute mouseHoverWidth set class external "LIBRARY oodialog spi_getMouseHoverWidth_cls"
 
 ::attribute updateFlag get class external "LIBRARY oodialog spi_getUpdateFlag_cls"
 ::attribute updateFlag set class external "LIBRARY oodialog spi_setUpdateFlag_cls"

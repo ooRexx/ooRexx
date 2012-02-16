@@ -431,6 +431,14 @@ REXX_METHOD_PROTOTYPE(spi_getDragHeight_cls);
 REXX_METHOD_PROTOTYPE(spi_setDragHeight_cls);
 REXX_METHOD_PROTOTYPE(spi_getDragWidth_cls);
 REXX_METHOD_PROTOTYPE(spi_setDragWidth_cls);
+REXX_METHOD_PROTOTYPE(spi_getMouseHoverHeight_cls);
+REXX_METHOD_PROTOTYPE(spi_setMouseHoverHeight_cls);
+REXX_METHOD_PROTOTYPE(spi_getMouseHoverTime_cls);
+REXX_METHOD_PROTOTYPE(spi_setMouseHoverTime_cls);
+REXX_METHOD_PROTOTYPE(spi_getMouseHoverWidth_cls);
+REXX_METHOD_PROTOTYPE(spi_setMouseHoverWidth_cls);
+REXX_METHOD_PROTOTYPE(spi_getMouseHoverHeight_cls);
+REXX_METHOD_PROTOTYPE(spi_setMouseHoverHeight_cls);
 REXX_METHOD_PROTOTYPE(spi_getUpdateFlag_cls);
 REXX_METHOD_PROTOTYPE(spi_setUpdateFlag_cls);
 REXX_METHOD_PROTOTYPE(spi_getWorkArea_cls);
@@ -1320,6 +1328,12 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(spi_setDragHeight_cls,          spi_setDragHeight_cls),
     REXX_METHOD(spi_getDragWidth_cls,           spi_getDragWidth_cls),
     REXX_METHOD(spi_setDragWidth_cls,           spi_setDragWidth_cls),
+    REXX_METHOD(spi_getMouseHoverHeight_cls,    spi_getMouseHoverHeight_cls),
+    REXX_METHOD(spi_setMouseHoverHeight_cls,    spi_setMouseHoverHeight_cls),
+    REXX_METHOD(spi_getMouseHoverTime_cls,      spi_getMouseHoverTime_cls),
+    REXX_METHOD(spi_setMouseHoverTime_cls,      spi_setMouseHoverTime_cls),
+    REXX_METHOD(spi_getMouseHoverWidth_cls,     spi_getMouseHoverWidth_cls),
+    REXX_METHOD(spi_setMouseHoverWidth_cls,     spi_setMouseHoverWidth_cls),
     REXX_METHOD(spi_getUpdateFlag_cls,          spi_getUpdateFlag_cls),
     REXX_METHOD(spi_setUpdateFlag_cls,          spi_setUpdateFlag_cls),
     REXX_METHOD(spi_getWorkArea_cls,            spi_getWorkArea_cls),
