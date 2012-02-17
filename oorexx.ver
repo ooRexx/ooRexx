@@ -4,7 +4,7 @@ ORX_MINOR=2
 ORX_MOD_LVL=0
 ORX_BLD_LVL=0
 ORX_VER_STR="4.2.0"
-ORX_COPY_YEAR="2005-2010"
+ORX_COPY_YEAR="2005-2012"
 
 # This defines the oorexx library version. For ooRexx this should always be the
 # same as the ORX_MAJOR number.
