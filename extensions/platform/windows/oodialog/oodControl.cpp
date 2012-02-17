@@ -740,6 +740,38 @@ bool parseTagOpts(RexxThreadContext *c, CSTRING opts, uint32_t *pTag, size_t arg
     return foundKeyWord;
 }
 
+static LRESULT charReply(pSubClassData pData, char *method, RexxArrayObject args,
+                         HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam)
+{
+    RexxThreadContext *c = pData->pcpbd->dlgProcContext;
+
+    RexxObjectPtr reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
+    if ( ! checkForCondition(c, false) && reply != NULLOBJECT )
+    {
+        if ( reply == TheFalseObj )
+        {
+            // Swallow the message.
+            return 0;
+        }
+        else if ( reply == TheTrueObj )
+        {
+            return DefSubclassProc(hwnd, msg, wParam, lParam);
+        }
+        else
+        {
+            // When it is neither true or false, the reply should be a charcter
+            // that replaces the char with the char sent back to us.
+            uint32_t chr;
+            if ( c->UnsignedInt32(reply, &chr) )
+            {
+                return DefSubclassProc(hwnd, msg, (WPARAM)chr, lParam);
+            }
+        }
+    }
+
+    // On errors:
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
 
 /**
  * Process a window message to a subclassed dialog control.  The message passed
@@ -773,12 +805,7 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
                     if ( isExtendedKeyEvent(wParam) )
                     {
                         RexxArrayObject args  = getKeyEventRexxArgs(c, wParam, true, pData->pcdc->rexxSelf);
-                        RexxObjectPtr   reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
-
-                        if ( ! checkForCondition(c, false) && reply == TheFalseObj )
-                        {
-                            return 0; // I think this should be 0.
-                        }
+                        return charReply(pData, method, args, hwnd, msg, wParam, lParam);
                     }
                     return DefSubclassProc(hwnd, msg, wParam, lParam);
                 }
@@ -786,32 +813,7 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
             else if ( msg == WM_CHAR )
             {
                 RexxArrayObject args  = getKeyEventRexxArgs(c, wParam, false, pData->pcdc->rexxSelf);
-                RexxObjectPtr   reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
-
-                if ( ! checkForCondition(c, false) && reply != NULLOBJECT )
-                {
-                    if ( reply == TheFalseObj )
-                    {
-                        // Swallow the message.
-                        return TRUE;
-                    }
-                    else if ( reply != TheTrueObj )
-                    {
-                        // If reply did equal TheTrueObj, it means 'do nothing.'
-                        // We will drop through and return DefSubclassProc().
-                        // When it is neither true or false, the reply is a
-                        // charcter that Replaces the char with the char sent
-                        // back to us.
-                        uint32_t chr;
-                        if ( c->UnsignedInt32(reply, &chr) )
-                        {
-                            return DefSubclassProc(hwnd, msg, (WPARAM)chr, lParam);
-                        }
-                    }
-                }
-
-                // On errors or a return of TheTrueObj:
-                return DefSubclassProc(hwnd, msg, wParam, lParam);
+                return charReply(pData, method, args, hwnd, msg, wParam, lParam);
             }
 
             break;
