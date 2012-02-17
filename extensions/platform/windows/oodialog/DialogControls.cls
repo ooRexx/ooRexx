@@ -61,14 +61,14 @@
 ::method init external "LIBRARY oodialog dlgctrl_init"
 ::method unInit external "LIBRARY oodialog dlgctrl_unInit"
 
-::method addUserSubclass unguarded external "LIBRARY oodialog dlgctrl_addUserSubclass"
+::method addUserSubclass unguarded external "LIBRARY oodialog dlgctrl_addUserSubclass" -- Do not document for 4.2.0
 ::method assignFocus unguarded external "LIBRARY oodialog dlgctrl_assignFocus"
 ::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
 ::method connectCharEvent unguarded
   use strict arg methodName = 'onChar'
   return self~connectEvent('CHAR', methodName)
 
-::method connectEvent unguarded external "LIBRARY oodialog dlgctrl_connectEvent"
+::method connectEvent unguarded external "LIBRARY oodialog dlgctrl_connectEvent"       -- Do not document for 4.2.0
 ::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
 ::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
 ::method data unguarded external "LIBRARY oodialog dlgctrl_data"

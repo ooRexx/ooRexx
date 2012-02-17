@@ -319,6 +319,8 @@
 
 
 ::class 'Mouse' public
+::constant HOVER_DEFAULT           4294967295
+
 ::method new class external "LIBRARY oodialog mouse_new_cls"
 ::method init external "LIBRARY oodialog mouse_init"
 
