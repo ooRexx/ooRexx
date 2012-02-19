@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: ProductView.rex - The ProductView component      v02-04 11Feb12
+   Exercise 06: ProductView.rex - The ProductView component      v02-05 19Feb12
 
    Contains: 	   classes "ProductView", "AboutDialog", and "HRSpv".
    Pre-requisites: ProductView.dll, ProductView.h, Pproduct.ico, ProductIcon.bmp,
@@ -58,8 +58,12 @@
    v02-03 01Dec11: Changed OK/Cancel to Yes/No on "cancel while in update" dialog.
    v02-04 11Feb12: ProductView - Changed .application()
                    HRS class name changed to HRSpv
+   v02-05 19Feb12: ProductView: moved .Application~ stmt to top of file.
 
 ------------------------------------------------------------------------------*/
+
+.Application~addToConstDir("Product\ProductView.h")
+
 
 ::requires "ooDialog.cls"
 ::requires "..\Support\NumberOnlyEditEx.cls"
@@ -68,7 +72,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductView							  v02-04 11Feb12
+  ProductView							  v02-05 19Feb12
   -----------
   The "view" part of the Product component. Now designed to operate from its own
   folder. Should be invoked from immediately outside the Product folder.
@@ -77,6 +81,8 @@
   Changes:
   v02-04 11Feb12: Moved .application~setDefaults() to app startup file.
                   Changed to .application~addToConstDir() here.
+  v02-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+                  method to top of file - just before ::requires statement(s).
 
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -91,11 +97,9 @@
     use arg rootDlg, productNo			--ADDED FOR EXERCISE06.
     if parent = "SA" then hasParent = .false; else hasParent = .true
     say ".ProductView-newInstance-01: rootDlg =" rootDlg
-    -- Enable use of symbolic IDs in menu creation, and turn off AutoDetection
-    -- (the third parameter:
     .Application~addToConstDir("Product\ProductView.h")
     -- Create an instance of ProductView and show it:
-    dlg = .ProductView~new("Product\res\ProductView.dll", IDD_PRODUCT_VIEW)  -- Exercise06 - but move to res folder later.
+    dlg = .ProductView~new("Product\res\ProductView.dll", IDD_PRODUCT_VIEW)  
     dlg~activate(rootDlg, productNo)			-- CHANGED FOR EXERCISE06.
 
 

@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderView class				  v00-04 11Feb12
+   Exercise 06: The OrderView class				  v00-05 19Feb12
    OrderFormView.rex
 
    Contains: class "OrderView".
@@ -51,22 +51,29 @@
    v00-01 25Aug11.
    v00-02 19Sep11: Corrected standalone invocation.
    v00-03 28Sep11: Minor mod to comment.
-   v00-04 11Feb12: OrderFormView - Changed .application()
+   v00-04 11Feb12: OrderView - Changed .application()
+   v00-05 19Feb12: OrderView: moved .Application~ stmt to top of file.
 
 ------------------------------------------------------------------------------*/
+
+
+.Application~addToConstDir("Order\OrderView.h")
+
 
 ::REQUIRES "ooDialog.cls"
 ::REQUIRES "Order\OrderModelData.rex"
 
 
 /*==============================================================================
-  OrderFormView							  v00-04 11Feb12
+  OrderView							  v00-05 19Feb12
   -------------
   The "view" (or "gui") part of the Order component - part of the sample
   Order Management application.
 
   v00-04 11Feb12: Moved .application~setDefaults() to app startup file.
                    changed to .application~addToConstDir() here.
+  v00-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+                   method to top of file - just before ::requires statement(s).
 
   interface iOrderView {
     void new();
@@ -80,7 +87,6 @@
     expose rootDlg
     use arg rootDlg, orderNo
     say ".OrderView-newInstance: rootDlg =" rootDlg
-    .Application~addToConstDir("Order\OrderView.h")
     dlg = self~new("Order\OrderView.rc", "IDD_ORDER_DIALOG")
     dlg~activate(rootDlg, orderNo)
 

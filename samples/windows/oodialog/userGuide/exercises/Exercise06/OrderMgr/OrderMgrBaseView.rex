@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The OrderManagementBaseView class
-   OrderMgrBaseView.rex						  v00-07 11Feb12
+   OrderMgrBaseView.rex						  v00-08 19Feb12
 
    Contains: classes "OrderMgrBaseBase", HRSombv (private).
 
@@ -53,6 +53,8 @@
      		     HRS classes in same file at some future time.
      v00-06 15Feb12: Changes to comments only.
      v00-07 11Feb12: Add .application~setDefaults to this file.
+     v00-08 19Feb12: OrderMgrBaseView: moved .Application~ stmt to top of file.
+
 
    To Do: - Add Find Customer, Find Product (buttons or menu items?)
           - Tidy up comments in code.
@@ -64,11 +66,15 @@
 
 ------------------------------------------------------------------------------*/
 
+
+.Application~addToConstDir("OrderMgr\OrderMgrBaseView.h")
+
+
 ::REQUIRES "ooDialog.cls"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderMgrBaseView						  v00-06 11Feb12
+  OrderMgrBaseView						  v00-07 19Feb12
   -----------------
   The base "view" (or "gui") part of the OrderMgr component (part of the
   sample Order Management application). This class provides for (a) handling
@@ -78,7 +84,8 @@
    Changes:
    v00-06 11Feb12: Moved .application~setDefaults() to app startup file.
                    changed to .application~addToConstDir() here.
-
+   v00-07 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+                   method to top of file - just before ::requires statement(s).
   
 
   interface iOrderMgrBaseView {
@@ -98,7 +105,6 @@
     --say ".OrderMgrBaseView-newInstance-01: Start."
     -- Enable use of symbolic IDs in menu creation, and turn off AutoDetection
     -- (the third parameter:
-    .Application~addToConstDir("OrderMgr\OrderMgrBaseView.h")
     -- Create an instance of OrderMgrBaseView and show it:
     dlg = self~new
 

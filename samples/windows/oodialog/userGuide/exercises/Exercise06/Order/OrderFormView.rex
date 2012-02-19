@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderFormView class				  v00-05 11Feb12
+   Exercise 06: The OrderFormView class				  v00-06 19Feb12
    OrderFormView.rex
 
    Contains: class "OrderFormView", class "HRSofv".
@@ -51,23 +51,30 @@
    		   Cancel/Place/Save Order. Also added "not implemented" message
    		   for each menu item.
    v00-05 11Feb12: OrderFormView - Changed .application() & HRS class
+   v00-06 19Feb12: OrderFormView: moved .Application~ stmt to top of file.
 
 ------------------------------------------------------------------------------*/
+
+
+.Application~addToConstDir("Order\OrderFormView.h")
+
 
 ::requires "ooDialog.cls"
 
 
 /*==============================================================================
-  OrderFormView							  v00-03 11Feb12
+  OrderFormView							  v00-04 19Feb12
   -------------
   The "view" (or "gui") Data Entry part of the Sales Order component.
 
   Changes:
   v00-01: First Version
   v00-02: Second version
-  v00-03: 11Feb12: Moved .application~setDefaults() to app startup file.
-                    changed to .application~addToConstDir() here.
-                    Changed name fo HRS class to HRSofv.
+  v00-03 11Feb12: Moved .application~setDefaults() to app startup file.
+                  changed to .application~addToConstDir() here.
+                  Changed name fo HRS class to HRSofv.
+  v00-04 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+                  method to top of file - just before ::requires statement(s).
 
   interface iOrderFormView {
     void new();
@@ -79,7 +86,6 @@
 
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg, orderNo
-    .Application~addToConstDir("Order\OrderFormView.h")
     dlg = self~new("Order\OrderFormView.rc", "IDD_ORDFORM_DIALOG")
     --say ".OrderFormView-newInstance: rootDlg =" rootDlg
     dlg~activate(rootDlg, orderNo)

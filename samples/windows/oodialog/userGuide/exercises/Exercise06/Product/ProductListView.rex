@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise06: The Product List View				  v00-04 28Jan12
+   Exercise06: The Product List View				  v00-05 19Feb12
 
    Contains: classes "ProductListView, HRSplv (for human-readable strings)
 
@@ -51,9 +51,13 @@
 		   Also added class HRS for display strings.
    v00-04 28Jan11  Change name of class HRS to HRSplv to allow for multiple
      		   HRS classes in same file at some future time.
+   v00-05 19Feb12: ProductListView - moved .Application~addToConstDir 
 
    Outstanding Problems: None reported.
 *******************************************************************************/
+
+.Application~addToConstDir("Product\ProductListView.h")
+
 
 ::REQUIRES "ooDialog.cls"
 ::REQUIRES "Product\ProductView.rex"
@@ -61,7 +65,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductListView						  v00-04 11Feb12
+  ProductListView						  v00-05 19Feb12
   -------------
   The view of a list of products.
   Changes:
@@ -69,6 +73,9 @@
     v00-02: Corrected for standalone invocation.
     v00-03 28Jan12: Changed name of HRS class to HRSplv.
     v00-04 11Feb12: Add .application~addToConstDir to this file.
+    v00-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+                    method to top of file - just before ::requires statement(s).
+
 
   [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -81,7 +88,6 @@
 
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg
-    .Application~addToConstDir("Product\ProductListView.h")
     --say ".ProductListView-newInstance-01: rootDlg =" rootDlg
     dlg = self~new("Product\ProductListView.rc", "IDD_PRODLIST_DIALOG")
     --say ".ProductListView-newInstance-02."

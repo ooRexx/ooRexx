@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The Customer ListView				  v01-04 12Feb12
+   Exercise 06: The Customer ListView				  v01-05 19Feb12
 
    Contains: classes "CustomerListView" and "HRSclv".
 
@@ -54,10 +54,15 @@
    v01-03 28Jan12: Changed class name HRS to HRSclv to allow for multiple
      		   HRS classes in same file at some future time.
    v01-04 11Feb12: CustomerListView - Changed .application()
+   v01-05 19Feb12: CustomerListView - moved .Application~addToConstDir 
 
 
    Outstanding Problems: None reported.
 *******************************************************************************/
+
+
+.Application~addToConstDir("Customer\CustomerListView.h")
+
 
 ::REQUIRES "ooDialog.cls"
 ::REQUIRES "customer\customerview.rex"
@@ -65,16 +70,17 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerListView						  v00-04 11Feb12
+  CustomerListView						  v01-04 19Feb12
   ----------------
   The view of a list of products.
   Changes:
-    v00-01: First version
-    v00-02: Corrected for standalone invocation.
-    v00-03 28Jan12: Changed name of HRS class to HRSplv.
-    v00-04 11Feb12: moved .application~setDefaults() to app startup file.
+    v01-01: First version
+    v01-02: Corrected for standalone invocation.
+    v01-03 28Jan12: Changed name of HRS class to HRSplv.
+    v01-04 11Feb12: moved .application~setDefaults() to app startup file.
                     changed to .application~addToConstDir() here.
-
+    v01-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+                    method to top of file - just before ::requires statement(s).
 
   [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -87,7 +93,6 @@
 
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg
-    .Application~addToConstDir("Customer\CustomerListView.h")
     --say ".CustomerListView-newInstance-01: root =" rootDlg
     dlg = self~new("Customer\CustomerListView.rc", "IDD_CUSTLIST_DIALOG")
     --say ".CustomerListView-newInstance-02."

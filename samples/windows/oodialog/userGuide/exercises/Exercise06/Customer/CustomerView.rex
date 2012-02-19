@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The CustomerView component             		  v02-04 11Feb12
+   Exercise 06: The CustomerView component             		  v02-05 19Feb12
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -53,7 +53,13 @@
    		   packaging of all classes in a single "application" file.
    v02-04 11Feb12: Changed CustomerView
 
+   v02-05 19Feb12: CustomerView: moved .Application~ stmt to top of file.
+
 ------------------------------------------------------------------------------*/
+
+
+.Application~addToConstDir("Customer\CustomerView.h")		
+
 
 ::requires "ooDialog.cls"
 ::requires "CustomerModelData.rex"
@@ -61,7 +67,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerView							  v02-04 11Feb12
+  CustomerView							  v02-05 19Feb12
   -------------
   The "view" (or "gui") part of the Customer component - part of the sample
   Order Management application.
@@ -81,6 +87,8 @@
      		    HRS classes in same file at some future time.
     v02-04 11Feb12: moved .application~setDefaults() to app startup file.
                     changed to .application~addToConstDir() here.
+    v02-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+                    method to top of file - just before ::requires statement(s).
 
 
   [interface (idl format)]
@@ -93,12 +101,11 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
-    expose hasParent
+    expose hasParent		
     -- ADDED FOR EXERCISE06. Statements in the old "StartCustomerView" Routine
     -- have been moved here. The ~activate statement has also changed.
     use arg rootDlg, customerNo
     --say ".CustomerView-newInstance-01: Start."
-    .Application~addToConstDir("Customer\CustomerView.h")
     -- Create an instance of CustomerView and show it:
     dlg = .CustomerView~new("Customer\CustomerView.rc", "IDD_CUST_DIALOG")
     --say ".CustomerView-newInstance-02: root =" rootDlg

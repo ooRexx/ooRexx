@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The Order ListView 				  v01-03 11Feb12
+   Exercise 06: The Order ListView 				  v01-04 19Feb12
 
    Contains: class "OrderListView", "HRSolv"
 
@@ -52,9 +52,15 @@
    v01-02 28Jan12: Changed class name HRS to HRSolv to allow for multiple
      		   HRS classes in same file at some future time.
    v01-03 11Feb12: OrderListView - Changed .application()
+   v01-04 19Feb12: OrderListView - Moved .Application~ stmt to top of file.
+
 
    Outstanding Problems: None reported.
 *******************************************************************************/
+
+
+.Application~addToConstDir("Order\OrderListView.h")
+
 
 ::REQUIRES "ooDialog.cls"
 ::REQUIRES "Order\OrderView.rex"
@@ -62,15 +68,18 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderListView						  	  v00-04 11Feb12
+  OrderListView						  	  v00-05 19Feb12
   -------------
   The view of a list of products.
   Changes:
     v00-01: First version
     v00-02: Corrected for standalone invocation.
-    v00-03 28Jan12: Changed name of HRS class to HRSplv.
-    v00-04 11Feb12: Moved .application~setDefaults() to app startup file.
-                   changed to .application~addToConstDir() here.
+    v00-03: 28Jan12: Changed name of HRS class to HRSplv.
+    v00-04: 11Feb12: Moved .application~setDefaults() to app startup file.
+                     changed to .application~addToConstDir() here.
+    v00-05: 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+                     method to top of file - just before ::requires statement(s).
+
 
   [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -83,7 +92,6 @@
 
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg
-    .Application~addToConstDir("Order\OrderListView.h")
     say ".OrderListView-newInstance-01: root =" "'"||rootDlg||"'"
     dlg = self~new("Order\OrderListView.rc", "IDD_ORDLIST_LISTVIEW")
     say ".OrderListView-newInstance-02."
