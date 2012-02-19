@@ -119,6 +119,10 @@ public:
     PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *fullName);
     void          runRequires(RexxActivity *activity, RexxString *name, RoutineClass *code);
     void          addRequiresFile(RexxString *shortName, RexxString *fullName, PackageClass *package);
+    inline void   setupProgram(RexxActivation *activation)
+    {
+        sysInstance.setupProgram(activation);
+    }
 
 protected:
 

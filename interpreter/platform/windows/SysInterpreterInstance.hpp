@@ -44,6 +44,7 @@
 #define Included_SysInterpreterInstance_hpp
 
 class InterpreterInstance;
+class RexxActivation;
 
 class SysInterpreterInstance
 {
@@ -55,11 +56,13 @@ public:
     void terminate();
     RexxString *resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension);
     void registerCommandHandlers(InterpreterInstance *i);
+    void setupProgram(RexxActivation *activation);
 
 protected:
     void addSearchExtension(const char *name);
 
     InterpreterInstance *instance;       // backlink to our instance container
+    bool  externalTraceEnabled;   // are we started with external trace on
 };
 
 

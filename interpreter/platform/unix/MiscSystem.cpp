@@ -141,23 +141,6 @@ void SystemInterpreter::validateAddressName(RexxString *name )
     }
 }
 
-void SystemInterpreter::setupProgram(RexxActivation *activation)
-/******************************************************************************/
-/* Function:  Do system specific program setup                                */
-/******************************************************************************/
-{
-    /* scan current environment,         */
-    const char *rxTraceBuf = getenv("RXTRACE");
-    if (rxTraceBuf != NULL)
-    {
-        if (!Utilities::strCaselessCompare(rxTraceBuf, "ON"))    /* request to turn on?               */
-        {
-                                           /* turn on tracing                   */
-            activation->enableExternalTrace();
-        }
-    }
-}
-
 RexxString * SystemInterpreter::getSourceString(RexxString * callType, RexxString * programName )
 /******************************************************************************/
 /* Function:  Produce a system specific source string                         */

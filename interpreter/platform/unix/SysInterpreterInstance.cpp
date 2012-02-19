@@ -42,6 +42,7 @@
 
 #include "InterpreterInstance.hpp"
 #include "SystemInterpreter.hpp"
+#include "RexxActivation.hpp"
 
 
 /**
@@ -54,6 +55,17 @@
 void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *options)
 {
     instance = i;
+
+    externalTraceEnabled = false;    // off by default
+    /* scan current environment,         */
+    const char *rxTraceBuf = getenv("RXTRACE");
+    if (rxTraceBuf != NULL)
+    {
+        if (!Utilities::strCaselessCompare(rxTraceBuf, "ON"))    /* request to turn on?               */
+        {
+            externalTraceEnabled = true;   // turn on tracing of top-level activations for this instance
+        }
+    }
 
     // add our default search extension as both upper and lower case
     addSearchExtension(".REX");

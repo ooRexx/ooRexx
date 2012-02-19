@@ -44,6 +44,7 @@
 #include "InterpreterInstance.hpp"
 #include "ListClass.hpp"
 #include "SystemInterpreter.hpp"
+#include "RexxActivation.hpp"
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -96,6 +97,18 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
  */
 void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *options)
 {
+    externalTraceEnabled = false;    // off by default
+    TCHAR rxTraceBuf[8];
+
+    /* scan current environment,         */
+    if (GetEnvironmentVariable("RXTRACE", rxTraceBuf, 8))
+    {
+        if (!Utilities::strCaselessCompare(rxTraceBuf, "ON"))    /* request to turn on?               */
+        {
+            externalTraceEnabled = true;   // turn on tracing of top-level activations for this instance
+        }
+    }
+
     /* Because of using the stand-alone runtime library or when using different compilers,
        the std-streams of the calling program and the REXX.DLL might be located at different
        addresses and therefore _file might be -1. If so, std-streams are reassigned to the
@@ -142,6 +155,18 @@ void SysInterpreterInstance::addSearchExtension(const char *name)
     if (instance->searchExtensions->hasItem(ext) == TheFalseObject)
     {
         instance->searchExtensions->append(ext);
+    }
+}
+
+void SysInterpreterInstance::setupProgram(RexxActivation *activation)
+/******************************************************************************/
+/* Function:  Do system specific program setup                                */
+/******************************************************************************/
+{
+    // trace this activation if turned on externally when the instance was started
+    if (externalTraceEnabled)
+    {
+        activation->enableExternalTrace();
     }
 }
 

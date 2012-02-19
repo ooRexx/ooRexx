@@ -100,7 +100,6 @@ public:
     static RexxString *getDefaultAddressName();
     static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
-    static void setupProgram(RexxActivation *activation);
     static void loadImage(char **imageBuffer, size_t *imageSize);
     static RexxBuffer *readProgram(const char *file_name);
 

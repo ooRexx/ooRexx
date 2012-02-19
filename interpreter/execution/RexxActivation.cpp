@@ -426,7 +426,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
             {
                 /* run initialization exit           */
                 activity->callInitializationExit(this);
-                SystemInterpreter::setupProgram(this);         /* do any system specific setup      */
+                activity->getInstance()->setupProgram(this);         /* do any system specific setup      */
             }
             else
             {
