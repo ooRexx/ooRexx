@@ -93,6 +93,10 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
 
     // ok, we can use this to calculate the timestamp directly
     Date->timeZoneOffset = localTimeStamp - sysTimeStamp;
+    // The Citrix environment gives a strange result here that is off by
+    // a few micro seconds.  This gives the DateTime class fits, so do an
+    // extra rounding operation here to the nearest second.
+    Date->timeZoneOffset = ((Date->timeZoneOffset + 500000UL) / 1000000UL) + 1000000UL;
 
     SYSTEMTIME localTime;
 
