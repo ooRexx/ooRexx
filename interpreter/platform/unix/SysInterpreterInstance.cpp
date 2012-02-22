@@ -96,7 +96,17 @@ void SysInterpreterInstance::addSearchExtension(const char *name)
     }
 }
 
-
+void SysInterpreterInstance::setupProgram(RexxActivation *activation)
+/******************************************************************************/
+/* Function:  Do system specific program setup                                */
+/******************************************************************************/
+{
+    // trace this activation if turned on externally when the instance was started
+    if (externalTraceEnabled)
+    {
+        activation->enableExternalTrace();
+    }
+}
 
 /**
  * Build a search path used for this resolution step.
