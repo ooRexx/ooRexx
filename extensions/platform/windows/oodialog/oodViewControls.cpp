@@ -2979,7 +2979,12 @@ RexxMethod2(RexxObjectPtr, lv_getItemData, uint32_t, index, CSELF, pCSelf)
     LVITEM        lvi    = {LVIF_PARAM, index};
     RexxObjectPtr result = TheNilObj;
 
-    if ( ListView_GetItem(getDChCtrl(pCSelf), &lvi) != 0 && lvi.lParam != 0 )
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return result;
+    }
+    if ( ListView_GetItem(pcdc->hCtrl, &lvi) != 0 && lvi.lParam != 0 )
     {
         result = (RexxObjectPtr)lvi.lParam;
     }
@@ -3732,7 +3737,8 @@ RexxMethod2(int, lv_stringWidthPx, CSTRING, text, CSELF, pCSelf)
     return ListView_GetStringWidth(getDChCtrl(pCSelf), text);
 }
 
-// TODO Review Implementation before release.  Maybe add / use a .ListViewItem or .LVItem
+// We've added a LvFullRow class, but the details are not fully sorted out.  So
+// do not document for 4.2.0.
 RexxMethod2(int32_t, lv_addFullRow, RexxObjectPtr, row, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;

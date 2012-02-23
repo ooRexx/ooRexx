@@ -1074,11 +1074,11 @@
 
 ::method add unguarded external "LIBRARY oodialog lv_add"
 ::method addExtendedStyle unguarded external "LIBRARY oodialog lv_addClearExtendStyle"
+::method addFullRow unguarded external "LIBRARY oodialog lv_addFullRow"                -- Do not document for 4.2.0
 ::method addRow unguarded external "LIBRARY oodialog lv_addRow"
-::method addFullRow unguarded external "LIBRARY oodialog lv_addFullRow"
+::method addStyle unguarded external "LIBRARY oodialog lv_addRemoveStyle"
 ::method alignLeft unguarded external "LIBRARY oodialog lv_arrange"
 ::method alignTop unguarded external "LIBRARY oodialog lv_arrange"
-::method addStyle unguarded external "LIBRARY oodialog lv_addRemoveStyle"
 ::method arrange unguarded external "LIBRARY oodialog lv_arrange"
 ::method bkColor unguarded external "LIBRARY oodialog lv_getColor"
 ::method "bkColor=" unguarded external "LIBRARY oodialog lv_setColor"
@@ -1154,10 +1154,10 @@
 ::method getHoverTime unguarded
    return self~sendWinIntMsg(self~LVM_GETHOVERTIME, 0, 0)
 
+::method getImageList unguarded external "LIBRARY oodialog lv_getImageList"
 ::method getItemData unguarded external "LIBRARY oodialog lv_getItemData"
 ::method getItemInfo unguarded external "LIBRARY oodialog lv_getItemInfo"
 ::method getItemPos unguarded external "LIBRARY oodialog lv_getItemPos"
-::method getImageList unguarded external "LIBRARY oodialog lv_getImageList"
 ::method hasCheckBoxes unguarded external "LIBRARY oodialog lv_hasCheckBoxes"
 ::method hitTestInfo unguarded external "LIBRARY oodialog lv_hitTestInfo"
 ::method insert unguarded external "LIBRARY oodialog lv_insert"
@@ -1168,9 +1168,6 @@
 
 ::method insertColumnPx unguarded external "LIBRARY oodialog lv_insertColumnPx"
 ::method isChecked unguarded external "LIBRARY oodialog lv_isChecked"
-::method items unguarded
-   return self~sendWinIntMsg(self~LVM_GETITEMCOUNT , 0, 0)
-
 ::method itemInfo
    use strict arg index, subItem = 0
    d = .Directory~new
@@ -1187,6 +1184,9 @@
    p = self~getItemPos(item)
    if p == 0 then return p
    else return p~x p~y
+
+::method items unguarded
+   return self~sendWinIntMsg(self~LVM_GETITEMCOUNT , 0, 0)
 
 ::method itemsPerPage unguarded
    return self~sendWinIntMsg(self~LVM_GETCOUNTPERPAGE, 0, 0)
@@ -1267,10 +1267,10 @@
 
 ::method stringWidthPx unguarded external "LIBRARY oodialog lv_stringWidthPx"
 ::method subclassEdit unguarded external "LIBRARY oodialog generic_subclassEdit"
-::method textColor unguarded external "LIBRARY oodialog lv_getColor"
-::method "textColor=" unguarded external "LIBRARY oodialog lv_setColor"
 ::method textBkColor unguarded external "LIBRARY oodialog lv_getColor"
 ::method "textBkColor=" unguarded external "LIBRARY oodialog lv_setColor"
+::method textColor unguarded external "LIBRARY oodialog lv_getColor"
+::method "textColor=" unguarded external "LIBRARY oodialog lv_setColor"
 ::method uncheck unguarded external "LIBRARY oodialog lv_checkUncheck"
 ::method uncheckAll unguarded
    return self~uncheck(-1)
@@ -1281,24 +1281,24 @@
 
 
 -- DEPRECATED
-::method setSmallImages unguarded
-   newArgs = arg(1, 'A')
-   newArgs[4] = 1
-   forward message 'setImageList' arguments (newArgs)
-
--- DEPRECATED
-::method setImages unguarded external "LIBRARY oodialog lv_setImageList"
+::method removeImages unguarded
+   return self~removeImageList(.nil, 0)
 
 -- DEPRECATED
 ::method removeSmallImages unguarded
    return self~removeImageList(.nil, 1)
 
 -- DEPRECATED
-::method removeImages unguarded
-   return self~removeImageList(.nil, 0)
+::method setImages unguarded external "LIBRARY oodialog lv_setImageList"
+
+-- DEPRECATED
+::method setSmallImages unguarded
+   newArgs = arg(1, 'A')
+   newArgs[4] = 1
+   forward message 'setImageList' arguments (newArgs)
 
 
-::class 'LvItem' public
+::class 'LvItem' public                                                                -- Do not document for 4.2.0
 ::method init external "LIBRARY oodialog lvi_init"
 ::method unInit external "LIBRARY oodialog lvi_unInit"
 
@@ -1324,7 +1324,7 @@
 ::attribute columns set external "LIBRARY oodialog lvi_setColumns"
 
 
-::class 'LvSubItem' public
+::class 'LvSubItem' public                                                             -- Do not document for 4.2.0
 ::method init external "LIBRARY oodialog lvsi_init"
 ::method unInit external "LIBRARY oodialog lvsi_unInit"
 
@@ -1340,7 +1340,7 @@
 ::attribute imageIndex set external "LIBRARY oodialog lvsi_setImageIndex"
 
 
-::class 'LvFullRow' public
+::class 'LvFullRow' public                                                             -- Do not document for 4.2.0
 ::method init external "LIBRARY oodialog lvfr_init"
 ::method unInit external "LIBRARY oodialog lvfr_unInit"
 
