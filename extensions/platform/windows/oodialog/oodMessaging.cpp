@@ -1446,6 +1446,7 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
     switch ( code )
     {
         case NM_CLICK:
+        case NM_DBLCLK:
         {
             LPNMITEMACTIVATE pIA = (LPNMITEMACTIVATE)lParam;
 
@@ -2903,6 +2904,11 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
     else if ( StrCmpI(keyword, "CLICK") == 0 )
     {
         lvn = NM_CLICK;
+        *tag = TAG_LISTVIEW;
+    }
+    else if ( StrCmpI(keyword, "DBLCLK") == 0 )
+    {
+        lvn = NM_DBLCLK;
         *tag = TAG_LISTVIEW;
     }
     else if ( StrCmpI(keyword, "CHECKBOXCHANGED") == 0 )

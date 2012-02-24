@@ -1415,7 +1415,7 @@
    dlg = .ListChoice~new(msg, title, lst., lx, ly, predev)
    res = dlg~execute
    drop dlg
-   if res = '' the return .nil
+   if res = '' then return .nil
    else return res
 
 ::routine MultiListChoice public

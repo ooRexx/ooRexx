@@ -2073,6 +2073,14 @@ done_out:
 }
 
 
+/**
+ * Put a Rexx object in this dialog control's 'bag.'  This saves a reference to
+ * the object in a context variable of this dialog control.  Which should
+ * prevent the object from being garbage collected.
+ *
+ * Although we call it a 'bag' it is really a set so that only one reference to
+ * any single object is added.
+ */
 RexxMethod2(RexxObjectPtr, dlgctrl_putInBag, RexxObjectPtr, object, CSELF, pCSelf)
 {
     pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
@@ -2081,11 +2089,11 @@ RexxMethod2(RexxObjectPtr, dlgctrl_putInBag, RexxObjectPtr, object, CSELF, pCSel
     {
         if ( pcdc->rexxBag == NULL )
         {
-            RexxObjectPtr bag = rxNewBag(context);
+            RexxObjectPtr bag = rxNewSet(context);
             context->SetObjectVariable(DIALOGCONTROL_BAG_ATTRIBUTE, bag);
             pcdc->rexxBag = bag;
         }
-        context->SendMessage2(pcdc->rexxBag, "PUT", object, object);
+        context->SendMessage1(pcdc->rexxBag, "PUT", object);
     }
 
     return TheNilObj;

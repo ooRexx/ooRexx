@@ -278,5 +278,10 @@ inline RexxObjectPtr rxNewQueue(RexxMethodContext *c)
     return rxNewBuiltinObject(c, "QUEUE");
 }
 
+inline RexxObjectPtr rxNewSet(RexxMethodContext *c)
+{
+    return rxNewBuiltinObject(c, "SET");
+}
+
 
 #endif

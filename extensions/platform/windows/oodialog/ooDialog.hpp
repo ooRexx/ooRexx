@@ -617,7 +617,8 @@ typedef struct _lvRexxSort{
     RexxThreadContext   *threadContext;    // Thread context of the sort function
     RexxObjectPtr        rexxDlg;          // The Rexx dialog object
     RexxObjectPtr        rexxLV;           // The Rexx list view object
-    char                *method;           // Name of method to invoke.
+    RexxObjectPtr        param;            // An optional parameter the Rexx programmer can have passed to his method.
+    char                *method;           // Name of the comparsion method to invoke.
 } CRexxSort;
 typedef CRexxSort *pCRexxSort;
 
@@ -638,9 +639,11 @@ typedef struct _dcCSelf {
     void               *pscd;            // Pointer to general subclass data struct, usually null.
     void               *pKeyPress;       // Pointer to KeyPress subclass data struct, usually null.
     void               *mouseCSelf;      // Mouse CSelf struct
-    pCRexxSort          pcrs;            // Pointer to Rexx sort struct used for sorting list view items, usuall null.
+    pCRexxSort          pcrs;            // Pointer to Rexx sort struct used for sorting list view items, usually null.
     RexxObjectPtr       rexxMouse;       // Rexx mouse object if there is one.
-    RexxObjectPtr       rexxBag;         // A Rexx Bag to put things in, if there is one.
+
+    // A Rexx Set to put Rexx objects in, used to prevent gc.
+    RexxObjectPtr       rexxBag;         // Called a bag but really a .Set
     int32_t             lastItem;        // Index of the last item added to the control
     uint32_t            id;              // Resouce ID of the control
     oodControl_t        controlType;     // Enum value for control type

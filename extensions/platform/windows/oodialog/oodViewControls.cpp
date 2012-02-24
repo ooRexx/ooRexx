@@ -2458,7 +2458,8 @@ static int getColumnWidthArg(RexxMethodContext *context, RexxObjectPtr _width, s
  *
  * @remarks  The Rexx programmer will have had to set the lParam user data field
  *           for each list view item of this to work.  If either lParam1 or
- *           lParam2 == 0
+ *           lParam2 is null, indicating the user did not set a data value for
+ *           the item, we simpley return 0.
  *
  *           Testing shows that this call back is always invoked on the dialog's
  *           window message processing thread, so we do no need to worry about
@@ -2475,7 +2476,7 @@ int32_t CALLBACK LvRexxCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParam
     pCRexxSort pcrs = (pCRexxSort)lParamSort;
     RexxThreadContext *c = pcrs->threadContext;
 
-    RexxArrayObject args = c->ArrayOfThree((RexxObjectPtr)lParam1, (RexxObjectPtr)lParam2, pcrs->rexxLV);
+    RexxArrayObject args = c->ArrayOfThree((RexxObjectPtr)lParam1, (RexxObjectPtr)lParam2, pcrs->param);
 
     RexxObjectPtr reply = c->SendMessage(pcrs->rexxDlg, pcrs->method, args);
     if ( msgReplyIsGood(c, pcrs->pcpbd, reply, pcrs->method, false) )
@@ -2935,7 +2936,7 @@ err_out:
  *
  *
  */
-RexxMethod2(logical_t, lv_sortItems, CSTRING, method, CSELF, pCSelf)
+RexxMethod3(logical_t, lv_sortItems, CSTRING, method, OPTIONAL_RexxObjectPtr, param, CSELF, pCSelf)
 {
     pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
     if ( pcdc == NULL )
@@ -2970,6 +2971,7 @@ RexxMethod2(logical_t, lv_sortItems, CSTRING, method, CSELF, pCSelf)
     pcrs->rexxDlg       = pcdc->pcpbd->rexxSelf;
     pcrs->rexxLV        = pcdc->rexxSelf;
     pcrs->threadContext = pcdc->pcpbd->dlgProcContext;
+    pcrs->param         = (argumentExists(2) ? param : TheNilObj);
 
     return ListView_SortItems(pcdc->hCtrl, LvRexxCompareFunc, pcrs);
 }
@@ -3036,7 +3038,7 @@ RexxMethod3(RexxObjectPtr, lv_setItemData, uint32_t, index, RexxObjectPtr, data,
         }
         else
         {
-            context->SendMessage2(pcdc->rexxBag, "PUT", data, data);
+            context->SendMessage1(pcdc->rexxBag, "PUT", data);
         }
         return TheTrueObj;
     }
@@ -3817,7 +3819,12 @@ RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
 {
     int32_t result = -1;
 
-    HWND hwnd = getDChCtrl(pCSelf);
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+    HWND hwnd = pcdc->hCtrl;
 
     size_t sizeArray;
     size_t argsUsed;
@@ -3863,15 +3870,15 @@ RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
         {
             context->DirectoryPut(info, context->Int32(hti.iGroup), "GROUP");
 
-            if ( hti.flags & LVHT_EX_FOOTER          ) strcat(buf, "FOOTER ");
-            if ( hti.flags & LVHT_EX_GROUP           ) strcat(buf, "GROUP ");
-            if ( hti.flags & LVHT_EX_GROUP_BACKGROUND) strcat(buf, "GROUPBACKGROUND ");
-            if ( hti.flags & LVHT_EX_GROUP_COLLAPSE  ) strcat(buf, "GROUPCOLLAPSE ");
-            if ( hti.flags & LVHT_EX_GROUP_FOOTER    ) strcat(buf, "GROUPFOOTER ");
-            if ( hti.flags & LVHT_EX_GROUP_HEADER    ) strcat(buf, "GROUPHEADER ");
-            if ( hti.flags & LVHT_EX_GROUP_STATEICON ) strcat(buf, "GROUPSTATEICON ");
-            if ( hti.flags & LVHT_EX_GROUP_SUBSETLINK) strcat(buf, "GROUPSUBSETLINK ");
-            if ( hti.flags & LVHT_EX_ONCONTENTS      ) strcat(buf, "ONCONTENTS ");
+            if ( hti.flags & LVHT_EX_FOOTER          ) strcat(buf, "Footer ");
+            if ( hti.flags & LVHT_EX_GROUP           ) strcat(buf, "Group ");
+            if ( hti.flags & LVHT_EX_GROUP_BACKGROUND) strcat(buf, "GroupBackground ");
+            if ( hti.flags & LVHT_EX_GROUP_COLLAPSE  ) strcat(buf, "GroupCollapse ");
+            if ( hti.flags & LVHT_EX_GROUP_FOOTER    ) strcat(buf, "GroupFooter ");
+            if ( hti.flags & LVHT_EX_GROUP_HEADER    ) strcat(buf, "GroupHeader ");
+            if ( hti.flags & LVHT_EX_GROUP_STATEICON ) strcat(buf, "GroupStateIcon ");
+            if ( hti.flags & LVHT_EX_GROUP_SUBSETLINK) strcat(buf, "GroupSubsetLink ");
+            if ( hti.flags & LVHT_EX_ONCONTENTS      ) strcat(buf, "OnContents ");
 
             if ( *buf != '\0' )
             {
@@ -3892,15 +3899,15 @@ RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
 
         *buf = '\0';
 
-        if ( hti.flags & LVHT_ABOVE          ) strcat(buf, "ABOVE ");
-        if ( hti.flags & LVHT_BELOW          ) strcat(buf, "BELOW ");
-        if ( hti.flags & LVHT_TORIGHT        ) strcat(buf, "TORIGHT ");
-        if ( hti.flags & LVHT_TOLEFT         ) strcat(buf, "TOLEFT ");
-        if ( hti.flags & LVHT_NOWHERE        ) strcat(buf, "NOWHERE ");
-        if ( hti.flags & LVHT_ONITEMICON     ) strcat(buf, "ONICON ");
-        if ( hti.flags & LVHT_ONITEMLABEL    ) strcat(buf, "ONLABEL ");
-        if ( hti.flags & LVHT_ONITEMSTATEICON) strcat(buf, "ONSTATEICON ");
-        if ( hti.flags & LVHT_ONITEM         ) strcat(buf, "ONITEM ");
+        if ( hti.flags & LVHT_ABOVE          ) strcat(buf, "Above ");
+        if ( hti.flags & LVHT_BELOW          ) strcat(buf, "Below ");
+        if ( hti.flags & LVHT_TORIGHT        ) strcat(buf, "ToRight ");
+        if ( hti.flags & LVHT_TOLEFT         ) strcat(buf, "ToLeft ");
+        if ( hti.flags & LVHT_NOWHERE        ) strcat(buf, "NoWhere ");
+        if ( hti.flags & LVHT_ONITEMICON     ) strcat(buf, "OnIcon ");
+        if ( hti.flags & LVHT_ONITEMLABEL    ) strcat(buf, "OnLabel ");
+        if ( hti.flags & LVHT_ONITEMSTATEICON) strcat(buf, "OnStateIcon ");
+        if ( hti.flags & LVHT_ONITEM         ) strcat(buf, "OnItem ");
 
         if ( *buf != '\0' )
         {
