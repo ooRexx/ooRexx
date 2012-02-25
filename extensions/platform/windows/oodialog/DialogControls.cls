@@ -952,35 +952,24 @@
 ::constant TCM_DELETEITEM      "0x1308"
 ::constant TCM_SETMINTABWIDTH  "0x1331"
 
-::method items unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~TCM_GETITEMCOUNT, 0, 0)
+::method addFullSeq unguarded external "LIBRARY oodialog tab_addFullSeq"
+::method addSequence unguarded external "LIBRARY oodialog tab_addSequence"
 
-::method rows unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~TCM_GETROWCOUNT, 0, 0)
+-- adjustToRectangle() and requiredWindowSize() are the old methods.  This set
+-- up produces the same results as the code did, which seems to be opposite of
+-- what the doc says.
+--
+-- calcWindowRect() and calcDisplayRect() are named and documented according to
+-- MSDN documentation.  (Which could be wrong.)
 
-::method last unguarded
-   use strict arg
-   return self~items - 1
+::method adjustToRectangle unguarded
+   use strict arg left, top, right, bottom
+   r = .Rect~new(left, top, right, bottom)
+   self~calcWindowRect(r)
+   return r~left r~top r~right r~bottom
 
-::method selectedIndex unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~TCM_GETCURSEL, 0, 0)
-
-::method selectIndex unguarded
-   use strict arg item
-   return self~sendWinIntMsg(self~TCM_SETCURSEL, item, 0)
-
-::method focused unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~TCM_GETCURFOCUS, 0, 0)
-
-::method focus unguarded
-   use strict arg item
-   self~sendWinIntMsg(self~TCM_SETCURFOCUS, item, 0)
-   return 0
-
+::method calcDisplayRect unguarded external "LIBRARY oodialog tab_calcRect"
+::method calcWindowRect unguarded external "LIBRARY oodialog tab_calcRect"
 ::method delete unguarded
    use strict arg item
    ret = self~sendWinIntMsg(self~TCM_DELETEITEM, item, 0)
@@ -991,61 +980,73 @@
    ret = self~sendWinIntMsg(self~TCM_DELETEALLITEMS, 0, 0)
    return ret == 0
 
-::method setMinTabWidth unguarded
-   use strict arg width
-   return self~sendWinIntMsg(self~TCM_SETMINTABWIDTH, 0, width)
+::method focus unguarded
+   use strict arg item
+   self~sendWinIntMsg(self~TCM_SETCURFOCUS, item, 0)
+   return 0
 
+::method focused unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~TCM_GETCURFOCUS, 0, 0)
+
+::method getImageList unguarded external "LIBRARY oodialog tab_getImageList"
 ::method getItemRect unguarded external "LIBRARY oodialog tab_getItemRect"
-::method setPadding unguarded external "LIBRARY oodialog tab_setPadding"
-::method setItemSize unguarded external "LIBRARY oodialog tab_setItemSize"
-::method selected unguarded external "LIBRARY oodialog tab_selected"
-::method select unguarded external "LIBRARY oodialog tab_select"
 ::method insert unguarded external "LIBRARY oodialog tab_insert"
 ::method itemInfo unguarded external "LIBRARY oodialog tab_itemInfo"
-::method addSequence unguarded external "LIBRARY oodialog tab_addSequence"
-::method addFullSeq unguarded external "LIBRARY oodialog tab_addFullSeq"
+::method items unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~TCM_GETITEMCOUNT, 0, 0)
+
+::method last unguarded
+   use strict arg
+   return self~items - 1
+
 ::method modify unguarded external "LIBRARY oodialog tab_modify"
-::method setImageList unguarded external "LIBRARY oodialog tab_setImageList"
-::method getImageList unguarded external "LIBRARY oodialog tab_getImageList"
-
-::method setSize unguarded
-   forward message "setItemSize" continue
-   return result~width result~height
-
 ::method posRectangle unguarded
    use strict arg item
    r = .Rect~new
    if self~getItemRect(item, r) then return r~top r~left r~bottom r~right
    else return ""
 
--- adjustToRectangle() and requiredWindowSize() are the old methods.  This set
--- up produces the same results as the code did, which seems to be opposite of
--- what the doc says.
---
--- calcWindowRect() and calcDisplayRect() are named and documented according to
--- MSDN documentation.  (Which could be wrong.)
-
-::method calcWindowRect unguarded external "LIBRARY oodialog tab_calcRect"
-::method adjustToRectangle unguarded
-   use strict arg left, top, right, bottom
-   r = .Rect~new(left, top, right, bottom)
-   self~calcWindowRect(r)
-   return r~left r~top r~right r~bottom
-
-::method calcDisplayRect unguarded external "LIBRARY oodialog tab_calcRect"
 ::method requiredWindowSize unguarded
    use strict arg left, top, right, bottom
    r = .Rect~new(left, top, right, bottom)
    self~calcDisplayRect(r)
    return r~left r~top r~right r~bottom
 
--- DEPRECATED
-::method setImages unguarded external "LIBRARY oodialog tab_setImageList"
+::method rows unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~TCM_GETROWCOUNT, 0, 0)
+
+::method select unguarded external "LIBRARY oodialog tab_select"
+::method selected unguarded external "LIBRARY oodialog tab_selected"
+::method selectedIndex unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~TCM_GETCURSEL, 0, 0)
+
+::method selectIndex unguarded
+   use strict arg item
+   return self~sendWinIntMsg(self~TCM_SETCURSEL, item, 0)
+
+::method setImageList unguarded external "LIBRARY oodialog tab_setImageList"
+::method setItemSize unguarded external "LIBRARY oodialog tab_setItemSize"
+::method setMinTabWidth unguarded
+   use strict arg width
+   return self~sendWinIntMsg(self~TCM_SETMINTABWIDTH, 0, width)
+
+::method setPadding unguarded external "LIBRARY oodialog tab_setPadding"
+
+::method setSize unguarded
+   forward message "setItemSize" continue
+   return result~width result~height
 
 -- DEPRECATED
 ::method removeImages unguarded
    return self~setImageList(.nil)
 
+::method setImages unguarded external "LIBRARY oodialog tab_setImageList"
+
+-- DEPRECATED
 
 /************ List Control Class **********************************************/
 
