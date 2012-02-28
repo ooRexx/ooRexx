@@ -84,9 +84,9 @@
    Changes:
    v00-06 11Feb12: Moved .application~setDefaults() to app startup file.
                    changed to .application~addToConstDir() here.
-   v00-07 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+   v00-07 19Feb12: Moved .Application~addToConstDir statement from newInstance
                    method to top of file - just before ::requires statement(s).
-  
+
 
   interface iOrderMgrBaseView {
     void newInstance();

@@ -81,7 +81,7 @@
   Changes:
   v02-04 11Feb12: Moved .application~setDefaults() to app startup file.
                   Changed to .application~addToConstDir() here.
-  v02-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+  v02-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
                   method to top of file - just before ::requires statement(s).
 
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -99,7 +99,7 @@
     say ".ProductView-newInstance-01: rootDlg =" rootDlg
     .Application~addToConstDir("Product\ProductView.h")
     -- Create an instance of ProductView and show it:
-    dlg = .ProductView~new("Product\res\ProductView.dll", IDD_PRODUCT_VIEW)  
+    dlg = .ProductView~new("Product\res\ProductView.dll", IDD_PRODUCT_VIEW)
     dlg~activate(rootDlg, productNo)			-- CHANGED FOR EXERCISE06.
 
 
@@ -281,7 +281,7 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD cancel
-    -- If in the process of updating, then ask whether any changes should be 
+    -- If in the process of updating, then ask whether any changes should be
     -- thrown away and dialog closed. If yes then close by calling the superclass,
     -- else nop. If not in update, then close immediately
     if self~dialogState = "inUpdate" then do

@@ -73,7 +73,7 @@
   v00-03 11Feb12: Moved .application~setDefaults() to app startup file.
                   changed to .application~addToConstDir() here.
                   Changed name fo HRS class to HRSofv.
-  v00-04 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+  v00-04 19Feb12: Moved .Application~addToConstDir statement from newInstance
                   method to top of file - just before ::requires statement(s).
 
   interface iOrderFormView {

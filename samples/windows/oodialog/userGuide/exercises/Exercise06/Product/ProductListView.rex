@@ -51,7 +51,7 @@
 		   Also added class HRS for display strings.
    v00-04 28Jan11  Change name of class HRS to HRSplv to allow for multiple
      		   HRS classes in same file at some future time.
-   v00-05 19Feb12: ProductListView - moved .Application~addToConstDir 
+   v00-05 19Feb12: ProductListView - moved .Application~addToConstDir
 
    Outstanding Problems: None reported.
 *******************************************************************************/
@@ -73,7 +73,7 @@
     v00-02: Corrected for standalone invocation.
     v00-03 28Jan12: Changed name of HRS class to HRSplv.
     v00-04 11Feb12: Add .application~addToConstDir to this file.
-    v00-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+    v00-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
                     method to top of file - just before ::requires statement(s).
 
 

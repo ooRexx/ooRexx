@@ -54,7 +54,7 @@
    v01-03 28Jan12: Changed class name HRS to HRSclv to allow for multiple
      		   HRS classes in same file at some future time.
    v01-04 11Feb12: CustomerListView - Changed .application()
-   v01-05 19Feb12: CustomerListView - moved .Application~addToConstDir 
+   v01-05 19Feb12: CustomerListView - moved .Application~addToConstDir
 
 
    Outstanding Problems: None reported.
@@ -79,7 +79,7 @@
     v01-03 28Jan12: Changed name of HRS class to HRSplv.
     v01-04 11Feb12: moved .application~setDefaults() to app startup file.
                     changed to .application~addToConstDir() here.
-    v01-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+    v01-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
                     method to top of file - just before ::requires statement(s).
 
   [interface (idl format)]  <<optional>>

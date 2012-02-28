@@ -58,7 +58,7 @@
 ------------------------------------------------------------------------------*/
 
 
-.Application~addToConstDir("Customer\CustomerView.h")		
+.Application~addToConstDir("Customer\CustomerView.h")
 
 
 ::requires "ooDialog.cls"
@@ -87,7 +87,7 @@
      		    HRS classes in same file at some future time.
     v02-04 11Feb12: moved .application~setDefaults() to app startup file.
                     changed to .application~addToConstDir() here.
-    v02-05 19Feb12: Moved .Application~addToConstDir statement from newInstance 
+    v02-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
                     method to top of file - just before ::requires statement(s).
 
 
@@ -101,7 +101,7 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
-    expose hasParent		
+    expose hasParent
     -- ADDED FOR EXERCISE06. Statements in the old "StartCustomerView" Routine
     -- have been moved here. The ~activate statement has also changed.
     use arg rootDlg, customerNo
