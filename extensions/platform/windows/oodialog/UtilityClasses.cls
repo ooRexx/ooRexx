@@ -722,7 +722,7 @@
 ::method key2name       external "LIBRARY oodialog vk_key2name"
 
 
-::class 'OEM' mixinclass Object public
+::class 'OEM' mixinclass Object public                                                 -- Do not document for 4.2.0
 
 ::constant OBM_CLOSE           32754
 ::constant OBM_UPARROW         32753
@@ -745,19 +745,11 @@
 ::constant OBM_DNARROWI        32736
 ::constant OBM_RGARROWI        32735
 ::constant OBM_LFARROWI        32734
-::constant OBM_OLD_CLOSE       32767
 ::constant OBM_SIZE            32766
-::constant OBM_OLD_UPARROW     32765
-::constant OBM_OLD_DNARROW     32764
-::constant OBM_OLD_RGARROW     32763
-::constant OBM_OLD_LFARROW     32762
 ::constant OBM_BTSIZE          32761
 ::constant OBM_CHECK           32760
 ::constant OBM_CHECKBOXES      32759
 ::constant OBM_BTNCORNERS      32758
-::constant OBM_OLD_REDUCE      32757
-::constant OBM_OLD_ZOOM        32756
-::constant OBM_OLD_RESTORE     32755
 
 ::constant OCR_NORMAL          32512
 ::constant OCR_IBEAM           32513
