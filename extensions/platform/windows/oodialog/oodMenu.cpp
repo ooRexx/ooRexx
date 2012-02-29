@@ -1023,6 +1023,51 @@ done_out:
 }
 
 /**
+ * Replaces this menu bar attached to its owner dialog with a new menu bar.
+ *
+ * @param  newMenuBar  The replacement menu bar.
+ *
+ * @return The old menu bar on success, or .nil on error
+ *
+ * @note Resets .SystemErrorCode.
+ */
+RexxObjectPtr CppMenu::replace(RexxObjectPtr newMenuBar)
+{
+    oodResetSysErrCode(c->threadContext);
+    RexxObjectPtr oldMenuBar = TheNilObj;
+
+    if ( ! c->IsOfType(newMenuBar, "MENUBAR") )
+    {
+        wrongClassException(c->threadContext, 1, "MenuBar");
+        goto done_out;
+    }
+
+    if ( ! isAttached() )
+    {
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
+        goto done_out;
+    }
+
+    CppMenu *cMenubar = (CppMenu *)c->ObjectToCSelf(newMenuBar);
+
+    if ( SetMenu(dlgHwnd, cMenubar->getHMenu()) == 0 )
+    {
+        oodSetSysErrCode(c->threadContext);
+        goto done_out;
+    }
+
+    oldMenuBar = c->SendMessage1(dlg, "LINKMENU", cMenubar->getSelf());
+    maybeRedraw(false);
+
+    pCEventNotification pcen = dlgToEventNotificationCSelf(c, dlg);
+
+    cMenubar->checkAutoConnect(pcen);
+
+done_out:
+    return oldMenuBar;
+}
+
+/**
  * Destroys the underlying menu.
  *
  * Normally this would never be called when the menu is attached to a dialog,
@@ -2718,6 +2763,13 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
     }
     return 0;
 }
+
+
+/**
+ *  Methods for the .Menu mixin class.
+ */
+#define MENU_CLASS       "Menu"
+
 
 /** Menu::connectCommandEvent() [class]
  *
@@ -4708,47 +4760,11 @@ RexxMethod5(logical_t, menu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, 
 }
 
 
-/** MenuBar::redraw()
- *
- *  Tells the dialog this menu bar is attached to, to redraw the menu.
- *
- *  @return  True on success, false on failure.
- *
- *  @note  Sets .SystemErrorCode on failure.  In addition to codes set by the
- *         operating system, the following error code indicates that this menu
- *         bar is not attached to a dialog:
- *
- *         ERROR_INVALID_FUNCTION (1) -> Not attached to a dialog.
+/**
+ *  Methods for the .MenuBar mixin class.
  */
-RexxMethod1(logical_t, menuBar_redraw, CSELF, cMenuPtr)
-{
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
-    cMenu->setContext(context, TheFalseObj);
+#define MENUBAR_CLASS       "MenuBar"
 
-    oodResetSysErrCode(context->threadContext);
-    return cMenu->maybeRedraw(true);
-}
-
-
-/** MenuBar::detach()
- *
- *  Detaches this menu from its assigned dialog.
- *
- *  @return  True on success, false on failure.
- *
- *  @note  Sets .SystemErrorCode on failure.  In addition to codes set by the
- *         operating system, the following error code indicates that this menu
- *         bar is not attached to a dialog:
- *
- *         ERROR_INVALID_FUNCTION (1) -> Not attached to a dialog.
- */
-RexxMethod1(logical_t, menuBar_detach, CSELF, cMenuPtr)
-{
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
-    cMenu->setContext(context, TheFalseObj);
-
-    return cMenu->detach(false);
-}
 
 /** MenuBar::attachTo()
  *
@@ -4762,14 +4778,9 @@ RexxMethod1(logical_t, menuBar_detach, CSELF, cMenuPtr)
  * If the menu bar is already attached to a dialog, first use the
  * .MenuBar~detach() method to detach it.
  *
- * If the dialog already has a menu bar attached to it and you want to attach a
- * different menu bar, you have two options:
- *
- * 1.) Use the .MenuBar~replace() method
- *
- * 2a.) If you have a reference to the menu bar it is attached to, simply use
- * the detach() method.  Otherwise, use the .PlainBaseDialog~getMenuBar() method
- * to get a reference to the attached menu bar, then use detach().
+ * If the dialog already has a menu bar attached to it and you want to attach
+ * this menu bar to tha dialog, get a reference to the dialog's current menu bar
+ * and use the replace() method.
  *
  *  @param  dlg  The dialog to attach to.
  *
@@ -4807,6 +4818,26 @@ RexxMethod2(logical_t, menuBar_attachTo, RexxObjectPtr, dlg, CSELF, cMenuPtr)
     return cMenu->attachToDlg(dlg);
 }
 
+/** MenuBar::detach()
+ *
+ *  Detaches this menu from its assigned dialog.
+ *
+ *  @return  True on success, false on failure.
+ *
+ *  @note  Sets .SystemErrorCode on failure.  In addition to codes set by the
+ *         operating system, the following error code indicates that this menu
+ *         bar is not attached to a dialog:
+ *
+ *         ERROR_INVALID_FUNCTION (1) -> Not attached to a dialog.
+ */
+RexxMethod1(logical_t, menuBar_detach, CSELF, cMenuPtr)
+{
+    CppMenu *cMenu = (CppMenu *)cMenuPtr;
+    cMenu->setContext(context, TheFalseObj);
+
+    return cMenu->detach(false);
+}
+
 /** MenuBar::isAttached()
  *
  * Determines if this menu bar is currently attached to a dialog.
@@ -4820,6 +4851,58 @@ RexxMethod1(logical_t, menuBar_isAttached, CSELF, cMenuPtr)
     oodResetSysErrCode(context->threadContext);
     return cMenu->isAttached();
 }
+
+
+/** MenuBar::redraw()
+ *
+ *  Tells the dialog this menu bar is attached to, to redraw the menu.
+ *
+ *  @return  True on success, false on failure.
+ *
+ *  @note  Sets .SystemErrorCode on failure.  In addition to codes set by the
+ *         operating system, the following error code indicates that this menu
+ *         bar is not attached to a dialog:
+ *
+ *         ERROR_INVALID_FUNCTION (1) -> Not attached to a dialog.
+ */
+RexxMethod1(logical_t, menuBar_redraw, CSELF, cMenuPtr)
+{
+    CppMenu *cMenu = (CppMenu *)cMenuPtr;
+    cMenu->setContext(context, TheFalseObj);
+
+    oodResetSysErrCode(context->threadContext);
+    return cMenu->maybeRedraw(true);
+}
+
+
+/** MenuBar::replace()
+ *
+ *  If this menubar is attached to a dialog, the menubar for the dialog is
+ *  replaced by the specified menubar.
+ *
+ *  @param   newMenu  The new menu bar to attach to this menu bar's dialog.
+ *
+ *  @return  The existing menu bar, if there is one, otherwise .ni
+ *
+ *  @note  Sets .SystemErrorCode on failure.  In addition to codes set by the
+ *         operating system, the following error code indicates that this menu
+ *         bar is not attached to a dialog:
+ *
+ *         ERROR_INVALID_FUNCTION (1) -> Not attached to a dialog.
+ */
+RexxMethod2(RexxObjectPtr, menuBar_replace, RexxObjectPtr, newMenu, CSELF, cMenuPtr)
+{
+    CppMenu *cMenu = (CppMenu *)cMenuPtr;
+    cMenu->setContext(context, TheFalseObj);
+
+    return cMenu->replace(newMenu);
+}
+
+
+/**
+ *  Methods for the .Menu mixin class.
+ */
+#define MENUTEMPLATE_CLASS       "MenuTemplate"
 
 
 /** MenuTemplate::addPopup()
@@ -4863,8 +4946,6 @@ RexxMethod1(logical_t, menuBar_isAttached, CSELF, cMenuPtr)
 RexxMethod5(logical_t, menuTemplate_addPopup, RexxObjectPtr, rxID, CSTRING, text,
             OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxHelpID, OSELF, self)
 {
-    RexxMethodContext *c = context;
-
     CppMenu *cMenu = menuToCSelf(context, self);
     cMenu->setContext(context, TheFalseObj);
 
@@ -4986,6 +5067,12 @@ RexxMethod1(logical_t, menuTemplate_isComplete, OSELF, self)
 }
 
 
+/**
+ *  Methods for the .BinaryMenuBar class.
+ */
+#define BINARYMENUBAR_CLASS       "Menu"
+
+
 /** BinaryMenuBar::init()
  *
  *  Initializes a BinaryMenuBar object.
@@ -5065,7 +5152,7 @@ RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         hMenu = CreateMenu();
         if ( hMenu == NULL )
         {
-            systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "LoadMenu");
+            systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "CreateMenu");
             goto done_out;
         }
     }
@@ -5171,6 +5258,12 @@ err_out:
 }
 
 
+/**
+ *  Methods for the .SystemMenu class.
+ */
+#define SYSTEMMENU_CLASS       "SystemMenu"
+
+
 /** SystemMenu::init()
  *
  *  Initializes a .SystemMenu object.  The underlying menu object is a copy of
@@ -5239,6 +5332,12 @@ RexxMethod1(logical_t, sysMenu_revert, CSELF, cMenuPtr)
 
     return cMenu->revertSysMenu();
 }
+
+
+/**
+ *  Methods for the .PopupMenu class.
+ */
+#define POPUPMENU_CLASS       "PopupMenu"
 
 
 /** PopupMenu::connectContextMenu() [class]
@@ -5601,6 +5700,12 @@ RexxMethod6(RexxObjectPtr, popMenu_show, RexxObjectPtr, location, OPTIONAL_RexxO
 
     return cMenu->trackPopup(location, _dlg, opts, bothButtons, excludeRect, false);
 }
+
+
+/**
+ *  Methods for the .ScriptMenuBar class.
+ */
+#define SCRIPTMENUBAR_CLASS       "ScriptMenuBar"
 
 
 /** ScriptMenuBar::init()

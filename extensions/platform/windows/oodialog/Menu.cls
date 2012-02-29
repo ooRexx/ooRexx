@@ -56,79 +56,61 @@
 ::attribute wID get external "LIBRARY oodialog menu_wID"
 ::attribute hMenu get external "LIBRARY oodialog menu_getHMenu"
 
-::method getCount external "LIBRARY oodialog menu_getCount"
-::method isValidMenu external "LIBRARY oodialog menu_isValidMenu"
-::method isValidMenuHandle external "LIBRARY oodialog menu_isValidMenuHandle"
-::method isValidItemID external "LIBRARY oodialog menu_isValidItemID"
-
-::method isPopup external "LIBRARY oodialog menu_isPopup"
-::method isCommandItem external "LIBRARY oodialog menu_isCommandItem"
-::method isSeparator external "LIBRARY oodialog menu_isSeparator"
-
-::method getHandle external "LIBRARY oodialog menu_getHMenu"
-::method getMenuHandle external "LIBRARY oodialog menu_getMenuHandle"
-::method releaseMenuHandle external "LIBRARY oodialog menu_releaseMenuHandle"
-::method destroy external "LIBRARY oodialog menu_destroy"
-
-::method getPopup unguarded external "LIBRARY oodialog menu_getPopup"
-
 -- TODO NEED appendPopup() and appendItem()  (note you can not append a separator, or can you?)
-
-::method insertPopup unguarded external "LIBRARY oodialog menu_insertPopup"
-::method insertItem unguarded external "LIBRARY oodialog menu_insertItem"
-::method insertSeparator unguarded external "LIBRARY oodialog menu_insertSeparator"
-::method removePopup external "LIBRARY oodialog menu_removePopup"
-::method removeItem external "LIBRARY oodialog menu_removeItem"
-::method removeSeparator external "LIBRARY oodialog menu_removeSeparator"
-::method deletePopup external "LIBRARY oodialog menu_deletePopup"
-
-::method isEnabled external "LIBRARY oodialog menu_isEnabled"
-::method isDisabled external "LIBRARY oodialog menu_isDisabled"
-::method isGrayed external "LIBRARY oodialog menu_isDisabled"
-::method isChecked external "LIBRARY oodialog menu_isChecked"
-
-::method enable external "LIBRARY oodialog menu_enable"
-::method disable external "LIBRARY oodialog menu_disable"
-::method gray external "LIBRARY oodialog menu_disable"
-::method check external "LIBRARY oodialog menu_check"
-::method unCheck external "LIBRARY oodialog menu_unCheck"
-::method checkRadio external "LIBRARY oodialog menu_checkRadio"
-::method hilite external "LIBRARY oodialog menu_hilite"
-::method unHilite external "LIBRARY oodialog menu_unHilite"
-::method getItemState external "LIBRARY oodialog menu_getItemState"
-::method getType external "LIBRARY oodialog menu_getItemType"
 
 -- TODO there are some methods where the C code was there but there are no
 -- Rexx methods to match.  SetItemType, SetPopupType, SetItemState, SetPopupType
 -- These methods would take a combination of keywords.  The parsing of the
 -- keywords is already implmented.
 
-
-::method getText external "LIBRARY oodialog menu_getText"
-::method setText external "LIBRARY oodialog menu_setText"
-::method getID external "LIBRARY oodialog menu_getID"
-::method setID external "LIBRARY oodialog menu_setID"
-
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
-  Methods that affect an entire menu, rather than a menu item.
-\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-::method setHelpID external "LIBRARY oodialog menu_setHelpID"
-::method getHelpID external "LIBRARY oodialog menu_getHelpID"
-::method setMaxHeight external "LIBRARY oodialog menu_setMaxHeight"
-::method getMaxHeight external "LIBRARY oodialog menu_getMaxHeight"
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
-  Message connection methods.
-\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-::method itemTextToMethodName external "LIBRARY oodialog menu_itemTextToMethodName"
-::method setAutoConnection external "LIBRARY oodialog menu_setAutoConnection"
-::method getAutoConnectStatus external "LIBRARY oodialog menu_getAutoConnectStatus"
-::method connectCommandEvent external "LIBRARY oodialog menu_connectCommandEvent"
+::method check external "LIBRARY oodialog menu_check"
+::method checkRadio external "LIBRARY oodialog menu_checkRadio"
 ::method connectAllCommandEvents external "LIBRARY oodialog menu_connectAllCommandEvents"
-::method connectSomeCommandEvents external "LIBRARY oodialog menu_connectSomeCommandEvents"
+::method connectCommandEvent external "LIBRARY oodialog menu_connectCommandEvent"
 ::method connectMenuEvent external "LIBRARY oodialog menu_connectMenuEvent"
+::method connectSomeCommandEvents external "LIBRARY oodialog menu_connectSomeCommandEvents"
+::method deletePopup external "LIBRARY oodialog menu_deletePopup"
+::method destroy external "LIBRARY oodialog menu_destroy"
+::method disable external "LIBRARY oodialog menu_disable"
+::method enable external "LIBRARY oodialog menu_enable"
+::method getAutoConnectStatus external "LIBRARY oodialog menu_getAutoConnectStatus"
+::method getCount external "LIBRARY oodialog menu_getCount"
+::method getHandle external "LIBRARY oodialog menu_getHMenu"
+::method getHelpID external "LIBRARY oodialog menu_getHelpID"
+::method getID external "LIBRARY oodialog menu_getID"
+::method getItemState external "LIBRARY oodialog menu_getItemState"
+::method getMaxHeight external "LIBRARY oodialog menu_getMaxHeight"
+::method getMenuHandle external "LIBRARY oodialog menu_getMenuHandle"
+::method getPopup unguarded external "LIBRARY oodialog menu_getPopup"
+::method getText external "LIBRARY oodialog menu_getText"
+::method getType external "LIBRARY oodialog menu_getItemType"
+::method gray external "LIBRARY oodialog menu_disable"
+::method hilite external "LIBRARY oodialog menu_hilite"
+::method insertItem unguarded external "LIBRARY oodialog menu_insertItem"
+::method insertPopup unguarded external "LIBRARY oodialog menu_insertPopup"
+::method insertSeparator unguarded external "LIBRARY oodialog menu_insertSeparator"
+::method isChecked external "LIBRARY oodialog menu_isChecked"
+::method isCommandItem external "LIBRARY oodialog menu_isCommandItem"
+::method isDisabled external "LIBRARY oodialog menu_isDisabled"
+::method isEnabled external "LIBRARY oodialog menu_isEnabled"
+::method isGrayed external "LIBRARY oodialog menu_isDisabled"
+::method isPopup external "LIBRARY oodialog menu_isPopup"
+::method isSeparator external "LIBRARY oodialog menu_isSeparator"
+::method isValidItemID external "LIBRARY oodialog menu_isValidItemID"
+::method isValidMenu external "LIBRARY oodialog menu_isValidMenu"
+::method isValidMenuHandle external "LIBRARY oodialog menu_isValidMenuHandle"
+::method itemTextToMethodName external "LIBRARY oodialog menu_itemTextToMethodName"
+::method releaseMenuHandle external "LIBRARY oodialog menu_releaseMenuHandle"
+::method removeItem external "LIBRARY oodialog menu_removeItem"
+::method removePopup external "LIBRARY oodialog menu_removePopup"
+::method removeSeparator external "LIBRARY oodialog menu_removeSeparator"
+::method setAutoConnection external "LIBRARY oodialog menu_setAutoConnection"
+::method setHelpID external "LIBRARY oodialog menu_setHelpID"
+::method setID external "LIBRARY oodialog menu_setID"
+::method setMaxHeight external "LIBRARY oodialog menu_setMaxHeight"
+::method setText external "LIBRARY oodialog menu_setText"
+::method unCheck external "LIBRARY oodialog menu_unCheck"
+::method unHilite external "LIBRARY oodialog menu_unHilite"
 
 ::method test external "LIBRARY oodialog menu_test"
 
@@ -137,14 +119,12 @@
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::class 'MenuBar' public mixinclass Menu
 
-::method replace
-  use strict arg dlg
-  if \ dlg~isA(.PlainBaseDialog) then return -3
-
-::method isAttached external "LIBRARY oodialog menuBar_isAttached"
-::method redraw external "LIBRARY oodialog menuBar_redraw"
 ::method attachTo external "LIBRARY oodialog menuBar_attachTo"
 ::method detach external "LIBRARY oodialog menuBar_detach"
+::method isAttached external "LIBRARY oodialog menuBar_isAttached"
+::method redraw external "LIBRARY oodialog menuBar_redraw"
+::method replace external "LIBRARY oodialog menuBar_replace"
+
 
 /** unInit()
  * A menu that is not assigned to a window must be destroyed by the application
@@ -209,12 +189,14 @@
 ::class 'PopupMenu' public subclass Object inherit Menu
 
 ::method connectContextMenu class external "LIBRARY oodialog popMenu_connectContextMenu_cls"
+
 ::method init external "LIBRARY oodialog popMenu_init"
+
+::method assignTo external "LIBRARY oodialog popMenu_assignTo"
+::method connectContextMenu external "LIBRARY oodialog popMenu_connectContextMenu"
 ::method isAssigned external "LIBRARY oodialog popMenu_isAssigned"
 ::method show external "LIBRARY oodialog popMenu_show"
 ::method track external "LIBRARY oodialog popMenu_track"
-::method assignTo external "LIBRARY oodialog popMenu_assignTo"
-::method connectContextMenu external "LIBRARY oodialog popMenu_connectContextMenu"
 
 ::method unInit
   say 'In unInit() of PopupMenu class'

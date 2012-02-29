@@ -1231,10 +1231,11 @@ REXX_METHOD_PROTOTYPE(menu_connectSomeCommandEvents);
 REXX_METHOD_PROTOTYPE(menu_itemTextToMethodName);
 REXX_METHOD_PROTOTYPE(menu_test);
 
-REXX_METHOD_PROTOTYPE(menuBar_isAttached);
-REXX_METHOD_PROTOTYPE(menuBar_redraw);
 REXX_METHOD_PROTOTYPE(menuBar_attachTo);
 REXX_METHOD_PROTOTYPE(menuBar_detach);
+REXX_METHOD_PROTOTYPE(menuBar_isAttached);
+REXX_METHOD_PROTOTYPE(menuBar_redraw);
+REXX_METHOD_PROTOTYPE(menuBar_replace);
 
 REXX_METHOD_PROTOTYPE(binMenu_init);
 
@@ -2099,10 +2100,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(menu_itemTextToMethodName,      menu_itemTextToMethodName),
     REXX_METHOD(menu_test,                      menu_test),
 
-    REXX_METHOD(menuBar_isAttached,             menuBar_isAttached),
-    REXX_METHOD(menuBar_redraw,                 menuBar_redraw),
     REXX_METHOD(menuBar_attachTo,               menuBar_attachTo),
     REXX_METHOD(menuBar_detach,                 menuBar_detach),
+    REXX_METHOD(menuBar_isAttached,             menuBar_isAttached),
+    REXX_METHOD(menuBar_redraw,                 menuBar_redraw),
+    REXX_METHOD(menuBar_replace,                menuBar_replace),
 
     REXX_METHOD(binMenu_init,                   binMenu_init),
 

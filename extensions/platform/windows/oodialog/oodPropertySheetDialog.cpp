@@ -1065,20 +1065,23 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
         {
             if ( pcpsp->wantAccelerators )
             {
-            LPMSG    pMsg  = (LPMSG)((LPPSHNOTIFY)lParam)->lParam;
-            uint32_t reply = PSNRET_NOERROR;
+                LPMSG    pMsg  = (LPMSG)((LPPSHNOTIFY)lParam)->lParam;
+                uint32_t reply = PSNRET_NOERROR;
 
-            RexxArrayObject args = getTranslateAccelatorArgs(c, pMsg->message, pMsg->wParam, pMsg->lParam, pcpsd->rexxSelf);
-            RexxObjectPtr result = c->SendMessage(pcpsp->rexxSelf, TRANSLATEACCELERATOR_MSG, args);
+                RexxArrayObject args = getTranslateAccelatorArgs(c, pMsg->message, pMsg->wParam, pMsg->lParam,
+                                                                 pcpsd->rexxSelf);
+                RexxObjectPtr result = c->SendMessage(pcpsp->rexxSelf, TRANSLATEACCELERATOR_MSG, args);
 
-            if ( goodReply(c, pcpsd->pcpbd, result, TRANSLATEACCELERATOR_MSG) )
-            {
-                if ( ! c->UnsignedInt32(result, &reply) || (reply != PSNRET_NOERROR && reply != PSNRET_MESSAGEHANDLED) )
+                if ( goodReply(c, pcpsd->pcpbd, result, TRANSLATEACCELERATOR_MSG) )
                 {
-                    tcInvalidReturnListException(c, TRANSLATEACCELERATOR_MSG, VALID_PSNRET_MSG_LIST, result, pcpsd->pcpbd);
+                    if ( ! c->UnsignedInt32(result, &reply) ||
+                         (reply != PSNRET_NOERROR && reply != PSNRET_MESSAGEHANDLED) )
+                    {
+                        tcInvalidReturnListException(c, TRANSLATEACCELERATOR_MSG, VALID_PSNRET_MSG_LIST, result,
+                                                     pcpsd->pcpbd);
+                    }
                 }
-            }
-            setWindowPtr(hPage, DWLP_MSGRESULT, reply);
+                setWindowPtr(hPage, DWLP_MSGRESULT, reply);
             }
             break;
         }
