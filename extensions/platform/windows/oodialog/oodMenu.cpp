@@ -61,7 +61,7 @@
  * then setting the appropriate error code.
  *
  * DO raise exceptions for any invalid Rexx arguments, bad resouce ID, item ID,
- * wrong type, wrong ranges, etc..
+ * wrong object type, wrong ranges, etc..
  *
  * Users can check for valid menu handles using isValid(), getHandle(), etc.
  *
@@ -170,6 +170,52 @@ inline BOOL _connectSysItem(pCEventNotification pcen, RexxMethodContext *c, uint
 {
     uint32_t tag = TAG_DIALOG | TAG_SYSMENUCOMMAND;
     return addMiscMessage(pcen, c, WM_SYSCOMMAND, UINT32_MAX, id, 0x0000FFF0, 0, 0, msg, tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+}
+
+
+/**
+ * Checks if CppMenu::attachToDlg() would succeed with the specified object.
+ *
+ * @param c
+ * @param dlg
+ * @param argPos
+ *
+ * @return true if attachToDlg() is expected to succeed, otherwise false.
+ *
+ * @note If false is returned, an exception has been raised.
+ */
+static bool validAttachTo(RexxMethodContext *c, RexxObjectPtr dlg, size_t argPos)
+{
+    TCHAR buf[256];
+
+    if ( ! c->IsOfType(dlg, "PLAINBASEDIALOG") )
+    {
+        _snprintf(buf, sizeof(buf), "can not attach menu unless arg %d 'attachTo' is a dialog object", argPos);
+        userDefinedMsgException(c, buf);
+        return false;
+    }
+
+    // The underlying dialog needs to exist, and it can not already have a menu
+    // bar attached.
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
+
+    if ( ! pcpbd->isDlgHwndSet )
+    {
+        _snprintf(buf, sizeof(buf), "can not attach menu when the underlying arg %d 'attachTo' dialog does not exist",
+                  argPos);
+        userDefinedMsgException(c, buf);
+        return false;
+    }
+
+    if ( c->SendMessage0(dlg, "HASMENUBAR") == TheTrueObj )
+    {
+        _snprintf(buf, sizeof(buf), "can not attach menu when the arg %d 'attachTo' dialog already has a menu bar",
+                  argPos);
+        userDefinedMsgException(c, buf);
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -776,8 +822,8 @@ done_out:
 
 
 /**
- * Adds a menu command item to the connection que so that the command event can
- * be connected to a dialog at a later time.
+ * Adds a menu command item to the connection queue so that the command event
+ * can be connected to a dialog at a later time.
  *
  * @param id
  * @param methodName
@@ -4563,6 +4609,13 @@ RexxMethod1(RexxObjectPtr, menu_getAutoConnectStatus, CSELF, cMenuPtr)
 RexxMethod2(RexxStringObject, menu_itemTextToMethodName, CSTRING, text, OSELF, self)
 {
     RexxStringObject result = NULLOBJECT;
+
+    if ( strlen(text) == 0 )
+    {
+        nullStringMethodException(context, 1);
+        return result;
+    }
+
     char *name = strdup_2methodName(text);
     if ( name != NULL )
     {
@@ -4779,8 +4832,8 @@ RexxMethod5(logical_t, menu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, 
  * .MenuBar~detach() method to detach it.
  *
  * If the dialog already has a menu bar attached to it and you want to attach
- * this menu bar to tha dialog, get a reference to the dialog's current menu bar
- * and use the replace() method.
+ * this menu bar to that dialog, get a reference to the dialog's current menu
+ * bar and use the replace() method.
  *
  *  @param  dlg  The dialog to attach to.
  *
@@ -4790,20 +4843,20 @@ RexxMethod5(logical_t, menu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, 
  *         the operating system, the following error codes may be set by
  *         ooDialog:
  *
- *            ERROR_INVALID_MENU_HANDLE (1401) this menu has been destroyed
- *
  *            ERROR_INVALID_FUNCTION (1) this menu is already attached to a dlg
  *
- *            ERROR_WINDOW_NOT_DIALOG (1420) dlg is not a .PlainBaseDialog
+ *            ERROR_NOT_ENOUGH_MEMORY (8) some menu items were not connected
+ *            because the message table is full.
  *
  *            ERROR_INVALID_WINDOW_HANDLE (1400) dlg has no underlying Windows
  *            dialog
  *
+ *            ERROR_INVALID_MENU_HANDLE (1401) this menu has been destroyed
+ *
+ *            ERROR_WINDOW_NOT_DIALOG (1420) dlg is not a .PlainBaseDialog
+ *
  *            ERROR_INVALID_WINDOW_STYLE (2002) dlg already attached to a menu
  *            bar
- *
- *            ERROR_NOT_ENOUGH_MEMORY (8) some menu items were not connected
- *            because the message table is full.
  *
  *         When this method returns false, the menu is not attached to a dialog,
  *         except in one circumstance.  If the .SystemErrorCode is
@@ -4964,7 +5017,7 @@ RexxMethod5(logical_t, menuTemplate_addPopup, RexxObjectPtr, rxID, CSTRING, text
  * @param opts    [optional]  A string of 0 or more, blank seperated, keywords
  *                indicating additional options for the menu item.  The keywords
  *                set the state and type of the of the item, and specify when
- *                the itme is the last item at the current level in the menu.
+ *                the item is the last item at the current level in the menu.
  *
  * @param method  [optional]  A method name to connect the item to.  The default
  *                is to not connect the menu command item. If this argument is
@@ -5072,7 +5125,6 @@ RexxMethod1(logical_t, menuTemplate_isComplete, OSELF, self)
  */
 #define BINARYMENUBAR_CLASS       "Menu"
 
-
 /** BinaryMenuBar::init()
  *
  *  Initializes a BinaryMenuBar object.
@@ -5141,6 +5193,16 @@ RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
             goto done_out;
         }
         dwHelpID = tmp;
+    }
+
+    // We check here, before we go any farther, if the attachTo argument is
+    // valid and attachToDlg() is not going fail later:
+    if ( argumentExists(4) )
+    {
+        if ( ! validAttachTo(context, attachTo, 4) )
+        {
+            goto done_out;
+        }
     }
 
     HMENU hMenu = NULL;
@@ -5215,8 +5277,6 @@ RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         }
     }
 
-    // Okay, from this point on we need to go to err_out on an exception to
-    // clean up hMenu.
     cMenu->setHMenu(hMenu);
 
     if ( dwHelpID != 0 )
@@ -5235,11 +5295,6 @@ RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
     if ( argumentExists(4) )
     {
-        if ( ! c->IsOfType(attachTo, "PLAINBASEDIALOG") )
-        {
-            userDefinedMsgException(context->threadContext, CAN_NOT_ATTACH_ON_INIT_MSG);
-            goto err_out;
-        }
         cMenu->attachToDlg(attachTo);
     }
 
@@ -5247,14 +5302,6 @@ RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
 done_out:
     return NULLOBJECT;
-
-err_out:
-  if ( hMenu && ! isPointer )
-  {
-      DestroyMenu(hMenu);
-  }
-  cMenu->setHMenu(NULL);
-  return NULLOBJECT;
 }
 
 
@@ -5727,10 +5774,10 @@ RexxMethod6(RexxObjectPtr, popMenu_show, RexxObjectPtr, location, OPTIONAL_RexxO
  *                       default if omitted is 100.
  *
  *  @param  connect      [optional]  If true, each menu command item in the menu
- *                       is connected to a method.  The name of the method is
- *                       composed from the menu item text.  This uses the
- *                       connectionRequested method of connecting menu items.
- *                       The default is false.
+ *                       is connected to a method in a Rexx dialog.  The name of
+ *                       the method is composed from the menu item text.  This
+ *                       uses the connection requested method of connecting menu
+ *                       items. The default is false.
  *
  *  @param  attachTo     [optional]  If specified attach this menu to the
  *                       dialog.  If specified, attachTo has to be a
@@ -5794,9 +5841,9 @@ RexxMethod7(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_R
 
     if ( argumentExists(6) )
     {
-        if ( ! context->IsOfType(attachTo, "PLAINBASEDIALOG") )
+        // We make sure here, that attachToDlg() later will not fail.
+        if ( ! validAttachTo(context, attachTo, 6) )
         {
-            wrongClassException(context->threadContext, 6, "PlainBaseDialog");
             goto done_out;
         }
     }
@@ -5845,6 +5892,12 @@ RexxMethod7(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_R
 done_out:
     return NULLOBJECT;
 }
+
+
+/**
+ *  Methods for the .UserMenuBar class.
+ */
+#define USERMENUBAR_CLASS       "UserMenuBar"
 
 
 /** UserMenuBar::init()

@@ -499,6 +499,13 @@ void nullObjectException(RexxThreadContext *c, CSTRING name, size_t pos)
     userDefinedMsgException(c, buffer);
 }
 
+void nullStringMethodException(RexxMethodContext *c, size_t pos)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Argument %d, must not be the empty string", pos);
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buffer));
+}
+
 void nullObjectException(RexxThreadContext *c, CSTRING name)
 {
     nullObjectException(c, name, 0);

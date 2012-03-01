@@ -84,6 +84,7 @@ extern void  sparseArrayException(RexxThreadContext *c, size_t argPos, size_t in
 extern void  nullObjectException(RexxThreadContext *c, CSTRING name, size_t pos);
 extern void  nullObjectException(RexxThreadContext *c, CSTRING name);
 extern void  nullPointerException(RexxThreadContext *c, int pos);
+extern void  nullStringMethodException(RexxMethodContext *c, size_t pos);
 
 extern RexxObjectPtr wrongClassException(RexxThreadContext *c, size_t pos, const char *n);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, RexxObjectPtr actual);
