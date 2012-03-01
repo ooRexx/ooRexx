@@ -36,8 +36,8 @@
 /*----------------------------------------------------------------------------*/
 
 /* ooDialog User Guide
-   Samples\TestPopups
-   TestPopups.rex 						  v01-01 23Feb12
+   Samples\Popups
+   OffsetPopups.rex	 					  v01-01 01Mar12
 
    The four dialogs in this file illustrate how popups can be tested in
    stand-alone mode with a single code base. If a given popup pops up another
@@ -46,7 +46,7 @@
 
    Associated files: None.
 
-   Invocation:  testpopups [runType] [offset]
+   Invocation:  OffsetPopups [runType] [offset]
 
    "runType" controls which dialog to surface in "standalone" mode as follows:
       "p" for parent, "c" for child, or "g" for grandchild, "gg" for
@@ -57,14 +57,12 @@
    The default is runtype = Parent and offset = 0.
 
    Change Log:
-   v01-00 18Sep11: First Version.
-   v01-01 28Feb12: Inserted dialog offset code, so dialogs do not come up
-                   over each other. Also, corrected a typo in a comment.
+   v01-01 01Mar12: First Version
 
 ------------------------------------------------------------------------------*/
 
 parse upper arg runtype offset
-progName = "TestPopups"
+progName = "OffsetPopups"
 if runtype = "?" then do
   say
   say "+-----------------------------------------------------------------------+"
@@ -72,7 +70,7 @@ if runtype = "?" then do
   say "| can be run 'standalone' - that is, as the 'parent' of other 'younger' |"
   say "| dialogs.                                                              |"
   say "|                                                                       |"
-  say "| Syntax: 'TestPopups [runType] [offset]'                               |"
+  say "| Syntax: 'TestOffsetPopups [runType] [offset]'                         |"
   say "|                                                                       |"
   say "| - runType: Defines the 'root' dialog as follows:                      |"
   say "|   'p/P' or null for Parent,  'c/C'   for Child,                       |"
@@ -115,7 +113,7 @@ select
   when runtype = "P"  then .ParentDialog~newInstance(offset)
   when runtype = "C" then .ChildDialog~newInstance("SA",offset)
   when runtype = "G" then .GrandChildDialog~newInstance("SA",offset)
-  when runtype = "GG" then .GreatGrandChildDialog~newInstance("SA",offset)
+  when runtype = "GG" then .GreatGrandChildDialog~newInstance("SA")
   otherwise nop
 end
 
@@ -125,10 +123,11 @@ end
 /*---------------------------------------------------------------------------*/
 
 ::CLASS 'ParentDialog' SUBCLASS UserDialog
+
   ::METHOD newInstance CLASS
-    use arg offset
+    use arg offset					-- added for offset
     dlg = self~new
-    dlg~activate(offset)
+    dlg~activate(offset)				-- modified for offset
 
 
   ::METHOD init
@@ -136,31 +135,32 @@ end
     self~create(30, 30, 257, 123, "Parent Dialog for Popups", "CENTER")
 
 
-  ::METHOD defineDialog		-- Invoked automatically by ooDialog.
-    self~createPushButton(901, 142, 99, 50, 14, "DEFAULT", "Pop Up Child", ok)
+  ::METHOD defineDialog
+    self~createPushButton(901, 142, 99, 50, 14, "DEFAULT", "Pop Up Child", popup)
 
 
   ::METHOD activate UNGUARDED
-    expose offset
-    use arg offset
+    expose offset					-- added for offset
+    use arg offset					-- added for offset
     self~execute("SHOWTOP")
 
 
-  ::METHOD ok UNGUARDED
-    expose offset
-    .ChildDialog~newInstance(self,offset)
+  ::METHOD popup UNGUARDED
+    expose offset					-- added for offset
+    .ChildDialog~newInstance(self,self,offset)		-- modified for offset
 
 /*---------------------------------------------------------------------------*/
 
 
 /*---------------------------------------------------------------------------*/
 
-::CLASS 'ChildDialog' SUBCLASS View --UserDialog
+::CLASS 'ChildDialog' SUBCLASS View 			-- modified for offset
 
   ::METHOD newInstance CLASS
-    use arg rootDlg, offset
+    use arg rootDlg, parent, offset			-- modified for offset
+    if rootDlg = "SA" then offset = parent		-- modified for offset
     dlg = self~new
-    dlg~activate(rootDlg,offset)
+    dlg~activate(rootDlg, parent, offset)		-- modified for offset
 
 
   ::METHOD init
@@ -168,42 +168,43 @@ end
     self~create(30, 30, 257, 123, "Child Dialog", "CENTER")
 
 
-  ::METHOD defineDialog		-- Invoked automatically by ooDialog.
-    self~createPushButton(901, 142, 99, 100, 14, "DEFAULT", "Pop Up Grandchild", ok)
+  ::METHOD defineDialog
+    self~createPushButton(901, 142, 99, 100, 14, "DEFAULT", "Pop Up Grandchild", popup)
 
 
   ::METHOD activate UNGUARDED
-    expose rootDlg offset standalone
-    use arg rootDlg, offset
+    expose rootDlg parent offset standalone		-- modified for offset
+    use arg rootDlg, parent, offset			-- modified for offset
     if rootDlg = "SA" then do
-      standalone = .true
+      standalone = .true				-- added for offset
+      parent = self					-- added for offset
       rootDlg = self
       self~execute("SHOWTOP")
     end
     else self~popupAsChild(rootDlg, "SHOWTOP")
 
 
-  ::METHOD initDialog
-    expose rootDlg offset standalone
-    if standalone \= .true then self~offset(rootDlg, offset)
+  ::METHOD initDialog					-- added for offset
+    expose rootDlg parent offset standalone
+    if standalone \= .true then self~offset(parent, offset)
 
 
-  ::METHOD ok UNGUARDED
-    expose rootDlg offset
-    .GrandChildDialog~newInstance(rootDlg, self, offset)
-
-/*---------------------------------------------------------------------------*/
-
+  ::METHOD popup UNGUARDED
+    expose rootDlg offset				-- modified for offset
+    .GrandChildDialog~newInstance(rootDlg, self, offset)-- modified for offset
 
 /*---------------------------------------------------------------------------*/
 
-::CLASS 'GrandChildDialog' SUBCLASS View
+
+/*---------------------------------------------------------------------------*/
+
+::CLASS 'GrandChildDialog' SUBCLASS View		-- modified for offset
 
   ::METHOD newInstance CLASS
-    use arg rootDlg, parent, offset
-    if rootDlg = "SA" then offset = parent
+    use arg rootDlg, parent, offset			-- modified for offset
+    if rootDlg = "SA" then offset = parent 		-- added for offset
     dlg = self~new
-    dlg~activate(rootDlg, parent, offset)
+    dlg~activate(rootDlg, parent, offset)		-- modified for offset
 
 
   ::METHOD init
@@ -212,62 +213,65 @@ end
 
 
   ::METHOD defineDialog
-    self~createPushButton(901, 142, 99, 100, 14, "DEFAULT", "Pop Up GreatGrandchild", ok)
+    self~createPushButton(901, 142, 99, 100, 14, "DEFAULT", "Pop Up GreatGrandchild", popup)
 
 
-  ::METHOD activate
-    expose rootDlg parent offset standalone
-    use arg rootDlg, parent, offset
+  ::METHOD activate UNGUARDED
+    expose rootDlg parent offset standalone		-- modified for offset
+    use arg rootDlg, parent, offset			-- modified for offset
     if rootDlg = "SA" then do
-      standalone = .true
+      standalone = .true				-- added for offset
+      parent = self					-- added for offset
       rootDlg = self
       self~execute("SHOWTOP")
     end
     else self~popupAsChild(rootDlg, "SHOWTOP")
 
 
-  ::METHOD initDialog					-- for offsetting only.
+  ::METHOD initDialog					-- added for offset
     expose rootDlg parent offset standalone
     if standalone \= .true then self~offset(parent, offset)
 
 
-  ::METHOD ok UNGUARDED
-    expose rootDlg offset
-    .GreatGrandChildDialog~newInstance(rootDlg,self,offset)	-- self is for offsetting.
+  ::METHOD popup UNGUARDED
+    expose rootDlg offset				-- modified for offset
+    .GreatGrandChildDialog~newInstance(rootDlg, self, offset)	-- modified for offset
 
 /*---------------------------------------------------------------------------*/
 
+
 /*---------------------------------------------------------------------------*/
 
-::CLASS 'GreatGrandChildDialog' SUBCLASS View
+::CLASS 'GreatGrandChildDialog' SUBCLASS View		-- modified for offset
 
   ::METHOD newInstance CLASS
-    use arg rootDlg, parent, offset
-    if rootDlg = "SA" then offset = parent
+    use arg rootDlg, parent, offset			-- modified for offset
     dlg = self~new
-    dlg~activate(rootDlg, parent, offset)
+    dlg~activate(rootDlg, parent, offset)		-- modified for offset
 
 
   ::METHOD init
     forward class (super) continue
     self~create(30, 30, 257, 123, "GreatGrandchild", "CENTER")
 
+
   ::METHOD activate
-    expose rootDlg parent offset
-    use arg rootDlg, parent, offset
+    expose rootDlg parent offset			-- added for offset
+    use arg rootDlg, parent, offset			-- modified for offset
     if rootDlg = "SA" then self~execute("SHOWTOP")
     else self~popupAsChild(rootDlg, "SHOWTOP")
 
 
-  ::METHOD initDialog					-- for offsetting only.
+  ::METHOD initDialog					-- added for offset
     expose rootdlg parent offset
     if rootDlg \= "SA" then self~offset(parent, offset)
 
 /*---------------------------------------------------------------------------*/
 
+
 /*---------------------------------------------------------------------------*/
 
-::CLASS View SUBCLASS UserDialog
+::CLASS View SUBCLASS UserDialog			-- added for offset
 
   ::METHOD offset
     use arg parent, offset
