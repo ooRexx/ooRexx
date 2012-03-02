@@ -439,8 +439,8 @@ logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING op
             goto done_out;
         }
 
-        DWORD dwState = getPopupStateOpts(upperOpts, 0);
-        DWORD dwType = getPopupTypeOpts(upperOpts, MFT_STRING);
+        dwState = getPopupStateOpts(upperOpts, 0);
+        dwType = getPopupTypeOpts(upperOpts, MFT_STRING);
         if ( strstr(upperOpts, "END") )
         {
             resInfo |= MFR_END;
@@ -3838,8 +3838,9 @@ done_out:
  *           enhancement could add support for that.
  *
  *           Note to myself, I have tested this several times, setting a
- *           submenu's state to checked does nothing, and setting it to default
- *           does work.
+ *           submenu's state to checked does nothing. I've tested all other
+ *           keywords, MENUBARBREAK, MENUBREAK, RIGHTJUSTIFY, RIGHTORDER,
+ *           DEFAULT, DISABLED, GRAYED, and HILITE all work.
  */
 RexxMethod8(logical_t, menu_insertPopup, RexxObjectPtr, rxBefore, RexxObjectPtr, rxID, RexxObjectPtr, popup, CSTRING, text,
             OPTIONAL_CSTRING, stateOpts, OPTIONAL_CSTRING, typeOpts, OPTIONAL_logical_t, byPosition, CSELF, cMenuPtr)
@@ -4995,6 +4996,9 @@ RexxMethod2(RexxObjectPtr, menuBar_replace, RexxObjectPtr, newMenu, CSELF, cMenu
  *        Additional keyword: END  This keyword is required to indicate the
  *        popup menu is the last item at the current level of the menu.
  *
+ * @remarks  Note to myself. I have tested this with DEFAULT, DISABLED, GRAYED,
+ *           HILITE, MENUBARBREAK, MENUBREAK, RIGHTJUSTIFY, and RIGHTORDER. They
+ *           all work.
  */
 RexxMethod5(logical_t, menuTemplate_addPopup, RexxObjectPtr, rxID, CSTRING, text,
             OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxHelpID, OSELF, self)
@@ -5071,9 +5075,6 @@ RexxMethod5(logical_t, menuTemplate_addItem, RexxObjectPtr, rxID, CSTRING, text,
  *                separator and can indicate that the separator is the last item
  *                at the current level in the menu.
  *
- * @param method  [optional]  A method name to connect the item to.  The default
- *                is to not connect the menu command item.
- *
  * @return  True on success, false on error.
  *
  * @note  Sets .SystemErrorCode on error.
@@ -5084,11 +5085,15 @@ RexxMethod5(logical_t, menuTemplate_addItem, RexxObjectPtr, rxID, CSTRING, text,
  *        ERROR_INVALID_FUNCTION (1) -> The .UserMenu has already been
  *        completed.
  *
- * @note  Type keywords: MENUBARBREAK MENUBREAK RIGHTJUSTIFY RADIO ????.  By
- *        default no special type is set.
+ * @note  Type keywords: MENUBARBREAK MENUBREAK RIGHTJUSTIFY.  By default no
+ *        special type is set.
  *
  *        Additional keyword: END  This keyword is required to indicate the menu
  *        command item is the last item at the current level of the menu.
+ *
+ * @remarks  Although MSDN says separators can not be used in a menu bar, on
+ *           Windows 7 at least they can. Not sure if that is because of using
+ *           the extended menu template, or a Windows 7 thing only
  *
  */
 RexxMethod3(logical_t, menuTemplate_addSeparator, RexxObjectPtr, rxID, OPTIONAL_CSTRING, opts, OSELF, self)
@@ -6169,10 +6174,10 @@ static UINT getItemTypeOpts(const char *opts, UINT type)
  * Parses an option string to determine a separtor's type flags.
  *
  * @param opts Keywords signaling the different MFT_* flags.  These are the
- *             valid keywords: MENUBARBREAK MENUBREAK RIGHTORDER
+ *             valid keywords: MENUBARBREAK MENUBREAK RIGHTJUSTIFY
  *
  *             To remove these types from an existing separator, use NOT, i.e.
- *             NOTMENUBARBREAK will remvoe the MFT_MENUBARBREAK flag from a menu
+ *             NOTMENUBARBREAK will remove the MFT_MENUBARBREAK flag from a menu
  *             separator.
  *
  * @return The combined MFT_* flags for a menu separtor.
@@ -6197,16 +6202,14 @@ static UINT getSeparatorTypeOpts(const char *opts, UINT type)
         type |= MFT_MENUBREAK;
     }
 
-    // TODO test if RIGHTORDER is valid for a separator, I don't think it is.
-    if ( strstr(opts, "NOTRIGHTORDER") != NULL )
+    if ( strstr(opts, "NOTRIGHTJUSTIFY") != NULL )
     {
-        type &= ~MFT_RIGHTORDER;
+        type &= ~MFT_RIGHTJUSTIFY;
     }
-    else if ( strstr(opts, "RIGHTORDER") != NULL )
+    else if ( strstr(opts, "RIGHTJUSTIFY") != NULL )
     {
-        type |= MFT_RIGHTORDER;
+        type |= MFT_RIGHTJUSTIFY;
     }
-
     return type;
 }
 
