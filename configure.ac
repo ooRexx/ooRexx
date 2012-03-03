@@ -503,6 +503,7 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/userGuide/exercises/Samples/Makefile
         samples/windows/oodialog/userGuide/exercises/Samples/DlgData/Makefile
         samples/windows/oodialog/userGuide/exercises/Samples/DlgData/res/Makefile
+        samples/windows/oodialog/userGuide/exercises/Samples/Popups/Makefile
         samples/windows/oodialog/userGuide/exercises/Support/Makefile
         samples/windows/oodialog/wav/Makefile
         samples/windows/oodialog/winsystem/Makefile

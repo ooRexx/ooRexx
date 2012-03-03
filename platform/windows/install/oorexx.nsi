@@ -740,6 +740,11 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Samples\DlgData\res\" "ASimpleDialog.dll"
 
   ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Samples\Popups
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Samples\Popups\" "*rex"
+
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Support
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Support\" "*.cls"

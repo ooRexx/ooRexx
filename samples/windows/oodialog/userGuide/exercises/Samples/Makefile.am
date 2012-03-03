@@ -37,8 +37,8 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= DlgData
-DIST_SUBDIRS		= DlgData
+SUBDIRS			= DlgData Popups
+DIST_SUBDIRS		= DlgData Popups
 
 MAINTAINERCLEANFILES	= Makefile.in *~
 
