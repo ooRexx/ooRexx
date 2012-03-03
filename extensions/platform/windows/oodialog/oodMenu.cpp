@@ -5470,6 +5470,14 @@ done_out:
  *                       null, a new empty menu is created as the underlying
  *                       menu.
  *
+ *                       TODO - don't document this argument at this time.  The
+ *                       user has no way of getting a menu handle, except
+ *                       through a menu object.  If the user gets a submenu from
+ *                       a menu bar, or other menu, to get its handle, it is
+ *                       easier just to use the submenu object itself.  So,
+ *                       there seems to be no use for this argument, at this
+ *                       time.
+ *
  *  @return  No return.
  *
  *  @remarks  Raises exceptions for all failures.  If no exceptions, the menu is
