@@ -37,26 +37,21 @@
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
 /* Name: oodtree.rex                                                        */
-/* Type: Object REXX Script using ooDialog                                  */
+/* Type: Open Object REXX Script using ooDialog                             */
 /* Resource: oodtree.rc                                                     */
 /*                                                                          */
 /* Description:                                                             */
 /*                                                                          */
 /* Demonstration of a tree control using the Object REXX TreeControl class. */
 /*                                                                          */
-/* This file has been created by the Object REXX Workbench ooDialog         */
-/* template generator.                                                      */
-/*                                                                          */
 /****************************************************************************/
 
+-- Use the global .constDir for symbolic IDs
+.application~useGlobalConstDir('O')
 
 
-
-/* Install signal handler to catch error conditions and clean up */
-signal on any name CleanUp
-
-myDialog = .MyDialogClass~new
-if myDialog~InitCode = 0 then do
+myDialog = .MyDialogClass~new("rc\oodtree.rc", IDD_TREE_DLG)
+if myDialog~initCode = 0 then do
     rc = myDialog~Execute("SHOWTOP")
 end
 
@@ -65,41 +60,25 @@ end
 exit   /* leave program */
 
 
-/* ---- signal handler to destroy dialog if error condition was raised  ----*/
-CleanUp:
-   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
-                     || "a"x || condition("o")~message
-   if myDialog~isDialogActive then do
-       myDialog~finished = .true
-       myDialog~stopIt
-   end
-
-
 ::requires "ooDialog.cls"    /* This file contains the ooDialog classes */
 
 
 /* ---------------------------- Directives ---------------------------------*/
 
-::class 'MyDialogClass' subclass UserDialog
+::class 'MyDialogClass' subclass RcDialog
 
 ::method init
-  use arg initStem.
-  if arg(1,"o") = 1 then
-     initRet = self~init:super
-  else
-     initRet = self~init:super(initStem.)   /* Initialization stem is used */
+  use arg rcFile, idDlg, initData., includeFile, options, expected
 
-  if self~load("rc\oodtree.rc", ) \= 0 then do
-     self~initCode = 1
-     return
-  end
+  forward class (super) continue
+  if self~initCode <> 0 then return self~initCode
 
-  /* Connect dialog control items to class methods */
-  self~connectTreeViewEvent("IDC_TREE","SelChanging","OnSelChanging_IDC_TREE")
-  --self~connectTreeViewEvent("IDC_TREE","SelChanged","OnSelChanged_IDC_TREE")
-  self~connectTreeViewEvent("IDC_TREE","Expanding","OnExpanding_IDC_TREE")
-  --self~connectTreeViewEvent("IDC_TREE","Expanded","OnExpanded_IDC_TREE")
-  self~connectTreeViewEvent("IDC_TREE","DefaultEdit")
+  /* Connect dialog control events to methods in the Rexx dialog. */
+  self~connectTreeViewEvent("IDC_TREE", "SelChanging", "onSelChanging_IDC_TREE")
+  --self~connectTreeViewEvent("IDC_TREE", "SelChanged", "onSelChanged_IDC_TREE")
+  self~connectTreeViewEvent("IDC_TREE", "Expanding", "onExpanding_IDC_TREE")
+  --self~connectTreeViewEvent("IDC_TREE", "Expanded", "onExpanded_IDC_TREE")
+  self~connectTreeViewEvent("IDC_TREE", "DefaultEdit")
   self~connectTreeViewEvent("IDC_TREE","BEGINDRAG", "DefTreeDragHandler")
   --self~connectTreeViewEvent("IDC_TREE","Delete","OnDelete_IDC_TREE")
   self~connectTreeViewEvent("IDC_TREE","KeyDown","OnKeyDown_IDC_TREE")
@@ -111,10 +90,10 @@ CleanUp:
 
 
   /* Initial values that are assigned to the object attributes */
-  self~IDC_TREE= 'Products' /* Text of the item which schould be selected */
+  self~IDC_TREE = 'Computers' /* Text of the item which should be selected */
 
-  /* Add your initialization code here */
-  return initRet
+  /* Add any other initialization code here */
+  return 0
 
 
 /* Initialization Code, fill tree with initialization data  */
@@ -122,25 +101,21 @@ CleanUp:
   expose bmpFile treeFile itemFile
 
   curTree = self~newTreeView("IDC_TREE")
-  if curTree \= .Nil then
-  do
+  if curTree \= .nil then do
     bmpFile  = "bmp\oodtree.bmp"  /* file which contains the icons for selected/not-selected items */
     treeFile = "oodtree.inp"  /* input file which contains the items to build the tree         */
     itemFile = "oodtreei.inp" /* input file which contains the items to build the special item */
 
     /* check the file existence and display an error messge */
-    if stream(bmpFile, "C", "QUERY EXISTS") = "" then
-    do
+    if stream(bmpFile, "C", "QUERY EXISTS") = "" then do
       call infoDialog "Data file " bmpFile " does not exist"
     end
 
-    if stream(treeFile, "C", "QUERY EXISTS") = "" then
-    do
+    if stream(treeFile, "C", "QUERY EXISTS") = "" then do
       call infoDialog "Data file " treefile " does not exist !"
     end
 
-    if stream(itemFile, "C", "QUERY EXISTS") = "" then
-    do
+    if stream(itemFile, "C", "QUERY EXISTS") = "" then do
       call infoDialog "Data file " itemFile " does not exist"
     end
 
@@ -162,56 +137,49 @@ CleanUp:
   end
 
 
-::method defineDialog
-    /* Additional dialog items could be added here (e.g. createEditInputGroup) */
+/* --------------------- message handler(s) ----------------------------------*/
 
-
-/* --------------------- message handler -----------------------------------*/
-
-/* Method OnSelChanging_IDC_TREE handles notification 'SelChanging' for item IDC_TREE */
-::method OnSelChanging_IDC_TREE
+/* Method onSelChanging_IDC_TREE handles notification 'SelChanging' for item IDC_TREE */
+::method onSelChanging_IDC_TREE
   curTree = self~newTreeView("IDC_TREE")
 
   /* diaplay items which are selected once as bolds */
-  curTree~Modify( curtree~selected,,,,"BOLD")
+  curTree~modify(curtree~selected, , , , "BOLD")
 
 
 
-/* Method OnExpanding_IDC_TREE handles notification 'Expanding' for item IDC_TREE */
-::method OnExpanding_IDC_TREE
+/* Method onExpanding_IDC_TREE handles notification 'Expanding' for item IDC_TREE */
+::method onExpanding_IDC_TREE
   expose itemFile
   use arg tree, item, what
   curTree = self~newTreeView(tree)
-  itemInfo. = curTree~ItemInfo(item)
+  itemInfo. = curTree~itemInfo(item)
 
   /* if the special item is selected, load the child items dynamically from a file */
   /* and delete all children of the item if it will be collapsed                   */
-  if itemInfo.!TEXT = "Special Offers" then
-  do
-    if what = "COLLAPSED" & curTree~Child(item) = 0 then
-    do
+  if itemInfo.!TEXT = "Special Offers" then do
+    if what = "COLLAPSED" & curTree~child(item) = 0 then do
       do while lines(itemFile)
         line = linein(itemFile)
-        command = "curTree~Insert(item,,"||line||")"
+        command = "curTree~insert(item,,"||line||")"
         interpret command
       end
-      curTree~Expand(item)
+      curTree~expand(item)
     end
     else
-      if what = "EXPANDED" & curTree~Child(item) \= 0 then
-      do
-        curTree~CollapseAndReset(item)
+      if what = "EXPANDED" & curTree~child(item) \= 0 then do
+        curTree~collapseAndReset(item)
       end
   end
 
 
-/* Method OnKeyDown_IDC_TREE handles notification 'KeyDown' for item IDC_TREE */
-::method OnKeyDown_IDC_TREE
+/* Method onKeyDown_IDC_TREE handles notification 'KeyDown' for item IDC_TREE */
+::method onKeyDown_IDC_TREE
   use arg treeId, key
   curTree = self~newTreeView(treeId)
   /* if DELETE key is pressed, delete the selected item */
   if key == .VK~DELETE then
-    curTree~Delete(curTree~Selected)
+    curTree~delete(curTree~Selected)
   else
     /* if INSERT key is pressed, simulate pressing the New button */
     if key == .VK~INSERT then
@@ -229,21 +197,21 @@ CleanUp:
 ::method IDC_PB_DELETE
   /*delete the selected item */
   curTree = self~newTreeView("IDC_TREE")
-  curTree~Delete(curTree~Selected)
+  curTree~delete(curTree~selected)
 
 
 /* Method IDC_PB_EXP_ALL is connected to item IDC_PB_EXP_ALL */
 ::method IDC_PB_EXP_ALL
   /*expand the selected item and all its childs */
   curTree = self~newTreeView("IDC_TREE")
-  if curTree~Selected = 0 then
+  if curTree~selected = 0 then
     call infoDialog "No item selected !"
   else do
-    curTree~Expand(curTree~Selected)
-    nextItem = curTree~Child(curTree~Selected)
+    curTree~expand(curTree~Selected)
+    nextItem = curTree~child(curTree~Selected)
     do while nextItem \= 0
-      curTree~Expand(nextItem)
-      nextItem = curTree~Next(nextItem)
+      curTree~expand(nextItem)
+      nextItem = curTree~next(nextItem)
     end
   end
 
@@ -252,15 +220,15 @@ CleanUp:
 ::method IDC_PB_COL_ALL
   /*collapse the selected item and all its childs */
   curTree = self~newTreeView("IDC_TREE")
-  if curTree~Selected = 0 then
+  if curTree~selected = 0 then
     call infoDialog "No item selected !"
   else do
-    nextItem = curTree~Child(curTree~Selected)
+    nextItem = curTree~child(curTree~Selected)
     do while nextItem \= 0
-      curTree~Collapse(nextItem)
-      nextItem = curTree~Next(nextItem)
+      curTree~collapse(nextItem)
+      nextItem = curTree~next(nextItem)
     end
-    curTree~Collapse(curTree~Selected)
+    curTree~collapse(curTree~selected)
   end
 
 /* Method IDC_PB_INFO is connected to item IDC_PB_COL_ALL */
@@ -268,12 +236,10 @@ CleanUp:
   /* Display the attributes of the selected item */
   use arg tree
   curTree = self~newTreeView("IDC_TREE")
-  itemInfo. = curTree~ItemInfo(CurTree~Selected)
+  itemInfo. = curTree~itemInfo(curTree~selected)
 
-  if itemInfo.!Children = 0 then
-    children = "no"
-  else
-    children = ""
+  if itemInfo.!Children = 0 then children = "no"
+  else children = ""
 
   call InfoDialog 'The selected item "'itemInfo.!Text'" has' children 'children. The index for the icon is "'itemInfo.!Image'"',
                    ', the index for the selected icon is "'itemInfo.!SelectedImage'". The states are "'itemInfo.!State'".'
@@ -281,7 +247,6 @@ CleanUp:
 /* Method Help is connected to item 9 */
 ::method Help
   call infoDialog "No help available."
-  self~Help:super
 
 ::class 'NewTreeItemDlg' subclass RcDialog
 

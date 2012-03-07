@@ -39,28 +39,27 @@
 
 oodpbar.rc
 
-produced by IBM Object REXX Resource Workshop
-
 *****************************************************************************/
 
 #include <windows.h>
 
-#define DIALOG_1	1
-#define ID_A	10
-#define ID_B	11
-#define ID_C	12
-#define ID_E	14
-#define ID_D	13
-DIALOG_1 DIALOG 13, 25, 280, 180
+#define IDD_ONE          100
+#define IDC_PBAR_A       110
+#define IDC_PBAR_B       111
+#define IDC_PBAR_C       112
+#define IDC_PBAR_D       113
+#define IDC_PBAR_E       114
+
+IDD_ONE DIALOG 13, 25, 280, 180
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Progress Bars"
 FONT 8, "MS Sans Serif"
 {
- CONTROL "", ID_A, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 19, 22, 13, 130
- CONTROL "", ID_B, "msctls_progress32", PBS_SMOOTH | PBS_VERTICAL | WS_CHILD | WS_VISIBLE, 59, 22, 13, 130
- CONTROL "", ID_C, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 99, 22, 13, 130
- CONTROL "", ID_D, "msctls_progress32", PBS_SMOOTH | PBS_VERTICAL | WS_CHILD | WS_VISIBLE, 139, 22, 13, 130
- CONTROL "", ID_E, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 179, 22, 13, 130
+ CONTROL "", IDC_PBAR_A, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 19, 22, 13, 130
+ CONTROL "", IDC_PBAR_B, "msctls_progress32", PBS_SMOOTH | PBS_VERTICAL | WS_CHILD | WS_VISIBLE, 59, 22, 13, 130
+ CONTROL "", IDC_PBAR_C, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 99, 22, 13, 130
+ CONTROL "", IDC_PBAR_D, "msctls_progress32", PBS_SMOOTH | PBS_VERTICAL | WS_CHILD | WS_VISIBLE, 139, 22, 13, 130
+ CONTROL "", IDC_PBAR_E, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 179, 22, 13, 130
  DEFPUSHBUTTON "Step", IDOK, 223, 13, 50, 14
  PUSHBUTTON "Cancel", IDCANCEL, 223, 31, 50, 14
  PUSHBUTTON "Help", IDHELP, 223, 53, 50, 14

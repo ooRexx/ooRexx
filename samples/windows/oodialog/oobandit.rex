@@ -54,6 +54,18 @@
  *  controls are calculated around the bitmap size.
  */
 
+   -- Use the global .constDir for symbolic IDs, and add IDs for this example.
+   .application~useGlobalConstDir('O')
+   .constDir[IDC_PB_STOP]        = 1100
+   .constDir[IDC_STATIC_JACKPOT] = 1200
+   .constDir[IDC_PB_BMP_LEFT]    = 1201
+   .constDir[IDC_PB_BMP_CENTER]  = 1202
+   .constDir[IDC_PB_BMP_RIGHT]   = 1203
+   .constDir[IDC_EDIT]           = 120
+   .constDir[IDC_UD]             = 1206
+
+
+
    curdir = directory()
    parse source . . me
    mydir = me~left(me~lastpos('\')-1)              /* where is code     */
@@ -119,14 +131,14 @@
    expose bmp. initialSpeed dlgSize bitMapSize
 
    -- Load the bitmaps into memory.
-   bmp.1 = self~LoadBitmap("bmp\tiger.bmp")
-   bmp.2 = self~LoadBitmap("bmp\chihuahu.bmp")
-   bmp.3 = self~LoadBitmap("bmp\eleph2.bmp")
-   bmp.4 = self~LoadBitmap("bmp\horse.bmp")
-   bmp.5 = self~LoadBitmap("bmp\sealion.bmp")
-   bmp.6 = self~LoadBitmap("bmp\moose.bmp")
-   bmp.7 = self~LoadBitmap("bmp\rhinoce.bmp")
-   bmp.8 = self~LoadBitmap("bmp\goat.bmp")
+   bmp.1 = self~loadBitmap("bmp\tiger.bmp")
+   bmp.2 = self~loadBitmap("bmp\chihuahu.bmp")
+   bmp.3 = self~loadBitmap("bmp\eleph2.bmp")
+   bmp.4 = self~loadBitmap("bmp\horse.bmp")
+   bmp.5 = self~loadBitmap("bmp\sealion.bmp")
+   bmp.6 = self~loadBitmap("bmp\moose.bmp")
+   bmp.7 = self~loadBitmap("bmp\rhinoce.bmp")
+   bmp.8 = self~loadBitmap("bmp\goat.bmp")
    bmp.0 = 8
 
    -- Note that for a static text control, the CENTERIMAGE flag has the effect
@@ -135,52 +147,53 @@
    -- Create the jackpot line.  First a frame around the whole thing.
    x = self~MARGIN_X
    y = self~MARGIN_Y
-   self~createBlackFrame(-1, x, y, dlgSize~width - (2 * self~MARGIN_X), self~JACKPOT_LINE_Y, "BORDER")
+   self~createBlackFrame(IDC_STATIC, x, y, dlgSize~width - (2 * self~MARGIN_X), self~JACKPOT_LINE_Y, "BORDER")
 
    -- Static text on the right, centered over the 1st bitmap
    txt = "Jackpot  $$$"
    txtSize = self~getTextSizeDU(txt)
    x += trunc((bitMapSize~width / 2) - (txtSize~width / 2))
    y += self~MARGIN_Y
-   self~createStaticText(-1, x, y, txtSize~width, self~TEXT_Y, "CENTER CENTERIMAGE", txt)
+   self~createStaticText(IDC_STATIC, x, y, txtSize~width, self~TEXT_Y, "CENTER CENTERIMAGE", txt)
 
    -- The jackpot number, could be up to 9 digits.  Just a static control with a
    -- fancy frame, centered over the middle bitmap
    txt = "888888888"
    txtSize = self~getTextSizeDU(txt)
    x = trunc((dlgSize~width / 2) - ((txtSize~width + 6) / 2))
-   self~createBlackFrame(-1,   x + 0, y - 2, txtSize~width + 6, self~TEXT_Y + 4, "BORDER")
-   self~createBlackFrame(-1,   x + 1, y - 1, txtSize~width + 4, self~TEXT_Y + 2, "BORDER")
-   self~createStaticText(1200, x + 3, y - 0, txtSize~width + 0, self~TEXT_Y + 0, "RIGHT CENTERIMAGE")
+   self~createBlackFrame(IDC_STATIC,   x + 0, y - 2, txtSize~width + 6, self~TEXT_Y + 4, "BORDER")
+   self~createBlackFrame(IDC_STATIC,   x + 1, y - 1, txtSize~width + 4, self~TEXT_Y + 2, "BORDER")
+   self~createStaticText(IDC_STATIC_JACKPOT, x + 3, y - 0, txtSize~width + 0, self~TEXT_Y + 0, "RIGHT CENTERIMAGE")
 
    -- Static text on the left, centered over the 3rd bitmap.
    txt = "$$$  Jackpot"
    txtSize = self~getTextSizeDU(txt)
    x = (bitMapSize~width * 2) + (3 * self~MARGIN_X)            -- The left edge of the 3rd bitmap ...
    x += trunc((bitMapSize~width / 2) - (txtSize~width / 2))    -- ... and center
-   self~createStaticText(-1, x, y, txtSize~width, self~TEXT_Y, "CENTER CENTERIMAGE", txt)
+   self~createStaticText(IDC_STATIC, x, y, txtSize~width, self~TEXT_Y, "CENTER CENTERIMAGE", txt)
 
    -- Now place the bitmaps
    x = self~MARGIN_X
    y = (2 * self~MARGIN_Y) + self~JACKPOT_LINE_Y
-   self~createBitmapButton(1201, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY  USEPAL", , , bmp.1)
+   self~createBitmapButton(IDC_PB_BMP_LEFT, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY  USEPAL", , , bmp.1)
 
    x += bitMapSize~width + self~MARGIN_X
-   self~createBitmapButton(1202, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY ", , , bmp.1)
+   self~createBitmapButton(IDC_PB_BMP_CENTER, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY ", , , bmp.1)
 
    x += bitMapSize~width + self~MARGIN_X
-   self~createBitmapButton(1203, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY ", , , bmp.1)
+   self~createBitmapButton(IDC_PB_BMP_RIGHT, x, y, bitMapSize~width, bitMapSize~height, "INMEMORY ", , , bmp.1)
 
    -- Stop and cancel buttons, placed at left margin and under bitmaps
    x = self~MARGIN_X
    y += bitMapSize~height + self~MARGIN_Y
-   self~createPushButtonGroup(x, y, self~BUTTON_X, self~BUTTON_Y, "&Stop 1100 onStop &Cancel 2 Cancel", .false, "DEFAULT")
+   buttons = "&Stop" .constDir[IDC_PB_STOP] "onStop &Cancel" .constDir[IDCANCEL] "Cancel"
+   self~createPushButtonGroup(x, y, self~BUTTON_X, self~BUTTON_Y, buttons, .false, "DEFAULT")
 
    -- A group box to hold the speed adjustment controls
    txt = 'Speed (in ms) lower is faster'
    x += bitMapSize~width + self~MARGIN_X
    cy = dlgSize~height - y - self~MARGIN_Y
-   self~createGroupBox(-1, x, y, (bitMapSize~width * 2) + self~MARGIN_X, cy, , txt)
+   self~createGroupBox(IDC_STATIC, x, y, (bitMapSize~width * 2) + self~MARGIN_X, cy, , txt)
 
    -- And finally the speed adjustment controls them selves.  The top of a group box
    -- is higher than the top line of the group box (to allow for text.)  So in order
@@ -191,16 +204,16 @@
    y += trunc((cy / 2) - (self~TEXT_Y / 2)) + 3
    txt = ' Faster :'
    txtSize = self~getTextSizeDU(txt)
-   self~createStaticText(-1, x, y, txtSize~width, self~TEXT_Y, 'RIGHT CENTERIMAGE', txt)
+   self~createStaticText(IDC_STATIC, x, y, txtSize~width, self~TEXT_Y, 'RIGHT CENTERIMAGE', txt)
 
    x += txtSize~width + 2
-   self~createEdit(1205, x , y, 35, self~TEXT_Y, "NUMBER")
+   self~createEdit(IDC_EDIT, x , y, 35, self~TEXT_Y, "NUMBER")
 
    x += 35
-   self~createUpDown(1206, x, y, 25, self~TEXT_Y, "RIGHT ARROWKEYS AUTOBUDDY BUDDYINT HORIZONTAL NOTHOUSANDS", 'speed')
+   self~createUpDown(IDC_UD, x, y, 25, self~TEXT_Y, "RIGHT ARROWKEYS AUTOBUDDY BUDDYINT HORIZONTAL NOTHOUSANDS", 'speed')
 
    x += 2
-   self~createStaticText(-1, x, y, 30, self~TEXT_Y, 'LEFT CENTERIMAGE', ': Slower')
+   self~createStaticText(IDC_STATIC, x, y, 30, self~TEXT_Y, 'LEFT CENTERIMAGE', ': Slower')
 
    -- Set the up down position to the initial speed.
    self~speed = initialSpeed
@@ -208,16 +221,16 @@
 ::method initDialog
    expose minSpeed maxSpeed notStopped jackPotCtrl speedCtrl
 
-   self~newUpDown(1206)~setRange(minSpeed, maxSpeed)
+   self~newUpDown(IDC_UD)~setRange(minSpeed, maxSpeed)
 
-   speedCtrl = self~newEdit(1205)
+   speedCtrl = self~newEdit(IDC_EDIT)
    speedCtrl~setLimit(maxSpeed~length - 1)
    ret = speedCtrl~connectCharEvent(onKey)
 
-   jackPotCtrl = self~newStatic(1200)
+   jackPotCtrl = self~newStatic(IDC_STATIC_JACKPOT)
 
    notStopped = .true
-   self~disableControl(1100)
+   self~disableControl(IDC_PB_STOP)
    self~start("bandit")
 
 -- An attempt to disallow cut and paste into the speed control.
@@ -240,7 +253,7 @@
    -- The user could have canceled while the whistle was playing..
    if self~finished then return 0
 
-   self~enableControl(1100)
+   self~enableControl(IDC_PB_STOP)
 
    do cycle = maxCycle by -1 to 1 until self~finished
       if self~checkSpeed = 0 then leave
@@ -264,9 +277,9 @@
       -- no longer exists.  (Which may be if the user hit cancel.)
       if \self~isDialogActive then return 0
 
-      self~changeBitmapButton(1201, bmp.x,,,,"INMEMORY STRETCH")
-      self~changeBitmapButton(1202, bmp.y,,,,"INMEMORY STRETCH")
-      self~changeBitmapButton(1203, bmp.z,,,,"INMEMORY STRETCH")
+      self~changeBitmapButton(IDC_PB_BMP_LEFT, bmp.x,,,,"INMEMORY STRETCH")
+      self~changeBitmapButton(IDC_PB_BMP_CENTER, bmp.y,,,,"INMEMORY STRETCH")
+      self~changeBitmapButton(IDC_PB_BMP_RIGHT, bmp.z,,,,"INMEMORY STRETCH")
 
       guard off
       if self~finished then return 0
@@ -288,10 +301,10 @@
    else return 1
 
 ::method disableControls private
-   self~disableControl(1100)
+   self~disableControl(IDC_PB_STOP)
    self~disableControl(IDCANCEL)
-   self~disableControl(1205)
-   self~disableControl(1206)
+   self~disableControl(IDC_EDIT)
+   self~disableControl(IDC_UD)
 
 ::method onStop
    expose x y z misses initPot notStopped won jackpotCtrl
@@ -350,8 +363,8 @@
    -- maximum.  In which case the up down control seems to return the empty
    -- string for its position ??
    if self~speed == "" then do
-     say 'Up down position: ' self~newUpDown(1206)~getPosition
-     say 'Edit control text:' self~newEdit(1205)~getText
+     say 'Up down position: ' self~newUpDown(IDC_UD)~getPosition
+     say 'Edit control text:' self~newEdit(IDC_EDIT)~getText
    end
 
    money = trunc(cycle * initPot / self~speed)

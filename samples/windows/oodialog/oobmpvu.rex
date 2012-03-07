@@ -41,12 +41,17 @@
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
 
+ -- Use the global .constDir for symbolic IDs, and add IDs for this example.
+ .application~useGlobalConstDir('O')
+ .constDir[IDC_CB]        = 101
+ .constDir[IDC_PB_BITMAP] = 102
+
 
  curdir = directory()
  parse source . . me
  mydir = me~left(me~lastpos('\')-1)              /* where is code     */
  mydir = directory(mydir)                        /* current is "my"   */
- b.101 = ''
+ b.IDC_CB = ''
  d = .BmpDialog~new(b.)
  d~createCenter(300, 200, "Bitmap Viewer")
  d~execute("SHOWTOP")
@@ -63,21 +68,23 @@
 
 ::method defineDialog
    ret = directory("bmp")
-   self~createStaticText(-1, 10, 10, , , , "&Filename: ")
-   self~createComboBox(101, 60, 10, 130, 80, "VSCROLL", "Filename")
-   self~connectListBoxEvent(101, "SELCHANGE", "FileSelected")
-   self~createBitmapButton(102, 13, 33, self~SizeX - 26, self~SizeY - 30 - 36, , , , "blank.bmp")
+   self~createStaticText(IDC_STATIC, 10, 10, , , , "Filename: ")
+
+   self~createComboBox(IDC_CB, 60, 10, 130, 180, "VSCROLL", "Filename")
+   self~connectComboBoxEvent(IDC_CB, "SELCHANGE", "FileSelected")
+
+   self~createBitmapButton(IDC_PB_BITMAP, 13, 33, self~SizeX - 26, self~SizeY - 30 - 36, , , , "blank.bmp")
    self~createPushButtonGroup(100, self~sizeY - 18,,, "&Show 1 OK &Cancel 2 CANCEL", 1)
-   self~createBlackFrame(-1, 10, 30, self~SizeX - 20, self~SizeY - 30 - 30)
+   self~createBlackFrame(IDC_STATIC, 10, 30, self~SizeX - 20, self~SizeY - 30 - 30)
 
 ::method initDialog
-   self~addComboEntry(101, "...")
-   self~comboAddDirectory(101, "*.bmp", "READWRITE")
-   self~comboAddDirectory(101, "*.dib", "READWRITE")
+   self~addComboEntry(IDC_CB, "...")
+   self~comboAddDirectory(IDC_CB, "*.bmp", "READWRITE")
+   self~comboAddDirectory(IDC_CB, "*.dib", "READWRITE")
 
    -- This is done so that when the dialog is initially displayed, the bitmap viewer portion,
    -- the bitmap button, is blank.
-   self~changeBitmapButton(102,0)
+   self~changeBitmapButton(IDC_PB_BITMAP,0)
 
 ::method fileSelected                        /* drop-down selection */
    self~getData
@@ -91,10 +98,10 @@
       self~filename = fileNameDialog("*.*", self~DlgHandle)
       if self~filename \= "0" then
       do
-         self~comboDrop(101)
-         self~addComboEntry(101, "...")
-         self~comboAddDirectory(101, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.bmp", "READWRITE")
-         self~comboAddDirectory(101, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.dib", "READWRITE")
+         self~comboDrop(IDC_CB)
+         self~addComboEntry(IDC_CB, "...")
+         self~comboAddDirectory(IDC_CB, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.bmp", "READWRITE")
+         self~comboAddDirectory(IDC_CB, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.dib", "READWRITE")
          self~setDataAttribute("Filename")
       end
    end
@@ -102,5 +109,5 @@
    return 0
 
 ::method showBitmap                          /* draw the bitmap */
-   self~changeBitmapButton(102,0)
-   self~changeBitmapButton(102,self~filename,,,,"USEPAL")
+   self~changeBitmapButton(IDC_PB_BITMAP,0)
+   self~changeBitmapButton(IDC_PB_BITMAP,self~filename,,,,"USEPAL")

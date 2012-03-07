@@ -41,23 +41,44 @@
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
 
+ -- Use the global .constDir for symbolic IDs
+ .application~useGlobalConstDir('O')
+ .constDir[IDD_PET_DLG      ]  = 103
+ .constDir[IDC_BMP_RHINO    ]  = 2001
+ .constDir[IDC_BMP_TIGER    ]  = 2002
+ .constDir[IDC_BMP_ELEPH    ]  = 2003
+ .constDir[IDC_BMP_MOOSE    ]  = 2004
+ .constDir[IDC_BMP_GOAT     ]  = 2005
+ .constDir[IDC_BMP_CHIHUAHUA]  = 2006
+ .constDir[IDC_BMP_SEAL     ]  = 2007
+ .constDir[IDC_BMP_HORSE    ]  = 2008
+ .constDir[IDC_EDIT_RHINO    ] = 1001
+ .constDir[IDC_EDIT_TIGER    ] = 1002
+ .constDir[IDC_EDIT_ELEPH    ] = 1003
+ .constDir[IDC_EDIT_MOOSE    ] = 1004
+ .constDir[IDC_EDIT_GOAT     ] = 1005
+ .constDir[IDC_EDIT_CHIHUAHUA] = 1006
+ .constDir[IDC_EDIT_SEAL     ] = 1007
+ .constDir[IDC_EDIT_HORSE    ] = 1008
 
  curdir = directory()
  parse source . . me
- mydir = me~left(me~lastpos('\')-1)              /* where is code     */
+ mydir = me~left(me~lastpos('\') - 1)            /* where is code     */
  mydir = directory(mydir)                        /* current is "my"   */
  env = 'ENVIRONMENT'
- win = value('WINDIR',,env)
- sp = value('SOUNDPATH',,env)
- sp = value('SOUNDPATH',win';'mydir'\WAV;'sp,env)
+ win = value('WINDIR', , env)
+ sp = value('SOUNDPATH', , env)
+ sp = value('SOUNDPATH', win';'mydir'\WAV;' sp, env)
 
- do i = 1001 to 1008
+ first = .constDir[IDC_EDIT_RHINO]
+ last  = .constDir[IDC_EDIT_HORSE]
+ do i = first to last
     b.i = "unknown animal"
  end
 
- d = .peddialog~new("RES\OOPet.DLL",103, b.)
- if d~InitCode \= 0 then exit
- d~execute("SHOWTOP")
+ dlg = .PetDialog~new("res\OOPet.DLL", IDD_PET_DLG, b., first, last)
+ if dlg~initCode \= 0 then exit
+ dlg~execute("SHOWTOP")
  ret = directory(curdir)
  return
 
@@ -67,66 +88,88 @@
 
 /*------------------------------- dialog class -----------------------*/
 
-::class peddialog subclass Resdialog
+::class 'PetDialog' subclass Resdialog
 
-::method InitDialog
-   expose correct beenhelped
-   self~InitDialog:super
-   call Play "guess.wav", yes
-   self~installBitmapButton(2001, "IDRHINO",     "bmp\rhinoce.bmp" ,,,,"FRAME STRETCH")
-   self~installBitmapButton(2002, "IDTIGER",     "bmp\tiger.bmp"   ,,,,"FRAME USEPAL STRETCH")
-   self~installBitmapButton(2003, "IDELEPH",     "bmp\eleph2.bmp"  ,,,,"FRAME STRETCH" )
-   self~installBitmapButton(2004, "IDMOOSE",     "bmp\moose.bmp"   ,,,,"FRAME STRETCH")
-   self~installBitmapButton(2005, "IDGOAT",      "bmp\goat.bmp"    ,,,,"FRAME STRETCH")
-   self~installBitmapButton(2006, "IDCHIHUAHUA", "bmp\chihuahu.bmp",,"bmp\kanguru.bmp",,"FRAME STRETCH")
-   self~installBitmapButton(2007, "IDSEA",       "bmp\sealion.bmp" ,,,,"FRAME STRETCH")
-   self~installBitmapButton(2008, "IDHORSE",     "bmp\horse.bmp"   ,,,,"FRAME STRETCH")
-   correct = .array~of("rhinoceros","tiger","elephant","moose","goat","chihuahua","seal", "horse")
-   beenhelped = 0
+::method init
+  expose first last
+  use arg resFile, id, dataStem., first, last
 
-::method Validate
-   expose correct beenhelped
-   self~GetDataStem(A.)
+  self~init:super(resFile, id, dataStem.)
+
+::method initDialog
+   expose correct beenHelped
+
+   ret = Play("guess.wav", yes)
+
+   self~installBitmapButton(IDC_BMP_RHINO    , "IDRHINO",     "bmp\rhinoce.bmp" , ,                  , , "FRAME STRETCH")
+   self~installBitmapButton(IDC_BMP_TIGER    , "IDTIGER",     "bmp\tiger.bmp"   , ,                  , , "FRAME USEPAL STRETCH")
+   self~installBitmapButton(IDC_BMP_ELEPH    , "IDELEPH",     "bmp\eleph2.bmp"  , ,                  , , "FRAME STRETCH" )
+   self~installBitmapButton(IDC_BMP_MOOSE    , "IDMOOSE",     "bmp\moose.bmp"   , ,                  , , "FRAME STRETCH")
+   self~installBitmapButton(IDC_BMP_GOAT     , "IDGOAT",      "bmp\goat.bmp"    , ,                  , , "FRAME STRETCH")
+   self~installBitmapButton(IDC_BMP_CHIHUAHUA, "IDCHIHUAHUA", "bmp\chihuahu.bmp", , "bmp\kanguru.bmp", , "FRAME STRETCH")
+   self~installBitmapButton(IDC_BMP_SEAl     , "IDSEA",       "bmp\sealion.bmp" , ,                  , , "FRAME STRETCH")
+   self~installBitmapButton(IDC_BMP_HORSE    , "IDHORSE",     "bmp\horse.bmp"   , ,                  , , "FRAME STRETCH")
+
+   correct = .array~of("rhinoceros", "tiger", "elephant", "moose", "goat", "chihuahua", "seal", "horse")
+   beenHelped = .false
+
+::method validate
+   expose correct beenHelped first last
+
+   -- Disable the Ok button until we are through.
+   self~newPushButton(IDOK)~disable
+
+   self~getDataStem(A.)
    wrongstr = ''
-   do i = 1001 to 1008
-      if A.i \= correct[i-1000] & A.i~space(0) \= "" then do
-         if wrongstr = '' then wrongstr = i-1000": "A.i
-                          else wrongstr = wrongstr", " i-1000": "A.i
+
+   do i = first to last
+      if \ A.i~strip~caseLessEquals(correct[i - 1000]) then do
+         wrongstr ||= '09'x || i-1000": "A.i || .endOfLine
       end
    end
    if wrongstr = '' then do
-      if beenhelped=0 then call Play "clap.wav"
-      call Play "yourgood.wav","YES"
-      if beenhelped=1 then
-           ret = TimedMessage("You got them all right.... with my help ","E N D",2000)
-      else ret = TimedMessage("You got them all right","B R A V O",2000)
-      return 1
-      end
+      if \ beenHelped then ret = Play("clap.wav")
+
+      ret = Play("yourgood.wav", "YES")
+
+      if beenHelped then
+         ret = TimedMessage("You got them all right.... with my help ","E N D",2000)
+      else
+        ret = TimedMessage("You got them all right","B R A V O",2000)
+      return .true
+   end
    else do
-      call Play "nope.wav"
-      ret = errorDialog("The following answer(s) is/are incorrect: "wrongstr)
-      return 0
+      ret = Play("nope.wav")
+
+      msg = "The following answer(s) is/are incorrect:" || .endOfLine~copies(2) || wrongstr
+      title = "Incorrect Answers for the ooRexx Animal Game"
+      ret = MessageDialog(msg, self~hwnd, title, 'OK', 'WARNING', 'DEFBUTTON1')
+
+      -- We are through
+      self~newPushButton(IDOK)~enable
+
+      return .false
    end
 
 ::method IDTIGER
    ret = Play("TIGER.WAV","YES")
-   ret = TimedMessage("Hold that t...., hold that .i...","A song about me",2000)
+   ret = TimedMessage("Hold that t...., hold that .i...", "A song about me", 2000)
 
 ::method IDELEPH
    ret = Play("ELEPHANT.WAV","YES")
-   ret = TimedMessage("I blow my nose like a trumpet","African Heavy Weight",2000)
+   ret = TimedMessage("I blow my nose like a trumpet", "African Heavy Weight", 2000)
 
 ::method IDMOOSE
    ret = Play("MOOSE.WAV","YES")
-   ret = TimedMessage("My name rhymes with a sweet brown dessert","Chocolate ......",2000)
+   ret = TimedMessage("My name rhymes with a sweet brown dessert", "Chocolate ......", 2000)
 
 ::method IDRHINO
    ret = Play("RHINO.WAV","YES")
-   ret = TimedMessage("I only fear the 2 guys on my right","I am strong",2000)
+   ret = TimedMessage("I only fear the 2 guys on my right", "I am strong", 2000)
 
 ::method IDGOAT
    ret = Play("GOAT.WAV","YES")
-   ret = TimedMessage("My relatives clime the Matterhorn","Mountain ....",2000)
+   ret = TimedMessage("My relatives climb the Matterhorn", "Mountain ....", 2000)
 
 ::method IDCHIHUAHUA
    ret = Play("NOPE.WAV","YES")
@@ -140,11 +183,20 @@
    ret = infoDialog("My son won the Kentucky Derby")
 
 ::method help
-   expose correct beenhelped
-   beenhelped = 1
-   call Play "help.wav"
-   self~GetDataStem(A.)
-   do i = 1001 to 1008
+   expose correct beenHelped first last
+
+   -- Disable the help button so that it can not be clicked until we are through
+   -- here.
+   self~newPushButton(IDHELP)~disable
+
+   beenHelped = .true
+   ret = Play("help.wav")
+
+   do i = first to last
       A.i = correct[i-1000]
    end
-   self~SetDataStem(A.)
+
+   self~setDataStem(A.)
+
+   -- Now enable Help again.
+   self~newPushButton(IDHELP)~enable

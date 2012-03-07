@@ -37,20 +37,15 @@
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
 /* Name: oodpbar.rex                                                        */
-/* Type: Object REXX Script using ooDialog                                  */
+/* Type: Open Object Rexx Script using ooDialog                             */
 /* Resource: oodpbar.rc                                                     */
-/*                                                                          */
-/* Description:                                                             */
-/* This file has been created by the Object REXX Workbench ooDialog         */
-/* template generator.                                                      */
 /*                                                                          */
 /****************************************************************************/
 
+-- Use the global .constDir for symbolic IDs
+.application~useGlobalConstDir('O')
 
-/* Install signal handler to catch error conditions and clean up */
-signal on any name CleanUp
-
-myDialog = .MyDialogClass~new
+myDialog = .MyDialogClass~new("rc\oodpbar.rc")
 if myDialog~initCode = 0 then do
   rc = myDialog~execute("SHOWTOP")
 end
@@ -60,30 +55,15 @@ end
 exit   /* leave program */
 
 
-/* ---- signal handler to destroy dialog if error condition was raised  ----*/
-CleanUp:
-   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
-                     || "a"x || condition("o")~message
-   if myDialog~isDialogActive then do
-     myDialog~finished = .true
-     myDialog~stopIt
-   end
-
-
 ::requires "ooDialog.cls"    /* This file contains the ooDialog classes */
 
 /* ---------------------------- Directives ---------------------------------*/
 
-::class MyDialogClass subclass UserDialog
+::class 'MyDialogClass' subclass RcDialog
 
-::method Init
+::method init
   forward class (super) continue /* call parent constructor */
-  InitRet = Result
-
-  if self~Load("rc\Oodpbar.rc", ) \= 0 then do
-     self~InitCode = 1
-     return 1
-  end
+  initRet = Result
 
   /* Connect dialog control items to class methods. Ok, Cancel, and Help are
    * already connected by the super class init()
@@ -92,81 +72,87 @@ CleanUp:
   /* Initial values that are assigned to the object attributes */
 
   /* Add your initialization code here */
-  return InitRet
+  return initRet
 
 
-::method InitDialog
+::method initDialog
 
-  /* Initialize progress bar ID_A */
-  curPB = self~newProgressBar("ID_A")
-  if curPB \= .Nil then do
-     curPB~SetRange(0,100)
-     curPB~SetStep(50)
-     curPB~SetPos(10)
+  /* Initialize progress bar IDC_PBAR_A */
+  curPB = self~newProgressBar("IDC_PBAR_A")
+  if curPB \= .nil then do
+     curPB~setRange(0,100)
+     curPB~setStep(50)
+     curPB~setPos(10)
   end
 
-  /* Initialize progress bar ID_B */
-  curPB = self~newProgressBar("ID_B")
-  if curPB \= .Nil then do
-     curPB~SetRange(0,100)
-     curPB~SetStep(40)
-     curPB~SetPos(20)
+  /* Initialize progress bar IDC_PBAR_B */
+  curPB = self~newProgressBar("IDC_PBAR_B")
+  if curPB \= .nil then do
+     curPB~setRange(0,100)
+     curPB~setStep(40)
+     curPB~setPos(20)
   end
 
-  /* Initialize progress bar ID_C */
-  curPB = self~newProgressBar("ID_C")
-  if curPB \= .Nil then do
-     curPB~SetRange(0,100)
-     curPB~SetStep(30)
-     curPB~SetPos(30)
+  /* Initialize progress bar IDC_PBAR_C */
+  curPB = self~newProgressBar("IDC_PBAR_C")
+  if curPB \= .nil then do
+     curPB~setRange(0,100)
+     curPB~setStep(30)
+     curPB~setPos(30)
   end
 
-  /* Initialize progress bar ID_D */
-  curPB = self~newProgressBar("ID_D")
-  if curPB \= .Nil then do
-     curPB~SetRange(0,100)
-     curPB~SetStep(20)
-     curPB~SetPos(40)
+  /* Initialize progress bar IDC_PBAR_D */
+  curPB = self~newProgressBar("IDC_PBAR_D")
+  if curPB \= .nil then do
+     curPB~setRange(0,100)
+     curPB~setStep(20)
+     curPB~setPos(40)
   end
 
-  /* Initialize progress bar ID_E */
-  curPB = self~newProgressBar("ID_E")
-  if curPB \= .Nil then do
-     curPB~SetRange(0,100)
-     curPB~SetStep(10)
-     curPB~SetPos(50)
+  /* Initialize progress bar IDC_PBAR_E */
+  curPB = self~newProgressBar("IDC_PBAR_E")
+  if curPB \= .nil then do
+     curPB~setRange(0,100)
+     curPB~setStep(10)
+     curPB~setPos(50)
   end
 
-  /* Initialization Code (e.g. fill list and combo boxes) */
-  return InitDlgRet
-
-
-::method DefineDialog
-
-  if result = 0 then do
-     /* Additional dialog items (e.g. createEditInputGroup) */
-  end
-
-
-/* --------------------- message handler -----------------------------------*/
-
-  /* Method Ok is connected to item 1 */
-::method Ok
-  /* step each progress bar by the step set with the SetStep method */
-  curPB = self~newProgressBar("ID_A")
-  curPB~Step
-  curPB = self~newProgressBar("ID_B")
-  curPB~Step
-  curPB = self~newProgressBar("ID_C")
-  curPB~Step
-  curPB = self~newProgressBar("ID_D")
-  curPB~Step
-  curPB = self~newProgressBar("ID_E")
-  curPB~Step
+  /* Othe initialization Code (e.g. fill list and combo boxes) */
   return 0
 
-  /* Method Cancel is connected to resource ID 2 */
-::method Cancel
+
+::method defineDialog
+
+  if self~initCode = 0 then do
+     -- Additional dialog control items could be added here.  e.g.
+     -- createEditInputGroup(), createDateTimePicker(), etc..  However, that is
+     -- rarely done with a RcDialog.  It makes more sense to simply have all the
+     -- controls in the resource script file.
+  end
+
+
+/* --------------------- event handler(s) ------------------------------------*/
+
+  -- Method 0k is automatically connected to the button CLICK event with the
+  -- resource ID of IDOK by the ooDialog framework.  In the resource script
+  -- file: "rc\oodpbar.rc" the button with ID of IDOK is labeled 'step'
+::method ok unguarded
+  /* step each progress bar by the step set with the setStep method */
+  curPB = self~newProgressBar("IDC_PBAR_A")
+  curPB~step
+  curPB = self~newProgressBar("IDC_PBAR_B")
+  curPB~step
+  curPB = self~newProgressBar("IDC_PBAR_C")
+  curPB~step
+  curPB = self~newProgressBar("IDC_PBAR_D")
+  curPB~step
+  curPB = self~newProgressBar("IDC_PBAR_E")
+  curPB~step
+  return 0
+
+  -- Method cancel is automatically connected to resource ID IDCANCEL by the
+  -- ooDialog framework.
+::method cancel unguarded
   /* Calling the superclass cancel will *always* close the dialog. If you want
    * to over-ride that behavior, for example to ask the user if she is sure she
    * wants to cancel, do not call the super class cancel first.  Here, commented
@@ -177,21 +163,22 @@ CleanUp:
   text = 'There are unsaved changes, are you'.endOfLine'sure you want to cancel?'
   title = "Abort All Changes !"
   ret = MessageDialog(text, self~hwnd, title, "YESNO", "WARNING", "DEFBUTTON2")
-  say 'ret' ret
-  if ret == self~constDir[IDYES] then return self~cancel:super
+  say 'ret' ret 'self~IDYES:' self~IDYES
+  if ret == self~IDYES then return self~cancel:super
   else return 1
   */
 
-  return self~Cancel:super
+  return self~cancel:super
 
-  /* Method Help is connected to resource ID 9. The super class does nothing,
-   * you need to over-ride this method to actually do anything.
-   */
-::method Help
-  self~Help:super  -- Will do absolutely nothing.
+  -- Method help() is automatically connected to resource ID IDHELP by the
+  -- ooDialog framework. The super class does nothing, you need to over-ride
+  -- this method to actually do anything.
+::method help unguarded
 
   text = "There is no help for oodpbar.rex"
   title = "The ooDialog ProgressBar Example"
 
   ret = MessageDialog(text, self~hwnd, title, "OK", "EXCLAMATION")
+
+  return 0
 

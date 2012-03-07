@@ -45,14 +45,15 @@ produced by IBM Object REXX Resource Workshop
 
 #include <windows.h>
 
-#define DIALOG_1	1
-#define IDC_PB_NEW	10
-#define IDC_PB_DELETE	11
-#define IDC_PB_EXP_ALL	12
-#define IDC_PB_COL_ALL	13
-#define IDC_PB_INFO	14
-#define IDC_TREE	1
-DIALOG_1 DIALOG 40, 60, 266, 302
+#define IDD_TREE_DLG    100
+#define IDC_PB_NEW      110
+#define IDC_PB_DELETE   111
+#define IDC_PB_EXP_ALL  112
+#define IDC_PB_COL_ALL  113
+#define IDC_PB_INFO     114
+#define IDC_TREE        120
+
+IDD_TREE_DLG DIALOG 40, 60, 266, 302
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
 CAPTION "Contents"
 FONT 8, "MS Sans Serif"

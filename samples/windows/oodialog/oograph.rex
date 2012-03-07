@@ -48,6 +48,17 @@
  *              scrollBitmapFromTo() and scrollInButton() methods.
  */
 
+  -- Use the global .constDir for symbolic IDs
+  .application~useGlobalConstDir('O')
+
+  .constDir[IDC_BMP_TOP]      = 101
+  .constDir[IDC_BMP_MIDDLE]   = 102
+  .constDir[IDC_ST_WFRAME]    = 203
+  .constDir[IDC_PB_OWNERDRAW] = 103
+  .constDir[IDC_PB_VIEWER]    = 111
+  .constDir[IDC_PB_DRAW]      = 112
+
+
    parse source . . me
    mydir = me~left(me~lastpos('\')-1)              /* where is code     */
    env = 'ENVIRONMENT'
@@ -80,35 +91,37 @@
    but2size = trunc(300 / self~factorY)
 
    -- The two bitmap buttons are created larger than they need to be.  In particular,
-   -- The 102 button height is much larger, it covers most of the lower part of the
+   -- The IDC_BMP_MIDDLE button height is much larger, it covers most of the lower part of the
    -- dialog.
    --
    -- Then, the bitmaps for the buttons are positioned (moved from the upper left corner
-   -- of the button) by a large amount.  The 101 button is positioned far to the right,
-   -- and the 102 button is positioned far to the bottom and far to the left.  In the
+   -- of the button) by a large amount.  The IDC_BMP_TOP button is positioned far to the right,
+   -- and the IDC_BMP_MIDDLE button is positioned far to the bottom and far to the left.  In the
    -- showInterface() method, scrollBitmapFromTo() is used to scroll the bitmaps from
-   -- their positions back to the upper left corner of the buttons.  This gives the 101
-   -- button the appearance of scrolling from the right to the left, and the 102 button
+   -- their positions back to the upper left corner of the buttons.  This gives the IDC_BMP_TOP
+   -- button the appearance of scrolling from the right to the left, and the IDC_BMP_MIDDLE button
    -- the appearance of scrolling from the bottom to the top.
 
    -- install.bmp   550 x 100 pixels
    -- install2.bmp  450 x 120 pixels
 
-   self~createBitmapButton(101, 1, 10, self~sizeX-1, trunc(130 / self~factorY), "USEPAL", , , "bmp\install.bmp")
-   self~createBitmapButton(102, 20, but2pos, self~sizeX - 20, but2size, , , , "bmp\install2.bmp")
+   self~createBitmapButton(IDC_BMP_TOP, 1, 10, self~sizeX-1, trunc(130 / self~factorY), "USEPAL", , , "bmp\install.bmp")
+   self~createBitmapButton(IDC_BMP_MIDDLE, 20, but2pos, self~sizeX - 20, but2size, , , , "bmp\install2.bmp")
 
    pos = .Point~new(trunc(self~sizeX * self~factorX) + 10, 0)
-   self~setBitmapPosition(101, pos)
+   self~setBitmapPosition(IDC_BMP_TOP, pos)
 
    pos~x = 0
    pos~y = trunc(self~sizeY * self~factorY) + 10
-   self~setBitmapPosition(102, pos)
+   self~setBitmapPosition(IDC_BMP_MIDDLE, pos)
 
    -- Add the other controls.
-   self~createWhiteFrame(203, 10, self~SizeY - 62, self~sizeX - 20, 38, "HIDDEN")
-   self~createPushButton(103, 12, self~SizeY - 60, self~sizeX - 24, 34, "OWNER NOTAB")
+   self~createWhiteFrame(IDC_ST_WFRAME, 10, self~SizeY - 62, self~sizeX - 20, 38, "HIDDEN")
+   self~createPushButton(IDC_PB_OWNERDRAW, 12, self~SizeY - 60, self~sizeX - 24, 34, "OWNER NOTAB")
 
-   groupArgs = "&Bitmap-Viewer 111 bitmapViewer &Draw-Color-Demo 112 ooDraw &Cancel 2 CANCEL"
+   groupArgs = "&Bitmap-Viewer"   .constDir[IDC_PB_VIEWER] "bitmapViewer " || -
+               "&Draw-Color-Demo" .constDir[IDC_PB_DRAW]   "ooDraw "       || -
+               "&Cancel"          .constDir[IDCANCEL]      "cancel"
    self~createPushButtonGroup(self~sizeX - 220, self~sizeY - 18, 60, 12, groupArgs, 1, "DEFAULT")
 
 ::method initDialog
@@ -116,9 +129,9 @@
    -- We set the background color of these buttons to the same backgroud color
    -- as the dialog, so that the buttons blend into the dialog.
    COLOR_BTNFACE = 15
-   self~setControlSysColor(103, COLOR_BTNFACE)
-   self~setControlSysColor(101, COLOR_BTNFACE)
-   self~setControlSysColor(102, COLOR_BTNFACE)
+   self~setControlSysColor(IDC_PB_OWNERDRAW, COLOR_BTNFACE)
+   self~setControlSysColor(IDC_BMP_TOP, COLOR_BTNFACE)
+   self~setControlSysColor(IDC_BMP_MIDDLE, COLOR_BTNFACE)
 
    self~start("showInterface")
 
@@ -127,33 +140,33 @@
 
    bmppos = trunc(but2size - 125 / self~FactorY)
 
-   self~disableControl(111)  /* disable push buttons */
-   self~disableControl(112)
-   self~disableControl(2)
+   self~disableControl(IDC_PB_VIEWER)  /* disable push buttons */
+   self~disableControl(IDC_PB_DRAW)
+   self~disableControl(IDCANCEL)
 
    ret = play("inst.wav", yes)
 
    -- Scroll the bitmaps from their displaced positions back to the upper left corners
    -- of the buttons.
-   self~scrollBitmapFromTo(101, trunc(self~SizeX * self~FactorX), 5, 12, 5, -12, 0, 1)
-   self~scrollBitmapFromTo(102, 30, bmppos, 30, 0, 0, -3, 2, 1)
+   self~scrollBitmapFromTo(IDC_BMP_TOP, trunc(self~SizeX * self~FactorX), 5, 12, 5, -12, 0, 1)
+   self~scrollBitmapFromTo(IDC_BMP_MIDDLE, 30, bmppos, 30, 0, 0, -3, 2, 1)
 
-   -- The size of the 102 button actually covers the controls under the button.  If the
+   -- The size of the IDC_BMP_MIDDLE button actually covers the controls under the button.  If the
    -- user clicks on any portion of the button, the button is repainted in the 'depressed'
    -- state.  Since the other controls are not repainted, this cause them (or parts of
    -- them) to disappear.  To prevent that, we resize the button to only take up the height
    -- needed for the bitamp.
-   self~resizeControl(102, 450 + 32, 120 + 2, "NOREDRAW")
+   self~resizeControl(IDC_BMP_MIDDLE, 450 + 32, 120 + 2, "NOREDRAW")
 
-   self~showControl(103)     /* show scroll button */
-   self~showControl(203)
-   self~enableControl(2)     /* Enable push buttons */
-   self~enableControl(111)
-   self~enableControl(112)
+   self~showControl(IDC_PB_OWNERDRAW)     /* show scroll button */
+   self~showControl(IDC_ST_WFRAME)
+   self~enableControl(IDCANCEL)     /* Enable push buttons */
+   self~enableControl(IDC_PB_VIEWER)
+   self~enableControl(IDC_PB_DRAW)
 
    -- Start the Asynchronuous scrolling of the introductory text.
    text = "This ooDialog sample demonstrates dynamic dialog creation"
-   m = self~start("ScrollInButton", 103, text, "Arial", 36, "BOLD", 0, 2, 2, 6)
+   m = self~start("ScrollInButton", IDC_PB_OWNERDRAW, text, "Arial", 36, "BOLD", 0, 2, 2, 6)
    m~notify(.message~new(self, "scrollingFinished"))
 
    -- Now, wait until the scrolling finishes, or the user closes the main dialog.
@@ -162,7 +175,7 @@
    -- While the user has not closed the dialog, scroll the instruction text.
    do while \ self~finished
       text = "... please press Bitmap-Viewer or Draw-Color-Demo buttons to run graphical applications ..."
-      m = self~start("scrollInButton", 103, text, "Arial", 32, "SEMIBOLD", 0, 2, 4)
+      m = self~start("scrollInButton", IDC_PB_OWNERDRAW, text, "Arial", 32, "SEMIBOLD", 0, 2, 4)
       m~notify(.message~new(self, "scrollingFinished"))
 
       self~waitForEvent
@@ -199,7 +212,7 @@
    expose m
 
    -- Stop the scrolling and hide ourself.
-   if \ m~completed then self~scrollInButton(103)
+   if \ m~completed then self~scrollInButton(IDC_PB_OWNERDRAW)
    self~hide
 
    call "oobmpvu.rex"
@@ -212,7 +225,7 @@
    expose m
 
    -- Stop the scrolling and hide ourself.
-   if m~completed = 0 then self~scrollInButton(103)
+   if m~completed = 0 then self~scrollInButton(IDC_PB_OWNERDRAW)
    self~hide
 
    call "oodraw.rex"
