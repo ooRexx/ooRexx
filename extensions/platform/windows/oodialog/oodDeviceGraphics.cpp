@@ -78,6 +78,21 @@ static HANDLE    TimerEvent = NULL;
 static uint32_t  TimerCount = 0;
 static ULONG_PTR Timer = 0;
 
+
+inline BitmapButtonBMPType getBMPType(bool inMemory, bool isIntResource)
+{
+    BitmapButtonBMPType t = FromFileBmp;
+    if ( inMemory )
+    {
+        t = InMemoryBmp;
+    }
+    else if ( isIntResource )
+    {
+        t = IntResourceBmp;
+    }
+    return t;
+}
+
 /**
  * Modify a palette to have the system colors in the first and last 10
  * positions.
@@ -1460,15 +1475,6 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
    return EndPaint(hDlg, &ps);
 }
 
-inline bool isIntResource(CSTRING bmp)
-{
-    if ( ! isPointerString(bmp) && (atoi(bmp) || bmp[0] == '0' || bmp[0] == '\0') )
-    {
-        return true;
-    }
-    return false;
-}
-
 /**
  * Retrieves the system color index number from a Rexx object that may be the
  * actual number or the color keyword.
@@ -1542,8 +1548,35 @@ bool getSystemColor(RexxMethodContext *c, RexxObjectPtr clr, int32_t *color, siz
     return true;
 }
 
-void assignBitmap(pCPlainBaseDialog pcpbd, size_t index, CSTRING bmp, PUSHBUTTON_STATES type, bool isInMemory)
+static bool getIdOrName(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxBmp, int32_t *id, CSTRING *bmp)
 {
+    if ( oodSafeResolveID(id, c, pcpbd->rexxSelf, rxBmp, -1, 1, true) )
+    {
+        return true;
+    }
+    else
+    {
+        // If the global .constDir is *only* being used, there could be a
+        // condition raised even when oodSaveResolveID() is used.
+        if ( c->CheckCondition() )
+        {
+            c->ClearCondition();
+        }
+
+        *bmp = c->ObjectToStringValue(rxBmp);
+    }
+
+    return false;
+}
+
+void assignBitmap(pCPlainBaseDialog pcpbd, size_t index, CSTRING bmp, int32_t bmpID, PUSHBUTTON_STATES type,
+                  bool isInMemory, bool isIntResource)
+{
+    if ( ! (isInMemory || isIntResource) && strlen(bmp) == 0 )
+    {
+        return;
+    }
+
     HBITMAP hBmp = NULL;
     BITMAPTABLEENTRY *bitmapEntry = pcpbd->BmpTab + index;
 
@@ -1552,14 +1585,17 @@ void assignBitmap(pCPlainBaseDialog pcpbd, size_t index, CSTRING bmp, PUSHBUTTON
         bitmapEntry->loaded = 2;
         hBmp = (HBITMAP)string2pointer(bmp);
     }
-    else if ( isIntResource(bmp) )
+    else if ( isIntResource )
     {
-        hBmp = LoadBitmap(pcpbd->hInstance, MAKEINTRESOURCE(atoi(bmp)));
+        hBmp = LoadBitmap(pcpbd->hInstance, MAKEINTRESOURCE(bmpID));
     }
     else
     {
-        bitmapEntry->loaded = 1;
         hBmp = (HBITMAP)loadDIB(bmp, NULL);
+        if ( hBmp != NULL )
+        {
+            bitmapEntry->loaded = 1;
+        }
     }
 
     switch ( type )
@@ -2139,16 +2175,23 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawControl, RexxObjectPtr, rxID, OPTIONAL_l
  *           message table is skipped.
  *
  * @remarks  Note that the dialog does not need to yet be created for some
- *           variations of this method.  But if any of the bitmap CSTRINGs are a
- *           number, so that the bitmap is to be loaded from a resource DLL,
- *           then the dialog does need to be created.  We want to raise the no
- *           windows dialog exception, *only* for that one condition.
+ *           variations of this method.  But if any of the bitmap source
+ *           arguments are a number, so that the bitmap is to be loaded from a
+ *           resource DLL, then the dialog does need to be created.  We want to
+ *           raise the no windows dialog exception, *only* for that one
+ *           condition.
+ *
+ *           The bitmap sources must all be from the same sources, all from a
+ *           file name, or all from from a bitmap handle already loaded in
+ *           memory, or all loaded from the resource DLL of a ResDialog. In
+ *           particular, if one is loaded from a resource DLL and others loaded
+ *           from a file, delDialog() will crash trying to free the bitmaps.
  *
  *           These old bitmap methods are too error-prone.
  */
 RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTIONAL_CSTRING, msgToRaise,
-            CSTRING, bmpNormal, OPTIONAL_CSTRING, bmpFocused, OPTIONAL_CSTRING, bmpSelected, OPTIONAL_CSTRING, bmpDisabled,
-            OPTIONAL_CSTRING, style, OSELF, self)
+            RexxObjectPtr, bmpNormal, OPTIONAL_RexxObjectPtr, bmpFocused, OPTIONAL_RexxObjectPtr, bmpSelected,
+            OPTIONAL_RexxObjectPtr, bmpDisabled, OPTIONAL_CSTRING, style, OSELF, self)
 {
     pCPlainBaseDialog pcpbd;
     uint32_t id;
@@ -2160,7 +2203,12 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
     }
 
     bool noUnderlyingDlg = pcpbd->hDlg == NULL ? true : false;
-    if ( isIntResource(bmpNormal) && noUnderlyingDlg )
+
+    int32_t bmpID = -1;
+    CSTRING bmp   = "";
+
+    bool isIntResource = getIdOrName(context, pcpbd, bmpNormal, &bmpID, &bmp);
+    if ( isIntResource && noUnderlyingDlg )
     {
         noWindowsDialogException(context, self);
         return TheOneObj;
@@ -2212,34 +2260,63 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
     pcpbd->BmpTab[index].buttonID = id;
     pcpbd->BmpTab[index].frame  = frame;
 
-    assignBitmap(pcpbd, index, bmpNormal, PBSS_NORMAL, inMemory);
+    BitmapButtonBMPType normal = getBMPType(inMemory, isIntResource);
 
-    if ( argumentExists(4) && ! isEmptyString(bmpFocused) )
+    assignBitmap(pcpbd, index, bmp, bmpID, PBSS_NORMAL, inMemory, isIntResource);
+
+    if ( argumentExists(4) )
     {
-        if ( isIntResource(bmpFocused) && noUnderlyingDlg )
+        isIntResource = getIdOrName(context, pcpbd, bmpFocused, &bmpID, &bmp);
+        if ( isIntResource && noUnderlyingDlg )
         {
             noWindowsDialogException(context, self);
             return TheOneObj;
         }
-        assignBitmap(pcpbd, index, bmpFocused, PBSS_DEFAULTED, inMemory);
+
+        BitmapButtonBMPType focused = getBMPType(inMemory, isIntResource);
+        if ( focused != normal )
+        {
+            bitmapTypeMismatchException(context, normal, focused, 4);
+            return TheOneObj;
+        }
+
+        assignBitmap(pcpbd, index, bmp, bmpID, PBSS_DEFAULTED, inMemory, isIntResource);
     }
-    if ( argumentExists(5) && ! isEmptyString(bmpSelected) )
+    if ( argumentExists(5) )
     {
-        if ( isIntResource(bmpSelected) && noUnderlyingDlg )
+        isIntResource = getIdOrName(context, pcpbd, bmpSelected, &bmpID, &bmp);
+        if ( isIntResource && noUnderlyingDlg )
         {
             noWindowsDialogException(context, self);
             return TheOneObj;
         }
-        assignBitmap(pcpbd, index, bmpSelected, PBSS_PRESSED, inMemory);
+
+        BitmapButtonBMPType selected = getBMPType(inMemory, isIntResource);
+        if ( selected != normal )
+        {
+            bitmapTypeMismatchException(context, normal, selected, 5);
+            return TheOneObj;
+        }
+
+        assignBitmap(pcpbd, index, bmp, bmpID, PBSS_PRESSED, inMemory, isIntResource);
     }
-    if ( argumentExists(6) && ! isEmptyString(bmpDisabled) )
+    if ( argumentExists(6) )
     {
-        if ( isIntResource(bmpDisabled) && noUnderlyingDlg )
+        isIntResource = getIdOrName(context, pcpbd, bmpDisabled, &bmpID, &bmp);
+        if ( isIntResource && noUnderlyingDlg )
         {
             noWindowsDialogException(context, self);
             return TheOneObj;
         }
-        assignBitmap(pcpbd, index, bmpDisabled, PBSS_DISABLED, inMemory);
+
+        BitmapButtonBMPType disabled = getBMPType(inMemory, isIntResource);
+        if ( disabled != normal )
+        {
+            bitmapTypeMismatchException(context, normal, disabled, 6);
+            return TheOneObj;
+        }
+
+        assignBitmap(pcpbd, index, bmp, bmpID, PBSS_DISABLED, inMemory, isIntResource);
     }
 
     if ( stretch && pcpbd->BmpTab[index].loaded )
@@ -2305,9 +2382,9 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
  * @return  0 on success, -1 if the resource ID could not be resolved, and 1 for
  *          other errors.
  */
-RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRING, bmpNormal,
-            OPTIONAL_CSTRING, bmpFocused, OPTIONAL_CSTRING, bmpSelected, OPTIONAL_CSTRING, bmpDisabled,
-            OPTIONAL_CSTRING, style, OSELF, self)
+RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, RexxObjectPtr, bmpNormal,
+            OPTIONAL_RexxObjectPtr, bmpFocused, OPTIONAL_RexxObjectPtr, bmpSelected,
+            OPTIONAL_RexxObjectPtr, bmpDisabled, OPTIONAL_CSTRING, style, OSELF, self)
 {
     pCPlainBaseDialog pcpbd;
     uint32_t id;
@@ -2316,7 +2393,8 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
     bool draw = (argumentExists(6) && StrStrI(style, "NODRAW") == NULL);
 
     // Note that the dialog does not need to yet be created for this method,
-    // unless we are going to draw the button.
+    // unless we are going to draw the button, or the BMP args are resource IDs
+    // in the resource DLL of the dialog.
     RexxObjectPtr result;
     if ( draw )
     {
@@ -2331,6 +2409,8 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
     {
         return result;
     }
+
+    bool noUnderlyingDlg = pcpbd->hDlg == NULL ? true : false;
 
     size_t i;
     if ( findBmpForID(pcpbd, id, &i) )
@@ -2370,19 +2450,73 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, CSTRI
         pcpbd->BmpTab[i].frame  = frame;
         pcpbd->BmpTab[i].loaded = 0;
 
-        assignBitmap(pcpbd, i, bmpNormal, PBSS_NORMAL, inMemory);
+        int32_t bmpID = -1;
+        CSTRING bmp   = "";
+
+        bool isIntResource = getIdOrName(context, pcpbd, bmpNormal, &bmpID, &bmp);
+        if ( isIntResource && noUnderlyingDlg )
+        {
+            noWindowsDialogException(context, self);
+            return TheOneObj;
+        }
+
+        BitmapButtonBMPType normal = getBMPType(inMemory, isIntResource);
+
+        assignBitmap(pcpbd, i, bmp, bmpID, PBSS_NORMAL, inMemory, isIntResource);
 
         if ( argumentExists(3) )
         {
-            assignBitmap(pcpbd, i, bmpFocused, PBSS_DEFAULTED, inMemory);
+            isIntResource = getIdOrName(context, pcpbd, bmpFocused, &bmpID, &bmp);
+            if ( isIntResource && noUnderlyingDlg )
+            {
+                noWindowsDialogException(context, self);
+                return TheOneObj;
+            }
+
+            BitmapButtonBMPType focused = getBMPType(inMemory, isIntResource);
+            if ( focused != normal )
+            {
+                bitmapTypeMismatchException(context, normal, focused, 3);
+                return TheOneObj;
+            }
+
+            assignBitmap(pcpbd, i, bmp, bmpID, PBSS_DEFAULTED, inMemory, isIntResource);
         }
         if ( argumentExists(4) )
         {
-            assignBitmap(pcpbd, i, bmpSelected, PBSS_PRESSED, inMemory);
+            isIntResource = getIdOrName(context, pcpbd, bmpSelected, &bmpID, &bmp);
+            if ( isIntResource && noUnderlyingDlg )
+            {
+                noWindowsDialogException(context, self);
+                return TheOneObj;
+            }
+
+            BitmapButtonBMPType selected = getBMPType(inMemory, isIntResource);
+            if ( selected != normal )
+            {
+                bitmapTypeMismatchException(context, normal, selected, 4);
+                return TheOneObj;
+            }
+
+            assignBitmap(pcpbd, i, bmp, bmpID, PBSS_PRESSED, inMemory, isIntResource);
         }
         if ( argumentExists(5) )
         {
-            assignBitmap(pcpbd, i, bmpDisabled, PBSS_DISABLED, inMemory);
+            isIntResource = getIdOrName(context, pcpbd, bmpDisabled, &bmpID, &bmp);
+            if ( isIntResource && noUnderlyingDlg )
+            {
+                noWindowsDialogException(context, self);
+                return TheOneObj;
+            }
+
+            BitmapButtonBMPType disabled = getBMPType(inMemory, isIntResource);
+            if ( disabled != normal )
+            {
+                bitmapTypeMismatchException(context, normal, disabled, 5);
+                return TheOneObj;
+            }
+
+            assignBitmap(pcpbd, i, bmp, bmpID, PBSS_DISABLED, inMemory, isIntResource);
         }
 
         if ( stretch && pcpbd->BmpTab[i].loaded )

@@ -507,6 +507,23 @@ void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char
 }
 
 
+inline char *bmpType2String(BitmapButtonBMPType type)
+{
+    if (      type == InMemoryBmp    ) return "in memory";
+    else if ( type == IntResourceBmp ) return "from resource ID";
+    else if ( type == FromFileBmp    ) return "from file";
+    return "unknown";
+}
+
+void bitmapTypeMismatchException(RexxMethodContext *c, BitmapButtonBMPType orig, BitmapButtonBMPType found, size_t pos)
+{
+    char msg[256];
+    _snprintf(msg, sizeof(msg), "Button bitmaps must be the same; normal bitmap is %s, arg %d bitmap is %s",
+              bmpType2String(orig), pos, bmpType2String(found));
+    userDefinedMsgException(c, msg);
+}
+
+
 /**
  * Checks that the current Os meets the minimum OS requirements for a method.
  * Raises an exception if the minimum is not meet.

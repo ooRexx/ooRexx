@@ -50,7 +50,6 @@ typedef enum
     PBSS_DEFAULTED  = 5,
 } PUSHBUTTON_STATES;
 
-
 extern uint32_t      parseShowOptions(CSTRING options);
 extern RexxObjectPtr oodGetClientRect(RexxMethodContext *, HWND hwnd, PRECT);
 extern RexxObjectPtr oodGetWindowRect(RexxMethodContext *, HWND hwnd);

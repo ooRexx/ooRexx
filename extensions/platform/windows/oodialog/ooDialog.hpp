@@ -200,6 +200,15 @@ typedef enum
 } MsgReplyType;
 
 
+// Enum for the type of bitmap used for bitmap buttons
+typedef enum
+{
+    InMemoryBmp    = 1,
+    IntResourceBmp = 2,
+    FromFileBmp    = 3,
+} BitmapButtonBMPType;
+
+
 // Identifies an error, that should never happen, discovered in RexxDlgProc(),
 // or some other place trying to do a therad attach. Used in
 // endDialogPremature() to determine what message to display.
