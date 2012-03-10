@@ -87,6 +87,32 @@ const int  query_system_position = 0x10;
 #define WR_CREAT    (O_WRONLY | O_CREAT)
 #define IREAD_IWRITE (S_IREAD | S_IWRITE)
 
+/**
+ * Helper routine for the method stubs to validate the
+ * stream info pointer to ensure that the stream has not
+ * been uninited already.  This can occur when an uninit
+ * method for another object attempts to use a stream.
+ *
+ * @param context   The method context
+ * @param streamPtr The CSELF value
+ * @param result    A potential result object set into the context.
+ *
+ * @return The StreamInfo object instance.  Throws an exception if
+ *         this is not valid.
+ */
+StreamInfo *checkStreamInfo(RexxMethodContext *context, void *streamPtr, RexxObjectPtr result)
+{
+    if (streamPtr == NULL)
+    {
+        context->RaiseException0(Rexx_Error_System_service);
+        throw Rexx_Error_System_service;
+    }
+
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
+    return stream_info;
+}
+
 
 /**
  * Token parsing routine for record length parsing.
@@ -1468,11 +1494,9 @@ RexxStringObject StreamInfo::charin(bool _setPosition, int64_t position, size_t 
 /********************************************************************************************/
 RexxMethod3(RexxStringObject, stream_charin, CSELF, streamPtr, OPTIONAL_int64_t, position, OPTIONAL_size_t, read_length)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
         return stream_info->charin(argumentExists(2), position, argumentOmitted(3) ? 1 : read_length);
     }
     catch (StreamInfo *)
@@ -1553,11 +1577,9 @@ size_t StreamInfo::charout(RexxStringObject data, bool _setPosition, int64_t pos
 
 RexxMethod3(size_t, stream_charout, CSELF, streamPtr, OPTIONAL_RexxStringObject, data, OPTIONAL_int64_t, position)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->False());
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->False());
         return stream_info->charout(data, argumentExists(3), position);
     }
     // this is thrown for any exceptions
@@ -1636,11 +1658,9 @@ RexxStringObject StreamInfo::linein(bool _setPosition, int64_t position, size_t 
 /********************************************************************************************/
 RexxMethod3(RexxStringObject, stream_linein, CSELF, streamPtr, OPTIONAL_int64_t, position, OPTIONAL_size_t, count)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
         return stream_info->linein(argumentExists(2), position, argumentOmitted(3) ? 1 : count);
     }
     // this is thrown for any exceptions
@@ -1713,11 +1733,9 @@ int StreamInfo::arrayin(RexxArrayObject result)
 /********************************************************************************************/
 RexxMethod2(int, stream_arrayin, CSELF, streamPtr, RexxArrayObject, result)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
         return stream_info->arrayin(result);
     }
     // this is thrown for any exceptions
@@ -1842,11 +1860,9 @@ RexxMethod2(int64_t, stream_lines, CSELF, streamPtr, OPTIONAL_CSTRING, option)
         }
     }
 
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->WholeNumberToObject(0));
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->False());
         return stream_info->lines(quick);
     }
     // this is thrown for any exceptions
@@ -1897,11 +1913,9 @@ int64_t StreamInfo::chars()
 /********************************************************************************************/
 RexxMethod1(int64_t, stream_chars, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->WholeNumberToObject(0));
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->False());
         return stream_info->chars();
     }
     // this is thrown for any exceptions
@@ -2014,12 +2028,10 @@ int StreamInfo::lineout(RexxStringObject data, bool _setPosition, int64_t positi
 /********************************************************************************************/
 RexxMethod3(int, stream_lineout, CSELF, streamPtr, OPTIONAL_RexxStringObject, string, OPTIONAL_int64_t, position)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    // we give a 1 residual count for all errors
-    stream_info->setContext(context, context->True());
-
     try
     {
+        // we give a 1 residual count for all errors
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->True());
         return stream_info->lineout(string, argumentExists(3), position);
     }
     // this is thrown for any exceptions
@@ -2147,11 +2159,9 @@ const char *StreamInfo::streamFlush()
 /********************************************************************************************/
 RexxMethod1(CSTRING, stream_flush, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
         return stream_info->streamFlush();
     }
     // this is thrown for any exceptions
@@ -2490,11 +2500,9 @@ const char *StreamInfo::streamOpen(const char *options)
 /********************************************************************************************/
 RexxMethod2(CSTRING, stream_open, CSELF, streamPtr, OPTIONAL_CSTRING, options)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
         return stream_info->streamOpen(options);
     }
     // this is thrown for any exceptions
@@ -2525,11 +2533,9 @@ void StreamInfo::setHandle(int fh)
 /********************************************************************************************/
 RexxMethod2(int, handle_set, CSELF, streamPtr, int, fh)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
         stream_info->setHandle(fh);
     }
     // this is thrown for any exceptions
@@ -2932,11 +2938,9 @@ int64_t StreamInfo::setLinePosition(int64_t new_line, int64_t &current_line, int
 /********************************************************************************************/
 RexxMethod2(int64_t, stream_position, CSELF, streamPtr, CSTRING, options)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->WholeNumberToObject(0));
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->False());
         return stream_info->streamPosition(options);
     }
     // this is thrown for any exceptions
@@ -3170,11 +3174,9 @@ int64_t StreamInfo::getLineWritePosition()
 /********************************************************************************************/
 RexxMethod2(RexxObjectPtr, stream_query_position, CSELF, streamPtr, OPTIONAL_CSTRING, options)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
     try
     {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
         return stream_info->queryStreamPosition(options);
     }
     // this is thrown for any exceptions
