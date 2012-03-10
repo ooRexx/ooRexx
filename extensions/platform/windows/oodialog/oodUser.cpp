@@ -1815,6 +1815,29 @@ inline bool needButtonConnect(CSTRING opts, oodControl_t ctrl)
     return false;
 }
 
+/**
+ * Determines if one of the keyword options for loading the dialog template from
+ * a .rc file is contained in the specified string
+ *
+ * @param opts
+ *
+ * @return bool
+ */
+inline bool isRcLoadItemsArg(CSTRING opts)
+{
+    if ( opts != NULL )
+    {
+        if ( StrStrI(opts, "CENTER")         != NULL ||
+             StrStrI(opts, "CONNECTBUTTONS") != NULL ||
+             StrStrI(opts, "CONNECTCHECKS")  != NULL ||
+             StrStrI(opts, "CONNECTRADIOS")  != NULL )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 /** DynamicDialog::createPushButton()
  *
  */
@@ -1868,7 +1891,7 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
     {
         methName = strdup_2methodName(label);
     }
-    else if ( argumentExists(8) )
+    else if ( argumentExists(8) && ! isRcLoadItemsArg(loadOptions) )
     {
         methName = strdup_nospace(msgToRaise);
     }
@@ -2002,7 +2025,7 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
             free((void *)methName);
             free((void *)finalName);
         }
-        else
+        else if ( ! isRcLoadItemsArg(loadOptions) )
         {
             result = addCommandMessage(pcpbd->enCSelf, context, id, UINTPTR_MAX, 0, 0, loadOptions, 0) ? 0 : 1;
         }

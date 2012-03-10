@@ -1572,18 +1572,16 @@ static bool getIdOrName(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjec
 void assignBitmap(pCPlainBaseDialog pcpbd, size_t index, CSTRING bmp, int32_t bmpID, PUSHBUTTON_STATES type,
                   bool isInMemory, bool isIntResource)
 {
-    if ( ! (isInMemory || isIntResource) && strlen(bmp) == 0 )
-    {
-        return;
-    }
-
     HBITMAP hBmp = NULL;
     BITMAPTABLEENTRY *bitmapEntry = pcpbd->BmpTab + index;
 
     if ( isInMemory )
     {
-        bitmapEntry->loaded = 2;
         hBmp = (HBITMAP)string2pointer(bmp);
+        if ( hBmp != NULL )
+        {
+            bitmapEntry->loaded = 2;
+        }
     }
     else if ( isIntResource )
     {
@@ -1591,7 +1589,23 @@ void assignBitmap(pCPlainBaseDialog pcpbd, size_t index, CSTRING bmp, int32_t bm
     }
     else
     {
-        hBmp = (HBITMAP)loadDIB(bmp, NULL);
+        if ( strlen(bmp) < 2 && (bmp[0] == '0' || bmp[0] == '\0') )
+        {
+            // Purposefully do nothing.  IBM Object Rexx whould check for a
+            // bitmap name of 0 (zero) or the empty string and then use loadDIB
+            // on it. Which in turn set the bitmapID field to NULL.  This
+            // ultimately had the effect of no bitmap being drawn for that
+            // button state. At least one of the example programs depended on
+            // that.
+            //
+            // Since hBmp is already NULL, we don't do anything.
+            ;
+        }
+        else
+        {
+            hBmp = (HBITMAP)loadDIB(bmp, NULL);
+        }
+
         if ( hBmp != NULL )
         {
             bitmapEntry->loaded = 1;

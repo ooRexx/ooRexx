@@ -778,6 +778,9 @@ REXX_METHOD_PROTOTYPE(rcpspdlg_startTemplate);
 // UserPSPDialog
 REXX_METHOD_PROTOTYPE(userpspdlg_init);
 
+// TimedMessage
+REXX_METHOD_PROTOTYPE(timedmsg_init);
+
 // WindowExtensions
 REXX_METHOD_PROTOTYPE(winex_initWindowExtensions);
 REXX_METHOD_PROTOTYPE(winex_getFont);
@@ -1685,6 +1688,9 @@ RexxMethodEntry oodialog_methods[] = {
 
     // ResPSPDialog
     REXX_METHOD(respspdlg_init,                 respspdlg_init),
+
+    //TimedMessage
+    REXX_METHOD(timedmsg_init,                  timedmsg_init),
 
     // WindowExtensions
     REXX_METHOD(winex_initWindowExtensions,     winex_initWindowExtensions),

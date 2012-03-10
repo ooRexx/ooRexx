@@ -2158,3 +2158,37 @@ RexxMethod3(RexxObjectPtr, dss_quickDayStateBuffer, RexxObjectPtr, _ds1, RexxObj
 }
 
 
+/**
+ * Methods for the ooDialog .TimedMessage class.
+ */
+#define TIMEDMESSAGE_CLASS  "TimedMessage"
+
+
+RexxMethod7(RexxObjectPtr, timedmsg_init, RexxStringObject, msg, RexxStringObject, title, int32_t, duration,
+            OPTIONAL_logical_t, earlyReply, OPTIONAL_RexxObjectPtr, pos, SUPER, super, OSELF, self)
+{
+    if ( argumentExists(5) )
+    {
+        if ( pos != TheNilObj && ! context->IsOfType(pos, "POINT"))
+        {
+            wrongArgValueException(context->threadContext, 5, "a Point object or the Nil object", pos);
+            return NULLOBJECT;
+        }
+        context->SetObjectVariable("POS", pos);
+    }
+    else
+    {
+        context->SetObjectVariable("POS", TheNilObj);
+    }
+
+    RexxArrayObject args = context->NewArray(0);
+    RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, args);
+
+    context->SetObjectVariable("MESSAGE", msg);
+    context->SetObjectVariable("TITLE", title);
+    context->SetObjectVariable("SLEEPING", context->Int32(duration));
+    context->SetObjectVariable("EARLYREPLY", context->Logical(earlyReply));
+
+    return TheZeroObj;
+}
+
