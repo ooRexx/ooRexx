@@ -51,6 +51,15 @@
 
 ::method init external "LIBRARY oodialog userdlg_init"
 
+-- Called from createStaticText() in oodUser.cpp
+::method setStaticTextAttribute                       -- Internal use only, do not document
+  use arg id, text
+
+  atrName = self~dataConnection[id]
+  if atrName \== .nil then self~sendWith(atrName || '=', .array~of(text))
+
+  if self~useStem then self~dlgData[id] = text
+
 ::method test external "LIBRARY oodialog userdlg_test"
 
 -- DEPRECATED menu bar methods.  Use the Menu classes directly.
