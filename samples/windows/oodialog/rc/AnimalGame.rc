@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-r/*                                                                            */
+/*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
 /* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
@@ -36,46 +36,76 @@ r/*                                                                            *
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+
 #include <windows.h>
 #include <winuser.h>
 #include <commctrl.h>
-#include "ldvideo.h"
+#include "AnimalGame.h"
 
 
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDD_VIDEO_DLG DIALOG 67, 32, 288, 251
+IDBMP_DOG          BITMAP         "..\\bmp\\chihuahu.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDBMP_ELEPHANT     BITMAP         "..\\bmp\\eleph2.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDBMP_GOAT         BITMAP         "..\\bmp\\goat.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDBMP_HORSE        BITMAP         "..\\bmp\\horse.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDBMP_KANGURU      BITMAP         "..\\bmp\\kanguru.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDBMP_MOOSE        BITMAP         "..\\bmp\\moose.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDBMP_RHINO        BITMAP         "..\\bmp\\rhinoce.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDBMP_SEAL         BITMAP         "..\\bmp\\sealion.bmp"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDBMP_TIGER        BITMAP         "..\\bmp\\tiger.bmp"
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_ANIMALS DIALOG 1, 0, 393, 314
 STYLE DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-CAPTION "Video Archive"
-FONT 8, "MS Sans Serif"
+CAPTION "What animals are these?"
+FONT 9, "Arial"
 {
-    EDITTEXT        IDC_EDIT_TAPE_NO, 64, 17, 42, 13, ES_AUTOHSCROLL
-    PUSHBUTTON      "&Search", 3001, 110, 16, 37, 15
-    EDITTEXT        IDC_EDIT_TAPE_LABEL, 64, 37, 85, 13, ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_FILM1, 80, 72, 175, 13, ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_FILM2, 80, 92, 175, 13, ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_FILM3, 80, 111, 175, 13, ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_FILM4, 80, 130, 175, 13, ES_AUTOHSCROLL
-    COMBOBOX        IDC_CB_LOCATION, 80, 168, 119, 43, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT
-    LISTBOX         IDC_LB_LENT_TO, 80, 188, 119, 49, WS_TABSTOP | WS_HSCROLL | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_SORT | LBS_NOTIFY
-    AUTOCHECKBOX    "Long&play", IDC_CK_LONGPLAY, 172, 15, 45, 10
-    AUTOCHECKBOX    "&Hifi - quality", IDC_CK_HIFI, 172, 28, 53, 10
-    AUTOCHECKBOX    "&Writeprotect", IDC_CK_WRITEPROTECT, 172, 41, 55, 10
-    AUTORADIOBUTTON "C120", IDC_RB_C120, 232, 15, 31, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "C180", IDC_RB_C180, 232, 27, 31, 10
-    AUTORADIOBUTTON "C240", IDC_RB_C240, 232, 40, 31, 10
-    DEFPUSHBUTTON   "OK", 1, 217, 166, 50, 14
-    PUSHBUTTON      "Cancel", 2, 217, 188, 50, 14
-    LTEXT           "Tape&number", 2008, 18, 18, 43, 11, SS_LEFT
-    LTEXT           "Tape label", 2006, 18, 38, 38, 11, SS_LEFT
-    LTEXT           "Film &1", 2001, 36, 74, 23, 11, SS_LEFT
-    LTEXT           "Film 2", 2002, 36, 93, 22, 11, SS_LEFT
-    LTEXT           "Film 3", 2003, 36, 112, 23, 11, SS_LEFT
-    LTEXT           "Film 4", 2004, 36, 131, 24, 11, SS_LEFT
-    LTEXT           "&Location", 2005, 36, 169, 32, 11, SS_LEFT
-    LTEXT           "Lent to", 2007, 36, 188, 26, 11, SS_LEFT
-    GROUPBOX        "Specification", -1, 12, 4, 145, 51
-    GROUPBOX        "Titles", -1, 12, 61, 261, 89
-    GROUPBOX        "Location and Possession", -1, 12, 156, 261, 86
-    GROUPBOX        "Tape&information", -1, 165, 3, 105, 51, WS_GROUP
+    EDITTEXT        IDC_EDIT_RHINO, 10, 113, 92, 13, ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_TIGER, 104, 113, 92, 13, ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ELEPHANT, 198, 113, 92, 13, ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MOOSE, 292, 113, 92, 13, ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_GOAT, 10, 236, 92, 13, ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DOG, 104, 236, 92, 13, ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_SEAL, 198, 236, 92, 13, ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_HORSE, 292, 236, 92, 13, ES_AUTOHSCROLL
+    PUSHBUTTON      "Rhino", IDC_PB_RHINO, 10, 10, 92, 100, BS_BITMAP
+    PUSHBUTTON      "Tiger", IDC_PB_TIGER, 104, 10, 92, 100, BS_BITMAP
+    PUSHBUTTON      "Elephant", IDC_PB_ELEPHANT, 198, 10, 92, 100, BS_BITMAP
+    PUSHBUTTON      "Moose", IDC_PB_MOOSE, 292, 10, 92, 100, BS_BITMAP
+    PUSHBUTTON      "Goat", IDC_PB_GOAT, 10, 134, 92, 100, BS_BITMAP
+    PUSHBUTTON      "Dog", IDC_PB_DOG, 104, 134, 92, 100, BS_BITMAP
+    PUSHBUTTON      "Seal", IDC_PB_SEAL, 198, 134, 92, 100, BS_BITMAP
+    PUSHBUTTON      "Horse", IDC_PB_HORSE, 292, 134, 92, 100, BS_BITMAP
+    PUSHBUTTON      "Help Me", IDHELP, 10, 290, 50, 14
+    GROUPBOX        "Write in the name of each animal below its picture", IDC_STATIC, 75, 262, 239, 42
+    LTEXT           "Tips:  Click on an animal's picture to get a hint.  Click Ok when finished, or to see which answers are correct / incorrect.", IDC_STATIC, 92, 280, 217, 20, SS_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 333, 271, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 333, 290, 50, 14
 }

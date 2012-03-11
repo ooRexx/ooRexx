@@ -71,14 +71,10 @@
  .constDir[IDBMP_HORSE    ]    = 208
  .constDir[IDBMP_KANGURU  ]    = 209
 
- curdir = directory()
- parse source . . me
- mydir = me~left(me~lastpos('\') - 1)            /* where is code     */
- mydir = directory(mydir)                        /* current is "my"   */
- env = 'ENVIRONMENT'
- win = value('WINDIR', , env)
- sp = value('SOUNDPATH', , env)
- sp = value('SOUNDPATH', win';'mydir'\WAV;' sp, env)
+ -- A directory manager saves the current directory and can later go back to
+ -- that directory.  It also sets up the environment we need.  The class
+ -- itself is located in samplesSetup.rex
+ mgr = .DirectoryManager~new()
 
  first = .constDir[IDC_EDIT_RHINO]
  last  = .constDir[IDC_EDIT_HORSE]
@@ -89,12 +85,13 @@
  dlg = .PetDialog~new("res\OOPet.DLL", IDD_PET_DLG, b., first, last)
  if dlg~initCode \= 0 then exit
  dlg~execute("SHOWTOP")
- ret = directory(curdir)
+ mgr~goBack
  return
 
 /*------------------------------- requires ---------------------------*/
 
 ::requires "ooDialog.cls"
+::requires "samplesSetup.rex"
 
 /*------------------------------- dialog class -----------------------*/
 

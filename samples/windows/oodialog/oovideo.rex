@@ -43,102 +43,120 @@
 /*                                                                          */
 /****************************************************************************/
 
- curdir = directory()
- parse source . . me
- mydir = me~left(me~lastpos('\')-1)              /* where is code     */
- mydir = directory(mydir)                        /* current is "my"   */
+ -- A directory manager saves the current directory and can later go back to
+ -- that directory.  It also sets up the environment we need.  The class
+ -- itself is located in samplesSetup.rex
+ mgr = .DirectoryManager~new()
+
+  -- Use the global .constDir for symbolic IDs
+  .application~useGlobalConstDir('O', 'rc\ldvideo.h')
 
  logfile = 'oovideo.log'
- a.1001 = "10000"
- a.1002 = "Actionfilms 1"
- a.1003 = "Gone with the Wind"
- a.1004 = "True Lies"
- a.1005 = "Rambo 4"
- a.1006  = ""
- a.1007 = "Unknown"
- a.1008 = "Maria Shell"
- do i = 1009 to 1014
+ a.IDC_EDIT_TAPE_NO = "10000"
+ a.IDC_EDIT_TAPE_LABEL = "Actionfilms 1"
+ a.IDC_EDIT_FILM1 = "Gone with the Wind"
+ a.IDC_EDIT_FILM2 = "True Lies"
+ a.IDC_EDIT_FILM3 = "Rambo 4"
+ a.IDC_EDIT_FILM4  = ""
+ a.IDC_CB_LOCATION = "Unknown"
+ a.IDC_LB_LENT_TO = "Maria Shell"
+ do i = .constDir[IDC_CK_LONGPLAY] to .constDir[IDC_RB_C240]
     a.i = 0
  end
- a.1013 = 1
- a.1010 = 1
+ a.IDC_RB_C180 = 1
+ a.IDC_CK_HIFI = 1
 
- dlg = .mydialog~new(A.)
- if dlg~initcode > 0 then call errorDialog "Couldn't load the Video dialog"
- else if dlg~execute("SHOWTOP") = 1 then
- do
+ dlg = .MyDialog~new("rc\ldvideo.rc", IDD_VIDEO_DLG, A., , "CONNECTBUTTONS")
+
+ if dlg~initcode > 0 then do
+    call errorDialog "Couldn't load the Video dialog"
+    mgr~goBack
+    return 99
+ end
+ else if dlg~execute("SHOWTOP") = .MyDialog~IDOK then do
     o=.stream~new(logfile)
     o~open('write replace')
     o~lineout("OOVideo - Data:")
-    o~lineout("Nr      :" a.1001)
-    o~lineout("Titel   :" a.1002)
-    o~lineout("Film 1  :" a.1003)
-    o~lineout("Film 2  :" a.1004)
-    o~lineout("Film 3  :" a.1005)
-    o~lineout("Film 4  :" a.1006)
-    o~lineout("Lent to :" a.1007)
-    o~lineout("Location:" a.1008)
-    o~lineout("Longplay:" a.1009)
-    o~lineout("Hifi    :" a.1010)
-    o~lineout("Protect :" a.1011)
-    if (a.1012 = 1) then o~lineout("Tape    : C120")
-    if (a.1013 = 1) then o~lineout("Tape    : C180")
-    if (a.1014 = 1) then o~lineout("Tape    : C240")
+    o~lineout("Nr      :" a.IDC_EDIT_TAPE_NO)
+    o~lineout("Titel   :" a.IDC_EDIT_TAPE_LABEL)
+    o~lineout("Film 1  :" a.IDC_EDIT_FILM1)
+    o~lineout("Film 2  :" a.IDC_EDIT_FILM2)
+    o~lineout("Film 3  :" a.IDC_EDIT_FILM3)
+    o~lineout("Film 4  :" a.IDC_EDIT_FILM4)
+    o~lineout("Lent to :" a.IDC_LB_LENT_TO)
+    o~lineout("Location:" a.IDC_CB_LOCATION)
+    o~lineout("Longplay:" a.IDC_CK_LONGPLAY)
+    o~lineout("Hifi    :" a.IDC_CK_HIFI)
+    o~lineout("Protect :" a.IDC_CK_WRITEPROTECT)
+    if (a.IDC_RB_C120 = 1) then o~lineout("Tape    : C120")
+    if (a.IDC_RB_C180 = 1) then o~lineout("Tape    : C180")
+    if (a.IDC_RB_C240 = 1) then o~lineout("Tape    : C240")
     o~close()
     "type" logfile
  end
 
- ret = directory(curdir)
+ mgr~goBack
  return
 
 /*--------------------------------- requires -------------------------*/
 
 ::requires "ooDialog.cls"
+::requires "samplesSetup.rex"
 
 /*--------------------------------- dialog class --------------------*/
 
-::class mydialog subclass UserDialog
+::class 'MyDialog' subclass RcDialog
 
-::method init
-   use arg st.
-   self~init:super(st.)
-   self~InitCode = self~load("rc\ldvideo.rc", 101, "CONNECTBUTTONS")
+::method initDialog
 
-::method InitDialog
-   self~InitDialog:super
-   self~AddComboEntry(1007,"Drawer 1")
-   self~AddComboEntry(1007,"Drawer 2")
-   self~AddComboEntry(1007,"Behind the door")
-   self~AddComboEntry(1007,"Under the bed")
-   self~AddComboEntry(1007,"On the floor")
-   self~AddComboEntry(1007,"Unknown")
+   cb = self~newComboBox(IDC_CB_LOCATION)
+   cb~add("Drawer 1")
+   cb~add("Drawer 2")
+   cb~add("Behind the door")
+   cb~add("Under the bed")
+   cb~add("On the floor")
+   cb~add("Unknown")
 
-   self~AddListEntry(1008,"Hans-Maria Baier")
-   self~AddListEntry(1008,"John Smith")
-   self~AddListEntry(1008,"Peter Fonda")
-   self~AddListEntry(1008,"Maria Shell")
-   self~AddListEntry(1008,"Mike Miller")
+   lb = self~newListBox(IDC_LB_LENT_TO)
+   lb~add("Hans-Maria Baier")
+   lb~add("John Smith")
+   lb~add("Peter Fonda")
+   lb~add("Maria Shell")
+   lb~add("Mike Miller")
 
    return 0
 
-::method Validate
-   tst = self~getControlData(1001)
+::method validate
+   tst = self~newEdit(IDC_EDIT_TAPE_NO)~getText
    if tst <> "" then do
       call Play "wav\take.wav"
-      return 1
-      end
+      return .true
+   end
    else do
-          ret = errorDialog("The number can't be blank (use cancel)!")
-          return 0
-        end
+      msg = "The tape number can not be blank.  Use cancel to quit, if needed."
+      title = 'Video Archive Database Warning'
+      ret = MessageDialog(msg, self~hwnd, title, 'OK', 'WARNING')
+   end
 
-::method CANCEL
+  return .false
+
+::method cancel unguarded
    ret = Play("wav\cancel.wav", yes)
-   self~finished = askDialog("Do you really want to cancel")
-   return self~finished
 
-::method Search
-   ret = errorDialog("Entry not found in database")
-   return 1
+   msg   = "Do you really want to cancel?       "
+   title = 'Exiting Video Database Application'
+
+   ret = MessageDialog(msg, self~hwnd, title, 'YESNO', 'QUESTION')
+
+   if ret  == self~IDYES then return self~cancel:super
+   else return 0
+
+::method search unguarded
+
+   msg = "Entry not found in Video Archive database."
+   title = 'Video Archive Database Warning'
+   ret = MessageDialog(msg, self~hwnd, title, 'OK', 'WARNING')
+
+   return 0
 
 

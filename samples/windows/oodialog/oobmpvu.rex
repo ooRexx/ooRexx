@@ -46,21 +46,24 @@
  .constDir[IDC_CB]        = 101
  .constDir[IDC_PB_BITMAP] = 102
 
+ -- A directory manager saves the current directory and can later go back to
+ -- that directory.  It also sets up the environment we need.  The class
+ -- itself is located in samplesSetup.rex
+ mgr = .DirectoryManager~new()
 
- curdir = directory()
- parse source . . me
- mydir = me~left(me~lastpos('\')-1)              /* where is code     */
- mydir = directory(mydir)                        /* current is "my"   */
  b.IDC_CB = ''
  d = .BmpDialog~new(b.)
  d~createCenter(300, 200, "Bitmap Viewer")
  d~execute("SHOWTOP")
- ret = directory(curdir)
+
+ mgr~goBack
+
  return
 
 /*-------------------------------- requires --------------------------*/
 
 ::requires "ooDialog.cls"
+::requires "samplesSetup.rex"
 
 /*-------------------------------- dialog class ----------------------*/
 
@@ -74,6 +77,7 @@
    self~connectComboBoxEvent(IDC_CB, "SELCHANGE", "FileSelected")
 
    self~createBitmapButton(IDC_PB_BITMAP, 13, 33, self~SizeX - 26, self~SizeY - 30 - 36, , , , "blank.bmp")
+
    self~createPushButtonGroup(100, self~sizeY - 18,,, "&Show 1 OK &Cancel 2 CANCEL", 1)
    self~createBlackFrame(IDC_STATIC, 10, 30, self~SizeX - 20, self~SizeY - 30 - 30)
 

@@ -1,6 +1,5 @@
 /*----------------------------------------------------------------------------*/
-r/*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/*                                                                            */
 /* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
@@ -36,46 +35,33 @@ r/*                                                                            *
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-#include <windows.h>
-#include <winuser.h>
-#include <commctrl.h>
-#include "ldvideo.h"
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
 
-
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDD_VIDEO_DLG DIALOG 67, 32, 288, 251
-STYLE DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-CAPTION "Video Archive"
-FONT 8, "MS Sans Serif"
-{
-    EDITTEXT        IDC_EDIT_TAPE_NO, 64, 17, 42, 13, ES_AUTOHSCROLL
-    PUSHBUTTON      "&Search", 3001, 110, 16, 37, 15
-    EDITTEXT        IDC_EDIT_TAPE_LABEL, 64, 37, 85, 13, ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_FILM1, 80, 72, 175, 13, ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_FILM2, 80, 92, 175, 13, ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_FILM3, 80, 111, 175, 13, ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_FILM4, 80, 130, 175, 13, ES_AUTOHSCROLL
-    COMBOBOX        IDC_CB_LOCATION, 80, 168, 119, 43, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT
-    LISTBOX         IDC_LB_LENT_TO, 80, 188, 119, 49, WS_TABSTOP | WS_HSCROLL | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_SORT | LBS_NOTIFY
-    AUTOCHECKBOX    "Long&play", IDC_CK_LONGPLAY, 172, 15, 45, 10
-    AUTOCHECKBOX    "&Hifi - quality", IDC_CK_HIFI, 172, 28, 53, 10
-    AUTOCHECKBOX    "&Writeprotect", IDC_CK_WRITEPROTECT, 172, 41, 55, 10
-    AUTORADIOBUTTON "C120", IDC_RB_C120, 232, 15, 31, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "C180", IDC_RB_C180, 232, 27, 31, 10
-    AUTORADIOBUTTON "C240", IDC_RB_C240, 232, 40, 31, 10
-    DEFPUSHBUTTON   "OK", 1, 217, 166, 50, 14
-    PUSHBUTTON      "Cancel", 2, 217, 188, 50, 14
-    LTEXT           "Tape&number", 2008, 18, 18, 43, 11, SS_LEFT
-    LTEXT           "Tape label", 2006, 18, 38, 38, 11, SS_LEFT
-    LTEXT           "Film &1", 2001, 36, 74, 23, 11, SS_LEFT
-    LTEXT           "Film 2", 2002, 36, 93, 22, 11, SS_LEFT
-    LTEXT           "Film 3", 2003, 36, 112, 23, 11, SS_LEFT
-    LTEXT           "Film 4", 2004, 36, 131, 24, 11, SS_LEFT
-    LTEXT           "&Location", 2005, 36, 169, 32, 11, SS_LEFT
-    LTEXT           "Lent to", 2007, 36, 188, 26, 11, SS_LEFT
-    GROUPBOX        "Specification", -1, 12, 4, 145, 51
-    GROUPBOX        "Titles", -1, 12, 61, 261, 89
-    GROUPBOX        "Location and Possession", -1, 12, 156, 261, 86
-    GROUPBOX        "Tape&information", -1, 165, 3, 105, 51, WS_GROUP
-}
+#define IDD_ANIMALS                             103
+#define IDBMP_RHINO                             201
+#define IDBMP_TIGER                             202
+#define IDBMP_ELEPHANT                          203
+#define IDBMP_MOOSE                             204
+#define IDBMP_GOAT                              205
+#define IDBMP_DOG                               206
+#define IDBMP_SEAL                              207
+#define IDBMP_HORSE                             208
+#define IDBMP_KANGURU                           209
+#define IDC_PB_RHINO                            2001
+#define IDC_PB_TIGER                            2002
+#define IDC_PB_ELEPHANT                         2003
+#define IDC_PB_MOOSE                            2004
+#define IDC_PB_GOAT                             2005
+#define IDC_PB_DOG                              2006
+#define IDC_PB_SEAL                             2007
+#define IDC_PB_HORSE                            2008
+#define IDC_EDIT_RHINO                          2021
+#define IDC_EDIT_TIGER                          2022
+#define IDC_EDIT_ELEPHANT                       2023
+#define IDC_EDIT_MOOSE                          2024
+#define IDC_EDIT_GOAT                           2025
+#define IDC_EDIT_DOG                            2026
+#define IDC_EDIT_SEAL                           2027
+#define IDC_EDIT_HORSE                          2028

@@ -64,27 +64,22 @@
    .constDir[IDC_EDIT]           = 120
    .constDir[IDC_UD]             = 1206
 
-
-
-   curdir = directory()
-   parse source . . me
-   mydir = me~left(me~lastpos('\')-1)              /* where is code     */
-   mydir = directory(mydir)                        /* current is "my"   */
-   env = 'ENVIRONMENT'
-   win = value('WINDIR',,env)
-   sp = value('SOUNDPATH',,env)
-   sp = value('SOUNDPATH',win';'mydir'\WAV;'sp,env)
+   -- A directory manager saves the current directory and can later go back to
+   -- that directory.  It also sets up the environment we need.  The class
+   -- itself is located in samplesSetup.rex
+   mgr = .DirectoryManager~new()
 
          /* 1ms fast, 500ms slow, 200ms start, equals random every 25th */
    d = .BanditDlg~new(1, 1000, 1000, 25)
    d~execute("SHOWTOP")
 
-   ret = directory(curdir)
+   mgr~goBack
    return 0
 
 /*---------------------------------- requires ------------------------*/
 
 ::requires "ooDialog.cls"
+::requires "samplesSetup.rex"
 
 /*---------------------------------- dialog class --------------------*/
 

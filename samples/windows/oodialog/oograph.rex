@@ -58,16 +58,15 @@
   .constDir[IDC_PB_VIEWER]    = 111
   .constDir[IDC_PB_DRAW]      = 112
 
-
-   parse source . . me
-   mydir = me~left(me~lastpos('\')-1)              /* where is code     */
-   env = 'ENVIRONMENT'
-   sp = value('SOUNDPATH', , env)
-   sp = value('SOUNDPATH', mydir'\WAV;'sp, env)
+   -- A directory manager saves the current directory and can later go back to
+   -- that directory.  It also sets up the environment we need.  The class
+   -- itself is located in samplesSetup.rex
+   mgr = .DirectoryManager~new()
 
    d = .GraphDialog~new()
    if d~initCode \= 0 then do
       say "Dialog init did not work"
+      mgr~goBack
       return d~initCode
    end
 
@@ -75,11 +74,13 @@
    d~createCenter(trunc(770 / d~FactorX), trunc(470 / d~FactorY), title)
    d~execute("SHOWTOP")
 
+   mgr~goBack
    return 0
 
 /*-------------------------------- requires --------------------------*/
 
 ::requires "ooDialog.cls"
+::requires "samplesSetup.rex"
 
 /*-------------------------------- dialog class ----------------------*/
 
