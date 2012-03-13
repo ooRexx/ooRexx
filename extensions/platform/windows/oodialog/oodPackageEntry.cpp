@@ -431,6 +431,10 @@ REXX_METHOD_PROTOTYPE(spi_getDragHeight_cls);
 REXX_METHOD_PROTOTYPE(spi_setDragHeight_cls);
 REXX_METHOD_PROTOTYPE(spi_getDragWidth_cls);
 REXX_METHOD_PROTOTYPE(spi_setDragWidth_cls);
+REXX_METHOD_PROTOTYPE(spi_getMenuAnimation_cls);
+REXX_METHOD_PROTOTYPE(spi_setMenuAnimation_cls);
+REXX_METHOD_PROTOTYPE(spi_getMenuFade_cls);
+REXX_METHOD_PROTOTYPE(spi_setMenuFade_cls);
 REXX_METHOD_PROTOTYPE(spi_getMouseHoverHeight_cls);
 REXX_METHOD_PROTOTYPE(spi_setMouseHoverHeight_cls);
 REXX_METHOD_PROTOTYPE(spi_getMouseHoverTime_cls);
@@ -459,6 +463,7 @@ REXX_METHOD_PROTOTYPE(sm_cyDrag_cls);
 REXX_METHOD_PROTOTYPE(sm_cyFixedFrame_cls);
 REXX_METHOD_PROTOTYPE(sm_cyHScroll_cls);
 REXX_METHOD_PROTOTYPE(sm_cyScreen_cls);
+REXX_METHOD_PROTOTYPE(sm_menuDropAlignment_cls);
 
 // ResourceUtils
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveIconID_pvt);
@@ -1332,6 +1337,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(spi_setDragHeight_cls,          spi_setDragHeight_cls),
     REXX_METHOD(spi_getDragWidth_cls,           spi_getDragWidth_cls),
     REXX_METHOD(spi_setDragWidth_cls,           spi_setDragWidth_cls),
+    REXX_METHOD(spi_getMenuAnimation_cls,       spi_getMenuAnimation_cls),
+    REXX_METHOD(spi_setMenuAnimation_cls,       spi_setMenuAnimation_cls),
+    REXX_METHOD(spi_getMenuFade_cls,            spi_getMenuFade_cls),
+    REXX_METHOD(spi_setMenuFade_cls,            spi_setMenuFade_cls),
     REXX_METHOD(spi_getMouseHoverHeight_cls,    spi_getMouseHoverHeight_cls),
     REXX_METHOD(spi_setMouseHoverHeight_cls,    spi_setMouseHoverHeight_cls),
     REXX_METHOD(spi_getMouseHoverTime_cls,      spi_getMouseHoverTime_cls),
@@ -1358,6 +1367,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(sm_cyFixedFrame_cls,            sm_cyFixedFrame_cls),
     REXX_METHOD(sm_cyHScroll_cls,               sm_cyHScroll_cls),
     REXX_METHOD(sm_cyScreen_cls,                sm_cyScreen_cls),
+    REXX_METHOD(sm_menuDropAlignment_cls,       sm_menuDropAlignment_cls),
 
     REXX_METHOD(rsrcUtils_resolveIconID_pvt,    rsrcUtils_resolveIconID_pvt),
     REXX_METHOD(rsrcUtils_resolveResourceID,    rsrcUtils_resolveResourceID),

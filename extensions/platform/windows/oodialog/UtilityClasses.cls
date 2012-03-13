@@ -217,6 +217,10 @@
 ::attribute dragHeight set class external "LIBRARY oodialog spi_setDragHeight_cls"
 ::attribute dragWidth get class external "LIBRARY oodialog spi_getDragWidth_cls"
 ::attribute dragWidth set class external "LIBRARY oodialog spi_setDragWidth_cls"
+::attribute menuAnimation get class external "LIBRARY oodialog spi_getMenuAnimation_cls"
+::attribute menuAnimation set class external "LIBRARY oodialog spi_setMenuAnimation_cls"
+::attribute menuFade get class external "LIBRARY oodialog spi_getMenuFade_cls"
+::attribute menuFade set class external "LIBRARY oodialog spi_setMenuFade_cls"
 ::attribute mouseHoverHeight get class external "LIBRARY oodialog spi_getMouseHoverHeight_cls"
 ::attribute mouseHoverHeight set class external "LIBRARY oodialog spi_getMouseHoverHeight_cls"
 ::attribute mouseHoverTime get class external "LIBRARY oodialog spi_getMouseHoverTime_cls"
@@ -245,6 +249,7 @@
 ::attribute cyFixedFrame get class external  "LIBRARY oodialog sm_cyFixedFrame_cls"
 ::attribute cyHscroll get class external     "LIBRARY oodialog sm_cyHScroll_cls"
 ::attribute cyScreen get class external      "LIBRARY oodialog sm_cyScreen_cls"
+::attribute menuDropAlignment get class external "LIBRARY oodialog sm_menuDropAlignment_cls"
 
 ::class 'OS' public
 ::method is64bit class external "LIBRARY oodialog os_is64bit"

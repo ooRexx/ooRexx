@@ -1206,6 +1206,62 @@ RexxMethod2(RexxObjectPtr, spi_setDragWidth_cls, uint32_t, pixels, CSELF, pCSelf
 }
 
 
+/** SPI::menuAnimation  [class attribute get]
+ */
+RexxMethod0(logical_t, spi_getMenuAnimation_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    logical_t on = FALSE;
+    if ( ! SystemParametersInfo(SPI_GETMENUANIMATION, 0, &on, 0) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return on;
+}
+
+/** SPI::menuAnimation  [class attribute set]
+ */
+RexxMethod2(RexxObjectPtr, spi_setMenuAnimation_cls, logical_t, on, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( ! SystemParametersInfo(SPI_SETMENUANIMATION, (uint32_t)on, NULL, ((pCSpi)pCSelf)->fWinIni) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return NULLOBJECT;
+}
+
+
+/** SPI::menuFade  [class attribute get]
+ */
+RexxMethod0(logical_t, spi_getMenuFade_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    logical_t on = FALSE;
+    if ( ! SystemParametersInfo(SPI_GETMENUFADE, 0, &on, 0) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return on;
+}
+
+/** SPI::menuFade  [class attribute set]
+ */
+RexxMethod2(RexxObjectPtr, spi_setMenuFade_cls, logical_t, on, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( ! SystemParametersInfo(SPI_SETMENUFADE, (uint32_t)on, NULL, ((pCSpi)pCSelf)->fWinIni) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return NULLOBJECT;
+}
+
+
 /** SPI::mouseHoverHeight  [class attribute get]
  */
 RexxMethod0(uint32_t, spi_getMouseHoverHeight_cls)
@@ -1460,6 +1516,10 @@ RexxMethod0(int32_t, sm_cyHScroll_cls)
 RexxMethod0(int32_t, sm_cyScreen_cls)
 {
     return GetSystemMetrics(SM_CYSCREEN);
+}
+RexxMethod0(int32_t, sm_menuDropAlignment_cls)
+{
+    return GetSystemMetrics(SM_MENUDROPALIGNMENT);
 }
 
 /**
