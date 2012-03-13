@@ -39,8 +39,8 @@
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 #include <stdio.h>
 #include <dlgs.h>
-#include <malloc.h>
 #include <limits.h>
+#include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodMessaging.hpp"
@@ -1776,15 +1776,10 @@ RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CS
     tp.hMenu = hMenu;
     tp.hWnd = ownerWindow;
 
-    UINT flags = 0;
+    uint32_t flags = 0;
     if ( opts != NULL )
     {
         flags = getTrackFlags(opts);
-        if ( flags == ERROR_OUTOFMEMORY )
-        {
-            outOfMemoryException(c->threadContext);
-            goto done_out;
-        }
     }
     else
     {
@@ -6252,19 +6247,13 @@ static UINT getItemStateOpts(const char *opts, UINT state)
 
 static UINT getTrackFlags(const char *opt)
 {
-    UINT flag = 0;
+    uint32_t flag = 0;
 
-    char *upperStr = strdupupr(opt);
-    if ( upperStr == NULL )
-    {
-        return ERROR_OUTOFMEMORY;
-    }
-
-    if ( strstr(upperStr, "LEFT") != NULL )
+    if ( StrStrI(opt, "LEFT") != NULL )
     {
         flag = TPM_LEFTALIGN;
     }
-    else if ( strstr(upperStr, "HCENTER") != NULL )
+    else if ( StrStrI(opt, "HCENTER") != NULL )
     {
         flag = TPM_CENTERALIGN;
     }
@@ -6273,11 +6262,11 @@ static UINT getTrackFlags(const char *opt)
         flag = TPM_RIGHTALIGN;
     }
 
-    if ( strstr(upperStr, "TOP") != NULL )
+    if ( StrStrI(opt, "TOP") != NULL )
     {
         flag |= TPM_TOPALIGN;
     }
-    else if ( strstr(upperStr, "VCENTER") != NULL )
+    else if ( StrStrI(opt, "VCENTER") != NULL )
     {
         flag |= TPM_VCENTERALIGN;
     }
@@ -6286,47 +6275,46 @@ static UINT getTrackFlags(const char *opt)
         flag |= TPM_BOTTOMALIGN;
     }
 
-    if ( strstr(upperStr, "HORNEGANIMATION") != NULL )
+    if ( StrStrI(opt, "HORNEGANIMATION") != NULL )
     {
         flag |= TPM_HORNEGANIMATION;
     }
-    if ( strstr(upperStr, "HORPOSANIMATION") != NULL )
+    if ( StrStrI(opt, "HORPOSANIMATION") != NULL )
     {
         flag |= TPM_HORPOSANIMATION;
     }
-    if ( strstr(upperStr, "NOANIMATION") != NULL )
+    if ( StrStrI(opt, "NOANIMATION") != NULL )
     {
         flag |= TPM_NOANIMATION;
     }
-    if ( strstr(upperStr, "VERNEGANIMATION") != NULL )
+    if ( StrStrI(opt, "VERNEGANIMATION") != NULL )
     {
         flag |= TPM_VERNEGANIMATION;
     }
-    if ( strstr(upperStr, "VERPOSANIMATION") != NULL )
+    if ( StrStrI(opt, "VERPOSANIMATION") != NULL )
     {
         flag |= TPM_VERPOSANIMATION;
     }
-    if ( strstr(upperStr, "HORIZONTAL") != NULL )
+    if ( StrStrI(opt, "HORIZONTAL") != NULL )
     {
         flag |= TPM_HORIZONTAL;
     }
-    if ( strstr(upperStr, "VERTICAL") != NULL )
+    if ( StrStrI(opt, "VERTICAL") != NULL )
     {
         flag |= TPM_VERTICAL;
     }
-    if ( strstr(upperStr, "RECURSE") != NULL )
+    if ( StrStrI(opt, "RECURSE") != NULL )
     {
         flag |= TPM_RECURSE;
     }
     if ( ComCtl32Version >= COMCTL32_6_0 )
     {
-        if ( strstr(upperStr, "LAYOUTRTL") != NULL )
+        if ( StrStrI(opt, "LAYOUTRTL") != NULL )
         {
             flag |= TPM_LAYOUTRTL;
         }
     }
 
-    safeFree(upperStr);
     return flag;
 }
 
