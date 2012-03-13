@@ -78,98 +78,59 @@ void __cdecl DebugMsg(const char* pszFormat, ...)
 
 #define SERVICENAME "RXAPI"
 
-/**
- * If rxapi is installed as a service, and the service is not disabled, and the
- * user (owner of this running process) has the authority to start the rxapi
- * service, then the service is started.
- *
- * This function will wait to see that the service actually starts.  If the
- * above conditions are met, then the service will start.
- *
- * @return True if the service is started and running, otherwise false.
- *
- * @note   Both the service control manager and the service itself are opened
- *         with the minimum access rights needed to accomplish the task.  On
- *         Vista this is especially important because it prevents unnecessary
- *         failures.
- */
-bool startAsService(void)
+// Windows Service status codes
+typedef enum
 {
-    LPQUERY_SERVICE_CONFIG serviceCfg = NULL;
-    DWORD needed;
-    SC_HANDLE hService = NULL;
+    WS_IS_RUNNING = 0,
+    WS_NOT_INSTALLED,
+    WS_IS_DISABLED,
+    WS_IS_STOPPED,
+    WS_NOT_PRIVILEGED,
+    WS_UNKNOWN
+} WinServiceStatusT;
 
-    // Open the Service Control Manager
-    SC_HANDLE hSCM = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CONNECT);
-    if ( hSCM )
-    {
-        // Open the service with the query and start access rights.
-        hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_CONFIG | SERVICE_START | SERVICE_QUERY_STATUS);
-        if ( hService )
-        {
-            // The service is installed, make sure it is not currently disabled.
-            serviceCfg = (LPQUERY_SERVICE_CONFIG)LocalAlloc(LPTR, 4096);
-            if ( serviceCfg )
-            {
-                if ( QueryServiceConfig(hService, serviceCfg, 4096, &needed) )
-                {
-                    if ( serviceCfg->dwStartType == SERVICE_DISABLED )
-                    {
-                        // The service is disabled set hService to null to
-                        // indicate rxapi can not be started as a service.
-                        CloseServiceHandle(hService);
-                        hService = NULL;
-                    }
-                }
-                LocalFree(serviceCfg);
-            }
-        }
-    }
 
-    if ( hService == NULL )
-    {
-        // Either rxapi is not installed as a service, or it is disabled.
-        // Return false so that rxapi will be started through CreateProcess().
-        if ( hSCM != NULL )
-        {
-            CloseServiceHandle(hSCM);
-        }
-        return false;
-    }
-
+/**
+ * Reports if the rxapi service is in the running state at the time this
+ * function returns.  If the service is in the START PENDING state the function
+ * waits untils the service is running or has timed out.
+ *
+ * @param hService  Opened service handle, must have the SERVICE_QUERY_STATUS
+ *                  privilege.
+ *
+ * @return True the service is not running, otherwise false.
+ */
+static bool hasServiceStarted(SC_HANDLE hService)
+{
     SERVICE_STATUS_PROCESS ssp;
-    DWORD oldCheck;
-    DWORD startTicks;
-    DWORD waitTime;
+    DWORD                  needed;
 
-    if ( ! StartService(hService, 0, NULL) )
-    {
-        CloseServiceHandle(hService);
-        CloseServiceHandle(hSCM);
-        return false;
-    }
-
-    // Check the status until the service is no longer start pending.
     if ( QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp, sizeof(SERVICE_STATUS_PROCESS), &needed) == 0 )
     {
-        CloseServiceHandle(hService);
-        CloseServiceHandle(hSCM);
         return false;
+    }
+
+    if ( ssp.dwCurrentState == SERVICE_RUNNING || ssp.dwCurrentState == SERVICE_STOPPED ||
+         ssp.dwCurrentState == SERVICE_STOP_PENDING )
+    {
+        return ssp.dwCurrentState == SERVICE_RUNNING;
     }
 
     // Save the tick count and initial checkpoint.
-    startTicks = GetTickCount();
-    oldCheck = ssp.dwCheckPoint;
+    uint32_t startTicks = GetTickCount();
+    uint32_t oldCheck = ssp.dwCheckPoint;
+    uint32_t waitTime;
 
+    // Check the status until the service is no longer start pending.  rxapi is
+    // not pausable, so PAUSED or PAUSED_PENDING should not be possible.
     while ( ssp.dwCurrentState == SERVICE_START_PENDING )
     {
         // Do not wait longer than the wait hint, which for rxapi will be 2000
         // milliseconds.
         //
         // Microsoft suggests that a good interval is one tenth the wait hint,
-        // but no less than 1 second and no more than 10 seconds. However, rxapi
-        // starts in less than 200 milliseconds, so there is no sense in waiting
-        // more than that.
+        // but not less than 1 second and no more than 10 seconds. rxapi usually
+        // starts in less than 200 milliseconds.
         waitTime = ssp.dwWaitHint / 10;
 
         if( waitTime < 200 )
@@ -183,7 +144,8 @@ bool startAsService(void)
 
         Sleep(waitTime);
 
-        if ( QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp, sizeof(SERVICE_STATUS_PROCESS), &needed) == 0 )
+        BOOL success = QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp, sizeof(SERVICE_STATUS_PROCESS), &needed);
+        if ( ! success || ssp.dwCurrentState == SERVICE_RUNNING )
         {
             break;
         }
@@ -205,10 +167,153 @@ bool startAsService(void)
         }
     }
 
+    return ssp.dwCurrentState == SERVICE_RUNNING ? true : false;
+}
+
+
+/**
+ * Get the status of the rxapi service, which could be not installed as a
+ * service.
+ *
+ * @param phSCM   Pointer to a handle for the Service Control Manager.  If rxapi
+ *                is installed as a service, and not disabled, an open handle is
+ *                returned here.  Otherwise the handle is set to NULL.
+ *
+ * @return  A WinServiceStatusT enum indicating the status of rxapi as a Windows
+ *          service.
+ */
+static WinServiceStatusT getServiceStatus(SC_HANDLE *phSCM)
+{
+    WinServiceStatusT      status = WS_UNKNOWN;
+    SC_HANDLE              hService = NULL;
+
+    // Open the Service Control Manager
+    SC_HANDLE hSCM = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CONNECT);
+    if ( hSCM )
+    {
+        // Open the service with the query access rights.
+        hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS);
+        if ( hService )
+        {
+            // The service is installed, make sure it is not currently disabled.
+            LPQUERY_SERVICE_CONFIG serviceCfg = (LPQUERY_SERVICE_CONFIG)LocalAlloc(LPTR, 4096);
+            if ( serviceCfg )
+            {
+                DWORD needed;
+
+                if ( QueryServiceConfig(hService, serviceCfg, 4096, &needed) )
+                {
+                    if ( serviceCfg->dwStartType == SERVICE_DISABLED )
+                    {
+                        status = WS_IS_DISABLED;
+                    }
+                }
+                LocalFree(serviceCfg);
+            }
+            else
+            {
+                status = WS_NOT_PRIVILEGED;
+            }
+
+            if ( status != WS_UNKNOWN )
+            {
+                CloseServiceHandle(hService);
+                hService = NULL;
+            }
+        }
+    }
+    else
+    {
+        status = WS_NOT_PRIVILEGED;
+    }
+
+    if ( status != WS_UNKNOWN )
+    {
+        if ( hSCM != NULL )
+        {
+            CloseServiceHandle(hSCM);
+        }
+        return status;
+    }
+
+    *phSCM = hSCM;
+
+    if ( hasServiceStarted(hService) )
+    {
+        status = WS_IS_RUNNING;
+    }
+    else
+    {
+        status = WS_IS_STOPPED;
+    }
+
+    CloseServiceHandle(hService);
+    return status;
+}
+
+/**
+ * Determines if rxapi is installed and running as a service.
+ *
+ * If rxapi is installed as a service, but not running an attempt is made to
+ * start the service.  When the service is not disabled, and the user (owner of
+ * this running process) has the authority to start the rxapi service, then the
+ * attempt should succeed.
+ *
+ * If the function attempts to start the service, it will wait to see that the
+ * service actually starts. If the above conditions are met, then the service
+ * will start.
+ *
+ * @return True if the service is started and running, otherwise false.
+ *
+ * @note   Both the service control manager and the service itself are opened
+ *         with the minimum access rights needed to accomplish the task.  On
+ *         Vista this is especially important because it prevents unnecessary
+ *         failures.
+ */
+bool startAsService(void)
+{
+    SC_HANDLE hSCM = NULL;
+
+    // First see if rxapi is already running as a service, or if not running, if
+    // there is at least a possibility of starting it.
+    WinServiceStatusT status = getServiceStatus(&hSCM);
+    if ( status == WS_NOT_INSTALLED || status == WS_IS_DISABLED || status == WS_NOT_PRIVILEGED )
+    {
+        return false;
+    }
+    else if ( status == WS_IS_RUNNING )
+    {
+        CloseServiceHandle(hSCM);
+        return true;
+    }
+
+    // Okay, the service is not running, but it is installed and should be
+    // startable.
+    SC_HANDLE hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_CONFIG | SERVICE_START | SERVICE_QUERY_STATUS);
+    if ( hService == NULL )
+    {
+        // Seems the user has sufficient privileges to query the service, but
+        // not to start it.
+        if ( hSCM != NULL )
+        {
+            CloseServiceHandle(hSCM);
+        }
+        return false;
+    }
+
+    bool hasStarted = false;
+
+    if ( ! StartService(hService, 0, NULL) )
+    {
+        goto done_out;
+    }
+
+    hasStarted = hasServiceStarted(hService);
+
+done_out:
     CloseServiceHandle(hSCM);
     CloseServiceHandle(hService);
-
-    return ssp.dwCurrentState == SERVICE_RUNNING ? true : false;
+    return hasStarted;
 }
 
 void SysLocalAPIManager::startServerProcess()

@@ -52,7 +52,7 @@
 
 #define APP_LOG_KEYNAME  "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\"
 
-typedef enum {installed_state, disabled_state, uninstalled_state} ServiceStateType;
+typedef enum {installed_state, running_state, disabled_state, uninstalled_state} ServiceStateType;
 typedef enum {Windows_NT, Windows_2K} WindowsVersionType;
 
 // Prototypes
@@ -64,7 +64,8 @@ static SERVICE_STATUS m_Status;
 static SERVICE_DESCRIPTION Info;
 
 
-/* - - - - Temporary stuff for debugging help, will be removed  - - - - - - - */
+/* - - - - Useful debugging help, if'd out under normal circumstances- - - - -*/
+
 #if 0
 #include <shlobj.h>
 #include <shlwapi.h>
@@ -99,7 +100,7 @@ void __cdecl DebugMsg(const char* pszFormat, ...)
   }
 }
 #endif
-/* - - End Temporary stuff for debugging help - - - - - - - - - - - - - - - - */
+/* - - End debugging help - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 APIServer apiServer;             // the real server instance
 
@@ -659,10 +660,100 @@ bool Uninstall()
 }
 
 /**
- * Determines if: rxapi is installed as a service, installed but the service is
+ * Determines if the service is currently running.
+ *
+ * If the current state is START PENDING will wait until the service is running
+ * or times out.
+ *
+ * @param hService  Handle to the opened service.  Note that the handle has to
+ *                  have been opened with SERVICE_QUERY_STATUS so that we can
+ *                  use QueryServiceStatusEx().
+ *
+ * @return True if the service is running, false otherwise.
+ */
+bool serviceIsRunning(SC_HANDLE hService)
+{
+    SERVICE_STATUS_PROCESS ssp;
+    DWORD                 needed;
+
+    BOOL success = QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp,
+                                        sizeof(SERVICE_STATUS_PROCESS), &needed);
+
+    if ( success )
+    {
+        if ( ssp.dwCurrentState == SERVICE_RUNNING || ssp.dwCurrentState == SERVICE_STOPPED ||
+             ssp.dwCurrentState == SERVICE_STOP_PENDING )
+        {
+            return ssp.dwCurrentState == SERVICE_RUNNING;
+        }
+
+        if ( ssp.dwCurrentState == SERVICE_START_PENDING )
+        {
+            // Save the tick count and initial checkpoint.
+            uint32_t startTicks = GetTickCount();
+            uint32_t oldCheck = ssp.dwCheckPoint;
+            uint32_t waitTime;
+
+            // Check the status until the service is no longer start pending.
+            // rxapi is not pausable, so PAUSED or PAUSED_PENDING should not be
+            // possible.
+            while ( ssp.dwCurrentState == SERVICE_START_PENDING )
+            {
+                // Do not wait longer than the wait hint, which for rxapi will
+                // be 2000 milliseconds.
+                //
+                // Microsoft suggests that a good interval is one tenth the wait
+                // hint, but not less than 1 second and no more than 10 seconds.
+                // rxapi usually starts in less than 200 milliseconds.
+                waitTime = ssp.dwWaitHint / 10;
+
+                if( waitTime < 200 )
+                {
+                    waitTime = 200;
+                }
+                else if ( waitTime > 10000 )
+                {
+                    waitTime = 10000;
+                }
+
+                Sleep(waitTime);
+
+                BOOL success = QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp,
+                                                    sizeof(SERVICE_STATUS_PROCESS), &needed);
+                if ( ! success || ssp.dwCurrentState == SERVICE_RUNNING )
+                {
+                    break;
+                }
+
+                if ( ssp.dwCheckPoint > oldCheck )
+                {
+                    // The service is making progress, so continue.
+                    startTicks = GetTickCount();
+                    oldCheck = ssp.dwCheckPoint;
+                }
+                else
+                {
+                    if( (GetTickCount() - startTicks) > ssp.dwWaitHint )
+                    {
+                        // The wait hint interval has expired and we are still
+                        // not started, so quit.
+                        break;
+                    }
+                }
+            }
+
+            return ssp.dwCurrentState == SERVICE_RUNNING;
+        }
+    }
+    return false;
+}
+
+/**
+ * Determines if: rxapi is installed as a service and is already running, is
+ * installed as a service but not running, installed but the service is
  * currently disabled, or not installed as a service.
  *
- * @return  One of the 3 service state enums.
+ * @return  One of the 4 service state enums.
  */
 ServiceStateType getServiceState(void)
 {
@@ -674,7 +765,7 @@ ServiceStateType getServiceState(void)
     {
         // Try to open the service, if this fails, rxapi is not installed as a
         // service.
-        SC_HANDLE hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_CONFIG);
+        SC_HANDLE hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS);
         if ( hService )
         {
             // The service is definitely installed, we'll mark it as disabled
@@ -694,6 +785,15 @@ ServiceStateType getServiceState(void)
                 }
                 LocalFree(pqsc);
             }
+
+            if ( state == installed_state )
+            {
+                // See if rxapi is already running as a service.
+                if ( serviceIsRunning(hService) )
+                {
+                    state = running_state;
+                }
+            }
             CloseServiceHandle(hService);
         }
         CloseServiceHandle(hSCM);
@@ -703,9 +803,12 @@ ServiceStateType getServiceState(void)
 
 /**
  * Start rxapi as a Windows Service, if possible.  This function determines if
- * rxapi is installed as a Service, and, if so, starts up the Service.
+ * rxapi is installed as a Service and if it is already running as a service.
  *
- * @return bool
+ * If it is installled as a service, but not running, an attempt is made to
+ * start it as a Service.
+ *
+ * @return True if now running as a Windows Service, otherwis false.
  */
 bool startAsWindowsService(void)
 {
@@ -713,7 +816,13 @@ bool startAsWindowsService(void)
     DWORD errRC;
     int iRet;
 
-    if ( getServiceState() == installed_state )
+    ServiceStateType state = getServiceState();
+    if ( state == running_state )
+    {
+        return true;
+    }
+
+    if ( state == installed_state )
     {
         // When the service is started successfully here, we do not return until
         // the service has been stopped.
@@ -902,18 +1011,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             exit(0);
         }
 
-        // When rxapi is successfully started as a service, we do not return
-        // from startAsWindowsService() until the service is stopped.
+        // If rxapi is already running as a service then startAsWindowsService()
+        // will return immediately and we will exit.  Otherwise, the function
+        // will attempt to strart rxapi as a service. If successful, we do not
+        // return from startAsWindowService() until the service is stopped.
         if ( startAsWindowsService() )
         {
-            // rxapi ran as a service, and is now ended / stopped.
+            // rxapi was already running as a service, or rxapi was started and
+            // ran as a service, and is now ended / stopped.
             exit(0);
         }
     }
 
-    // For some reason we did not run as a service, (either not installed as
-    // service, the user does not have the authority to start a stopped service,
-    // or some other reason.) In this case, run rxapi as a normal process.
+    // For some reason we are not running as an installed service, (either not
+    // installed as service, the user does not have the authority to start a
+    // stopped service, or some other reason.) In this case, run rxapi as a
+    // normal process.
     Run(false);
 
     return 0;
