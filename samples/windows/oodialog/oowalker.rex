@@ -62,31 +62,30 @@
  *  animation.
  */
 
- curdir = directory()
- parse source . . me
- mydir = me~left(me~lastpos('\')-1)              /* where is code     */
- mydir = directory(mydir)                        /* current is "my"   */
- env = 'ENVIRONMENT'
- win = value('WINDIR',,env)
- sp = value('SOUNDPATH',,env)
- sp = value('SOUNDPATH',win';'mydir'\WAV;'sp,env)
+ -- A directory manager saves the current directory and can later go back to
+ -- that directory.  It also sets up the environment we need.  The class
+ -- itself is located in samplesSetup.rex
+ mgr = .DirectoryManager~new()
 
- dlg = .WalkerDialog~new(data.)
+ dlg = .WalkerDialog~new("rc\walker.rc", , data.)
 
- if dlg~InitCode \= 0 then exit
- if dlg~Load("rc\walker.rc") > 0 then exit
- dlg~Execute("SHOWTOP")
+ if dlg~initCode \= 0 then do
+    mgr~goBack
+    return 99
+ end
+ dlg~execute("SHOWTOP")
 
- ret = directory(curdir)
+ mgr~goBack
  return
 
 /*---------------------------- requires -----------------------------*/
 
 ::requires "ooDialog.cls"
+::requires "samplesSetup.rex"
 
 /*---------------------------- walker dialog ------------------------*/
 
-::class 'WalkerDialog' subclass UserDialog
+::class 'WalkerDialog' subclass RcDialog
 
 ::method initDialog
    expose bitmaps spriteButton quitCheckBox restartButton okButton
@@ -180,9 +179,13 @@
    end
 
    -- Now it is safe to delete the bitmaps.
-   do i= 1 to 8
+   if bitmaps \== .nil then do i= 1 to 8
       self~removeBitmap(bitmaps[i])
    end
+
+   -- Be sure we don't free the bitmaps twice.  The WalkButton will invoke
+   -- maybeQuit() which can cause stopAnimation() to be invoked twice.
+   bitmaps = .nil
 
 
 /*------------------------------ animated button --------------------*/
