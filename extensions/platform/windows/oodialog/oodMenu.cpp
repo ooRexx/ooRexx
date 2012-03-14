@@ -1403,7 +1403,10 @@ logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING met
         goto done_out;
     }
 
-    if ( *method == '\0' )
+    // The 'method' argument is optional in the Rexx method, so NULL is okay.
+    // But, if the user does supply a method name, it can not be the emptry
+    // strin.
+    if ( method != NULL && *method == '\0' )
     {
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
         goto done_out;
