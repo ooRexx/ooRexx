@@ -109,7 +109,7 @@ StreamInfo *checkStreamInfo(RexxMethodContext *context, void *streamPtr, RexxObj
     }
 
     StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
+    stream_info->setContext(context, result);
     return stream_info;
 }
 
