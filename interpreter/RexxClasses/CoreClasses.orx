@@ -2004,6 +2004,25 @@ Output:
   forward class (super) continue array (item)   -- allow the superclass to handle adding the item
   return ret                      -- return removed item
 
+::METHOD section
+  expose size
+  use strict arg index, count = (size)   -- the default is to return everything.  This essentially becomes a rotate
+
+   if datatype(count, "Whole") = .false | count < 0  then
+      raise syntax 93.906 array (2, count)
+
+   count = min(size, count)  -- cap at the number of items
+
+   newqueue = self~class~new(count)
+
+   do while count > 0
+      newqueue~queue(self[index])
+      index += 1
+      if index > size then index = 1  -- handle wrap arounds
+      count -= 1
+   end
+
+   return newqueue
 
 -----------------------------
 
