@@ -198,6 +198,7 @@ RexxObject *WeakReference::newRexx(RexxObject **init_args, size_t argCount)
   requiredArgument(refObj, ARG_ONE);
   // create a new weakReference
   RexxObject *newObj = new WeakReference(refObj);
+  ProtectedObject p(newObj);
   // override the behaviour in case this is a subclass
   newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
   if (((RexxClass *)this)->hasUninitDefined())

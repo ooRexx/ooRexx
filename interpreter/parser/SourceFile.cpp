@@ -923,7 +923,12 @@ void RexxSource::nextClause()
  */
 StackFrameClass *RexxSource::createStackFrame()
 {
-    return new StackFrameClass(FRAME_PARSE, programName, OREF_NULL, OREF_NULL, OREF_NULL, traceBack(clauseLocation, 0, true), clauseLocation.getLineNumber());
+    // construct the traceback line before we allocate the stack frame object.
+    // calling this in the constructor argument list can cause the stack frame instance
+    // to be inadvertently reclaimed if a GC is triggered while evaluating the constructor
+    // arguments.
+    RexxString *traceback = traceBack(clauseLocation, 0, true);
+    return new StackFrameClass(FRAME_PARSE, programName, OREF_NULL, OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber());
 }
 
 
@@ -949,7 +954,9 @@ RexxString *RexxSource::traceBack(
                                          /* trace instruction format?         */
     if (line == OREF_NULLSTRING)
     {
-        line = new_string(NO_SOURCE_MARKER);
+        RexxArray *args = new_array(this->programName);
+        ProtectedObject p(args);
+        line = ActivityManager::currentActivity->buildMessage(Message_Translations_no_source_available, args);
     }
 
     if (indent < 0)                      /* possible negative indentation?    */

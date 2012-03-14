@@ -94,7 +94,12 @@ RexxMethod *InternalActivationFrame::method()
 
 StackFrameClass *InternalActivationFrame::createStackFrame()
 {
-    return new StackFrameClass(FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), new_string(COMPILED_MARKER), SIZE_MAX);
+    RexxArray *info = new_array(name, frameMethod->getScope()->getId());
+    ProtectedObject p(info);
+
+    RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
+    p = message;
+    return new StackFrameClass(FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX);
 }
 
 RexxSource *InternalActivationFrame::getSource()

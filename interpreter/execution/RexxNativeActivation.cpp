@@ -3278,12 +3278,24 @@ void RexxNativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxC
  */
 StackFrameClass *RexxNativeActivation::createStackFrame()
 {
-    const char *type = FRAME_METHOD;
     if (receiver == OREF_NULL)
     {
-        const char *type = FRAME_ROUTINE;
+        RexxArray *info = new_array(getMessageName());
+        ProtectedObject p(info);
+
+        RexxString *message = activity->buildMessage(Message_Translations_compiled_routine_invocation, info);
+        p = message;
+        return new StackFrameClass(FRAME_ROUTINE, getMessageName(), (BaseExecutable *)getExecutableObject(), NULL, getArguments(), message, SIZE_MAX);
     }
-    return new StackFrameClass(type, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), new_string(COMPILED_MARKER), SIZE_MAX);
+    else
+    {
+        RexxArray *info = new_array(getMessageName(), ((RexxMethod *)getExecutableObject())->getScope()->getId());
+        ProtectedObject p(info);
+
+        RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
+        p = message;
+        return new StackFrameClass(FRAME_METHOD, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), message, SIZE_MAX);
+    }
 }
 
 

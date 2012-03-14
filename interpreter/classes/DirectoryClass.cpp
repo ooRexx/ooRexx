@@ -787,6 +787,7 @@ RexxObject *RexxDirectory::newRexx(
     /* object might actually be for a    */
     /* subclass                          */
     RexxDirectory *newDirectory = new_directory();
+    ProtectedObject p(newDirectory);
     newDirectory->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
     /* does object have an UNINT method  */
     if (((RexxClass *)this)->hasUninitDefined())

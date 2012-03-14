@@ -1187,6 +1187,7 @@ RexxList *RexxList::newRexx(
     /* object might actually be for a    */
     /* subclass                          */
     RexxList *newList = new RexxList;
+    ProtectedObject p(newList);
     /* Give new object its behaviour     */
     newList->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
     if (((RexxClass *)this)->hasUninitDefined())

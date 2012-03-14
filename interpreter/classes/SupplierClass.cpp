@@ -250,6 +250,7 @@ RexxObject  *RexxSupplierClass::newRexx(
 /****************************************************************************/
 {
     RexxObject *newObj = new RexxSupplier();
+    ProtectedObject p(newObj);
     newObj->setBehaviour(this->getInstanceBehaviour());
     if (this->hasUninitDefined())
     {

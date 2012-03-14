@@ -46,6 +46,7 @@
 #include "TableClass.hpp"
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"
+#include "ProtectedObject.hpp"
 
 // singleton class instance
 RexxClass *RexxTable::classInstance = OREF_NULL;
@@ -191,6 +192,7 @@ RexxObject *RexxTable::newRexx(
 /******************************************************************************/
 {
     RexxTable *newObj = new_table();                /* get a new table                   */
+    ProtectedObject p(newObj);
     newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
     /* does object have an UNINT method  */
     if (((RexxClass *)this)->hasUninitDefined())

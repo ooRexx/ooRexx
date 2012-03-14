@@ -572,6 +572,8 @@ PackageClass *PackageClass::newRexx(
         package = instance->loadRequires(activity, nameString, sourceArray);
     }
 
+    ProtectedObject p(package);
+
     /* Give new object its behaviour     */
     package->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
     if (((RexxClass *)this)->hasUninitDefined())

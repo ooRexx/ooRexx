@@ -625,6 +625,9 @@
 #define Message_Translations_routine_invocation_msg                  719
 #define Message_Translations_method_invocation_msg                   720
 #define Error_Incorrect_method_multi_dimension_msg                   721
+#define Message_Translations_compiled_method_invocation_msg          722
+#define Message_Translations_compiled_routine_invocation_msg         723
+#define Message_Translations_no_source_available_msg                 724
 
 
 #endif

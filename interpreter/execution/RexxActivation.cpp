@@ -3141,7 +3141,7 @@ void RexxActivation::traceEntry()
 
     if (isMethod())
     {
-        info = new_array(getMessageName(), scope, getPackage()->getName());
+        info = new_array(getMessageName(), scope->getId(), getPackage()->getName());
     }
     else
     {
@@ -4315,5 +4315,10 @@ StackFrameClass *RexxActivation::createStackFrame()
         arguments = getArguments();
     }
 
-    return new StackFrameClass(type, getMessageName(), (BaseExecutable *)getExecutableObject(), target, arguments, getTraceBack(), getContextLineNumber());
+    // construct the traceback line before we allocate the stack frame object.
+    // calling this in the constructor argument list can cause the stack frame instance
+    // to be inadvertently reclaimed if a GC is triggered while evaluating the constructor
+    // arguments.
+    RexxString *traceback = getTraceBack();
+    return new StackFrameClass(type, getMessageName(), (BaseExecutable *)getExecutableObject(), target, arguments, traceback, getContextLineNumber());
 }

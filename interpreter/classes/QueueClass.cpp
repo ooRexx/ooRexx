@@ -588,6 +588,7 @@ RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
 /******************************************************************************/
 {
     RexxObject *newObj =  new RexxQueue;             /* get a new queue                   */
+    ProtectedObject p(newObj);
     /* Initialize the new list instance  */
     newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
     if (((RexxClass *)this)->hasUninitDefined())

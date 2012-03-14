@@ -3831,7 +3831,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_minarg</SymbolicName>
-        <Text>Not enough arguments in method; <Sub position="1" name="number"/> expected</Text>
+        <Text>Not enough arguments for method; <Sub position="1" name="number"/> expected</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -5256,6 +5256,33 @@ special character (such as a parenthesis).
         <Severity>Info</Severity>
         <SymbolicName>Message_Translations_method_invocation</SymbolicName>
         <Text>Method <Sub position="1" name="method"/> with scope <q><Sub position="2" name="class"/></q> in package <Sub position="3" name="package"/></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>101</Code>
+        <Subcode>020</Subcode>
+        <MessageNumber>722</MessageNumber>
+        <Component>Translation</Component>
+        <Severity>Info</Severity>
+        <SymbolicName>Message_Translations_compiled_method_invocation</SymbolicName>
+        <Text>       *-* Compiled method <Sub position="1" name="method"/> with scope <q><Sub position="2" name="class"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>101</Code>
+        <Subcode>021</Subcode>
+        <MessageNumber>723</MessageNumber>
+        <Component>Translation</Component>
+        <Severity>Info</Severity>
+        <SymbolicName>Message_Translations_compiled_routine_invocation</SymbolicName>
+        <Text>       *-* Compiled routine <Sub position="1" name="routine"/></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>101</Code>
+        <Subcode>022</Subcode>
+        <MessageNumber>724</MessageNumber>
+        <Component>Translation</Component>
+        <Severity>Info</Severity>
+        <SymbolicName>Message_Translations_no_source_available</SymbolicName>
+        <Text>Package <q><Sub position="1" name="package"/></q> (no source available)</Text>
       </SubMessage>
     </Subcodes>
   </Message>

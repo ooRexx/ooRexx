@@ -2053,6 +2053,7 @@ RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
     RexxString *string = (RexxString *)stringArgument(stringObj, ARG_ONE);
     /* create a new string object        */
     string = new_string(string->getStringData(), string->getLength());
+    ProtectedObject p(string);
     string->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
     if (((RexxClass *)this)->hasUninitDefined())
     {

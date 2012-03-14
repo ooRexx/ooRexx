@@ -2816,7 +2816,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Not enough arguments in method; <emphasis role="italic">number</emphasis> expected</para>
+<para>Not enough arguments for method; <emphasis role="italic">number</emphasis> expected</para>
 </listitem>
 </varlistentry>
 <varlistentry>

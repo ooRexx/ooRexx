@@ -610,6 +610,9 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Message_Translations_December)
       MINOR(Message_Translations_routine_invocation)
       MINOR(Message_Translations_method_invocation)
+      MINOR(Message_Translations_compiled_method_invocation)
+      MINOR(Message_Translations_compiled_routine_invocation)
+      MINOR(Message_Translations_no_source_available)
 
   MAJOR(Table_end)                       /* make sure table is ended          */
 };

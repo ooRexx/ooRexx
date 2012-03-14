@@ -46,8 +46,6 @@
 #include "RoutineClass.hpp"
 #include "MethodClass.hpp"
 
-#define COMPILED_MARKER "       *-* Compiled code"
-#define NO_SOURCE_MARKER "Source unavailable"
 #define FRAME_PARSE "PARSE"
 #define FRAME_ROUTINE "ROUTINE"
 #define FRAME_METHOD "METHOD"

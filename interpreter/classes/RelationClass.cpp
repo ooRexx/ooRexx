@@ -235,6 +235,7 @@ RexxObject *RexxRelation::newRexx(
 /******************************************************************************/
 {
     RexxRelation *newObj = new_relation();             /* get a new relation                */
+    ProtectedObject p(newObj);
     /* object parse_assignment behaviour */
     newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
     /* Initialize the new list instance  */

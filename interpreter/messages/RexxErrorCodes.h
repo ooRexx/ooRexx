@@ -607,6 +607,9 @@
 #define Message_Translations_December                      101017
 #define Message_Translations_routine_invocation            101018
 #define Message_Translations_method_invocation             101019
+#define Message_Translations_compiled_method_invocation    101020
+#define Message_Translations_compiled_routine_invocation   101021
+#define Message_Translations_no_source_available           101022
 #define Error_RXSUBC_general                               999000
 #define Error_RXSUBC_register                              999001
 #define Error_RXSUBC_drop                                  999002

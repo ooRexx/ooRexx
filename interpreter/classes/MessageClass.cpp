@@ -593,6 +593,7 @@ RexxObject *RexxMessage::newRexx(
     /* actually a subclassed item?       */
     if (((RexxClass *)this)->isPrimitive())
     {
+        ProtectedObject p(newMessage);
         /* Give new object its behaviour     */
         newMessage->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
         newMessage->sendMessage(OREF_INIT);/* call any rexx inits               */

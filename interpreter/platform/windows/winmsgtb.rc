@@ -367,7 +367,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_External_name_not_found_method    "Unable to find external method ""&1"""
    Error_External_name_not_found_routine    "Unable to find external routine ""&1"""
    Error_No_result_object_message    "Message ""&1"" did not return a result"
-   Error_Incorrect_method_minarg    "Not enough arguments in method; &1 expected"
+   Error_Incorrect_method_minarg    "Not enough arguments for method; &1 expected"
    Error_Incorrect_method_maxarg    "Too many arguments in invocation of method; &1 expected"
    Error_Incorrect_method_noarg    "Missing argument in method; argument &1 is required"
    Error_Incorrect_method_number    "Method argument &1 must be a number; found ""&2"""
@@ -625,6 +625,9 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_routine_invocation    "Routine &1 in package &2"
    Message_Translations_method_invocation    "Method &1 with scope ""&2"" in package &3"
    Error_Incorrect_method_multi_dimension    "Method argument &1 cannot have more than a single dimension"
+   Message_Translations_compiled_method_invocation    "       *-* Compiled method &1 with scope ""&2"""
+   Message_Translations_compiled_routine_invocation    "       *-* Compiled routine &1"
+   Message_Translations_no_source_available    "Package ""&1"" (no source available)"
    
 END
 
