@@ -43,7 +43,7 @@
 /*********************************************************************/
 
 #include <windows.h>
-#include <rexx.h>                           /* needed for RexxStart()     */
+#include <oorexxapi.h>                      /* needed for RexxStart()     */
 #include <malloc.h>
 #include <string.h>                         /* needed for strlen()        */
 #include <stdio.h>
@@ -60,13 +60,11 @@ int WINAPI WinMain(
     LPSTR lpCmdLine,	// pointer to command line
     int nCmdShow)
 {
-    short    rexxrc = 0;                 /* return code from rexx             */
-    LONG  rc;                            /* actually running program RC       */
+    int32_t rc;                          /* actually running program RC       */
     const char *program_name;            /* name to run                       */
     CHAR  arg_buffer[1024];              /* starting argument buffer         */
     CONSTRXSTRING arguments;             /* rexxstart argument                */
     size_t argcount;
-    RXSTRING rxretbuf;                   // program return buffer
 
     rc = 0;                              /* set default return                */
 
@@ -81,25 +79,41 @@ int WINAPI WinMain(
     }
     else                               /* real program execution            */
     {
-        rxretbuf.strlength = 0L;           /* initialize return to empty*/
+        RexxInstance        *pgmInst;
+        RexxThreadContext   *pgmThrdInst;
+        RexxArrayObject      rxargs, rxcargs;
+        RexxDirectoryObject  dir;
+        RexxObjectPtr        result;
+        int i;
+        int argc;                            // parsed count of arguments
+        PCHAR *argv;                         // parsed out arguments
 
-        /* Here we call the interpreter.  We don't really need to use     */
-        /* all the casts in this call; they just help illustrate          */
-        /* the data types used.                                           */
-        rc=REXXSTART(argcount,      /* number of arguments   */
-                     &arguments,    /* array of arguments    */
-                     program_name,  /* name of REXX file     */
-                     0,             /* No INSTORE used       */
-                     "CMD",         /* Command env. name     */
-                     RXCOMMAND,     /* Code for how invoked  */
-                     NULL,          /* No system exits */
-                     &rexxrc,       /* Rexx program output   */
-                     &rxretbuf );   /* Rexx program output   */
+        // parse the arguments into argv/argc format
+        argv = CommandLineToArgvA(lpCmdLine, &argc);
 
-        if ((rc==0) && rxretbuf.strptr) {
-            RexxFreeMemory(rxretbuf.strptr);        /* Release storage only if*/
+        RexxCreateInterpreter(&pgmInst, &pgmThrdInst, NULL);
+        // configure the traditional single argument string
+        rxargs = pgmThrdInst->NewArray(1);
+        pgmThrdInst->ArrayPut(rxargs,
+                              pgmThrdInst->NewString(arguments.strptr, arguments.strlength), 1);
+        // set up the C args into the .local environment
+        dir = (RexxDirectoryObject)pgmThrdInst->GetLocalEnvironment();
+        rxcargs = pgmThrdInst->NewArray(argc - 2);
+        for (i = 2; i < argc; i++) {
+            pgmThrdInst->ArrayPut(rxcargs,
+                                  pgmThrdInst->NewStringFromAsciiz(argv[i]),
+                                  i - 1);
         }
-        freeArguments(program_name, &arguments);
+
+        pgmThrdInst->DirectoryPut(dir, rxcargs, "SYSCARGS");
+
+        LocalFree(argv);        // released the parsed argguments
+        // call the interpreter
+        result = pgmThrdInst->CallProgram(program_name, rxargs);
+        rc = 0;
+        if (result != NULL) {
+            pgmThrdInst->ObjectToInt32(result, &rc);
+        }
 
         if (rc < 0)
         {
@@ -108,7 +122,7 @@ int WINAPI WinMain(
         }
     }
     // return interpeter or
-    return rc ? rc : rexxrc;                    // rexx program return cd
+    return rc;                                  // rexx program return cd
 }
 
 
