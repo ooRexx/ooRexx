@@ -733,7 +733,7 @@ static RexxStringObject wmsz2string(RexxThreadContext *c, WPARAM wParam)
     return c->String(s);
 }
 
-static RexxStringObject sc2string(RexxThreadContext *c, WPARAM wParam)
+static RexxObjectPtr sc2rexx(RexxThreadContext *c, WPARAM wParam)
 {
     CSTRING s;
 
@@ -805,8 +805,8 @@ static RexxStringObject sc2string(RexxThreadContext *c, WPARAM wParam)
             s = "ISSECURE";
             break;
         default :
-            s = "UNKNOWN";
-            break;
+            // Could be a menu command item inserted by the user
+            return c->WholeNumber(wParam & 0xFFF0);
     }
     return c->String(s);
 }
@@ -2328,7 +2328,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                         {
                             /* Args to ooRexx: The SC_xx command name, x, y
                              */
-                            RexxStringObject sc_cmd = sc2string(c, wParam);
+                            RexxObjectPtr sc_cmd = sc2rexx(c, wParam);
                             RexxObjectPtr x, y;
 
 
