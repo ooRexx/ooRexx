@@ -2115,7 +2115,12 @@ BUILTIN(LINES)
     /* to only return 0 or 1             */
     if (toupper(option->getChar(0)) == 'N')
     {
-        return (result != IntegerZero) ? IntegerOne : IntegerZero;
+        wholenumber_t count = 0;
+        if (result->numberValue(count))
+        {
+            return (count != 0) ? IntegerOne : IntegerZero;
+        }
+        return result;    // not sure what this, just return directly
     }
     else
     {
