@@ -37,7 +37,7 @@
 
 /* ooDialog User Guide
    Samples\Popups
-   Popups.rex 							  v01-01 01Mar12
+   Popups.rex 							  v01-02 16Mar12
 
    The four dialogs in this file illustrate how popups can be tested in
    stand-alone mode with a single code base. If a given dialog pops up another
@@ -46,7 +46,7 @@
 
    Associated files: None.
 
-   Invocation:  popups [runType] [offset]
+   Invocation:  popups [runType]
 
    "runType" controls which dialog to surface in "standalone" mode as follows:
       "p" for parent, "c" for child, or "g" for grandchild, "gg" for
@@ -58,6 +58,7 @@
    Change Log:
    v01-00 18Sep11: First Version.
    v01-01 01Mar12: Added a "help"; corrected a typo in a comment.
+   v01-02 16Mar12: Changes to comments only.
 
 ------------------------------------------------------------------------------*/
 
@@ -70,7 +71,7 @@ if runtype = "?" then do
   say "| can be run 'standalone' - that is, as the 'parent' of other 'younger' |"
   say "| dialogs.                                                              |"
   say "|                                                                       |"
-  say "| Syntax: 'TestPopups [runType]'                                        |"
+  say "| Syntax: 'Popups [runType]'                                            |"
   say "|                                                                       |"
   say "| - runType: Defines the 'root' dialog as follows:                      |"
   say "|   'p/P' or null for Parent,  'c/C'   for Child,                       |"
@@ -134,6 +135,7 @@ end
     use arg rootDlg
     dlg = self~new
     dlg~activate(rootDlg)
+
 
   ::METHOD init
     forward class (super) continue
