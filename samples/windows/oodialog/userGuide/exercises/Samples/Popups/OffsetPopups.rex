@@ -187,7 +187,7 @@ end
 
   ::METHOD initDialog					-- added for offset
     expose rootDlg dlgPos standalone
-    if standalone \= .true then self~offset2(dlgPos)
+    if standalone \= .true then self~offset(dlgPos)
 
 
   ::METHOD popup UNGUARDED
@@ -229,7 +229,7 @@ end
 
   ::METHOD initDialog					-- added for offset
     expose rootDlg dlgPos standalone
-    if standalone \= .true then self~offset2(dlgPos)
+    if standalone \= .true then self~offset(dlgPos)
 
 
   ::METHOD popup UNGUARDED
@@ -264,7 +264,7 @@ end
 
   ::METHOD initDialog					-- added for offset
     expose rootdlg dlgPos
-    if rootDlg \= "SA" then self~offset2(dlgPos)
+    if rootDlg \= "SA" then self~offset(dlgPos)
 
 /*---------------------------------------------------------------------------*/
 
@@ -281,16 +281,9 @@ end
     popupPos~incr(offset,offset)
     return popupPos
 
-  ::METHOD offset2
+  ::METHOD offset
     use arg dlgPos
     self~moveTo(dlgPos, 'SHOWWINDOW')
-    self~ensureVisible()
-
-  ::METHOD offset
-    use arg parent, offset
-    parentPos = parent~getRealPos
-    parentPos~incr(offset,offset)
-    self~moveTo(parentPos, 'SHOWWINDOW')
     self~ensureVisible()
 
 /*---------------------------------------------------------------------------*/
