@@ -1155,6 +1155,63 @@ bool msgReplyIsGood(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr
     return ! haveCondition;
 }
 
+
+/**
+ * Checks that there is no pending condition and ends the dialog if there is
+ * one.  This is like msgReplyIsGood(), but is used when we do not enforce that
+ * the user returns a value form the event handler.
+ *
+ * @param c
+ * @param pcpbd
+ * @param methodName
+ * @param clear
+ *
+ * @return True if there is a pending condition and the dialog was ended,
+ *         otherwise false.
+ */
+bool endOnCondition(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, bool clear)
+{
+    bool haveCondition = checkForCondition(c, clear);
+
+    if ( checkForCondition(c, clear) )
+    {
+        endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ * Checks that reply is either true or false.  If not, an exception is raised
+ * and the dialog is ended.
+ *
+ * @param c
+ * @param pcpbd
+ * @param reply
+ * @param method
+ * @param clear
+ *
+ * @return TheTrueObj or TheFalseObj on success, NULLOBJECT on failure.
+ */
+RexxObjectPtr requiredBooleanReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply,
+                                   CSTRING method, bool clear)
+{
+    RexxObjectPtr result = NULLOBJECT;
+
+    if ( msgReplyIsGood(c, pcpbd, reply, method, false) )
+    {
+        result = convertToTrueOrFalse(c, reply);
+        if ( result == NULLOBJECT )
+        {
+            wrongReplyNotBooleanException(c, method, reply);
+            checkForCondition(c, false);
+            endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+        }
+    }
+    return result;
+}
+
 /**
  * The simplest form of invoking the Rexx method connected to a WM_NOTIFY
  * message.  The Rexx method is invoked with two arguments, the resource ID of
@@ -1244,6 +1301,47 @@ bool invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodN
 }
 
 /**
+ * Invokes the Rexx dialog's event handling method for a Windows message.
+ *
+ * The method invocation is done directly by sending a message to the method.
+ *
+ * @param c       Thread context we are operating in.
+ * @param obj     The Rexx dialog whose method will be invoked.
+ * @param method  The name of the method being invoked
+ * @param args    The argument array for the method being invoked
+ *
+ * @return True for no problems, false if a condition was raised during the
+ *         execution of the Rexx method.
+ *
+ * @remarks  This function is exactly like invokeDirect(), except it does not
+ *           check that the Rexx method returned a value.
+ *
+ *           Earlier versions of ooDialog, on the C++ side, constructed a method
+ *           invocation string, placed it on a queue, and returned immediately
+ *           to the message processing loop.  On the Rexx side, the string was
+ *           pulled from the queue and the event handler method invoked through
+ *           interpret.  This meant that the Rexx programmer could never block
+ *           the window loop, but also could never reply to any window message.
+ *
+ *           This function should be used when:
+ *
+ *           a.) The reply to the window message is ignored and either the
+ *           default behaviour is to wait for the reply, or the Rexx programmer
+ *           has specified to wait for a reply, and checking that the method
+ *           actually returned a value should be skipped.
+ *
+ *           b.) When it has been determined that invoking the method directly
+ *           improves things, but it is expected that there are exisiing
+ *           programs connecting the event that do not return a value.  A
+ *           perfect example is the WM_SIZE message.
+ */
+bool invokeSync(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, RexxArrayObject args)
+{
+    RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+    return ! endOnCondition(c, pcpbd, methodName, false);
+}
+
+/**
  * Construct the argument array sent to the Rexx event handling method through
  * dispatchWindowMessage().
  *
@@ -1312,6 +1410,11 @@ MsgReplyType genericInvokeDispatch(pCPlainBaseDialog pcpbd, char *rexxMethod, WP
     if ( tag & TAG_REPLYFROMREXX )
     {
         invokeDirect(c, pcpbd, rexxMethod, args);
+        return ReplyTrue;
+    }
+    if ( tag & TAG_SYNC )
+    {
+        invokeSync(c, pcpbd, rexxMethod, args);
         return ReplyTrue;
     }
     else
@@ -1916,22 +2019,14 @@ MsgReplyType processTCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
         {
             case TCN_SELCHANGING :
             {
-                RexxObjectPtr rexxReply;
-
                 // The Rexx programmer returns .true, changing the tab is okay, or .false do not change tabs.
-                rexxReply = c->SendMessage2(pcpbd->rexxSelf, methodName, idFrom, hwndFrom);
+                RexxObjectPtr msgReply = c->SendMessage2(pcpbd->rexxSelf, methodName, idFrom, hwndFrom);
 
-                if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
+                msgReply = requiredBooleanReply(c, pcpbd, msgReply, methodName, false);
+                if ( msgReply == TheTrueObj || msgReply == TheFalseObj )
                 {
-                    if ( rexxReply == TheTrueObj || rexxReply == TheFalseObj  )
-                    {
-                        // Return true to prevent the change.
-                        setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT,  rexxReply == TheTrueObj ? FALSE : TRUE);
-                    }
-                    else
-                    {
-                        wrongReplyListException(c, methodName, ".true or .false", rexxReply);
-                    }
+                    // Return true to prevent the change.
+                    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, msgReply == TheTrueObj ? FALSE : TRUE);
                 }
                 return ReplyTrue;
             }
@@ -2264,6 +2359,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
             RexxArrayObject args;
 
             char  *np = NULL;
+            char  *method = m[i].rexxMethod;
             int    item = OOD_INVALID_ITEM_ID;
             HANDLE handle = NULL;
 
@@ -2285,7 +2381,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                                                   c->Int32(phi->MousePos.x), c->Int32(phi->MousePos.x));
                             c->ArrayPut(args, c->Uintptr(phi->dwContextId), 5);
 
-                            return invokeDispatch(c, pcpbd->rexxSelf, c->String(m[i].rexxMethod), args);
+                            return invokeDispatch(c, pcpbd->rexxSelf, c->String(method), args);
                         }
                         break;
 
@@ -2305,7 +2401,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                              */
                             args = c->ArrayOfThree(pointer2string(c, (void *)wParam), c->Int32(GET_X_LPARAM(lParam)),
                                                    c->Int32(GET_Y_LPARAM(lParam)));
-                            invokeDispatch(c, pcpbd->rexxSelf, c->String(m[i].rexxMethod), args);
+                            invokeDispatch(c, pcpbd->rexxSelf, c->String(method), args);
                             return ReplyTrue;
                         }
                         break;
@@ -2320,7 +2416,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                              * words.
                              */
                             args = c->ArrayOfTwo(c->WholeNumber(wParam), c->NewPointer((POINTER)lParam));
-                            return invokeDispatch(c, pcpbd->rexxSelf, c->String(m[i].rexxMethod), args);
+                            return invokeDispatch(c, pcpbd->rexxSelf, c->String(method), args);
                         }
                         break;
 
@@ -2351,23 +2447,17 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                             MsgReplyType reply = ReplyFalse;
                             RexxArrayObject args = c->ArrayOfThree(sc_cmd, x, y);
 
-                            RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                            RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, method, args);
 
-                            if ( msgReplyIsGood(c, pcpbd, msgReply, m[i].rexxMethod, false) )
+                            msgReply = requiredBooleanReply(c, pcpbd, msgReply, method, false);
+                            if ( msgReply == TheTrueObj )
                             {
-                                if ( msgReply == TheTrueObj )
-                                {
-                                    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 0);
-                                    reply = ReplyTrue;
-                                }
-                                else if ( msgReply== TheFalseObj )
-                                {
-                                    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 1);
-                                }
-                                else
-                                {
-                                    wrongReplyListException(c, m[i].rexxMethod, ".true or .false", msgReply);
-                                }
+                                setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 0);
+                                reply = ReplyTrue;
+                            }
+                            else
+                            {
+                                setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 1);
                             }
                             return reply;
                         }
@@ -2386,23 +2476,17 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                             MsgReplyType reply = ReplyFalse;
                             RexxPointerObject rxHMenu = c->NewPointer((POINTER)wParam);
 
-                            RexxObjectPtr msgReply = c->SendMessage1(pcpbd->rexxSelf, m[i].rexxMethod, rxHMenu);
+                            RexxObjectPtr msgReply = c->SendMessage1(pcpbd->rexxSelf, method, rxHMenu);
 
-                            if ( msgReplyIsGood(c, pcpbd, msgReply, m[i].rexxMethod, false) )
+                            msgReply = requiredBooleanReply(c, pcpbd, msgReply, method, false);
+                            if ( msgReply == TheTrueObj )
                             {
-                                if ( msgReply == TheTrueObj )
-                                {
-                                    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 0);
-                                    reply = ReplyTrue;
-                                }
-                                else if ( msgReply == TheFalseObj )
-                                {
-                                    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 1);
-                                }
-                                else
-                                {
-                                    wrongReplyListException(c, m[i].rexxMethod, ".true or .false", msgReply);
-                                }
+                                setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 0);
+                                reply = ReplyTrue;
+                            }
+                            else
+                            {
+                                setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 1);
                             }
                             return reply;
                         }
@@ -2414,7 +2498,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                     break;
 
                 case TAG_MOUSE :
-                    return processMouseMsg(c, m[i].rexxMethod, m[i].tag, msg, wParam, lParam, pcpbd);
+                    return processMouseMsg(c, method, m[i].tag, msg, wParam, lParam, pcpbd);
 
                 default :
                     break;
@@ -2448,18 +2532,12 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                 MsgReplyType reply = ReplyFalse;
                 RexxArrayObject args = c->ArrayOfFour(flag, hwnd, hFocus, isMinimized);
 
-                RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, method, args);
 
-                if ( msgReplyIsGood(c, pcpbd, msgReply, m[i].rexxMethod, false) )
+                msgReply = requiredBooleanReply(c, pcpbd, msgReply, method, false);
+                if ( msgReply == TheTrueObj )
                 {
-                    if ( msgReply == TheTrueObj )
-                    {
-                        reply = ReplyTrue;
-                    }
-                    else if ( msgReply != TheFalseObj )
-                    {
-                        wrongReplyListException(c, m[i].rexxMethod, ".true or .false", msgReply);
-                    }
+                    reply = ReplyTrue;
                 }
                 return reply;
             }
@@ -2475,28 +2553,22 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                 MsgReplyType reply = ReplyFalse;
                 RexxArrayObject args = c->ArrayOfTwo(rect, wmsz);
 
-                RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, m[i].rexxMethod, args);
+                RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, method, args);
 
-                if ( msgReplyIsGood(c, pcpbd, msgReply, m[i].rexxMethod, false) )
+                msgReply = requiredBooleanReply(c, pcpbd, msgReply, method, false);
+                if ( msgReply == TheTrueObj )
                 {
-                    if ( msgReply == TheTrueObj )
-                    {
-                        PRECT r = (PRECT)c->ObjectToCSelf(rect);
-                        wRect->top = r->top;
-                        wRect->left = r->left;
-                        wRect->bottom = r->bottom;
-                        wRect->right = r->right;
-                        reply = ReplyTrue;
-                    }
-                    else if ( msgReply != TheFalseObj )
-                    {
-                        wrongReplyListException(c, m[i].rexxMethod, ".true or .false", msgReply);
-                    }
+                    PRECT r = (PRECT)c->ObjectToCSelf(rect);
+                    wRect->top = r->top;
+                    wRect->left = r->left;
+                    wRect->bottom = r->bottom;
+                    wRect->right = r->right;
+                    reply = ReplyTrue;
                 }
                 return reply;
             }
 
-            return genericInvokeDispatch(pcpbd, m[i].rexxMethod, wParam, lParam, np, handle, item, m[i].tag);
+            return genericInvokeDispatch(pcpbd, method, wParam, lParam, np, handle, item, m[i].tag);
         }
     }
     return ContinueProcessing;

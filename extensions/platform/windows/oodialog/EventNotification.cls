@@ -57,8 +57,10 @@
 
 -- WM_SIZE
 ::method connectResize
-   use strict arg msgToRise = 'onResize'
-   return self~addUserMsg(msgToRise, 0x00000005, 0xFFFFFFFF, 0, 0, 0, 0)
+   use strict arg msgToRise = 'onResize', sync = .true
+   tag = 0
+   if sync then tag = 0x08000000
+   return self~addUserMsg(msgToRise, 0x00000005, 0xFFFFFFFF, 0, 0, 0, 0, tag)
 
 -- WM_SIZING
 ::method connectResizing
