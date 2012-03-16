@@ -57,8 +57,7 @@
    The default is runtype = Parent and offset = 0.
 
    Change Log:
-   v01-01 01Mar12: First Version (Note to Self - file date 04Mar because I tested syssleep.
-                   Code now identical to committed version.)
+   v01-01 01Mar12: First Version
    v01-02 16Mar12: Changed to make parent define child's position, then make
    		   child appear according to parent's offset instruction.
    		   Much simpler - and arguably better encapsulation.
@@ -74,7 +73,7 @@ if runtype = "?" then do
   say "| can be run 'standalone' - that is, as the 'parent' of other 'younger' |"
   say "| dialogs.                                                              |"
   say "|                                                                       |"
-  say "| Syntax: 'OffsetPopups [runType] [offset]'                         |"
+  say "| Syntax: 'OffsetPopups [runType] [offset]'                             |"
   say "|                                                                       |"
   say "| - runType: Defines the 'root' dialog as follows:                      |"
   say "|   'p/P' or null for Parent,  'c/C'   for Child,                       |"
