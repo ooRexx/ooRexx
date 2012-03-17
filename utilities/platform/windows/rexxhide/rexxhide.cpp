@@ -93,16 +93,30 @@ int WINAPI WinMain(
 
         RexxCreateInterpreter(&pgmInst, &pgmThrdInst, NULL);
         // configure the traditional single argument string
-        rxargs = pgmThrdInst->NewArray(1);
-        pgmThrdInst->ArrayPut(rxargs,
-                              pgmThrdInst->NewString(arguments.strptr, arguments.strlength), 1);
+        if ( arguments.strptr != NULL )
+        {
+            rxargs = pgmThrdInst->NewArray(1);
+            pgmThrdInst->ArrayPut(rxargs, pgmThrdInst->NewString(arguments.strptr, arguments.strlength), 1);
+        }
+        else
+        {
+            rxargs = pgmThrdInst->NewArray(0);
+        }
+
         // set up the C args into the .local environment
         dir = (RexxDirectoryObject)pgmThrdInst->GetLocalEnvironment();
-        rxcargs = pgmThrdInst->NewArray(argc - 2);
-        for (i = 2; i < argc; i++) {
-            pgmThrdInst->ArrayPut(rxcargs,
-                                  pgmThrdInst->NewStringFromAsciiz(argv[i]),
-                                  i - 1);
+        if ( argc > 2 )
+        {
+            rxcargs = pgmThrdInst->NewArray(argc - 2);
+        }
+        else
+        {
+            rxcargs = pgmThrdInst->NewArray(0);
+        }
+
+        for (i = 2; i < argc; i++)
+        {
+            pgmThrdInst->ArrayPut(rxcargs, pgmThrdInst->NewStringFromAsciiz(argv[i]), i - 1);
         }
 
         pgmThrdInst->DirectoryPut(dir, rxcargs, "SYSCARGS");

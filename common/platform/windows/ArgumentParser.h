@@ -176,24 +176,24 @@ void freeArguments(const char *program, PCONSTRXSTRING arguments)
 // argv/argc format.  Used for setting the array of arguments
 // in .local
 
-PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc)
+PCHAR* CommandLineToArgvA(PCHAR CmdLine, int32_t* _argc)
 {
-    PCHAR* argv;
-    PCHAR  _argv;
-    ULONG   len;
-    ULONG   argc;
-    CHAR   a;
-    ULONG   i, j;
+    char     **argv;
+    char      *_argv;
+    size_t    len;
+    int32_t   argc;
+    char      a;
+    size_t    i, j;
 
     BOOLEAN  in_QM;
     BOOLEAN  in_TEXT;
     BOOLEAN  in_SPACE;
 
     len = strlen(CmdLine);
-    i = ((len+2)/2)*sizeof(PVOID) + sizeof(PVOID);
+    i = ((len+2)/2)*sizeof(void *) + sizeof(void *);
 
-    argv = (PCHAR*)GlobalAlloc(GMEM_FIXED,
-                               i + (len+2)*sizeof(CHAR));
+    argv = (char**)GlobalAlloc(GMEM_FIXED,
+                               i + (len+2)*sizeof(char));
 
     _argv = (PCHAR)(((PUCHAR)argv)+i);
 

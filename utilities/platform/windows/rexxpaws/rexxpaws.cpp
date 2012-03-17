@@ -78,43 +78,38 @@ void __cdecl set_pause_at_exit( void )
 //
 int __cdecl main(int argc, char *argv[])
 {
-    short    rexxrc = 0;                 /* return code from rexx             */
-    int   i;                             /* loop counter                      */
+    int16_t   rexxrc = 0;                /* return code from rexx             */
+    int32_t   i;                         /* loop counter                      */
     int32_t  rc;                         /* actually running program RC       */
     const char *program_name;            /* name to run                       */
     char  arg_buffer[8192];              /* starting argument buffer          */
-    CONSTRXSTRING arguments;             /* rexxstart argument                */
-    size_t argcount;
-    RXSTRING rxretbuf;                   // program return buffer
 
     rc = 0;                              /* set default return                */
 
     /*
      * Convert the input array into a single string for the Object REXX
-     * argument string. Initialize the RXSTRING variable to point to this
-     * string. Keep the string null terminated so we can print it for debug.
-     * First argument is name of the REXX program
-     * Next argument(s) are parameters to be passed
+     * argument string. First argument is name of the REXX program Next
+     * argument(s) are parameters to be passed.  Note that rexxpaws does not
+     * currently accept any options, so the parsing is straight forward.
     */
     set_pause_at_exit();
 
     arg_buffer[0] = '\0';                /* default to no argument string     */
     program_name = NULL;                 /* no program to run yet             */
 
-    for (i = 1; i < argc; i++)         /* loop through the arguments        */
+    for (i = 1; i < argc; i++)           /* loop through the arguments        */
     {
         if (program_name == NULL)        /* no name yet?                      */
         {
-            program_name = argv[i];        /* program is first non-option       */
-            break;      /* end parsing after program_name has been resolved */
+            program_name = argv[i];      /* program is first non-option       */
         }
-        else                           /* part of the argument string       */
+        else                             /* part of the argument string       */
         {
-            if (arg_buffer[0] != '\0')     /* not the first one?                */
+            if (arg_buffer[0] != '\0')   /* not the first one?                */
             {
-                strcat(arg_buffer, " ");     /* add an blank                      */
+                strcat(arg_buffer, " "); /* add an blank                      */
             }
-            strcat(arg_buffer, argv[i]);   /* add this to the argument string   */
+            strcat(arg_buffer, argv[i]); /* add this to the argument string   */
         }
     }
 
@@ -125,7 +120,7 @@ int __cdecl main(int argc, char *argv[])
         printf("Syntax: REXXPAWS ProgramName [parameter_1....parameter_n]\n");
         return -1;
     }
-    else                               /* real program execution            */
+    else                                 /* real program execution            */
     {
         RexxInstance        *pgmInst;
         RexxThreadContext   *pgmThrdInst;
@@ -134,10 +129,18 @@ int __cdecl main(int argc, char *argv[])
         RexxObjectPtr        result;
 
         RexxCreateInterpreter(&pgmInst, &pgmThrdInst, NULL);
+
         // configure the traditional single argument string
-        rxargs = pgmThrdInst->NewArray(1);
-        pgmThrdInst->ArrayPut(rxargs,
-                              pgmThrdInst->NewStringFromAsciiz(arg_buffer), 1);
+        if ( arg_buffer[0] != '\0' )
+        {
+            rxargs = pgmThrdInst->NewArray(1);
+            pgmThrdInst->ArrayPut(rxargs, pgmThrdInst->String(arg_buffer), 1);
+        }
+        else
+        {
+            rxargs = pgmThrdInst->NewArray(0);
+        }
+
         // set up the C args into the .local environment
         dir = (RexxDirectoryObject)pgmThrdInst->GetLocalEnvironment();
         rxcargs = pgmThrdInst->NewArray(1);
@@ -155,6 +158,6 @@ int __cdecl main(int argc, char *argv[])
         }
     }
     // return interpeter or
-    return rc ? rc : rexxrc;                    // rexx program return cd
+    return rc ? rc : rexxrc;
 }
 
