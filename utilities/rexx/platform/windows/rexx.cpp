@@ -193,15 +193,23 @@ int __cdecl main(int argc, char *argv[]) {
         else {
             RexxCreateInterpreter(&pgmInst, &pgmThrdInst, NULL);
             // configure the traditional single argument string
-            rxargs = pgmThrdInst->NewArray(1);
-            pgmThrdInst->ArrayPut(rxargs, 
-                                  pgmThrdInst->NewStringFromAsciiz(arg_buffer), 1);
+
+            if ( arguments.strptr != NULL )
+            {
+                rxargs = pgmThrdInst->NewArray(1);
+                pgmThrdInst->ArrayPut(rxargs, pgmThrdInst->String(arguments.strptr), 1);
+            }
+            else
+            {
+                rxargs = pgmThrdInst->NewArray(0);
+            }
+
             // set up the C args into the .local environment
             dir = (RexxDirectoryObject)pgmThrdInst->GetLocalEnvironment();
             rxcargs = pgmThrdInst->NewArray(1);
             for (i = 2; i < argc; i++) {
-                pgmThrdInst->ArrayPut(rxcargs, 
-                                      pgmThrdInst->NewStringFromAsciiz(argv[i]), 
+                pgmThrdInst->ArrayPut(rxcargs,
+                                      pgmThrdInst->NewStringFromAsciiz(argv[i]),
                                       i - 1);
             }
             pgmThrdInst->DirectoryPut(dir, rxcargs, "SYSCARGS");
