@@ -330,16 +330,8 @@ wholenumber_t RexxActivity::error()
         this->popStackFrame(false);
     }
 
-    wholenumber_t rc = Error_Interpretation/1000;      /* set default return code           */
-    /* did we get a condtion object?     */
-    if (this->conditionobj != OREF_NULL)
-    {
-        /* force it to display               */
-        this->display(this->conditionobj);
-        // try to convert.  Leaves unchanged if not value
-        this->conditionobj->at(OREF_RC)->numberValue(rc);
-    }
-    return rc;                           /* return the error code             */
+    // go display
+    return displayCondition(this->conditionobj);
 }
 
 
@@ -364,15 +356,39 @@ wholenumber_t RexxActivity::error(RexxActivationBase *activation, RexxDirectory 
         this->popStackFrame(false);
     }
 
-    wholenumber_t rc = Error_Interpretation/1000;      /* set default return code           */
-    /* did we get a condtion object?     */
-    if (errorInfo != OREF_NULL)
+    // go display
+    return displayCondition(errorInfo);
+}
+
+/**
+ * Display error information and traceback lines for a
+ * Syntax condition.
+ *
+ * @param errorInfo The condition object with the error information
+ *
+ * @return The major error code for the syntax error, if this is
+ *         indeed a syntax conditon.
+ */
+wholenumber_t RexxActivity::displayCondition(RexxDirectory *errorInfo)
+{
+    // no condition object?  This is a nop
+    if (errorInfo == OREF_NULL)
     {
-        /* force it to display               */
-        this->display(errorInfo);
-        // try to convert.  Leaves unchanged if not value
-        errorInfo->at(OREF_RC)->numberValue(rc);
+        return 0;   // no error condition to return
     }
+
+    RexxString *condition = (RexxString *)errorInfo->at(OREF_CONDITION);
+    // we only display syntax conditions
+    if (condition == OREF_NULL || !condition->isEqual(OREF_SYNTAX))
+    {
+        return 0;   // no error condition to return
+    }
+    // display the information
+    this->display(errorInfo);
+
+    wholenumber_t rc = Error_Interpretation/1000;      /* set default return code           */
+    // try to convert.  Leaves unchanged if not value
+    errorInfo->at(OREF_RC)->numberValue(rc);
     return rc;                           /* return the error code             */
 }
 

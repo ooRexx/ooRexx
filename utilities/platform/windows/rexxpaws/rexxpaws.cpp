@@ -152,10 +152,17 @@ int __cdecl main(int argc, char *argv[])
         pgmThrdInst->DirectoryPut(dir, rxcargs, "SYSCARGS");
         // call the interpreter
         result = pgmThrdInst->CallProgram(program_name, rxargs);
-        rc = 0;
+        // display any error message if there is a condition.
+        // if there was an error, then that will be our return code
+        rc = pgmThrdInst->DisplayCondition();
+        if (rc != 0) {
+            return -rc;   // well, the negation of the error number is the return code
+        }
         if (result != NULL) {
             pgmThrdInst->ObjectToInt32(result, &rc);
         }
+
+        return rc;
     }
     // return interpeter or
     return rc ? rc : rexxrc;

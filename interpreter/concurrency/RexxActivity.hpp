@@ -142,6 +142,7 @@ typedef enum
    wholenumber_t error();
    wholenumber_t error(RexxActivationBase *, RexxDirectory *errorInfo);
    wholenumber_t errorNumber(RexxDirectory *conditionObject);
+   wholenumber_t displayCondition(RexxDirectory *conditionObject);
    bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
    bool        raiseCondition(RexxDirectory *);
    RexxDirectory *createConditionObject(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);

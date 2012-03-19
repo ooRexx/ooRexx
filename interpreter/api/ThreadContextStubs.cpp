@@ -1768,6 +1768,19 @@ logical_t RexxEntry CheckCondition(RexxThreadContext *c)
     return false;
 }
 
+wholenumber_t RexxEntry DisplayCondition(RexxThreadContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.activity->displayCondition(context.context->getConditionInfo());
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return Error_Interpretation/1000;   // this is a default one if something goes wrong
+}
+
 RexxDirectoryObject RexxEntry GetConditionInfo(RexxThreadContext *c)
 {
     ApiContext context(c);
@@ -1953,4 +1966,5 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     OREF_NULL,
     OREF_NULL,
     ObjectToCSelfScoped,
+    DisplayCondition,
 };

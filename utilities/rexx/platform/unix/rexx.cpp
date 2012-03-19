@@ -91,14 +91,14 @@ int main (int argc, char **argv) {
                     instore[1].strlength = 0;
                     real_argument = false;
                     break;
-              
+
                 case 'v': case 'V':      /* display version string            */
                     ptr = RexxGetVersionInformation();
                     fprintf(stdout, ptr);
                     fprintf(stdout, "\n");
                     RexxFreeMemory(ptr);
                     return 0;
-              
+
                 default:                 /* ignore other switches             */
                     break;
             }
@@ -144,23 +144,30 @@ int main (int argc, char **argv) {
         RexxCreateInterpreter(&pgmInst, &pgmThrdInst, NULL);
         // configure the traditional single argument string
         rxargs = pgmThrdInst->NewArray(1);
-        pgmThrdInst->ArrayPut(rxargs, 
+        pgmThrdInst->ArrayPut(rxargs,
                               pgmThrdInst->NewStringFromAsciiz(arg_buffer), 1);
         // set up the C args into the .local environment
         dir = (RexxDirectoryObject)pgmThrdInst->GetLocalEnvironment();
         rxcargs = pgmThrdInst->NewArray(1);
         for (i = 2; i < argc; i++) {
-            pgmThrdInst->ArrayPut(rxcargs, 
-                                  pgmThrdInst->NewStringFromAsciiz(argv[i]), 
+            pgmThrdInst->ArrayPut(rxcargs,
+                                  pgmThrdInst->NewStringFromAsciiz(argv[i]),
                                   i - 1);
         }
         pgmThrdInst->DirectoryPut(dir, rxcargs, "SYSCARGS");
         // call the interpreter
         result = pgmThrdInst->CallProgram(program_name, rxargs);
-        rc = 0;
+        // display any error message if there is a condition.
+        // if there was an error, then that will be our return code
+        rc = pgmThrdInst->DisplayCondition();
+        if (rc != 0) {
+            return -rc;   // well, the negation of the error number is the return code
+        }
         if (result != NULL) {
             pgmThrdInst->ObjectToInt32(result, &rc);
         }
+
+        return rc;
     }
     return rc ? rc : rexxrc;
 

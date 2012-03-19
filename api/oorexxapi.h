@@ -439,7 +439,8 @@ typedef struct
 } RexxInstanceInterface;
 
 #define THREAD_INTERFACE_VERSION_4_0_0 100
-#define THREAD_INTERFACE_VERSION 101
+#define THREAD_INTERFACE_VERSION_4_1_1 101
+#define THREAD_INTERFACE_VERSION 102
 
 BEGIN_EXTERN_C()
 
@@ -591,6 +592,7 @@ typedef struct
     RexxStringObject RexxNullString;
 
     POINTER          (RexxEntry *ObjectToCSelfScoped)(RexxThreadContext *, RexxObjectPtr, RexxObjectPtr);
+    wholenumber_t    (RexxEntry *DisplayCondition)(RexxThreadContext *);
 
 } RexxThreadInterface;
 
@@ -1312,6 +1314,10 @@ struct RexxThreadContext_
     {
         return functions->CheckCondition(this);
     }
+    wholenumber_t DisplayCondition()
+    {
+        return functions->DisplayCondition(this);
+    }
     RexxDirectoryObject GetConditionInfo()
     {
         return functions->GetConditionInfo(this);
@@ -1960,6 +1966,10 @@ struct RexxMethodContext_
     logical_t CheckCondition()
     {
         return threadContext->CheckCondition();
+    }
+    logical_t DisplayCondition()
+    {
+        return threadContext->DisplayCondition();
     }
     RexxDirectoryObject GetConditionInfo()
     {
@@ -2670,6 +2680,10 @@ struct RexxCallContext_
     logical_t CheckCondition()
     {
         return threadContext->CheckCondition();
+    }
+    logical_t DisplayCondition()
+    {
+        return threadContext->DisplayCondition();
     }
     RexxDirectoryObject GetConditionInfo()
     {
@@ -3382,6 +3396,10 @@ struct RexxExitContext_
     logical_t CheckCondition()
     {
         return threadContext->CheckCondition();
+    }
+    logical_t DisplayCondition()
+    {
+        return threadContext->DisplayCondition();
     }
     RexxDirectoryObject GetConditionInfo()
     {
