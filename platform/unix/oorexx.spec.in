@@ -254,6 +254,7 @@ else
    # else, try good old chkconfig
    chkconfig --add rxapid
 fi
+echo %{_libdir}/ooRexx > /etc/ld.so.conf.d/ooRexx.conf
 ldconfig
 service rxapid start
 
@@ -277,6 +278,7 @@ rm -f %{_bindir}/rexxtry.rex
 #******************************************************************************
 %postun
 #******************************************************************************
+rm -f /etc/ld.so.conf.d/ooRexx.conf
 ldconfig
 
 #******************************************************************************
