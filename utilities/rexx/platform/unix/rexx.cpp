@@ -144,8 +144,10 @@ int main (int argc, char **argv) {
         RexxCreateInterpreter(&pgmInst, &pgmThrdInst, NULL);
         // configure the traditional single argument string
         rxargs = pgmThrdInst->NewArray(1);
-        pgmThrdInst->ArrayPut(rxargs,
-                              pgmThrdInst->NewStringFromAsciiz(arg_buffer), 1);
+        if (argCount > 0) {
+            pgmThrdInst->ArrayPut(rxargs,
+                                  pgmThrdInst->NewStringFromAsciiz(arg_buffer), 1);
+        }
         // set up the C args into the .local environment
         dir = (RexxDirectoryObject)pgmThrdInst->GetLocalEnvironment();
         rxcargs = pgmThrdInst->NewArray(1);
