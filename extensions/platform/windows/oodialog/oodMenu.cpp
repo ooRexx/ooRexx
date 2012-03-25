@@ -1505,7 +1505,7 @@ uint32_t CppMenu::string2WM(CSTRING keyWord)
     return wm;
 }
 
-logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND hwndFilter, RexxObjectPtr dialog)
+logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND hFilter, RexxObjectPtr dialog)
 {
     logical_t success = FALSE;
 
@@ -1529,9 +1529,9 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
         case WM_CONTEXTMENU :
         {
             tag |= TAG_CONTEXTMENU;
-            if ( hwndFilter != NULL )
+            if ( hFilter != NULL )
             {
-                success = addMiscMessage(pcen, c, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwndFilter, UINTPTR_MAX, 0, 0, methodName, tag);
+                success = addMiscMessage(pcen, c, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hFilter, UINTPTR_MAX, 0, 0, methodName, tag);
             }
             else
             {
@@ -1547,7 +1547,24 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
 
         case WM_INITMENUPOPUP :
             tag |= TAG_MENUMESSAGE;
-            success = addMiscMessage(pcen, c, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX, 0, 0, methodName, tag);
+            if ( isMenuBar() )
+            {
+                if ( hFilter != NULL )
+                {
+                    // This will trap WM_INITPOPUP messages for the specified submenu.
+                    success = addMiscMessage(pcen, c, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hFilter, UINTPTR_MAX, 0, 0, methodName, tag);
+                }
+                else
+                {
+                    // This will trap all WM_INITPOPU messages sent to the dialog the menubar is attached to.
+                    success = addMiscMessage(pcen, c, WM_INITMENUPOPUP, UINT32_MAX, 0, 0, 0, 0, methodName, tag);
+                }
+            }
+            else
+            {
+                // This will trap only WM_INITPOPUP messages for *this* menu.
+                success = addMiscMessage(pcen, c, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX, 0, 0, methodName, tag);
+            }
             break;
 
         default :
@@ -4053,7 +4070,7 @@ done_out:
  * To remove a submenu from a menu and still use the submenu, use the
  * removePopup() method.
  *
- * @param rxItemID    The item id of the submenut to remove.
+ * @param rxItemID    The item id of the submenu to remove.
  *
  * @param byPosition  [optional]  Whether the popup menu to be deleted is found
  *                    by ID or by position.  The default is false, found by ID.
@@ -4638,6 +4655,15 @@ RexxMethod2(RexxStringObject, menu_itemTextToMethodName, CSTRING, text, OSELF, s
  * @param keyword     A single keyword specifying which message event to
  *                    connect.
  *
+ * @param hFilter     Window handle of an object to use for to filter the
+ *                    connected notification. The use of this filter is specific
+ *                    to the event being connectd.  For the CONTEXTMENU event it
+ *                    can be a window handle, in which case only notifications
+ *                    for that window are generated.  For the INITMENUPOPUP
+ *                    event it can be the menu handle of a submenu, in which
+ *                    case only notifications for that submenu are generated.
+ *
+ *
  * @param dlg         [optional] The dialog being connected.  By default the
  *                    dialog this menu is attached to is used.  However, any
  *                    dialog can be used.  In most cases, it only makes sense to
@@ -4663,13 +4689,13 @@ RexxMethod2(RexxStringObject, menu_itemTextToMethodName, CSTRING, text, OSELF, s
  *
  *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
  */
-RexxMethod4(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyWord,
-            OPTIONAL_RexxObjectPtr, _dlg, CSELF, cMenuPtr)
+RexxMethod5(logical_t, menu_connectMenuEvent, CSTRING, methodName, CSTRING, keyWord,
+            OPTIONAL_POINTERSTRING, hFilter, OPTIONAL_RexxObjectPtr, _dlg, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->connectMenuMessage(methodName, keyWord, (HWND)NULL, _dlg);
+    return cMenu->connectMenuMessage(methodName, keyWord, (HWND)hFilter, _dlg);
 }
 
 /** Menu::connectCommandEvent()

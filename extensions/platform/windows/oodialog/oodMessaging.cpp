@@ -2467,18 +2467,37 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                         {
                             // Right now there is only WM_INITMENU and
                             // WM_INITMENUPOPUP, but in the future there could
-                            // be more.  Both of these messages are handled the
-                            // exact same way as far as what is sent to ooRexx.
-                            // TODO would really be nice to send the Rexx menu
-                            // object itself.
+                            // be more.  Both of these messages are handled in a
+                            // similar way. TODO would really be nice to send
+                            // the Rexx menu object itself.
 
-                            // Args to ooRexx: hMenu as a pointer.
-                            MsgReplyType reply = ReplyFalse;
+                            MsgReplyType      reply = ReplyFalse;
                             RexxPointerObject rxHMenu = c->NewPointer((POINTER)wParam);
+                            RexxObjectPtr     msgReply;
 
-                            RexxObjectPtr msgReply = c->SendMessage1(pcpbd->rexxSelf, method, rxHMenu);
+                            switch ( msg )
+                            {
+                                case WM_INITMENU :
+                                    // Args to ooRexx: hMenu as a pointer.
+                                    args = c->ArrayOfOne(rxHMenu);
+                                    break;
 
+                                case WM_INITMENUPOPUP :
+                                    // Args to ooRexx: pos, isSystemMenu, hMenu
+                                    // as a pointer. Position needs to be
+                                    // converted to 1-based.
+                                    args = c->ArrayOfThree(c->Int32(LOWORD(lParam) + 1),
+                                                           c->Logical(HIWORD(lParam)),
+                                                           rxHMenu);
+                                    break;
+
+                                default :
+                                    return reply;
+                            }
+
+                            msgReply = c->SendMessage(pcpbd->rexxSelf, method, args);
                             msgReply = requiredBooleanReply(c, pcpbd, msgReply, method, false);
+
                             if ( msgReply == TheTrueObj )
                             {
                                 setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, 0);
