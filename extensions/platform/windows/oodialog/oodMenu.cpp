@@ -1018,10 +1018,9 @@ logical_t CppMenu::assignToDlg(RexxObjectPtr dialog, logical_t _autoConnect, CST
     // passed in .false.
     if ( argExists(2) )
     {
-        autoConnect = _autoConnect ? true : false;
-        if ( methodName != NULL )
+        if ( ! setAutoConnection(_autoConnect, methodName) )
         {
-            connectionMethod = methodName;
+            goto done_out;
         }
     }
 
@@ -1111,6 +1110,24 @@ RexxObjectPtr CppMenu::replace(RexxObjectPtr newMenuBar)
 
 done_out:
     return oldMenuBar;
+}
+
+/**
+ * Called from the Rexx uninit() method.
+ *
+ */
+void CppMenu::uninitMenu()
+{
+    if ( connectionMethod != NULL )
+    {
+        LocalFree(connectionMethod);
+        connectionMethod = NULL;
+    }
+
+    if ( isMenuBar() && dlg != TheNilObj && hMenu != NULL )
+    {
+        DestroyMenu(hMenu);
+    }
 }
 
 /**
@@ -1263,6 +1280,12 @@ logical_t CppMenu::revertSysMenu()
     {
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto done_out;
+    }
+
+    if ( connectionMethod != NULL )
+    {
+        LocalFree(connectionMethod);
+        connectionMethod = NULL;
     }
 
     // It looks as though the system destroys the existing menu handle on its own.
@@ -1695,19 +1718,64 @@ BOOL CppMenu::checkAutoConnect(pCEventNotification pcen)
     return TRUE;
 }
 
-
-void CppMenu::setAutoConnection(logical_t on, CSTRING methodName)
+/**
+ * Initially sets, or changes, the autoconnection status.
+ *
+ * @param on            Set autoconnection on or off.
+ * @param methodName    A method name to connect all the items to one method.
+ *
+ * @return True on success, false on error.  The only error would be a memory
+ *         allocation error.
+ *
+ * @remarks  In order to allow the user to change the current status of
+ *           autoconnection, we allow the method name to be the empty string.
+ *           When changing the current status, if the user omits the method name
+ *           argument, then connectionMethod is left alone.  That is, if there
+ *           is already a method name, it is left the same, if it is null it is
+ *           left null.
+ *
+ *           However, if there is already a method name set, but the user wants
+ *           to change that to no method name, (which means each menu item is
+ *           connected to a unique method based on the text of the item,) that
+ *           can be done by passing in the empty string.
+ */
+bool CppMenu::setAutoConnection(logical_t on, CSTRING methodName)
 {
     if ( on )
     {
         autoConnect = true;
-        connectionMethod = methodName;
+        if ( methodName != NULL )
+        {
+            size_t len = strlen(methodName);
+
+            if ( connectionMethod != NULL  )
+            {
+                LocalFree(connectionMethod);
+                connectionMethod = NULL;
+            }
+
+            // If len is 0, we're done.  The existing method name, if it
+            // existed, is removed.
+            if ( len > 0 )
+            {
+                connectionMethod = (char *)LocalAlloc(LPTR, len + 1);
+                if ( connectionMethod == NULL )
+                {
+                    return false;
+                }
+            }
+        }
     }
     else
     {
         autoConnect = false;
-        connectionMethod = NULL;
+        if ( connectionMethod != NULL  )
+        {
+            LocalFree(connectionMethod);
+            connectionMethod = NULL;
+        }
     }
+    return true;
 }
 
 
@@ -2913,6 +2981,28 @@ RexxMethod1(RexxObjectPtr, menu_menuInit_pvt, RexxObjectPtr, cselfObject)
 }
 
 
+/** Menu::uninit()
+ *
+ *
+ *
+ * @return The handle to the menu this object represents.
+ */
+RexxMethod1(RexxObjectPtr, menu_uninit, CSELF, cMenuPtr)
+{
+    CppMenu *cMenu = (CppMenu *)cMenuPtr;
+
+#if 1
+    printf("In UNINIT() of Menu class cMenu=%p\n", cMenu);
+#endif
+
+    if ( cMenu != NULL )
+    {
+        cMenu->uninitMenu();
+    }
+    return NULLOBJECT;
+}
+
+
 /** Menu::hMenu()  [attribute get]
  *
  * Gets the hMenu attribute.
@@ -3250,7 +3340,7 @@ RexxMethod3(logical_t, menu_isPopup, RexxObjectPtr, rxItemID, OPTIONAL_logical_t
  *            Need some comment for the doc on what the Rexx programmer can
  *            expect after the menu is destroyed.
  */
-RexxMethod2(logical_t, menu_destroy, OSELF, self, CSELF, cMenuPtr)
+RexxMethod1(logical_t, menu_destroy, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
@@ -4586,8 +4676,13 @@ RexxMethod3(RexxObjectPtr, menu_setAutoConnection, logical_t, on, OPTIONAL_CSTRI
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
-    cMenu->setAutoConnection(on, methodName);
-    return NULLOBJECT;
+
+    if ( ! cMenu->setAutoConnection(on, methodName) )
+    {
+        outOfMemoryException(context->threadContext);
+        return TheFalseObj;
+    }
+    return TheTrueObj;
 }
 
 
@@ -5319,7 +5414,11 @@ RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
     if ( autoConnect )
     {
-        cMenu->setAutoConnection(TRUE, mName);
+        if ( ! cMenu->setAutoConnection(TRUE, mName) )
+        {
+            outOfMemoryException(c->threadContext);
+            goto done_out;
+        }
     }
 
     if ( argumentExists(4) )
@@ -6019,7 +6118,10 @@ RexxMethod6(RexxObjectPtr, userMenu_init, OPTIONAL_RexxObjectPtr, _id, OPTIONAL_
 
     if ( autoConnect )
     {
-        cMenu->setAutoConnection(TRUE, mName);
+        if ( ! cMenu->setAutoConnection(TRUE, mName) )
+        {
+            outOfMemoryException(context->threadContext);
+        }
     }
 
 done_out:

@@ -52,6 +52,7 @@
 ::method connectCommandEvent class external "LIBRARY oodialog menu_connectCommandEvent_cls"
 
 ::method menuInit private external "LIBRARY oodialog menu_menuInit_pvt"
+::method unInit external "LIBRARY oodialog menu_uninit"
 
 ::attribute wID get external "LIBRARY oodialog menu_wID"
 ::attribute hMenu get external "LIBRARY oodialog menu_getHMenu"
@@ -131,12 +132,8 @@
  * when it closes.  On the other hand, menus assigned to a window are destroyed
  * by the system when the window is destroyed.
  */
---/*
 ::method unInit
-  say 'In unInit() of MenuBar class'
-  if self~dlg <> .nil then return
-  self~destroy
---*/
+  forward class (.Menu)
 
 /* class: SystemMenu - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
      A system menu class.  System menus are also known as window or control
@@ -171,6 +168,9 @@
 
 ::method init external "LIBRARY oodialog sysMenu_init"
 ::method revert external "LIBRARY oodialog sysMenu_revert"
+::method unInit
+  forward class (.Menu)
+
 
 
 /* class: BinaryMenuBar- - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -180,6 +180,8 @@
 ::class 'BinaryMenuBar' public subclass Object inherit MenuBar
 
 ::method init external "LIBRARY oodialog binMenu_init"
+::method unInit
+  forward class (.Menu)
 
 
 /* class: PopupMenu- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -199,9 +201,8 @@
 ::method track external "LIBRARY oodialog popMenu_track"
 
 ::method unInit
-  say 'In unInit() of PopupMenu class'
-  --if self~dlg <> .nil then return
-  --self~destroy
+  say 'In uninit() of PopupMenu'
+  forward class (.Menu)
 
 /* class: MenuTemplate - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
     A mix in class supplying the funtionality to create a menu template in
@@ -224,6 +225,8 @@
 
 ::method init external "LIBRARY oodialog userMenu_init"
 ::method complete external "LIBRARY oodialog userMenu_complete"
+::method unInit
+  forward class (.Menu)
 
 
 /* class: ScriptMenuBar- - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -234,6 +237,8 @@
 
 ::method init external "LIBRARY oodialog scriptMenu_init"
 ::method resolveSymbolicID external "LIBRARY oodialog global_resolveSymbolicID"
+::method unInit
+  forward class (.Menu)
 
 /** load() Parses a menu definition in a resource script file and loads it into
  *         memory (through a MenuTemplate.)  The MENU resource definition

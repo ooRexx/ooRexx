@@ -1189,6 +1189,7 @@ REXX_METHOD_PROTOTYPE(vk_key2name);
 
 // Menu classes methods
 REXX_METHOD_PROTOTYPE(menu_menuInit_pvt);
+REXX_METHOD_PROTOTYPE(menu_uninit);
 REXX_METHOD_PROTOTYPE(menu_connectCommandEvent_cls);
 REXX_METHOD_PROTOTYPE(menu_getHMenu);
 REXX_METHOD_PROTOTYPE(menu_wID);
@@ -2066,6 +2067,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     // Menu classes methods
     REXX_METHOD(menu_menuInit_pvt,              menu_menuInit_pvt),
+    REXX_METHOD(menu_uninit,                    menu_uninit),
     REXX_METHOD(menu_connectCommandEvent_cls,   menu_connectCommandEvent_cls),
     REXX_METHOD(menu_getHMenu,                  menu_getHMenu),
     REXX_METHOD(menu_wID,                       menu_wID),
