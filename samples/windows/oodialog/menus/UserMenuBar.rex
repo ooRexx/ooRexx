@@ -36,8 +36,9 @@
 /*----------------------------------------------------------------------------*/
 
 /**
- * A simple UserDialog with a menu, an Edit control and an UpDown control.  The
- * menu is used to change styles or behaviour of the two controls.
+ * A simple application that shows how to create an UserMenuBar menu.  The
+ * dialog contains an Edit control and an UpDown control.  The menu is used to
+ * change styles or behaviour of the two controls.
  *
  * About half of the menu items pop up a dialog to collect user input needed to
  * carry out the menu item action.
