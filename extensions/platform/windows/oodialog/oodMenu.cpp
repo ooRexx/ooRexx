@@ -4295,7 +4295,7 @@ RexxMethod3(RexxObjectPtr, menu_getItemState, RexxObjectPtr, rxItemID, OPTIONAL_
 }
 
 
-/** Menu::getItemType()
+/** Menu::getType()
  *
  * Returns a string of 0 or more keywords that indicate the type of the
  * specified menu item.
@@ -4315,11 +4315,6 @@ RexxMethod3(RexxObjectPtr, menu_getItemState, RexxObjectPtr, rxItemID, OPTIONAL_
  *        SEPARATOR COMMAND SUBMENU MENUBARBREAK MENUBREAK OWNERDRAW RADIO
  *        RIGHTJUSTIFY RIGHTORDER BITMAP STRING
  *
- *
- *  @remarks  It is possible that we could add MIIM_STRING to the flags and be
- *            able to determine in one call to GetMenuItemInfo() if the item is
- *            a string item or not.  The MSDN docs are not clear.  TODO test
- *            this.
  */
 RexxMethod3(RexxObjectPtr, menu_getItemType, RexxObjectPtr, rxItemID, OPTIONAL_logical_t, byPosition, CSELF, cMenuPtr)
 {
