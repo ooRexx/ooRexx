@@ -120,7 +120,7 @@
     -- Creates the menu bar on the dialog.
     expose menuBar
     --say "CustomerListView-createMenuBar-01."
-    menuBar = .ScriptMenuBar~new("Customer\CustomerListView.rc", "IDR_CUSTLIST_MENU", , , .true, self)
+    menuBar = .ScriptMenuBar~new("Customer\CustomerListView.rc", "IDR_CUSTLIST_MENU", , , .true)
     return .true
 
 

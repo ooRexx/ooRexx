@@ -137,7 +137,7 @@
     self~connectResizing('onResizing')
     self~connectSizeMoveEnded('onSizeMoveEnded')
 
-    menuBar = .ScriptMenuBar~new("OrderMgr\OrderMgrBaseView.rc", IDR_ORDMGR_MENU, , , .true, self)
+    menuBar = .ScriptMenuBar~new("OrderMgr\OrderMgrBaseView.rc", IDR_ORDMGR_MENU, , , .true)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD defineDialog
