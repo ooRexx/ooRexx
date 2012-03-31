@@ -41,6 +41,18 @@
  * the menu objects.
  */
 
+   .application~useGlobalConstDir('O')
+
+   .constDir[IDC_STATIC]       =  200
+   .constDir[IDM_MENUBAR]      = 1000
+   .constDir[IDM_POP_FILE]     = 1200
+   .constDir[IDM_MI_LEAVE]     = 1201
+   .constDir[IDM_MI_TEST_ITEM] = 1202
+   .constDir[IDM_MI_CONTEXT]   = 1203
+   .constDir[IDM_SEPARATOR]    = 1204
+   .constDir[IDM_POP_HELP]     = 1300
+   .constDir[IDM_MI_ABOUT]     = 1301
+
    dlg = .MenuDlg~new
    dlg~execute('ShowTop')
 
@@ -58,7 +70,7 @@
    text = "Choosing the 'Leave' menu item will close the dialog " -
           "with 'Cancel', the 'Exit' menu item will close with 'Ok.'"
 
-   self~createStaticText(200, 10, 10, 140, 60, , text)
+   self~createStaticText(IDC_STATIC, 10, 10, 140, 60, , text)
 
 
 ::method initDialog
@@ -69,25 +81,25 @@
    -- then the menu bar is empty at this point, so there are no menu items to
    -- automatically connect.  In this case, we attach automatically, then when
    -- the menu bar is populated, we automatically connect all menu items.
-   menu = .BinaryMenuBar~new(.nil, 1000, , self)
+   menu = .BinaryMenuBar~new(.nil, IDM_MENUBAR, , self)
 
-   subMenu = .PopupMenu~new(1300)
-   subMenu~insertItem(1301, 1301, "About")
+   subMenu = .PopupMenu~new(IDM_POP_HELP)
+   subMenu~insertItem(IDM_MI_ABOUT, IDM_MI_ABOUT, "About")
 
-   menu~insertPopup(1300, 1300, subMenu, "Help")
+   menu~insertPopup(IDM_POP_HELP, IDM_POP_HELP, subMenu, "Help")
 
-   subMenu = .PopupMenu~new(1200)
+   subMenu = .PopupMenu~new(IDM_POP_FILE)
    subMenu~insertItem(IDOK, IDOK, "Exit")
-   subMenu~insertItem(IDOK, 1201, "Leave")
-   subMenu~insertItem(1201, 1202, "Test Item")
-   subMenu~insertItem(1201, 1203, "Context")
-   subMenu~insertSeparator(1201, 1204)
+   subMenu~insertItem(IDOK, IDM_MI_LEAVE, "Leave")
+   subMenu~insertItem(IDM_MI_LEAVE, IDM_MI_TEST_ITEM, "Test Item")
+   subMenu~insertItem(IDM_MI_LEAVE, IDM_MI_CONTEXT, "Context")
+   subMenu~insertSeparator(IDM_MI_LEAVE, IDM_SEPARATOR)
 
-   menu~insertPopup(1300, 1200, subMenu, "File")
+   menu~insertPopup(IDM_POP_HELP, IDM_POP_FILE, subMenu, "File")
 
    menu~connectAllCommandEvents
 
-   staticText = self~newStatic(200)
+   staticText = self~newStatic(IDC_STATIC)
 
 ::method about
    expose staticText
