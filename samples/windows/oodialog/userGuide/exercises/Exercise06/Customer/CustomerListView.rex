@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The Customer ListView				  v01-05 19Feb12
+   Exercise 06: The Customer ListView				  v01-07 01Apr12
 
    Contains: classes "CustomerListView" and "HRSclv".
 
@@ -55,6 +55,8 @@
      		   HRS classes in same file at some future time.
    v01-04 11Feb12: CustomerListView - Changed .application()
    v01-05 19Feb12: CustomerListView - moved .Application~addToConstDir
+   v01-06 29Mar12: CustomerListView - Very minor mods.
+   v01-07 01Apr12: Deleted self from createMenuBar().
 
 
    Outstanding Problems: None reported.
@@ -72,7 +74,7 @@
   ==============================================================================
   CustomerListView						  v01-04 19Feb12
   ----------------
-  The view of a list of products.
+  The view of a list of Customers.
   Changes:
     v01-01: First version
     v01-02: Corrected for standalone invocation.
@@ -81,6 +83,8 @@
                     changed to .application~addToConstDir() here.
     v01-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
                     method to top of file - just before ::requires statement(s).
+    v01-06 29Mar12: Very minor mods - all just minor clean-ups. All comments removed
+
 
   [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -93,9 +97,7 @@
 
   ::METHOD newInstance CLASS PUBLIC
     use arg rootDlg
-    --say ".CustomerListView-newInstance-01: root =" rootDlg
     dlg = self~new("Customer\CustomerListView.rc", "IDD_CUSTLIST_DIALOG")
-    --say ".CustomerListView-newInstance-02."
     dlg~activate(rootDlg)				-- Must be the last statement.
 
 
@@ -119,7 +121,6 @@
   ::METHOD createMenuBar
     -- Creates the menu bar on the dialog.
     expose menuBar
-    --say "CustomerListView-createMenuBar-01."
     menuBar = .ScriptMenuBar~new("Customer\CustomerListView.rc", "IDR_CUSTLIST_MENU", , , .true)
     return .true
 
@@ -128,8 +129,6 @@
   ::METHOD activate UNGUARDED
     expose rootDlg
     use arg rootDlg
-    --say "CustomerListView-activate-01: root =" rootDlg
-    --trace i
     if rootDlg = "SA" then do			-- If standalone operation required
       rootDlg = self				      -- To pass on to children
       self~execute("SHOWTOP","IDI_CUSTLIST_DLGICON")
@@ -145,15 +144,14 @@
 
     menuBar~attachTo(self)
 
-    --say "CustomerListView-initDialog-01"; --say
     lvCustomers = self~newListView("IDC_CUSTLIST_LIST");
-    lvCustomers~addExtendedStyle(GRIDLINES FULLROWSELECT)
+    lvCustomers~addExtendedStyle("GRIDLINES FULLROWSELECT")
     lvCustomers~insertColumnPX(0,"Number",60,"LEFT")
     lvCustomers~insertColumnPX(1,"Name",220,"LEFT")
     lvCustomers~insertColumnPX(2,"Zip",80,"LEFT")
     self~connectListViewEvent("IDC_CUSTLIST_LIST","CLICK",itemSelected)		-- Single click
-    self~connectListViewEvent("IDC_CUSTLIST_LIST","ACTIVATE",openItem)	 	-- Double-click
     self~connectButtonEvent("IDC_CUSTLIST_SHOWCUST","CLICKED",showCustomer)
+    self~connectListViewEvent("IDC_CUSTLIST_LIST","ACTIVATE",openItem)	 	-- Double-click
 
     self~loadList
 
@@ -180,8 +178,7 @@
     Event Handling Methods - List Items
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  ::METHOD itemSelected unguarded
-    expose lvCustomers
+  ::METHOD itemSelected UNGUARDED
     use arg id, itemIndex, columnIndex, keyState
     /* This method is fired when the user clicks on a row in the ListView.
        If the user clicks on an empty row, then itemIndex is set to -1, else
@@ -191,8 +188,6 @@
        click of the double-click is ignored, else the double-click method is
        fired.
     */
-    --say "CustomerListView-itemSelected-1: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
-    --say "CustomerListView-itemSelected-2: item selected is:" lvCustomers~selected
     if itemIndex > -1 then self~enableControl("IDC_CUSTLIST_SHOWCUST")
     else self~disableControl("IDC_CUSTLIST_SHOWCUST")
 
@@ -201,7 +196,6 @@
   ::METHOD openItem UNGUARDED
     -- User double-clicked on an item in the ListView.
     -- Note: does not get fired if double-click was on an empty row.
-    say "CustomerListView-openItem-01: item selected =" item
     self~showCustomer
 
 
@@ -213,7 +207,6 @@
   ::METHOD showCustomer UNGUARDED
     expose lvCustomers rootDlg
     item = lvCustomers~selected
-    say "CustomerListView-showCustomer-01: item selected =" item
     if item = -1 then do		-- if no item selected.
       ret = MessageDialog(.HRSclv~nilSelected, self~hwnd, title, 'WARNING')
       return
@@ -226,7 +219,6 @@
       .local~my.idCustomerData~activate
       .local~my.idCustomerModel~activate
       .CustomerView~newInstance(rootDlg,"CU003")
-      --say "CustomerListView-showCustomer-03: after startCustomerView"
       self~disableControl("IDC_CUSTLIST_SHOWCUST")
     end
     else do
@@ -236,18 +228,16 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD loadList
     expose lvCustomers
-    --say "CustomerListView-loadList-01"
-    lvCustomers~addRow( 1, ,"CU001", "ABC Inc.",   "TX 20152")
-    lvCustomers~addRow( 2, ,"CU002", "Frith Inc.", "CA 30543")
-    lvCustomers~addRow( 3, ,"CU003", "LMN & Co",   "NY 47290-1201")
-    lvCustomers~addRow( 4, ,"CU005", "EJ Smith",   "NJ 12345")
-    lvCustomers~addRow( 5, ,"CU010", "Red-On Inc.","AZ 12345")
-    lvCustomers~addRow( 6, ,"AB15784", "Joe Bloggs & Co Ltd","LB7 4EJ")
+    lvCustomers~addRow( , ,"CU001", "ABC Inc.",   "TX 20152")
+    lvCustomers~addRow( , ,"CU002", "Frith Inc.", "CA 30543")
+    lvCustomers~addRow( , ,"CU003", "LMN & Co",   "NY 47290-1201")
+    lvCustomers~addRow( , ,"CU005", "EJ Smith",   "NJ 12345")
+    lvCustomers~addRow( , ,"CU010", "Red-On Inc.","AZ 12345")
+    lvCustomers~addRow( , ,"AB15784", "Joe Bloggs & Co Ltd","LB7 4EJ")
     /*do i = 1 to 50
       lvCustomers~addRow(i, , "Line" i, i)
     end*/
     lvCustomers~setColumnWidth(1)	-- set width of 2nd column to longest text entry.
-    --say "CustomerListView-loadList-02"
 
 /*============================================================================*/
 

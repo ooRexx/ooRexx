@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderFormView class				  v00-06 19Feb12
+   Exercise 06: The OrderFormView class				  v00-07 12Apr12
    OrderFormView.rex
 
    Contains: class "OrderFormView", class "HRSofv".
@@ -52,6 +52,7 @@
    		   for each menu item.
    v00-05 11Feb12: OrderFormView - Changed .application() & HRS class
    v00-06 19Feb12: OrderFormView: moved .Application~ stmt to top of file.
+   v00-07 01Apr12: Minor correction.
 
 ------------------------------------------------------------------------------*/
 
@@ -63,7 +64,7 @@
 
 
 /*==============================================================================
-  OrderFormView							  v00-04 19Feb12
+  OrderFormView							  v00-05 01Apr12
   -------------
   The "view" (or "gui") Data Entry part of the Sales Order component.
 
@@ -75,6 +76,7 @@
                   Changed name fo HRS class to HRSofv.
   v00-04 19Feb12: Moved .Application~addToConstDir statement from newInstance
                   method to top of file - just before ::requires statement(s).
+  v00-05 01Apr12: Corrected ScriptMenubar param (ooDialog change)
 
   interface iOrderFormView {
     void new();
@@ -113,7 +115,7 @@
     -- Creates the menu bar on the dialog.
     expose menuBar
     say "OrderFormView-createMenuBar-01"
-    menuBar = .ScriptMenuBar~new("Order\OrderFormView.rc", IDR_ORDFORM_MENU, , , .true, self)
+    menuBar = .ScriptMenuBar~new("Order\OrderFormView.rc", IDR_ORDFORM_MENU, , , .true)
 
     return .true
 

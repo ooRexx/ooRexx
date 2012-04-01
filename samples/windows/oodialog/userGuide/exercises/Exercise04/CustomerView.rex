@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The CustomerView component             		  v00-08 25Jan12
+   Exercise 04: The CustomerView component             		  v00-09 01Apr12
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -55,7 +55,10 @@
    v00-07 Ex04 04Oct11: Added msgbox for unimplemented menu items.
           08Jan12 - temp change to check on sequence of methods - removed after check.
    v00-08 25Jan12 - very minor change to msgbox obtained from Print menu item.
-------------------------------------------------------------------------------*/
+   v00-09 01Apr12: 6th param in .ScriptMenuBar~new now causes crash - removed.
+                   Also changed one message
+
+-------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
 
@@ -96,14 +99,14 @@
       self~initCode = 1
       return
     end
-
+   
 
   /*-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Create Menu Bar - Creates the menu bar on the dialog.                   --*/
   ::METHOD createMenuBar
     expose menuBar
     say "CustomerView-createMenuBar-01."
-    menuBar = .ScriptMenuBar~new("CustomerView.rc", IDR_CUST_MENU, , , .true, self)
+    menuBar = .ScriptMenuBar~new("CustomerView.rc", IDR_CUST_MENU, , , .true)
     return .true
 
 
@@ -150,11 +153,8 @@
     New Customer... Not fully implemented - merely tells user to use the
                     Customer List object.           		            --*/
   ::METHOD newCustomer unguarded
-    msg = "You must use the Customer List to create a new Customer."||.endofline||,
-          "Would you like to open the Customer List now?"
-    hwnd = self~dlgHandle
-    answer = MessageDialog(msg,hwnd,"Create New Customer","YESNO","WARNING","DEFBUTTON2 APPLMODAL")
-    if answer = 6 then say "CustomerView-newCustomer-01: Customer List not yet implemented."
+    msg = "Creating a new Customer is not yet implemented."
+    ret = InfoDialog(msg)
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

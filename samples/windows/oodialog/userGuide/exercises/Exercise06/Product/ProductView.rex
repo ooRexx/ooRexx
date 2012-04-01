@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: ProductView.rex - The ProductView component      v02-05 19Feb12
+   Exercise 06: ProductView.rex - The ProductView component       v02-06 01Apr12
 
    Contains: 	   classes "ProductView", "AboutDialog", and "HRSpv".
    Pre-requisites: ProductView.dll, ProductView.h, Pproduct.ico, ProductIcon.bmp,
@@ -59,6 +59,7 @@
    v02-04 11Feb12: ProductView - Changed .application()
                    HRS class name changed to HRSpv
    v02-05 19Feb12: ProductView: moved .Application~ stmt to top of file.
+   v02-06 01Apr12: Minor changes to ProductView
 
 ------------------------------------------------------------------------------*/
 
@@ -83,7 +84,7 @@
                   Changed to .application~addToConstDir() here.
   v02-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
                   method to top of file - just before ::requires statement(s).
-
+  v02-06 01Apr12  Added msgbox for menu 'Print'. Commented out all 'say's.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS ProductView SUBCLASS ResDialog PUBLIC
@@ -96,7 +97,7 @@
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
     use arg rootDlg, productNo			--ADDED FOR EXERCISE06.
     if parent = "SA" then hasParent = .false; else hasParent = .true
-    say ".ProductView-newInstance-01: rootDlg =" rootDlg
+    --say ".ProductView-newInstance-01: rootDlg =" rootDlg
     .Application~addToConstDir("Product\ProductView.h")
     -- Create an instance of ProductView and show it:
     dlg = .ProductView~new("Product\res\ProductView.dll", IDD_PRODUCT_VIEW)
@@ -113,7 +114,7 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD init
-    say "ProductView-init-01."
+    --say "ProductView-init-01."
     -- called first (result of .ProductView~new)
     forward class (super) continue
 
@@ -121,7 +122,7 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate UNGUARDED
     use arg rootDlg, productNo					--ADDED FOR EXERCISE06.
-    say "ProductView-activate-01: rootDlg =" rootDlg
+    --say "ProductView-activate-01: rootDlg =" rootDlg
     self~dialogState = "closable"
     if rootDlg = "SA" then self~execute("SHOWTOP","IDI_PROD_DLGICON")		--ADDED FOR EXERCISE06.
     else self~popUpAsChild(rootDlg,"SHOWTOP",,"IDI_PROD_DLGICON")		--ADDED FOR EXERCISE06.
@@ -131,7 +132,7 @@
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD initDialog
     expose menuBar prodControls prodData
-    say "ProductView-initDialog-01"
+    --say "ProductView-initDialog-01"
 
     menuBar = .BinaryMenuBar~new(self, IDR_PRODUCT_VIEW_MENU, , self, .true)
 
@@ -189,16 +190,17 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD print UNGUARDED
-    say "ProductView-print-01"
+    -- say "ProductView-print-01"
+    ans = MessageDialog(.HRSpv~printMsg)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD close UNGUARDED
-    say "ProductView-close-01"
+    --say "ProductView-close-01"
     return self~cancel:super
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD about UNGUARDED
-    say "ProductView-about-01"
+    --say "ProductView-about-01"
     dlg = .AboutDialog~new("ProductView.dll", IDD_PRODUCT_VIEW_ABOUT)
     dlg~execute("SHOWTOP")
 
@@ -300,7 +302,7 @@
   ::METHOD getData
     -- Get data from the ProductModel:
     --expose prodData
-    say "ProductView-getData-01."
+    --say "ProductView-getData-01."
     idProductModel = .local~my.idProductModel
     prodData = idProductModel~query		-- prodData is of type ProductDT
     return prodData
@@ -310,7 +312,7 @@
   ::METHOD showData
     -- Transfrom data (where necessary) to display format, and then disable controls.
     expose prodControls prodData
-    say "ProductView-showData-01."
+    --say "ProductView-showData-01."
     -- Set data in controls:
     prodControls[ecProdNo]~setText(   prodData~number       )
     prodControls[ecProdName]~setText( prodData~name         )
@@ -462,7 +464,7 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method showMsgBox
-    say "AboutDialog-showMsgBox-01."
+    --say "AboutDialog-showMsgBox-01."
     ans = MessageDialog(.HRSpv~AboutDblClick)
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
@@ -500,6 +502,7 @@
   ::CONSTANT uomTooSmall    "The new UOM is too small."
   ::CONSTANT updateIP       "Update in process"
   ::CONSTANT updateProd     "Update Product"
+  ::CONSTANT printMsg       "The 'Print...' menu item is not yet implemented."
 
 /*============================================================================*/
 

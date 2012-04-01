@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise06: The Product List View				  v00-05 19Feb12
+   Exercise06: The Product List View				  v00-06 01Apr12
 
    Contains: classes "ProductListView, HRSplv (for human-readable strings)
 
@@ -52,6 +52,7 @@
    v00-04 28Jan11  Change name of class HRS to HRSplv to allow for multiple
      		   HRS classes in same file at some future time.
    v00-05 19Feb12: ProductListView - moved .Application~addToConstDir
+   v00-06 01Apr12: Minor chnage (ooDialog updated)
 
    Outstanding Problems: None reported.
 *******************************************************************************/
@@ -75,6 +76,7 @@
     v00-04 11Feb12: Add .application~addToConstDir to this file.
     v00-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
                     method to top of file - just before ::requires statement(s).
+    v00-06 01Apr12: Deleted last param ('self') of createMenuBar
 
 
   [interface (idl format)]  <<optional>>
@@ -115,7 +117,7 @@
     -- Creates the menu bar on the dialog.
     expose menuBar
     --say "ProductListView-createMenuBar-01."
-    menuBar = .ScriptMenuBar~new("Product\ProductListView.rc", "IDR_PRODLIST_MENU", , , .true, self)
+    menuBar = .ScriptMenuBar~new("Product\ProductListView.rc", "IDR_PRODLIST_MENU", , , .true)
     return .true
 
 

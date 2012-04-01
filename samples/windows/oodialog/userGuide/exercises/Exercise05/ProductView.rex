@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView component      v00-08 01Dec11
+   Exercise 04b: ProductView.rex - The ProductView component      v00-09 01Apr12
 
    Contains: 	   classes "ProductView" and "AboutDialog".
    Pre-requisites: ProductView.dll, ProductView.h.
@@ -66,6 +66,7 @@
    		   - are you sure" message.
    v00-07 29Nov11: Added a comment to the cancel method. No change in function.
    v00-08 01Dec11: Changed OK/Cancel to Yes/No on "cancel while in update" dialog.
+   v00-09 01Apr12: Added msgbox for Print menu item.
 
 ------------------------------------------------------------------------------*/
 
@@ -186,6 +187,7 @@ say "ProductView-updateProduct-01."
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD print UNGUARDED
     say "ProductView-print-01"
+    ret = InfoDialog(.HRS~printMsg)
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD close UNGUARDED
@@ -488,4 +490,4 @@ say "ProductView-updateProduct-01."
   ::CONSTANT uomTooSmall    "The new UOM is too small."
   ::CONSTANT updateIP       "Update in process"
   ::CONSTANT updateProd     "Update Product"
-
+  ::CONSTANT printMsg       "The 'Print...' menu item is not yet implemented."

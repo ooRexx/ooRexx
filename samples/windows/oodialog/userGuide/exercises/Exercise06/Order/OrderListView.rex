@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The Order ListView 				  v01-04 19Feb12
+   Exercise 06: The Order ListView 				  v01-05 019Apr12
 
    Contains: class "OrderListView", "HRSolv"
 
@@ -53,6 +53,7 @@
      		   HRS classes in same file at some future time.
    v01-03 11Feb12: OrderListView - Changed .application()
    v01-04 19Feb12: OrderListView - Moved .Application~ stmt to top of file.
+   v01-05 01Apr12: Minor correction to menu stmt.
 
 
    Outstanding Problems: None reported.
@@ -68,7 +69,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderListView						  	  v00-05 19Feb12
+  OrderListView						  	  v00-06 01Apr12
   -------------
   The view of a list of products.
   Changes:
@@ -79,7 +80,7 @@
                      changed to .application~addToConstDir() here.
     v00-05: 19Feb12: Moved .Application~addToConstDir statement from newInstance
                      method to top of file - just before ::requires statement(s).
-
+    v00-06 01Apr12: Deleted last param of create menu (new ooDialog)
 
   [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -119,7 +120,7 @@
     -- Creates the menu bar on the dialog.
     expose menuBar
     say "OrderListView-createMenuBar-01."
-    menuBar = .ScriptMenuBar~new("Order\OrderListView.rc", "IDR_ORDLIST_MENU", , , .true, self)
+    menuBar = .ScriptMenuBar~new("Order\OrderListView.rc", "IDR_ORDLIST_MENU", , , .true)
     return .true
 
 

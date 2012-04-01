@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The CustomerView component             		  v02-05 19Feb12
+   Exercise 06: The CustomerView component             		  v02-06 01Apr12
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -54,6 +54,7 @@
    v02-04 11Feb12: Changed CustomerView
 
    v02-05 19Feb12: CustomerView: moved .Application~ stmt to top of file.
+   v02-06 01Apr12: Deleted self from createMenuBar().
 
 ------------------------------------------------------------------------------*/
 
@@ -135,7 +136,7 @@
   ::METHOD createMenuBar
     expose menuBar
     --say "CustomerView-createMenuBar-01."
-    menuBar = .ScriptMenuBar~new("Customer\CustomerView.rc", "IDR_CUST_MENU", , , .true, self)	--Rel2StartupDir.
+    menuBar = .ScriptMenuBar~new("Customer\CustomerView.rc", "IDR_CUST_MENU", , , .true)
     return .true
 
 

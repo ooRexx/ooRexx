@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: OrderMgrView.rex 				  v00-06 05Feb12
+   Exercise 06: OrderMgrView.rex 				  v00-07 27Mar12
 
    Contains: 	   class: "OrderMgrView", "HRSomv"
 
@@ -61,6 +61,7 @@
         	   Changed class name HRS to HRSomv to allow for multiple
      		   HRS classes in same file at some future time.
    v00-06 15Feb12: Changes to comments only (change "OrderManagement" to "OrderMgr")
+   v00-07 27Mar12: Tidy-up - delete a couple of commented-out instructions.
 
 ------------------------------------------------------------------------------*/
 
@@ -106,7 +107,6 @@ call "OrderMgr\RequiresList.rex"
     -- required by the ListView control.
     expose iconList
     --say "OrderMgrView-createIconList."
-    --trace i
     imgCustList  = .Image~getImage("customer\bmp\CustList.bmp")
     imgProdList  = .Image~getImage("product\res\ProdList.bmp")
     imgOrderList = .Image~getImage("order\bmp\OrderList.bmp")
@@ -171,7 +171,6 @@ call "OrderMgr\RequiresList.rex"
   /*- - Orders  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD newOrder UNGUARDED
     expose records
-    --say "OrderMgrView-newOrder."
     self~showModel(records[4])
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -279,7 +278,6 @@ call "OrderMgr\RequiresList.rex"
     className = record~ID
     --say "OrderMgrView-showModel-01: className =" className
     viewClassName = className||"View"
-    --root = self
     interpret "."||viewClassName||"~newInstance(self)"
     --say "OrderMgrView-showModel-02:"
 
