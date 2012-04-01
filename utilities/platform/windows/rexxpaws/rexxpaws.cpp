@@ -143,7 +143,14 @@ int __cdecl main(int argc, char *argv[])
 
         // set up the C args into the .local environment
         dir = (RexxDirectoryObject)pgmThrdInst->GetLocalEnvironment();
-        rxcargs = pgmThrdInst->NewArray(1);
+        if ( argc > 2 )
+        {
+            rxcargs = pgmThrdInst->NewArray(argc - 2);
+        }
+        else
+        {
+            rxcargs = pgmThrdInst->NewArray(0);
+        }
         for (i = 2; i < argc; i++) {
             pgmThrdInst->ArrayPut(rxcargs,
                                   pgmThrdInst->NewStringFromAsciiz(argv[i]),
