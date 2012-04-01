@@ -126,7 +126,7 @@
   expose tabContent lastSelected havePositioned
   use strict arg tabContent
 
-  -- The havePositioned array is used to determine of the page dialogs have been
+  -- The havePositioned array is used to determine if the page dialogs have been
   -- positioned or not.  Mark all 5 dialogs as not having been positioned yet.
   havePositioned = .array~of(.false, .false, .false, .false, .false)
 

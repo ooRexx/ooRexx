@@ -372,181 +372,6 @@
 
 /*            Owner and Control Dialogs                                       */
 
-::class 'TabOwnerDialog' mixinclass Object public
-
-::method tabOwnerDlginit external "LIBRARY oodialog tod_tabOwnerDlgInit"
-::method getTabPage external "LIBRARY oodialog tod_getTabPage"
-::method tabOwnerOk external "LIBRARY oodialog tod_tabOwnerOk"
-::method tabOwnerCancel external "LIBRARY oodialog tod_tabOwnerCancel"
-
--- Return .true, it's okay to leave the page, .false it is not okay, stay on the page
-::method tabOwnerKillActive unguarded
-  use strict arg pageDlg, tab
-  say "In TabOwnerDialog::tabOwnerKillActive dlg:" self 'page:' pageDlg 'tab:' tab
-  return .true
-
--- Return 0, accept the activation, otherwise page number of alternate page to set focus to.
-::method tabOwnerSetActive unguarded
-  use strict arg pageDlg, tab
-  say "In TabOwnerDialog::tabOwnerSetActive dlg:" self 'page:' pageDlg 'tab:' tab
-  return 0
-
-::method tabOwnerSelChange unguarded
-  use strict arg pageDlg, pageNumber
-  return 0
-
-::method tabOwnerSelChanging unguarded
-  use strict arg pageDlg, pageNumber
-  return 0
-
-
-::class 'TabOwnerDlgInfo' subclass Object public
-
-::method init external "LIBRARY oodialog todi_init"
-::method add external "LIBRARY oodialog todi_add"
-
-
-::class 'ManagedTab' subclass Object public
-
-::method init external "LIBRARY oodialog mt_init"
-
-
-::class 'ControlDialog' mixinclass Object public
-
-::method init class external "LIBRARY oodialog cd_init_cls"                                     -- Not to be documented
-
-/*::attribute pageNumber get external "LIBRARY oodialog cd_get_pageNumber"
-::attribute pageNumber set external "LIBRARY oodialog cd_set_pageNumber"*/
-
-::attribute isManaged get external "LIBRARY oodialog cd_get_isManaged"
-::attribute wasActivated get external "LIBRARY oodialog cd_get_wasActivated"
-
-::attribute initializing get external "LIBRARY oodialog cd_get_initializing"
-::attribute initializing set external "LIBRARY oodialog cd_set_initializing"
-
-::attribute pageTitle get external "LIBRARY oodialog cd_get_pageTitle"
-::attribute pageTitle set external "LIBRARY oodialog cd_set_pageTitle"
-
-::attribute extraOptions get external "LIBRARY oodialog cd_get_extraOptions"
-::attribute extraOptions set external "LIBRARY oodialog cd_set_extraOptions"
-
-/*::attribute size get external "LIBRARY oodialog ctrlDlg_get_size"
-::attribute size set external "LIBRARY oodialog ctrlDlg_set_size"
-
-::attribute wantAllNotifications get external "LIBRARY oodialog ctrlDlg_get_wantAllNotifications"
-::attribute wantAllNotifications set external "LIBRARY oodialog ctrlDlg_set_wantAllNotifications"
-
-::attribute resources get unguarded
-::attribute resources set external "LIBRARY oodialog psp_setResources_atr"
-
-::attribute tabIcon get unguarded
-::attribute tabIcon set external "LIBRARY oodialog psp_setTabIcon_atr"*/
-
-
-::method controlDlgInit private external "LIBRARY oodialog cd_controlDlgInit"
-
-::method beginExecution unguarded
-
-    dlgData. = self~dlgData
-
-    if \ self~isManaged then do
-        if \ self~startIt then do
-            self~finished = .true
-            self~stopIt
-            return 0
-        end
-    end
-
-    if self~useStem then self~setDataStem(dlgData.)
-    else self~setData
-
-    do while self~automaticMethods~Items > 0
-        p = self~automaticMethods~pull
-        m = self~automaticMethods~pull
-        c = self~automaticMethods~pull
-        o = c~new(p, self)
-        o~start(m)
-    end
-
-    self~waitForDialog
-
-    return 0
-
-
-::method endExecution unguarded
-    use strict arg isOkay = .false
-
-    if isOkay, self~wasActivated then do
-        self~initCode = 1
-        if self~useStem then self~getDataStem(self~dlgData)
-        self~getData
-    end
-    else do
-        self~initCode = 2
-    end
-    self~finished = .true
-
-    self~stopIt
-    return self~initCode
-
-
--- Return .true, it's okay to leave the page, .false it is not okay, stay on the page
-::method tabPageKillActive unguarded
-  use strict arg owner, tab
-  say "In ControlDialog::tabPageKillActive dlg:" self 'owner:' owner 'tab:' tab
-  return .true
-
--- Return 0, accept the activation, otherwise page number of alternate page to set focus to.
-::method tabPageSetActive unguarded
-  use strict arg owner, tab
-  say "In ControlDialog::tabPageSetActive dlg:" self 'owner:' owner 'tab:' tab
-  return 0
-
-::method initUpdateListView private
-  use strict arg lvID, pause = .005
-
-  self~addNewAttribute('updateListViewID', lvID, .true)
-
-  src = .array~new
-  src[1]  = "use strict arg hwnd"
-  src[2]  = ""
-  src[3]  = "lv = self~newListView(self~updateListViewID)"
-  src[4]  = "if lv == .nil then return .false"
-  src[5]  = ""
-  src[6]  = "if hwnd == lv~hwnd then do"
-  src[7]  = "  j = SysSleep("pause")"
-  src[8]  = "  lv~redraw"
-  src[9]  = "  return .true"
-  src[10] = "end"
-  src[11] = "return .false"
-  self~setMethod('updateListView', src)
-
-  owner = self~ownerDialog
-
-  owner~addNewAttribute(updateListViewPageDialog, self, .true, .true)
-  owner~addNewAttribute(updateListViewLastFocused, 0, .true, .true)
-
-  src = .array~new
-  src[1]  = "expose updateListViewPageDialog updateListViewLastFocused"
-  src[2]  = "use arg flag, hwnd, hFocused, isMinimized"
-  src[3]  = ""
-  src[4]  = "reply .false"
-  src[5]  = ""
-  src[6]  = "if flag == INACTIVE then updateListViewLastFocused = hFocused"
-  src[7]  = "else updateListViewPageDialog~updateListView(updateListViewLastFocused)"
-  owner~addNewMethod('onUpdateListViewActivate', src, .true)
-
-  owner~connectActivate('onUpdateListViewActivate')
-
-
-::class 'ControlDlgInfo' subclass Object public
-
-::attribute managed set external "LIBRARY oodialog cdi_set_managed"
-::attribute title set external "LIBRARY oodialog cdi_set_title"
-::attribute size set external "LIBRARY oodialog cdi_set_size"
-::method init external "LIBRARY oodialog cdi_init"
-
-
 ::class 'ResControlDialog' public subclass ResDialog inherit ControlDialog
 
 ::method startIt
@@ -647,6 +472,189 @@
     self~start("BEGINEXECUTION")
 ::method executeAsync abstract
 ::method endAsyncExecution abstract
+
+
+::class 'ControlDialog' mixinclass Object public
+
+::attribute wasActivated get external "LIBRARY oodialog cd_get_wasActivated"
+
+::method endExecution unguarded
+    use strict arg isOkay = .false
+
+    if isOkay, self~wasActivated then do
+        self~initCode = 1
+        if self~useStem then self~getDataStem(self~dlgData)
+        self~getData
+    end
+    else do
+        self~initCode = 2
+    end
+    self~finished = .true
+
+    self~stopIt
+    return self~initCode
+
+::method initUpdateListView private
+  use strict arg lvID, pause = .005
+
+  self~addNewAttribute('updateListViewID', lvID, .true)
+
+  src = .array~new
+  src[1]  = "use strict arg hwnd"
+  src[2]  = ""
+  src[3]  = "lv = self~newListView(self~updateListViewID)"
+  src[4]  = "if lv == .nil then return .false"
+  src[5]  = ""
+  src[6]  = "if hwnd == lv~hwnd then do"
+  src[7]  = "  j = SysSleep("pause")"
+  src[8]  = "  lv~redraw"
+  src[9]  = "  return .true"
+  src[10] = "end"
+  src[11] = "return .false"
+  self~setMethod('updateListView', src)
+
+  owner = self~ownerDialog
+
+  owner~addNewAttribute(updateListViewPageDialog, self, .true, .true)
+  owner~addNewAttribute(updateListViewLastFocused, 0, .true, .true)
+
+  src = .array~new
+  src[1]  = "expose updateListViewPageDialog updateListViewLastFocused"
+  src[2]  = "use arg flag, hwnd, hFocused, isMinimized"
+  src[3]  = ""
+  src[4]  = "reply .false"
+  src[5]  = ""
+  src[6]  = "if flag == INACTIVE then updateListViewLastFocused = hFocused"
+  src[7]  = "else updateListViewPageDialog~updateListView(updateListViewLastFocused)"
+  owner~addNewMethod('onUpdateListViewActivate', src, .true)
+
+  owner~connectActivate('onUpdateListViewActivate')
+
+/**   Do not document classes and methods from here to end of the file.
+ *
+ * Most of the classes will not be documented for 4.2.0 because they are not
+ * ready.  They will be inlcuded in the release after 4.2.0.
+ */
+
+
+::method init class external "LIBRARY oodialog cd_init_cls"                                     -- Not to be documented
+
+/*::attribute pageNumber get external "LIBRARY oodialog cd_get_pageNumber"
+::attribute pageNumber set external "LIBRARY oodialog cd_set_pageNumber"*/
+
+::attribute initializing get external "LIBRARY oodialog cd_get_initializing"
+::attribute initializing set external "LIBRARY oodialog cd_set_initializing"
+
+::attribute isManaged get external "LIBRARY oodialog cd_get_isManaged"
+
+::attribute pageTitle get external "LIBRARY oodialog cd_get_pageTitle"
+::attribute pageTitle set external "LIBRARY oodialog cd_set_pageTitle"
+
+::attribute extraOptions get external "LIBRARY oodialog cd_get_extraOptions"
+::attribute extraOptions set external "LIBRARY oodialog cd_set_extraOptions"
+
+/*::attribute size get external "LIBRARY oodialog ctrlDlg_get_size"
+::attribute size set external "LIBRARY oodialog ctrlDlg_set_size"
+
+::attribute wantAllNotifications get external "LIBRARY oodialog ctrlDlg_get_wantAllNotifications"
+::attribute wantAllNotifications set external "LIBRARY oodialog ctrlDlg_set_wantAllNotifications"
+
+::attribute resources get unguarded
+::attribute resources set external "LIBRARY oodialog psp_setResources_atr"
+
+::attribute tabIcon get unguarded
+::attribute tabIcon set external "LIBRARY oodialog psp_setTabIcon_atr"*/
+
+
+::method controlDlgInit private external "LIBRARY oodialog cd_controlDlgInit"
+
+::method beginExecution unguarded
+
+    dlgData. = self~dlgData
+
+    if \ self~isManaged then do
+        if \ self~startIt then do
+            self~finished = .true
+            self~stopIt
+            return 0
+        end
+    end
+
+    if self~useStem then self~setDataStem(dlgData.)
+    else self~setData
+
+    do while self~automaticMethods~Items > 0
+        p = self~automaticMethods~pull
+        m = self~automaticMethods~pull
+        c = self~automaticMethods~pull
+        o = c~new(p, self)
+        o~start(m)
+    end
+
+    self~waitForDialog
+
+    return 0
+
+
+-- Return .true, it's okay to leave the page, .false it is not okay, stay on the page
+::method tabPageKillActive unguarded
+  use strict arg owner, tab
+  say "In ControlDialog::tabPageKillActive dlg:" self 'owner:' owner 'tab:' tab
+  return .true
+
+-- Return 0, accept the activation, otherwise page number of alternate page to set focus to.
+::method tabPageSetActive unguarded
+  use strict arg owner, tab
+  say "In ControlDialog::tabPageSetActive dlg:" self 'owner:' owner 'tab:' tab
+  return 0
+
+
+
+::class 'TabOwnerDialog' mixinclass Object public
+
+::method tabOwnerDlginit external "LIBRARY oodialog tod_tabOwnerDlgInit"
+::method getTabPage external "LIBRARY oodialog tod_getTabPage"
+::method tabOwnerOk external "LIBRARY oodialog tod_tabOwnerOk"
+::method tabOwnerCancel external "LIBRARY oodialog tod_tabOwnerCancel"
+
+-- Return .true, it's okay to leave the page, .false it is not okay, stay on the page
+::method tabOwnerKillActive unguarded
+  use strict arg pageDlg, tab
+  say "In TabOwnerDialog::tabOwnerKillActive dlg:" self 'page:' pageDlg 'tab:' tab
+  return .true
+
+-- Return 0, accept the activation, otherwise page number of alternate page to set focus to.
+::method tabOwnerSetActive unguarded
+  use strict arg pageDlg, tab
+  say "In TabOwnerDialog::tabOwnerSetActive dlg:" self 'page:' pageDlg 'tab:' tab
+  return 0
+
+::method tabOwnerSelChange unguarded
+  use strict arg pageDlg, pageNumber
+  return 0
+
+::method tabOwnerSelChanging unguarded
+  use strict arg pageDlg, pageNumber
+  return 0
+
+
+::class 'TabOwnerDlgInfo' subclass Object public
+
+::method init external "LIBRARY oodialog todi_init"
+::method add external "LIBRARY oodialog todi_add"
+
+
+::class 'ManagedTab' subclass Object public
+
+::method init external "LIBRARY oodialog mt_init"
+
+
+::class 'ControlDlgInfo' subclass Object public
+
+::attribute managed set external "LIBRARY oodialog cdi_set_managed"
+::attribute title set external "LIBRARY oodialog cdi_set_title"
+::attribute size set external "LIBRARY oodialog cdi_set_size"
+::method init external "LIBRARY oodialog cdi_init"
 
 
 
