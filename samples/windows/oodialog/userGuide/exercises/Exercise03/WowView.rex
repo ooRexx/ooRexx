@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise03 Part 2:	Re-structuring the "Words of Wisdom" application
-   WowView.rex    	The Wow View component		  	  v00-05 06Feb12
+   WowView.rex    	The Wow View component		  	  v00-06 02Apr12
 
    Contains: 	   class "WowView.
    Pre-requisites: None
@@ -46,6 +46,7 @@
      v00-04: Name change - MyDialog to WowView.
      v00-05 06Feb12: Changed resource ID of text from -1 to 101
                      (-1 not valid - change in ooDialog)
+     v00-06 02Apr12: Uppercased 'unguarded' on activate method.
 
 *******************************************************************************/
 
@@ -54,10 +55,6 @@
   WowView							 v00-04  11Aug11
   -------
   A class that defines the User Interface for the Wow application.
-
-  Changes:
-  v00-03: Added an initDialog method in which "newText" is created.
-  v00-04: Changed classname from MyDialog to WowView.
 
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -94,7 +91,7 @@
   /*----------------------------------------------------------------------------
     activate - gets id for wowPicker, shows the dialog.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD activate unguarded
+  ::METHOD activate UNGUARDED
     expose wowPicker
     wowPicker = .local~my.idWowPicker
     self~execute("SHOWTOP", IDI_DLG_OOREXX)		-- MUST be last!
