@@ -332,7 +332,7 @@
   * to be altered.
   */
 
-::method initDialog
+::method initDialog unguarded
    return 0
 
  /** ok()
@@ -361,7 +361,7 @@
    return 0
 
 ::method leaving
-   return
+   return 0
 
 /** validate()
  * This method is an abstract method that will be called to determin whether the
