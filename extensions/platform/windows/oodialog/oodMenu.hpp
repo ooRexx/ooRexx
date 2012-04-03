@@ -188,7 +188,7 @@ protected:
    RexxObjectPtr dlg;
    HWND dlgHwnd;
 
-   HANDLE hTemplateMemory;        // Handle to allocated template memory. ("MEMHANDLE")
+   DWORD *hTemplateMemory;        // Handle to allocated template memory. ("MEMHANDLE")
    DWORD *pTemplate;              // Pointer to aligned, start of template. ("BASEPTR")
    DWORD *pCurrentTemplatePos;    // Pointer template offset for next item addition.  ("CURRENTPTR")
    byte  *endOfTemplate;          // Last allocated byte of template memory

@@ -268,7 +268,6 @@ logical_t CppMenu::addTemplateSepartor(RexxObjectPtr rxID, CSTRING opts)
 {
     logical_t success = FALSE;
     oodResetSysErrCode(c->threadContext);
-    char *upperOpts = NULL;
 
     int32_t id = oodGlobalID(c, rxID, 1, false);
     if ( id == OOD_ID_EXCEPTION )
@@ -287,15 +286,8 @@ logical_t CppMenu::addTemplateSepartor(RexxObjectPtr rxID, CSTRING opts)
 
     if ( opts != NULL )
     {
-        upperOpts = strdupupr(opts);
-        if ( upperOpts == NULL )
-        {
-            oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
-            goto done_out;
-        }
-
-        dwType = getSeparatorTypeOpts(upperOpts, dwType);
-        if ( strstr(upperOpts, "END") )
+        dwType = getSeparatorTypeOpts(opts, dwType);
+        if ( StrStrI(opts, "END") )
         {
             resInfo = MFR_END;
         }
@@ -303,7 +295,6 @@ logical_t CppMenu::addTemplateSepartor(RexxObjectPtr rxID, CSTRING opts)
     success = addTemplateMenuItem(id, dwType, 0, 0, resInfo, "");
 
 done_out:
-    safeFree(upperOpts);
     return success;
 }
 
@@ -324,7 +315,6 @@ logical_t CppMenu::addTemplateItem(RexxObjectPtr rxID, CSTRING text, CSTRING opt
 {
     logical_t success = FALSE;
     oodResetSysErrCode(c->threadContext);
-    char *upperOpts = NULL;
 
     int32_t id = oodGlobalID(c, rxID, 1, true);
     if ( id == OOD_ID_EXCEPTION )
@@ -350,16 +340,9 @@ logical_t CppMenu::addTemplateItem(RexxObjectPtr rxID, CSTRING text, CSTRING opt
 
     if ( opts != NULL )
     {
-        upperOpts = strdupupr(opts);
-        if ( upperOpts == NULL )
-        {
-            oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
-            goto done_out;
-        }
-
-        dwState = getItemStateOpts(upperOpts, 0);
-        dwType = getItemTypeOpts(upperOpts, MFT_STRING);
-        if ( strstr(upperOpts, "END") )
+        dwState = getItemStateOpts(opts, 0);
+        dwType = getItemTypeOpts(opts, MFT_STRING);
+        if ( StrStrI(opts, "END") )
         {
             resInfo = MFR_END;
         }
@@ -378,7 +361,6 @@ logical_t CppMenu::addTemplateItem(RexxObjectPtr rxID, CSTRING text, CSTRING opt
     }
 
 done_out:
-    safeFree(upperOpts);
     return success;
 }
 
@@ -402,7 +384,6 @@ logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING op
 {
     logical_t success = FALSE;
     oodResetSysErrCode(c->threadContext);
-    char *upperOpts = NULL;
 
     int32_t id = oodGlobalID(c, rxID, 1, false);
     if ( id == OOD_ID_EXCEPTION )
@@ -432,16 +413,9 @@ logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING op
 
     if ( opts != NULL )
     {
-        upperOpts = strdupupr(opts);
-        if ( upperOpts == NULL )
-        {
-            oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
-            goto done_out;
-        }
-
-        dwState = getPopupStateOpts(upperOpts, 0);
-        dwType = getPopupTypeOpts(upperOpts, MFT_STRING);
-        if ( strstr(upperOpts, "END") )
+        dwState = getPopupStateOpts(opts, 0);
+        dwType = getPopupTypeOpts(opts, MFT_STRING);
+        if ( StrStrI(opts, "END") )
         {
             resInfo |= MFR_END;
         }
@@ -449,7 +423,6 @@ logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING op
     success = addTemplateMenuItem(id, dwType, dwState, dwHelpID, resInfo, text);
 
 done_out:
-    safeFree(upperOpts);
     return success;
 }
 
@@ -466,23 +439,14 @@ bool CppMenu::initTemplate(uint32_t count, uint32_t _helpID)
     // an arbitrarily picked menu item size.  (Which is probably much bigger
     // than a typical menu item size.
     size_t size = (++count) * ARBITRARY_MENU_ITEM_SIZE;
-    hTemplateMemory = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, size);
+    hTemplateMemory = (PDWORD)GlobalAlloc(GPTR, size);
     if ( hTemplateMemory == NULL )
     {
         systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GlobalAlloc");
         goto done_out;
     }
 
-    p = (PWORD)GlobalLock(hTemplateMemory);
-    if ( p == NULL)
-    {
-        // hTemplateMemory is already discarded or has a length of 0.  Really,
-        // should be impossible.  In either case, hTemplateMemory does not need
-        // to get freed.
-        hTemplateMemory = NULL;
-        systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GlobalLock");
-        goto done_out;
-    }
+    p = (PWORD)hTemplateMemory;
 
     isFinal = false;
     endOfTemplate = (byte *)p + size - 1;
@@ -574,7 +538,6 @@ BOOL CppMenu::addTemplateMenuItem(DWORD menuID, DWORD dwType, DWORD dwState, DWO
 
 void CppMenu::deleteTemplate()
 {
-    GlobalUnlock(hTemplateMemory);
     GlobalFree(hTemplateMemory);
 
     isFinal = true;
@@ -6165,29 +6128,29 @@ void CppMenu::test(CppMenu *other)
 
 static UINT checkCommonTypeOpts(const char *opts, UINT type)
 {
-    if ( strstr(opts, "NOTMENUBARBREAK") != NULL )
+    if ( StrStrI(opts, "NOTMENUBARBREAK") != NULL )
     {
         type &= ~MFT_MENUBARBREAK;
     }
-    else if ( strstr(opts, "MENUBARBREAK") != NULL )
+    else if ( StrStrI(opts, "MENUBARBREAK") != NULL )
     {
         type |= MFT_MENUBARBREAK;
     }
 
-    if ( strstr(opts, "NOTMENUBREAK") != NULL )
+    if ( StrStrI(opts, "NOTMENUBREAK") != NULL )
     {
         type &= ~MFT_MENUBREAK;
     }
-    else if ( strstr(opts, "MENUBREAK") != NULL )
+    else if ( StrStrI(opts, "MENUBREAK") != NULL )
     {
         type |= MFT_MENUBREAK;
     }
 
-    if ( strstr(opts, "NOTRIGHTJUSTIFY") != NULL )
+    if ( StrStrI(opts, "NOTRIGHTJUSTIFY") != NULL )
     {
         type &= ~MFT_RIGHTJUSTIFY;
     }
-    else if ( strstr(opts, "RIGHTJUSTIFY") != NULL )
+    else if ( StrStrI(opts, "RIGHTJUSTIFY") != NULL )
     {
         type |= MFT_RIGHTJUSTIFY;
     }
@@ -6196,31 +6159,31 @@ static UINT checkCommonTypeOpts(const char *opts, UINT type)
 
 static UINT checkCommonStateOpts(const char *opts, UINT state)
 {
-    if ( strstr(opts, "NOTDEFAULT") != NULL )
+    if ( StrStrI(opts, "NOTDEFAULT") != NULL )
     {
         state &= ~MFS_DEFAULT;
     }
-    else if ( strstr(opts, "DEFAULT") != NULL )
+    else if ( StrStrI(opts, "DEFAULT") != NULL )
     {
         state |= MFS_DEFAULT;
     }
-    if ( strstr(opts, "DISABLED") != NULL )
+    if ( StrStrI(opts, "DISABLED") != NULL )
     {
         state |= MFS_DISABLED;
     }
-    if ( strstr(opts, "GRAYED") != NULL )
+    if ( StrStrI(opts, "GRAYED") != NULL )
     {
         state |= MFS_GRAYED;
     }
-    if ( strstr(opts, "ENABLED") != NULL )
+    if ( StrStrI(opts, "ENABLED") != NULL )
     {
         state &= ~MFS_DISABLED;
     }
-    if ( strstr(opts, "UNHILITE") != NULL )
+    if ( StrStrI(opts, "UNHILITE") != NULL )
     {
         state &= ~MFS_HILITE;
     }
-    else if ( strstr(opts, "HILITE") != NULL )
+    else if ( StrStrI(opts, "HILITE") != NULL )
     {
         state |= MFS_HILITE;
     }
@@ -6242,11 +6205,11 @@ static UINT checkCommonStateOpts(const char *opts, UINT state)
 static UINT getPopupTypeOpts(const char *opts, UINT type)
 {
     type = checkCommonTypeOpts(opts, type);
-    if ( strstr(opts, "NOTRIGHTORDER") != NULL )
+    if ( StrStrI(opts, "NOTRIGHTORDER") != NULL )
     {
         type &= ~MFT_RIGHTORDER;
     }
-    else if ( strstr(opts, "RIGHTORDER") != NULL )
+    else if ( StrStrI(opts, "RIGHTORDER") != NULL )
     {
         type |= MFT_RIGHTORDER;
     }
@@ -6288,11 +6251,11 @@ static UINT getPopupStateOpts(const char *opts, UINT state)
 static UINT getItemTypeOpts(const char *opts, UINT type)
 {
     type = checkCommonTypeOpts(opts, type);
-    if ( strstr(opts, "NOTRADIO") != NULL )
+    if ( StrStrI(opts, "NOTRADIO") != NULL )
     {
         type &= ~MFT_RADIOCHECK;
     }
-    else if ( strstr(opts, "RADIO") != NULL )
+    else if ( StrStrI(opts, "RADIO") != NULL )
     {
         type |= MFT_RADIOCHECK;
     }
@@ -6313,29 +6276,29 @@ static UINT getItemTypeOpts(const char *opts, UINT type)
  */
 static UINT getSeparatorTypeOpts(const char *opts, UINT type)
 {
-    if ( strstr(opts, "NOTMENUBARBREAK") != NULL )
+    if ( StrStrI(opts, "NOTMENUBARBREAK") != NULL )
     {
         type &= ~MFT_MENUBARBREAK;
     }
-    else if ( strstr(opts, "MENUBARBREAK") != NULL )
+    else if ( StrStrI(opts, "MENUBARBREAK") != NULL )
     {
         type |= MFT_MENUBARBREAK;
     }
 
-    if ( strstr(opts, "NOTMENUBREAK") != NULL )
+    if ( StrStrI(opts, "NOTMENUBREAK") != NULL )
     {
         type &= ~MFT_MENUBREAK;
     }
-    else if ( strstr(opts, "MENUBREAK") != NULL )
+    else if ( StrStrI(opts, "MENUBREAK") != NULL )
     {
         type |= MFT_MENUBREAK;
     }
 
-    if ( strstr(opts, "NOTRIGHTJUSTIFY") != NULL )
+    if ( StrStrI(opts, "NOTRIGHTJUSTIFY") != NULL )
     {
         type &= ~MFT_RIGHTJUSTIFY;
     }
-    else if ( strstr(opts, "RIGHTJUSTIFY") != NULL )
+    else if ( StrStrI(opts, "RIGHTJUSTIFY") != NULL )
     {
         type |= MFT_RIGHTJUSTIFY;
     }
@@ -6359,11 +6322,11 @@ static UINT getItemStateOpts(const char *opts, UINT state)
 {
     state = checkCommonStateOpts(opts, state);
 
-    if ( strstr(opts, "UNCHECKED") != NULL )
+    if ( StrStrI(opts, "UNCHECKED") != NULL )
     {
         state &= ~MFS_CHECKED;
     }
-    else if ( strstr(opts, "CHECKED") != NULL )
+    else if ( StrStrI(opts, "CHECKED") != NULL )
     {
         state |= MFS_CHECKED;
     }
