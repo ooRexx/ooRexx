@@ -1513,6 +1513,10 @@ RexxMethod0(int32_t, sm_cyHScroll_cls)
 {
     return GetSystemMetrics(SM_CYHSCROLL);
 }
+RexxMethod0(int32_t, sm_cyMenu_cls)
+{
+    return GetSystemMetrics(SM_CYMENU);
+}
 RexxMethod0(int32_t, sm_cyScreen_cls)
 {
     return GetSystemMetrics(SM_CYSCREEN);

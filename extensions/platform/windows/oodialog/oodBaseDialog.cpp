@@ -490,6 +490,74 @@ static HWND winExtSetup(RexxMethodContext *c, void *pCSelf)
 }
 
 
+static RexxStringObject textAlign2string(RexxMethodContext *c, uint32_t align)
+{
+    char buf[256] = {'\0'};
+
+    uint32_t flags = TA_LEFT | TA_RIGHT | TA_CENTER;
+    switch ( flags & align )
+    {
+        case TA_LEFT :
+            strcpy(buf, "LEFT ");
+            break;
+        case TA_RIGHT :
+            strcpy(buf, "RIGHT ");
+            break;
+        case TA_CENTER :
+            strcpy(buf, "CENTER ");
+            break;
+    }
+
+    flags = TA_BOTTOM | TA_TOP | TA_BASELINE;
+    switch ( flags & align )
+    {
+        case TA_TOP :
+            strcat(buf, "TOP ");
+            break;
+        case TA_BOTTOM :
+            strcat(buf, "BOTTOM ");
+            break;
+        case TA_BASELINE :
+            strcat(buf, "BASELINE ");
+            break;
+    }
+
+    flags = TA_NOUPDATECP | TA_UPDATECP;
+    switch ( flags & align )
+    {
+        case TA_NOUPDATECP :
+            strcat(buf, "NOUPDATECP");
+            break;
+        case TA_UPDATECP :
+            strcat(buf, "UPDATECP");
+            break;
+    }
+
+    return c->String(buf);
+}
+
+
+static uint32_t string2textAlign(CSTRING flags)
+{
+    // Note that all 3 of these flags are 0.
+    uint32_t align = TA_LEFT | TA_TOP | TA_NOUPDATECP;
+
+    // flags can be null.
+    if ( flags != NULL && strlen(flags) > 0 )
+    {
+        if ( StrStrI(     flags, "RIGHT")      != NULL ) align |= TA_RIGHT;
+        else if ( StrStrI(flags, "CENTER")     != NULL ) align |= TA_CENTER;
+
+        if ( StrStrI(     flags, "BOTTOM")     != NULL ) align |= TA_BOTTOM;
+        else if ( StrStrI(flags, "BASELINE")   != NULL ) align |= TA_BASELINE;
+
+        if ( StrStrI(     flags, "NOUPDATECP") != NULL ) align |= TA_NOUPDATECP;
+        else if ( StrStrI(flags, "UPDATECP")   != NULL ) align |= TA_UPDATECP;
+    }
+
+    return align;
+}
+
 static int scrollBarType(HWND hwnd, CSTRING method)
 {
     int type;
@@ -830,6 +898,159 @@ RexxMethod2(RexxObjectPtr, winex_freeDC, POINTERSTRING, hDC, CSELF, pCSelf)
         return TheFalseObj;
     }
     return TheTrueObj;
+}
+
+
+/** WindowsExtensions::getTextExtent()
+ *
+ *  Gets the size bounding rectangle for the specified text, if it were to be
+ *  drawn in the specified device context.
+ *
+ *  @param  hDC   The device context the text is going to be written to.
+ *  @param  text  The text to be written.
+ *
+ *  @return  A size object that reflects the size of the bounding rectangle of
+ *           the text.
+ *
+ *  @note  Sets the .systemErrorCode
+ *
+ *         The size is calculated using the current selected font in the DC.
+ *
+ */
+RexxMethod3(RexxObjectPtr, winex_getTextExtent, POINTERSTRING, hDC, CSTRING, text, CSELF, pCSelf)
+{
+    RexxObjectPtr result = rxNewSize(context, 0, 0);
+    SIZE s = {0};
+
+    if ( winExtSetup(context, pCSelf) == NULL )
+    {
+        goto done_out;
+    }
+    if ( hDC == NULL )
+    {
+        nullObjectException(context->threadContext, "device context", 1);
+        goto done_out;
+    }
+
+    if ( GetTextExtentPoint32((HDC)hDC, text, (int32_t)strlen(text), &s) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto done_out;
+    }
+    result = rxNewSize(context, s.cx, s.cy);
+
+done_out:
+    return result;
+}
+
+
+/** WindowsExtensions::getTextAlign()
+ *
+ *  Gets the text alignment setting for the specified device context.
+ *
+ *  @param  hDC   The device context whose text alignment is required.
+ *
+ *  @return  A string of keywords specifying the text alignment.  The returned
+ *           string will contain exactly one keyword from the following 3 groups
+ *           of keywords, in the same order as the groups
+ *
+ *           LEFT RIGHT CENTER
+ *
+ *           TOP BOTTOM BASELINE
+ *
+ *           NOUPDATECP UPDATECP
+ *
+ *  @note  Sets the .systemErrorCode
+ *
+ *         The text alignment flags determine how the text writing methods
+ *         align a string of text in relation to the reference point provided to
+ *         the method
+ */
+RexxMethod2(RexxStringObject, winex_getTextAlign, POINTERSTRING, hDC, CSELF, pCSelf)
+{
+    RexxStringObject result = context->NullString();
+
+    if ( winExtSetup(context, pCSelf) == NULL )
+    {
+        goto done_out;
+    }
+    if ( hDC == NULL )
+    {
+        nullObjectException(context->threadContext, "device context", 1);
+        goto done_out;
+    }
+
+    uint32_t align = GetTextAlign((HDC)hDC);
+    if ( align == GDI_ERROR )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto done_out;
+    }
+
+    result = textAlign2string(context, align);
+
+done_out:
+    return result;
+}
+
+
+/** WindowsExtensions::setTextAlign()
+ *
+ *  Gets the text alignment setting for the specified device context.
+ *
+ *  @param  hDC   The device context whose text alignment is bein set.
+ *
+ *  @param  align  A string of keywords specifying the text alignment.  The
+ *                 following keywords are recognized.  Specify exactly one
+ *                 keyword from the following 3 groups of keywords, case and
+ *                 order are insignificant.
+ *
+ *           LEFT RIGHT CENTER
+ *
+ *           TOP BOTTOM BASELINE
+ *
+ *           NOUPDATECP UPDATECP
+ *
+ *                The default if this argument is omitted is:
+ *
+ *                LEFT TOP NOUPDATECP.
+ *
+ *                For any group that has no keyword specified, the default for
+ *                that group is used.  I.e., if neither LEFT RIGHT nor CENTER is
+ *                specified, LEFT is used.
+ *
+ *  @note  Sets the .systemErrorCode
+ *
+ *         The text alignment flags determine how the text writing methods
+ *         align a string of text in relation to the reference point provided to
+ *         the method.
+ */
+RexxMethod3(RexxStringObject, winex_setTextAlign, POINTERSTRING, hDC, OPTIONAL_CSTRING, _align, CSELF, pCSelf)
+{
+    RexxStringObject result = context->NullString();
+
+    if ( winExtSetup(context, pCSelf) == NULL )
+    {
+        goto done_out;
+    }
+    if ( hDC == NULL )
+    {
+        nullObjectException(context->threadContext, "device context", 1);
+        goto done_out;
+    }
+
+    uint32_t align = string2textAlign(_align);
+    uint32_t prev  = SetTextAlign((HDC)hDC, align);
+    if ( prev == GDI_ERROR )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto done_out;
+    }
+
+    result = textAlign2string(context, prev);
+
+done_out:
+    return result;
 }
 
 

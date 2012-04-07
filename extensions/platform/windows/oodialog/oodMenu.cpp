@@ -891,7 +891,7 @@ void CppMenu::releaseConnectionQ()
 }
 
 
-logical_t CppMenu::attachToDlg(RexxObjectPtr dialog)
+logical_t CppMenu::attachToDlg(RexxObjectPtr dialog, uint32_t countRows)
 {
     oodResetSysErrCode(c->threadContext);
 
@@ -929,8 +929,20 @@ logical_t CppMenu::attachToDlg(RexxObjectPtr dialog)
         goto no_change;
     }
 
+    RECT r;
+    uint32_t flags = SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_NOREDRAW | SWP_NOMOVE;
+
+    if ( countRows > 0 )
+    {
+        GetWindowRect(pcpbd->hDlg, &r);
+
+        int32_t newHeight = (r.bottom - r.top) + (countRows * GetSystemMetrics(SM_CYMENU));
+        SetWindowPos(pcpbd->hDlg, 0, r.left, r.top, r.right - r.left, newHeight, flags);
+    }
+
     if ( SetMenu(pcpbd->hDlg, hMenu) == 0 )
     {
+        SetWindowPos(pcpbd->hDlg, 0, r.left, r.top, r.right - r.left, r.bottom - r.top, flags);
         oodSetSysErrCode(c->threadContext);
         goto no_change;
     }
@@ -4913,7 +4925,12 @@ RexxMethod5(logical_t, menu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, 
  * this menu bar to that dialog, get a reference to the dialog's current menu
  * bar and use the replace() method.
  *
- *  @param  dlg  The dialog to attach to.
+ *  @param  dlg         The dialog to attach to.
+ *
+ *  @param  countRows   [optional] The number of rows the menu has. If this
+ *                      number is greater than 0, the size of the dialog is
+ *                      automatically adjusted to account for the height of the
+ *                      menu.
  *
  *  @return  True on success, false on failure.
  *
@@ -4941,12 +4958,12 @@ RexxMethod5(logical_t, menu_connectSomeCommandEvents, RexxObjectPtr, rxItemIDs, 
  *         ERROR_NOT_ENOUGH_MEMORY, then the menu is attached to the dialog, but
  *         some menu items were not connected.
  */
-RexxMethod2(logical_t, menuBar_attachTo, RexxObjectPtr, dlg, CSELF, cMenuPtr)
+RexxMethod3(logical_t, menuBar_attachTo, RexxObjectPtr, dlg, OPTIONAL_uint32_t, countRows, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    return cMenu->attachToDlg(dlg);
+    return cMenu->attachToDlg(dlg, countRows);
 }
 
 /** MenuBar::detach()
@@ -5381,7 +5398,7 @@ RexxMethod7(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
     if ( argumentExists(4) )
     {
-        cMenu->attachToDlg(attachTo);
+        cMenu->attachToDlg(attachTo, 0);
     }
 
     // TODO need to think about putting this Rexx object in the data word of the menu.
@@ -5980,7 +5997,7 @@ RexxMethod7(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, OPTIONAL_R
 
     if ( argumentExists(6) )
     {
-        cMenu->attachToDlg(attachTo);
+        cMenu->attachToDlg(attachTo, 0);
     }
 
 done_out:

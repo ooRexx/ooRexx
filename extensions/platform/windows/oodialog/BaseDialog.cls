@@ -86,6 +86,9 @@
 ::method createPen unguarded external "LIBRARY oodialog winex_createPen"
 ::method deleteObject unguarded external "LIBRARY oodialog winex_deleteObject"
 
+::method getTextAlign unguarded external "LIBRARY oodialog winex_getTextAlign"  -- Document for 4.2.1, not for 4.2.0
+::method setTextAlign unguarded external "LIBRARY oodialog winex_setTextAlign"  -- Document for 4.2.1, not for 4.2.0
+::method getTextExtent unguarded external "LIBRARY oodialog winex_getTextExtent"
 ::method getDC unguarded external "LIBRARY oodialog winex_getDC"
 ::method freeDC unguarded external "LIBRARY oodialog winex_freeDC"
 ::method objectToDC unguarded external "LIBRARY oodialog winex_objectToDC"

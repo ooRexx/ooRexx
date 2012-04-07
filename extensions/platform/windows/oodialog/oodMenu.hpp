@@ -145,7 +145,7 @@ public:
     RexxDirectoryObject autoConnectionStatus();
     bool setAutoConnection(logical_t on, CSTRING methodName);
     BOOL maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CSTRING methodName);
-    logical_t attachToDlg(RexxObjectPtr dialog);
+    logical_t attachToDlg(RexxObjectPtr dialog, uint32_t countRows);
     RexxObjectPtr replace(RexxObjectPtr newMenu);
     logical_t assignToDlg(RexxObjectPtr dialog, logical_t autoConnect, CSTRING methodName);
     bool addToConnectionQ(uint32_t id, CSTRING methodName);

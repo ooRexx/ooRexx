@@ -462,6 +462,7 @@ REXX_METHOD_PROTOTYPE(sm_cyCursor_cls);
 REXX_METHOD_PROTOTYPE(sm_cyDrag_cls);
 REXX_METHOD_PROTOTYPE(sm_cyFixedFrame_cls);
 REXX_METHOD_PROTOTYPE(sm_cyHScroll_cls);
+REXX_METHOD_PROTOTYPE(sm_cyMenu_cls);
 REXX_METHOD_PROTOTYPE(sm_cyScreen_cls);
 REXX_METHOD_PROTOTYPE(sm_menuDropAlignment_cls);
 
@@ -802,6 +803,9 @@ REXX_METHOD_PROTOTYPE(winex_write);
 REXX_METHOD_PROTOTYPE(winex_createBrush);
 REXX_METHOD_PROTOTYPE(winex_createPen);
 REXX_METHOD_PROTOTYPE(winex_deleteObject);
+REXX_METHOD_PROTOTYPE(winex_getTextAlign);
+REXX_METHOD_PROTOTYPE(winex_setTextAlign);
+REXX_METHOD_PROTOTYPE(winex_getTextExtent);
 REXX_METHOD_PROTOTYPE(winex_getDC);
 REXX_METHOD_PROTOTYPE(winex_freeDC);
 REXX_METHOD_PROTOTYPE(winex_rectangle);
@@ -1367,6 +1371,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(sm_cyDrag_cls,                  sm_cyDrag_cls),
     REXX_METHOD(sm_cyFixedFrame_cls,            sm_cyFixedFrame_cls),
     REXX_METHOD(sm_cyHScroll_cls,               sm_cyHScroll_cls),
+    REXX_METHOD(sm_cyMenu_cls,                  sm_cyMenu_cls),
     REXX_METHOD(sm_cyScreen_cls,                sm_cyScreen_cls),
     REXX_METHOD(sm_menuDropAlignment_cls,       sm_menuDropAlignment_cls),
 
@@ -1720,6 +1725,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(winex_createPen,                winex_createPen),
     REXX_METHOD(winex_deleteObject,             winex_deleteObject),
     REXX_METHOD(winex_objectToDC,               winex_objectToDC),
+    REXX_METHOD(winex_getTextExtent,            winex_getTextExtent),
+    REXX_METHOD(winex_getTextAlign,             winex_getTextAlign),
+    REXX_METHOD(winex_setTextAlign,             winex_setTextAlign),
     REXX_METHOD(winex_getDC,                    winex_getDC),
     REXX_METHOD(winex_freeDC,                   winex_freeDC),
     REXX_METHOD(winex_rectangle,                winex_rectangle),

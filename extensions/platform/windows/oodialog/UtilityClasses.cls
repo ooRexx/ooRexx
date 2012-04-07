@@ -248,6 +248,7 @@
 ::attribute cyDrag get class external        "LIBRARY oodialog sm_cyDrag_cls"
 ::attribute cyFixedFrame get class external  "LIBRARY oodialog sm_cyFixedFrame_cls"
 ::attribute cyHscroll get class external     "LIBRARY oodialog sm_cyHScroll_cls"
+::attribute cyMenu get class external        "LIBRARY oodialog sm_cyMenu_cls"    -- Document in 4.2.1, not 4.2.0
 ::attribute cyScreen get class external      "LIBRARY oodialog sm_cyScreen_cls"
 ::attribute menuDropAlignment get class external "LIBRARY oodialog sm_menuDropAlignment_cls"
 
