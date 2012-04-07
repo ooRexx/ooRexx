@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,29 +35,22 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: EM_CATEG.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/* Description:  Sample to demonstrate the category dialog class            */
-/*                                                                          */
-/****************************************************************************/
 
 /**
- * Name: employe10tab.rex
+ * Name: employee11tab.rex
  * Type: Open Object REXX Script
  *
  * Description:  Example to demonstrate the property sheet dialog class.
  */
 
   -- Note to self, we do not use data attributes in this app, need explanation.
-  .application~setDefaults("O", "employe10tab.h", .false)
+  .application~setDefaults("O", "employee11tab.h", .false)
 
   -- Create the dialog pages.
-  p1 = .EmployeeAdd~new("employe10tab.rc", IDD_EMPLOYEES_ADD)
-  p2 = .EmployeeEdit~new("employe10tab.rc", IDD_EMPLOYEES_EDIT)
-  p3 = .EmployeeBrowse~new("employe10tab.rc", IDD_EMPLOYEES_BROWSE)
-  p4 = .EmployeeList~new("employe10tab.rc", IDD_EMPLOYEES_LIST)
+  p1 = .EmployeeAdd~new("employee11tab.rc", IDD_EMPLOYEES_ADD)
+  p2 = .EmployeeEdit~new("employee11tab.rc", IDD_EMPLOYEES_EDIT)
+  p3 = .EmployeeBrowse~new("employee11tab.rc", IDD_EMPLOYEES_BROWSE)
+  p4 = .EmployeeList~new("employee11tab.rc", IDD_EMPLOYEES_LIST)
 
   pages = .array~of(p1, p2, p3, p4)
   dlg = .AcmeEmployeesDlg~new(pages, "", "Acme Software - Employee Manager Version 10.00.0")
