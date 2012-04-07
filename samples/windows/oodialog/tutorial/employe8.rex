@@ -35,150 +35,177 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: EMPLOYE8.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/*                                                                          */
-/****************************************************************************/
 
+/**
+ * Name: employe8.rex
+ * Type: Open Object REXX Script
+ */
 
-signal on any name CleanUp
+dlg = .MyDialogClass~new("employe5.rc", 100)
+if dlg~initCode <> 0 then exit
+dlg~execute("SHOWTOP")
 
-dlg = .MyDialogClass~new
-if dlg~InitCode <> 0 then exit
-dlg~Execute("SHOWTOP")
-dlg~deinstall
 exit
-
-/* ------- signal handler to destroy dialog if condition trap happens  -----*/
-CleanUp:
-   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
-                     || "a"x || condition("o")~message
-   if dlg~isDialogActive then do
-      dlg~finished = .true
-      dlg~stopIt
-   end
-
 
 ::requires "ooDialog.cls"
 
-::class MyDialogClass subclass UserDialog
+::class MyDialogClass subclass RcDialog
 
-::method Employees attribute
-::method Emp_count attribute
-::method Emp_current attribute
+::attribute employees
+::attribute empCount
+::attribute empCurrent
 
-::method Init
+::method init
     expose font
+
+    forward class (super) continue
+    if self~initCode <> 0 then return self~initCode
+
     font = 0
-    ret = self~init:super;
-    if ret = 0 then ret = self~Load("EMPLOYE5.RC", 100)
-    if ret = 0 then self~Employees = .array~new(10)
-    if ret = 0 then do
-        self~Emp_count = 1
-        self~Emp_current = 1
-        self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
-        self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
-        self~connectButtonEvent(13, "CLICKED", "Emp_List")
-        self~ConnectDraw(1, "DrawOK")
-    end
-    self~InitCode = ret
-    return ret
 
-::method InitDialog
+    self~employees = .array~new(10)
+    self~empCount = 1
+    self~empCurrent = 1
+    self~connectButtonEvent(10, "CLICKED", "print")   /* connect button 10 with a method */
+    self~connectButtonEvent(12, "CLICKED", "add")     /* connect button 12 with a method */
+    self~connectUpDownEvent(11, "DELTAPOS", onEmpChange)
+    self~connectButtonEvent(13, "CLICKED", "empList")
+
+    return self~initCode
+
+
+::method initDialog
     expose font
-    self~City = "New York"
-    self~Male = 1
-    self~Female = 0
-    self~AddComboEntry(22, "Munich")
-    self~AddComboEntry(22, "New York")
-    self~AddComboEntry(22, "San Francisco")
-    self~AddComboEntry(22, "Stuttgart")
-    self~AddListEntry(23, "Business Manager")
-    self~AddListEntry(23, "Software Developer")
-    self~AddListEntry(23, "Broker")
-    self~AddListEntry(23, "Police Man")
-    self~AddListEntry(23, "Lawyer")
-    self~connectEachSBEvent(11, "Emp_Previous", "Emp_Next")
-    self~DisableItem(11)
+
+    self~city = "New York"
+    self~male = 1
+    self~female = 0
+    self~addComboEntry(22, "Munich")
+    self~addComboEntry(22, "New York")
+    self~addComboEntry(22, "San Francisco")
+    self~addComboEntry(22, "Stuttgart")
+    self~addListEntry(23, "Business Manager")
+    self~addListEntry(23, "Software Developer")
+    self~addListEntry(23, "Broker")
+    self~addListEntry(23, "Police Man")
+    self~addListEntry(23, "Lawyer")
 
     additional = .directory~new
     additional~weight = 600
     font = self~createFontEx("Script", 16, additional)
     self~setControlFont(1, font)
+
+    self~disableItem(11)
     self~disableItem(13)
 
-::method Print
-    self~GetData
-    if self~Male = 1 then title = "Mr."; else title = "Ms."
-    if self~Married = 1 then addition = " (married) "; else addition = ""
-    call infoDialog title self~Name addition || "A"x || "City:" self~City || "A"x ||,
-                     "Profession:" self~Profession
 
-::method Add
-    self~Employees[self~Emp_count] = .directory~new
-    self~Employees[self~Emp_count]['NAME'] = self~getControlData(21)
-    self~Employees[self~Emp_count]['CITY'] = self~getControlData(22)
-    self~Employees[self~Emp_count]['PROFESSION'] = self~getControlData(23)
-    if self~getControlData(31) = 1 then sex = 1; else sex = 2
-    self~Employees[self~Emp_count]['SEX'] = sex
-    self~Employees[self~Emp_count]['MARRIED'] = self~getControlData(41)
-    self~Emp_count = self~Emp_count +1
-    self~Emp_current = self~Emp_count
+::method onEmpChange
+    use arg curPos, increment
+
+    if increment > 0 then self~empNext
+    else self~empPrev
+
+    return .UpDown~deltaPosReply
+
+
+::method print
+    self~getData
+
+    if self~male = 1 then title = "Mr."
+    else title = "Ms."
+    if self~married = 1 then addition = " (married) "
+    else addition = ""
+
+    call infoDialog title self~name addition || "A"x || "City:" self~city || "A"x ||  -
+                     "Profession:" self~name
+
+::method add
+    self~employees[self~empCount] = .directory~new
+    self~employees[self~empCount]['NAME'] = self~getControlData(21)
+    self~employees[self~empCount]['CITY'] = self~getControlData(22)
+    self~employees[self~empCount]['PROFESSION'] = self~getControlData(23)
+
+    if self~getControlData(31) = 1 then sex = 1
+    else sex = 2
+    self~employees[self~empCount]['SEX'] = sex
+
+    self~employees[self~empCount]['MARRIED'] = self~getControlData(41)
+    self~empCount = self~empCount + 1
+    self~empCurrent = self~empCount
     self~setControlData(21, "");
-    self~SetSBRange(11, 1, self~Emp_count)
-    self~SetSBPos(11, self~Emp_count)
-    self~EnableItem(11)
-    self~EnableItem(13)
+
+    self~newUpDown(11)~setRange(1, self~empCount)
+    self~newUpDown(11)~setPosition(self~empCount)
+
+    self~enableItem(11)
+    self~enableItem(13)
 
 
-::method Set
-    self~setControlData(21, self~Employees[self~Emp_current]['NAME'])
-    self~setControlData(22, self~Employees[self~Emp_current]['CITY'])
-    self~setControlData(23, self~Employees[self~Emp_current]['PROFESSION'])
-    if self~Employees[self~Emp_current]['SEX'] = 1 then do
-       self~setControlData(31, 1);self~setControlData(32, 0); end
+::method set
+    self~setControlData(21, self~employees[self~empCurrent]['NAME'])
+    self~setControlData(22, self~employees[self~empCurrent]['CITY'])
+    self~setControlData(23, self~employees[self~empCurrent]['PROFESSION'])
+
+    if self~employees[self~empCurrent]['SEX'] = 1 then do
+       self~setControlData(31, 1)
+       self~setControlData(32, 0)
+    end
     else do
-       self~setControlData(31, 0);self~setControlData(32, 1); end
-    self~setControlData(41, self~Employees[self~Emp_current]['MARRIED'])
+       self~setControlData(31, 0)
+       self~setControlData(32, 1)
+    end
 
-::method Emp_Previous
-   if self~Emp_count = 1 then return
-   if self~Emp_current > 1 then do
-       self~Emp_current = self~Emp_current - 1
-       self~SetSBPos(11, self~Emp_current)
-       self~Set
-   end; else
-       call TimedMessage "You reached the top!","Info",1000
+    self~setControlData(41, self~employees[self~empCurrent]['MARRIED'])
 
-::method Emp_Next
-   if self~Emp_count = 1 then return
-   if self~Emp_current < self~Emp_count-1 then do
-       self~Emp_current = self~Emp_current + 1
-       self~SetSBPos(11, self~Emp_current)
-       self~Set
-   end; else
-       call TimedMessage "You reached the bottom!","Info",1000
+::method empPrev
+   if self~empCount = 1 then return
+   if self~empCurrent > 1 then do
+       self~empCurrent = self~empCurrent - 1
+       self~newUpDown(11)~setPosition(self~empCount)
+       self~set
+   end
+   else do
+       call TimedMessage "You reached the bottom.", "Info", 1000
+   end
 
-::method Emp_List
-   ldlg = .EmployeeListClass~new(self)
-   ldlg~Execute("SHOWTOP")
+::method empNext
+   if self~empCount = 1 then return
+   if self~empCurrent < self~empCount-1 then do
+       self~empCurrent = self~empCurrent + 1
+       self~newUpDown(11)~setPosition(self~empCount)
+       self~set
+   end
+   else do
+       call TimedMessage "You reached the top.", "Info", 1000
+   end
+
+::method empList
+   lDlg = .EmployeeListClass~new("employe5.rc", 101)
+   lDlg~parent = self
+   lDlg~execute("SHOWTOP")
 
 
-::method FillList
+::method fillList
    use arg subdlg, id
-   column1 = 24;column2 = 29
-   do i = 1 to self~Emp_count-1
-       if self~Employees[i]['SEX'] = 1 then title = "Mr."; else title = "Ms."
-       addstring = title self~Employees[i]['NAME']
-       spacebetween = column1 - self~Employees[i]['NAME']~length - 5
+
+   column1 = 24
+   column2 = 29
+
+   do i = 1 to self~empCount - 1
+       if self~employees[i]['SEX'] = 1 then title = "Mr."
+       else title = "Ms."
+       addstring = title self~employees[i]['NAME']
+
+       spacebetween = column1 - self~employees[i]['NAME']~length - 5
+
        if spacebetween > 0 then addstring = addstring || " "~copies(spacebetween)
-       addstring = addstring || " "self~Employees[i]['PROFESSION']
-       spacebetween = column2 - self~Employees[i]['PROFESSION']~length - 5
+       addstring = addstring || " "self~employees[i]['PROFESSION']
+
+       spacebetween = column2 - self~employees[i]['PROFESSION']~length - 5
        if spacebetween > 0 then addstring = addstring || " "~copies(spacebetween)
-       addstring = addstring || " "self~Employees[i]['CITY']
-       subdlg~AddListEntry(id, addstring)
+       addstring = addstring || " "self~employees[i]['CITY']
+
+       subdlg~addListEntry(id, addstring)
    end
 
 ::method Leaving
@@ -186,26 +213,18 @@ CleanUp:
    if font \= 0 then self~DeleteFont(font)
 
 
-::class EmployeeListClass subclass UserDialog
+::class 'EmployeeListClass' subclass RcDialog
 
-::method Parent attribute
+::method parent attribute
 
-::method Init
+::method initDialog
    expose font
-   use arg ParentDlg
-   self~Parent = ParentDlg
-   font = 0
-   ret = self~init:super
-   if ret = 0 then ret = self~Load("EMPLOYE5.RC", 101)
-   self~InitCode = ret
-   return ret
 
-::method InitDialog
-   expose font
    font = self~createFontEx("Courier", 14)
    self~setControlFont(101, font)
-   self~parent~FillList(self, 101)
 
-::method Leaving
+   self~parent~fillList(self, 101)
+
+::method leaving
    expose font
-   if font \= 0 then self~DeleteFont(font)
+   self~deleteFont(font)

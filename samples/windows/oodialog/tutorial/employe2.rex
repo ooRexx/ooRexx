@@ -35,37 +35,37 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: EMPLOYE2.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/****************************************************************************/
 
-dlg = .MyDialogClass~new
-if dlg~InitCode <> 0 then exit
-if dlg~Load("EMPLOYE1.RC", 100) \= 0 then exit
-if dlg~Execute("SHOWTOP") = 1 then do
-    say dlg~Name
-    say dlg~City
-    say dlg~Profession
-    say dlg~Male
-    say dlg~Female
-    say dlg~Married
+/**
+ * Name: employe2.rex
+ * Type: Open Object REXX Script
+ */
+
+dlg = .MyDialogClass~new("employe1.rc", 100)
+if dlg~initCode <> 0 then exit
+
+if dlg~execute("SHOWTOP") = 1 then do
+    say dlg~name
+    say dlg~city
+    say dlg~profession
+    say dlg~male
+    say dlg~female
+    say dlg~married
 end
-dlg~deinstall
+
 ::requires "ooDialog.cls"
 
-::class MyDialogClass subclass UserDialog
-::method InitDialog
-    self~City = "New York"
-    self~Male = 1
-    self~Female = 0
-    self~AddComboEntry(22, "Munich")
-    self~AddComboEntry(22, "New York")
-    self~AddComboEntry(22, "San Francisco")
-    self~AddComboEntry(22, "Stuttgart")
-    self~AddListEntry(23, "Business Manager")
-    self~AddListEntry(23, "Software Developer")
-    self~AddListEntry(23, "Broker")
-    self~AddListEntry(23, "Police Man")
-    self~AddListEntry(23, "Lawyer")
+::class MyDialogClass subclass RcDialog
+::method initDialog
+    self~city = "New York"
+    self~male = 1
+    self~female = 0
+    self~addComboEntry(22, "Munich")
+    self~addComboEntry(22, "New York")
+    self~addComboEntry(22, "San Francisco")
+    self~addComboEntry(22, "Stuttgart")
+    self~addListEntry(23, "Business Manager")
+    self~addListEntry(23, "Software Developer")
+    self~addListEntry(23, "Broker")
+    self~addListEntry(23, "Police Man")
+    self~addListEntry(23, "Lawyer")

@@ -35,23 +35,23 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: EMPLOYE1.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/****************************************************************************/
+
+/**
+ * Name: employe1.rex
+ * Type: Open Object REXX Script
+ */
 
 dlg = .UserDialog~new
-if dlg~InitCode <> 0 then exit
-if dlg~Load("EMPLOYE1.RC", 100) \= 0 then exit
-if dlg~Execute("SHOWTOP") = 1 then do
-    say dlg~Name
-    say dlg~City
-    say dlg~Profession
-    say dlg~Male
-    say dlg~Female
-    say dlg~Married
+if dlg~initCode <> 0 then exit
+if dlg~load("employe1.rc", 100) \= 0 then exit
+if dlg~execute("SHOWTOP") = 1 then do
+    say dlg~name
+    say dlg~city
+    say dlg~profession
+    say dlg~male
+    say dlg~female
+    say dlg~married
 end
-dlg~deinstall
+
 ::requires "ooDialog.cls"
 

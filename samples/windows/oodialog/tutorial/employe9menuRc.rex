@@ -37,10 +37,12 @@
 /*----------------------------------------------------------------------------*/
 
 /**
- * Name: emp_menu.rex
+ * Name: employe9menuRc.rex
  * Type: Open Object REXX Script
  *
- * Description: Example demonstrating ooDialog menus.
+ * Description:  Adds a menu, obtained from the .rc script, to the Employees
+ *               application.  Continues the refinement / enhancement of the
+ *               application.
  */
 
     .application~setDefaults('O', 'employe7.h', .false)
@@ -68,9 +70,9 @@ return 0
     self~employees = .array~new(10)
     self~empCount = 0
 
-    self~connectButtonEvent(IDC_PB_PRINT, "CLICKED", "print")
-    self~connectButtonEvent(IDC_PB_ADD, "CLICKED", "add")
-    self~connectButtonEvent(IDC_PB_LIST, "CLICKED", "empList")
+    self~connectButtonEvent(IDC_PB_PRINT, "CLICKED", "onPrint")
+    self~connectButtonEvent(IDC_PB_ADD, "CLICKED", "onAdd")
+    self~connectButtonEvent(IDC_PB_LIST, "CLICKED", "onList")
     self~connectButtonEvent(IDC_RB_ADD, "CLICKED", "onAdding")
     self~connectButtonEvent(IDC_RB_BROWSE, "CLICKED", "onBrowsing")
 
@@ -78,17 +80,15 @@ return 0
     self~connectUpDownEvent(IDC_UPD, "DELTAPOS", onEmpChange)
 
     menuBar = .ScriptMenuBar~new("employe7.rc", IDM_MENUBAR, 0)
-    menuBar~connectCommandEvent(IDM_ADD, "add", self)
-    menuBar~connectCommandEvent(IDM_PRINT, "print", self)
-    menuBar~connectCommandEvent(IDM_LIST, "empList", self)
+    menuBar~connectCommandEvent(IDM_ADD, "onAdd", self)
+    menuBar~connectCommandEvent(IDM_PRINT, "onPrint", self)
+    menuBar~connectCommandEvent(IDM_LIST, "onList", self)
     menuBar~connectCommandEvent(IDM_ABOUT, "about", self)
 
     return self~initCode
 
 ::method initDialog
-    expose menuBar cbCity lbPosition
-
-    menuBar~attachTo(self)
+    expose cbCity lbPosition menuBar
 
     cbCity = self~newComboBox(IDC_CB_CITY)
     cbCity~add("Munich")
@@ -113,23 +113,28 @@ return 0
     lbPosition~add("Lawyer")
     lbPosition~add("CEO")
 
+    menuBar~attachTo(self, 1)
+
     self~setControls
     self~defaultForm
 
-::method print
+
+::method onPrint
     expose cbCity lbPosition rbMale chkMarried editName
 
     title = "Acme Software - Employee:"
 
-    if rbMale~checked then msg = "Mr."; else msg = "Ms."
+    if rbMale~checked then msg = "Mr."
+    else msg = "Ms."
     msg ||= editName~getText
+
     if chkMarried~checked then msg ||= " (married) "
     msg ||= "A"x || "City:" cbCity~selected || "A"x || "Profession:" lbPosition~selected
 
     j = MessageDialog(msg, self~hwnd, title, , INFORMATION)
 
-::method add
-    expose menuBar cbCity lbPosition rbMale chkMarried editName pbList upDown rbBrowse
+::method onAdd
+    expose cbCity lbPosition rbMale chkMarried editName pbList upDown rbBrowse
 
     self~empCount += 1
     self~employees[self~empCount] = .directory~new
@@ -137,7 +142,9 @@ return 0
     self~employees[self~empCount]['CITY'] = cbCity~selected
     self~employees[self~empCount]['POSITION'] = lbPosition~selected
 
-    if rbMale~checked then sex = 1; else sex = 2
+    if rbMale~checked then sex = 1
+    else sex = 2
+
     self~employees[self~empCount]['SEX'] = sex
     self~employees[self~empCount]['MARRIED'] = chkMarried~checked
 
@@ -150,22 +157,28 @@ return 0
     self~defaultForm
 
 ::method onNameChange
-    expose menuBar editName pbAdd rbAdd
+    expose menuBar editName rbAdd pbAdd pbPrint
 
     if rbAdd~checked then do
         if editName~getText~strip~length == 0 then do
             pbAdd~disable
+            pbPrint~disable
             menuBar~disable(IDM_ADD)
+            menuBar~disable(IDM_PRINT)
         end
         else do
             pbAdd~enable
+            pbPrint~enable
             menuBar~enable(IDM_ADD)
+            menuBar~enable(IDM_PRINT)
         end
     end
 
 ::method onEmpChange
     use arg curPos, increment
+
     self~setEmpRecord(curPos + increment)
+    return .UpDown~deltaPosReply
 
 ::method onAdding
     self~defaultForm
@@ -203,7 +216,7 @@ return 0
     else chkMarried~uncheck
 
 
-::method empList
+::method onList
    lDlg = .EmployeeListClass~new("employe7.rc", IDD_EMPLOYEE_LIST)
    lDlg~parent = self
    lDlg~execute("SHOWTOP")
@@ -223,10 +236,11 @@ return 0
     call infoDialog "Sample to demonstrate ooDialog menus."
 
 ::method setControls private
-    expose rbMale rbFemale rbAdd rbBrowse chkMarried editName pbList pbAdd upDown
+    expose rbMale rbFemale rbAdd rbBrowse chkMarried editName pbList pbAdd pbPrint upDown
 
     pbAdd      = self~newPushButton(IDC_PB_ADD)
     pbList     = self~newPushButton(IDC_PB_LIST)
+    pbPrint    = self~newPushButton(IDC_PB_PRINT)
     rbMale     = self~newRadioButton(IDC_RB_MALE)
     rbFemale   = self~newRadioButton(IDC_RB_FEMALE)
     rbAdd      = self~newRadioButton(IDC_RB_ADD)
@@ -236,7 +250,8 @@ return 0
     upDown     = self~newUpDown(IDC_UPD)
 
 ::method defaultForm private
-    expose menuBar cbCity lbPosition rbMale rbFemale chkMarried editName pbAdd pbList rbAdd rbBrowse upDown
+    expose menuBar cbCity lbPosition rbMale rbFemale rbAdd rbBrowse chkMarried -
+           editName pbAdd pbList pbPrint upDown
 
     editName~setText("")
     cbCity~select("New York")
@@ -248,19 +263,20 @@ return 0
 
     rbAdd~check
     pbAdd~disable
+    pbPrint~disable
     menuBar~disable(IDM_ADD)
+    menuBar~disable(IDM_PRINT)
     upDown~disable
 
     editName~assignFocus
 
-    if self~empCount == 0 then do
+    if self~empCount < 1 then do
         pbList~disable
         rbBrowse~disable
         upDown~setRange(0, 0)
         upDown~setPosition(0)
     end
-
-    if self~empCount == 1 then do
+    else do
         pbList~enable
         menuBar~enable(IDM_LIST)
     end

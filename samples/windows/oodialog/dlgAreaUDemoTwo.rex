@@ -98,7 +98,7 @@
     return
   end
 
-  self~connectResize('onResize')
+  self~connectResize('onResize', .true)
   self~connectSizeMoveEnded('onSizeMoveEnded')
 
 

@@ -101,6 +101,10 @@ return 0
   use arg curPos, increment
   self~refreshClientDisplay(curPos + increment)
 
+  -- Return a delta position reply.  With no arguments the reply essentially
+  -- says to allow the change.
+  return .UpDown~deltaPosReply
+
 
 -- onChangeAcceleration()
 -- Invoked when the user clicks on the "Change Acceleration" button.  We keep
@@ -157,6 +161,8 @@ return 0
 
   self~printAccelValues(currentAccel, newAccel, reverting)
 
+  return 0
+
 
 -- onChangeRange()
 -- Invoked when the "Change Range" button is clicked.  The range of the up down
@@ -191,6 +197,8 @@ return 0
         '  minimum:' range~min                           || .endOfLine || -
         '  maximum:' range~max
   self~information(msg)
+
+  return 0
 
 
 -- onChangeBase()
@@ -248,6 +256,8 @@ return 0
         'base' newBase'.'
   self~information(msg)
 
+  return 0
+
 
 -- onGetPostion()
 -- Invoked when the user clicks the 'Get Position' push button.  We simply
@@ -266,6 +276,8 @@ return 0
 
   msg = "The position of the up down control on the" side "is" pos
   self~information(msg)
+
+  return 0
 
 
 -- onGetBuddy()
@@ -292,6 +304,8 @@ return 0
 
   msg = "The window handle of the up down control on the" side "is" buddy~hwnd
   self~information(msg)
+
+  return 0
 
 
 -- connectPushButtons()

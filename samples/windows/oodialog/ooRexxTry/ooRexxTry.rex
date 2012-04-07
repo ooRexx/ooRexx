@@ -82,7 +82,6 @@ exit
     self~init:super
     rc = self~create(.dx,.dy,.dwidth,.dheight,.title,'ThickFrame MinimizeBox MaximizeBox')
     self~initCode = (rc=0)
-    self~connectResize('onResize')
     self~fontMenuHelper
 
 ::method defineDialog
@@ -176,7 +175,7 @@ exit
    if \ menuBar~complete then
        statusText = 'User menu bar completion error:' .SystemErrorCode SysGetErrortext(.SystemErrorCode)
 
-::method initDialog
+::method initDialog unguarded
     expose args_input code_input result_input say_input errors_input menuBar
     -- Use font data from .ini file or defaults if .ini not present yet
 
@@ -231,6 +230,7 @@ exit
                 end
         end
 
+    self~connectResize('onResize', .true)
 
 -- Run menu option
 ::method RunIt
@@ -857,8 +857,6 @@ return 0
     tp = (.dy + (.dh / 2) - 30)~format( , 0)
     rc = self~create(lp,tp,100,60,.title,"THICKFRAME")
     self~initCode = (rc=0)
-    self~connectResize('onResize')
-    self~connectSizeMoveEnded('onSizeMoveEnded')
 
 ::method defineDialog
     expose h sizing
@@ -883,7 +881,7 @@ return 0
     dd = .dlgArea~new(h~x,dt~y + dt~h,h~w,10)
     self~createPushButton(25,dd~x,dd~y,dd~w,10,,'&PDF','Help')
 
-::method initDialog
+::method initDialog unguarded
     v_title = self~newStatic(20)
     a_title = self~newStatic(22)
     d_title = self~newStatic(24)
@@ -891,6 +889,9 @@ return 0
     v_title~setColor(5,10)
     a_title~setColor(5,10)
     d_title~setColor(5,10)
+
+    self~connectResize('onResize', .true)
+    self~connectSizeMoveEnded('onSizeMoveEnded')
 
 ::method help
     -- The help doc is supposed to be in the 'doc' subdirectory, but we will also check the

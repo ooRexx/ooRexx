@@ -35,57 +35,49 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: TEXTSCRL.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/* Description:  Scrolling text sample.                                     */
-/*                                                                          */
-/****************************************************************************/
 
-signal on any name CleanUp
+/**
+ * Name: employe4valid.rex
+ * Type: Open Object REXX Script
+ */
 
-dlg = .MyDialogClass~new
-if dlg~InitCode <> 0 then exit
-dlg~Execute("SHOWTOP")
-dlg~deinstall
-exit
+dlg = .MyDialogClass~new("employe2.rc", 100)
+if dlg~initCode <> 0 then exit
 
-/* ------- signal handler to destroy dialog if condition trap happens  -----*/
-CleanUp:
-   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
-                     || "a"x || condition("o")~message
-   if dlg~isDialogActive then do
-      dlg~finished = .true
-      dlg~stopIt
-   end
-
+dlg~execute("SHOWTOP")
 
 ::requires "ooDialog.cls"
 
-::class 'MyDialogClass' subclass UserDialog
-
-::method init
-    ret = self~init:super;
-    if ret = 0 then ret = self~load("Textscrl.RC", 100)
-    if ret = 0 then do
-        self~data13 = "Arial"
-        self~text = "This is a scrolling text demonstration"
-        self~data14 = 24
-        self~connectButtonEvent(11, "CLICKED", "Display")
-    end
-    self~initCode = ret
-    return ret
-
-
+::class MyDialogClass subclass RcDialog
 ::method initDialog
+    self~city = "New York"
+    self~male = 1
+    self~female = 0
+    self~addComboEntry(22, "Munich")
+    self~addComboEntry(22, "New York")
+    self~addComboEntry(22, "San Francisco")
+    self~addComboEntry(22, "Stuttgart")
+    self~addListEntry(23, "Business Manager")
+    self~addListEntry(23, "Software Developer")
+    self~addListEntry(23, "Broker")
+    self~addListEntry(23, "Police Man")
+    self~addListEntry(23, "Lawyer")
+    self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
 
-   -- Set the background color of the button to the backgroud color of a button.
-   COLOR_BTNFACE = 15
-   self~setItemSysColor(10, COLOR_BTNFACE)
-
-
-::method display
+::method print
     self~getData
-    self~scrollInButton(10, self~text, self~data13, self~data14, "BOLD")
+    if self~male = 1 then title = "Mr."
+    else title = "Ms."
+    if self~married = 1 then addition = " (married) "
+    else addition = ""
+    call infoDialog title self~name addition || "A"x || "City:" self~city || "A"x ||,
+                     "Profession:" self~profession
 
+::method validate
+    if self~getControlData(21)~strip = "" then do
+        call infoDialog "An unnamed employee is not accepted!"
+        return .false       /* dialog cannot be closed */
+    end
+    else do
+        return .true       /* dialog can be closed */
+    end

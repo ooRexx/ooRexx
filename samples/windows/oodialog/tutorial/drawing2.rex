@@ -35,85 +35,117 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: DRAWING2.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/* Description: Sample to demonstrate drawing functionality                 */
-/*                                                                          */
-/****************************************************************************/
 
-signal on any name CleanUp
+/**
+ * Name: drawing2.rex
+ * Type: Open Object REXX Script
+ *
+ * Description: Example demonstrating drawing functionality.
+ */
 
-dlg = .MyDialogClass~new
-if dlg~InitCode <> 0 then exit
-dlg~Execute("SHOWTOP")
-dlg~deinstall
-exit
+dlg = .MyDialogClass~new("drawings.rc", 100)
+if dlg~initCode <> 0 then return 99
+dlg~execute("SHOWTOP")
 
-/* ------- signal handler to destroy dialog if condition trap happens  -----*/
-CleanUp:
-   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
-                     || "a"x || condition("o")~message
-   if dlg~isDialogActive then do
-      dlg~finished = .true
-      dlg~stopIt
-   end
-
+return 0
 
 ::requires "ooDialog.cls"
 
-::class MyDialogClass subclass UserDialog
+::class 'MyDialogClass' subclass RcDialog
 
-::method GraphicObject attribute
+::attribute graphicObject
 
-::method Init
-    ret = self~init:super;
-    if ret = 0 then ret = self~Load("Drawings.RC", 100)
-    self~connectButtonEvent(11, "CLICKED", "Circle")
-    self~connectButtonEvent(12, "CLICKED", "MyRectangle")
-    self~GraphicObject = "NONE"
-    if ret = 0 then self~ConnectDraw(10, "DrawIt")
-    self~InitCode = ret
-    return ret
+::method init
+
+    forward class (super) continue
+    if self~initCode <> 0 then return self~initCode
+
+    self~connectButtonEvent(11, "CLICKED", "circle")
+    self~connectButtonEvent(12, "CLICKED", "myRectangle")
+    self~connectDraw(10, "drawIt")
+
+    self~graphicObject = "NONE"
+
+    return self~initCode
 
 
-::method DrawIt
+::method drawIt
     use arg id
-    if self~GraphicObject = "NONE" then return 0
-    dc = self~GetButtonDC(10)
-    if self~GraphicObject = "CIRCLE" then do
-        size = 5
-        color = 1
-        x = 60
-    end; else do
-        size = 8
-        color = 2
-        x = 20
-    end;
-    pen = self~CreatePen(size, "SOLID", color)
-    oldpen = self~ObjectToDc(dc, pen)
-    font = self~CreateFont("Arial", 24, "BOLD ITALIC")
-    oldfont = self~FontToDC(dc, font)
-    self~TransparentText(dc)
-    if self~GraphicObject = "CIRCLE" then
-        self~DrawArc(dc, 10, 10, 300, 200)
-    else
-        self~Rectangle(dc, 10, 10, 320, 200)
-    self~WriteDirect(dc,x,100,self~GraphicObject)
-    self~FontToDC(dc, oldfont)
-    self~DeleteFont(font)
-    self~ObjectToDc(dc, oldpen)
-    self~DeleteObject(pen)
-    self~OpaqueText(dc)
-    self~FreeButtonDC(10, dc)
-    return 1
+
+    if self~graphicObject = "NONE" then return 0
+
+    dc = self~getControlDC(10)
+
+    if self~graphicObject = "CIRCLE" then do
+        pen = self~createPen(5, "SOLID", 1)
+    end
+    else do
+        pen = self~createPen(8, "SOLID", 2)
+    end
+
+    oldPen = self~objectToDc(dc, pen)
+
+    properties = .directory~new
+    properties~weight = 700
+    properties~italic = .true
+
+    font = self~createFontEx("Arial", 24, properties)
+    oldFont = self~fontToDC(dc, font)
+
+    self~transparentText(dc)
+
+    say 'Text align:' self~getTextAlign(dc)
+
+    if self~graphicObject = "CIRCLE" then do
+        -- Get the size of the bounding rectangle for the text we are going to
+        -- write, in this DC:
+        size = self~getTextExtent(dc, self~graphicObject)
+
+        -- Get the midpoint of the circle we are about to draw;
+        pos = .Point~new(((300 - 10) % 2) + 10, ((200 - 10) % 2) + 10); say pos
+
+        -- Now adjust the pos point to specify where to write the text, in order
+        -- to center it in the circle:
+        pos~x -= size~width  % 2
+        pos~y -= size~height % 2; say pos
+
+        -- Draw the circle.
+        self~drawArc(dc, 10, 10, 300, 200)
+    end
+    else do
+        -- Do the same calculations for the position to write the text as we did
+        -- above for CIRCLE:
+        size = self~getTextExtent(dc, self~graphicObject); say size
+
+        pos = .Point~new(((320 - 10) % 2) + 10, ((200 - 10) % 2) + 10); say pos
+        pos~x -= size~width  % 2
+        pos~y -= size~height % 2; say pos
+
+        -- Draw the rectangle.
+        self~rectangle(dc, 10, 10, 320, 200)
+    end
+
+    -- Write the text at the position we calculated above.
+    self~writeDirect(dc, pos~x, pos~y, self~graphicObject)
+
+    self~fontToDC(dc, oldFont)
+    self~deleteFont(font)
+
+    self~objectToDc(dc, oldPen)
+    self~deleteObject(pen)
+
+    self~opaqueText(dc)
+    self~freeControlDC(10, dc)
+
+    return .true
 
 
-::method Circle
-    self~GraphicObject = "CIRCLE"
-    self~RedrawButton(10, 1)
+::method circle
+    self~graphicObject = "CIRCLE"
+    self~redrawControl(10, 1)
 
-::method MyRectangle
-    self~GraphicObject = "RECTANGLE"
-    self~RedrawButton(10, 1)
+
+::method myRectangle
+    self~graphicObject = "RECTANGLE"
+    self~redrawControl(10, 1)
+

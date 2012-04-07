@@ -58,7 +58,7 @@ return 0
     return
   end
 
-  self~connectResize('OnResize')
+  self~connectResize('OnResize', .true)
 
 /* ------------------------------------------------------------------------- */
 ::method defineDialog

@@ -45,16 +45,10 @@
 
   .application~setDefaults("O", "rc\PropertySheetDemo.h", .false)
 
-  -- To run correctly, this program needs to be able to find its support files.
-  -- But, we allow starting the program from anywhere.  To do this we:
-  -- get the directory we are executing from, switch to the directory this
-  -- program is installed in, and then switch back to the directory we started
-  -- from when we quit.
-
-  curdir = directory();                       -- Directory we started from.
-  parse source . . me
-  mydir = me~left(me~lastpos('\')-1)          -- Directory we are installed in.
-  mydir = directory(mydir)                    -- CD to the install direcotry.
+  -- A directory manager saves the current directory and can later go back to
+  -- that directory.  It also sets up the environment we need.  The class
+  -- itself is located in samplesSetup.rex
+  mgr = .DirectoryManager~new()
 
   -- Create the 5 dialog pages.
   p1 = .ListViewDlg~new("rc\PropertySheetDemo.rc", IDD_LISTVIEW_DLG)
@@ -77,11 +71,11 @@
   -- Show the property sheet.
   propDlg~execute
 
-  -- Switch back to the intial directory and quit.
-  ret = directory(curdir)
+  mgr~goBack
   return 0
 
 ::requires "ooDialog.cls"
+::requires "samplesSetup.rex"
 
 ::class 'ListViewDlg' subclass RcPSPDialog
 

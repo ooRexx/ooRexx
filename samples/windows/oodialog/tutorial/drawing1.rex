@@ -35,61 +35,58 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: DRAWING1.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/* Description: Sample to demonstrate drawing functionality                 */
-/*                                                                          */
-/****************************************************************************/
 
-signal on any name CleanUp
+/**
+ * Name: drawing1.rex
+ * Type: Open Object REXX Script
+ *
+ * Description: Example demonstrating drawing functionality.
+ */
 
-dlg = .MyDialogClass~new
-if dlg~InitCode <> 0 then exit
-dlg~Execute("SHOWTOP")
-dlg~deinstall
-exit
+dlg = .MyDialogClass~new("drawings.rc", 100)
+if dlg~initCode <> 0 then return 99
+dlg~execute("SHOWTOP")
 
-/* ------- signal handler to destroy dialog if condition trap happens  -----*/
-CleanUp:
-   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
-                     || "a"x || condition("o")~message
-   if dlg~IsDialogActive then do
-     dlg~finished = .true
-     dlg~stopIt
-   end
-
+return 0
 
 ::requires "ooDialog.cls"
 
-::class 'MyDialogClass' subclass UserDialog
+::class 'MyDialogClass' subclass RcDialog
 
-::method Init
-    ret = self~init:super;
-    if ret = 0 then ret = self~Load("Drawings.RC", 100)
-    self~connectButtonEvent(11, "CLICKED", "Circle")
-    self~connectButtonEvent(12, "CLICKED", "MyRectangle")
-    self~InitCode = ret
-    return ret
+::method init
+
+    forward class (super) continue
+    if self~initCode <> 0 then return self~initCode
+
+    self~connectButtonEvent(11, "CLICKED", "circle")
+    self~connectButtonEvent(12, "CLICKED", "myRectangle")
+
+    return self~initCode
 
 
-::method Circle
-    dc = self~GetButtonDC(10)
-    pen = self~CreatePen(5, "SOLID", 1)
-    oldpen = self~ObjectToDc(dc, pen)
-    self~DrawArc(dc, 10, 10, 320, 200)
-    self~ObjectToDc(dc, oldpen)
-    self~DeleteObject(pen)
-    self~FreeButtonDC(10, dc)
+::method circle
 
-::method MyRectangle
-    dc = self~GetButtonDC(10)
-    pen = self~CreatePen(10, "DOT", 2)
-    oldpen = self~ObjectToDc(dc, pen)
-    self~Rectangle(dc, 10, 10, 320, 200)
-    self~ObjectToDc(dc, oldpen)
-    self~DeleteObject(pen)
-    self~FreeButtonDC(10, dc)
+    dc = self~getControlDC(10)
+    pen = self~createPen(5, "SOLID", 1)
+    oldPen = self~objectToDc(dc, pen)
+
+    self~drawArc(dc, 10, 10, 320, 200)
+
+    self~objectToDc(dc, oldPen)
+    self~deleteObject(pen)
+    self~freeControlDC(10, dc)
+
+
+::method myRectangle
+
+    dc = self~getControlDC(10)
+    pen = self~createPen(10, "DOT", 2)
+    oldPen = self~ObjectToDc(dc, pen)
+
+    self~rectangle(dc, 10, 10, 320, 200)
+
+    self~objectToDc(dc, oldPen)
+    self~deleteObject(pen)
+    self~freeControlDC(10, dc)
 
 

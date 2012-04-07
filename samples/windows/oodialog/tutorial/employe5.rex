@@ -35,93 +35,92 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name: EMPLOYE5.REX                                                       */
-/* Type: Object REXX Script                                                 */
-/*                                                                          */
-/****************************************************************************/
 
-signal on any name CleanUp
+/**
+ * Name: employe5.rex
+ * Type: Open Object REXX Script
+ */
 
-dlg = .MyDialogClass~new
-if dlg~InitCode <> 0 then exit
-dlg~Execute("SHOWTOP")
-dlg~deinstall
+dlg = .MyDialogClass~new("employe3.rc", 100)
+if dlg~initCode <> 0 then exit
+dlg~execute("SHOWTOP")
+
 exit
-
-/* ------- signal handler to destroy dialog if condition trap happens  -----*/
-CleanUp:
-   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
-                     || "a"x || condition("o")~message
-   if dlg~isDialogActive then do
-      dlg~finished = 1
-      dlg~stopIt
-   end
-
 
 ::requires "ooDialog.cls"
 
-::class MyDialogClass subclass UserDialog
+::class MyDialogClass subclass RcDialog
 
-::method Employees attribute
-::method Emp_count attribute
-::method Emp_current attribute
+::attribute employees
+::attribute empCount
+::attribute empCurrent
 
 ::method init
-    ret = self~init:super;
-    if ret = 0 then ret = self~Load("EMPLOYE3.RC", 100)
-    if ret = 0 then do
-        self~Employees = .array~new(10)
-        self~Emp_count = 1
-        self~Emp_current = 1
-        self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
-        self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
-    end
-    self~initCode = ret
-    return ret
+    forward class (super) continue
+    if self~initCode <> 0 then return self~initCode
 
-::method InitDialog
-    self~City = "New York"
-    self~Male = 1
-    self~Female = 0
-    self~AddComboEntry(22, "Munich")
-    self~AddComboEntry(22, "New York")
-    self~AddComboEntry(22, "San Francisco")
-    self~AddComboEntry(22, "Stuttgart")
-    self~AddListEntry(23, "Business Manager")
-    self~AddListEntry(23, "Software Developer")
-    self~AddListEntry(23, "Broker")
-    self~AddListEntry(23, "Police Man")
-    self~AddListEntry(23, "Lawyer")
+    self~employees = .array~new(10)
+    self~empCount = 1
+    self~empCurrent = 1
+    self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
+    self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
 
-::method Print
-    self~GetData
-    if self~Male = 1 then title = "Mr."; else title = "Ms."
-    if self~Married = 1 then addition = " (married) "; else addition = ""
-    call infoDialog title self~Name addition || "A"x || "City:" self~City || "A"x ||,
-                     "Profession:" self~Profession
+    return self~initCode
 
-::method Add
-    self~Employees[self~Emp_count] = .directory~new
-    self~Employees[self~Emp_count]['NAME'] = self~getControlData(21)
-    self~Employees[self~Emp_count]['CITY'] = self~getControlData(22)
-    self~Employees[self~Emp_count]['PROFESSION'] = self~getControlData(23)
-    if self~getControlData(31) = 1 then sex = 1; else sex = 2
-    self~Employees[self~Emp_count]['SEX'] = sex
-    self~Employees[self~Emp_count]['MARRIED'] = self~getControlData(41)
-    self~Emp_count = self~Emp_count +1
-    self~Emp_current = self~Emp_count
+::method initDialog
+    self~city = "New York"
+    self~male = 1
+    self~female = 0
+    self~addComboEntry(22, "Munich")
+    self~addComboEntry(22, "New York")
+    self~addComboEntry(22, "San Francisco")
+    self~addComboEntry(22, "Stuttgart")
+    self~addListEntry(23, "Business Manager")
+    self~addListEntry(23, "Software Developer")
+    self~addListEntry(23, "Broker")
+    self~addListEntry(23, "Police Man")
+    self~addListEntry(23, "Lawyer")
+
+::method print
+    self~getData
+
+    if self~male = 1 then title = "Mr."
+    else title = "Ms."
+    if self~married = 1 then addition = " (married) "
+    else addition = ""
+
+    call infoDialog title self~name addition || "A"x || "City:" self~city || "A"x ||  -
+                     "Profession:" self~name
+
+::method add
+    self~employees[self~empCount] = .directory~new
+    self~employees[self~empCount]['NAME'] = self~getControlData(21)
+    self~employees[self~empCount]['CITY'] = self~getControlData(22)
+    self~employees[self~empCount]['PROFESSION'] = self~getControlData(23)
+
+    if self~getControlData(31) = 1 then sex = 1
+    else sex = 2
+    self~employees[self~empCount]['SEX'] = sex
+
+    self~employees[self~empCount]['MARRIED'] = self~getControlData(41)
+    self~empCount += 1
+    self~empCurrent = self~empCount
     self~setControlData(21, "");
 
 
-::method Set
-    self~setControlData(21, self~Employees[self~Emp_current]['NAME'])
-    self~setControlData(22, self~Employees[self~Emp_current]['CITY'])
-    self~setControlData(23, self~Employees[self~Emp_current]['PROFESSION'])
-    if self~Employees[self~Emp_current]['SEX'] = 1 then do
-       self~setControlData(31, 1);self~setControlData(32, 0); end
+::method set
+    self~setControlData(21, self~employees[self~empCurrent]['NAME'])
+    self~setControlData(22, self~employees[self~empCurrent]['CITY'])
+    self~setControlData(23, self~employees[self~empCurrent]['PROFESSION'])
+
+    if self~employees[self~empCurrent]['SEX'] = 1 then do
+       self~setControlData(31, 1)
+       self~setControlData(32, 0)
+    end
     else do
-       self~setControlData(31, 0);self~setControlData(32, 1); end
-    self~setControlData(41, self~Employees[self~Emp_current]['MARRIED'])
+       self~setControlData(31, 0)
+       self~setControlData(32, 1)
+    end
+    self~setControlData(41, self~employees[self~empCurrent]['MARRIED'])
 
 

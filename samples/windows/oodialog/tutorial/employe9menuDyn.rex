@@ -37,11 +37,13 @@
 /*----------------------------------------------------------------------------*/
 
 /**
- * Name: employe7.rex
+ * Name: employe9menuDyn.rex
  * Type: Open Object REXX Script
+ *
+ * Description:  Adds a menu, created dynamically, to the Employees application.
  */
 
-dlg = .MyDialogClass~new("employe8.rc", 100)
+dlg = .MyDialogClass~new("employe6.rc", 100)
 if dlg~initCode <> 0 then exit
 dlg~execute("SHOWTOP")
 
@@ -63,38 +65,44 @@ exit
     self~employees = .array~new(10)
     self~empCount = 1
     self~empCurrent = 1
-    self~connectButtonEvent(10, "CLICKED", "print")
+    self~connectButtonEvent(10, "CLICKED", "print")   /* connect button 10 with a method */
+    self~connectButtonEvent(12, "CLICKED", "add")     /* connect button 12 with a method */
     self~connectUpDownEvent(11, "DELTAPOS", onEmpChange)
-
-    -- The 'Add' button in this dialog will use an image list to display a
-    -- bitmap for the surface of the button, rather than text.  The image list
-    -- is created now and assigned to the button in initDialog()
-    self~createImageList
-    self~connectButtonEvent(12, "CLICKED", "add")
-
-    -- Using a background bitmap for the dialog is a rather archic method, left
-    -- over from the previous millenium.  It is seldom seen in modern dialogs.
-    -- Most likely you will not find the appearance of this dialog very
-    -- appealing.
-    self~backgroundBitmap("logo.bmp")
+    self~connectButtonEvent(13, "CLICKED", "empList")
+    self~defineMenu
 
     return self~initCode
 
 
-::method createImageList private
-    expose imageList
+::method defineMenu private
+    expose menuBar
 
-    size  = .Size~new(45, 41)
-    flags = .DlgUtil~or(.Image~toID(ILC_COLOR8), .Image~toID(ILC_MASK))
-    imageList = .ImageList~create(size, flags, 1)
+    empPopup = .PopupMenu~new(200)
+    empPopup~insertItem(202, 202, "&Print")
+    empPopup~insertItem(202, 204, "&List", "GRAYED")
+    empPopup~insertSeparator(202, 203)
+    empPopup~insertItem(202, 201, "&Add")
 
-    cRef  = .Image~colorRef(255, 255, 255)
-    image = .Image~getImage('add.bmp')
-    imageList~addMasked(image, cRef)
+    ctrlPopup = .PopupMenu~new(210)
+    ctrlPopup~insertItem(211, 211, "E&xit")
+    ctrlPopup~insertItem(211, 214, "&About")
+    ctrlPopup~insertSeparator(211, 213)
+    ctrlPopup~insertItem(211, 212, "&Cancel")
+
+    menuBar = .BinaryMenuBar~new(.nil, 300)
+    menuBar~insertPopup(200, 200, empPopup, "&Employees")
+    menuBar~insertPopup(200, 210, ctrlPopup, "&Control")
+
+    menuBar~connectCommandEvent(201, add, self)
+    menuBar~connectCommandEvent(202, print, self)
+    menuBar~connectCommandEvent(204, empList, self)
+    menuBar~connectCommandEvent(211, ok, self)
+    menuBar~connectCommandEvent(212, cancel, self)
+    menuBar~connectCommandEvent(214, about, self)
 
 
 ::method initDialog
-    expose imageList
+    expose menuBar
 
     self~city = "New York"
     self~male = 1
@@ -108,10 +116,10 @@ exit
     self~addListEntry(23, "Broker")
     self~addListEntry(23, "Police Man")
     self~addListEntry(23, "Lawyer")
+    self~disableItem(11)
+    self~disableItem(13)
 
-    -- Assign the image list to the 'Add' button.
-    margin = .Rect~new(2)
-    self~newPushButton(12)~setImageList(imageList, margin)
+    menuBar~attachTo(self, 1)
 
 
 ::method onEmpChange
@@ -135,6 +143,8 @@ exit
                      "Profession:" self~name
 
 ::method add
+    expose menuBar
+
     self~employees[self~empCount] = .directory~new
     self~employees[self~empCount]['NAME'] = self~getControlData(21)
     self~employees[self~empCount]['CITY'] = self~getControlData(22)
@@ -151,6 +161,11 @@ exit
 
     self~newUpDown(11)~setRange(1, self~empCount)
     self~newUpDown(11)~setPosition(self~empCount)
+
+    self~enableItem(11)
+    self~enableItem(13)
+
+    menuBar~enable(204)
 
 
 ::method set
@@ -191,3 +206,33 @@ exit
        call TimedMessage "You reached the top.", "Info", 1000
    end
 
+::method empList
+   lDlg = .EmployeeListClass~new("employe6.rc", 101)
+   lDlg~parent = self
+   lDlg~execute("SHOWTOP")
+
+
+::method fillList
+   use arg subdlg, id
+
+   do i = 1 to self~empCount - 1
+       if self~employees[i]['SEX'] = 1 then title = "Mr."
+       else title = "Ms."
+       addstring = title self~employees[i]['NAME']
+       addstring = addstring || "9"x || self~employees[i]['PROFESSION']
+       addstring = addstring || "9"x || self~employees[i]['CITY']
+       subdlg~addListEntry(id, addstring)
+   end
+
+
+::method About
+   call infoDialog "This sample demonstrates ooDialog menus."
+
+
+::class EmployeeListClass subclass RcDialog
+
+::method parent attribute
+
+::method initDialog
+   self~parent~fillList(self, 101)
+   self~setListTabulators(101, 98, 198)
