@@ -222,7 +222,7 @@
 
 
 ::method apply unguarded
-    use strict arg isOkButton, propSheet
+    use strict arg isOkButton, pageIndex, pageCurrent, psDlg
 
     ret = self~validate(isOkButton, propsheet)
     if ret == self~PSNRET_NOERROR then return self~applyNoError(propSheet)

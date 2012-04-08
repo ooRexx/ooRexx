@@ -969,7 +969,16 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
             uint32_t reply           = PSNRET_NOERROR;
             RexxObjectPtr isOkButton = lppsn->lParam ? TheTrueObj : TheFalseObj;
 
-            RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, APPLY_MSG, isOkButton, pcpsd->rexxSelf);
+            // We want to get the Rexx property sheet page that had the focus when the Apply button was presse.
+            int32_t i = PropSheet_HwndToIndex(pcpsd->hDlg, PropSheet_GetCurrentPageHwnd(pcpsd->hDlg));
+            pCPropertySheetPage current = pcpsd->cppPages[i];
+
+            // Index to Rexx is one-based.
+            i++;
+
+            RexxArrayObject args = c->ArrayOfFour(isOkButton, c->Int32(i), current->rexxSelf, pcpsd->rexxSelf);
+
+            RexxObjectPtr result = c->SendMessage(pcpsp->rexxSelf, APPLY_MSG, args);
 
             if ( goodReply(c, pcpsd->pcpbd, result, APPLY_MSG) )
             {
@@ -978,6 +987,7 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
                     tcInvalidReturnListException(c, APPLY_MSG, VALID_PSNRET_LIST, result, pcpsd->pcpbd);
                 }
             }
+
             setWindowPtr(hPage, DWLP_MSGRESULT, (LPARAM)reply);
             break;
         }
@@ -1002,8 +1012,8 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
 
         case PSN_KILLACTIVE :
         {
-            // Send TRUE to *cancel* the page change.  The Rexx programmer
-            // should send .false to cancel.
+            // Reply TRUE to Windows to *cancel* the page change.  The Rexx
+            // programmer should send .false to cancel the change.
             long reply = FALSE;
 
             RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, KILLACTIVE_MSG, pcpsd->rexxSelf);
@@ -1019,6 +1029,7 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
                     reply = TRUE;
                 }
             }
+
             setWindowPtr(hPage, DWLP_MSGRESULT, (LPARAM)reply);
             break;
         }
