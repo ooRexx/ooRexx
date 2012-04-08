@@ -224,79 +224,79 @@
 ::method apply unguarded
     use strict arg isOkButton, pageIndex, pageCurrent, psDlg
 
-    ret = self~validate(isOkButton, propsheet)
-    if ret == self~PSNRET_NOERROR then return self~applyNoError(propSheet)
+    ret = self~validate(isOkButton, psDlg)
+    if ret == self~PSNRET_NOERROR then return self~applyNoError(psDlg)
     else return ret
 
 ::method applyNoError private unguarded                                          -- Document ??
-    use strict arg propSheet
+    use strict arg psDlg
 
     self~initCode = 1
     if self~useStem then self~getDataStem(dlgData.)
     self~getData
-    propSheet~unchanged(self)
+    psDlg~unchanged(self)
     return self~PSNRET_NOERROR
 
 ::method getObject unguarded
     return 0
 
 ::method help unguarded
-    use strict arg propSheet
+    use strict arg psDlg
     return 0
 
 ::method killActive unguarded
-    use strict arg propSheet
-    return self~validatePage(propSheet)
+    use strict arg psDlg
+    return self~validatePage(psDlg)
 
 ::method pageCreate unguarded
     use strict arg
     return .true
 
 ::method queryCancel unguarded
-    use strict arg propSheet
+    use strict arg psDlg
     self~initCode = 2
     return .true
 
 ::method queryFromSibling unguarded
-    use strict arg arg1, arg2, propSheet
+    use strict arg arg1, arg2, psDlg
     return 0
 
 ::method queryInitialFocus unguarded
-    use strict arg idDefFocus, propSheet
+    use strict arg idDefFocus, psDlg
     return 0
 
 ::method reset unguarded
-  use strict arg isCancelButton, propSheet
+  use strict arg isCancelButton, psDlg
   self~initCode = 2
   return 0
 
 ::method setActive unguarded
-    use strict arg propSheet
+    use strict arg psDlg
     return 0
 
 ::method setSize external "LIBRARY oodialog psp_setSize"
 ::method translateAccelerator unguarded
-    use strict arg msg, keyCode, d, propsheet
+    use strict arg msg, keyCode, d, psDlg
     return self~PSNRET_NOERROR
 
 ::method wizBack unguarded
-    use strict arg propSheet
+    use strict arg psDlg
     return 0
 
 ::method wizFinish unguarded
-    use strict arg propSheet
+    use strict arg psDlg
     return 0
 
 ::method wizNext unguarded
-    use strict arg propSheet
+    use strict arg psDlg
     return 0
 
 ::method validate private unguarded
-    use strict arg isOkButton, propSheet
+    use strict arg isOkButton, psDlg
     return self~PSNRET_NOERROR
 
 ::method validatePage private unguarded
-    use strict arg propSheet
+    use strict arg psDlg
     return .true
 
 
