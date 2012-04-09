@@ -630,6 +630,7 @@ static void initializePropSheet(HWND hPropSheet)
         pcpbd->hDlg = hPropSheet;
 
         // Not sure about using the whole top dialog thing for property sheets.
+        // There is no pcpbd->previous set.
         installNecessaryStuff(pcpbd, NULL);
 
         pcpbd->hDlg = hPropSheet;
@@ -642,7 +643,8 @@ static void initializePropSheet(HWND hPropSheet)
         pcpbd->onTheTop = true;
         pcpbd->dlgProcThreadID = GetCurrentThreadId();
 
-        // Do we have a modal dialog?  TODO need to check this for modeless property sheet.
+        // Do we have a modal dialog?  TODO this check is worthless because
+        // there is no pcpbd->previous set.
         checkModal((pCPlainBaseDialog)pcpbd->previous, pcpsd->modeless);
 
         c->SendMessage0(pcpsd->rexxSelf, "INITDIALOG");
@@ -1185,7 +1187,7 @@ DWORD WINAPI PropSheetLoopThread(void *arg)
         }
         if ( PropSheet_GetCurrentPageHwnd(hPropSheet) == NULL )
         {
-            pcpsd->getResultValue = (int)PropSheet_GetResult(hPropSheet);
+            pcpsd->getResultValue = PropSheet_GetResult(hPropSheet);
             break;
         }
     }
@@ -1199,6 +1201,8 @@ done_out:
     {
         ret = delDialog(pcpbd, pcpbd->dlgProcContext);
         pcpbd->hDlgProcThread = NULL;
+
+        c->SendMessage0(pcpbd->rexxSelf, "LEAVING");
     }
     LeaveCriticalSection(&crit_sec);
 
@@ -2495,6 +2499,9 @@ RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, 
     RexxObjectPtr   result = TheNegativeOneObj;
     HWND            hParent = NULL;
 
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    pcpsd->getResultValue = -1;
+
     PROPSHEETPAGE *psp = NULL;
     PROPSHEETHEADER *psh = NULL;
 
@@ -2506,8 +2513,6 @@ RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, 
             goto done_out;
         }
     }
-
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
     psp = initPropSheetPages(context, pcpsd);
     if ( psp == NULL )
@@ -2523,7 +2528,7 @@ RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, 
         goto done_out;
     }
 
-    INT_PTR ret;
+    intptr_t ret;
     if ( hParent == NULL )
     {
         assignPSDThreadContext(pcpsd, context->threadContext, GetCurrentThreadId());
@@ -2539,8 +2544,14 @@ RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, 
     }
     else
     {
-        ret = (INT_PTR)SendMessage(hParent, WM_USER_CREATEPROPSHEET_DLG, (WPARAM)psh, (LPARAM)pcpsd);
+        ret = (intptr_t)SendMessage(hParent, WM_USER_CREATEPROPSHEET_DLG, (WPARAM)psh, (LPARAM)pcpsd);
     }
+
+    pcpsd->getResultValue = ret;
+
+    // Call leaving now, but note that the underlying Windows property sheet
+    // dialog is now destroyed
+    context->SendMessage0(pcpsd->rexxSelf, "LEAVING");
 
     result = context->WholeNumber(ret);
 
@@ -3141,34 +3152,44 @@ RexxMethod1(RexxObjectPtr, psdlg_getCurrentPageHwnd, CSELF, pCSelf)
 
 /** PropertySheetDialog::getResult()
  *
- *  Used by modeless property sheets to retrieve the same information returned
- *  to modal property sheets.
+ *  Returns the result of executing the PropertySheetDialog.
+ *
+ *  Originally this was intended to be  used by modeless property sheets to
+ *  retrieve the same information returned to modal property sheets. Now howver,
+ *  the getResultValue is set for modeless on modal dialogs.
  *
  */
 RexxMethod1(RexxObjectPtr, psdlg_getResult, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    RexxObjectPtr result;
+    char *result;
+
     switch ( pcpsd->getResultValue )
     {
+        case OOD_NO_VALUE :
+            result = "NOTFINISHED";
+            break;
         case -1 :
-            result = TheNegativeOneObj;
+            result = "EXECUTIONERR";
             break;
         case ID_PSRESTARTWINDOWS :
-            result = context->String("RESTARTWINDOWS");
+            result = "RESTARTWINDOWS";
             break;
         case ID_PSREBOOTSYSTEM :
-            result = context->String("REBOOTSYSTEM");
+            result = "REBOOTSYSTEM";
             break;
         case 0 :
-            result = TheZeroObj;
+            result = "CLOSEDCANCEL";
+            break;
+        case 1 :
+            result = "CLOSEDOK";
             break;
         default :
-            result = TheNilObj;
+            result = "UNKNOWN";
             break;
     }
-    return result;
+    return context->String(result);
 }
 
 
