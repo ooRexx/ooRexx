@@ -98,7 +98,7 @@ return 0
     cbCity~add("San Diego")
     cbCity~add("Tucson")
     cbCity~add("Houston")
-    cbCity~add("Las Angles")
+    cbCity~add("Los Angeles")
 
     lbPosition = self~newListBox(IDC_LB_POSITION)
     lbPosition~add("Business Manager")
