@@ -42,13 +42,15 @@
 #define IDD_EMPLOYEES_BROWSE                    208
 #define IDD_EMPLOYEES_ADD                       209
 #define IDD_EMPLOYEES_EDIT                      210
+#define IDM_CONTEXT_MENUBAR                     212
 #define IDC_GB1                                 1000
 #define IDC_LV_EMPLOYEES                        1001
 #define IDC_PB_PRINT_A                          1001
 #define IDC_PB_PRINT_E                          1002
 #define IDC_UPD                                 1002
 #define IDC_PB_ADD_A                            1003
-#define IDC_PB_PRINT_E1                         1003
+#define IDC_PB_PRINT_B                          1003
+#define IDC_PB_RESET_E                          1003
 #define IDC_PB_SAVE_E                           1004
 #define IDC_EDIT_NAME_B                         1005
 #define IDC_CB_CITY_B                           1009
@@ -71,3 +73,10 @@
 #define IDC_RB_FEMALE_E                         1027
 #define IDC_CHK_MARRIED_E                       1028
 #define IDC_CHK_FULLTIME_E                      1029
+#define IDM_POP_CONTEXT                         40000
+#define IDM_EDIT                                40001
+#define IDM_ADD                                 40002
+#define IDM_BROWSE                              40003
+#define IDM_DELETE                              40004
+#define IDM_SEP1                                40005
+#define IDM_SEP2                                40006
