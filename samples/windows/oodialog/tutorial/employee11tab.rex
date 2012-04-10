@@ -119,6 +119,13 @@
     if listPage~wasActivated then listPage~editedEmployeeNotify
 
 
+::method selectedEmployeeNotify
+    use strict arg index
+
+    self~empIndex = index + 1
+    self~notifyPages
+
+
 ::method leaving
     expose dbChanged
 
@@ -675,13 +682,18 @@
         if \ self~empView~sameAs(self~empInitial) then isChanged = .true
     end
 
-    if isChanged, editName~getText~strip \== '' then do
+    txt = editName~getText~strip
+
+    if txt == '' then do
+    		pbPrint~disable
+        pbSave~disable
+    end
+    else if isChanged then do
         pbPrint~enable
         pbSave~enable
     end
     else do
-    		pbPrint~disable
-        pbSave~disable
+        pbPrint~enable
     end
 
     return 0
@@ -705,7 +717,7 @@
 
 
 ::method setEmpRecord
-    expose pbSave pbPrint
+    expose pbSave pbPrint isChanged
 
     if self~empCount < 1 then do
         self~empView~disable
@@ -713,6 +725,10 @@
         pbPrint~disable
         return 0
     end
+
+    isChanged = .false
+    pbSave~disable
+    pbPrint~enable
 
     self~empInitial = self~employees[self~empIndex]
     self~empView~displayEmployee(self~empInitial)
@@ -949,12 +965,15 @@
     self~empCount  = count
     self~empIndex  = index
 
+    self~connectListViewEvent(IDC_LV_EMPLOYEES, "SELECTCHANGED", onSelectionChanged)
+
 ::method newEmployeeNotify
     expose lv
 
     emp = self~employees[self~empIndex]
     self~addEmployee(lv, emp)
-    lv~select(self~empIndex - 1)
+
+    self~ensureSelection
 
 
 ::method initDialog
@@ -975,7 +994,30 @@
       self~addEmployee(lv, self~employees[i])
     end
 
+    self~ensureSelection
+
+
+::method onSelectionChanged unguarded
+    use arg id, itemIndex, state
+
+    if state == 'SELECTED' then do
+      say 'selected changed index:' itemIndex
+      self~propSheet~selectedEmployeeNotify(itemIndex)
+    end
+
+
+::method setActive unguarded
+    expose lv
+
+    self~ensureSelection
+    return 0
+
+
+::method ensureSelection private
+    expose lv
+
     lv~select(self~empIndex - 1)
+
 
 ::method addEmployee private
     use strict arg list, employee
