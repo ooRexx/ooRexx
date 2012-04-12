@@ -6306,7 +6306,18 @@ RexxMethod2(RexxObjectPtr, cd_controlDlgInit, POINTER, cpbd, OSELF, self)
         pccd->pcdd = (pCDynamicDialog)context->ObjectToCSelf(self, TheDynamicDialogClass);
     }
 
-    int32_t resID = oodResolveSymbolicID(context->threadContext, self, pcpbd->resourceID, -1, 2, true);
+    // For a UserControlDialog, the resource ID can be 0, but for the other
+    // types, we wan a valud resource ID.
+    int32_t resID;
+    if ( pccd->pageType == oodUserControlDialog )
+    {
+        resID = oodResolveSymbolicID(context->threadContext, self, pcpbd->resourceID, -1, 2, false);
+    }
+    else
+    {
+        resID = oodResolveSymbolicID(context->threadContext, self, pcpbd->resourceID, -1, 2, true);
+    }
+
     if ( resID == OOD_ID_EXCEPTION )
     {
         pcpbd->wndBase->initCode = 1;
