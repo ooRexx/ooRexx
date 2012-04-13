@@ -99,7 +99,7 @@
       self~initCode = 1
       return
     end
-   
+
 
   /*-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Create Menu Bar - Creates the menu bar on the dialog.                   --*/

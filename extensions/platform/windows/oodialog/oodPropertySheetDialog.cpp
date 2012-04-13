@@ -6307,7 +6307,7 @@ RexxMethod2(RexxObjectPtr, cd_controlDlgInit, POINTER, cpbd, OSELF, self)
     }
 
     // For a UserControlDialog, the resource ID can be 0, but for the other
-    // types, we wan a valud resource ID.
+    // types, we want a valid resource ID.
     int32_t resID;
     if ( pccd->pageType == oodUserControlDialog )
     {
