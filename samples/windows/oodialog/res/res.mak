@@ -39,7 +39,7 @@
 
 rcflags_common = /DWIN32 /v
 
-all:  oowalk2.dll AnimalGame.dll PropertySheetDemo.dll TabOwnerDemo.dll
+all:  oowalk2.dll AnimalGame.dll ..\propertySheet.tabs\rc\PropertySheetDemo.dll ..\propertySheet.tabs\rc\TabOwnerDemo.dll
 
 oowalk2.dll: oowalk2.res
     link $(@B).res /NOENTRY /DLL -out:$(@B).dll
@@ -47,11 +47,11 @@ oowalk2.dll: oowalk2.res
 AnimalGame.dll: AnimalGame.res
     link $(@B).res /NOENTRY /DLL -out:$(@B).dll
 
-PropertySheetDemo.dll: PropertySheetDemo.res
-    link $(@B).res /NOENTRY /DLL -out:$(@B).dll
+..\propertySheet.tabs\rc\PropertySheetDemo.dll: PropertySheetDemo.res
+    link $(@B).res /NOENTRY /DLL -out:..\propertySheet.tabs\rc\$(@B).dll
 
-TabOwnerDemo.dll: TabOwnerDemo.res
-    link $(@B).res /NOENTRY /DLL -out:$(@B).dll
+..\propertySheet.tabs\rc\TabOwnerDemo.dll: TabOwnerDemo.res
+    link $(@B).res /NOENTRY /DLL -out:..\propertySheet.tabs\rc\$(@B).dll
 
 # Create .res from .rc
 oowalk2.res: ..\rc\walker.rc
@@ -60,8 +60,8 @@ oowalk2.res: ..\rc\walker.rc
 AnimalGame.res: ..\rc\AnimalGame.rc
         rc $(rcflags_common) -r -fo$(@B).res ..\rc\AnimalGame.rc
 
-PropertySheetDemo.res: ..\rc\PropertySheetDemo.rc
-        rc $(rcflags_common) -r -fo$(@B).res ..\rc\PropertySheetDemo.rc
+PropertySheetDemo.res: ..\propertySheet.tabs\rc\PropertySheetDemo.rc
+        rc $(rcflags_common) -r -fo$(@B).res ..\propertySheet.tabs\rc\PropertySheetDemo.rc
 
-TabOwnerDemo.res: ..\rc\TabOwnerDemo.rc
-        rc $(rcflags_common) -r -fo$(@B).res ..\rc\TabOwnerDemo.rc
+TabOwnerDemo.res: ..\propertySheet.tabs\rc\TabOwnerDemo.rc
+        rc $(rcflags_common) -r -fo$(@B).res ..\propertySheet.tabs\rc\TabOwnerDemo.rc

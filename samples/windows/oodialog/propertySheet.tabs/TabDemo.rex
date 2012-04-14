@@ -78,16 +78,16 @@
   --
   -- Instantiate all the control dialogs and pass them to the prep() method in
   -- an array.
-  t1 = .ListViewDlg~new("res\PropertySheetDemo.dll", IDD_LISTVIEW_DLG)
-  t2 = .TreeViewDlg~new("res\PropertySheetDemo.dll", IDD_TREEVIEW_DLG)
+  t1 = .ListViewDlg~new("rc\PropertySheetDemo.dll", IDD_LISTVIEW_DLG)
+  t2 = .TreeViewDlg~new("rc\PropertySheetDemo.dll", IDD_TREEVIEW_DLG)
   t3 = .ProgressBarDlg~new("rc\PropertySheetDemo.rc", IDD_PROGRESSBAR_DLG)
-  t4 = .TrackBarDlg~new("res\PropertySheetDemo.dll", IDD_TRACKBAR_DLG)
-  t5 = .TabDlg~new("res\PropertySheetDemo.dll", IDD_TAB_DLG)
+  t4 = .TrackBarDlg~new("rc\PropertySheetDemo.dll", IDD_TRACKBAR_DLG)
+  t5 = .TabDlg~new("rc\PropertySheetDemo.dll", IDD_TAB_DLG)
 
   tabContent = .array~of(t1, t2, t3, t4, t5)
 
   -- Create the main dialog.
-  dlg = .NewControlsDialog~new('res\PropertySheetDemo.dll', IDD_NEWCONTROLS_DLG)
+  dlg = .NewControlsDialog~new('rc\PropertySheetDemo.dll', IDD_NEWCONTROLS_DLG)
 
   -- Invoke the prep() methods of the list view and progress bar dialogs to do
   -- some initial set up before we start executing the main dialog.  Note that
@@ -423,7 +423,7 @@
     --
     -- The list-view control is created without the SHAREIMAGES styles, so it
     -- takes care of releasing the image list when the program ends.
-    image = .Image~getImage("bmp\propertySheetDemoListView.bmp")
+    image = .Image~getImage("rc\propertySheetDemoListView.bmp")
     imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
     if \image~isNull,  \imageList~isNull then do
         imageList~add(image)
@@ -469,7 +469,7 @@
     tv = self~newTreeView(IDC_TV_MAIN)
 
     -- Create and set the ImageList for the tree view items
-    image = .Image~getImage("bmp\propertySheetDemoTreeView.bmp")
+    image = .Image~getImage("rc\propertySheetDemoTreeView.bmp")
     imageList = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR8), 10, 0)
     if \image~isNull,  \imageList~isNull then do
           imageList~add(image)
@@ -792,7 +792,7 @@
    -- Create a COLORREF (pure white) and load our bitmap.  The bitmap is a
    -- series of 16x16 images, each one a colored letter.
    cRef = .Image~colorRef(255, 255, 255)
-   image = .Image~getImage("bmp\propertySheetDemoTab.bmp")
+   image = .Image~getImage("rc\propertySheetDemoTab.bmp")
 
    -- Create our image list, as a masked image list.
    flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))

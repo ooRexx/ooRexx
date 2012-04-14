@@ -62,18 +62,11 @@
  * stand this program.
  */
 
+  -- A directory manager saves the current directory and can later go back to
+  -- that directory.  The class itself is located in DirectoryManaager.cls
+  mgr = .DirectoryManager~new()
+
   .application~useGlobalConstDir('O', "rc\ticketWizard.h")
-
-  -- To run correctly, this program needs to be able to find its support files.
-  -- But, we allow starting the program from anywhere.  To do this we:
-  -- get the directory we are executing from, switch to the directory this
-  -- program is installed in, and then switch back to the directory we started
-  -- from when we quit.
-
-  curdir = directory();                       -- Directory we started from.
-  parse source . . me
-  mydir = me~left(me~lastpos('\')-1)          -- Directory we are installed in.
-  mydir = directory(mydir)                    -- CD to the install direcotry.
 
   -- Let the user select a font for the example program.
   oldFont = setFont()
@@ -126,18 +119,19 @@
   -- Create the property sheet using the dialog pages and set its attributes.
   wizDlg = .TicketWizard97~new(pages, "Wizard97", "Let's Go To The Movies")
 
-  wizDlg~header = .Image~getImage("bmp\ticketWizardTheater.bmp")
-  wizDlg~watermark = .Image~getImage("bmp\ticketWizardRexxLA.bmp")
+  wizDlg~header = .Image~getImage("rc\ticketWizardTheater.bmp")
+  wizDlg~watermark = .Image~getImage("rc\ticketWizardRexxLA.bmp")
 
   -- Execute the wizard.
   wizDlg~execute
 
   -- Return to the directory we started from and restore the default font.
-  ret = directory(curdir)
+  mgr~goBack
   ret = restoreFont(oldFont)
   return
 
 ::requires "ooDialog.cls"
+::requires "DirectoryManager.cls"
 
 -- TicketWizard97
 --   The property sheet for the example program.  Although the
@@ -671,7 +665,7 @@
 
   staticImage = self~newStatic(IDC_ST_MOVIE_BMP)
   size = staticImage~getRealSize
-  image = .Image~getImage('bmp\ticketWizardMovie.bmp', .Image~toID(IMAGE_BITMAP), size)
+  image = .Image~getImage('rc\ticketWizardMovie.bmp', .Image~toID(IMAGE_BITMAP), size)
   staticImage~setImage(image)
 
   filmArray = .array~new(20)
@@ -1077,7 +1071,7 @@
 
     if .DlgUtil~comCtl32Version < 6 then do
       self~createBitmapButton(IDC_PB_TICKET_BMP, x, y, s~width, s~height, "FRAME USEPAL STRETCH GROUP", "Get the Ticket", -
-                              'onGetTicket', "bmp\ticketWizardTicket.bmp")
+                              'onGetTicket', "rc\ticketWizardTicket.bmp")
    end
    else do
       self~createPushButton(IDC_PB_TICKET_BMP, x, y, s~width, s~height, "GROUP", "", 'onGetTicket')
@@ -1107,7 +1101,7 @@
    size~width -= 10;
    size~height -= 10;
 
-   image = .Image~getImage('bmp\ticketWizardTicket.bmp', .Image~toID(IMAGE_BITMAP), size)
+   image = .Image~getImage('rc\ticketWizardTicket.bmp', .Image~toID(IMAGE_BITMAP), size)
    imageList = .ImageList~create(size, .Image~toID(ILC_COLOR8), 1, 0)
    imageList~add(image)
 

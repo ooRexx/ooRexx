@@ -49,6 +49,10 @@
  *
  */
 
+  -- A directory manager saves the current directory and can later go back to
+  -- that directory.  The class itself is located in DirectoryManaager.cls
+  mgr = .DirectoryManager~new()
+
   .application~useGlobalConstDir("O", 'rc\oodListViews.h')
 
   dlg = .ListsDialog~new("rc\oodListViews.rc", IDD_LISTVIEWS)
@@ -60,9 +64,12 @@
 
   dlg~execute("SHOWTOP")
 
+  mgr~goBack
+
   return 0
 
 ::requires "ooDialog.cls"
+::requires "DirectoryManager.cls"
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -342,7 +349,7 @@
 ::method createImageLists private
   expose smallIcons normalIcons
 
-  small = .Image~getImage("bmp\oodListViews1.bmp")
+  small = .Image~getImage("rc\oodListViews1.bmp")
   tmpIL = .ImageList~create(.Size~new(16, 12), .Image~toID(ILC_COLOR4), 4, 0)
   if \small~isNull,  \tmpIL~isNull then do
       tmpIL~add(small)
@@ -353,7 +360,7 @@
     smallIcons = .nil
   end
 
-  normal = .Image~getImage("bmp\oodListViews2.bmp")
+  normal = .Image~getImage("rc\oodListViews2.bmp")
   tmpIL = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR4), 4, 0)
   if \normal~isNull,  \tmpIL~isNull then do
       tmpIL~add(normal)

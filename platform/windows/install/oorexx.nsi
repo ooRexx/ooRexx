@@ -531,7 +531,6 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\" "GUI_Template.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "oobandit.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "oobmpvu.rex"
-  ${File} "${SRCDIR}\samples\windows\oodialog\" "oodListViews.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "oodpbar.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "oodraw.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "oodtree.rex"
@@ -542,12 +541,8 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\" "oovideo.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "oowalk2.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "oowalker.rex"
-  ${File} "${SRCDIR}\samples\windows\oodialog\" "PropertySheetDemo.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "sample.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "samplesSetup.rex"
-  ${File} "${SRCDIR}\samples\windows\oodialog\" "TabDemo.rex"
-;  ${File} "${SRCDIR}\samples\windows\oodialog\" "TabOwnerDemo.rex" Don't include in 4.2.0
-  ${File} "${SRCDIR}\samples\windows\oodialog\" "ticketWizard.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "*.inp"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "*.ico"
@@ -583,8 +578,6 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "install2.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "kanguru.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "moose.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "oodListViews1.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "oodListViews2.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "oodtree.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "phileat.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "phileat2.bmp"
@@ -594,9 +587,6 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "philslep.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "philtest.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "philwait.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "propertySheetDemoListView.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "propertySheetDemoTab.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "propertySheetDemoTreeView.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "rhinoce.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "s2anim.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "s2arch.bmp"
@@ -612,13 +602,6 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "s2tree.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "s2walker.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "sealion.bmp"
-;;  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "TabOwnerDemoListView.bmp" Don't include in 4.2.0
-;;  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "TabOwnerDemoTab.bmp"
-;;  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "TabOwnerDemoTreeView.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "ticketWizardMovie.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "ticketWizardRexxLA.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "ticketWizardTheater.bmp"
-  ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "ticketWizardTicket.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "tiger.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "wlkfig1.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "wlkfig2.bmp"
@@ -668,12 +651,51 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.txt"
   ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.rc"
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\ooRexxTry
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\" "ooRexxTry.rex"
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\ooRexxTry\doc
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\doc\" "ooRexxTry.pdf"
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\propertySheet.tabs
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\" "DirectoryManager.cls"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\" "oodListViews.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\" "PropertySheetDemo.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\" "TabDemo.rex"
+;  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\" "TabOwnerDemo.rex" Don't include in 4.2.0
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\" "ticketWizard.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\" "UserTabDemo.rex"
+  ${SetOutPath} $INSTDIR\samples\oodialog\propertySheet.tabs\rc
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" ""
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "oodListViews1.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "oodListViews2.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "oodListViews.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "oodListViews.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "propertySheetDemoListView.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "propertySheetDemoTab.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "propertySheetDemoTreeView.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "PropertySheetDemo.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "PropertySheetDemo.dll"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "PropertySheetDemo.rc"
+;;  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "TabOwnerDemoListView.bmp"  Don't include in 4.2.0
+;;  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "TabOwnerDemoTab.bmp"       Don't include in 4.2.0
+;;  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "TabOwnerDemoTreeView.bmp"  Don't include in 4.2.0
+;;  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "TabOwnerDemo.dll"          Don't include in 4.2.0
+;;  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "TabOwnerDemo.h"            Don't include in 4.2.o
+;;  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "TabOwnerDemo.rc"           Don't include in 4.2.o
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "ticketWizard.h"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "ticketWizard.rc"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "ticketWizardMovie.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "ticketWizardRexxLA.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "ticketWizardTheater.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "ticketWizardTicket.bmp"
+  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "UserTabDemo.h"
+;;  ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabs\rc\" "UserTabDemo.rc"    Not included in distribution, maybe in the future.
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\rc
   ; Distribution files...
@@ -683,28 +705,18 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "exercise.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "ldvideo.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "ldvideo.rc"
-  ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "oodListViews.h"
-  ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "oodListViews.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "oodpbar.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "oodtree.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "oodtreeNewItem.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "oophil1.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "oophil2.rc"
-  ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "PropertySheetDemo.h"
-  ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "PropertySheetDemo.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "sample.rc"
-;;  ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "TabOwnerDemo.h"  Don't include in 4.2.o
-;;  ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "TabOwnerDemo.rc"
-  ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "ticketWizard.h"
-  ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "ticketWizard.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "walker.rc"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\res
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\res\" "AnimalGame.dll"
   ${File} "${SRCDIR}\samples\windows\oodialog\res\" "oowalk2.dll"
-  ${File} "${SRCDIR}\samples\windows\oodialog\res\" "PropertySheetDemo.dll"
-;;  ${File} "${SRCDIR}\samples\windows\oodialog\res\" "TabOwnerDemo.dll" Don't include in 4.2.0
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\simple
   ; Distribution files...

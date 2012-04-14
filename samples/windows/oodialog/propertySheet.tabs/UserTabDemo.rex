@@ -39,7 +39,7 @@
  * UserTabDemo.rex
  */
 
-    .application~useGlobalConstDir('O', 'UserTabDemo.h')
+    .application~useGlobalConstDir('O', 'rc\UserTabDemo.h')
     .application~autoDetection(.false)
     .application~defaultFont('Tahoma', 10)
 

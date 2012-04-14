@@ -43,12 +43,11 @@
  * Bar, and Tab.
  */
 
-  .application~setDefaults("O", "rc\PropertySheetDemo.h", .false)
-
   -- A directory manager saves the current directory and can later go back to
-  -- that directory.  It also sets up the environment we need.  The class
-  -- itself is located in samplesSetup.rex
+  -- that directory.  The class itself is located in DirectoryManaager.cls
   mgr = .DirectoryManager~new()
+
+  .application~setDefaults("O", "rc\PropertySheetDemo.h", .false)
 
   -- Create the 5 dialog pages.
   p1 = .ListViewDlg~new("rc\PropertySheetDemo.rc", IDD_LISTVIEW_DLG)
@@ -75,7 +74,7 @@
   return 0
 
 ::requires "ooDialog.cls"
-::requires "samplesSetup.rex"
+::requires "DirectoryManager.cls"
 
 ::class 'ListViewDlg' subclass RcPSPDialog
 
@@ -96,7 +95,7 @@
     -- Set the images for the items in the list-view.  The list-view control was
     -- created without the SHAREIMAGES styles, so it takes care of releasing the
     -- image list when the program ends.
-    image = .Image~getImage("bmp\propertySheetDemoListView.bmp")
+    image = .Image~getImage("rc\propertySheetDemoListView.bmp")
     imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
     if \image~isNull,  \imageList~isNull then do
         imageList~add(image)
@@ -172,7 +171,7 @@
     tv = self~newTreeView(IDC_TV_MAIN)
 
     -- Create and set the ImageList for the tree view items
-    image = .Image~getImage("bmp\propertySheetDemoTreeView.bmp")
+    image = .Image~getImage("rc\propertySheetDemoTreeView.bmp")
     imageList = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR8), 10, 0)
     if \image~isNull,  \imageList~isNull then do
           imageList~add(image)
@@ -498,7 +497,7 @@
    -- Create a COLORREF (pure white) and load our bitmap.  The bitmap is a
    -- series of 16x16 images, each one a colored letter.
    cRef = .Image~colorRef(255, 255, 255)
-   image = .Image~getImage("bmp\propertySheetDemoTab.bmp")
+   image = .Image~getImage("rc\propertySheetDemoTab.bmp")
 
    -- Create our image list, as a masked image list.
    flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))
@@ -627,4 +626,26 @@
     imageList~release
 
 ::class 'PropertySheetDemoDlg' subclass PropertySheetDialog
+
+
+
+::class 'DirectoryManager' public
+
+::method init
+  expose originalDirectory
+
+  -- Save our current directory.
+  originalDirectory = directory()
+
+  -- Get the full path to this program file.
+  parse source . . pgmFile
+
+  -- Get the directory this program file is located in, and then cd to it.
+  pgmDir = pgmFile~left(pgmFile~lastpos('\') - 1)
+  pgmDir = directory(pgmDir)
+
+
+::method goBack
+  expose originalDirectory
+  ret = directory(originalDirectory)
 

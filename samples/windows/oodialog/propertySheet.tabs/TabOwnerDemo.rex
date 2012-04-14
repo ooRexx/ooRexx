@@ -53,38 +53,38 @@
   dlgs = .array~new(5)
 
   exArgs = .ControlDlgInfo~new( , .true, "List View", .Size~new(300, 250))
-  dlgs[1] = .ListViewDlg~new("res\TabOwnerDemo.dll", IDD_LISTVIEW_DLG, , , exArgs)
+  dlgs[1] = .ListViewDlg~new("rc\TabOwnerDemo.dll", IDD_LISTVIEW_DLG, , , exArgs)
 
   exArgs~title = 'Tree View'
-  dlgs[2] = .TreeViewDlg~new("res\TabOwnerDemo.dll", IDD_TREEVIEW_DLG, , , exArgs)
+  dlgs[2] = .TreeViewDlg~new("rc\TabOwnerDemo.dll", IDD_TREEVIEW_DLG, , , exArgs)
 
   exArgs~title = 'Progress Bar'
-  dlgs[3] = .ProgressBarDlg~new("res\TabOwnerDemo.dll", IDD_PROGRESSBAR_DLG, , , exArgs)
+  dlgs[3] = .ProgressBarDlg~new("rc\TabOwnerDemo.dll", IDD_PROGRESSBAR_DLG, , , exArgs)
 
   exArgs~title = 'Track Bar'
-  dlgs[4] = .TrackBarDlg~new("res\TabOwnerDemo.dll", IDD_TRACKBAR_DLG, , , exArgs)
+  dlgs[4] = .TrackBarDlg~new("rc\TabOwnerDemo.dll", IDD_TRACKBAR_DLG, , , exArgs)
 
   exArgs~title = 'Tab'
-  dlgs[5] = .TabDlg~new("res\TabOwnerDemo.dll", IDD_TAB_DLG, , , exArgs)
+  dlgs[5] = .TabDlg~new("rc\TabOwnerDemo.dll", IDD_TAB_DLG, , , exArgs)
 
   mt1 = .ManagedTab~new(IDC_TAB1, dlgs, "SELCHANGE")
 
   dlgs = .array~new(5)
 
   exArgs~Title = "Blank 1"
-  dlgs[1] = .BlankDlg~new("res\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
+  dlgs[1] = .BlankDlg~new("rc\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
 
   exArgs~title = 'Blank 2'
-  dlgs[2] = .BlankDlg~new("res\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
+  dlgs[2] = .BlankDlg~new("rc\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
 
   exArgs~title = 'Blank 3'
-  dlgs[3] = .BlankDlg~new("res\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
+  dlgs[3] = .BlankDlg~new("rc\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
 
   exArgs~title = 'Blank 4'
-  dlgs[4] = .BlankDlg~new("res\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
+  dlgs[4] = .BlankDlg~new("rc\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
 
   exArgs~title = 'Blank 5'
-  dlgs[5] = .BlankDlg~new("res\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
+  dlgs[5] = .BlankDlg~new("rc\TabOwnerDemo.dll", IDD_BLANK_DLG, , , exArgs)
 
   mt2 = .ManagedTab~new(IDC_TAB2, dlgs)
 
@@ -204,7 +204,7 @@
     -- Set the images for the items in the list-view.  The list-view control was
     -- created without the SHAREIMAGES styles, so it takes care of releasing the
     -- image list when the program ends.
-    image = .Image~getImage("bmp\TabOwnerDemoListView.bmp")
+    image = .Image~getImage("rc\TabOwnerDemoListView.bmp")
     imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
     if \image~isNull,  \imageList~isNull then do
         imageList~add(image)
@@ -287,7 +287,7 @@
     tv = self~newTreeView(IDC_TV_MAIN)
 
     -- Create and set the ImageList for the tree view items
-    image = .Image~getImage("bmp\TabOwnerDemoTreeView.bmp")
+    image = .Image~getImage("rc\TabOwnerDemoTreeView.bmp")
     imageList = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR8), 10, 0)
     if \image~isNull,  \imageList~isNull then do
           imageList~add(image)
@@ -634,7 +634,7 @@
    -- Create a COLORREF (pure white) and load our bitmap.  The bitmap is a
    -- series of 16x16 images, each one a colored letter.
    cRef = .Image~colorRef(255, 255, 255)
-   image = .Image~getImage("bmp\TabOwnerDemoTab.bmp")
+   image = .Image~getImage("rc\TabOwnerDemoTab.bmp")
 
    -- Create our image list, as a masked image list.
    flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))
