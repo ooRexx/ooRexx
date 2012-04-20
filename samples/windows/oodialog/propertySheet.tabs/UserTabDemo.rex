@@ -241,7 +241,7 @@
     pages[1] = patientdlg
 
     -- .01 seconds == 10000 microseconds
-    .Alarm~new(.TimeSpan~fromMicroseconds(10000), .message~new(self, "initialShowDlg"))
+    .Alarm~new(.TimeSpan~fromMicroseconds(20000), .message~new(self, "initialShowDlg"))
 
 
 ::method activateContacts private unguarded

@@ -627,25 +627,3 @@
 
 ::class 'PropertySheetDemoDlg' subclass PropertySheetDialog
 
-
-
-::class 'DirectoryManager' public
-
-::method init
-  expose originalDirectory
-
-  -- Save our current directory.
-  originalDirectory = directory()
-
-  -- Get the full path to this program file.
-  parse source . . pgmFile
-
-  -- Get the directory this program file is located in, and then cd to it.
-  pgmDir = pgmFile~left(pgmFile~lastpos('\') - 1)
-  pgmDir = directory(pgmDir)
-
-
-::method goBack
-  expose originalDirectory
-  ret = directory(originalDirectory)
-
