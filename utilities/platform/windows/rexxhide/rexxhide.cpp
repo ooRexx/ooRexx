@@ -132,6 +132,8 @@ int WINAPI WinMain(
         {
             sprintf(arg_buffer, "Open Object Rexx program execution failure: rc = %d",rc);
             MessageBox(NULL, arg_buffer, "Execution Error", MB_OK | MB_ICONHAND);
+
+            pgmInst->Terminate();
             return -rc;   // well, the negation of the error number is the return code
         }
         if (result != NULL)

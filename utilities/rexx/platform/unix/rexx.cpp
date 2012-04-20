@@ -172,13 +172,13 @@ int main (int argc, char **argv) {
         // if there was an error, then that will be our return code
         rc = pgmThrdInst->DisplayCondition();
         if (rc != 0) {
+            pgmInst->Terminate();
             return -rc;   // well, the negation of the error number is the return code
         }
         if (result != NULL) {
             pgmThrdInst->ObjectToInt32(result, &rc);
         }
 
-        pgmInst->Terminate();
 
         return rc;
     }

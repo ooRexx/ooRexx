@@ -165,6 +165,7 @@ int __cdecl main(int argc, char *argv[])
         rc = (int32_t)pgmThrdInst->DisplayCondition();
         if (rc != 0)
         {
+            pgmInst->Terminate();
             return -rc;   // well, the negation of the error number is the return code
         }
         if (result != NULL)

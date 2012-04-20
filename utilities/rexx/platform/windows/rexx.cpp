@@ -215,7 +215,8 @@ int __cdecl main(int argc, char *argv[]) {
             {
                 rxcargs = pgmThrdInst->NewArray(0);
             }
-            for (i = 2; i < argc; i++) {
+            for (i = 2; i < argc; i++)
+            {
                 pgmThrdInst->ArrayPut(rxcargs,
                                       pgmThrdInst->NewStringFromAsciiz(argv[i]),
                                       i - 1);
@@ -228,7 +229,9 @@ int __cdecl main(int argc, char *argv[]) {
             // Although the return is a wholenumber_t we know there is no error
             // code too big to fit in an int.
             rc = (int)pgmThrdInst->DisplayCondition();
-            if (rc != 0) {
+            if (rc != 0)
+            {
+                pgmInst->Terminate();
                 return -rc;   // well, the negation of the error number is the return code
             }
             // now handle any potential return value
