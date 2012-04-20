@@ -67,8 +67,8 @@ LONG REXXENTRY MY_IOEXIT( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock);
 //
 int __cdecl main(int argc, char *argv[]) {
     short    rexxrc = 0;                 /* return code from rexx             */
-    INT   i;                             /* loop counter                      */
-    INT  rc;                             /* actually running program RC       */
+    int   i;                             /* loop counter                      */
+    int  rc;                             /* actually running program RC       */
     const char *program_name;            /* name to run                       */
     char  arg_buffer[8192];              /* starting argument buffer          */
     char *cp;                            /* option character pointer          */
@@ -224,8 +224,10 @@ int __cdecl main(int argc, char *argv[]) {
             // call the interpreter
             result = pgmThrdInst->CallProgram(program_name, rxargs);
             // display any error message if there is a condition.
-            // if there was an error, then that will be our return code
-            rc = pgmThrdInst->DisplayCondition();
+            // if there was an error, then that will be our return code.
+            // Although the return is a wholenumber_t we know there is no error
+            // code too big to fit in an int.
+            rc = (int)pgmThrdInst->DisplayCondition();
             if (rc != 0) {
                 return -rc;   // well, the negation of the error number is the return code
             }
@@ -233,6 +235,8 @@ int __cdecl main(int argc, char *argv[]) {
             if (result != NULL) {
                 pgmThrdInst->ObjectToInt32(result, &rc);
             }
+
+            pgmInst->Terminate();
 
             return rc;
         }

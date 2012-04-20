@@ -124,20 +124,25 @@ int WINAPI WinMain(
         LocalFree(argv);        // released the parsed argguments
         // call the interpreter
         result = pgmThrdInst->CallProgram(program_name, rxargs);
-        // display any error message if there is a condition.
-        // if there was an error, then that will be our return code
-        rc = pgmThrdInst->DisplayCondition();
-        if (rc != 0) {
+        // display any error message if there is a condition.  if there was an
+        // error, then that will be our return code. we know error code will fit
+        // in an int32_t.
+        rc = (int32_t)pgmThrdInst->DisplayCondition();
+        if (rc != 0)
+        {
             sprintf(arg_buffer, "Open Object Rexx program execution failure: rc = %d",rc);
             MessageBox(NULL, arg_buffer, "Execution Error", MB_OK | MB_ICONHAND);
             return -rc;   // well, the negation of the error number is the return code
         }
-        if (result != NULL) {
+        if (result != NULL)
+        {
             pgmThrdInst->ObjectToInt32(result, &rc);
         }
+
+        pgmInst->Terminate();
     }
-    // return interpeter or
-    return rc;                                  // rexx program return cd
+
+    return rc;
 }
 
 

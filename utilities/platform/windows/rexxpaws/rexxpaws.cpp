@@ -78,7 +78,6 @@ void __cdecl set_pause_at_exit( void )
 //
 int __cdecl main(int argc, char *argv[])
 {
-    int16_t   rexxrc = 0;                /* return code from rexx             */
     int32_t   i;                         /* loop counter                      */
     int32_t  rc;                         /* actually running program RC       */
     const char *program_name;            /* name to run                       */
@@ -151,7 +150,8 @@ int __cdecl main(int argc, char *argv[])
         {
             rxcargs = pgmThrdInst->NewArray(0);
         }
-        for (i = 2; i < argc; i++) {
+        for (i = 2; i < argc; i++)
+        {
             pgmThrdInst->ArrayPut(rxcargs,
                                   pgmThrdInst->NewStringFromAsciiz(argv[i]),
                                   i - 1);
@@ -159,19 +159,22 @@ int __cdecl main(int argc, char *argv[])
         pgmThrdInst->DirectoryPut(dir, rxcargs, "SYSCARGS");
         // call the interpreter
         result = pgmThrdInst->CallProgram(program_name, rxargs);
-        // display any error message if there is a condition.
-        // if there was an error, then that will be our return code
-        rc = pgmThrdInst->DisplayCondition();
-        if (rc != 0) {
+        // display any error message if there is a condition.  if there was an
+        // error, then that will be our return code. we know the return code
+        // will fit in an int32_t.
+        rc = (int32_t)pgmThrdInst->DisplayCondition();
+        if (rc != 0)
+        {
             return -rc;   // well, the negation of the error number is the return code
         }
-        if (result != NULL) {
+        if (result != NULL)
+        {
             pgmThrdInst->ObjectToInt32(result, &rc);
         }
 
-        return rc;
+        pgmInst->Terminate();
     }
-    // return interpeter or
-    return rc ? rc : rexxrc;
+
+    return rc;
 }
 
