@@ -37,10 +37,10 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= bmp controls examples menus mouse oleinfo ooRexxTry propertySheet.tabs rc res simple sysinfo tutorial userGuide wav winsystem
-DIST_SUBDIRS 	= bmp controls examples menus mouse oleinfo ooRexxTry  propertySheet.tab src res simple sysinfo tutorial userGuide wav winsystem
+SUBDIRS      = bmp controls examples menus mouse oleinfo ooRexxTry propertySheet.tabs rc res simple sysinfo tutorial userGuide wav winsystem
+DIST_SUBDIRS = bmp controls examples menus mouse oleinfo ooRexxTry propertySheet.tabs rc res simple sysinfo tutorial userGuide wav winsystem
 
-MAINTAINERCLEANFILES 	= Makefile.in *~
+MAINTAINERCLEANFILES = Makefile.in *~
 
 EXTRA_DIST = *.rex *.h *.inp *.ico
 
