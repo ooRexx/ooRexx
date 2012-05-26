@@ -43,6 +43,7 @@ Name "${LONGNAME} ${VERSION}"
 
 ; Docs for the string functions say they need to be declared before use:
 ${StrTok}
+${StrCase}
 ${UnStrTok}
 
 !define MUI_ICON "${SRCDIR}\platform\windows\rexx.ico"
@@ -1877,7 +1878,7 @@ Function SendTo_Items_page
     Rexx executables will execute your program.$\n$\n\
     Rather than create a file association for rexxhide.exe and rexxpaws.exe you may wish to create a \
     'Send To' item for those executables.  Or create both a file association and 'Send To' items for \
-    those executabls.  Usually a file association is created for rexx.exe and not a 'Send To' item."
+    those executables.  Usually a file association is created for rexx.exe and not a 'Send To' item."
 
   Pop $Label_One
 
@@ -1989,17 +1990,17 @@ Function Associate_rexx_page
   ${NSD_SetState} $Associate_rexx_CK $Associate_rexx_CK_state
 
   ; Extension line
-  ${NSD_CreateLabel}     16u  116u  36u  8u "Extension:"
+  ${NSD_CreateLabel}     16u  116u  75u  8u "Extension (no spaces):"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      52u  114u  46u 12u $Rexx_ext_text
+  ${NSD_CreateText}      91u  114u  36u 12u $Rexx_ext_text
   Pop $Rexx_ext_EDIT
 
   ; File type line
-  ${NSD_CreateLabel}     120u 116u  52u  8u "File type name:"
+  ${NSD_CreateLabel}     137u 116u  90u  8u "File type name (no spaces):"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      173u 114u  46u 12u $Rexx_ftype_text
+  ${NSD_CreateText}      228u 114u  46u 12u $Rexx_ftype_text
   Pop $Rexx_ftype_EDIT
 
   ${NSD_SetState} $Associate_rexx_CK $Associate_rexx_CK_state
@@ -2066,7 +2067,31 @@ Function Associate_rexx_leave
       SendMessage $Dialog ${WM_NEXTDLGCTL} $Rexx_ext_EDIT 1
       Abort
     ${endif}
+
+    ; Check that the user did not include any spaces in either field. If so abort
+    push $0
+    call CheckForSpaces
+    pop $2
+    push $1
+    call CheckForSpaces
+    pop $3
+
+    ${if} $2 > 0
+    ${orif} $3 > 0
+      MessageBox MB_OK|MB_ICONEXCLAMATION \
+        "Neither the file extension field nor the file$\n\
+        type name field can contain a space."
+
+      ${if} $2 > 0
+        SendMessage $Dialog ${WM_NEXTDLGCTL} $Rexx_ext_EDIT 1
+      ${else}
+        SendMessage $Dialog ${WM_NEXTDLGCTL} $Rexx_ftype_EDIT 1
+      ${endif}
+      Abort
+    ${endif}
+
   ${endif}
+
 
   ; Okay text fields are okay.  If editor field is blank, it is just not used.
   ${NSD_GetText} $Rexx_ext_EDIT $Rexx_ext_text
@@ -2162,17 +2187,17 @@ Function Associate_otherExes_page
   ${NSD_SetState} $Associate_rexxhide_CK $Associate_rexxhide_CK_state
 
   ; Extension line
-  ${NSD_CreateLabel}     16u  38u  36u  8u "Extension:"
+  ${NSD_CreateLabel}     16u  38u   75u  8u "Extension (no spaces):"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      52u  36u  46u 12u $RexxHide_ext_text
+  ${NSD_CreateText}      91u  36u  36u 12u $RexxHide_ext_text
   Pop $RexxHide_ext_EDIT
 
   ; File type line
-  ${NSD_CreateLabel}     120u 38u  52u  8u "File type name:"
+  ${NSD_CreateLabel}     137u 38u   90u  8u "File type name (no spaces):"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      173u 36u  46u 12u $RexxHide_ftype_text
+  ${NSD_CreateText}      228u 36u  46u 12u $RexxHide_ftype_text
   Pop $RexxHide_ftype_EDIT
 
 
@@ -2192,17 +2217,17 @@ Function Associate_otherExes_page
   ${NSD_SetState} $Associate_rexxpaws_CK $Associate_rexxpaws_CK_state
 
   ; Extension line
-  ${NSD_CreateLabel}     16u  118u  36u  8u "Extension:"
+  ${NSD_CreateLabel}     16u  118u  75u  8u "Extension (no spaces):"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      52u  116u  46u 12u $RexxPaws_ext_text
+  ${NSD_CreateText}      91u  116u  36u 12u $RexxPaws_ext_text
   Pop $RexxPaws_ext_EDIT
 
   ; File type line
-  ${NSD_CreateLabel}     120u 118u  52u  8u "File type name:"
+  ${NSD_CreateLabel}     137u 118u  90u  8u "File type name (no spaces):"
   Pop $0  ; Discarded
 
-  ${NSD_CreateText}      173u 116u  46u 12u $RexxPaws_ftype_text
+  ${NSD_CreateText}      228u 116u  46u 12u $RexxPaws_ftype_text
   Pop $RexxPaws_ftype_EDIT
 
   ${if} $DoUpgrade == 'true'
@@ -2278,6 +2303,30 @@ Function Associate_otherExes_leave
       SendMessage $Dialog ${WM_NEXTDLGCTL} $RexxHide_ext_EDIT 1
       Abort
     ${endif}
+
+    ; Check that the user did not include any spaces in either field. If so abort
+    push $0
+    call CheckForSpaces
+    pop $2
+    push $1
+    call CheckForSpaces
+    pop $3
+
+    ${if} $2 > 0
+    ${orif} $3 > 0
+      MessageBox MB_OK|MB_ICONEXCLAMATION \
+        "Neither the file extension field nor the file$\n\
+        type name field can contain a space."
+
+      ${if} $2 > 0
+        SendMessage $Dialog ${WM_NEXTDLGCTL} $RexxHide_ext_EDIT 1
+      ${else}
+        SendMessage $Dialog ${WM_NEXTDLGCTL} $RexxHide_ftype_EDIT 1
+      ${endif}
+      Abort
+    ${endif}
+
+
   ${endif}
 
   /* Check the Rexx Paws controls */
@@ -2312,6 +2361,29 @@ Function Associate_otherExes_leave
       SendMessage $Dialog ${WM_NEXTDLGCTL} $RexxPaws_ext_EDIT 1
       Abort
     ${endif}
+
+    ; Check that the user did not include any spaces in either field. If so abort
+    push $0
+    call CheckForSpaces
+    pop $2
+    push $1
+    call CheckForSpaces
+    pop $3
+
+    ${if} $2 > 0
+    ${orif} $3 > 0
+      MessageBox MB_OK|MB_ICONEXCLAMATION \
+        "Neither the file extension field nor the file$\n\
+        type name field can contain a space."
+
+      ${if} $2 > 0
+        SendMessage $Dialog ${WM_NEXTDLGCTL} $RexxPaws_ext_EDIT 1
+      ${else}
+        SendMessage $Dialog ${WM_NEXTDLGCTL} $RexxPaws_ftype_EDIT 1
+      ${endif}
+      Abort
+    ${endif}
+
   ${endif}
 
   ; Okay text fields are okay.
@@ -2828,12 +2900,56 @@ Function CheckInstalledStatus
 
 FunctionEnd
 
+
+/** CheckForSpaces()
+ *
+ * This function checks for spaces in a string.  It is taken from the NSIS
+ * examples provided on the NSIS site.
+ *
+ * It should be used this way:
+ *
+ * push <str>
+ * call CheckForSpaces
+ * pop $R0
+ *
+ * $R0 will contain the number of spaces.  When using the LogicLib, a check like
+ * this can be done
+ *
+ * ${if} $R0 > 0
+ *   <do something>
+ * ${endif}
+ *
+ */
+Function CheckForSpaces
+   Exch $R0
+   Push $R1
+   Push $R2
+   Push $R3
+
+   StrCpy $R1 -1
+   StrCpy $R3 $R0
+   StrCpy $R0 0
+   loop:
+     StrCpy $R2 $R3 1 $R1
+     IntOp $R1 $R1 - 1
+     StrCmp $R2 "" done
+     StrCmp $R2 " " 0 loop
+     IntOp $R0 $R0 + 1
+   Goto loop
+   done:
+
+   Pop $R3
+   Pop $R2
+   Pop $R1
+   Exch $R0
+FunctionEnd
+
 /** AddToPathExt()
  *
  * Adds the file extension(s) associated with the ooRexx executables to PATHEXT.
  *
- * Right now the user can not specifies these, but a future enhancement will add
- * that feature.
+ * We upper case the extension so that it matches what is commonly seen on
+ * Windows.
  *
  * @notes - This could be done for a single-user install, but remember that
  *          the user specific PATHEXT *replaces* the system wide PATHEXT, so
@@ -2847,22 +2963,25 @@ Function AddToPathExt
   ${endif}
 
   ${StrTok} $0 $RegVal_rexxAssociation " " "0" "0"
-  DetailPrint "Adding the $0 extension to PATHEXT"
-  Push $0
+  ${StrCase} $1 $0 "U"
+  DetailPrint "Adding the $1 extension to PATHEXT"
+  Push $1
   Push $IsAdminUser      ; should only be "true" at this point
   Push "PATHEXT"
   Call AddToPath
 
   ${StrTok} $0 $RegVal_rexxHideAssociation " " "0" "0"
-  DetailPrint "Adding the $0 extension to PATHEXT"
-  Push $0
+  ${StrCase} $1 $0 "U"
+  DetailPrint "Adding the $1 extension to PATHEXT"
+  Push $1
   Push $IsAdminUser      ; should only be "true" at this point
   Push "PATHEXT"
   Call AddToPath
 
   ${StrTok} $0 $RegVal_rexxPawsAssociation " " "0" "0"
-  DetailPrint "Adding the $0 extension to PATHEXT"
-  Push $0
+  ${StrCase} $1 $0 "U"
+  DetailPrint "Adding the $1 extension to PATHEXT"
+  Push $1
   Push $IsAdminUser      ; should only be "true" at this point
   Push "PATHEXT"
   Call AddToPath
