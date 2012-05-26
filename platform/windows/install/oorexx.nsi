@@ -2590,17 +2590,17 @@ Function AssociateExtensionWithExe
   ${if} $AssociationProgramName == 'rexx.exe'
     ${StrTok} $0 $RegVal_rexxAssociation " " "0" "0"
     ${StrTok} $1 $RegVal_rexxAssociation " " "1" "0"
-    StrCpy $AssociationText "ooRexx Rexx Progam"
+    StrCpy $AssociationText "ooRexx Rexx Program"
     StrCpy $AssociationEditor '$RegVal_rexxEditor'
   ${elseif} $AssociationProgramName == 'rexxhide.exe'
     ${StrTok} $0 $RegVal_rexxHideAssociation " " "0" "0"
     ${StrTok} $1 $RegVal_rexxHideAssociation " " "1" "0"
-    StrCpy $AssociationText "ooRexx Rexx GUI Progam"
+    StrCpy $AssociationText "ooRexx Rexx GUI Program"
     StrCpy $AssociationEditor '$RegVal_rexxEditor'
   ${elseif} $AssociationProgramName == 'rexxpaws.exe'
     ${StrTok} $0 $RegVal_rexxPawsAssociation " " "0" "0"
     ${StrTok} $1 $RegVal_rexxPawsAssociation " " "1" "0"
-    StrCpy $AssociationText "ooRexx Rexx pausing Progam"
+    StrCpy $AssociationText "ooRexx Rexx pausing Program"
     StrCpy $AssociationEditor "$RegVal_rexxEditor"
   ${else}
     DetailPrint "Unrecoverable ERROR. The ftype association executable: $AssociationProgramName is not recognized."
