@@ -3412,13 +3412,13 @@ Function un.Uninstall_By_Log_page
     ${NSD_Check} $Delete_ooRexx_Tree_CK
     EnableWindow $Delete_ooRexx_Tree_CK 0
   ${else}
-    ${NSD_CreateLabel} 0 0 100% 64u $0
+    ${NSD_CreateLabel} 0 0 100% 80u $0
     Pop $Label_One
 
-    ${NSD_CreateLabel} 0 80u 100% 16u "To DELETE the entire $INSTDIR directory tree, check the check box."
+    ${NSD_CreateLabel} 0 100u 100% 16u "To DELETE the entire $INSTDIR directory tree, check the check box."
     Pop $Label_Two
 
-    ${NSD_CreateCheckBox} 0 100u 100% 8u "Delete entire directory tree"
+    ${NSD_CreateCheckBox} 0 120u 100% 8u "Delete entire directory tree"
     Pop $Delete_ooRexx_Tree_CK
   ${endif}
 
