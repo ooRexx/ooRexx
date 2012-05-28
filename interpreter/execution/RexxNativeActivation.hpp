@@ -55,6 +55,7 @@ class RegisteredRoutine;
 class RexxStem;
 class RexxSupplier;
 class StackFrameClass;
+class RexxIdentityTable;
 
 #define MAX_NATIVE_ARGUMENTS 16
 
@@ -200,7 +201,7 @@ protected:
     RexxActivation *activation;          /* parent activation                 */
     RexxObject    **arglist;             /* copy of the argument list         */
     RexxArray      *argArray;            /* optionally create argument array  */
-    RexxList       *savelist;            /* list of saved objects             */
+    RexxIdentityTable   *savelist;       /* list of saved objects             */
     RexxObject     *result;              /* result from RexxRaise call        */
     ActivationType  activationType;      // the type of activation
     RexxDirectory  *conditionObj;        // potential condition object

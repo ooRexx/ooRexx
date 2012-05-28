@@ -1144,10 +1144,10 @@ void RexxNativeActivation::createLocalReference(RexxObject *objr)
         if (this->savelist == OREF_NULL)     /* first saved object?               */
         {
             /* create the save list now          */
-            this->savelist = new_list();
+            this->savelist = new_identity_table();
         }
         /* add to the save table             */
-        this->savelist->append(objr);
+        this->savelist->put(objr, objr);
     }
 }
 
@@ -1168,7 +1168,7 @@ void RexxNativeActivation::removeLocalReference(RexxObject *objr)
           // NB...this is a special remove that functions using the object
           // identify to avoid false positives or potential exceptions caused
           // by calling EQUALS methods.
-          savelist->removeObject(objr);
+          savelist->remove(objr);
       }
   }
 }
