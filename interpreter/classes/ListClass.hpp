@@ -119,6 +119,7 @@
    RexxObject  *index(RexxObject *);
    RexxObject  *hasItem(RexxObject *);
    RexxObject  *removeItem(RexxObject *);
+   RexxObject  *removeObject(RexxObject *);
 
    void          addLast(RexxObject *value);
    void          addFirst(RexxObject *value);

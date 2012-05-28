@@ -1043,6 +1043,41 @@ RexxObject *RexxList::removeItem(RexxObject *target)
 }
 
 
+/**
+ * Removes an item from the collection using Object identity
+ * comparisons.  This is used in some special circumstances when
+ * we don't want to have the equals method called, which can
+ * cause some exceptions or false positives.  This is used
+ * primarily for managing the local reference save lists.
+ *
+ * @param target The target value.
+ *
+ * @return The target item.
+ */
+RexxObject *RexxList::removeObject(RexxObject *target)
+{
+    // we require the index to be there.
+    requiredArgument(target, ARG_ONE);
+
+    // ok, now run the list looking for the target item
+    size_t nextEntry = this->first;
+
+    for (size_t i = 1; i <= this->count; i++)
+    {
+        LISTENTRY *element = ENTRY_POINTER(nextEntry);
+        // if we got a match, return the item
+        if (target == element->value)
+        {
+            // remove this item
+            return primitiveRemove(element);
+        }
+        nextEntry = element->next;
+    }
+    // no match
+    return TheNilObject;
+}
+
+
 RexxObject *RexxList::indexOfValue(
      RexxObject *_value)
 /*****************************************************************************/

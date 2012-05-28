@@ -1165,7 +1165,10 @@ void RexxNativeActivation::removeLocalReference(RexxObject *objr)
       // make sure we have a savelist before trying to remove this
       if (savelist != OREF_NULL)
       {
-          savelist->removeItem(objr);
+          // NB...this is a special remove that functions using the object
+          // identify to avoid false positives or potential exceptions caused
+          // by calling EQUALS methods.
+          savelist->removeObject(objr);
       }
   }
 }
