@@ -40,24 +40,21 @@
 #define APICommon_Included
 
 
-#define NO_HMODULE_MSG            "failed to obtain %s module handle; OS error code %d"
-#define NO_PROC_MSG               "failed to get procedeure adddress for %s(); OS error code %d"
-#define API_FAILED_MSG            "system API %s() failed; OS error code %d"
-#define COM_API_FAILED_MSG        "system API %s() failed; COM code 0x%08x"
-#define NO_MEMORY_MSG             "failed to allocate memory"
-#define FUNC_WINCTRL_FAILED_MSG   "the '%s'() function of the Windows '%s' control failed"
-#define MSG_WINCTRL_FAILED_MSG    "the '%s' message of the Windows '%s' control failed"
-#define NO_LOCAL_ENVIRONMENT_MSG  "the .local environment was not found"
-#define NO_SIZE_CLASS_MSG         "the .Size class was not found"
-#define BAD_APPLICATION_MSG       "the .Application object already exists"
+#ifdef _WIN32
+    #define snprintf _snprintf
+#endif
 
-extern void  severeErrorException(RexxThreadContext *c, char *msg);
-extern void  systemServiceException(RexxThreadContext *context, char *msg);
-extern void  systemServiceException(RexxThreadContext *context, char *msg, const char *sub);
-extern void  systemServiceExceptionCode(RexxThreadContext *context, const char *msg, const char *arg1, DWORD rc);
+
+#define NO_MEMORY_MSG             "failed to allocate memory"
+
+extern void  severeErrorException(RexxThreadContext *c, const char *msg);
+extern void  systemServiceException(RexxThreadContext *context, const char *msg);
+extern void  systemServiceException(RexxThreadContext *context, const char *msg, const char *sub);
+extern void  systemServiceExceptionCode(RexxThreadContext *context, const char *msg, const char *arg1, uint32_t rc);
 extern void  systemServiceExceptionCode(RexxThreadContext *context, const char *msg, const char *arg1);
-extern void  systemServiceExceptionComCode(RexxThreadContext *context, const char *msg, const char *arg1, HRESULT hr);
 extern void  outOfMemoryException(RexxThreadContext *c);
+extern void *baseClassIntializationException(RexxMethodContext *c);
+extern void *baseClassIntializationException(RexxMethodContext *c, CSTRING clsName);
 extern void  userDefinedMsgException(RexxThreadContext *c, CSTRING msg);
 extern void  userDefinedMsgException(RexxThreadContext *c, CSTRING formatStr, int number);
 extern void  userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg);
@@ -87,6 +84,7 @@ extern void  nullPointerException(RexxThreadContext *c, int pos);
 extern void  nullStringMethodException(RexxMethodContext *c, size_t pos);
 
 extern RexxObjectPtr wrongClassException(RexxThreadContext *c, size_t pos, const char *n);
+extern RexxObjectPtr wrongClassException(RexxThreadContext *c, size_t pos, const char *n, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, const char *actual);
 extern RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual);
@@ -98,6 +96,9 @@ extern RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxO
 extern RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual);
 extern RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char *type);
+extern RexxObjectPtr noSuchRoutineException(RexxThreadContext *c, CSTRING rtnName, size_t pos);
+extern RexxObjectPtr unsupportedRoutineException(RexxCallContext *c, CSTRING rtnName);
+extern RexxObjectPtr invalidReturnWholeNumberException(RexxThreadContext *c, CSTRING name, RexxObjectPtr actual, bool isMethod);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber);
@@ -115,13 +116,15 @@ extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxOb
 extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);
 extern RexxObjectPtr   rxNewBuiltinObject(RexxThreadContext *c, CSTRING className);
 
-extern bool isOutOfMemoryException(RexxThreadContext *c);
-extern bool checkForCondition(RexxThreadContext *c, bool clear);
-extern void standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition);
-extern bool isInt(int, RexxObjectPtr, RexxThreadContext *);
-extern bool isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
-extern void dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
-extern void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
+extern bool    isOutOfMemoryException(RexxThreadContext *c);
+extern bool    checkForCondition(RexxThreadContext *c, bool clear);
+extern void    standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition);
+extern bool    isInt(int, RexxObjectPtr, RexxThreadContext *);
+extern bool    isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
+extern void    dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
+extern void    dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
+extern CSTRING strPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
+extern CSTRING strPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
 
 /**
@@ -144,6 +147,28 @@ inline RexxObjectPtr noMsgReturnException(RexxThreadContext *c, RexxStringObject
 inline RexxObjectPtr noMsgReturnException(RexxThreadContext *c, CSTRING msg)
 {
     return noMsgReturnException(c, c->String(msg));
+}
+
+/**
+ *  No data returned from function "function"
+ *
+ *  No data returned from function "commitHookCallback"
+ *
+ *  Raises 44.001
+ *
+ * @param c    The thread context we are operating under.
+ * @param msg  The function name that did not return a value
+ *
+ * @return NULLOBJECT
+ */
+inline RexxObjectPtr noRoutineReturnException(RexxThreadContext *c, RexxStringObject rtnName)
+{
+    c->RaiseException1(Rexx_Error_Function_no_data_function, rtnName);
+    return NULLOBJECT;
+}
+inline RexxObjectPtr noRoutineReturnException(RexxThreadContext *c, CSTRING rtnName)
+{
+    return noRoutineReturnException(c, c->String(rtnName));
 }
 
 /**

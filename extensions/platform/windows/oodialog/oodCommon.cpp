@@ -51,6 +51,19 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 
+
+void systemServiceExceptionCode(RexxThreadContext *context, const char *msg, const char *arg1)
+{
+    systemServiceExceptionCode(context, msg, arg1, GetLastError());
+}
+
+void systemServiceExceptionComCode(RexxThreadContext *context, const char *msg, const char *arg1, HRESULT hr)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), msg, arg1, hr);
+    systemServiceException(context, buffer);
+}
+
 /**
  * 49.900
  * 49 -> A severe error was detected in the language processor or execution
@@ -77,44 +90,6 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
     c->RaiseException1(Rexx_Error_Interpretation_user_defined, c->String(buf));
 }
 
-
-/**
- *  Error 98.900
- *
- *  98 The language processor detected a specific error during execution. The
- *  associated error gives the reason for the error.
- *
- *  900 User message.
- *
- *  The base class has not been initialized correctly
- *
- * @param c    The method context we are operating under.
- *
- * @return  Returns a null pointer.  This allows this type of code:
- *
- *            if ( pCSelf == NULL )
- *            {
- *                return baseClassIntializationException(c);
- *            }
- *
- * @remarks  This error should be used when the CSelf pointer is null.  It can
- *           only happen (I believe) when the user inovkes a method on self in
- *           init() before the super class init() has run.  For example:
- *
- *           ::method init
- *             self~create(30, 30, 257, 123, "Simple Dialog", "CENTER")
- *             forward class (super) continue
- *
- *           Unfortunately, I have sample ooDialog programs from users that do
- *           just this sort of thing.  Prior to the conversion to the C++ APIs,
- *           the programs probably did not work as the user thought they were
- *           working, but it was not fatal.  However, now a null CSelf pointer
- *           causes a crash if not checked for.
- */
-void *baseClassIntializationException(RexxMethodContext *c)
-{
-    return executionErrorException(c->threadContext, "The base class has not been initialized correctly");
-}
 
 /**
  *  93.900
