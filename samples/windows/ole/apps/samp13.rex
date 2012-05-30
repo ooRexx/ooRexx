@@ -73,7 +73,16 @@ end
 textInput~value = "REXX"
 
 /* click on the search image to submit the query */
-doc~getElementById("ibm-search")~click
+submitInput = doc~getElementById("ibm-search")
+if submitIput == .nil then do
+  say "Failed to get submit input object."
+  say "Website may have changed, aborting."
+
+  myIE~quit
+  return 99
+end
+
+submitInput~click
 
 myIE~wait /* wait for page to be loaded */
 
