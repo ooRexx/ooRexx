@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -43,6 +43,10 @@
 /* Search for the string "REXX" on the IBM web page and go randomly   */
 /* to one of the found sites.                                         */
 /*                                                                    */
+/* Note that this sample no longer seems to work using IE9 on         */
+/* Windows.  Invoking the click() method on the Search button seems   */
+/* have no effect.  Geting the form instead fo the button and         */
+/* invoking submit() also doesn't work.                               */
 /**********************************************************************/
 
 
@@ -57,10 +61,20 @@ myIE~wait /* wait for page to be loaded */
 doc = myIE~document
 
 /* set query field on the IBM page to REXX */
-doc~GetElementById("q")~value = "REXX"
+textInput = doc~GetElementById("q")
+if textIput == .nil then do
+  say "Failed to get text input object."
+  say "Website may have changed, aborting."
 
-/* click on the go image to submit the query */
-doc~GetElementById("Search")~click
+  myIE~quit
+  return 99
+end
+
+textInput~value = "REXX"
+
+/* click on the search image to submit the query */
+doc~getElementById("ibm-search")~click
+
 myIE~wait /* wait for page to be loaded */
 
 /* get the new page */
@@ -76,6 +90,16 @@ do i over all
     rexxlinks~put(i~href,j)
     j = j + 1
   end
+end
+
+if rexxLinks~items < 1 then do
+  msg = "No links were found.  Submitting the search"   || .endOfLine || -
+        "probably failed.  This happens with IE9"       || .endOfLine || -
+        "on Windows 7."
+  ret = RxMessageBox(msg, "Done", "OK", "INFORMATION")
+
+  myIE~quit
+  return 99
 end
 
 /* select one of the REXX links randomly... */
