@@ -35,27 +35,27 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise03 Part 2:	Re-structuring the "Words of Wisdom" application
-   WowView.rex    	The Wow View component		  	  v00-06 02Apr12
+   Exercise03 Part 2: The WowView component.			  v01-00 31may12
 
-   Contains: 	   class "WowView.
-   Pre-requisites: None
+   Contains: 	   Classes: WowView.
+
+   Pre-requisites:
+     .local~my.idWowPicker - an object that provides a 'pickWow' method.
+
+   Description: The view component for the "Words of Wisdom" app.
 
    Changes:
-     v00-03: Changes to class MyDialog.
-     v00-04: Name change - MyDialog to WowView.
-     v00-05 06Feb12: Changed resource ID of text from -1 to 101
-                     (-1 not valid - change in ooDialog)
-     v00-06 02Apr12: Uppercased 'unguarded' on activate method.
-
-*******************************************************************************/
+     v01-00: First version.
+------------------------------------------------------------------------------*/
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  WowView							 v00-04  11Aug11
+  WowView							  v01-00 31May12
   -------
   A class that defines the User Interface for the Wow application.
 
+  Changes:
+    v01-00: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::REQUIRES "ooDialog.cls"

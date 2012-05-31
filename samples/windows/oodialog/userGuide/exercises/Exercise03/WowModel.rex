@@ -35,28 +35,29 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 03b: Re-structuring the "Words of Wisdom" application
-   Exercise03b-Model.rex 					  v00-03 29Jly11
+   Exercise03 Part 2: The WowModel component.			  v01-00 31May12
+
+   Contains:       Classes: WowPicker.
+
+   Pre-requisites:
+     .local~my.idWowData - an object that provides an array of 'words of wisdom'.
+
+   Description:    The model component of the "Words of Wisdom" app.
+
    Changes:
-     v00-03 - Changes to WowPicker
+     v01-00 31May12: First version.
 ------------------------------------------------------------------------------*/
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  WowPicker							  v00-03 29Jly11
+  WowPicker							  v01-00 31may12
   ---------
   A class that returns a Words of Wisdom string, selected randomly from a set
   of such Words of Wisdom.
   (Potential enhancements: Request a different set from the WowData class;
   			   Have the size of the set configurable.)
   Changes:
-    v00-03: Changed to get data array in activate method instead of
-      	      pickWow method.
-
-  interface{
-    activate( )
-    arrWowSet pickWow( )
-  }
+    v01-00: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS WowPicker Public

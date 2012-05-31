@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 02: Making the Controls Work	 		  v00-03 06Feb12
+   Exercise 02: Making the Controls Work	 		  v01-00 31May12
 
    File Contents:   class "WordsOfWisdom2"
    Pre-requisites:  None.
@@ -43,11 +43,7 @@
                     wisdom' in a static text control.
 
    Changes:
-   v00-01: First version (was called "Exercise02b.rex").
-   v00-02 11Aug11: Correction since static text did not display due to change in
-                   ooDialog, plus mods to comments.
-   v00-03 06Feb12: Corrected id of static text - ooDialog does not now support
-                   -1 when later used to set text (as per latest ooDialog Reference).
+   v01-00: First version.
 
 ------------------------------------------------------------------------------*/
 

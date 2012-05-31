@@ -35,24 +35,29 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 03b: Re-structuring the "Words of Wisdom" application
-   Exercise03b-Data.rex 					  v00-03 29Jly11
+   Exercise03 Part 2: The WowData component.			  v01-00 31May12
+
+   Contains:       Classes: WowData.
+
+   Pre-requisites: None.
+
+   Description:    The data component of the "Words of Wisdom" app.
+
+   Changes:
+     v01-00 31May12: First version.
+
 ------------------------------------------------------------------------------*/
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  WowData							  v00-03 29Jly11
+  WowData							  v01-00 31May12
   -------
   Has access to WOW data, and returns a set to requester.
+
   Potential enhancement: Define the size of a set through configuration.
+
   Changes:
-    v00-02: minor changes to comments.
-    v00-03: minor change to comment on activate method.
-
-
-  interface{
-    arrWow readWowSet( )
-  }
+    v01-01: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS WowData PUBLIC
@@ -76,7 +81,7 @@
   	      "No matter which way you ride, it's uphill and against the wind."
     arrWow[6] = "Brooks's Law:" -
   	      "Adding manpower to a late software project makes it later."
-    arrWow[7] = "Grossman's Misquote of H. L. Mencken" -
+    arrWow[7] = "Grossman's Misquote of H. L. Mencken:" -
   	      "Complex problems have simple, easy-to-understand wrong answers."
     return
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */

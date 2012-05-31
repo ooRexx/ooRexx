@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 02: Putting "controls" on the window. 		  v00-02 11Aug11
+   Exercise 02: Putting "controls" on the window. 		  v01-00 31May12
 
    File Contents:   class "WordsOfWisdom"
    Pre-requisites:  None.
@@ -43,9 +43,7 @@
                     wisdom' in a static text control.
 
    Changes:
-   v00-01: First version (was called "Exercise02b.rex").
-   v00-02: Correction since static text did not display due to change in
-           ooDialog, plus mods to comments.
+   v01-00: First version.
 
 ------------------------------------------------------------------------------*/
 

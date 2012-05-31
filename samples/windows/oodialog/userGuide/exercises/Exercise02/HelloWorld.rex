@@ -35,15 +35,14 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 02: Hello World					  v00-02 11Aug11
+   Exercise 02: Hello World					  v01-00 31May12
 
    File Contents:   class "HelloWorld"
    Pre-requisites:  None.
    Description:     The simplest possible dialog.
 
    Changes:
-   v00-01: First version.
-   v00-02: Replacement when v00-01 was somehow lost(!!).
+   v01-00: First version.
 
 ------------------------------------------------------------------------------*/
 

@@ -35,23 +35,17 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 03: Wow3.rex - Re-structuring the "Words 		  v00-05 06Feb12
-   			   of Wisdom" application.
+   Exercise 03a: Re-structuring the "Words of Wisdom" app.	  v01-00 31May12
 
    Contains:       Startup statements
                    Classes: WowView, WowModel, WowData.
+
    Pre-requisites: None.
 
    Description:    A re-structuring of the "Words of Wisdom" code.
 
    Changes:
-     v00-03: Added an InitDialog method so do 'self~newStatic(902)' only once.
-     v00-04: Change filename from Exercise03a.rex to Wow3.rex, and classname
-             to WowView.
-     v00-05 06Feb12: Changed resource ID of text from -1 to 101
-                     (-1 not valid - change in ooDialog)
-
-   Outstanding Problems: None reported.
+     v01-00 31May12: First version.
 
  ******************************************************************************/
 
@@ -63,9 +57,12 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  UI - Class 'WowView'						 v00-02  29Jly11
+  UI - Class 'WowView'						 v01-00  31may12
   ---------------------
   Defines the Words of Wisdom User Interface.
+
+  Changes:
+  v01-00 31May12: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS 'WowView' SUBCLASS UserDialog
@@ -114,14 +111,13 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  WowPicker							  v00-01 24Mar11
+  WowPicker							  v01-00 31May12
   -------------
   Picks a "words of wisdom" string from a set of such "words of wisdom"
   and returns it. The set is initially retrieved from the WowData class.
 
-  interface{
-    pickWow( out string wow )
-  }
+  Changes:
+  v01-00 31May12: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS WowPicker
@@ -130,7 +126,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
     init - gets an initial Wow set from the WowData object.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD init
-    expose dataSource wowSet
+    expose wowSet
     dataSource = .WowData~new
     wowSet = dataSource~readWowSet
     return
@@ -151,17 +147,13 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  WowData							  v00-02 29Jly11
+  WowData							  v01-00 31May12
   -------------
   Has access to WOW data, and returns a set to requester. The size of the set
   can be set via configuration (but not in this version).
-  Changes:
-    v00-02: Corrected comments on readWowSet method.
 
-  interface{
-    readWowSet    (out array wowSet)
-    readNewWowSet (out array wowSet) - note: not in this version.
-  }
+  Changes:
+  v01-00 31May12: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS WowData
@@ -185,7 +177,7 @@ dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
   	      "No matter which way you ride, it's uphill and against the wind."
     arrWow[6] = "Brooks's Law:" -
   	      "Adding manpower to a late software project makes it later."
-    arrWow[7] = "Grossman's Misquote of H. L. Mencken" -
+    arrWow[7] = "Grossman's Misquote of H. L. Mencken:" -
   	      "Complex problems have simple, easy-to-understand wrong answers."
     return
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
