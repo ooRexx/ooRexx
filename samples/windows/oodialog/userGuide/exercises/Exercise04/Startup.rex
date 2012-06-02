@@ -35,14 +35,19 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The Customer Component
-   Startup.rex  						  v00-03 03Aug11
-                The starter" for the Customer component.
+   Exercise04: The Customer Component				  v01-00 01Jun12
+
+   Contains:   Startup.rex
+
+   Pre-requisites:
+     CustomerView.rex      - the CustomerView dialog.
+     CustomerModelData.rex - Customer model and data components.
+
+   Description: The startup script for the CustomerView component.
+
    Changes:
-     v00-01: 15Jly11
-     v00-02  29Jly11 - Modified to take into account the added Model and Data
-                       classes.
-     v00-03  03Aug11 - Deleted ::requires ooDialog.cls (not required here).
+     v01-00 01Jun12: First version.
+
 ------------------------------------------------------------------------------*/
 
 .local~my.idCustomerData  = .CustomerData~new	-- create Customer Data instance

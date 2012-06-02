@@ -35,28 +35,17 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The CustomerView component             		  v00-09 01Apr12
+   Exercise04: The Customer component             		  v01-00 01Jun12
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
-   Pre-requisites: CustomerView.rc, CustomerView.h.
+
+   Pre-requisites: CustomerView.rc, CustomerView.h, CustomerModelView.rex.
 
    Description: A sample Customer View component - part of the sample
         	Order Management application.
 
    Changes:
-   v00-02: CustomerView class and also the Customer.h file.
-   v00-03: CustomerView class
-   v00-04: CustomerView class
-   v00-05: CustomerView class (note - date of file changed to 16Aug11 because
-           I did a simple test then set everything back as it was.)
-   v00-06 17Aug11: Changed to .Application~setDefaults in newInstance method,
-                   and deleted autoDetection methods - not now needed as turn
-                   off autoDetection in .Application~setDefaults().
-   v00-07 Ex04 04Oct11: Added msgbox for unimplemented menu items.
-          08Jan12 - temp change to check on sequence of methods - removed after check.
-   v00-08 25Jan12 - very minor change to msgbox obtained from Print menu item.
-   v00-09 01Apr12: 6th param in .ScriptMenuBar~new now causes crash - removed.
-                   Also changed one message
+   v01-00 01Jun12: First version.
 
 -------------------------------------------------------------------------*/
 
@@ -65,23 +54,17 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerView							  v00-05 29Jly11
+  CustomerView							  v01-00 01Jun12
   -------------
   The "view" (or "gui") part of the Customer component - part of the sample
   Order Management application.
-  Changes:
-    v00-02: Prevented close on enter key by providing no-op "ok" method.
-            Changed tab order on window by changing sequence of controls in .rc file
-    v00-03: Changed symbolic IDs to conform with naming convention
-            Added initAutoDetection method because deleted dlgData. from
-	    dlg~new statement in starter.rex.
-    v00-04: Took out the OK method - include that in Exercise05.
-    v00-05: Modified to use CustomerData and CustomerModel classes.
 
-  [interface (idl format)]
+  Changes:
+    v01-00: First version
+
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
-::CLASS CustomerView SUBCLASS RcDialog PUBLIC
+::CLASS "CustomerView" SUBCLASS RcDialog PUBLIC
 
   /*----------------------------------------------------------------------------
     Dialog Creation Methods:
@@ -321,7 +304,16 @@
 
 
 
-/*============================================================================*/
+/*//////////////////////////////////////////////////////////////////////////////
+  ==============================================================================
+  StartCustomerView						  v01-00 01Jun12
+  -----------------
+  A routine that creates the CustomerView dialog.
+
+  Changes:
+    v01-00: First version
+  = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
+
 ::ROUTINE StartCustomerView PUBLIC
   say "StartCustomerView Routine-01: Start."
   .Application~setDefaults("O", "CustomerView.h", .false)
