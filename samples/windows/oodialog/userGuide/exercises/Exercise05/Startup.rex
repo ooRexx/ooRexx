@@ -35,12 +35,12 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 05: The Product component				  v00-02 29Jly11
+   Exercise 05: The Product component				  v01-00 03Jun12
+
    Startup.rex - the starter" for the Product component.
+
    Changes:
-     v00-01: 15Jly11
-     v00-02  29Jly11 - Modified to take into account the added Model and Data
-                       classes.
+     v01-00 03Jun12: Firect version.
 
 ------------------------------------------------------------------------------*/
 

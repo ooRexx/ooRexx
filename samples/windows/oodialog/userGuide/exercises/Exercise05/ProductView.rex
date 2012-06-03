@@ -35,38 +35,18 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: ProductView.rex - The ProductView component      v00-09 01Apr12
+   Exercise 04: ProductView.rex - The ProductView component	  v01-00 03Jun12
 
    Contains: 	   classes "ProductView" and "AboutDialog".
+
    Pre-requisites: ProductView.dll, ProductView.h.
    		   Support\NumberOnlyEditEx.cls (copied from ooDialog Samples)
 
    Description: A sample Product View component - part of the sample
         	Order Management application.
 
-   Outstanding Problems: None reported.
-
    Changes:
-   v00-01 21Jly11
-   v00-02 28Jly11: Added a constants class for user-visible messages.
-   v00-03 06Aug11: corrected typos in some comments.
-   		   deleted a commented-out statement that shouldn't have been
-                   left in the file, plus another typo in a comment corrected.
-                   use of a ProductDT rather than directory for data.
-                   Changed class name of strings to HRS.
-   v00-04 17Aug11: Changed to .Application~setDefaults in newInstance method,
-                   and deleted autoDetection methods - not now needed as turn
-                   off autoDetection in .Application~setDefaults().
-   v00-05 23Nov11: Allow for standard close actions. These were disabled in
-                   previous versions to illustrate the point, but this fails the
-                   principle of least astonishment. Guide modified to discuss
-                   this briefly.
-   v00-06 26Nov11: Provide a status attribute (dialogState) so that close (e.g.
-   		   pressing Esc) can issue a "changes made but not committed
-   		   - are you sure" message.
-   v00-07 29Nov11: Added a comment to the cancel method. No change in function.
-   v00-08 01Dec11: Changed OK/Cancel to Yes/No on "cancel while in update" dialog.
-   v00-09 01Apr12: Added msgbox for Print menu item.
+     v01-00 03Jun12: First version.
 
 ------------------------------------------------------------------------------*/
 
@@ -77,10 +57,12 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductView							  v01-00 12Jly11
+  ProductView							  v01-00 03Jun12
   -----------
-  The "view" part of the Product component.
-  [interface (idl format)]
+  The "view" part of the Product business component.
+
+  Changes:
+    v01-00 03Jun12: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS ProductView SUBCLASS ResDialog PUBLIC
@@ -88,8 +70,8 @@
   ::ATTRIBUTE dialogState PRIVATE	-- States are: 'closable' or 'inUpdate".
 
   /*----------------------------------------------------------------------------
-    Class Methods
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+    Class Methods:
+    --------------------------------------------------------------------------*/
 
   ::METHOD newInstance CLASS PUBLIC UNGUARDED
     say ".ProductView-newInstance-01: Start."
@@ -103,11 +85,11 @@
 
 
   /*----------------------------------------------------------------------------
-    Instance Methods
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+    Instance Methods:
+    --------------------------------------------------------------------------*/
 
   /*----------------------------------------------------------------------------
-    Dialog Setup Methods
+    Dialog Setup Methods:
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -202,7 +184,7 @@ say "ProductView-updateProduct-01."
 
 
   /*----------------------------------------------------------------------------
-    Event Handler Methods - PushButton Events
+    Event Handler Methods - PushButton Events:
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -263,7 +245,7 @@ say "ProductView-updateProduct-01."
 
 
   /*----------------------------------------------------------------------------
-    Event Handler Methods - Keyboard Events
+    Event Handler Methods - Keyboard Events:
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -286,7 +268,7 @@ say "ProductView-updateProduct-01."
 
 
   /*----------------------------------------------------------------------------
-    Application Methods
+    Application Methods:
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -432,10 +414,13 @@ say "ProductView-updateProduct-01."
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  AboutDialog							v01-00 17May11
+  AboutDialog							  v01-00 03Jun12
   -------------
   The "About" class - shows a dialog box that includes a bitmap - part of the
   ProductView component.
+
+  Changes:
+    v01-00 03Jun12: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS AboutDialog SUBCLASS ResDialog
@@ -450,14 +435,12 @@ say "ProductView-updateProduct-01."
     self~newStatic(IDC_PRODABT_STATIC2)~setFont(font)		  -- ... set the static text to use that font.
     -- Provide for a double-click in Product icon:
     self~connectStaticNotify("IDC_PRODABT_ICON_PLACE", "DBLCLK", showMsgBox)
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method showMsgBox
     say "AboutDialog-showMsgBox-01."
     ans = MessageDialog(.HRS~aboutDblClick)
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -465,16 +448,18 @@ say "ProductView-updateProduct-01."
     expose font image
     self~deleteFont(font)
     image~release()
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 /*============================================================================*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  Human-Readable Strings (HRS)					  v00-02 08Aug11
+  Human-Readable Strings (HRS)					  v01-00 03Jun12
   --------
    The HRS class provides constant character strings for user-visible messages.
+
+   Changes:
+     v01-00 03Jun12: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS HRS PRIVATE		-- Human-Readable Strings
@@ -491,3 +476,5 @@ say "ProductView-updateProduct-01."
   ::CONSTANT updateIP       "Update in process"
   ::CONSTANT updateProd     "Update Product"
   ::CONSTANT printMsg       "The 'Print...' menu item is not yet implemented."
+
+/*============================================================================*/

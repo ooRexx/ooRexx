@@ -35,32 +35,26 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04b: The ProductModel and ProductData Classes         v00-03 08Aug11
+   Exercise 04: The ProductModel and ProductData Components	  v01-00 03Jun12
 
    Contains:  classes "ProductModel", "ProductResource", and "ProductDT".
+
    Pre-requisites: None.
 
-   Outstanding Problems:
-   None.
-
    Changes:
-   v00-02: 21Jly11
-   v00-03: Correct "return" statement not in right place (typo in code!!)
-           Renamed the ProductDT attributes (initial "prod" deemed extraneous)
+     v01-00 03Jun12: First Version
 ------------------------------------------------------------------------------*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductModel							  v00-02 12Jly11
+  ProductModel							  v01-00 03Jun12
   ------------
   The "model" part of the Product component.
 
-  interface productModel{
-    aProductModel newInstance()  -- Class method.
-    null	  activate()
-    aProductDT     query()
-  };
+  Changes:
+    v01-00 03Jun12: First Version
+
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS ProductModel PUBLIC
@@ -93,12 +87,15 @@
 /*============================================================================*/
 
 
+
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductData							  v01-00 20Jly11
+  ProductData							  v01-00 03Jun12
   ------------
   The "data" part of the Product component.
-  [interface (idl format)]
+
+  Changes:
+    v01-00 03Jun12: First Version
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS ProductData PUBLIC
@@ -141,7 +138,11 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductDT - A business data type for Product data.		  v00-02 07Aug11
+  ProductDT - A business data type for Product data.		  v01-00 03Jun12
+
+  Changes:
+    v01-00 03Jun12: First Version
+
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =*/
 
 ::CLASS ProductDT PUBLIC
