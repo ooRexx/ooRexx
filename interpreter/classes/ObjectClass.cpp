@@ -1155,6 +1155,24 @@ RexxString *RexxObject::requestString()
         {/* didn't convert?                   */
          /* get the final string value        */
             this->sendMessage(OREF_STRINGSYM, string_value);
+            // we're really dependent upon the program respecting the protocol
+            // here and returning a value.  It is possible there is a
+            // problem, so how to handle this.  We could just raise an error, but this
+            // isn't the most ideal message since the error is raised at the
+            // line where the string value is required, but this is a rare
+            // situation.  As a fallback, use the default object STRING method,
+            // then raise an error if we still don't get anything.  This at least
+            // keeps the interpreter from crashing, there's a good chance the
+            // program will run.  Frankly, there's something seriously wrong
+            // if this error ever gets issued.
+            if (string_value == OREF_NULL)
+            {
+                string_value = RexxObject::stringValue();
+                if (string_value == OREF_NULL)
+                {
+                    reportException(Error_No_result_object_message, OREF_STRINGSYM);
+                }
+            }
             // The returned value might be an Integer or NumberString value.  We need to
             // force this to be a real string value.
             string_value = ((RexxObject *)string_value)->primitiveMakeString();
