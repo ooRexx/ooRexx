@@ -35,24 +35,14 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderFormView class				  v00-07 12Apr12
+   Exercise 06: The OrderFormView class				  v01-00 07Jun12
    OrderFormView.rex
 
    Contains: class "OrderFormView", class "HRSofv".
    Pre-requisite files: OrderFormView.rc, OrderFormView.h.
 
    Changes:
-   v00-01 25Aug11: First version.
-   v00-02 28Sep11: Changed to be the beginnings of a "new order" - will be a
-   		   tabbed dialog. Old order form is now view got from OrderList.
-   v00-03 30Sep11: Added msgbox for when user hits Esc (cancel). Also added
-                   HRS class for user-visible strings.
-   v00-04 12Oct11: Changed DoThis menu item and added two more - now have
-   		   Cancel/Place/Save Order. Also added "not implemented" message
-   		   for each menu item.
-   v00-05 11Feb12: OrderFormView - Changed .application() & HRS class
-   v00-06 19Feb12: OrderFormView: moved .Application~ stmt to top of file.
-   v00-07 01Apr12: Minor correction.
+     v01-00 07Jun12: First version.
 
 ------------------------------------------------------------------------------*/
 
@@ -64,24 +54,13 @@
 
 
 /*==============================================================================
-  OrderFormView							  v00-05 01Apr12
+  OrderFormView							  v01-00 07Jun12
   -------------
   The "view" (or "gui") Data Entry part of the Sales Order component.
 
   Changes:
-  v00-01: First Version
-  v00-02: Second version
-  v00-03 11Feb12: Moved .application~setDefaults() to app startup file.
-                  changed to .application~addToConstDir() here.
-                  Changed name fo HRS class to HRSofv.
-  v00-04 19Feb12: Moved .Application~addToConstDir statement from newInstance
-                  method to top of file - just before ::requires statement(s).
-  v00-05 01Apr12: Corrected ScriptMenubar param (ooDialog change)
+  v01-00 07Jun12: First Version
 
-  interface iOrderFormView {
-    void new();
-    void activate();
-  }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderFormView SUBCLASS RcDialog PUBLIC
@@ -191,7 +170,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  Human-Readable Strings (HRSofv)				  v00-03 11Feb12
+  Human-Readable Strings (HRSofv)				  v01-00 07Jun12
   --------
    The HRSofv class provides constant character strings for user-visible messages.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */

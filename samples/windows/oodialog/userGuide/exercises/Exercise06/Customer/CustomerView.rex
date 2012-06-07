@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The CustomerView component             		  v02-06 01Apr12
+   Exercise 06: The CustomerView component             		  v01-01 07Jun12
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: CustomerView.rc, CustomerView.h.
@@ -45,16 +45,8 @@
         	it does not invoke other components.
 
    Changes:
-   v02-00 06Sep11.
-   v02-01 18Sep11: Corrected stand-alone invocation.
-   v02-02 10Oct11: Corrected msgbox text when select "Show Cust List".
-   v02-02 21Jan12: Added HRS class.
-   v02-03 28Jan12: Changed class HRS to HRScv to allow for possible future
-   		   packaging of all classes in a single "application" file.
-   v02-04 11Feb12: Changed CustomerView
-
-   v02-05 19Feb12: CustomerView: moved .Application~ stmt to top of file.
-   v02-06 01Apr12: Deleted self from createMenuBar().
+   v01-00 01Jun12: First version (Exercise04).
+   v01-01 07Jun12: Minor changes for Exercise06.
 
 ------------------------------------------------------------------------------*/
 

@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: ProductView.rex - The ProductView component	  v01-00 03Jun12
+   Exercise 05: ProductView.rex - The ProductView component	  v01-00 03Jun12
 
    Contains: 	   classes "ProductView" and "AboutDialog".
 

@@ -35,7 +35,8 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The OrderView class				  v00-06 01Apr12
+   Exercise 06: The OrderView class				  v01-00 07Jun12
+
    OrderFormView.rex
 
    Contains: class "OrderView".
@@ -48,12 +49,7 @@
    Outstanding Problems: None reported.
 
    Changes:
-   v00-01 25Aug11.
-   v00-02 19Sep11: Corrected standalone invocation.
-   v00-03 28Sep11: Minor mod to comment.
-   v00-04 11Feb12: OrderView - Changed .application()
-   v00-05 19Feb12: OrderView: moved .Application~ stmt to top of file.
-   v00-06 01Apr12: Minor correction.
+     v01-00 07Jun12: First Version
 
 ------------------------------------------------------------------------------*/
 
@@ -66,21 +62,14 @@
 
 
 /*==============================================================================
-  OrderView							  v00-06 01Mar12
+  OrderView							  v01-00 07Jun12
   -------------
   The "view" (or "gui") part of the Order component - part of the sample
   Order Management application.
 
-  v00-04 11Feb12: Moved .application~setDefaults() to app startup file.
-                   changed to .application~addToConstDir() here.
-  v00-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
-                   method to top of file - just before ::requires statement(s).
-  v00-06 01Apr12: Deleted 'self' from ScriptMenubar (ooDialog change)
+  Changes:
+    v01-00 07Jun12: First Version.
 
-  interface iOrderView {
-    void new();
-    void activate();
-  }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderView SUBCLASS RcDialog PUBLIC
@@ -170,7 +159,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  Human-Readable Strings (HRSov)				  v00-01 11Feb12
+  Human-Readable Strings (HRSov)				  v01-00 07Jun12
   --------
    The HRSofv class provides constant character strings for user-visible messages.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */

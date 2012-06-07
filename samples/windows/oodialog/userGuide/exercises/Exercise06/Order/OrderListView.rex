@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The Order ListView 				  v01-05 019Apr12
+   Exercise 06: The Order ListView 				  v01-00 07Jun12
 
    Contains: class "OrderListView", "HRSolv"
 
@@ -46,17 +46,11 @@
                 This is an "Intermediate" component - it is invoked by OrderMgmt,
                 and invokes OrderView.
 
-   v01-00 19Sep11: First Version
-   v01-01 12Oct11: Added menu select methods (all saying not implemented).
-   		   Added an HRS class for text strings.
-   v01-02 28Jan12: Changed class name HRS to HRSolv to allow for multiple
-     		   HRS classes in same file at some future time.
-   v01-03 11Feb12: OrderListView - Changed .application()
-   v01-04 19Feb12: OrderListView - Moved .Application~ stmt to top of file.
-   v01-05 01Apr12: Minor correction to menu stmt.
-
+   Changes:
+     v01-00 07Jun12: First Version
 
    Outstanding Problems: None reported.
+
 *******************************************************************************/
 
 
@@ -69,20 +63,12 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderListView						  	  v00-06 01Apr12
+  OrderListView						  	  v01-00 07Jun12
   -------------
   The view of a list of products.
   Changes:
-    v00-01: First version
-    v00-02: Corrected for standalone invocation.
-    v00-03: 28Jan12: Changed name of HRS class to HRSplv.
-    v00-04: 11Feb12: Moved .application~setDefaults() to app startup file.
-                     changed to .application~addToConstDir() here.
-    v00-05: 19Feb12: Moved .Application~addToConstDir statement from newInstance
-                     method to top of file - just before ::requires statement(s).
-    v00-06 01Apr12: Deleted last param of create menu (new ooDialog)
+    v01-00 07Jun12: First version
 
-  [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderListView SUBCLASS RcDialog PUBLIC
@@ -184,13 +170,8 @@
   ::METHOD itemSelected unguarded
     expose lvOrders --btnShowOrder
     use arg id, itemIndex, columnIndex, keyState
-    --say "OrderListView-itemSelected: itemIndex, columnIndex, keyState:" itemIndex columnIndex keyState
-    --say "OrderListView-itemSelected: item selected is:"lvOrders~selected
     if itemIndex > -1 then self~enableControl("IDC_ORDLIST_SHOWORDER")
     else self~disableControl("IDC_ORDLIST_SHOWORDER")
-    --text = list~itemText(itemIndex)
-    --colText = list~itemText(itemIndex, 1)
-    --parent~insertNewItem(text, colText)
 
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -248,10 +229,13 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRSolv (Human-Readable Strings for OrderListView)		  v00-02 28Jan12
+  HRSolv (Human-Readable Strings for OrderListView)		  v01-00 07Jun12
   ---
   The HRSolv class provides constant character strings for user-visible messages
   issued by the OrderListView class.
+
+  Changes:
+   v01-00 07Jun12: First Version
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 

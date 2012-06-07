@@ -37,7 +37,7 @@
 
 /* ooDialog User Guide
    Samples\Popups
-   Popups.rex 							  v01-02 16Mar12
+   Popups.rex 							  v01-00 07Jun12
 
    The four dialogs in this file illustrate how popups can be tested in
    stand-alone mode with a single code base. If a given dialog pops up another
@@ -55,10 +55,8 @@
 
    The default is runtype = Parent.
 
-   Change Log:
-   v01-00 18Sep11: First Version.
-   v01-01 01Mar12: Added a "help"; corrected a typo in a comment.
-   v01-02 16Mar12: Changes to comments only.
+   Changes:
+     v01-00 07Jun12: First Version
 
 ------------------------------------------------------------------------------*/
 

@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The ProductModel and ProductData Components	  v01-00 03Jun12
+   Exercise 05: The ProductModel and ProductData Components	  v01-00 03Jun12
 
    Contains:  classes "ProductModel", "ProductResource", and "ProductDT".
 

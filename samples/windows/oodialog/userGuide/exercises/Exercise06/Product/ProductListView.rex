@@ -35,24 +35,17 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise06: The Product List View				  v00-06 01Apr12
+   Exercise06: The Product List View				  v01-00 06Jun12
 
    Contains: classes "ProductListView, HRSplv (for human-readable strings)
 
    Pre-requisites: ProductListView.rc, ProductListView.h, ProdList.ico
 
-   Description: An "intermediate" component - called by OrderMgmt,
-                calls "CustomerView".
+   Description: An "intermediate" component - called by OrderMgr,
+                invokes "ProductView".
 
    Changes:
-   v00-01 26Aug11.
-   v00-02 19Sep11: Corrected for standalone invocation.
-   v00-03 12Oct11: Added methods for menu items (show msg box - "Not Implemented")
-		   Also added class HRS for display strings.
-   v00-04 28Jan11  Change name of class HRS to HRSplv to allow for multiple
-     		   HRS classes in same file at some future time.
-   v00-05 19Feb12: ProductListView - moved .Application~addToConstDir
-   v00-06 01Apr12: Minor chnage (ooDialog updated)
+   v01-00 06Jun12: First version.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
@@ -66,20 +59,12 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductListView						  v00-05 19Feb12
+  ProductListView						  v01-00 06Jun12
   -------------
   The view of a list of products.
   Changes:
-    v00-01: First version
-    v00-02: Corrected for standalone invocation.
-    v00-03 28Jan12: Changed name of HRS class to HRSplv.
-    v00-04 11Feb12: Add .application~addToConstDir to this file.
-    v00-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
-                    method to top of file - just before ::requires statement(s).
-    v00-06 01Apr12: Deleted last param ('self') of createMenuBar
+    v01-00: First version
 
-
-  [interface (idl format)]  <<optional>>
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS ProductListView SUBCLASS RcDialog PUBLIC
@@ -234,7 +219,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRSplv (Human-Readable Strings for ProductListView)		  v00-02 28Jan12
+  HRSplv (Human-Readable Strings for ProductListView)		  v01-00 06Jun12
   ------
   The HRS class provides constant character strings for user-visible messages
   issued by the ProductListView class.

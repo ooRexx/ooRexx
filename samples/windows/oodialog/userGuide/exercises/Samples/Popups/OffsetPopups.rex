@@ -37,7 +37,7 @@
 
 /* ooDialog User Guide
    Samples\Popups
-   OffsetPopups.rex	 					  v01-02 16Mar12
+   OffsetPopups.rex	 					  v01-00 07Jun12
 
    The four dialogs in this file illustrate how popups can be tested in
    stand-alone mode with a single code base. If a given popup pops up another
@@ -56,11 +56,8 @@
       is visually offset from the ancestor that surfaced it.
    The default is runtype = Parent and offset = 0.
 
-   Change Log:
-   v01-01 01Mar12: First Version
-   v01-02 16Mar12: Changed to make parent define child's position, then make
-   		   child appear according to parent's offset instruction.
-   		   Much simpler - and arguably better encapsulation.
+   Changes:
+     v01-00 07Jun12: First Version
 
 ------------------------------------------------------------------------------*/
 

@@ -36,24 +36,14 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 06: The OrderManagementBaseView class
-   OrderMgrBaseView.rex						  v00-08 19Feb12
+   OrderMgrBaseView.rex						  v01-00 07Jun12
 
    Contains: classes "OrderMgrBaseBase", HRSombv (private).
 
    Pre-requisite files: OrderMgrBaseView.rc, OrderMgrBaseView.h.
 
    Changes:
-     v00-01 22Aug11: First version.
-     v00-02 28Sep11: Add OrderList icon (a bitmap).
-     v00-03 29Sep11: Corrected wrong window size on open.
-     v00-04 03Oct11: Re-factor code to move all app function (including ListView
-                     setup) to the OrderMgrView sublcass. No function/appearance
-                     change.
-     v00-05 28Jan12: Changed class name HRS to HRSombv to allow for multiple
-     		     HRS classes in same file at some future time.
-     v00-06 15Feb12: Changes to comments only.
-     v00-07 11Feb12: Add .application~setDefaults to this file.
-     v00-08 19Feb12: OrderMgrBaseView: moved .Application~ stmt to top of file.
+     v01-00 07Jun12: First Version
 
 
    To Do: - Add Find Customer, Find Product (buttons or menu items?)
@@ -74,7 +64,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderMgrBaseView						  v00-07 19Feb12
+  OrderMgrBaseView						  v01-00 07Jun12
   -----------------
   The base "view" (or "gui") part of the OrderMgr component (part of the
   sample Order Management application). This class provides for (a) handling
@@ -82,15 +72,8 @@
   in the dialog which is a ListView control.
 
    Changes:
-   v00-06 11Feb12: Moved .application~setDefaults() to app startup file.
-                   changed to .application~addToConstDir() here.
-   v00-07 19Feb12: Moved .Application~addToConstDir statement from newInstance
-                   method to top of file - just before ::requires statement(s).
+     v01-00 07Jun12: First Version
 
-
-  interface iOrderMgrBaseView {
-    void newInstance();
-  }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderMgrBaseView SUBCLASS UserDialog PUBLIC
@@ -133,7 +116,7 @@
       return
     end
 
-    self~connectResize('onResize', .true)
+    self~connectResize('onResize')
     self~connectResizing('onResizing')
     self~connectSizeMoveEnded('onSizeMoveEnded')
 
@@ -380,7 +363,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRSombv (Human-Readable Strings for OrderMgrViewBase)		  v00-01 21Aug11
+  HRSombv (Human-Readable Strings for OrderMgrViewBase)		  v01-00 07Jun12
   ---
   The OmHRS class provides constant character strings for user-visible messages
   issued by the OrderMgrBaseView class.

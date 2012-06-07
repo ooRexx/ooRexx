@@ -36,14 +36,13 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise06: 		Stand-alone startup for Product
-   startupProduct.rex 						  v01-01 11Feb12
+   startupProduct.rex 						  v01-00 06Jun12
 
    Contains: 	   Startup code.
    Pre-requisites: Must be run from the parent folder of the Product folder.
 
    Changes:
-   v01-00 12Sep11: First Version
-   v01-01 11Feb12: Add .application~setDefaults to this file.
+   v01-00 06Jun12: First Version
 
    Outstanding Problems: None reported.
 *******************************************************************************/

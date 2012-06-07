@@ -35,10 +35,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: RequiresList.rex 				  v00-04 03Oct11
+   Exercise 06: RequiresList.rex 				  v01-00 07Jun12
 
    Contains: 	   The list of View components that OrderMgrView requires.
-
 
    Pre-requisites: Class "OrderMgrView
 
@@ -47,10 +46,7 @@
    Outstanding Problems: None reported.
 
    Changes:
-   v00-01 21Aug11: First version.
-   v00-02 19Sep11: Added required copyright notice.
-   v00-03 28Sep11: Added OrderListView.
-   v00-04 03Oct11: Commented out 'say'.
+     v01-00 07Jun12: First Version
 ------------------------------------------------------------------------------*/
 
 --say "RequiresList."

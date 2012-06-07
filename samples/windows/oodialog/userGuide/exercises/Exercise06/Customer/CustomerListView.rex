@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: The Customer ListView				  v01-07 01Apr12
+   Exercise 06: The Customer ListView				  v01-00 06Jun12
 
    Contains: classes "CustomerListView" and "HRSclv".
 
@@ -46,18 +46,7 @@
                 This is an "Intermediate" component - it is invoked by OrderMgmt,
                 and invokes CustomerView.
 
-   v01-00 10Sep11: First Version
-   v01-01 19Sep11: Corrected for stand-alone invocation.
-   v01-02 12Oct11: Tidy up code.
-   		   Added code to catch menu selections - displays "no function"
-   		   msg box.
-   v01-03 28Jan12: Changed class name HRS to HRSclv to allow for multiple
-     		   HRS classes in same file at some future time.
-   v01-04 11Feb12: CustomerListView - Changed .application()
-   v01-05 19Feb12: CustomerListView - moved .Application~addToConstDir
-   v01-06 29Mar12: CustomerListView - Very minor mods.
-   v01-07 01Apr12: Deleted self from createMenuBar().
-
+   v01-00 06Jun12: First Version.
 
    Outstanding Problems: None reported.
 *******************************************************************************/
@@ -109,6 +98,7 @@
     Dialog Setup Methods
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD init
     forward class (super) continue
     if \ self~createMenuBar then do		-- if there was a problem
@@ -244,12 +234,11 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRSclv (Human-Readable Strings for CustomerListView)		  v00-02 28Jan12
+  HRSclv (Human-Readable Strings for CustomerListView)		  v01-00 06Jun12
   ---
   The HRSclv class provides constant character strings for user-visible messages
   issued by the CustomerListView class.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
-
 
 ::CLASS HRSclv PRIVATE		-- Human-Readable Strings
   ::CONSTANT noMenu       "This menu item is not yet implemented."

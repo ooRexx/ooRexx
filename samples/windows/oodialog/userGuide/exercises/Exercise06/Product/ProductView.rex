@@ -35,31 +35,22 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: ProductView.rex - The ProductView component       v02-06 01Apr12
+   Exercise 06: ProductView.rex - The ProductView component       v01-01 06Jum12
 
    Contains: 	   classes "ProductView", "AboutDialog", and "HRSpv".
+
    Pre-requisites: ProductView.dll, ProductView.h, Pproduct.ico, ProductIcon.bmp,
    		   Support\NumberOnlyEditEx.cls (copied from ooDialog Samples
    		   into the folder Exercise06\Support)
 
    Description: A sample Product View component - part of the sample
         	Order Management application.
-        	This is a "leaf" component - invoked by ProductList.
 
    Outstanding Problems: None reported.
 
    Changes:
-   v01-00 Initial version for Exercise05.
-   v02-00 09Sep11: Changed to be invoked from its own folder. This has meant
-                   changing file references to include the Product folder.
-   v02-01 19Sep11: Changed to provide for standalone invocation.
-   v02-02 29Nov11: Brought up to date with Ex05 version (added state attribute
-                   plus better "cancel" method).
-   v02-03 01Dec11: Changed OK/Cancel to Yes/No on "cancel while in update" dialog.
-   v02-04 11Feb12: ProductView - Changed .application()
-                   HRS class name changed to HRSpv
-   v02-05 19Feb12: ProductView: moved .Application~ stmt to top of file.
-   v02-06 01Apr12: Minor changes to ProductView
+   v01-00 03Jun12: First version for Exercise05.
+   v01-01 06Jun12: Minor changes for Exercise06.
 
 ------------------------------------------------------------------------------*/
 
@@ -73,18 +64,16 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  ProductView							  v02-05 19Feb12
+  ProductView							  v01-01 06Jun12
   -----------
   The "view" part of the Product component. Now designed to operate from its own
   folder. Should be invoked from immediately outside the Product folder.
   [interface (idl format)]
 
   Changes:
-  v02-04 11Feb12: Moved .application~setDefaults() to app startup file.
-                  Changed to .application~addToConstDir() here.
-  v02-05 19Feb12: Moved .Application~addToConstDir statement from newInstance
-                  method to top of file - just before ::requires statement(s).
-  v02-06 01Apr12  Added msgbox for menu 'Print'. Commented out all 'say's.
+  v01-00 03Jun12: First version.
+     v01-01 06Jun12: Minor changes for Exercise06.
+
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS ProductView SUBCLASS ResDialog PUBLIC
@@ -121,7 +110,7 @@
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD activate UNGUARDED
-    use arg rootDlg, productNo					--ADDED FOR EXERCISE06.
+    use arg rootDlg, productNo							--ADDED FOR EXERCISE06.
     --say "ProductView-activate-01: rootDlg =" rootDlg
     self~dialogState = "closable"
     if rootDlg = "SA" then self~execute("SHOWTOP","IDI_PROD_DLGICON")		--ADDED FOR EXERCISE06.
@@ -142,7 +131,7 @@
     prodControls[ecProdPrice]      = self~newEdit("IDC_PROD_LIST_PRICE")
     prodControls[ecUOM]            = self~newEdit("IDC_PROD_UOM")
     prodControls[ecProdDescr]      = self~newEdit("IDC_PROD_DESCRIPTION")
-    prodControls[gbSizes]          = self~newEdit("IDC_PROD_SIZE_GROUP")		-- Do we ever need this?
+    prodControls[gbSizes]          = self~newEdit("IDC_PROD_SIZE_GROUP")
     prodControls[rbSmall]          = self~newRadioButton("IDC_PROD_RADIO_SMALL")
     prodControls[rbMedium]         = self~newRadioButton("IDC_PROD_RADIO_MEDIUM")
     prodControls[rbLarge]          = self~newRadioButton("IDC_PROD_RADIO_LARGE")
@@ -441,7 +430,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  AboutDialog							v01-00 17May11
+  AboutDialog							  v01-00 03Jun12
   -------------
   The "About" class - shows a dialog box that includes a bitmap - part of the
   ProductView component.
@@ -481,7 +470,7 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  Human-Readable Strings (HRSpv)				  v00-03 11Feb12
+  Human-Readable Strings (HRSpv)				  v01-00 03Jun12
   ------------------------------
    The HRSpv class provides constant character strings for user-visible messages.
 

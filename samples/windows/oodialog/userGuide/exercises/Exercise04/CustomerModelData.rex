@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The CustomerModel and CustomerData Classes	  v00-01 29Jly11
+   Exercise 04: The CustomerModel and CustomerData Classes	  v01-00 07Jun12
 
    Contains: 	   classes "CustomerModel" and "CustomerResource".
    Pre-requisites: None.
@@ -44,21 +44,18 @@
    None.
 
    Changes:
-   v00-01: 29Jly11
+   v01-00 07Jun12: First version.
 ------------------------------------------------------------------------------*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerModel							  v00-01 29Jly11
+  CustomerModel							  v01-00 07Jun12
   ------------
   The "model" part of the Customer component.
 
-  interface customerModel{
-    cusstomerModel newInstance()  -- Class method.
-    null	  activate()
-    aDirectory    query()	  -- Returns Customer Data in a directory instance.
-  };
+   Changes:
+     v01-00 07Jun12: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS CustomerModel PUBLIC
@@ -95,10 +92,12 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerData							  v00-01 29Jly11
+  CustomerData							  v01-00 07Jun12
   ------------
   The "data" part of the Customer component.
-  [interface (idl format)]
+
+   Changes:
+     v01-00 07Jun12: First version.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS CustomerData PUBLIC

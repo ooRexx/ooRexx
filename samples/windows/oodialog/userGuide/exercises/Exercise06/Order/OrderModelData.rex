@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 04: The OrderModel and OrderData Classes	  	  v00-01 19Sep11
+   Exercise 06: The OrderModel and OrderData Classes	  	  v01-00 07Jun12
 
    Contains: 	   classes "OrderModel" and "OrderResource".
    Pre-requisites: None.
@@ -44,21 +44,16 @@
    None.
 
    Changes:
-   v00-01: 29Jly11
+   v01-00 07Jun12: First version.
 ------------------------------------------------------------------------------*/
 
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderModel							  v00-01 19Sep11
+  OrderModel							  v01-00 07Jun12
   ------------
   The "model" part of the Order component.
 
-  interface OrderModel{
-    cusstomerModel newInstance()  -- Class method.
-    null	  activate()
-    aDirectory    query()	  -- Returns Order Data in a directory instance.
-  };
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderModel PUBLIC
@@ -95,10 +90,10 @@
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderData							  v00-01 19Sep11
+  OrderData							  v01-00 07Jun12
   ------------
   The "data" part of the Order component.
-  [interface (idl format)]
+
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderData PUBLIC

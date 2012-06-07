@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: OrderMgrView.rex 				  v00-07 27Mar12
+   Exercise 06: OrderMgrView.rex 				  v01-00 07Jun12
 
    Contains: 	   class: "OrderMgrView", "HRSomv"
 
@@ -50,18 +50,7 @@
    Outstanding Problems: None reported.
 
    Changes:
-   v00-01 21Aug11: First version.
-   v00-02 30Sep11: Added OrderForm.
-   v00-03 12Oct11: Re-factored - moved all ListView matters (except re-sizing)
-                   from OrderMgmtBaseView to here.
-                   Add methods for menu items.
-   v00-04 26Jan12: Changed call orderMgmt\RequiresList.rex to
-                   call orderMgr\RequiresList.rex
-   v00-05 28Jan12: Very minor changes to some "say"s.
-        	   Changed class name HRS to HRSomv to allow for multiple
-     		   HRS classes in same file at some future time.
-   v00-06 15Feb12: Changes to comments only (change "OrderManagement" to "OrderMgr")
-   v00-07 27Mar12: Tidy-up - delete a couple of commented-out instructions.
+     v01-00 07Jun12: First Version
 
 ------------------------------------------------------------------------------*/
 
@@ -72,15 +61,12 @@ call "OrderMgr\RequiresList.rex"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderMgrView							  v00-06 05Feb12
+  OrderMgrView							  v01-00 07Jun12
   --------------------
   The "application" part of the "Order Manager View" component. This class
   provides for all function except re-sizing and basic setup (OrderMgrBaseView
   has the .h file and the .rc file for the menu).
 
-  interface iOrderMgrView {
-    void newInstance();
-  }
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderMgrView SUBCLASS OrderMgrBaseView PUBLIC
@@ -286,7 +272,7 @@ call "OrderMgr\RequiresList.rex"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  HRSomv (Human-Readable Strings for OrderMgrView)		  v00-01 03Oct11
+  HRSomv (Human-Readable Strings for OrderMgrView)		  v01-00 07Jun12
   ---
   The HRSomv class provides constant character strings for user-visible messages
   issued by the OrderMgrBaseView class.
