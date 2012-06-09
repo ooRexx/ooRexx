@@ -549,6 +549,19 @@ RexxString *RexxMutableBuffer::makeString()
     return new_string(data->getData(), dataLength);
 }
 
+/**
+ * Handle the primitive class makeString optimization.  This
+ * is required because MutableBuffer implements a
+ * STRING method.
+ *
+ * @return The string value of the buffer
+ */
+RexxString *RexxMutableBuffer::primitiveMakeString()
+{
+    // go straight to the string handler
+    return this->makeString();
+}
+
 
 /******************************************************************************/
 /* Arguments:  String position for substr                                     */

@@ -93,6 +93,7 @@ class RexxMutableBufferClass : public RexxClass {
    RexxObject        *setBufferSize(RexxInteger*);
    RexxArray         *makearray(RexxString *div);
    RexxString        *makeString();
+   RexxString        *primitiveMakeString();
    RexxInteger       *countStrRexx(RexxString *needle);
    RexxInteger       *caselessCountStrRexx(RexxString *needle);
    RexxMutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
