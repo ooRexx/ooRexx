@@ -91,7 +91,8 @@ class RexxMutableBufferClass : public RexxClass {
 
    RexxInteger       *getBufferSize() { return new_integer(bufferLength); }
    RexxObject        *setBufferSize(RexxInteger*);
-   RexxArray         *makearray(RexxString *div);
+   RexxArray         *makeArrayRexx(RexxString *div);
+   RexxArray         *makeArray();
    RexxString        *makeString();
    RexxString        *primitiveMakeString();
    RexxInteger       *countStrRexx(RexxString *needle);

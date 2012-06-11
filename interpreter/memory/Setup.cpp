@@ -921,7 +921,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_AND                          ,TheStringBehaviour, CPPM(RexxString::andOp), 1);
   defineKernelMethod(CHAR_OR                           ,TheStringBehaviour, CPPM(RexxString::orOp), 1);
   defineKernelMethod(CHAR_XOR                          ,TheStringBehaviour, CPPM(RexxString::xorOp), 1);
-  defineKernelMethod(CHAR_MAKEARRAY                    ,TheStringBehaviour, CPPM(RexxString::makeArray), 1);
+  defineKernelMethod(CHAR_MAKEARRAY                    ,TheStringBehaviour, CPPM(RexxString::makeArrayRexx), 1);
   defineKernelMethod(CHAR_LOWER                        ,TheStringBehaviour, CPPM(RexxString::lowerRexx), 2);
   defineKernelMethod(CHAR_UPPER                        ,TheStringBehaviour, CPPM(RexxString::upperRexx), 2);
   defineKernelMethod(CHAR_MATCH                        ,TheStringBehaviour, CPPM(RexxString::match), 4);
@@ -971,7 +971,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_SETBUFFERSIZE                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::setBufferSize), 1);
 
   defineKernelMethod(CHAR_LENGTH                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lengthRexx), 0);
-  defineKernelMethod(CHAR_MAKEARRAY                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::makearray), 1);
+  defineKernelMethod(CHAR_MAKEARRAY                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::makeArrayRexx), 1);
   defineKernelMethod(CHAR_STRING                       ,TheMutableBufferBehaviour, CPPM(RexxObject::makeStringRexx), 0);
   defineKernelMethod(CHAR_COUNTSTR                     ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::countStrRexx), 1);
   defineKernelMethod(CHAR_CASELESSCOUNTSTR             ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessCountStrRexx), 1);

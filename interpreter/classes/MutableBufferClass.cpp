@@ -550,6 +550,17 @@ RexxString *RexxMutableBuffer::makeString()
 }
 
 /**
+ * Baseclass optimization for handling request array calls.
+ *
+ * @return The string object converted to an array using default arguments.
+ */
+RexxArray  *RexxMutableBuffer::makeArray()
+{
+    // forward to the Rexx version with default arguments
+    return this->makeArrayRexx(OREF_NULL);
+}
+
+/**
  * Handle the primitive class makeString optimization.  This
  * is required because MutableBuffer implements a
  * STRING method.
@@ -673,7 +684,7 @@ RexxString *RexxMutableBuffer::subchar(RexxInteger *positionArg)
 }
 
 
-RexxArray *RexxMutableBuffer::makearray(RexxString *div)
+RexxArray *RexxMutableBuffer::makeArrayRexx(RexxString *div)
 /******************************************************************************/
 /* Function:  Split string into an array                                      */
 /******************************************************************************/

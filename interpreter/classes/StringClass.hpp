@@ -159,6 +159,7 @@ inline char IntToHexDigit(int n)
    RexxNumberString *numberString();
    RexxInteger *integerValue(size_t);
    RexxString  *makeString();
+   RexxArray   *makeArray();
    RexxString  *primitiveMakeString();
    void         copyIntoTail(RexxCompoundTail *buffer);
    RexxString  *stringValue();
@@ -312,7 +313,7 @@ inline char IntToHexDigit(int n)
    RexxInteger *equals(RexxString *other);
    RexxInteger *caselessEquals(RexxString *other);
 
-   RexxArray   *makeArray(RexxString *);
+   RexxArray   *makeArrayRexx(RexxString *);
 
 /****************************************************************************/
 /*                                                                          */

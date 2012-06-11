@@ -1441,7 +1441,7 @@ void RexxNativeActivation::callRegisteredRoutine(RoutineClass *_routine, Registe
         enableVariablepool();                // enable the variable pool interface here
         activity->releaseAccess();           /* force this to "safe" mode         */
         // now process the function call
-        functionrc = (*methp)(functionName->getStringData(), count, argPtr, queuename, &funcresult);
+        functionrc = (int)(*methp)(functionName->getStringData(), count, argPtr, queuename, &funcresult);
         activity->requestAccess();           /* now in unsafe mode again          */
     }
     catch (RexxActivation *)

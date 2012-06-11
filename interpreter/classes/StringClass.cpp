@@ -211,6 +211,17 @@ RexxString  *RexxString::makeString()
     }
 }
 
+/**
+ * Baseclass optimization for handling request array calls.
+ *
+ * @return The string object converted to an array using default arguments.
+ */
+RexxArray  *RexxString::makeArray()
+{
+    // forward to the Rexx version with default arguments
+    return this->makeArrayRexx(OREF_NULL);
+}
+
 
 void RexxString::copyIntoTail(RexxCompoundTail *tail)
 /******************************************************************************/
@@ -1720,7 +1731,7 @@ RexxObject *RexxString::xorOp(RexxObject *other)
     }
 }
 
-RexxArray *RexxString::makeArray(RexxString *div)
+RexxArray *RexxString::makeArrayRexx(RexxString *div)
 /******************************************************************************/
 /* Function:  Split string into an array                                      */
 /******************************************************************************/
