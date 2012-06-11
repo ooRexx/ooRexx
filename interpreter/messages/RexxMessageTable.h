@@ -104,6 +104,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Incomplete_do_then)
       MINOR(Error_Incomplete_do_else)
       MINOR(Error_Incomplete_do_otherwise)
+      MINOR(Error_Incomplete_do_loop)
   MAJOR(Error_Invalid_hex)
       MINOR(Error_Invalid_hex_hexblank)
       MINOR(Error_Invalid_hex_binblank)

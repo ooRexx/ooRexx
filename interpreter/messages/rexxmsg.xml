@@ -455,8 +455,8 @@ Say NOT EQUALS
     <Component>Rexx</Component>
     <Severity>Warning</Severity>
     <SymbolicName>Error_Incomplete_do</SymbolicName>
-    <Text>Incomplete DO/SELECT/IF</Text>
-    <Explanation><para>At the end of the program or the string for an INTERPRET instruction, a DO or SELECT instruction was found without a matching END or an IF clause that is not followed by a THEN clause.  Putting the name of the control variable on each END closing a controlled loop can help locate this kind of error.</para></Explanation>
+    <Text>Incomplete DO/LOOP/SELECT/IF</Text>
+    <Explanation><para>At the end of the program or the string for an INTERPRET instruction, a DO, LOOP, or SELECT instruction was found without a matching END or an IF clause that is not followed by a THEN clause.  Putting the name of the control variable on each END closing a controlled loop can help locate this kind of error.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>14</Code>
@@ -502,6 +502,15 @@ Say NOT EQUALS
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incomplete_do_otherwise</SymbolicName>
         <Text>OTHERWISE on line <Sub position="1" name="line_number"/> requires matching END</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>14</Code>
+        <Subcode>005</Subcode>
+        <MessageNumber>725</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incomplete_do_loop</SymbolicName>
+        <Text>LOOP instruction on line <Sub position="1" name="line_number"/> requires matching END</Text>
       </SubMessage>
     </Subcodes>
   </Message>

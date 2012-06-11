@@ -3495,7 +3495,7 @@ RexxCode *RexxSource::translateBlock(
                 controltype = this->topDo()->getType();
             }
         }
-        if (type == KEYWORD_IF || type == KEYWORD_SELECT || type == KEYWORD_DO)
+        if (type == KEYWORD_IF || type == KEYWORD_SELECT || type == KEYWORD_DO || type == KEYWORD_LOOP)
         {
             this->addClause(_instruction);   /* add to instruction heap           */
         }
@@ -3644,7 +3644,7 @@ RexxCode *RexxSource::translateBlock(
                 second = this->popDo();        /* get the top of the queue          */
                 type = second->getType();      /* get the instruction type          */
                                                /* not working on a block?           */
-                if (type != KEYWORD_SELECT && type != KEYWORD_OTHERWISE && type != KEYWORD_DO)
+                if (type != KEYWORD_SELECT && type != KEYWORD_OTHERWISE && type != KEYWORD_DO && type != KEYWORD_LOOP)
                 {
                     if (type == KEYWORD_ELSE)    /* on an else?                       */
                     {
@@ -3681,6 +3681,7 @@ RexxCode *RexxSource::translateBlock(
                 break;
 
             case  KEYWORD_DO:                // start of new DO group (also picks up LOOP instruction)
+            case  KEYWORD_LOOP:
                 this->pushDo(_instruction);    /* add this to the control queue     */
                 break;
 
@@ -5541,6 +5542,10 @@ void RexxSource::blockError(
         case KEYWORD_DO:                   /* incomplete DO                     */
             /* raise an error                    */
             syntaxError(Error_Incomplete_do_do, _instruction);
+            break;
+        case KEYWORD_LOOP:                   /* incomplete LOOP                     */
+            /* raise an error                    */
+            syntaxError(Error_Incomplete_do_loop, _instruction);
             break;
 
         case KEYWORD_SELECT:               /* incomplete SELECT                 */

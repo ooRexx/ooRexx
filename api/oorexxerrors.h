@@ -101,6 +101,7 @@
 #define Rexx_Error_Incomplete_do_then                           14003
 #define Rexx_Error_Incomplete_do_else                           14004
 #define Rexx_Error_Incomplete_do_otherwise                      14901
+#define Rexx_Error_Incomplete_do_loop                           14005
 #define Rexx_Error_Invalid_hex                                  15000
 #define Rexx_Error_Invalid_hex_hexblank                         15001
 #define Rexx_Error_Invalid_hex_binblank                         15002

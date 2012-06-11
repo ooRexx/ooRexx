@@ -64,7 +64,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Unexpected_end    "Unexpected or unmatched END"
    Error_Control_stack    "Control stack full"
    Error_Invalid_character    "Invalid character in program"
-   Error_Incomplete_do    "Incomplete DO/SELECT/IF"
+   Error_Incomplete_do    "Incomplete DO/LOOP/SELECT/IF"
    Error_Invalid_hex    "Invalid hexadecimal or binary string"
    Error_Label_not_found    "Label not found"
    Error_Unexpected_procedure    "Unexpected PROCEDURE"
@@ -628,6 +628,7 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_compiled_method_invocation    "       *-* Compiled method &1 with scope ""&2"""
    Message_Translations_compiled_routine_invocation    "       *-* Compiled routine &1"
    Message_Translations_no_source_available    "Package ""&1"" (no source available)"
+   Error_Incomplete_do_loop    "LOOP instruction on line &1 requires matching END"
    
 END
 

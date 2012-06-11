@@ -101,6 +101,7 @@
 #define Error_Incomplete_do_then                           14003
 #define Error_Incomplete_do_else                           14004
 #define Error_Incomplete_do_otherwise                      14901
+#define Error_Incomplete_do_loop                           14005
 #define Error_Invalid_hex                                  15000
 #define Error_Invalid_hex_hexblank                         15001
 #define Error_Invalid_hex_binblank                         15002

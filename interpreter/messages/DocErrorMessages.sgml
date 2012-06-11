@@ -346,11 +346,11 @@ Say NOT EQUALS
 </variablelist>
 </section>
 <section id="ERR14">
-<title>Error 14 - Incomplete DO/SELECT/IF</title>
+<title>Error 14 - Incomplete DO/LOOP/SELECT/IF</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>At the end of the program or the string for an INTERPRET instruction, a DO or SELECT instruction was found without a matching END or an IF clause that is not followed by a THEN clause.  Putting the name of the control variable on each END closing a controlled loop can help locate this kind of error.</para>
+<para>At the end of the program or the string for an INTERPRET instruction, a DO, LOOP, or SELECT instruction was found without a matching END or an IF clause that is not followed by a THEN clause.  Putting the name of the control variable on each END closing a controlled loop can help locate this kind of error.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -375,6 +375,12 @@ Say NOT EQUALS
 <term>004</term>
 <listitem>
 <para>ELSE on line <emphasis role="italic">line_number</emphasis> must be followed by an instruction</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>005</term>
+<listitem>
+<para>LOOP instruction on line <emphasis role="italic">line_number</emphasis> requires matching END</para>
 </listitem>
 </varlistentry>
 <varlistentry>
