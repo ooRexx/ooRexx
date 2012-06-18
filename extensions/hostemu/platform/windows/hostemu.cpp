@@ -262,9 +262,9 @@ unsigned long SetRexxVar (
 /*                                                                    */
 /*--------------------------------------------------------------------*/
 
-RexxReturnCode GrxHost(PCONSTRXSTRING command,
-                       unsigned short int *flags,
-                       PRXSTRING retc)
+RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
+                                 unsigned short int *flags,
+                                 PRXSTRING retc)
    {
 
    /* Local function variables */

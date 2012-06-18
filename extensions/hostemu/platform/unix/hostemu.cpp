@@ -263,9 +263,9 @@ unsigned long SetRexxVar (
 /*                                                                    */
 /*--------------------------------------------------------------------*/
 
-RexxReturnCode GrxHost(PCONSTRXSTRING command,
-                       unsigned short int *flags,
-                       PRXSTRING retc)
+RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
+                                 unsigned short int *flags,
+                                 PRXSTRING retc)
    {
 
    /* Local function variables */
@@ -421,7 +421,7 @@ static unsigned long ExecIO_Write_From_Stem (
    char *      Stem;             /* Stem variable name                */
    char *      Index;            /* Stem index value (string)         */
    RXSTRING rxVal;               /* Rexx stem variable value          */
-   int      elements;  
+   int      elements;
 
    /* process request */
    if (ExecIO_Options.lRcdCnt == 0)
@@ -803,7 +803,7 @@ static long queued (
    {
 
    /* local function variables */
-   size_t elements;   
+   size_t elements;
 
    RexxQueryQueue("SESSION", &elements);
    return (long)elements;

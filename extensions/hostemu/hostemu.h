@@ -51,9 +51,9 @@
 
 int yyparse (
    void);                        /* no arguments                      */
-RexxReturnCode GrxHost(PCONSTRXSTRING command,
-                       unsigned short int *flags,
-                       PRXSTRING retc);
+RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
+                                 unsigned short int *flags,
+                                 PRXSTRING retc);
 
 
 /*--------------------------------------------------------------------*/
