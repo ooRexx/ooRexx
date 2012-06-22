@@ -2199,7 +2199,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setAppIcon_atr, RexxObjectPtr, icon, CSELF, pCS
             pcpsd->iconID = (uint32_t)result;
         }
 
-        context->SetObjectVariable("ICON", icon);
+        context->SetObjectVariable("APPICON", icon);
     }
 
     return NULLOBJECT;
