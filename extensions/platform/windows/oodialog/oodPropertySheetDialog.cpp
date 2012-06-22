@@ -2189,7 +2189,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setAppIcon_atr, RexxObjectPtr, icon, CSELF, pCS
         {
             if ( type != IMAGE_ICON )
             {
-                wrongArgValueException(context->threadContext, 1, "Icon, Cursor", getImageTypeName(type));
+                invalidImageException(context->threadContext, 1, "Icon", getImageTypeName(type));
                 return NULLOBJECT;
             }
             pcpsd->hIcon = (HICON)result;
