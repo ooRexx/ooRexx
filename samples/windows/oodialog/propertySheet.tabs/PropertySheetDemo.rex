@@ -62,10 +62,9 @@
   pages = .array~of(p1, p2, p3, p4, p5)
   propDlg = .PropertySheetDemoDlg~new(pages, "NOAPPLYNOW", "ooRexx Property Sheet with Controls")
 
-  -- For the appliation icon of the dialog we will use the ooRexx icon which is
-  -- available for general use from oodialog.dll.
-  propDlg~resources = .ResourceImage~new("oodialog.dll", propDlg)
-  propDlg~appIcon = "IDI_DLG_OOREXX"
+  -- Do any customization of the property sheet dialog by setting the values of
+  -- the appropriate attributes.  However, for this example we do not do any
+  -- customization.
 
   -- Show the property sheet.
   propDlg~execute

@@ -132,6 +132,7 @@ extern int32_t    oodResolveSymbolicID(RexxThreadContext *, RexxObjectPtr, RexxO
 extern bool       oodSafeResolveID(int32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, size_t, bool);
 extern int32_t    resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPtr self);
+extern HICON      getOORexxIcon(uint32_t id);
 
 extern bool       requiredOS(RexxMethodContext *context, const char *method, const char *osName, os_name_t os);
 extern bool       requiredOS(RexxMethodContext *context, os_name_t os, const char *msg, const char *osName);

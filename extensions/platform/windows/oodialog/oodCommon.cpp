@@ -48,6 +48,7 @@
 #include <dlgs.h>
 #include <malloc.h>
 #include <shlwapi.h>
+#include "oodResourceIDs.hpp"
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 
@@ -1023,6 +1024,30 @@ int32_t resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPt
     }
 
     return id;
+}
+
+
+/**
+ * Returns one of small icons bound into the ooDialog.dll.
+ *
+ * @param id
+ *
+ * @return HICON
+ *
+ * @remarks  This should never return NULL unless the caller used the wrong ID.
+ */
+HICON getOORexxIcon(uint32_t id)
+{
+    HICON icon = NULL;
+
+    if ( IDI_DLG_MIN_ID <= id && id <= IDI_DLG_MAX_ID )
+    {
+        icon = (HICON)LoadImage(MyInstance, MAKEINTRESOURCE(id), IMAGE_ICON,
+                                GetSystemMetrics(SM_CXSMICON),
+                                GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+    }
+
+    return icon;
 }
 
 DWORD oodGetSysErrCode(RexxThreadContext *c)

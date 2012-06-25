@@ -2109,62 +2109,6 @@ HWND getValidPageHwnd(RexxMethodContext *c, pCPropertySheetDialog pcpsd, RexxObj
 }
 
 
-/** PropertySheetDialog::pages          [Attrbiute Get]
- *
- *  Gets the array of page dialogs for this property sheet.
- *
- *  @return  An array of Rexx dialogs.  Each index in the array contains the
- *           Rexx dialog for the page matching the index.  Page indexes are
- *           one-based.
- *
- *  @remarks.  There is no set method for this attribute, it is set in the
- *             native code when the user instantiates the property sheet.
- *
- *             We return a copy of the actual array so that the user can not
- *             alter the actual array.
- */
-RexxMethod1(RexxObjectPtr, psdlg_getPages_atr, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    uint32_t count = pcpsd->pageCount;
-    RexxArrayObject pages = context->NewArray(count);
-
-    for ( uint32_t i = 0; i < count; i++ )
-    {
-        context->ArrayPut(pages, pcpsd->rexxPages[i], i + 1);
-    }
-    return pages;
-}
-
-
-/** PropertySheetDialog::caption()      [Attribute set]
- *
- */
-RexxMethod2(RexxObjectPtr, psdlg_setCaption_atr, CSTRING, text, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-    setCaption(context, pcpsd, text);
-    return NULLOBJECT;
-}
-
-
-/** PropertySheetDialog::resources()      [Attribute set]
- *
- */
-RexxMethod2(RexxObjectPtr, psdlg_setResources_atr, RexxObjectPtr, resourceImage, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    PRESOURCEIMAGE ri = rxGetResourceImage(context, resourceImage, 1);
-    if ( ri != NULL )
-    {
-        pcpsd->hInstance = ri->hMod;
-        context->SetObjectVariable("RESOURCES", resourceImage);
-    }
-    return NULLOBJECT;
-}
-
 /** PropertySheetDialog::appIcon()      [Attribute set]
  *
  *  Sets the icon for the appIcon attribute.  The user can specify the icon as
@@ -2205,7 +2149,18 @@ RexxMethod2(RexxObjectPtr, psdlg_setAppIcon_atr, RexxObjectPtr, icon, CSELF, pCS
     return NULLOBJECT;
 }
 
-/** PropertySheetDialog::header()        [Attribute set]
+/** PropertySheetDialog::caption()      [Attribute set]
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setCaption_atr, CSTRING, text, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    setCaption(context, pcpsd, text);
+    return NULLOBJECT;
+}
+
+
+/** PropertySheetDialog::header()       [Attribute set]
  *
  *  Sets the header bitmap used for a Wizard (Wizard97 or AeroWizard.)
  *
@@ -2265,16 +2220,96 @@ done_out:
     return NULLOBJECT;
 }
 
-/** PropertySheetDialog::watermark()        [Attribute set]
+/** PropertySheetDialog::imageList()    [Attribute set]
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setImageList_atr, RexxObjectPtr, imageList, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    pcpsd->imageList = rxGetImageList(context, imageList, 1);
+    if ( pcpsd->imageList != NULL )
+    {
+        context->SetObjectVariable("IMAGELIST", imageList);
+    }
+    return NULLOBJECT;
+}
+
+/** PropertySheetDialog::pages          [Attrbiute Get]
+ *
+ *  Gets the array of page dialogs for this property sheet.
+ *
+ *  @return  An array of Rexx dialogs.  Each index in the array contains the
+ *           Rexx dialog for the page matching the index.  Page indexes are
+ *           one-based.
+ *
+ *  @remarks.  There is no set method for this attribute, it is set in the
+ *             native code when the user instantiates the property sheet.
+ *
+ *             We return a copy of the actual array so that the user can not
+ *             alter the actual array.
+ */
+RexxMethod1(RexxObjectPtr, psdlg_getPages_atr, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    uint32_t count = pcpsd->pageCount;
+    RexxArrayObject pages = context->NewArray(count);
+
+    for ( uint32_t i = 0; i < count; i++ )
+    {
+        context->ArrayPut(pages, pcpsd->rexxPages[i], i + 1);
+    }
+    return pages;
+}
+
+
+/** PropertySheetDialog::resources()    [Attribute set]
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setResources_atr, RexxObjectPtr, resourceImage, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    PRESOURCEIMAGE ri = rxGetResourceImage(context, resourceImage, 1);
+    if ( ri != NULL )
+    {
+        pcpsd->hInstance = ri->hMod;
+        context->SetObjectVariable("RESOURCES", resourceImage);
+    }
+    return NULLOBJECT;
+}
+
+/** PropertySheetDialog::startPage()    [Attribute set]
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setStartPage_atr, uint32_t, startPage, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( startPage < 1 || startPage > MAXPROPPAGES )
+    {
+        wrongRangeException(context->threadContext, 1, 1, MAXPROPPAGES, startPage);
+    }
+    else
+    {
+        pcpsd->startPage = startPage;
+        context->SetObjectVariable("STARTPAGE", context->UnsignedInt32(startPage));
+    }
+
+    return NULLOBJECT;
+}
+
+/** PropertySheetDialog::watermark()    [Attribute set]
  *
  *  Sets the watermark bitmap used for a Wizard97 wizard.
  *
  *  The user can specify the bitmap as either a resource ID (numeric or
  *  symbolic) or as an .Image object.
  *
- *  @remarks  If the user specifies the header as an .Image object, then it has
- *            to be a bitmap image, not some other type of image, like an icon,
- *            etc.
+ *  @remarks  If the user specifies the watermark as an .Image object, then it
+ *            has to be a bitmap image, not some other type of image, like an
+ *            icon, etc.
  */
 RexxMethod2(RexxObjectPtr, psdlg_setWatermark_atr, RexxObjectPtr, watermark, CSELF, pCSelf)
 {
@@ -2310,41 +2345,6 @@ RexxMethod2(RexxObjectPtr, psdlg_setWatermark_atr, RexxObjectPtr, watermark, CSE
     }
 
 done_out:
-    return NULLOBJECT;
-}
-
-/** PropertySheetDialog::startPage()      [Attribute set]
- *
- */
-RexxMethod2(RexxObjectPtr, psdlg_setStartPage_atr, uint32_t, startPage, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    if ( startPage < 1 || startPage > MAXPROPPAGES )
-    {
-        wrongRangeException(context->threadContext, 1, 1, MAXPROPPAGES, startPage);
-    }
-    else
-    {
-        pcpsd->startPage = startPage;
-        context->SetObjectVariable("STARTPAGE", context->UnsignedInt32(startPage));
-    }
-
-    return NULLOBJECT;
-}
-
-/** PropertySheetDialog::imageList()      [Attribute set]
- *
- */
-RexxMethod2(RexxObjectPtr, psdlg_setImageList_atr, RexxObjectPtr, imageList, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    pcpsd->imageList = rxGetImageList(context, imageList, 1);
-    if ( pcpsd->imageList != NULL )
-    {
-        context->SetObjectVariable("IMAGELIST", imageList);
-    }
     return NULLOBJECT;
 }
 
@@ -2431,24 +2431,37 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
     pcpsd->rexxPages = rexxPages;
     pcpsd->getResultValue = OOD_NO_VALUE;
 
-    // Set the pages attribute object variable so that the Rexx pages object is
-    // not garbage collected.
+    // Set values for all the attributes, APPICON first:
+    SIZE s;
+    s.cx = GetSystemMetrics(SM_CXSMICON);
+    s.cy = GetSystemMetrics(SM_CYSMICON);
+
+    HICON         hIcon = getOORexxIcon(IDI_DLG_OOREXX);
+    RexxObjectPtr temp  = rxNewValidImage(context, hIcon, IMAGE_ICON, &s, LR_SHARED, true);
+
+    pcpsd->hIcon = hIcon;
+    context->SetObjectVariable("APPICON", temp);
+
+    // CAPTION
+    if ( argumentOmitted(3) )
+    {
+        caption = "ooRexx Property Sheet Dialog";
+    }
+    if ( ! setCaption(context, pcpsd, caption) )
+    {
+        goto done_out;
+    }
+
+    // and the rest:
+    context->SetObjectVariable("HEADER", TheNilObj);
+    context->SetObjectVariable("IMAGELIST", TheNilObj);
     context->SetObjectVariable("PAGES", pages);
-
-    if ( argumentExists(3) )
-    {
-        if ( ! setCaption(context, pcpsd, caption) )
-        {
-            goto done_out;
-        }
-    }
-    else
-    {
-        context->SetObjectVariable("CAPTION", TheNilObj);
-    }
-
-    context->SetObjectVariable("ICON", TheNilObj);
     context->SetObjectVariable("RESOURCES", TheNilObj);
+
+    pcpsd->startPage = 1;
+    context->SetObjectVariable("STARTPAGE", TheOneObj);
+
+    context->SetObjectVariable("WATERMARK", TheNilObj);
 
     if ( parsePropSheetOpts(context, pcpsd, opts) )
     {
