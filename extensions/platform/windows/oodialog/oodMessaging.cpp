@@ -346,6 +346,7 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 SetLastError(0);
                 INT_PTR ret = PropertySheet((PROPSHEETHEADER *)wParam);
+                oodSetSysErrCode(pcpbd->dlgProcContext);
                 ReplyMessage((LRESULT)ret);
             }
             else

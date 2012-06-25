@@ -78,6 +78,8 @@
 
 
 ::constant MAXPROPPAGES                 100
+::constant ID_PSRESTARTWINDOWS            2
+::constant ID_PSREBOOTSYSTEM              3  -- (ID_PSRESTARTWINDOWS | 0x1)
 
 -- The application icon for the property sheet dialog
 ::attribute appIcon get unguarded
