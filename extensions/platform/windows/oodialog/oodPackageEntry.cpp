@@ -750,9 +750,12 @@ REXX_METHOD_PROTOTYPE(psdlg_setCurSelByID);
 REXX_METHOD_PROTOTYPE(psdlg_resetPageText);
 REXX_METHOD_PROTOTYPE(psdlg_setTitle);
 REXX_METHOD_PROTOTYPE(psdlg_setWizButtons);
+REXX_METHOD_PROTOTYPE(psdlg_enableWizButtons);
 REXX_METHOD_PROTOTYPE(psdlg_showWizButtons);
 REXX_METHOD_PROTOTYPE(psdlg_querySiblings);
 REXX_METHOD_PROTOTYPE(psdlg_setButtonText);
+REXX_METHOD_PROTOTYPE(psdlg_setFinishText);
+REXX_METHOD_PROTOTYPE(psdlg_setNextText);
 REXX_METHOD_PROTOTYPE(psdlg_unchanged);
 REXX_METHOD_PROTOTYPE(psdlg_test);
 
@@ -1669,11 +1672,14 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(psdlg_setCurSel,                psdlg_setCurSel),
     REXX_METHOD(psdlg_setCurSelByID,            psdlg_setCurSelByID),
     REXX_METHOD(psdlg_setWizButtons,            psdlg_setWizButtons),
+    REXX_METHOD(psdlg_enableWizButtons,         psdlg_enableWizButtons),
     REXX_METHOD(psdlg_showWizButtons,           psdlg_showWizButtons),
     REXX_METHOD(psdlg_querySiblings,            psdlg_querySiblings),
     REXX_METHOD(psdlg_resetPageText,            psdlg_resetPageText),
     REXX_METHOD(psdlg_setTitle,                 psdlg_setTitle),
     REXX_METHOD(psdlg_setButtonText,            psdlg_setButtonText),
+    REXX_METHOD(psdlg_setFinishText,            psdlg_setFinishText),
+    REXX_METHOD(psdlg_setNextText,              psdlg_setNextText),
     REXX_METHOD(psdlg_unchanged,                psdlg_unchanged),
     REXX_METHOD(psdlg_test,                     psdlg_test),
 

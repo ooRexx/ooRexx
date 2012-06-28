@@ -810,6 +810,7 @@ typedef struct _pspCSelf {
     INT_PTR                 pageID;           // Identifies the page to the Windows property sheet, resource ID or pointer
     char                   *pageTitle;
     char                   *headerTitle;
+    char                   *headerTitleAero;  // Must be Unicode for Aero.
     char                   *headerSubTitle;
     oodClass_t              pageType;
     uint32_t                dlgProcThreadID;
@@ -823,6 +824,7 @@ typedef struct _pspCSelf {
     bool                    wantAccelerators; // User wants PSN_TRANSLATEACCELERATOR notifications
     bool                    wantGetObject;    // User wants PSN_GETOBJECT notifications
     bool                    isWizardPage;
+    bool                    isAeroWizardPage;
     bool                    inRemovePage;     // Signals running in PropertySheetDialg::removePage()
 } CPropertySheetPage;
 typedef CPropertySheetPage *pCPropertySheetPage;
@@ -859,7 +861,7 @@ typedef struct _psdCSelf {
 typedef CPropertySheetDialog *pCPropertySheetDialog;
 
 /*
- * Struct for the page dialog information.  This is used for initializin the
+ * Struct for the page dialog information.  This is used for initializing the
  * dialog template pointer for either a property sheet page dialog or a managed
  * tab page dialog.  (A managed tab page dialog is a ControlDialog in a
  * ManagedTab.)

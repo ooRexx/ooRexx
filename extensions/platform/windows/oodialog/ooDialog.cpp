@@ -287,6 +287,11 @@ void delPageDialog(pCPropertySheetPage pcpsp)
         LocalFree(pcpsp->headerTitle);
         pcpsp->headerTitle = NULL;
     }
+    if ( pcpsp->headerTitleAero != NULL )
+    {
+        LocalFree(pcpsp->headerTitleAero);
+        pcpsp->headerTitleAero = NULL;
+    }
     if ( pcpsp->headerSubTitle != NULL )
     {
         LocalFree(pcpsp->headerSubTitle);

@@ -2234,7 +2234,7 @@ int putUnicodeText(LPWORD dest, const char *text)
 LPWSTR ansi2unicode(LPCSTR str)
 {
     if ( str == NULL )
-{
+    {
         return NULL;
     }
 

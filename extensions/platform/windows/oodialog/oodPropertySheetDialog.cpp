@@ -74,6 +74,7 @@ public:
 #define VALID_PSNRET_LIST       "PSNRET_NOERROR, PSNRET_INVALID, or PSNRET_INVALID_NOCHANGEPAGE"
 #define VALID_PSNRET_MSG_LIST   "PSNRET_NOERROR or PSNRET_MESSAGEHANDLED"
 #define VALID_PROPSHEET_BUTTONS  "APPLYNOW, BACK, CANCEL, FINISH, HELP, NEXT, or OK"
+#define VALID_AERO_BUTTONS       "BACK, CANCEL, FINISH, or NEXT"
 
 /**
  * The following set of helper functions, some of which are named tcXXX (for
@@ -494,7 +495,7 @@ INT_PTR getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr ima
 
 
 /**
- * A generic function used to set the title, or header titel, or header subtitle
+ * A generic function used to set the title, or header title, or header subtitle
  * text for a property sheet page.
  *
  * These text strings can be set before the property sheet is created.  But they
@@ -504,6 +505,13 @@ INT_PTR getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr ima
  *
  * When replacing already existing text, the old text needs to be freed.  During
  * delDialog for a property sheet page, the existing text is freed.
+ *
+ * This is further complicated by the fact that if the page is in an aero
+ * dialog, the header text has to be in Unicode, but the other page parts do not
+ * apply. What we do, is always set the ANSI text in the struct.  Then, if we
+ * know now we are an Aero page, we also set the Unicode text in the struct.
+ * But, we won't always know here. So, when the PROPSHEETPAGE struct is filled
+ * in, it becomes necessary to, maybe, fix up the Unicode string.
  *
  * @param c
  * @param pcpsp
@@ -526,17 +534,34 @@ bool setPageText(RexxMethodContext *c, pCPropertySheetPage pcpsp, CSTRING text, 
     switch ( part )
     {
         case headerSubtext :
+        {
             safeLocalFree(pcpsp->headerSubTitle);
             pcpsp->headerSubTitle = t;
             break;
+        }
         case headerText :
+        {
             safeLocalFree(pcpsp->headerTitle);
             pcpsp->headerTitle = t;
+
+            if ( pcpsp->isAeroWizardPage )
+            {
+                LPWSTR newText = ansi2unicode(text);
+                if ( newText != NULL )
+                {
+                    safeLocalFree(pcpsp->headerTitleAero);
+                    pcpsp->headerTitleAero = (char *)newText;
+                }
+            }
+
             break;
+        }
         case pageText :
+        {
             safeLocalFree(pcpsp->pageTitle);
             pcpsp->pageTitle = t;
             break;
+        }
     }
 
     return true;
@@ -1850,6 +1875,18 @@ uint32_t maybeSetTabIcon(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROP
  *
  * @remarks  On error, it is the caller's repsonsibility to clean up psp memory.
  *
+ * @remarks  If this is a page in an Aero wizard, then the header title, if
+ *           used, has to be in Unicode. To manage this we create a second copy
+ *           of the header title text as Unicode.  It is possible to get here,
+ *           with that second Unicode copy not yet made.  So, if it is an Aero
+ *           wizard page, if headerTitle is not null and headerTitleAero is
+ *           null, then we make the copy here.
+ *
+ *           Also, if this page is for an Aero Wizard, we do not automatically
+ *           set the PSP_HIDEHEADER flag like we do for other wizards when it is
+ *           an exterior page.  The user will have to explicitly set the flag in
+ *           the page opts.
+ *
  * @remarks  For ResDialogs, the user has to include all other resources, header
  *           bitmap, etc., in the resource dll for the dialog.  But, for other
  *           types of dialog pages the user can use a resource image for the
@@ -1901,27 +1938,51 @@ bool initPSP(RexxMethodContext *c, pCPropertySheetDialog pcpsd, PROPSHEETPAGE *p
 
     flags |= maybeSetTabIcon(c, pcpsd, psp, i);
 
-    if ( (pcpsd->isWiz97 || pcpsd->isWizLite)  )
+    if ( pcpsd->isWiz97 || pcpsd->isWizLite || pcpsd->isAeroWiz )
     {
         if ( pcpsp->headerTitle != NULL )
         {
-            psp->pszHeaderTitle = pcpsp->headerTitle;
-            flags |= PSP_USEHEADERTITLE;
+            if ( pcpsp->isAeroWizardPage )
+            {
+                if ( pcpsp->headerTitleAero == NULL )
+                {
+                    // This shouldn't fail, but if it does, we just won't have
+                    // any header text.
+                    pcpsp->headerTitleAero = (char *)ansi2unicode(pcpsp->headerTitle);
+                }
+                psp->pszHeaderTitle = pcpsp->headerTitleAero;
+            }
+            else
+            {
+                psp->pszHeaderTitle = pcpsp->headerTitle;
+            }
+
+            if ( psp->pszHeaderTitle != NULL )
+            {
+                flags |= PSP_USEHEADERTITLE;
+            }
         }
 
         if ( pcpsp->headerSubTitle != NULL )
         {
-            psp->pszHeaderSubTitle = pcpsp->headerSubTitle;
-            flags |= PSP_USEHEADERSUBTITLE;
+            if ( ! pcpsd->isAeroWiz )
+            {
+                psp->pszHeaderSubTitle = pcpsp->headerSubTitle;
+                flags |= PSP_USEHEADERSUBTITLE;
+            }
         }
 
         if ( pcpsp->headerTitle == NULL && pcpsp->headerSubTitle == NULL && isExteriorPage )
         {
-            flags |= PSP_HIDEHEADER;
+            if ( ! pcpsd->isAeroWiz )
+            {
+                flags |= PSP_HIDEHEADER;
+            }
         }
     }
 
     psp->dwFlags = flags;
+
     success = true;
 
 done_out:
@@ -2041,10 +2102,13 @@ PROPSHEETHEADER *initPropSheetHeader(RexxMethodContext *c, pCPropertySheetDialog
         {
             psh->hbmHeader = pcpsd->hHeaderBitmap;
 
-            flags |= PSH_USEHBMHEADER;
             if ( pcpsd->isWiz97 )
             {
-                flags |= PSH_HEADER;
+                flags |= PSH_USEHBMHEADER | PSH_HEADER;
+            }
+            else
+            {
+                flags |= PSH_USEHBMHEADER | PSH_HEADERBITMAP;
             }
         }
         else if ( pcpsd->headerBitmapID != 0 && pcpsd->hInstance != NULL )
@@ -2285,7 +2349,6 @@ RexxMethod2(RexxObjectPtr, psdlg_setHeader_atr, RexxObjectPtr, header, CSELF, pC
                 wrongArgValueException(context->threadContext, 1, "Bitmap", getImageTypeName(type));
                 goto done_out;
             }
-
             pcpsd->hHeaderBitmap = (HBITMAP)result;
         }
         else
@@ -2490,6 +2553,13 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
         goto done_out;
     }
 
+    // We need to parse the options before we look at the pages so we know if we
+    // are a wizard or not.
+    if ( ! parsePropSheetOpts(context, pcpsd, opts) )
+    {
+        goto done_out;
+    }
+
     RexxArrayObject      pagesCopy = context->NewArray(count);
     pCPropertySheetPage *pPage     = cppPages;
     RexxObjectPtr       *pRexxPage = rexxPages;
@@ -2509,10 +2579,10 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
         }
 
         pCPropertySheetPage pcpsp = dlgToPSPCSelf(context, dlg);
-        pcpsp->pageNumber = i;
-        pcpsp->rexxPropSheet = pcpsd->rexxSelf;
-        pcpsp->cppPropSheet = pcpsd;
-        pcpsp->isWizardPage = ! pcpsd->isNotWizard;
+        pcpsp->pageNumber         = i;
+        pcpsp->rexxPropSheet      = pcpsd->rexxSelf;
+        pcpsp->cppPropSheet       = pcpsd;
+        pcpsp->isWizardPage       = ! pcpsd->isNotWizard;
 
         *pPage = pcpsp;
         *pRexxPage = dlg;
@@ -2555,10 +2625,7 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
 
     context->SetObjectVariable("WATERMARK", TheNilObj);
 
-    if ( parsePropSheetOpts(context, pcpsd, opts) )
-    {
-        result = 0;
-    }
+    result = 0;
 
 done_out:
     pcpbd->wndBase->initCode = result;
@@ -3063,7 +3130,7 @@ RexxMethod2(RexxObjectPtr, psdlg_unchanged, RexxObjectPtr, _page, CSELF, pCSelf)
  *
  *            The prop sheet marco does not return a value.
  */
-RexxMethod2(RexxObjectPtr, psdlg_setWizButtons, CSTRING, opts, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, psdlg_setWizButtons, OPTIONAL_CSTRING, opts, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
     if ( pcpsd->isNotWizard )
@@ -3073,62 +3140,229 @@ RexxMethod2(RexxObjectPtr, psdlg_setWizButtons, CSTRING, opts, CSELF, pCSelf)
 
     uint32_t flags = 0;
 
-    if ( StrStrI(opts, "BACK")           != NULL ) flags |= PSWIZB_BACK;
-    if ( StrStrI(opts, "NEXT")           != NULL ) flags |= PSWIZB_NEXT;
-    if ( StrStrI(opts, "FINISH")         != NULL ) flags |= PSWIZB_FINISH;
-    if ( StrStrI(opts, "DISABLEDFINISH") != NULL ) flags |= PSWIZB_DISABLEDFINISH;
+    if ( argumentExists(1) )
+    {
+        if ( StrStrI(opts, "BACK")           != NULL ) flags |= PSWIZB_BACK;
+        if ( StrStrI(opts, "NEXT")           != NULL ) flags |= PSWIZB_NEXT;
+        if ( StrStrI(opts, "FINISH")         != NULL ) flags |= PSWIZB_FINISH;
+        if ( StrStrI(opts, "DISABLEDFINISH") != NULL ) flags |= PSWIZB_DISABLEDFINISH;
+    }
 
     PropSheet_SetWizButtons(pcpsd->hDlg, flags);
     return TheTrueObj;
 }
 
 
+/** PropertySheetDialog::setNextText()
+ *
+ *  Sets the text of the Next button in an aero wizard.
+ *
+ *  @param  text  The text for the Next button.
+ *
+ *  @return  True if an aero wizard, otherwise false
+ *
+ *  @requires Vista or later.
+ *
+ *  @remarks  Testing has shown that all text in an aero wizard has to be
+ *            Unicode.  Not sure about freeing the text after the call to
+ *            PropSheet_SetNextText(), but it seems okay.
+ */
+RexxMethod3(RexxObjectPtr, psdlg_setNextText, CSTRING, text, NAME, method, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( requiredOS(context, "setNextText", "Vista", Vista_OS) && pcpsd->isAeroWiz )
+    {
+        LPWSTR buttonText = ansi2unicode(text);
+        if ( buttonText != NULL )
+        {
+            PropSheet_SetNextText(pcpsd->hDlg, buttonText);
+            LocalFree(buttonText);
+        }
+        return TheTrueObj;
+    }
+
+    return TheFalseObj;
+}
+
+
+/** PropertySheetDialog::setButtonText()
+ *
+ *  Sets the text of the specified button in an Aero wizard
+ *
+ *  @param  button  A keyword specifying which button to set the text for, Back,
+ *                  Cancel, Finish, or Next.
+ *
+ *  @param  text    The text for the Next button.
+ *
+ *  @return  True on success, false otherwise.
+ *
+ *  @note  Raises syntax conditions if not Vista and if keyword is incorrect.
+ *
+ */
+RexxMethod3(RexxObjectPtr, psdlg_setButtonText, CSTRING, button, CSTRING, text, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( requiredOS(context, "setButtonText", "Vista", Vista_OS) && pcpsd->isAeroWiz )
+    {
+        uint32_t flag = 0;
+
+        if (      StrStrI(button, "BACK")   != NULL ) flag = PSWIZB_BACK;
+        else if ( StrStrI(button, "CANCEL") != NULL ) flag = PSWIZB_CANCEL;
+        else if ( StrStrI(button, "FINISH") != NULL ) flag = PSWIZB_FINISH;
+        else if ( StrStrI(button, "NEXT")   != NULL ) flag = PSWIZB_NEXT;
+        else
+        {
+            wrongArgValueException(context->threadContext, 1, VALID_AERO_BUTTONS, button);
+            return TheFalseObj;
+        }
+
+        LPWSTR buttonText = ansi2unicode(text);
+        if ( buttonText != NULL )
+        {
+            PropSheet_SetButtonText(pcpsd->hDlg, flag, buttonText);
+            LocalFree(buttonText);
+            return TheTrueObj;
+        }
+    }
+
+    return TheFalseObj;
+}
+
+
+/** PropertySheetDialog::enableWizButtons()
+ *
+ *  Enables or disables buttons in an Aero wizard.
+ *
+ *  @param  opts       Zero or more of the keyword values that specify which
+ *                     property sheet buttons are to be enabled. If a button
+ *                     value is included in both this argument and the
+ *                     optsButtons argument, then the button is enabled.
+ *
+ *  @param optsButtons Zero or more of the same keywords used in opts. Here,
+ *                     they specify which property sheet buttons are to be
+ *                     enablred or disabled. If a keyword appears in this
+ *                     argument but not in opts, it indicates that the button
+ *                     should be enabled.
+ *
+ *  @param  Returns true if this is an Aero Wizard property sheet on Vista on
+ *          later, otherwise false.
+ *
+ *  @notes  Thise method only works for Aero Wizards.  This method requires
+ *          Vista or later, a condition is raised if the OS is not Vista or
+ *          later. This method has no effect if the property sheet is not an
+ *          Aero Wizard.
+ *                            DO NOT KNOW ABOUT BELOW
+ *          The order of showWizButtons() and setWizButtons() is important.
+ *          This works:
+ *
+ *            propSheet~setWizButtons("NEXT")
+ *            propSheet~showWizButtons("NEXT", "BACK NEXT")
+ *
+ *          This does not work:
+ *
+ *            propSheet~showWizButtons("NEXT", "BACK NEXT")
+ *            propSheet~setWizButtons("NEXT")
+ */
+RexxMethod3(RexxObjectPtr, psdlg_enableWizButtons, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, optsButtons, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( requiredOS(context, "enableWizButtons", "Vista", Vista_OS) && pcpsd->isAeroWiz )
+    {
+        uint32_t flags = 0;
+        uint32_t buttons = 0;
+
+        if ( argumentExists(1) )
+        {
+            if ( StrStrI(opts, "BACK")   != NULL ) flags |= PSWIZB_BACK;
+            if ( StrStrI(opts, "NEXT")   != NULL ) flags |= PSWIZB_NEXT;
+            if ( StrStrI(opts, "FINISH") != NULL ) flags |= PSWIZB_FINISH;
+            if ( StrStrI(opts, "CANCEL") != NULL ) flags |= PSWIZB_CANCEL;
+        }
+
+        if ( argumentExists(2) )
+        {
+            if ( StrStrI(optsButtons, "BACK")   != NULL ) buttons |= PSWIZB_BACK;
+            if ( StrStrI(optsButtons, "NEXT")   != NULL ) buttons |= PSWIZB_NEXT;
+            if ( StrStrI(optsButtons, "FINISH") != NULL ) buttons |= PSWIZB_FINISH;
+            if ( StrStrI(optsButtons, "CANCEL") != NULL ) buttons |= PSWIZB_CANCEL;
+        }
+
+        PropSheet_EnableWizButtons(pcpsd->hDlg, flags, buttons);
+
+        return TheTrueObj;
+    }
+
+    return TheFalseObj;
+}
+
+
 /** PropertySheetDialog::showWizButtons()
  *
- *  Show or hide buttons in a wizard.
+ *  Show or hide buttons in an Aero wizard.
  *
- *  @param  opts       One or more of the keyword values that specify which
+ *  @param  opts       Zero or more of the keyword values that specify which
  *                     property sheet buttons are to be shown. If a button value
  *                     is included in both this argument and the optsButtons
  *                     argument, then the button is shown.
  *
- *  @param optsButtons One or more of the same keywords used in opts. Here,
+ *  @param optsButtons Zero or more of the same keywords used in opts. Here,
  *                     they specify which property sheet buttons are to be shown
  *                     or hidden. If a keyword appears in this argument but not
  *                     in opts, it indicates that the button should be hidden.
  *
- *  @param  Returns true if this is a Wizard property sheet on Vista on later,
- *          otherwise false.
+ *  @param  Returns true if this is an Aero Wizard property sheet on Vista on
+ *          later, otherwise false.
  *
- *  @notes  This method requires Vista or later, a condition is raised if the OS
- *          is not Vista or later.
+ *  @notes  Thise method only works for Aero Wizards.  This method requires
+ *          Vista or later, a condition is raised if the OS is not Vista or
+ *          later. This method has no effect if the property sheet is not an
+ *          Aero Wizard.
  *
- *          This method has no effect if the property sheet is not a Wizard.
+ *          The order of showWizButtons() and setWizButtons() is important.
+ *          This works:
+ *
+ *            propSheet~setWizButtons("NEXT")
+ *            propSheet~showWizButtons("NEXT", "BACK NEXT")
+ *
+ *          This does not work:
+ *
+ *            propSheet~showWizButtons("NEXT", "BACK NEXT")
+ *            propSheet~setWizButtons("NEXT")
  */
-RexxMethod3(RexxObjectPtr, psdlg_showWizButtons, CSTRING, opts, CSTRING, optsButtons, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, psdlg_showWizButtons, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, optsButtons, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    if ( ! requiredOS(context, "showWizButtons", "Vista", Vista_OS) || pcpsd->isNotWizard )
+    if ( requiredOS(context, "showWizButtons", "Vista", Vista_OS) && pcpsd->isAeroWiz )
     {
-        return TheFalseObj;
+        uint32_t flags = 0;
+        uint32_t buttons = 0;
+
+        if ( argumentExists(1) )
+        {
+            if ( StrStrI(opts, "BACK")   != NULL ) flags |= PSWIZB_BACK;
+            if ( StrStrI(opts, "NEXT")   != NULL ) flags |= PSWIZB_NEXT;
+            if ( StrStrI(opts, "FINISH") != NULL ) flags |= PSWIZB_FINISH;
+            if ( StrStrI(opts, "CANCEL") != NULL ) flags |= PSWIZB_CANCEL;
+        }
+
+        if ( argumentExists(2) )
+        {
+            if ( StrStrI(optsButtons, "BACK")   != NULL ) buttons |= PSWIZB_BACK;
+            if ( StrStrI(optsButtons, "NEXT")   != NULL ) buttons |= PSWIZB_NEXT;
+            if ( StrStrI(optsButtons, "FINISH") != NULL ) buttons |= PSWIZB_FINISH;
+            if ( StrStrI(optsButtons, "CANCEL") != NULL ) buttons |= PSWIZB_CANCEL;
+        }
+
+        PropSheet_ShowWizButtons(pcpsd->hDlg, flags, buttons);
+
+        return TheTrueObj;
     }
 
-    uint32_t flags = 0;
-    uint32_t buttons = 0;
-
-    if ( StrStrI(opts, "BACK")   != NULL ) flags |= PSWIZB_BACK;
-    if ( StrStrI(opts, "NEXT")   != NULL ) flags |= PSWIZB_NEXT;
-    if ( StrStrI(opts, "FINISH") != NULL ) flags |= PSWIZB_FINISH;
-    if ( StrStrI(opts, "CANCEL") != NULL ) flags |= PSWIZB_CANCEL;
-
-    if ( StrStrI(optsButtons, "BACK")   != NULL ) buttons |= PSWIZB_BACK;
-    if ( StrStrI(optsButtons, "NEXT")   != NULL ) buttons |= PSWIZB_NEXT;
-    if ( StrStrI(optsButtons, "FINISH") != NULL ) buttons |= PSWIZB_FINISH;
-    if ( StrStrI(optsButtons, "CANCEL") != NULL ) buttons |= PSWIZB_CANCEL;
-
-    PropSheet_ShowWizButtons(pcpsd->hDlg, flags, buttons);
-    return TheTrueObj;
+    return TheFalseObj;
 }
 
 
@@ -3506,38 +3740,26 @@ RexxMethod2(RexxObjectPtr, psdlg_setCurSelByID, POINTER, id, CSELF, pCSelf)
  *
  *  @return  0, always.
  *
-/** PropertySheetDialog::setNextText()
- *
- *  Sets the text of the Next button in a wizard.
- *
- *  @param  text  The text for the Next button.
- *
- *  @return  0, always.
- *
+ *  @note  setFinishText() does not work for Aero Wizards.  Use setButtonText()
+ *         instead.
  */
-RexxMethod3(RexxObjectPtr, psdlg_setButtonText, CSTRING, text, NAME, method, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, psdlg_setFinishText, CSTRING, text, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    if ( *(method + 3) == 'F' )
-    {
-        PropSheet_SetFinishText(pcpsd->hDlg, text);
-    }
-    else
-    {
-        PropSheet_SetNextText(pcpsd->hDlg, text);
-    }
+    PropSheet_SetFinishText(pcpsd->hDlg, text);
+
     return TheZeroObj;
 }
-
 
 #if 0
 /** PropertySheetDialog::setHeaderBitmap()
  *
  *  The property sheet PropSheet_SetHeaderBitmap and
  *  PropSheet_SetHeaderBitmapResource macros are apparently not implemented.  I
- *  wrote this code before discovering that.  Going to save the code for future
- *  use.
+ *  wrote this code before discovering that.  The macros are not implemented
+ *  because the underlying PSM messages are not implemented.  Going to save the
+ *  code for future use.
  */
 RexxMethod3(RexxObjectPtr, psdlg_setHeaderBitmap, uint32_t, index, RexxObjectPtr, bitmap, CSELF, pCSelf)
 {
@@ -3575,8 +3797,8 @@ done_out:
 /** PropertySheetDialog::setHeaderSubtitle()
  *  PropertySheetDialog::setHeaderTitle()
  *
- *  Resets the text for a page in a property sheet wizard dialog.  These methods
- *  are not available for Aero wizards
+ *  Resets the text for a page in a property sheet wizard dialog.
+ *  setHeaderSubTitle() is not available for Aero wizards
  *
  *  The same native function handles the setHeaderTitle() and
  *  setHeaderSubtitle() methods.
@@ -3586,12 +3808,15 @@ done_out:
  *  @param  newText  New text for the page.
  *
  *  @return  Zero, always.
+ *
+ *  @note Neither function works for Aero wizards.  Tested many times.  Leaving
+ *        Aero code for setHeaderTitle() in.
  */
 RexxMethod4(RexxObjectPtr, psdlg_resetPageText, uint32_t, index, CSTRING, newText, NAME, method, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    if ( pcpsd->isAeroWiz || pcpsd->isNotWizard )
+    if ( pcpsd->isNotWizard )
     {
         goto done_out;
     }
@@ -3611,15 +3836,20 @@ RexxMethod4(RexxObjectPtr, psdlg_resetPageText, uint32_t, index, CSTRING, newTex
         if ( setPageText(context, pcpsp, newText, headerSubtext) )
         {
             PropSheet_SetHeaderSubTitle(pcpsd->hDlg, index, pcpsp->headerSubTitle);
-
         }
     }
     else
     {
         if ( setPageText(context, pcpsp, newText, headerText) )
         {
-            PropSheet_SetHeaderTitle(pcpsd->hDlg, index, pcpsp->headerTitle);
-
+            if ( pcpsd->isAeroWiz )
+            {
+                PropSheet_SetHeaderTitle(pcpsd->hDlg, index, pcpsp->headerTitleAero);
+            }
+            else
+            {
+                PropSheet_SetHeaderTitle(pcpsd->hDlg, index, pcpsp->headerTitle);
+            }
         }
     }
 
@@ -3630,10 +3860,10 @@ done_out:
 
 /** PropertySheetDialog::setTitle()
  *
- *  Sets the title for a property sheet dialog.  This method is not available
- *  for Aero wizards, and does nothing in other wizards
+ *  Sets the title for a property sheet dialog.
  *
  *  @param  title             The title for the property sheet.
+ *
  *  @param  addPropertiesFor  [OPTIONAL] If true the text "Properties for" is
  *                            prefixed to the title.  If omitted or false, there
  *                            is no text added.
@@ -3642,7 +3872,13 @@ done_out:
  *
  *  @remarks  The MSDN documentation seems to indicate that this is valid for
  *            wizards, but experimentation shows it does not work for any
- *            wizard.
+ *            wizard. In addition, newe MSD documentation explicitly states
+ *            that: In an Aero Wizard, this macro can be used to change the
+ *            title of an interior page dynamically for example, when handling
+ *            the PSN_SETACTIVE notification.
+ *
+ *            However, it simply does not work.  The code for an aero wizard is
+ *            left in, but it does not seem to work.
  */
 RexxMethod3(RexxObjectPtr, psdlg_setTitle, CSTRING, title, OPTIONAL_logical_t, addPropertiesFor, CSELF, pCSelf)
 {
@@ -3650,12 +3886,18 @@ RexxMethod3(RexxObjectPtr, psdlg_setTitle, CSTRING, title, OPTIONAL_logical_t, a
 
     if ( pcpsd->isAeroWiz )
     {
-        goto done_out;
+        LPWSTR newText = ansi2unicode(title);
+        if ( newText != NULL )
+        {
+            PropSheet_SetTitle(pcpsd->hDlg, addPropertiesFor, newText);
+            LocalFree(newText);
+        }
+    }
+    else
+    {
+        PropSheet_SetTitle(pcpsd->hDlg, addPropertiesFor, title);
     }
 
-    PropSheet_SetTitle(pcpsd->hDlg, addPropertiesFor, title);
-
-done_out:
     return TheZeroObj;
 }
 
@@ -3667,7 +3909,7 @@ done_out:
 RexxMethod1(RexxObjectPtr, psdlg_test, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-    printf("PropertySheetDialog pcpsd-hDlg=%p pcpsd->pcpbd->hDlg=%p\n", pcpsd->hDlg, pcpsd->pcpbd->hDlg);
+    printf("PropertySheetDialog pcpsd->hDlg=%p pcpsd->pcpbd->hDlg=%p\n", pcpsd->hDlg, pcpsd->pcpbd->hDlg);
     printf("No test set up at this time\n");
     printf("Make version for 6.1=%d\n", MAKEVERSION(6, 1));
     printf("Make version for 6.01=%d\n", MAKEVERSION(6, 01));
@@ -3755,6 +3997,8 @@ static void parsePageOpts(RexxMethodContext *c, pCPropertySheetPage pcpsp, CSTRI
 
     if ( options != NULL )
     {
+        if ( StrStrI(options, "AEROPAGE")          != NULL ) pcpsp->isAeroWizardPage = true;
+
         if ( StrStrI(options, "USETITLE")          != NULL ) opts |= PSP_USETITLE;
         if ( StrStrI(options, "RTLREADING")        != NULL ) opts |= PSP_RTLREADING;
         if ( StrStrI(options, "HASHELP")           != NULL ) opts |= PSP_HASHELP;
@@ -4065,6 +4309,7 @@ RexxMethod3(RexxObjectPtr, psp_setPageTitle, CSTRING, text, NAME, name, CSELF, p
             break;
 
         case 'I' :
+            printf("Setting header title attribute %s\n", text);
             setPageText(context, pcpsp, text, headerText);
             break;
 
