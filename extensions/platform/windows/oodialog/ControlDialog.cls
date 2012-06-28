@@ -197,13 +197,13 @@
 ::attribute tabIcon get unguarded
 ::attribute tabIcon set external "LIBRARY oodialog psp_setTabIcon_atr"
 
-::attribute wasActivated get external "LIBRARY oodialog psp_wasActivated_atr"
-
 ::attribute wantAccelerators get external "LIBRARY oodialog psp_getWantNotification"
 ::attribute wantAccelerators set external "LIBRARY oodialog psp_setWantNotification"
 
 ::attribute wantGetObject get external "LIBRARY oodialog psp_getWantNotification"
 ::attribute wantGetObject set external "LIBRARY oodialog psp_setWantNotification"
+
+::attribute wasActivated get external "LIBRARY oodialog psp_wasActivated_atr"
 
 
 ::method endExecute unguarded                                                                   -- Not to be documented

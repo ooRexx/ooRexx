@@ -2633,186 +2633,6 @@ done_out:
 }
 
 
-/** PropertySheetDialog::getPage()
- *
- *  Gets the page dialog specified by index.
- *
- *  @index  The one-based index of the page whose dialog is desired.
- *
- *  @return  The Rexx dialog object for the page specified.
- *
- *  @notes  Raises an exception if index is not correct.
- *
- *  @remarks  This method is not an interface to a PSM_x message, it is a helper
- *            function for ooDialog programmers.
- */
-RexxMethod2(RexxObjectPtr, psdlg_getPage, uint32_t, index, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    uint32_t count = pcpsd->pageCount;
-    if ( index < 1 || index > count )
-    {
-        wrongRangeException(context->threadContext, 1, 1, (int)count, index);
-        return NULLOBJECT;
-    }
-
-    return pcpsd->rexxPages[index - 1];
-}
-
-
-/** PropertySheetDialog::execute()
- *
- *  Creates a modal property sheet dialog.
- *
- *  @note  Sets the .systemErrorCode
- */
-RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, pCSelf)
-{
-    RexxObjectPtr   result = TheNegativeOneObj;
-    HWND            hParent = NULL;
-
-    oodSetSysErrCode(context->threadContext);
-
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-    pcpsd->getResultValue = -1;
-
-    PROPSHEETPAGE *psp = NULL;
-    PROPSHEETHEADER *psh = NULL;
-
-    if ( argumentExists(1) )
-    {
-        hParent = checkPropSheetOwner(context, owner, 1);
-        if ( hParent == NULL )
-        {
-            goto done_out;
-        }
-    }
-
-    psp = initPropSheetPages(context, pcpsd);
-    if ( psp == NULL )
-    {
-        goto done_out;
-    }
-
-    // It is not necessary to set pcpsd->modeless to false, it is false by default.
-
-    psh = initPropSheetHeader(context, pcpsd, psp, hParent);
-    if ( psh == NULL )
-    {
-        goto done_out;
-    }
-
-    intptr_t ret;
-    if ( hParent == NULL )
-    {
-        assignPSDThreadContext(pcpsd, context->threadContext, GetCurrentThreadId());
-
-        if ( setPropSheetHook(pcpsd) )
-        {
-            ret = PropertySheet(psh);
-            oodSetSysErrCode(context->threadContext);
-        }
-        else
-        {
-            ret = -1;
-        }
-    }
-    else
-    {
-        ret = (intptr_t)SendMessage(hParent, WM_USER_CREATEPROPSHEET_DLG, (WPARAM)psh, (LPARAM)pcpsd);
-    }
-
-    pcpsd->getResultValue = ret;
-
-    // Call leaving now, but note that the underlying Windows property sheet
-    // dialog is now destroyed
-    context->SendMessage0(pcpsd->rexxSelf, "LEAVING");
-
-    result = context->WholeNumber(ret);
-
-done_out:
-    safeLocalFree(psp);
-    safeLocalFree(psh);
-    stopDialog(pcpsd->pcpbd, context->threadContext);
-    return result;
-}
-
-
-/** PropertySheetDialog::popup()
- *
- *
- *  @notes  AeroWizard dialogs do not support modeless
- */
-RexxMethod2(RexxObjectPtr, psdlg_popup, NAME, methodName, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-    pCPlainBaseDialog pcpbd = pcpsd->pcpbd;
-
-    PROPSHEETPAGE *psp = NULL;
-    PROPSHEETHEADER *psh = NULL;
-
-    if ( pcpsd->isAeroWiz )
-    {
-        methodCanNotBeInvokedException(context, "popup", pcpsd->rexxSelf, "with the AeroWizard style");
-        goto err_out;
-    }
-
-    psp = initPropSheetPages(context, pcpsd);
-    if ( psp == NULL )
-    {
-        goto err_out;
-    }
-
-    pcpsd->modeless = true;
-
-    psh = initPropSheetHeader(context, pcpsd, psp, NULL);
-    if ( psh == NULL )
-    {
-        goto err_out;
-    }
-
-    DWORD threadID;
-    bool Release = false;
-
-    EnterCriticalSection(&crit_sec);
-
-    PropSheetThreadArgs threadArgs;
-    threadArgs.pcpsd = pcpsd;
-    threadArgs.psh = psh;
-    threadArgs.release = &Release;
-
-    pcpbd->hDlgProcThread = CreateThread(NULL, 2000, PropSheetLoopThread, &threadArgs, 0, &threadID);
-
-    // Wait for thread to signal us to continue, don't wait if the thread was not created.
-    while ( ! Release && pcpbd->hDlgProcThread != NULL )
-    {
-        Sleep(1);
-    }
-    LeaveCriticalSection(&crit_sec);
-
-    // Note we do not need to set pcpbd->dlgProcThreadID here.  It is set in
-    // PropSheetLoopThread because that function also sets dlgProcContext and
-    // dlgProcThreadID for all the property sheet page dialogs.
-    if ( pcpbd->hDlgProcThread != NULL )
-    {
-        return TheTrueObj;
-    }
-    else
-    {
-        // Something failed in the the thread function.  In that case, things
-        // are cleaned up in the thread function.
-        return TheFalseObj;
-    }
-
-err_out:
-    safeLocalFree(psp);
-    safeLocalFree(psh);
-    stopDialog(pcpsd->pcpbd, context->threadContext);
-    return TheFalseObj;
-}
-
-
 /** PropertySheetDialog::addPage()
  *
  *  Adds a page to the property sheet at the end of the pages.
@@ -2920,154 +2740,31 @@ err_out:
 }
 
 
-/** PropertySheetDialog::insertPage()
+/** PropertySheetDialog::apply()
  *
+ *  Simulates the selection of the Apply button, indicating that one or more
+ *  pages have changed and the changes need to be validated and recorded.
  *
  */
-RexxMethod4(RexxObjectPtr, psdlg_insertPage, RexxObjectPtr, _page, uint32_t, index, OPTIONAL_logical_t, isExteriorPage, CSELF, pCSelf)
-{
-    pCPropertySheetDialog  pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    bool     abortDialog;
-    uint32_t max = pcpsd->pageCount;
-
-    pCPropertySheetPage pcpsp = NULL;
-
-    PROPSHEETPAGE *psp = getPSPMemory(context, pcpsd, &pcpsp, _page, max, &abortDialog);
-    if ( psp == NULL )
-    {
-        goto err_out;
-    }
-
-    pcpsp->psp = psp;
-    abortDialog = false;
-
-    index--;
-    updatePageCSelf(pcpsd, pcpsp, index);
-
-    if ( index + 1 < max )
-    {
-        for ( uint32_t i = max - 1, j = max; i >= index; i--, j-- )
-        {
-            pcpsd->rexxPages[j] = pcpsd->rexxPages[i];
-            pcpsd->cppPages[j] = pcpsd->cppPages[i];
-            pcpsd->cppPages[j]->pageNumber = j;
-        }
-    }
-
-    pcpsd->cppPages[index] = pcpsp;
-    pcpsd->rexxPages[index] = _page;
-    pcpsd->pageCount++;
-
-    if ( ! initPSP(context, pcpsd, psp, index, isExteriorPage ? true : false) )
-    {
-        goto err_out;
-    }
-
-    abortDialog = true;
-
-    pcpsp->hPropSheetPage = CreatePropertySheetPage(psp);
-    if ( pcpsp->hPropSheetPage == NULL )
-    {
-        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "CreatePropertySheetPage");
-        goto err_out;
-    }
-
-    if ( PropSheet_InsertPage(pcpsd->hDlg, index, pcpsp->hPropSheetPage) == 0 )
-    {
-        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "PropSheet_InsertPage");
-        goto err_out;
-    }
-
-    PropSheet_RecalcPageSizes(pcpsd->hDlg);
-
-    return TheTrueObj;
-
-err_out:
-    safeLocalFree(psp);
-
-    if ( pcpsp != NULL )
-    {
-        pcpsp->psp = NULL;
-
-        if ( pcpsp->hPropSheetPage != NULL )
-        {
-            DestroyPropertySheetPage(pcpsp->hPropSheetPage);
-            pcpsp->hPropSheetPage = NULL;
-        }
-    }
-
-    if ( abortDialog )
-    {
-        endDialogPremature(pcpsd->pcpbd, pcpsd->hDlg, RexxConditionRaised);
-    }
-    return TheFalseObj;
-}
-
-
-/** PropertySheetDialog::removePage()
- *
- *  Removes a page from the property sheet.
- *
- *  @param  index  The one-based index of the page to be removed.
- *
- *  @return  Zero always.
- *
- *  @remarks  If the page being removed is not the last page we need to move the
- *            pointers in the arrays down 1.  However, we also need to adjust
- *            the page numbers in the Rexx page object.  So, rather than do a
- *            memmove for the pointers, we may as well just walk the arrays.
- */
-RexxMethod2(RexxObjectPtr, psdlg_removePage, OPTIONAL_uint32_t, index, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, psdlg_apply, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    uint32_t max = pcpsd->pageCount;
+    return PropSheet_Apply(pcpsd->hDlg) ? TheTrueObj : TheFalseObj;
+}
 
-    if ( argumentOmitted(1) )
-    {
-        index = max;
-    }
 
-    if ( index < 1 || index > max )
-    {
-        wrongRangeException(context->threadContext, 1, 1, max, index);
-        return TheZeroObj;
-    }
+/** PropertySheetDialog::cancelToClose()
+ *
+ *  Used when changes made since the most recent PSN_APPLY notification cannot
+ *  be canceled.
+ *
+ */
+RexxMethod1(RexxObjectPtr, psdlg_cancelToClose, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    index--;
-    pCPropertySheetPage pcpspRemove = pcpsd->cppPages[index];
-
-    if ( index + 1 < max )
-    {
-        for ( uint32_t i = index, j = index + 1; i > max - 1; i++, j++ )
-        {
-            pcpsd->rexxPages[i] = pcpsd->rexxPages[j];
-            pcpsd->cppPages[i] = pcpsd->cppPages[j];
-            pcpsd->cppPages[i]->pageNumber = i;
-        }
-    }
-
-    pcpsd->rexxPages[max] = NULL;
-    pcpsd->cppPages[max] = NULL;
-    pcpsd->pageCount--;
-
-    pcpspRemove->inRemovePage = true;
-
-    PropSheet_RemovePage(pcpsd->hDlg, index, NULL);
-    PropSheet_RecalcPageSizes(pcpsd->hDlg);
-
-    if ( pcpspRemove->hPropSheetPage != NULL )
-    {
-        DestroyPropertySheetPage(pcpspRemove->hPropSheetPage);
-        pcpspRemove->hPropSheetPage = NULL;
-
-        safeLocalFree(pcpspRemove->psp);
-        pcpspRemove->psp = NULL;
-    }
-
-    pcpspRemove->inRemovePage = false;
-
+    PropSheet_CancelToClose(pcpsd->hDlg);
     return TheZeroObj;
 }
 
@@ -3085,149 +2782,6 @@ RexxMethod2(RexxObjectPtr, psdlg_changed, RexxObjectPtr, _page, CSELF, pCSelf)
         PropSheet_Changed(pcpsd->hDlg, page);
     }
     return TheZeroObj;
-}
-
-
-/** PropertySheetDialog::unchanged()
- *
- */
-RexxMethod2(RexxObjectPtr, psdlg_unchanged, RexxObjectPtr, _page, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    HWND page = getValidPageHwnd(context, pcpsd, _page, 1);
-    if ( page != NULL )
-    {
-        PropSheet_UnChanged(pcpsd->hDlg, page);
-    }
-    return TheZeroObj;
-}
-
-
-/** PropertySheetDialog::setWizButtons()
- *
- *  Enables or disables the Back, Next, and Finish buttons in a wizard.
- *
- *  @param  opts  Keyword(s) that control which buttons are enabled or disabled.
- *
- *  @return  True this property sheet is a wizard, otherwise false.
- *
- *  @notes  Wizards display either three or four buttons below each page. This
- *          method is used to specify which buttons are enabled. Wizards
- *          normally display Back, Cancel, and either a Next or Finish button.
- *          Typically, enable only the Next button for the welcome page, Next
- *          and Back for interior pages, and Back and Finish for the completion
- *          page.  The Cancel button is always enabled.  Normally, setting
- *          FINISH or DISABLEDFINISH replaces the Next button with a Finish
- *          button.  To display Next and Finish buttons simultaneously, set the
- *          WIZARDHASFINISH keyword in the options when the PropertySheetDialog
- *          is instantiated.  Every page will then display all four buttons.
- *
- *          If this property sheet is not a Wizard, this method has no effect.
- *
- *  @remarks  We do not enforce that this is only called for a Wizard, although
- *            maybe we should.
- *
- *            The prop sheet marco does not return a value.
- */
-RexxMethod2(RexxObjectPtr, psdlg_setWizButtons, OPTIONAL_CSTRING, opts, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-    if ( pcpsd->isNotWizard )
-    {
-        return TheFalseObj;
-    }
-
-    uint32_t flags = 0;
-
-    if ( argumentExists(1) )
-    {
-        if ( StrStrI(opts, "BACK")           != NULL ) flags |= PSWIZB_BACK;
-        if ( StrStrI(opts, "NEXT")           != NULL ) flags |= PSWIZB_NEXT;
-        if ( StrStrI(opts, "FINISH")         != NULL ) flags |= PSWIZB_FINISH;
-        if ( StrStrI(opts, "DISABLEDFINISH") != NULL ) flags |= PSWIZB_DISABLEDFINISH;
-    }
-
-    PropSheet_SetWizButtons(pcpsd->hDlg, flags);
-    return TheTrueObj;
-}
-
-
-/** PropertySheetDialog::setNextText()
- *
- *  Sets the text of the Next button in an aero wizard.
- *
- *  @param  text  The text for the Next button.
- *
- *  @return  True if an aero wizard, otherwise false
- *
- *  @requires Vista or later.
- *
- *  @remarks  Testing has shown that all text in an aero wizard has to be
- *            Unicode.  Not sure about freeing the text after the call to
- *            PropSheet_SetNextText(), but it seems okay.
- */
-RexxMethod3(RexxObjectPtr, psdlg_setNextText, CSTRING, text, NAME, method, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    if ( requiredOS(context, "setNextText", "Vista", Vista_OS) && pcpsd->isAeroWiz )
-    {
-        LPWSTR buttonText = ansi2unicode(text);
-        if ( buttonText != NULL )
-        {
-            PropSheet_SetNextText(pcpsd->hDlg, buttonText);
-            LocalFree(buttonText);
-        }
-        return TheTrueObj;
-    }
-
-    return TheFalseObj;
-}
-
-
-/** PropertySheetDialog::setButtonText()
- *
- *  Sets the text of the specified button in an Aero wizard
- *
- *  @param  button  A keyword specifying which button to set the text for, Back,
- *                  Cancel, Finish, or Next.
- *
- *  @param  text    The text for the Next button.
- *
- *  @return  True on success, false otherwise.
- *
- *  @note  Raises syntax conditions if not Vista and if keyword is incorrect.
- *
- */
-RexxMethod3(RexxObjectPtr, psdlg_setButtonText, CSTRING, button, CSTRING, text, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
-
-    if ( requiredOS(context, "setButtonText", "Vista", Vista_OS) && pcpsd->isAeroWiz )
-    {
-        uint32_t flag = 0;
-
-        if (      StrStrI(button, "BACK")   != NULL ) flag = PSWIZB_BACK;
-        else if ( StrStrI(button, "CANCEL") != NULL ) flag = PSWIZB_CANCEL;
-        else if ( StrStrI(button, "FINISH") != NULL ) flag = PSWIZB_FINISH;
-        else if ( StrStrI(button, "NEXT")   != NULL ) flag = PSWIZB_NEXT;
-        else
-        {
-            wrongArgValueException(context->threadContext, 1, VALID_AERO_BUTTONS, button);
-            return TheFalseObj;
-        }
-
-        LPWSTR buttonText = ansi2unicode(text);
-        if ( buttonText != NULL )
-        {
-            PropSheet_SetButtonText(pcpsd->hDlg, flag, buttonText);
-            LocalFree(buttonText);
-            return TheTrueObj;
-        }
-    }
-
-    return TheFalseObj;
 }
 
 
@@ -3299,99 +2853,81 @@ RexxMethod3(RexxObjectPtr, psdlg_enableWizButtons, OPTIONAL_CSTRING, opts, OPTIO
 }
 
 
-/** PropertySheetDialog::showWizButtons()
+/** PropertySheetDialog::execute()
  *
- *  Show or hide buttons in an Aero wizard.
+ *  Creates a modal property sheet dialog.
  *
- *  @param  opts       Zero or more of the keyword values that specify which
- *                     property sheet buttons are to be shown. If a button value
- *                     is included in both this argument and the optsButtons
- *                     argument, then the button is shown.
- *
- *  @param optsButtons Zero or more of the same keywords used in opts. Here,
- *                     they specify which property sheet buttons are to be shown
- *                     or hidden. If a keyword appears in this argument but not
- *                     in opts, it indicates that the button should be hidden.
- *
- *  @param  Returns true if this is an Aero Wizard property sheet on Vista on
- *          later, otherwise false.
- *
- *  @notes  Thise method only works for Aero Wizards.  This method requires
- *          Vista or later, a condition is raised if the OS is not Vista or
- *          later. This method has no effect if the property sheet is not an
- *          Aero Wizard.
- *
- *          The order of showWizButtons() and setWizButtons() is important.
- *          This works:
- *
- *            propSheet~setWizButtons("NEXT")
- *            propSheet~showWizButtons("NEXT", "BACK NEXT")
- *
- *          This does not work:
- *
- *            propSheet~showWizButtons("NEXT", "BACK NEXT")
- *            propSheet~setWizButtons("NEXT")
+ *  @note  Sets the .systemErrorCode
  */
-RexxMethod3(RexxObjectPtr, psdlg_showWizButtons, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, optsButtons, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, psdlg_execute, OPTIONAL_RexxObjectPtr, owner, CSELF, pCSelf)
 {
+    RexxObjectPtr   result = TheNegativeOneObj;
+    HWND            hParent = NULL;
+
+    oodSetSysErrCode(context->threadContext);
+
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    pcpsd->getResultValue = -1;
 
-    if ( requiredOS(context, "showWizButtons", "Vista", Vista_OS) && pcpsd->isAeroWiz )
+    PROPSHEETPAGE *psp = NULL;
+    PROPSHEETHEADER *psh = NULL;
+
+    if ( argumentExists(1) )
     {
-        uint32_t flags = 0;
-        uint32_t buttons = 0;
-
-        if ( argumentExists(1) )
+        hParent = checkPropSheetOwner(context, owner, 1);
+        if ( hParent == NULL )
         {
-            if ( StrStrI(opts, "BACK")   != NULL ) flags |= PSWIZB_BACK;
-            if ( StrStrI(opts, "NEXT")   != NULL ) flags |= PSWIZB_NEXT;
-            if ( StrStrI(opts, "FINISH") != NULL ) flags |= PSWIZB_FINISH;
-            if ( StrStrI(opts, "CANCEL") != NULL ) flags |= PSWIZB_CANCEL;
+            goto done_out;
         }
-
-        if ( argumentExists(2) )
-        {
-            if ( StrStrI(optsButtons, "BACK")   != NULL ) buttons |= PSWIZB_BACK;
-            if ( StrStrI(optsButtons, "NEXT")   != NULL ) buttons |= PSWIZB_NEXT;
-            if ( StrStrI(optsButtons, "FINISH") != NULL ) buttons |= PSWIZB_FINISH;
-            if ( StrStrI(optsButtons, "CANCEL") != NULL ) buttons |= PSWIZB_CANCEL;
-        }
-
-        PropSheet_ShowWizButtons(pcpsd->hDlg, flags, buttons);
-
-        return TheTrueObj;
     }
 
-    return TheFalseObj;
-}
+    psp = initPropSheetPages(context, pcpsd);
+    if ( psp == NULL )
+    {
+        goto done_out;
+    }
 
+    // It is not necessary to set pcpsd->modeless to false, it is false by default.
 
-/** PropertySheetDialog::apply()
- *
- *  Simulates the selection of the Apply button, indicating that one or more
- *  pages have changed and the changes need to be validated and recorded.
- *
- */
-RexxMethod1(RexxObjectPtr, psdlg_apply, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    psh = initPropSheetHeader(context, pcpsd, psp, hParent);
+    if ( psh == NULL )
+    {
+        goto done_out;
+    }
 
-    return PropSheet_Apply(pcpsd->hDlg) ? TheTrueObj : TheFalseObj;
-}
+    intptr_t ret;
+    if ( hParent == NULL )
+    {
+        assignPSDThreadContext(pcpsd, context->threadContext, GetCurrentThreadId());
 
+        if ( setPropSheetHook(pcpsd) )
+        {
+            ret = PropertySheet(psh);
+            oodSetSysErrCode(context->threadContext);
+        }
+        else
+        {
+            ret = -1;
+        }
+    }
+    else
+    {
+        ret = (intptr_t)SendMessage(hParent, WM_USER_CREATEPROPSHEET_DLG, (WPARAM)psh, (LPARAM)pcpsd);
+    }
 
-/** PropertySheetDialog::cancelToClose()
- *
- *  Used when changes made since the most recent PSN_APPLY notification cannot
- *  be canceled.
- *
- */
-RexxMethod1(RexxObjectPtr, psdlg_cancelToClose, CSELF, pCSelf)
-{
-    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    pcpsd->getResultValue = ret;
 
-    PropSheet_CancelToClose(pcpsd->hDlg);
-    return TheZeroObj;
+    // Call leaving now, but note that the underlying Windows property sheet
+    // dialog is now destroyed
+    context->SendMessage0(pcpsd->rexxSelf, "LEAVING");
+
+    result = context->WholeNumber(ret);
+
+done_out:
+    safeLocalFree(psp);
+    safeLocalFree(psh);
+    stopDialog(pcpsd->pcpbd, context->threadContext);
+    return result;
 }
 
 
@@ -3404,6 +2940,34 @@ RexxMethod1(RexxObjectPtr, psdlg_getCurrentPageHwnd, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
     return pointer2string(context, PropSheet_GetCurrentPageHwnd(pcpsd->hDlg));
+}
+
+
+/** PropertySheetDialog::getPage()
+ *
+ *  Gets the page dialog specified by index.
+ *
+ *  @index  The one-based index of the page whose dialog is desired.
+ *
+ *  @return  The Rexx dialog object for the page specified.
+ *
+ *  @notes  Raises an exception if index is not correct.
+ *
+ *  @remarks  This method is not an interface to a PSM_x message, it is a helper
+ *            function for ooDialog programmers.
+ */
+RexxMethod2(RexxObjectPtr, psdlg_getPage, uint32_t, index, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    uint32_t count = pcpsd->pageCount;
+    if ( index < 1 || index > count )
+    {
+        wrongRangeException(context->threadContext, 1, 1, (int)count, index);
+        return NULLOBJECT;
+    }
+
+    return pcpsd->rexxPages[index - 1];
 }
 
 
@@ -3600,6 +3164,91 @@ RexxMethod3(RexxObjectPtr, psdlg_indexToHandle, int, index, NAME, method, CSELF,
 }
 
 
+/** PropertySheetDialog::insertPage()
+ *
+ *
+ */
+RexxMethod4(RexxObjectPtr, psdlg_insertPage, RexxObjectPtr, _page, uint32_t, index, OPTIONAL_logical_t, isExteriorPage, CSELF, pCSelf)
+{
+    pCPropertySheetDialog  pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    bool     abortDialog;
+    uint32_t max = pcpsd->pageCount;
+
+    pCPropertySheetPage pcpsp = NULL;
+
+    PROPSHEETPAGE *psp = getPSPMemory(context, pcpsd, &pcpsp, _page, max, &abortDialog);
+    if ( psp == NULL )
+    {
+        goto err_out;
+    }
+
+    pcpsp->psp = psp;
+    abortDialog = false;
+
+    index--;
+    updatePageCSelf(pcpsd, pcpsp, index);
+
+    if ( index + 1 < max )
+    {
+        for ( uint32_t i = max - 1, j = max; i >= index; i--, j-- )
+        {
+            pcpsd->rexxPages[j] = pcpsd->rexxPages[i];
+            pcpsd->cppPages[j] = pcpsd->cppPages[i];
+            pcpsd->cppPages[j]->pageNumber = j;
+        }
+    }
+
+    pcpsd->cppPages[index] = pcpsp;
+    pcpsd->rexxPages[index] = _page;
+    pcpsd->pageCount++;
+
+    if ( ! initPSP(context, pcpsd, psp, index, isExteriorPage ? true : false) )
+    {
+        goto err_out;
+    }
+
+    abortDialog = true;
+
+    pcpsp->hPropSheetPage = CreatePropertySheetPage(psp);
+    if ( pcpsp->hPropSheetPage == NULL )
+    {
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "CreatePropertySheetPage");
+        goto err_out;
+    }
+
+    if ( PropSheet_InsertPage(pcpsd->hDlg, index, pcpsp->hPropSheetPage) == 0 )
+    {
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "PropSheet_InsertPage");
+        goto err_out;
+    }
+
+    PropSheet_RecalcPageSizes(pcpsd->hDlg);
+
+    return TheTrueObj;
+
+err_out:
+    safeLocalFree(psp);
+
+    if ( pcpsp != NULL )
+    {
+        pcpsp->psp = NULL;
+
+        if ( pcpsp->hPropSheetPage != NULL )
+        {
+            DestroyPropertySheetPage(pcpsp->hPropSheetPage);
+            pcpsp->hPropSheetPage = NULL;
+        }
+    }
+
+    if ( abortDialog )
+    {
+        endDialogPremature(pcpsd->pcpbd, pcpsd->hDlg, RexxConditionRaised);
+    }
+    return TheFalseObj;
+}
+
+
 /** PropertySheetDialog::pageToIndex()
  *
  *  Takes the handle of a property sheet page and returns its one-based index.
@@ -3614,6 +3263,80 @@ RexxMethod2(uint32_t, psdlg_pageToIndex, POINTER, hPage, CSELF, pCSelf)
 
     int index = PropSheet_PageToIndex(pcpsd->hDlg, hPage);
     return ++index;
+}
+
+
+/** PropertySheetDialog::popup()
+ *
+ *
+ *  @notes  AeroWizard dialogs do not support modeless
+ */
+RexxMethod2(RexxObjectPtr, psdlg_popup, NAME, methodName, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcpsd->pcpbd;
+
+    PROPSHEETPAGE *psp = NULL;
+    PROPSHEETHEADER *psh = NULL;
+
+    if ( pcpsd->isAeroWiz )
+    {
+        methodCanNotBeInvokedException(context, "popup", pcpsd->rexxSelf, "with the AeroWizard style");
+        goto err_out;
+    }
+
+    psp = initPropSheetPages(context, pcpsd);
+    if ( psp == NULL )
+    {
+        goto err_out;
+    }
+
+    pcpsd->modeless = true;
+
+    psh = initPropSheetHeader(context, pcpsd, psp, NULL);
+    if ( psh == NULL )
+    {
+        goto err_out;
+    }
+
+    DWORD threadID;
+    bool Release = false;
+
+    EnterCriticalSection(&crit_sec);
+
+    PropSheetThreadArgs threadArgs;
+    threadArgs.pcpsd = pcpsd;
+    threadArgs.psh = psh;
+    threadArgs.release = &Release;
+
+    pcpbd->hDlgProcThread = CreateThread(NULL, 2000, PropSheetLoopThread, &threadArgs, 0, &threadID);
+
+    // Wait for thread to signal us to continue, don't wait if the thread was not created.
+    while ( ! Release && pcpbd->hDlgProcThread != NULL )
+    {
+        Sleep(1);
+    }
+    LeaveCriticalSection(&crit_sec);
+
+    // Note we do not need to set pcpbd->dlgProcThreadID here.  It is set in
+    // PropSheetLoopThread because that function also sets dlgProcContext and
+    // dlgProcThreadID for all the property sheet page dialogs.
+    if ( pcpbd->hDlgProcThread != NULL )
+    {
+        return TheTrueObj;
+    }
+    else
+    {
+        // Something failed in the the thread function.  In that case, things
+        // are cleaned up in the thread function.
+        return TheFalseObj;
+    }
+
+err_out:
+    safeLocalFree(psp);
+    safeLocalFree(psh);
+    stopDialog(pcpsd->pcpbd, context->threadContext);
+    return TheFalseObj;
 }
 
 
@@ -3653,6 +3376,118 @@ RexxMethod3(int32_t, psdlg_querySiblings, RexxObjectPtr, wParam, RexxObjectPtr, 
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
     return (int32_t)PropSheet_QuerySiblings(pcpsd->hDlg, (WPARAM)wParam, (LPARAM)lParam);
+}
+
+
+/** PropertySheetDialog::removePage()
+ *
+ *  Removes a page from the property sheet.
+ *
+ *  @param  index  The one-based index of the page to be removed.
+ *
+ *  @return  Zero always.
+ *
+ *  @remarks  If the page being removed is not the last page we need to move the
+ *            pointers in the arrays down 1.  However, we also need to adjust
+ *            the page numbers in the Rexx page object.  So, rather than do a
+ *            memmove for the pointers, we may as well just walk the arrays.
+ */
+RexxMethod2(RexxObjectPtr, psdlg_removePage, OPTIONAL_uint32_t, index, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    uint32_t max = pcpsd->pageCount;
+
+    if ( argumentOmitted(1) )
+    {
+        index = max;
+    }
+
+    if ( index < 1 || index > max )
+    {
+        wrongRangeException(context->threadContext, 1, 1, max, index);
+        return TheZeroObj;
+    }
+
+    index--;
+    pCPropertySheetPage pcpspRemove = pcpsd->cppPages[index];
+
+    if ( index + 1 < max )
+    {
+        for ( uint32_t i = index, j = index + 1; i > max - 1; i++, j++ )
+        {
+            pcpsd->rexxPages[i] = pcpsd->rexxPages[j];
+            pcpsd->cppPages[i] = pcpsd->cppPages[j];
+            pcpsd->cppPages[i]->pageNumber = i;
+        }
+    }
+
+    pcpsd->rexxPages[max] = NULL;
+    pcpsd->cppPages[max] = NULL;
+    pcpsd->pageCount--;
+
+    pcpspRemove->inRemovePage = true;
+
+    PropSheet_RemovePage(pcpsd->hDlg, index, NULL);
+    PropSheet_RecalcPageSizes(pcpsd->hDlg);
+
+    if ( pcpspRemove->hPropSheetPage != NULL )
+    {
+        DestroyPropertySheetPage(pcpspRemove->hPropSheetPage);
+        pcpspRemove->hPropSheetPage = NULL;
+
+        safeLocalFree(pcpspRemove->psp);
+        pcpspRemove->psp = NULL;
+    }
+
+    pcpspRemove->inRemovePage = false;
+
+    return TheZeroObj;
+}
+
+
+/** PropertySheetDialog::setButtonText()
+ *
+ *  Sets the text of the specified button in an Aero wizard
+ *
+ *  @param  button  A keyword specifying which button to set the text for, Back,
+ *                  Cancel, Finish, or Next.
+ *
+ *  @param  text    The text for the Next button.
+ *
+ *  @return  True on success, false otherwise.
+ *
+ *  @note  Raises syntax conditions if not Vista and if keyword is incorrect.
+ *
+ */
+RexxMethod3(RexxObjectPtr, psdlg_setButtonText, CSTRING, button, CSTRING, text, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( requiredOS(context, "setButtonText", "Vista", Vista_OS) && pcpsd->isAeroWiz )
+    {
+        uint32_t flag = 0;
+
+        if (      StrStrI(button, "BACK")   != NULL ) flag = PSWIZB_BACK;
+        else if ( StrStrI(button, "CANCEL") != NULL ) flag = PSWIZB_CANCEL;
+        else if ( StrStrI(button, "FINISH") != NULL ) flag = PSWIZB_FINISH;
+        else if ( StrStrI(button, "NEXT")   != NULL ) flag = PSWIZB_NEXT;
+        else
+        {
+            wrongArgValueException(context->threadContext, 1, VALID_AERO_BUTTONS, button);
+            return TheFalseObj;
+        }
+
+        LPWSTR buttonText = ansi2unicode(text);
+        if ( buttonText != NULL )
+        {
+            PropSheet_SetButtonText(pcpsd->hDlg, flag, buttonText);
+            LocalFree(buttonText);
+            return TheTrueObj;
+        }
+    }
+
+    return TheFalseObj;
 }
 
 
@@ -3858,6 +3693,39 @@ done_out:
 }
 
 
+/** PropertySheetDialog::setNextText()
+ *
+ *  Sets the text of the Next button in an aero wizard.
+ *
+ *  @param  text  The text for the Next button.
+ *
+ *  @return  True if an aero wizard, otherwise false
+ *
+ *  @requires Vista or later.
+ *
+ *  @remarks  Testing has shown that all text in an aero wizard has to be
+ *            Unicode.  Not sure about freeing the text after the call to
+ *            PropSheet_SetNextText(), but it seems okay.
+ */
+RexxMethod3(RexxObjectPtr, psdlg_setNextText, CSTRING, text, NAME, method, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( requiredOS(context, "setNextText", "Vista", Vista_OS) && pcpsd->isAeroWiz )
+    {
+        LPWSTR buttonText = ansi2unicode(text);
+        if ( buttonText != NULL )
+        {
+            PropSheet_SetNextText(pcpsd->hDlg, buttonText);
+            LocalFree(buttonText);
+        }
+        return TheTrueObj;
+    }
+
+    return TheFalseObj;
+}
+
+
 /** PropertySheetDialog::setTitle()
  *
  *  Sets the title for a property sheet dialog.
@@ -3898,6 +3766,138 @@ RexxMethod3(RexxObjectPtr, psdlg_setTitle, CSTRING, title, OPTIONAL_logical_t, a
         PropSheet_SetTitle(pcpsd->hDlg, addPropertiesFor, title);
     }
 
+    return TheZeroObj;
+}
+
+
+/** PropertySheetDialog::setWizButtons()
+ *
+ *  Enables or disables the Back, Next, and Finish buttons in a wizard.
+ *
+ *  @param  opts  Keyword(s) that control which buttons are enabled or disabled.
+ *
+ *  @return  True this property sheet is a wizard, otherwise false.
+ *
+ *  @notes  Wizards display either three or four buttons below each page. This
+ *          method is used to specify which buttons are enabled. Wizards
+ *          normally display Back, Cancel, and either a Next or Finish button.
+ *          Typically, enable only the Next button for the welcome page, Next
+ *          and Back for interior pages, and Back and Finish for the completion
+ *          page.  The Cancel button is always enabled.  Normally, setting
+ *          FINISH or DISABLEDFINISH replaces the Next button with a Finish
+ *          button.  To display Next and Finish buttons simultaneously, set the
+ *          WIZARDHASFINISH keyword in the options when the PropertySheetDialog
+ *          is instantiated.  Every page will then display all four buttons.
+ *
+ *          If this property sheet is not a Wizard, this method has no effect.
+ *
+ *  @remarks  We do not enforce that this is only called for a Wizard, although
+ *            maybe we should.
+ *
+ *            The prop sheet marco does not return a value.
+ */
+RexxMethod2(RexxObjectPtr, psdlg_setWizButtons, OPTIONAL_CSTRING, opts, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+    if ( pcpsd->isNotWizard )
+    {
+        return TheFalseObj;
+    }
+
+    uint32_t flags = 0;
+
+    if ( argumentExists(1) )
+    {
+        if ( StrStrI(opts, "BACK")           != NULL ) flags |= PSWIZB_BACK;
+        if ( StrStrI(opts, "NEXT")           != NULL ) flags |= PSWIZB_NEXT;
+        if ( StrStrI(opts, "FINISH")         != NULL ) flags |= PSWIZB_FINISH;
+        if ( StrStrI(opts, "DISABLEDFINISH") != NULL ) flags |= PSWIZB_DISABLEDFINISH;
+    }
+
+    PropSheet_SetWizButtons(pcpsd->hDlg, flags);
+    return TheTrueObj;
+}
+
+
+/** PropertySheetDialog::showWizButtons()
+ *
+ *  Show or hide buttons in an Aero wizard.
+ *
+ *  @param  opts       Zero or more of the keyword values that specify which
+ *                     property sheet buttons are to be shown. If a button value
+ *                     is included in both this argument and the optsButtons
+ *                     argument, then the button is shown.
+ *
+ *  @param optsButtons Zero or more of the same keywords used in opts. Here,
+ *                     they specify which property sheet buttons are to be shown
+ *                     or hidden. If a keyword appears in this argument but not
+ *                     in opts, it indicates that the button should be hidden.
+ *
+ *  @param  Returns true if this is an Aero Wizard property sheet on Vista on
+ *          later, otherwise false.
+ *
+ *  @notes  Thise method only works for Aero Wizards.  This method requires
+ *          Vista or later, a condition is raised if the OS is not Vista or
+ *          later. This method has no effect if the property sheet is not an
+ *          Aero Wizard.
+ *
+ *          The order of showWizButtons() and setWizButtons() is important.
+ *          This works:
+ *
+ *            propSheet~setWizButtons("NEXT")
+ *            propSheet~showWizButtons("NEXT", "BACK NEXT")
+ *
+ *          This does not work:
+ *
+ *            propSheet~showWizButtons("NEXT", "BACK NEXT")
+ *            propSheet~setWizButtons("NEXT")
+ */
+RexxMethod3(RexxObjectPtr, psdlg_showWizButtons, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, optsButtons, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    if ( requiredOS(context, "showWizButtons", "Vista", Vista_OS) && pcpsd->isAeroWiz )
+    {
+        uint32_t flags = 0;
+        uint32_t buttons = 0;
+
+        if ( argumentExists(1) )
+        {
+            if ( StrStrI(opts, "BACK")   != NULL ) flags |= PSWIZB_BACK;
+            if ( StrStrI(opts, "NEXT")   != NULL ) flags |= PSWIZB_NEXT;
+            if ( StrStrI(opts, "FINISH") != NULL ) flags |= PSWIZB_FINISH;
+            if ( StrStrI(opts, "CANCEL") != NULL ) flags |= PSWIZB_CANCEL;
+        }
+
+        if ( argumentExists(2) )
+        {
+            if ( StrStrI(optsButtons, "BACK")   != NULL ) buttons |= PSWIZB_BACK;
+            if ( StrStrI(optsButtons, "NEXT")   != NULL ) buttons |= PSWIZB_NEXT;
+            if ( StrStrI(optsButtons, "FINISH") != NULL ) buttons |= PSWIZB_FINISH;
+            if ( StrStrI(optsButtons, "CANCEL") != NULL ) buttons |= PSWIZB_CANCEL;
+        }
+
+        PropSheet_ShowWizButtons(pcpsd->hDlg, flags, buttons);
+
+        return TheTrueObj;
+    }
+
+    return TheFalseObj;
+}
+
+
+/** PropertySheetDialog::unchanged()
+ *
+ */
+RexxMethod2(RexxObjectPtr, psdlg_unchanged, RexxObjectPtr, _page, CSELF, pCSelf)
+{
+    pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
+
+    HWND page = getValidPageHwnd(context, pcpsd, _page, 1);
+    if ( page != NULL )
+    {
+        PropSheet_UnChanged(pcpsd->hDlg, page);
+    }
     return TheZeroObj;
 }
 
@@ -4195,7 +4195,7 @@ err_out:
     return TheFalseObj;
 }
 
-/** PropertySheetPage::init()  [Class method]
+/** PropertySheetPage::init()               [Class method]
  *
  *  Used to capture the PropertySheetPage class object.  This is used for scoped
  *  look ups of the CSelf.
@@ -4210,48 +4210,8 @@ RexxMethod1(RexxObjectPtr, psp_init_cls, OSELF, self)
 }
 
 
-/** PropertySheetPage::propSheet()  [Attribute get]
- *
- */
-RexxMethod1(RexxObjectPtr, psp_propSheet_atr, CSELF, pCSelf)
-{
-    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
-    return pcpsp->rexxPropSheet;
-}
-
-
-/** PropertySheetPage::wasActivated()  [Attribute get]
- *
- */
-RexxMethod1(RexxObjectPtr, psp_wasActivated_atr, CSELF, pCSelf)
-{
-    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
-    return pcpsp->activated ? TheTrueObj : TheFalseObj;
-}
-
-
-/** PropertySheetPage::pageID()  [Attribute get]
- *
- */
-RexxMethod1(POINTER, psp_pageID_atr, CSELF, pCSelf)
-{
-    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
-    return (POINTER)pcpsp->pageID;
-}
-
-
-/** PropertySheetPage::pageIndex()  [Attribute get]
- *
- */
-RexxMethod1(uint32_t, psp_pageNumber_atr, CSELF, pCSelf)
-{
-    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
-    return pcpsp->pageNumber + 1;
-}
-
-
-/** PropertySheetPage::cx                [Attribute get]
- *  PropertySheetPage::cy
+/** PropertySheetPage::cx                   [Attribute get]
+ *  PropertySheetPage::cy                   [Attribute get]
  *
  */
 RexxMethod2(uint32_t, psp_getcx, NAME, name, CSELF, pCSelf)
@@ -4262,8 +4222,8 @@ RexxMethod2(uint32_t, psp_getcx, NAME, name, CSELF, pCSelf)
 }
 
 
-/** PropertySheetPage::cx                [Attribute set]
- *  PropertySheetPage::cy
+/** PropertySheetPage::cx                   [Attribute set]
+ *  PropertySheetPage::cy                   [Attribute set]
  *
  */
 RexxMethod3(RexxObjectPtr, psp_setcx, uint32_t, dlgUnit, NAME, name, CSELF, pCSelf)
@@ -4275,7 +4235,27 @@ RexxMethod3(RexxObjectPtr, psp_setcx, uint32_t, dlgUnit, NAME, name, CSELF, pCSe
 }
 
 
-/** PropertySheetPage::pageTitle()       [Attribute get]
+/** PropertySheetPage::pageID()             [Attribute get]
+ *
+ */
+RexxMethod1(POINTER, psp_pageID_atr, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+    return (POINTER)pcpsp->pageID;
+}
+
+
+/** PropertySheetPage::pageIndex()          [Attribute get]
+ *
+ */
+RexxMethod1(uint32_t, psp_pageNumber_atr, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+    return pcpsp->pageNumber + 1;
+}
+
+
+/** PropertySheetPage::pageTitle()          [Attribute get]
  *  PropertySheetPage::headerTitle()
  *  PropertySheetPage::headerSubTitle()
  */
@@ -4294,9 +4274,9 @@ RexxMethod2(RexxObjectPtr, psp_getPageTitle, NAME, name, CSELF, pCSelf)
 }
 
 
-/** PropertySheetPage::pageTitle()       [Attribute set]
- *  PropertySheetPage::headerTitle()
- *  PropertySheetPage::headerSubTitle()
+/** PropertySheetPage::pageTitle()          [Attribute set]
+ *  PropertySheetPage::headerTitle()        [Attribute set]
+ *  PropertySheetPage::headerSubTitle()     [Attribute set]
  */
 RexxMethod3(RexxObjectPtr, psp_setPageTitle, CSTRING, text, NAME, name, CSELF, pCSelf)
 {
@@ -4309,7 +4289,6 @@ RexxMethod3(RexxObjectPtr, psp_setPageTitle, CSTRING, text, NAME, name, CSELF, p
             break;
 
         case 'I' :
-            printf("Setting header title attribute %s\n", text);
             setPageText(context, pcpsp, text, headerText);
             break;
 
@@ -4321,44 +4300,17 @@ RexxMethod3(RexxObjectPtr, psp_setPageTitle, CSTRING, text, NAME, name, CSELF, p
 }
 
 
-/** PropertySheetPage::wantAccelerators()   [Attribute]
- *  PropertySheetPage::wantGetObject()
+/** PropertySheetPage::propSheet()          [Attribute get]
  *
  */
-RexxMethod2(RexxObjectPtr, psp_getWantNotification, NAME, methName, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, psp_propSheet_atr, CSELF, pCSelf)
 {
     pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
-    RexxObjectPtr result = TheFalseObj;
-
-    if ( *(methName + 4) == 'A' )
-    {
-        result = pcpsp->wantAccelerators ? TheTrueObj : TheFalseObj;
-    }
-    else
-    {
-        result = pcpsp->wantGetObject ? TheTrueObj : TheFalseObj;
-    }
-    return result;
+    return pcpsp->rexxPropSheet;
 }
 
 
-RexxMethod3(RexxObjectPtr, psp_setWantNotification, logical_t, want, NAME, methName, CSELF, pCSelf)
-{
-    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
-
-    if ( *(methName + 4) == 'A' )
-    {
-        pcpsp->wantAccelerators = want ? true : false;
-    }
-    else
-    {
-        pcpsp->wantGetObject = want ? true : false;
-    }
-    return NULLOBJECT;
-}
-
-
-/** PropertySheetPage::resources()      [Attribute set]
+/** PropertySheetPage::resources()          [Attribute set]
  *
  */
 RexxMethod2(RexxObjectPtr, psp_setResources_atr, RexxObjectPtr, resourceImage, CSELF, pCSelf)
@@ -4374,7 +4326,7 @@ RexxMethod2(RexxObjectPtr, psp_setResources_atr, RexxObjectPtr, resourceImage, C
     return NULLOBJECT;
 }
 
-/** PropertySheetPage::tabIcon()        [Attribute set]
+/** PropertySheetPage::tabIcon()            [Attribute set]
  *
  *  Sets the icon used for the tab.  The user can specify the icon as either a
  *  resource ID (numeric or symbolic) or as an .Image object.
@@ -4413,6 +4365,57 @@ RexxMethod2(RexxObjectPtr, psp_setTabIcon_atr, RexxObjectPtr, icon, CSELF, pCSel
 
 done_out:
     return NULLOBJECT;
+}
+
+
+/** PropertySheetPage::wantAccelerators()   [Attribute get]
+/** PropertySheetPage::wantGetObject()      [Attribute get]
+ *
+ */
+RexxMethod2(RexxObjectPtr, psp_getWantNotification, NAME, methName, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+    RexxObjectPtr result = TheFalseObj;
+
+    if ( *(methName + 4) == 'A' )
+    {
+        result = pcpsp->wantAccelerators ? TheTrueObj : TheFalseObj;
+    }
+    else
+    {
+        result = pcpsp->wantGetObject ? TheTrueObj : TheFalseObj;
+    }
+    return result;
+}
+
+
+/** PropertySheetPage::wantAccelerators()   [Attribute set]
+/** PropertySheetPage::wantGetObject()      [Attribute set]
+ *
+ */
+RexxMethod3(RexxObjectPtr, psp_setWantNotification, logical_t, want, NAME, methName, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+
+    if ( *(methName + 4) == 'A' )
+    {
+        pcpsp->wantAccelerators = want ? true : false;
+    }
+    else
+    {
+        pcpsp->wantGetObject = want ? true : false;
+    }
+    return NULLOBJECT;
+}
+
+
+/** PropertySheetPage::wasActivated()       [Attribute get]
+ *
+ */
+RexxMethod1(RexxObjectPtr, psp_wasActivated_atr, CSELF, pCSelf)
+{
+    pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
+    return pcpsp->activated ? TheTrueObj : TheFalseObj;
 }
 
 
