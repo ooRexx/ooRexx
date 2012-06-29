@@ -270,6 +270,8 @@
 ::method isAtLeastW2K3 class external "LIBRARY oodialog os_isVersion"
 ::method isAtLeastVista class external "LIBRARY oodialog os_isVersion"
 ::method isAtLeastWindows7 class external "LIBRARY oodialog os_isVersion"
+::method settingChanged class external "LIBRARY oodialog os_settingChanged"
+::method shellChangeNotify class external "LIBRARY oodialog os_shellChangeNotify"
 
 
 ::class 'Rect' public

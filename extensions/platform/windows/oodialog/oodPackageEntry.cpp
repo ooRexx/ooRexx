@@ -424,6 +424,8 @@ REXX_METHOD_PROTOTYPE(app_setDefaults);
 REXX_METHOD_PROTOTYPE(os_is64bit);
 REXX_METHOD_PROTOTYPE(os_is32on64bit);
 REXX_METHOD_PROTOTYPE(os_isVersion);
+REXX_METHOD_PROTOTYPE(os_settingChanged);
+REXX_METHOD_PROTOTYPE(os_shellChangeNotify);
 
 // SPI
 REXX_METHOD_PROTOTYPE(spi_init_cls);
@@ -1338,6 +1340,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(os_is64bit,                     os_is64bit),
     REXX_METHOD(os_is32on64bit,                 os_is32on64bit),
     REXX_METHOD(os_isVersion,                   os_isVersion),
+    REXX_METHOD(os_settingChanged,              os_settingChanged),
+    REXX_METHOD(os_shellChangeNotify,           os_shellChangeNotify),
 
     // SPI
     REXX_METHOD(spi_init_cls,                   spi_init_cls),

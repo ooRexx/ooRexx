@@ -44,6 +44,8 @@
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
 #include <stdio.h>          // For printf()
+#include <shlwapi.h>        // For StrStrI()
+#include <shlobj.h>         // For ShChangeNotify()
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodDeviceGraphics.hpp"
@@ -1126,7 +1128,9 @@ RexxMethod1(RexxStringObject, dlgutil_windowFromPoint_cls, RexxObjectPtr, pt)
  */
 RexxMethod1(uint64_t, dlgutil_test_cls, int64_t, n)
 {
-    return (uint64_t)n;
+    printf("DlgUtil::test() No tests at this time.\n");
+
+    return 0;
 }
 
 /**
@@ -1628,6 +1632,71 @@ RexxMethod1(RexxObjectPtr, os_isVersion, NAME, method)
     return (isVersion ? TheTrueObj : TheFalseObj);
 }
 
+
+/** OS::settingChanged()
+ *
+ *
+ *  The use of ERRORONEXIT requires Vista or later. Sets the .systemErrorCode.
+ */
+RexxMethod3(logical_t, os_settingChanged, OPTIONAL_uint32_t, to, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, area)
+{
+    DWORD_PTR result;
+    uint32_t  timeout   = 5000;;
+    uint32_t  flags     = SMTO_ABORTIFHUNG;
+    CSTRING   paramArea = "Environment";
+
+    oodResetSysErrCode(context->threadContext);
+
+    if ( argumentExists(1) )
+    {
+        timeout = to;
+    }
+    if ( argumentExists(2) && strlen(opts) > 0 )
+    {
+        flags = 0;
+
+        if ( StrStrI(opts, "ABORTIFHUNG")        != NULL ) flags |= SMTO_ABORTIFHUNG;
+        if ( StrStrI(opts, "BLOCK")              != NULL ) flags |= SMTO_BLOCK;
+        if ( StrStrI(opts, "NORMAL")             != NULL ) flags |= SMTO_NORMAL;
+        if ( StrStrI(opts, "NOTIMEOUTIFNOTHUNG") != NULL ) flags |= SMTO_NOTIMEOUTIFNOTHUNG;
+        if ( StrStrI(opts, "ERRORONEXIT")        != NULL )
+        {
+            if ( ! requiredOS(context, "setttingChanged", "Vista", Vista_OS) )
+            {
+                return FALSE;
+            }
+
+            flags |= SMTO_ERRORONEXIT;
+        }
+    }
+    if ( argumentExists(3) )
+    {
+        paramArea = area;
+    }
+
+    if ( SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL, (LPARAM)paramArea, flags, timeout, &result) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/** OS::shellChangeNotify()
+ *
+ */
+RexxMethod4(logical_t, os_shellChangeNotify, OPTIONAL_CSTRING, id, OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, item1,
+            OPTIONAL_RexxObjectPtr, item2)
+{
+    if ( argumentExists(1) || argumentExists(2) || argumentExists(3) || argumentExists(4) )
+    {
+        return FALSE;
+    }
+
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+    return TRUE;
+}
 
 /**
  *  Methods for the .ResourceUtils mixin class.
