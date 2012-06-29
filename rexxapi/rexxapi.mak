@@ -61,14 +61,14 @@ CLIENTOBJS = $(OR_OUTDIR)\ClientMessage.obj $(OR_OUTDIR)\LocalAPIContext.obj \
           $(OR_OUTDIR)\ServiceMessage.obj $(OR_OUTDIR)\SysCSStream.obj $(OR_OUTDIR)\SysProcess.obj \
           $(OR_OUTDIR)\Utilities.obj $(OR_OUTDIR)\SysLegacyAPI.obj $(OR_OUTDIR)\SysFile.obj \
           $(OR_OUTDIR)\SysLocalAPIManager.obj $(OR_OUTDIR)\SysLibrary.obj $(OR_OUTDIR)\SysAPIManager.obj \
-          $(OR_OUTDIR)\SysSemaphore.obj
+          $(OR_OUTDIR)\SysSemaphore.obj $(OR_OUTDIR)\RegistrationTable.obj
 
 SERVEROBJS = $(OR_OUTDIR)\APIServer.obj $(OR_OUTDIR)\APIServerInstance.obj \
           $(OR_OUTDIR)\MacroSpaceManager.obj $(OR_OUTDIR)\QueueManager.obj \
           $(OR_OUTDIR)\RegistrationManager.obj $(OR_OUTDIR)\ServiceMessage.obj \
           $(OR_OUTDIR)\APIService.obj $(OR_OUTDIR)\SysCSStream.obj $(OR_OUTDIR)\SysProcess.obj \
           $(OR_OUTDIR)\SysAPIManager.obj $(OR_OUTDIR)\SysThread.obj $(OR_OUTDIR)\SysSemaphore.obj \
-          $(OR_OUTDIR)\Utilities.obj $(OR_OUTDIR)\APIServerThread.obj
+          $(OR_OUTDIR)\Utilities.obj $(OR_OUTDIR)\APIServerThread.obj $(OR_OUTDIR)\RegistrationTable.obj
 
 # Following for REXXAPI.DLL
 #

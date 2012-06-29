@@ -242,14 +242,14 @@ Say NOT EQUALS
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>More ENDs were found in your program than DO or SELECT instructions, or the ENDs did not match the DO or SELECT instructions. This message also occurs if you try to transfer control into the middle of a loop using SIGNAL. In this case, the language processor does not expect the END because it did not process the previous DO instruction. Remember also that SIGNAL deactivates any current loops, so it cannot transfer control from one place inside a loop to another.</para>
-<para>Another cause for this message is placing an END immediately after a THEN or ELSE subkeyword or specifying a name on the END keyword that does not match the name following DO. Putting the name of the control variable on ENDs that close repetitive loops can also help locate this kind of error.</para>
+<para>More ENDs were found in your program than DO, LOOP, or SELECT instructions, or the ENDs did not match the DO, LOOP, or SELECT instructions. This message also occurs if you try to transfer control into the middle of a loop using SIGNAL. In this case, the language processor does not expect the END because it did not process the previous DO instruction. Remember also that SIGNAL deactivates any current loops, so it cannot transfer control from one place inside a loop to another.</para>
+<para>Another cause for this message is placing an END immediately after a THEN or ELSE subkeyword or specifying a name on the END keyword that does not match the name following DO or LOOP. Putting the name of the control variable on ENDs that close repetitive loops can also help locate this kind of error.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>END has no corresponding DO or SELECT</para>
+<para>END has no corresponding DO, LOOP, or SELECT</para>
 </listitem>
 </varlistentry>
 <varlistentry>

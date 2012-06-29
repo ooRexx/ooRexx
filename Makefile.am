@@ -341,6 +341,7 @@ rexxapiClientHeaders = $(build_rexxapi_client_dir)/ClientMessage.hpp \
                  $(build_rexxapi_client_platform_dir)/SysLocalAPIManager.hpp
 rexxapiCommonHeaders = $(build_rexxapi_common_dir)/Encodings.hpp \
                  $(build_rexxapi_common_dir)/Rxstring.hpp \
+                 $(build_rexxapi_common_dir)/RegistrationTable.hpp \
                  $(build_rexxapi_common_dir)/ServiceException.hpp \
                  $(build_rexxapi_common_dir)/ServiceMessage.hpp \
                  $(build_rexxapi_common_platform_dir)/SysAPIManager.hpp \
@@ -470,6 +471,7 @@ librexxapi_la_SOURCES = $(build_rexxapi_client_dir)/ClientMessage.cpp \
                         $(build_rexxapi_client_dir)/RegistrationAPI.cpp \
                         $(build_rexxapi_client_dir)/platform/unix/SysLegacyAPI.cpp \
                         $(build_rexxapi_client_dir)/platform/unix/SysLocalAPIManager.cpp \
+                        $(build_rexxapi_common_dir)/RegistrationTable.cpp \
                         $(build_rexxapi_common_dir)/ServiceMessage.cpp \
                         $(build_rexxapi_common_platform_dir)/SysAPIManager.cpp \
                         $(build_rexxapi_common_platform_dir)/SysCSStream.cpp \
@@ -732,6 +734,7 @@ rxapi_SOURCES = $(build_rexxapi_server_dir)/APIServer.cpp \
                 $(build_rexxapi_server_dir)/RegistrationManager.cpp \
                 $(build_rexxapi_server_dir)/platform/unix/$(ORX_PLATFORM_SPEC_DIR)/APIService.cpp \
                 $(build_rexxapi_common_dir)/ServiceMessage.cpp \
+                $(build_rexxapi_common_dir)/RegistrationTable.cpp \
                 $(build_rexxapi_common_platform_dir)/SysAPIManager.cpp \
                 $(build_rexxapi_common_platform_dir)/SysCSStream.cpp \
                 $(build_rexxapi_common_platform_dir)/SysProcess.cpp \

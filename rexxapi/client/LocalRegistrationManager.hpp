@@ -39,6 +39,7 @@
 #ifndef LocalRegistrationManager_HPP_INCLUDED
 #define LocalRegistrationManager_HPP_INCLUDED
 
+#include "RegistrationTable.hpp"
 #include "LocalAPISubsystem.hpp"
 #include "ServiceMessage.hpp"
 #include "rexx.h"
@@ -66,6 +67,14 @@ public:
     RexxReturnCode resolveCallback(RegistrationType type, const char *name, const char *module, REXXPFN &entryPoint);
     RexxReturnCode mapReturnResult(ServiceMessage &m);
     virtual RexxReturnCode processServiceException(ServiceException *e);
+
+protected:
+
+    RegistrationTable &locateTable(RegistrationType type);
+
+    RegistrationTable functions;         // our tables for process-specific registrations
+    RegistrationTable exits;
+    RegistrationTable commandHandlers;
 };
 
 #endif

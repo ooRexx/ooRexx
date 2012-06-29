@@ -42,6 +42,7 @@
 #include "SysLibrary.hpp"
 #include "ClientMessage.hpp"
 #include "Utilities.hpp"
+#include "RegistrationTable.hpp"
 
 
 
@@ -96,8 +97,34 @@ RexxReturnCode LocalRegistrationManager::registerCallback(RegistrationType type,
     ServiceRegistrationData regData(entryPoint, userData);
     message.setMessageData((char *)&regData, sizeof(ServiceRegistrationData));
 
-    message.send();
+    // we handle the exe callback registration locally.  So, this is a simulated SEND operation
+    RegistrationTable &table(locateTable(type));
+
+    // perform the registration locally
+    table.registerCallback(message);
     return mapReturnResult(message);
+}
+
+/**
+ * Locate the target table for a registration based on the type.
+ *
+ * @param type   The target registration type
+ *
+ * @return A reference to the registration table.
+ */
+RegistrationTable &LocalRegistrationManager::locateTable(RegistrationType type)
+{
+    if (type == FunctionAPI)
+    {
+        return functions;
+    }
+    else if (type == SubcomAPI)
+    {
+        return commandHandlers;
+    }
+    else {
+        return exits ;
+    }
 }
 
 
@@ -115,7 +142,8 @@ RexxReturnCode LocalRegistrationManager::dropCallback(RegistrationType type, con
     // this is a different operation depending on whether we have a module specified
     if (module != NULL)
     {
-        // first parameter for these calls is ALWAYS the type
+        // first parameter for these calls is ALWAYS the type.  Library registrations are
+        // handled by the server, so this is always a send.
         ClientMessage message(RegistrationManager, REGISTER_DROP_LIBRARY, type, name);
         // we have extra data to send
         ServiceRegistrationData regData(module);
@@ -128,6 +156,19 @@ RexxReturnCode LocalRegistrationManager::dropCallback(RegistrationType type, con
     {
         // first parameter for these calls is ALWAYS the type
         ClientMessage message(RegistrationManager, REGISTER_DROP, type, name);
+
+        RegistrationTable &table(locateTable(type));
+
+        // try to drop this locally
+        table.dropCallback(message);
+        RexxReturnCode rc = mapReturnResult(message);
+        // if handled ok at this level, we're done
+        if (rc == RXSUBCOM_OK)
+        {
+            return RXSUBCOM_OK;
+        }
+
+        // need to send this to the server.
         message.send();
         return mapReturnResult(message);
     }
@@ -146,6 +187,19 @@ RexxReturnCode LocalRegistrationManager::queryCallback(RegistrationType type, co
 {
     // first parameter for these calls is ALWAYS the type
     ClientMessage message(RegistrationManager, REGISTER_QUERY, type, name);
+
+    RegistrationTable &table(locateTable(type));
+
+    // try to drop this locally
+    table.queryCallback(message);
+    RexxReturnCode rc = mapReturnResult(message);
+    // if handled ok at this level, we're done
+    if (rc == RXSUBCOM_OK)
+    {
+        return RXSUBCOM_OK;
+    }
+
+    // need to send this to the server.
 
     message.send();
     // the returned extra message data is released automatically.
@@ -189,7 +243,17 @@ RexxReturnCode LocalRegistrationManager::queryCallback(RegistrationType type, co
     {
         // first parameter for these calls is ALWAYS the type
         ClientMessage message(RegistrationManager, REGISTER_QUERY, type, name);
-        message.send();
+        RegistrationTable &table(locateTable(type));
+
+        // try to drop this locally
+        table.queryCallback(message);
+        // if this wasn't found locally, ask the server
+        if (message.result != CALLBACK_EXISTS)
+        {
+            // need to send this to the server.
+            message.send();
+        }
+
         // if this was there, copy the user information back
         if (message.result == CALLBACK_EXISTS)
         {
@@ -217,7 +281,17 @@ RexxReturnCode LocalRegistrationManager::resolveCallback(RegistrationType type, 
 
     // first parameter for these calls is ALWAYS the type
     ClientMessage message(RegistrationManager, REGISTER_LOAD_LIBRARY, type, name);
-    message.send();
+
+    RegistrationTable &table(locateTable(type));
+
+    // try to locate this locally
+    table.queryCallback(message);
+    // if this wasn't found locally, ask the server
+    if (message.result != CALLBACK_EXISTS)
+    {
+        // need to send this to the server.
+        message.send();
+    }
 
     // if this was there, now try to load the module, if necessary.
     if (message.result == CALLBACK_EXISTS)

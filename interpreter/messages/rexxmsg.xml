@@ -313,8 +313,8 @@ Say NOT EQUALS
     <Severity>Warning</Severity>
     <SymbolicName>Error_Unexpected_end</SymbolicName>
     <Text>Unexpected or unmatched END</Text>
-    <Explanation><para>More ENDs were found in your program than DO or SELECT instructions, or the ENDs did not match the DO or SELECT instructions. This message also occurs if you try to transfer control into the middle of a loop using SIGNAL. In this case, the language processor does not expect the END because it did not process the previous DO instruction. Remember also that SIGNAL deactivates any current loops, so it cannot transfer control from one place inside a loop to another.</para>
-    <para>Another cause for this message is placing an END immediately after a THEN or ELSE subkeyword or specifying a name on the END keyword that does not match the name following DO. Putting the name of the control variable on ENDs that close repetitive loops can also help locate this kind of error.</para></Explanation>
+    <Explanation><para>More ENDs were found in your program than DO, LOOP, or SELECT instructions, or the ENDs did not match the DO, LOOP, or SELECT instructions. This message also occurs if you try to transfer control into the middle of a loop using SIGNAL. In this case, the language processor does not expect the END because it did not process the previous DO instruction. Remember also that SIGNAL deactivates any current loops, so it cannot transfer control from one place inside a loop to another.</para>
+    <para>Another cause for this message is placing an END immediately after a THEN or ELSE subkeyword or specifying a name on the END keyword that does not match the name following DO or LOOP. Putting the name of the control variable on ENDs that close repetitive loops can also help locate this kind of error.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>10</Code>
@@ -323,7 +323,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_end_nodo</SymbolicName>
-        <Text>END has no corresponding DO or SELECT</Text>
+        <Text>END has no corresponding DO, LOOP, or SELECT</Text>
       </SubMessage>
       <SubMessage>
         <Code>10</Code>
