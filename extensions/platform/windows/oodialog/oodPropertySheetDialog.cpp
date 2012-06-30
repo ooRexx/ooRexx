@@ -2803,21 +2803,10 @@ RexxMethod2(RexxObjectPtr, psdlg_changed, RexxObjectPtr, _page, CSELF, pCSelf)
  *  @param  Returns true if this is an Aero Wizard property sheet on Vista on
  *          later, otherwise false.
  *
- *  @notes  Thise method only works for Aero Wizards.  This method requires
- *          Vista or later, a condition is raised if the OS is not Vista or
- *          later. This method has no effect if the property sheet is not an
- *          Aero Wizard.
- *                            DO NOT KNOW ABOUT BELOW
- *          The order of showWizButtons() and setWizButtons() is important.
- *          This works:
- *
- *            propSheet~setWizButtons("NEXT")
- *            propSheet~showWizButtons("NEXT", "BACK NEXT")
- *
- *          This does not work:
- *
- *            propSheet~showWizButtons("NEXT", "BACK NEXT")
- *            propSheet~setWizButtons("NEXT")
+ *  @notes  This method only works for Aero Wizards.  This method requires Vista
+ *          or later, a condition is raised if the OS is not Vista or later.
+ *          This method has no effect if the property sheet is not an Aero
+ *          Wizard.
  */
 RexxMethod3(RexxObjectPtr, psdlg_enableWizButtons, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, optsButtons, CSELF, pCSelf)
 {
