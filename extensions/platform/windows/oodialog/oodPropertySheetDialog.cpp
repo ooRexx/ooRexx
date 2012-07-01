@@ -996,7 +996,7 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
             uint32_t reply           = PSNRET_NOERROR;
             RexxObjectPtr isOkButton = lppsn->lParam ? TheTrueObj : TheFalseObj;
 
-            // We want to get the Rexx property sheet page that had the focus when the Apply button was presse.
+            // We want to get the Rexx property sheet page that had the focus when the Apply button was pressed.
             int32_t i = PropSheet_HwndToIndex(pcpsd->hDlg, PropSheet_GetCurrentPageHwnd(pcpsd->hDlg));
             pCPropertySheetPage current = pcpsd->cppPages[i];
 
@@ -1024,7 +1024,7 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
             // I have not been able to produce this notification, so there is no implementation for it.
             if ( pcpsp->wantGetObject )
             {
-                printf("No implementation for PSN_GETOBJECT\n");
+                RexxObjectPtr result = c->SendMessage0(pcpsp->rexxSelf, GETOBJECT_MSG);
             }
 
             break;
