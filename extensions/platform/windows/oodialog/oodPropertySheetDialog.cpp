@@ -1021,10 +1021,10 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
 
         case PSN_GETOBJECT :
         {
-            // I have not been able to produce this notification, so there is no implementation for it.
+            // I have not been able to produce this notification, so this should essentially be a no-op
             if ( pcpsp->wantGetObject )
             {
-                RexxObjectPtr result = c->SendMessage0(pcpsp->rexxSelf, GETOBJECT_MSG);
+                RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, GETOBJECT_MSG, pcpsd->rexxSelf);
             }
 
             break;
