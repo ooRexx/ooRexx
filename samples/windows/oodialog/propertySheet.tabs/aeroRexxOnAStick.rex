@@ -130,7 +130,6 @@
   propSheet~setWizButtons("BACK NEXT")
   propSheet~showWizButtons("BACK FINISH NEXT", "BACK FINISH NEXT")
 
-  propSheet~setHeaderTitle(2, "My New Text")
   return 0
 
 
@@ -242,8 +241,6 @@
   p7~headerTitle = 'The set environment command is the heart of the minimal install, allowing a rich ooRexx environment without requiring Admin privileges.'
 
 
-  /*
-  */
   pages = .array~of(p1, p2, p3, p4, p5, p6, p7)
 
   aeroWiz = .AeroWizardDlg~new(pages, "AEROWIZARD WIZARDHASFINISH", "Aero Wizard On Windows 7 Demo")
