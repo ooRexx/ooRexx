@@ -2579,7 +2579,7 @@ RexxMethod6(wholenumber_t, psdlg_init, RexxArrayObject, pages, OPTIONAL_CSTRING,
         }
 
         pCPropertySheetPage pcpsp = dlgToPSPCSelf(context, dlg);
-        pcpsp->pageNumber         = i;
+        pcpsp->pageNumber         = i - 1; // Zero-based index in CSelf.
         pcpsp->rexxPropSheet      = pcpsd->rexxSelf;
         pcpsp->cppPropSheet       = pcpsd;
         pcpsp->isWizardPage       = ! pcpsd->isNotWizard;
@@ -4234,7 +4234,7 @@ RexxMethod1(POINTER, psp_pageID_atr, CSELF, pCSelf)
 }
 
 
-/** PropertySheetPage::pageIndex()          [Attribute get]
+/** PropertySheetPage::pageNumber()          [Attribute get]
  *
  */
 RexxMethod1(uint32_t, psp_pageNumber_atr, CSELF, pCSelf)
@@ -4475,7 +4475,7 @@ RexxMethod1(RexxObjectPtr, psp_initTemplate, CSELF, pCSelf)
     {
         pcpsp->pageID = pdi.pageID;
 
-        if ( pdi.newTitle != NULL )
+        if ( pdi.newTitle != NULL && ! (pcpsp->pageFlags & PSP_USETITLE) )
         {
             if ( ! setPageText(context, pcpsp, pdi.newTitle, pageText) )
             {
@@ -4662,9 +4662,13 @@ RexxMethod7(RexxObjectPtr, rcpspdlg_startTemplate, uint32_t, cx, uint32_t, cy, C
     pcpsp->cx = cx;
     pcpsp->cy = cy;
 
-    if ( strlen(title) > 0 && ! setPageText(context, pcpsp, title, pageText) )
+    // We only want to change the title if PSP_USETITLE is not set.
+    if ( strlen(title) > 0 && ! (pcpsp->pageFlags & PSP_USETITLE) )
     {
-        return TheOneObj;
+        if ( ! setPageText(context, pcpsp, title, pageText) )
+        {
+           return TheOneObj;
+        }
     }
 
     size_t len = strlen(fontName);
