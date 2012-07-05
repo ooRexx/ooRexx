@@ -168,6 +168,12 @@
 ::constant PSNRET_INVALID                     1
 ::constant PSNRET_INVALID_NOCHANGEPAGE        2
 ::constant PSNRET_MESSAGEHANDLED              3
+::constant PROP_SM_CXDLG                      212
+::constant PROP_SM_CYDLG                      188
+::constant PROP_MED_CXDLG                     227
+::constant PROP_MED_CYDLG                     215
+::constant PROP_LG_CXDLG                      252
+::constant PROP_LG_CYDLG                      218
 
 ::method init class external "LIBRARY oodialog psp_init_cls"                                    -- Not to be documented
 
