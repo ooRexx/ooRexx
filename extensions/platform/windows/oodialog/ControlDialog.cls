@@ -259,7 +259,7 @@
     return self~validatePage(psDlg)
 
 ::method pageCreate unguarded
-    use strict arg
+    use strict arg psDlg
     return .true
 
 ::method queryCancel unguarded

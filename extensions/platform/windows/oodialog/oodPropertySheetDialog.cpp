@@ -1092,7 +1092,7 @@ static int doPSMessage(pCPropertySheetPage pcpsp, pCPlainBaseDialog pcpbd, uint3
         case PSN_RESET :
         {
             LPPSHNOTIFY lppsn            = (LPPSHNOTIFY)lParam;
-            RexxObjectPtr isCancelButton = lppsn->lParam ? TheTrueObj : TheFalseObj;
+            RexxObjectPtr isCancelButton = lppsn->lParam ? TheFalseObj : TheTrueObj;
 
             RexxObjectPtr result = c->SendMessage2(pcpsp->rexxSelf, RESET_MSG, isCancelButton, pcpsd->rexxSelf);
             goodReply(c, pcpsd->pcpbd, result, RESET_MSG);
@@ -1637,7 +1637,7 @@ uint32_t CALLBACK PropSheetPageCallBack(HWND hwnd, uint32_t msg, LPPROPSHEETPAGE
         {
             pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
 
-            RexxObjectPtr result = c->SendMessage0(pcpsp->rexxSelf, PAGECREATE_MSG);
+            RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, PAGECREATE_MSG, pcpsd->rexxSelf);
 
             if ( goodReply(c, pcpsd->pcpbd, result, PAGECREATE_MSG) )
             {
@@ -3484,8 +3484,8 @@ RexxMethod3(RexxObjectPtr, psdlg_setButtonText, CSTRING, button, CSTRING, text, 
  *
  *  Activates the specified page in a property sheet.
  *
- *  @param  hPage  [OPTIONAL] The property sheet page handle.
  *  @param  index  [OPTIONAL] The one-based page index.
+ *  @param  hPage  [OPTIONAL] The property sheet page handle.
  *
  *  @return  True on success, otherwise false.
  *
@@ -3498,7 +3498,7 @@ RexxMethod3(RexxObjectPtr, psdlg_setButtonText, CSTRING, button, CSTRING, text, 
  *         raised.  In addition, if the index argument is used to specify the
  *         page is not a valid index, a condition is raised.
  */
-RexxMethod3(RexxObjectPtr, psdlg_setCurSel, OPTIONAL_POINTER, hPage, OPTIONAL_int32_t, index, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, psdlg_setCurSel, OPTIONAL_int32_t, index, OPTIONAL_POINTER, hPage, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
@@ -3506,7 +3506,16 @@ RexxMethod3(RexxObjectPtr, psdlg_setCurSel, OPTIONAL_POINTER, hPage, OPTIONAL_in
 
     if ( argumentExists(1) )
     {
-        result = PropSheet_SetCurSel(pcpsd->hDlg, (HPROPSHEETPAGE)hPage, NULL) ? TheTrueObj : TheFalseObj;
+        int max = (int)pcpsd->pageCount;
+
+        if ( index < 1 || index > max )
+        {
+            wrongRangeException(context->threadContext, 1, 1, max, index);
+            goto done_out;
+        }
+
+        index--;
+        result = PropSheet_SetCurSel(pcpsd->hDlg, NULL, index) ? TheTrueObj : TheFalseObj;
     }
     else
     {
@@ -3516,16 +3525,7 @@ RexxMethod3(RexxObjectPtr, psdlg_setCurSel, OPTIONAL_POINTER, hPage, OPTIONAL_in
             goto done_out;
         }
 
-        int max = (int)pcpsd->pageCount;
-
-        if ( index < 1 || index > max )
-        {
-            wrongRangeException(context->threadContext, 2, 1, max, index);
-            goto done_out;
-        }
-
-        index--;
-        result = PropSheet_SetCurSel(pcpsd->hDlg, NULL, index) ? TheTrueObj : TheFalseObj;
+        result = PropSheet_SetCurSel(pcpsd->hDlg, (HPROPSHEETPAGE)hPage, NULL) ? TheTrueObj : TheFalseObj;
     }
 
 done_out:
@@ -4494,17 +4494,21 @@ RexxMethod1(RexxObjectPtr, psp_initTemplate, CSELF, pCSelf)
  *
  *
  */
-RexxMethod2(RexxObjectPtr, psp_setSize, RexxObjectPtr, size, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, psp_setSize, ARGLIST, args, CSELF, pCSelf)
 {
     // TODO validate CSelf.
     pCPropertySheetPage pcpsp = (pCPropertySheetPage)pCSelf;
 
-    PSIZE s = rxGetSize(context, size, 1);
-    if ( s != NULL )
+    size_t arraySize;
+    size_t argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 2, &arraySize, &argsUsed) )
     {
-        pcpsp->cx = s->cx;
-        pcpsp->cy = s->cy;
+        return TheOneObj;
     }
+
+    pcpsp->cx = point.x;
+    pcpsp->cy = point.y;
 
     return TheZeroObj;
 }
