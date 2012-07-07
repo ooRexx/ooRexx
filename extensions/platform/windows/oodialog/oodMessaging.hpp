@@ -62,7 +62,7 @@ extern BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
 
 extern LRESULT       paletteMessage(pCPlainBaseDialog, HWND, UINT, WPARAM, LPARAM);
 extern MsgReplyType  searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog);
-extern bool          initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen);
+extern bool          initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen, pCPlainBaseDialog pcpbd);
 extern bool          initEventNotification(RexxMethodContext *, pCPlainBaseDialog, RexxObjectPtr, pCEventNotification *);
 extern bool          addCommandMessage(pCEventNotification, RexxMethodContext *, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
 extern bool          addNotifyMessage(pCEventNotification, RexxMethodContext *, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);

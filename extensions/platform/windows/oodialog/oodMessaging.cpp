@@ -2843,7 +2843,28 @@ bool addMiscMessage(pCEventNotification pcen, RexxMethodContext *c, uint32_t win
 }
 
 
-bool initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen)
+/**
+ * The command message table is always initialized when a new dialog object is
+ * instantiated.  The Ok, Cancel, and Help commands are always trapped and
+ * default event handlers are defined in the PlainBaseDialog class.
+ *
+ * However, this causes problems in property sheet page dialogs. When the user
+ * hits enter when a page has the focus, the default Ok event handler runs. The
+ * default Ok handler invokes validate() with the wrong arguments for
+ * PropertySheetPage::validate().
+ *
+ * We don't want that, so for page and contol dialogs we don't automatically
+ * trap the command messages. There are other ways to fix this, but this seems
+ * best.  The Ok, Cancel, and Help commands should not really be trapped for
+ * either page or control dialogs.
+ *
+ * @param c
+ * @param pcen
+ * @param pcpbd
+ *
+ * @return bool
+ */
+bool initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen, pCPlainBaseDialog pcpbd)
 {
     pcen->commandMsgs = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * DEF_MAX_COMMAND_MSGS);
     if ( ! pcen->commandMsgs )
@@ -2854,17 +2875,21 @@ bool initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen)
     pcen->cmSize = DEF_MAX_COMMAND_MSGS;
     pcen->cmNextIndex = 0;
 
-    if ( ! addCommandMessage(pcen, c, IDOK, UINTPTR_MAX, 0, 0, "OK", TAG_NOTHING) )
+    // We do not want to trap these events for page or control dialogs.
+    if ( ! (pcpbd->isPageDlg || pcpbd->isControlDlg) )
     {
-        return false;
-    }
-    if ( ! addCommandMessage(pcen, c, IDCANCEL, UINTPTR_MAX, 0, 0, "Cancel", TAG_NOTHING) )
-    {
-        return false;
-    }
-    if ( ! addCommandMessage(pcen, c, IDHELP, UINTPTR_MAX, 0, 0, "Help", TAG_NOTHING) )
-    {
-        return false;
+        if ( ! addCommandMessage(pcen, c, IDOK, UINTPTR_MAX, 0, 0, "OK", TAG_NOTHING) )
+        {
+            return false;
+        }
+        if ( ! addCommandMessage(pcen, c, IDCANCEL, UINTPTR_MAX, 0, 0, "Cancel", TAG_NOTHING) )
+        {
+            return false;
+        }
+        if ( ! addCommandMessage(pcen, c, IDHELP, UINTPTR_MAX, 0, 0, "Help", TAG_NOTHING) )
+        {
+            return false;
+        }
     }
 
     return true;
@@ -2883,7 +2908,7 @@ bool initEventNotification(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxOb
 
     pcen->rexxSelf = self;
 
-    if ( ! initCommandMessagesTable(c, pcen) )
+    if ( ! initCommandMessagesTable(c, pcen, pcpbd) )
     {
         return false;
     }

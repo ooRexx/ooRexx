@@ -3073,6 +3073,13 @@ RexxMethod6(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
         goto terminate_out;
     }
 
+    // We want to set the dialog type before initializing the event notification
+    // class.
+    if ( ! checkDlgType(context, self, pcpbd, ownerData) )
+    {
+        goto terminate_out;
+    }
+
     // Initialize the event notification mixin class.  The only thing that could
     // fail is getting a buffer from the interpreter kernel.
     pCEventNotification pEN = NULL;
@@ -3090,11 +3097,6 @@ RexxMethod6(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     }
     strcpy(pcpbd->library, library);
     pcpbd->resourceID = resource;
-
-    if ( ! checkDlgType(context, self, pcpbd, ownerData) )
-    {
-        goto terminate_out;
-    }
 
     pcpbd->interpreter = context->threadContext->instance;
     pcpbd->autoDetect  = (pcpbd->isPropSheetDlg ? FALSE : TRUE);

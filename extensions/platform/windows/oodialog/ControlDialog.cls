@@ -242,8 +242,10 @@
     use strict arg psDlg
 
     self~initCode = 1
-    if self~useStem then self~getDataStem(dlgData.)
+
+    if self~useStem then self~getDataStem(self~dlgData)
     self~getData
+
     psDlg~unchanged(self)
     return self~PSNRET_NOERROR
 
