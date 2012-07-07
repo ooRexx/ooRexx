@@ -155,14 +155,20 @@
 /*::method wizNext
   use arg propSheet
   return 0
-
+*/
 ::method wizBack
   use arg propSheet
-  return propSheet~indexToID(0)
 
+  say 'In wizBack page four'
+  ret = propSheet~indexToID(1)
+  say 'Got return from indexToID() ret:' ret
+  return ret
+
+/*
 ::method queryInitialFocus
   use strict arg idDefFocus, propSheet
-  return IDC_CK_HOSTEMU          */
+  return IDC_CK_HOSTEMU
+*/
 
 
 
@@ -226,19 +232,19 @@
 
   p1 = .PageOneDlg~new('rc\aeroRexxOnAStick.rc'  , IDD_PAGE1, , , "AEROPAGE SMALL")
   p2 = .PageTwoDlg~new('rc\aeroRexxOnAStick.rc'  , IDD_PAGE2, , , "AEROPAGE SMALL")
-  p3 = .PageTwoDlg~new('rc\aeroRexxOnAStick.rc'  , IDD_PAGE3, , , "AEROPAGE SMALL")
+  p3 = .PageThreeDlg~new('rc\aeroRexxOnAStick.rc'  , IDD_PAGE3, , , "AEROPAGE SMALL")
   p4 = .PageFourDlg~new('rc\aeroRexxOnAStick.rc' , IDD_PAGE4, , , "AEROPAGE SMALL")
   p5 = .PageFiveDlg~new('rc\aeroRexxOnAStick.rc' , IDD_PAGE5, , , "AEROPAGE SMALL")
   p6 = .PageSixDlg~new('rc\aeroRexxOnAStick.rc'  , IDD_PAGE6, , , "AEROPAGE SMALL")
   p7 = .PageSevenDlg~new('rc\aeroRexxOnAStick.rc', IDD_PAGE7, , , "AEROPAGE SMALL")
 
-  p1~headerTitle = 'This Wizard will guide you through the steps to create a minimal ooRexx installation package from a full ooRexx installation on this system.'
-  p2~headerTitle = 'Enter the path to the current ooRexx installation and the path to the location for the minimal installation file set.'
-  p3~headerTitle = 'Select, or deselect, executables other than the core Rexx executables for the minimal file set.'
-  p4~headerTitle = 'Include or Exclude Native Extensions for the minimal file set.'
-  p5~headerTitle = 'These additional items are good to include when over-all size is not an issue.'
-  p6~headerTitle = 'Personal program area needs some good text.'
-  p7~headerTitle = 'The set environment command is the heart of the minimal install, allowing a rich ooRexx environment without requiring Admin privileges.'
+  p1~headerTitle = '(1) This Wizard will guide you through the steps to create a minimal ooRexx installation package from a full ooRexx installation on this system.'
+  p2~headerTitle = '(2) Enter the path to the current ooRexx installation and the path to the location for the minimal installation file set.'
+  p3~headerTitle = '(3) Select, or deselect, executables other than the core Rexx executables for the minimal file set.'
+  p4~headerTitle = '(4) Include or Exclude Native Extensions for the minimal file set.'
+  p5~headerTitle = '(5) These additional items are good to include when over-all size is not an issue.'
+  p6~headerTitle = '(6) Personal program area needs some good text.'
+  p7~headerTitle = '(7) The set environment command is the heart of the minimal install, allowing a rich ooRexx environment without requiring Admin privileges.'
 
 
   pages = .array~of(p1, p2, p3, p4, p5, p6, p7)
