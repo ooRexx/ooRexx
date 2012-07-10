@@ -1819,6 +1819,9 @@ void RexxSource::resolveDependencies()
             }
             if (next_install == OREF_NULL)   /* nothing located?                  */
             {
+                // directive line where we can give as the source of the error
+                ClassDirective *error_class = (ClassDirective *)(classes->getValue(classes->firstIndex()));
+                clauseLocation = error_class->getLocation();
                 /* raise an error                    */
                 syntaxError(Error_Execution_cyclic, this->programName);
             }

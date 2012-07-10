@@ -313,7 +313,7 @@ class RexxSource : public RexxInternalObject {
     inline void        syntaxError(int errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { this->error(errorcode, a1, a2, a3); }
     inline void        syntaxError(int errorcode, RexxToken *token) { this->errorToken(errorcode, token); }
     inline void        syntaxError(int errorcode) { this->error(errorcode); }
-           StackFrameClass *createStackFrame();
+    StackFrameClass *createStackFrame();
 
     RexxInstruction *addressNew();
     RexxInstruction *assignmentNew(RexxToken *);
