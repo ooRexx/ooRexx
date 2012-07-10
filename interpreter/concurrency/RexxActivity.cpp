@@ -93,6 +93,10 @@ void RexxActivity::runThread()
         // save the actitivation level in case there's an error unwind for an unhandled
         // exception;
         size_t activityLevel = 0;
+        // the thread might have terminated for a control stack issue
+        // so make sure checking is turned back on before trying to run
+        // anything
+        this->stackcheck = true;
 
         try
         {
@@ -1085,7 +1089,7 @@ RexxString *RexxActivity::messageSubstitution(
                     restoreActivationLevel(activityLevel);
                     /* we're safe again                  */
                     this->requestingString = false;
-                    this->stackcheck = true;     /* disable the checking              */
+                    this->stackcheck = true;     // reenable the checking
                 }
             }
         }
@@ -1968,10 +1972,10 @@ void RexxActivity::checkStackSpace()
 /******************************************************************************/
 {
 #ifdef STACKCHECK
-  size_t temp;                          /* if checking and there isn't room  */
+  size_t temp;                          // if checking and there isn't room
   if (((char *)&temp - (char *)this->stackBase) < MIN_C_STACK && this->stackcheck == true)
   {
-                                       /* go raise an exception             */
+                                        // go raise an exception
       reportException(Error_Control_stack_full);
   }
 #endif
