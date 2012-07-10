@@ -2592,7 +2592,7 @@ void RexxSource::attributeDirective()
         else if (!token->isSymbol())
         {
             /* report an error                   */
-            syntaxError(Error_Invalid_subkeyword_method, token);
+            syntaxError(Error_Invalid_subkeyword_attribute, token);
         }
         else
         {                         /* have some sort of option keyword  */
@@ -2603,7 +2603,7 @@ void RexxSource::attributeDirective()
                     // only one of GET/SET allowed
                     if (style != ATTRIBUTE_BOTH)
                     {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     style = ATTRIBUTE_GET;
                     break;
@@ -2612,7 +2612,7 @@ void RexxSource::attributeDirective()
                     // only one of GET/SET allowed
                     if (style != ATTRIBUTE_BOTH)
                     {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     style = ATTRIBUTE_SET;
                     break;
@@ -2623,7 +2623,7 @@ void RexxSource::attributeDirective()
                     if (Class)               /* had one of these already?         */
                     {
                                              /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     Class = true;            /* flag this for later processing    */
                     break;
@@ -2631,7 +2631,7 @@ void RexxSource::attributeDirective()
                     if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     Private = PRIVATE_SCOPE;           /* flag for later processing         */
                     break;
@@ -2640,7 +2640,7 @@ void RexxSource::attributeDirective()
                     if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     Private = PUBLIC_SCOPE;        /* flag for later processing         */
                     break;
@@ -2649,7 +2649,7 @@ void RexxSource::attributeDirective()
                     if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     Protected = PROTECTED_METHOD;        /* flag for later processing         */
                     break;
@@ -2657,7 +2657,7 @@ void RexxSource::attributeDirective()
                     if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     Protected = UNPROTECTED_METHOD;      /* flag for later processing         */
                     break;
@@ -2667,7 +2667,7 @@ void RexxSource::attributeDirective()
                     if (guard != DEFAULT_GUARD)
                     {
                         /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     guard = UNGUARDED_METHOD;/* flag for later processing         */
                     break;
@@ -2677,7 +2677,7 @@ void RexxSource::attributeDirective()
                     if (guard != DEFAULT_GUARD)
                     {
                         /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     guard = GUARDED_METHOD;  /* flag for later processing         */
                     break;
@@ -2687,7 +2687,7 @@ void RexxSource::attributeDirective()
                     if (externalname != OREF_NULL)
                     {
                         /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     token = nextReal();      /* get the next token                */
                                              /* not a string?                     */
@@ -2702,7 +2702,7 @@ void RexxSource::attributeDirective()
 
                 default:                   /* invalid keyword                   */
                     /* this is an error                  */
-                    syntaxError(Error_Invalid_subkeyword_method, token);
+                    syntaxError(Error_Invalid_subkeyword_attribute, token);
                     break;
             }
         }

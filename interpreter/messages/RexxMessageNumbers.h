@@ -629,6 +629,7 @@
 #define Message_Translations_compiled_routine_invocation_msg         723
 #define Message_Translations_no_source_available_msg                 724
 #define Error_Incomplete_do_loop_msg                                 725
+#define Error_Invalid_subkeyword_attribute_msg                       726
 
 
 #endif

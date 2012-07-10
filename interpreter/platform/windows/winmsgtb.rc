@@ -629,6 +629,7 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_compiled_routine_invocation    "       *-* Compiled routine &1"
    Message_Translations_no_source_available    "Package ""&1"" (no source available)"
    Error_Incomplete_do_loop    "LOOP instruction on line &1 requires matching END"
+   Error_Invalid_subkeyword_attribute    "Unknown keyword on ::ATTRIBUTE directive; found ""&1"""
    
 END
 

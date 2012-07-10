@@ -1157,6 +1157,12 @@ special character (such as a parenthesis).
 <para>Unknown keyword on ::OPTIONS directive; found "<emphasis role="italic">word</emphasis>"</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>925</term>
+<listitem>
+<para>Unknown keyword on ::ATTRIBUTE directive; found "<emphasis role="italic">word</emphasis>"</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR26">

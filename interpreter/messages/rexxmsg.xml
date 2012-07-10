@@ -1596,6 +1596,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_subkeyword_options</SymbolicName>
         <Text>Unknown keyword on ::OPTIONS directive; found <q><Sub position="1" name="word"/></q></Text>
       </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>925</Subcode>
+        <MessageNumber>726</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_attribute</SymbolicName>
+        <Text>Unknown keyword on ::ATTRIBUTE directive; found <q><Sub position="1" name="word"/></q></Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

@@ -219,6 +219,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Invalid_subkeyword_message)
       MINOR(Error_Invalid_subkeyword_select)
       MINOR(Error_Invalid_subkeyword_options)
+      MINOR(Error_Invalid_subkeyword_attribute)
   MAJOR(Error_Invalid_whole_number)
       MINOR(Error_Invalid_whole_number_power)
       MINOR(Error_Invalid_whole_number_repeat)
