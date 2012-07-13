@@ -839,13 +839,13 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
             break;
 
         case 'S' :
-            _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+            _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", OOD_VER, OOD_REL, OOD_MOD, OOD_BLD);
             break;
 
         case 'F' :
         default :
             _snprintf(buf, sizeof(buf), "ooDialog Version %u.%u.%u.%u (an ooRexx Windows Extension)",
-                      ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+                      OOD_VER, OOD_REL, OOD_MOD, OOD_BLD);
             break;
 
     }
