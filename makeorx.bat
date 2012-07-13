@@ -570,7 +570,8 @@ cl > temp.txt.okayToDelete 2>&1
 for /F "tokens=1,3,6-10,11" %%i in (temp.txt.okayToDelete) do (
   if %%i == Microsoft (
     if %%j == C/C++ (
-      if %%l GTR 15.0 set MSVCVER=9.0
+      if %%l GTR 16.0 set MSVCVER=10.0
+      if %%l GTR 15.0 (if %%l LSS 16 set MSVCVER=9.0)
       if %%l GTR 14.0 (if %%l LSS 15 set MSVCVER=8.0)
       if %%l GTR 13.0 (if %%l LSS 14 set MSVCVER=7.0)
       if %%l GTR 12.0 (if %%l LSS 13 set MSVCVER=6.0)
@@ -581,7 +582,8 @@ for /F "tokens=1,3,6-10,11" %%i in (temp.txt.okayToDelete) do (
         )
       )
     ) else (
-      if %%m GTR 15.0 set MSVCVER=9.0
+      if %%m GTR 16.0 set MSVCVER=10.0
+      if %%m GTR 15.0 (if %%m LSS 16 set MSVCVER=9.0)
       if %%m GTR 14.0 (if %%m LSS 15 set MSVCVER=8.0)
       if %%m GTR 13.0 (if %%m LSS 14 set MSVCVER=7.0)
       if %%m GTR 12.0 (if %%m LSS 13 set MSVCVER=6.0)

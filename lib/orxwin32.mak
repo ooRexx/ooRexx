@@ -1,6 +1,6 @@
 #/*******************************************************************************
 # Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
-# Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+# Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.
 #
 # This program and the accompanying materials are made available under
 # the terms of the Common Public License v1.0 which accompanies this
@@ -41,12 +41,15 @@
 # These compiler defines allow the support of different versions of Mircrosoft's
 # Visual C++ compiler.  The build has not necessarily been tested on all of the
 # following versions, so some of the !IFDEF statements may need to be adjusted.
+# VCPP10 == Visual C++ 2010
 # VCPP9 == Visual C++ 2008
 # VCPP8 == Visual C++ 2005
 # VCPP7 == Visual C++ 2003
 # VCPP6 == Visual C++ 6.0
 #
-!IF "$(MSVCVER)" == "9.0"
+!IF "$(MSVCVER)" == "10.0"
+VCPP10 = 1
+!ELSEIF "$(MSVCVER)" == "9.0"
 VCPP9 = 1
 !ELSEIF "$(MSVCVER)" == "8.0"
 VCPP8 = 1
@@ -115,7 +118,9 @@ WARNING_FLAGS = /W4 /wd4100 /wd4706 /wd4701 $(WARNING_FLAGS)
 WARNING_FLAGS = /W3 $(WARNING_FLAGS)
 !ENDIF
 
-!IFDEF VCPP9
+!IFDEF VCPP10
+Z_FLAGS =
+!ELSE IFDEF VCPP9
 Z_FLAGS =
 !ELSE IFDEF VCPP8
 Z_FLAGS =
