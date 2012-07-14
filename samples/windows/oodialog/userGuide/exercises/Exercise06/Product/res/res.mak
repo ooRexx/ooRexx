@@ -40,11 +40,11 @@
 all:  ProductView.dll
 
 ProductView.dll: ProductView.res
-    link $(@B).res /NOENTRY /DLL /MACHINE:X86 /OUT:$(@B).dll
+    link /NOLOGO $(@B).res /NOENTRY /DLL /MACHINE:$(MACHINE) /OUT:$(@B).dll
 
 # Create .res from .rc
 ProductView.res: ..\ProductView.rc
-    rc -r -fo$(@B).res ..\$(@B).rc
+    rc /NOLOGO -r -fo$(@B).res ..\$(@B).rc
 
 clean:
     del *.res *.dll 1>nul 2>&1

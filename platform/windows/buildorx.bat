@@ -222,19 +222,19 @@ if ERRORLEVEL 1 goto error
 
 @ECHO Building OODialog Samples..
 CD  %OR_OODIALOGSAMPLES%\res
-IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
+IF %USELOGFILE% equ 1 ( NMAKE /F res.mak MACHINE=%CPU% >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak MACHINE=%CPU% )
 if ERRORLEVEL 1 goto error
 
 CD  %OR_OODIALOGSAMPLES%\userGuide\exercises\Samples\DlgData\res
-IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
+IF %USELOGFILE% equ 1 ( NMAKE /F res.mak MACHINE=%CPU% >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak MACHINE=%CPU% )
 if ERRORLEVEL 1 goto error
 
 CD  %OR_OODIALOGSAMPLES%\userGuide\exercises\Exercise05\res
-IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
+IF %USELOGFILE% equ 1 ( NMAKE /F res.mak MACHINE=%CPU% >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak MACHINE=%CPU% )
 if ERRORLEVEL 1 goto error
 
 CD  %OR_OODIALOGSAMPLES%\userGuide\exercises\Exercise06\Product\res
-IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
+IF %USELOGFILE% equ 1 ( NMAKE /F res.mak MACHINE=%CPU% >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak MACHINE=%CPU% )
 if ERRORLEVEL 1 goto error
 
 goto arounderr
