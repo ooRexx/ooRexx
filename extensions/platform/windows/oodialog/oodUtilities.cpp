@@ -835,7 +835,7 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
     switch ( toupper(*format) )
     {
         case 'L' :
-            _snprintf(buf, sizeof(buf), "%u.%u.%u", OOD_LVL_MAJOR, OOD_LVL_MINOR, OOD_LVL_BIT);
+            _snprintf(buf, sizeof(buf), "%u.%u.%u", OOD_VER, OOD_REL, OOD_MOD);
             break;
 
         case 'S' :
