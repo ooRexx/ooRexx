@@ -1049,10 +1049,10 @@ Section "${LONGNAME} Documentation" SecDoc
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx TCP-IP Sockets Functions Reference.lnk"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx rxFTP Class Reference.lnk" "$INSTDIR\doc\rxftp.pdf" "" "$INSTDIR\doc\rxftp.pdf" 0
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx rxFTP Class Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ooDialog Method Reference.lnk" "$INSTDIR\doc\oodialog.pdf" "" "$INSTDIR\doc\oodialog.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ooDialog Method Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ooDialog User Guide.lnk" "$INSTDIR\doc\oodguide.pdf" "" "$INSTDIR\doc\oodguide.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ooDialog User Guide.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog Reference.lnk" "$INSTDIR\doc\oodialog.pdf" "" "$INSTDIR\doc\oodialog.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog User Guide.lnk" "$INSTDIR\doc\oodguide.pdf" "" "$INSTDIR\doc\oodguide.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog User Guide.lnk"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Rexx Extensions Reference.lnk" "$INSTDIR\doc\rexxextensions.pdf" "" "$INSTDIR\doc\rexxextensions.pdf" 0
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Windows Extensions Reference.lnk"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Unix Extensions Reference.lnk" "$INSTDIR\doc\unixextensions.pdf" "" "$INSTDIR\doc\unixextensions.pdf" 0
