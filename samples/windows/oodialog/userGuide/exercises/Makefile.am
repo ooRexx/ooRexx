@@ -42,5 +42,3 @@ DIST_SUBDIRS		= Exercise02 Exercise03 Exercise04 Exercise05 Exercise06 Samples S
 
 MAINTAINERCLEANFILES	= Makefile.in *~
 
-EXTRA_DIST		= *.rex
-

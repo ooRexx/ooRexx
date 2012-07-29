@@ -762,11 +762,6 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\" "ReadMe.txt"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\" "*.rex"
-
-  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise02
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise02\" "*.rex"
