@@ -251,6 +251,22 @@ union semun {
 };
 #endif
 
+/*
+ * From the GCC doc:
+ * __FUNCTION__ is another name for __func__. Older versions of GCC recognize
+ * only this name. However, it is not standardized. For maximum portability, we
+ * recommend you use __func__, but provide a fallback definition with the
+ * preprocessor:
+ */
+
+ #if __STDC_VERSION__ < 199901L
+ # if __GNUC__ >= 2
+ #  define __func__ __FUNCTION__
+ # else
+ #  define __func__ "<unknown>"
+ # endif
+ #endif
+
 extern char *resolve_tilde(const char *);
 
 #define INVALID_ROUTINE 40
@@ -271,6 +287,13 @@ extern char *resolve_tilde(const char *);
                                        /* with the return codes      */
 #define MAXUSECOUNT     65535          /* max semaphore usecount     */
 #define REXXMESSAGEFILE    "rexx.cat"
+
+// SysFileTree initial buffer sizes;
+#define FNAMESPEC_BUF_LEN      IBUF_LEN
+#define FOUNDFILE_BUF_LEN      IBUF_LEN
+#define FILETIME_BUF_LEN       64
+#define FILEATTR_BUF_LEN       16
+#define FOUNDFILELINE_BUF_LEN  FOUNDFILE_BUF_LEN + FILETIME_BUF_LEN + FILEATTR_BUF_LEN
 
 
 /*********************************************************************/
@@ -376,20 +399,36 @@ extern char *resolve_tilde(const char *);
 struct termios in_orig;                /* original settings (important!!)     */
 
 
-/*********************************************************************/
-/* RxTree Structure used by SysTree.                                 */
-/*********************************************************************/
-
+/*
+ *  Data structure used with SysFileTree()
+ *
+ *  dFNameSpec, dFoundFile, and dFoundFileLine start out pointing to the static
+ *  fNameSpec, foundFile, foundFileLine, buffers.
+ *
+ *  The nFNameSpec, nFoundFile, and nFoundLine, fields are set to the the byte
+ *  count of the static buffers.
+ *
+ *  If any buffer turns out to be too small, memory is allocated for a larger
+ *  buffer and the corresponding count variable is set to the new size.
+ *
+ *  On return from SysFileTree() any allocated memory in the struct is freed.
+ *  To test if memory was or wasn't allocated, test if the count variable is not
+ *  or is the same size as the static buffers.
+ */
 typedef struct RxTreeData {
-    size_t count;                      /* Number of lines processed  */
-    SHVBLOCK shvb;                     /* Request block for RxVar    */
-    size_t stemlen;                    /* Length of stem             */
-    size_t vlen;                       /* Length of variable value   */
-    char TargetSpec[MAX+1];            /* Target filespec            */
-    char truefile[MAX+1];              /* expanded file name         */
-    char Temp[MAX+80];                 /* buffer for returned values */
-    char varname[MAX];                 /* Buffer for variable name   */
-    size_t nattrib;                    /* New attrib, diff for each  */
+    size_t         count;                        // Number of found file lines
+    RexxStemObject files;                        // Stem that holds results.
+    char           fNameSpec[FNAMESPEC_BUF_LEN]; // File name portion of the search for file spec, may contain glob characters.
+    char           foundFile[FOUNDFILE_BUF_LEN]; // Full path name of found file
+    char           foundFileLine[FOUNDFILELINE_BUF_LEN];  // Buffer for found file line, includes foundFile, fileTime, and fileAttr
+    char           fileTime[FILETIME_BUF_LEN];   // Time and size of found file
+    char           fileAttr[FILEATTR_BUF_LEN];   // File attribute string of found file
+    char          *dFNameSpec;                   // Starts out pointing at fNameSpec
+    char          *dFoundFile;                   // Starts out pointing at foundFile
+    char          *dFoundFileLine;               // Starts out pointing at foundFileLine
+    size_t         nFNameSpec;                   // CouNt of bytes in dFNameSpec buffer
+    size_t         nFoundFile;                   // CouNt of bytes in dFoundFile
+    size_t         nFoundFileLine;               // CouNt of bytes in dFoundFileLine buffer
 } RXTREEDATA;
 
 
@@ -907,457 +946,6 @@ int SearchPath(
   }
   return rc;                           /* return not found           */
 }
-
-
-/*****************************************************************
-* Function:  getpath(string, path, filename)                     *
-*                                                                *
-* Purpose:  This function gets the PATH and FILENAME of the file *
-*           target contained in STRING.  The path will end with  *
-*           the '/' char if a path is supplied.                  *
-*                                                                *
-*****************************************************************/
-
-void getpath(
-    char *string,
-    char *path,
-    char *filename )
-{
-  int    iLen;                         /* length of filespec         */
-  int    LastSlashPos;                 /* position of last slash     */
-  char   szSavePath[IBUF_LEN];         /* Keep path to get back to   */
-
-  if (!strcmp(string, "."))            /* period case?               */
-    strcpy(string, "./*");             /* make it a * request        */
-  else if (!strcmp(string, ".."))      /* double period case?        */
-    strcpy(string, "../*");            /* make it a ../ * request    */
-  iLen = strlen(string);               /* Get length of full file    */
-                                       /* spec                       */
-  LastSlashPos = iLen-1;               /* Get max pos of last '/'    */
-  /* Step back through string until it begins or at last '/' char    */
-  do
-    LastSlashPos--;
-  while((string[LastSlashPos] != '/') && (LastSlashPos>=0));
-
-  if (string[LastSlashPos] == '/'){    /* if we have a slash         */
-    /* Get file name from filespec (just after last '/')             */
-    if (string[LastSlashPos+1])        /* have a real name?          */
-                                       /* copy it over               */
-      strcpy(filename, &string[LastSlashPos+1]);
-    else
-      strcpy(filename, "*");           /* just use wildcards         */
-  }
-  else {                               /* no '/' just filename       */
-      strcpy(filename, &string[LastSlashPos+1]);
-  }
-
-  /* Now resolve to fully qualified path ---------------------------- */
-  iLen = strlen(filename);             /* Get file name length        */
-  if (string[LastSlashPos] != '/')     /* if we have no slash         */
-  {                                    /* resolve current dir         */
-    if (!getcwd(path, (IBUF_LEN - iLen - 2)))
-       strcpy(path, "./");             /* if no cwd set current dir  */
-    else
-       strcat(path, "/");
-  }
-  else {                               /* there is path info         */
-    strncpy(path, string, LastSlashPos+1);/* copy the path out       */
-    *(path+LastSlashPos+1) = '\0';     /* make ASCII-Z string        */
-    if (getcwd(szSavePath, (IBUF_LEN - 1 )))
-    {
-      if (!chdir(path))                /* If successful get           */
-      {                                /*   reolved path name         */
-        if ((getcwd(path, (IBUF_LEN - iLen - 2 ))) &&
-            ( LastSlashPos > 0 ))
-           strcat(path, "/");          /* Add if not root dir         */
-        chdir(szSavePath);             /* Back to current dir         */
-      }
-    }
-  }
-}
-
-
-/*****************************************************************************
-* Function:  LinFindNextFile(path, dir_handle, finfo, d_name, caseless)      *
-*                                                                            *
-* Purpose:  This function finds the next file in the directory PATH pointed  *
-*           by DIR_HANDLE which matchs the filespec.  All needed info is     *
-*           returned via the FINFO struct and the D_NAME pointer.            *
-*                                                                            *
-* Note:  '?' is currently not supported. Add the impletmentation here !      *
-******************************************************************************/
-int LinFindNextFile(
-  const char * filespec,               /* filespec to search for     */
-  const char * path,                   /* current path               */
-  DIR *dir_handle,                     /* directory handle           */
-  struct stat *finfo,                  /* return buf for the finfo   */
-  char * *d_name,                      /* name of the file found     */
-  size_t caseless)                     /* case insensitive matching  */
-{
-  struct dirent *dir_entry;            /* Directory entry            */
-  char full_path[IBUF_LEN+1];
-                                       /* strtok routine             */
-
- if(!(dir_entry = readdir(dir_handle)))/* get first entry            */
-   return 0;                           /* no entry or EOF            */
-
- do{
-
-                                       /* make full spec             */
-    sprintf(full_path, "%s%s", path, dir_entry->d_name);
-    lstat(full_path, finfo);           /* read the info about it     */
-
-  if(S_ISREG(finfo->st_mode) ||        /* if it is a file            */
-     S_ISCHR(finfo->st_mode) ||        /* or a device special        */
-     S_ISBLK(finfo->st_mode) ||        /* file                       */
-     S_ISSOCK(finfo->st_mode) ||       /* or a socket                */
-     S_ISLNK(finfo->st_mode) ||        /* or a symbolic link         */
-     S_ISFIFO(finfo->st_mode)){        /* or a FIFO                  */
-
-    if (caseless) {                    /* if caseless search         */
-      char dup_d_name[IBUF_LEN+1];     /* compare upper cased copy   */
-      char * pDest = dup_d_name;        /* of the entry name          */
-      char * pSrc  = dir_entry->d_name;
-
-      for ( ; *pSrc; pDest++, pSrc++ )
-        *pDest = toupper(*pSrc);
-      *pDest = '\x0';
-
-      if(fnmatch(filespec,dup_d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
-        *d_name = dir_entry->d_name;    /* retptr to the name location*/
-        return 1;                       /* return success             */
-      }
-    }
-    else {                              /* else compare normally      */
-      if(fnmatch(filespec,dir_entry->d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
-        *d_name = dir_entry->d_name;    /* retptr to the name location*/
-        return 1;                       /* return success             */
-      }
-    }
-  }
-   }
- while((dir_entry = readdir(dir_handle)));/* while have entries       */
- return 0;                            /* no file found or EOF       */
-}
-
-/*****************************************************************
-* Function:  LinFindNextDir(path, dir_handle, finfo, d_name)     *
-*                                                                *
-* Purpose:  This function finds the next dir in the directory    *
-*           PATH pointed by DIR_HANDLE. All needed info is       *
-*           returned via the FINFO struct and the D_NAME pointer.*
-*                                                                *
-* Note:  '?' is currently not supported. Add the impletmentation *
-*        here !                                                  *
-*****************************************************************/
-int LinFindNextDir(
-  const char * filespec,               /* filespec to search for     */
-  const char * path,                   /* current path               */
-  DIR *dir_handle,                     /* directory handle           */
-  struct stat *finfo,                  /* return buf for the finfo   */
-  char * *d_name,                      /* name of the file found     */
-  size_t caseless)                     /* case insensitive matching  */
-{
-  struct dirent *dir_entry;            /* Directory entry            */
-  char full_path[IBUF_LEN+1];
-                                       /* strtok routine             */
-
- if(!(dir_entry = readdir(dir_handle)))/* get first entry           */
-   return 0;                           /* no entry or EOF            */
-
- do{
-
-                                       /* make full spec             */
-    sprintf(full_path, "%s%s", path, dir_entry->d_name);
-    lstat(full_path, finfo);           /* read the info about it     */
-
-    if(S_ISDIR(finfo->st_mode)){       /* if it is a directory       */
-
-      if (caseless) {                    /* if caseless search         */
-        char dup_d_name[IBUF_LEN+1];     /* compare upper cased copy   */
-        char * pDest = dup_d_name;        /* of the entry name          */
-        char * pSrc  = dir_entry->d_name;
-
-        for ( ; *pSrc; pDest++, pSrc++ )
-          *pDest = toupper(*pSrc);
-        *pDest = '\x0';
-
-        if(fnmatch(filespec,dup_d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
-          *d_name = dir_entry->d_name;    /* retptr to the name location*/
-          return 1;                       /* return success             */
-        }
-      }
-      else {                              /* else compare normally      */
-        if(fnmatch(filespec,dir_entry->d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
-          *d_name = dir_entry->d_name;    /* retptr to the name location*/
-          return 1;                       /* return success             */
-        }
-      }
-    }
-   }
- while((dir_entry = readdir(dir_handle)));/* while have entries       */
- return 0;                            /* no file found or EOF       */
-}
-
-/*********************************************************************/
-/* Function: size_t FormatFile(                                       */
-/*                                                                   */
-/* Purpose:  Returns the new file attribute, given the mask of       */
-/*           attributes to be cleared/set and the current attribute  */
-/*           settings.                                               */
-/*                                                                   */
-/*********************************************************************/
-
-size_t FormatFile(
-  RXTREEDATA   *ldp,                   /* Pointer to local data      */
-  int          *smask,                 /* Mask of attributes to      */
-                                       /* search for                 */
-  int          *dmask,                 /* Mask of attributes to set  */
-  size_t        options,               /* Search and output format   */
-  struct stat *finfo )              /* File info sturcture        */
-{
-  struct tm *timestamp;                /* Time info about the file   */
-  char tp;                             /* type of the entry          */
-
-  if (options&NAME_ONLY)               /* name only?                 */
-    strcpy(ldp->Temp, ldp->truefile);  /* just copy it over          */
-  else {
-#ifdef AIX
-    struct tm stTimestamp;               /* Time info about the file   */
-    timestamp = localtime_r(&(finfo->st_mtime),&stTimestamp); /* get the time info */
-#else
-    timestamp = localtime(&(finfo->st_mtime));/* get the time info   */
-#endif
-    /* add long time format */
-    if (options&LONG_TIME)             /* need the long time format? */
-                                       /* format as such             */
-      sprintf(ldp->Temp, "%4d-%02d-%02d %02d:%02d:%02d  %10lu  ",
-        timestamp->tm_year+1900,
-        timestamp->tm_mon+1,
-        timestamp->tm_mday,
-        timestamp->tm_hour,
-        timestamp->tm_min,
-        timestamp->tm_sec,
-        finfo->st_size);
-    else
-    {
-      if (options&EDITABLE_TIME)       /* need the "smushed" form?   */
-                                       /* format as such             */
-        sprintf(ldp->Temp, "%02d/%02d/%02d/%02d/%02d  %10lu  ",
-          (timestamp->tm_year)%100,
-          timestamp->tm_mon+1,
-          timestamp->tm_mday,
-          timestamp->tm_hour,
-          timestamp->tm_min,
-          finfo->st_size);
-      else                             /* give the pretty form       */
-        sprintf(ldp->Temp, "%2d/%02d/%02d  %2d:%02d%c  %10lu  ",
-          timestamp->tm_mon+1,
-          timestamp->tm_mday,
-          (timestamp->tm_year)%100,
-          (timestamp->tm_hour < 13?
-          timestamp->tm_hour:
-          (timestamp->tm_hour-12)),
-          timestamp->tm_min,
-          ((timestamp->tm_hour < 12 ||
-          timestamp->tm_hour == 24)?'a':'p'),
-          finfo->st_size);
-    }
-
-    /* find the type of the entry                                    */
-    if(S_ISLNK(finfo->st_mode))
-      tp = 'l';                        /* symbolic link              */
-    else if(S_ISBLK(finfo->st_mode))
-      tp = 'b';                        /* block device               */
-    else if(S_ISCHR(finfo->st_mode))
-      tp = 'c';                        /* character device           */
-    else if(S_ISDIR(finfo->st_mode))
-      tp = 'd';                        /* directory                  */
-    else if(S_ISFIFO(finfo->st_mode))
-      tp = 'p';                        /* FIFO                       */
-    else if(S_ISSOCK(finfo->st_mode))
-      tp = 's';                        /* socket                     */
-    else
-      tp = '-';                        /* regular file               */
-
-                                       /* format the attributes now  */
-    sprintf(ldp->Temp, "%s%c%c%c%c%c%c%c%c%c%c  %s", ldp->Temp,
-      tp,
-      (((finfo->st_mode)&S_IREAD)?'r':'-'),
-      (((finfo->st_mode)&S_IWRITE)?'w':'-'),
-      (((finfo->st_mode)&S_IEXEC)?'x':'-'),
-      (((finfo->st_mode)&S_IRGRP)?'r':'-'),
-      (((finfo->st_mode)&S_IWGRP)?'w':'-'),
-      (((finfo->st_mode)&S_IXGRP)?'x':'-'),
-      (((finfo->st_mode)&S_IROTH)?'r':'-'),
-      (((finfo->st_mode)&S_IWOTH)?'w':'-'),
-      (((finfo->st_mode)&S_IXOTH)?'x':'-'),
-      ldp->truefile);
-  }
-                                       /* Place new string in Stem   */
-  ldp->vlen = strlen(ldp->Temp);
-  ldp->count++;
-  sprintf(ldp->varname+ldp->stemlen, "%d", (int)ldp->count);
-  ldp->shvb.shvnext = NULL;
-  ldp->shvb.shvname.strptr = ldp->varname;
-  ldp->shvb.shvname.strlength = strlen(ldp->varname);
-  ldp->shvb.shvvalue.strptr = ldp->Temp;
-  ldp->shvb.shvvalue.strlength = ldp->vlen;
-  ldp->shvb.shvnamelen = ldp->shvb.shvname.strlength;
-  ldp->shvb.shvvaluelen = ldp->vlen;
-  ldp->shvb.shvcode = RXSHV_SET;
-  ldp->shvb.shvret = 0;
-
-  int rc = RexxVariablePool(&ldp->shvb);
-  if (rc & (RXSHV_BADN | RXSHV_MEMFL))
-  {
-    return INVALID_ROUTINE;
-  }
-  return 0;                            /* good return                */
-}
-
-/*****************************************************************************
-* Function: RecursiveFindFile( FileSpec, path, lpd, smask, dmask, options )  *
-*                                                                            *
-* Purpose:  Finds all files starting with FileSpec, and will look down the   *
-*           directory tree if required.                                      *
-*                                                                            *
-* Params:   FileSpec - ASCIIZ string which designates filespec to search     *
-*                       for.                                                 *
-*           path     - ASCIIZ string for current path                        *
-*                                                                            *
-*           ldp      - Pointer to local data structure.                      *
-*                                                                            *
-*           smask    - Array of integers which describe the source attribute *
-*                       mask.  Only files with attributes matching this mask *
-*                       will be found.                                       *
-*                                                                            *
-*           dmask    - Array of integers which describe the target attribute *
-*                       mask.  Attributes of all found files will be set     *
-*                       using this mask.                                     *
-*                                                                            *
-*             Note:  Both source and targets mask are really arrays of       *
-*                    integers.  Each index of the mask corresponds           *
-*                    to a different file attribute.  Each indexe and         *
-*                    its associated attribute follows:                       *
-*                                                                            *
-*                         mask[0] = FILE_ARCHIVED                            *
-*                         mask[1] = FILE_DIRECTORY                           *
-*                         mask[2] = FILE_HIDDEN                              *
-*                         mask[3] = FILE_READONLY                            *
-*                         mask[4] = FILE_SYSTEM                              *
-*                                                                            *
-*                    A negative value at a given index indicates that        *
-*                    the attribute bit of the file is not set.  A positive   *
-*                    number indicates that the attribute should be set.      *
-*                    A value of 0 indicates a "Don't Care" setting.          *
-*                                                                            *
-*           options  - The search/output options.  The following options     *
-*                       may be ORed together when calling this function:     *
-*                                                                            *
-*                    RECURSE     - Indicates that function should search     *
-*                                   all child subdirectories recursively.    *
-*                    DO_DIRS     - Indicates that directories should be      *
-*                                   included in the search.                  *
-*                    DO_FILES    - Indicates that files should be included   *
-*                                   in the search.                           *
-*                    NAME_ONLY   - Indicates that the output should be       *
-*                                   restricted to filespecs only.            *
-*                    EDITABLE_TIME - Indicates time and date fields should   *
-*                                   be output as one timestamp.              *
-*                    LONG_TIME   - Indicates time and date fields should     *
-*                                   be output as one long formatted timestamp*
-*                    CASELESS    - Indicates do a case insensitive check for *
-*                                   file names.                              *
-*                                                                            *
-*****************************************************************************/
-
-int  RecursiveFindFile(
-  const char *FileSpec,                /* Filespecs to search for    */
-  const char *path,                    /* current directory          */
-  RXTREEDATA *ldp,                     /* Pointer to local data      */
-  int        *smask,                   /* Mask of attributes to      */
-                                       /* search for                 */
-  int        *dmask,                   /* Mask of attributes to set  */
-  size_t       options )               /* Search and output format   */
-                                       /* options                    */
-{
-  char  tempfile[MAX+1];               /* Used to hold temp file name*/
-  DIR *dir_handle;                     /* Directory handle           */
-  struct stat finfo;                   /* file information           */
-  char * filename;
-  size_t caseless = options&CASELESS;
-
-
-  /********************************************************************
-  * First, process all of the normal files, saving directories for    *
-  * last.                                                             *
-  ********************************************************************/
-
-  if(!(dir_handle = opendir(path))){   /* get the directory handle   */
-    return VALID_ROUTINE;              /* return  on non-zero        */
-  }
-
-  if (options&DO_FILES &&              /* if processing files        */
-                                       /* and have some              */
-      (LinFindNextFile(ldp->TargetSpec,path ,dir_handle,&finfo, &filename, caseless))) {
-                                       /* Get the rest of the files  */
-    do {
-                                       /* build the full name        */
-      sprintf(ldp->truefile, "%s%s", path, filename);
-                                       /* passed back ok?            */
-      if (FormatFile(ldp, smask, dmask, options, &finfo)) {
-        closedir(dir_handle);          /* close the search           */
-        return INVALID_ROUTINE;        /* error on non-zero          */
-      }
-    } while (LinFindNextFile(ldp->TargetSpec,path, dir_handle, &finfo, &filename, caseless));
-  }
-  closedir(dir_handle);                /* reset the                  */
-  dir_handle = opendir(path);          /* directory handle (rewinddir*/
-                                       /* doesn't work!)             */
-  if (options&DO_DIRS  &&              /* need directories?          */
-                                       /* and have some              */
-      (LinFindNextDir(ldp->TargetSpec,path,dir_handle,&finfo,&filename, caseless))) {
-
-    do {
-                                       /* dot directory?             */
-      if (!strcmp(filename, ".") || !strcmp(filename, ".."))
-        continue;                      /* skip this one              */
-                                       /* build the full name        */
-        sprintf(ldp->truefile, "%s%s", path, filename);
-                                       /* passed back ok?            */
-        if (FormatFile(ldp, smask, dmask, options, &finfo)) {
-          closedir(dir_handle);        /* close the search           */
-          return INVALID_ROUTINE;      /* error on non-zero          */
-      }
-   } while (LinFindNextDir(ldp->TargetSpec,path, dir_handle, &finfo, &filename, caseless));
-  }
-  closedir(dir_handle);                /* reset the directory handle */
-  dir_handle = opendir(path);          /* (rewinddir doesn't work!)  */
-                                       /* need to recurse? and have  */
-  if (options&RECURSE) {               /* some? no need for caseless */
-                                       /* matching star              */
-    if (LinFindNextDir("*",path,dir_handle,&finfo,&filename, 0)) {
-      do {
-                                       /* dot directory?             */
-        if (!strcmp(filename, ".") ||
-            !strcmp(filename, ".."))
-          continue;                    /* skip this one              */
-                                       /* build the new directory    */
-        sprintf(tempfile, "%s%s/", path, filename);
-                                       /* search the next level      */
-        if (RecursiveFindFile(ldp->TargetSpec, tempfile, ldp,
-            smask, dmask, options)) {
-          closedir(dir_handle);        /* close the search           */
-          return INVALID_ROUTINE;      /* error on non-zero          */
-        }
-      } while (LinFindNextDir("*",path,dir_handle,&finfo,&filename, 0));
-    }
-  }
-  closedir(dir_handle);
-  return VALID_ROUTINE;                /* finished                   */
-}
-
 
 
 /********************************************************************
@@ -2711,157 +2299,1343 @@ RexxRoutine1(int, SysCloseMutexSem, uintptr_t, vhandle)
 }
 
 
-/*************************************************************************
-* Function:  SysFileTree                                                 *
-*                                                                        *
-* Syntax:    call SysFileTree filespec, stem [, options]                 *
-*                                                                        *
-* Params:    filespec - Filespec to search for (may include * and ?).    *
-*            stem     - Name of stem var to store results in.            *
-*            options  - Any combo of the following:                      *
-*                        'B' - Search for files and directories.         *
-*                        'D' - Search for directories only.              *
-*                        'F' - Search for files only.                    *
-*                        'O' - Only output file names.                   *
-*                        'S' - Recursively scan subdirectories.          *
-*                        'T' - Combine time & date fields into one.      *
-*                        'L' - Long time format                          *
-*                        'I' - Case Insensitive search.                  *
-*                                                                        *
-* Return:    NO_UTIL_ERROR   - Successful.                               *
-*            ERROR_NOMEM     - Out of memory.                            *
-*************************************************************************/
+/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\
+ *                                                                            *
+ *   SysFileTree() implmentation and helper functions.                        *
+ *                                                                            *
+\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t RexxEntry SysFileTree(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+/* Enum for the different buffers in the RXTREEDATA struct */
+typedef enum
 {
-  char        FileSpec[IBUF_LEN];      /* File spec to look for      */
-  char        path[IBUF_LEN];          /* path to search along       */
-  const char *optptr;                  /* option scan pointer        */
-  size_t       options;                /* Mask of options            */
-  int         smask[5];                /* Source attribute mask      */
-  int         dmask[5];                /* Target attribute mask      */
-  RXTREEDATA  ldp;                     /* local data                 */
-  char *       temp;
+    FILESPEC_BUFFER,
+    FOUNDFILE_BUFFER,
+    FOUNDFILELINE_BUFFER
+} TreeDataBuffers;
 
-  options = DO_FILES|DO_DIRS;          /* Clear if we should not     */
-                                       /* display files              */
-  smask[0] = IGNORE;                   /* No mask unless specified   */
-  dmask[0] = IGNORE;                   /* No mask unless specified   */
-  path[0] = '\0';                      /* no path yet                */
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* pass back result           */
-
-                                       /* validate arguments         */
-  if (numargs < 2 || numargs > 3 ||
-      !RXVALIDSTRING(args[0]) ||
-      !RXVALIDSTRING(args[1]) ||
-      args[0].strlength > 255)
-    return INVALID_ROUTINE;            /* Invalid call to routine    */
-                                       /* initialize data area       */
-  ldp.count = 0;
-  strcpy(ldp.varname, args[1].strptr);
-  ldp.stemlen = args[1].strlength;
-  /* uppercase the name  */
-  strupr(ldp.varname);
-
-  if (ldp.varname[ldp.stemlen-1] != '.')
-    ldp.varname[ldp.stemlen++] = '.';
-
-  strcpy(FileSpec, args[0].strptr);    /* get file spec              */
-
-  /* if filespec is '*' then use './ *'                               */
-  if((strlen(FileSpec)==1)&&(FileSpec[0] == '*'))
-    strcpy(FileSpec, "./*");
-
-   /** If FileSpec ends in / then append  *                          */
-
-  if (FileSpec[strlen(FileSpec)-1] == '/')
-    strcat(FileSpec, "*");
-
-  /* if filespec begins with '~' generate absolute path              */
-  if(FileSpec[0] == '~'){
-    if(!(temp = resolve_tilde(FileSpec)))/* get the absolute path    */
-      return INVALID_ROUTINE;
-    strcpy(FileSpec,temp);             /* work with the new one      */
-    free(temp);                        /* free temp space            */
-  }
-
-  if (numargs >= 3 &&                  /* check third option         */
-      !RXNULLSTRING(args[2])) {
-    if (!args[2].strlength)            /* a zero length string isn't */
-      return INVALID_ROUTINE;          /* valid                      */
-    optptr = args[2].strptr;           /* copy the pointer           */
-    while (*optptr) {                  /* while more characters      */
-      switch(toupper(*optptr)) {       /* process each option        */
-        case 'S':                      /* recurse on subdirectories  */
-          options |= RECURSE;          /* Should we recurse          */
-          break;
-
-        case 'O':                      /* only return names          */
-          options |= NAME_ONLY;        /* Should include names only  */
-          break;
-
-        case 'T':                      /* editable time?             */
-          options |= EDITABLE_TIME;    /* create editable timestamp  */
-          break;
-
-        case 'L':                      /* long time format?          */
-          options |= LONG_TIME;        /* create timestamp           */
-          break;
-
-        case 'F':                      /* include only files?        */
-          options &= ~DO_DIRS;         /* Should not include dirs !  */
-          options |= DO_FILES;         /* Should include files !     */
-          break;
-
-        case 'D':                      /* include only directories?  */
-          options |= DO_DIRS;          /* Should include dirs !      */
-          options &= ~DO_FILES;        /* Should not include files ! */
-          break;
-
-        case 'B':                      /* include both files and dirs*/
-          options |= DO_DIRS;          /* Should include dirs !      */
-          options |= DO_FILES;         /* Should include files !     */
-          break;
-
-        case 'I':                      /* case insensitive?          */
-          options |= CASELESS;         /* do caseless check          */
-          break;
-
-        default:                       /* unknown option             */
-          return INVALID_ROUTINE;      /* raise an error             */
-      }
-      optptr++;                        /* step the option pointer    */
+/**
+ * Returns a value that is greater than 'need' by doubling 'have' until that
+ * value is reached.
+ */
+inline size_t neededSize(size_t need, size_t have)
+{
+    while ( have < need )
+    {
+        have *= 2;
     }
-  }
-                                       /* get path and name          */
-  getpath(FileSpec, path, ldp.TargetSpec);
+    return have;
+}
 
-  if ( options & CASELESS ) {          /* if caseless upper case     */
-    char * p = ldp.TargetSpec;          /* file name portion now      */
-    for ( ; *p; ++p ) {
-      *p = toupper(*p);
+void inline outOfMemoryException(RexxThreadContext *c)
+{
+    c->RaiseException1(Rexx_Error_System_service_user_defined, c->String("failed to allocate memory"));
+}
+
+/**
+ * <routineName> argument <argPos> must not be a null string
+ *
+ * SysFileTree argument 2 must not be a null string
+ *
+ * @param c      Threade context we are operating in.
+ * @param fName  Routine name.
+ * @param pos    Argument position.
+ */
+void inline nullStringException(RexxThreadContext *c, CSTRING fName, size_t pos)
+{
+    c->RaiseException2(Rexx_Error_Incorrect_call_null, c->String(fName), c->StringSize(pos));
+}
+
+
+/**
+ * <routineName>() argument <argPos> must be less than <len> characters in
+ * length; length is <realLen>
+ *
+ * SysFileTree() argument 2 must be less than 255 characters in length; length
+ * is 260
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param pos      Argumet position
+ * @param len      Fixed length
+ * @param realLen  Actual length
+ */
+static void stringTooLongException(RexxThreadContext *c, CSTRING funcName, size_t pos, size_t len, size_t realLen)
+{
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%s() argument %lu must be less than %lu characters in length; length is %lu",
+              funcName, pos, len, realLen);
+
+    c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
+}
+
+/**
+ * This is a SysFileTree specific function.  Could be expanded for use in other
+ * RexxUtil functions by passing in function name, etc..
+ *
+ * @param c
+ * @param pos
+ * @param actual
+ */
+static void badSFTOptsException(RexxThreadContext *c, size_t pos, CSTRING actual)
+{
+    char buf[256] = {0};
+    snprintf(buf, sizeof(buf),
+             "SysFileTree argument %lu must be a combination of F, D, B, S, T, L, I, or O; found \"%s\"",
+             pos, actual);
+
+    c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
+}
+
+static void bufferOverflowException(RexxThreadContext *c, size_t needed, size_t have, CSTRING func, size_t lineNumber)
+{
+    char buf[256] = {0};
+    snprintf(buf, sizeof(buf),
+             "buffer overflow would occur in %s() at line: %lu; data size: %lu buffer size: %lu",
+             func, lineNumber, needed, have);
+
+    c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
+}
+
+/**
+ * Dynamically allocates memory for a buffer in the RXTREEDATA structure so that
+ * it is bigger than the size specified.
+ *
+ * @param need          The allocated buffer size must be greater than this.
+ * @param treeData      Pointer to the RXTREEDATA struct.
+ * @param whichBuffer   Identifies the buffer to increase.
+ *
+ * @return True on success, false if memory allocation fails.
+ *
+ * @remarks  For SysFileTree() we start out with very large static buffers to
+ *           use for full path names and the maniupulation of path names.  But,
+ *           on unixes, directories can be nested to any arbitary depth.
+ *
+ *           It is unlikely, but possible, that a static buffer will be too
+ *           small.  If this happens, we double the size of the buffer until it
+ *           is large enough by allocating a new buffer.
+ */
+static bool increaseBuffer(RexxCallContext *c, size_t need, RXTREEDATA *treeData, TreeDataBuffers whichBuffer)
+{
+    if ( whichBuffer == FILESPEC_BUFFER )
+    {
+        if ( treeData->nFNameSpec != FNAMESPEC_BUF_LEN )
+        {
+            free(treeData->dFNameSpec);
+        }
+
+        treeData->nFNameSpec = neededSize(need, treeData->nFNameSpec);
+        treeData->dFNameSpec = (char *)malloc(sizeof(char) * treeData->nFNameSpec);
+
+        if ( treeData->dFNameSpec == NULL )
+        {
+            outOfMemoryException(c->threadContext);
+            return false;
+        }
     }
-  }
-                                       /* recursively search         */
-  if (RecursiveFindFile(FileSpec, path, &ldp, smask, dmask, options))
-    return INVALID_ROUTINE;
-                                       /* return lines read          */
-  sprintf(ldp.Temp, "%d", (int)ldp.count);
-  ldp.varname[ldp.stemlen] = '0';
-  ldp.varname[ldp.stemlen+1] = 0;
-  ldp.shvb.shvnext = NULL;
-  ldp.shvb.shvname.strptr = ldp.varname;
-  ldp.shvb.shvname.strlength = ldp.stemlen+1;
-  ldp.shvb.shvnamelen = ldp.stemlen+1;
-  ldp.shvb.shvvalue.strptr = ldp.Temp;
-  ldp.shvb.shvvalue.strlength = strlen(ldp.Temp);
-  ldp.shvb.shvvaluelen = ldp.shvb.shvvalue.strlength;
-  ldp.shvb.shvcode = RXSHV_SET;
-  ldp.shvb.shvret = 0;
-  if (RexxVariablePool(&ldp.shvb) == RXSHV_BADN)
-    return INVALID_ROUTINE;            /* error on non-zero          */
+    else if ( whichBuffer == FOUNDFILE_BUFFER )
+    {
+        if ( treeData->nFoundFile != FOUNDFILE_BUF_LEN )
+        {
+            free(treeData->dFoundFile);
+        }
 
-  return VALID_ROUTINE;                /* no error on call           */
+        treeData->nFoundFile = neededSize(need, treeData->nFoundFile);
+        treeData->dFoundFile = (char *)malloc(sizeof(char) * treeData->nFoundFile);
+
+        if ( treeData->dFoundFile == NULL )
+        {
+            outOfMemoryException(c->threadContext);
+            return false;
+        }
+    }
+    else
+    {
+        if ( treeData->nFoundFileLine != FOUNDFILELINE_BUFFER )
+        {
+            free(treeData->dFoundFileLine);
+        }
+
+        treeData->nFoundFile = neededSize(need, treeData->nFoundFile);
+        treeData->dFoundFile = (char *)malloc(sizeof(char) * treeData->nFoundFile);
+
+        if ( treeData->dFoundFile == NULL )
+        {
+            outOfMemoryException(c->threadContext);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * This is a SysFileTree specific function.
+ *
+ * Test if struct stat.st_mode field is a file for the purpose of SysFileTree.
+ *
+ * @param m
+ *
+ * @return True if a file, otherwise
+ */
+inline bool isAcceptableFile(mode_t m)
+{
+    return (S_ISREG(m)    ||        // if it is a file
+            S_ISCHR(m)    ||        // or a device special
+            S_ISBLK(m)    ||        // file
+            S_ISSOCK(m)   ||        // or a socket
+            S_ISLNK(m)    ||        // or a symbolic link
+            S_ISFIFO(m));           // or a FIFO
+}
+
+inline char typeOfEntry(mode_t m)
+{
+    if( S_ISLNK(m) )
+    {
+      return 'l';                // symbolic link
+    }
+    else if ( S_ISBLK(m) )
+    {
+      return 'b';                // block device
+    }
+    else if ( S_ISCHR(m) )
+    {
+      return 'c';                // character device
+    }
+    else if ( S_ISDIR(m) )
+    {
+      return 'd';                // directory
+    }
+    else if ( S_ISFIFO(m) )
+    {
+      return 'p';                // FIFO
+    }
+    else if ( S_ISSOCK(m) )
+    {
+      return 's';                // socket
+    }
+    else
+    {
+      return '-';                // regular file
+    }
+}
+
+/**
+ * This is a SysFileTree specific function.
+ *
+ * Find the next file in the directory pointed to by dir_handle that matches
+ * fileSpec.  The needed information is returnd in finfo and d_name.
+ *
+ * @param fileSpec     Search specification.
+ * @param path         Current path we are searching.
+ * @param dir_handle   Directory handle.
+ * @param finfo        Returned file info buffer.
+ * @param d_name       Returned name of the file found
+ * @param caseless     Do case insensitive matching, or not.
+ *
+ * @return True if a file is found, outherwise false.
+ *
+ * @remarks  The '?' glob character is not currently supported.  Old notes said
+ *           add the implementation here.
+ */
+bool linFindNextFile(RexxCallContext *c, const char *fileSpec, const char *path, DIR *dir_handle,
+                     struct stat *finfo, char **d_name, bool caseless)
+{
+    char fullPath[IBUF_LEN];
+    int  len;
+
+    struct dirent *dir_entry = readdir(dir_handle);
+    if( dir_entry == NULL )
+    {
+        return false;
+    }
+
+    do
+    {
+        len = snprintf(fullPath, sizeof(fullPath), "%s%s", path, dir_entry->d_name);
+        if ( len >= (int)sizeof(fullPath) )
+        {
+            bufferOverflowException(c->threadContext, len, sizeof(fullPath), __func__, __LINE__);
+            return false;
+        }
+
+        lstat(fullPath, finfo);
+
+        if ( isAcceptableFile(finfo->st_mode) )
+        {
+            // If this is a caseless search, we compare an upper cased copy of
+            // the entry name.  fileSpec has already been upper cased at a
+            // higher level.
+            if ( caseless )
+            {
+                char  dup_d_name[IBUF_LEN];
+                char *pDest = dup_d_name;
+                char *pSrc  = dir_entry->d_name;
+
+                for ( ; *pSrc; pDest++, pSrc++ )
+                {
+                    *pDest = toupper(*pSrc);
+                }
+                *pDest = '\x0';
+
+                if ( fnmatch(fileSpec, dup_d_name, FNM_NOESCAPE | FNM_PATHNAME | FNM_PERIOD ) == 0 )
+                {
+                    *d_name = dir_entry->d_name;
+                    return true;
+                }
+            }
+            else
+            {
+                if ( fnmatch(fileSpec, dir_entry->d_name, FNM_NOESCAPE | FNM_PATHNAME | FNM_PERIOD) == 0 )
+                {
+                    *d_name = dir_entry->d_name;
+                    return true;
+                }
+            }
+        }
+        dir_entry = readdir(dir_handle);
+    }
+    while( dir_entry != NULL );
+
+    return false;
+}
+
+/**
+ * This is a SysFileTree specific function.
+ *
+ * Find the next directory in the directory pointed to by dir_handle that
+ * matches fileSpec.  The needed information is returnd in finfo and d_name.
+ *
+ * @param fileSpec     Search specification.
+ * @param path         Current path we are searching.
+ * @param dir_handle   Directory handle.
+ * @param finfo        Returned file info buffer.
+ * @param d_name       Returned name of the directory found.
+ * @param caseless     Do case insensitive matching, or not.
+ *
+ * @return True if a directory is found, outherwise false.
+ *
+ * @remarks  The '?' glob character is not currently supported.  Old notes said
+ *           add the implementation here.
+ */
+bool linFindNextDir(RexxCallContext *c, const char *fileSpec, const char *path, DIR *dir_handle,
+                     struct stat *finfo, char **d_name, bool caseless)
+{
+    char    fullPath[FOUNDFILE_BUF_LEN];
+    char   *dFullPath = fullPath;
+    size_t  nFullPath = FOUNDFILE_BUF_LEN;
+
+    struct dirent *dir_entry = readdir(dir_handle);
+    if( dir_entry == NULL )
+    {
+        return false;
+    }
+
+    do
+    {
+        int len = snprintf(dFullPath, nFullPath, "%s%s", path, dir_entry->d_name);
+        if ( len >= (int)nFullPath )
+        {
+            if ( nFullPath != FOUNDFILE_BUF_LEN )
+            {
+                free(dFullPath);
+            }
+            nFullPath = neededSize(len, nFullPath);
+
+            dFullPath = (char *)malloc(nFullPath * sizeof(char));
+            if ( dFullPath == NULL )
+            {
+                outOfMemoryException(c->threadContext);
+                return false;
+            }
+
+            sprintf(dFullPath, "%s%s", path, dir_entry->d_name);
+        }
+
+        lstat(fullPath, finfo);
+
+        if ( S_ISDIR(finfo->st_mode) )
+        {
+            // If this is a caseless search, we compare an upper cased copy of
+            // the entry name.  fileSpec has already been upper cased at a
+            // higher level.
+            if ( caseless )
+            {
+                char  dup_d_name[IBUF_LEN];
+                char *pDest = dup_d_name;
+                char *pSrc  = dir_entry->d_name;
+
+                for ( ; *pSrc; pDest++, pSrc++ )
+                {
+                    *pDest = toupper(*pSrc);
+                }
+                *pDest = '\x0';
+
+                if ( fnmatch(fileSpec, dup_d_name, FNM_NOESCAPE | FNM_PATHNAME | FNM_PERIOD ) == 0 )
+                {
+                    *d_name = dir_entry->d_name;
+                    return true;
+                }
+            }
+            else
+            {
+                if ( fnmatch(fileSpec, dir_entry->d_name, FNM_NOESCAPE | FNM_PATHNAME | FNM_PERIOD) == 0 )
+                {
+                    *d_name = dir_entry->d_name;
+                    return true;
+                }
+            }
+        }
+        dir_entry = readdir(dir_handle);
+    }
+    while( dir_entry != NULL );
+
+    return false;
+}
+
+/**
+ * This is a SysFileTree specific function.
+ *
+ * Determines the options by converting the character based argument to the
+ * correct set of flags.
+ *
+ * @param c
+ * @param opts
+ * @param pOpts
+ *
+ * @return bool
+ */
+static bool goodOpts(RexxCallContext *c, CSTRING opts, uint32_t *pOpts)
+{
+    uint32_t options = *pOpts;
+
+    while ( *opts )
+    {
+        switch( toupper(*opts) )
+        {
+          case 'S':                      // recurse into subdirectories
+              options |= RECURSE;
+              break;
+
+          case 'O':                      // only return names
+              options |= NAME_ONLY;
+              break;
+
+          case 'T':                      // use short time format, ignored if L is used
+            options |= EDITABLE_TIME;
+            break;
+
+          case 'L':                      // use long time format
+              options |= LONG_TIME;
+              break;
+
+          case 'F':                      // include only files
+              options &= ~DO_DIRS;
+              options |= DO_FILES;
+              break;
+
+          case 'D':                      // include only directories
+              options |= DO_DIRS;
+              options &= ~DO_FILES;
+              break;
+
+          case 'B':                      // include both files and directories
+              options |= DO_DIRS;
+              options |= DO_FILES;
+              break;
+
+          case 'I':                      // case insensitive? no op on Windows
+              break;
+
+          default:                       // error, unknown option
+            return false;
+        }
+        opts++;
+    }
+
+    *pOpts = options;
+    return true;
+}
+
+/**
+ * This is a SysFileTree specific helper function.
+ *
+ * Checks the validity of the options argument to SysFileTree, sets the default
+ * options, and converts the character based argument to the proper set of
+ * flags.
+ *
+ * @param context
+ * @param opts
+ * @param options
+ * @param argPos
+ *
+ * @return bool
+ */
+static bool getOptionsFromArg(RexxCallContext *context, CSTRING opts, uint32_t *options, size_t argPos)
+{
+    *options = DO_FILES | DO_DIRS;
+
+    if ( argumentExists(argPos) )
+    {
+        if ( strlen(opts) == 0 )
+        {
+            nullStringException(context->threadContext, "SysFileTree", argPos);
+            return false;
+        }
+
+        if ( ! goodOpts(context, opts, options) )
+        {
+            badSFTOptsException(context->threadContext, argPos, opts);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+/**
+ * Checks the file specification as input by the user for validity and expands /
+ * redoes the value if needed.  For example if the the specification starts with
+ * the ~ character, the file spec is expanded to include the full path to the
+ * home directory.
+ *
+ * @param context   Call context we are operating in.
+ *
+ * @param fSpec     The file specification as passed by the user.  Can not be
+ *                  the empty string or longer than 255 characters.  The unix
+ *                  version has always enforced that, although the Windows
+ *                  version never has.
+ *
+ * @param fileSpec  Buffer to contain the expanded file specification.  At this
+ *                  time the buffer is 4096 in length, which seems more than
+ *                  sufficient.  However, we check the length when copying into
+ *                  it anyway.
+ *
+ * @param bufLen    Length of fileSpec buffer.
+ *
+ * @param argPos    Argument position, use for raising conditions.
+ *
+ * @return True if no error, otherwise false.  False is only returned if an
+ *         exception has been raised.
+ *
+ * @remarks  The fileSpec buffer is IBUF_LEN, or 4096 bytes.  fSpec is
+ *           restricted to 255 characters, so there is no problem with the input
+ *           string being to long, o begin with.  Theoretically, if fSpec starts
+ *           with the tilde, '~', the string could be too long after expanding
+ *           the home directoy.
+ *
+ *           But that would mean the path to the user's home directory would be
+ *           over about 3750 characters long.  That seems absurd.  The goal is
+ *           to not raise exceptions except for incorrect arguments.  But, here
+ *           a condition is raised if the tilde expansion produces a path too
+ *           long, because I believe the condition will never be raised.
+ */
+static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fileSpec, size_t bufLen, size_t argPos)
+{
+
+    size_t len = strlen(fSpec);
+    if ( len == 0 )
+    {
+        nullStringException(context->threadContext, "SysFileTree", argPos);
+        return false;
+    }
+    if ( len > 255 )
+    {
+        stringTooLongException(context->threadContext, "SysFileTree", argPos, 255, len);
+        return false;
+    }
+
+    strcpy(fileSpec, fSpec);
+
+    // If filespec is '*' then use './ *'
+    if ( len == 1 && fileSpec[0] == '*' )
+    {
+        strcpy(fileSpec, "./*");
+    }
+
+    // If fileSpec ends in '/' then append  '*'
+    if ( fileSpec[len - 1] == '/' )
+    {
+        strcat(fileSpec, "*");
+    }
+
+    // If filespec begins with '~' generate the absolute path.
+    if ( fileSpec[0] == '~' )
+    {
+        char *temp = resolve_tilde(fileSpec);
+        if ( ! temp )
+        {
+            outOfMemoryException(context->threadContext);
+            return false;
+        }
+
+        size_t l = strlen(temp) + len + 1;
+        if ( l > bufLen )
+        {
+            bufferOverflowException(context->threadContext, l, bufLen, __func__, __LINE__);
+            free(temp);
+            return false;
+        }
+
+        strcpy(fileSpec, temp);
+        free(temp);
+    }
+
+    return true;
+}
+
+/**
+ * Allocates a buffer twice as big as the buffer passed in.
+ *
+ * @param c             Call context we are operating in.
+ * @param dPath         Pointer to the buffer to reallocate
+ * @param nPath         Size of dPath buffer.
+ * @param nStaticBuffer Size of original static buffer.
+ *
+ * @return True on success, false on memory allocation failure.
+ *
+ * @remarks  NOTE: that the pointer to the buffer to reallocate, may, or may
+ *           not, be a pointer to a static buffer.  We must NOT try to free a
+ *           static buffer and we MUST free a non-static buffer.
+ */
+static bool getBiggerBuffer(RexxCallContext *c, char **dPath, size_t *nPath, size_t nStaticBuffer)
+{
+    if ( *nPath != nStaticBuffer )
+    {
+        free(*dPath);
+    }
+
+    *nPath *= 2;
+    *dPath = (char *)malloc(*nPath * sizeof(char));
+
+    if ( *dPath == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Used to retrieve the file name portion of the search file specification the
+ * user sent to SysFileTree.
+ *
+ * @param c
+ * @param fileSpec
+ * @param treeData
+ * @param lastSlashPos
+ *
+ * @return True on success, false on a memory allocation error.
+ */
+static bool getFileNameSegment(RexxCallContext *c, char *fileSpec, RXTREEDATA *treeData, int *lastSlashPos)
+{
+    size_t l;                          // Temporay var for length calculations.
+    int slashPos = 0;                  // Position of last slash in fileSpec.
+    int len      = strlen(fileSpec);
+
+    // Get maximum position of last '/' and then step back through fileSpec
+    // until we are at the beginning of fileSpec, or at the last '/' character.
+    slashPos = len - 1;
+    do
+    {
+        slashPos--;
+    }
+    while( fileSpec[slashPos] != '/' && slashPos >= 0 );
+
+    if ( fileSpec[slashPos] == '/' )
+    {
+        // We found a slash, if there are characters after the slash, they are
+        // the file name portion.  Otherwise, juse use wildcards.
+        if ( fileSpec[slashPos + 1] != '\0' )
+        {
+            l = strlen(&fileSpec[slashPos + 1]) + 1;
+            if ( l > treeData->nFNameSpec )
+            {
+                if ( ! increaseBuffer(c, l, treeData, FILESPEC_BUFFER) )
+                {
+                    return false;
+                }
+            }
+            strcpy(treeData->dFNameSpec, &fileSpec[slashPos + 1]);
+        }
+        else
+        {
+            strcpy(treeData->dFNameSpec, "*");
+        }
+    }
+    else
+    {
+        // no '/', fileSpec is just a file name.
+
+        l = strlen(&fileSpec[slashPos + 1]) + 1;
+        if ( l > treeData->nFNameSpec )
+        {
+            if ( ! increaseBuffer(c, l, treeData, FILESPEC_BUFFER) )
+            {
+                return false;
+            }
+        }
+        strcpy(treeData->dFNameSpec, &fileSpec[slashPos + 1]);
+    }
+
+    *lastSlashPos = slashPos;
+    return true;
+}
+
+/**
+ *
+ *
+ * @param c
+ * @param fileSpec
+ * @param path
+ * @param pathLen
+ * @param lastSlashPos
+ *
+ * @return bool
+ */
+static bool getPathSegment(RexxCallContext *c, char *fileSpec, char **path, size_t *pathLen, int lastSlashPos)
+{
+    char    savedPath[FOUNDFILE_BUF_LEN];   // Used to save current directory and return to it.
+    char   *dPath = *path;
+    size_t  nPath = *pathLen;
+
+    if ( fileSpec[lastSlashPos] != '/' )
+    {
+        // We have no slash in fileSpec, so it can not be a relative or full
+        // path name.  We resolve to the current directory.
+        while ( getcwd(dPath, nPath) == NULL )
+        {
+            // The buffer is not big enough, reallocate a bigger buffer.
+            if ( ! getBiggerBuffer(c, &dPath, &nPath, *pathLen) )
+            {
+                return false;
+            }
+        }
+
+        if ( strlen(dPath) + 1 > nPath )
+        {
+            // The buffer is not big enough to concatenate a slash, reallocate
+            // a bigger buffer.
+            if ( ! getBiggerBuffer(c, &dPath, &nPath, *pathLen) )
+            {
+                return false;
+            }
+        }
+
+        strcat(dPath, "/");
+    }
+    else
+    {
+        // There is a slash in fileSpec, so it is a relative or full path.
+        // Copy the path out.
+        size_t l = lastSlashPos + 1 + 1;
+        if ( l > nPath )
+        {
+            nPath = neededSize(l, nPath);
+            dPath = (char *)malloc(nPath * sizeof(char));
+
+            if ( dPath == NULL )
+            {
+                outOfMemoryException(c->threadContext);
+                return false;
+            }
+        }
+        strncpy(dPath, fileSpec, lastSlashPos + 1);
+
+        *(dPath + lastSlashPos + 1) = '\0';  // Terminate the string
+
+        // At this point path could be a relative path.  We try to resolve it to
+        // a full path by saving the current directory, doing a chdir() which
+        // will resolve a relative path, and then copying that current directory
+        // into path.  If we can not save the current directory or change
+        // directory we just keep the relative path.
+        if ( getcwd(savedPath, FOUNDFILE_BUF_LEN) != NULL )
+        {
+            if ( chdir(dPath) == 0 )
+            {
+                while ( getcwd(dPath, nPath) == NULL )
+                {
+                    // The buffer is not big enough, reallocate a bigger buffer.
+                    if ( ! getBiggerBuffer(c, &dPath, &nPath, *pathLen) )
+                    {
+                        // Back to current directory.
+                        chdir(savedPath);
+                        return false;
+                    }
+                }
+
+                if ( strlen(dPath) + 1 > nPath )
+                {
+                    // The buffer is not big enough to concatenate a slash,
+                    // reallocate a bigger buffer.
+                    if ( ! getBiggerBuffer(c, &dPath, &nPath, *pathLen) )
+                    {
+                        return false;
+                    }
+                }
+
+                if ( lastSlashPos > 0 )
+                {
+                    strcat(dPath, "/");
+                }
+
+                // Back to current directory.
+                chdir(savedPath);
+            }
+        }
+    }
+
+    if ( nPath != *pathLen )
+    {
+        *pathLen = nPath;
+        *path    = dPath;
+    }
+
+    return true;
+}
+
+/**
+ * This is a SysFileTree() specific function..
+ *
+ * This function expands the file spec passed in to the function into its full
+ * path name.  The full path name is then split into the path portion and the
+ * file name portion.  The path portion is returned in path and the file name
+ * portion is returned in the RXTREEDATA structure.
+ *
+ * The path portion will end with the '\' character.
+ *
+ * @param c          Call context we are operating in.
+ *
+ * @param fSpec      File specification to search for.
+ *
+ * @param path       Pointer to the buffer for the returned full path of
+ *                   expanded file specification.  This buffer may be
+ *                   reallocated if it is not big enough
+ *
+ * @param pathLen    Pointer to the size of the passed in path buffer.  This
+ *                   value will be reset if the path buffer is reallocated.
+ *
+ * @param treeData   The file name portion of the full path is copied into the
+ *                   dFNameSpec field in this struct.
+ *
+ *
+ * @return   True on success, false on error.  The only error would be if memory
+ *           allocation failed, in which case a condition has been raised.  It
+ *           seems highly unlikely that this function could fail.
+ *
+ * @remarks  Both the path and the file name destination buffers are checked to
+ *           be sure they are big enough.  If either is not big enough, a larger
+ *           buffer is allocated.
+ */
+
+static bool getPath(RexxCallContext *c, char *fileSpec, char **path, size_t *pathLen, RXTREEDATA *treeData)
+{
+    int  lastSlashPos;                   // Position of last slash in fileSpec.
+
+    // If fileSpec is exactly "." or ".." then change it to "*" or "../*"
+    if ( strcmp(fileSpec, ".") == 0 )
+    {
+        strcpy(fileSpec, "./*");
+    }
+    else if ( strcmp(fileSpec, "..") == 0 )
+    {
+        strcpy(fileSpec, "../*");
+    }
+
+    // Get the file name segment of fileSpec.
+    if ( ! getFileNameSegment(c, fileSpec, treeData, &lastSlashPos) )
+    {
+        return false;
+    }
+
+    // Now resolve to the fully qualified path name.
+    if ( ! getPathSegment(c, fileSpec, path, pathLen, lastSlashPos) )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+/**
+ * This is a SysFileTree() specific function..
+ *
+ * Formats a found file entry according to the specified options and adds it to
+ * the stem containing the found files.
+ *
+ * @param c         Call context we are operating in.
+ *
+ * @param treeData  Struct with data related to finding the files.
+ *
+ * @param options   Options specifying how the found file line is to be
+ *                  formatted.
+ *
+ * @param finfo     File info structure.
+ *
+ * @return False on error, otherwise true.
+ *
+ * @remarks  If the options specify name only, we just need to copy over the
+ *           found file name.  Otherwise we need to format a line with the time
+ *           stamp and file attributes, plus the found file name.
+ *
+ *           We use the buffers in the treeData structure to format the found
+ *           file line. snprintf() is used to prevent and detect buffer
+ *           overflows. We start off trying to use the large static buffers in
+ *           the struct, each time a buffer is found to be too small in size, it
+ *           is doubled in size by dynamically allocated memory.. Code at the
+ *           top level detects and frees any allocated memory.
+ *
+ *           Note that we can count the characters used for both the time data
+ *           and attribute data, so we know the buffers are large enough.
+ */
+bool formatFile(RexxCallContext *c, RXTREEDATA *treeData, uint32_t options, struct stat *finfo)
+{
+    struct tm *timestamp;
+    char   tp;
+
+    if ( options & NAME_ONLY )
+    {
+        if ( treeData->nFoundFileLine < treeData->nFoundFile )
+        {
+            if ( ! increaseBuffer(c, treeData->nFoundFile, treeData, FOUNDFILELINE_BUFFER) )
+            {
+                return false;
+            }
+        }
+        strcpy(treeData->foundFileLine, treeData->foundFile);
+    }
+    else
+    {
+#ifdef AIX
+        struct tm stTimestamp;
+        timestamp = localtime_r(&(finfo->st_mtime), &stTimestamp);
+#else
+        timestamp = localtime(&(finfo->st_mtime));
+#endif
+        if ( options & LONG_TIME )
+        {
+
+            sprintf(treeData->fileTime, "%4d-%02d-%02d %02d:%02d:%02d  %10lu  ",
+                      timestamp->tm_year + 1900,
+                      timestamp->tm_mon + 1,
+                      timestamp->tm_mday,
+                      timestamp->tm_hour,
+                      timestamp->tm_min,
+                      timestamp->tm_sec,
+                      finfo->st_size);
+        }
+        else
+        {
+            if ( options & EDITABLE_TIME )
+            {
+                sprintf(treeData->fileTime, "%02d/%02d/%02d/%02d/%02d  %10lu  ",
+                          (timestamp->tm_year) % 100,
+                          timestamp->tm_mon + 1,
+                          timestamp->tm_mday,
+                          timestamp->tm_hour,
+                          timestamp->tm_min,
+                          finfo->st_size);
+            }
+            else
+            {
+                sprintf(treeData->fileTime, "%2d/%02d/%02d  %2d:%02d%c  %10lu  ",
+                          timestamp->tm_mon+1,
+                          timestamp->tm_mday,
+                          timestamp->tm_year % 100,
+                          timestamp->tm_hour < 13 ? timestamp->tm_hour : timestamp->tm_hour - 12,
+                          timestamp->tm_min,
+                          (timestamp->tm_hour < 12 || timestamp->tm_hour == 24) ? 'a' : 'p',
+                          finfo->st_size);
+            }
+        }
+        tp = typeOfEntry(finfo->st_mode);
+
+        sprintf(treeData->fileAttr, "%c%c%c%c%c%c%c%c%c%c  ",
+                  tp,
+                  (finfo->st_mode & S_IREAD)  ? 'r' : '-',
+                  (finfo->st_mode & S_IWRITE) ? 'w' : '-',
+                  (finfo->st_mode & S_IEXEC)  ? 'x' : '-',
+                  (finfo->st_mode & S_IRGRP)  ? 'r' : '-',
+                  (finfo->st_mode & S_IWGRP)  ? 'w' : '-',
+                  (finfo->st_mode & S_IXGRP)  ? 'x' : '-',
+                  (finfo->st_mode & S_IROTH)  ? 'r' : '-',
+                  (finfo->st_mode & S_IWOTH)  ? 'w' : '-',
+                  (finfo->st_mode & S_IXOTH)  ? 'x' : '-');
+
+        // Now format the complete line.
+        int len = snprintf(treeData->dFoundFileLine, treeData->nFoundFileLine, "%s%s%s",
+                           treeData->fileTime, treeData->fileAttr, treeData->dFoundFile);
+        if ( len >= (int)treeData->nFoundFileLine )
+        {
+            size_t need = treeData->nFoundFile + strlen(treeData->fileTime) + strlen(treeData->fileAttr) + 1;
+            if ( ! increaseBuffer(c, need, treeData, FOUNDFILELINE_BUFFER) )
+            {
+                return false;
+            }
+
+            // The buffer is now guaranteed to be big enough.
+            sprintf(treeData->dFoundFileLine, "%s%s%s",
+                    treeData->fileTime, treeData->fileAttr, treeData->dFoundFile);
+        }
+    }
+
+    // Place found file line in the stem.
+    treeData->count++;
+    c->SetStemArrayElement(treeData->files, treeData->count, c->String(treeData->foundFileLine));
+
+    return true;
+}
+
+
+/**
+ * Finds all files matching treeData->fNameSpec starting path, recursing into
+ * sub-directories if requested.
+ *
+ * @param c         Call context we are operating in.
+ *
+ * @param path      Path to the directory to start in.
+ *
+ * @param treeData  Struct containing data pertaining to the search and used to
+ *                  return the found files.
+ *
+ * @param options   Options defining the search.  Some comination of the
+ *                  following.
+ *
+ *                  RECURSE       - Indicates that function should search
+ *                                  all child subdirectories recursively.
+ *                  DO_DIRS       - Indicates that directories should be
+ *                                  included in the search.
+ *                  DO_FILES      - Indicates that files should be included
+ *                                  in the search.
+ *                  NAME_ONLY     - Indicates that the output should be
+ *                                  restricted to matched file names only.
+ *                  EDITABLE_TIME - Indicates time and date fields should
+ *                                  be output as one timestamp.
+ *                  LONG_TIME     - Indicates time and date fields should
+ *                                  be output as one long formatted timestamp
+ *                  CASELESS      - Indicates do a case insensitive check for
+ *                                  file names.
+ *
+ * @return True on no error, otherwise false.
+ *
+ * @remarks  The IBM recursive find file passed in fileSpec as the first
+ *           argument, but never used it.  Instead it used fNameSpec in
+ *           RXTREEDATA.  So, that argument is eliminated here and fNameSpec is
+ *           used.
+ *
+ *           snprintf() note:
+ *
+ *           snprintf() doe not write more than size bytes (including the
+ *           terminating null byte ('\0')). If the output was truncated due to
+ *           this limit then the return value is the number of characters
+ *           (excluding the terminating null byte) which would have been written
+ *           to the final string if enough space had been available. Thus, a
+ *           return value of size or more means that the output was truncated.
+ *
+ *           Therefore, unlike windows, there is no possibility of having an
+ *           unterminated string.  If we detect that the buffers in use are too
+ *           small, rather than truncate data, we allocate dynamic memory that
+ *           is big enough.  Actually we allocate a buffer twice as big as the
+ *           current buffer.
+ *
+ *           We start with big static buffers, so we need to keep track of
+ *           whether memory was allocated or not.  This is done by tracking the
+ *           size of the buffers.  If a buffer size does not equal the original
+ *           size of the static buffer, then it needs to be freed.
+ */
+static bool recursiveFindFile(RexxCallContext *c, const char *path, RXTREEDATA *treeData, uint32_t options)
+{
+    DIR    *dir_handle;                  // Directory handle.
+    struct  stat finfo;                  // File information.
+    char   *fileName;                    // Found file name returned here.
+    int     len;                         // snprintf return to check buffer overflow.
+    bool    caseless = options & CASELESS;
+
+    // First, process all of the normal files, saving directories for last.                                                             *
+
+    dir_handle = opendir(path);
+    if ( dir_handle == NULL )
+    {
+        // Old IBM code returned VALID_ROUTINE here.  I think it should probably
+        // be an error though.  I.e., it should be false.
+        return true;
+    }
+
+    // If processing files, and have some files, get all of them.
+    if ( (options & DO_FILES) && linFindNextFile(c, treeData->dFNameSpec, path, dir_handle, &finfo, &fileName, caseless) )
+    {
+        do
+        {
+            // Build the full name.
+            len = snprintf(treeData->dFoundFile, treeData->nFoundFile, "%s%s", path, fileName);
+            if ( len >= (int)treeData->nFoundFile )
+            {
+                if ( ! increaseBuffer(c, len + 1, treeData, FOUNDFILE_BUFFER) )
+                {
+                    closedir(dir_handle);
+                    return false;
+                }
+
+                // We are guarenteed the buffer is big enough.
+                sprintf(treeData->dFoundFile, "%s%s", path, fileName);
+            }
+
+            if ( ! formatFile(c, treeData, options, &finfo) )
+            {
+              closedir(dir_handle);
+              return false;
+            }
+        }
+        while ( linFindNextFile(c, treeData->dFNameSpec, path, dir_handle, &finfo, &fileName, caseless) );
+    }
+
+    // Reset the directory handle, (rewinddir doesn't work.)
+    closedir(dir_handle);
+    dir_handle = opendir(path);
+
+    if ( dir_handle == NULL )
+    {
+        return true;
+    }
+
+    // If processing directories, and have some directories, get all of them.
+    if ( (options & DO_DIRS)  &&  linFindNextDir(c, treeData->dFNameSpec, path, dir_handle, &finfo, &fileName, caseless) )
+    {
+        do
+        {
+            // Skip dot directories.
+            if ( strcmp(fileName, ".") == 0 || strcmp(fileName, "..") == 0 )
+            {
+                continue;
+            }
+
+            // Build the full name.
+            len = snprintf(treeData->dFoundFile, treeData->nFoundFile, "%s%s", path, fileName);
+            if ( len >= (int)treeData->nFoundFile )
+            {
+                if ( ! increaseBuffer(c, len + 1, treeData, FOUNDFILE_BUFFER) )
+                {
+                    closedir(dir_handle);
+                    return false;
+                }
+
+                // We are guarenteed the buffer is big enough.
+                sprintf(treeData->dFoundFile, "%s%s", path, fileName);
+            }
+
+            if ( ! formatFile(c, treeData, options, &finfo) )
+            {
+              closedir(dir_handle);
+              return false;
+            }
+       }
+       while ( linFindNextDir(c, treeData->dFNameSpec, path, dir_handle, &finfo, &fileName, caseless) );
+
+    }
+
+    // Reset the directory handle, (rewinddir doesn't work.)
+    closedir(dir_handle);
+    dir_handle = opendir(path);
+    if ( dir_handle == NULL )
+    {
+        return true;
+    }
+
+    // Do we need to recurse?
+    if ( options & RECURSE )
+    {
+        // Used to create a new directory name.
+        char    tmpDirName[FOUNDFILE_BUF_LEN];
+        char   *dTmpDirName = tmpDirName;
+        size_t  nTmpDirName = FOUNDFILE_BUF_LEN;
+
+        // No need for caseless when matching a star.
+        if ( linFindNextDir(c, "*", path, dir_handle, &finfo, &fileName, 0) )
+        {
+            do
+            {
+                // Skip dot directories.
+                if ( strcmp(fileName, ".") == 0 || strcmp(fileName, "..") == 0 )
+                {
+                    continue;
+                }
+
+                // Build the new directory name and search the next level.
+                len = snprintf(dTmpDirName, nTmpDirName, "%s%s/", path, fileName);
+                if ( len >= (int)nTmpDirName )
+                {
+                    if ( ! getBiggerBuffer(c, &dTmpDirName, &nTmpDirName, FOUNDFILE_BUF_LEN) )
+                    {
+                        closedir(dir_handle);
+                        return false;
+                    }
+
+                    // We are guarenteed the buffer is big enough.
+                    sprintf(dTmpDirName, "%s%s/", path, fileName);
+                }
+
+                if ( ! recursiveFindFile(c, dTmpDirName, treeData, options) )
+                {
+                    closedir(dir_handle);
+                    if ( nTmpDirName != FOUNDFILE_BUF_LEN )
+                    {
+                        free(dTmpDirName);
+                    }
+                    return false;
+                }
+            }
+            while ( linFindNextDir(c, "*", path, dir_handle, &finfo, &fileName, 0) );
+        }
+
+        if ( nTmpDirName != FOUNDFILE_BUF_LEN )
+        {
+            free(dTmpDirName);
+        }
+    }
+
+    closedir(dir_handle);
+    return true;
+}
+
+/**
+ * Intializes the RXTREEDATA struct at start up of SysFileTree()
+ *
+ * @param treeData
+ * @param files
+ */
+void inline initTreeData(RXTREEDATA *treeData, RexxStemObject files)
+{
+    treeData->files = files;
+
+    treeData->dFNameSpec = treeData->fNameSpec;
+    treeData->nFNameSpec = FNAMESPEC_BUF_LEN;
+
+    treeData->dFoundFile = treeData->foundFile;
+    treeData->nFoundFile = FOUNDFILE_BUF_LEN;
+
+    treeData->dFoundFileLine = treeData->foundFileLine;
+    treeData->nFoundFileLine = FOUNDFILELINE_BUF_LEN;
+}
+
+/**
+ * Frees any allocated memory in the RXTREEDATA struct, if needed, on return
+ * from SysFileTree()
+ *
+ * @param treeData
+ */
+void inline uninitTreeData(RXTREEDATA *treeData)
+{
+    if ( treeData->nFNameSpec > FNAMESPEC_BUF_LEN )
+    {
+        free(treeData->dFNameSpec);
+    }
+    if ( treeData->nFoundFile > FOUNDFILE_BUF_LEN )
+    {
+        free(treeData->dFoundFile);
+    }
+    if ( treeData->nFoundFileLine > FOUNDFILELINE_BUF_LEN )
+    {
+        free(treeData->dFoundFileLine);
+    }
+}
+
+
+
+/**
+ * SysFileTree() implementation.  Searches for files in a directory tree.
+ *
+ * @param  fSpec  [required]  The search pattern, may contain glob characters.
+ *                 E.g., .sh
+ *
+ * @param  files  [required]  A stem to contain the returned results.
+ *
+ * @param  opts   [optional]  Any combination of the following:
+ *
+ *                  'B' - Search for files and directories.
+ *                  'D' - Search for directories only.
+ *                  'F' - Search for files only.
+ *                  'O' - Only output file names.
+ *                  'S' - Recursively scan subdirectories.
+ *                  'T' - Combine time & date fields into one.
+ *                  'L' - Long time format
+ *                  'I' - Case Insensitive search.
+ *
+ * @param targetAttr  [optional]  Target attribute mask.  This is not used in
+ *                    the Unix version of SysFileTree(), was never used.  But,
+ *                    the doc never noted that fact.  It is left here to avoid
+ *                    breaking any program that may have used it.
+ *
+ * @param newAttr     [optional]  New attribute mask.  This is not used in the
+ *                    Unix version of SysFileTree(), was never used.  But, the
+ *                    doc never noted that fact.  It is left here to avoid
+ *                    breaking any program that may have used it.
+ *
+ * @return  0 on success, non-zero on error.  For all errors a condition is
+ *          raised.
+ *
+ *
+ */
+RexxRoutine5(uint32_t, SysFileTreeB, CSTRING, fSpec, RexxStemObject, files, OPTIONAL_CSTRING, opts,
+             OPTIONAL_CSTRING, targetAttr, OPTIONAL_CSTRING, newAttr)
+{
+    char         fileSpec[FNAMESPEC_BUF_LEN]; // File specification to look for.
+    char         path[FOUNDFILE_BUF_LEN];     // Path to search along.
+    uint32_t     result   = 1;       // Return value, 1 is an error.
+    RXTREEDATA  treeData = {0};     // Struct containing data about found files.
+    uint32_t     options  = 0;
+
+    initTreeData(&treeData, files);
+
+    char   *dPath = path;
+    size_t  nPath = FOUNDFILE_BUF_LEN;
+
+    if ( ! getFileSpecFromArg(context, fSpec, fileSpec, FNAMESPEC_BUF_LEN, 1) )
+    {
+        goto done_out;
+    }
+
+    if ( ! getOptionsFromArg(context, opts, &options, 3) )
+    {
+        goto done_out;
+    }
+
+    if ( ! getPath(context, fileSpec, &dPath, &nPath, &treeData) )
+    {
+        goto done_out;
+    }
+
+    // If caseless, upper case file name portion now
+    if ( options & CASELESS )
+    {
+        char *p = treeData.fNameSpec;
+        for ( ; *p; ++p )
+        {
+          *p = toupper(*p);
+        }
+    }
+
+    // The old RecursiveFindFile pulls fileSpec from treeData and never uses
+    // fileSpec.  fileSpec and treeData.fNameSpec are not equivalent.
+
+    if ( recursiveFindFile(context, dPath, &treeData, options) )
+    {
+
+        context->SetStemArrayElement(treeData.files, 0, context->WholeNumber(treeData.count));
+        result = 0;
+    }
+
+    if ( nPath != FOUNDFILE_BUF_LEN )
+    {
+        free(dPath);
+    }
+
+done_out:
+
+    uninitTreeData(&treeData);
+    return result;
 }
 
 
@@ -5052,7 +5826,7 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysDropFuncs,           SysDropFuncs),
     REXX_CLASSIC_ROUTINE(SysFileDelete,          SysFileDelete),
     REXX_CLASSIC_ROUTINE(SysFileSearch,          SysFileSearch),
-    REXX_CLASSIC_ROUTINE(SysFileTree,            SysFileTree),
+    REXX_TYPED_ROUTINE(SysFileTree,              SysFileTree),
     REXX_CLASSIC_ROUTINE(SysGetKey,              SysGetKey),
     REXX_CLASSIC_ROUTINE(SysGetMessage,          SysGetMessage),
     REXX_CLASSIC_ROUTINE(SysGetMessageX,         SysGetMessageX),
