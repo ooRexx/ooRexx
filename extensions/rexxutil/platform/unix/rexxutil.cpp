@@ -3578,7 +3578,7 @@ void inline uninitTreeData(RXTREEDATA *treeData)
  *
  *
  */
-RexxRoutine5(uint32_t, SysFileTreeB, CSTRING, fSpec, RexxStemObject, files, OPTIONAL_CSTRING, opts,
+RexxRoutine5(uint32_t, SysFileTree, CSTRING, fSpec, RexxStemObject, files, OPTIONAL_CSTRING, opts,
              OPTIONAL_CSTRING, targetAttr, OPTIONAL_CSTRING, newAttr)
 {
     char         fileSpec[FNAMESPEC_BUF_LEN]; // File specification to look for.
