@@ -179,6 +179,7 @@ int main (int argc, char **argv) {
             pgmThrdInst->ObjectToInt32(result, &rc);
         }
 
+        pgmInst->Terminate();
 
         return rc;
     }
