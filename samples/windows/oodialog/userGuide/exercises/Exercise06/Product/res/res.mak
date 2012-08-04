@@ -44,7 +44,7 @@ ProductView.dll: ProductView.res
 
 # Create .res from .rc
 ProductView.res: ..\ProductView.rc
-    rc /NOLOGO -r -fo$(@B).res ..\$(@B).rc
+    rc -r -fo$(@B).res ..\$(@B).rc
 
 clean:
     del *.res *.dll 1>nul 2>&1

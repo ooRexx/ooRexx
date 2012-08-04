@@ -55,13 +55,13 @@ AnimalGame.dll: AnimalGame.res
 
 # Create .res from .rc
 oowalk2.res: ..\rc\walker.rc
-        rc /NOLOGO $(rcflags_common) -r -fo$(@B).res ..\rc\walker.rc
+        rc $(rcflags_common) -r -fo$(@B).res ..\rc\walker.rc
 
 AnimalGame.res: ..\rc\AnimalGame.rc
-        rc /NOLOGO $(rcflags_common) -r -fo$(@B).res ..\rc\AnimalGame.rc
+        rc $(rcflags_common) -r -fo$(@B).res ..\rc\AnimalGame.rc
 
 PropertySheetDemo.res: ..\propertySheet.tabs\rc\PropertySheetDemo.rc
-        rc /NOLOGO $(rcflags_common) -r -fo$(@B).res ..\propertySheet.tabs\rc\PropertySheetDemo.rc
+        rc $(rcflags_common) -r -fo$(@B).res ..\propertySheet.tabs\rc\PropertySheetDemo.rc
 
 TabOwnerDemo.res: ..\propertySheet.tabs\rc\TabOwnerDemo.rc
-        rc /NOLOGO $(rcflags_common) -r -fo$(@B).res ..\propertySheet.tabs\rc\TabOwnerDemo.rc
+        rc $(rcflags_common) -r -fo$(@B).res ..\propertySheet.tabs\rc\TabOwnerDemo.rc

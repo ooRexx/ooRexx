@@ -44,7 +44,7 @@ ASimpleDialog.dll: ASimpleDialog.res
 
 # Create .res from .rc
 ASimpleDialog.res: ..\ASimpleDialog.rc
-    rc /NOLOGO -r -fo$(@B).res ..\$(@B).rc
+    rc -r -fo$(@B).res ..\$(@B).rc
 
 clean:
     del *.res *.dll 1>nul 2>&1
