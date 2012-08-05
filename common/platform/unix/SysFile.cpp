@@ -1163,6 +1163,10 @@ void SysFile::setStdErr()
  * Check to see if a stream still has data.
  *
  * @return True if data can be read from the stream, false otherwise.
+ *
+ * @remarks TTY devices require special handling.  But, if stdin is opened
+ *          through a pipe, it won't be marked as a TTY, so we need to check for
+ *          that also.
  */
 bool SysFile::hasData()
 {
@@ -1172,8 +1176,7 @@ bool SysFile::hasData()
         return false;
     }
 
-    // tty devices require special handling
-    if (isTTY)
+    if (isTTY || (isStdIn() && !hasBufferedInput()))
     {
         int bytesWaiting;
         ioctl(fileHandle, FIONREAD, &bytesWaiting);
@@ -1181,7 +1184,8 @@ bool SysFile::hasData()
         {
             return true;
         }
-        else {
+        else
+        {
             return false;
         }
     }

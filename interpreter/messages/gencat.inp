@@ -84,7 +84,7 @@ $ Error_Invalid_character
 13 Invalid character in program
 
 $ Error_Incomplete_do
-14 Incomplete DO/SELECT/IF
+14 Incomplete DO/LOOP/SELECT/IF
 
 $ Error_Invalid_hex
 15 Invalid hexadecimal or binary string
@@ -345,7 +345,7 @@ $ Error_Unexpected_when_otherwise
 211 OTHERWISE has no corresponding SELECT
 
 $ Error_Unexpected_end_nodo
-212 END has no corresponding DO or SELECT
+212 END has no corresponding DO, LOOP, or SELECT
 
 $ Error_Unexpected_end_control
 213 Symbol following END ("&1") must match block specification name ("&2") on line &3 or be omitted
@@ -993,7 +993,7 @@ $ Error_No_result_object_message
 429 Message "&1" did not return a result
 
 $ Error_Incorrect_method_minarg
-431 Not enough arguments in method; &1 expected
+431 Not enough arguments for method; &1 expected
 
 $ Error_Incorrect_method_maxarg
 432 Too many arguments in invocation of method; &1 expected
@@ -1765,6 +1765,21 @@ $ Message_Translations_method_invocation
 
 $ Error_Incorrect_method_multi_dimension
 721 Method argument &1 cannot have more than a single dimension
+
+$ Message_Translations_compiled_method_invocation
+722        *-* Compiled method &1 with scope "&2"
+
+$ Message_Translations_compiled_routine_invocation
+723        *-* Compiled routine &1
+
+$ Message_Translations_no_source_available
+724 Package "&1" (no source available)
+
+$ Error_Incomplete_do_loop
+725 LOOP instruction on line &1 requires matching END
+
+$ Error_Invalid_subkeyword_attribute
+726 Unknown keyword on ::ATTRIBUTE directive; found "&1"
 
 
 $ * -------------------------------------------------------------------------- */

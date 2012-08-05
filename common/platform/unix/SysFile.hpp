@@ -120,6 +120,7 @@ public:
     inline bool isReadable() { return readable; }
     inline bool isWriteable() { return writeable; }
     inline bool isOpen() { return fileHandle != -1; }
+    inline bool isStdIn() { return fileHandle == stdinHandle; }
 
     inline bool error() { return errInfo != 0; }
     inline int  errorInfo() { return errInfo; }
