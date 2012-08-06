@@ -111,6 +111,11 @@ SysFile::SysFile()
  *                   function.
  *
  * @return true if the file was opened successfully, false otherwise.
+ *
+ * @remarks  TTY devices should not be buffered.  Stdin, stdout, etc. are set
+ *           correctly in their setStdIn() setStdOut(), etc., functions.  But
+ *           here we need to check for TTY devices and not buffer them.
+ *           /dev/pts/n for example.
  */
 bool SysFile::open(const char *name, int openFlags, int openMode, int shareMode)
 {
@@ -142,9 +147,18 @@ bool SysFile::open(const char *name, int openFlags, int openMode, int shareMode)
     // set eof flag
     fileeof = false;
 
-    // set the default buffer size (and allocate the buffer)
-    setBuffering(true, 0);
     getStreamTypeInfo();
+
+    // set the default buffer size (and allocate the buffer)
+    if ( isTTY )
+    {
+        setBuffering(false, 0);
+    }
+    else
+    {
+        setBuffering(true, 0);
+    }
+
     return true;
 }
 
@@ -156,6 +170,11 @@ bool SysFile::open(const char *name, int openFlags, int openMode, int shareMode)
  * @param fdopenMode The fdopen() mode flags for the stream.
  *
  * @return true if the file opened ok, false otherwise.
+ *
+ * @remarks  TTY devices should not be buffered.  Stdin, stdout, etc. are set
+ *           correctly in their setStdIn() setStdOut(), etc., functions.  But
+ *           here we need to check for TTY devices and not buffer them.
+ *           /dev/pts/n for example.
  */
 bool SysFile::open(int handle)
 {
@@ -163,9 +182,18 @@ bool SysFile::open(int handle)
     openedHandle = false;
     fileHandle = handle;
     ungetchar = -1;              // 0xFF indicates no char
-    // set the default buffer size (and allocate the buffer)
-    setBuffering(true, 0);
     getStreamTypeInfo();
+
+    // set the default buffer size (and allocate the buffer)
+    if ( isTTY )
+    {
+        setBuffering(false, 0);
+    }
+    else
+    {
+        setBuffering(true, 0);
+    }
+
     return true;
 }
 
