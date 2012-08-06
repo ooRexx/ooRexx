@@ -284,6 +284,15 @@ FILE_SYSTEM | FILE_ARCHIVED | MUST_HAVE_DIRECTORY | FILE_DIRECTORY
 #define WC_ERR_INVALID_CHARS      0x00000080
 #endif
 
+// Defines for various SysFileTree buffer.
+#define FNAMESPEC_BUF_EXTRA    8
+#define FNAMESPEC_BUF_LEN      MAX_PATH + FNAMESPEC_BUF_EXTRA
+#define FOUNDFILE_BUF_LEN      MAX_PATH
+#define FILETIME_BUF_LEN       64
+#define FILEATTR_BUF_LEN       16
+#define FOUNDFILELINE_BUF_LEN  FOUNDFILE_BUF_LEN + FILETIME_BUF_LEN + FILEATTR_BUF_LEN
+
+
 /*********************************************************************/
 /* Structures used throughout REXXUTIL.C                             */
 /*********************************************************************/
@@ -300,37 +309,23 @@ typedef struct _GetFileData {
   HANDLE       handle;                 /* file handle                */
 } GetFileData;
 
-/*********************************************************************/
-/* RxTree Structure used by SysTree.                                 */
-/*********************************************************************/
-
-typedef struct RxTreeData {
-    size_t count;                      /* Number of lines processed  */
-    SHVBLOCK shvb;                     /* Request block for RxVar    */
-    size_t stemlen;                    /* Length of stem             */
-    size_t vlen;                       /* Length of variable value   */
-    char TargetSpec[MAX_PATH+1];     /* Target filespec            */
-    char truefile[MAX_PATH+1];       /* expanded file name         */
-    char Temp[MAX_PATH+80];          /* buffer for returned values */
-    char varname[MAX];                 /* Buffer for variable name   */
-    size_t nattrib;                    /* New attrib, diff for each  */
-} RXTREEDATA;
 
 /*
- *  Temp data structure used while working on SysFileTreeB.  Not sure yet how
- *  much of this is really needed.
+ *  Data structure for SysFileTree.
  *
  *  Note that in Windows the MAX_PATH define includes the terminating null.
  */
-typedef struct RxTreeDataB {
+typedef struct RxTreeData {
     size_t         count;                         // Number of found file lines
     RexxStemObject files;                         // Stem that holds results.
-    char           fNameSpec[MAX_PATH];           // File name portion of the search for file spec, may contain glob characters.
-    char           foundFile[MAX_PATH];           // Full path name of found file
-    char           fileTime[64];                  // Time and size of found file
-    char           fileAttr[16];                  // File attribute string of found file
-    char           foundFileLine[MAX_PATH + 80];  // Buffer for found file line, includes foundFile, fileTime, and fileAttr
-} RXTREEDATAB;
+    char           fNameSpec[FNAMESPEC_BUF_LEN];  // File name portion of the search for file spec, may contain glob characters.
+    char           foundFile[FOUNDFILE_BUF_LEN];  // Full path name of found file
+    char           fileTime[FILETIME_BUF_LEN];    // Time and size of found file
+    char           fileAttr[FILEATTR_BUF_LEN];    // File attribute string of found file
+    char           foundFileLine[FOUNDFILELINE_BUF_LEN]; // Buffer for found file line, includes foundFile, fileTime, and fileAttr
+    char          *dFNameSpec;                    // Starts out pointing at fNameSpec
+    size_t         nFNameSpec;                    // CouNt of bytes in dFNameSpec buffer
+} RXTREEDATA;
 
 /*********************************************************************/
 /* RxStemData                                                        */
@@ -436,79 +431,20 @@ inline void safeLocalFree(void *p)
 }
 
 /**
- * This is a SysFileTree specific function.  Could be expanded for use in other
- * RexxUtil functions by passing in function name, etc..
+ * Raises an exception for an unrecoverable system API failure.
  *
- * @param c
- * @param pos
- * @param actual
+ * @param c    Call context we are operating in.
+ * @param api  System API name.
+ * @param rc   Return code from calling the API.
  */
-static void badSFTOptsException(RexxThreadContext *c, size_t pos, CSTRING actual)
+static void systemServiceExceptionCode(RexxThreadContext *c, CSTRING api, uint32_t rc)
 {
     char buf[256] = {0};
     _snprintf(buf, sizeof(buf),
-             "SysFileTree argument %d must be a combination of F, D, B, S, T, L, I, or O; found \"%s\"",
-             pos, actual);
-
-    c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
-}
-
-/**
- * This is a SysFile specific function.
- *
- * @param c
- * @param pos
- * @param actual
- */
-static void badMaskException(RexxThreadContext *c, size_t pos, CSTRING actual)
-{
-    char buf[256] = {0};
-    _snprintf(buf, sizeof(buf),
-             "SysFileTree argument %d must be 5 characters or less in length containing only '+', '-', or '*'; found \"%s\"",
-             pos, actual);
-
-    c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
-}
-
-/**
- * This is a SysFileTree specific function.
- *
- * @param c
- * @param api
- * @param rc
- * @param bufSize
- */
-static void systemServiceExceptionCode(RexxThreadContext *c, CSTRING api, uint32_t rc, size_t bufSize)
-{
-    char buf[256] = {0};
-    _snprintf(buf, sizeof(buf),
-             "system API %s() failed; rc: %d buffer size: %d last error code: %d",
-             api, rc, bufSize, GetLastError());
+             "system API %s() failed; rc: %d last error code: %d", api, rc, GetLastError());
 
     c->RaiseException1(Rexx_Error_System_service_user_defined, c->String(buf));
 }
-
-static void bufferOverflowException(RexxThreadContext *c, size_t needed, size_t have, CSTRING func, size_t lineNumber)
-{
-    char buf[256] = {0};
-    _snprintf(buf, sizeof(buf),
-             "buffer overflow would occur in %s() at line: %d; data size: %d buffer size: %d",
-             func, lineNumber, needed, have);
-
-    c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
-}
-
-static void bufferTooSmallException(RexxThreadContext *c, int ret, size_t have, size_t needed, CSTRING func, size_t lineNumber)
-{
-    char buf[256] = {0};
-    _snprintf(buf, sizeof(buf),
-             "in %s() at line: %d buffer too small; _snprintf rc: ret data size: %d buffer size: %d",
-             func, lineNumber, ret, needed, have);
-
-    c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
-}
-
-
 
 /**
  * Tests if the the current operating system version meets the specified
@@ -1655,6 +1591,95 @@ size_t RexxEntry SysFileSearch(const char *name, size_t numargs, CONSTRXSTRING a
   return VALID_ROUTINE;                /* no error on call           */
 }
 
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\
+ *                                                                            *
+ *   SysFileTree() implmentation and helper functions.                        *
+ *                                                                            *
+\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * This is a SysFileTree specific function.
+ *
+ * @param c
+ * @param pos
+ * @param actual
+ */
+static void badSFTOptsException(RexxThreadContext *c, size_t pos, CSTRING actual)
+{
+    char buf[256] = {0};
+    _snprintf(buf, sizeof(buf),
+             "SysFileTree argument %d must be a combination of F, D, B, S, T, L, I, or O; found \"%s\"",
+             pos, actual);
+
+    c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
+}
+
+/**
+ * This is a SysFile specific function.
+ *
+ * @param c
+ * @param pos
+ * @param actual
+ */
+static void badMaskException(RexxThreadContext *c, size_t pos, CSTRING actual)
+{
+    char buf[256] = {0};
+    _snprintf(buf, sizeof(buf),
+             "SysFileTree argument %d must be 5 characters or less in length containing only '+', '-', or '*'; found \"%s\"",
+             pos, actual);
+
+    c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
+}
+
+/**
+ * Returns a value that is greater than 'need' by doubling 'have' until that
+ * value is reached.
+ */
+inline size_t neededSize(size_t need, size_t have)
+{
+    while ( have < need )
+    {
+        have *= 2;
+    }
+    return have;
+}
+
+/**
+ * Allocates a buffer that is at least twice as big as the buffer passed in.
+ *
+ * @param c             Call context we are operating in.
+ * @param dBuf          Pointer to the buffer to reallocate
+ * @param nBuf          Size of current dBuf buffer. Will be updated on return
+ *                      to size of newly allocated buffer.
+ * @param needed        Minimum size needed.
+ * @param nStaticBuffer Size of original static buffer.
+ *
+ * @return True on success, false on memory allocation failure.
+ *
+ * @remarks  NOTE: that the pointer to the buffer to reallocate, may, or may
+ *           not, be a pointer to a static buffer.  We must NOT try to free a
+ *           static buffer and we MUST free a non-static buffer.
+ */
+static bool getBiggerBuffer(RexxCallContext *c, char **dBuf, size_t *nBuf, size_t needed, size_t nStaticBuffer)
+{
+    if ( *nBuf != nStaticBuffer )
+    {
+        LocalFree(*dBuf);
+    }
+
+    *nBuf = neededSize(needed, *nBuf);
+    *dBuf = (char *)LocalAlloc(LPTR, *nBuf * sizeof(char));
+
+    if ( *dBuf == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+
+    return true;
+}
+
 /**
  * Checks that attr is the same as that specified by the mask.
  *
@@ -1664,7 +1689,7 @@ size_t RexxEntry SysFileSearch(const char *name, size_t numargs, CONSTRXSTRING a
  *
  * @return True for a match, otherwise false.
  */
-bool sameAttr(int32_t *mask, uint32_t attr, uint32_t options)
+static bool sameAttr(int32_t *mask, uint32_t attr, uint32_t options)
 {
     if ( (options & DO_DIRS) && ! (options & DO_FILES) && ! (attr & FILE_ATTRIBUTE_DIRECTORY) )
     {
@@ -1721,20 +1746,18 @@ bool sameAttr(int32_t *mask, uint32_t attr, uint32_t options)
     }
 
     return  true;
-
 }
 
-
-/*********************************************************************/
-/* Function: ULONG NewAttr(mask, attr)                               */
-/*                                                                   */
-/* Purpose:  Returns the new file attribute, given the mask of       */
-/*           attributes to be cleared/set and the current attribute  */
-/*           settings.                                               */
-/*                                                                   */
-/*********************************************************************/
-
-uint32_t newAttr(int32_t *mask, uint32_t attr)
+/**
+ * Returns a new file attribute value given a mask of attributes to be changed
+ * and the current attribute value.
+ *
+ * @param mask
+ * @param attr
+ *
+ * @return New attribute value.
+ */
+static uint32_t newAttr(int32_t *mask, uint32_t attr)
 {
     if ( mask[0] == RXIGNORE )
     {
@@ -1785,7 +1808,6 @@ uint32_t newAttr(int32_t *mask, uint32_t attr)
     return  attr;
 }
 
-
 /**
  * Changes the file attributes of the specified file to those specified by attr.
  *
@@ -1798,7 +1820,7 @@ uint32_t newAttr(int32_t *mask, uint32_t attr)
  * @remarks  Note that this function was named SetFileMode() in the old IBM
  * code.
  */
-bool setAttr(const char *file, uint32_t attr)
+static bool setAttr(const char *file, uint32_t attr)
 {
     if ( SetFileAttributes(file, attr) == 0 )
     {
@@ -1829,7 +1851,8 @@ bool setAttr(const char *file, uint32_t attr)
  *  that either nFoundFile, or nFoundFileLine, are the same size as they are
  *  originally set to, or not.
  */
-bool formatFile(RexxCallContext *c, char *path, RXTREEDATAB *treeData, int32_t *newMask, uint32_t options, WIN32_FIND_DATA *wfd)
+static bool formatFile(RexxCallContext *c, char *path, RXTREEDATA *treeData, int32_t *newMask,
+                       uint32_t options, WIN32_FIND_DATA *wfd)
 {
     SYSTEMTIME systime;
     FILETIME   ftLocal;
@@ -1968,60 +1991,6 @@ bool formatFile(RexxCallContext *c, char *path, RXTREEDATAB *treeData, int32_t *
     return true;
 }
 
-/*****************************************************************************
-* Function: recursiveFindFile( FileSpec, path, lpd, smask, dmask, options ) *
-*                                                                            *
-* Purpose:  Finds all files starting with FileSpec, and will look down the   *
-*           directory tree if required.                                      *
-*                                                                            *
-* Params:   FileSpec - ASCIIZ string which designates filespec to search     *
-*                       for.                                                 *
-*           path     - ASCIIZ string for current path                        *
-*                                                                            *
-*           ldp      - Pointer to local data structure.                      *
-*                                                                            *
-*           smask    - Array of integers which describe the source attribute *
-*                       mask.  Only files with attributes matching this mask *
-*                       will be found.                                       *
-*                                                                            *
-*           dmask    - Array of integers which describe the target attribute *
-*                       mask.  Attributes of all found files will be set     *
-*                       using this mask.                                     *
-*                                                                            *
-*             Note:  Both source and targets mask are really arrays of       *
-*                    integers.  Each index of the mask corresponds           *
-*                    to a different file attribute.  Each indexe and         *
-*                    its associated attribute follows:                       *
-*                                                                            *
-*                         mask[0] = FILE_ARCHIVED                            *
-*                         mask[1] = FILE_DIRECTORY                           *
-*                         mask[2] = FILE_HIDDEN                              *
-*                         mask[3] = FILE_READONLY                            *
-*                         mask[4] = FILE_SYSTEM                              *
-*                                                                            *
-*                    A negative value at a given index indicates that        *
-*                    the attribute bit of the file is not set.  A positive   *
-*                    number indicates that the attribute should be set.      *
-*                    A value of 0 indicates a "Don't Care" setting.          *
-*                                                                            *
-*           options  - The search/output options.  The following options     *
-*                       may be ORed together when calling this function:     *
-*                                                                            *
-*                    RECURSE     - Indicates that function should search     *
-*                                   all child subdirectories recursively.    *
-*                    DO_DIRS     - Indicates that directories should be      *
-*                                   included in the search.                  *
-*                    DO_FILES    - Indicates that files should be included   *
-*                                   in the search.                           *
-*                    NAME_ONLY   - Indicates that the output should be       *
-*                                   restricted to filespecs only.            *
-*                    EDITABLE_TIME - Indicates time and date fields should   *
-*                                   be output as one timestamp.              *
-*                    LONG_TIME   - Indicates time and date fields should     *
-*                                   be output as one long formatted timestamp*
-*                                                                            *
-*****************************************************************************/
-
 /**
  * Finds all files matching a file specification, formats a file name line and
  * adds the formatted line to a stem.  Much of the data to complete this
@@ -2076,21 +2045,21 @@ bool formatFile(RexxCallContext *c, char *path, RXTREEDATAB *treeData, int32_t *
  *           nTmpFileName does not equal what it is originally set to, we know
  *           we have to free the allocated memory.
  */
-static bool recursiveFindFile(RexxCallContext *c, char *path, RXTREEDATAB *treeData,
+static bool recursiveFindFile(RexxCallContext *c, char *path, RXTREEDATA *treeData,
                               int32_t *targetMask, int32_t *newMask, uint32_t options)
 {
   WIN32_FIND_DATA  wfd;
   HANDLE           fHandle;
-  char             tmpFileName[MAX_PATH];
-  char            *dTmpFileName = tmpFileName;   // Dynamic memory for tmpFileName, static memory to begin with.
-  size_t           nTmpFileName = MAX_PATH;      // CouNt of bytes in dTmpFileName.
+  char             tmpFileName[FNAMESPEC_BUF_LEN];
+  char            *dTmpFileName = tmpFileName;       // Dynamic memory for tmpFileName, static memory to begin with.
+  size_t           nTmpFileName = FNAMESPEC_BUF_LEN; // CouNt of bytes in dTmpFileName.
   int32_t          len;
   bool             result = true;
 
-  len = _snprintf(dTmpFileName, nTmpFileName, "%s%s", path, treeData->fNameSpec);
+  len = _snprintf(dTmpFileName, nTmpFileName, "%s%s", path, treeData->dFNameSpec);
   if ( len < 0 || len == nTmpFileName )
   {
-      nTmpFileName = strlen(path) + strlen(treeData->fNameSpec) + 1;
+      nTmpFileName = strlen(path) + strlen(treeData->dFNameSpec) + 1;
       dTmpFileName = (char *)LocalAlloc(LPTR, nTmpFileName);
       if ( dTmpFileName == NULL )
       {
@@ -2149,7 +2118,7 @@ static bool recursiveFindFile(RexxCallContext *c, char *path, RXTREEDATAB *treeD
               {
                   // We may need to free dTmpFileName if it is now allocated
                   // memory.
-                  if ( nTmpFileName != MAX_PATH )
+                  if ( nTmpFileName != FNAMESPEC_BUF_LEN )
                   {
                       LocalFree(dTmpFileName);
                   }
@@ -2181,7 +2150,7 @@ static bool recursiveFindFile(RexxCallContext *c, char *path, RXTREEDATAB *treeD
 
 done_out:
 
-    if ( nTmpFileName != MAX_PATH )
+    if ( nTmpFileName != FNAMESPEC_BUF_LEN )
     {
         safeLocalFree(dTmpFileName);
     }
@@ -2195,7 +2164,7 @@ done_out:
  * This function mimics the old IBM code.
  *
  * Leading spaces are stripped, in some cases. A file specification of "." is
- * changed to "*.*" and a file specification of ".." is changed to "..\*.c*"
+ * changed to "*.*" and a file specification of ".." is changed to "..\*.*"
  *
  * Leading spaces in fSpec are stripped IFF the first character(s) after the
  * leading spaces:
@@ -2276,21 +2245,73 @@ static char *adjustFSpec(char *fSpec)
     return fSpec;
 }
 
-static bool expandNonPath2fullPath(RexxCallContext *c, char *fSpec, char *path, size_t pathLen, int *lastSlashPos)
+static bool safeGetCurrentDirectory(RexxCallContext *c, char **pPath, size_t *pPathLen)
 {
-    char     szBuff[MAX_PATH];        // used to save current dir
-    char     drv[3] = {0};            // used to change current drive
-    uint32_t ret    = 0;
+    size_t  pathLen = *pPathLen;
+    char   *path    = *pPath;
+
+    // Get the current directory.  First check that the path buffer is large
+    // enough.
+    uint32_t ret = GetCurrentDirectory(0, 0);
+    if ( ret == 0 )
+    {
+        systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret);
+        return false;
+    }
+
+    path = (char *)LocalAlloc(LPTR, ret);
+    if ( path == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+
+    // Fix up our input path / pathLen variables now.  The input path buffer
+    // is allocated memory, so we need to free it.
+    LocalFree(*pPath);
+    *pPath    = path;
+    *pPathLen = ret;
+
+    ret = GetCurrentDirectory(ret, path);
+    if ( ret == 0 )
+    {
+        systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret);
+        return false;
+    }
+
+    return true;
+}
+
+static bool expandNonPath2fullPath(RexxCallContext *c, char *fSpec, char **pPath, size_t *pPathLen, int *lastSlashPos)
+{
+    char     *buf    = NULL;  // used to save current dir
+    char      drv[3] = {0};   // used to change current drive
+    uint32_t  ret    = 0;
+    bool      result = false;
 
     // fSpec could be a drive designator.
     if ( fSpec[1] == ':' )
     {
-        // Save the current drive and path
-        ret = GetCurrentDirectory(sizeof(szBuff), szBuff);
-        if ( ret == 0 || ret > sizeof(szBuff) )
+        // Save the current drive and path, first get needed buffer size.
+        ret = GetCurrentDirectory(0, 0);
+        if ( ret == 0 )
         {
-            systemServiceExceptionCode(c->threadContext,  "GetCurrentDirectory", ret, sizeof(szBuff));
-            return false;
+            systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret);
+            goto done_out;
+        }
+
+        buf = (char *)LocalAlloc(LPTR, ret);
+        if ( buf == NULL )
+        {
+            outOfMemoryException(c->threadContext);
+            goto done_out;
+        }
+
+        ret = GetCurrentDirectory(ret, buf);
+        if ( ret == 0 )
+        {
+            systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret);
+            goto done_out;
         }
 
         // Just copy the drive letter and the colon, omit the rest.  This is
@@ -2300,13 +2321,15 @@ static bool expandNonPath2fullPath(RexxCallContext *c, char *fSpec, char *path, 
         // Change to the specified drive, get the current directory, then go
         // back to where we came from.
         SetCurrentDirectory(drv);
-        ret = GetCurrentDirectory((uint32_t)pathLen, path);
-        SetCurrentDirectory(szBuff);
+        bool success = safeGetCurrentDirectory(c, pPath, pPathLen);
 
-        if ( ret == 0 || ret > pathLen )
+        SetCurrentDirectory(buf);
+        LocalFree(buf);
+
+        if ( ! success )
         {
-            systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret, pathLen);
-            return false;
+            systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret);
+            goto done_out;
         }
 
         // make drive the path
@@ -2314,40 +2337,66 @@ static bool expandNonPath2fullPath(RexxCallContext *c, char *fSpec, char *path, 
     }
     else
     {
-        // No drive designator, get the current directory.
-        ret = GetCurrentDirectory((uint32_t)pathLen, path);
-        if ( ret == 0 || ret > pathLen )
+        // No drive designator, just get the current directory.
+        if ( ! safeGetCurrentDirectory(c, pPath, pPathLen) )
         {
-            systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret, pathLen);
-            return false;
+            goto done_out;
         }
     }
 
     // If we need a trailing slash, add one.
+    char *path = *pPath;
     if ( path[strlen(path) - 1] != '\\' )
     {
         strcat(path, "\\");
     }
 
-    return true;
+    result = true;
+
+done_out:
+    safeLocalFree(buf);
+    return result;
 }
 
 
-static bool expandPath2fullPath(RexxCallContext *c, char *fSpec, size_t lastSlashPos, char *path, size_t pathLen)
+/**
+ * Splits the path portion off from fSpec and returns it in the path buffer.
+ *
+ * When this function is called, there is always at least one slash in fSpec.
+ *
+ * @param c
+ * @param fSpec
+ * @param lastSlashPos
+ * @param pPath
+ * @param pPathLen
+ *
+ * @return bool
+ *
+ * @remarks  The size of the path buffer is guarenteed to be at least the string
+ *           length of fSpec + FNAMESPEC_BUF_EXTRA (8) in size.  Or MAX (264)
+ *           bytes in size.  Whichever is larger.  So path is big enough to
+ *           contain all of fSpec + 7 characters.
+ *
+ *           We may have to enlarge the passed in path buffer.  If we do, we
+ *           need to be sure and update the path buffer pointer and the path
+ *           length. As long as we keep pPath and pPathLen correct, the caller
+ *           will take care of freeing any memory.
+ *
+ *           But if we do change pPath, we need to free the buffer it was
+ *           pointing to.
+ */
+static bool expandPath2fullPath(RexxCallContext *c, char *fSpec, size_t lastSlashPos, char **pPath, size_t *pPathLen)
 {
     size_t l = 0;    // Used to calculate lengths of strings.
+
+    char   *path    = *pPath;
+    size_t  pathLen = *pPathLen;
 
     // If fSpec starts with a drive designator, then we have a full path. Copy
     // over the path portion, including the last slash, and null terminate it.
     if (fSpec[1] == ':')
     {
         l = lastSlashPos + 1;
-        if ( l > pathLen )
-        {
-            bufferOverflowException(c->threadContext, l, pathLen, __FUNCTION__, __LINE__);
-            return false;
-        }
-
         memcpy(path, fSpec, l);
         path[l] = '\0';
     }
@@ -2360,49 +2409,92 @@ static bool expandPath2fullPath(RexxCallContext *c, char *fSpec, size_t lastSlas
         char ext[_MAX_EXT];
         char lastChar;
 
+        // fpath is the only buffer we need to worry about being too small.
+        // Although, when compiled for ANSI, which we are, I really think it is
+        // impossible for MAX_PATH to be too small.
+        char   *dFPath = fpath;
+        size_t  nFPath = MAX_PATH;
+
         if ( lastSlashPos == 0 )
         {
             // Only 1 slash at the beginning, get the full path.
-            _fullpath(fpath, "\\", MAX_PATH);
+            _fullpath(dFPath, "\\", nFPath);
 
-            l = strlen(fpath) + strlen(&fSpec[1]) + 1;
-            if ( l > MAX_PATH )
+            l = strlen(dFPath) + strlen(&fSpec[1]) + 1;
+            if ( l > nFPath )
             {
-                bufferOverflowException(c->threadContext, l, MAX_PATH, __FUNCTION__, __LINE__);
-                return false;
+                if ( ! getBiggerBuffer(c, &dFPath, &nFPath, l, nFPath) )
+                {
+                    return false;
+                }
             }
 
-            strcat(fpath, &fSpec[1]);
+            strcat(dFPath, &fSpec[1]);
         }
         else
         {
             // Chop off the path part by putting a null at the last slash, get
             // the full path, and then put the slash back.
             fSpec[lastSlashPos] = '\0';
-            _fullpath(fpath, fSpec, MAX_PATH);
+            if ( _fullpath(dFPath, fSpec, nFPath) == NULL )
+            {
+                // This will double the buffer until either _fullpath()
+                // succeeds, or we run out of memory.  If we go through the loop
+                // more than once, and fail, we need to free memory allocated
+                // for dFPath.  We fix fSpec on failure, but that is not really
+                // needed, the caller(s) will just quit on failure of this
+                // function.
+                do
+                {
+                    if ( ! getBiggerBuffer(c, &dFPath, &nFPath, l, MAX_PATH) )
+                    {
+                        if ( nFPath != MAX_PATH )
+                        {
+                            LocalFree(dFPath);
+                        }
+
+                        fSpec[lastSlashPos] = '\\';
+                        return false;
+                    }
+                } while ( _fullpath(dFPath, fSpec, nFPath) == NULL );
+            }
+
             fSpec[lastSlashPos] = '\\';
 
-            lastChar = fpath[strlen(fpath)-1];
+            lastChar = dFPath[strlen(dFPath) - 1];
             if (lastChar != '\\' && lastChar != '/')
             {
-                l = strlen(fpath) + strlen(&fSpec[lastSlashPos]) + 1;
-                if ( l > MAX_PATH )
+                l = strlen(dFPath) + strlen(&fSpec[lastSlashPos]) + 1;
+                if ( l > nFPath )
                 {
-                    bufferOverflowException(c->threadContext, l, MAX_PATH, __FUNCTION__, __LINE__);
-                    return false;
+                    if ( ! getBiggerBuffer(c, &dFPath, &nFPath, l, MAX_PATH) )
+                    {
+                        // If dFPath was allocated, free it.
+                        if ( nFPath != MAX_PATH )
+                        {
+                            LocalFree(dFPath);
+                        }
+                        return false;
+                    }
                 }
 
-                strcat(fpath, &fSpec[lastSlashPos]);
+                strcat(dFPath, &fSpec[lastSlashPos]);
             }
         }
 
-        _splitpath(fpath, drive, dir, fname, ext);
+        _splitpath(dFPath, drive, dir, fname, ext);
 
         l = strlen(drive) + strlen(dir) + 1;
         if ( l > pathLen )
         {
-            bufferOverflowException(c->threadContext, l, pathLen, __FUNCTION__, __LINE__);
-            return false;
+            if ( ! getBiggerBuffer(c, &path, &pathLen, l, pathLen) )
+            {
+                return false;
+            }
+
+            LocalFree(*pPath);
+            *pPath    = path;
+            *pPathLen = pathLen;
         }
 
         strcpy(path, drive);
@@ -2410,30 +2502,18 @@ static bool expandPath2fullPath(RexxCallContext *c, char *fSpec, size_t lastSlas
 
         // If path is invalid, (the empty string,) for some reason, copy the
         // path from fSpec.  That is from the start of the string up through the
-        // last slash.  Then zero terminate it.
+        // last slash.  Then zero terminate it.  The path buffer is guaranteed
+        // big enough for this, see the remarks.
         if ( strlen(path) == 0 )
         {
-            l = lastSlashPos + 2;
-            if ( l > pathLen )
-            {
-                bufferOverflowException(c->threadContext, l, pathLen, __FUNCTION__, __LINE__);
-                return false;
-            }
-
             memcpy(path, fSpec, lastSlashPos + 1);
             path[lastSlashPos + 1] = '\0';
         }
 
-        // If we need a trailing slash, add it.
+        // If we need a trailing slash, add it.  Again, the path buffer is
+        // guaranteed to be big enough.
         if (path[strlen(path) - 1] != '\\')
         {
-            l = lastSlashPos + 1;
-            if ( l > pathLen )
-            {
-                bufferOverflowException(c->threadContext, l, pathLen, __FUNCTION__, __LINE__);
-                return false;
-            }
-
             strcat(path, "\\");
         }
     }
@@ -2452,16 +2532,19 @@ static bool expandPath2fullPath(RexxCallContext *c, char *fSpec, size_t lastSlas
  * The path portion will end with the '\' char if fSpec contains a path.
  *
  * @param fSpec
- * @param path
+ * @param path       Pointer to path buffer.  Path buffer is allocated memory,
+ *                   not a static buffer.
  * @param filename
- * @param pathLen    Size of the path buffer.
+ * @param pathLen    Pointer to size of the path buffer.
  *
  * @remarks  On entry, the buffer pointed to by fSpec is guaranteed to be at
- *           least strlen(fSpec) + 8.  So, we can strcat to it at least 7
- *           characters and still have it null terminated.
+ *           least strlen(fSpec) + FNAMESPEC_BUF_EXTRA (8).  So, we can strcat
+ *           to it at least 7 characters and still have it null terminated.
  *
+ *           In addition, the path buffer is guarenteed to be at least that size
+ *           also.
  */
-static bool getPath(RexxCallContext *c, char *fSpec, char *path, char *filename, size_t pathLen)
+static bool getPath(RexxCallContext *c, char *fSpec, char **path, char *filename, size_t *pathLen)
 {
     size_t len;                     // length of filespec
     int    lastSlashPos;            // position of last slash
@@ -2731,8 +2814,10 @@ static bool getOptionsFromArg(RexxCallContext *context, char *opts, uint32_t *op
  *
  * @param context
  * @param fSpec
- * @param fSpecLen  [returned]  The length of the original fSpec argument, not
- *                  the length of the allocated buffer.
+ * @param fSpecLen     [returned]  The length of the original fSpec argument,
+ *                     not the length of the allocated buffer.
+ * @param fSpecBufLen  [returned]  The length of the length of the allocated
+ *                     fSpec buffer.
  * @param argPos
  *
  * @return A string specifying the file pattern to search for.  The buffer
@@ -2742,8 +2827,12 @@ static bool getOptionsFromArg(RexxCallContext *context, char *opts, uint32_t *op
  *           using LocalAlloc(), not malloc().
  *
  *           If the returned buffer is null, a condition has been raised.
+ *
+ *           FNAMESPEC_BUF_EXTRA (8) is sized to contain the terminating NULL.
+ *           So the allocated buffer has room to concatenate 7 characters.
  */
-static char *getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, size_t *fSpecLen, size_t argPos)
+static char *getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, size_t *fSpecLen,
+                                size_t *fSpecBufLen, size_t argPos)
 {
     size_t len = strlen(fSpec);
     if ( len == 0 )
@@ -2752,7 +2841,7 @@ static char *getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, size_t 
         return NULL;
     }
 
-    char *fileSpec = (char *)LocalAlloc(LPTR, len + 8);
+    char *fileSpec = (char *)LocalAlloc(LPTR, len + FNAMESPEC_BUF_EXTRA);
     if ( fileSpec == NULL )
     {
         outOfMemoryException(context->threadContext);
@@ -2769,14 +2858,15 @@ static char *getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, size_t 
     }
     else if ( fileSpec[len - 1] == '.')
     {
-      if ( len == 1 ||
-           (len > 1  && (fileSpec[len - 2] == '\\' || fileSpec[len - 2] == '.')) )
-      {
-          strcat(fileSpec, "\\*.*");
-      }
+        if ( len == 1 ||
+             (len > 1  && (fileSpec[len - 2] == '\\' || fileSpec[len - 2] == '.')) )
+        {
+            strcat(fileSpec, "\\*.*");
+        }
     }
 
-    *fSpecLen = len;
+    *fSpecLen    = len;
+    *fSpecBufLen = len + FNAMESPEC_BUF_EXTRA;
     return fileSpec;
 }
 
@@ -2786,9 +2876,10 @@ static char *getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, size_t 
  * Allocates and returns a buffer large enough to contain the path to search
  * along.
  *
- *  We need a minimum size for the path buffer of at least MAX.  But the old
- *  code seemed to think fileSpecLen + 8 could be longer than that.  I guess
- *  it could if the user put in a non-existent long file path.
+ *  We need a minimum size for the path buffer of at least MAX (264).  But the
+ *  old code seemed to think fileSpecLen + FNAMESPEC_BUF_EXTRA could be longer
+ *  than that.  I guess it could if the user put in a non-existent long file
+ *  path.
  *
  *  The old code of checking fSpecLen is still used, but I'm unsure of its exact
  *  purpose.
@@ -2797,20 +2888,24 @@ static char *getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, size_t 
  * @param fSpecLen
  * @param pathLen
  *
- * @return A buffer the larger of MAX or fSpecLen + 8 bytes in size.  Returns
- *         NULL on failure.
+ * @return A buffer the larger of MAX or fSpecLen + FNAMESPEC_BUF_EXTRA bytes in
+ *         size.  Returns NULL on failure.
  *
  * @remarks  The caller is resposible for freeing the allocated memory.
  *
  *           LocalAlloc(), not malloc() is used for memory allocation.
+ *
+ *           Note that the path buffer is guarenteed to be FNAMESPEC_BUF_EXTRA
+ *           (8) bytes larger than the fNameSpec buffer in the caller.  This is
+ *           important in later checks for buffer overflow.
  */
 static char *getPathBuffer(RexxCallContext *context, size_t fSpecLen, size_t *pathLen)
 {
     size_t bufLen = MAX;
 
-    if ( fSpecLen + 8 > MAX )
+    if ( fSpecLen + FNAMESPEC_BUF_EXTRA > MAX )
     {
-        bufLen = fSpecLen + 8;
+        bufLen = fSpecLen + FNAMESPEC_BUF_EXTRA;
     }
 
     *pathLen = bufLen;
@@ -2874,17 +2969,31 @@ RexxRoutine5(uint32_t, SysFileTree, CSTRING, fSpec, RexxStemObject, files, OPTIO
 {
      uint32_t     result   = 1;        // Return value, 1 is an error.
      char        *fileSpec = NULL;     // File spec to search for.
-     size_t       fSpecLen = 0;        // Length of the fSpec
+     size_t       fSpecLen = 0;        // Length of the original fSpec string.
+     size_t       fSpecBufLen = 0;     // Length of the allocated fSpec buffer.
      char        *path     = NULL;     // Path to search along.
      size_t       pathLen  = 0;        // Size of buffer holding path.
-     RXTREEDATAB  treeData = {0};      // Struct for data, may not be correct yet.
+     RXTREEDATA   treeData = {0};      // Struct for data.
 
-     treeData.files = files;
+     treeData.files      = files;
+     treeData.dFNameSpec = treeData.fNameSpec;
+     treeData.nFNameSpec = FNAMESPEC_BUF_LEN;
 
-     fileSpec = getFileSpecFromArg(context, fSpec, &fSpecLen, 1);
+     fileSpec = getFileSpecFromArg(context, fSpec, &fSpecLen, &fSpecBufLen, 1);
      if ( fileSpec == NULL )
      {
          goto done_out;
+     }
+
+     // Some, or all, of fileSpec will eventually be copied into
+     // treeData.dFNameSpec. So, if we ensure that treeData.dFNameSpec is big
+     // enough to hold fileSpec we do not need to worry about it any more.
+     if ( fSpecBufLen >= FNAMESPEC_BUF_LEN )
+     {
+         if ( ! getBiggerBuffer(context, &treeData.dFNameSpec, &treeData.nFNameSpec, fSpecBufLen + 1, FNAMESPEC_BUF_LEN) )
+         {
+             goto done_out;
+         }
      }
 
      path = getPathBuffer(context, fSpecLen, &pathLen);
@@ -2915,7 +3024,7 @@ RexxRoutine5(uint32_t, SysFileTree, CSTRING, fSpec, RexxStemObject, files, OPTIO
      // Get the full path segment and the file name segment by expanding the
      // file specification string.  It seems highly unlikely, but possible, that
      // this could fail.
-     if ( ! getPath(context, fileSpec, path, treeData.fNameSpec, pathLen) )
+     if ( ! getPath(context, fileSpec, &path, treeData.dFNameSpec, &pathLen) )
      {
          goto done_out;
      }
@@ -2929,6 +3038,10 @@ RexxRoutine5(uint32_t, SysFileTree, CSTRING, fSpec, RexxStemObject, files, OPTIO
 done_out:
     safeLocalFree(fileSpec);
     safeLocalFree(path);
+    if ( treeData.nFNameSpec != FNAMESPEC_BUF_LEN )
+    {
+        LocalFree(treeData.dFNameSpec);
+    }
     return result;
 }
 
