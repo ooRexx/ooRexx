@@ -3190,6 +3190,15 @@ static bool getPath(RexxCallContext *c, char *fileSpec, char **path, size_t *pat
  *
  *           Note that we can count the characters used for both the time data
  *           and attribute data, so we know the buffers are large enough.
+ *
+ *           If the file search is a very deep recursion in the host file
+ *           system, a very large number of String objects may be created in the
+ *           single Call context of SysFileTree.  A reference to each created
+ *           object is saved in a hash table to protect it from garbage
+ *           collection, which can lead to a very large hash table.  To prevent
+ *           the creation of a very large hash table, we create a temp object,
+ *           pass that object to the interpreter, and then tell the interpreter
+ *           the object no longer needs to be protected in this call context.
  */
 bool formatFile(RexxCallContext *c, RXTREEDATA *treeData, uint32_t options, struct stat *finfo)
 {
@@ -3283,8 +3292,11 @@ bool formatFile(RexxCallContext *c, RXTREEDATA *treeData, uint32_t options, stru
     }
 
     // Place found file line in the stem.
+    RexxString Object t = c->String(treeData->foundFileLine);
+
     treeData->count++;
-    c->SetStemArrayElement(treeData->files, treeData->count, c->String(treeData->foundFileLine));
+    c->SetStemArrayElement(treeData->files, treeData->count, t);
+    c->ReleaseLocalReference(t);
 
     return true;
 }

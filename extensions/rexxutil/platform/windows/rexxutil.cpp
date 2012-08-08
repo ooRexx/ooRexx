@@ -1850,6 +1850,14 @@ static bool setAttr(const char *file, uint32_t attr)
  *  it of course.  We can determine if the memory needs to be freed by checking
  *  that either nFoundFile, or nFoundFileLine, are the same size as they are
  *  originally set to, or not.
+ *
+ *  If the file search is a very deep recursion in the host file system, a very
+ *  large number of String objects may be created in the single Call context of
+ *  SysFileTree.  A reference to each created object is saved in a hash table to
+ *  protect it from garbage collection, which can lead to a very large hash
+ *  table.  To prevent the creation of a very large hash table, we create a temp
+ *  object, pass that object to the interpreter, and then tell the interpreter
+ *  the object no longer needs to be protected in this call context.
  */
 static bool formatFile(RexxCallContext *c, char *path, RXTREEDATA *treeData, int32_t *newMask,
                        uint32_t options, WIN32_FIND_DATA *wfd)
@@ -1888,9 +1896,12 @@ static bool formatFile(RexxCallContext *c, char *path, RXTREEDATA *treeData, int
 
     if ( options & NAME_ONLY )
     {
+        RexxStringObject t = c->String(dFoundFile);
+
         // Add the file name to the stem and be done with it.
         treeData->count++;
-        c->SetStemArrayElement(treeData->files, treeData->count, c->String(dFoundFile));
+        c->SetStemArrayElement(treeData->files, treeData->count, t);
+        c->ReleaseLocalReference(t);
 
         if ( nFoundFile != sizeof(treeData->foundFile) )
         {
@@ -1956,7 +1967,6 @@ static bool formatFile(RexxCallContext *c, char *path, RXTREEDATA *treeData, int
     char   *dFoundFileLine = treeData->foundFileLine;
     size_t  nFoundFileLine = sizeof(treeData->foundFileLine);
 
-
     len = _snprintf(dFoundFileLine, nFoundFileLine, "%s%s%s",
                     treeData->fileTime, treeData->fileAttr, dFoundFile);
     if ( len < 0 || len == nFoundFileLine )
@@ -1976,8 +1986,11 @@ static bool formatFile(RexxCallContext *c, char *path, RXTREEDATA *treeData, int
     }
 
     // Place found file line in the stem.
+    RexxStringObject t = c->String(dFoundFileLine);
+
     treeData->count++;
-    c->SetStemArrayElement(treeData->files, treeData->count, c->String(dFoundFileLine));
+    c->SetStemArrayElement(treeData->files, treeData->count, t);
+    c->ReleaseLocalReference(t);
 
     if ( nFoundFile != sizeof(treeData->foundFile) )
     {
