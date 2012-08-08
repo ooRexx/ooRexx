@@ -4,11 +4,14 @@
 There are 3 basic ways to install ooRexx.  From simplest to most complex
 they are:
 
-Use a binary installer package, download and build ooRexx from a release
-source archive (a tar or zip file,) or checkout and build from the source in
-the Subversion repository.
+* Use a binary installer package
 
-Please read ALL of these notes before building ooRexx!
+* Download and build ooRexx from a release source archive (a tar or zip
+file,)
+
+* Checkout and build from the source in the Subversion repository.
+
+Please read ALL of these notes before attempting to build ooRexx.
 
 Install Using an Installer Package
 ==================================
@@ -18,6 +21,11 @@ for each installer package are provided here.  Check the specific platform
 documentation of the installer type for advanced options.  For platforms
 that do not have an installer package, it still may be possible to build a
 version of ooRexx for that platform from the source.
+
+Important: An "upgrade" type of installation is neither tested nor supported
+on any platform.  Please completely uninstall a prior version of ooRexx
+before installing a new version.  Installing over the top of an existing
+installation is likely to produce unpredictable results.
 
 Windows
 -------
@@ -37,27 +45,31 @@ a directory other than the default.  The /D option must be last on the
 command line and the directory must NOT be enclosed in quotes, even if the
 directory name contains spaces.
 
-Using this release as an example, to install without prompting into the
-"D:\Local Interpreters" directory, the following command line could be used:
+Using a generically named release as an example, to install without
+prompting into the "D:\Local Interpreters" directory, the following command
+line could be used:
 
-E:\downloads\ooRexx312.exe /S /D=D:\Local Interpreters\ooRexx
+E:\downloads\ooRexx-4.1.2.windows.X86_64.exe /S /D=D:\Local Interpreters\ooRexx
 
-It is recommended that an existing version of ooRexx first be uninstalled
-before installation.  Starting the installer when a previous version of
-ooRexx is installed will automatically run the uninstaller first.  This is
-true even when the installer is started from a command prompt using the /S
-option.
+An existing version of ooRexx must be uninstalled before installation.
+Starting the installer when a previous version of ooRexx is installed will
+automatically run the uninstaller first.  This is true even when the
+installer is started from a command prompt using the /S option.
 
-Vista Notes
------------
-ooRexx is supported on Vista starting with release 3.1.2.  The same Windows
-installer is used as on other versions of Windows.  On Vista the installer
-must be run as administrator.  To do this, from Windows Explorer, right
-click on the installer and select the "Run as administrator" menu item.  To
-run the installer from a command prompt, the user should right click on the
-command prompt icon and select the run as administrator menu item.  From
-within this console window, the installer can be run from the command prompt
-in the same way as on other versions of Windows.
+Notes for Windows Versions After XP
+-----------------------------------
+Windows Vista and later verssions have a feature known as User Account
+Control (UAC.)  ooRexx is fully supported on these versions of Windows,
+however UAC places some restrictions on the ooRexx installer.  The same
+Windows installer is used on all versions of Windows.
+
+On Vista or later the installer must be run as administrator.  To do this,
+from Windows Explorer, right click on the installer and select the "Run as
+administrator" menu item.  To run the installer from a command prompt, the
+user should right click on the command prompt icon and select the run as
+administrator menu item.  From within this console window, the installer can
+be run from the command prompt in the same way as on other versions of
+Windows.
 
 If the user does not right click and select to run as administrator, when
 the installer starts the elevated privileges dialog will pop up.  Right
@@ -65,20 +77,21 @@ clicking first simply saves a step and is not really necessary.
 
 ooRexx runs a process: rxapi.exe the first time a Rexx program executes.
 The rxapi process can be installed as a service, or not.  Although the
-installer offers the choice to install as a service, on Vista the user
-*should* always install rxapi as a service.  This allows Rexx programs to
-run without using "elevated privileges."
+installer offers the choice to install as a service, on Vista and later the
+user *should* always install rxapi as a service.  This allows Rexx programs
+to run without using "elevated privileges."
 
-If rxapi is *not* installed as a service on Vista, the rxapi process will
-not start for standard users.  This prevents almost all Rexx programs from
-running.  Note that on Vista even users in the administrator group will
-normally be running as standard users.
+If rxapi is *not* installed as a service on Vista and later, the rxapi
+process will not start for standard users.  This prevents almost all Rexx
+programs from running.  Note that on Vista even users in the administrator
+group will normally be running as standard users.
 
 However, if rxapi is not installed as a service, there are several methods
 that will allow the user to run Rexx programs.  Both of these methods
-circumvent, to some degree, MicroSoft's improved security measures in Vista.
-Therefore the user is advised to install rxapi as a service on Vista.  Two
-of these methods are as follows:
+circumvent, to some degree, MicroSoft's improved security measures, which
+are largely based on UAC.  Therefore the user is advised to install rxapi as
+a service on versions of Windows with UAC.  Two of these methods are as
+follows:
 
 1.) Run all Rexx programs from a console session (command prompt) that has
 been started using the "Run as administrator" option.
@@ -94,16 +107,30 @@ Linux
 Both .rpm (Redhat Package Manager) and .deb (Debian) install packages are
 available.  Both Redhat and SuSE Linux generally use .rpm files, as do many
 other Linux distributions.  Debian based systems (Debian, Ubuntu, Kubuntu,
-etc.,) use .deb files.  The commands to do a basic install are as follows:
+etc.,) use .deb files.
 
-Debian: dpkg -i <packageFile>
+As for all versions of ooRexx, any previous installations must be completely
+uninstalled first.  The commands to do a basic install are as follows:
 
-RPM: rpm -iv <packageFile>
+Debian:
 
-Using the 3.1.2 files as an example:
+dpkg -P ooRexx
+dpkg -i <packageFile>
 
-tom@Loon:~/downloads$ dpkg -i ooRexx-3.1.2-1.i386-debian-3.1.deb
+RPM:
 
+rpm -e ooRexx
+rpm -iv <packageFile>
+
+Using a generically named packages as an example. They must be executed as
+root or using sudo.  If there is no previous installation of ooRexx, skip
+the first command, (dpkg -P or rmp -e) they are the commands to uninstall a
+previous version.
+
+tom@Loon:~/downloads$ dpkg -P ooRexx
+tom@Loon:~/downloads$ dpkg -i ooRexx-4.1.2.x86_64.deb
+
+Raven:/home/tom # rpm -e ooRexx
 Raven:/home/tom # rpm -iv ooRexx-3.1.2-1.i386.rpm
 
 Solaris
@@ -138,7 +165,7 @@ directory and then execute the following commands:
 To install the 32 bit version:
 
 root@box # inutoc ./
-root@box # installp -a -c -X -v -Y -V2 -g -d./ ooRexx.32.rte
+root@box # installp -a -c -X -v -Y -V2 -g -d./ ooRexx.32.rte 4.1.0.1
 
 To uninstall the 32 bit version:
 
@@ -147,7 +174,7 @@ root@box # installp -u ooRexx.32.rte
 To install the 64 bit version:
 
 root@box # inutoc ./
-root@box # installp -a -c -X -v -Y -V2 -g -d./ ooRexx.64.rte
+root@box # installp -a -c -X -v -Y -V2 -g -d./ ooRexx.64.rte 4.1.0.1
 
 To uninstall the 64 bit version:
 
@@ -158,7 +185,12 @@ Build and Install From a Release Source Archive
 ===============================================
 
 Download and unpack the release source archive file in the format desired (a
-tar or a zip file.) Both the tar and the zip files contain the same content.
+tar or a zip file.) The tar file should be used on unix-like systems and the
+zip file on Windows systems.  Both the tar and the zip files contain the
+same source code, but with suitable line endings.  The zip also contains the
+PDF docs, which are needed in the packaging step on Windows.  The tar file
+contains the configure skip so that ooRexx can be built on a unix-like
+system without installing the autoconf tools.
 
 Windows
 -------
@@ -189,9 +221,11 @@ follows, using the 4.x head as an example:
 
 E:\work>svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/main/trunk interpreter
 
-You can also check out the 4.0.0 release code:
+You can also check out the release code for any version of ooRexx.  Using
+the 4.1.0 relase as an example, use the proper release number for other
+versions:
 
-E:\work>svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/main/releases/4.0.0 interpreter
+E:\work>svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/main/releases/4.1.0 interpreter
 
 In this command, the last word of the command is the directory into which
 the source tree will be checked out.  The name of the directory can be any
@@ -203,5 +237,5 @@ AIX, etc..
 
 When the source tree is checked out, it will include the "windows-build.txt"
 and the "unix-like-build.txt" files.  Pick the file appropriate for the
-platform on which the build is to take place and follow the directions in
+platform on which the build is to take place, and follow the directions in
 the file.

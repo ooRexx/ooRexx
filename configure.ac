@@ -1,5 +1,5 @@
 dnl
-dnl Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.
+dnl Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.
 dnl
 dnl This program and the accompanying materials are made available under
 dnl the terms of the Common Public License v1.0 which accompanies this

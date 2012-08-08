@@ -3,8 +3,8 @@ When changing the version number of ooRexx you will need to change the following
 oorexx.ver
 configure.ac
 CHANGES
-windows-build.txt
-unix-like-build.txt
+ReleaseNotes
+api/oorexxapi.h                         (REXX_INTERPRETER_4_1_x)
 extensions/rxftp/rxftp.cls
 platform/unix/oorexx-config.1
 platform/unix/oorexx.spec.in
@@ -15,9 +15,9 @@ platform/unix/rxsubcom.1
 
 When the copyright year changes be sure to update the following.
 
-interpreter/api/InterpreterAPI.cpp
+interpreter/api/InterpreterAPI.cpp      (RexxGetVersionInformation())
 
 When the library interface changes you need to modify the oorexx.ver
-file. BE CAREFUL!!!!! Some of this info has no relationship to the ooRexx package
+file. BE CAREFUL! Some of this info has no relationship to the ooRexx package
 version! If you don't know what you are doing, then don't do anything!
 

@@ -1,73 +1,69 @@
                              Open Object Rexx
 
                               Release Notes
-                              Version 4.0.0
+                              Version 4.2.0
 
-  Copyright 2005, 2009 Rexx Language Association.  All rights reserved.
-                            August 15, 2009
+  Copyright 2005-2012 Rexx Language Association.  All rights reserved.
+                               December 2012
+
+Note
+====
+ooRexx 4.2.0 is a bug fix only release.  There are no new features or
+enhancements in this release.  This, mostly empty, file is left as a
+template for future releases.
+
+|| (or)
+
+ooRexx 4.2.0 is a bug fix and enhancement release.  An outline of the new
+features and enhancements in this release are listed below.
+
+Fixed bugs are listed in the CHANGES document.
 
 File List
 =========
+Linux rpm and deb packages contain the distribution name and version of
+the system they were built on.  For instance,
+ooRexx-4.2.0.opensuse1110.x86_64.rpm was built on OpenSuSE 11.10.
 
-0readme.pdf
-Installation help and other relevant notes, prior to installation,
+All package names contain an indication if the package is built as a 32-bit
+or 64-bit binary.  Usually this indicator is x86_32 or x86_64.  For a 32-bit
+binary, these indicators are sometimes used: i386, i586, etc..
+
+Pick the package closest to the system you intend to install on.  If the
+package is not an exact match and will not install, or the interpreter will
+not run because of a conflict with the C / C++ libraries, it may be possible
+to get one of the developers to build a package for your system by opening
+up a support request in the tracker system.  Note that developer resources
+are constrained and this is neither a commitment nor a promise.
+
+_Readme.pdf
+Installation help and other relevant notes that should be read prior to
+installation.
+
+_Readme.html
+The same text as _Readme.pdf in HTML format.
 
 INSTALL
-Installation help in a text format.
+Additional installation help in a text format.
 
 ReleaseNotes
 This file.
 
-ooRexx-4.0.0.i586.deb
-Installation package for any recent Debian-based distribution of 32-bit
-Linux that supports the Debian package manager
+ReadMe.txt
+A copy of this file because SourceForge will display the contents of a
+readme file in the file download section.
 
-ooRexx-4.0.0.i586.exe
-Installation package for any supported Windows 32-bit OS
+ooRexx-4.2.0.*
+The installation packages for various operating systems.
 
-ooRexx-4.0.0.i586.fedora11.rpm
-Installation package for a Fedora Core 11 distribution of 32-bit Linux.
+ooRexx-4.2.0-source.tar.gz
+The source code for this version of ooRexx, suitable for building on an
+unix-like system.  Includes the configure script.
 
-ooRexx-4.0.0.i586.rpm
-Generic installation package for a distribution of 32-bit Linux that
-supports rpm.  If all other rpm packages fail, try this one.  It may
-still fail, in which case report your specifice Linux distribution to
-the ooRexx team and a developer *may* build a package for your sytem.
-
-ooRexx-4.0.0.i586.suse10.rpm
-Installation package for 32-bit SuSE 10.x or earlier Linux that supports
-rpm.
-
-ooRexx-4.0.0.x86_64.deb
-Installation package for any recent Debian-based distribution of 64-bit
-Linux that supports the Debian package manager
-
-ooRexx-4.0.0.x86_64.exe
-Installation package for any supported Windows 64-bit OS
-
-ooRexx-4.0.0.x86_64.fedora11.rpm
-Installation package for a Fedora Core 11 distribution of 64-bit Linux.
-
-ooRexx-4.0.0.x86_64.suse10.rpm
-Installation package for 64-bit SuSE 10.x or earlier Linux that supports
-rpm.
-
-ooRexx-4.0.0.x86_64.suse11.rpm
-Installation package for 64-bit SuSE 11.x or later Linux that supports
-rpm.
-
-ooRexx-debuginfo-4.0.0.i586.fedora11.rpm
-debuginfo package for ooRexx-4.0.0.i586.fedora11.rpm
-
-ooRexx-debuginfo-4.0.0.x86_64.fedora11.rpm
-debuginfo package for ooRexx-4.0.0.x86_64.fedora11.rpm
-
-ooRexx.4.0.0.source.tar.gz
-Source code tree with unix line ending files
-
-ooRexx.4.0.0.source.zip
-Source code tree with Windows line ending files and PDF doc files required
-to build the Windows installation package.
+ooRexx-4.2.0-source.zip
+The source code for this version of ooRexx, suitable for building and
+packaging on a Windows system.  Includes the PDF documentation files which
+are required for the packaging step.
 
 
 Installation and Configuration
@@ -76,39 +72,31 @@ Installation and Configuration
 Prior to Installation:
 ----------------------
 
-Important:  An "upgrade" type of installation is neither tested nor
-supported on any platform.  Please completely uninstall a prior version of
-ooRexx before installing a new version.  Installing over the top of an
-existing installation is likely to produce unpredictable results.
+Important: An "upgrade" type of installation is neither tested nor supported
+on any platform.  Please completely uninstall a prior version of ooRexx
+before installing a new version.  Installing over the top of an existing
+installation is likely to produce unpredictable results.
+
+Note:  On Windows only, the installer will detect a previous installation
+and launch the uninstalltion program automatically.  The uninstall program
+will completely uninstall the previous version of ooRexx and then return
+control to the installer.
 
 For installation help and other relevant notes, prior to installation,
-please read the "0ReadMe.pdf" PDF file which is placed with the
-downloadable files for this release on SourceForge.
+please read the "_ReadMe.pdf" PDF file which is placed with the downloadable
+files for this release on SourceForge.
 
 A Note on Linux packages:
 -------------------------
 
-The generically named rpm packages should install on any modern
-distribution that uses RPM as a package manager.  Likewise, the
-generically named deb packages will install on any modern debian-based
-systems.
-
-For instance, ooRexx-4.0.0-4567.x86_64.rpm, will install on 64-bit Fedora
-Core 9, Fedora Core 10, Open SuSE 11.1, etc..
-
-In the same manner, ooRexx-4.0.0-4567.i386.deb will install on 32-bit
-Ubuntu 7.04, Kubuntu 8.10, Debian 5.0, etc..
+The generically named rpm packages should install on any modern distribution
+that uses RPM as a package manager.  Likewise, the generically named deb
+packages will install on any modern debian-based systems.
 
 When it is known that the generic package has problems on a distribution,
 the ooRexx team may build an additional package for that specific
 distribution.  In which case, the installation package will have the
 targeted distribution in its file name.
-
-I.e., on OpenSuSE prior to version 11, there is a problem.  A specific
-package is built for OpenSuSE prior to version 11.  The 32-bit package
-name looks like:
-
-ooRexx-4.0.0-4567.i386.suse102.rpm
 
 Please use the generically named rpm and deb packages.  If there is a
 problem on your distribution, report it by opening up a Tracker bug.
@@ -116,299 +104,61 @@ Depending on resources, the ooRexx team may be able to build a specific
 package for that distribution.
 
 
-Changes in ooRexx 4.0.0
-=======================
-
-New platforms:
---------------
-
-Linux 64-bit
-AIX 64-bit
-Windows 64-bit
+Changes in ooRexx 4.2.0
+=================================
 
 All platforms:
 ==============
 
-Although not directly visible to the ooRexx programer, much of the code in
-the interpreter core has been rewritten.  This enhances the interpreter in
-several ways, not the least of which is the ability to compile the
-interpreter in 64-bit addressing mode.  In addition, the rewritten
-interpreter is now more maintainable and extensible.
+Builtin Classes:
+----------------
 
-A new, improved, set of application programming interfaces (APIs) have
-been added.  The programmers guide has been updated accordingly.  Although
-these utilize C++ they are extremely easy to use.  All of the external
-function libraries have been upgraded to use these new APIs.
+New class:
+------------
 
-REXX_PATH (new in 4.0) is an additional path you can set that is used for
-Rexx program searches.
+    Class methods
+    -------------
 
-A new utility class, a socket class, has been added.
+    Instance methods
+    ----------------
 
-New samples are included in the distribution:
----------------------------------------------
 
-samples/scclient.rex
-samples/scserver.rex
-samples/sfclient.rex
-samples/sfserver.rex
+New methods on x:
+------------------------
+
+
+New extensions classes:
+-----------------------
+
+New documentation:
+-------------------
+
 
 Unix platform:
 ==============
 
-Rxapi now runs as a system wide daemon.  The use of shared memory has been
-eliminated.  Rxapi now uses a socket interface for communication.
+New extension library:
+----------------------
+
+  Functions:
+  ----------
+
 
 Windows platform:
 =================
 
-Improvements to ooDialog and OLEObject.
+ooDialog :
+----------
 
-The documentation of the Windows specific classes has been moved out of
-rexxref to the new document winextensions.pdf.
+New samples :
 
-New samples are included in the distribution:
----------------------------------------------
-
-samples\oodialog\examples\imageButton.rex
-samples\winsystem\displayAnyMenu.rex
-samples\winsystem\displayWindowTree.rex
-samples\winsystem\getTheWindow.rex
-samples\winsystem\menuCalc.rex
-samples\winsystem\menuNotepad.rex
-samples\winsystem\quickCalc.rex
-samples\winsystem\quickShowAllMenus.rex
-samples\winsystem\windowsSystem.frm
-samples\winsystem\winSystemDlgs.h
-samples\winsystem\winSystemDlgs.rc
-samples\winsystem\writeWithNotepad.rex
-
-The ooRexxTry program has been moved out of the incubator into the Windows
-distribution.  It is a GUI version of rexxtry and is installed along side
-of rexxtry in the installation directory.  (Which means it is in the path
-and can be started from the command line.) It is also placed in the Open
-Object Rexx folder on the Start Menu, next to rexxtry.  A PDF
-documentation file is installed in the doc directory, and a short cut link
-to it is in documentation folder on the Start Menu.
 
 Windows Installation:
 =====================
 
-The Windows installation program has be enhanced so that it will only
-remove files installed by the ooRexx package.  Files added to the
-installation directory by the user will no longer be deleted when ooRexx
-is uninstalled.  This behavior will be in effect for the uninstallation of
-ooRexx 4.0.0 and future versions of ooRexx, there is no change in the
-3.2.0 uninstallation.  When a 3.2.0, or earlier, version of ooRexx is
-uninstalled, all files in the installation directory are deleted.
-
-The installation program now correctly sets up the .rex file associations
-when run with non-Admin privileges.  Note however, it is still advised to
-always run the installation and un-installation program using Admin
-privileges.
-
-The installation program now sets up Rexx program files with the .rex
-extension as drop handlers.  When a file is dropped on the icon for a Rexx
-program, the Windows Shell passes the complete file name path as the
-argument to the program.
-
-Windows ooDialog:
-=================
-
-Documentation
+Major changes
 -------------
 
-Restructuring of the ooDialog reference has started.  Some areas have been
-reviewed for accuracy and corrected / clarified where needed.  Anyone
-using ooDialog is urged to at least read chapter 2, section 4 (2.4) which
-attempts to provide some information on the future direction of ooDialog.
-
-New classes:
-------------
-
-DlgUtil, Point, Rect, Size, Image, ImageList, and ResourceImage.
-
-Enhanced classes:
------------------
-
-The following existing classes have been reviewed for correct behavior and
-enhanced to provide all the functionality of the underlying Windows
-control, as of Windows XP.  In essence this entails allowing the control
-to be created with all of the control styles, providing a way to send all
-of the messages the control accepts, providing a way to receive all of the
-event notifications that the control sends.
-
-* ButtonControl and subclasses.
-* StaticControl
-* ProgressBar
-
-The above classes all have new methods.
-
-Other New methods:
-------------------
-
-(Please use the index in the ooDialog reference to see what classes these
-methods belong to.)
-
-setItemSysColor()
-getFont(), createFontEx()
-getTextSizeScreen()
-getExStyleRaw()
-setDefaultFont(), getFontName(), getFontSize()  <- Class methods.
-fontName(), fontSize()                          <- Attributes.
-getTextSizeDlg()
-addStatic(), addImage(), addEtchedFrame(), addEtchedHorizontal(),
-  addEtchedVertical()
-getGroupBox()
-setSysColor()
-setImageList(), getImageList()                  <- For several classes.
-getColumnCount(), getColumnOrder(), setColumnOrder()
-connectStaticNotify()
-
-Windows Scripting Host:
-=======================
-
-The Windows Scripting Host support in ooRexx 4.0.0 has been temporarily
-disabled.  This was done after soliciting input from users.  Temporarily
-disabling WSH allows the release of 4.0.0 to be months sooner than it
-would have been otherwise.  The consensus of users was that they would
-prefer an early release without WSH than a later release with WSH.  The
-intent is to deliver WSH as soon as possible in a follow-on minor release.
-
-Some possible differences in program behavior:
-==============================================
-
-Files loaded by ::requires are loaded by a global package manager, and
-a given file will only be loaded once in a process.  This means multiple
-programs referring to a ::requires file will be accessing a single set of
-created classes and routines rather than each ending up with a unique
-set.
-
-Due to a bug in prior releases of ooRexx and Object Rexx, a negative
-return code from a Rexx program could be transformed to a positive return
-code to the operating system.  This bug is now fixed.
-
-Due to a bug in prior releases, methods created with ::METHOD ATTRIBUTE
-or ::ATTRIBUTE did not properly recognize the GUARDED status of methods.
-All attribute methods behaved like they were UNGUARDED.
-
-The RxFuncAdd now checks that a registered function can be resolved at
-registration time and will return a failure if it cannot.  This is how
-many believed it worked originally.
-
-Some returns from the rxMath package were not consistent.  As an example,
-on Windows, NaN (Not a Number) was returned as the string "ERROR" while on
-Linux the string "nan" was returned.  This was fixed so that the string
-"nan" is returned on all platforms.
-
-On all platforms, +infinity and -infinity are now returned as strings
-"+infinity" and "-infinity".
-
-Miscellaneous Enhancements:
-===========================
-
-A method that is declared PRIVATE has been enhanced to allow its
-invocation from any of the following situations:
-
-1) From within a method owned by the same class as the target (i.e., the
-method is invoked using SELF.)  This is the same as ooRexx-3.2 and before.
-
-2) The caller is an instance of the same class that defined the target
-method (the method's scope).  This allows an instance of a class to invoke
-a private method of another instance of the same class.
-
-3) The caller is a class object that is compatible with the scope of the
-method.  This allows class objects to also access private methods of its
-own instances.  Useful for specialized class methods that create instances
-(such as the "fromXxxxxx" methods on DateTime).
-
-EXTERNAL is allowed on ::ATTRIBUTE and ::METHOD directives.
-EXTERNAL is allowed on ::ROUTINE ::METHOD directives.
-LIBRARY allowed on ::REQUIRES to load external libraries
-
-A new ::CONSTANT directive.
-
-The stream class supports files larger than 4Gb (on both
-32-bit and 64-bit platforms).
-
-Builtin functions:
-==================
-
-FILESPEC has new options : Location, Extension.
-
-LASTPOS has a new parameter : length.
-
-POS has a new parameter : length.
-
-QUALIFY is new builtin function.
-
-TIME has a new option : Offset.
-
-TRANSLATE has new parameters : pos, length.
-
-Class library:
-==============
-
-New classes:
-------------
-
-Buffer, IdentityTable, Orderable, Package, Pointer, RexxContext, Routine,
-WeakReference.
-
-New methods on Object:
-----------------------
-
-send, sendwith, startWith.
-
-New methods on DateTime:
-------------------------
-
-offset, setTimeStamp (private), toTimeZone, utcDate, utcIsoDate.
-
-DateTime also supports a timezone offset on class methods that create
-new DataTime instances.
-
-New methods on Method:
----------------------
-
-package.
-
-New methods on MutableBuffer:
------------------------------
-
-caselessChangeStr, caselessCountStr, caselessLastPos, caselessMatch,
-caselessMatchChar, caselessPos, caselessWordPos, changeStr, countStr,
-delStr, delWord, lower, makeArray, match, matchChar, replaceAt, subWord,
-translate, upper, verify, word, wordIndex, wordLength, wordPos, words.
-
-New methods on OLEObject:
--------------------------
-
-addEventMethod, connectEvents, disconnectEvents, isConnectable,
-isConnected, removeEventHandler, removeEventMethod.
-
-New methods on RexxQueue:
-------------------------
-
-empty, makeArray, exists, open.
-
-New methods on Stem:
---------------------
-
-toDirectory.
-
-New methods on String:
----------------------
-
-replaceAt.
-
-Also, the makearray() method of string allows for delimiters longer than
-a single character.
-
-Incubator:
-==========
-
-A beta version of RexxGTK is available.  This is a portable GUI class for
-building ooRexx GUI programs.  It runs on any *nix system where GTK is
-available and on Windows with the proper GTK DLLs in place.
+Minor changes
+-------------
 
