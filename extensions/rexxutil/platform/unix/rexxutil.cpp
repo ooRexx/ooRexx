@@ -2443,6 +2443,39 @@ static bool increaseBuffer(RexxCallContext *c, size_t need, RXTREEDATA *treeData
 }
 
 /**
+ * Allocates a buffer twice as big as the buffer passed in.
+ *
+ * @param c             Call context we are operating in.
+ * @param dPath         Pointer to the buffer to reallocate
+ * @param nPath         Size of dPath buffer.
+ * @param nStaticBuffer Size of original static buffer.
+ *
+ * @return True on success, false on memory allocation failure.
+ *
+ * @remarks  NOTE: that the pointer to the buffer to reallocate, may, or may
+ *           not, be a pointer to a static buffer.  We must NOT try to free a
+ *           static buffer and we MUST free a non-static buffer.
+ */
+static bool getBiggerBuffer(RexxCallContext *c, char **dPath, size_t *nPath, size_t nStaticBuffer)
+{
+    if ( *nPath != nStaticBuffer )
+    {
+        free(*dPath);
+    }
+
+    *nPath *= 2;
+    *dPath = (char *)malloc(*nPath * sizeof(char));
+
+    if ( *dPath == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * This is a SysFileTree specific function.
  *
  * Test if struct stat.st_mode field is a file for the purpose of SysFileTree.
@@ -2528,11 +2561,11 @@ bool linFindNextFile(RexxCallContext *c, const char *fileSpec, const char *path,
     do
     {
         len = snprintf(dFullPath, nFullPath, "%s%s", path, dir_entry->d_name);
-        if ( len >= nFullPath )
+        if ( len >= (int)nFullPath )
         {
             if ( ! getBiggerBuffer(c, &dFullPath, &nFullPath, IBUF_LEN) )
             {
-                outOfMemoryException(c);
+                outOfMemoryException(c->threadContext);
                 if ( nFullPath != IBUF_LEN )
                 {
                     free(dFullPath);
@@ -2877,39 +2910,6 @@ static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fi
 
         strcpy(fileSpec, temp);
         free(temp);
-    }
-
-    return true;
-}
-
-/**
- * Allocates a buffer twice as big as the buffer passed in.
- *
- * @param c             Call context we are operating in.
- * @param dPath         Pointer to the buffer to reallocate
- * @param nPath         Size of dPath buffer.
- * @param nStaticBuffer Size of original static buffer.
- *
- * @return True on success, false on memory allocation failure.
- *
- * @remarks  NOTE: that the pointer to the buffer to reallocate, may, or may
- *           not, be a pointer to a static buffer.  We must NOT try to free a
- *           static buffer and we MUST free a non-static buffer.
- */
-static bool getBiggerBuffer(RexxCallContext *c, char **dPath, size_t *nPath, size_t nStaticBuffer)
-{
-    if ( *nPath != nStaticBuffer )
-    {
-        free(*dPath);
-    }
-
-    *nPath *= 2;
-    *dPath = (char *)malloc(*nPath * sizeof(char));
-
-    if ( *dPath == NULL )
-    {
-        outOfMemoryException(c->threadContext);
-        return false;
     }
 
     return true;
@@ -3289,7 +3289,7 @@ bool formatFile(RexxCallContext *c, RXTREEDATA *treeData, uint32_t options, stru
     }
 
     // Place found file line in the stem.
-    RexxString Object t = c->String(treeData->foundFileLine);
+    RexxStringObject t = c->String(treeData->foundFileLine);
 
     treeData->count++;
     c->SetStemArrayElement(treeData->files, treeData->count, t);
