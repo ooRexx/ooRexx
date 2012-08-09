@@ -251,22 +251,6 @@ union semun {
 };
 #endif
 
-/*
- * From the GCC doc:
- * __FUNCTION__ is another name for __func__. Older versions of GCC recognize
- * only this name. However, it is not standardized. For maximum portability, we
- * recommend you use __func__, but provide a fallback definition with the
- * preprocessor:
- */
-
- #if __STDC_VERSION__ < 199901L
- # if __GNUC__ >= 2
- #  define __func__ __FUNCTION__
- # else
- #  define __func__ "<unknown>"
- # endif
- #endif
-
 extern char *resolve_tilde(const char *);
 
 #define INVALID_ROUTINE 40
@@ -2370,8 +2354,7 @@ static void stringTooLongException(RexxThreadContext *c, CSTRING funcName, size_
 }
 
 /**
- * This is a SysFileTree specific function.  Could be expanded for use in other
- * RexxUtil functions by passing in function name, etc..
+ * This is a SysFileTree specific function.
  *
  * @param c
  * @param pos
@@ -2385,16 +2368,6 @@ static void badSFTOptsException(RexxThreadContext *c, size_t pos, CSTRING actual
              pos, actual);
 
     c->RaiseException1(Rexx_Error_Incorrect_call_user_defined, c->String(buf));
-}
-
-static void bufferOverflowException(RexxThreadContext *c, size_t needed, size_t have, CSTRING func, size_t lineNumber)
-{
-    char buf[256] = {0};
-    snprintf(buf, sizeof(buf),
-             "buffer overflow would occur in %s() at line: %lu; data size: %lu buffer size: %lu",
-             func, lineNumber, needed, have);
-
-    c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
 }
 
 /**
@@ -2541,8 +2514,10 @@ inline char typeOfEntry(mode_t m)
 bool linFindNextFile(RexxCallContext *c, const char *fileSpec, const char *path, DIR *dir_handle,
                      struct stat *finfo, char **d_name, bool caseless)
 {
-    char fullPath[IBUF_LEN];
-    int  len;
+    char    fullPath[IBUF_LEN];
+    int     len;
+    char   *dFullPath = fullPath;
+    size_t  nFullPath = IBUF_LEN;
 
     struct dirent *dir_entry = readdir(dir_handle);
     if( dir_entry == NULL )
@@ -2552,14 +2527,21 @@ bool linFindNextFile(RexxCallContext *c, const char *fileSpec, const char *path,
 
     do
     {
-        len = snprintf(fullPath, sizeof(fullPath), "%s%s", path, dir_entry->d_name);
-        if ( len >= (int)sizeof(fullPath) )
+        len = snprintf(dFullPath, nFullPath, "%s%s", path, dir_entry->d_name);
+        if ( len >= nFullPath )
         {
-            bufferOverflowException(c->threadContext, len, sizeof(fullPath), __func__, __LINE__);
-            return false;
+            if ( ! getBiggerBuffer(c, &dFullPath, &nFullPath, IBUF_LEN) )
+            {
+                outOfMemoryException(c);
+                if ( nFullPath != IBUF_LEN )
+                {
+                    free(dFullPath);
+                }
+                return false;
+            }
         }
 
-        lstat(fullPath, finfo);
+        lstat(dFullPath, finfo);
 
         if ( isAcceptableFile(finfo->st_mode) )
         {
@@ -2581,6 +2563,11 @@ bool linFindNextFile(RexxCallContext *c, const char *fileSpec, const char *path,
                 if ( fnmatch(fileSpec, dup_d_name, FNM_NOESCAPE | FNM_PATHNAME | FNM_PERIOD ) == 0 )
                 {
                     *d_name = dir_entry->d_name;
+
+                    if ( nFullPath != IBUF_LEN )
+                    {
+                        free(dFullPath);
+                    }
                     return true;
                 }
             }
@@ -2589,6 +2576,11 @@ bool linFindNextFile(RexxCallContext *c, const char *fileSpec, const char *path,
                 if ( fnmatch(fileSpec, dir_entry->d_name, FNM_NOESCAPE | FNM_PATHNAME | FNM_PERIOD) == 0 )
                 {
                     *d_name = dir_entry->d_name;
+
+                    if ( nFullPath != IBUF_LEN )
+                    {
+                        free(dFullPath);
+                    }
                     return true;
                 }
             }
@@ -2596,6 +2588,11 @@ bool linFindNextFile(RexxCallContext *c, const char *fileSpec, const char *path,
         dir_entry = readdir(dir_handle);
     }
     while( dir_entry != NULL );
+
+    if ( nFullPath != IBUF_LEN )
+    {
+        free(dFullPath);
+    }
 
     return false;
 }
@@ -2826,10 +2823,10 @@ static bool getOptionsFromArg(RexxCallContext *context, CSTRING opts, uint32_t *
  *           the home directoy.
  *
  *           But that would mean the path to the user's home directory would be
- *           over about 3750 characters long.  That seems absurd.  The goal is
- *           to not raise exceptions except for incorrect arguments.  But, here
- *           a condition is raised if the tilde expansion produces a path too
- *           long, because I believe the condition will never be raised.
+ *           over about 3750 characters long.  That seems absurd.  I believe
+ *           this will never happen, but to prevent a possible buffer overflow,
+ *           an out of memory exception is raised for this seemingly impossible
+ *           situation.
  */
 static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fileSpec, size_t bufLen, size_t argPos)
 {
@@ -2873,7 +2870,7 @@ static bool getFileSpecFromArg(RexxCallContext *context, CSTRING fSpec, char *fi
         size_t l = strlen(temp) + len + 1;
         if ( l > bufLen )
         {
-            bufferOverflowException(context->threadContext, l, bufLen, __func__, __LINE__);
+            outOfMemoryException(context->threadContext);
             free(temp);
             return false;
         }
