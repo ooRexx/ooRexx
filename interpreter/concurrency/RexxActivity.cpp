@@ -809,11 +809,8 @@ void RexxActivity::raiseException(wholenumber_t  errcode, RexxString *descriptio
  *
  * @return The created exception dictionary.
  */
-RexxDirectory *RexxActivity::createExceptionObject(
-    wholenumber_t  errcode,            /* REXX error code                   */
-    RexxString    *description,        /* descriptive information           */
-    RexxArray     *additional,         /* substitution information          */
-    RexxObject    *result )            /* result information                */
+RexxDirectory *RexxActivity::createExceptionObject(wholenumber_t  errcode,
+    RexxString *description, RexxArray *additional, RexxObject *result )
 /******************************************************************************/
 /* This routine is used for SYNTAX conditions only.                           */
 /*                                                                            */
@@ -821,13 +818,12 @@ RexxDirectory *RexxActivity::createExceptionObject(
 /* convenient for the calling code in the two cases where this facility       */
 /* is used.                                                                   */
 /*                                                                            */
-/* NOTE: The building of the excepption obejct (EXOBJ)  has been re-arranged  */
+/* NOTE: The building of the exception obejct (EXOBJ) has been re-arranged    */
 /*  so that a garbage collection in the middle of building traceBack/etc      */
 /*  doesn't clean up the newly built objects.  SO we create exobj early on    */
-/*  save it, and add newlly built objects to exobj as we go.                  */
+/*  save it, and add newly built objects to exobj as we go.                   */
 /******************************************************************************/
 {
-
     /* All error detection done. we can  */
     /*  build and save exobj now.        */
     /* get an exception directory        */

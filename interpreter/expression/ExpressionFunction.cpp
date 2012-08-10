@@ -209,7 +209,7 @@ RexxObject *RexxExpressionFunction::evaluate(
 
         case function_internal:            /* need to process internal routine  */
             /* go process the internal call      */
-            context->internalCall(this->target, argcount, stack, result);
+            context->internalCall(this->functionName, this->target, argcount, stack, result);
             break;
 
         case function_builtin:             /* builtin function call             */

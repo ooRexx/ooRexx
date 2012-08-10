@@ -395,7 +395,9 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
     size_t             instructionCount; /* instructions without yielding     */
 #endif
     this->receiver = _receiver;          /* save the message receiver         */
-    this->settings.msgname = msgname;    /* use the passed message name       */
+    // the "msgname" can also be the name of an external routine, the label
+    // name of an internal routine.
+    this->settings.msgname = msgname;
 
     /* not a reply restart situation?    */
     if (this->execution_state != REPLIED)
@@ -2827,14 +2829,20 @@ void RexxActivation::loadLibrary(RexxString *target, RexxInstruction *instructio
 }
 
 
-RexxObject * RexxActivation::internalCall(
-    RexxInstruction     *target,       /* target of the call                */
-    size_t               _argcount,     /* count of arguments                */
-    RexxExpressionStack *_stack,        /* stack of arguments                */
-    ProtectedObject &returnObject)
-/******************************************************************************/
-/* Function:  Process an internal function or subroutine call                 */
-/******************************************************************************/
+/**
+ * Process an internal function or subroutine call.
+ *
+ * @param name      The name of the target label.
+ * @param target    The target instruction where we start executing (this is the label)
+ * @param _argcount The count of arguments
+ * @param _stack    The context stack holding the arguments
+ * @param returnObject
+ *                  A holder for the return value
+ *
+ * @return The return value object
+ */
+RexxObject * RexxActivation::internalCall(RexxString *name, RexxInstruction *target,
+    size_t _argcount, RexxExpressionStack *_stack, ProtectedObject &returnObject)
 {
     RexxActivation * newActivation;      /* new activation for call           */
     size_t           lineNum;            /* line number of the call           */
@@ -2849,16 +2857,22 @@ RexxObject * RexxActivation::internalCall(
     this->activity->pushStackFrame(newActivation); /* push on the activity stack        */
     /* run the internal routine on the   */
     /* new activation                    */
-    return newActivation->run(receiver, OREF_NULL, _arguments, _argcount, target, returnObject);
+    return newActivation->run(receiver, name, _arguments, _argcount, target, returnObject);
 }
 
-RexxObject * RexxActivation::internalCallTrap(
-    RexxInstruction * target,          /* target of the call                */
-    RexxDirectory   * conditionObj,    /* processed condition object        */
-    ProtectedObject &resultObj)
-/******************************************************************************/
-/* Function:  Call an internal condition trap                                 */
-/******************************************************************************/
+/**
+ * Processing a call to an internal trap subroutine.
+ *
+ * @param name      The label name of the internal call.
+ * @param target    The target instruction for the call (the label)
+ * @param conditionObj
+ *                  The associated condition object
+ * @param resultObj A holder for a result object
+ *
+ * @return Any return result
+ */
+RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction * target,
+    RexxDirectory *conditionObj, ProtectedObject &resultObj)
 {
 
     this->stack.push(conditionObj);      /* protect the condition object      */
@@ -2872,7 +2886,7 @@ RexxObject * RexxActivation::internalCallTrap(
     this->activity->pushStackFrame(newActivation); /* push on the activity stack        */
     /* run the internal routine on the   */
     /* new activation                    */
-    return newActivation->run(OREF_NULL, OREF_NULL, NULL, 0, target, resultObj);
+    return newActivation->run(OREF_NULL, name, NULL, 0, target, resultObj);
 }
 
 

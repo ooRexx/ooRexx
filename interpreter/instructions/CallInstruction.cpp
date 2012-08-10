@@ -261,7 +261,7 @@ void RexxInstructionCall::execute(
 
             case call_internal:              /* need to process internal routine  */
                 /* go process the internal call      */
-                context->internalCall(_target, argcount, stack, result);
+                context->internalCall(_name, _target, argcount, stack, result);
                 break;
 
             case call_builtin:               /* builtin function call             */
@@ -304,7 +304,7 @@ void RexxInstructionCall::trap(
 
         case call_internal:                /* need to process internal routine  */
             /* go process the internal call      */
-            context->internalCallTrap(this->target, conditionObj, result);
+            context->internalCallTrap((RexxString *)this->name, this->target, conditionObj, result);
             break;
 
         case call_builtin:                 /* builtin function call             */
