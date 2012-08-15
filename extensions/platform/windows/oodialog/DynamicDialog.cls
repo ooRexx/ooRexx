@@ -697,13 +697,13 @@
             when class = 'WC_TABCONTROL' | class = '"SYSTABCONTROL32"' then
                self~createTab(id, x, y, w, h, self~getNamedCtrlStyle(style, "TAB"), name)
 
-            when class = 'DATETIMEPICK_CLASS' then
+            when class = 'DATETIMEPICK_CLASS' | class = '"SYSDATETIMEPICK32"' then
                self~createDateTimePicker(id, x, y, w, h, self~getNamedCtrlStyle(style, "DTP"), name)
 
-            when class = 'MONTHCAL_CLASS' then
+            when class = 'MONTHCAL_CLASS' | class = '"SYSMONTHCAL32"' then
                self~createMonthCalendar(id, x, y, w, h, self~getNamedCtrlStyle(style, "MONTH"), name)
 
-            when class = 'UPDOWN_CLASS' then
+            when class = 'UPDOWN_CLASS' | class = '"MSCTLS_UPDOWN32"' then
                self~createUpDown(id, x, y, w, h, self~getNamedCtrlStyle(style, "UPDOWN"), name)
 
             otherwise do
