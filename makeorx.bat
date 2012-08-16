@@ -405,7 +405,7 @@ for /F "delims== tokens=1,2,3*" %%i in (oorexx.ver) do (
    )
  )
 )
-echo SVN_REVSION=%SVN_REV%>> oorexx.ver.incl
+echo SVN_REVISION=%SVN_REV%>> oorexx.ver.incl
 goto GENERATE_VERSION_FILE_DONE
 
 :NOSVN
@@ -417,7 +417,7 @@ if exist oorexx.ver.incl (
 ) else (
   copy oorexx.ver oorexx.ver.incl 1>nul 2>&1
   set SVN_REV=%BLD_NUM%
-  echo SVN_REVSION=%SVN_REV%>> oorexx.ver.incl
+  echo SVN_REVISION=%SVN_REV%>> oorexx.ver.incl
 )
 
 goto GENERATE_VERSION_FILE_DONE
