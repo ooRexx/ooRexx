@@ -849,6 +849,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_SUBSTR                       ,TheStringBehaviour, CPPM(RexxString::substr), 3);
   defineKernelMethod(CHAR_SUBCHAR                      ,TheStringBehaviour, CPPM(RexxString::subchar), 1);
   defineKernelMethod(CHAR_DELWORD                      ,TheStringBehaviour, CPPM(RexxString::delWord), 2);
+  defineKernelMethod(CHAR_SPACE                        ,TheStringBehaviour, CPPM(RexxString::space), 2);
   defineKernelMethod(CHAR_SUBWORD                      ,TheStringBehaviour, CPPM(RexxString::subWord), 2);
   defineKernelMethod("SUBWORDS"                        ,TheStringBehaviour, CPPM(RexxString::subWords), 2);
   defineKernelMethod(CHAR_TRUNC                        ,TheStringBehaviour, CPPM(RexxString::trunc), 1);
