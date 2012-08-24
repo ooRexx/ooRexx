@@ -997,6 +997,7 @@ CPPM(RexxContext::getArgs),
 CPPM(RexxContext::getCondition),
 CPPM(RexxContext::getLine),
 CPPM(RexxContext::getRS),
+CPPM(RexxContext::getName),
 
 CPPM(StackFrameClass::getName),
 CPPM(StackFrameClass::getExecutable),

@@ -926,7 +926,7 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
     // name and the fullName (if it was resolved)
     addRequiresFile(shortName, fullName, package);
     // for any requires file loaded to this instance, we run the prolog within the instance.
-    runRequires(activity, shortName, requiresFile);
+    runRequires(activity, fullName != OREF_NULL ? fullName : shortName, requiresFile);
 
     return package;
 }

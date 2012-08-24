@@ -76,6 +76,7 @@ public:
     RexxObject *getLine();
     RexxObject *getRS();
     RexxObject *copyRexx();
+    RexxObject *getName();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 

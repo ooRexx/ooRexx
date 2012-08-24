@@ -658,6 +658,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_CONDITION     ,TheRexxContextBehaviour, CPPM(RexxContext::getCondition), 0);
   defineKernelMethod("LINE"             ,TheRexxContextBehaviour, CPPM(RexxContext::getLine), 0);
   defineKernelMethod("RS"               ,TheRexxContextBehaviour, CPPM(RexxContext::getRS), 0);
+  defineKernelMethod(CHAR_NAME          ,TheRexxContextBehaviour, CPPM(RexxContext::getName), 0);
 
                                        /* Add the instance methods to the   */
                                        /* instance behaviour mdict          */

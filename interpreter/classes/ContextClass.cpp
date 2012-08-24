@@ -280,3 +280,19 @@ RexxObject *RexxContext::getRS()
     checkValid();
     return activation->getContextReturnStatus();
 }
+
+
+/**
+ * Retrieve the name associated with the current context.
+ * If this is the top level, then the name of the package
+ * is returned.  For internal call contexts, the label name
+ * is returned, and for routines or methods, the name used
+ * to invoke the code is returned.
+ *
+ * @return The appropriate name for this context.
+ */
+RexxObject *RexxContext::getName()
+{
+    checkValid();
+    return activation->getCallname();
+}
