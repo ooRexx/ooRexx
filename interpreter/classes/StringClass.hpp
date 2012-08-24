@@ -220,6 +220,9 @@ inline char IntToHexDigit(int n)
    RexxObject *Max(RexxObject **args, size_t argCount);
    RexxObject *Min(RexxObject **args, size_t argCount);
    RexxObject *trunc(RexxInteger *decimals);
+   RexxObject *floor();
+   RexxObject *ceiling();
+   RexxObject *round();
    RexxObject *format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger);
    RexxObject *isInteger();
    RexxObject *logicalOperation(RexxObject *, RexxObject *, unsigned int);

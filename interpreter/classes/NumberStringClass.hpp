@@ -150,6 +150,12 @@
     RexxObject *getRealValue(RexxVariableDictionary *);
     RexxObject *trunc(RexxObject *);
     RexxObject *truncInternal(size_t);
+    RexxObject *floor();
+    RexxObject *floorInternal();
+    RexxObject *ceiling();
+    RexxObject *ceilingInternal();
+    RexxObject *round();
+    RexxObject *roundInternal();
     RexxObject *unknown(RexxString *, RexxArray *);
     bool        isInstanceOf(RexxClass *);
     RexxMethod   *instanceMethod(RexxString *);

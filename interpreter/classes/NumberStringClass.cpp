@@ -1462,6 +1462,372 @@ RexxObject *RexxNumberString::truncInternal(
     return result;                       /* return the formatted number       */
 }
 
+
+/**
+ * Return the floor value for a decimal numeric value.  The floor
+ * is the first full number value less that the current
+ * value.  If the number has no significant decimal positions,
+ * this returns the same value (minus any trailing decimal zeros).
+ * NOTE:  If the number is negative, the value goes toward the
+ * lower number (e.g., the floor of -3.5 is -4, not -3).
+ *
+ * @return The numeric floor of this value.
+ */
+RexxObject *RexxNumberString::floor()
+{
+    /* round to current digits setting   */
+    return this->prepareNumber(number_digits(), ROUND)->floorInternal();
+}
+
+/**
+ * Calculate the floor value for a number.
+ *
+ * @return A string value of the floor, with appropriate
+ *         formatting for the function.
+ */
+RexxObject *RexxNumberString::floorInternal()
+{
+    // if this is exactly zero, then the floor is always zero
+    if (this->sign == 0)
+    {
+        return IntegerZero;
+    }
+    // if this is a positive number, then this is the same as trunc
+    else if (this->sign > 0)
+    {
+        return this->truncInternal(0);
+    }
+    else
+    {
+        // since we have to go lower, first check to see if there are
+        // any non-zero decimals.  If not, then we can call trunc
+        // directly to format.  If there are non-zero decimals, we add one
+        // to the value and then let trunc do the heavy lifting.
+
+        // not have a decimal part?  If no decimal part, just pass to trunc
+        if (this->exp >= 0)
+        {
+            return this->truncInternal(0);
+        }
+        else
+        {
+            // number has a decimal part, so we need to see if there are
+            // any non-zero decimals
+
+            // get the number of decimals we need to scan
+            stringsize_t decimals = Numerics::minVal(this->length, (stringsize_t)(-this->exp));
+            // get the position to start the scan
+            stringsize_t lastDecimal = this->length - 1;
+            bool foundNonZero = false;
+            for (stringsize_t i = decimals; i > 0; i--)
+            {
+                // if we found a non-zero, we have to do this the hard way
+                if (this->number[lastDecimal--] != 0)
+                {
+                    foundNonZero = true;
+                    break;
+                }
+            }
+
+            // no-nonzero values, we can allow trunc to handle it from here
+            if (!foundNonZero)
+            {
+                return this->truncInternal(0);
+            }
+
+            // ok, we need to add 1 to this value, and then allow trunc to finish the
+            // job.  Unfortunately, this might require us to round out of the top of
+            // the number, so we need to account for this
+
+            // get the leading digits of the value
+            wholenumber_t integer_digits = (wholenumber_t)this->length + this->exp;
+            // if there are no integer digits, then this number is between 0 and -1.
+            // we can just punt here and return -1.
+            if (integer_digits <= 0)
+            {
+                return IntegerMinusOne;
+            }
+            else
+            {
+                // ok, we have integer digits.  Let's make like easy at this
+                // point by chopping this down to just the integer digits and
+                // throwing away the exponent
+                this->length = integer_digits;
+                this->exp = 0;
+
+                // point to the first digit, and start adding until
+                // we no longer round
+                char *current = this->number + integer_digits - 1;
+
+                while (current >= this->number)
+                {
+                    int ch = *current + 1;
+                    // did this round?
+                    if (ch > 9)
+                    {
+                        // overwrite with a zero and keep looping
+                        *current-- = 0;
+                    }
+                    else
+                    {
+                        // overwrite this value and have the trunc function
+                        // format the value
+                        *current = ch;
+                        return this->truncInternal(0);
+                    }
+                }
+
+                // ok, we rounded all the way out.  At this point, every digit in
+                // the buffer is a zero.  Doing the rounding is easy here, just
+                // stuff a 1 in the first digit and bump the exponent by 1
+                *this->number = 1;
+                this->exp += 1;
+                // and again, the trunc code can handle all of the formatting
+            return this->truncInternal(0);
+            }
+        }
+    }
+}
+
+
+/**
+ * Return the ceiling value for a decimal numeric value.  The
+ * ceiling is the first full number value greater that the
+ * current value. If the number has no significant decimal
+ * positions, this returns the same value (minus any trailing
+ * decimal zeros). NOTE:  If the number is negative, the value
+ * goes toward the higher number (e.g., the ceiling of -3.5 is
+ * -3, not
+ * -4).
+ *
+ * @return The numeric ceiling of this value.
+ */
+RexxObject *RexxNumberString::ceiling()
+{
+    /* round to current digits setting   */
+    return this->prepareNumber(number_digits(), ROUND)->ceilingInternal();
+}
+
+/**
+ * Calculate the ceiling value for a number.
+ *
+ * @return A string value of the ceiling, with appropriate
+ *         formatting for the function.
+ */
+RexxObject *RexxNumberString::ceilingInternal()
+{
+    // if this is exactly zero, then the ceiling is always zero
+    if (this->sign == 0)
+    {
+        return IntegerZero;
+    }
+    // if this is a negative number, then this is the same as trunc
+    else if (this->sign < 0)
+    {
+        return this->truncInternal(0);
+    }
+    else
+    {
+        // since we have to go higher, first check to see if there are
+        // any non-zero decimals.  If not, then we can call trunc
+        // directly to format.  If there are non-zero decimals, we add one
+        // to the value and then let trunc do the heavy lifting.
+
+        // not have a decimal part?  If no decimal part, just pass to trunc
+        if (this->exp >= 0)
+        {
+            return this->truncInternal(0);
+        }
+        else
+        {
+            // number has a decimal part, so we need to see if there are
+            // any non-zero decimals
+
+            // get the number of decimals we need to scan
+            stringsize_t decimals = Numerics::minVal((stringsize_t)this->length, (stringsize_t)(-this->exp));
+            // get the position to start the scan
+            stringsize_t lastDecimal = this->length - 1;
+            bool foundNonZero = false;
+            for (stringsize_t i = decimals; i > 0; i--)
+            {
+                // if we found a non-zero, we have to do this the hard way
+                if (this->number[lastDecimal--] != 0)
+                {
+                    foundNonZero = true;
+                    break;
+                }
+            }
+
+            // no-nonzero values, we can allow trunc to handle it from here
+            if (!foundNonZero)
+            {
+                return this->truncInternal(0);
+            }
+
+            // ok, we need to add 1 to this value, and then allow trunc to finish the
+            // job.  Unfortunately, this might require us to round out of the top of
+            // the number, so we need to account for this
+
+            // get the leading digits of the value
+            wholenumber_t integer_digits = (wholenumber_t)this->length + this->exp;
+            // if there are no integer digits, then this number is between 0 and 1.
+            // we can just punt here and return 1.
+            if (integer_digits <= 0)
+            {
+                return IntegerOne;
+            }
+            else
+            {
+                // ok, we have integer digits.  Let's make like easy at this
+                // point by chopping this down to just the integer digits and
+                // throwing away the exponent
+                this->length = integer_digits;
+                this->exp = 0;
+
+                // point to the first digit, and start adding until
+                // we no longer round
+                char *current = this->number + integer_digits - 1;
+
+                while (current >= this->number)
+                {
+                    int ch = *current + 1;
+                    // did this round?
+                    if (ch > 9)
+                    {
+                        // overwrite with a zero and keep looping
+                        *current-- = 0;
+                    }
+                    else
+                    {
+                        // overwrite this value and have the trunc function
+                        // format the value
+                        *current = ch;
+                        return this->truncInternal(0);
+                    }
+                }
+
+                // ok, we rounded all the way out.  At this point, every digit in
+                // the buffer is a zero.  Doing the rounding is easy here, just
+                // stuff a 1 in the first digit and bump the exponent by 1
+                *this->number = 1;
+                this->exp += 1;
+                // and again, the trunc code can handle all of the formatting
+                return this->truncInternal(0);
+            }
+        }
+    }
+}
+
+
+/**
+ * Round the number value depending on the value of the first
+ * decimal position using standard rounding rules.
+ * NOTE: this uses the same rules for floor and ceiling when
+ * determining how things are rounded.  This is really defined
+ * as floor(number + .5).  Thus 3.4 and -3.4 round to 3 and -3,
+ * since they end up calculating floor(3.9) and floor(-2.9),
+ * repectively.
+ *
+ * @return The rounded value
+ */
+RexxObject *RexxNumberString::round()
+{
+    /* round to current digits setting   */
+    return this->prepareNumber(number_digits(), ROUND)->roundInternal();
+}
+
+/**
+ * Calculate the rounded number value.
+ *
+ * @return A string value of the rounded number.
+ */
+RexxObject *RexxNumberString::roundInternal()
+{
+    // if this is exactly zero, then the rounded value is always zero
+    if (this->sign == 0)
+    {
+        return IntegerZero;
+    }
+    // ok, regardless of the sign, we first decide based on the first
+    // decimal which way we are rounding.
+    else
+    {
+        // since we might have to go higher, first check to see if there are
+        // any non-zero decimals.  If not, then we can call trunc
+        // directly to format.  Otherwise, we need to look at the first
+        // decimal position and see which way we go.
+
+        // not have a decimal part?  If no decimal part, just pass to trunc
+        if (this->exp >= 0)
+        {
+            return this->truncInternal(0);
+        }
+        else
+        {
+            // number has a decimal part, so we need to look at the first
+            // decimal position
+
+            // get the leading digits of the value
+            wholenumber_t integer_digits = (wholenumber_t)this->length + this->exp;
+            // if the exponent is larger than the number of significant digits, then
+            // the first digit to the right of the decimal is zero, so this will always
+            // round to zero
+            if (integer_digits < 0)
+            {
+                return IntegerZero;
+            }
+            else
+            {
+                // ok, we have integer digits and decimals.  The returned value will
+                // be an integer, so we can just set the exponent to zero now and
+                // throw away the decimal part
+                this->length = integer_digits;
+                this->exp = 0;
+
+                // Now we need to look at the first decimal and see if
+                // we're rounding up
+                char *current = this->number + integer_digits;
+                // no rounding needed, go do the formatting
+                if (*current < 5)
+                {
+                    return this->truncInternal(0);
+                }
+
+                // we need to add one to the integer part...which of course
+                // might round all the way out.
+                current--;
+
+                while (current >= this->number)
+                {
+                    int ch = *current + 1;
+                    // did this round?
+                    if (ch > 9)
+                    {
+                        // overwrite with a zero and keep looping
+                        *current-- = 0;
+                    }
+                    else
+                    {
+                        // overwrite this value and have the trunc function
+                        // format the value
+                        *current = ch;
+                        return this->truncInternal(0);
+                    }
+                }
+
+                // ok, we rounded all the way out.  At this point, every digit in
+                // the buffer is a zero.  Doing the rounding is easy here, just
+                // stuff a 1 in the first digit and bump the exponent by 1
+                *this->number = 1;
+                this->exp += 1;
+                // and again, the trunc code can handle all of the formatting
+            return this->truncInternal(0);
+            }
+        }
+    }
+}
+
+
 RexxString  *RexxNumberString::formatRexx(
   RexxObject *Integers,                /* space for integer part            */
   RexxObject *Decimals,                /* number of decimals required       */

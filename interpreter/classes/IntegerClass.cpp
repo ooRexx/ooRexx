@@ -1020,6 +1020,39 @@ RexxObject *RexxInteger::trunc(
   return this->numberString()->trunc(decimals);
 }
 
+/**
+ * Calculate the floor value for a numeric value
+ *
+ * @return The floor value.
+ */
+RexxObject *RexxInteger::floor()
+{
+    // the floor of an integer is always the same value
+    return this;
+}
+
+/**
+ * Calculate the ceiling value for a numeric value
+ *
+ * @return The ceiling value.
+ */
+RexxObject *RexxInteger::ceiling()
+{
+    // the ceiling of an integer is always the same value
+    return this;
+}
+
+/**
+ * Calculate the round value for a numeric value
+ *
+ * @return The round value.
+ */
+RexxObject *RexxInteger::round()
+{
+    // the rounding of an integer is always the same value
+    return this;
+}
+
 RexxObject *RexxInteger::format(
   RexxObject *Integers,                /* space for integer part            */
   RexxObject *Decimals,                /* number of decimals required       */

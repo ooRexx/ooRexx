@@ -933,6 +933,60 @@ RexxObject *RexxString::trunc(RexxInteger *decimals)
     return numstr->trunc(decimals);      /* have numberstring do this         */
 }
 
+/**
+ * The String class version of the floor method.
+ *
+ * @return The formatted numeric version.
+ */
+RexxObject *RexxString::floor()
+{
+    RexxNumberString *numstr;            /* converted number string           */
+
+                                         /* non-numeric?                      */
+    if ((numstr = this->fastNumberString()) == OREF_NULL)
+    {
+        /* this is a conversion error        */
+        reportException(Error_Incorrect_method_string_nonumber, "FLOOR", this);
+    }
+    return numstr->floor();      /* have numberstring do this         */
+}
+
+/**
+ * The String class version of the ceiling method.
+ *
+ * @return The formatted numeric version.
+ */
+RexxObject *RexxString::ceiling()
+{
+    RexxNumberString *numstr;            /* converted number string           */
+
+                                         /* non-numeric?                      */
+    if ((numstr = this->fastNumberString()) == OREF_NULL)
+    {
+        /* this is a conversion error        */
+        reportException(Error_Incorrect_method_string_nonumber, "CEILING", this);
+    }
+    return numstr->ceiling();      /* have numberstring do this         */
+}
+
+/**
+ * The String class version of the round method.
+ *
+ * @return The formatted numeric version.
+ */
+RexxObject *RexxString::round()
+{
+    RexxNumberString *numstr;            /* converted number string           */
+
+                                         /* non-numeric?                      */
+    if ((numstr = this->fastNumberString()) == OREF_NULL)
+    {
+        /* this is a conversion error        */
+        reportException(Error_Incorrect_method_string_nonumber, "ROUND", this);
+    }
+    return numstr->round();      /* have numberstring do this         */
+}
+
 RexxObject *RexxString::format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger)
 /******************************************************************************/
 /* Function:  String Format...performed by RexxNumberString                   */

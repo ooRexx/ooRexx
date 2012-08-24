@@ -852,6 +852,9 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_SPACE                        ,TheStringBehaviour, CPPM(RexxString::space), 2);
   defineKernelMethod(CHAR_SUBWORD                      ,TheStringBehaviour, CPPM(RexxString::subWord), 2);
   defineKernelMethod("SUBWORDS"                        ,TheStringBehaviour, CPPM(RexxString::subWords), 2);
+  defineKernelMethod("FLOOR"                           ,TheStringBehaviour, CPPM(RexxString::floor), 0);
+  defineKernelMethod("CEILING"                         ,TheStringBehaviour, CPPM(RexxString::ceiling), 0);
+  defineKernelMethod("ROUND"                           ,TheStringBehaviour, CPPM(RexxString::round), 0);
   defineKernelMethod(CHAR_TRUNC                        ,TheStringBehaviour, CPPM(RexxString::trunc), 1);
   defineKernelMethod(CHAR_WORD                         ,TheStringBehaviour, CPPM(RexxString::word), 1);
   defineKernelMethod(CHAR_WORDINDEX                    ,TheStringBehaviour, CPPM(RexxString::wordIndex), 1);
@@ -1059,6 +1062,9 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_MAKESTRING                   ,TheIntegerBehaviour, CPPM(RexxObject::makeStringRexx), 0);
   defineKernelMethod(CHAR_FORMAT                       ,TheIntegerBehaviour, CPPM(RexxInteger::format), 4);
   defineKernelMethod(CHAR_TRUNC                        ,TheIntegerBehaviour, CPPM(RexxInteger::trunc), 1);
+  defineKernelMethod("FLOOR"                           ,TheIntegerBehaviour, CPPM(RexxInteger::floor), 0);
+  defineKernelMethod("CEILING"                         ,TheIntegerBehaviour, CPPM(RexxInteger::ceiling), 0);
+  defineKernelMethod("ROUND"                           ,TheIntegerBehaviour, CPPM(RexxInteger::round), 0);
   defineKernelMethod(CHAR_CLASS                        ,TheIntegerBehaviour, CPPM(RexxInteger::classObject), 0);
 
                                        /* set the scope of the methods to   */
@@ -1125,6 +1131,9 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_MAKESTRING                   ,TheNumberStringBehaviour, CPPM(RexxObject::makeStringRexx), 0);
   defineKernelMethod(CHAR_FORMAT                       ,TheNumberStringBehaviour, CPPM(RexxNumberString::formatRexx), 4);
   defineKernelMethod(CHAR_TRUNC                        ,TheNumberStringBehaviour, CPPM(RexxNumberString::trunc), 1);
+  defineKernelMethod("FLOOR"                           ,TheNumberStringBehaviour, CPPM(RexxNumberString::floor), 0);
+  defineKernelMethod("CEILING"                         ,TheNumberStringBehaviour, CPPM(RexxNumberString::ceiling), 0);
+  defineKernelMethod("ROUND"                           ,TheNumberStringBehaviour, CPPM(RexxNumberString::round), 0);
   defineKernelMethod(CHAR_CLASS                        ,TheNumberStringBehaviour, CPPM(RexxNumberString::classObject), 0);
 
                                        /* set the scope of the methods to   */
