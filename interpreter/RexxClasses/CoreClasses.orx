@@ -797,6 +797,12 @@ nomethod:
 ::method 'delete' ABSTRACT
 ::method 'append' ABSTRACT
 ::method 'section' ABSTRACT
+::method 'first' ABSTRACT
+::method 'last' ABSTRACT
+::method 'next' ABSTRACT
+::method 'firstItem' ABSTRACT
+::method 'lastItem' ABSTRACT
+
 
 /*****************************************/
 /* APPENDALL     method                  */

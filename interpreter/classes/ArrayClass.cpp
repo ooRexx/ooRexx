@@ -1222,6 +1222,50 @@ RexxObject  *RexxArray::lastRexx(void)
     return (RexxObject *)convertIndex(lastElement);
 }
 
+/**
+ * Return the first item in the array, or .nil if the
+ * array is empty.
+ *
+ * @return The first item in the array
+ */
+RexxObject  *RexxArray::firstItem()
+{
+    /* get the address of the first      */
+    /*element in the array               */
+    RexxObject **thisObject = this->expansionArray->objects;
+    size_t _arraySize = this->size();            /* get the size of the array         */
+    /* find first position in the        */
+    /*array with data                    */
+
+    for (size_t i = 0; i < _arraySize; i++)
+    {
+        // if we have a non-nil object, return it
+        if (thisObject[i] != OREF_NULL)
+        {
+            return thisObject[i];
+        }
+    }
+    // not found, return .nil
+    return TheNilObject;
+}
+
+/**
+ * Return the last item in the array.
+ *
+ * @return The last item, or .nil if the array is empty.
+ */
+RexxObject  *RexxArray::lastItem()
+{
+    // for an empy array, the item is .nil
+    if (lastElement == 0)
+    {
+        return TheNilObject;
+    }
+
+    // return the last item
+    return (RexxObject *)get(lastElement);
+}
+
 size_t RexxArray::lastIndex()
 /******************************************************************************/
 /* Function:  Return the index of the last array item as an integer object    */

@@ -153,6 +153,8 @@ typedef struct copyElelmentParm {
    RexxInteger *sizeRexx();
    RexxObject  *firstRexx();
    RexxObject  *lastRexx();
+   RexxObject  *firstItem();
+   RexxObject  *lastItem();
    size_t       lastIndex();
    RexxObject  *nextRexx(RexxObject **, size_t);
    RexxObject  *previousRexx(RexxObject **, size_t);

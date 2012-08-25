@@ -372,7 +372,9 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_SIZE         ,TheArrayBehaviour, CPPM(RexxArray::sizeRexx), 0);
   defineKernelMethod(CHAR_SUPPLIER     ,TheArrayBehaviour, CPPM(RexxArray::supplier), 0);
   defineKernelMethod(CHAR_FIRST        ,TheArrayBehaviour, CPPM(RexxArray::firstRexx), 0);
+  defineKernelMethod(CHAR_FIRSTITEM    ,TheArrayBehaviour, CPPM(RexxArray::firstItem), 0);
   defineKernelMethod(CHAR_LAST         ,TheArrayBehaviour, CPPM(RexxArray::lastRexx), 0);
+  defineKernelMethod(CHAR_LASTITEM     ,TheArrayBehaviour, CPPM(RexxArray::lastItem), 0);
   defineKernelMethod(CHAR_NEXT         ,TheArrayBehaviour, CPPM(RexxArray::nextRexx), A_COUNT);
   defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPM(RexxArray::previousRexx), A_COUNT);
   defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPM(RexxArray::appendRexx), 1);
@@ -710,7 +712,9 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_HASITEM       ,TheQueueBehaviour, CPPM(RexxList::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM    ,TheQueueBehaviour, CPPM(RexxList::removeItem), 1);
   defineKernelMethod(CHAR_FIRST         ,TheQueueBehaviour, CPPM(RexxQueue::firstRexx), 0);
+  defineKernelMethod(CHAR_FIRSTITEM     ,TheQueueBehaviour, CPPM(RexxList::firstItem), 0);
   defineKernelMethod(CHAR_LAST          ,TheQueueBehaviour, CPPM(RexxQueue::lastRexx), 0);
+  defineKernelMethod(CHAR_LASTITEM      ,TheQueueBehaviour, CPPM(RexxList::lastItem), 0);
   defineKernelMethod(CHAR_NEXT          ,TheQueueBehaviour, CPPM(RexxQueue::next), 1);
   defineKernelMethod(CHAR_PREVIOUS      ,TheQueueBehaviour, CPPM(RexxQueue::previous), 1);
   defineKernelMethod(CHAR_INSERT        ,TheQueueBehaviour, CPPM(RexxQueue::insert), 2);
