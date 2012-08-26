@@ -148,6 +148,8 @@ OODUSER_SOURCEF = $(OOD_OUTDIR)\oodPropertySheetDialog.obj $(OOD_OUTDIR)\oodUser
 
 
 $(OOD_OUTDIR)\oodialog.dll: $(SOURCEF)
+    @ECHO .
+    @ECHO Linking $(OOD_OUTDIR)\oodialog.dll
     $(OR_LINK) \
     $(SOURCEF)  \
     $(lflags_common) $(lflags_dll) \
@@ -165,7 +167,7 @@ $(OOD_OUTDIR)\oodialog.dll: $(SOURCEF)
 $(OOD_OUTDIR)\oodialog.res: $(OOD_OODIALOGSRC)\oodialog.rc
     @ECHO .
     @ECHO ResourceCompiling $(@B).res
-        $(rc) $(rcflags_oodialog) /i $(OOD_OODIALOGSRC) /i $(OR_WINKERNELSRC) -r -fo$(OOD_OUTDIR)\$(@B).res $(OOD_OODIALOGSRC)\$(@B).rc
+    $(rc) $(rcflags_oodialog) /i $(OOD_OODIALOGSRC) /i $(OR_WINKERNELSRC) -r -fo$(OOD_OUTDIR)\$(@B).res $(OOD_OODIALOGSRC)\$(@B).rc
 
 # Recompile everything if the make file changes.
 $(SOURCEF) : oodialog.mak

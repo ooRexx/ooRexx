@@ -43,7 +43,7 @@
  * that will no longer be maintained.
  *
  * The empty classes are needed to provide backward compatibility for existing
- * programs where dialogs have inherited the classes.
+ * programs where dialogs have, or may have, inherited the classes.
  *
  * MessageExtensions:  Its functionality is contained in the EventNotification
  *                     class.
@@ -53,6 +53,10 @@
  *
  * PlainUserDialog:    The plain user dialog is no different than the UserDialog
  *                     class.
+ *
+ * BaseDialog:         The base dialog is no different than the PlainBaseDialog
+ *                     class.  Do NOT use BaseDialog in any code. It WILL be
+ *                     removed in the future.
  *
  * These classes were a poor implementation and were both buggy and hard to
  * maintain.
@@ -75,6 +79,8 @@
 -- DEPRECATED
 ::class 'PlainUserDialog' subclass UserDialog public
 
+-- DEPRECATED
+::class 'BaseDialog' subclass PlainBaseDialog public
 
 /* Deprecated */
 ::class 'CategoryDialog' subclass UserDialog public

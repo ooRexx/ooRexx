@@ -43,7 +43,10 @@
  */
 ::requires "PlainBaseDialog.cls"
 
-::class 'ResDialog' subclass PlainBaseDialog public
+-- This class extends the 'PlainBaseDialog' class.  Because of backwards
+-- compatibility we need to do this through the deprecated BaseDialog.
+-- BaseDialog will be removed in the future.  Do NOT use BaseDialog in any code.
+::class 'ResDialog' subclass BaseDialog public
 
 ::method init external "LIBRARY oodialog resdlg_init"
 
