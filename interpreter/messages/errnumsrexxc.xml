@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "rexxref.ent">
+%BOOK_ENTITIES;
+]>
+<!--###########################################################################-->
+<!--#                                                                          -->
+<!--# Description: Open Object Rexx: Reference XML File                        -->
+<!--#                                                                          -->
+<!--# Copyright (c) 2005-2012, Rexx Language Association. All rights reserved. -->
+<!--# Portions Copyright (c) 2004, IBM Corporation. All rights reserved.       -->
+<!--#                                                                          -->
+<!--# This program and the accompanying materials are made available under     -->
+<!--# the terms of the Common Public License v1.0 which accompanies this       -->
+<!--# distribution. A copy is also available at the following address:         -->
+<!--# http://www.oorexx.org/license.html                                       -->
+<!--#                                                                          -->
+<!--# Redistribution and use in source and binary forms, with or               -->
+<!--# without modification, are permitted provided that the following          -->
+<!--# conditions are met:                                                      -->
+<!--#                                                                          -->
+<!--# Redistributions of source code must retain the above copyright           -->
+<!--# notice, this list of conditions and the following disclaimer.            -->
+<!--# Redistributions in binary form must reproduce the above copyright        -->
+<!--# notice, this list of conditions and the following disclaimer in          -->
+<!--# the documentation and/or other materials provided with the distribution. -->
+<!--#                                                                          -->
+<!--# Neither the name of Rexx Language Association nor the names              -->
+<!--# of its contributors may be used to endorse or promote products           -->
+<!--# derived from this software without specific prior written permission.    -->
+<!--#                                                                          -->
+<!--# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS      -->
+<!--# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT        -->
+<!--# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS        -->
+<!--# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT -->
+<!--# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,    -->
+<!--# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED -->
+<!--# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,      -->
+<!--# OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY   -->
+<!--# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING  -->
+<!--# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS       -->
+<!--# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             -->
+<!--#                                                                          -->
+<!--###########################################################################-->
+<section id="rexxcup">
+<title>RexxC Utility Program</title>
+<para>When RexxC encounters a syntax error in a Rexx program while tokenizing or syntax checking it, RexxC
+returns the negated ooRexx error code. In addition, RexxC issues the following errors:</para>
+<section id="ERR127">
+<title>Error 127 - The REXXC command parameters are incorrect.</title>
+<para>
+<emphasis role="bold">Explanation:</emphasis>
+</para>
+<para>The REXXC utility was invoked with zero or more than three parameters.  REXXC accepts the following parameters:
+        <itemizedlist>
+        <listitem>
+<para>To check the syntax of a REXX program: REXXC Program_name [-s]</para>
+</listitem>
+        <listitem>
+<para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [-s]</para>
+</listitem>
+        <listitem>
+<para>The -s option will suppress the copyright banner.</para>
+</listitem>
+        </itemizedlist>
+        </para>
+</section>
+<section id="ERR128">
+<title>Error 128 - Output file name must be different from input file name.</title>
+<para> </para>
+</section>
+<section id="ERR129">
+<title>Error 129 - SYNTAX: REXXC InProgramName [OutProgramName] [/S]</title>
+<para> </para>
+</section>
+<section id="ERR130">
+<title>Error 130 - Without OutProgramName REXXC only performs a syntax check</title>
+<para> </para>
+</section>
+<section id="ERR133">
+<title>Error 133 - SYNTAX: REXXC InProgramName [OutProgramName] [-s]</title>
+<para> </para>
+</section>
+</section>

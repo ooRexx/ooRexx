@@ -421,7 +421,8 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
 # These error message files are built BEFORE any other target
 #
 BUILT_SOURCES = $(errorHeaders) \
-                rexx.img @REXXCAT@ ooTest $(build_messages_dir)/DocErrorMessages.sgml
+                rexx.img @REXXCAT@ ooTest $(build_messages_dir)/errnums.xml $(build_messages_dir)/errnumsrexxc.xml \
+                $(build_messages_dir)/errnumsrxqueue.xml $(build_messages_dir)/errnumssubcom.xml
 #
 # Binary targets
 #
@@ -990,6 +991,18 @@ $(build_api_dir)/oorexxerrors.h: $(build_messages_dir)/ApiErrorCodes.xsl $(messa
 
 $(build_messages_dir)/RexxMessageTable.h: $(build_messages_dir)/RexxMessageTable.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/RexxMessageTable.xsl
+
+$(build_messages_dir)/errnums.xml: $(build_messages_dir)/errnums.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/errnums.xsl
+
+$(build_messages_dir)/errnumsrexxc.xml: $(build_messages_dir)/errnumsrexxc.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/errnumsrexxc.xsl
+
+$(build_messages_dir)/errnumssubcom.xml: $(build_messages_dir)/errnumssubcom.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/errnumssubcom.xsl
+
+$(build_messages_dir)/errnumsrxqueue.xml: $(build_messages_dir)/errnumsrxqueue.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/errnumsrxqueue.xsl
 
 $(build_messages_dir)/gencat.inp: $(build_interpreter_platform_dir)/UnixGencat.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(build_interpreter_platform_dir)/UnixGencat.xsl

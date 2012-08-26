@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "rexxref.ent">
+%BOOK_ENTITIES;
+]>
+<!--###########################################################################-->
+<!--#                                                                          -->
+<!--# Description: Open Object Rexx: Reference XML File                        -->
+<!--#                                                                          -->
+<!--# Copyright (c) 2005-2012, Rexx Language Association. All rights reserved. -->
+<!--# Portions Copyright (c) 2004, IBM Corporation. All rights reserved.       -->
+<!--#                                                                          -->
+<!--# This program and the accompanying materials are made available under     -->
+<!--# the terms of the Common Public License v1.0 which accompanies this       -->
+<!--# distribution. A copy is also available at the following address:         -->
+<!--# http://www.oorexx.org/license.html                                       -->
+<!--#                                                                          -->
+<!--# Redistribution and use in source and binary forms, with or               -->
+<!--# without modification, are permitted provided that the following          -->
+<!--# conditions are met:                                                      -->
+<!--#                                                                          -->
+<!--# Redistributions of source code must retain the above copyright           -->
+<!--# notice, this list of conditions and the following disclaimer.            -->
+<!--# Redistributions in binary form must reproduce the above copyright        -->
+<!--# notice, this list of conditions and the following disclaimer in          -->
+<!--# the documentation and/or other materials provided with the distribution. -->
+<!--#                                                                          -->
+<!--# Neither the name of Rexx Language Association nor the names              -->
+<!--# of its contributors may be used to endorse or promote products           -->
+<!--# derived from this software without specific prior written permission.    -->
+<!--#                                                                          -->
+<!--# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS      -->
+<!--# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT        -->
+<!--# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS        -->
+<!--# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT -->
+<!--# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,    -->
+<!--# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED -->
+<!--# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,      -->
+<!--# OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY   -->
+<!--# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING  -->
+<!--# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS       -->
+<!--# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.             -->
+<!--#                                                                          -->
+<!--###########################################################################-->
+<section id="rxqueueup">
+<title>RXQUEUE Utility Program</title>
+<para>RXQUEUE issues the following errors:</para>
+<section id="ERR119">
+<title>Error 119 - The REXX queuing system is not initialized.</title>
+<para>
+<emphasis role="bold">Explanation:</emphasis>
+</para>
+<para>The queuing system requires a housekeeping program to run. This program usually runs under the Presentation Manager shell.  The program is not running.</para>
+</section>
+<section id="ERR120">
+<title>Error 120 - The size of the data is incorrect.</title>
+<para>
+<emphasis role="bold">Explanation:</emphasis>
+</para>
+<para>The data supplied to the RXQUEUE command is too long. The RXQUEUE program accepts data records containing 0 - 65472 bytes.  A record exceeded the allowable limits.</para>
+</section>
+<section id="ERR121">
+<title>Error 121 - Storage for data queues is exhausted.</title>
+<para>
+<emphasis role="bold">Explanation:</emphasis>
+</para>
+<para>The queuing system is out of memory.  No more storage is available to store queued data.</para>
+</section>
+<section id="ERR122">
+<title>Error 122 - The name %1 is not a valid queue name.</title>
+<para>
+<emphasis role="bold">Explanation:</emphasis>
+</para>
+<para>The queue name contains an invalid character.
+        Only the following characters can appear in queue names:  </para>
+<programlisting>
+        
+           'A' .. 'Z', '0' .. '9', '.', '!', '?', '_'
+        
+        </programlisting>
+</section>
+<section id="ERR123">
+<title>Error 123 - The queue access mode is not correct.</title>
+<para>
+<emphasis role="bold">Explanation:</emphasis>
+</para>
+<para>An internal error occurred in RXQUEUE. The RXQUEUE program tried to access a queue with an incorrect access mode. Correct access modes are LIFO and FIFO.</para>
+</section>
+<section id="ERR124">
+<title>Error 124 - The queue %1 does not exist.</title>
+<para>
+<emphasis role="bold">Explanation:</emphasis>
+</para>
+<para>The command attempted to access a nonexistent queue.</para>
+</section>
+<section id="ERR131">
+<title>Error 131 - The syntax of the command is incorrect</title>
+<para> </para>
+</section>
+<section id="ERR132">
+<title>Error 132 - System error occurred while processing the command</title>
+<para> </para>
+</section>
+</section>
