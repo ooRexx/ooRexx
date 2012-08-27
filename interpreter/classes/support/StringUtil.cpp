@@ -1412,6 +1412,7 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
     // get the reference string information
     ref = stringArgument(ref, ARG_ONE);
     size_t referenceLen = ref->getLength();
+    const char *refSet = ref->getStringData();
                                          /* get the option, default 'Nomatch' */
     char opt = optionalOptionArgument(option, VERIFY_NOMATCH, ARG_TWO);
     // validate the possibilities
@@ -1453,25 +1454,10 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
             if (opt == VERIFY_NOMATCH)
             {
                 while (stringRange-- != 0)
-                {            /* while input left                  */
-                    char ch = *current++;          /* get next char                     */
-                                                   /* get reference string              */
-                    const char *reference = ref->getStringData();
-                    size_t temp = referenceLen;           /* copy the reference length         */
-
-                    while (temp != 0)
-                    {               /* spin thru reference               */
-                        if (ch == *reference++)
-                        {
-                            // we have a match, so we can leave
-                            break;
-                        }
-                        temp--;
-                    }
-                    // terminate because we tested all characters?
-                    if (temp == 0)
+                {
+                    // if no match at this position, return this position
+                    if (!StringUtil::matchCharacter(*current++, refSet, referenceLen))
                     {
-                        // mismatch at this offset
                         return new_integer(current - data);
                     }
                 }
@@ -1481,20 +1467,11 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
             else
             {
                 while (stringRange-- != 0)
-                {            /* while input left                  */
-                    char ch = *current++;          /* get next char                     */
-                                                   /* get reference string              */
-                    const char *reference = ref->getStringData();
-                    size_t temp = referenceLen;           /* copy the reference length         */
-
-                    while (temp != 0)
-                    {               /* spin thru reference               */
-                        if (ch == *reference++)
-                        {
-                            // we found a matching character, return that position
-                            return new_integer(current - data);
-                        }
-                        temp--;
+                {
+                    // if we have a match at this position, trigger this
+                    if (StringUtil::matchCharacter(*current++, refSet, referenceLen))
+                    {
+                        return new_integer(current - data);
                     }
                 }
                 // this is always a non matching situation to get here

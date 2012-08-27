@@ -596,112 +596,77 @@ RexxString *RexxString::right(RexxInteger *_length,
     return Retval;                       /* return string piece               */
 }
 
-/* the STRIP function */
-/******************************************************************************/
-/* Arguments:  option, where to strip the characters                          */
-/*             the character to strip.                                        */
-/*                                                                            */
-/*  Returned:  string                                                         */
-/******************************************************************************/
-RexxString *RexxString::strip(RexxString *option,
-                              RexxString *stripchar)
+/**
+ * Strip a set of leading and/or trailing characters from
+ * a string, returning a new string value.
+ *
+ * @param option    The option indicating which characters to strip.
+ * @param stripchar The set of characters to strip.
+ *
+ * @return A new string instance, with the target characters removed.
+ */
+RexxString *RexxString::strip(RexxString *optionString, RexxString *stripchar)
 {
-    const char *Back;                    /* pointer to back part              */
-    const char *Front;                   /* pointer to front part             */
-    size_t      Length;                  /* length of the string              */
-    char        RemoveChar;              /* character to remove               */
-    char        Option;                  /* strip option                      */
-    RexxString *Retval;                  /* return value                      */
-
-    /* get the option character          */
-    Option = optionalOptionArgument(option, STRIP_BOTH, ARG_ONE);
-    if (Option != STRIP_TRAILING &&      /* must be a valid option            */
-        Option != STRIP_LEADING &&
-        Option != STRIP_BOTH )
+    // get the option character
+    char option = optionalOptionArgument(optionString, STRIP_BOTH, ARG_ONE);
+    if (option != STRIP_TRAILING &&      /* must be a valid option            */
+        option != STRIP_LEADING &&
+        option != STRIP_BOTH )
     {
         reportException(Error_Incorrect_method_option, "BLT", option);
     }
-    // get the strip character.  This is a phony default, as the
-    // real default strips the entire set of recognized whitespace characters.
-    RemoveChar = optionalPadArgument(stripchar, ' ', ARG_TWO);
-    // and get a special processing flag
-    bool stripWhite = stripchar == OREF_NULL;
+    // get the strip character set.  The default is to remove spaces and
+    // horizontal tabs
+    stripchar = optionalStringArgument(stripchar, OREF_NULL, ARG_TWO);
 
-    Front = this->getStringData();       /* point to string start             */
-    Length = this->getLength();          /* get the length                    */
+    // the default is to strip whitespace characters
+    const char *chars = stripchar == OREF_NULL ? " \t" : stripchar->getStringData();
+    size_t charsLen = stripchar == OREF_NULL ? strlen(" \t") : stripchar->getLength();
+
+    const char *front = this->getStringData();       /* point to string start             */
+    size_t length = this->getLength();               /* get the length                    */
 
                                          /* need to strip leading?            */
-    if (Option == STRIP_LEADING || Option == STRIP_BOTH)
+    if (option == STRIP_LEADING || option == STRIP_BOTH)
     {
-        // stripping all white space?  need multiple checks
-        if (stripWhite)
+        // loop while more string or we don't find one of the stripped characters
+        while (length > 0)
         {
-            while (Length > 0)
+            if (!StringUtil::matchCharacter(*front, chars, charsLen))
             {
-                // stop of not a blank or a tab
-                if (*Front != ch_BLANK && *Front != ch_TAB)
-                {
-                    break;
-                }
-                Front++;                         /* step the pointer                  */
-                Length--;                        /* reduce the length                 */
+                break;
             }
-
-        }
-        else
-        {
-            while (Length > 0)
-            {                   /* while more string                 */
-                if (*Front != RemoveChar)        /* done stripping?                   */
-                {
-                    break;                         /* quit                              */
-                }
-                Front++;                         /* step the pointer                  */
-                Length--;                        /* reduce the length                 */
-            }
+            front++;                         /* step the pointer                  */
+            length--;                        /* reduce the length                 */
         }
     }
 
-    /* need to strip trailing?           */
-    if (Option == STRIP_TRAILING || Option == STRIP_BOTH)
+    // need to strip trailing?
+    if (option == STRIP_TRAILING || option == STRIP_BOTH)
     {
-        Back = Front + Length - 1;         /* point to the end                  */
-        if (stripWhite)
+        // point to the end and scan backwards now
+        const char *back = front + length - 1;
+        while (length > 0)
         {
-            while (Length > 0)
+            if (!StringUtil::matchCharacter(*back, chars, charsLen))
             {
-                if (*Back != ch_BLANK && *Back != ch_TAB)
-                {
-                    break;
-                }
-                Back--;                          /* step the pointer back             */
-                Length--;                        /* reduce the length                 */
+                break;
             }
-
-        }
-        else
-        {
-            while (Length > 0)
-            {                   /* while more string                 */
-                if (*Back != RemoveChar)         /* done stripping?                   */
-                {
-                    break;                         /* quit                              */
-                }
-                Back--;                          /* step the pointer back             */
-                Length--;                        /* reduce the length                 */
-            }
+            back--;                          /* step the pointer back             */
+            length--;                        /* reduce the length                 */
         }
     }
 
-    if (Length > 0)                      /* have anything left?               */
+    // if there is anything left, extract the remaining part
+    if (length > 0)
     {
-        Retval = new_string(Front, Length);/* extract remaining piece           */
+        return new_string(front, length);
     }
     else
     {
-        Retval = OREF_NULLSTRING;          /* nothing left, us a null           */
+        // null string, everything stripped away
+        return OREF_NULLSTRING;
     }
-    return Retval;                       /* return stripped string            */
 }
 
 /* the SUBSTR function */

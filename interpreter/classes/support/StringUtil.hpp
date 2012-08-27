@@ -44,7 +44,6 @@
 #ifndef Included_StringUtil
 #define Included_StringUtil
 
-class RexxString;
 class RexxInteger;
 class RexxArray;
 
@@ -91,6 +90,18 @@ public:
     static RexxInteger *caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
     static RexxArray   *words(const char *data, size_t length);
     static const char  *locateSeparator(const char *start, const char *end, const char *sepData, size_t sepLength);
+
+    static inline bool matchCharacter(char ch, const char *charSet, size_t len)
+    {
+        while (len-- > 0)
+        {
+            if (ch == *charSet++)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 #endif
