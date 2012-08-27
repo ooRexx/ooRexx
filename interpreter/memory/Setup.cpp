@@ -286,6 +286,8 @@ void RexxMemory::createImage()
   // this is explicitly inserted into the class behaviour because it gets used
   // prior to the instance behavior merges.
   defineKernelMethod(CHAR_HASHCODE               ,TheClassBehaviour, CPPM(RexxObject::hashCode), 0);
+  // this is a NOP by default, so we'll just use the object init method as a fill in.
+  defineKernelMethod(CHAR_ACTIVATE               ,TheClassBehaviour, CPPM(RexxObject::init), 0);
 
                                        /* set the scope of the methods to   */
                                        /* the CLASS scope                   */

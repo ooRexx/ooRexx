@@ -1699,11 +1699,24 @@ void RexxSource::processInstall(
         OrefSet(this, this->installed_classes, new_directory());
         /* and the public classes            */
         OrefSet(this, this->installed_public_classes, new_directory());
+        RexxArray *createdClasses = new_array(classes->items());
+
+        ProtectedObject p(createdClasses);
+        size_t index = 1;       // used for keeping track of install order
         for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
         {
             /* get the class info                */
             ClassDirective *current_class = (ClassDirective *)this->classes->getValue(i);
-            current_class->install(this, activation);
+            // save the newly created class in our array so we can send the activate
+            // message at the end
+            RexxClass *newClass = current_class->install(this, activation);
+            createdClasses->put(newClass, index++);
+        }
+        // now send an activate message to each of these classes
+        for (size_t j = 1; j < index; j++)
+        {
+            RexxClass *clz = (RexxClass *)createdClasses->get(j);
+            clz->sendMessage(OREF_ACTIVATE);
         }
     }
 }

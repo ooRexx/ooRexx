@@ -43,6 +43,7 @@
 /*                                                                            */
 /******************************************************************************/
 
+  GLOBAL_NAME(ACTIVATE, CHAR_ACTIVATE)
   GLOBAL_NAME(ADDCLASS, CHAR_ADDCLASS)
   GLOBAL_NAME(ADDITIONAL, CHAR_ADDITIONAL)
   GLOBAL_NAME(ADDRESS, CHAR_ADDRESS)

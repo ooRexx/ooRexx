@@ -148,7 +148,7 @@ void *ClassDirective::operator new(size_t size)
  *
  * @param activation The activation we're running under for the install.
  */
-void ClassDirective::install(RexxSource *source, RexxActivation *activation)
+RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activation)
 {
     RexxClass *metaclass = OREF_NULL;
     RexxClass *subclass = TheObjectClass;
@@ -217,6 +217,8 @@ void ClassDirective::install(RexxSource *source, RexxActivation *activation)
         /* define them to the class object   */
         classObject->defineMethods(instanceMethods);
     }
+    // the source needs this at the end so it call call the activate methods
+    return classObject;
 }
 
 

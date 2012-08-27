@@ -47,6 +47,7 @@
 #include "RexxDirective.hpp"
 
 class RexxDirectory;
+class RexxClass;
 
 class ClassDirective : public RexxDirective
 {
@@ -65,7 +66,7 @@ class ClassDirective : public RexxDirective
     void flatten(RexxEnvelope *);
 
     inline RexxString *getName() { return publicName; }
-    void install(RexxSource *source, RexxActivation *activation);
+    RexxClass *install(RexxSource *source, RexxActivation *activation);
 
     void addDependencies(RexxDirectory *class_directives);
     void checkDependency(RexxString *name, RexxDirectory *class_directives);
