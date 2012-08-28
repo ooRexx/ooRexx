@@ -79,6 +79,7 @@
     RexxObject   *merge(RexxHashTableCollection *);
     RexxArray    *allItems();
     RexxArray    *allIndexes();
+    RexxArray    *uniqueIndexes();
     RexxObject   *empty();
     RexxObject   *isEmpty();
 

@@ -1746,6 +1746,30 @@ RexxArray *RexxHashTable::allIndexes()
     return result;                       /* return the result array           */
 }
 
+/**
+ * Return an array containing the unique indexes of a
+ * Relation object.
+ *
+ * @return An array with the set of unique index values
+ */
+RexxArray *RexxHashTable::uniqueIndexes()
+{
+    RexxTable *indexSet = new_table();
+    ProtectedObject p(indexSet);
+    size_t j = 0;                               /* set the insertion point           */
+    // loop through all of the items
+    for (size_t i = 0; i < this->totalSlotsSize(); i++)
+    {
+        // add the index for every entry to the accumulator
+        if (this->entries[i].index != OREF_NULL)
+        {
+            indexSet->put(TheNilObject, this->entries[i].index);
+        }
+    }
+    // now return the reduced index set
+    return indexSet->allIndexes();
+}
+
 
 RexxSupplier *RexxHashTable::supplier(void)
 /******************************************************************************/

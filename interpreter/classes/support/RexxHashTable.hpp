@@ -115,6 +115,7 @@ typedef size_t HashLink;
    RexxSupplier  *supplier();
    RexxArray     *allItems();
    RexxArray     *allIndexes();
+   RexxArray     *uniqueIndexes();
    RexxObject    *removeItem(RexxObject *value, RexxObject *key);
    RexxObject    *removeItem(RexxObject *value);
    RexxObject    *stringGet(RexxString *key);

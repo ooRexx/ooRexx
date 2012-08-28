@@ -498,6 +498,16 @@ RexxArray *RexxHashTableCollection::allIndexes()
     return this->contents->allIndexes();
 }
 
+/**
+ * Return the unique indexes in a hash collection.
+ *
+ * @return The set of uniqueIndexes
+ */
+RexxArray *RexxHashTableCollection::uniqueIndexes()
+{
+    return this->contents->uniqueIndexes();
+}
+
 
 /**
  * Empty a hash table collection.
