@@ -13,7 +13,7 @@
 /*              the old functions.                                            */
 /*                                                                            */
 /*              Another difference is that each instance of the class you     */
-/*              instaniate has its own connection to an FTP server. Thus      */
+/*              instantiate has its own connection to an FTP server. Thus     */
 /*              you can instaniate multiple instance of this class and        */
 /*              connect to multiple FTP servers simultaneously. Also, each    */
 /*              instance can be reused - the FtpLogoff method reinitializes   */
@@ -25,7 +25,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -92,6 +92,7 @@
 ::method rhost      attribute private -- remote FTP host name/ip address
 ::method srvr_os    attribute private -- remote FTP host operating system
 ::method traceflg   attribute private -- .true = display ftp commands
+::method exttraceflg attribute private -- .true = display ftp commands prefixed with time
 ::method tracelog   attribute private -- trace log file stream
 ::method user       attribute private -- remote FTP host user name
 ::method version    attribute private -- version of this class
@@ -178,7 +179,7 @@ if ndsock = -1 then do
    return
    end
 
-self~debugsay('Connected, recieving data.')
+self~debugsay('Connected, receiving data.')
 bytesrcvd = SockRecv(ndsock, 'resp', self~bufsize)
 do while bytesrcvd > 0
    self~debugsay('SockRecv:' bytesrcvd 'bytes received.')
@@ -374,7 +375,13 @@ return .false
 
 ::method debugsay private unguarded
 /* any value other than .false activates debug messages */
-if self~debug <> .false then say arg(1)
+if self~debug <> .false then do
+	say arg(1)
+	if self~tracelog <> .nil then do
+		if self~exttraceflg = .true then
+   		self~traceline("D" arg(1))
+		end
+	end
 return
 
 
@@ -782,7 +789,7 @@ if self~cmdresponse[self~cmdresponse~items]~substr(4, 1) = '-' then do
 
 /* place response in trace file */
 if self~tracelog <> .nil then do i = startresp to self~cmdresponse~items
-   self~tracelog~lineout(self~cmdresponse[i])
+   self~traceline(self~cmdresponse[i])
    end
 
 /* check the response & return .false if we find an expected return code */
@@ -844,8 +851,8 @@ if self~csock = 0 then do
 
 /* place cmd in trace file */
 if self~tracelog <> .nil then do
-   if cmd~substr(1, 4) = 'PASS' then self~tracelog~lineout('PASS XXXX')
-   else self~tracelog~lineout(cmd)
+   if cmd~substr(1, 4) = 'PASS' then self~traceline('PASS XXXX')
+   else self~traceline(cmd)
    end
 
 /* display cmd if tracing */
@@ -892,6 +899,7 @@ self~response = .nil             -- parsed last command response from the server
 self~rhost = ''                  -- host name or ip address of the ftp server
 self~srvr_os = ''                -- remote host operating system
 self~traceflg = 0                -- .true = display ftp commands
+self~exttraceflg = .false        -- .true = display ftp commands prefixed with time
 self~tracelog = .nil             -- trace log stream
 self~user = ''                   -- user account on the ftp server
 self~version = '4.2.0'           -- current version of this class
@@ -911,6 +919,23 @@ use arg cmd, exretc
 retc = self~sendcmd(cmd)
 if retc = .true then return .true
 return self~recvresponse(exretc)
+
+
+/*----------------------------------------------------------------------------*/
+/* Method: traceline  private unguarded                                                         */
+/* Description: Write trace string                                             */
+/*----------------------------------------------------------------------------*/
+
+::method traceline private unguarded
+use arg line
+
+if self~exttraceflg = .true then
+	self~tracelog~lineout(Time() line)
+else
+	self~tracelog~lineout(line)
+self~tracelog~flush()
+
+return 
 
 
 /*----------------------------------------------------------------------------*/
@@ -1897,31 +1922,65 @@ return 0
 /*----------------------------------------------------------------------------*/
 
 ::method FtpTraceLog
-
 self~response = .array~new()
 
 /* check/get args */
-if arg() > 2 then raise syntax 93.902 array (2)
+if arg() > 4 then raise syntax 93.902 array (4)
 if arg() < 1 then raise syntax 93.901 array (1)
-if arg() = 1 then do
-   use arg fname
-   mode = 'R'
+	
+select
+   when arg() = 1 then do
+	   use arg fname
+  	 mode = 'R'
+   	 end
+   when arg() = 2 then do
+   	 use arg fname, mode
+   	 mode = mode~substr(1, 1)~translate()
+   	 if mode = 'R' then nop
+   	 else raise syntax 93.914 array (2, 'R', mode)
+   	 end
+   when arg() = 3 then do
+   	 use arg fname, mode, sharemode=''
+   	 mode = mode~substr(1, 1)~translate()
+   	 if mode = 'R' then nop
+   	 else raise syntax 93.914 array (2, 'R', mode)
+   	 sharemode = sharemode~substr(1, 1)~translate()
+   	 if sharemode = 'S' then nop
+   	 else raise syntax 93.914 array (3, 'S', sharemode)
+     end
+   when arg() = 4 then do
+   	 use arg fname, mode, sharemode='', logmode
+   	 mode = mode~substr(1, 1)~translate()
+   	 if mode = 'R' then nop
+   	 else raise syntax 93.914 array (2, 'R', mode)
+   	 sharemode = sharemode~substr(1, 1)~translate()
+   	 if sharemode = 'S' | sharemode = '' then nop
+   	 else raise syntax 93.914 array (3, 'S', sharemode)
+   	 log = logmode~substr(1, 1)~translate()
+   	 if logmode = 'E' then self~exttraceflg = .true
+   	 else raise syntax 93.914 array (4, 'E', logmode)
+     end
+   otherwise nop
    end
-else do
-   use arg fname, mode
-   mode = mode~substr(1, 1)~translate()
-   if mode = 'R' then nop
-   else raise syntax 93.914 array (2, 'R', mode)
-   end
-
+   		
 /* open the trace file */
 if mode = '' then mode = 'R'
 self~tracelog = .stream~new(fname)
 if mode = 'R' then do
-   retc = self~tracelog~open('write replace')
+	 if sharemode = 'S' then do
+   	 retc = self~tracelog~open('write replace shareread')
+     end
+   else do
+   	 retc = self~tracelog~open('write replace')
+     end   	
    end
 else do
-   retc = self~tracelog~open('write append')
+	 if sharemode = 'S' then do
+     retc = self~tracelog~open('write append shareread')
+		 end
+	 else do
+     retc = self~tracelog~open('write append')
+   	 end
    end
 if retc <> 'READY:' then do
    self~debugsay('Error: cannot open trace file' fname'.')
@@ -1931,7 +1990,6 @@ if retc <> 'READY:' then do
    end
 
 return 0
-
 
 /*----------------------------------------------------------------------------*/
 /* Method: FtpTraceLogOff                                                     */
@@ -1968,4 +2026,3 @@ if arg() > 0 then raise syntax 93.902 array (0)
 
 self~ftperrno = ''
 return self~version()
-
