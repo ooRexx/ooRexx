@@ -2010,6 +2010,18 @@ Output:
   forward class (super) continue array (item)   -- allow the superclass to handle adding the item
   return ret                      -- return removed item
 
+-- check to see if we need to remove an item before appending.
+::METHOD append
+  expose size
+  use strict arg item
+
+  if size=0 then return .nil  -- size is 0, do not process!
+
+  if self~items >= size then
+     ret = self~pull           -- if we've gone over the size, remove this
+
+  forward class(super) -- allow the superclass to handle adding the item
+
 ::METHOD section
   expose size
   use strict arg index, count = (size)   -- the default is to return everything.  This essentially becomes a rotate
