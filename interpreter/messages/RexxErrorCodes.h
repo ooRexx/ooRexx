@@ -589,6 +589,14 @@
 #define Error_Translation_use_strict_ellipsis              99930
 #define Error_Translation_duplicate_attribute              99931
 #define Error_Translation_duplicate_constant               99932
+#define Error_Translation_abstract_method                  99933
+#define Error_Translation_attribute_method                 99934
+#define Error_Translation_external_attribute               99935
+#define Error_Translation_external_method                  99936
+#define Error_Translation_body_error                       99937
+#define Error_Translation_constant_body                    99938
+#define Error_Translation_external_routine                 99939
+#define Error_Translation_abstract_attribute               99940
 #define Error_at_line                                      101000
 #define Message_Translations_error                         101001
 #define Message_Translations_running                       101002

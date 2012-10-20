@@ -589,6 +589,14 @@
 #define Rexx_Error_Translation_use_strict_ellipsis              99930
 #define Rexx_Error_Translation_duplicate_attribute              99931
 #define Rexx_Error_Translation_duplicate_constant               99932
+#define Rexx_Error_Translation_abstract_method                  99933
+#define Rexx_Error_Translation_attribute_method                 99934
+#define Rexx_Error_Translation_external_attribute               99935
+#define Rexx_Error_Translation_external_method                  99936
+#define Rexx_Error_Translation_body_error                       99937
+#define Rexx_Error_Translation_constant_body                    99938
+#define Rexx_Error_Translation_external_routine                 99939
+#define Rexx_Error_Translation_abstract_attribute               99940
 
 
 #endif

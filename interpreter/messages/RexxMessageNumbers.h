@@ -630,6 +630,14 @@
 #define Message_Translations_no_source_available_msg                 724
 #define Error_Incomplete_do_loop_msg                                 725
 #define Error_Invalid_subkeyword_attribute_msg                       726
+#define Error_Translation_abstract_method_msg                        727
+#define Error_Translation_attribute_method_msg                       728
+#define Error_Translation_external_attribute_msg                     729
+#define Error_Translation_external_method_msg                        730
+#define Error_Translation_body_error_msg                             731
+#define Error_Translation_constant_body_msg                          732
+#define Error_Translation_external_routine_msg                       733
+#define Error_Translation_abstract_attribute_msg                     734
 
 
 #endif

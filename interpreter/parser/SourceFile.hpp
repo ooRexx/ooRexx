@@ -183,7 +183,7 @@ class RexxSource : public RexxInternalObject {
     RexxCode   *generateCode(bool isMethod);
     RexxCode   *interpretMethod(RexxDirectory *);
     RexxCode   *interpret(RexxString *, RexxDirectory *, size_t);
-    void        checkDirective();
+    void        checkDirective(int errorCode);
     bool        hasBody();
     RexxObject *toss(RexxObject *);
     void        cleanup();
@@ -219,6 +219,7 @@ class RexxSource : public RexxInternalObject {
     void        createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        createConstantGetterMethod(RexxString *name, RexxObject *value);
+    void        createAbstractMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg);
     void        addMethod(RexxString *name, RexxMethod *method, bool classMethod);
     void        flushControl(RexxInstruction *);

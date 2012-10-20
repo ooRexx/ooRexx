@@ -1215,7 +1215,7 @@ RexxCode *RexxSource::interpret(
   return source->interpretMethod(_labels);
 }
 
-void RexxSource::checkDirective()
+void RexxSource::checkDirective(int errorCode)
 /******************************************************************************/
 /* Function:  Verify that no code follows a directive except for more         */
 /*            directive instructions.                                         */
@@ -1233,7 +1233,7 @@ void RexxSource::checkDirective()
         if (token->classId != TOKEN_DCOLON)
         {
             /* this is an error                  */
-            syntaxError(Error_Translation_bad_directive);
+            syntaxError(errorCode);
         }
         firstToken();                      /* reset to the first token          */
         this->reclaimClause();             /* give back to the source object    */
@@ -2176,7 +2176,7 @@ void RexxSource::methodDirective()
                     }
                     token = nextReal();      /* get the next token                */
                                              /* not a string?                     */
-                    if (!token->isSymbolOrLiteral())
+                    if (!token->isLiteral())
                     {
                         /* report an error                   */
                         syntaxError(Error_Symbol_or_string_external, token);
@@ -2295,7 +2295,7 @@ void RexxSource::methodDirective()
         checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_method);
 
                                        /* Go check the next clause to make  */
-        this->checkDirective();        /* sure that no code follows         */
+        this->checkDirective(Error_Translation_attribute_method);        /* sure that no code follows         */
         // this might be externally defined setters and getters.
         if (externalname != OREF_NULL)
         {
@@ -2330,7 +2330,7 @@ void RexxSource::methodDirective()
     else if (abstractMethod)
     {
                                        /* Go check the next clause to make  */
-        this->checkDirective();        /* sure that no code follows         */
+        this->checkDirective(Error_Translation_abstract_method);        /* sure that no code follows         */
         // this uses a special code block
         BaseCode *code = new AbstractCode();
         _method = new RexxMethod(name, code);
@@ -2357,7 +2357,7 @@ void RexxSource::methodDirective()
         decodeExternalMethod(internalname, externalname, library, procedure);
 
         /* go check the next clause to make  */
-        this->checkDirective();
+        this->checkDirective(Error_Translation_external_method);
         // and make this into a method object.
         _method = createNativeMethod(name, library, procedure);
     }
@@ -2583,6 +2583,7 @@ void RexxSource::attributeDirective()
     int  guard = DEFAULT_GUARD;       /* default is guarding               */
     int  style = ATTRIBUTE_BOTH;      // by default, we create both methods for the attribute.
     bool Class = false;              /* default is an instance method     */
+    bool abstractMethod = false;     // by default, creating a concrete method
     RexxToken *token = nextReal();   /* get the next token                */
 
                                      /* not a symbol or a string          */
@@ -2700,19 +2701,28 @@ void RexxSource::attributeDirective()
                     /* ::METHOD name ATTRIBUTE           */
                 case SUBDIRECTIVE_EXTERNAL:
                     /* already had an external?          */
-                    if (externalname != OREF_NULL)
+                    if (externalname != OREF_NULL || abstractMethod)
                     {
                         /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
                     token = nextReal();      /* get the next token                */
                                              /* not a string?                     */
-                    if (!token->isSymbolOrLiteral())
+                    if (!token->isLiteral())
                     {
                         /* report an error                   */
                         syntaxError(Error_Symbol_or_string_external, token);
                     }
                     externalname = token->value;
+                    break;
+                                           /* ::METHOD name ABSTRACT            */
+                case SUBDIRECTIVE_ABSTRACT:
+
+                    if (abstractMethod || externalname != OREF_NULL)
+                    {
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
+                    }
+                    abstractMethod = true;   /* flag for later processing         */
                     break;
 
 
@@ -2740,7 +2750,7 @@ void RexxSource::attributeDirective()
             checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_attribute);
 
             // no code can follow the automatically generated methods
-            this->checkDirective();
+            this->checkDirective(Error_Translation_body_error);
             if (externalname != OREF_NULL)
             {
                 RexxString *library = OREF_NULL;
@@ -2756,6 +2766,15 @@ void RexxSource::attributeDirective()
                 _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(setterName, _method, Class);
+            }
+            // abstract method?
+            else if (abstractMethod)
+            {
+                // create the method pair and quit.
+                createAbstractMethod(internalname, Class, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                createAbstractMethod(setterName, Class, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             }
             else
             {
@@ -2776,7 +2795,7 @@ void RexxSource::attributeDirective()
             if (externalname != OREF_NULL)
             {
                 // no code can follow external methods
-                this->checkDirective();
+                this->checkDirective(Error_Translation_external_attribute);
                 RexxString *library = OREF_NULL;
                 RexxString *procedure = OREF_NULL;
                 decodeExternalMethod(internalname, externalname, library, procedure);
@@ -2790,6 +2809,15 @@ void RexxSource::attributeDirective()
                 _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(internalname, _method, Class);
+            }
+            // abstract method?
+            else if (abstractMethod)
+            {
+                // no code can follow abstract methods
+                this->checkDirective(Error_Translation_abstract_attribute);
+                // create the method pair and quit.
+                createAbstractMethod(internalname, Class, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             }
             // either written in ooRexx or is automatically generated.
             else {
@@ -2816,7 +2844,7 @@ void RexxSource::attributeDirective()
             if (externalname != OREF_NULL)
             {
                 // no code can follow external methods
-                this->checkDirective();
+                this->checkDirective(Error_Translation_external_attribute);
                 RexxString *library = OREF_NULL;
                 RexxString *procedure = OREF_NULL;
                 decodeExternalMethod(internalname, externalname, library, procedure);
@@ -2830,6 +2858,15 @@ void RexxSource::attributeDirective()
                 _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(setterName, _method, Class);
+            }
+            // abstract method?
+            else if (abstractMethod)
+            {
+                // no code can follow abstract methods
+                this->checkDirective(Error_Translation_abstract_attribute);
+                // create the method pair and quit.
+                createAbstractMethod(setterName, Class, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             }
             else
             {
@@ -2909,7 +2946,7 @@ void RexxSource::constantDirective()
         syntaxError(Error_Invalid_data_constant_dir, token);
     }
     // this directive does not allow a body
-    this->checkDirective();
+    this->checkDirective(Error_Translation_constant_body);
 
     // check for duplicates.  We only do the class duplicate check if there
     // is an active class, otherwise we'll get a syntax error
@@ -3009,6 +3046,32 @@ void RexxSource::createAttributeSetterMethod(RexxString *name, RexxVariableBase 
 
 
 /**
+ * Create an abstract method.
+ *
+ * @param name   The name of the method.
+ * @param classMethod
+ *                  Indicates we're adding a class or instance method.
+ * @param privateMethod
+ *               The method's private attribute.
+ * @param protectedMethod
+ *               The method's protected attribute.
+ * @param guardedMethod
+ *               The method's guarded attribute.
+ */
+void RexxSource::createAbstractMethod(RexxString *name,
+    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
+{
+    // create the kernel method for the accessor
+    // this uses a special code block
+    BaseCode *code = new AbstractCode();
+    RexxMethod * _method = new RexxMethod(name, code);
+    _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
+    // add this to the target
+    addMethod(name, _method, classMethod);
+}
+
+
+/**
  * Create a CONSTANT "get" method.
  *
  * @param target The target method directory.
@@ -3080,7 +3143,7 @@ void RexxSource::routineDirective()
                 }
                 token = nextReal();        /* get the next token                */
                 /* not a string?                     */
-                if (!token->isSymbolOrLiteral())
+                if (!token->isLiteral())
                 {
                     /* report an error                   */
                     syntaxError(Error_Symbol_or_string_requires, token);
@@ -3146,7 +3209,7 @@ void RexxSource::routineDirective()
                 }
 
                 /* go check the next clause to make  */
-                this->checkDirective();      /* sure no code follows              */
+                this->checkDirective(Error_Translation_external_routine);      /* sure no code follows              */
                                              /* create a new native method        */
                 RoutineClass *routine = PackageManager::resolveRoutine(library, entry);
                 // raise an exception if this entry point is not found.
@@ -3189,7 +3252,7 @@ void RexxSource::routineDirective()
                 }
 
                 /* go check the next clause to make  */
-                this->checkDirective();      /* sure no code follows              */
+                this->checkDirective(Error_Translation_external_routine);      /* sure no code follows              */
                                              /* create a new native method        */
                 RoutineClass *routine = PackageManager::resolveRoutine(name, library, entry);
                 // raise an exception if this entry point is not found.

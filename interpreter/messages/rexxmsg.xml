@@ -788,7 +788,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Symbol_or_string_external</SymbolicName>
-        <Text>String or symbol expected after EXTERNAL keyword</Text>
+        <Text>String expected after EXTERNAL keyword</Text>
       </SubMessage>
       <SubMessage>
         <Code>19</Code>
@@ -5092,6 +5092,78 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_duplicate_constant</SymbolicName>
         <Text>Duplicate ::CONSTANT directive instruction</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>933</Subcode>
+        <MessageNumber>727</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_abstract_method</SymbolicName>
+        <Text>Abstract methods cannot have a method body</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>934</Subcode>
+        <MessageNumber>728</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_attribute_method</SymbolicName>
+        <Text>Attribute methods cannot have a method body</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>935</Subcode>
+        <MessageNumber>729</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_external_attribute</SymbolicName>
+        <Text>External attributes cannot have a method body</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>936</Subcode>
+        <MessageNumber>730</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_external_method</SymbolicName>
+        <Text>External methods cannot have a method body</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>937</Subcode>
+        <MessageNumber>731</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_body_error</SymbolicName>
+        <Text>Attribute methods without a SET or GET designation cannot have a method body</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>938</Subcode>
+        <MessageNumber>732</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_constant_body</SymbolicName>
+        <Text>Constant methods cannot have a method body</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>939</Subcode>
+        <MessageNumber>733</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_external_routine</SymbolicName>
+        <Text>External routines cannot have a method body</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>940</Subcode>
+        <MessageNumber>734</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_abstract_attribute</SymbolicName>
+        <Text>Abstract attributes cannot have a method body</Text>
       </SubMessage>
     </Subcodes>
   </Message>
