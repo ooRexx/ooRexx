@@ -1940,7 +1940,7 @@ RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_
 * Return:    result - return code from DosOpenEventSem                   *
 *************************************************************************/
 
-RexxMethod1(RexxObjectPtr, SysOpenEventSem, CSTRING, name)
+RexxMethod1(uintptr_t, SysOpenEventSem, CSTRING, name)
 {
     RXSEMDATA *semdata;
 
@@ -1953,7 +1953,7 @@ RexxMethod1(RexxObjectPtr, SysOpenEventSem, CSTRING, name)
         return 0;
     }
     semdata->named = true;
-    return (RexxObjectPtr)semdata;
+    return (uintptr_t)semdata;
 }
 
 
@@ -2143,7 +2143,7 @@ RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
 * Return:    result - return code from DosOpenEventSem                   *
 *************************************************************************/
 
-RexxRoutine1(RexxObjectPtr, SysOpenMutexSem, CSTRING, name)
+RexxRoutine1(uintptr_t, SysOpenMutexSem, CSTRING, name)
 {
     RXSEMDATA *semdata;
 
@@ -2156,7 +2156,7 @@ RexxRoutine1(RexxObjectPtr, SysOpenMutexSem, CSTRING, name)
         return 0;
     }
     semdata->named = true;
-    return (RexxObjectPtr)semdata;
+    return (uintptr_t)semdata;
 }
 
 
