@@ -1919,7 +1919,6 @@ RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_
     }
     else {
         /* this is a named semaphore */
-        sem_unlink(name);
         semdata->handle = sem_open(name, (O_CREAT | O_EXCL), (S_IRWXU | S_IRWXG), 0);
         if (semdata->handle == SEM_FAILED ) {
             free(semdata);
@@ -1941,7 +1940,7 @@ RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_
 * Return:    result - return code from DosOpenEventSem                   *
 *************************************************************************/
 
-RexxMethod1(uintptr_t, SysOpenEventSem, CSTRING, name)
+RexxMethod1(RexxObjectPtr, SysOpenEventSem, CSTRING, name)
 {
     RXSEMDATA *semdata;
 
@@ -1954,7 +1953,7 @@ RexxMethod1(uintptr_t, SysOpenEventSem, CSTRING, name)
         return 0;
     }
     semdata->named = true;
-    return (uintptr_t)semdata->handle;
+    return (RexxObjectPtr)semdata;
 }
 
 
@@ -2122,7 +2121,6 @@ RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
     }
     else {
         /* this is a named semaphore */
-        sem_unlink(name);
         semdata->handle = sem_open(name, (O_CREAT | O_EXCL), (S_IRWXU | S_IRWXG), 0);
         if (semdata->handle == SEM_FAILED ) {
             free(semdata);
@@ -2145,7 +2143,7 @@ RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
 * Return:    result - return code from DosOpenEventSem                   *
 *************************************************************************/
 
-RexxRoutine1(uintptr_t, SysOpenMutexSem, CSTRING, name)
+RexxRoutine1(RexxObjectPtr, SysOpenMutexSem, CSTRING, name)
 {
     RXSEMDATA *semdata;
 
@@ -2158,7 +2156,7 @@ RexxRoutine1(uintptr_t, SysOpenMutexSem, CSTRING, name)
         return 0;
     }
     semdata->named = true;
-    return (uintptr_t)semdata->handle;
+    return (RexxObjectPtr)semdata;
 }
 
 
