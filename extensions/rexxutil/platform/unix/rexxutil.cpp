@@ -2067,7 +2067,7 @@ RexxRoutine2(int, SysWaitEventSem, uintptr_t, vhandle, OPTIONAL_int, timeout)
             if (rc == 0) {
                 break;
             }
-            if (usleep(SEM_WAIT_PERIOD * 1000)) {
+            if (usleep(SEM_WAIT_PERIOD * 1000) == 0) {
                 timeout -= SEM_WAIT_PERIOD;
             }
         }
@@ -2184,7 +2184,7 @@ RexxRoutine2(int, SysRequestMutexSem, uintptr_t, vhandle, OPTIONAL_int, timeout)
             if (rc == 0) {
                 break;
             }
-            if (usleep(SEM_WAIT_PERIOD * 1000)) {
+            if (usleep(SEM_WAIT_PERIOD * 1000) == 0) {
                 timeout -= SEM_WAIT_PERIOD;
             }
         }
