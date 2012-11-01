@@ -832,12 +832,12 @@ RexxRoutine4(int, SockSelect, OPTIONAL_RexxObjectPtr, array1, OPTIONAL_RexxObjec
 {
     struct timeval  timeOutS;
     struct timeval *timeOutP;
-    int             rCount;
-    int             wCount;
-    int             eCount;
-    int            *rArray;
-    int            *wArray;
-    int            *eArray;
+    int             rCount = 0;
+    int             wCount = 0;
+    int             eCount = 0;
+    int            *rArray = NULL;
+    int            *wArray = NULL;
+    int            *eArray = NULL;
     int             i;
     int             j;
     int             rc;

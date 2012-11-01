@@ -133,6 +133,10 @@ public:
      */
     bool resolveStem(RexxObjectPtr source)
     {
+        // handle the case where no stem was provided at all 
+        if (source == NULL) {
+            return false;
+        }
         // this is the simplest solution
         if (context->IsStem(source))
         {
@@ -144,7 +148,7 @@ public:
             const char *dotPos = strchr(stemName, '.');
             // if no dot or the dot is the last character, this is a standard
             // stem value
-            if (dotPos == NULL || dotPos == (stemName + strlen(stemName) + 1))
+            if (dotPos == NULL || dotPos == (stemName + strlen(stemName) - 1))
             {
                 stem = context->ResolveStemVariable(source);
             }
