@@ -173,7 +173,9 @@ public:
             }
             if (stem == NULL)
             {
-                context->InvalidRoutine();
+                // context->InvalidRoutine();
+                // don't call context->InvalidRoutine() because we 
+                // want to allow an empty string as a parm
                 return false;
             }
         }

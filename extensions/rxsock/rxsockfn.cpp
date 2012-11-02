@@ -855,7 +855,7 @@ RexxRoutine4(int, SockSelect, OPTIONAL_RexxObjectPtr, array1, OPTIONAL_RexxObjec
     /*---------------------------------------------------------------
      * get timeout value
      *---------------------------------------------------------------*/
-    if (argumentOmitted(3))
+    if (argumentOmitted(4))
     {
         timeOutP = NULL;
     }
