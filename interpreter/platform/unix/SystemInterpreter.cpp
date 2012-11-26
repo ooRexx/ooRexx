@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -101,7 +101,9 @@ void signalHandler(int sig)
 #endif
 
     // if the signal is a ctrl-C, we perform a halt operation
-    if (sig == SIGINT)
+    if (sig == SIGINT ||
+        sig == SIGTERM ||
+        sig == SIGHUP)
     {
         Interpreter::haltAllActivities();
         return;
@@ -132,9 +134,13 @@ void SystemInterpreter::startInterpreter()
 /* that we now get a coredump instead of a hang up                              */
 
     sigaction(SIGINT, NULL, &old_action);
+    sigaction(SIGTERM, NULL, &old_action);
+    sigaction(SIGHUP, NULL, &old_action);
     if (old_action.sa_handler == NULL)           /* not set by ext. exit handler*/
     {
-        sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal     */
+        sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGINT signal    */
+        sigaction(SIGTERM, &new_action, NULL); /* exitClear on SIGTERM signal   */
+        sigaction(SIGHUP, &new_action, NULL);  /* exitClear on SIGHUP signal    */
     }
 }
 
