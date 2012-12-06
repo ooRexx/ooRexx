@@ -78,6 +78,12 @@ StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *
 {
     type = ty;
     name = n;
+    // interpret stack frames don't have a name, but we need to have a valid
+    // return value if requested, so make this a nullstring.
+    if (name == OREF_NULL)
+    {
+        name = OREF_NULLSTRING;
+    }
     executable = e;
     target = tg;
     arguments = a;
