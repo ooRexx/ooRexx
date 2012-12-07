@@ -114,8 +114,8 @@ RexxNumberString *RexxNumberString::Multiply(RexxNumberString *other)
     NumberDigits = number_digits();       /* Get the current Numeric Digits    */
 
                                           /* prepare both numbers              */
-    left = this->checkNumber(NumberDigits + 1, NOROUND);
-    right = other->checkNumber(NumberDigits + 1, NOROUND);
+    left = this->checkNumber(NumberDigits);
+    right = other->checkNumber(NumberDigits);
     /* either number 0 to begin with?    */
     if (left->sign == 0 || right->sign == 0)
     {
@@ -342,8 +342,8 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
     NumberDigits = number_digits();       /* get current digits setting.       */
                                           /* make sure we've got good copy of  */
                                           /*  our working numbers              */
-    left = this->checkNumber(NumberDigits + 1, NOROUND);
-    right = other->checkNumber(NumberDigits + 1, NOROUND);
+    left = this->checkNumber(NumberDigits);
+    right = other->checkNumber(NumberDigits);
     CalcExp = left->exp - right->exp;     /* compute the new exponents         */
                                           /* calculate expected resultant exp  */
     CalcExp += (wholenumber_t)left->length - (wholenumber_t)right->length;
@@ -358,7 +358,7 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
         else
         {
             /* We are doing //, return left(this)*/
-            result = left->prepareNumber(NumberDigits + 1, NOROUND);
+            result = left->prepareOperatorNumber(NumberDigits + 1, NumberDigits, NOROUND);
             result->setupNumber();
             return result;
         }
@@ -712,7 +712,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
     NumberDigits = number_digits();      /* get the current Digits Setting.   */
                                          /* make a copy of self, since we may */
                                          /* need to adjust some of its data.  */
-    left = this->prepareNumber(NumberDigits+1, NOROUND);
+    left = this->prepareOperatorNumber(NumberDigits+1, NumberDigits, NOROUND);
 
     if (left->sign == 0)
     {               /* Is the base number Zero?          */

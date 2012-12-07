@@ -78,6 +78,8 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
 
                                           /* assume 1st operand (self) is the  */
                                           /*  one we want !                    */
+    // NB:  The min and max methods are defined as rounding the values to the
+    // current digits settings, which bypasses the LOSTDIGITS condition
     maxminobj = this->prepareNumber(saveDigits, ROUND);
     ProtectedObject p(maxminobj);
     for (arg=0; arg < argCount; arg++)
@@ -104,7 +106,7 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
         {          /* Was conversion sucessfull?        */
                    /* get new comp object in right      */
                    /* digits                            */
-            compobj = compobj->prepareNumber(saveDigits, ROUND);
+            compobj = compobj->prepareOperatorNumber(saveDigits, saveDigits, ROUND);
 
             /* Just compare the two NumberStrings*/
             /*  See if new number is greater than*/
@@ -382,6 +384,7 @@ void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
     return;                               /* just return to caller.            */
 }
 
+
 RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, bool rounding)
 /*********************************************************************/
 /* Function:  Create new copy of supplied object and make sure the   */
@@ -391,11 +394,12 @@ RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, bool roun
     /* clone ourselves                   */
     RexxNumberString *newObj = this->clone();
     if (newObj->length > NumberDigits)
-    {  /* is the length larger than digits()*/
-       /* raise a numeric condition, may    */
-       /*  not return from this.            */
-        reportCondition(OREF_LOSTDIGITS, (RexxString *)newObj);
-        /* adjust exponet by amount over     */
+    {
+        // NOTE:  This version does NOT raise a LOSTDIGITS condition, since it
+        // is used for formatting results from functions that are used to create
+        // intentionally shortened numbers.
+
+        /* adjust exponent by amount over     */
         /* precision                         */
         newObj->exp += newObj->length - NumberDigits;
         newObj->length = NumberDigits;       /* make length equal precision       */
@@ -407,6 +411,52 @@ RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, bool roun
     }
     /* make sure this has the correct settings */
     newObj->setNumericSettings(NumberDigits, number_form());
+    return newObj;                        /* return new object to caller.      */
+}
+
+
+/**
+ * Prepare an operator numberstring to a given length,
+ * raising a LOSTDIGITS condition if the starting number
+ * will cause lost digits
+ *
+ * @param targetLength
+ *                 The target preparation length (>= numberDigits)
+ * @param numberDigits
+ *                 The digits setting used to determine LOSTDIGITS conditions
+ * @param rounding Inidicates whether rounding is to be performed if the
+ *                 target object is longer than the targetLength
+ *
+ * @return A new number object no longer than the target length.
+ */
+RexxNumberString *RexxNumberString::prepareOperatorNumber(size_t targetLength, size_t numberDigits, bool rounding)
+/*********************************************************************/
+/* Function:  Create new copy of supplied object and make sure the   */
+/*            number is computed to correct digits setting           */
+/*********************************************************************/
+{
+    /* clone ourselves                   */
+    RexxNumberString *newObj = this->clone();
+    if (newObj->length > numberDigits)
+    {  /* is the length larger than digits()*/
+       /* raise a numeric condition, may    */
+       /*  not return from this.            */
+        reportCondition(OREF_LOSTDIGITS, (RexxString *)newObj);
+        if (newObj->length > targetLength)
+        {
+            /* adjust exponent by amount over     */
+            /* precision                         */
+            newObj->exp += newObj->length - targetLength;
+            newObj->length = targetLength;       /* make length equal precision       */
+            if (rounding == ROUND)
+            {             /* are we to perform rounding?       */
+                          /* Round the adjusted number         */
+                newObj->mathRound(newObj->number);
+            }
+        }
+    }
+    /* make sure this has the correct settings */
+    newObj->setNumericSettings(numberDigits, number_form());
     return newObj;                        /* return new object to caller.      */
 }
 
@@ -443,22 +493,29 @@ RexxNumberString *RexxNumberString::addSub(
     leftLength = left->length;            /* maintain our own copy of lengths  */
     rightLength = right->length;          /* these may be adjusted below.      */
 
-    if (leftLength > maxLength)
+    if (leftLength > NumberDigits)
     {
-        /* raise a numeric condition, may,   */
+        // raise a numeric condition, which might not return
         reportCondition(OREF_LOSTDIGITS, (RexxString *)this);
-        /*  not return from this.            */
-        leftExp += leftLength - maxLength;
-        leftLength = maxLength;
+        if (leftLength > maxLength)
+        {
+            leftExp += leftLength - maxLength;
+            leftLength = maxLength;
+        }
     }
-    if (rightLength > maxLength)
+
+    if (rightLength > NumberDigits)
     {
-        /* raise a numeric condition, may    */
+        // raise a numeric condition, which might not return
         reportCondition(OREF_LOSTDIGITS, (RexxString *)other);
-        /*  not return from this.            */
-        rightExp += rightLength - maxLength;
-        rightLength = maxLength;
+        if (rightLength > maxLength)
+        {
+            /*  not return from this.            */
+            rightExp += rightLength - maxLength;
+            rightLength = maxLength;
+        }
     }
+
 
     if (leftExp <= rightExp)              /* Find the smaller of the two exps. */
     {

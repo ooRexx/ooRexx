@@ -2788,6 +2788,19 @@ wholenumber_t RexxNumberString::comp(
         return this->stringValue()->comp(right);
     }
 
+    // unfortunately, we need to perform any lostdigits checks before
+    // handling any of the short cuts
+    NumberDigits = number_digits();
+
+    if (this->length > NumberDigits)
+    {
+        reportCondition(OREF_LOSTDIGITS, (RexxString *)this);
+    }
+    if (rightNumber->length > NumberDigits)
+    {
+        reportCondition(OREF_LOSTDIGITS, (RexxString *)rightNumber);
+    }
+
     if (this->sign != rightNumber->sign) /* are numbers the same sign?        */
     {
         /* no, this is easy                  */
@@ -3069,7 +3082,7 @@ RexxNumberString *RexxNumberString::plus(RexxObject *right)
             (number_form() == Numerics::FORM_ENGINEERING && this->NumFlags&NumFormScientific))
         {
             /* need to copy and reformat         */
-            return this->prepareNumber(number_digits(), ROUND);
+            return this->prepareOperatorNumber(number_digits(), number_digits(), ROUND);
         }
         else
         {
@@ -3099,7 +3112,7 @@ RexxNumberString *RexxNumberString::minus(RexxObject *right)
     else
     {
         /* need to copy and reformat         */
-        RexxNumberString *result = this->prepareNumber(number_digits(), ROUND);
+        RexxNumberString *result = this->prepareOperatorNumber(number_digits(), number_digits(), ROUND);
         /* invert the sign of our copy.      */
         result->sign = -(result->sign);
         return result;                       /* return addition result            */

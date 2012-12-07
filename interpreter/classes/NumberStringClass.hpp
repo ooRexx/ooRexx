@@ -45,6 +45,7 @@
 #define Included_RexxNumberString
 
 #include "Numerics.hpp"
+#include "NumberStringMath.hpp"
 
 /* Define char data used in OKNUMSTR   */
 #define ch_BLANK  ' '                       /* Define a Blank character.            */
@@ -161,15 +162,19 @@
     RexxMethod   *instanceMethod(RexxString *);
     RexxSupplier *instanceMethods(RexxClass *);
     RexxClass  *classObject();
-    inline RexxNumberString *checkNumber(size_t digits, bool rounding)
+    inline RexxNumberString *checkNumber(size_t digits)
     {
-     if (this->length > digits)            /* is the length larger than digits()*/
-                                           /* need to allocate a new number     */
-       return this->prepareNumber(digits, rounding);
-     return this;                          /* no adjustment required            */
+       if (this->length > digits)            // is the length larger than digits()?
+       {
+                                             // need to allocate a new number, but
+                                             // we chop to digits + 1
+           return this->prepareOperatorNumber(digits + 1, digits, NOROUND);
+       }
+       return this;                          // no adjustment required
     }
 
     RexxNumberString *prepareNumber(size_t, bool);
+    RexxNumberString *prepareOperatorNumber(size_t, size_t, bool);
     void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
     inline void       checkPrecision() { if (length > NumDigits) adjustPrecision(); }
