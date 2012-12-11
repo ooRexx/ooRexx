@@ -67,7 +67,7 @@ logical_t RexxEntry AttachThread(RexxInstance *c, RexxThreadContext **tc)
 void RexxEntry Halt(RexxInstance *c)
 {
     InstanceApiContext context(c);
-    context.instance->haltAllActivities();
+    context.instance->haltAllActivities(OREF_NULL);
 }
 
 void RexxEntry SetTrace(RexxInstance *c, logical_t setting)

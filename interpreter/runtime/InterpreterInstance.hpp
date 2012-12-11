@@ -101,7 +101,7 @@ public:
     void setExitHandler(RXSYSEXIT &e) { getExitHandler(e.sysexit_code).resolve(e.sysexit_name); }
     void setExitHandler(RexxContextExit &e) { getExitHandler(e.sysexit_code).resolve(e.handler); }
     void removeInactiveActivities();
-    bool haltAllActivities();
+    bool haltAllActivities(RexxString *);
     void traceAllActivities(bool on);
     inline RexxString *resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext) { return sysInstance.resolveProgramName(name, dir, ext); }
     inline SecurityManager *getSecurityManager() { return securityManager; }

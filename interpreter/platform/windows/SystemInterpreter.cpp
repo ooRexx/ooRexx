@@ -146,7 +146,7 @@ bool SystemInterpreter::processSignal(DWORD dwCtrlType)
     // to kill the process.
     if (dwCtrlType == CTRL_C_EVENT)
     {
-        return Interpreter::haltAllActivities();
+        return Interpreter::haltAllActivities(OREF_NULL);
     }
     return true;      /* ignore signal */
 }

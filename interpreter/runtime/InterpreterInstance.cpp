@@ -536,7 +536,7 @@ void InterpreterInstance::removeGlobalReference(RexxObject *o)
 /**
  * Raise a halt condition on all running activities.
  */
-bool InterpreterInstance::haltAllActivities()
+bool InterpreterInstance::haltAllActivities(RexxString *name)
 {
     // make sure we lock this, since it is possible the table can get updated
     // as a result of setting these flags

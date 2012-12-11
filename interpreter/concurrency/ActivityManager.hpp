@@ -77,7 +77,7 @@ public:
     static RexxActivity *createNewActivity();
     static RexxActivity *createCurrentActivity();
     static RexxActivity *createNewActivity(RexxActivity *);
-    static void haltAllActivities();
+    static void haltAllActivities(RexxString *);
     static void traceAllActivities(bool on);
     static bool setActivityTrace(thread_id_t thread_id, bool on_or_off);
     static void clearActivityPool();

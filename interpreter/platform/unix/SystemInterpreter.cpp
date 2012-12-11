@@ -101,11 +101,19 @@ void signalHandler(int sig)
 #endif
 
     // if the signal is a ctrl-C, we perform a halt operation
-    if (sig == SIGINT ||
-        sig == SIGTERM ||
-        sig == SIGHUP)
+    if (sig == SIGINT)
     {
-        Interpreter::haltAllActivities();
+        Interpreter::haltAllActivities(OREF_SIGINT_STRING);
+        return;
+    }
+    else if (sig == SIGTERM)
+    {
+        Interpreter::haltAllActivities(OREF_SIGTERM_STRING);
+        return;
+    }
+    else if (sig == SIGHUP)
+    {
+        Interpreter::haltAllActivities(OREF_SIGHUP_STRING);
         return;
     }
     else
