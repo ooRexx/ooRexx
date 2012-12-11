@@ -44,7 +44,7 @@
 #define GDATA                          /* prevent some RexxCore.h declares    */
 #define EXTERN                         /* keep RexxCore.h from using extern   */
 // explicitly initialize global variable declares.
-#define INITGLOBALDATA = NULL
+#define INITGLOBALPTR = NULL
 
 #include "RexxCore.h"
 #include "StringClass.hpp"

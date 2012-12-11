@@ -39,7 +39,15 @@
 /* REXX Kernel                                              GlobalNames.h     */
 /*                                                                            */
 /* Definitions of all name objects created at startup time.  All these        */
-/* Name objects are addressible via OREF_ global names                        */
+/* Name objects are addressible via OREF_ global names.  Changes to this file */
+/* also require recompilation of GlobalNames.cpp and GlobalData.cpp for things*/
+/* to link correctly.                                                         */
+/*                                                                            */
+/* NOTE:  The string values of these constants do not need to be a symbolic   */
+/* CHAR_* name.  These values can be directly coded as a literal string.  If  */
+/* an existing CHAR_* constant is available for the value to be defined, use  */
+/* the symbol.  Otherwise, it is perfectly acceptable to just use a literal   */
+/* string value here.                                                         */
 /*                                                                            */
 /******************************************************************************/
 
