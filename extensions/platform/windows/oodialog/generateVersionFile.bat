@@ -1,5 +1,5 @@
 @REM
-@REM Copyright (c) 2012-2012 Rexx Language Association. All rights reserved.
+@REM Copyright (c) 2012-2013 Rexx Language Association. All rights reserved.
 @REM
 @REM This program and the accompanying materials are made available under
 @REM the terms of the Common Public License v1.0 which accompanies this
