@@ -486,7 +486,7 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/ooRexxTry/Makefile
         samples/windows/oodialog/ooRexxTry/doc/Makefile
         samples/windows/oodialog/propertysheet.tabControls/Makefile
-        samples/windows/oodialog/propertysheet.tabControlss/rc/Makefile
+        samples/windows/oodialog/propertysheet.tabControls/rc/Makefile
         samples/windows/oodialog/rc/Makefile
         samples/windows/oodialog/res/Makefile
         samples/windows/oodialog/simple/Makefile
