@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -60,15 +60,6 @@ if calcDlg~initCode = 0 then do
 end
 
 exit   /* leave program */
-
-/* error handling: Display the cause of the error and restart the programm */
-any:
-  call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc) "a"x condition("o")~message
-  if calcDlg~isDialogActive then do
-     calcDlg~finished = .true
-     calcDlg~stopDialog
-  end
-  signal reStart
 
 ::requires "ooDialog.cls"
 
@@ -290,8 +281,9 @@ any:
 
     This is what the default implementation of ok does: it invokes the validate()
     method.  If validate() returns false, then ok() does nothing and just returns.
-    If validate() returns true then ok() sets self~initCode to 1 and
-    self~finished to true, which ends the dialog.
+    If validate() returns true then ok() sets self~initCode to 1 and ends the
+    dialog.  To end a dialog programatically, the superclass ok or cancel
+    methods should always be used.
 
     This over-ride sets the calculator display to 0 before ending the dialog.  Again,
     this is not necessary, it is just done to demonstrate how to over-ride the ok
@@ -300,6 +292,5 @@ any:
   if \ self~validate then return 0
 
   self~setLine(0)
-  self~initCode = 1
-  self~finished = .true
-  return self~finished
+
+  return self~ok:super

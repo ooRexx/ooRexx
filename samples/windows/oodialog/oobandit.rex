@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -246,19 +246,19 @@
    ret = play("WHISTLE.WAV")
 
    -- The user could have canceled while the whistle was playing..
-   if self~finished then return 0
+   if \self~isDialogActive then return 0
 
    self~enableControl(IDC_PB_STOP)
 
-   do cycle = maxCycle by -1 to 1 until self~finished
+   do cycle = maxCycle by -1 to 1 until \self~isDialogActive
       if self~checkSpeed = 0 then leave
 
       sleep = format(max(1, min(100, self~speed / 2)), , 0)
       do j = 1 to self~speed / sleep
-	       if  \self~finished then call msSleep sleep
+	       if  self~isDialogActive then call msSleep sleep
       end
 
-      if self~finished then return 0
+      if \self~isDialogActive then return 0
       guard on when notStopped     -- Don't change the bitmaps out from under the user.
 
       if random(1, kind3) = 3 then do
@@ -277,7 +277,7 @@
       self~changeBitmapButton(IDC_PB_BMP_RIGHT, bmp.z,,,,"INMEMORY STRETCH")
 
       guard off
-      if self~finished then return 0
+      if \self~isDialogActive then return 0
    end
 
    if \won then do
@@ -292,7 +292,7 @@
    end
 
    -- Clean up is in our cancel method, so we invoke that rather than self~ok:super
-   if \self~finished then return self~cancel
+   if self~isDialogActive then return self~cancel
    else return 1
 
 ::method disableControls private
@@ -347,7 +347,7 @@
 ::method checkSpeed
    expose minSpeed maxSpeed cycle initPot jackpotCtrl
 
-   if self~finished then return 0
+   if \self~isDialogActive then return 0
 
    self~getDataAttribute('speed')
 
@@ -367,26 +367,31 @@
 
    return money
 
-::method cancel
-   expose notStopped bmp.
 
-   self~disableControls
-   self~finished = 1
-
-   call Play "byebye.wav"
-   notStopped = .true     -- Be sure the bandit() method is not blocked
-
-   -- You can not remove the bitmap handles while the dialog is still displayed
-   -- on the screen.  As long as the dialog is showing, the os will try to
-   -- repaint  the dialog when needed.  If the bitmaps are destroyed, the
-   -- program will crash.  Wait until the underlying dialog is closed.
-   do while self~isDialogActive
-     j = SysSleep(.334)
-   end
+ -- You can not remove the bitmap handles while the dialog is still displayed
+ -- on the screen.  As long as the dialog is showing, the os will try to
+ -- repaint  the dialog when needed.  If the bitmaps are destroyed, the
+ -- program will crash.  The leaving method is provided for just this purpose,
+ -- it allows you to clean up resources.
+::method leaving
+   expose bmp.
 
    do i = 1 to bmp.0
      self~removeBitmap(bmp.i)
    end
+
+
+::method cancel
+   expose notStopped
+
+   self~disableControls
+   self~cancel:super
+
+   call Play "byebye.wav"
+
+   -- Be sure the bandit() method is not blocked so that this Rexx program ends.
+   notStopped = .true
+
    return 1
 
 ::method calcSize private

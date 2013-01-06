@@ -619,7 +619,7 @@ inline pCDynamicDialog validateDDCSelf(RexxMethodContext *c, void *pcdd)
 {
     if ( pcdd == NULL )
     {
-        baseClassIntializationException(c);
+        baseClassInitializationException(c);
     }
     return (pCDynamicDialog)pcdd;
 }
@@ -703,23 +703,45 @@ uint32_t listViewStyle(CSTRING opts, uint32_t style)
 }
 
 
+/**
+ * Parses the tree-view control styles.
+ *
+ * @param opts
+ * @param style
+ *
+ * @return uint32_t
+ *
+ * @note  The original code checked for ALL and then added those style and
+ *        returned.  This had the effect of INFOTIP being ignored in the keyword
+ *        string: "ALL INFOTIP"  Now if we detect ALL, we then drop through and
+ *        look for any other keywords.
+ */
 uint32_t treeViewStyle(CSTRING opts, uint32_t style)
 {
     if ( StrStrI(opts,"ALL") != NULL )
     {
-        style |=  TVS_HASLINES | WS_VSCROLL | WS_HSCROLL | TVS_EDITLABELS | TVS_HASBUTTONS |
-                  TVS_LINESATROOT | TVS_SHOWSELALWAYS;
-        return style;
+        style |=  TVS_EDITLABELS    | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
+                  TVS_SHOWSELALWAYS |  WS_VSCROLL    | WS_HSCROLL;
     }
 
-    if ( StrStrI(opts, "VSCROLL"      ) != NULL ) style |= WS_VSCROLL;
-    if ( StrStrI(opts, "HSCROLL"      ) != NULL ) style |= WS_HSCROLL;
-    if ( StrStrI(opts, "NODRAG"       ) != NULL ) style |= TVS_DISABLEDRAGDROP;
-    if ( StrStrI(opts, "EDIT"         ) != NULL ) style |= TVS_EDITLABELS;
-    if ( StrStrI(opts, "BUTTONS"      ) != NULL ) style |= TVS_HASBUTTONS;
-    if ( StrStrI(opts, "LINES"        ) != NULL ) style |= TVS_HASLINES;
     if ( StrStrI(opts, "ATROOT"       ) != NULL ) style |= TVS_LINESATROOT;
+    if ( StrStrI(opts, "BUTTONS"      ) != NULL ) style |= TVS_HASBUTTONS;
+    if ( StrStrI(opts, "CHECKBOXES"   ) != NULL ) style |= TVS_CHECKBOXES;
+    if ( StrStrI(opts, "EDIT"         ) != NULL ) style |= TVS_EDITLABELS;
+    if ( StrStrI(opts, "FULLROWSELECT") != NULL ) style |= TVS_FULLROWSELECT;
+    if ( StrStrI(opts, "HSCROLL"      ) != NULL ) style |= WS_HSCROLL;
+    if ( StrStrI(opts, "INFOTIP"      ) != NULL ) style |= TVS_INFOTIP;
+    if ( StrStrI(opts, "LINES"        ) != NULL ) style |= TVS_HASLINES;
+    if ( StrStrI(opts, "NODRAG"       ) != NULL ) style |= TVS_DISABLEDRAGDROP;
+    if ( StrStrI(opts, "NOHSCROLL"    ) != NULL ) style |= TVS_NOHSCROLL;
+    if ( StrStrI(opts, "NONEVENHEIGHT") != NULL ) style |= TVS_NONEVENHEIGHT;
+    if ( StrStrI(opts, "NOSCROLL"     ) != NULL ) style |= TVS_NOSCROLL;
+    if ( StrStrI(opts, "NOTOOLTIPS"   ) != NULL ) style |= TVS_NOTOOLTIPS;
+    if ( StrStrI(opts, "RTLREADING"   ) != NULL ) style |= TVS_RTLREADING;
     if ( StrStrI(opts, "SHOWSELALWAYS") != NULL ) style |= TVS_SHOWSELALWAYS;
+    if ( StrStrI(opts, "SINGLEEXPAND" ) != NULL ) style |= TVS_SINGLEEXPAND;
+    if ( StrStrI(opts, "TRACKSELECT"  ) != NULL ) style |= TVS_TRACKSELECT;
+    if ( StrStrI(opts, "VSCROLL"      ) != NULL ) style |= WS_VSCROLL;
     return style;
 }
 
@@ -1475,7 +1497,7 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
 
     if ( pcpbd->hDlg )
     {
-        setDlgHandle(context->threadContext, pcpbd);
+        setDlgHandle(pcpbd);
 
         // Set the thread priority higher for faster drawing.
         SetThreadPriority(pcpbd->hDlgProcThread, THREAD_PRIORITY_ABOVE_NORMAL);
@@ -1583,9 +1605,9 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
         if ( hChild )
         {
             pcpbd->hDlg = hChild;
+            setDlgHandle(pcpbd);
             pcpbd->isActive = true;
             ((pCControlDialog)pcpbd->dlgPrivate)->activated = true;
-            setDlgHandle(context->threadContext, pcpbd);
         }
     }
     else
@@ -1865,6 +1887,339 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
 
     safeFree((void *)methName);
     return result;
+}
+
+bool fillInButtonUsingIndex(RexxMethodContext *c, RexxStemObject inp, pButtonData btn, uint32_t i, RexxObjectPtr rexxSelf)
+{
+    char buf[256] = {'\0'};
+
+    _snprintf(buf, sizeof(buf), "%d.ID", i);
+
+    RexxObjectPtr value = c->GetStemElement(inp, buf);
+    if ( value == NULLOBJECT )
+    {
+        missingIndexInStemException(c->threadContext, 5, "ID");
+        return false;
+    }
+
+    int32_t id = checkID(c, value, rexxSelf);
+    if ( id < 1 )
+    {
+        return false;
+    }
+    btn->id = (uint32_t)id;
+
+    _snprintf(buf, sizeof(buf), "%d.TEXT", i);
+
+    value = c->GetStemElement(inp, buf);
+    btn->text = (value == NULLOBJECT) ? "" : c->ObjectToStringValue(value);
+
+    _snprintf(buf, sizeof(buf), "%d.METHOD", i);
+
+    value = c->GetStemElement(inp, buf);
+    btn->methName = (value == NULLOBJECT) ? "" : c->ObjectToStringValue(value);
+
+    uint32_t style = WS_CHILD;
+    CSTRING  opts  = NULL;
+    _snprintf(buf, sizeof(buf), "%d.OPTS", i);
+
+    value = c->GetStemElement(inp, buf);
+    if ( value == NULLOBJECT )
+    {
+        style |= BS_PUSHBUTTON;
+        opts = "";
+    }
+    else
+    {
+        opts = c->ObjectToStringValue(value);
+        style |= ( StrStrI(opts, "DEFAULT") != NULL ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON );
+    }
+    btn->opts = getCommonButtonStyles(style, opts, winPushButton);
+
+    return true;
+}
+
+bool fillInButtonFromStem(RexxMethodContext *c, RexxStemObject s, pButtonData btn, RexxObjectPtr rexxSelf)
+{
+    RexxObjectPtr value = c->GetStemElement(s, "ID");
+    if ( value == NULLOBJECT )
+    {
+        missingIndexInStemException(c->threadContext, 5, "ID");
+        return false;
+    }
+
+    int32_t id = checkID(c, value, rexxSelf);
+    if ( id < 1 )
+    {
+        return false;
+    }
+    btn->id = (uint32_t)id;
+
+    value = c->GetStemElement(s, "TEXT");
+    btn->text = (value == NULLOBJECT) ? "" : c->ObjectToStringValue(value);
+
+    value = c->GetStemElement(s, "METHOD");
+    btn->methName = (value == NULLOBJECT) ? "" : c->ObjectToStringValue(value);
+
+    uint32_t style = WS_CHILD;
+    CSTRING  opts  = NULL;
+
+    value = c->GetStemElement(s, "OPTS");
+    if ( value == NULLOBJECT )
+    {
+        style |= BS_PUSHBUTTON;
+        opts = "";
+    }
+    else
+    {
+        CSTRING opts = c->ObjectToStringValue(value);
+        style |= ( StrStrI(opts, "DEFAULT") != NULL ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON );
+    }
+    style = getCommonButtonStyles(style, opts, winPushButton);
+
+    btn->opts = style;
+
+    return true;
+}
+
+pButtonData *parseButtonStem(RexxMethodContext *c, uint32_t count, RexxStemObject inp, RexxObjectPtr rexxSelf)
+{
+    pButtonData *result = NULL;
+    size_t       used   = 0;
+
+    result = (pButtonData *)LocalAlloc(LPTR, count * sizeof(pButtonData *));
+    if ( result == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        goto err_out;
+    }
+
+    for ( uint32_t i = 1; i <= count; i++)
+    {
+        pButtonData btn = (pButtonData)LocalAlloc(LPTR, sizeof(ButtonData));
+        if ( btn == NULL )
+        {
+            outOfMemoryException(c->threadContext);
+            goto err_out;
+        }
+
+        result[i - 1] = btn;
+        used++;
+
+        RexxStemObject s = (RexxStemObject)c->GetStemArrayElement(inp, i);
+        if ( s != NULLOBJECT )
+        {
+            if ( ! fillInButtonFromStem(c, s, btn, rexxSelf) )
+            {
+                goto err_out;
+            }
+        }
+        else
+        {
+            if ( ! fillInButtonUsingIndex(c, inp, btn, i, rexxSelf) )
+            {
+                goto err_out;
+            }
+        }
+    }
+
+    return result;
+
+err_out:
+
+    for ( size_t i = 0; i < used; i++)
+    {
+        LocalFree(result[i]);
+    }
+    safeLocalFree(result);
+    return NULL;
+}
+
+/** DynamicDialog::createPushButtonStem()
+ *
+ *  Creates a group of push buttons using data supplied in a Stem object.
+ *
+ *  @param   x   [optional]  X co-ordinate of upper left corner of the 1st push
+ *               button in the group.  If omitted, or less than 0 this will be
+ *               calculated.
+ *
+ *  @param   y   [optional]  Y co-ordinate of upper left corner of the 1st push
+ *               button in the group. If omitted, or less than 0 this will be
+ *               calculated.
+ *
+ *  ...
+ *
+ */
+RexxMethod8(int32_t, dyndlg_createPushButtonStem, OPTIONAL_int32_t, x, OPTIONAL_int32_t, y, OPTIONAL_int32_t, cx,
+             OPTIONAL_int32_t, cy, RexxStemObject, inp, OPTIONAL_logical_t, row, OPTIONAL_CSTRING, leftTop, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    pCDynamicDialog pcdd = validateDDCSelf(context, pCSelf);
+    if ( pcdd == NULL )
+    {
+        return 0;
+    }
+
+    pButtonData *dataArray = NULL;
+    int32_t      rc        = -2;
+
+    if ( pcdd->active == NULL )
+    {
+        goto done_out;
+    }
+
+    uint32_t      count;
+    RexxObjectPtr _count = c->GetStemArrayElement(inp, 0);
+    if ( _count == NULLOBJECT || ! c->UnsignedInt32(_count, &count) )
+    {
+        stemIndexZeroException(context, 5);
+        goto done_out;
+    }
+
+    dataArray = parseButtonStem(context, count, inp, pcdd->pcpbd->rexxSelf);
+    if ( dataArray == NULL )
+    {
+        goto done_out;
+    }
+
+    bool bottom = true;
+    bool right  = true;
+    if ( argumentExists(7) )
+    {
+        if ( StrStrI(leftTop, "LEFT") != NULL )  right  = false;
+        if ( StrStrI(leftTop, "TOP")  != NULL )  bottom = false;
+    }
+
+    bool calcXY  = (argumentOmitted(1) || argumentOmitted(2) || x <  0 || y <  0) ? true : false;
+    bool calcCXY = (argumentOmitted(2) || argumentOmitted(3) || cx < 0 || cy < 0) ? true : false;
+
+    // Maybe do some calculations
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    cx = 50;
+    cy = 14;
+    if ( calcCXY )
+    {
+        int32_t maxCX = 0;
+        int32_t maxCY = 0;
+        SIZE    s     = {0};
+
+        for ( uint32_t i = 0; i < count; i++ )
+        {
+            pButtonData btn = dataArray[i];
+
+            // We just ignore errors here, almost impossible to happen anyway.
+            if ( pcpbd->hDlg == NULL )
+            {
+                getTextSizeDuInactiveDlg(context, pcpbd, btn->text, &s);
+            }
+            else
+            {
+                getTextSizeDuActiveDlg(context, pcpbd, btn->text, &s);
+            }
+            maxCX = (s.cx > maxCX) ? s.cx : maxCX;
+            maxCY = (s.cy > maxCY) ? s.cy : maxCY;
+        }
+
+        maxCX += 6;
+        maxCY += 6;
+
+        cx = (maxCX > cx) ? maxCX : cx;
+        cy = (maxCY > cy) ? maxCY : maxCY;
+    }
+
+    if ( calcXY )
+    {
+        if ( row )
+        {
+            if ( argumentOmitted(2) )
+            {
+                if ( bottom )
+                {
+                    y = pcpbd->wndBase->sizeY - 7 - cy;
+                }
+                else
+                {
+                    y = 7;
+                }
+            }
+            if ( right )
+            {
+                x = pcpbd->wndBase->sizeX - 7 - (count * cx) - ((count - 1) * 4);
+            }
+            else
+            {
+                x = 7;
+            }
+        }
+        else
+        {
+            if ( bottom )
+            {
+                y = pcpbd->wndBase->sizeY - 7 - (count * cy) - ((count - 1) * 4);
+            }
+            else
+            {
+                y = 7;
+            }
+            if ( argumentOmitted(1) )
+            {
+                if ( right )
+                {
+                    x = pcpbd->wndBase->sizeX - 7 - cx;
+                }
+                else
+                {
+                    x = 7;
+                }
+            }
+        }
+    }
+
+    for ( uint32_t i = 0; i < count; i++ )
+    {
+        pButtonData btn = dataArray[i];
+
+        if ( ! addToDialogTemplate(context, pcdd, ButtonAtom, NULL, btn->id, x, y, cx, cy, btn->text, btn->opts) )
+        {
+            goto done_out;
+        }
+
+        if ( row )
+        {
+            x += cx + 4;
+        }
+        else
+        {
+            y += cy + 4;
+        }
+
+        if ( btn->id == IDCANCEL || btn->id == IDHELP || strlen(btn->methName) == 0 )
+        {
+            continue;
+        }
+
+        if ( ! addCommandMessage(pcdd->pcpbd->enCSelf, context, btn->id, UINTPTR_MAX, 0, 0, btn->methName, 0) )
+        {
+            rc = 1;
+            goto done_out;
+        }
+    }
+
+    rc = 0;
+
+done_out:
+
+    if ( dataArray != NULL )
+    {
+        for ( size_t i = 0; i < count; i++)
+        {
+            safeLocalFree(dataArray[i]);
+        }
+        safeLocalFree(dataArray);
+    }
+
+    return rc;
 }
 
 

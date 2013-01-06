@@ -473,6 +473,11 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/Makefile
         samples/windows/oodialog/bmp/Makefile
         samples/windows/oodialog/controls/Makefile
+        samples/windows/oodialog/controls/ListView/Makefile
+        samples/windows/oodialog/controls/ListView/rc/Makefile
+        samples/windows/oodialog/controls/ToolTip/Makefile
+        samples/windows/oodialog/controls/TreeView/Makefile
+        samples/windows/oodialog/controls/TreeView/rc/Makefile
         samples/windows/oodialog/examples/Makefile
         samples/windows/oodialog/examples/resources/Makefile
         samples/windows/oodialog/menus/Makefile
@@ -480,8 +485,8 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/oleinfo/Makefile
         samples/windows/oodialog/ooRexxTry/Makefile
         samples/windows/oodialog/ooRexxTry/doc/Makefile
-        samples/windows/oodialog/propertySheet.tabs/Makefile
-        samples/windows/oodialog/propertySheet.tabs/rc/Makefile
+        samples/windows/oodialog/propertySheet.tabControls/Makefile
+        samples/windows/oodialog/propertySheet.tabControlss/rc/Makefile
         samples/windows/oodialog/rc/Makefile
         samples/windows/oodialog/res/Makefile
         samples/windows/oodialog/simple/Makefile

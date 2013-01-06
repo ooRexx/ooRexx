@@ -59,6 +59,8 @@
 #define MAXTABPAGES           MAXPROPPAGES
 #define MAXMANAGEDTABS        4
 
+#define MAXCUSTOMDRAWCONTROLS   20
+
 #define DEFAULT_FONTNAME            "MS Shell Dlg"
 #define DEFAULT_FONTSIZE              8
 #define MAX_DEFAULT_FONTNAME        256
@@ -72,11 +74,13 @@
 #define DEF_MAX_DT_ENTRIES          100
 #define DEF_MAX_CT_ENTRIES          100
 #define DEF_MAX_IT_ENTRIES           20
+#define DEF_MAX_TTT_ENTRIES          20
 #define DEF_MAX_NOTIFY_MSGS         100
 #define DEF_MAX_COMMAND_MSGS        100
 #define DEF_MAX_MISC_MSGS            50
 
 /* User defined window messages used for RexxDlgProc() */
+#define WM_USER_REXX_FIRST             WM_USER + 0x0601
 #define WM_USER_CREATECHILD            WM_USER + 0x0601
 #define WM_USER_INTERRUPTSCROLL        WM_USER + 0x0602
 #define WM_USER_GETFOCUS               WM_USER + 0x0603
@@ -88,6 +92,8 @@
 #define WM_USER_CREATECONTROL_DLG      WM_USER + 0x0609
 #define WM_USER_CREATECONTROL_RESDLG   WM_USER + 0x060A
 #define WM_USER_CREATEPROPSHEET_DLG    WM_USER + 0x060B
+#define WM_USER_CREATETOOLTIP          WM_USER + 0x060C
+#define WM_USER_REXX_LAST              WM_USER + 0x060C
 
 // Flags for WM_USER_MOUSE_MISC
 #define MF_GETCAPTURE       0
@@ -141,6 +147,8 @@
 #define TAG_UPDOWN                0x0000000A
 #define TAG_DATETIMEPICKER        0x0000000B
 #define TAG_MONTHCALENDAR         0x0000000C
+#define TAG_TOOLTIP               0x0000000D
+#define TAG_CUSTOMDRAW            0x000000FF
 
 /**
  * The next 2 bytes are generic 'flags' that can be isolated using TAG_FLAGMASK.
@@ -162,11 +170,32 @@
 #define TAG_SELECTCHANGED         0x00000400
 #define TAG_FOCUSCHANGED          0x00000800
 
+// When combined with CTRL flag of custom draw, specifies which type of control.
+#define TAG_CD_HEADER             0x00000100
+#define TAG_CD_LISTVIEW           0x00000200
+#define TAG_CD_REBAR              0x00000400
+#define TAG_CD_TOOLBAR            0x00000800
+#define TAG_CD_TOOLTIP            0x00001000
+#define TAG_CD_TRACKBAR           0x00002000
+#define TAG_CD_TREEVIEW           0x00004000
+
+// When combined with the CTRL flag of a dialog control, (nothing else,)
+// indicates the event handler should be invoked exactly the same as in old
+// ooDialog (pre 4.2.0.)
+#define TAG_PRESERVE_OLD          0x00100000
+
 /**
  * The last byte is for, well 'extra' information.  Use TAG_EXTRAMASK to
  * isolate the byte.
  */
 #define TAG_EXTRAMASK             0xFF000000
+
+// When compbined with TAG_CUSTOMDRAW and one of the TAG_CD_* flags means to use
+// the simple form of custom draw.  What is 'simple' is defined by the control.
+// For instance, with a list-view, ooDialog lets the user change the foreground,
+// background colors, and the font on an item and sub-item basis, but nothing
+// more.
+#define TAG_CD_SIMPLE             0x01000000
 
 // Reply TRUE in dialog procedure, not FALSE.  Reply FALSE passes message on to
 // the system for processing.  TRUE indicates the message was handled.
@@ -252,6 +281,7 @@ typedef enum
     winDateTimePicker      = 15,
     winMonthCalendar       = 16,
     winUpDown              = 17,
+    winToolTip             = 18,
 
     // A special value used by the data table / data table connection functions.
     winNotAControl         = 42,
@@ -266,7 +296,7 @@ typedef enum
     oodPlainBaseDialog, oodCategoryDialog,    oodUserDialog,      oodRcDialog,         oodResDialog,
     oodControlDialog,   oodUserControlDialog, oodRcControlDialog, oodResControlDialog, oodUserPSPDialog,
     oodRcPSPDialog,     oodResPSPDialog,      oodDialogControl,   oodStaticControl,    oodButtonControl,
-    oodEditControl,     oodListBox,           oodProgressBar,     oodUnknown
+    oodEditControl,     oodListBox,           oodProgressBar,     oodToolTip,          oodUnknown
 } oodClass_t;
 
 // How the Global constDir is to be used
@@ -312,7 +342,7 @@ typedef struct {
    WPARAM     wParam;
    ULONG_PTR  wpFilter;
    LPARAM     lParam;
-   ULONG_PTR  lpfilter;
+   ULONG_PTR  lpFilter;
    uint32_t   msg;
    uint32_t   msgFilter;
    uint32_t   tag;
@@ -337,17 +367,37 @@ typedef struct {
 } BITMAPTABLEENTRY;
 
 typedef struct {
+    HBRUSH   ColorBrush;
+    COLORREF ColorBk;
+    COLORREF ColorFG;
+    uint32_t itemID;
    bool isSysBrush;
-   ULONG itemID;
-   INT ColorBk;
-   INT ColorFG;
-   HBRUSH ColorBrush;
+    bool     useSysColors;
 } COLORTABLEENTRY;
 
 typedef struct {
-   ULONG iconID;
-   PCHAR fileName;
+    uint32_t  iconID;
+    char     *fileName;
 } ICONTABLEENTRY;
+
+
+// We need to define this here instead of in oodCommon.hpp with the other tool
+// tip stuff.
+#define MAX_TOOLINFO_TEXT_LENGTH    1023
+
+typedef struct {
+    char           textBuf[MAX_TOOLINFO_TEXT_LENGTH + 1];
+    LPWSTR         wcharBuf;
+    RexxObjectPtr  rexxSelf;
+    HWND           hToolTip;
+    uint32_t       id;
+} TOOLTIPTABLEENTRY, *PTOOLTIPTABLEENTRY;
+
+typedef struct _createToolTip {
+    HINSTANCE   hInstance;
+    uint32_t    style;
+    uint32_t    errRC;
+} CREATETOOLTIP, *PCREATETOOLTIP;
 
 // Structure used for context menus
 typedef struct {
@@ -513,6 +563,7 @@ typedef CWindowBase *pCWindowBase;
 
 /* Struct for the EventNotification object CSelf. */
 typedef struct _enCSelf {
+    uint32_t            magic;
     MESSAGETABLEENTRY  *notifyMsgs;
     MESSAGETABLEENTRY  *commandMsgs;
     MESSAGETABLEENTRY  *miscMsgs;
@@ -522,12 +573,16 @@ typedef struct _enCSelf {
     size_t              cmNextIndex;
     size_t              mmSize;
     size_t              mmNextIndex;
-    HWND                hDlg;
     RexxObjectPtr       rexxSelf;
+    HWND                hDlg;
     HHOOK               hHook;
     void               *pHookData;
+    void               *pCustomDraw;
+    void               *pDlgCSelf;
 } CEventNotification;
 typedef CEventNotification *pCEventNotification;
+
+#define EVENTNOTIFICATION_MAGIC    0x1ee1e11e
 
 // Struct for the PlainBaseDialog class CSelf.
 typedef struct _pbdcCSelf {
@@ -569,30 +624,35 @@ typedef struct _pbdCSelf {
     pCEventNotification  enCSelf;
     pCWindowExtensions   weCSelf;
     RexxObjectPtr        rexxSelf;      // This dialog's Rexx dialog object
-    HWND                 hDlg;
-    RexxObjectPtr        rexxOwner;     // This dialog's Rexx owner dialog object
-    HWND                 hOwnerDlg;
     RexxObjectPtr        rexxParent;    // This dialog's Rexx parent dialog object
+    HWND                 hDlg;          // The handle to this dialog's underlying Windows dialog
+    RexxObjectPtr        rexxOwner;     // This dialog's Rexx owner dialog object
+    HWND                 hOwnerDlg;     // Owner dialog window handle
+    void                *ownerCSelf;    // Owner dialog CSelf.
     void                *dlgPrivate;    // Subclasses can store data unique to the subclass
     void                *initPrivate;   // Subclasses can store init data unique to the subclass
     void                *mouseCSelf;
     RexxObjectPtr        rexxMouse;
-    DATATABLEENTRY      *DataTab;
-    ICONTABLEENTRY      *IconTab;
-    COLORTABLEENTRY     *ColorTab;
-    BITMAPTABLEENTRY    *BmpTab;
-    size_t               DT_nextIndex;
-    size_t               DT_size;
-    size_t               IT_nextIndex;
-    size_t               IT_size;
-    size_t               CT_nextIndex;
-    size_t               CT_size;
-    size_t               BT_nextIndex;
-    size_t               BT_size;
     HBRUSH               bkgBrush;
     HBITMAP              bkgBitmap;
     WPARAM               stopScroll;
     HPALETTE             colorPalette;
+    DATATABLEENTRY      *DataTab;
+    ICONTABLEENTRY      *IconTab;
+    COLORTABLEENTRY     *ColorTab;
+    BITMAPTABLEENTRY    *BmpTab;
+    TOOLTIPTABLEENTRY   *ToolTipTab;
+    size_t               DT_nextIndex;
+    size_t               DT_size;
+    size_t               IT_nextIndex;
+    size_t               IT_size;
+    size_t               TTT_nextIndex;
+    size_t               TTT_size;
+    size_t               CT_nextIndex;
+    size_t               CT_size;
+    size_t               BT_nextIndex;
+    size_t               BT_size;
+    size_t               countChilds;
     logical_t            autoDetect;
     DWORD                dlgProcThreadID;
     uint32_t             fontSize;
@@ -600,17 +660,23 @@ typedef struct _pbdCSelf {
     bool                 isCategoryDlg;  // Need to use IsNestedDialogMessage()
     bool                 isControlDlg;   // Dialog was created as DS_CONTROL | WS_CHILD
     bool                 isOwnedDlg;     // Dialog has an owner dialog
+    bool                 isOwnerDlg;       // Dialog is an owner dialog
     bool                 isManagedDlg;   // Dialog has an owner dialog, which is a tab owner dialog
     bool                 isPageDlg;      // Dialog is a property sheet page dialog
     bool                 isPropSheetDlg; // Dialog is a property sheet dialog
     bool                 isTabOwnerDlg;  // Dialog is a tab owner dialog
+    bool                 isCustomDrawDlg;  // Dialog inherited CustomDraw
+    bool                 idsNotChecked;
+    bool                 badIDs;
     bool                 isDlgHwndSet;   // Has setDlgHandle() been executed
     bool                 sharedIcon;
     bool                 didChangeIcon;
     bool                 isActive;
+    bool                 isFinished;       // The value of the finished attribute
     bool                 dlgAllocated;
     bool                 abnormalHalt;
     bool                 scrollNow;      // For scrolling text in windows.
+    bool                 bkgBrushIsSystem; // Do not delete brush if true.
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
 
@@ -622,18 +688,34 @@ typedef struct {
     char              *method;          /* Name of method to invoke. */
 } CHAREVENTDATA;
 
-// Struct for sorting list view items when the sorting is done by invoking a
-// method in the Rexx dialog.
+// Struct for sorting list-view or tree-view items when the sorting is done by
+// invoking a method in the Rexx dialog.
 typedef struct _lvRexxSort{
     pCPlainBaseDialog    pcpbd;            // The Rexx owner dialog CSelf
     RexxThreadContext   *threadContext;    // Thread context of the sort function
     RexxObjectPtr        rexxDlg;          // The Rexx dialog object
-    RexxObjectPtr        rexxLV;           // The Rexx list view object
+    RexxObjectPtr        rexxCtrl;         // The Rexx control object
     RexxObjectPtr        param;            // An optional parameter the Rexx programmer can have passed to his method.
+    HTREEITEM            hItem;
     char                *method;           // Name of the comparsion method to invoke.
 } CRexxSort;
 typedef CRexxSort *pCRexxSort;
 
+/**
+ * Struct for the CustomDraw object CSelf.  This is in anticipation of future
+ * enhancements to CustoDraw.  It is not really needed as yet.
+ */
+typedef struct _customdrawCSelf {
+    uint32_t             magic;
+    uint32_t             ids[MAXCUSTOMDRAWCONTROLS];   // List of all control IDs the user has set.
+    oodControl_t         types[MAXCUSTOMDRAWCONTROLS]; // Matching type of control for each ID.
+    pCEventNotification  enCSelf;
+    RexxObjectPtr        rexxSelf;
+    uint32_t             count;                        // Number of IDs in the ids array.
+} CCustomDraw;
+typedef CCustomDraw *pCCustomDraw;
+
+#define CUSTOMDRAW_MAGIC    0x7cd7c77d
 
 
 // Struct for the DialogControl object CSelf.
@@ -650,12 +732,13 @@ typedef struct _dcCSelf {
     pCWindowBase        wndBase;
     void               *pscd;            // Pointer to general subclass data struct, usually null.
     void               *pKeyPress;       // Pointer to KeyPress subclass data struct, usually null.
+    void               *pRelayEvent;     // Pointer to relay event (tool tips) subclass data struct, usually null.
     void               *mouseCSelf;      // Mouse CSelf struct
     pCRexxSort          pcrs;            // Pointer to Rexx sort struct used for sorting list view items, usually null.
     RexxObjectPtr       rexxMouse;       // Rexx mouse object if there is one.
-
-    // A Rexx Set to put Rexx objects in, used to prevent gc.
-    RexxObjectPtr       rexxBag;         // Called a bag but really a .Set
+    PTOOLTIPTABLEENTRY  toolTipEntry;    // The tool tip table entry for this dialog control, if this control is a tool tip.
+    // A Rexx bag to put Rexx objects in, used to prevent gc.
+    RexxObjectPtr       rexxBag;         // A bag is used, meaning the same item can be put in multiple times.
     int32_t             lastItem;        // Index of the last item added to the control
     uint32_t            id;              // Resouce ID of the control
     oodControl_t        controlType;     // Enum value for control type
@@ -678,6 +761,31 @@ typedef struct _subClassData {
 } SubClassData;
 typedef SubClassData *pSubClassData;
 
+// ToolTip relay event stuff:
+#define RE_COUNT_RELAYEVENTS        5
+#define RE_RELAYEVENT_IDX           0
+#define RE_NEEDTEXT_IDX             1
+#define RE_SHOW_IDX                 2
+#define RE_POP_IDX                  3
+#define RE_LINKCLICK_IDX            4
+#define RE_NORELAY_IDX              5
+
+// A specific structure used for subclassing controls to use with the tool tip
+// relay event.  This structure is allocate and then set as the pData member of
+// the generic SubClassData structure.  The generic SubClassData struct is set
+// as the pRelayEvent in the CDialgControl struct.
+// A function ... TODO finish comment
+typedef struct _relayEventData {
+    HWND             hToolTip;        // Window handle of tool tip
+    RexxObjectPtr    rxToolTip;       // Rexx tool tip object.
+    // Rexx methods to invoke, 1 for each possible event.
+    char            *methods[RE_COUNT_RELAYEVENTS];
+    bool             doEvent[RE_COUNT_RELAYEVENTS];
+    bool             skipRelay;
+} RelayEventData;
+typedef RelayEventData *pRelayEventData;
+
+extern void freeRelayData(pSubClassData pSCData);
 
 /* Struct for the DynamicDialog object CSelf. */
 typedef struct _ddCSelf {
@@ -932,6 +1040,8 @@ extern RexxClassObject TheControlDialogClass;
 extern RexxClassObject ThePointClass;
 extern RexxClassObject TheSizeClass;
 extern RexxClassObject TheRectClass;
+extern RexxClassObject TheLvCustomDrawSimpleClass;
+extern RexxClassObject TheTvCustomDrawSimpleClass;
 
 extern HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id);
 

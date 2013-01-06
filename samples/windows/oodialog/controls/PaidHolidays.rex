@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2010-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2010-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -201,7 +201,7 @@ return 0
 
 -- This function returns an array of .DayState objects for the specified months.
 -- A day state object specifies which days in a month should be bolded.
-::method getDayStateArray private
+::method getDayStateArray private unguarded
   use strict arg startMonth, count
 
   -- Create the array to hold the .DayState objects.
@@ -227,7 +227,7 @@ return 0
 
 -- This function initalizes a .DayState object to the proper value depending on
 -- the month specified.
-::method getDayState private
+::method getDayState private unguarded
   use strict arg month
 
   select

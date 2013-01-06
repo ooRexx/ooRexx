@@ -130,16 +130,20 @@ void *executionErrorException(RexxThreadContext *c, CSTRING msg)
  *
  *            if ( pCSelf == NULL )
  *            {
- *                return baseClassIntializationException(c);
+ *                return baseClassInitializationException(c);
  *            }
  *
  * @remarks  This error is intended to be used when the CSelf pointer is null.
  *           It can only happen (I believe) when the user inovkes a method on
  *           self in init() before the super class init() has run.
  */
-void *baseClassIntializationException(RexxMethodContext *c)
+void *baseClassInitializationException(RexxThreadContext *c)
 {
-    return executionErrorException(c->threadContext, "The base class has not been initialized correctly");
+    return executionErrorException(c, "The base class has not been initialized correctly");
+}
+void *baseClassInitializationException(RexxMethodContext *c)
+{
+    return baseClassInitializationException(c->threadContext);
 }
 
 /**
@@ -164,11 +168,15 @@ void *baseClassIntializationException(RexxMethodContext *c)
  *           Identifying the actual base class may make it easier for the user to
  *           understand what the problem is.
  */
-void *baseClassIntializationException(RexxMethodContext *c, CSTRING clsName)
+void *baseClassInitializationException(RexxThreadContext *c, CSTRING clsName)
 {
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "The %s base class has not been initialized correctly", clsName);
-    return executionErrorException(c->threadContext, buffer);
+    return executionErrorException(c, buffer);
+}
+void *baseClassInitializationException(RexxMethodContext *c, CSTRING clsName)
+{
+    return baseClassInitializationException(c->threadContext, clsName);
 }
 
 /**
@@ -316,6 +324,47 @@ RexxObjectPtr wrongClassException(RexxThreadContext *c, size_t pos, const char *
 }
 
 /**
+ *  Argument 'argument' must be of the 'list' class; found 'actual'
+ *
+ *  Argument 1 must be of the ToolInfo, PlainBaseDialog, or DialogControl class;
+ *  found a Stem
+ *
+ *  Similar to 88.914
+ *  Raises 88.900
+ *
+ * @param c       The thread context we are operating under.
+ * @param pos     The 'argument' position.
+ * @param n       The list of the classes expected.
+ * @param actual  Some Rexx object.
+ *
+ * @return Pointer to void, could be used in the return statement of a method
+ *         to return NULLOBJECT after the exeception is raised.
+ *
+ * @remarks  If _actual is a stem object without an assigned name, then
+ *           ObjectToStringValue() will return the empty string, which is
+ *           confusing in the error message.  Hence the work around.  What would
+ *           be better is to use the real class name for _actual, but currently
+ *           I get Stem, rather than 'a Stem' or Array rather than 'an Array'.
+ *           Need to figure out how to get an Array.
+ */
+RexxObjectPtr wrongClassListException(RexxThreadContext *c, size_t pos, const char *n, RexxObjectPtr _actual)
+{
+    char    buffer[256];
+
+    CSTRING actual = c->ObjectToStringValue(_actual);
+    if ( strlen(actual) == 0 )
+    {
+        actual = strPrintClassID(c, _actual);
+    }
+
+    snprintf(buffer, sizeof(buffer), "Argument %d must be of the %s class; found %s",
+             pos, n, actual);
+
+    userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
+}
+
+/**
  * Argument 'argument' is not a valid 'msg'
  *
  * Argument 3 is not a valid menu handle
@@ -407,11 +456,27 @@ RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxObjectPt
     return NULLOBJECT;
 }
 
-void wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING obj, RexxObjectPtr actual)
+/**
+ * Index <index> of the array, argument <argPos>, must be <msg>; found
+ * "<actual>"
+ *
+ * Index 2 of the array, argument 2, must be exactly one of keywords POP or
+ * SHOW; found "POINT"
+ *
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param argPos   Array argument position.
+ * @param index    Index in array
+ * @param msg      Some string message, or object
+ * @param actual   Actual Rexx object, in string format.
+ */
+void wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING msg, CSTRING actual)
 {
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "Index %d of the array, argument %d, must be %s; found \"%s\"",
-              index, argPos, obj, c->ObjectToStringValue(actual));
+              index, argPos, msg, actual);
     userDefinedMsgException(c, buffer);
 }
 
@@ -441,7 +506,7 @@ void missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING 
 }
 
 /**
- * Aargument <pos> must contain at least one of the indexes: <indexes>"
+ * Argument <pos> must contain at least one of the indexes: <indexes>"
  *
  * Argument 1 must contain at least one of the indexes: constDirUsage,
  * symbolSrc, autoDetction, fontName, or fontSize
@@ -503,6 +568,40 @@ void directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING index,
               "Index, %s, of argument %d %s; found \"%s\"", index, pos, msg, actual);
     userDefinedMsgException(c, buffer);
 }
+
+/**
+ * The wording of this exception is exactly the same for a Directory or a Stem
+ * object.
+ *
+ * @param c
+ * @param argPos
+ * @param index
+ */
+void missingIndexInStemException(RexxThreadContext *c, int argPos, CSTRING index)
+{
+    return missingIndexInDirectoryException(c, argPos, index);
+}
+
+/**
+ *  Raises 93.900
+ *
+ * Method argument <pos>, the Stem object, must have an index "0" containing a
+ * non-negative whole number value.
+ *
+ * Method argument 5, the Stem object, must have an index "0' containing a
+ * positive whold number value.
+ *
+ * @param c
+ * @param pos
+ */
+void stemIndexZeroException(RexxMethodContext *c, size_t pos)
+{
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer),
+             "Method argument %d, the Stem object, must have an index \"0\" containing a non-negative whole number value", pos);
+    userDefinedMsgException(c, buffer);
+}
+
 
 void emptyArrayException(RexxThreadContext *c, int argPos)
 {
@@ -623,14 +722,19 @@ RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, int min, int
     return wrongRangeException(c, pos, min, max, c->WholeNumber(actual));
 }
 
-RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, uint32_t min, uint32_t max, uint32_t actual)
+RexxObjectPtr wrongRangeException(RexxThreadContext *c, size_t pos, uint32_t min, uint32_t max, RexxObjectPtr actual)
 {
     c->RaiseException(Rexx_Error_Invalid_argument_range,
                       c->ArrayOfFour(c->StringSize(pos),
                                      c->UnsignedInt32(min),
                                      c->UnsignedInt32(max),
-                                     c->UnsignedInt32(actual)));
+                                     actual));
     return NULLOBJECT;
+}
+
+RexxObjectPtr wrongRangeException(RexxMethodContext *c, size_t pos, uint32_t min, uint32_t max, uint32_t actual)
+{
+    return wrongRangeException(c->threadContext, pos, min, max, c->UnsignedInt32(actual));
 }
 
 RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, RexxObjectPtr actual)
@@ -768,6 +872,27 @@ RexxObjectPtr invalidReturnWholeNumberException(RexxThreadContext *c, CSTRING na
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
     return NULLOBJECT;
 }
+
+/**
+ *  98.900
+ *  Error 98 - Execution error
+ *        The language processor detected a specific error during execution.
+ *
+ *  The return from method "name"() must a logical; found "value"
+ *
+ *  The return from method onCustomDraw() must be a logical; found an Array
+ *
+ *  The exception is raised, printed, and the dialog is ended.
+ */
+void notBooleanReplyException(RexxThreadContext *c, CSTRING method, RexxObjectPtr actual)
+{
+    TCHAR buf[256];
+    _snprintf(buf, sizeof(buf), "The return from method %s() must be a logical; found %s",
+              method, c->ObjectToStringValue(actual));
+
+    c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
+}
+
 
 CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
 {

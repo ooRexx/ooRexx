@@ -93,6 +93,14 @@ inline BitmapButtonBMPType getBMPType(bool inMemory, bool isIntResource)
     return t;
 }
 
+inline char *bmpType2String(BitmapButtonBMPType type)
+{
+    if (      type == InMemoryBmp    ) return "in memory";
+    else if ( type == IntResourceBmp ) return "from resource ID";
+    else if ( type == FromFileBmp    ) return "from file";
+    return "unknown";
+}
+
 /**
  * Modify a palette to have the system colors in the first and last 10
  * positions.
@@ -576,7 +584,7 @@ RexxObjectPtr oodGetWindowRect(RexxMethodContext *c, HWND hwnd)
  * @return  0 on no error, otherwise 1.
  */
 logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t id,
-                        int32_t bkColor, int32_t fgColor, bool useSysColor)
+                        uint32_t bkColor, uint32_t fgColor, bool useSysColor)
 {
     if ( pcpbd->ColorTab == NULL )
     {
@@ -632,13 +640,22 @@ logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t 
 
     if ( useSysColor )
     {
-        pcpbd->ColorTab[i].ColorBrush = GetSysColorBrush(pcpbd->ColorTab[i].ColorBk);
+        pcpbd->ColorTab[i].ColorBrush   = GetSysColorBrush(bkColor);
+        pcpbd->ColorTab[i].isSysBrush   = true;
+        pcpbd->ColorTab[i].useSysColors = true;
+    }
+    else
+    {
+        if ( bkColor == CLR_DEFAULT )
+        {
+            pcpbd->ColorTab[i].ColorBrush = GetSysColorBrush(COLOR_3DFACE);
         pcpbd->ColorTab[i].isSysBrush = true;
     }
     else
     {
-        pcpbd->ColorTab[i].ColorBrush = CreateSolidBrush(PALETTEINDEX(pcpbd->ColorTab[i].ColorBk));
+            pcpbd->ColorTab[i].ColorBrush = CreateSolidBrush(bkColor);
         pcpbd->ColorTab[i].isSysBrush = false;
+    }
     }
     return 0;
 }
@@ -916,7 +933,7 @@ int getHeightFromFontSize(int fontSize)
  *
  *  A number of methods dealing with device independent bitmaps have an option
  *  (USEPAL) that specifies that the palette of the bitmap be used for the
- *  system color pallete.  This function implements that.
+ *  system color pallette.  This function implements that.
  *
  *  In general, it is safe to pass anything in, iff all the proper conditions
  *  are met, then the system color palette is set.  Otherwise nothing is done.
@@ -1217,8 +1234,25 @@ inline bool focusedNotDisabled(uint32_t itemState)
              (itemState & ODS_SELECTED) == 0 );
 }
 
-BOOL drawBitmapButton(pCPlainBaseDialog pcpbd, LPARAM lParam, bool msgEnabled)
+/**
+ * Handles the WM_DRAWITEM message in the dialog window procedure.  Called from
+ * any of the Rexx dialog procedures in ooDialog.
+ *
+ *
+ * @param pcpbd
+ * @param lParam
+ * @param msgEnabled
+ *
+ * @return TRUE of FALSE.  The return value has been preserved so that it
+ *         matches what the original ooDialog code would have returned.
+ */
+LRESULT drawBitmapButton(pCPlainBaseDialog pcpbd, LPARAM lParam, bool msgEnabled)
 {
+    if ( lParam == 0 )
+    {
+        return FALSE;
+    }
+
     DRAWITEMSTRUCT * dis;
     HDC hDC;
     HBITMAP hBmp = NULL;
@@ -1431,8 +1465,141 @@ BOOL drawBitmapButton(pCPlainBaseDialog pcpbd, LPARAM lParam, bool msgEnabled)
 }
 
 
-BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
+/**
+ * Handles the WM_CTLCOLORDLG message in the dialog window procedure.  Called
+ * from any of the various Rexx dialog procedures of ooDialog.
+ *
+ * @param pcpbd
+ *
+ * @return The handle of the background brush if one has been set, otherwise
+ *         FALSE;
+ */
+LRESULT handleDlgColor(pCPlainBaseDialog pcpbd)
 {
+    if ( pcpbd->bkgBrush )
+    {
+        return(LRESULT)pcpbd->bkgBrush;
+    }
+    return FALSE;
+}
+
+/**
+ * Handles the
+ *
+ *   WM_CTLCOLORSTATIC:
+ *   WM_CTLCOLORBTN:
+ *   WM_CTLCOLOREDIT:
+ *   WM_CTLCOLORLISTBOX:
+ *   WM_CTLCOLORMSGBOX:
+ *   WM_CTLCOLORSCROLLBAR:
+ *
+ * messages in the dialog window procedure.  Called from any of the various Rexx
+ * dialog procedures of ooDialog.  Handles the case where the user has set a
+ * custom color for a dialog control.
+ *
+ * @param pcpbd
+ * @param hDlg
+ * @param uMsg
+ * @param wParam
+ * @param lParam
+ *
+ * @return LRESULT
+ */
+LRESULT handleCtlColor(pCPlainBaseDialog pcpbd, HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HBRUSH hbrush = NULL;
+
+    // If we have entries in the color table, see if the user has set a color
+    // for this control.
+    if ( pcpbd->CT_nextIndex > 0 )
+    {
+        long id = GetWindowLong((HWND)lParam, GWL_ID);
+        if ( id > 0 )
+        {
+            register size_t i = 0;
+            while ( i < pcpbd->CT_nextIndex && pcpbd->ColorTab[i].itemID != id )
+            {
+                i++;
+            }
+            if ( i < pcpbd->CT_nextIndex )
+            {
+                hbrush = pcpbd->ColorTab[i].ColorBrush;
+            }
+
+            if ( hbrush )
+            {
+                if ( pcpbd->ColorTab[i].useSysColors )
+                {
+                    if ( pcpbd->ColorTab[i].ColorBk != CLR_DEFAULT )
+                    {
+                        SetBkColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorBk));
+                        if ( pcpbd->ColorTab[i].ColorFG != CLR_DEFAULT )
+                        {
+                            SetTextColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorFG));
+                        }
+                    }
+                    else if ( pcpbd->ColorTab[i].ColorFG != CLR_DEFAULT )
+                    {
+                        SetBkMode((HDC)wParam, TRANSPARENT);
+                        SetTextColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorFG));
+
+                        if ( pcpbd->bkgBrush )
+                        {
+                            hbrush = pcpbd->bkgBrush;
+                        }
+                    }
+                }
+                else
+                {
+                    if ( pcpbd->ColorTab[i].ColorBk != CLR_DEFAULT )
+                    {
+                        SetBkColor((HDC)wParam, pcpbd->ColorTab[i].ColorBk);
+                        if ( pcpbd->ColorTab[i].ColorFG != CLR_DEFAULT )
+                        {
+                            SetTextColor((HDC)wParam, pcpbd->ColorTab[i].ColorFG);
+                        }
+                    }
+                    else if ( pcpbd->ColorTab[i].ColorFG != CLR_DEFAULT )
+                    {
+                        SetBkMode((HDC)wParam, TRANSPARENT);
+                        SetTextColor((HDC)wParam, pcpbd->ColorTab[i].ColorFG);
+
+                        if ( pcpbd->bkgBrush )
+                        {
+                            hbrush = pcpbd->bkgBrush;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if ( hbrush )
+    {
+        return(LRESULT)hbrush;
+    }
+
+    return DefWindowProc(hDlg, uMsg, wParam, lParam);
+}
+
+
+/**
+ * Handles the WM_PAINT message in the dialog window procedure.  Called from any
+ * of the Rexx dialog procedures in ooDialog.
+ *
+ * @param pcpbd
+ * @param hDlg
+ *
+ * @return FALSE always.  Note that this is what the original ooDialog code did
+ *         and has not been changed through all the revisions of the code.
+ */
+LRESULT drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
+{
+    if ( pcpbd->bkgBitmap == NULL )
+    {
+        return FALSE;
+    }
+
    HDC hDC;
    PAINTSTRUCT ps;
    HPALETTE hP;
@@ -1452,11 +1619,14 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
    destw = dibWidth(pcpbd->bkgBitmap);         // dest width
    desth = dibHeight(pcpbd->bkgBitmap);        // dest height
 
-
    if (r.right - r.left > destw)
+    {
       destw = r.right - r.left;
+    }
    if (r.bottom - r.top > desth)
+    {
       desth = r.bottom - r.top;
+    }
 
    StretchDIBits(hDC,
                  0,                             // dest x
@@ -1472,7 +1642,9 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
                  DIB_RGB_COLORS,
                  SRCCOPY);                      // rop
 
-   return EndPaint(hDlg, &ps);
+    EndPaint(hDlg, &ps);
+
+    return FALSE;
 }
 
 /**
@@ -1492,9 +1664,9 @@ BOOL drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
  *
  *           Raises a syntax condition on failure to convert clr.
  */
-bool getSystemColor(RexxMethodContext *c, RexxObjectPtr clr, int32_t *color, size_t argPos)
+bool getSystemColor(RexxMethodContext *c, RexxObjectPtr clr, uint32_t *color, size_t argPos)
 {
-    if ( c->Int32(clr, color) )
+    if ( c->UnsignedInt32(clr, color) )
     {
         return true;
     }
@@ -1642,7 +1814,7 @@ pCPlainBaseDialog dlgExtSetup(RexxMethodContext *c, RexxObjectPtr dlg)
     pCPlainBaseDialog pcpbd = requiredDlgCSelf(c, dlg, oodPlainBaseDialog, 0, NULL);
     if ( pcpbd == NULL )
     {
-        return (pCPlainBaseDialog)baseClassIntializationException(c);
+        return (pCPlainBaseDialog)baseClassInitializationException(c);
     }
 
     if ( pcpbd->hDlg == NULL )
@@ -1681,7 +1853,7 @@ RexxObjectPtr dlgExtControlSetup(RexxMethodContext *c, RexxObjectPtr self, RexxO
     pCPlainBaseDialog pcpbd = dlgToCSelf(c, self);
     if ( pcpbd == NULL )
     {
-        baseClassIntializationException(c);
+        baseClassInitializationException(c);
         return TheOneObj;
     }
 
@@ -1770,7 +1942,7 @@ RexxMethod3(RexxObjectPtr, dlgext_clearRect, POINTERSTRING, hwnd, ARGLIST, args,
     pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
     if ( pcpbd == NULL )
     {
-        baseClassIntializationException(context);
+        baseClassInitializationException(context);
         return TheOneObj;
     }
 
@@ -2290,7 +2462,7 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
         BitmapButtonBMPType focused = getBMPType(inMemory, isIntResource);
         if ( focused != normal )
         {
-            bitmapTypeMismatchException(context, normal, focused, 4);
+            bitmapTypeMismatchException(context, bmpType2String(normal), bmpType2String(focused), 4);
             return TheOneObj;
         }
 
@@ -2308,7 +2480,7 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
         BitmapButtonBMPType selected = getBMPType(inMemory, isIntResource);
         if ( selected != normal )
         {
-            bitmapTypeMismatchException(context, normal, selected, 5);
+            bitmapTypeMismatchException(context, bmpType2String(normal), bmpType2String(selected), 5);
             return TheOneObj;
         }
 
@@ -2326,7 +2498,7 @@ RexxMethod8(RexxObjectPtr, dlgext_installBitmapButton, RexxObjectPtr, rxID, OPTI
         BitmapButtonBMPType disabled = getBMPType(inMemory, isIntResource);
         if ( disabled != normal )
         {
-            bitmapTypeMismatchException(context, normal, disabled, 6);
+            bitmapTypeMismatchException(context, bmpType2String(normal), bmpType2String(disabled), 6);
             return TheOneObj;
         }
 
@@ -2490,7 +2662,7 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, RexxO
             BitmapButtonBMPType focused = getBMPType(inMemory, isIntResource);
             if ( focused != normal )
             {
-                bitmapTypeMismatchException(context, normal, focused, 3);
+                bitmapTypeMismatchException(context, bmpType2String(normal), bmpType2String(focused), 3);
                 return TheOneObj;
             }
 
@@ -2508,7 +2680,7 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, RexxO
             BitmapButtonBMPType selected = getBMPType(inMemory, isIntResource);
             if ( selected != normal )
             {
-                bitmapTypeMismatchException(context, normal, selected, 4);
+                bitmapTypeMismatchException(context, bmpType2String(normal), bmpType2String(selected), 4);
                 return TheOneObj;
             }
 
@@ -2526,7 +2698,7 @@ RexxMethod7(RexxObjectPtr, dlgext_changeBitmapButton, RexxObjectPtr, rxID, RexxO
             BitmapButtonBMPType disabled = getBMPType(inMemory, isIntResource);
             if ( disabled != normal )
             {
-                bitmapTypeMismatchException(context, normal, disabled, 5);
+                bitmapTypeMismatchException(context, bmpType2String(normal), bmpType2String(disabled), 5);
                 return TheOneObj;
             }
 
@@ -3154,14 +3326,22 @@ RexxMethod1(RexxObjectPtr, dlgext_setForgroundWindow, RexxStringObject, hwnd)
  *
  *            Since accepting keywords is a 4.2.0 or later feature, we raise a
  *            syntax error if an unsupported keyword is used.
+ *
+ *            The setControlColor method is enhanced from the original to make
+ *            the background color optional and to allow a third argument.  The
+ *            third argument allows the user to specify a COLORREF instead of a
+ *            pallete index.
+ *
+ *            For setControlSysColor, the background argument is now also
+ *            optional.
  */
-RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, RexxObjectPtr, rxBG, OPTIONAL_RexxObjectPtr, rxFG,
-            NAME, method, OSELF, self)
+RexxMethod6(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, rxBG, OPTIONAL_RexxObjectPtr, rxFG,
+            OPTIONAL_logical_t, isClrRef, NAME, method, OSELF, self)
 {
     pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
     if ( pcpbd == NULL )
     {
-        baseClassIntializationException(context);
+        baseClassInitializationException(context);
         return 0;
     }
 
@@ -3171,14 +3351,14 @@ RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, RexxObjectPtr,
         return -1;
     }
 
+    uint32_t bkColor     = CLR_DEFAULT;
+    uint32_t fgColor     = CLR_DEFAULT;
     bool    useSysColor = (method[10] == 'S');
-    int32_t bkColor = 0;
-    int32_t fgColor = -1;
 
     RexxMethodContext *c = context;
     if ( useSysColor )
     {
-        if ( ! getSystemColor(context, rxBG, &bkColor, 2) )
+        if ( argumentExists(2) && ! getSystemColor(context, rxBG, &bkColor, 2) )
         {
             return -1;
         }
@@ -3189,9 +3369,26 @@ RexxMethod5(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, RexxObjectPtr,
     }
     else
     {
-        if ( ! context->Int32(rxBG, &bkColor) || (argumentExists(3) && ! context->Int32(rxBG, &fgColor)) )
+        RexxMethodContext *c = context;
+        if ( argumentExists(2) && ! c->UnsignedInt32(rxBG, &bkColor) )
         {
             return -1;
+        }
+        if ( argumentExists(3) && ! context->UnsignedInt32(rxFG, &fgColor) )
+        {
+            return -1;
+        }
+    }
+
+    if ( ! (useSysColor || isClrRef) )
+    {
+        if ( bkColor != CLR_DEFAULT )
+        {
+            bkColor = PALETTEINDEX(bkColor);
+        }
+        if ( fgColor != CLR_DEFAULT )
+        {
+            fgColor = PALETTEINDEX(fgColor);
         }
     }
 
@@ -3970,4 +4167,90 @@ bool getTextSize(RexxMethodContext *context, CSTRING text, CSTRING fontName, uin
 error_out:
     return false;
 }
+
+
+bool getTextSizeDuActiveDlg(RexxMethodContext *c, pCPlainBaseDialog pcpbd, CSTRING text, SIZE *textSize)
+{
+    HWND hDlg = pcpbd->hDlg;
+
+    HDC hdc = GetDC(hDlg);
+    if ( hdc == NULL )
+    {
+        systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GetDC");
+        return false;
+    }
+
+    HFONT dlgFont = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
+
+    // Even if we have the dialog handle, the font could be null if WM_SETFONT
+    // was not used.  In this case the stock system font will be correct.
+    if ( dlgFont == NULL )
+    {
+        dlgFont = (HFONT)GetStockObject(SYSTEM_FONT);
+    }
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, dlgFont);
+
+    GetTextExtentPoint32(hdc, text, (int)strlen(text), textSize);
+    screenToDlgUnit(hdc, (POINT *)&textSize, 1);
+
+    SelectObject(hdc, hOldFont);
+    ReleaseDC(hDlg, hdc);
+
+    return true;
+}
+/**
+ * Gets the text size of the specified string when we have the CSELF of a
+ * dialog, but the underlying dialog has not been created.  This calculates the
+ * size using the current assigned font in the CSELF.
+ *
+ * @param c
+ * @param pcpbd
+ * @param text
+ * @param textSize
+ *
+ * @return bool
+ *
+ * @assumes  The caller has already checked that pcpbd->hDlg is null.
+ */
+bool getTextSizeDuInactiveDlg(RexxMethodContext *c, pCPlainBaseDialog pcpbd, CSTRING text, SIZE *textSize)
+{
+    // With a null hwnd, this will get a DC for the entire screen and that
+    // should be ok.
+    HDC hdc = GetDC(NULL);
+    if ( hdc == NULL )
+    {
+        systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GetDC");
+        return false;
+    }
+
+    bool  createdFont = false;
+    HFONT dlgFont     = createFontFromName(hdc, pcpbd->fontName, pcpbd->fontSize);
+    if ( dlgFont != NULL )
+    {
+        createdFont = true;
+    }
+
+    // If the createFontFromName() failed, well that is unlikely.  Just use the
+    // stock system font in that case.
+    if ( dlgFont == NULL )
+    {
+        dlgFont = (HFONT)GetStockObject(SYSTEM_FONT);
+    }
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, dlgFont);
+
+    GetTextExtentPoint32(hdc, text, (int)strlen(text), textSize);
+    screenToDlgUnit(hdc, (POINT *)textSize, 1);
+
+    SelectObject(hdc, hOldFont);
+    ReleaseDC(NULL, hdc);
+
+    if ( createdFont )
+    {
+        DeleteObject(dlgFont);
+    }
+    return true;
+}
+
 

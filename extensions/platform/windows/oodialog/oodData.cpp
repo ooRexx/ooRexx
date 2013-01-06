@@ -456,57 +456,15 @@ static bool getTreeViewData(HWND hW, char * ldat, INT item)
 
 static bool setTreeViewData(HWND hDlg, const char * ldat, uint32_t ctrlID)
 {
-   TVITEM tvi = {0};
-   CHAR data[DATA_BUFFER];
-
    HWND hCtrl = GetDlgItem(hDlg, ctrlID);
-   if ( hCtrl != NULL && *ldat != '\0' )
+
+   if ( hCtrl != NULL )
    {
-       HTREEITEM hTreeItem, root = TreeView_GetRoot(hCtrl);
-       tvi.hItem = root;
-       while ( tvi.hItem != NULL )
+       HTREEITEM hItem = tvFindItem(hCtrl, ldat);
+
+       if ( hItem != NULL )
        {
-            tvi.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_CHILDREN;
-            tvi.pszText = data;
-            tvi.cchTextMax = DATA_BUFFER - 1;
-            if ( TreeView_GetItem(hCtrl, &tvi) )
-            {
-                if ( stricmp(tvi.pszText, ldat) == 0 )
-                {
-                    return (TreeView_SelectItem(hCtrl, tvi.hItem) ? true : false);
-                }
-                else
-                {
-                    if ( tvi.cChildren > 0 )
-                    {
-                        hTreeItem = TreeView_GetChild(hCtrl, tvi.hItem);
-                    }
-                    else
-                    {
-                        hTreeItem = TreeView_GetNextSibling(hCtrl, tvi.hItem);
-                    }
-
-                    while ( hTreeItem == NULL && tvi.hItem != NULL )
-                    {
-                        tvi.hItem = TreeView_GetParent(hCtrl, tvi.hItem);
-                        hTreeItem = TreeView_GetNextSibling(hCtrl, tvi.hItem);
-                        if ( hTreeItem == root )
-                        {
-                            return false;
-                        }
-                    }
-
-                    if ( tvi.hItem == NULL )
-                    {
-                        return false;
-                    }
-                    tvi.hItem = hTreeItem;
-                }
-            }
-            else
-            {
-                tvi.hItem = NULL;
-            }
+           return (TreeView_SelectItem(hCtrl, hItem) ? true : false);
        }
    }
    return false;

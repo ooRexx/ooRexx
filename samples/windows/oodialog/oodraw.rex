@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -224,7 +224,7 @@ doRectangles:
       self~objectToDC(dc, myBrush)
       self~rectangle(dc, 7 * x, 7 * y, 193 * x, 193 * y, 'FILL')
 
-      do k = 1 to 25 until self~finished
+      do k = 1 to 25 while \ self~interrupted
          brushcol = random(1, 18)
          brush = self~createBrush(brushcol)
          if recThick // 3 = 0 then pencol = brushcol

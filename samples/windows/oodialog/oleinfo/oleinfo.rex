@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -158,9 +158,7 @@ callFailed:
 
   /* Method MyOk is connected to item 200 */
 ::method MyOk
-  resOK = self~OK:super  /* make sure self~Validate is called and self~InitCode is set to 1 */
-  self~Finished = resOK  /* 1 means close dialog, 0 means keep open                         */
-  return resOK
+  return self~OK:super  /* make sure self~Validate is called and self~InitCode is set to 1 */
 
   /* Method Help is connected to item 9 */
 ::method Help
@@ -527,9 +525,7 @@ callFailed:
 
 
 ::METHOD ok
-  resOK = self~OK:super  /* make sure self~Validate is called and self~InitCode is set to 1 */
-  self~Finished = resOK  /* 1 means close dialog, 0 means keep open                         */
-  return resOK
+  return self~OK:super  /* make sure self~Validate is called and self~InitCode is set to 1 */
 
 
 
@@ -574,13 +570,11 @@ callFailed:
   end
 
 ::METHOD ok
-  resOK = self~OK:super  /* make sure self~Validate is called and self~InitCode is set to 1 */
-  self~Finished = resOK  /* 1 means close dialog, 0 means keep open                         */
-  if (resOK = 1) & self~useOLEobject \= .nil then do
+  if self~useOLEobject \= .nil then do
     keep = RxMessageBox("An OLE object was returned from the method invocation. Do you want to use it as the active object?","Question","OKCANCEL","QUESTION")
     if keep \= 1 then self~useOLEobject = .nil
   end
-  return resOK
+  return self~ok:super
 
 ::method useOLEobject ATTRIBUTE
 

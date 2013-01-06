@@ -41,7 +41,6 @@
  *
  * Resource Dialog Class.
  */
-::requires "PlainBaseDialog.cls"
 
 -- This class extends the 'PlainBaseDialog' class.  Because of backwards
 -- compatibility we need to do this through the deprecated BaseDialog.

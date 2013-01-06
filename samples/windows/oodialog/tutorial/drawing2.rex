@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -94,7 +94,7 @@ return 0
 
     self~transparentText(dc)
 
-    say 'Text align:' self~getTextAlign(dc)
+    self~getTextAlign(dc)
 
     if self~graphicObject = "CIRCLE" then do
         -- Get the size of the bounding rectangle for the text we are going to
@@ -102,12 +102,12 @@ return 0
         size = self~getTextExtent(dc, self~graphicObject)
 
         -- Get the midpoint of the circle we are about to draw;
-        pos = .Point~new(((300 - 10) % 2) + 10, ((200 - 10) % 2) + 10); say pos
+        pos = .Point~new(((300 - 10) % 2) + 10, ((200 - 10) % 2) + 10)
 
         -- Now adjust the pos point to specify where to write the text, in order
         -- to center it in the circle:
         pos~x -= size~width  % 2
-        pos~y -= size~height % 2; say pos
+        pos~y -= size~height % 2
 
         -- Draw the circle.
         self~drawArc(dc, 10, 10, 300, 200)
@@ -115,11 +115,11 @@ return 0
     else do
         -- Do the same calculations for the position to write the text as we did
         -- above for CIRCLE:
-        size = self~getTextExtent(dc, self~graphicObject); say size
+        size = self~getTextExtent(dc, self~graphicObject)
 
-        pos = .Point~new(((320 - 10) % 2) + 10, ((200 - 10) % 2) + 10); say pos
+        pos = .Point~new(((320 - 10) % 2) + 10, ((200 - 10) % 2) + 10)
         pos~x -= size~width  % 2
-        pos~y -= size~height % 2; say pos
+        pos~y -= size~height % 2
 
         -- Draw the rectangle.
         self~rectangle(dc, 10, 10, 320, 200)

@@ -61,6 +61,8 @@ extern bool parseWinMessageFilter(RexxMethodContext *context, pWinMessageFilter 
 extern BOOL endDialogPremature(pCPlainBaseDialog, HWND, DlgProcErrType);
 
 extern LRESULT       paletteMessage(pCPlainBaseDialog, HWND, UINT, WPARAM, LPARAM);
+extern LRESULT       handleWmCommand(pCPlainBaseDialog pcpbd, HWND hDlg, WPARAM wParam, LPARAM lParam, bool isNestedDlg);
+extern LRESULT       handleWmUser(pCPlainBaseDialog pcpbd, HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, bool isNestedDlg);
 extern MsgReplyType  searchMessageTables(ULONG message, WPARAM param, LPARAM lparam, pCPlainBaseDialog);
 extern bool          initCommandMessagesTable(RexxMethodContext *c, pCEventNotification pcen, pCPlainBaseDialog pcpbd);
 extern bool          initEventNotification(RexxMethodContext *, pCPlainBaseDialog, RexxObjectPtr, pCEventNotification *);
@@ -76,9 +78,34 @@ extern void            freeKeyPressData(pSubClassData);
 extern uint32_t        seekKeyPressMethod(KEYPRESSDATA *, CSTRING);
 extern void            removeKeyPressMethod(KEYPRESSDATA *, uint32_t);
 extern RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam, bool isExtended, RexxObjectPtr rexxControl);
+extern void            releaseKeyEventRexxArgs(RexxThreadContext *c, RexxArrayObject args);
 
-extern bool         invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, RexxArrayObject args);
-extern MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringObject method, RexxArrayObject args);
-extern bool         msgReplyIsGood(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING methodName, bool clear);
+extern bool          invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, RexxArrayObject args);
+extern MsgReplyType  invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringObject method, RexxArrayObject args);
+extern bool          msgReplyIsGood(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING methodName, bool clear);
+extern RexxObjectPtr requiredBooleanReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING method, bool clear);
+
+// List-view functions.  Defined in oodListView.cpp:
+extern void maybeUpdateFullRowText(RexxThreadContext *c, NMLVDISPINFO *pdi);
+
+// Tree-view notification processing functions.  Defined in oodTreeView.cpp:
+extern MsgReplyType  tvnBeginDrag(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd, uint32_t code);
+extern MsgReplyType  tvnBeginLabelEdit(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd);
+extern MsgReplyType  tvnDeleteItem(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd);
+extern MsgReplyType  tvnEndLabelEdit(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd);
+extern MsgReplyType  tvnGetInfoTip(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd);
+extern MsgReplyType  tvnItemExpand(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd, uint32_t code);
+extern MsgReplyType  tvnKeyDown(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd);
+extern MsgReplyType  tvnSelChange(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd, uint32_t code);
+
+inline RexxObjectPtr idFrom2rexxArg(RexxThreadContext *c, LPARAM lParam)
+{
+    return c->Uintptr(((NMHDR *)lParam)->idFrom);
+}
+
+inline RexxObjectPtr hwndFrom2rexxArg(RexxThreadContext *c, LPARAM lParam)
+{
+    return pointer2string(c, ((NMHDR *)lParam)->hwndFrom);
+}
 
 #endif

@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2011-2012 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,8 +37,8 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= DlgData Popups
-DIST_SUBDIRS		= DlgData Popups
+SUBDIRS			= DlgData Person Popups Wow4
+DIST_SUBDIRS		= DlgData Person Popups Wow4
 
 MAINTAINERCLEANFILES	= Makefile.in *~
 

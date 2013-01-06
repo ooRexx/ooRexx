@@ -241,7 +241,7 @@ RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTI
     if ( argumentExists(6) )
     {
         uprMiscStyles = strdupupr(miscStyles);
-        if ( uprIcon == NULL )
+        if ( uprMiscStyles == NULL )
         {
             outOfMemoryException(context->threadContext);
             goto done_out;

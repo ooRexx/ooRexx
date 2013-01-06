@@ -412,6 +412,40 @@ void *wrongReplyListException(RexxThreadContext *c, const char *mName, const cha
  *
  *  900 User message.
  *
+ *  The reply from the event handler, ('mName',) must be in the range 'min' to
+ *  'max'; found 'actual'
+ *
+ *  The reply from the event handler (onSysCommand) must be in the range
+ *  –2147483648 to 2147483647; found Tom
+ *
+ * @param c      The thread context we are operating under.
+ * @param mName  The method name of the event handler
+ * @param min    The minimum value allowed.
+ * @param max    The maximum value allowed.
+ * @param actual Actual reply object
+ *
+ * @return Pointer to void, could be used in the return statement of a method
+ *         to return NULLOBJECT after the exeception is raised.
+ *
+ * @notes  This exception is meant to be used when the reply from a Rexx event
+ *         handler is incorrect.
+ */
+void *wrongReplyRangeException(RexxThreadContext *c, const char *mName, int32_t min, int32_t max, RexxObjectPtr actual)
+{
+    TCHAR buffer[512];
+    _snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) must be in the range %I32d to %I32d; found %s",
+              mName, min, max, c->ObjectToStringValue(actual));
+    return executionErrorException(c, buffer);
+}
+
+/**
+ *  Error 98.900
+ *
+ *  98 The language processor detected a specific error during execution. The
+ *  associated error gives the reason for the error.
+ *
+ *  900 User message.
+ *
  *  The reply from the event handler, ('mName,) 'msg'
  *
  *  The reply from the event handler (onUserString) can only be .nil if the DTP
@@ -467,6 +501,28 @@ void *wrongReplyNotBooleanException(RexxThreadContext *c, const char *mName, Rex
     return executionErrorException(c, buffer);
 }
 
+/**
+ * The reply from the event handler (<method>)  must be less than <len>
+ * characters in length; length is <realLen>
+ *
+ * The reply from the event handler (onNeedText) must be less than 255
+ * characters in length; length is 260
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param pos      Argumet position
+ * @param len      Fixed length
+ * @param realLen  Actual length
+ */
+void stringTooLongReplyException(RexxThreadContext *c, CSTRING method, size_t len, size_t realLen)
+{
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "The reply from the event handler (%s) must be less than %d characters in length; length is %d",
+             method, len, realLen);
+    userDefinedMsgException(c, buffer);
+}
+
 void controlFailedException(RexxThreadContext *c, const char *msg, const char *func, const char *control)
 {
     TCHAR buffer[256];
@@ -483,20 +539,21 @@ void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char
 }
 
 
-inline char *bmpType2String(BitmapButtonBMPType type)
-{
-    if (      type == InMemoryBmp    ) return "in memory";
-    else if ( type == IntResourceBmp ) return "from resource ID";
-    else if ( type == FromFileBmp    ) return "from file";
-    return "unknown";
-}
-
-void bitmapTypeMismatchException(RexxMethodContext *c, BitmapButtonBMPType orig, BitmapButtonBMPType found, size_t pos)
+void bitmapTypeMismatchException(RexxMethodContext *c, CSTRING orig, CSTRING found, size_t pos)
 {
     char msg[256];
     _snprintf(msg, sizeof(msg), "Button bitmaps must be the same; normal bitmap is %s, arg %d bitmap is %s",
-              bmpType2String(orig), pos, bmpType2String(found));
+              orig, pos, found);
     userDefinedMsgException(c, msg);
+}
+
+void customDrawMismatchException(RexxThreadContext *c, uint32_t id, oodControl_t type)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer),
+              "The control marked for custom draw with id %d is not a %s control", id, controlType2controlName(type));
+
+    executionErrorException(c, buffer);
 }
 
 
@@ -510,9 +567,6 @@ void bitmapTypeMismatchException(RexxMethodContext *c, BitmapButtonBMPType orig,
  * @param os type
  *
  * @return True if the requirement is meet, otherwise false.
- *
- * @remarks Note the switch of the odering of the arguments for this
- *          requiredComCtl32Version() and the one directly above.
  */
 bool requiredOS(RexxMethodContext *context, const char *method, const char *osName, os_name_t os)
 {
@@ -1419,7 +1473,7 @@ RexxStringObject dword2string(RexxMethodContext *c, uint32_t num)
  *
  * In many places in ooDialog we require the user to use .true or .false.  But,
  * really ooRexx allows 1 or 0 to equal .true or .false, so we need to
- * accomadate that.  If we compare a Rexx object to TheTrueObj, it will fail if
+ * accommodate that.  If we compare a Rexx object to TheTrueObj, it will fail if
  * the Rexx object is 1, same thing with TheFalseObj.
  *
  * @param c
@@ -1737,7 +1791,7 @@ pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, ood
 
     if ( pcpbd == NULLOBJECT )
     {
-        baseClassIntializationException(c);
+        baseClassInitializationException(c);
     }
     return pcpbd;
 }

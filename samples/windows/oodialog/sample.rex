@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -103,19 +103,19 @@
    self~loadApp("oostddlg.rex", 2800)
 
 ::method wiz97
-   self~loadApp("propertySheet.tabs\ticketWizard.rex")
+   self~loadApp("propertySheet.tabControls\ticketWizard.rex")
 
 ::method tree
-   self~loadApp("oodtree.rex")
+   self~loadApp("controls\TreeView\treeViewCustomDraw.rex")
 
 ::method list
-   self~loadApp("propertySheet.tabs\oodListViews.rex")
+   self~loadApp("propertySheet.tabControls\oodListViews.rex")
 
 ::method progress
    self~loadApp("oodpbar.rex")
 
 ::method property
-   self~loadApp("propertySheet.tabs\PropertySheetDemo.rex")
+   self~loadApp("propertySheet.tabControls\PropertySheetDemo.rex")
 
 
 ::method cancel

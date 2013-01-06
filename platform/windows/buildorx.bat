@@ -225,6 +225,10 @@ CD  %OR_OODIALOGSAMPLES%\res
 IF %USELOGFILE% equ 1 ( NMAKE /F res.mak MACHINE=%CPU% >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak MACHINE=%CPU% )
 if ERRORLEVEL 1 goto error
 
+CD  %OR_OODIALOGSAMPLES%\controls\ListView\rc
+IF %USELOGFILE% equ 1 ( NMAKE /F res.mak MACHINE=%CPU% >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak MACHINE=%CPU% )
+if ERRORLEVEL 1 goto error
+
 CD  %OR_OODIALOGSAMPLES%\userGuide\exercises\Samples\DlgData\res
 IF %USELOGFILE% equ 1 ( NMAKE /F res.mak MACHINE=%CPU% >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak MACHINE=%CPU% )
 if ERRORLEVEL 1 goto error

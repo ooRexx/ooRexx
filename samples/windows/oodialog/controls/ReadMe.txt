@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -40,18 +40,22 @@
   1.  ooDialog - Dialog Control Example Programs
   -----------------------------------------------
 
-  This directory contains example programs that demonstrate how to use the
-  various dialog control objects in ooDialog.  It is intended that,
-  eventually there will be an example of all the control objects.  The
-  programs are intended to cover most of the methods of the control objects.
-  This will probably cause them to be medium complex.
+  This directory and subdirectory contain example programs that demonstrate
+  how to use the various dialog control objects in ooDialog.  It is intended
+  that, eventually there will be an example of all the control objects.  The
+  programs are intended to show several of the methods of the control
+  objects. This will probably cause them to be medium complex.
 
-    - upDown.rex
+  Many of the example programs are in dialog control subdirectories to make
+  it easy to find examples of a specific control.  List-view examples in the
+  ListView subdirectory, ToolTip examples in the ToolTip subdirectory, etc..
 
-    Demonstrates how to use the UpDown class.  An up down control is a pair
-    of arrow buttons that the user can click to increment or decrement a
-    value, such as a scroll position or a number displayed in a companion
-    control.
+    - fiscalReports.rex
+
+    Demonstrates how to use the DateTimePicker control.  This example
+    focuses on how to use call back fields in the format string for the
+    DateTimePicker control and how to respond to the FORMATQUERY, FORMAT,
+    and KEYDOWN notifications.
 
     - paidHolidays.rex
 
@@ -60,12 +64,12 @@
     the calendar, resize the calendar to the optimal size, and determine
     which months are currently displayed.
 
-    - fiscalReports.rex
+    - upDown.rex
 
-    Demonstrates how to use the DateTimePicker control.  This example
-    focuses on how to use call back fields in the format string for the
-    DateTimePicker control and how to respond to the FORMATQUERY, FORMAT,
-    and KEYDOWN notifications.
+    Demonstrates how to use the UpDown class.  An up down control is a pair
+    of arrow buttons that the user can click to increment or decrement a
+    value, such as a scroll position or a number displayed in a companion
+    control.
 
     - userStringDTP.rex
 
@@ -76,3 +80,4 @@
     program to provide the user with the capability of typing within the DTP
     control.  The program can then provide a custom response when the user
     has finished typing.
+

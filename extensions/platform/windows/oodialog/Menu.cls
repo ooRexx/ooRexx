@@ -201,7 +201,6 @@
 ::method track external "LIBRARY oodialog popMenu_track"
 
 ::method unInit
-  say 'In uninit() of PopupMenu'
   forward class (.Menu)
 
 /* class: MenuTemplate - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\

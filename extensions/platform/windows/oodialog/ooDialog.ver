@@ -1,8 +1,8 @@
 # This defines the current version of ooDialog
 OOD_MAJOR=4
 OOD_MINOR=2
-OOD_MOD_LVL=0
+OOD_MOD_LVL=1
 OOD_BLD_LVL=0
-OOD_VER_STR="4.2.0"
+OOD_VER_STR="4.2.1"
 OOD_COPY_YEAR="2005-2013"
 

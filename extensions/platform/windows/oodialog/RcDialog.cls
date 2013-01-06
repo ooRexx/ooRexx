@@ -43,8 +43,6 @@
  * Provides support for creating a dialog defined in a resource script file,
  * (most commonly a *.rc file, but *.dlg is also common.)
  */
-::requires "UserDialog.cls"
-
 ::class 'RcDialog' subclass UserDialog public
 
 ::method init

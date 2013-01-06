@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -223,7 +223,7 @@
   count += 1
 
   -- Now size the dialog to exactly fit the buttons
-  self~create(0, 30, count * s~width, s~height, "Tool Pallete", "NOMENU")
+  self~create(0, 30, count * s~width, s~height, "Tool Palette", "NOMENU")
 
 ::method defineDialog
   expose s buttonIDs

@@ -101,7 +101,7 @@ extern bool setPropSheetHook(pCPropertySheetDialog);
 
 extern void assignPSDThreadContext(pCPropertySheetDialog pcpsd, RexxThreadContext *c, uint32_t threadID);
 
-extern LRESULT CALLBACK RexxPropertySheetDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+extern LRESULT CALLBACK RexxPropertySheetPageDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 extern LRESULT CALLBACK PropSheetCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 #endif

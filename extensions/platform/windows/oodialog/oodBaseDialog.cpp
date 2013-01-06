@@ -68,6 +68,8 @@ public:
 
 /**
  * Checks that a ControlDialog has a proper, active, running, owner dialog.
+ * Sets that owner dialog information in the CSelf of the control dialog, the
+ * owned dialog.
  *
  * The window message processing function of a control dialog executes in the
  * same thread as the owner dialog, so we copy the thread context and thread ID
@@ -88,6 +90,13 @@ public:
  * @return True if all okay, otherwise false.
  *
  * @note  An exception has been raised if false is returned.
+ *
+ * @remarks  If AttachThread() failed for the parent dialog, that dialog is
+ *           ended prematurely and we couldn't be here.  The control dialog will
+ *           be, has to be, created on the the owner dialog's message
+ *           proccessing thread.  So we can set the dlgProcContext here to the
+ *           thread context of the owner dialog.
+ *
  */
 bool validControlDlg(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
 {
@@ -102,18 +111,30 @@ bool validControlDlg(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
     {
         goto err_out;
     }
-
     if ( ownerPcpbd->hDlg == NULL || ! ownerPcpbd->isActive )
     {
         noParentWindowsDialogException(c, pcpbd->rexxSelf);
         goto err_out;
     }
-    pcpbd->hOwnerDlg = ownerPcpbd->hDlg;
+    if ( ownerPcpbd->countChilds >= MAXCHILDDIALOGS )
+    {
+        char buf[128];
+        _snprintf(buf, sizeof(buf),
+                  "The number of owned dialogs has\n"
+                  "reached the maximum (%d) allowed\n\n"
+                  "No more owned dialogs can be instantiated", MAXCHILDDIALOGS);
+        MessageBox(NULL, buf, "ooDialog Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
 
-    // If AttachThread() failed for the parent dialog, that dialog is ended
-    // prematurely and we couldn't be here.
+        goto err_out;
+    }
+
+    pcpbd->hOwnerDlg = ownerPcpbd->hDlg;
+    pcpbd->ownerCSelf     = ownerPcpbd;
     pcpbd->dlgProcContext = ownerPcpbd->dlgProcContext;
 
+    ownerPcpbd->countChilds++;
+    ownerPcpbd->isOwnerDlg = true;
+    ownerPcpbd->childDlg[ownerPcpbd->countChilds] = (HWND)pcpbd;
     return true;
 
 err_out:
@@ -155,10 +176,9 @@ bool processOwnedDialog(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
         RexxObjectPtr childList = c->SendMessage0(pcpbd->rexxParent, "CHILDDIALOGS");
         if ( childList == NULLOBJECT )
         {
-            baseClassIntializationException(c);
+            baseClassInitializationException(c);
             goto err_out;
         }
-
         c->SendMessage1(childList, "INSERT", pcpbd->rexxSelf);
     }
 
@@ -420,7 +440,7 @@ RexxMethod5(logical_t, resdlg_startDialog_pvt, CSTRING, library, RexxObjectPtr, 
 
     if ( pcpbd->hDlg )
     {
-        setDlgHandle(context->threadContext, pcpbd);
+        setDlgHandle(pcpbd);
 
         // Set the thread priority higher for faster drawing.
         SetThreadPriority(pcpbd->hDlgProcThread, THREAD_PRIORITY_ABOVE_NORMAL);
@@ -476,7 +496,7 @@ static HWND winExtSetup(RexxMethodContext *c, void *pCSelf)
 {
     if ( pCSelf == NULL )
     {
-        return (HWND)baseClassIntializationException(c);
+        return (HWND)baseClassInitializationException(c);
     }
 
     oodResetSysErrCode(c->threadContext);
@@ -2111,6 +2131,268 @@ RexxMethod3(CSTRING, winex_getSetArcDirection, POINTERSTRING, _hDC, OPTIONAL_CST
 
 err_out:
     return "";
+}
+
+
+/**
+ *  Methods for the .CustomDraw class.
+ */
+#define CUSTOMDRAW_CLASS        "CustomDraw"
+
+/**
+ * Ensures that the passed pointer is not null and is a pointer to a
+ * CEventNotification struct.
+ *
+ * @param pCSelf  Pointer to check
+ *
+ * @return pCEventNotification
+ */
+static pCEventNotification ensureEventNotification(RexxMethodContext *c, void *pCSelf)
+{
+    if ( pCSelf != NULL && *(((uint32_t *)pCSelf)) == EVENTNOTIFICATION_MAGIC )
+    {
+        return (pCEventNotification)pCSelf;
+    }
+
+    baseClassInitializationException(c, "CustomDraw");
+    return NULL;
+}
+
+/**
+ * Ensures that the passed pointer is not null and is a pointer to a
+ * CCustomDraw struct.
+ *
+ * @param pCSelf  Pointer to check
+ *
+ * @return pCCustomDraw
+ */
+static pCCustomDraw ensureCustomDraw(RexxMethodContext *c, void *pCSelf)
+{
+    if ( pCSelf != NULL && *(((uint32_t *)pCSelf)) == CUSTOMDRAW_MAGIC )
+    {
+        return (pCCustomDraw)pCSelf;
+    }
+
+    baseClassInitializationException(c, "CustomDraw");
+    return NULL;
+}
+
+/**
+ *
+ *
+ *
+ * @param pcpbd
+ *
+ * @note  This function must be called from the Window procedure of the dialog
+ *        represented by pcpbd.  The needed thread context is taken from pcpbd
+ *        as the dlgProcContext.  Calling this function from a different thread
+ *        context will cause the interpreter to throw a
+ *        NativeActivationException, which, in ooDialog, appears to cause a
+ *        hang.
+ */
+void customDrawCheckIDs(pCPlainBaseDialog pcpbd)
+{
+    pcpbd->idsNotChecked = false;
+
+    pCEventNotification pcen = pcpbd->enCSelf;
+    if ( pcen->pCustomDraw == NULL )
+    {
+        pcpbd->badIDs = true;
+
+        baseClassInitializationException(pcpbd->dlgProcContext, "CustomDraw");
+        checkForCondition(pcpbd->dlgProcContext, false);
+        endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+
+        return;
+    }
+
+    pCCustomDraw pccd = (pCCustomDraw)pcen->pCustomDraw;
+    for ( uint32_t i = 0; i < pccd->count; i++ )
+    {
+        if ( ! isControlMatch(pcpbd->hDlg, pccd->ids[i], pccd->types[i]) )
+        {
+            pcpbd->badIDs = true;
+
+            customDrawMismatchException(pcpbd->dlgProcContext, pccd->ids[i], pccd->types[i]);
+            checkForCondition(pcpbd->dlgProcContext, false);
+            endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+
+            return;
+        }
+    }
+
+    return;
+}
+
+/** CustomDraw::customDraw
+ *
+ *  Initializes the custom draw interface.  The user must call this method
+ *  before envoking any other method of the CustomDraw interface.  Failure to do
+ *  so results in error conditions being raised.
+ *
+ *  @return  True on success, false on error.
+ *
+ *  @note  class 'CustomDraw' public mixinclass EventNotification  So, when we
+ *         get here, CSELF is the event notification class C self.  We check
+ *         that it is, and end on error if it isn't.  We then replace the event
+ *         notification with our own C self.
+ */
+RexxMethod2(RexxObjectPtr, cd_init, OSELF, self, CSELF, pCSelf)
+{
+    pCEventNotification pcen = ensureEventNotification(context, pCSelf);
+    if ( pcen == NULL )
+    {
+        return TheFalseObj;
+    }
+
+    RexxBufferObject obj = context->NewBuffer(sizeof(CCustomDraw));
+    if ( obj == NULLOBJECT )
+    {
+        outOfMemoryException(context->threadContext);
+        return TheFalseObj;
+    }
+
+    pCCustomDraw pccd = (pCCustomDraw)context->BufferData(obj);
+    memset(pccd, 0, sizeof(pCCustomDraw));
+
+    pccd->magic    = CUSTOMDRAW_MAGIC;
+    pccd->enCSelf  = pcen;
+    pccd->rexxSelf = self;
+
+    pcen->pCustomDraw = pccd;
+
+    context->SetObjectVariable("CSELF", obj);
+
+    return TheTrueObj;
+}
+
+/** CustomDraw::customDrawControl()
+ *
+ * Specifies that the programmer will custom draw the named control.
+ *
+ * @param  id   Resource ID of the control, may be numeric or symbolic.  A
+ *              syntax condition is raised if the ID can not be resolved.
+ *
+ * @param controlName  [optional] The name of the type of control.  I.e.,
+ *                     treeView, TrackBar, LISTVIEW.  By default the control is
+ *                     assumed to be a ListView.
+ *
+ * @param methName     [optional]  The name of the method to be invoked for the
+ *                     custom draw event.  If omitted it defaults to
+ *                     onCustomDraw().
+ *
+ * @param flags        [optional]  Reserverd for future use.  One use will be to
+ *                     specify 'simple' custom draw.  Right now that is all that
+ *                     is implemented, so we don't check this argument.
+ *
+ * @notes  We are only supporting ListView right now, other controls to be added
+ *         later.
+ *
+ *         We can not, always, tell at this point if the control specified by
+ *         the user is really the type of control she says it is.  During the
+ *         processing of the custom draw events, if it is not, the interpreter
+ *         will likely crash.
+ *
+ *         What we do is keep track of the control IDs matched to the type the
+ *         user says they are.  Then once the underlying dialog is created, we
+ *         will check all the IDs at once before we process any NM_CUSTOMDRAW
+ *         message. If there is a mismatch we abort the dialog.  Flags in the
+ *         PlainBase dialog CSelf, keep track of whether the IDs have been
+ *         checked, so that we only do it once.
+ *
+ *         However, although it makes the most sense for the user to specify all
+ *         controls which will be custom drawn before the dialog starts, there
+ *         is probably a use case for starting to custom draw a control at any
+ *         point in the life cycle of the dialog.
+ *
+ *         Therefore we allow the user to add custom drawing for a control at
+ *         any time. Because of this, when customDrawControl() is invoked we
+ *         need to check whether the IDs have been checked already.  If they
+ *         have, the underlying dialog must exist, and for this invocation we
+ *         can do the check immediately.
+ */
+RexxMethod5(RexxObjectPtr, cd_customDrawControl, RexxObjectPtr, rxID, OPTIONAL_CSTRING, controlName,
+            OPTIONAL_CSTRING, methName, OPTIONAL_CSTRING, flags, CSELF, pCSelf)
+{
+    pCCustomDraw pccd = ensureCustomDraw(context, pCSelf);
+    if ( pccd == NULL )
+    {
+        goto err_out;
+    }
+
+    pCEventNotification pcen = pccd->enCSelf;
+
+    int32_t id = oodResolveSymbolicID(context, pcen->rexxSelf, rxID, -1, 1, true);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto err_out;
+    }
+
+    if ( pccd->count >= MAXCUSTOMDRAWCONTROLS )
+    {
+        char buffer[256];
+        _snprintf(buffer, sizeof(buffer),
+                  "the number of custom draw controls has reached the maximum (%d) allowed",
+                  MAXCUSTOMDRAWCONTROLS);
+
+        userDefinedMsgException(context, buffer);
+        goto err_out;
+    }
+
+
+    // Simple will be an option in the future, but for now it is the only thing
+    // implemented.
+    uint32_t     tag         = TAG_CUSTOMDRAW | TAG_CD_SIMPLE;
+    oodControl_t controlType = controlName2controlType(controlName);
+
+    if ( argumentExists(2) )
+    {
+        switch ( controlType )
+        {
+            case winListView :
+                tag |= TAG_CD_LISTVIEW;
+                break;
+
+            case winTreeView :
+                tag |= TAG_CD_TREEVIEW;
+                break;
+
+            default :
+                wrongArgValueException(context->threadContext, 2, "ListView, TreeView", controlName);
+                goto err_out;
+        }
+    }
+    else
+    {
+        tag |= TAG_CD_LISTVIEW;
+    }
+
+    pccd->types[pccd->count] = controlType;
+    pccd->ids[pccd->count++] = id;
+
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, pcen->rexxSelf);
+    if ( ! pcpbd->idsNotChecked )
+    {
+        if ( ! isControlMatch(pcpbd->hDlg, id, controlType) )
+        {
+            pcpbd->badIDs = true;
+            customDrawMismatchException(context->threadContext, id, controlType);
+            goto err_out;
+        }
+    }
+
+    if ( argumentOmitted(3) )
+    {
+        methName = "onCustomDraw";
+    }
+
+    if ( addNotifyMessage(pcen, context, id, 0xFFFFFFFF, NM_CUSTOMDRAW, 0xFFFFFFFF, methName, tag) )
+    {
+        return TheZeroObj;
+    }
+
+err_out:
+    return TheOneObj;
 }
 
 

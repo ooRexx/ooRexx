@@ -169,7 +169,7 @@ inline uint32_t _connectItem(pCEventNotification pcen, RexxMethodContext *c, uin
 inline BOOL _connectSysItem(pCEventNotification pcen, RexxMethodContext *c, uint32_t id, CSTRING msg)
 {
     uint32_t tag = TAG_DIALOG | TAG_SYSMENUCOMMAND;
-    return addMiscMessage(pcen, c, WM_SYSCOMMAND, UINT32_MAX, id, 0x0000FFF0, 0, 0, msg, tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return addMiscMessage(pcen, c, WM_SYSCOMMAND, UINT32_MAX, id, 0x0000FFFF, 0, 0, msg, tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 
@@ -2528,7 +2528,6 @@ BOOL setSingleState(CppMenu *cMenu, RexxObjectPtr rxItemIDs, logical_t byPositio
                 break;
 
             default :
-                printf("SEVERE ERROR HERE\n");
                 goto done_out;
                 break;
         }
@@ -2966,8 +2965,10 @@ RexxMethod1(RexxObjectPtr, menu_uninit, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
 
+#ifdef _DEBUG
 #if 1
     printf("In UNINIT() of Menu class cMenu=%p\n", cMenu);
+#endif
 #endif
 
     if ( cMenu != NULL )

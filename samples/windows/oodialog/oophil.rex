@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -197,10 +197,13 @@
 
 ::class 'PhilDlg' subclass UserDialog
 
+::attribute stopped unguarded
+
 ::method init
    expose v.
    use arg v.
    self~init:super
+   self~stopped = .false
    self~load(v.anidialog, v.anidialogID, 'CENTER')
 
 ::method initDialog
@@ -228,9 +231,10 @@
    p4 = .phil~new(4,f3,f4, self)
    p5 = .phil~new(5,f4,f5, self)
 
-::method myExecute                              /* animate dialog      */
+::method myExecute unguarded                             /* animate dialog      */
    expose f1 f2 f3 f4 f5 p1 p2 p3 p4 p5
    use arg parms.
+   reply
    T.sleep = parms.101
    T.eat = parms.102
    T.veat = trunc(T.eat / 2)
@@ -250,7 +254,7 @@
    self~enableControl(1)                        /* enable stop button  */
 
    -- wait untill the 5 philsopers are done, or the stop button is pushed.
-   do while(m1~completed+m2~completed+m3~completed+m4~completed+m5~completed <5) & \self~finished
+   do while(m1~completed+m2~completed+m3~completed+m4~completed+m5~completed <5) & \self~stopped
       j = SysSleep(.340)
    end
    m1~result                                    /* check 5 phils       */
@@ -263,13 +267,16 @@
 ::method ok unguarded                           /* Stop button      */
    expose f1 f2 f3 f4 f5 p1 p2 p3 p4 p5 v.
    self~disableControl(1)
+   self~stopped = .true
    call play v.stop,'yes'
-   self~ok:super                                /* sets finished    */
    f1~layDown                                   /* take away forks  */
    f2~layDown
    f3~layDown
    f4~layDown
    f5~layDown
+
+::method cancel unguarded
+  self~ok                                       /* stop ourself */
 
 ::method setPhil unguarded                      /* philosoph bitmap */
    expose v.
@@ -326,11 +333,11 @@
    expose num rFork lFork dlg
    use arg T.
    x =  random(1,100,time('S')*num)
-   do i=1 to T.repeats until dlg~finished         /* - run the loop   */
+   do i=1 to T.repeats until dlg~stopped          /* - run the loop   */
          stime = random(T.sleep-T.vsleep,T.sleep+T.vsleep)
-         if dlg~finished then leave               /* - stop clicked   */
+         if dlg~stopped then leave                /* - stop clicked   */
          self~sleep(stime)                        /* - call sleep     */
-         if dlg~finished then leave               /* - stop clicked   */
+         if dlg~stopped then leave                /* - stop clicked   */
          self~wait                                /* - call wait      */
          if random(1,100) < T.side then do        /* - pick up forks  */
             self~pickLeft(T.eat>20)               /* - - left first   */
@@ -341,7 +348,7 @@
             self~pickLeft(T.eat>20)
          end
          etime = random(T.eat-T.veat,T.eat+T.veat)
-         if dlg~finished then leave               /* - stop clicked   */
+         if dlg~stopped then leave                /* - stop clicked   */
          self~eat(etime)                          /* - call eat       */
          self~layDownLeft                         /* - free forks     */
          self~layDownRight
@@ -364,7 +371,7 @@
       dlg~setPiece(num, 'piece')                  /* - he gets piece  */
       if ds > 0 then do
          if num=1 & ds>=20 then dlg~audio('eat')
-         do i = 1 to ds/5 while \dlg~finished    /* - eat,check stop */
+         do i = 1 to ds/5 while \dlg~stopped     /* - eat, check stop */
             call msSleep 300
             if random(1,50)=11 then
                  dlg~~audio('ouch')~setPhil(num, 'ouch')
@@ -372,7 +379,7 @@
             call msSleep 200
             dlg~setPhil(num, 'eat')
          end
-         if \dlg~finished then call msSleep ds//10 * 100
+         if \dlg~stopped then call msSleep ds//10 * 100
       end
       dlg~setPiece(num, 'blank')
 

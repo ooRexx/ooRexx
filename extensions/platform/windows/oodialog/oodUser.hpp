@@ -41,6 +41,16 @@
 
 #define DEFAULT_EXPECTED_DIALOG_ITEMS   200
 
+/* Struct for data used to add a button the dialog template. */
+typedef struct _buttonData {
+    CSTRING   text;
+    CSTRING   methName;
+    uint32_t  opts;
+    uint32_t  id;
+} ButtonData;
+typedef ButtonData *pButtonData;
+
+
 extern bool startDialogTemplate(RexxThreadContext *c, DLGTEMPLATEEX **ppBase, pCDynamicDialog pcdd,
                                 int x, int y, int cx, int cy, const char *dlgClass, const char *title,
                                 const char *fontName, int fontSize, uint32_t style, uint32_t exStyle);

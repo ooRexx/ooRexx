@@ -86,7 +86,7 @@ static pCMouse getMouseCSelf(RexxMethodContext *c, void *p)
     pCMouse pcm = (pCMouse)p;
     if ( pcm == NULL )
     {
-        baseClassIntializationException(c);
+        baseClassInitializationException(c);
     }
     return pcm;
 }
@@ -162,7 +162,7 @@ static pCEventNotification getMousePCEN(RexxMethodContext *c, pCMouse pcm)
 
     if ( pcm == NULL )
     {
-        baseClassIntializationException(c);
+        baseClassInitializationException(c);
         goto done_out;
     }
 

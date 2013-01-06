@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2013 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,7 +45,7 @@
  *              shows how to use the drawing methods provided by ooDialog.
  *
  *              The main program, this program, shows how to use the
- *              scrollBitmapFromTo() and scrollInButton() methods.
+ *              scrollBitmapFromTo() and scrollInControl() methods.
  */
 
   -- Use the global .constDir for symbolic IDs
@@ -167,16 +167,16 @@
 
    -- Start the Asynchronuous scrolling of the introductory text.
    text = "This ooDialog sample demonstrates dynamic dialog creation"
-   m = self~start("ScrollInButton", IDC_PB_OWNERDRAW, text, "Arial", 36, "BOLD", 0, 2, 2, 6)
+   m = self~start("scrollInControl", IDC_PB_OWNERDRAW, text, "Arial", 36, "BOLD", 0, 2, 2, 6)
    m~notify(.message~new(self, "scrollingFinished"))
 
    -- Now, wait until the scrolling finishes, or the user closes the main dialog.
    self~waitForEvent
 
    -- While the user has not closed the dialog, scroll the instruction text.
-   do while \ self~finished
+   do while self~isDialogActive
       text = "... please press Bitmap-Viewer or Draw-Color-Demo buttons to run graphical applications ..."
-      m = self~start("scrollInButton", IDC_PB_OWNERDRAW, text, "Arial", 32, "SEMIBOLD", 0, 2, 4)
+      m = self~start("scrollInControl", IDC_PB_OWNERDRAW, text, "Arial", 32, "SEMIBOLD", 0, 2, 4)
       m~notify(.message~new(self, "scrollingFinished"))
 
       self~waitForEvent
@@ -192,17 +192,17 @@
   guard on when haveEvent
 
 -- This is the notification method for the scrolling text.  It is invoked when
--- the scrollInButton() method has finished.  The haveEvent object variable is
+-- the scrollInControl() method has finished.  The haveEvent object variable is
 -- set to true which causes ourself to stop waiting.
 ::method scrollingFinished unguarded
   expose haveEvent
   haveEvent = .true
 
 -- leaving() is invoked by the ooDialog framework when the underlying dialog is
--- closed.  It serves as a notification that the dialog is finished.  The default
--- implementation does nothing.  It can be, and if meant to be, over-ridden by
--- the programmer when desired.  We use it to signal ourself to stop waiting by
--- setting haveEvent to true.
+-- closed.  It serves as a notification that the dialog is finished.  The
+-- default implementation does nothing.  It can be, and ii meant to be, over-
+-- ridden by the programmer when desired.  We use it to signal ourself to stop
+-- waiting by setting haveEvent to true.
 ::method leaving  unguarded
   expose haveEvent
   haveEvent = .true
@@ -213,7 +213,7 @@
    expose m
 
    -- Stop the scrolling and hide ourself.
-   if \ m~completed then self~scrollInButton(IDC_PB_OWNERDRAW)
+   if \ m~completed then self~scrollInControl(IDC_PB_OWNERDRAW)
    self~hide
 
    call "oobmpvu.rex"
@@ -226,7 +226,7 @@
    expose m
 
    -- Stop the scrolling and hide ourself.
-   if m~completed = 0 then self~scrollInButton(IDC_PB_OWNERDRAW)
+   if \ m~completed then self~scrollInControl(IDC_PB_OWNERDRAW)
    self~hide
 
    call "oodraw.rex"

@@ -1173,8 +1173,37 @@ RexxMethod1(int, ckbx_setIndeterminate, CSELF, pCSelf)
  *
  *  This method is used as a convenient way to test code.
  */
-RexxMethod1(int, bc_test, ARGLIST, args)
+RexxMethod1(int, bc_test, RexxStemObject, stm)
 {
+    RexxMethodContext *c = context;
+
+    RexxStemObject s = (RexxStemObject)c->GetStemArrayElement(stm, 3);
+    if ( s == NULLOBJECT )
+    {
+        printf("stm.3 is null\n");
+
+        RexxObjectPtr _t = c->GetStemElement(stm, "3.TEXT");
+        if ( _t == NULLOBJECT )
+        {
+            printf("Get stm ->3.text didn't work\n");
+        }
+        else
+        {
+            printf("Get stm ->3.text text=%s\n", c->ObjectToStringValue(_t));
+        }
+    }
+    else
+    {
+        RexxObjectPtr _t = c->GetStemElement(s, "TEXT");
+        if ( _t == NULLOBJECT )
+        {
+            printf("Get stm.3 ->text didn't work\n");
+        }
+        else
+        {
+            printf("Get stm.3.text text=%s\n", c->ObjectToStringValue(_t));
+        }
+    }
     return 0;
 }
 

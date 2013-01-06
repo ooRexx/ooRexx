@@ -96,6 +96,7 @@
 ::method createBlackFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
 ::method createEtchedHorizontal external "LIBRARY oodialog dyndlg_createStaticFrame"
 ::method createEtchedVertical external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createEtchedFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
 
 ::method createPushButton external "LIBRARY oodialog dyndlg_createPushButton"
 ::method createRadioButton external "LIBRARY oodialog dyndlg_createRadioButton"
@@ -353,7 +354,7 @@
    if nob = 0 then return self~createGroupBox(idstat, x, y, mx+cx, highy-y+(stepy % 2), newopts, "")
    else return 0
 
-::method createPushButtonGroup  -- TODO this doesn't support symbolic IDs.
+::method createPushButtonGroup
    use arg x, y, cx, cy, inp, bottom, opts = ""
    parse var inp bt bid bfnk newinp
 
@@ -377,6 +378,7 @@
    return 0
 
 
+::method createPushButtonStem external "LIBRARY oodialog dyndlg_createPushButtonStem"
 ::method createOkCancelRightBottom
    return self~createPushButtonGroup(self~sizeX-95, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
@@ -914,12 +916,24 @@
    else if style~wordpos("WS_VISIBLE") > 0 then ret = "VISIBLE"
    if style~wordpos("WS_DISABLED") > 0 & style~wordpos("NOT WS_DISABLED") == 0 then ret = ret || " DISABLED"
    if kind = "TREE" then do
+      if style~wordpos("TVS_CHECKBOXES") > 0 then ret = ret || " CHECKBOXES"
       if style~wordpos("TVS_DISABLEDRAGDROP") > 0 then ret = ret || " NODRAG"
       if style~wordpos("TVS_EDITLABELS") > 0 then ret = ret || " EDIT"
+      if style~wordpos("TVS_FULLROWSELECT") > 0 then ret = ret || " FULLROWSELECT"
       if style~wordpos("TVS_HASBUTTONS") > 0 then ret = ret || " BUTTONS"
       if style~wordpos("TVS_HASLINES") > 0 then ret = ret || " LINES"
+      if style~wordpos("TVS_INFOTIP") > 0 then ret = ret || " INFOTIP"
       if style~wordpos("TVS_LINESATROOT") > 0 then ret = ret || " ATROOT"
+      if style~wordpos("TVS_NOHSCROLL") > 0 then ret = ret || " NOHSCROLL"
+      if style~wordpos("TVS_NONEVENHEIGHT") > 0 then ret = ret || " NONEVENHEIGHT"
+      if style~wordpos("TVS_NOSCROLL") > 0 then ret = ret || " NOSCROLL"
+      if style~wordpos("TVS_NOTOOLTIPS") > 0 then ret = ret || " NOTOOLTIPS"
+      if style~wordpos("TVS_RTLREADING") > 0 then ret = ret || " RTLREADING"
       if style~wordpos("TVS_SHOWSELALWAYS") > 0 then ret = ret || " SHOWSELALWAYS"
+      if style~wordpos("TVS_SINGLEEXPAND") > 0 then ret = ret || " SINGLEEXPAND"
+      if style~wordpos("TVS_TRACKSELECT") > 0 then ret = ret || " TRACKSELECT"
+      if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"
+      if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
       if style~wordpos("WS_BORDER") = 0 then ret = ret || " NOBORDER"
    end
    else if kind = "LIST" then do
@@ -1042,7 +1056,7 @@
 
 ::method addGrayRect
    use strict arg x, y, cx, cy, opts = "", id = (-1)
-   return self~createRectRect(id, x, y, cx, cy, opts)
+   return self~createGrayRect(id, x, y, cx, cy, opts)
 
 ::method addBlackRect
    use strict arg x, y, cx, cy, opts = "", id = (-1)

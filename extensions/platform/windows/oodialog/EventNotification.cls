@@ -247,33 +247,6 @@
 ::method connectAllSBEvents external "LIBRARY oodialog en_connectAllSBEvents"
 
 
-::method connectTreeViewEvent
-   use strict arg id, type, msgToRise = ""
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   type = type~translate
-   select
-       when type = "SELCHANGING" then lp = -401
-       when type = "SELCHANGED"  then lp = -402
-       when type = "EXPANDING"   then lp = -405
-       when type = "EXPANDED"    then lp = -406
-       when type = "BEGINDRAG"   then lp = -407
-       when type = "BEGINRDRAG"  then lp = -408
-       when type = "DELETE"      then lp = -409
-       when type = "BEGINEDIT"   then lp = -410
-       when type = "ENDEDIT"     then lp = -411
-       when type = "DEFAULTEDIT" then do
-            self~addUserMsg("DefTreeEditStarter", 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", -410, "0xFFFFFFFF")
-            lp = -411
-            msgToRise = "DefTreeEditHandler"
-       end
-       when type = "KEYDOWN" then lp = -412
-       otherwise return -1
-   end
-   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
-
-
 ::method connectTabEvent
    use strict arg id, type, msgToRise = "", willReply = .false
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
@@ -319,27 +292,12 @@
    return self~addUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
 
 
+::method connectToolTipEvent external "LIBRARY oodialog en_connectToolTipEvent"
+::method connectTreeViewEvent external "LIBRARY oodialog en_connectTreeViewEvent"
 ::method connectListViewEvent external "LIBRARY oodialog en_connectListViewEvent"
 ::method connectDateTimePickerEvent external "LIBRARY oodialog en_connectDateTimePickerEvent"
 ::method connectMonthCalendarEvent external "LIBRARY oodialog en_connectMonthCalendarEvent"
 ::method connectUpDownEvent external "LIBRARY oodialog en_connectUpDownEvent"
-
-::method defListEditStarter
-    use arg id, dummy, category
-    if arg(3, 'O') then lc = self~newListView(id)
-    else lc = self~newListView(id, category)
-    if lc \= .nil then lc~subclassEdit
-
-::method defListEditHandler
-    use arg id, item, newText, category
-    if arg(3, 'O') then return
-    if arg(4, 'O') then lc = self~newListView(id)
-    else lc = self~newListView(id, category)
-    if lc \= .nil then do
-        lc~modify(item, 0, newText)
-        lc~restoreEditClass
-    end
-
 ::method defListDragHandler
    use arg id, item, pt
    lc = self~newListView(id)
@@ -395,24 +353,9 @@
    self~setCursorPos(x+1, y+1)  /* move cursor to force redraw */
 
 
-::method defTreeEditStarter
-    use arg id, dummy, category
-    if arg(3,'o') = 1 then tc = self~newTreeView(id)
-    else tc = self~newTreeView(id, category)
-    if tc \= .nil then tc~subclassEdit
-
-::method defTreeEditHandler
-    use arg id, item, newText, category
-    if arg(3,'o') = 1 then return
-    if arg(4,'o') = 1 then tc = self~newTreeView(id)
-    else tc = self~newTreeView(id, category)
-    if tc \= .nil then do
-        tc~Modify(item,newText)
-        tc~RestoreEditClass
-    end
-
-::method defTreeDragHandler
+::method defTreeDragHandler unguarded
    use arg id, item, pt
+   reply 0
    tc = self~newTreeView(id)
    hc = tc~Cursor_Cross   /* change cursor and store current */
    parse value tc~GetRect with left top right bottom

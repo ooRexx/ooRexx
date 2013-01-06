@@ -156,7 +156,15 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             RexxSetProcessMessages(FALSE);
         }
 
+        pcpbd->hDlg = hDlg;
         setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
+
+        if ( pcpbd->isCustomDrawDlg && pcpbd->idsNotChecked )
+        {
+            // We don't care what the outcome of this is, customDrawCheckIDs
+            // will take care of aborting this dialog if the IDs are bad.
+            customDrawCheckIDs(pcpbd);
+        }
 
         return TRUE;
     }
@@ -205,28 +213,21 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
 
+    if ( uMsg >= WM_USER_REXX_FIRST && uMsg <= WM_USER_REXX_LAST )
+    {
+        return handleWmUser(pcpbd, hDlg, uMsg, wParam, lParam, false);
+    }
+
     switch ( uMsg )
     {
         case WM_PAINT:
-            if ( pcpbd->bkgBitmap != NULL )
-            {
-                drawBackgroundBmp(pcpbd, hDlg);
-            }
-            break;
+            return drawBackgroundBmp(pcpbd, hDlg);
 
         case WM_DRAWITEM:
-            if ( lParam != 0 )
-            {
                 return drawBitmapButton(pcpbd, lParam, msgEnabled);
-            }
-            break;
 
         case WM_CTLCOLORDLG:
-            if ( pcpbd->bkgBrush )
-            {
-                return(LRESULT)pcpbd->bkgBrush;
-            }
-            break;
+            return handleDlgColor(pcpbd);
 
         case WM_CTLCOLORSTATIC:
         case WM_CTLCOLORBTN:
@@ -234,80 +235,187 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_CTLCOLORLISTBOX:
         case WM_CTLCOLORMSGBOX:
         case WM_CTLCOLORSCROLLBAR:
-        {
-            HBRUSH hbrush = NULL;
-
-            if ( pcpbd->CT_nextIndex > 0 )
-            {
-                // See of the user has set the dialog item with a different
-                // color.
-                long id = GetWindowLong((HWND)lParam, GWL_ID);
-                if ( id > 0 )
-                {
-                    register size_t i = 0;
-                    while ( i < pcpbd->CT_nextIndex && pcpbd->ColorTab[i].itemID != id )
-                    {
-                        i++;
-                    }
-                    if ( i < pcpbd->CT_nextIndex )
-                    {
-                        hbrush = pcpbd->ColorTab[i].ColorBrush;
-                    }
-
-                    if ( hbrush )
-                    {
-                        if ( pcpbd->ColorTab[i].isSysBrush )
-                        {
-                            SetBkColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorBk));
-                            if ( pcpbd->ColorTab[i].ColorFG != -1 )
-                            {
-                                SetTextColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorFG));
-                            }
-                        }
-                        else
-                        {
-                            SetBkColor((HDC)wParam, PALETTEINDEX(pcpbd->ColorTab[i].ColorBk));
-                            if ( pcpbd->ColorTab[i].ColorFG != -1 )
-                            {
-                                SetTextColor((HDC)wParam, PALETTEINDEX(pcpbd->ColorTab[i].ColorFG));
-                            }
-                        }
-                    }
-                }
-            }
-            if ( hbrush )
-                return(LRESULT)hbrush;
-            else
-                return DefWindowProc(hDlg, uMsg, wParam, lParam);
-        }
-
-        case WM_COMMAND:
-            switch ( LOWORD(wParam) )
-            {
-                case IDOK:
-                case IDCANCEL:
-
-                    // For both IDOK and IDCANCEL, the notification code
-                    // (the high word value) must be 0.
-                    if ( HIWORD(wParam) == 0 )
-                    {
-                        // We should never get here because both IDOK and
-                        // IDCANCEL should have be interecepted in
-                        // searchMessageTables().  But - sometimes we do, very
-                        // rarely.  It is on some abnormal error. See the
-                        // comments above for the WM_DESTROY message.
-                        pcpbd->abnormalHalt = true;
-                        DestroyWindow(hDlg);
-
-                        return TRUE;
-                    }
-            }
-            break;
+            return handleCtlColor(pcpbd, hDlg, uMsg, wParam, lParam);
 
         case WM_QUERYNEWPALETTE:
         case WM_PALETTECHANGED:
             return paletteMessage(pcpbd, hDlg, uMsg, wParam, lParam);
 
+                default :
+                    break;
+            }
+
+    return FALSE;
+}
+
+/**
+ * The dialog procedure for control dialogs, i.e. those created with the
+ * DS_CONTROL.
+ *
+ * These are 'nested' dialogs, or dialogs within a top-level dialog.  For the
+ * most part, the procedure is exactly the same as for top-level dialogs.
+ *
+ * @param hDlg
+ * @param uMsg
+ * @param wParam
+ * @param lParam
+ *
+ * @return LRESULT CALLBACK
+ */
+LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if ( uMsg == WM_INITDIALOG )
+    {
+        pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)lParam;
+        if ( pcpbd == NULL )
+        {
+            // Theoretically impossible.  But ... if it should happen, abort.
+            return endDialogPremature(pcpbd, hDlg, NoPCPBDpased);
+        }
+
+        pcpbd->hDlg = hDlg;
+        setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
+
+        if ( pcpbd->isCustomDrawDlg && pcpbd->idsNotChecked )
+        {
+            // We don't care what the outcome of this is, customDrawCheckIDs
+            // will take care of aborting this dialog if the IDs are bad.
+            customDrawCheckIDs(pcpbd);
+        }
+
+        return TRUE;
+    }
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(hDlg, GWLP_USERDATA);
+    if ( pcpbd == NULL )
+    {
+        // A number of messages arrive before WM_INITDIALOG, we just ignore them.
+        return FALSE;
+    }
+
+    if ( pcpbd->dlgProcContext == NULL )
+    {
+        if ( ! pcpbd->isActive )
+        {
+            return FALSE;
+        }
+
+        // Once again, theoretically impossible ...
+        return endDialogPremature(pcpbd, hDlg, NoThreadContext);
+    }
+
+    // Don't process WM_DESTROY messages.
+
+    bool msgEnabled = IsWindowEnabled(hDlg) ? true : false;
+
+    // Do not search message table for WM_PAINT to improve redraw.
+    if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
+    {
+        MsgReplyType searchReply = searchMessageTables(uMsg, wParam, lParam, pcpbd);
+        if ( searchReply != ContinueProcessing )
+        {
+            // Note pre 4.0.1, we always returned FALSE, (pass on to the system
+            // to process.) But, post 4.0.1 we sometimes reply TRUE, the message
+            // has been handled.
+            return (searchReply == ReplyTrue ? TRUE : FALSE);
+        }
+    }
+
+    if ( uMsg >= WM_USER_REXX_FIRST && uMsg <= WM_USER_REXX_LAST )
+    {
+        return handleWmUser(pcpbd, hDlg, uMsg, wParam, lParam, true);
+    }
+
+    switch ( uMsg )
+    {
+        case WM_PAINT:
+            return drawBackgroundBmp(pcpbd, hDlg);
+
+        case WM_DRAWITEM:
+                return drawBitmapButton(pcpbd, lParam, msgEnabled);
+
+        case WM_CTLCOLORDLG:
+            return handleDlgColor(pcpbd);
+
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLORBTN:
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORMSGBOX:
+        case WM_CTLCOLORSCROLLBAR:
+            return handleCtlColor(pcpbd, hDlg, uMsg, wParam, lParam);
+
+        case WM_QUERYNEWPALETTE:
+        case WM_PALETTECHANGED:
+            return paletteMessage(pcpbd, hDlg, uMsg, wParam, lParam);
+
+        case WM_COMMAND:
+            return handleWmCommand(pcpbd, hDlg, wParam, lParam, true);
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+
+/**
+ * Checks if the specified message is one that we don't allow in a nested
+ * dialog.
+ *
+ * @param uMsg
+ *
+ * @return bool
+ *
+ * @remarks  For now, we don't let the user created nested, nested dialogs.  In
+ *           addition, keyboard hooks should only be created in a top-level
+ *           dialog.
+ */
+inline bool isRestrictedUserMsg(uint32_t uMsg)
+{
+    if ( uMsg == WM_USER_CREATECHILD          ||
+         uMsg == WM_USER_CREATECONTROL_DLG    ||
+         uMsg == WM_USER_CREATECONTROL_RESDLG ||
+         uMsg == WM_USER_HOOK )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ *  Handles all our WM_USER_xxx messages for any Rexx dialog procedure.
+ *
+ *  Note that we check if the message is from a nested dialog procedure, like a
+ *  property sheet page dialog, and don't allow certain of the messages.
+ *
+ * @param pcpbd
+ * @param hDlg
+ * @param uMsg
+ * @param wParam
+ * @param lParam
+ * @param isNestedDlg
+ *
+ * @return LRESULT
+ *
+ * @remarks  We are only in this functrion for our own Rexx user messages, and
+ *           we process all of them.  So, we always return true.  If we add a
+ *           message and forget to process it, returning true will do no harm.
+ *           It should be easy enough to find the bug when we look at why the
+ *           new message doesn't work.
+ */
+LRESULT handleWmUser(pCPlainBaseDialog pcpbd, HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, bool isNestedDlg)
+{
+    if ( isNestedDlg && isRestrictedUserMsg(uMsg) )
+    {
+        ReplyMessage((LRESULT)NULL);
+        return TRUE;
+    }
+
+    switch ( uMsg )
+    {
         case WM_USER_CREATECHILD:
         {
             HWND hChild = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)lParam, hDlg, (DLGPROC)RexxDlgProc,
@@ -320,17 +428,17 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             pCPlainBaseDialog p = (pCPlainBaseDialog)wParam;
             HWND hChild = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)lParam, p->hOwnerDlg, (DLGPROC)RexxChildDlgProc,
-                                                    wParam);
+                                                    (LPARAM)p);
             ReplyMessage((LRESULT)hChild);
             return TRUE;
         }
 
         case WM_USER_CREATECONTROL_RESDLG:
         {
-            pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)wParam;
+            pCPlainBaseDialog p = (pCPlainBaseDialog)wParam;
 
-            HWND hChild = CreateDialogParam(pcpbd->hInstance, MAKEINTRESOURCE((uint32_t)lParam), pcpbd->hOwnerDlg,
-                                            (DLGPROC)RexxChildDlgProc, (LPARAM)pcpbd);
+            HWND hChild = CreateDialogParam(p->hInstance, MAKEINTRESOURCE((uint32_t)lParam), p->hOwnerDlg,
+                                            (DLGPROC)RexxChildDlgProc, (LPARAM)p);
 
             ReplyMessage((LRESULT)hChild);
             return TRUE;
@@ -340,7 +448,7 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)lParam;
 
-            assignPSDThreadContext(pcpsd, pcpbd->dlgProcContext, pcpbd->dlgProcThreadID);
+            assignPSDThreadContext(pcpsd, pcpbd->dlgProcContext, GetCurrentThreadId());
 
             if ( setPropSheetHook(pcpsd) )
             {
@@ -354,6 +462,21 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ReplyMessage((LRESULT)-1);
             }
 
+            return TRUE;
+        }
+
+        case WM_USER_CREATETOOLTIP:
+        {
+            PCREATETOOLTIP ctt = (PCREATETOOLTIP)wParam;
+
+            HWND hToolTip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL, ctt->style, CW_USEDEFAULT, CW_USEDEFAULT,
+                                           CW_USEDEFAULT, CW_USEDEFAULT, hDlg, NULL, ctt->hInstance, NULL);
+
+            if ( hToolTip == NULL )
+            {
+                ctt->errRC = GetLastError();
+            }
+            ReplyMessage((LRESULT)hToolTip);
             return TRUE;
         }
 
@@ -450,248 +573,56 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    return FALSE;
+    //
+    return TRUE;
 }
 
+
 /**
- * The dialog procedure for control dialogs, i.e. those created with the
- * DS_CONTROL.
+ * Handles the WM_COMMAND message in the dialog window procedure.  Called from
+ * any of the various Rexx dialog procedures in ooDialog.
  *
- * These are 'nested' dialogs, or dialogs within a top-level dialog.  For the
- * most part, the procedure is exactly the same as for top-level dialogs.
- *
+ * @param pcpbd
  * @param hDlg
- * @param uMsg
  * @param wParam
  * @param lParam
+ * @param isNestedDlg
  *
- * @return LRESULT CALLBACK
+ * @return LRESULT
+ *
+ * @remarks  Note that for nested dialogs, we have always returned false since
+ *           they were introduced.  Not sure if it might not be better to return
+ *           true.
+ *
+ *           We only process the IDOK and IDCANCEL identifier when the high
+ *           word is 0.  The high word being 0 would indicate that it was a
+ *           button click (BN_CLICK is 0) or sent from a menu command.
+ *
+ *           However, we should never actually get to process anything here
+ *           because both IDOK and IDCANCEL should have been interecepted in
+ *           searchMessageTables().  But - sometimes we do get one or the other,
+ *           very rarely.  It is on some abnormal error.  The processing seems
+ *           to handle that error.
  */
-LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT handleWmCommand(pCPlainBaseDialog pcpbd, HWND hDlg, WPARAM wParam, LPARAM lParam, bool isNestedDlg)
 {
-    if ( uMsg == WM_INITDIALOG )
+    if ( isNestedDlg )
     {
-        pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)lParam;
-        if ( pcpbd == NULL )
-        {
-            // Theoretically impossible.  But ... if it should happen, abort.
-            return endDialogPremature(pcpbd, hDlg, NoPCPBDpased);
-        }
-
-        setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
-        return TRUE;
-    }
-
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(hDlg, GWLP_USERDATA);
-    if ( pcpbd == NULL )
-    {
-        // A number of messages arrive before WM_INITDIALOG, we just ignore them.
         return FALSE;
     }
 
-    if ( pcpbd->dlgProcContext == NULL )
+    switch ( LOWORD(wParam) )
     {
-        if ( ! pcpbd->isActive )
-        {
-            return FALSE;
-        }
-
-        // Once again, theoretically impossible ...
-        return endDialogPremature(pcpbd, hDlg, NoThreadContext);
-    }
-
-    // Don't process WM_DESTROY messages.
-
-    bool msgEnabled = IsWindowEnabled(hDlg) ? true : false;
-
-    // Do not search message table for WM_PAINT to improve redraw.
-    if ( msgEnabled && uMsg != WM_PAINT && uMsg != WM_NCPAINT )
-    {
-        MsgReplyType searchReply = searchMessageTables(uMsg, wParam, lParam, pcpbd);
-        if ( searchReply != ContinueProcessing )
-        {
-            // Note pre 4.0.1, we always returned FALSE, (pass on to the system
-            // to process.) But, post 4.0.1 we sometimes reply TRUE, the message
-            // has been handled.
-            return (searchReply == ReplyTrue ? TRUE : FALSE);
-        }
-    }
-
-    switch ( uMsg )
-    {
-        case WM_PAINT:
-            if ( pcpbd->bkgBitmap != NULL )
+        case IDOK:
+        case IDCANCEL:
+            if ( HIWORD(wParam) == 0 )
             {
-                drawBackgroundBmp(pcpbd, hDlg);
+                //
+                pcpbd->abnormalHalt = true;
+                DestroyWindow(hDlg);
+
+                return TRUE;
             }
-            break;
-
-        case WM_DRAWITEM:
-            if ( lParam != 0 )
-            {
-                return drawBitmapButton(pcpbd, lParam, msgEnabled);
-            }
-            break;
-
-        case WM_CTLCOLORDLG:
-            if ( pcpbd->bkgBrush )
-            {
-                return(LRESULT)pcpbd->bkgBrush;
-            }
-            break;
-
-        case WM_CTLCOLORSTATIC:
-        case WM_CTLCOLORBTN:
-        case WM_CTLCOLOREDIT:
-        case WM_CTLCOLORLISTBOX:
-        case WM_CTLCOLORMSGBOX:
-        case WM_CTLCOLORSCROLLBAR:
-        {
-            HBRUSH hbrush = NULL;
-
-            if ( pcpbd->CT_nextIndex > 0 )
-            {
-                // See of the user has set the dialog item with a different
-                // color.
-                long id = GetWindowLong((HWND)lParam, GWL_ID);
-                if ( id > 0 )
-                {
-                    register size_t i = 0;
-                    while ( i < pcpbd->CT_nextIndex && pcpbd->ColorTab[i].itemID != id )
-                    {
-                        i++;
-                    }
-                    if ( i < pcpbd->CT_nextIndex )
-                    {
-                        hbrush = pcpbd->ColorTab[i].ColorBrush;
-                    }
-
-                    if ( hbrush )
-                    {
-                        if ( pcpbd->ColorTab[i].isSysBrush )
-                        {
-                            SetBkColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorBk));
-                            if ( pcpbd->ColorTab[i].ColorFG != -1 )
-                            {
-                                SetTextColor((HDC)wParam, GetSysColor(pcpbd->ColorTab[i].ColorFG));
-                            }
-                        }
-                        else
-                        {
-                            SetBkColor((HDC)wParam, PALETTEINDEX(pcpbd->ColorTab[i].ColorBk));
-                            if ( pcpbd->ColorTab[i].ColorFG != -1 )
-                            {
-                                SetTextColor((HDC)wParam, PALETTEINDEX(pcpbd->ColorTab[i].ColorFG));
-                            }
-                        }
-                    }
-                }
-            }
-            if ( hbrush )
-                return(LRESULT)hbrush;
-            else
-                return DefWindowProc(hDlg, uMsg, wParam, lParam);
-        }
-
-        case WM_QUERYNEWPALETTE:
-        case WM_PALETTECHANGED:
-            return paletteMessage(pcpbd, hDlg, uMsg, wParam, lParam);
-
-        // For now, don't let the user created nested, nested dialogs.  In
-        // addition, keyboard hooks should only be created in a top-level
-        // dialog.
-        case WM_USER_CREATECHILD:
-        case WM_USER_CREATECONTROL_DLG:
-        case WM_USER_CREATECONTROL_RESDLG:
-        case WM_USER_HOOK:
-            ReplyMessage((LRESULT)NULL);
-            return TRUE;
-
-        case WM_USER_INTERRUPTSCROLL:
-            pcpbd->stopScroll = wParam;
-            return TRUE;
-
-        case WM_USER_GETFOCUS:
-            ReplyMessage((LRESULT)GetFocus());
-            return TRUE;
-
-        case WM_USER_MOUSE_MISC:
-        {
-            switch ( wParam )
-            {
-                case MF_RELEASECAPTURE :
-                {
-                    uint32_t rc = 0;
-                    if ( ReleaseCapture() == 0 )
-                    {
-                        rc = GetLastError();
-                    }
-                    ReplyMessage((LRESULT)rc);
-                    break;
-                }
-
-                case MF_GETCAPTURE :
-                    ReplyMessage((LRESULT)GetCapture());
-                    break;
-
-                case MF_SETCAPTURE :
-                    ReplyMessage((LRESULT)SetCapture((HWND)lParam));
-                    break;
-
-                case MF_BUTTONDOWN :
-                    ReplyMessage((LRESULT)GetAsyncKeyState((int)lParam));
-                    break;
-
-                case MF_SHOWCURSOR :
-                    ReplyMessage((LRESULT)ShowCursor((BOOL)lParam));
-                    break;
-
-                default :
-                    // Maybe we should raise an internal exception here.  But,
-                    // as long as the internal code is consistent, we can not
-                    // get here.
-                    break;
-            }
-            return TRUE;
-        }
-
-        case WM_USER_SUBCLASS:
-        {
-            pSubClassData pData = (pSubClassData)lParam;
-
-            BOOL success = SetWindowSubclass(pData->hCtrl, (SUBCLASSPROC)wParam, pData->id, (DWORD_PTR)pData);
-
-            ReplyMessage((LRESULT)success);
-            return TRUE;
-        }
-
-        case WM_USER_SUBCLASS_REMOVE:
-            ReplyMessage((LRESULT)RemoveWindowSubclass(GetDlgItem(hDlg, (int)lParam), (SUBCLASSPROC)wParam, (int)lParam));
-            return TRUE;
-
-        case WM_USER_CONTEXT_MENU:
-        {
-            PTRACKPOP ptp = (PTRACKPOP)wParam;
-            uint32_t cmd;
-
-            SetLastError(0);
-            cmd = (uint32_t)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
-                                             ptp->hWnd, ptp->lptpm);
-
-            // If TPM_RETURNCMD is specified, the return is the menu item
-            // selected.  Otherwise, the return is 0 for failure and
-            // non-zero for success.
-            if ( ! (ptp->flags & TPM_RETURNCMD) )
-            {
-                cmd = (cmd == 0 ? FALSE : TRUE);
-                if ( cmd == FALSE )
-                {
-                    ptp->dwErr = GetLastError();
-                }
-            }
-            ReplyMessage((LRESULT)cmd);
-            return TRUE;
-        }
     }
 
     return FALSE;
@@ -865,6 +796,23 @@ inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
     return ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (focusDidChange(p));
 }
 
+/**
+ * Return true if code is a tool tip notification codes.  TTN_*
+ */
+inline bool isTTN(uint32_t code)
+{
+    return (code >= TTN_LAST && code <= TTN_FIRST);
+}
+
+/**
+ * Return true if code matches the lpFilter / lParam combination in a message
+ * table entry.
+ */
+inline bool isCodeMatch(MESSAGETABLEENTRY *m, uint32_t code, register size_t i)
+{
+    return ((code & m[i].lpFilter) == (uint32_t)m[i].lParam);
+}
+
 
 /**
  *  Converts arguments to a Rexx method to their C values when adding a window
@@ -986,13 +934,17 @@ done_out:
  *           RexxDlgProc(). The dialog procedure then posts a quit message, we
  *           fall out of the message loop and things unwind cleanly.
  *
- *           Setting abnormalHalt causes ensureFinished() to be invoked which
+ *           Setting abnormalHalt to true ensures we don't invoke leaving() and
+ *           that the dialog return gets set to 2.  Calling ensureFinished()
  *           terminates the thread waiting on the finished instance variable.
  *
  *           This works fine for modeless property sheets, but modal property
  *           sheets hang.  The abortPropertySheet() essentially does a
  *           programmatic close and prevents any of the property sheet pages
  *           from nixing the close.
+ *
+ *           Note that if we do not call ensureFinished here, we get a crash in
+ *           the Window message processing loop.
  */
 BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
 {
@@ -1038,9 +990,24 @@ BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
             abortPropertySheet((pCPropertySheetDialog)pcpbd->dlgPrivate, hDlg, t);
             return FALSE;
         }
+
+        if ( pcpbd->isPageDlg )
+        {
+            abortPropertySheetPage((pCPropertySheetPage)pcpbd->dlgPrivate, hDlg, t);
+            return FALSE;
+        }
+        if ( pcpbd->isOwnedDlg )
+        {
+            abortOwnedDlg(pcpbd, hDlg, t);
+            return FALSE;
+        }
+        ensureFinished(pcpbd, pcpbd->dlgProcContext, TheTrueObj);
+    }
+    else
+    {
+    DestroyWindow(hDlg);
     }
 
-    DestroyWindow(hDlg);
 
     return FALSE;
 }
@@ -1094,6 +1061,109 @@ LRESULT paletteMessage(pCPlainBaseDialog pcpbd, HWND hDlg, UINT msg, WPARAM wPar
 }
 
 /**
+ * Checks that reply is not null and that the context does not have a pending
+ * condition.
+ *
+ * @param c
+ * @param pcpbd
+ * @param reply
+ * @param methodName
+ * @param clear
+ *
+ * @return True if reply is not null and there is no pending condition.
+ *
+ * @note  If there is a condition, it is just printed, but the dialog is not
+ *        ended.  This results in a message to the screen, if the user is
+ *        running from a console window, but the dialog keeps running.  I'm not
+ *        sure this is the right way to do it.  It is just what I did during
+ *        development.  We should maybe alwasy end the dialog.
+ *
+ * @note  The call to checkForCondition() after noMsgReturnException() is what
+ *        causes the condition to be printed to the screen.  Without that call,
+ *        the dialog just quits with no reason printed, so it is needed.
+ */
+bool msgReplyIsGood(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING methodName, bool clear)
+{
+    bool haveCondition = checkForCondition(c, clear);
+
+    if ( ! haveCondition && reply == NULLOBJECT )
+    {
+        noMsgReturnException(c, methodName);
+        haveCondition = true;
+        checkForCondition(c, clear);
+        endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+    }
+    return ! haveCondition;
+}
+
+
+/**
+ * Checks that there is no pending condition and ends the dialog if there is
+ * one.  This is like msgReplyIsGood(), but is used when we do not enforce that
+ * the user returns a value from the event handler.
+ *
+ * @param c
+ * @param pcpbd
+ * @param methodName
+ * @param clear
+ *
+ * @return True if there is a pending condition and the dialog was ended,
+ *         otherwise false.
+ */
+bool endOnCondition(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, bool clear)
+{
+    if ( checkForCondition(c, clear) )
+    {
+        endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ * Checks that no condition has been raised, and that reply is either true or
+ * false. If not, an exception is raised and the dialog is ended.
+ *
+ * @param c
+ * @param pcpbd
+ * @param reply
+ * @param method
+ * @param clear
+ *
+ * @return TheTrueObj or TheFalseObj on success, NULLOBJECT on failure.
+ *
+ * @note  The local reference to the reply object is always released in this
+ *        function.
+ */
+RexxObjectPtr requiredBooleanReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply,
+                                   CSTRING method, bool clear)
+{
+    RexxObjectPtr result = NULLOBJECT;
+
+    if ( msgReplyIsGood(c, pcpbd, reply, method, false) )
+    {
+        result = convertToTrueOrFalse(c, reply);
+        if ( result == NULLOBJECT )
+        {
+            wrongReplyNotBooleanException(c, method, reply);
+            checkForCondition(c, false);
+        }
+    }
+
+    if ( reply != NULLOBJECT )
+    {
+        c->ReleaseLocalReference(reply);
+    }
+
+    if ( result == NULLOBJECT )
+    {
+            endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+        }
+    return result;
+}
+
+/**
  * Invokes the Rexx dialog's event handling method for a Windows message.
  *
  * The method invocation is done indirectly using startWith().  This allows us
@@ -1128,89 +1198,6 @@ MsgReplyType invokeDispatch(RexxThreadContext *c, RexxObjectPtr obj, RexxStringO
 {
     c->SendMessage2(obj, "STARTWITH", method, args);
     return ReplyTrue;
-}
-
-/**
- * Checks that reply is not null and that the context does not have a pending
- * condition.
- *
- * @param c
- * @param pcpbd
- * @param reply
- * @param methodName
- * @param clear
- *
- * @return True if reply is not null and there is no pending condition.
- */
-bool msgReplyIsGood(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply, CSTRING methodName, bool clear)
-{
-    bool haveCondition = checkForCondition(c, clear);
-
-    if ( ! haveCondition && reply == NULLOBJECT )
-    {
-        noMsgReturnException(c, methodName);
-        haveCondition = true;
-        checkForCondition(c, clear);
-        endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
-    }
-    return ! haveCondition;
-}
-
-
-/**
- * Checks that there is no pending condition and ends the dialog if there is
- * one.  This is like msgReplyIsGood(), but is used when we do not enforce that
- * the user returns a value form the event handler.
- *
- * @param c
- * @param pcpbd
- * @param methodName
- * @param clear
- *
- * @return True if there is a pending condition and the dialog was ended,
- *         otherwise false.
- */
-bool endOnCondition(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, bool clear)
-{
-    bool haveCondition = checkForCondition(c, clear);
-
-    if ( checkForCondition(c, clear) )
-    {
-        endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
-        return true;
-    }
-    return false;
-}
-
-
-/**
- * Checks that reply is either true or false.  If not, an exception is raised
- * and the dialog is ended.
- *
- * @param c
- * @param pcpbd
- * @param reply
- * @param method
- * @param clear
- *
- * @return TheTrueObj or TheFalseObj on success, NULLOBJECT on failure.
- */
-RexxObjectPtr requiredBooleanReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr reply,
-                                   CSTRING method, bool clear)
-{
-    RexxObjectPtr result = NULLOBJECT;
-
-    if ( msgReplyIsGood(c, pcpbd, reply, method, false) )
-    {
-        result = convertToTrueOrFalse(c, reply);
-        if ( result == NULLOBJECT )
-        {
-            wrongReplyNotBooleanException(c, method, reply);
-            checkForCondition(c, false);
-            endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
-        }
-    }
-    return result;
 }
 
 /**
@@ -1298,7 +1285,11 @@ static MsgReplyType genericCommandInvoke(RexxThreadContext *c, pCPlainBaseDialog
 bool invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodName, RexxArrayObject args)
 {
     RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
-    return msgReplyIsGood(c, pcpbd, rexxReply, methodName, false);
+
+    bool isGood = msgReplyIsGood(c, pcpbd, rexxReply, methodName, false);
+    c->ReleaseLocalReference(rexxReply);
+
+    return isGood;
 }
 
 /**
@@ -1315,7 +1306,10 @@ bool invokeDirect(RexxThreadContext *c, pCPlainBaseDialog pcpbd, CSTRING methodN
  *         execution of the Rexx method.
  *
  * @remarks  This function is exactly like invokeDirect(), except it does not
- *           check that the Rexx method returned a value.
+ *           check that the Rexx method returned a value.  It is used to 'sync'
+ *           the Windows message handling loop with Rexx.  For each Windows
+ *           message, we won't return from the loop until we get a reply back
+ *           from Rexx.
  *
  *           Earlier versions of ooDialog, on the C++ side, constructed a method
  *           invocation string, placed it on a queue, and returned immediately
@@ -1434,16 +1428,6 @@ inline RexxStringObject mcnViewChange2rexxString(RexxThreadContext *c, uint32_t 
     return c->String(v);
 }
 
-inline RexxObjectPtr idFrom2rexxArg(RexxThreadContext *c, LPARAM lParam)
-{
-    return c->Uintptr(((NMHDR *)lParam)->idFrom);
-}
-
-inline RexxObjectPtr hwndFrom2rexxArg(RexxThreadContext *c, LPARAM lParam)
-{
-    return pointer2string(c, ((NMHDR *)lParam)->hwndFrom);
-}
-
 
 /**
  * Searches through the command (WM_COMMAND) message table for a table entry
@@ -1485,7 +1469,7 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
 
     for ( i = 0; i < tableSize; i++ )
     {
-        if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((lParam & m[i].lpfilter) == m[i].lParam) )
+        if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((lParam & m[i].lpFilter) == m[i].lParam) )
         {
             return genericCommandInvoke(pcpbd->dlgProcContext, pcpbd, m[i].rexxMethod, m[i].tag, wParam, lParam);
         }
@@ -1495,7 +1479,7 @@ MsgReplyType searchCommandTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog 
 
 
 /**
- * Helper function to deterimine a list view item's index using a hit test.
+ * Helper function to determine a list view item's index using a hit test.
  *
  * @param hwnd  Handle of the list view.
  * @param pIA   Pointer to an item activate structure.
@@ -1538,6 +1522,45 @@ static void getItemIndexFromHitPoint(LPNMITEMACTIVATE pIA, HWND hwnd)
         }
     }
 }
+
+inline RexxObjectPtr getToolTipFromLParam(LPARAM lParam)
+{
+    return (RexxObjectPtr)getWindowPtr(((NMHDR *)lParam)->hwndFrom, GWLP_USERDATA);
+}
+
+/**
+ * Attempts to get the proper ID for a tool tip tool.
+ *
+ * @param c
+ * @param lParam
+ *
+ * @return RexxObjectPtr
+ *
+ * @remarks  The tool tip tool ID can either be a dialog control window handle,
+ *           or a unique number.  There is no real way to tell whether the
+ *           number in idFrom is a HWND or a number.
+ */
+RexxObjectPtr getToolIDFromLParam(RexxThreadContext *c, LPARAM lParam)
+{
+    RexxObjectPtr rxID = TheNilObj;
+    UINT_PTR      id   = ((NMHDR *)lParam)->idFrom;
+
+    SetLastError(0);
+    if ( IsWindow((HWND)id) && GetDlgCtrlID((HWND)id) != 0 && GetLastError() == 0 )
+    {
+        rxID = (RexxObjectPtr)getWindowPtr((HWND)id, GWLP_USERDATA);
+        if ( rxID == NULLOBJECT )
+        {
+            rxID = c->Uintptr(id);
+        }
+    }
+    else
+    {
+        rxID = c->Uintptr(id);
+    }
+    return rxID;
+}
+
 
 MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
 {
@@ -1751,13 +1774,207 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             break;
         }
 
+        case LVN_BEGINLABELEDIT :
+        {
+            NMLVDISPINFO *pdi = (NMLVDISPINFO *)lParam;
+
+            if ( (tag & TAG_FLAGMASK) == TAG_PRESERVE_OLD )
+            {
+                // To preserve old behavior for DefListEditStater, we don't need
+                // to do anything. Otherwise, we need to invoke the named method
+                // with the old args.
+                if ( StrCmpI(methodName, "DefListEditStarter") != 0 )
+                {
+                    RexxStringObject mthName = c->String(methodName);
+                    RexxObjectPtr    useLess = c->Intptr(lParam);
+                    RexxArrayObject  args    = c->ArrayOfTwo(idFrom, useLess);
+
+                    invokeDispatch(c, pcpbd->rexxSelf, mthName, args);
+
+                    c->ReleaseLocalReference(mthName);
+                    c->ReleaseLocalReference(idFrom);
+                    c->ReleaseLocalReference(useLess);
+                }
+                return ReplyTrue;
+            }
+
+            HWND hLv   = pdi->hdr.hwndFrom;
+            HWND hEdit = ListView_GetEditControl(hLv);
+
+            RexxObjectPtr   itemID = c->UnsignedInt32(pdi->item.iItem);
+            RexxObjectPtr   rxLv   = createControlFromHwnd(c, pcpbd, pdi->hdr.hwndFrom, winListView, true);
+            RexxObjectPtr   rxEdit = createControlFromHwnd(c, pcpbd, hEdit, winEdit, false);
+            RexxArrayObject args   = c->ArrayOfFour(idFrom, itemID, rxEdit, rxLv);
+
+            if ( expectReply )
+            {
+                RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+                msgReply = requiredBooleanReply(c, pcpbd, msgReply, methodName, false);
+                if ( msgReply == NULL )
+                {
+                    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, TRUE);
+                    return ReplyFalse;
+                }
+
+                // Return false to let the text be edited, true to disallow it.
+                // The return from Rexx is true to allow, false to disallow.
+                setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, msgReply == TheTrueObj ? FALSE : TRUE);
+            }
+            else
+            {
+                RexxStringObject mthName = c->String(methodName);
+                invokeDispatch(c, pcpbd->rexxSelf, mthName, args);
+                c->ReleaseLocalReference(mthName);
+            }
+
+            c->ReleaseLocalReference(idFrom);
+            c->ReleaseLocalReference(itemID);
+            if ( rxLv != TheNilObj )
+            {
+                c->ReleaseLocalReference(rxLv);
+            }
+            if ( rxEdit != TheNilObj )
+            {
+                c->ReleaseLocalReference(rxEdit);
+            }
+            c->ReleaseLocalReference(args);
+
+            return ReplyTrue;
+        }
+
+        case LVN_ENDLABELEDIT :
+        {
+            NMLVDISPINFO *pdi = (NMLVDISPINFO *)lParam;
+
+            if ( (tag & TAG_FLAGMASK) == TAG_PRESERVE_OLD )
+            {
+                // To preserve old behaviour for DefListEditHandler, we don't
+                // need to do anything except set the reply value.  Otherwise,
+                // we need to invoke the named method with the old args.
+                if ( StrCmpI(methodName, "DefListEditHandler") != 0 )
+                {
+                    RexxArrayObject args;
+
+                    RexxStringObject mthName = c->String(methodName);
+                    RexxObjectPtr    itemID  = c->UnsignedInt32(pdi->item.iItem);
+                    RexxObjectPtr    text    = pdi->item.pszText ? c->String(pdi->item.pszText) : NULLOBJECT;
+
+                    if ( text != NULLOBJECT )
+                    {
+                        args = c->ArrayOfThree(idFrom, itemID, text);
+                        invokeDispatch(c, pcpbd->rexxSelf, mthName, args);
+
+                        c->ReleaseLocalReference(text);
+                    }
+                    else
+                    {
+                        args = c->ArrayOfTwo(idFrom, itemID);
+                        invokeDispatch(c, pcpbd->rexxSelf, mthName, args);
+                    }
+
+                    c->ReleaseLocalReference(mthName);
+                    c->ReleaseLocalReference(idFrom);
+                    c->ReleaseLocalReference(itemID);
+                }
+
+                if ( pdi->item.pszText )
+                {
+                    maybeUpdateFullRowText(c, pdi);
+                }
+
+                setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, pdi->item.pszText ? TRUE : FALSE);
+                return ReplyTrue;
+            }
+
+            RexxObjectPtr   itemID = c->UnsignedInt32(pdi->item.iItem);
+            RexxObjectPtr   text   = pdi->item.pszText ? c->String(pdi->item.pszText) : TheNilObj;
+            RexxObjectPtr   rxLV   = createControlFromHwnd(c, pcpbd, pdi->hdr.hwndFrom, winListView, true);
+            RexxArrayObject args   = c->ArrayOfFour(idFrom, itemID, text, rxLV);
+
+            if ( expectReply )
+            {
+                RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+                msgReply = requiredBooleanReply(c, pcpbd, msgReply, methodName, false);
+                if ( msgReply == NULL )
+                {
+                    return ReplyFalse;
+                }
+
+                // From Rexx, return true to accept the edited text, false to
+                // cancel it.  The return to Windows is the same.  But, if the
+                // user canceled the edit and the Rexx programmer returns true,
+                // we ignore the Rexx programmer's reply and return FALSE to
+                // Windows.
+                BOOL windowsReply = (msgReply == TheTrueObj && pdi->item.pszText != NULL) ? TRUE : FALSE;
+
+                if ( windowsReply )
+                {
+                    maybeUpdateFullRowText(c, pdi);
+                }
+
+                setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, windowsReply);
+            }
+            else
+            {
+                RexxStringObject mthName = c->String(methodName);
+                invokeDispatch(c, pcpbd->rexxSelf, mthName, args);
+                c->ReleaseLocalReference(mthName);
+            }
+
+            c->ReleaseLocalReference(idFrom);
+            c->ReleaseLocalReference(itemID);
+            c->ReleaseLocalReference(rxLV);
+            if ( text != TheNilObj )
+            {
+                c->ReleaseLocalReference(text);
+            }
+            c->ReleaseLocalReference(args);
+
+            return ReplyTrue;
+        }
+
+        case LVN_GETINFOTIP :
+        {
+            NMLVGETINFOTIP *tip = (LPNMLVGETINFOTIP)lParam;
+
+            RexxObjectPtr item = c->Int32(tip->iItem);
+            RexxObjectPtr text = tip->dwFlags == 0 ? c->String(tip->pszText) : c->NullString();
+            RexxObjectPtr len  = c->Int32(tip->cchTextMax - 1);
+
+            RexxArrayObject args = c->ArrayOfFour(idFrom, item, text, len);
+
+            RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+            if ( msgReplyIsGood(c, pcpbd, msgReply, methodName, false) )
+            {
+                CSTRING newText = c->ObjectToStringValue(msgReply);
+                if ( strlen(newText) > 0 )
+                {
+                    _snprintf(tip->pszText, tip->cchTextMax - 1, "%s", newText);
+                }
+            }
+
+            c->ReleaseLocalReference(idFrom);
+            c->ReleaseLocalReference(item);
+            c->ReleaseLocalReference(text);
+            c->ReleaseLocalReference(len);
+            c->ReleaseLocalReference(args);
+
+            return ReplyTrue;
+        }
+
         case LVN_KEYDOWN :
         {
             RexxObjectPtr rxLV = createControlFromHwnd(c, pcpbd, ((NMHDR *)lParam)->hwndFrom, winListView, true);
             uint16_t      vKey = ((NMLVKEYDOWN *)lParam)->wVKey;
 
-            // The third argument is whether it is an extended key or not.  That
-            // is the only way to tell between ...
+            // The third argument is whether it is an extended key or not. This
+            // is needed for processing WM_CHAR, which getKeyEventRexxArgs() is
+            // also used for.  For WM_CHAR it is the only way to tell between
+            // the extended DELETE key and the '.' character.  For key down we
+            // just say false.
             RexxArrayObject args  = getKeyEventRexxArgs(c, (WPARAM)vKey, false, rxLV);
 
             if ( expectReply )
@@ -1766,9 +1983,12 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             }
             else
             {
-                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+                RexxStringObject mth = c->String(methodName);
+                invokeDispatch(c, pcpbd->rexxSelf, mth, args);
+                c->ReleaseLocalReference(mth);
             }
 
+            releaseKeyEventRexxArgs(c, args);
             msgReply = ReplyTrue;
 
             break;
@@ -2040,6 +2260,230 @@ MsgReplyType processTCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
     return genericNotifyInvoke(c, pcpbd, methodName, idFrom, hwndFrom);
 }
 
+
+/**
+ * Process tool tip notification messages.
+ *
+ * @param c
+ * @param methodName
+ * @param tag
+ * @param code
+ * @param wParam
+ * @param lParam
+ * @param pcpbd
+ *
+ * @return MsgReplyType
+ *
+ * @remarks  Testing has shown that wParam, what the MSDN doc labels as idTT, is
+ *           the uId field of the TOOLINFO struct. In addition, wParam and
+ *           ((NMHDR *)lParam)->idFrom seem to always have the same value.
+ *
+ *           However, for the TTN_LINKCLICK notification, this value is always
+ *           0.  (Seems to be always 0, and this sort of matches what MSDN
+ *           says.)
+ *
+ *           The TTN_NEEDTEXT notification presents a problem.  For strings
+ *           longer than 80 characters, MSDN says you need to point the lpszText
+ *           array to your own private buffer when the text used in the ToolTip
+ *           exceeds 80 TCHARS in length.  If we alloc the memory, when do we
+ *           free it?  Currently, we use a static buffer in the tool tip table
+ *           entry.  We are assuming that only 1 tool tip text can display at
+ *           any one time.  When we get TTN_NEEDTEXT, we copy the text returned
+ *           from the user into this static buffer.  Then we do not need to
+ *           worry about allocing and freeing the memory.
+ */
+MsgReplyType processTTN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, WPARAM wParam, LPARAM lParam,
+                        pCPlainBaseDialog pcpbd)
+{
+    RexxObjectPtr rexxReply = NULLOBJECT;
+    bool          willReply = (tag & TAG_REPLYFROMREXX) == TAG_REPLYFROMREXX;
+
+    RexxObjectPtr   rxToolTip = getToolTipFromLParam(lParam);
+    RexxObjectPtr   rxToolID  = getToolIDFromLParam(c, lParam);
+
+    switch ( code )
+    {
+        case TTN_LINKCLICK :
+        {
+            RexxArrayObject args = c->ArrayOfTwo(rxToolID, rxToolTip);
+            if ( willReply )
+            {
+                invokeDirect(c, pcpbd, methodName, args);
+            }
+            else
+            {
+                RexxStringObject mthName = c->String(methodName);
+
+                invokeDispatch(c, pcpbd->rexxSelf, mthName, args);
+                c->ReleaseLocalReference(mthName);
+            }
+
+            c->ReleaseLocalReference(args);
+            break;
+        }
+
+        case TTN_NEEDTEXT :
+        {
+            LPNMTTDISPINFO nmtdi = (LPNMTTDISPINFO)lParam;
+
+            RexxDirectoryObject info = c->NewDirectory();
+
+            RexxObjectPtr    userData = nmtdi->lParam == NULL ? TheNilObj : (RexxObjectPtr)nmtdi->lParam;
+            RexxStringObject flags    = ttdiFlags2keyword(c, nmtdi->uFlags);
+
+            c->DirectoryPut(info, c->NullString(), "TEXT");
+            c->DirectoryPut(info, userData, "USERDATA");
+            c->DirectoryPut(info, flags, "FLAGS");
+
+            RexxArrayObject args = c->ArrayOfThree(rxToolID, rxToolTip, info);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+            rexxReply = requiredBooleanReply(c, pcpbd, rexxReply, methodName, false);
+            if ( rexxReply == NULLOBJECT )
+            {
+                return ReplyFalse;
+            }
+
+            RexxObjectPtr _text = c->DirectoryAt(info, "TEXT");
+            CSTRING       text  = c->ObjectToStringValue(_text);
+            size_t        len   = strlen(text);
+
+            if ( len > MAX_TOOLINFO_TEXT_LENGTH )
+            {
+                stringTooLongException(c, 1, MAX_TOOLINFO_TEXT_LENGTH, len);
+                checkForCondition(c, false);
+                endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+                return ReplyFalse;
+            }
+
+            pCDialogControl pcdc = controlToCSelf(c, rxToolTip);
+            strcpy(pcdc->toolTipEntry->textBuf, text);
+
+            nmtdi->lpszText = pcdc->toolTipEntry->textBuf;
+
+            if ( rexxReply == TheTrueObj )
+            {
+                nmtdi->uFlags |= TTF_DI_SETITEM;
+            }
+            c->ReleaseLocalReference(_text);
+
+            c->ReleaseLocalReference(flags);
+            c->ReleaseLocalReference(info);
+            c->ReleaseLocalReference(args);
+            break;
+        }
+
+        case TTN_POP :
+        {
+            RexxArrayObject args = c->ArrayOfTwo(rxToolID, rxToolTip);
+
+            if ( willReply )
+            {
+                invokeDirect(c, pcpbd, methodName, args);
+            }
+            else
+            {
+                RexxStringObject mthName = c->String(methodName);
+
+                invokeDispatch(c, pcpbd->rexxSelf, mthName, args);
+                c->ReleaseLocalReference(mthName);
+            }
+
+            c->ReleaseLocalReference(args);
+
+            break;
+        }
+
+        case TTN_SHOW :
+        {
+            RexxArrayObject args = c->ArrayOfTwo(rxToolID, rxToolTip);
+
+            rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+            rexxReply = requiredBooleanReply(c, pcpbd, rexxReply, methodName, false);
+            if ( rexxReply == NULLOBJECT )
+            {
+                return ReplyFalse;
+            }
+            if ( rexxReply == TheTrueObj )
+            {
+                setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, TRUE);
+            }
+
+            c->ReleaseLocalReference(args);
+
+            break;
+        }
+
+        default :
+            // Theoretically we can not get here because all tool tip
+            // notification codes that have a tag are accounted for.
+            break;
+    }
+
+    c->ReleaseLocalReference(rxToolTip);
+    c->ReleaseLocalReference(rxToolID);
+
+    return ReplyTrue;
+}
+
+/**
+ * Handles the connected tree-vien event notifications.
+ *
+ * The tag code must have included the TAG_TREEVIEW flag for this function to be
+ * invoked.
+ *
+ * @param c
+ * @param methodName
+ * @param tag
+ * @param code
+ * @param lParam
+ * @param pcpbd
+ *
+ * @return MsgReplyType
+ *
+ * @remarks
+ *
+ */
+MsgReplyType processTVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    switch ( code )
+    {
+        case TVN_BEGINDRAG :
+        case TVN_BEGINRDRAG :
+            return tvnBeginDrag(c, methodName, tag, lParam, pcpbd, code);
+
+        case TVN_BEGINLABELEDIT :
+            return tvnBeginLabelEdit(c, methodName, tag, lParam, pcpbd);
+
+        case TVN_DELETEITEM :
+            return tvnDeleteItem(c, methodName, tag, lParam, pcpbd);
+
+        case TVN_ENDLABELEDIT :
+            return tvnEndLabelEdit(c, methodName, tag, lParam, pcpbd);
+
+        case TVN_GETINFOTIP :
+            return tvnGetInfoTip(c, methodName, tag, lParam, pcpbd);
+
+        case TVN_KEYDOWN :
+            return tvnKeyDown(c, methodName, tag, lParam, pcpbd);
+
+        case TVN_ITEMEXPANDED :
+        case TVN_ITEMEXPANDING :
+            return tvnItemExpand(c, methodName, tag, lParam, pcpbd, code);
+
+        case TVN_SELCHANGED :
+        case TVN_SELCHANGING :
+            return tvnSelChange(c, methodName, tag, lParam, pcpbd, code);
+
+        default :
+            break;
+    }
+
+
+    // This should never happen, we can't get here.
+    return ReplyTrue;
+}
+
 MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, uint32_t code, LPARAM lParam, pCPlainBaseDialog pcpbd)
 {
     RexxObjectPtr rexxReply;
@@ -2200,6 +2644,56 @@ MsgReplyType processUDN(RexxThreadContext *c, CSTRING methodName, LPARAM lParam,
     return ReplyTrue;
 }
 
+/**
+ * Handles the NM_CUSTOMDRAW event notification message.
+ *
+ * @param c
+ * @param methodName
+ * @param lParam
+ * @param pcpbd
+ *
+ * @return MsgReplyType
+ *
+ * @notes  Currently we are only handling the list-view and tree-view custom
+ *         draw, and only the simple case.  Everything else is just ignored.
+ *         Custom draw for more controls will be added over time.
+ *
+ *         The simple case may be the only practical case.  But, the intent is
+ *         to add complete support for custom draw, with the anticipation that
+ *         it may be too slow in ooDialog.
+ */
+MsgReplyType processCustomDraw(RexxThreadContext *c, CSTRING methodName, uint32_t tag, LPARAM lParam, pCPlainBaseDialog pcpbd)
+{
+    LPARAM reply = CDRF_DODEFAULT;
+
+    if ( ! pcpbd->badIDs )
+    {
+        switch ( tag & TAG_FLAGMASK )
+        {
+            case TAG_CD_LISTVIEW :
+                if ( (tag & TAG_EXTRAMASK) == TAG_CD_SIMPLE )
+                {
+                    return lvSimpleCustomDraw(c, methodName, lParam, pcpbd);
+                }
+
+                break;
+
+            case TAG_CD_TREEVIEW :
+                if ( (tag & TAG_EXTRAMASK) == TAG_CD_SIMPLE )
+                {
+                    return tvSimpleCustomDraw(c, methodName, lParam, pcpbd);
+                }
+
+                break;
+
+            default :
+                break;
+        }
+    }
+
+    setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, (LPARAM)reply);
+    return ReplyTrue;
+}
 
 /**
  * Searches through the notify (WM_NOTIFY) message table for a table entry that
@@ -2224,12 +2718,14 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
     }
 
     uint32_t code = ((NMHDR *)lParam)->code;
+    HWND     hwndFrom = ((NMHDR *)lParam)->hwndFrom;
     size_t tableSize = pcpbd->enCSelf->nmNextIndex;
-    register size_t i = 0;
 
+    register size_t i = 0;
     for ( i = 0; i < tableSize; i++ )
     {
-        if ( ((wParam & m[i].wpFilter) == m[i].wParam) && ((code & m[i].lpfilter) == (uint32_t)m[i].lParam) )
+        if ( (((wParam & m[i].wpFilter) == m[i].wParam) && isCodeMatch(m, code, i)) ||
+             (isTTN(code) && isCodeMatch(m, code, i) && (((WPARAM)hwndFrom & m[i].wpFilter) == m[i].wParam)) )
         {
             RexxThreadContext *c = pcpbd->dlgProcContext;
 
@@ -2243,6 +2739,10 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 case TAG_NOTHING :
                     break;
 
+                case TAG_CUSTOMDRAW :
+                    return processCustomDraw(c, m[i].rexxMethod, m[i].tag, lParam, pcpbd);
+                    break;
+
                 case TAG_LISTVIEW :
                 {
                     MsgReplyType ret = processLVN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
@@ -2253,9 +2753,8 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                     return ret;
                 }
 
-                // TODO should we terminate the interpreter if checkForCondition() returns true??
-                // We could let the user decide through use of the .application
-                // object.
+                case TAG_TREEVIEW :
+                    return processTVN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
 
                 case TAG_TAB :
                     return processTCN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
@@ -2269,30 +2768,15 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 case TAG_DATETIMEPICKER :
                     return processDTN(c, m[i].rexxMethod, m[i].tag, code, lParam, pcpbd);
 
+                case TAG_TOOLTIP :
+                    return processTTN(c, m[i].rexxMethod, m[i].tag, code, wParam, lParam, pcpbd);
+
                 default :
                     break;
             }
 
-            /* do we have an end label edit for tree or list view? */
-            if ( (code == TVN_ENDLABELEDIT) && ((TV_DISPINFO *)lParam)->item.pszText )
-            {
-                np = ((TV_DISPINFO *)lParam)->item.pszText;
-                handle = ((TV_DISPINFO *)lParam)->item.hItem;
-            }
-            else if ( (code == LVN_ENDLABELEDIT) && ((LV_DISPINFO *)lParam)->item.pszText )
-            {
-                np = ((LV_DISPINFO *)lParam)->item.pszText;
-                item = ((LV_DISPINFO *)lParam)->item.iItem;
-            }
-            /* do we have a tree expand/collapse? */
-            else if ( (code == TVN_ITEMEXPANDED) || (code == TVN_ITEMEXPANDING) )
-            {
-                handle = ((NM_TREEVIEW *)lParam)->itemNew.hItem;
-                if ( ((NM_TREEVIEW *)lParam)->itemNew.state & TVIS_EXPANDED ) np = "EXPANDED";
-                else np = "COLLAPSED";
-            }
             /* do we have a key_down? */
-            else if ( (code == TVN_KEYDOWN) || (code == LVN_KEYDOWN) || (code == TCN_KEYDOWN) )
+            if ( code == LVN_KEYDOWN || code == TCN_KEYDOWN )
             {
                 lParam = (ULONG)((TV_KEYDOWN *)lParam)->wVKey;
             }
@@ -2302,14 +2786,6 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
                 item = ((NM_LISTVIEW *)lParam)->iItem;
                 wParam = ((NMHDR *)lParam)->idFrom;
                 sprintf(tmpBuffer, "%d %d", ((NM_LISTVIEW *)lParam)->ptAction.x, ((NM_LISTVIEW *)lParam)->ptAction.y);
-                np = tmpBuffer;
-            }
-            /* do we have a tree drag and drop? */
-            else if ( (code == TVN_BEGINDRAG) || (code == TVN_BEGINRDRAG) )
-            {
-                handle = ((NM_TREEVIEW *)lParam)->itemNew.hItem;
-                wParam = ((NMHDR *)lParam)->idFrom;
-                sprintf(tmpBuffer, "%d %d", ((NM_TREEVIEW *)lParam)->ptDrag.x, ((NM_TREEVIEW *)lParam)->ptDrag.y);
                 np = tmpBuffer;
             }
             else if ( code == BCN_HOTITEMCHANGE )
@@ -2351,10 +2827,9 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
 
     size_t tableSize = pcpbd->enCSelf->mmNextIndex;
     register size_t i = 0;
-
     for ( i = 0; i < tableSize; i++ )
     {
-        if ( (msg & m[i].msgFilter) == m[i].msg && (wParam & m[i].wpFilter) == m[i].wParam && (lParam & m[i].lpfilter) == m[i].lParam )
+        if ( (msg & m[i].msgFilter) == m[i].msg && (wParam & m[i].wpFilter) == m[i].wParam && (lParam & m[i].lpFilter) == m[i].lParam )
         {
             RexxThreadContext *c = pcpbd->dlgProcContext;
             RexxArrayObject args;
@@ -2379,7 +2854,7 @@ MsgReplyType searchMiscTable(uint32_t msg, WPARAM wParam, LPARAM lParam, pCPlain
                             np = (phi->iContextType == HELPINFO_WINDOW ? "WINDOW" : "MENU");
 
                             args = c->ArrayOfFour(c->Int32(phi->iCtrlId), c->String(np),
-                                                  c->Int32(phi->MousePos.x), c->Int32(phi->MousePos.x));
+                                                  c->Int32(phi->MousePos.x), c->Int32(phi->MousePos.y));
                             c->ArrayPut(args, c->Uintptr(phi->dwContextId), 5);
 
                             return invokeDispatch(c, pcpbd->rexxSelf, c->String(method), args);
@@ -2646,7 +3121,7 @@ bool addCommandMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wP
 {
     if ( pcen == NULL || pcen->commandMsgs == NULL )
     {
-        baseClassIntializationException(c);
+        baseClassInitializationException(c);
         return false;
     }
 
@@ -2681,7 +3156,7 @@ bool addCommandMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wP
     pcen->commandMsgs[index].wParam = wParam;
     pcen->commandMsgs[index].wpFilter = wpFilter;
     pcen->commandMsgs[index].lParam = lParam;
-    pcen->commandMsgs[index].lpfilter = lpFilter;
+    pcen->commandMsgs[index].lpFilter = lpFilter;
     pcen->commandMsgs[index].tag = tag;
 
     pcen->cmNextIndex++;
@@ -2757,7 +3232,7 @@ bool addNotifyMessage(pCEventNotification pcen, RexxMethodContext *c, WPARAM wPa
     pcen->notifyMsgs[index].wParam = wParam;
     pcen->notifyMsgs[index].wpFilter = wpFilter;
     pcen->notifyMsgs[index].lParam = lParam;
-    pcen->notifyMsgs[index].lpfilter = lpFilter;
+    pcen->notifyMsgs[index].lpFilter = lpFilter;
     pcen->notifyMsgs[index].tag = tag;
 
     pcen->nmNextIndex++;
@@ -2835,7 +3310,7 @@ bool addMiscMessage(pCEventNotification pcen, RexxMethodContext *c, uint32_t win
     pcen->miscMsgs[index].wParam = wParam;
     pcen->miscMsgs[index].wpFilter = wpFilter;
     pcen->miscMsgs[index].lParam = lParam;
-    pcen->miscMsgs[index].lpfilter = lpFilter;
+    pcen->miscMsgs[index].lpFilter = lpFilter;
     pcen->miscMsgs[index].tag = tag;
 
     pcen->mmNextIndex++;
@@ -2906,7 +3381,9 @@ bool initEventNotification(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxOb
     pCEventNotification pcen = (pCEventNotification)c->BufferData(obj);
     memset(pcen, 0, sizeof(pCEventNotification));
 
+    pcen->magic     = EVENTNOTIFICATION_MAGIC;
     pcen->rexxSelf = self;
+    pcen->pDlgCSelf = pcpbd;
 
     if ( ! initCommandMessagesTable(c, pcen, pcpbd) )
     {
@@ -2928,6 +3405,7 @@ bool initEventNotification(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxOb
 
 #define DTPN_KEYWORDS                 "CloseUp, DateTimeChange, DropDown, FormatQuery, Format, KillFocus, SetFocus, UserString, or KeyDown"
 #define MCN_KEYWORDS                  "GetDayState, Released, SelChange, Select, or ViewChange"
+#define TTN_KEYWORDS                  "LinkClick, NeedText, Pop, or Show"
 
 /**
  * Convert a keyword to the proper scroll bar notification code.
@@ -2995,6 +3473,167 @@ inline CSTRING sbn2name(uint32_t sbn)
 
 
 /**
+ * Convert a keyword to the proper tree-view notification code.
+ *
+ *
+ */
+static bool keyword2tvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, uint32_t *pTag, bool *isDefEdit,
+                        logical_t willReply, bool willReplyUsed)
+{
+    uint32_t tvn  = 0;
+    uint32_t tag = 0;
+
+    *isDefEdit = false;
+
+    if ( StrCmpI(keyword, "BEGINDRAG"  ) == 0 )
+    {
+        tvn = TVN_BEGINDRAG;
+        tag = TAG_TREEVIEW;
+
+        if ( ! willReplyUsed )
+        {
+            tag |= TAG_PRESERVE_OLD;
+        }
+    }
+    else if ( StrCmpI(keyword, "BEGINEDIT"  ) == 0 )
+    {
+        tvn = TVN_BEGINLABELEDIT;
+        tag = TAG_TREEVIEW;
+
+        if ( ! willReplyUsed )
+        {
+            tag |= TAG_PRESERVE_OLD;
+        }
+    }
+    else if ( StrCmpI(keyword, "BEGINRDRAG" ) == 0 )
+    {
+        tvn = TVN_BEGINRDRAG;
+        tag = TAG_TREEVIEW;
+
+        if ( ! willReplyUsed )
+        {
+            tag |= TAG_PRESERVE_OLD;
+        }
+    }
+    else if ( StrCmpI(keyword, "DEFAULTEDIT") == 0 )
+    {
+        *isDefEdit = true;
+        tag = TAG_TREEVIEW | TAG_PRESERVE_OLD;
+    }
+    else if ( StrCmpI(keyword, "DELETE"     ) == 0 )
+    {
+        tvn = TVN_DELETEITEM;
+        tag = TAG_TREEVIEW;
+
+        if ( ! willReplyUsed )
+        {
+            tag |= TAG_PRESERVE_OLD;
+        }
+    }
+    else if ( StrCmpI(keyword, "ENDEDIT"    ) == 0 )
+    {
+        tvn = TVN_ENDLABELEDIT;
+        tag = TAG_TREEVIEW;
+
+        if ( ! willReplyUsed )
+        {
+            tag |= TAG_PRESERVE_OLD;
+        }
+    }
+    else if ( StrCmpI(keyword, "EXPANDED") == 0 )
+    {
+        tvn = TVN_ITEMEXPANDED;
+        tag = TAG_TREEVIEW;
+    }
+    else if ( StrCmpI(keyword, "EXPANDING"  ) == 0 )
+    {
+        tvn = TVN_ITEMEXPANDING;
+        tag = TAG_TREEVIEW;
+    }
+    else if ( StrCmpI(keyword, "GETINFOTIP") == 0 )
+    {
+        tvn = TVN_GETINFOTIP;
+        tag = TAG_TREEVIEW | TAG_REPLYFROMREXX;
+    }
+    else if ( StrCmpI(keyword, "KEYDOWN"    ) == 0 )
+    {
+        tvn = TVN_KEYDOWN;
+        tag = TAG_TREEVIEW | TAG_PRESERVE_OLD;
+    }
+    else if ( StrCmpI(keyword, "KEYDOWNEX") == 0 )
+    {
+        tvn = TVN_KEYDOWN;
+        tag = TAG_TREEVIEW;
+    }
+    else if ( StrCmpI(keyword, "SELCHANGED" ) == 0 )
+    {
+        tvn = TVN_SELCHANGED;
+        tag = TAG_TREEVIEW;
+
+        if ( ! willReplyUsed )
+        {
+            tag |= TAG_PRESERVE_OLD;
+        }
+    }
+    else if ( StrCmpI(keyword, "SELCHANGING") == 0 )
+    {
+        tvn = TVN_SELCHANGING;
+        tag = TAG_TREEVIEW;
+
+        if ( ! willReplyUsed )
+        {
+            tag |= TAG_PRESERVE_OLD;
+        }
+    }
+    else
+    {
+        return false;
+    }
+
+    if ( tag != 0 && willReply )
+    {
+        tag |= TAG_REPLYFROMREXX;
+    }
+
+    *code = tvn;
+    *pTag = tag;
+    return true;
+}
+
+
+/**
+ * Convert a tree view notification code and tag to a method name.
+ */
+inline CSTRING tvn2name(uint32_t tvn, uint32_t tag)
+{
+    switch ( tvn )
+    {
+        case TVN_SELCHANGING    : return "onSelChanging";
+        case TVN_SELCHANGED     : return "onSelChanged";
+        case TVN_BEGINDRAG      : return "onBeginDrag";
+        case TVN_BEGINRDRAG     : return "onBeginRDrag";
+        case TVN_DELETEITEM     : return "onDelete";
+        case TVN_BEGINLABELEDIT : return "onBeginEdit";
+        case TVN_ENDLABELEDIT   : return "onEndEdit";
+        case TVN_ITEMEXPANDING  : return "onExpanding";
+        case TVN_ITEMEXPANDED   : return "onExpanded";
+        case TVN_GETINFOTIP     : return "onGetInfoTip";
+        case TVN_KEYDOWN        :
+            if ( tag & TAG_TREEVIEW )
+            {
+                return "onKeyDownEx";
+            }
+            else
+            {
+                return "onKeydown";
+            }
+
+    }
+    return "onTVN";
+}
+
+
+/**
  * Convert a keyword to the proper list view notification code.
  *
  *
@@ -3011,13 +3650,25 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
     else if ( StrCmpI(keyword, "INSERTED")    == 0 ) lvn = LVN_INSERTITEM;
     else if ( StrCmpI(keyword, "DELETE")      == 0 ) lvn = LVN_DELETEITEM;
     else if ( StrCmpI(keyword, "DELETEALL")   == 0 ) lvn = LVN_DELETEALLITEMS;
-    else if ( StrCmpI(keyword, "BEGINEDIT")   == 0 ) lvn = LVN_BEGINLABELEDIT;
-    else if ( StrCmpI(keyword, "ENDEDIT")     == 0 ) lvn = LVN_ENDLABELEDIT;
     else if ( StrCmpI(keyword, "BEGINDRAG")   == 0 ) lvn = LVN_BEGINDRAG;
     else if ( StrCmpI(keyword, "BEGINRDRAG")  == 0 ) lvn = LVN_BEGINRDRAG;
     else if ( StrCmpI(keyword, "ACTIVATE")    == 0 ) lvn = LVN_ITEMACTIVATE;
     else if ( StrCmpI(keyword, "KEYDOWN")     == 0 ) lvn = LVN_KEYDOWN;
-    else if ( StrCmpI(keyword, "DEFAULTEDIT") == 0 ) *isDefEdit = true;
+    else if ( StrCmpI(keyword, "DEFAULTEDIT") == 0 )
+    {
+        *isDefEdit = true;
+        *tag = TAG_LISTVIEW | TAG_PRESERVE_OLD;
+    }
+    else if ( StrCmpI(keyword, "BEGINEDIT")   == 0 )
+    {
+        lvn = LVN_BEGINLABELEDIT;
+        *tag = TAG_LISTVIEW;
+    }
+    else if ( StrCmpI(keyword, "ENDEDIT")     == 0 )
+    {
+         lvn = LVN_ENDLABELEDIT;
+         *tag = TAG_LISTVIEW;
+    }
     else if ( StrCmpI(keyword, "CLICK") == 0 )
     {
         lvn = NM_CLICK;
@@ -3058,6 +3709,11 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
         lvn = LVN_ITEMCHANGED;
         *tag = TAG_LISTVIEW | TAG_STATECHANGED | TAG_SELECTCHANGED | TAG_FOCUSCHANGED;
     }
+    else if ( StrCmpI(keyword, "GETINFOTIP") == 0 )
+    {
+        lvn = LVN_GETINFOTIP;
+        *tag = TAG_LISTVIEW | TAG_REPLYFROMREXX;
+    }
     else
     {
         return false;
@@ -3090,6 +3746,7 @@ inline CSTRING lvn2name(uint32_t lvn, uint32_t tag)
         case LVN_BEGINDRAG      : return "onBegindrag";
         case LVN_BEGINRDRAG     : return "onBeginrdrag";
         case LVN_ITEMACTIVATE   : return "onActivate";
+        case LVN_GETINFOTIP     : return "onGetInfoTip";
         case NM_CLICK           : return "onClick";
         case LVN_KEYDOWN :
             if ( tag & TAG_LISTVIEW )
@@ -3123,6 +3780,53 @@ inline CSTRING lvn2name(uint32_t lvn, uint32_t tag)
             }
     }
     return "onLVN";
+}
+
+
+/**
+ * Convert a keyword to the proper tool tip notification code.
+ *
+ * We know the keyword arg position is 2.  The ToolTip control is post
+ * ooRexx 4.0.1 so we raise an exception on error.
+ */
+static bool keyword2ttn(RexxMethodContext *c, CSTRING keyword, uint32_t *flag)
+{
+    uint32_t ttn;
+
+    if ( StrCmpI(keyword, "LINKCLICK") == 0 )
+    {
+        if ( ! requiredComCtl32Version(c, "LINKCLICK", COMCTL32_6_0) )
+        {
+            return false;
+        }
+        ttn = TTN_LINKCLICK;
+    }
+    else if ( StrCmpI(keyword, "NEEDTEXT")  == 0 ) ttn = TTN_NEEDTEXT;
+    else if ( StrCmpI(keyword, "POP")       == 0 ) ttn = TTN_POP;
+    else if ( StrCmpI(keyword, "SHOW")      == 0 ) ttn = TTN_SHOW;
+    else
+    {
+        wrongArgValueException(c->threadContext, 2, TTN_KEYWORDS, keyword);
+        return false;
+    }
+    *flag = ttn;
+    return true;
+}
+
+
+/**
+ * Convert a tool tip notification code to a method name.
+ */
+inline CSTRING ttn2name(uint32_t ttn)
+{
+    switch ( ttn )
+    {
+        case TTN_LINKCLICK : return "onLinkClick";
+        case TTN_NEEDTEXT  : return "onNeedText";
+        case TTN_POP       : return "onPop";
+        case TTN_SHOW      : return "onShow";
+    }
+    return "onTTN";
 }
 
 
@@ -3290,6 +3994,27 @@ RexxArrayObject getKeyEventRexxArgs(RexxThreadContext *c, WPARAM wParam, bool is
 
 
 /**
+ * Releases the local references to the arg array created in
+ * getKeyEventRexxArgs().  We cheat here and use our knowledge of the function
+ * above and release the first 5 args in the array.  The 6th arg is either
+ * TheNilObj, or a dialog control ojbect.  Neither one of these should be
+ * released.
+ *
+ * @param c
+ * @param args
+ */
+void releaseKeyEventRexxArgs(RexxThreadContext *c, RexxArrayObject args)
+{
+    for ( size_t i = 1; i <= 5; i++ )
+    {
+        RexxObjectPtr o = c->ArrayAt(args, i);
+        c->ReleaseLocalReference(o);
+    }
+    c->ReleaseLocalReference(args);
+}
+
+
+/**
  * The keyboard hook procedure.
  *
  * This is a thread specific hook, not a global hook. This function executes in
@@ -3394,6 +4119,9 @@ static keyPressErr_t installKBHook(pCEventNotification pcen, CSTRING method, CST
     }
     else
     {
+        // To safely use freeKeyPressData() to clean up we need to set pData to
+        // pKeyData.
+        pSCData->pData = pKeyData;
         freeKeyPressData(pSCData);
     }
 
@@ -3567,10 +4295,15 @@ void processKeyPress(pSubClassData pSCData, WPARAM wParam, LPARAM lParam)
     {
         RexxThreadContext *c = pSCData->pcpbd->dlgProcContext;
 
+        RexxStringObject mth  = c->String(pMethod);
         RexxArrayObject args = getKeyEventRexxArgs(c, wParam,
                                                    lParam & KEY_ISEXTENDED ? true : false,
                                                    pSCData->pcdc == NULL   ? NULL : pSCData->pcdc->rexxSelf);
-        invokeDispatch(c, pSCData->pcpbd->rexxSelf, c->String(pMethod), args);
+
+        invokeDispatch(c, pSCData->pcpbd->rexxSelf, mth, args);
+
+        c->ReleaseLocalReference(mth);
+        releaseKeyEventRexxArgs(c, args);
     }
 }
 
@@ -4658,189 +5391,6 @@ err_out:
 }
 
 
-/** EventNotification::connectListViewEvent()
- *
- *  Connects a Rexx dialog method with a list view event.
- *
- *  @param  rxID        The resource ID of the dialog control.  Can be numeric
- *                      or symbolic.
- *
- *  @param  event       Keyword specifying which event to connect.  Keywords at
- *                      this time:
- *
- *                      ACTIVATE
- *                      BEGINDRAG
- *                      BEGINRDRAG
- *                      BEGINEDIT
- *                      CHANGED
- *                      CHANGING
- *                      COLUMNCLICK
- *                      DEFAULTEDIT
- *                      DELETE
- *                      DELETEALL
- *                      ENDEDIT
- *                      INSERTED
- *                      KEYDOWN
- *
- *                      CHECKBOXCHANGED
- *                      CLICK
- *                      FOCUSCHANGED
- *                      SELECTCHANGED
- *                      SELECTFOCUS
- *
- *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
- *                      Rexx dialog.  If this argument is omitted then the
- *                      method name is constructed by prefixing the event
- *                      keyword with 'on'.  For instance onUserString.
- *
- *  @param  willReply   [OPTIONAL] Specifies if the method invocation should be
- *                      direct or indirect. With a direct invocation, the
- *                      interpreter waits in the Windows message loop for the
- *                      return from the Rexx method. With indirect, the Rexx
- *                      method is invoked through ~startWith(), which of course
- *                      returns immediately.
- *
- *                      For list views, at this time, the default is false, i.e.
- *                      the Rexx programmer needs to specify that she wants to
- *                      reply.  This could change if new key words are added.
- *
- *  @return 0 for no error, -1 for a bad resource ID or incorrect event keyword,
- *          1 if the event could not be connected.  The event can not be
- *          connected if there is a problem with the message table, full or out
- *          of memory error.
- *
- *  @remarks   For the current keywords, if a symbolic ID is  used and it can
- *             not be resolved to a numeric number -1 has to be returned for
- *             backwards compatibility.  Essentially, for this method, all
- *             behaviour needs to be pre-4.2.0.  The only change is that for
- *             tagged list view events, the user can specify to reply directly.
- */
-RexxMethod5(RexxObjectPtr, en_connectListViewEvent, RexxObjectPtr, rxID, CSTRING, event,
-            OPTIONAL_CSTRING, methodName, OPTIONAL_logical_t, willReply, CSELF, pCSelf)
-{
-    pCEventNotification pcen = (pCEventNotification)pCSelf;
-
-    int32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
-    {
-        return TheNegativeOneObj;
-    }
-
-    uint32_t tag = 0;
-    bool     isDefEdit = false;
-    uint32_t notificationCode;
-
-    if ( ! keyword2lvn(context, event, &notificationCode, &tag, &isDefEdit, willReply) )
-    {
-        return TheNegativeOneObj;
-    }
-
-    // Deal with DEFAULTEDIT separately.
-    if ( isDefEdit )
-    {
-        if ( ! addNotifyMessage(pcen, context, id, 0xFFFFFFFF, LVN_BEGINLABELEDIT, 0xFFFFFFFF, "DefListEditStarter", 0) )
-        {
-            return TheNegativeOneObj;
-        }
-        if ( ! addNotifyMessage(pcen, context, id, 0xFFFFFFFF, LVN_ENDLABELEDIT, 0xFFFFFFFF, "DefListEditHandler", 0) )
-        {
-            return TheNegativeOneObj;
-        }
-        return TheZeroObj;
-    }
-
-    if ( argumentOmitted(3) || *methodName == '\0' )
-    {
-        methodName = lvn2name(notificationCode, tag);
-    }
-
-    if ( addNotifyMessage(pcen, context, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
-    {
-        return TheZeroObj;
-    }
-
-    return TheOneObj;
-}
-
-
-/** EventNotification::connectUpDownEvent()
- *
- *  Connects a Rexx dialog method with an up down control event.
- *
- *  @param  rxID        The resource ID of the dialog control.  Can be numeric
- *                      or symbolic.
- *
- *  @param  event       Keyword specifying which event to connect.  Only one at
- *                      this time:
- *
- *                      DELTAPOS
- *
- *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
- *                      Rexx dialog.  If this argument is omitted then the
- *                      method name is constructed by prefixing the event
- *                      keyword with 'on'.  For instance onDeltaPos.
- *
- *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
- *          number an exception is raised.
- *
- *  @remarks  This method is new since the 4.0.0 release, therefore an exception
- *            is raised for a bad resource ID rather than returning -1.
- *
- *            MSDN docs say that the up-down control also sends the
- *            NM_RELEASEDCAPTURE message.  I see no evidence it is ever sent.
- *            And there is this from a news group:
- *
- *            Christian ASTOR    View profile
- *
- *            Alexander Grigoriev wrote:
- *            > I need to handle NM_RELEASEDCAPTURE notification from an up-down
- *            > control in a dialog. But they don't seem to send it, no matter
- *            > how I'm trying.
- *
- *            Up-Down control doesn't send NM_RELEASEDCAPTURE notification.
- *            (docs are wrong...)
- *
- *            Since DELTAPOS is the only notification and it is always direct
- *            reply, we don't have the the optional fourth, willReply, argument.
- */
-RexxMethod4(RexxObjectPtr, en_connectUpDownEvent, RexxObjectPtr, rxID, CSTRING, event,
-            OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
-{
-    pCEventNotification pcen = (pCEventNotification)pCSelf;
-
-    int32_t id = oodResolveSymbolicID(context->threadContext, pcen->rexxSelf, rxID, -1, 1, true);
-    if ( id == OOD_ID_EXCEPTION )
-    {
-        goto err_out;
-    }
-
-    uint32_t notificationCode;
-
-    if ( StrStrI(event, "DELTAPOS") != NULL )
-    {
-        notificationCode = UDN_DELTAPOS;
-    }
-    else
-    {
-        wrongArgValueException(context->threadContext, 2, "DeltaPos", event);
-        goto err_out;
-    }
-
-    if ( argumentOmitted(3) || *methodName == '\0' )
-    {
-        methodName = "onDeltaPos";
-    }
-
-    if ( addNotifyMessage(pcen, context, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, TAG_UPDOWN) )
-    {
-        return TheTrueObj;
-    }
-
-err_out:
-    return TheFalseObj;
-}
-
-
 /** EventNotification::connectDateTimePickerEvent()
  *
  *  Connects a Rexx dialog method with a date time picker control event.
@@ -4928,6 +5478,151 @@ err_out:
 }
 
 
+/** EventNotification::connectListViewEvent()
+ *
+ *  Connects a Rexx dialog method with a list view event.
+ *
+ *  @param  rxID        The resource ID of the dialog control.  Can be numeric
+ *                      or symbolic.
+ *
+ *  @param  event       Keyword specifying which event to connect.  Keywords at
+ *                      this time:
+ *
+ *                      ACTIVATE
+ *                      BEGINDRAG
+ *                      BEGINRDRAG
+ *                      BEGINEDIT
+ *                      CHANGED
+ *                      CHANGING
+ *                      COLUMNCLICK
+ *                      DEFAULTEDIT
+ *                      DELETE
+ *                      DELETEALL
+ *                      ENDEDIT
+ *                      INSERTED
+ *                      KEYDOWN
+ *
+ *                      CHECKBOXCHANGED
+ *                      CLICK
+ *                      FOCUSCHANGED
+ *                      SELECTCHANGED
+ *                      SELECTFOCUS
+ *
+ *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
+ *                      Rexx dialog.  If this argument is omitted then the
+ *                      method name is constructed by prefixing the event
+ *                      keyword with 'on'.  For instance onUserString.
+ *
+ *  @param  willReply   [OPTIONAL] Specifies if the method invocation should be
+ *                      direct or indirect. With a direct invocation, the
+ *                      interpreter waits in the Windows message loop for the
+ *                      return from the Rexx method. With indirect, the Rexx
+ *                      method is invoked through ~startWith(), which of course
+ *                      returns immediately.
+ *
+ *                      For list views, at this time, the default is false, i.e.
+ *                      the Rexx programmer needs to specify that she wants to
+ *                      reply.  This could change if new key words are added.
+ *
+ *  @return 0 for no error, -1 for a bad resource ID or incorrect event keyword,
+ *          1 if the event could not be connected.  The event can not be
+ *          connected if there is a problem with the message table, full or out
+ *          of memory error.
+ *
+ *  @remarks   For the current keywords, if a symbolic ID is  used and it can
+ *             not be resolved to a numeric number -1 has to be returned for
+ *             backwards compatibility.  Essentially, for this method, all
+ *             behaviour needs to be pre-4.2.0.  The only change is that for
+ *             tagged list view events, the user can specify to reply directly.
+ *
+ *             The processing for beginlabeledit and endlabeledit that was done
+ *             for the DEFAULTEDIT keyword is not needed for a list-view.
+ *             defListEditStarter and defListEditHandler methods are not needed
+ *             and the methods are removed from the list-view.  For backwards
+ *             compatibility, if the keyword DEFAULTEDIT, we only connect the
+ *             defListEditHandler.  We need that to catch the message.  A tag is
+ *             added for preserve old behavior and within processLVN() we simply
+ *             do what the old defListEditHandler did.  Set the label text if
+ *             the user did not cancel, don't set the label if the user did
+ *             cancel.
+ *
+ *             For reference.  The arguments sent to the event handler for
+ *             LVN_ENDLABELEDIT were never documented correctly, if at all.
+ *             They were as follows.  If the user did *not* cancel the edit:
+ *               arg 1 list-view id                   (from wParam)
+ *               arg 2 item being edited id (0 based)
+ *               arg 3 text user entered.
+ *
+ *             If the user did cancel the edit:
+ *               arg 1 list-view id                   (from wParam)
+ *               arg 2 pointer to the NMLVDISPINFO struct as a decimal value
+ *                                                    (from lParam)
+ *
+ *             Note: it is highly unlikely that anyone ever connected
+ *             LVN_ENDLABELEDIT in the old ooDialog, but if they did, the
+ *             willReply argument would be omitted.  We do a special check for
+ *             this and preserve what would have been the old behaviour.  That
+ *             is: use invoke dispatch and use the arguments listed above.
+ *
+ *             The arguments to the event handler for LVN_BEGINLABELEDIT were
+ *             never documented at all.  For reference they were:
+ *               arg 1 list-view id                   (from wParam)
+ *               arg 2 pointer to the NMLVDISPINFO struct as a decimal value
+ *                                                    (from lParam)
+ */
+RexxMethod5(RexxObjectPtr, en_connectListViewEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, OPTIONAL_logical_t, willReply, CSELF, pCSelf)
+{
+    pCEventNotification pcen = (pCEventNotification)pCSelf;
+
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    uint32_t tag = 0;
+    bool     isDefEdit = false;
+    uint32_t notificationCode;
+
+    if ( ! keyword2lvn(context, event, &notificationCode, &tag, &isDefEdit, willReply) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    // Deal with DEFAULTEDIT separately.
+    if ( isDefEdit )
+    {
+        if ( ! addNotifyMessage(pcen, context, id, 0xFFFFFFFF, LVN_BEGINLABELEDIT, 0xFFFFFFFF, "DefListEditStarter", tag) )
+        {
+            return TheNegativeOneObj;
+        }
+        if ( ! addNotifyMessage(pcen, context, id, 0xFFFFFFFF, LVN_ENDLABELEDIT, 0xFFFFFFFF, "DefListEditHandler", tag) )
+        {
+            return TheNegativeOneObj;
+        }
+        return TheZeroObj;
+    }
+
+    if ( argumentOmitted(3) || *methodName == '\0' )
+    {
+        methodName = lvn2name(notificationCode, tag);
+    }
+
+    if ( (notificationCode == LVN_BEGINLABELEDIT || notificationCode == LVN_ENDLABELEDIT) && argumentOmitted(4) )
+    {
+        tag |= TAG_PRESERVE_OLD;
+    }
+
+    if ( addNotifyMessage(pcen, context, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
+    {
+        return TheZeroObj;
+    }
+
+    return TheOneObj;
+}
+
+
 /** EventNotification::connectMonthCalendarEvent()
  *
  *  Connects a Rexx dialog method with a month calendar control event.
@@ -5009,6 +5704,315 @@ RexxMethod5(RexxObjectPtr, en_connectMonthCalendarEvent, RexxObjectPtr, rxID, CS
     }
 
     if ( addNotifyMessage(pcen, context, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
+    {
+        return TheTrueObj;
+    }
+
+err_out:
+    return TheFalseObj;
+}
+
+
+/** EventNotification::connectToolTipEvent()
+ *
+ *  Connects a Rexx dialog method with a tool tip control event.
+ *
+ *  @param  rxID        The resource ID of the tool tip control.  Can be numeric
+ *                      or symbolic.
+ *
+ *  @param  event       Keyword specifying which event to connect.  Keywords at
+ *                      this time:
+ *
+ *                      LINKCLICK
+ *                      NEEDTEXT
+ *                      POP
+ *                      SHOW
+ *
+ *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
+ *                      Rexx dialog.  If this argument is omitted then the
+ *                      method name is constructed by prefixing the event
+ *                      keyword with 'on'.  For instance onPop.
+ *
+ *  @param  willReply   [OPTIONAL] Specifies if the method invocation should be
+ *                      direct or indirect. With a direct invocation, the
+ *                      interpreter waits in the Windows message loop for the
+ *                      return from the Rexx method. With indirect, the Rexx
+ *                      method is invoked through ~startWith(), which of course
+ *                      returns immediately.
+ *
+ *  @return  True if the event notification was connected, otherwsie false.
+ *
+ *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
+ *          number an exception is raised.
+ *
+ *  @remarks  This method is new since the 4.0.0 release, therefore an exception
+ *            is raised for a bad resource ID rather than returning -1.
+ *
+ *            For controls new since 4.0.0, event notifications that have a
+ *            reply are documented as always being 'direct' reply and
+ *            notifications that ignore the return are documented as allowing
+ *            the programmer to specify.  This means that willReply is ignored
+ *            for TTN_NEEDTEXT and TTN_SHOW and not ignored for TTN_LINKCLICK
+ *            and TTNPOP.
+ *
+ *            Note that the underlying tool tip does not have a ID.  We require
+ *            the user to supply an ID when instantiating a tool tip.  We then
+ *            maintain a table for all tool tips for the dialog and use the ID
+ *            to do table look ups.  In addition
+ */
+RexxMethod5(RexxObjectPtr, en_connectToolTipEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, OPTIONAL_logical_t, _willReply, CSELF, pCSelf)
+{
+    pCEventNotification pcen = (pCEventNotification)pCSelf;
+
+    int32_t id = oodResolveSymbolicID(context->threadContext, pcen->rexxSelf, rxID, -1, 1, true);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto err_out;
+    }
+
+    PTOOLTIPTABLEENTRY ptte = findToolTipForID((pCPlainBaseDialog)pcen->pDlgCSelf, id);
+    if ( ptte == NULL )
+    {
+        noToolTipException(context, pcen->rexxSelf);
+        goto err_out;
+    }
+
+    uint32_t notificationCode;
+    if ( ! keyword2ttn(context, event, &notificationCode) )
+    {
+        goto err_out;
+    }
+
+    if ( argumentOmitted(3) || *methodName == '\0' )
+    {
+        methodName = ttn2name(notificationCode);
+    }
+
+    uint32_t tag = TAG_TOOLTIP;
+    bool willReply = argumentOmitted(4) || _willReply;
+
+    if ( notificationCode == TTN_NEEDTEXT || notificationCode == TTN_SHOW )
+    {
+        tag |= TAG_REPLYFROMREXX;
+    }
+    else
+    {
+        tag |= (willReply ? TAG_REPLYFROMREXX : 0);
+    }
+
+    if ( addNotifyMessage(pcen, context, (WPARAM)ptte->hToolTip, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
+    {
+        return TheTrueObj;
+    }
+
+err_out:
+    return TheFalseObj;
+}
+
+
+/** EventNotification::connectTreeViewEvent()
+ *
+ *  Connects a Rexx dialog method with a tree-view event.
+ *
+ *  @param  rxID        The resource ID of the dialog control.  Can be numeric
+ *                      or symbolic.
+ *
+ *  @param  event       Keyword specifying which event to connect.  Keywords at
+ *                      this time:
+ *
+ *                      SELCHANGING
+ *                      SELCHANGED
+ *                      EXPANDING
+ *                      EXPANDED
+ *                      BEGINDRAG
+ *                      BEGINRDRAG
+ *                      DELETE
+ *                      BEGINEDIT
+ *                      ENDEDIT
+ *                      DEFAULTEDIT
+ *                      KEYDOWN
+ *                      GETINFOTIP
+ *
+ *
+ *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
+ *                      Rexx dialog.  If this argument is omitted then the
+ *                      method name is constructed by prefixing the event
+ *                      keyword with 'on'.  For instance onExpanding.
+ *
+ *  @param  willReply   [OPTIONAL] Specifies if the method invocation should be
+ *                      direct or indirect. With a direct invocation, the
+ *                      interpreter waits in the Windows message loop for the
+ *                      return from the Rexx method. With indirect, the Rexx
+ *                      method is invoked through ~startWith(), which of course
+ *                      returns immediately.
+ *
+ *                      For tree-views, at this time, the default is false, i.e.
+ *                      the Rexx programmer needs to specify that she wants to
+ *                      reply.  This could change if new key words are added.
+ *
+ *  @return 0 for no error, -1 for a bad resource ID or incorrect event keyword,
+ *          1 if the event could not be connected.  The event can not be
+ *          connected if there is a problem with the message table, full or out
+ *          of memory error.
+ *
+ *  @remarks   For the current keywords, if a symbolic ID is  used and it can
+ *             not be resolved to a numeric number -1 has to be returned for
+ *             backwards compatibility.  Essentially, except for the keywords
+ *             listed below, for this method, all behaviour needs to be
+ *             pre-4.2.0.
+ *
+ *             EXPANDING / EXPANDED  The willReply request is honored
+ *
+ *             BEGINLABELEDIT / ENDLABELEDIT
+ *
+ *             INFOTIP  new keyword - will reply is always set to true for this
+ *             keyword.
+ *
+ *             The processing for beginlabeledit and endlabeledit that was done
+ *             for the DEFAULTEDIT keyword is not all needed for a tree-view.
+ *             This is changed in a similar manner as the list-view was changed.
+ *             However, for a tree-view if we do not subclass the edit control,
+ *             the enter and the esc key close the dialog.  What we do here is
+ *             very similar to what we do in the connect list-view event
+ *             function.  See that header doc if more detail is needed.
+ *
+ *             For reference.  The arguments sent to the event handler for
+ *             TVN_ENDLABELEDIT were never documented correctly, if at all.
+ *             They were as follows.  If the user did *not* cancel the edit:
+ *               arg 1 tree-view id    (from wParam)
+ *               arg 2 handle of item being edited
+ *               arg 3 text user entered.
+ *
+ *             If the user did cancel the edit:
+ *               arg 1 tree-view id    (from wParam)
+ *               arg 2 pointer to the NMLVDISPINFO struct as a decimal value
+ *                                     (from lParam)
+ *
+ *             The arguments to the event handler for TVN_BEGINLABELEDIT were
+ *             never documented at all.  For reference they were:
+ *               arg 1 tree-view id    (from wParam)
+ *               arg 2 pointer to the NMLVDISPINFO struct as a decimal value
+ *                                     (from lParam)
+ */
+RexxMethod5(RexxObjectPtr, en_connectTreeViewEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, OPTIONAL_logical_t, willReply, CSELF, pCSelf)
+{
+    pCEventNotification pcen = (pCEventNotification)pCSelf;
+
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcen->rexxSelf, rxID, -1, 1, true) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    uint32_t notificationCode = 0;
+    bool     willReplyExists  = argumentExists(4) ? true : false;
+    bool     isDefEdit        = false;
+    uint32_t tag              = 0;
+
+    if ( ! keyword2tvn(context, event, &notificationCode, &tag, &isDefEdit, willReply, willReplyExists) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    // Deal with DEFAULTEDIT separately.
+    if ( isDefEdit )
+    {
+        if ( ! addNotifyMessage(pcen, context, id, 0xFFFFFFFF, TVN_BEGINLABELEDIT, 0xFFFFFFFF, "DefTreeEditStarter", tag) )
+        {
+            return TheNegativeOneObj;
+        }
+        if ( ! addNotifyMessage(pcen, context, id, 0xFFFFFFFF, TVN_ENDLABELEDIT, 0xFFFFFFFF, "DefTreeEditHandler", tag) )
+        {
+            return TheNegativeOneObj;
+        }
+        return TheZeroObj;
+    }
+
+    if ( argumentOmitted(3) || *methodName == '\0' )
+    {
+        methodName = tvn2name(notificationCode, tag);
+    }
+
+    if ( addNotifyMessage(pcen, context, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, tag) )
+    {
+        return TheZeroObj;
+    }
+
+    return TheOneObj;
+}
+
+
+/** EventNotification::connectUpDownEvent()
+ *
+ *  Connects a Rexx dialog method with an up down control event.
+ *
+ *  @param  rxID        The resource ID of the dialog control.  Can be numeric
+ *                      or symbolic.
+ *
+ *  @param  event       Keyword specifying which event to connect.  Only one at
+ *                      this time:
+ *
+ *                      DELTAPOS
+ *
+ *  @param  methodName  [OPTIONAL] The name of the method to be invoked in the
+ *                      Rexx dialog.  If this argument is omitted then the
+ *                      method name is constructed by prefixing the event
+ *                      keyword with 'on'.  For instance onDeltaPos.
+ *
+ *  @note   If a symbolic ID is  used and it can not be resolved to a numeric
+ *          number an exception is raised.
+ *
+ *  @remarks  This method is new since the 4.0.0 release, therefore an exception
+ *            is raised for a bad resource ID rather than returning -1.
+ *
+ *            MSDN docs say that the up-down control also sends the
+ *            NM_RELEASEDCAPTURE message.  I see no evidence it is ever sent.
+ *            And there is this from a news group:
+ *
+ *            Christian ASTOR    View profile
+ *
+ *            Alexander Grigoriev wrote:
+ *            > I need to handle NM_RELEASEDCAPTURE notification from an up-down
+ *            > control in a dialog. But they don't seem to send it, no matter
+ *            > how I'm trying.
+ *
+ *            Up-Down control doesn't send NM_RELEASEDCAPTURE notification.
+ *            (docs are wrong...)
+ *
+ *            Since DELTAPOS is the only notification and it is always direct
+ *            reply, we don't have the the optional fourth, willReply, argument.
+ */
+RexxMethod4(RexxObjectPtr, en_connectUpDownEvent, RexxObjectPtr, rxID, CSTRING, event,
+            OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
+{
+    pCEventNotification pcen = (pCEventNotification)pCSelf;
+
+    int32_t id = oodResolveSymbolicID(context->threadContext, pcen->rexxSelf, rxID, -1, 1, true);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto err_out;
+    }
+
+    uint32_t notificationCode;
+
+    if ( StrStrI(event, "DELTAPOS") != NULL )
+    {
+        notificationCode = UDN_DELTAPOS;
+    }
+    else
+    {
+        wrongArgValueException(context->threadContext, 2, "DeltaPos", event);
+        goto err_out;
+    }
+
+    if ( argumentOmitted(3) || *methodName == '\0' )
+    {
+        methodName = "onDeltaPos";
+    }
+
+    if ( addNotifyMessage(pcen, context, id, 0xFFFFFFFF, notificationCode, 0xFFFFFFFF, methodName, TAG_UPDOWN) )
     {
         return TheTrueObj;
     }
