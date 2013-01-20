@@ -1165,10 +1165,10 @@ RexxString *RexxObject::requestString()
             // keeps the interpreter from crashing, there's a good chance the
             // program will run.  Frankly, there's something seriously wrong
             // if this error ever gets issued.
-            if (string_value == OREF_NULL)
+            if (string_value == TheNilObject)
             {
                 string_value = RexxObject::stringValue();
-                if (string_value == OREF_NULL)
+                if (string_value == TheNilObject)
                 {
                     reportException(Error_No_result_object_message, OREF_STRINGSYM);
                 }
