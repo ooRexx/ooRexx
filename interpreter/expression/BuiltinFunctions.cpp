@@ -2074,39 +2074,40 @@ BUILTIN(LINES)
     RexxString *name = optional_string(LINES, name); /* get the string name               */
     RexxString *option = optional_string(LINES, option);
     RexxObject *result;
+
+    if (option != OREF_NULL)
+    {
+        switch (option->getChar(0))
+        {      /* process the option character      */
+            case 'C':
+            case 'c':
+                break;
+            case 'N':
+            case 'n':
+                break;
+            default:                         /* unknown option                    */
+                /* this is an error                  */
+                reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "NC", option);
+                break;
+        }
+    }
+    else
+    {
+        option = OREF_NORMAL;
+    }
+
     if (check_queue(name))
     {             /* is this "QUEUE:"                  */
                   /* get the default output stream     */
         RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
         /* return count on the queue         */
-        result = stream->sendMessage(OREF_QUERY);
+        result = stream->sendMessage(OREF_QUEUED);
     }
     else
     {
         bool added;
         /* get a stream for this name        */
         RexxObject *stream = context->resolveStream(name, true, NULL, &added);
-
-        if (option != OREF_NULL)
-        {
-            switch (option->getChar(0))
-            {      /* process the option character      */
-                case 'C':
-                case 'c':
-                    break;
-                case 'N':
-                case 'n':
-                    break;
-                default:                         /* unknown option                    */
-                    /* this is an error                  */
-                    reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "NC", option);
-                    break;
-            }
-        }
-        else
-        {
-            option = OREF_NORMAL;
-        }
 
         /* use modified LINES method with quick flag       */
         result = stream->sendMessage(OREF_LINES, option);
