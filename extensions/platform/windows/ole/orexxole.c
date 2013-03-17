@@ -1186,7 +1186,7 @@ BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *p
 }
 
 /**
- * Try to get the dispatch id for a function / methd by name.
+ * Try to get the dispatch id for a function / method by name.
  *
  * @param pszFunction  Function / method name
  * @param pDispatch    Pointer to IDispatch, may not be null.
@@ -1231,6 +1231,143 @@ static BOOL getIDByName(const char *pszFunction, IDispatch *pDispatch, IDispatch
     return gotID;
 }
 
+
+/**
+ * Try to get the dispatch id for a function / method by name from a IDispatchEx
+ * interface.
+ *
+ * @param pszFunction  Function / method name
+ * @param pDispatchEx  Pointer to IDispatchEx, may not be null.
+ * @param pMemId       [in/out] returned dispatch id, if found.
+ * @param wFlags       [in/out] returned flags for the IDispatchEx::Invoke call.
+ *
+ * @return True if the dispatch ID was obtained, otherwise false.
+ *
+ * @note This an attempt to fix a problem when the IDispatchEx interface is
+ *       available.  In the old IBM code, when this happened, the invoke flags
+ *       were set to 0, and if there were 0 arguments, the flags ended up
+ *       getting set to DISPATCH_METHOD | DISPATCH_PROPERTYGET.  When using
+ *       IDispatchEx::Invoke, if the member was a method and not a property, the
+ *       property get flag caused things to fail.  At least for IE9.
+ *
+ *       The code here is assuming IDispatchEx::GetMemberProperties works.  But,
+ *       it does not work when the IDipatchEx interfaces comes from IE9.
+ *
+ *       On input wFlags may already contain DISPATCH_PROPERTYPUT, and perhaps
+ *       in the future some other flags. We remove any existing flag that
+ *       GetMemberProperties indicates is not supported.
+ *
+ *       GetMemberProperties() always sets props to 0 for IE9, which pretty much
+ *       causes things to not work for IE9.  If we see that the flags are 0 and
+ *       we have a pTypeInfo pointer, then we try to get the flags by searching
+ *       the type library.
+ *
+ *       This *does* work for the broken case of IE9, but who knows about some
+ *       other case.  The way the code is structured, if GetMemberProperties
+ *       fails and there either is or is not a type info pointer, the code path
+ *       exactly follows the old IBM code.
+ */
+static BOOL getDispatchIDByName(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatchEx, ITypeInfo *pTypeInfo,
+                                POLECLASSINFO pClsInfo, PPOLEFUNCINFO pFuncInfo, MEMBERID *pMemId, unsigned short *wFlags,
+                                size_t argCount)
+{
+    LPOLESTR unicodeName = NULL;
+    HRESULT  hr          = E_FAIL;
+    BOOL     gotID       = FALSE;
+
+    unicodeName = lpAnsiToUnicode(pszFunction, strlen(pszFunction) + 1);
+    if ( unicodeName == NULL )
+    {
+        goto done_out;
+    }
+
+    BSTR bstrName = SysAllocString(unicodeName);
+    if ( bstrName )
+    {
+        MEMBERID id;
+        hr = pDispatchEx->GetDispID(bstrName, fdexNameCaseInsensitive, &id);
+        SysFreeString(bstrName);
+
+        if ( FAILED(hr) )
+        {
+            goto done_out;
+        }
+
+        uint16_t flags = *wFlags;
+        DWORD    which = grfdexPropCanAll | grfdexPropCannotAll;
+        DWORD    props = 0;
+
+        hr = pDispatchEx->GetMemberProperties(id, which, &props);
+        if ( FAILED(hr) )
+        {
+            // This should not be possible.
+            goto done_out;
+        }
+
+        if ( props & fdexPropCanGet )       flags |= DISPATCH_PROPERTYGET;
+        if ( props & fdexPropCanPut )       flags |= DISPATCH_PROPERTYPUT;
+        if ( props & fdexPropCanPutRef )    flags |= DISPATCH_PROPERTYPUTREF;
+        if ( props & fdexPropCanCall )      flags |= DISPATCH_METHOD;
+        if ( props & fdexPropCannotGet )    flags &= ~DISPATCH_PROPERTYGET;
+        if ( props & fdexPropCannotPut )    flags &= ~DISPATCH_PROPERTYPUT;
+        if ( props & fdexPropCannotPutRef ) flags &= ~DISPATCH_PROPERTYPUTREF;
+        if ( props & fdexPropCannotCall )   flags &= ~DISPATCH_METHOD;
+
+        // If flags are 0, something is wrong ... but we just ignore this for now.
+        if ( flags == 0 && pTypeInfo )
+        {
+            POLEFUNCINFO tempFuncInfo = NULL;
+            MEMBERID     tempMemId = 0;
+            BOOL         tempFound = FALSE;
+
+            // We need to send NULL for the pDispatchEx arg for fFindFunction to
+            // actually have the function search the type library.  We also want
+            // to discard the found return and any change to the DISPID that we
+            // found above.
+            tempFound = fFindFunction(pszFunction, pDispatch, NULL, pTypeInfo, pClsInfo, *wFlags, &tempFuncInfo, &tempMemId, argCount);
+            if ( tempFound && tempFuncInfo )
+            {
+                *pFuncInfo = tempFuncInfo;
+                flags = tempFuncInfo->invkind;
+            }
+        }
+
+        gotID   = TRUE;
+        *pMemId = id;
+        *wFlags = flags;
+    }
+
+done_out:
+    if ( unicodeName != NULL )
+    {
+        ORexxOleFree(unicodeName);
+    }
+    return gotID;
+}
+
+
+void printDispatchExNames(IDispatchEx *pDispatchEx)
+{
+    HRESULT hr;
+    BSTR bstrName;
+    DISPID dispid;
+
+   // Assign to pDispatchEx
+   hr = pDispatchEx->GetNextDispID(fdexEnumAll, DISPID_STARTENUM, &dispid);
+   while ( hr == S_OK )
+   {
+      hr = pDispatchEx->GetMemberName(dispid, &bstrName);
+      wprintf(L"%s\n", bstrName);
+      if (!wcscmp(bstrName, OLESTR("submit")))
+      {
+          wprintf(L"%s id=%d\n", bstrName, dispid);
+      }
+
+      SysFreeString(bstrName);
+
+      hr = pDispatchEx->GetNextDispID(fdexEnumAll, dispid, &dispid);
+   }
+}
 
 BOOL fFindConstant(const char * pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTINFO ppConstInfo )
 {
@@ -3412,7 +3549,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     getCachedClassInfo(context, &pClsInfo, &pTypeInfo);
 
     pszFunction = pszStringDupe(msgName);
-    if (!pszFunction)
+    if ( ! pszFunction )
     {
         context->RaiseException0(Rexx_Error_System_resources);
         return NULLOBJECT;
@@ -3426,9 +3563,15 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     }
 
     hResult = pDispatch->QueryInterface(IID_IDispatchEx, (LPVOID*)&pDispatchEx);
-
-    fFound = fFindFunction(pszFunction, pDispatch, pDispatchEx, pTypeInfo,
-                           pClsInfo, wFlags, &pFuncInfo, &MemId, iArgCount);
+    if ( pDispatchEx != NULL )
+    {
+        fFound = getDispatchIDByName(pszFunction, pDispatch, pDispatchEx, pTypeInfo, pClsInfo, &pFuncInfo, &MemId, &wFlags, iArgCount);
+    }
+    else
+    {
+        fFound = fFindFunction(pszFunction, pDispatch, pDispatchEx, pTypeInfo,
+                               pClsInfo, wFlags, &pFuncInfo, &MemId, iArgCount);
+    }
 
     /* This change honors the function description better; before, the wFlag
      * (invocation kind) was determined by use, regardless of the description.
@@ -3444,11 +3587,11 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
             // DISPATCH_XXX & INVOKE_XXX flags have the same values.
             wFlags = pFuncInfo->invkind;
         }
-        else
+        else if ( fFound )
         {
             wFlags = DISPATCH_METHOD;
 
-            if (iArgCount == 0)
+            if ( iArgCount == 0 )
             {
                 /* this could be a property get or a dispatch method */
                 wFlags |= DISPATCH_PROPERTYGET;
@@ -3476,28 +3619,6 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
                                pClsInfo, wFlags, &pFuncInfo, &MemId, iArgCount);
     }
 
-    /* The below was used to allow setting a property by calling it like a
-     * method. This creates problems, because it might "shadow" a method with
-     * the same signature. Therefore it is disabled...
-     */
-    /*
-    // call of PROPERTYPUT with braces: e.g. ~visible(.true)
-    if (fFound && pFuncInfo)
-    {
-        // are we sure this is a PROPERTYGET?
-        if (pFuncInfo->invkind == DISPATCH_PROPERTYGET)
-        {
-            // check if parameter list is valid. but how?
-            if (iArgCount > (pFuncInfo->iParmCount - pFuncInfo->iOptParms) )
-            {
-                // oh, we must rethink our call: this must be a property put, and not a get!!!
-                wFlags = DISPATCH_PROPERTYPUT;
-                fFound = fFindFunction(pszFunction, pDispatch, pDispatchEx, pTypeInfo, pClsInfo,
-                                       wFlags, &pFuncInfo, &MemId);
-            }
-        }
-    }
-    */
 
     // This memory is no longer needed.
     ORexxOleFree(pszFunction);
@@ -3523,7 +3644,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     }
 
     size_t i;
-    for (i = 0; i < iArgCount; i++)
+    for ( i = 0; i < iArgCount; i++ )
     {
         /* arguments are filled in from the end of the array */
         VariantInit(&(pVarArgs[iArgCount - i - 1]));
@@ -3560,12 +3681,12 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     /* if we have a property put then the new property value needs to be a named
      * argument
      */
-    if (wFlags == DISPATCH_PROPERTYPUT)
+    if ( wFlags == DISPATCH_PROPERTYPUT )
     {
         dp.cNamedArgs = 1;
         dp.rgdispidNamedArgs = &PropPutDispId;
         // without this check, property put is hardcoded to PROPERTYPUT...  ...bad.
-        if (fFound && pFuncInfo)
+        if ( fFound && pFuncInfo )
         {
             /* use the invkind the function description contains */
             wFlags = pFuncInfo->invkind; // DISPATCH_... & INVOKE_... are the same (values 2,4,8)
@@ -3587,20 +3708,20 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     ZeroMemory(&sExc, sizeof(EXCEPINFO));
 
     pResult = &sResult;
-    if (pTypeInfo && pFuncInfo)
+    if ( pTypeInfo && pFuncInfo )
     {
-        if (pFuncInfo->FuncVt == VT_VOID)
+        if ( pFuncInfo->FuncVt == VT_VOID )
         {
             pResult = NULL; /* function has no return code! */
         }
 
-        if (pFuncInfo->invkind & INVOKE_PROPERTYGET)
+        if ( pFuncInfo->invkind & INVOKE_PROPERTYGET )
         {
             wFlags |= DISPATCH_PROPERTYGET; /* this might be a property get */
         }
     }
 
-    if (pDispatchEx)
+    if ( pDispatchEx )
     {
         hResult = pDispatchEx->InvokeEx(MemId, LOCALE_USER_DEFAULT,
                                         wFlags, &dp, pResult, &sExc, NULL);
@@ -3612,7 +3733,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     }
 
     /* maybe this is a property get with arguments */
-    if ((hResult == DISP_E_MEMBERNOTFOUND) && iArgCount)
+    if ( (hResult == DISP_E_MEMBERNOTFOUND) && iArgCount )
     {
         hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
                                     wFlags | DISPATCH_PROPERTYGET, &dp,
@@ -3620,7 +3741,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     }
 
     /* if function has no return value, try again */
-    if (hResult == DISP_E_MEMBERNOTFOUND)
+    if ( hResult == DISP_E_MEMBERNOTFOUND )
     {
         hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
                                     wFlags, &dp, NULL, &sExc, &uArgErr);
@@ -3628,7 +3749,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     // needed for instance of tests
     variantClass = context->FindClass("OLEVARIANT");
 
-    for (i = 0; i < dp.cArgs; i++)
+    for ( i = 0; i < dp.cArgs; i++ )
     {
         arrItem = context->ArrayAt(msgArgs, i + 1);
 
@@ -3639,7 +3760,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
             RexxObjectPtr   outObject;
             RexxObjectPtr   outArray = context->GetObjectVariable("!OUTARRAY");
 
-            if (outArray == context->Nil())
+            if ( outArray == context->Nil() )
             {
                 outArray = context->NewArray(1);
                 context->SetObjectVariable("!OUTARRAY", outArray);
@@ -3656,14 +3777,14 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
 
             // If the arg was ommitted (arrItem), it can not be an out
             // parameter, but to be safe, check for NULLOBJECT.
-            if (arrItem != NULLOBJECT && context->IsInstanceOf(arrItem, variantClass))
+            if ( arrItem != NULLOBJECT && context->IsInstanceOf(arrItem, variantClass) )
             {
                 context->SendMessage1(arrItem, "!VARVALUE_=", outObject);
             }
 
             // if the call changed an out parameter, we have to clear the original variant that
             // was overwritten
-            if (memcmp(&pInputParameters[iArgCount - i - 1],&pVarArgs[iArgCount - i - 1],sizeof(VARIANT)))
+            if ( memcmp(&pInputParameters[iArgCount - i - 1], &pVarArgs[iArgCount - i - 1], sizeof(VARIANT)) )
             {
                 dereferenceVariant(&pInputParameters[iArgCount - i - 1]);
                 handleVariantClear(context, &pInputParameters[iArgCount - i - 1], arrItem);
@@ -3685,7 +3806,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
         }
     }
 
-    if (hResult == S_OK)
+    if ( hResult == S_OK )
     {
         // If Variant2Rexx() raises an exception we drop through and catch the
         // clean up code and are okay here.
