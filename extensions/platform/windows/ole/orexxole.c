@@ -3579,9 +3579,9 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
      * invkind of the function description is used.  If no function description
      * is available, we use our "best guess"...
      */
-    if (wFlags == 0)
+    if ( wFlags == 0 )
     {
-        if (fFound && pFuncInfo)
+        if ( fFound && pFuncInfo )
         {
             // Use the invkind the function description contains.  Note that the
             // DISPATCH_XXX & INVOKE_XXX flags have the same values.
@@ -3611,10 +3611,18 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
 
     /* replace methods '[]' and 'at' with the method 'Item' if they */
     /* could not be found */
-    if (!fFound && (wFlags & DISPATCH_METHOD) &&
+    if (!fFound && (wFlags == 0 || (wFlags & DISPATCH_METHOD)) &&
         ((stricmp(pszFunction, "AT") == 0) ||
          (stricmp(pszFunction, "[]") == 0)) )
     {
+        if ( wFlags == 0 )
+        {
+            wFlags = DISPATCH_METHOD;
+            if ( iArgCount == 0 )
+            {
+                wFlags |= DISPATCH_PROPERTYGET;
+            }
+        }
         fFound = fFindFunction("Item", pDispatch, pDispatchEx, pTypeInfo,
                                pClsInfo, wFlags, &pFuncInfo, &MemId, iArgCount);
     }

@@ -46,14 +46,31 @@
 
 /* Get stock price from IBM internet page with MS IE and OLE */
 
+say "Getting stock price from IBM Internet page."
+say "Using a not visible InternetExplorer."
+say
+
 Explorer = .OLEObject~new("InternetExplorer.Application")
 /* uncomment the next line if you want to see what is happening */
 --Explorer~Visible = .true
 Explorer~Navigate("http://www.ibm.com/investor/")
 
-/* wait for browser to load the page */
-/* if the page is not loaded by then, an error will occur */
-call SysSleep 5
+-- Wait for browser to load the page, with a time out.  If the page is not
+-- loaded by the timout, then quit.
+count = 0
+do while Explorer~busy & count < 12
+    do while Explorer~readyState <> 4 & count < 12
+        j = SysSleep(.5)
+        count += 1
+    end
+end
+
+if Explorer~busy | Explorer~readyState <> 4 then do
+    say 'Timed out waiting for page: http://www.ibm.com/investor/'
+    say 'to load.  Going to quit.'
+    Explorer~quit
+    return 99
+end
 
 /* obtain text representation of the page */
 doc = Explorer~document           -- DOM document
@@ -61,14 +78,22 @@ body = doc~body                   -- get BODY
 textrange = body~CreateTextRange  -- get TextRange
 text = textrange~Text             -- get the contents
 
-/* extract stock price information */
-parse var text . "Current price:" stockprice "0d0a"x .
-if stockprice = "" then stockprice = "<could not read stock price>"
+/* extract stock price information, this is dependent on page not changing */
+parse var text . "(NYSE)" '0d0a'x stockprice "0d0a"x .
+if stockprice = "" then do
+    stockprice = "<could not read stock price>"
+    gotPrice = .false
+end
+else do
+    gotPrice = .true
+end
 
 /* end Explorer */
 Explorer~quit
 
 say "IBM stocks are at" stockprice"."
+if \ gotPrice then say "Web page has likely changed format."
+
 exit
 
 
