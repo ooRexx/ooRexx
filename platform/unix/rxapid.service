@@ -1,0 +1,13 @@
+[Unit]
+Description=ooRexx rxapi service
+After=syslog.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/ooRexx.pid
+ExecStartPre=/bin/rm -f /var/run/rxapid.pid
+ExecStart=/usr/bin/rxapi
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

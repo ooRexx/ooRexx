@@ -226,6 +226,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/ooRexx/rexx.csh
 %{_datadir}/ooRexx/*.rex
 %{_datadir}/ooRexx/readme
+%{_datadir}/ooRexx/rxapid.service
 
 #******************************************************************************
 %post
@@ -249,34 +250,52 @@ ln -sf %{_libdir}/librxunixsys.so %{_libdir}/librxunixsys.so.3
 # Add links for some ooRexx scripts
 ln -sf %{_datadir}/ooRexx/rexxtry.rex %{_bindir}/rexxtry.rex
 # Add the rxapi service
-ln -sf %{_bindir}/rxapid /etc/init.d/rxapid
-if [ -x /sbin/insserv ]; then
+if [ -x /usr/bin/systemctl ]; then
+   ln -sf %{_datadir}/ooRexx/rxapid.service /etc/systemd/system/rxapid.service
+   echo %{_libdir}/ooRexx > /etc/ld.so.conf.d/ooRexx.conf
+   ldconfig
+   systemctl start rxapid.service
+elif [ -x /sbin/insserv ]; then
+   ln -sf %{_bindir}/rxapid /etc/init.d/rxapid
    # try insserv first (for Suse)
    insserv -f rxapid
+   echo %{_libdir}/ooRexx > /etc/ld.so.conf.d/ooRexx.conf
+   ldconfig
+   service rxapid start
 else
+   ln -sf %{_bindir}/rxapid /etc/init.d/rxapid
    # else, try good old chkconfig
    chkconfig --add rxapid
+   echo %{_libdir}/ooRexx > /etc/ld.so.conf.d/ooRexx.conf
+   ldconfig
+   service rxapid start
 fi
-echo %{_libdir}/ooRexx > /etc/ld.so.conf.d/ooRexx.conf
-ldconfig
-service rxapid start
 
 #******************************************************************************
 %preun
 #******************************************************************************
 # Remove rxapi service
-service rxapid stop
-if [ -x /sbin/insserv ]; then
+if [ -x /usr/bin/systemctl ]; then
+   systemctl stop rxapid.service
+   # Remove misc
+   rm -f /etc/systemd/system/rxapid.service
+elif [ -x /sbin/insserv ]; then
+   service rxapid stop
    # try insserv first (for Suse)
    insserv -f rxapid
+   # Remove the rxapi daemon
+   rm -f /etc/init.d/rxapid
+   # Remove misc
+   rm -f %{_bindir}/rexxtry.rex
 else
+   service rxapid stop
    # else, try good old chkconfig
    chkconfig --del rxapid
+   # Remove the rxapi daemon
+   rm -f /etc/init.d/rxapid
+   # Remove misc
+   rm -f %{_bindir}/rexxtry.rex
 fi
-# Remove the rxapi daemon
-rm -f /etc/init.d/rxapid
-# Remove misc
-rm -f %{_bindir}/rexxtry.rex
 
 #******************************************************************************
 %postun
