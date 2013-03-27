@@ -71,12 +71,15 @@ rm -f /usr/bin/rexxtry.rex
 rm -rf /usr/share/ooRexx
 
 # Debian specific removal of rxapid
-if [ -e /etc/init.d/rxapid ]; then
-   /etc/init.d/rxapid stop
+if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
+   systemctl stop rxapid.service
+   rm /etc/systemd/system/rxapid.service
+else
+   if [ -e /etc/init.d/rxapid ]; then
+      /etc/init.d/rxapid stop
+   fi
+   rm -f /etc/init.d/rxapid
+   update-rc.d rxapid remove
+   rm -f /etc/ld.so.conf.d/ooRexx.conf
 fi
-rm -f /etc/init.d/rxapid
-update-rc.d rxapid remove
-
-# Remove the ld ooRexx.conf file
-rm -f /etc/ld.so.conf.d/ooRexx.conf
 
