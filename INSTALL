@@ -122,6 +122,10 @@ RPM:
 rpm -e ooRexx
 rpm -iv <packageFile>
 
+System using the systemd daemon:
+
+sudo systemctl --system daemon-reload
+
 Using a generically named packages as an example. They must be executed as
 root or using sudo.  If there is no previous installation of ooRexx, skip
 the first command, (dpkg -P or rmp -e) they are the commands to uninstall a
@@ -129,9 +133,13 @@ previous version.
 
 tom@Loon:~/downloads$ dpkg -P ooRexx
 tom@Loon:~/downloads$ dpkg -i ooRexx-4.1.2.x86_64.deb
+# if systemd is installed:
+tom@Loon:~/downloads$ sudo systemctl --system daemon-reload
 
 Raven:/home/tom # rpm -e ooRexx
 Raven:/home/tom # rpm -iv ooRexx-3.1.2-1.i386.rpm
+# if systemd is installed:
+Raven:/home/tom # sudo systemctl --system daemon-reload
 
 Solaris
 ------
