@@ -43,10 +43,7 @@
  *
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
-//#include "oodControl.hpp"
 
-//#include <stdio.h>
-//#include <dlgs.h>
 #include <shlwapi.h>
 #include <WindowsX.h>
 
@@ -62,14 +59,6 @@
  *  Methods for the .Mouse class.
  */
 #define MOUSE_CLASS        "Mouse"
-
-#define TRACK_MOUSE_KEYWORDS    "CANCEL, HOVER, LEAVE, NONCLIENT, or QUERY"
-#define WM_MOUSE_KEYWORDS       "MouseMove, MouseWheel, MouseLeave, MouseHover, NcMouseLeave, NcMouseHover, lButtonUp, lButtonDown, or CaptureChanged"
-#define MOUSE_BUTTON_KEYWORDS   "LEFT, RIGHT, MIDDLE, XBUTTON1, or XBUTTON2"
-#define SYSTEM_CURSOR_KEYWORDS  "APPSTARTING, ARROW, CROSS, HAND, HELP, IBEAM, NO, SIZEALL, SIZENESW, SIZENS, " \
-                                "SIZENWSE, SIZEWE, UPARROW, or WAIT"
-
-#define DLG_HAS_ENDED_MSG       "windows dialog has executed and been closed"
 
 /**
  * Returns the mouse CSelf, raising an exception if it is null.

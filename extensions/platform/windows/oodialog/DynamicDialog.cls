@@ -171,7 +171,7 @@
       end
       my = my + stepy; i = i + 1
       parse var inp rb inp
-      if cx = 0 then do
+      if rb \== '', cx = 0 then do
          s = self~getTextSizeDu(rb)
          len = s~width
          if len > lastlen then lastlen = len
@@ -991,8 +991,8 @@
    else if kind = "DTP" then do
         if style~wordpos("DTS_APPCANPARSE") > 0 then ret = ret || " CANPARSE"
         if style~wordpos("DTS_RIGHTALIGN") > 0 then ret = ret || " RIGHT"
-        if style~wordpos("DTS_SHOWNONE  ") > 0 then ret = ret || " SHOWNONE"
-        if style~wordpos("DTS_UPDOWN    ") > 0 then ret = ret || " UPDOWN"
+        if style~wordpos("DTS_SHOWNONE") > 0 then ret = ret || " SHOWNONE"
+        if style~wordpos("DTS_UPDOWN") > 0 then ret = ret || " UPDOWN"
         if style~wordpos("DTS_LONGDATEFORMAT") > 0 then ret = ret || " LONG"
         if style~wordpos("DTS_SHORTDATEFORMAT") > 0 then ret = ret || " SHORT"
         if style~wordpos("DTS_SHORTDATECENTURYFORMAT") > 0 then ret = ret || " CENTURY"

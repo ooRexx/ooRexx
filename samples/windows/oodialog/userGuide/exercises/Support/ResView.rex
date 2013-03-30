@@ -36,10 +36,14 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide - Exercise07
 
-   Support - ResView						 v00-01  21Aug12
+   Support - ResView						 v01-00  11Jan13
    ----------------
    A simple superclass class for the Model-View framework.
    Code is idential to that in RcView.
+
+   Versions:
+   v01-00 21Aug12: First version.
+          11Jan13: Comment-out say instructions.
 
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
@@ -60,7 +64,7 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD init
     expose objectMgr
-    say "ResView-init-01."
+    --say "ResView-init-01."
     forward class (super) continue
     objectMgr = .local~my.ObjectMgr	-- Needed to clear up when dialog closed.
     self~viewMgr = .local~myViewMgr
@@ -75,14 +79,14 @@
     expose viewClass viewInstance
     use arg modelId
     -- Get View Instance name and View Class for tidy-up when dialog is closed.
-    say ".ResView~activate-01: class = " viewClass
+    --say ".ResView~activate-01: class = " viewClass
     viewInstance = self~identityHash
     dlgName = self~objectName
-    say ".ResView~activate-02: dlgName = " dlgName
+    --say ".ResView~activate-02: dlgName = " dlgName
     parse var dlgName "a " viewClass
-    say ".ResView~activate-03: class name = '"||viewClass||"'"
-    say ".ResView-activate-04: viewInstance =" viewInstance
-    say ".ResView-activate-05: modelId =" modelId
+    --say ".ResView~activate-03: class name = '"||viewClass||"'"
+    --say ".ResView-activate-04: viewInstance =" viewInstance
+    --say ".ResView-activate-05: modelId =" modelId
     modelData = modelId~query
     return modelData
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -99,7 +103,7 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD leaving UNGUARDED
     expose objectMgr viewClass viewInstance
-    say "RcView-leaving-01. viewClass =" viewClass "viewInstance =" viewInstance
+    --say "RcView-leaving-01. viewClass =" viewClass "viewInstance =" viewInstance
     objectMgr~removeView(viewClass, viewInstance)
     -- Note - we do not remove the Model. Should we? If so, not from here!
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */

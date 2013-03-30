@@ -57,6 +57,7 @@
 #include "oodControl.hpp"
 #include "oodMessaging.hpp"
 #include "oodResourceIDs.hpp"
+#include "oodResizableDialog.hpp"
 #include "oodUser.hpp"
 
 BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, LPMSG lpmsg);
@@ -86,6 +87,10 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     if ( pcpbd->isTabOwnerDlg )
     {
         dlgProc = (DLGPROC)RexxTabOwnerDlgProc;
+    }
+    else if ( pcpbd->isResizableDlg )
+    {
+        dlgProc = (DLGPROC)RexxResizableDlgProc;
     }
 
     pcpbd->hDlg = CreateDialogIndirectParam(MyInstance, (LPCDLGTEMPLATE)args->dlgTemplate, pcpbd->hOwnerDlg,
@@ -595,14 +600,7 @@ RexxMethod7(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
 
 RexxMethod1(RexxObjectPtr, userdlg_test, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-
-    int32_t id1 = OOD_ID_EXCEPTION;
-    printf("int OOD_ID_EXCEPTION < 1 ? %d\n", id1 < 1);
-
-    uint32_t id2 = OOD_ID_EXCEPTION;
-    printf("uint32_t OOD_ID_EXCEPTION < 1 ? %d\n", id2 < 1);
+    printf("No test at this time\n");
     return TheZeroObj;
 }
 
@@ -803,10 +801,6 @@ uint32_t dateTimePickerStyle(CSTRING opts, uint32_t style)
         style |= DTS_SHORTDATECENTURYFORMAT;
     }
     else if ( StrStrI(opts, "TIME") != NULL )
-    {
-        style |= DTS_TIMEFORMAT;
-    }
-    else
     {
         style |= DTS_TIMEFORMAT;
     }
@@ -1286,6 +1280,13 @@ RexxMethod2(RexxObjectPtr, dyndlg_dynamicInit, POINTER, arg, OSELF, self)
  *           created, there is no backing Rexx dialog object.  Child dialogs are
  *           created for the 'category' pages of a CategoryDialog or its
  *           subclasses.
+ *
+ *           For a resizable dialog (inherits ResizingAdmin) we add the needed
+ *           styles to force the dialog to be resizable. Testing seems to show
+ *           that adding WS_THICKFRAME during WM_INITDIALOG does not work if
+ *           WS_MAXIMIZEBOX is not used in the dialog template.  But, if
+ *           WS_THICKFRAME is added to the dialog template, WS_MAXIMIZEBOX is
+ *           not needed.  So we do that here.
  */
 RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint32_t, cy, OPTIONAL_CSTRING, title,
             OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, dlgClass, ARGLIST, args, CSELF, pCSelf)
@@ -1304,6 +1305,11 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     if ( pcpbd->isControlDlg )
     {
         style = DS_SETFONT | DS_CONTROL | WS_CHILD;
+    }
+
+    if ( pcpbd->isResizableDlg )
+    {
+        style |= WS_THICKFRAME;
     }
 
     uint32_t exStyle = 0;

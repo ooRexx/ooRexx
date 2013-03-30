@@ -63,3 +63,7 @@
     the internal sorting feature of the ooDialog framework.  In report
     view, the columns can be drag and droppred to arrange the order.
     Clicking on a column sorts the column.
+
+  The subitem.editing subdirectory contains several examples of embedding
+  dialog controls within the list-view to allow in-place editing of the
+  subitems in report view.

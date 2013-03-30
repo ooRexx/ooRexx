@@ -44,14 +44,17 @@
   be relatively short and simple programs that demonstrate how to use some
   feature of ooDialog.
 
-    - publicRoutines_demo.rex
+    - addManyRows.rex
 
-    ooDialog contains a number of standard dialog and public routines.  The
-    standard dialogs and public routines are designed to be easy to use.
-    They allow a programmer to added simple graphical elements to a program
-    without any detailed knowledge of the ooDialog framework.  The
-    publicRoutines_demo program demonstrates how to use these public
-    routines.
+    This example's main purpose is to show how to use the ProgressDialog
+    class.  It allows the user to select how many list-view items are to be
+    added to the list-view before it starts.  It also does some interesting
+    timings and displays the times in the dialog
+
+    - browsePrinters.rex
+
+    Shows how to use the BrowseForFolder class and how to customize the
+    browse dialog so that the user can select a printer.
 
     - fileNameDialog_demo.rex
 
@@ -65,6 +68,24 @@
     in ooRexx 4.0.0, including the .Image, .Imagelist classes, and the
     setImageList() method of the button class.
 
+    - publicRoutines_demo.rex
+
+    ooDialog contains a number of standard dialog and public routines.  The
+    standard dialogs and public routines are designed to be easy to use.
+    They allow a programmer to added simple graphical elements to a program
+    without any detailed knowledge of the ooDialog framework.  The
+    publicRoutines_demo program demonstrates how to use these public
+    routines.
+
+    - simpleFolderBrowse.rex
+
+    Demonstrates how to use the SimpleFolderBrowse class to allow the user
+    to pick a folder.
+
+    - stopWatch.rex
+
+    An intersting implmentation of a stop watch in Rexx.
+
     - useTools.rex
 
     This example program shows how to use a dialog that is an "owned"
@@ -72,3 +93,4 @@
     they always remain above their owner window.  This makes them useful to
     create "tool palette" types of programs.  The example program does just
     that, demonstrates a main dialog with a tool palette.
+

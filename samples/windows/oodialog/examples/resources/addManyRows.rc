@@ -1,0 +1,106 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2013-2013 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+#include <windows.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include "addManyRows.h"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_ADD_ROWS DIALOGEX 0, 0, 411, 238
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Large Item Count List View"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    CONTROL         "", IDC_LV, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_SHOWSELALWAYS | LVS_REPORT, 10, 10, 391, 153
+    PUSHBUTTON      "Rexx Sort", IDC_PB_SORT_REXX, 10, 214, 62, 14
+    PUSHBUTTON      "Internal Sort", IDC_PB_SORT_INTERN, 10, 195, 62, 14
+    GROUPBOX        "Time in seconds (2000 rows):", IDC_GB_TIMES, 77, 168, 269, 60
+    LTEXT           "Create full rows:", IDC_ST_CREATE, 86, 185, 107, 8, SS_LEFT
+    LTEXT           "Insert full rows:", IDC_ST_INSERT, 86, 207, 107, 8, SS_LEFT
+    LTEXT           "Internal sort:", IDC_ST_INTERNAL, 226, 185, 107, 8, SS_LEFT
+    LTEXT           "Rexx sort:", IDC_ST_REXXSORT, 226, 207, 107, 8, SS_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 351, 214, 50, 14
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_INTRO DIALOGEX 0, 0, 241, 130
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Progress Bar Example - Set Up"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    LTEXT           "The upcoming example creates a list-view with a large number of items.  Select the number of items for the list-view", IDC_STATIC, 12, 10, 209, 19, SS_LEFT
+    GROUPBOX        "Pre-sets", IDC_STATIC, 11, 34, 104, 85, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "1,000", IDC_RB_1000, 21, 49, 35, 10, WS_TABSTOP
+    AUTORADIOBUTTON "2,000", IDC_RB_2000, 74, 49, 35, 10
+    AUTORADIOBUTTON "5,000", IDC_RB_5000, 21, 73, 35, 10
+    AUTORADIOBUTTON "10,000", IDC_RB_10000, 74, 73, 35, 10
+    AUTORADIOBUTTON "15,000", IDC_RB_15000, 21, 98, 35, 10
+    AUTORADIOBUTTON "25,000", IDC_RB_25000, 74, 98, 35, 10
+    AUTOCHECKBOX    "Use Free-form", IDC_CK_FREEFORM, 126, 39, 80, 10
+    GROUPBOX        "Free-form", IDC_STATIC, 126, 57, 104, 39
+    EDITTEXT        IDC_ED_ITEMS, 151, 73, 40, 14, ES_AUTOHSCROLL
+    CONTROL         "", IDC_SP_ITEMS, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_SETBUDDYINT, 179, 73, 11, 14
+    DEFPUSHBUTTON   "OK", IDOK, 127, 106, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 181, 106, 50, 14
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_SORT_PARAMS DIALOGEX 0, 0, 295, 162
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Set Up the Sort"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    GROUPBOX        "Sort Parameters:", IDC_STATIC, 10, 10, 275, 116
+    GROUPBOX        "Column:", IDC_STATIC, 29, 31, 59, 77
+    AUTORADIOBUTTON "Item", IDC_RB_ITEM, 38, 48, 39, 8, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Subitem", IDC_RB_SUBITEM, 38, 67, 39, 8
+    EDITTEXT        IDC_ED_COL, 38, 87, 31, 12, ES_AUTOHSCROLL
+    CONTROL         "", IDC_SP_COL, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_AUTOBUDDY | UDS_HOTTRACK | UDS_SETBUDDYINT, 57, 87, 11, 14
+    GROUPBOX        "", IDC_STATIC, 107, 31, 160, 77, WS_GROUP
+    AUTORADIOBUTTON "Ascending", IDC_RB_ASCENDING, 124, 48, 48, 8, WS_TABSTOP
+    AUTORADIOBUTTON "Descending", IDC_RB_DESCENDING, 192, 48, 55, 8
+    AUTORADIOBUTTON "Case Sensitive", IDC_RB_CASE, 124, 67, 60, 8, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Case Insensitive", IDC_RB_CASELESS, 192, 67, 65, 8
+    DEFPUSHBUTTON   "OK", IDOK, 180, 138, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 235, 138, 50, 14
+}

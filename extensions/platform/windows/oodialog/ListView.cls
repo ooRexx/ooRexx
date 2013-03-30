@@ -78,6 +78,7 @@
 ::method addExtendedStyle unguarded external "LIBRARY oodialog lv_addClearExtendStyle"
 ::method addFullRow unguarded external "LIBRARY oodialog lv_addFullRow"
 ::method addRow unguarded external "LIBRARY oodialog lv_addRow"
+::method addRowFromArray unguarded external "LIBRARY oodialog lv_addRowFromArray"
 ::method addStyle unguarded external "LIBRARY oodialog lv_addRemoveStyle"
 ::method alignLeft unguarded external "LIBRARY oodialog lv_arrange"
 ::method alignTop unguarded external "LIBRARY oodialog lv_arrange"
@@ -154,8 +155,10 @@
 ::method getItem unguarded external "LIBRARY oodialog lv_getItem"
 ::method getItemData unguarded external "LIBRARY oodialog lv_getItemData"
 ::method getItemInfo unguarded external "LIBRARY oodialog lv_getItemInfo"
+::method getItemRect unguarded external "LIBRARY oodialog lv_getItemRect"
 ::method getItemPos unguarded external "LIBRARY oodialog lv_getItemPos"
 ::method getSubitem unguarded external "LIBRARY oodialog lv_getSubitem"
+::method getSubitemRect unguarded external "LIBRARY oodialog lv_getSubitemRect"
 ::method getToolTips unguarded external "LIBRARY oodialog generic_getToolTips"
 ::method getView unguarded external "LIBRARY oodialog lv_getView"
 ::method hasCheckBoxes unguarded external "LIBRARY oodialog lv_hasCheckBoxes"
@@ -208,6 +211,7 @@
    return self~modifyColumnPx(index, label, width, align)
 
 ::method modifyColumnPx unguarded external "LIBRARY oodialog lv_modifyColumnPx"
+::method modifyFullRow unguarded external "LIBRARY oodialog lv_modifyFullRow"
 ::method modifyItem unguarded external "LIBRARY oodialog lv_modifyItem"
 ::method modifySubitem unguarded external "LIBRARY oodialog lv_modifySubitem"
 ::method next unguarded external "LIBRARY oodialog lv_getNextItem"
@@ -246,6 +250,7 @@
    return self~setColumnWidthPx(index, width)
 
 ::method setColumnWidthPx unguarded external "LIBRARY oodialog lv_setColumnWidthPx"
+::method setFullRowText unguarded external "LIBRARY oodialog lv_setFullRowText"
 ::method setHoverTime unguarded
    use strict arg time = (-1)
    if time < -1 then time = -1
@@ -324,6 +329,8 @@
 
 ::class 'LvItem' public
 
+::method init class external "LIBRARY oodialog lvi_init_cls"
+
 ::method init external "LIBRARY oodialog lvi_init"
 ::method unInit external "LIBRARY oodialog lvi_unInit"
 
@@ -356,8 +363,14 @@
 
 
 ::class 'LvFullRow' public
+::method init class external "LIBRARY oodialog lvfr_init_cls"
+::method fromArray class external "LIBRARY oodialog lvfr_fromArray_cls"
+
 ::method init external "LIBRARY oodialog lvfr_init"
 ::method unInit external "LIBRARY oodialog lvfr_unInit"
+
+::attribute userData get external "LIBRARY oodialog lvfr_userData"
+::attribute userData set external "LIBRARY oodialog lvfr_setUserData"
 
 ::method addSubItem external "LIBRARY oodialog lvfr_addSubitem"
 ::method insertSubitem external "LIBRARY oodialog lvfr_insertSubitem"
@@ -368,6 +381,8 @@
 
 
 ::class 'LvSubItem' public
+::method init class external "LIBRARY oodialog lvsi_init_cls"
+
 ::method init external "LIBRARY oodialog lvsi_init"
 ::method unInit external "LIBRARY oodialog lvsi_unInit"
 

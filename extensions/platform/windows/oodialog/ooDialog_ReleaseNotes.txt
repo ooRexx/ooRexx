@@ -1,0 +1,523 @@
+                      Release Notes ooDialog 4.2.2
+                      ============================
+
+The ooDialog 4.2.2 release is focused on the implementation of Request
+for Enhancements with a large number of new features.
+
+ooDialog 4.2.2 can be installed to any ooRexx installation, 4.1.0 or
+later.
+
+Beginning with the release of ooDialog 4.2.0, the installation of
+ooDialog has been decoupled from the interpreter.  ooDialog 4.2.2
+installs over the top of any ooRexx installation.  It replaces the
+version of ooDialog in the ooRexx installation with ooDialog 4.2.2.
+
+This type of ooDialog installation is called an "independent" ooDialog
+installation to indicate the ooDialog installation is independent of an
+ooRexx installation and, to a degree, the version of ooRexx installed.
+
+ooDialog 4.2.2 requires a minimum ooRexx version of 4.1.0.
+
+
+Installation
+========================================================================
+
+Installation is simple, done through a typical Windows installer.  Pick
+the installation package that matches the bitness of the ooRexx
+installation.  I.e., a 32-bit package for a 32-bit ooRexx and a 64-bit
+package for a 64-bit ooRexx.
+
+The installer will detect the installed ooRexx, location and version.
+If the ooRexx version is less than 4.1.0, or if there is no installed
+ooRexx, the installer will abort with a message explaining the problem.
+Otherwise the installer will replace the current ooDialog with ooDialog
+4.2.2.
+
+Note that the actions of the installer are dependent on the version of
+ooRexx, not the version of the installed ooDialog.  For instance, if the
+installed ooDialog is version 4.3.0, but for some reason the user is not
+happy with that version, running the ooDialog 4.2.2 installer will
+replace the 4.3.0 version with the 4.2.2 version.
+
+At the time of the installation, *all* ooDialog programs must be halted
+and the ooDialog PDFs must be closed if they happen to be opened.
+
+
+Changes in ooDialog 4.2.2 since the release of ooDialog 4.2.1
+========================================================================
+
+Bug Fixes in ooDialog:
+----------------------
+
+ * #1153 Deprecated CategoryDialog dialogs do not work in ooDialog 4.2.1
+
+ * #1154 setColor() method produces incorrect results
+
+ * #1166 Naming a DlgAreaU object 'b' causes the object to fail
+
+
+DocumentationBug Fixes in ooDialog:
+----------------------------------
+
+ * #196 ooDialog - mapWindowPoints() was never documented
+
+
+Feature Requests in ooDialog:
+-----------------------------
+
+ * #249 Add support for generalized resizable dialogs
+
+ * #352 Fix document StateIndicator / ProgressIndicator
+
+ * #370 Replace ooDialog WinTimer with a waitable time
+
+ * #417 ooDialog public routines and icon resource
+
+ * #504 It would be nice to be able to store a user value as part of the
+        LvFullRow object
+
+ * #505 Would like a way to prevent Enter from closing dialog when in
+        single-line edit control
+
+ * #506 Allow modifying a list-view item and all its subitems at once
+
+ * #507 ooDialog - Modify the text of a list-view item and all its
+        subitems at one time
+
+ * #512 Add setWindowStyleRaw to match WindowBase getWindowStyleRaw
+
+ * #513 Need access to the ListView_GetItemRect
+        ListView_GetIndexItemRect
+
+ * #514 It would be interesting to temporarily change the parent window
+        of a dialog control
+
+ * #515 Would like to connect list-view begin and end scroll events
+
+ * #517 Add a way to access the child controls of a combo box
+
+ * #518 Need to work with an edit control that is not a direct child of
+        the dialog
+
+ * #519 Would like the ListView hitTestInfo to return the subitem index
+
+ * #520 folder selection dialog
+
+ * #521 It would be useful to create a LvFullRow from an array of text
+        values
+
+ * #522 Add item to list-view using array to specify the text of the
+        item / subitem(s)
+
+ * #524 Standard dialogs should work no matter what the application wide
+        setting of auto detect
+
+ * #525 The TreeView find() should allow some options
+
+ * #526 Get the message text associated with Windows error codes
+
+ * #528 Get the list box item under a point
+
+ * #529	Add methods to determine type of combo box from Rexx code
+
+ * #530	Want to be be able to calculate the rectangle occupied by a
+        combo box item
+
+ * #531	Combo box methods to set the minimum number of items shown in
+        list
+
+ * #532	Set the cue banner text for a combo box
+
+ * #534	Key status
+
+ * #535 Treeview expand/collapse button replacement
+
+ * #536 popupAsChild support for PropertySheets
+
+
+New Functionality in ooDialog:
+------------------------------
+
+Methods have been added to various classes that allow the embedding of
+either an edit control or a combo box control in the subitem fields of a
+list-view.  This functionality allows the in-place editing of the
+subitems in a list-view item.
+
+Work has been done that allows any type of ooDialog dialog to be made
+resizable.
+
+
+New dialog classes:
+-------------------
+
+ResizingAdmin class:
+
+The ResizingAdmin class is a new mixin class.  Dialogs that inherit this
+class are automatically made resizable.  Any ooDialog dialog class can
+intherit the mixin class.  By default, all controls in the dialog are
+sized in proportion to the change in size of the dialog.  Methods of the
+ResizingAdmin class allow the programmer to customize how the controls
+in the dialog are sized.
+
+
+New utility classes:
+--------------------
+
+BrowseForFolder class:
+
+The ooDialog BrowseForFolder class provides access to the Windows
+BrowseForFolder COM object.  It gives the Rexx programmer the ability to
+put up a standard dialog that allows the user to select a folder.  It is
+somewhat similar the the fileNameDialog() routine, except it is possible
+to select a folder.  Something that has not been possible in ooDialog
+previously.  The programmer has access to the full set of customizations
+in the COM object.
+
+SimpleFolderBrowse class:
+
+The SimpleFolderBrowse class also provides access to the Windows
+BrowseForFolder COM object, however it is designed to be very simple to
+use.  Only the most common customization features are provided.
+
+Keyboard class:
+
+The Keyboard class addresses the receiving and processing of keyboard
+input.
+
+ProgressDialog class:
+
+A ProgressDialog object is used to show a dialog containing a
+ProgressBar, an optional message, an optional status line, and an
+optional Cancel button.  The dialog shows the progress a lengthy task is
+making to the user.
+
+
+New Public Routines:
+--------------------
+
+SimpleFolderBrowse()  This routine provides a shortcut access to the
+                      SimpleFolderBrowse dialog class.
+
+
+New Methods:
+------------
+
+In the ApplicationManager class:
+
+defaultIcon()     Assigns an application-wide default dialog icon.
+
+
+In the ComboBox class:
+
+getCue()          Retrieves the cue banner text for this combo box, or
+                  the empty string if  there is no cue set.
+
+getComboBoxInfo() Returns a Directory object containinng information
+                  about the combo box.
+
+getEditControl()  Returns a Rexx Edit object that represents the child
+                  edit control used by the combo box.
+
+getFirstVisible() Determines the one-based index of the top item in the
+                  drop-down list.
+
+getItemHeight()   Determines the height of the list items or the height
+                  of the selection field in this combo box.
+
+getMinVisible()   Retrieves the minimum number of visible items that
+                  must be displayed in the drop-down list of this combo
+                  box.
+
+isDropDown()      Determines if this combo box is a drop-down combo box.
+
+isDropDownList()  Determines if this combo box is a drop-down list combo
+                  box.
+
+isGrandChild()    Notifies the ooDialog framework that the combo box
+                  control is a grandchild of the dialog and configures
+                  the underlying combo box control to send four event
+                  notifications to the dialog, rather than its direct
+                  parent.
+
+isSimple()        Determines if this combo box is a simple combo box.
+
+setCue()          Sets the cue banner text for this combo box.
+
+setItemHeight()   Sets the height of the list items or the selection
+                  field in this combo box.
+
+setMinVisible()   Sets the minimum number of visible items in the
+                  drop-down list of a combo box.
+
+
+In the DialogControl class:
+
+setParent()       Sets a new parent for the dialog control.
+
+setWindowTheme()  Changes the visual theme for this dialog control
+                  window, causes the window to use a different set of
+                  visual style information than its class normally uses.
+
+
+In the DlgUtil class:
+
+errMsg()         Returns the operating system error message text for  a
+                 system error code, including COM error codes.
+
+
+In the Edit class:
+
+isGrandchild()    Notifies the ooDialog framework that the edit control
+                  is a grandchild of the dialog and configures the
+                  underlying edit control to send four event
+                  notifications to the dialog, rather than its direct
+                  parent.
+
+wantReturn()      Connects the Enter keypress in a single-line edit
+                  control to a method in the Rexx dialog and prevents
+                  the keypress from closing the dialog.
+
+
+In the ListBox class:
+
+hitTestInfo()    Determines the one-based index of the item nearest a
+                 specified point in a list box.
+
+
+In the ListView class:
+
+addRowFromArray() Inserts an item into this list-view from an array of
+                  values. The string value of each item in the array is
+                  used as the text for the item and subitem(s).
+
+getItemRect()     Gets the bounding rectangle for all or part of an item
+                  in the current view of the list-view.
+
+getSubitemRect()  Gets the bounding rectangle for all or part of a
+                  subitem in the current view of the list-view.
+
+modifyFullRow()   Modifies a list-view's item and all its subitem using
+                  a LvFullRow object.
+
+setFullRowText()  Sets or updates the text for a list-view item and all
+                  its subItems using a LvFullRow object.
+
+
+In the LvFullRow class:
+
+fromArray()       [Class method] Instantiates a new LvFullRow object
+                  from an array of values. The string value of each item
+                  in the array is used as the text for the item and
+                  subitem(s).
+
+
+In the PropertySheetDialog class:
+
+popupAsChild()    The popupAsChild() method works for
+                  PropertySheetDialog dialogs as it does for regular
+                  ooDialog. It starts a modeless property sheet dialog
+                  that is closed automatically when its assigned parent
+                  dialog is closed.
+
+
+In the Rect class:
+
+copy()            Returns a new Rect object with the same cooridinates
+                  as this Rect object.
+
+
+In the WindowBase class:
+
+setWindowStyleRaw() Sets the window style flags of the window. The value
+                    is specified as the raw numeric value of the style.
+
+
+
+New Attributes:
+---------------
+
+In the LvFullRow class:
+
+
+userData  The userData attribute allows the programmer to assign any
+          object to each full row object.
+
+In the PlainBaseDialog class:
+
+dlgID     This attribute reflects a whole number value that can be used
+          to identify the dialog.
+
+
+Enhanced Methods:
+-----------------
+
+In the Button class:
+
+getIdealSize()          A new optional parameter, wantWidth, is added.
+                        If this argument is specified, the operating
+                        system will calculate the ideal height of the
+                        button with the specified width.  This
+                        functionality is not available in the operating
+                        system until Vista or later.
+
+
+In the EventNotification class:
+
+connectListViewEvent()  New events added.
+
+  * the BEGINSCROLL event is added.
+
+  * the ENDSCROLL event is added.
+
+
+In the ListView class:
+
+hitTestInfo()           Enhanced to return the subitem index, instead of
+                        0
+
+
+In the TreeView class:
+
+find()                  Enhanced to allow starting the search from any
+                        parent tree-view item.  Enhanced to allow
+                        searching for an abbreviation of the tree-view
+                        item label.
+
+
+Enhanced Public Routines:
+-------------------------
+
+WinTimer()              The WinTimer() public routine was originally
+                        implemented in a way that caused it consume 100%
+                        of the CPU in a busy loop.  The routine has been
+                        re-implmented in a way that keeps the behaviour
+                        of the routine the same, without the high CPU
+                        use.  The CPU use while waiting on the timer is
+                        now 0%.
+
+
+Deprecated Methods:
+-------------------
+
+In the TreeView class:
+
+hitTest()               This method is deprecated.  Use the
+                        hitTestInfo() method instead.
+
+
+New samples:
+------------
+
+ooDialog\controls\ListView\subitem.editing\dropDownComboBox.rex
+ooDialog\controls\ListView\subitem.editing\dropDownListComboBox.rex
+ooDialog\controls\ListView\subitem.editing\editControl.rex
+
+These 3 examples demonstrate how to embed a control in a list-view when
+it is in report view and use the control to do in-place subitem editing.
+
+oodialog\resizableDialogs\ResizingAdmin\augmentedResize.rex
+oodialog\resizableDialogs\ResizingAdmin\basicResize.rex
+oodialog\resizableDialogs\ResizingAdmin\gbStationary.rex
+
+These 3 examples demonstrate inheriting the ResizingAdmin class.
+
+oodialog\examples\addManyRows.rex
+
+This example shows how to use the new ProgressDialog class.
+
+oodialog\examples\browsePrinters.rex
+
+This example demonstrates the BrowseForFolder class.
+
+oodialog\examples\simpleFolderBrowse.rex
+
+This example demonstrates the SimpleBrowseForFolder class.
+
+oodialog\examples\stopWatch.rex
+
+This example demonstrates general ooDialog programming techniques by
+putting up a 'stop watch' dialog.
+
+
+Enhanced samples:
+-----------------
+
+oodialog\oodStandardDialogs.rex
+
+This example is an enhanced version of the old oostddlg.rex.  It has a
+completely graphical interface and no longer uses 'say' statements.  It
+also uses the defaultIcon() method to set the default icon for the
+program.
+
+oodialog\oodStandardRoutines.rex
+
+This example is an enhanced version of the old oostdfct.rex.  It has a
+completely graphical interface and no longer uses 'say' statements.  It
+also uses the defaultIcon() method to set the default icon for the
+program.
+
+oodialog\resizableDialogs\ResizingAdmin\PropertySheetDemo.rex
+oodialog\resizableDialogs\ResizingAdmin\TabDemo.rex
+
+These 2 examples are copied from the
+
+oodialog\propertySheet.tabControls\PropertySheetDemo.rex
+oodialog\propertySheet.tabControls\TabDemo.rex
+
+examples and enhanced to be resizable.  The old and new examples can be
+compared to see both how to make a dialog resizable and how the
+appearance of the old and new versions contrast.
+
+
+Documentation:
+--------------
+
+All new methods, new classes, and new functionality are fully
+documented.  Other than that there are no major changes to the
+documentation.
+
+
+Known Problems, "Gotchas," and Solutions with Independent Installations
+========================================================================
+
+* Problem:
+
+The ooRexx installer creates a log of the files it installs.  When the
+uninstaller runs, the user can select to only uninstall files logged
+during installtion.  An indpendent ooDialog installation may install
+some example programs, documentation files, and shortcuts not recorded
+in the log file.  When ooRexx is uninstalled or upgraded, these files
+and shortcuts may not be deleted.
+
+  Solution 1:
+
+  Before uninstalling ooRexx, install the independent ooDialog that
+  matches the ooRexx installation.  I.e., if the ooRexx installation is
+  any 4.0.x, or 4.1.x ooRexx version, install the ooDialog 4.1.0
+  indpendent installation. Then when ooRexx is uninstalled, all ooDialog
+  files and shortcuts will be removed because the files and shortcuts
+  exactly match what was installed during the ooRexx installation.
+
+  Solution 2:
+
+  After uninstalling ooRexx, manually delete any files in the old ooRexx
+  installation directory.
+
+* Gotcha:
+
+  The independent ooDialog installation deletes the entire ooDialog
+  samples subdirectory tree.  This will delete any personal files
+  that may have been put there after ooRexx was installed.
+
+  Solution 1:
+
+  Do not put personal files in the %REXX_HOME%\samples\ooDialog
+  subdirectory tree.
+
+  Solution 2:
+
+  Before executing the independent ooDialog installer, move or back up
+  any personal files that may be in %REXX_HOME%\samples\ooDialog
+  subdirectory tree.
+
+

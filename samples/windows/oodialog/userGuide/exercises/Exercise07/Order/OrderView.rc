@@ -1,0 +1,101 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+#include <windows.h>
+#include <commctrl.h>
+#include <richedit.h>
+#include "OrderView.h"
+
+
+
+
+//
+// Menu resources
+//
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDR_ORDER_MENU MENU
+{
+    POPUP "Actions"
+    {
+        MENUITEM "An Action", IDM_ORDER_DOTHIS
+    }
+    POPUP "Help"
+    {
+        MENUITEM "About", IDM_ORDER_ABOUT
+    }
+}
+
+
+
+//
+// Dialog resources
+//
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_ORDER_DIALOG DIALOG 0, 0, 272, 270
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_GROUP | WS_POPUP | WS_SYSMENU
+CAPTION "Sales Order"
+FONT 8, "Ms Shell Dlg"
+{
+    EDITTEXT        IDC_ORDER_ORDNO, 217, 30, 40, 14, ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_ORDER_CUSTNO, 217, 50, 40, 14, ES_RIGHT | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Order No.", IDC_STATIC, 169, 33, 32, 8, SS_LEFT
+    LTEXT           "Customer No.", IDC_STATIC, 169, 53, 44, 8, SS_LEFT
+    CONTROL         "", IDC_ORDER_ITEMS, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_REPORT, 17, 70, 240, 115
+    LTEXT           "Date", IDC_STATIC, 169, 13, 16, 8, SS_LEFT
+    LTEXT           "Net Cost:", IDC_STATIC, 113, 195, 30, 8, SS_LEFT
+    LTEXT           "Discount:", IDC_STATIC, 113, 209, 31, 8, SS_LEFT
+    DEFPUSHBUTTON   "Close", IDCANCEL, 17, 234, 35, 14
+    LTEXT           "Tax:", IDC_STATIC, 113, 223, 15, 8, SS_LEFT
+    RTEXT           "0.00", IDC_ST_DISCOUNT_PC, 161, 209, 40, 8, SS_RIGHT
+    RTEXT           "0.00", IDC_ST_TAX_PC, 161, 223, 40, 8, SS_RIGHT
+    RTEXT           "0.00", IDC_ST_TAX, 212, 223, 40, 8, SS_RIGHT
+    RTEXT           "0.00", IDC_ST_NET, 212, 195, 40, 8, SS_RIGHT, WS_EX_RIGHT
+    RTEXT           "0.00", IDC_ST_DISCOUNT, 212, 209, 40, 8, SS_RIGHT
+    EDITTEXT        IDC_ORDER_NAMEADDR, 17, 23, 103, 39, ES_AUTOHSCROLL | ES_MULTILINE | ES_READONLY
+    LTEXT           "Customer:", IDC_STATIC, 19, 9, 32, 8, SS_LEFT
+    LTEXT           "Total Cost:", IDC_STATIC, 113, 237, 35, 8, SS_LEFT
+    RTEXT           "0.00", IDC_ST_TOTAL, 212, 237, 40, 11, WS_BORDER | SS_RIGHT
+    EDITTEXT        IDC_ORDER_DATE, 217, 10, 40, 14, ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+}
+
+
+
+//
+// Icon resources
+//
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_ORDER_DLGICON  ICON           ".\\Order\\bmp\\OrderForm.ico"

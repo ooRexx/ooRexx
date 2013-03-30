@@ -69,6 +69,7 @@ extern bool          initEventNotification(RexxMethodContext *, pCPlainBaseDialo
 extern bool          addCommandMessage(pCEventNotification, RexxMethodContext *, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
 extern bool          addNotifyMessage(pCEventNotification, RexxMethodContext *, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
 extern bool          addMiscMessage(pCEventNotification, RexxMethodContext *, uint32_t, uint32_t, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, uint32_t);
+extern RexxObjectPtr getToolIDFromLParam(RexxThreadContext *c, LPARAM lParam);
 
 // Shared functions for keyboard hooks, key press and key event subclassing.
 extern void            removeKBHook(pCEventNotification);

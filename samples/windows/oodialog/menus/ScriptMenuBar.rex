@@ -76,7 +76,10 @@ return 0
   expose lv menuBar
 
   lv~show
+  menuBar~check(IDM_OPEN_LIST_VIEW)
   menuBar~disable(IDM_OPEN_LIST_VIEW)
+
+  menuBar~unCheck(IDM_CLOSE_LIST_VIEW)
   menuBar~enable(IDM_CLOSE_LIST_VIEW)
 
 ::method 'closeList-View'
@@ -84,6 +87,9 @@ return 0
 
   lv~hide
   menuBar~enable(IDM_OPEN_LIST_VIEW)
+  menuBar~unCheck(IDM_OPEN_LIST_VIEW)
+
+  menuBar~check(IDM_CLOSE_LIST_VIEW)
   menuBar~disable(IDM_CLOSE_LIST_VIEW)
 
 ::method checkBoxes

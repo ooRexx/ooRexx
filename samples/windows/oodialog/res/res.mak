@@ -40,7 +40,7 @@
 rcflags_common = /DWIN32 /v
 
 all:  oowalk2.dll AnimalGame.dll ..\propertySheet.tabControls\rc\PropertySheetDemo.dll \
-      ..\propertySheet.tabControls\rc\TabOwnerDemo.dll
+      ..\propertySheet.tabControls\rc\TabOwnerDemo.dll ..\resizableDialogs\ResizingAdmin\rc\PropertySheetDemo.dll
 
 oowalk2.dll: oowalk2.res
     link /NOLOGO  $(@B).res /NOENTRY /DLL /MACHINE:$(MACHINE) -out:$(@B).dll
@@ -53,6 +53,9 @@ AnimalGame.dll: AnimalGame.res
 
 ..\propertySheet.tabControls\rc\TabOwnerDemo.dll: TabOwnerDemo.res
     link /NOLOGO $(@B).res /NOENTRY /DLL /MACHINE:$(MACHINE) -out:..\propertySheet.tabControls\rc\$(@B).dll
+
+..\resizableDialogs\ResizingAdmin\rc\PropertySheetDemo.dll: PropertySheetDemo.res
+    link /NOLOGO $(@B).res /NOENTRY /DLL /MACHINE:$(MACHINE) -out:..\resizableDialogs\ResizingAdmin\rc\$(@B).dll
 
 # Create .res from .rc
 oowalk2.res: ..\rc\walker.rc

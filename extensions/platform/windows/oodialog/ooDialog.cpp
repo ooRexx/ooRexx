@@ -54,6 +54,7 @@
 #include "oodMessaging.hpp"
 #include "oodData.hpp"
 #include "oodDeviceGraphics.hpp"
+#include "oodResizableDialog.hpp"
 #include "oodResourceIDs.hpp"
 
 
@@ -575,6 +576,20 @@ int32_t delDialog(pCPlainBaseDialog pcpbd, RexxThreadContext *c)
         pcpbd->dlgPrivate = NULL;
     }
 
+    if ( pcpbd->isResizableDlg && pcpbd->resizeInfo != NULL )
+    {
+        pResizeInfoDlg prid = pcpbd->resizeInfo;
+
+        for ( size_t i = 0; i < prid->countPagedTabs; i++ )
+        {
+            safeLocalFree(prid->pagedTabs[i]);
+        }
+        safeLocalFree(prid->riCtrls);
+        safeLocalFree(prid->sizeEndedMeth);
+        safeLocalFree(prid);
+        pcpbd->resizeInfo = NULL;
+    }
+
     if ( pcpbd->isPropSheetDlg && pcpbd->dlgPrivate != NULL  )
     {
         delPropSheetDialog((pCPropertySheetDialog)pcpbd->dlgPrivate);
@@ -656,6 +671,20 @@ BOOL getDialogIcons(pCPlainBaseDialog pcpbd, INT id, UINT iconSrc, PHANDLE phBig
 
     if ( id < 1 )
     {
+        if ( TheDefaultBigIcon != NULL )
+        {
+            *phBig   = TheDefaultBigIcon;
+            *phSmall = TheDefaultSmallIcon;
+
+            // The default icons will be used over and over again, (probably,)
+            // so they must not be destroyed when a dialog ends.
+            pcpbd->sharedIcon = true;
+
+            return TRUE;
+        }
+
+        // Should never get here, the default icons should already be set to
+        // IDI_DLG_DEFAULT, at least.
         id = IDI_DLG_DEFAULT;
     }
 
@@ -2644,6 +2673,34 @@ RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
 }
 
 
+/** WindowBase::setWindowLong()  [private]
+ *
+ *  Calls SetWindowLong with the value specified.
+ *
+ *  @param  flag   [required] The GWL_xx index to set.
+ *
+ *  @param  value  [required] The value to set
+ *
+ *  @return  The previous value for the index
+ *
+ *  @remarks  This is used internally for setWindowStyleRaw, GWL_STYLE.  It
+ *            could also be used for GWL_EXSTYLE.  The other indexes, besides
+ *            those 2, are pointer or handle values. Because of this, this
+ *            method should not be documented. Use from Rexx for any other index
+ *            is likely to crash Rexx, or have other unintended consequences.
+ */
+RexxMethod3(uint32_t, wb_setWindowLong_pvt, int32_t, flag, CSTRING, value, CSELF, pCSelf)
+{
+
+    uint32_t realValue;
+    if ( ! rxStr2Number32(context, value, &realValue, 2) )
+    {
+        return NULLOBJECT;
+    }
+    return SetWindowLong(getWBWindow(context, pCSelf), flag, realValue);
+}
+
+
 /**
  *  Methods for the .PlainBaseDialog class.
  */
@@ -2923,6 +2980,11 @@ static bool checkDlgType(RexxMethodContext *c, RexxObjectPtr self, pCPlainBaseDi
         pcpbd->idsNotChecked   = true;
     }
 
+    if ( c->IsOfType(self, "RESIZINGADMIN") )
+    {
+        pcpbd->isResizableDlg = true;
+    }
+
     return true;
 
 err_out:
@@ -3028,7 +3090,12 @@ done_out:
  *  The initialization of the base dialog.
  *
  *  @params  library      DLL or .rc file for ResDialog or RcDialog dialogs.
- *  @params  resource     Resource ID for ResDialog or RcDialog dialogs.
+ *  @params  resource     The resource ID for ResDialog or RcDialog dialogs. The
+ *                        dlgID attribute is set to this value, if it can be
+ *                        resolved to a number. By default -1 will be assigned
+ *                        to dlgID if resource does not resolve to a positive
+ *                        number.
+ *
  *  @params  dlgDataStem  Data stem.
  *  @params  hFile        Header file.
  *
@@ -3040,7 +3107,14 @@ done_out:
  *                        on to the concrete class.  Which in turn knows how to
  *                        use that init object.
  *
- *  @remarks  Prior to 4.0.1, if something failed here, the 'init code' was set
+ *  @remarks  We keep the dlgID attribute separate from the undocumented
+ *            resourceID. dlgID is set to resourceID, if resourceID can be
+ *            resolved here to a number greater than 0.  If it can not be
+ *            resolved, it is set to -1.  This way, changing it to -1 can not
+ *            interfere with the resourceID.  dlgID can be changed any time by
+ *            the user.
+ *
+ *            Prior to 4.0.1, if something failed here, the 'init code' was set
  *            to non-zero.  One problem with this is that it relies on the user
  *            checking the init code and *not* using the dialog object if it is
  *            an error code.  Since we can not rely on that, in order to prevent
@@ -3178,6 +3252,47 @@ RexxMethod6(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
         context->SendMessage1(self, "PARSEINCLUDEFILE", hFile);
     }
 
+    // If there is a condition pending we do not want to clear it.
+    if ( ! context->CheckCondition() )
+    {
+        pcpbd->dlgID = resolveResourceID(context, resource, self);
+
+        // Now, if there is a condition pending, it came from trying to resolve
+        // the ID, and we do want to clear it.
+        if ( context->CheckCondition() )
+        {
+            context->ClearCondition();
+        }
+    }
+
+    if ( pcpbd->isResizableDlg )
+    {
+        if ( ! allocateResizeInfo(context, pcpbd, cselfBuffer) )
+        {
+            result = TheOneObj;
+            goto done_out;
+        }
+
+        pcpbd->resizeInfo->inDefineSizing = true;
+
+        RexxObjectPtr reply = context->SendMessage0(self, "DEFINESIZING");
+
+        if ( ! isInt(0, reply, context->threadContext) )
+        {
+            // It is relatively easy to get a syntax error in the defineSizing()
+            // method.  If we have a condition, we don't want to replace it with
+            // the base class initialization condition
+            if ( ! context->CheckCondition() )
+            {
+                baseClassInitializationException(context, "ResizingAdmin", "defineSizing failed");
+            }
+
+            result = TheOneObj;
+        }
+
+        pcpbd->resizeInfo->inDefineSizing = false;
+    }
+
     goto done_out;
 
 terminate_out:
@@ -3294,6 +3409,37 @@ RexxMethod2(RexxObjectPtr, pbdlg_setAutoDetect, logical_t, on, CSELF, pCSelf)
         return (RexxObjectPtr)baseClassInitializationException(context);
     }
     pcpbd->autoDetect = on;
+    return NULLOBJECT;
+}
+
+/** PlainBaseDialog:dlgID    [attribute get]
+ */
+RexxMethod1(int32_t, pbdlg_getDlgID, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        baseClassInitializationException(context);
+        return 0;
+    }
+    return pcpbd->dlgID;
+}
+/** PlainBaseDialog::dlgID   [attribute set]
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_setDlgID, RexxObjectPtr, _id, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd == NULL )
+    {
+        return (RexxObjectPtr)baseClassInitializationException(context);
+    }
+
+    int32_t id = oodResolveSymbolicID(context->threadContext, pcpbd->rexxSelf, _id, -1, 1, true);
+
+    if ( id != OOD_ID_EXCEPTION )
+    {
+        pcpbd->dlgID = id;
+    }
     return NULLOBJECT;
 }
 
@@ -3685,8 +3831,8 @@ RexxMethod2(RexxObjectPtr, pbdlg_getTextSizeDu, CSTRING, text, CSELF, pCSelf)
     {
         if ( ! getTextSizeDuInactiveDlg(context, pcpbd, text, &textSize) )
         {
-        goto error_out;
-    }
+            goto error_out;
+        }
     }
     else
     {
@@ -4436,7 +4582,7 @@ RexxMethod4(RexxObjectPtr, pbdlg_backgroundColor, RexxObjectPtr, _colorIndex, OP
     }
 
     pcpbd->bkgBrushIsSystem = isSys;
-    pcpbd->bkgBrush = hBrush;
+    pcpbd->bkgBrush         = hBrush;
 
     return TheTrueObj;
 }
@@ -5168,7 +5314,7 @@ RexxMethod3(RexxObjectPtr, pbdlg_getNewControl, RexxObjectPtr, rxID, OSELF, self
         goto out;
     }
 
-    oodControl_t controlType = control2controlType(hControl);
+    oodControl_t controlType = controlHwnd2controlType(hControl);
     if ( controlType == winUnknown )
     {
         controlNotSupportedException(context, rxID, self, 1, controlWindow2rexxString(context, hControl));

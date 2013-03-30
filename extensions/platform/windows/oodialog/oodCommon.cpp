@@ -98,6 +98,35 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
  *        The specified method, built-in function, or external routine exists,
  *        but you used it incorrectly.
  *
+ *  The "methName" method can only be invoked on "objectName" "msg"
+ *
+ *  The defaultLeft method can only be invoked on a ResizableDlg during the
+ *  defineSizing method.
+ *
+ * @param c           The method context we are operationg in.
+ * @param methodName  Method name.
+ * @param msg
+ * @param rxObj
+ *
+ * @note  This is an argument rearrangement to produce a message similar to, but
+ *        slightly different, than the other methodCanNotBeInvokedExeception
+ *        functions.
+ */
+RexxObjectPtr methodCanOnlyBeInvokedException(RexxMethodContext *c, CSTRING methodName, CSTRING msg, RexxObjectPtr rxObj)
+{
+    TCHAR buf[512];
+    _snprintf(buf, sizeof(buf), "The %s method can only be invoked on %s %s",
+              methodName, c->ObjectToStringValue(rxObj), msg);
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
+    return NULLOBJECT;
+}
+
+/**
+ *  93.900
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
  *  The "methName" method can not be invoked on "objectName" "msg"
  *
  *  The execute method can not be invoked on a PropertyPage using an owner
@@ -556,6 +585,20 @@ void customDrawMismatchException(RexxThreadContext *c, uint32_t id, oodControl_t
     executionErrorException(c, buffer);
 }
 
+RexxObjectPtr tooManyPagedTabsException(RexxMethodContext *c, uint32_t count, bool isPagedTab)
+{
+    TCHAR  buffer[256];
+    char  *insert = "mangaed";
+
+    if ( isPagedTab )
+    {
+        insert = "paged";
+    }
+    _snprintf(buffer, sizeof(buffer), "%d exceeds the maximum (%d) of allowable %s tabs", count, MAXMANAGEDTABS, insert);
+
+    userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
+}
 
 /**
  * Checks that the current Os meets the minimum OS requirements for a method.
@@ -1796,6 +1839,65 @@ pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, ood
     return pcpbd;
 }
 
+/**
+ * Checks that the specified Rexx object is in fact a PlainBaseDialog and
+ * returns its CSelf pointer if it is.
+ *
+ * @param c
+ * @param dlg
+ * @param argPos
+ *
+ * @return pCPlainBaseDialog
+ *
+ * @remarks  This is for use when a method argument is required to be a Dialog.
+ *           It could be used for a required or optional argument, it handles
+ *           NULLOBJECT.
+ *
+ *           An exception is rasied on failure.
+ */
+pCPlainBaseDialog requiredPlainBaseDlg(RexxMethodContext *c, RexxObjectPtr dlg, size_t argPos)
+{
+    pCPlainBaseDialog pcpbd = NULL;
+
+    if ( dlg != NULLOBJECT )
+    {
+        if ( c->IsOfType(dlg, "PLAINBASEDIALOG") )
+        {
+            pcpbd = dlgToCSelf(c, dlg);
+        }
+    }
+
+    if ( pcpbd == NULLOBJECT )
+    {
+        wrongClassException(c->threadContext, argPos, "PlainBaseDialog");
+    }
+    return pcpbd;
+}
+
+pCDialogControl requiredDlgControlCSelf(RexxMethodContext *c, RexxObjectPtr control, size_t argPos)
+{
+    pCDialogControl pcdc = NULL;
+
+    if ( control != NULLOBJECT )
+    {
+        if ( c->IsOfType(control, "DIALOGCONTROL") )
+        {
+            pcdc = controlToCSelf(c, control);
+            if ( pcdc == NULLOBJECT )
+            {
+                baseClassInitializationException(c, "DialogControl");
+            }
+        }
+        else
+        {
+            wrongClassException(c->threadContext, argPos, "DialogControl");
+            return NULLOBJECT;
+        }
+    }
+
+    return pcdc;
+}
+
 PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, size_t argPos)
 {
     if ( requiredClass(context->threadContext, p, "Point", argPos) )
@@ -1879,6 +1981,11 @@ RexxObjectPtr rxNewSize(RexxThreadContext *c, long cx, long cy)
 RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy)
 {
     return rxNewSize(c->threadContext, cx, cy);
+}
+
+RexxObjectPtr rxNewSize(RexxMethodContext *c, PSIZE s)
+{
+    return rxNewSize(c->threadContext, s->cx, s->cx);
 }
 
 bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj)
@@ -2362,7 +2469,7 @@ char *unicode2ansi(LPWSTR wstr)
 /**
  * Converts a wide character (Unicode) string to a Rexx string object.
  *
- * @param c    Method context we are operating in.
+ * @param c    Thread context we are operating in.
  * @param wstr Wide character string to convert.
  *
  * @return The conveted string as a new Rexx string object on success.
@@ -2371,7 +2478,7 @@ char *unicode2ansi(LPWSTR wstr)
  *           function could be added if it is necessary to distinguish types of
  *           errors.
  */
-RexxStringObject unicode2string(RexxMethodContext *c, LPWSTR wstr)
+RexxStringObject unicode2string(RexxThreadContext *c, LPWSTR wstr)
 {
     RexxStringObject result = c->NullString();
     if ( wstr == NULL )
@@ -2425,6 +2532,69 @@ bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size
     return true;
 }
 
+/**
+ * Gets the error message text for the specified error code.
+ *
+ * @param errBuff   in / out Formatted message returned here.
+ *
+ * @param errCode   The error code whose message is needed.
+ *
+ * @param thisErr   in / out  Format message can fail.  If not null the error
+ *                  code for a failed FormatMessage() is returned here..
+ *
+ * @return True on success, false on error.
+ *
+ * @remarks  errBuff is allocated by the system on success using LocalAlloc().
+ *           The caller is responsible for freeing it on return.
+ *
+ *           Some system error messages use inserts.  Without the
+ *           FORMAT_MESSAGE_IGNORE_INSERTS flag, we get errors when called from
+ *           DlgUtil::errMsg().
+ */
+bool getFormattedErrMsg(char **errBuff, uint32_t errCode, uint32_t *thisErr)
+{
+    unsigned short lang  = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+    uint32_t       flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+
+    uint32_t count = FormatMessage(flags, NULL, errCode, lang, (LPSTR)errBuff, 0, NULL);
+    if ( thisErr != NULL )
+    {
+        *thisErr = GetLastError();
+    }
+    if ( count == 0 )
+    {
+        return false;
+    }
+
+    return true;
+}
+/**
+ * Formats a HRESULT error code and prints it to the console.  This is more for
+ * use as an internal debugging tool.
+ *
+ * @param api
+ * @param hr
+ *
+ * @return bool
+ */
+bool printHResultErr(CSTRING api, HRESULT hr)
+{
+    char *errBuff = NULL;
+    char *msg     = NULL;
+
+    msg = (char *)LocalAlloc(LPTR, 512);
+    if ( msg && getFormattedErrMsg(&errBuff, hr, NULL) )
+    {
+        printf("API %s: result (0x%08x): %s\n", api, hr, errBuff);
+        LocalFree(msg);
+        LocalFree(errBuff);
+
+        return true;
+    }
+
+    safeLocalFree(msg);
+    return false;
+}
 /**
  * Fills in a RECT structure using an argument array passed to a Rexx object
  * method.

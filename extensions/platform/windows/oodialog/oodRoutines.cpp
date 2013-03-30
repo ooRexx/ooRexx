@@ -54,6 +54,8 @@
 
 
 #define MB_BUTTON_KEYWORDS "ABORTRETRYIGNORE CANCELTRYCONTINUE HELP OK OKCANCEL RETRYCANCEL YESNO YESNOCANCEL"
+#define FILENAME_BUFFER_LEN 65535
+
 
 /**
  * Initializes the string to int map for common Windows constant flags.  Things
@@ -161,223 +163,76 @@ static uint32_t getMiscMBStyle(char *mbStyle, RexxCallContext *c, int pos, CSTRI
     return styles;
 }
 
-/** MessageDialog()
- *
- *
- *  @param  text
- *  @param  hwnd  Handle of owner window.  If the user specifies 0 we do not use
- *                an owner window.  If the user omits hwnd, then we try the to
- *                find and use the topmost dialog.
- *
- *
- *  @note  Sets the .SystemErrorCode.
- *
- */
-RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTIONAL_CSTRING, _title,
-             OPTIONAL_CSTRING, button, OPTIONAL_CSTRING, icon, OPTIONAL_CSTRING, miscStyles)
+static char *searchSoundPath(CSTRING file, RexxCallContext *c)
 {
-    oodResetSysErrCode(context->threadContext);
+    oodResetSysErrCode(c->threadContext);
 
-    int result = -1;
+    // We need a buffer for the path to search, a buffer for the returned full
+    // file name, (if found,) and a pointer to char (an unused arg to
+    // SearchPath().)
+    char *buf = NULL;
+    char *fullFileName = NULL;
+    char *pFileName;
 
-    char *uprButton = NULL;
-    char *uprIcon = NULL;
-    char *uprMiscStyles = NULL;
+    // Calculate how much room we need for the search path buffer.
+    uint32_t cchCWD = GetCurrentDirectory(0, NULL);
 
-    HWND hwndOwner = (HWND)string2pointer(hwnd);
-    if ( hwndOwner == NULL )
+    // Many modern systems no longer have the SOUNDPATH set.
+    SetLastError(0);
+    uint32_t cchSoundPath = GetEnvironmentVariable("SOUNDPATH", NULL, 0);
+    uint32_t rc = GetLastError();
+    if ( cchSoundPath == 0 && rc != ERROR_ENVVAR_NOT_FOUND )
     {
-        if ( argumentOmitted(2) && TopDlg != NULL && TopDlg->onTheTop )
+        oodSetSysErrCode(c->threadContext, rc);
+        goto err_out;
+    }
+
+    // Allocate our needed buffers.
+    buf = (char *)malloc(cchCWD + cchSoundPath + 3);
+    fullFileName = (char *)malloc(_MAX_PATH);
+    if ( buf == NULL || fullFileName == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        goto err_out;
+    }
+
+    // Now get the current directory and the sound path.
+    cchCWD = GetCurrentDirectory(cchCWD + 1, buf);
+    if ( cchCWD == 0 )
+    {
+        oodSetSysErrCode(c->threadContext);
+        goto err_out;
+    }
+
+    if ( cchSoundPath != 0 )
+    {
+        buf[cchCWD++] = ';';
+        cchSoundPath = GetEnvironmentVariable("SOUNDPATH", buf + cchCWD, cchSoundPath + 1);
+        if ( cchSoundPath == 0 )
         {
-            hwndOwner = TopDlg->hDlg;
+            oodSetSysErrCode(c->threadContext);
+            goto err_out;
         }
     }
 
-    CSTRING title = "ooDialog Application Message";
-    if ( argumentExists(3) )
+    uint32_t errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    cchSoundPath = SearchPath(buf, file, NULL, _MAX_PATH, fullFileName, &pFileName);
+    SetErrorMode(errorMode);
+
+    if ( cchSoundPath == 0 || cchSoundPath >= _MAX_PATH )
     {
-        title = _title;
+        oodSetSysErrCode(c->threadContext);
+        goto err_out;
     }
 
-    // Defaults.  These values are all 0.
-    uint32_t flags = MB_OK | MB_DEFBUTTON1 | MB_APPLMODAL;
+    free(buf);
+    return fullFileName;
 
-    uint32_t flag;
-    if ( argumentExists(4) )
-    {
-        uprButton = strdupupr(button);
-        if ( uprButton == NULL )
-        {
-            outOfMemoryException(context->threadContext);
-            goto done_out;
-        }
-
-        flag = winKeyword2ID(uprButton, context->threadContext, 4, "MessageDialog button keyword");
-        if ( flag == (int)-1 )
-        {
-            goto done_out;
-        }
-        flags |= flag;
-    }
-
-    // There is no default for the icon, if omitted there is no icon.
-    if ( argumentExists(5) )
-    {
-        uprIcon = strdupupr(icon);
-        if ( uprIcon == NULL )
-        {
-            outOfMemoryException(context->threadContext);
-            goto done_out;
-        }
-
-        flag = winKeyword2ID(uprIcon, context->threadContext, 5, "MessageDialog icon keyword");
-        if ( flag == (int)-1 )
-        {
-            goto done_out;
-        }
-        flags |= flag;
-    }
-
-    if ( argumentExists(6) )
-    {
-        uprMiscStyles = strdupupr(miscStyles);
-        if ( uprMiscStyles == NULL )
-        {
-            outOfMemoryException(context->threadContext);
-            goto done_out;
-        }
-
-        flag = getMiscMBStyle(uprMiscStyles, context, 6, "MessageDialog style keyword");
-        if ( flag == (int)-1 )
-        {
-            goto done_out;
-        }
-        flags |= flag;
-    }
-
-    result = MessageBox(hwndOwner, text, title, flags);
-    if ( result == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
-
-done_out:
-    safeFree(uprButton);
-    safeFree(uprIcon);
-    safeFree(uprMiscStyles);
-
-    return result;
+err_out:
+    safeFree(buf);
+    safeFree(fullFileName);
+    return NULL;
 }
-
-/** findWindow()
- *
- *  Retrieves a window handle to the top-level window whose class name and
- *  window name match the specified strings. This function does not search child
- *  windows. This function does not perform a case-sensitive search.
- *
- *  @param caption     The title of the window to search for.  Although this
- *                     argument is required, the empty string can be used to
- *                     indicate a null should be used for the caption.
- *
- *  @param className   [optional]  Specifies the window class name of the window
- *                     to search for.  The class name can be any name registered
- *                     with RegisterClass() or RegisterClassEx(), or any of the
- *                     predefined control-class names.
- *
- *                     If className is omitted, it finds any window whose title
- *                     matches the caption argument.
- *
- *  @return  The window handle if the window is found, otherwise 0.
- *
- *  @note  Sets the system error code.
- */
-RexxRoutine2(RexxObjectPtr, findWindow_rtn, CSTRING, caption, OPTIONAL_CSTRING, className)
-{
-    oodResetSysErrCode(context->threadContext);
-
-    if ( strlen(caption) == 0 )
-    {
-        caption = NULL;
-    }
-    HWND hwnd = FindWindow(className, caption);
-    if ( hwnd == NULL )
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
-    return pointer2string(context->threadContext, hwnd);
-}
-
-
-/** msSleep()
- *
- *  Sleeps the specified number of miliseconds.
- *
- *  Prior to ooRexx 4.0.0, both the public routine msSleep() and the external
- *  function sleepMS() were both documented.  For backward compatibility, both
- *  need to be maintained.  sleepMS() is marked as deprecated and mapped to this
- *  function.
- *
- *  @param ms   The number of miliseconds to sleep.
- *
- *  @return     Always returns 0.
- *
- *  @note  This function can block the Windows message loop.  It should really
- *         only be used for durations less than 1 second.  Certainly no more
- *         than a few seconds.  Use SysSleep() instead.
- */
-RexxRoutine1(RexxObjectPtr, msSleep_rtn, uint32_t, ms)
-{
-    Sleep(ms);
-    return TheZeroObj;
-}
-
-/** winTimer()
- *
- *  The classic Rexx external function, WinTimer() was documented prior to 4.0.0
- *  and therefore needs to be retained for backward compatibility.  This
- *  implementation is poor.  PeekMessage() returns immediately if there are no
- *  messages.  Since there are probably no windows on this thread, the WAIT
- *  function spins in a busy loop consuming 100% of the CPU.
- *
- *  @param  mode    Keyword for what is to be done.  START creates the timer and
- *                  starts it.  WAIT waits on the timer.  STOP destroys the
- *                  timer.
- *
- *  @param  msOrId  Either the period of the timer, in miliseconds, if mode is
- *                  START, or the timer ID for the other modes.
- *
- *  @return The timer ID for the START mode, or success / error return code for
- *          the  other modes.
- */
-RexxRoutine2(uintptr_t, winTimer_rtn, CSTRING, mode, uintptr_t, msOrId)
-{
-    MSG msg;
-
-    if ( stricmp("START", mode) == 0 )
-    {
-        return SetTimer(NULL, 1001, (unsigned int)msOrId, NULL);
-    }
-    else if ( stricmp("STOP", mode) == 0 )
-    {
-        if ( KillTimer(NULL, msOrId) == 0 )
-        {
-            return GetLastError();
-        }
-        return 0;
-    }
-    else if ( stricmp("WAIT", mode) == 0 )
-    {
-        while ( !PeekMessage(&msg, NULL, WM_TIMER, WM_TIMER, PM_REMOVE) || (msg.wParam != msOrId) )
-        {
-            ; // do nothing
-        }
-        return 0;
-    }
-
-    wrongArgValueException(context->threadContext, 1, "START, STOP, WAIT", mode);
-    return 0;
-}
-
 
 /**
  * A call back function for the Open / Save file name dialog.  This simply
@@ -400,7 +255,6 @@ UINT_PTR CALLBACK  OFNSetForegroundHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam
     return 0;
 }
 
-#define FILENAME_BUFFER_LEN 65535
 
 /** fileNameDialog()
  *
@@ -623,78 +477,188 @@ RexxRoutine8(RexxObjectPtr, fileNameDlg_rtn,
 }
 
 
-static char *searchSoundPath(CSTRING file, RexxCallContext *c)
+/** findWindow()
+ *
+ *  Retrieves a window handle to the top-level window whose class name and
+ *  window name match the specified strings. This function does not search child
+ *  windows. This function does not perform a case-sensitive search.
+ *
+ *  @param caption     The title of the window to search for.  Although this
+ *                     argument is required, the empty string can be used to
+ *                     indicate a null should be used for the caption.
+ *
+ *  @param className   [optional]  Specifies the window class name of the window
+ *                     to search for.  The class name can be any name registered
+ *                     with RegisterClass() or RegisterClassEx(), or any of the
+ *                     predefined control-class names.
+ *
+ *                     If className is omitted, it finds any window whose title
+ *                     matches the caption argument.
+ *
+ *  @return  The window handle if the window is found, otherwise 0.
+ *
+ *  @note  Sets the system error code.
+ */
+RexxRoutine2(RexxObjectPtr, findWindow_rtn, CSTRING, caption, OPTIONAL_CSTRING, className)
 {
-    oodResetSysErrCode(c->threadContext);
+    oodResetSysErrCode(context->threadContext);
 
-    // We need a buffer for the path to search, a buffer for the returned full
-    // file name, (if found,) and a pointer to char (an unused arg to
-    // SearchPath().)
-    char *buf = NULL;
-    char *fullFileName = NULL;
-    char *pFileName;
-
-    // Calculate how much room we need for the search path buffer.
-    uint32_t cchCWD = GetCurrentDirectory(0, NULL);
-
-    // Many modern systems no longer have the SOUNDPATH set.
-    SetLastError(0);
-    uint32_t cchSoundPath = GetEnvironmentVariable("SOUNDPATH", NULL, 0);
-    uint32_t rc = GetLastError();
-    if ( cchSoundPath == 0 && rc != ERROR_ENVVAR_NOT_FOUND )
+    if ( strlen(caption) == 0 )
     {
-        oodSetSysErrCode(c->threadContext, rc);
-        goto err_out;
+        caption = NULL;
     }
-
-    // Allocate our needed buffers.
-    buf = (char *)malloc(cchCWD + cchSoundPath + 3);
-    fullFileName = (char *)malloc(_MAX_PATH);
-    if ( buf == NULL || fullFileName == NULL )
+    HWND hwnd = FindWindow(className, caption);
+    if ( hwnd == NULL )
     {
-        outOfMemoryException(c->threadContext);
-        goto err_out;
+        oodSetSysErrCode(context->threadContext);
     }
+    return pointer2string(context->threadContext, hwnd);
+}
 
-    // Now get the current directory and the sound path.
-    cchCWD = GetCurrentDirectory(cchCWD + 1, buf);
-    if ( cchCWD == 0 )
-    {
-        oodSetSysErrCode(c->threadContext);
-        goto err_out;
-    }
 
-    if ( cchSoundPath != 0 )
+/** MessageDialog()
+ *
+ *
+ *  @param  text
+ *  @param  hwnd  Handle of owner window.  If the user specifies 0 we do not use
+ *                an owner window.  If the user omits hwnd, then we try the to
+ *                find and use the topmost dialog.
+ *
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ */
+RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTIONAL_CSTRING, _title,
+             OPTIONAL_CSTRING, button, OPTIONAL_CSTRING, icon, OPTIONAL_CSTRING, miscStyles)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    int result = -1;
+
+    char *uprButton = NULL;
+    char *uprIcon = NULL;
+    char *uprMiscStyles = NULL;
+
+    HWND hwndOwner = (HWND)string2pointer(hwnd);
+    if ( hwndOwner == NULL )
     {
-        buf[cchCWD++] = ';';
-        cchSoundPath = GetEnvironmentVariable("SOUNDPATH", buf + cchCWD, cchSoundPath + 1);
-        if ( cchSoundPath == 0 )
+        if ( argumentOmitted(2) && TopDlg != NULL && TopDlg->onTheTop )
         {
-            oodSetSysErrCode(c->threadContext);
-            goto err_out;
+            hwndOwner = TopDlg->hDlg;
         }
     }
 
-    uint32_t errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-    cchSoundPath = SearchPath(buf, file, NULL, _MAX_PATH, fullFileName, &pFileName);
-    SetErrorMode(errorMode);
-
-    if ( cchSoundPath == 0 || cchSoundPath >= _MAX_PATH )
+    CSTRING title = "ooDialog Application Message";
+    if ( argumentExists(3) )
     {
-        oodSetSysErrCode(c->threadContext);
-        goto err_out;
+        title = _title;
     }
 
-    free(buf);
-    return fullFileName;
+    // Defaults.  These values are all 0.
+    uint32_t flags = MB_OK | MB_DEFBUTTON1 | MB_APPLMODAL;
 
-err_out:
-    safeFree(buf);
-    safeFree(fullFileName);
-    return NULL;
+    uint32_t flag;
+    if ( argumentExists(4) )
+    {
+        uprButton = strdupupr(button);
+        if ( uprButton == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        flag = winKeyword2ID(uprButton, context->threadContext, 4, "MessageDialog button keyword");
+        if ( flag == (int)-1 )
+        {
+            goto done_out;
+        }
+        flags |= flag;
+    }
+
+    // There is no default for the icon, if omitted there is no icon.
+    if ( argumentExists(5) )
+    {
+        uprIcon = strdupupr(icon);
+        if ( uprIcon == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        flag = winKeyword2ID(uprIcon, context->threadContext, 5, "MessageDialog icon keyword");
+        if ( flag == (int)-1 )
+        {
+            goto done_out;
+        }
+        flags |= flag;
+    }
+
+    if ( argumentExists(6) )
+    {
+        uprMiscStyles = strdupupr(miscStyles);
+        if ( uprMiscStyles == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        flag = getMiscMBStyle(uprMiscStyles, context, 6, "MessageDialog style keyword");
+        if ( flag == (int)-1 )
+        {
+            goto done_out;
+        }
+        flags |= flag;
+    }
+
+    result = MessageBox(hwndOwner, text, title, flags);
+    if ( result == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+
+done_out:
+    safeFree(uprButton);
+    safeFree(uprIcon);
+    safeFree(uprMiscStyles);
+
+    return result;
 }
 
-RexxRoutine3(RexxObjectPtr, playSound_rtn, OPTIONAL_CSTRING, fileName, OPTIONAL_CSTRING, modifier, NAME, routineName)
+/** msSleep()
+ *
+ *  Sleeps the specified number of miliseconds.
+ *
+ *  Prior to ooRexx 4.0.0, both the public routine msSleep() and the external
+ *  function sleepMS() were both documented.  For backward compatibility, both
+ *  need to be maintained.  sleepMS() is marked as deprecated and mapped to this
+ *  function.
+ *
+ *  @param ms   The number of miliseconds to sleep.
+ *
+ *  @return     Always returns 0.
+ *
+ *  @note  This function can block the Windows message loop.  It should really
+ *         only be used for durations less than 1 second.  Certainly no more
+ *         than a few seconds.  Use SysSleep() instead.
+ */
+RexxRoutine1(RexxObjectPtr, msSleep_rtn, uint32_t, ms)
+{
+    Sleep(ms);
+    return TheZeroObj;
+}
+
+
+RexxRoutine1(RexxObjectPtr, simpleFolderBrowse_rtn, ARGLIST, args)
+{
+    RexxClassObject SFBClass = context->FindContextClass("SIMPLEFOLDERBROWSE");
+    return context->SendMessage(SFBClass, "GETFOLDER", args);
+}
+
+
+/** playSoundFile()
+ *
+ */
+RexxRoutine3(RexxObjectPtr, play_rtn, OPTIONAL_CSTRING, fileName, OPTIONAL_CSTRING, modifier, NAME, routineName)
 {
     bool isStopRoutine = strcmp("STOPSOUNDFILE", routineName) == 0;
 
@@ -743,6 +707,124 @@ RexxRoutine3(RexxObjectPtr, playSound_rtn, OPTIONAL_CSTRING, fileName, OPTIONAL_
     return result;
 }
 
+
+/** winTimer()
+ *
+ *  The classic Rexx external function, WinTimer() was documented prior to 4.0.0
+ *  and therefore needs to be retained for backward compatibility.
+ *
+ *  The original implementation was poor, using SetTimer() / KillTimer().  For
+ *  the wait mode, it used this loop:
+ *
+ *  else if ( stricmp("WAIT", mode) == 0 )
+ *  {
+ *      while ( !PeekMessage(&msg, NULL, WM_TIMER, WM_TIMER, PM_REMOVE)
+ *      {
+ *          ; // do nothing
+ *      }
+ *      return 0;
+ *  }
+ *
+ *  PeekMessage() returns immediately if there are no messages.  Since there
+ *  were probably no windows on the thread, the WAIT function spun in a busy
+ *  loop consuming 100% of the CPU.
+ *
+ *  svn revision 8968 and previous contains the original implementation if there
+ *  is a need to review that code.
+ *
+ *  The original implmentation was replaced in ooDialog 4.2.2 with this
+ *  implementation using waitable timers instead.  It is backwards compatible
+ *  with the original implementation, and needs to remain that way.
+ *
+ *  For very small periods, SetTimer replaces the specified time with
+ *  USER_TIMER_MINIMUM.  So when Rexx programmers specified 1 or 2 or 6
+ *  milliseconds, the got USER_TIMER_MINIMUM instead.  We mimic that behaviour
+ *  here, otherwise programs using a delay of 1 millisecond do not work the
+ *  same.  We actually use 1.5 times USER_TIMER_MINIMUM because it seems to work
+ *  the best.
+ *
+ *  @param  mode    Keyword for what is to be done.  START creates the timer and
+ *                  starts it.  WAIT waits on the timer.  STOP destroys the
+ *                  timer.
+ *
+ *  @param  msOrId  Either the period of the timer, in miliseconds, if mode is
+ *                  START, or the timer ID for the other modes.
+ *
+ *  @return The timer ID for the START mode, or success / error return code for
+ *          the  other modes.
+ *
+ *  @notes  Sets the .SystemErrorCode.  For the STOP and WAIT modes the system
+ *          error code value is returned in addition to setting the
+ *          .SystemErrorCode.
+ *
+ *  @remarks  If this routine was being implemented from scratch, it would be
+ *            done differently.  However since it is being used to preserve
+ *            backwards compatibility, this implementation serves best.  An
+ *            enhancement creating a new Waitable object class would be nice.
+ */
+RexxRoutine2(uintptr_t, winTimer_rtn, CSTRING, mode, uintptr_t, msOrId)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( stricmp("START", mode) == 0 )
+    {
+        HANDLE hTimer = NULL;
+        LARGE_INTEGER liDueTime;
+
+        if ( msOrId < USER_TIMER_MINIMUM + 5 )
+        {
+            msOrId = USER_TIMER_MINIMUM + 5;
+        }
+
+        liDueTime.QuadPart = msOrId * -10000;
+
+        hTimer = CreateWaitableTimer(NULL, FALSE, NULL);
+        if ( hTimer == NULL )
+        {
+            oodSetSysErrCode(context->threadContext);
+            return 0;
+        }
+
+        if ( ! SetWaitableTimer(hTimer, &liDueTime, (int32_t)msOrId, NULL, NULL, FALSE) )
+        {
+            oodSetSysErrCode(context->threadContext);
+            return 0;
+        }
+
+        return (uintptr_t)hTimer;
+    }
+    else if ( stricmp("STOP", mode) == 0 )
+    {
+        if ( CancelWaitableTimer((HANDLE)msOrId) == 0 )
+        {
+            uint32_t rc = GetLastError();
+            oodSetSysErrCode(context->threadContext, rc);
+            return rc;
+        }
+        return 0;
+    }
+    else if ( stricmp("WAIT", mode) == 0 )
+    {
+        if ( WaitForSingleObject((HANDLE)msOrId, INFINITE) != WAIT_OBJECT_0 )
+        {
+            uint32_t rc = GetLastError();
+            oodSetSysErrCode(context->threadContext, rc);
+            return rc;
+        }
+        return 0;
+    }
+
+    wrongArgValueException(context->threadContext, 1, "START, STOP, WAIT", mode);
+    return 0;
+}
+
+
+/** routineTest()
+ *
+ *  Internal method used to test things in a routine context.  Internal use
+ *  only.
+ *
+ */
 RexxRoutine1(RexxObjectPtr, routineTest_rtn, RexxObjectPtr, obj)
 {
     return TheZeroObj;

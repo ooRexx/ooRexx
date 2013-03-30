@@ -1,0 +1,95 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2013-2013 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+#include <windows.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include "oodStandardDialogs.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_STDDLGS DIALOGEX 0, 0, 413, 201
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "User Input Common Dialog Library"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    LTEXT           "The ooDialog framework provides a number of easy to use dialogs that obtain user input in a standard way.  These dialogs allow programmers to include simple graphical elements in their Rexx applications and collect user input in a standard way.", IDC_STATIC, 77, 10, 258, 37, SS_LEFT
+    GROUPBOX        "Select the Common Dialog to Display", IDC_STATIC, 11, 58, 392, 107
+    AUTORADIOBUTTON "CheckList Dialog", IDC_RB_CHECKLIST, 25, 79, 90, 10
+    AUTORADIOBUTTON "InputBox Dialog", IDC_RB_INPUTBOX, 159, 79, 90, 10
+    AUTORADIOBUTTON "Integer Dialog", IDC_RB_INTEGERBOX, 272, 79, 90, 10
+    AUTORADIOBUTTON "ListChoice Dialog", IDC_RB_LISTCHOICE, 25, 107, 90, 10
+    AUTORADIOBUTTON "MultiInputBox Dialog", IDC_RB_MULTIINPUTBOX, 159, 107, 90, 10
+    AUTORADIOBUTTON "MultiListChoice Dialog", IDC_RB_MULTILISTCHOICE, 272, 107, 90, 10
+    AUTORADIOBUTTON "PasswordBox Dialog", IDC_RB_PASSWORDBOX, 25, 134, 90, 10
+    AUTORADIOBUTTON "SingleSelection Dialog", IDC_RB_SINGLESELECTION, 159, 134, 90, 10
+    AUTORADIOBUTTON "TimedMessage Dialog", IDC_RB_TIMEDMESSAGE, 272, 134, 90, 10
+    DEFPUSHBUTTON   "Display Selected Dialog", IDOK, 161, 177, 90, 14
+    PUSHBUTTON      "Close", IDCANCEL, 353, 177, 50, 14
+}
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_STDRTNS DIALOGEX 0, 0, 413, 201
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "User Input Common Public Routines"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    LTEXT           "The ooDialog framework provides a number of easy to use public routines that obtain user input in a standard way.  These routines allow the use of simple graphical elements in Rexx applications that collect user input in a standard way.", IDC_STATIC, 10, 10, 393, 18, SS_LEFT
+    GROUPBOX        "Select the Common Public Routine to Display", IDC_STATIC, 11, 33, 392, 139
+    AUTORADIOBUTTON "AskDialog Routine", IDC_RB_ASKDIALOG_R, 25, 56, 90, 10
+    AUTORADIOBUTTON "CheckList Routine", IDC_RB_CHECKLIST_R, 159, 56, 90, 10
+    AUTORADIOBUTTON "ErrorDialog Routine", IDC_RB_ERRORDIALOG_R, 272, 56, 90, 10
+    AUTORADIOBUTTON "FileNameDialog Routine", IDC_RB_FILENAMEDIALOG_R, 25, 79, 90, 10
+    AUTORADIOBUTTON "InfoDialog Routine", IDC_RB_INFODIALOG_R, 159, 79, 90, 10
+    AUTORADIOBUTTON "InputBox Routine", IDC_RB_INPUTBOX_R, 272, 79, 90, 10
+    AUTORADIOBUTTON "IntegerBox Routine", IDC_RB_INTEGERBOX_R, 25, 103, 90, 10
+    AUTORADIOBUTTON "ListChoice Routine", IDC_RB_LISTCHOICE_R, 159, 103, 90, 10
+    AUTORADIOBUTTON "MessageDialog Routine", IDC_RB_MESSAGEDIALOG_R, 272, 103, 90, 10
+    AUTORADIOBUTTON "MultiInputBox Routine", IDC_RB_MULTIINPUTBOX_R, 25, 128, 90, 10
+    AUTORADIOBUTTON "MultiListChoice Routine", IDC_RB_MULTILISTCHOICE_R, 159, 128, 90, 10
+    AUTORADIOBUTTON "PasswordBox Routine", IDC_RB_PASSWORDBOX_R, 272, 128, 90, 10
+    AUTORADIOBUTTON "SingleSelection Routine", IDC_RB_SINGLESELECTION_R, 25, 152, 90, 10
+    AUTORADIOBUTTON "TimedMessage Routine", IDC_RB_TIMEDMESSAGE_R, 159, 152, 90, 10
+    DEFPUSHBUTTON   "Display Selected Routine", IDOK, 161, 177, 90, 14
+    PUSHBUTTON      "Close", IDCANCEL, 353, 177, 50, 14
+}
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_APP_ICON_R     ICON           ".\\oodStandardRoutines.ico"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_APP_ICON       ICON           ".\\oodStandardDialog.ico"

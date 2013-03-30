@@ -588,7 +588,7 @@ logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t 
 {
     if ( pcpbd->ColorTab == NULL )
     {
-        pcpbd->ColorTab = (COLORTABLEENTRY *)LocalAlloc(LMEM_FIXED, sizeof(COLORTABLEENTRY) * DEF_MAX_CT_ENTRIES);
+        pcpbd->ColorTab = (COLORTABLEENTRY *)LocalAlloc(LPTR, sizeof(COLORTABLEENTRY) * DEF_MAX_CT_ENTRIES);
         if ( pcpbd->ColorTab == NULL )
         {
             outOfMemoryException(c->threadContext);
@@ -649,13 +649,13 @@ logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t 
         if ( bkColor == CLR_DEFAULT )
         {
             pcpbd->ColorTab[i].ColorBrush = GetSysColorBrush(COLOR_3DFACE);
-        pcpbd->ColorTab[i].isSysBrush = true;
-    }
-    else
-    {
+            pcpbd->ColorTab[i].isSysBrush = true;
+        }
+        else
+        {
             pcpbd->ColorTab[i].ColorBrush = CreateSolidBrush(bkColor);
-        pcpbd->ColorTab[i].isSysBrush = false;
-    }
+            pcpbd->ColorTab[i].isSysBrush = false;
+        }
     }
     return 0;
 }
@@ -1600,47 +1600,47 @@ LRESULT drawBackgroundBmp(pCPlainBaseDialog pcpbd, HWND hDlg)
         return FALSE;
     }
 
-   HDC hDC;
-   PAINTSTRUCT ps;
-   HPALETTE hP;
-   RECT r;
-   LONG desth, destw;
+    HDC hDC;
+    PAINTSTRUCT ps;
+    HPALETTE hP;
+    RECT r;
+    LONG desth, destw;
 
-   hDC = BeginPaint(hDlg, &ps);
+    hDC = BeginPaint(hDlg, &ps);
 
-   if (pcpbd->colorPalette)
-   {
-      hP = SelectPalette(hDC, pcpbd->colorPalette, 0);
-      RealizePalette(hDC);
-   }
-
-   GetClientRect(hDlg, &r);
-
-   destw = dibWidth(pcpbd->bkgBitmap);         // dest width
-   desth = dibHeight(pcpbd->bkgBitmap);        // dest height
-
-   if (r.right - r.left > destw)
+    if (pcpbd->colorPalette)
     {
-      destw = r.right - r.left;
-    }
-   if (r.bottom - r.top > desth)
-    {
-      desth = r.bottom - r.top;
+       hP = SelectPalette(hDC, pcpbd->colorPalette, 0);
+       RealizePalette(hDC);
     }
 
-   StretchDIBits(hDC,
-                 0,                             // dest x
-                 0,                             // dest y
-                 destw,
-                 desth,
-                 0,                             // src x
-                 0,                             // src y
-                 dibWidth(pcpbd->bkgBitmap),   // src width
-                 dibHeight(pcpbd->bkgBitmap),  // src height
-                 dibPBits(pcpbd->bkgBitmap),   // bits
-                 dibPBI(pcpbd->bkgBitmap),     // BITMAPINFO
-                 DIB_RGB_COLORS,
-                 SRCCOPY);                      // rop
+    GetClientRect(hDlg, &r);
+
+    destw = dibWidth(pcpbd->bkgBitmap);         // dest width
+    desth = dibHeight(pcpbd->bkgBitmap);        // dest height
+
+    if ( r.right - r.left > destw )
+    {
+       destw = r.right - r.left;
+    }
+    if ( r.bottom - r.top > desth )
+    {
+       desth = r.bottom - r.top;
+    }
+
+    StretchDIBits(hDC,
+                  0,                             // dest x
+                  0,                             // dest y
+                  destw,
+                  desth,
+                  0,                             // src x
+                  0,                             // src y
+                  dibWidth(pcpbd->bkgBitmap),   // src width
+                  dibHeight(pcpbd->bkgBitmap),  // src height
+                  dibPBits(pcpbd->bkgBitmap),   // bits
+                  dibPBI(pcpbd->bkgBitmap),     // BITMAPINFO
+                  DIB_RGB_COLORS,
+                  SRCCOPY);                      // rop
 
     EndPaint(hDlg, &ps);
 
@@ -3353,7 +3353,7 @@ RexxMethod6(int32_t, dlgext_setControlColor, RexxObjectPtr, rxID, OPTIONAL_RexxO
 
     uint32_t bkColor     = CLR_DEFAULT;
     uint32_t fgColor     = CLR_DEFAULT;
-    bool    useSysColor = (method[10] == 'S');
+    bool     useSysColor = (method[10] == 'S');
 
     RexxMethodContext *c = context;
     if ( useSysColor )

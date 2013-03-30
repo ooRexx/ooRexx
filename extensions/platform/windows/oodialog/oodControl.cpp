@@ -46,6 +46,7 @@
 
 #include <shlwapi.h>
 #include <OleAcc.h>
+#include <uxtheme.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodMessaging.hpp"
@@ -75,6 +76,7 @@ const char *controlType2winName(oodControl_t control)
         case winMonthCalendar :        return MONTHCAL_CLASS;
         case winDateTimePicker :       return DATETIMEPICK_CLASS;
         case winUpDown :               return UPDOWN_CLASS;
+        case winComboLBox :            return "ComboLBox";
         default :                      return "";
     }
 }
@@ -92,6 +94,7 @@ const char *controlType2className(oodControl_t control)
         case winEdit :                 return "EDIT";
         case winListBox :              return "LISTBOX";
         case winComboBox :             return "COMBOBOX";
+        case winComboLBox :            return "LISTBOX";
         case winScrollBar :            return "SCROLLBAR";
         case winTreeView :             return "TREEVIEW";
         case winListView :             return "LISTVIEW";
@@ -119,6 +122,7 @@ const char *controlType2controlName(oodControl_t control)
         case winEdit :                 return "Edit";
         case winListBox :              return "ListBox";
         case winComboBox :             return "ComboBox";
+        case winComboLBox :            return "ComboLBox";
         case winScrollBar :            return "ScrollBar";
         case winTreeView :             return "TreeView";
         case winListView :             return "ListView";
@@ -151,13 +155,14 @@ oodControl_t winName2controlType(const char *className)
     else if ( strcmp(className, DATETIMEPICK_CLASS) == 0 ) return winDateTimePicker;
     else if ( strcmp(className, UPDOWN_CLASS      ) == 0 ) return winUpDown;
     else if ( strcmp(className, TOOLTIPS_CLASS    ) == 0 ) return winToolTip;
+    else if ( strcmp(className, "ComboLBox"       ) == 0 ) return winComboLBox;
     else
     {
         return winUnknown;
     }
 }
 
-oodControl_t control2controlType(HWND hControl)
+oodControl_t controlHwnd2controlType(HWND hControl)
 {
     oodControl_t type = winUnknown;
 
@@ -190,6 +195,7 @@ oodControl_t controlName2controlType(CSTRING name)
 {
     if      ( StrCmpI(name, "CHECKBOX"      ) == 0 ) return winCheckBox;
     else if ( StrCmpI(name, "COMBOBOX"      ) == 0 ) return winComboBox;
+    else if ( StrCmpI(name, "COMBOLBOX"     ) == 0 ) return winComboLBox;
     else if ( StrCmpI(name, "DATETIMEPICKER") == 0 ) return winDateTimePicker;
     else if ( StrCmpI(name, "EDIT"          ) == 0 ) return winEdit;
     else if ( StrCmpI(name, "GROUPBOX"      ) == 0 ) return winGroupBox;
@@ -963,9 +969,9 @@ static LRESULT charReply(pSubClassData pData, char *method, RexxArrayObject args
     }
     else
     {
-    // On errors:
+        // On errors:
         ret = DefSubclassProc(hwnd, msg, wParam, lParam);
-}
+    }
 
     if ( reply != NULLOBJECT )
     {
@@ -998,6 +1004,71 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
     {
         case CTRLTAG_NOTHING :
             break;
+
+        case CTRLTAG_COMBOBOX :
+        {
+            if ( tag & CTRLTAG_ISGRANDCHILD )
+            {
+                return grandchildEvent(pData, method, hwnd, msg, wParam, lParam, tag);
+            }
+            break;
+        }
+
+        case CTRLTAG_EDIT :
+        {
+            if ( tag & CTRLTAG_WANTRETURN )
+            {
+                if ( msg == WM_GETDLGCODE )
+                {
+                    return (DLGC_WANTALLKEYS | DefSubclassProc(hwnd, msg, wParam, lParam));
+                }
+                else if ( msg == WM_KEYDOWN )
+                {
+                    switch ( wParam )
+                    {
+                        case VK_RETURN :
+                        {
+                            RexxObjectPtr   ctrlID = c->UnsignedInt32(pData->id);
+                            RexxArrayObject args   = c->ArrayOfTwo(ctrlID, pData->pcdc->rexxSelf);
+                            RexxObjectPtr   reply  = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
+
+                            if ( ! checkForCondition(c, false) && reply != NULLOBJECT )
+                            {
+                                c->ReleaseLocalReference(ctrlID);
+                                c->ReleaseLocalReference(args);
+                                c->ReleaseLocalReference(reply);
+
+                                return 0;
+                            }
+                            else
+                            {
+                                // On error return DefSubclassProc()
+                                return DefSubclassProc(hwnd, msg, wParam, lParam);
+                            }
+                        }
+
+                        case VK_ESCAPE :
+                        {
+                            SendMessage(pData->pcpbd->hDlg, WM_COMMAND, IDCANCEL, 0);
+                            return 0;
+                        }
+
+                        case VK_TAB :
+                        {
+                            BOOL previous = (GetAsyncKeyState(VK_SHIFT) & ISDOWN) ? 1 : 0;
+                            SendMessage(pData->pcpbd->hDlg, WM_NEXTDLGCTL, previous, FALSE);
+
+                            return 0;
+                        }
+                    }
+                }
+            }
+            else if ( tag & CTRLTAG_ISGRANDCHILD )
+            {
+                return grandchildEvent(pData, method, hwnd, msg, wParam, lParam, tag);
+            }
+            break;
+        }
 
         case CTRLTAG_CONTROL :
         {
@@ -1279,7 +1350,7 @@ bool addSubclassMessage(RexxMethodContext *c, pCDialogControl pcdc, pWinMessageF
         pscd->msgs = (MESSAGETABLEENTRY *)temp;
     }
 
-    pscd->msgs[index].rexxMethod = (char *)LocalAlloc(LMEM_FIXED, strlen(pwmf->method) + 1);
+    pscd->msgs[index].rexxMethod = (char *)LocalAlloc(LPTR, strlen(pwmf->method) + 1);
     if ( pscd->msgs[index].rexxMethod == NULL )
     {
         outOfMemoryException(c->threadContext);
@@ -1682,6 +1753,12 @@ RexxMethod1(RexxObjectPtr, dlgctrl_assignFocus, CSELF, pCSelf)
  *            to signal some special processing, but that was never followed
  *            through on.
  *
+ *  @remarks  For WANTRETURN, we need to also connect the VK_TAB and VK_ESCAPE
+ *            keys.  The reason is that we need to use DLGC_WANTALLKEYS for
+ *            WM_GETDLGCODE, which prevents the dialog manager from handling TAB
+ *            and ESCAPE.  I don't see any way of asking for RETURN but not
+ *            ESCAPE and TAB.  In the message processing loop, handle TAB and
+ *            ESCAPE ourselves.
  */
 RexxMethod3(RexxObjectPtr, dlgctrl_connectEvent, CSTRING, event, OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
 {
@@ -1750,6 +1827,59 @@ RexxMethod3(RexxObjectPtr, dlgctrl_connectEvent, CSTRING, event, OPTIONAL_CSTRIN
         wmf.wm       = WM_SIZE;
         wmf.wmFilter = 0xFFFFFFFF;
         wmf.tag      = CTRLTAG_DIALOG | CTRLTAG_REPLYZERO;
+
+        if ( addSubclassMessage(context, pcdc, &wmf) )
+        {
+            result = TheTrueObj;
+        }
+        goto done_out;
+    }
+    else if ( StrCmpI(event, "WANTRETURN") == 0 )
+    {
+        if ( pcdc->controlType != winEdit || ! isSingleLineEdit(pcdc->hCtrl) )
+        {
+            result = TheFalseObj;
+            goto done_out;
+        }
+
+        if ( argumentOmitted(2) )
+        {
+            methodName = "onReturn";
+        }
+
+        wmf.method = methodName;
+        wmf.tag    = CTRLTAG_EDIT | CTRLTAG_WANTRETURN;
+
+        wmf.wm       = WM_KEYDOWN;
+        wmf.wmFilter = 0xFFFFFFFF;
+        wmf.wp       = VK_RETURN;
+        wmf.wpFilter = 0xFFFFFFFF;
+        wmf.lp       = 0;
+        wmf.lpFilter = KEY_WASDOWN;
+
+        if ( ! addSubclassMessage(context, pcdc, &wmf) )
+        {
+            goto done_out;
+        }
+
+        wmf.wp = VK_ESCAPE;
+        if ( ! addSubclassMessage(context, pcdc, &wmf) )
+        {
+            goto done_out;
+        }
+
+        wmf.wp = VK_TAB;
+        if ( ! addSubclassMessage(context, pcdc, &wmf) )
+        {
+            goto done_out;
+        }
+
+        wmf.wm       = WM_GETDLGCODE;
+        wmf.wmFilter = 0xFFFFFFFF;
+        wmf.wp       = 0;
+        wmf.wpFilter = 0;
+        wmf.lp       = 0;
+        wmf.lpFilter = 0;
 
         if ( addSubclassMessage(context, pcdc, &wmf) )
         {
@@ -2010,6 +2140,85 @@ RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
     }
 
     return redrawRect(context, getDChCtrl(pCSelf), &r, doErase, true);
+}
+
+
+/** DialogControl::setParent()
+ *
+ *  Sets a new parent for this dialog control.
+ *
+ *  @param  The new parent
+ *
+ *  @return  True on success, false on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(RexxObjectPtr, dlgctrl_setParent, RexxObjectPtr, parent, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    pCDialogControl pcdcParent = requiredDlgControlCSelf(context, parent, 1);
+    pCDialogControl pcdc       = validateDCCSelf(context, pCSelf);
+
+    if ( pcdc == NULL || pcdcParent == NULL )
+    {
+        return TheFalseObj;
+    }
+
+    HWND old = SetParent(pcdc->hCtrl, pcdcParent->hCtrl);
+    if ( old == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheFalseObj;
+    }
+    return TheTrueObj;
+}
+
+
+/** DialogControl::setWindowTheme()
+ *
+ *  Causes a window to use a different set of visual style information than its
+ *  class normally uses.
+ *
+ *  @param  name [required]  The application name to use in place of the calling
+ *               application's name.
+ *
+ *  @return  True on success, false on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  The only theme name I know to work is 'explorer.'  Not at all sure
+ *            what other names might be valid.
+ */
+RexxMethod2(RexxObjectPtr, dlgctrl_setWindowTheme, CSTRING, name, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return TheFalseObj;
+    }
+
+    size_t len = strlen(name);
+    if ( len >= MAX_PATH )
+    {
+        stringTooLongException(context->threadContext, 1, MAX_PATH - 1, len);
+        return TheFalseObj;
+    }
+
+    WCHAR themeName[MAX_PATH];
+
+    putUnicodeText((LPWORD)themeName, name);
+
+    HRESULT hr = SetWindowTheme(pcdc->hCtrl, themeName, NULL);
+    if ( ! SUCCEEDED(hr) )
+    {
+        oodSetSysErrCode(context->threadContext, hr);
+        return TheFalseObj;
+    }
+
+    return TheTrueObj;
 }
 
 

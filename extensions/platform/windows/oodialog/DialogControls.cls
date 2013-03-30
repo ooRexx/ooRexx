@@ -54,8 +54,8 @@
 ::method init class external "LIBRARY oodialog dlgctrl_init_cls"
 
 ::attribute id get unguarded    -- The numerical resource ID for this control
-::attribute oDlg get unguarded  -- The ooRexx dialog object this control belongs to
 ::attribute hDlg get unguarded  -- The window handle of that dialog
+::attribute oDlg get unguarded  -- The ooRexx dialog object this control belongs to
 
 ::method init external "LIBRARY oodialog dlgctrl_init"
 ::method unInit external "LIBRARY oodialog dlgctrl_unInit"
@@ -79,7 +79,9 @@
 ::method putInBag unguarded external "LIBRARY oodialog dlgctrl_putInBag"  -- Internal use only.
 ::method redrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
 ::method setColor unguarded external "LIBRARY oodialog dlgctrl_setColor"
+::method setParent unguarded external "LIBRARY oodialog dlgctrl_setParent"
 ::method setSysColor unguarded external "LIBRARY oodialog dlgctrl_setColor"
+::method setWindowTheme unguarded external "LIBRARY oodialog dlgctrl_setWindowTheme"
 ::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method textSize unguarded external "LIBRARY oodialog dlgctrl_textSize"
 ::method useUnicode unguarded
@@ -142,238 +144,29 @@
 -- DEPRECATED END
 
 
-::class 'StaticControl' subclass DialogControl public
-::class 'Static' subclass StaticControl public
-
-::method getIcon unguarded external "LIBRARY oodialog stc_getIcon"
-::method setIcon unguarded external "LIBRARY oodialog stc_setIcon"
-::method getImage unguarded external "LIBRARY oodialog stc_getImage"
-::method setImage unguarded external "LIBRARY oodialog stc_setImage"
-
-
-/************************* Edit Control Class *********************************/
-
-::class 'EditControl' subclass DialogControl public
-::class 'Edit' subclass EditControl public
-
-::constant EM_SETSEL               "0x00B1"
-::constant EM_SCROLL               "0x00B5"
-::constant EM_LINESCROLL           "0x00B6"
-::constant EM_SCROLLCARET          "0x00B7"
-::constant EM_GETMODIFY            "0x00B8"
-::constant EM_SETMODIFY            "0x00B9"
-::constant EM_GETLINECOUNT         "0x00BA"
-::constant EM_LINELENGTH           "0x00C1"
-::constant EM_LIMITTEXT            "0x00C5"
-::constant EM_CANUNDO              "0x00C6"
-::constant EM_UNDO                 "0x00C7"
-::constant EM_LINEFROMCHAR         "0x00C9"
-::constant EM_SETTABSTOPS          "0x00CB"
-::constant EM_SETPASSWORDCHAR      "0x00CC"
-::constant EM_GETFIRSTVISIBLELINE  "0x00CE"
-::constant EM_SETREADONLY          "0x00CF"
-::constant EM_GETPASSWORDCHAR      "0x00D2"
-::constant EM_SETMARGINS           "0x00D3"
-::constant EM_GETMARGINS           "0x00D4"
-
-::constant EM_NEGATIVEONE          4294967295
-
-::constant EC_LEFTMARGIN           1       -- 0x0001
-::constant EC_RIGHTMARGIN          2       -- 0x0002
-::constant EC_USEFONTINFO          65535   -- 0xFFFF
-
-::constant WM_CUT                  "0x0300"
-::constant WM_COPY                 "0x0301"
-::constant WM_PASTE                "0x0302"
-::constant WM_CLEAR                "0x0303"
-
-::attribute passwordChar unguarded set
-    use strict arg char
-    ch = char~c2d
-    if self~isSingleLine, ch > 0, ch < 256 then self~sendWinIntMsg(self~EM_SETPASSWORDCHAR, ch, 0)
-
-::attribute passwordChar unguarded get
-    if \ self~isSingleLine then return ""
-    char = self~sendWinIntMsg(self~EM_GETPASSWORDCHAR, 0, 0)
-    if char \= 0 then return char~d2c
-    else return ""
-
-::method isSingleLine unguarded external "LIBRARY oodialog e_isSingleLine"
-::method selection unguarded external "LIBRARY oodialog e_selection"
-::method selected unguarded
-    s = self~selection
-    return s~startChar s~endChar
-
-::method replaceSelText unguarded external "LIBRARY oodialog e_replaceSelText"
-::method getLine unguarded external "LIBRARY oodialog e_getLine"
-::method lineIndex unguarded external "LIBRARY oodialog e_lineIndex"
-::method lineFromIndex unguarded external "LIBRARY oodialog e_lineFromIndex"
-::method lineLength unguarded external "LIBRARY oodialog e_lineLength"
-::method hideBalloon unguarded external "LIBRARY oodialog e_hideBallon"
-::method showBalloon unguarded external "LIBRARY oodialog e_showBallon"
-::method getCue unguarded external "LIBRARY oodialog e_getCue"
-::method setCue unguarded external "LIBRARY oodialog e_setCue"
-::method getRect unguarded external "LIBRARY oodialog e_getRect"
-::method setRect unguarded external "LIBRARY oodialog e_setRect"
-::method replaceStyle unguarded external "LIBRARY oodialog e_style"
-::method addStyle unguarded external "LIBRARY oodialog e_style"
-::method removeStyle unguarded external "LIBRARY oodialog e_style"
-::method getStyle unguarded external "LIBRARY oodialog e_style"
-
-::method noContextMenu unguarded
-  use strict arg
-  return self~connectEvent('CONTEXTMENU')
-
-::method disableInternalResize unguarded
-  use strict arg
-  return self~connectEvent('WM_SIZE')
-
-::method canUndo unguarded
-    use strict arg
-    return self~sendWinIntMsg(self~EM_CANUNDO, 0, 0) != 0
-
-::method undo unguarded
-    use strict arg
-    return self~sendWinIntMsg(self~EM_UNDO, 0, 0) != 0
-
-::method cutText unguarded
-    use strict arg
-    self~sendWinIntMsg(self~WM_CUT, 0, 0)
-    return 0
-
-::method copyText unguarded
-    use strict arg
-    self~sendWinIntMsg(self~WM_COPY, 0, 0)
-    return 0
-
-::method pasteText unguarded
-    use strict arg
-    self~sendWinIntMsg(self~WM_PASTE, 0, 0)
-    return 0
-
-::method clearText unguarded
-    use strict arg
-    self~sendWinIntMsg(self~WM_CLEAR, 0, 0)
-    return 0
-
-::method setTabStops unguarded external "LIBRARY oodialog e_setTabStops"
-::method "tab=" unguarded
-    use strict arg dlgunits
-    self~setTabStops(.array~of(dlgunits))
-
-::method select unguarded
-    use strict arg start = 1, end = 0
-    self~sendWinIntMsg(self~EM_SETSEL, start - 1, end - 1)
-    return 0
-
-::method scrollCommand unguarded
-    use arg kind = "UP", reps = 1
-    kind = kind~translate
-    if self~isSingleLine then return 0
-    select
-        when kind = "UP" | kind = "LEFT" then wParam = 0
-        when kind = "DOWN" | kind = "RIGHT" then wParam = 1
-        when kind = "PAGEUP" | kind = "PAGELEFT" then wParam = 2
-        when kind = "PAGEDOWN" | kind = "PAGERIGHT" then wParam = 3
-        otherwise wParam = 0
-    end
-    do i = 1 to reps
-        ret = self~sendWinIntMsg(self~EM_SCROLL, wParam, 0)
-    end
-    return ret
-
-::method lineScroll unguarded
-    use strict arg cx, cy
-    if self~isSingleLine then return 1
-    self~sendWinIntMsg(self~EM_LINESCROLL, cx, cy)
-    return 0
-
-::method ensureCaretVisibility unguarded
-    use strict arg
-    self~sendWinIntMsg(self~EM_SCROLLCARET, 0, 0)
-    return 0
-
-::method isModified unguarded
-    use strict arg
-    return self~sendWinIntMsg(self~EM_GETMODIFY, 0, 0) <> 0
-
-::method setModified unguarded
-    use strict arg bool = .true
-    self~sendWinIntMsg(self~EM_SETMODIFY, bool, 0)
-    return 0
-
-::method lines unguarded
-    use strict arg
-    return self~sendWinIntMsg(self~EM_GETLINECOUNT, 0, 0)
-
-::method setLimit unguarded
-    use strict arg limit
-    self~sendWinUintMsg(self~EM_LIMITTEXT, limit, 0)
-    return 0
-
-
-::method firstVisibleLine unguarded
-    use strict arg
-    return self~sendWinIntMsg(self~EM_GETFIRSTVISIBLELINE, 0, 0) + 1
-
-::method setReadOnly unguarded
-    use strict arg bool = .true
-    return self~sendWinIntMsg(self~EM_SETREADONLY, bool, 0) <> 0
-
-::method setMargins unguarded
-    use arg left, right
-    if arg(1, 'O'), arg(2, 'O') then do
-       self~sendWinIntMsg(self~EM_SETMARGINS, 0, self~EC_USEFONTINFO)
-    end
-    else do
-       flag = 0
-       if arg(1, 'E') then flag = self~EC_LEFTMARGIN
-       if arg(2, 'E') then flag = .DlgUtil~or(flag, self~EC_RIGHTMARGIN)
-       lParam = .DlgUtil~makeLParam(left, right)
-       self~sendWinIntMsg(self~EM_SETMARGINS, flag, lParam)
-    end
-    return 0
-
-::method getMargins unguarded
-    use strict arg
-    marg = self~sendWinIntMsg(self~EM_GETMARGINS, 0, 0)
-    m = .directory~new
-    m~right = .DlgUtil~hiWord(marg)
-    m~left = .DlgUtil~loWord(marg)
-    return m
-
-::method margins unguarded
-    m = self~getMargins
-    return m~left m~right
-
-
-/******************* Button Classes *******************************************/
-
-::class 'GroupBox' subclass DialogControl public
-::method "style=" unguarded external "LIBRARY oodialog gb_setStyle"
+/******** Button Classes ******************************************************/
 
 ::class 'ButtonControl' subclass DialogControl public
 ::class 'Button' subclass ButtonControl public
 
 ::constant BM_CLICK              "0x00F5"
 
-::method state unguarded external "LIBRARY oodialog bc_getState"
-::method "state=" unguarded external "LIBRARY oodialog bc_setState"
-::method "style=" unguarded external "LIBRARY oodialog bc_setStyle"
-
-::method push unguarded
-   return self~sendWinIntMsg(self~BM_CLICK, 0, 0)
-
 ::method click unguarded
    forward message "push"
 
 ::method getIdealSize unguarded external "LIBRARY oodialog bc_getIdealSize"
-::method getTextMargin unguarded external "LIBRARY oodialog bc_getTextMargin"
-::method setTextMargin unguarded external "LIBRARY oodialog bc_setTextMargin"
-::method setImageList unguarded external "LIBRARY oodialog bc_setImageList"
-::method getImageList unguarded external "LIBRARY oodialog bc_getImageList"
 ::method getImage unguarded external "LIBRARY oodialog bc_getImage"
+::method getImageList unguarded external "LIBRARY oodialog bc_getImageList"
+::method getTextMargin unguarded external "LIBRARY oodialog bc_getTextMargin"
+::method push unguarded
+   return self~sendWinIntMsg(self~BM_CLICK, 0, 0)
+
 ::method setImage unguarded external "LIBRARY oodialog bc_setImage"
+::method setImageList unguarded external "LIBRARY oodialog bc_setImageList"
+::method setTextMargin unguarded external "LIBRARY oodialog bc_setTextMargin"
+::method state unguarded external "LIBRARY oodialog bc_getState"
+::method "state=" unguarded external "LIBRARY oodialog bc_setState"
+::method "style=" unguarded external "LIBRARY oodialog bc_setStyle"
 
 -- Bitmap button methods ALL DEPRECATED.
 
@@ -455,10 +248,10 @@
 ::class 'RadioButton' subclass Button public
 ::method checkInGroup class external "LIBRARY oodialog rb_checkInGroup_cls"
 
-::method checked unguarded external "LIBRARY oodialog rb_checked"
 ::method check unguarded external "LIBRARY oodialog rb_check"
-::method uncheck unguarded external "LIBRARY oodialog rb_uncheck"
+::method checked unguarded external "LIBRARY oodialog rb_checked"
 ::method getCheckState unguarded external "LIBRARY oodialog rb_getCheckState"
+::method uncheck unguarded external "LIBRARY oodialog rb_uncheck"
 
 -- DEPRECATED
 ::method isChecked external "LIBRARY oodialog rb_isChecked"
@@ -468,10 +261,356 @@
 
 ::class 'CheckBox' subclass RadioButton public
 
-::method setIndeterminate unguarded external "LIBRARY oodialog ckbx_setIndeterminate"
 ::method isIndeterminate unguarded external "LIBRARY oodialog ckbx_isIndeterminate"
+::method setIndeterminate unguarded external "LIBRARY oodialog ckbx_setIndeterminate"
 
-/**************** List Box Class **********************************************/
+
+/******** ComboBox Class ******************************************************/
+
+::class 'ComboBox' subclass DialogControl public
+
+::constant CB_SETEDITSEL               "0x0142"
+::constant CB_DELETESTRING             "0x0144"
+::constant CB_GETCOUNT                 "0x0146"
+::constant CB_GETCURSEL                "0x0147"
+::constant CB_RESETCONTENT             "0x014B"
+::constant CB_SETCURSEL                "0x014E"
+::constant CB_SHOWDROPDOWN             "0x014F"
+::constant CB_GETDROPPEDSTATE          "0x0157"
+::constant CB_GETTOPINDEX              "0x015b"
+::constant CB_GETHORIZONTALEXTENT      "0x015d"
+::constant CB_SETHORIZONTALEXTENT      "0x015e"
+
+::method add unguarded external "LIBRARY oodialog cb_add"
+::method addDirectory unguarded external "LIBRARY oodialog cb_addDirectory"
+::method closeDropDown unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 0, 0)
+
+::method delete unguarded
+   use strict arg index = (self~selectedIndex)
+   ret = self~sendWinIntMsg(self~CB_DELETESTRING, index - 1, 0)
+   if ret == 0 then self~deleteAll
+   return ret
+
+::method deleteAll unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~CB_RESETCONTENT, 0, 0)
+
+::method find unguarded external "LIBRARY oodialog cb_find"
+::method getCue unguarded external "LIBRARY oodialog cb_getCue"
+::method getComboBoxInfo unguarded external "LIBRARY oodialog cb_getComboBoxInfo"
+::method getEditControl unguarded external "LIBRARY oodialog cb_getEditControl"
+::method getFirstVisible unguarded
+   return self~sendWinIntMsg(self~CB_GETTOPINDEX, 0, 0) + 1
+
+::method getHorizontalExtent unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~CB_GETHORIZONTALEXTENT, 0, 0)
+
+::method getItemHeight unguarded external "LIBRARY oodialog cb_getItemHeight"
+::method getMinVisible unguarded external "LIBRARY oodialog cb_getMinVisible"
+::method getText unguarded external "LIBRARY oodialog cb_getText"
+::method insert unguarded external "LIBRARY oodialog cb_insert"
+::method isDropDown unguarded external "LIBRARY oodialog cb_isDropDown"
+::method isDropDownList unguarded external "LIBRARY oodialog cb_isDropDown"
+::method isDropDownOpen unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~CB_GETDROPPEDSTATE, 0, 0)
+
+::method isGrandchild unguarded external "LIBRARY oodialog cb_isGrandchild"
+::method isSimple unguarded external "LIBRARY oodialog cb_isDropDown"
+::method items unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~CB_GETCOUNT, 0, 0)
+
+::method modify unguarded
+   use strict arg index = (self~selectedIndex), newEntry
+   if index <= 0 then return -1
+   self~delete(index)
+   return self~insert(index, newEntry)
+
+::method openDropDown unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 1, 0)
+
+::method select unguarded external "LIBRARY oodialog cb_select"
+::method selected unguarded
+   use strict arg
+   return self~getText(self~selectedIndex)
+
+::method selectedIndex unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~CB_GETCURSEL, 0, 0) + 1
+
+::method selectIndex unguarded
+   use strict arg ndx = 0
+   ret = self~sendWinIntMsg(self~CB_SETCURSEL, ndx - 1, 0)
+   if ret == -1, ndx <> 0 then return -1
+   return ret + 1
+
+::method setCue unguarded external "LIBRARY oodialog cb_setCue"
+::method setEditSelection unguarded
+   use strict arg startndx = 0, endndx = 0
+   if endndx == 0 then endndx = -1
+   lParam = .DlgUtil~makeLParam(startndx - 1, endndx)
+   return self~sendWinIntMsg(self~CB_SETEDITSEL, 0, lParam) == -1
+
+::method setHorizontalExtent unguarded
+   use strict arg extent
+   self~sendWinIntMsg(self~CB_SETHORIZONTALEXTENT, extent, 0)
+   return 0
+
+::method setItemHeight unguarded external "LIBRARY oodialog cb_setItemHeight"
+::method setMinVisible unguarded external "LIBRARY oodialog cb_setMinVisible"
+
+-- DEPRECATED
+::method editSelection
+   forward message "setEditSelection"
+
+
+
+/******** DateTimePicker Class ************************************************/
+
+::class 'DateTimePicker' subclass DialogControl public
+
+::constant DTM_GETMCFONT           "0x100A"
+::constant DTM_SETMCFONT           "0x1009"
+
+::method closeMonthCal unguarded external "LIBRARY oodialog dtp_closeMonthCal"
+::method getDateTime unguarded external "LIBRARY oodialog dtp_getDateTime"
+::method getInfo unguarded external "LIBRARY oodialog dtp_getInfo"
+::method getIdealSize unguarded external "LIBRARY oodialog dtp_getIdealSize"
+::method getMonthCal unguarded external "LIBRARY oodialog dtp_getMonthCal"
+::method getMonthCalColor unguarded external "LIBRARY oodialog dtp_getMonthCalColor"
+
+::method getMonthCalFont unguarded
+   use strict arg
+   return self~sendWinIntMsgH(self~DTM_GETMCFONT, 0, 0)
+
+::method getMonthCalStyle unguarded external "LIBRARY oodialog dtp_getMonthCalStyle"
+::method getRange unguarded external "LIBRARY oodialog dtp_getRange"
+
+::method setDateTime unguarded external "LIBRARY oodialog dtp_setDateTime"
+::method setFormat unguarded external "LIBRARY oodialog dtp_setFormat"
+::method setMonthCalColor unguarded external "LIBRARY oodialog dtp_setMonthCalColor"
+
+::method setMonthCalFont unguarded
+   use strict arg hFont, redraw = .true
+   return self~sendWinHandleMsg(self~DTM_SETMCFONT, hFont, redraw)
+
+::method setMonthCalStyle unguarded external "LIBRARY oodialog dtp_setMonthCalStyle"
+::method setRange unguarded external "LIBRARY oodialog dtp_setRange"
+
+
+/******** Edit Class **********************************************************/
+
+::class 'EditControl' subclass DialogControl public
+::class 'Edit' subclass EditControl public
+
+::constant EM_SETSEL               "0x00B1"
+::constant EM_SCROLL               "0x00B5"
+::constant EM_LINESCROLL           "0x00B6"
+::constant EM_SCROLLCARET          "0x00B7"
+::constant EM_GETMODIFY            "0x00B8"
+::constant EM_SETMODIFY            "0x00B9"
+::constant EM_GETLINECOUNT         "0x00BA"
+::constant EM_LINELENGTH           "0x00C1"
+::constant EM_LIMITTEXT            "0x00C5"
+::constant EM_CANUNDO              "0x00C6"
+::constant EM_UNDO                 "0x00C7"
+::constant EM_LINEFROMCHAR         "0x00C9"
+::constant EM_SETTABSTOPS          "0x00CB"
+::constant EM_SETPASSWORDCHAR      "0x00CC"
+::constant EM_GETFIRSTVISIBLELINE  "0x00CE"
+::constant EM_SETREADONLY          "0x00CF"
+::constant EM_GETPASSWORDCHAR      "0x00D2"
+::constant EM_SETMARGINS           "0x00D3"
+::constant EM_GETMARGINS           "0x00D4"
+
+::constant EM_NEGATIVEONE          4294967295
+
+::constant EC_LEFTMARGIN           1       -- 0x0001
+::constant EC_RIGHTMARGIN          2       -- 0x0002
+::constant EC_USEFONTINFO          65535   -- 0xFFFF
+
+::constant WM_CUT                  "0x0300"
+::constant WM_COPY                 "0x0301"
+::constant WM_PASTE                "0x0302"
+::constant WM_CLEAR                "0x0303"
+
+::attribute passwordChar unguarded set
+    use strict arg char
+    ch = char~c2d
+    if self~isSingleLine, ch > 0, ch < 256 then self~sendWinIntMsg(self~EM_SETPASSWORDCHAR, ch, 0)
+
+::attribute passwordChar unguarded get
+    if \ self~isSingleLine then return ""
+    char = self~sendWinIntMsg(self~EM_GETPASSWORDCHAR, 0, 0)
+    if char \= 0 then return char~d2c
+    else return ""
+
+::method addStyle unguarded external "LIBRARY oodialog e_style"
+::method canUndo unguarded
+    use strict arg
+    return self~sendWinIntMsg(self~EM_CANUNDO, 0, 0) != 0
+
+::method clearText unguarded
+    use strict arg
+    self~sendWinIntMsg(self~WM_CLEAR, 0, 0)
+    return 0
+
+::method copyText unguarded
+    use strict arg
+    self~sendWinIntMsg(self~WM_COPY, 0, 0)
+    return 0
+
+::method cutText unguarded
+    use strict arg
+    self~sendWinIntMsg(self~WM_CUT, 0, 0)
+    return 0
+
+::method disableInternalResize unguarded
+  use strict arg
+  return self~connectEvent('WM_SIZE')
+
+::method ensureCaretVisibility unguarded
+    use strict arg
+    self~sendWinIntMsg(self~EM_SCROLLCARET, 0, 0)
+    return 0
+
+::method firstVisibleLine unguarded
+    use strict arg
+    return self~sendWinIntMsg(self~EM_GETFIRSTVISIBLELINE, 0, 0) + 1
+
+::method getCue unguarded external "LIBRARY oodialog e_getCue"
+::method getLine unguarded external "LIBRARY oodialog e_getLine"
+::method getMargins unguarded
+    use strict arg
+    marg = self~sendWinIntMsg(self~EM_GETMARGINS, 0, 0)
+    m = .directory~new
+    m~right = .DlgUtil~hiWord(marg)
+    m~left = .DlgUtil~loWord(marg)
+    return m
+
+::method getRect unguarded external "LIBRARY oodialog e_getRect"
+::method getStyle unguarded external "LIBRARY oodialog e_style"
+::method hideBalloon unguarded external "LIBRARY oodialog e_hideBallon"
+::method isGrandChild unguarded external "LIBRARY oodialog e_isGrandchild"
+::method isModified unguarded
+    use strict arg
+    return self~sendWinIntMsg(self~EM_GETMODIFY, 0, 0) <> 0
+
+::method isSingleLine unguarded external "LIBRARY oodialog e_isSingleLine"
+::method lineScroll unguarded
+    use strict arg cx, cy
+    if self~isSingleLine then return 1
+    self~sendWinIntMsg(self~EM_LINESCROLL, cx, cy)
+    return 0
+
+::method lineFromIndex unguarded external "LIBRARY oodialog e_lineFromIndex"
+::method lineIndex unguarded external "LIBRARY oodialog e_lineIndex"
+::method lineLength unguarded external "LIBRARY oodialog e_lineLength"
+::method lines unguarded
+    use strict arg
+    return self~sendWinIntMsg(self~EM_GETLINECOUNT, 0, 0)
+
+::method margins unguarded
+    m = self~getMargins
+    return m~left m~right
+
+::method noContextMenu unguarded
+  use strict arg
+  return self~connectEvent('CONTEXTMENU')
+
+::method pasteText unguarded
+    use strict arg
+    self~sendWinIntMsg(self~WM_PASTE, 0, 0)
+    return 0
+
+::method removeStyle unguarded external "LIBRARY oodialog e_style"
+::method replaceSelText unguarded external "LIBRARY oodialog e_replaceSelText"
+::method replaceStyle unguarded external "LIBRARY oodialog e_style"
+::method scrollCommand unguarded
+    use arg kind = "UP", reps = 1
+    kind = kind~translate
+    if self~isSingleLine then return 0
+    select
+        when kind = "UP" | kind = "LEFT" then wParam = 0
+        when kind = "DOWN" | kind = "RIGHT" then wParam = 1
+        when kind = "PAGEUP" | kind = "PAGELEFT" then wParam = 2
+        when kind = "PAGEDOWN" | kind = "PAGERIGHT" then wParam = 3
+        otherwise wParam = 0
+    end
+    do i = 1 to reps
+        ret = self~sendWinIntMsg(self~EM_SCROLL, wParam, 0)
+    end
+    return ret
+
+::method select unguarded
+    use strict arg start = 1, end = 0
+    self~sendWinIntMsg(self~EM_SETSEL, start - 1, end - 1)
+    return 0
+
+::method selected unguarded
+    s = self~selection
+    return s~startChar s~endChar
+
+::method selection unguarded external "LIBRARY oodialog e_selection"
+::method setCue unguarded external "LIBRARY oodialog e_setCue"
+::method setLimit unguarded
+    use strict arg limit
+    self~sendWinUintMsg(self~EM_LIMITTEXT, limit, 0)
+    return 0
+
+::method setMargins unguarded
+    use arg left, right
+    if arg(1, 'O'), arg(2, 'O') then do
+       self~sendWinIntMsg(self~EM_SETMARGINS, 0, self~EC_USEFONTINFO)
+    end
+    else do
+       flag = 0
+       if arg(1, 'E') then flag = self~EC_LEFTMARGIN
+       if arg(2, 'E') then flag = .DlgUtil~or(flag, self~EC_RIGHTMARGIN)
+       lParam = .DlgUtil~makeLParam(left, right)
+       self~sendWinIntMsg(self~EM_SETMARGINS, flag, lParam)
+    end
+    return 0
+
+::method setModified unguarded
+    use strict arg bool = .true
+    self~sendWinIntMsg(self~EM_SETMODIFY, bool, 0)
+    return 0
+
+::method setReadOnly unguarded
+    use strict arg bool = .true
+    return self~sendWinIntMsg(self~EM_SETREADONLY, bool, 0) <> 0
+
+::method setRect unguarded external "LIBRARY oodialog e_setRect"
+::method setTabStops unguarded external "LIBRARY oodialog e_setTabStops"
+::method showBalloon unguarded external "LIBRARY oodialog e_showBallon"
+
+::method "tab=" unguarded
+    use strict arg dlgunits
+    self~setTabStops(.array~of(dlgunits))
+
+::method undo unguarded
+    use strict arg
+    return self~sendWinIntMsg(self~EM_UNDO, 0, 0) != 0
+
+::method wantReturn unguarded
+  use strict arg mthName = 'onReturn'
+  return self~connectEvent('WANTRETURN', mthName)
+
+
+
+/******** GroupBox Class ******************************************************/
+
+::class 'GroupBox' subclass DialogControl public
+::method "style=" unguarded external "LIBRARY oodialog gb_setStyle"
+
+
+/******** ListBox Class *******************************************************/
 
 ::class 'ListBox' subclass DialogControl public
 
@@ -490,17 +629,16 @@
 ::constant LB_SETITEMHEIGHT        "0x01A0"
 ::constant LB_GETITEMHEIGHT        "0x01A1"
 
-::method setTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
-::method isSingleSelection unguarded external "LIBRARY oodialog lb_isSingleSelection"
-::method getText unguarded external "LIBRARY oodialog lb_getText"
 ::method add unguarded external "LIBRARY oodialog lb_add"
-::method insert unguarded external "LIBRARY oodialog lb_insert"
-::method select unguarded external "LIBRARY oodialog lb_select"
-::method selectIndex unguarded external "LIBRARY oodialog lb_selectIndex"
-::method deSelectIndex unguarded external "LIBRARY oodialog lb_deselectIndex"
-::method selectedIndex unguarded external "LIBRARY oodialog lb_selectedIndex"
-::method find unguarded external "LIBRARY oodialog lb_find"
 ::method addDirectory unguarded external "LIBRARY oodialog lb_addDirectory"
+::method "columnWidth=" unguarded -- Dialog units, not accurate
+   use strict arg dlgunits
+   if dlgunits~datatype("N") = 0 then return
+   self~columnWidthPx = trunc(dlgunits * self~factorX)
+
+::method "columnWidthPx=" unguarded
+   use strict arg pixels
+   self~sendWinIntMsg(self~LB_SETCOLUMNWIDTH, pixels, 0)
 
 ::method delete unguarded
    use strict arg index = (self~selectedIndex)
@@ -511,36 +649,42 @@
    self~sendWinIntMsg(self~LB_RESETCONTENT, 0, 0)
    return 0
 
-::method selected unguarded
-   return self~getText(self~selectedIndex)
-
-::method selectRange unguarded
-   use strict arg fromNdx = 1, toNdx = (self~items)
-   if self~isSingleSelection then return -1
-   lParam = .DlgUtil~makeLParam(fromNdx - 1, toNdx - 1)
-   return self~sendWinIntMsg(self~LB_SELITEMRANGE, .true, lParam)
-
+::method deSelectIndex unguarded external "LIBRARY oodialog lb_deselectIndex"
 ::method deselectRange unguarded
    use strict arg fromNdx = 1, toNdx = (self~items)
    if self~isSingleSelection then return -1
    lParam = .DlgUtil~makeLParam(fromNdx - 1, toNdx - 1)
    return self~sendWinIntMsg(self~LB_SELITEMRANGE, .false, lParam)
 
+::method find unguarded external "LIBRARY oodialog lb_find"
+::method getFirstVisible unguarded
+   return self~sendWinIntMsg(self~LB_GETTOPINDEX, 0, 0) + 1
+
+::method getText unguarded external "LIBRARY oodialog lb_getText"
+::method hitTestInfo unguarded external "LIBRARY oodialog lb_hitTestInfo"
+::method insert unguarded external "LIBRARY oodialog lb_insert"
+::method isSingleSelection unguarded external "LIBRARY oodialog lb_isSingleSelection"
+::method itemHeight unguarded     -- Dialog units, not accurate
+   return self~itemHeightPx / self~factorY
+
+::method "itemHeight=" unguarded  -- Dialog units, not accurate
+   use strict arg dlgunits
+   if dlgunits~datatype("N") = 0 then return
+   self~itemHeightPx = trunc(dlgunits * self~factorY)
+
+::method itemHeightPx unguarded
+   return self~sendWinIntMsg(self~LB_GETITEMHEIGHT, 0, 0)
+
+::method "itemHeightPx=" unguarded
+   use strict arg pixels
+   self~sendWinIntMsg(self~LB_SETITEMHEIGHT, pixels, 0)
+
 ::method items unguarded
    return self~sendWinIntMsg(self~LB_GETCOUNT, 0, 0)
-
-::method selectedItems unguarded
-   return self~sendWinIntMsg(self~LB_GETSELCOUNT, 0, 0)
-
-::method selectedIndexes unguarded                                    -- TODO be nice to return an array
-   return self~oDlg~getListBoxData(self~id)
 
 ::method makeFirstVisible unguarded
    use strict arg ndx = 1
    return self~sendWinIntMsg(self~LB_SETTOPINDEX, ndx - 1, 0)
-
-::method getFirstVisible unguarded
-   return self~sendWinIntMsg(self~LB_GETTOPINDEX, 0, 0) + 1
 
 ::method modify unguarded
    use strict arg index = (self~selectedIndex), newItem
@@ -548,139 +692,159 @@
    self~delete(index)
    return self~insert(index, newItem)
 
-::method setWidthPx unguarded
-   use strict arg pixels
-   self~sendWinIntMsg(self~LB_SETHORIZONTALEXTENT, pixels, 0)
-   return 0
+::method select unguarded external "LIBRARY oodialog lb_select"
+::method selected unguarded
+   return self~getText(self~selectedIndex)
 
-::method widthPx unguarded
-   return self~sendWinIntMsg(self~LB_GETHORIZONTALEXTENT, 0, 0)
+::method selectedIndex unguarded external "LIBRARY oodialog lb_selectedIndex"
+::method selectedItems unguarded
+   return self~sendWinIntMsg(self~LB_GETSELCOUNT, 0, 0)
 
-::method "itemHeightPx=" unguarded
-   use strict arg pixels
-   self~sendWinIntMsg(self~LB_SETITEMHEIGHT, pixels, 0)
+::method selectIndex unguarded external "LIBRARY oodialog lb_selectIndex"
+::method selectedIndexes unguarded                                    -- TODO be nice to return an array
+   return self~oDlg~getListBoxData(self~id)
 
-::method itemHeightPx unguarded
-   return self~sendWinIntMsg(self~LB_GETITEMHEIGHT, 0, 0)
+::method selectRange unguarded
+   use strict arg fromNdx = 1, toNdx = (self~items)
+   if self~isSingleSelection then return -1
+   lParam = .DlgUtil~makeLParam(fromNdx - 1, toNdx - 1)
+   return self~sendWinIntMsg(self~LB_SELITEMRANGE, .true, lParam)
 
-::method "columnWidthPx=" unguarded
-   use strict arg pixels
-   self~sendWinIntMsg(self~LB_SETCOLUMNWIDTH, pixels, 0)
-
+::method setTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
 ::method setWidth unguarded       -- Dialog units, not accurate
    use strict arg dlgunits
    if dlgunits~datatype("N") = 0 then return -1
    px = trunc(dlgunits * self~factorX)
    self~setWidthPx(px)
 
+::method setWidthPx unguarded
+   use strict arg pixels
+   self~sendWinIntMsg(self~LB_SETHORIZONTALEXTENT, pixels, 0)
+   return 0
+
 ::method width unguarded          -- Dialog units, not accurate
    return self~widthPx / self~factorX
 
-::method "itemHeight=" unguarded  -- Dialog units, not accurate
-   use strict arg dlgunits
-   if dlgunits~datatype("N") = 0 then return
-   self~itemHeightPx = trunc(dlgunits * self~factorY)
-
-::method itemHeight unguarded     -- Dialog units, not accurate
-   return self~itemHeightPx / self~factorY
-
-::method "columnWidth=" unguarded -- Dialog units, not accurate
-   use strict arg dlgunits
-   if dlgunits~datatype("N") = 0 then return
-   self~columnWidthPx = trunc(dlgunits * self~factorX)
+::method widthPx unguarded
+   return self~sendWinIntMsg(self~LB_GETHORIZONTALEXTENT, 0, 0)
 
 
-/********** Combo Box Class ***************************************************/
 
-::class 'ComboBox' subclass DialogControl public
+/******** MonthCalendar Class *************************************************/
 
-::constant CB_SETEDITSEL               "0x0142"
-::constant CB_DELETESTRING             "0x0144"
-::constant CB_GETCOUNT                 "0x0146"
-::constant CB_GETCURSEL                "0x0147"
-::constant CB_RESETCONTENT             "0x014B"
-::constant CB_SETCURSEL                "0x014E"
-::constant CB_SHOWDROPDOWN             "0x014F"
-::constant CB_GETDROPPEDSTATE          "0x0157"
-::constant CB_GETHORIZONTALEXTENT      "0x015d"
-::constant CB_SETHORIZONTALEXTENT      "0x015e"
+::class 'MonthCalendar' subclass DialogControl public
 
-::method getText unguarded external "LIBRARY oodialog cb_getText"
-::method add unguarded external "LIBRARY oodialog cb_add"
-::method insert unguarded external "LIBRARY oodialog cb_insert"
-::method select unguarded external "LIBRARY oodialog cb_select"
-::method find unguarded external "LIBRARY oodialog cb_find"
-::method addDirectory unguarded external "LIBRARY oodialog cb_addDirectory"
+::constant MCM_GETMAXSELCOUNT      "0x1003"
+::constant MCM_SETMAXSELCOUNT      "0x1004"
+::constant MCM_GETMAXTODAYWIDTH    "0x1015"
+::constant MCM_GETMONTHDELTA       "0x1013"
+::constant MCM_SETMONTHDELTA       "0x1014"
 
-::method delete unguarded
-   use strict arg index = (self~selectedIndex)
-   ret = self~sendWinIntMsg(self~CB_DELETESTRING, index - 1, 0)
-   if ret == 0 then self~deleteAll
-   return ret
+::attribute date unguarded external "LIBRARY oodialog _mc_date"
 
-::method deleteAll unguarded
+::method addStyle unguarded external "LIBRARY oodialog mc_addRemoveStyle"
+::method getCalendarBorder unguarded external "LIBRARY oodialog mc_getCalendarBorder"
+::method getCalendarCount unguarded external "LIBRARY oodialog mc_getCalendarCount"
+::method getCALID unguarded external "LIBRARY oodialog mc_getCALID"
+::method getColor unguarded external "LIBRARY oodialog mc_getColor"
+::method getCurrentView unguarded external "LIBRARY oodialog mc_getCurrentView"
+::method getFirstDayOfWeek unguarded external "LIBRARY oodialog mc_getFirstDayOfWeek"
+::method getGridInfo unguarded external "LIBRARY oodialog mc_getGridInfo"
+::method getMaxSelection unguarded
    use strict arg
-   return self~sendWinIntMsg(self~CB_RESETCONTENT, 0, 0)
+   return self~sendWinIntMsg(self~MCM_GETMAXSELCOUNT, 0, 0)
 
-::method selectedIndex unguarded
+::method getMaxTodayWidth unguarded
    use strict arg
-   return self~sendWinIntMsg(self~CB_GETCURSEL, 0, 0) + 1
+   return self~sendWinIntMsg(self~MCM_GETMAXTODAYWIDTH, 0, 0)
 
-::method selected unguarded
+::method getMinRect unguarded external "LIBRARY oodialog mc_getMinRect"
+::method getMonthDelta unguarded
    use strict arg
-   return self~getText(self~selectedIndex)
+   return self~sendWinIntMsg(self~MCM_GETMONTHDELTA, 0, 0)
 
-::method selectIndex unguarded
-   use strict arg ndx = 0
-   ret = self~sendWinIntMsg(self~CB_SETCURSEL, ndx - 1, 0)
-   if ret == -1, ndx <> 0 then return -1
-   return ret + 1
+::method getMonthRange unguarded external "LIBRARY oodialog mc_getMonthRange"
+::method getRange unguarded external "LIBRARY oodialog mc_getRange"
+::method getSelectionRange unguarded external "LIBRARY oodialog mc_getSelectionRange"
+::method getStyle unguarded external "LIBRARY oodialog mc_getStyle"
+::method getToday unguarded external "LIBRARY oodialog mc_getToday"
+::method hitTest unguarded external "LIBRARY oodialog mc_hitTestInfo"  -- Error in 4.2.0 docs, name should have been hitTestInfo. Need to keep for backwards compatibility
+::method hitTestInfo unguarded external "LIBRARY oodialog mc_hitTestInfo"
+::method removeStyle unguarded external "LIBRARY oodialog mc_addRemoveStyle"
+::method replaceStyle unguarded external "LIBRARY oodialog mc_replaceStyle"
+::method setCalendarBorder unguarded external "LIBRARY oodialog mc_setCalendarBorder"
+::method setCALID unguarded external "LIBRARY oodialog mc_setCALID"
+::method setColor unguarded external "LIBRARY oodialog mc_setColor"
+::method setCurrentView unguarded external "LIBRARY oodialog mc_setCurrentView"
+::method setDayState unguarded external "LIBRARY oodialog mc_setDayState"
+::method setDayStateQuick unguarded external "LIBRARY oodialog mc_setDayStateQuick"
+::method setFirstDayOfWeek unguarded external "LIBRARY oodialog mc_setFirstDayOfWeek"
+::method setMaxSelection unguarded
+   use strict arg count
+   return self~sendWinIntMsg(self~MCM_SETMAXSELCOUNT, count, 0) <> 0
 
-::method items unguarded
+::method setMonthDelta unguarded
+   use strict arg amount
+   return self~sendWinIntMsg(self~MCM_SETMAXTODAYWIDTH, amount, 0)
+
+::method setRange unguarded external "LIBRARY oodialog mc_setRange"
+::method setSelectionRange unguarded external "LIBRARY oodialog mc_setSelectionRange"
+::method setToday unguarded external "LIBRARY oodialog mc_setToday"
+::method sizeRectToMin unguarded external "LIBRARY oodialog mc_sizeRectToMin"
+
+
+/******** ProgressBar Class ***************************************************/
+
+::class 'ProgressBar' subclass DialogControl public
+
+-- WM_USER == 0x400 -> 1024
+::constant PBM_SETPOS          "0x0402"
+::constant PBM_DELTAPOS        "0x0403"
+::constant PBM_SETSTEP         "0x0404"
+::constant PBM_STEPIT          "0x0405"
+::constant PBM_GETPOS          "0x0408"
+::constant PBM_SETBARCOLOR     "0x0409"
+::constant PBM_SETBKCOLOR      "0x2001"
+
+::method backgroundColor unguarded
+   use strict arg newColor
+   return self~sendWinUintMsg(self~PBM_SETBKCOLOR, 0, newColor)
+
+::method barColor unguarded
+   use strict arg newColor
+   return self~sendWinUintMsg(self~PBM_SETBARCOLOR, 0, newColor)
+
+::method getFullRange unguarded external "LIBRARY oodialog pbc_getFullRange"
+::method getPos unguarded
    use strict arg
-   return self~sendWinIntMsg(self~CB_GETCOUNT, 0, 0)
+   return self~sendWinIntMsg(self~PBM_GETPOS, 0, 0)
 
-::method modify unguarded
-   use strict arg index = (self~selectedIndex), newEntry
-   if index <= 0 then return -1
-   self~delete(index)
-   return self~insert(index, newEntry)
+::method setFullRange unguarded external "LIBRARY oodialog pbc_setFullRange"
+::method setMarquee unguarded external "LIBRARY oodialog pbc_setMarquee"
+::method setPos unguarded
+   use strict arg position
+   return self~sendWinIntMsg(self~PBM_SETPOS, position, 0)
 
-::method openDropDown unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 1, 0)
+::method setStep unguarded
+  use strict arg newStep = 10
+   return self~sendWinIntMsg(self~PBM_SETSTEP, newStep, 0)
 
-::method closeDropDown unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 0, 0)
-
-::method isDropDownOpen unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~CB_GETDROPPEDSTATE, 0, 0)
-
-::method setEditSelection unguarded
-   use strict arg startndx = 0, endndx = 0
-   if endndx == 0 then endndx = -1
-   lParam = .DlgUtil~makeLParam(startndx - 1, endndx)
-   return self~sendWinIntMsg(self~CB_SETEDITSEL, 0, lParam) == -1
-
-::method getHorizontalExtent unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~CB_GETHORIZONTALEXTENT, 0, 0)
-
-::method setHorizontalExtent unguarded
-   use strict arg extent
-   self~sendWinIntMsg(self~CB_SETHORIZONTALEXTENT, extent, 0)
-   return 0
+::method step unguarded
+   use strict arg delta = 0
+   msg = self~PBM_STEPIT
+   if arg(1, 'E') then msg = self~PBM_DELTAPOS
+   return self~sendWinIntMsg(msg, delta, 0)
 
 
 -- DEPRECATED
-::method editSelection
-   forward message "setEditSelection"
+::method getRange unguarded external "LIBRARY oodialog pbc_getFullRange"
+::method setRange unguarded
+   forward message "setFullRange" continue
+   return result~min result~max
 
 
 
-/*********** ScrollBar Class **************************************************/
+/******** ScrollBar Class *****************************************************/
 
 
 ::class 'ScrollBar' subclass DialogControl public
@@ -741,57 +905,19 @@
 ::method setRange unguarded external "LIBRARY oodialog sb_setRange"
 
 
-/********* Progress Bar Class *************************************************/
 
-::class 'ProgressBar' subclass DialogControl public
+/******** Static Class ********************************************************/
 
--- WM_USER == 0x400 -> 1024
-::constant PBM_SETPOS          "0x0402"
-::constant PBM_DELTAPOS        "0x0403"
-::constant PBM_SETSTEP         "0x0404"
-::constant PBM_STEPIT          "0x0405"
-::constant PBM_GETPOS          "0x0408"
-::constant PBM_SETBARCOLOR     "0x0409"
-::constant PBM_SETBKCOLOR      "0x2001"
+::class 'StaticControl' subclass DialogControl public
+::class 'Static' subclass StaticControl public
 
-::method backgroundColor unguarded
-   use strict arg newColor
-   return self~sendWinUintMsg(self~PBM_SETBKCOLOR, 0, newColor)
-
-::method barColor unguarded
-   use strict arg newColor
-   return self~sendWinUintMsg(self~PBM_SETBARCOLOR, 0, newColor)
-
-::method getFullRange unguarded external "LIBRARY oodialog pbc_getFullRange"
-::method getPos unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~PBM_GETPOS, 0, 0)
-
-::method setFullRange unguarded external "LIBRARY oodialog pbc_setFullRange"
-::method setMarquee unguarded external "LIBRARY oodialog pbc_setMarquee"
-::method setPos unguarded
-   use strict arg position
-   return self~sendWinIntMsg(self~PBM_SETPOS, position, 0)
-
-::method setStep unguarded
-  use strict arg newStep = 10
-   return self~sendWinIntMsg(self~PBM_SETSTEP, newStep, 0)
-
-::method step unguarded
-   use strict arg delta = 0
-   msg = self~PBM_STEPIT
-   if arg(1, 'E') then msg = self~PBM_DELTAPOS
-   return self~sendWinIntMsg(msg, delta, 0)
+::method getIcon unguarded external "LIBRARY oodialog stc_getIcon"
+::method setIcon unguarded external "LIBRARY oodialog stc_setIcon"
+::method getImage unguarded external "LIBRARY oodialog stc_getImage"
+::method setImage unguarded external "LIBRARY oodialog stc_setImage"
 
 
--- DEPRECATED
-::method getRange unguarded external "LIBRARY oodialog pbc_getFullRange"
-::method setRange unguarded
-   forward message "setFullRange" continue
-   return result~min result~max
-
-
-/******** Track Bar Class ******************************************************/
+/******** TrackBar Class ******************************************************/
 
 ::class 'SliderControl' subclass DialogControl public
 ::class 'TrackBar' subclass SliderControl public
@@ -822,45 +948,10 @@
 ::constant TBM_SETLINESIZE         "0x0417"
 ::constant TBM_GETLINESIZE         "0x0418"
 
-::method "pos=" unguarded
-   forward message "setPos"
-
-::method pos unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~TBM_GETPOS, 0, 0)
-
-::method setPos unguarded
-   use strict arg p, redraw = .false
-   self~sendWinIntMsg(self~TBM_SETPOS, redraw, p)
+::method clearSelRange unguarded
+   use strict arg redraw = .true
+   self~sendWinIntMsg(self~TBM_CLEARSEL, redraw, 0)
    return 0
-
-::method initRange unguarded
-   use strict arg min = 0, max = 100, redraw = .false
-   if max < min then return -1
-   self~sendWinIntMsg(self~TBM_SETRANGE, redraw, .DlgUtil~makeLParam(min, max))
-   return 0
-
-::method getMin unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~TBM_GETRANGEMIN, 0, 0)
-
-::method setMin unguarded
-   use strict arg min, redraw = .true
-   self~sendWinIntMsg(self~TBM_SETRANGEMIN, redraw, min)
-   return 0
-
-::method getMax unguarded
-   return self~sendWinIntMsg(self~TBM_GETRANGEMAX, 0, 0)
-
-::method setMax unguarded
-   use strict arg max, redraw = .true
-   self~sendWinIntMsg(self~TBM_SETRANGEMAX, redraw, max)
-   return 0
-
-::method getRange unguarded external "LIBRARY oodialog tb_getRange"
-::method range unguarded
-   r = self~getRange
-   return r~min r~max
 
 ::method clearTicks unguarded
    use strict arg redraw = .true
@@ -870,9 +961,92 @@
 ::method countTicks unguarded
    return self~sendWinIntMsg(self~TBM_GETNUMTICS, 0, 0)
 
+::method getLineStep unguarded
+   return self~sendWinIntMsg(self~TBM_GETLINESIZE, 0, 0)
+
+::method getMax unguarded
+   return self~sendWinIntMsg(self~TBM_GETRANGEMAX, 0, 0)
+
+::method getMin unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETRANGEMIN, 0, 0)
+
+::method getPageStep unguarded
+   return self~sendWinIntMsg(self~TBM_GETPAGESIZE, 0, 0)
+
+::method getRange unguarded external "LIBRARY oodialog tb_getRange"
+::method getSelEnd unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETSELEND, 0, 0)
+
+::method getSelRange unguarded external "LIBRARY oodialog tb_getSelRange"
+::method getSelStart unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETSELSTART, 0, 0)
+
 ::method getTick unguarded
    use strict arg tic
    return self~sendWinIntMsg(self~TBM_GETTIC, tic, 0)
+
+::method initRange unguarded
+   use strict arg min = 0, max = 100, redraw = .false
+   if max < min then return -1
+   self~sendWinIntMsg(self~TBM_SETRANGE, redraw, .DlgUtil~makeLParam(min, max))
+   return 0
+
+::method initSelRange unguarded
+   use strict arg min = 0, max = (self~getMax), redraw = .false
+   if max < min then return -1
+   self~sendWinIntMsg(self~TBM_SETSEL, redraw, .DlgUtil~makeLParam(min, max))
+   return 0
+
+::method pos unguarded
+   use strict arg
+   return self~sendWinIntMsg(self~TBM_GETPOS, 0, 0)
+
+::method "pos=" unguarded
+   forward message "setPos"
+
+::method range unguarded
+   r = self~getRange
+   return r~min r~max
+
+::method selRange
+   sr = self~getSelRange
+   return sr~start sr~end
+
+::method setSelEnd unguarded
+   use strict arg max, redraw = .true
+   self~sendWinIntMsg(self~TBM_SETSELEND, redraw, min)
+   return 0
+
+::method setLineStep unguarded
+   use strict arg step
+   return self~sendWinIntMsg(self~TBM_SETLINESIZE, 0, step)
+
+::method setMax unguarded
+   use strict arg max, redraw = .true
+   self~sendWinIntMsg(self~TBM_SETRANGEMAX, redraw, max)
+   return 0
+
+::method setMin unguarded
+   use strict arg min, redraw = .true
+   self~sendWinIntMsg(self~TBM_SETRANGEMIN, redraw, min)
+   return 0
+
+::method setPageStep unguarded
+   use strict arg step
+   return self~sendWinIntMsg(self~TBM_SETPAGESIZE, 0, step)
+
+::method setPos unguarded
+   use strict arg p, redraw = .false
+   self~sendWinIntMsg(self~TBM_SETPOS, redraw, p)
+   return 0
+
+::method setSelStart unguarded
+   use strict arg min, redraw = .true
+   self~sendWinIntMsg(self~TBM_SETSELSTART, redraw, min)
+   return 0
 
 ::method setTickAt unguarded
    use strict arg pos
@@ -882,64 +1056,15 @@
    use strict arg freq
    return self~sendWinIntMsg(self~TBM_SETTICFREQ, freq, 0)
 
-::method getLineStep unguarded
-   return self~sendWinIntMsg(self~TBM_GETLINESIZE, 0, 0)
-
-::method getPageStep unguarded
-   return self~sendWinIntMsg(self~TBM_GETPAGESIZE, 0, 0)
-
-::method setLineStep unguarded
-   use strict arg step
-   return self~sendWinIntMsg(self~TBM_SETLINESIZE, 0, step)
-
-::method setPageStep unguarded
-   use strict arg step
-   return self~sendWinIntMsg(self~TBM_SETPAGESIZE, 0, step)
-
-::method initSelRange unguarded
-   use strict arg min = 0, max = (self~getMax), redraw = .false
-   if max < min then return -1
-   self~sendWinIntMsg(self~TBM_SETSEL, redraw, .DlgUtil~makeLParam(min, max))
-   return 0
-
-::method getSelStart unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~TBM_GETSELSTART, 0, 0)
-   return 0
-
-::method setSelStart unguarded
-   use strict arg min, redraw = .true
-   self~sendWinIntMsg(self~TBM_SETSELSTART, redraw, min)
-   return 0
-
-::method getSelEnd unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~TBM_GETSELEND, 0, 0)
-   return 0
-
-::method setSelEnd unguarded
-   use strict arg max, redraw = .true
-   self~sendWinIntMsg(self~TBM_SETSELEND, redraw, min)
-   return 0
-
-::method clearSelRange unguarded
-   use strict arg redraw = .true
-   self~sendWinIntMsg(self~TBM_CLEARSEL, redraw, 0)
-   return 0
-
-::method getSelRange unguarded external "LIBRARY oodialog tb_getSelRange"
-::method selRange
-   sr = self~getSelRange
-   return sr~start sr~end
 
 
-/*********** Tab Control Class & Related **************************************/
+/******** Tab Class & Releated ************************************************/
 
 ::class 'OwnedTabInfo' subclass Object public
 
 ::attribute nID
-::attribute sID
 ::attribute pages
+::attribute sID
 ::attribute tab
 
 ::method init
@@ -1051,105 +1176,12 @@
 ::method removeImages unguarded
    return self~setImageList(.nil)
 
+-- DEPRECATED
 ::method setImages unguarded external "LIBRARY oodialog tab_setImageList"
 
--- DEPRECATED
 
 
-::class 'DateTimePicker' subclass DialogControl public
-
-::constant DTM_GETMCFONT           "0x100A"
-::constant DTM_SETMCFONT           "0x1009"
-
-::method closeMonthCal unguarded external "LIBRARY oodialog dtp_closeMonthCal"
-::method getDateTime unguarded external "LIBRARY oodialog dtp_getDateTime"
-::method getInfo unguarded external "LIBRARY oodialog dtp_getInfo"
-::method getIdealSize unguarded external "LIBRARY oodialog dtp_getIdealSize"
-::method getMonthCal unguarded external "LIBRARY oodialog dtp_getMonthCal"
-::method getMonthCalColor unguarded external "LIBRARY oodialog dtp_getMonthCalColor"
-
-::method getMonthCalFont unguarded
-   use strict arg
-   return self~sendWinIntMsgH(self~DTM_GETMCFONT, 0, 0)
-
-::method getMonthCalStyle unguarded external "LIBRARY oodialog dtp_getMonthCalStyle"
-::method getRange unguarded external "LIBRARY oodialog dtp_getRange"
-
-::method setDateTime unguarded external "LIBRARY oodialog dtp_setDateTime"
-::method setFormat unguarded external "LIBRARY oodialog dtp_setFormat"
-::method setMonthCalColor unguarded external "LIBRARY oodialog dtp_setMonthCalColor"
-
-::method setMonthCalFont unguarded
-   use strict arg hFont, redraw = .true
-   return self~sendWinHandleMsg(self~DTM_SETMCFONT, hFont, redraw)
-
-::method setMonthCalStyle unguarded external "LIBRARY oodialog dtp_setMonthCalStyle"
-::method setRange unguarded external "LIBRARY oodialog dtp_setRange"
-
-
-::class 'MonthCalendar' subclass DialogControl public
-
-::constant MCM_GETMAXSELCOUNT      "0x1003"
-::constant MCM_SETMAXSELCOUNT      "0x1004"
-::constant MCM_GETMAXTODAYWIDTH    "0x1015"
-::constant MCM_GETMONTHDELTA       "0x1013"
-::constant MCM_SETMONTHDELTA       "0x1014"
-
-::attribute date unguarded external "LIBRARY oodialog _mc_date"
-
-::method addStyle unguarded external "LIBRARY oodialog mc_addRemoveStyle"
-::method removeStyle unguarded external "LIBRARY oodialog mc_addRemoveStyle"
-::method replaceStyle unguarded external "LIBRARY oodialog mc_replaceStyle"
-::method getStyle unguarded external "LIBRARY oodialog mc_getStyle"
-
-::method getCalendarBorder unguarded external "LIBRARY oodialog mc_getCalendarBorder"
-::method getCalendarCount unguarded external "LIBRARY oodialog mc_getCalendarCount"
-::method getCALID unguarded external "LIBRARY oodialog mc_getCALID"
-::method getColor unguarded external "LIBRARY oodialog mc_getColor"
-::method getCurrentView unguarded external "LIBRARY oodialog mc_getCurrentView"
-::method getFirstDayOfWeek unguarded external "LIBRARY oodialog mc_getFirstDayOfWeek"
-::method getGridInfo unguarded external "LIBRARY oodialog mc_getGridInfo"
-
-::method getMaxSelection unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~MCM_GETMAXSELCOUNT, 0, 0)
-
-::method getMaxTodayWidth unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~MCM_GETMAXTODAYWIDTH, 0, 0)
-
-::method getMinRect unguarded external "LIBRARY oodialog mc_getMinRect"
-
-::method getMonthDelta unguarded
-   use strict arg
-   return self~sendWinIntMsg(self~MCM_GETMONTHDELTA, 0, 0)
-
-::method getMonthRange unguarded external "LIBRARY oodialog mc_getMonthRange"
-::method getRange unguarded external "LIBRARY oodialog mc_getRange"
-::method getSelectionRange unguarded external "LIBRARY oodialog mc_getSelectionRange"
-::method getToday unguarded external "LIBRARY oodialog mc_getToday"
-::method hitTest unguarded external "LIBRARY oodialog mc_hitTest"
-::method setCalendarBorder unguarded external "LIBRARY oodialog mc_setCalendarBorder"
-::method setCALID unguarded external "LIBRARY oodialog mc_setCALID"
-::method setColor unguarded external "LIBRARY oodialog mc_setColor"
-::method setCurrentView unguarded external "LIBRARY oodialog mc_setCurrentView"
-::method setDayState unguarded external "LIBRARY oodialog mc_setDayState"
-::method setDayStateQuick unguarded external "LIBRARY oodialog mc_setDayStateQuick"
-::method setFirstDayOfWeek unguarded external "LIBRARY oodialog mc_setFirstDayOfWeek"
-
-::method setMaxSelection unguarded
-   use strict arg count
-   return self~sendWinIntMsg(self~MCM_SETMAXSELCOUNT, count, 0) <> 0
-
-::method setMonthDelta unguarded
-   use strict arg amount
-   return self~sendWinIntMsg(self~MCM_SETMAXTODAYWIDTH, amount, 0)
-
-::method setRange unguarded external "LIBRARY oodialog mc_setRange"
-::method setSelectionRange unguarded external "LIBRARY oodialog mc_setSelectionRange"
-::method setToday unguarded external "LIBRARY oodialog mc_setToday"
-::method sizeRectToMin unguarded external "LIBRARY oodialog mc_sizeRectToMin"
-
+/******** UPDown Class ********************************************************/
 
 ::class 'UpDown' subclass DialogControl public
 
@@ -1159,22 +1191,22 @@
 
 ::method deltaPosReply class external "LIBRARY oodialog ud_deltaPosReply_cls"
 
+::method getAcceleration unguarded external "LIBRARY oodialog ud_getAcceleration"
 ::method getBase unguarded
    use strict arg
    return self~sendWinIntMsg(self~UDM_GETBASE, 0, 0)
 
+::method getBuddy unguarded external "LIBRARY oodialog ud_getBuddy"
+::method getRange unguarded external "LIBRARY oodialog ud_getRange"
+::method getPosition unguarded external "LIBRARY oodialog ud_getPosition"
+::method setAcceleration unguarded external "LIBRARY oodialog ud_setAcceleration"
 ::method setBase unguarded
    use strict arg newBase
    return self~sendWinIntMsg(self~UDM_SETBASE, newBase, 0)
 
-::method getPosition unguarded external "LIBRARY oodialog ud_getPosition"
+::method setBuddy unguarded external "LIBRARY oodialog ud_setBuddy"
 ::method setPosition unguarded
    use strict arg newPos
    return self~sendWinIntMsg(self~UDM_SETPOS32, 0, newPos)
 
-::method getBuddy unguarded external "LIBRARY oodialog ud_getBuddy"
-::method setBuddy unguarded external "LIBRARY oodialog ud_setBuddy"
-::method getRange unguarded external "LIBRARY oodialog ud_getRange"
 ::method setRange unguarded external "LIBRARY oodialog ud_setRange"
-::method getAcceleration unguarded external "LIBRARY oodialog ud_getAcceleration"
-::method setAcceleration unguarded external "LIBRARY oodialog ud_setAcceleration"

@@ -475,6 +475,7 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/controls/Makefile
         samples/windows/oodialog/controls/ListView/Makefile
         samples/windows/oodialog/controls/ListView/rc/Makefile
+        samples/windows/oodialog/controls/ListView/subitem.editing/Makefile
         samples/windows/oodialog/controls/ToolTip/Makefile
         samples/windows/oodialog/controls/TreeView/Makefile
         samples/windows/oodialog/controls/TreeView/rc/Makefile
@@ -489,6 +490,10 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/propertysheet.tabControls/rc/Makefile
         samples/windows/oodialog/rc/Makefile
         samples/windows/oodialog/res/Makefile
+        samples/windows/oodialog/resizableDialogs/Makefile
+        samples/windows/oodialog/resizableDialogs/DialogAreaU/Makefile
+        samples/windows/oodialog/resizableDialogs/ResizingAdmin/Makefile
+        samples/windows/oodialog/resizableDialogs/ResizingAdmin/rc/Makefile
         samples/windows/oodialog/simple/Makefile
         samples/windows/oodialog/sysinfo/Makefile
         samples/windows/oodialog/tutorial/Makefile
@@ -507,10 +512,20 @@ AC_CONFIG_FILES([
         samples/windows/oodialog/userGuide/exercises/Exercise06/OrderMgr/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise06/Product/Makefile
         samples/windows/oodialog/userGuide/exercises/Exercise06/Product/res/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise07/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise07/Customer/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise07/Customer/bmp/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise07/Order/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise07/Order/bmp/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise07/OrderMgr/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise07/Product/Makefile
+        samples/windows/oodialog/userGuide/exercises/Exercise07/Product/res/Makefile
         samples/windows/oodialog/userGuide/exercises/Samples/Makefile
         samples/windows/oodialog/userGuide/exercises/Samples/DlgData/Makefile
         samples/windows/oodialog/userGuide/exercises/Samples/DlgData/res/Makefile
+        samples/windows/oodialog/userGuide/exercises/Samples/Person/Makefile
         samples/windows/oodialog/userGuide/exercises/Samples/Popups/Makefile
+        samples/windows/oodialog/userGuide/exercises/Samples/Wow4/Makefile
         samples/windows/oodialog/userGuide/exercises/Support/Makefile
         samples/windows/oodialog/wav/Makefile
         samples/windows/oodialog/winsystem/Makefile

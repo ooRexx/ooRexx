@@ -206,7 +206,7 @@ void getToolIdentifiers(RexxMethodContext *c, LPTOOLINFO pTI, RexxObjectPtr *hwn
     if ( pTI->uFlags & TTF_IDISHWND )
     {
         pCPlainBaseDialog pcpbd   = (pCPlainBaseDialog)getWindowPtr(pTI->hwnd, GWLP_USERDATA);
-        oodControl_t      ctrType = control2controlType((HWND)pTI->uId);
+        oodControl_t      ctrType = controlHwnd2controlType((HWND)pTI->uId);
 
         rxHwnd = pcpbd->rexxSelf;
         rxID   = createControlFromHwnd(c, pcpbd, (HWND)pTI->uId, ctrType, true);
@@ -216,7 +216,7 @@ void getToolIdentifiers(RexxMethodContext *c, LPTOOLINFO pTI, RexxObjectPtr *hwn
         rxID = c->Uintptr(pTI->uId);
 
         // If ctrlType is winUnknown, the hwnd must be a dialog.
-        oodControl_t ctrlType = control2controlType(pTI->hwnd);
+        oodControl_t ctrlType = controlHwnd2controlType(pTI->hwnd);
         if ( ctrlType == winUnknown )
         {
             pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(pTI->hwnd, GWLP_USERDATA);
@@ -788,7 +788,7 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
     pRelayEventData    pred  = (pRelayEventData)pData->pData;
     RexxThreadContext *c     = pData->pcpbd->dlgProcContext;
 
-    if ( (msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || msg == WM_NCMOUSEMOVE && ! pred->skipRelay )
+    if ( ((msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) || msg == WM_NCMOUSEMOVE) && ! pred->skipRelay )
     {
         MSG _msg;
         _msg.hwnd = hwnd;
@@ -812,6 +812,12 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
                 c->ReleaseLocalReference(rxMMsg);
                 c->ReleaseLocalReference(args);
             }
+            else
+            {
+                SendMessage(pred->hToolTip, TTM_ACTIVATE, 0, 0);
+                endDialogPremature(pData->pcpbd, pData->pcpbd->hDlg, RexxConditionRaised);
+                return FALSE;
+            }
         }
 
         SendMessage(pred->hToolTip, TTM_RELAYEVENT, 0, (LPARAM)&_msg);
@@ -827,16 +833,16 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
             {
                 if ( pred->doEvent[RE_SHOW_IDX] )
                 {
-                    CSTRING         method = pred->methods[RE_SHOW_IDX];
-                    LPARAM          result = FALSE;
-                    RexxArrayObject args   = c->ArrayOfTwo(pred->rxToolTip, pData->pcdc->rexxSelf);
+                    RexxObjectPtr   rxToolID  = getToolIDFromLParam(c, lParam);
+                    CSTRING         method    = pred->methods[RE_SHOW_IDX];
+                    LPARAM          result    = FALSE;
+                    RexxArrayObject args      = c->ArrayOfThree(pred->rxToolTip, pData->pcdc->rexxSelf, rxToolID);
 
                     RexxObjectPtr reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
 
                     reply = checkForBoolean(c, pData->pcpbd, reply, method, false);
                     if ( reply == NULLOBJECT )
                     {
-                        c->ReleaseLocalReference(args);
                         SendMessage(pred->hToolTip, TTM_ACTIVATE, 0, 0);
 
                         endDialogPremature(pData->pcpbd, pData->pcpbd->hDlg, RexxConditionRaised);
@@ -847,6 +853,7 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
                         result = TRUE;
                     }
 
+                    c->ReleaseLocalReference(rxToolID);
                     c->ReleaseLocalReference(args);
 
                     return result;
@@ -864,21 +871,25 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
 
                     RexxDirectoryObject info = c->NewDirectory();
 
+                    RexxObjectPtr   rxToolID  = getToolIDFromLParam(c, lParam);
                     RexxObjectPtr    userData = nmtdi->lParam == NULL ? TheNilObj : (RexxObjectPtr)nmtdi->lParam;
                     RexxStringObject flags    = ttdiFlags2keyword(c, nmtdi->uFlags);
 
                     c->DirectoryPut(info, c->NullString(), "TEXT");
                     c->DirectoryPut(info, userData, "USERDATA");
                     c->DirectoryPut(info, flags, "FLAGS");
+                    c->DirectoryPut(info, rxToolID, "TOOLID");
 
                     RexxArrayObject args = c->ArrayOfThree(pred->rxToolTip, pData->pcdc->rexxSelf, info);
 
                     RexxObjectPtr reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
 
+                    // Local reference for reply is released in checkForBoolean
+                    // Returned reply is TheTrueObj or TheFalseObj - do not need
+                    // to release.
                     reply = checkForBoolean(c, pData->pcpbd, reply, method, false);
                     if ( reply == NULLOBJECT )
                     {
-                        c->ReleaseLocalReference(args);
                         SendMessage(pred->hToolTip, TTM_ACTIVATE, 0, 0);
 
                         endDialogPremature(pData->pcpbd, pData->pcpbd->hDlg, RexxConditionRaised);
@@ -891,7 +902,6 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
 
                     if ( len > MAX_TOOLINFO_TEXT_LENGTH )
                     {
-                        c->ReleaseLocalReference(args);
                         SendMessage(pred->hToolTip, TTM_ACTIVATE, 0, 0);
 
                         stringTooLongReplyException(c, method, MAX_TOOLINFO_TEXT_LENGTH + 1, len);
@@ -922,9 +932,9 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
                         nmtdi->uFlags |= TTF_DI_SETITEM;
                     }
 
-                    c->ReleaseLocalReference(reply);
                     c->ReleaseLocalReference(_text);
                     c->ReleaseLocalReference(flags);
+                    c->ReleaseLocalReference(rxToolID);
                     c->ReleaseLocalReference(info);
                     c->ReleaseLocalReference(args);
 
@@ -937,13 +947,15 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
             {
                 if ( pred->doEvent[RE_POP_IDX] )
                 {
-                    CSTRING         method = pred->methods[RE_POP_IDX];
-                    RexxArrayObject args   = c->ArrayOfTwo(pred->rxToolTip, pData->pcdc->rexxSelf);
+                    CSTRING         method   = pred->methods[RE_POP_IDX];
+                    RexxObjectPtr   rxToolID = getToolIDFromLParam(c, lParam);
+                    RexxArrayObject args     = c->ArrayOfThree(pred->rxToolTip, pData->pcdc->rexxSelf, rxToolID);
 
                     RexxObjectPtr reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
 
                     // ignore return.
 
+                    c->ReleaseLocalReference(rxToolID);
                     c->ReleaseLocalReference(args);
 
                     return 0;
@@ -955,20 +967,22 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
             {
                 if ( pred->doEvent[RE_LINKCLICK_IDX] )
                 {
-                    CSTRING         method = pred->methods[RE_LINKCLICK_IDX];
-                    RexxArrayObject args   = c->ArrayOfTwo(pred->rxToolTip, pData->pcdc->rexxSelf);
+                    CSTRING         method   = pred->methods[RE_LINKCLICK_IDX];
+                    RexxObjectPtr   rxToolID = getToolIDFromLParam(c, lParam);
+                    RexxArrayObject args     = c->ArrayOfThree(pred->rxToolTip, pData->pcdc->rexxSelf, rxToolID);
 
                     RexxObjectPtr reply = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
 
                     if ( ! checkReplyIsGood(c, pData->pcpbd, reply, method, false) )
                     {
-                        c->ReleaseLocalReference(args);
                         SendMessage(pred->hToolTip, TTM_ACTIVATE, 0, 0);
 
                         endDialogPremature(pData->pcpbd, pData->pcpbd->hDlg, RexxConditionRaised);
                         return 0;
                     }
 
+                    c->ReleaseLocalReference(reply);
+                    c->ReleaseLocalReference(rxToolID);
                     c->ReleaseLocalReference(args);
 
                     return 0;
@@ -2084,7 +2098,7 @@ RexxMethod1(logical_t, tt_hasCurrentTool, CSELF, pCSelf)
 }
 
 
-/** ToolTip::hitTest()
+/** ToolTip::hitTestInfo()
  *
  *  Tests a point to determine whether it is within the bounding rectangle of a
  *  tool within the window specified and, if it is, retrieves information about
@@ -2109,9 +2123,12 @@ RexxMethod1(logical_t, tt_hasCurrentTool, CSELF, pCSelf)
  *  @return True if the point being tested is within the window specified,
  *          otherwise false.
  *
- *  @notes
+ *  @remarks  Erroneously called hitTest in ooDialog 4.2.1.  Now both hitTest
+ *            and hitTestInfo are mapped to this method.  Need to preserve
+ *            hitTest for backwards compatibility, but only hitTestInfo is
+ *            documented from 4.2.2 onwards.
  */
-RexxMethod3(logical_t, tt_hitTest, RexxObjectPtr, toolInfo, ARGLIST, args, CSELF, pCSelf)
+RexxMethod3(logical_t, tt_hitTestInfo, RexxObjectPtr, toolInfo, ARGLIST, args, CSELF, pCSelf)
 {
     TTHITTESTINFO hi  = { 0 };
 
@@ -2235,6 +2252,7 @@ RexxMethod4(logical_t, tt_manageAtypicalTool, RexxObjectPtr, toolObject, OPTIONA
             OPTIONAL_RexxArrayObject, methods, CSELF, pCSelf)
 {
     pCDialogControl subClassCtrl = NULL;
+    pSubClassData   pSCData      = NULL;
 
     pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
     if ( pcdc == NULL )
@@ -2272,7 +2290,7 @@ RexxMethod4(logical_t, tt_manageAtypicalTool, RexxObjectPtr, toolObject, OPTIONA
         goto err_out;
     }
 
-    pSubClassData pSCData = (pSubClassData)LocalAlloc(LPTR, sizeof(SubClassData));
+    pSCData = (pSubClassData)LocalAlloc(LPTR, sizeof(SubClassData));
     if ( pSCData == NULL )
     {
         outOfMemoryException(context->threadContext);
@@ -3222,7 +3240,7 @@ RexxMethod7(RexxObjectPtr, ti_init, RexxObjectPtr, hwndObj, OPTIONAL_RexxObjectP
 
     if ( argumentExists(5) )
     {
-        PRECT r = rxGetRect(context, _rect, 6);
+        PRECT r = rxGetRect(context, _rect, 5);
         if ( r == NULL )
         {
             goto done_out;

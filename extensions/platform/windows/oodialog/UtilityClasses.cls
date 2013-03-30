@@ -56,12 +56,84 @@
 
 ::class 'ResourceUtils' public mixinclass object
 
-/* Directory object containing symbolic constants */
+-- Directory object containing symbolic constants
 ::attribute constDir get
 ::attribute constDir set private
-
 ::attribute processingLoad private    -- in loadItems ?
 
+::method checkfile private
+   use arg f
+   if (f~lines = 0) then do
+      f~close
+      self~processingLoad = 0
+      ret = errorDialog("Error reading resource file!" f)
+      return 1
+   end
+   return 0
+
+::method checkID external "LIBRARY oodialog rsrcUtils_checkID"
+::method errorfile private
+   use arg f, s
+   f~close
+   self~processingLoad = 0
+   ret = errorDialog("Error reading resource file:" f "("s")")
+
+-- This method is very specific looking only for an ICON resource statement.
+::method findIconInRcFile private
+    use strict arg resFile, iconID
+
+    if \ SysIsFile(resFile) then do
+        foundFile = SysSearchPath("PATH", resFile)
+        if foundFile == "" then do
+            msg = 'Unable to find resource script file "'resFile'"'
+            j = MessageDialog(msg, 0, "File Not Found Error", "OK", "WARNING", "SYSTEMMODAL")
+            return ""
+        end
+        resFile = foundFile
+    end
+
+    f = .stream~new(resFile)
+    ret = f~open(read)
+    if ret \= "READY:" then do
+        msg = 'Resource script file "'resFile'" is not readable:' ret
+        j = MessageDialog(msg, 0, "File Open Error", "OK", "WARNING", "SYSTEMMODAL")
+        return ""
+    end
+
+    found = .false; iconFile = ''
+    fl = f~lines
+    do while \ found
+        do while iconFile == '' & fl > 0
+            s = f~linein; fl -= 1
+            if s~wordpos("ICON") = 2 then do
+                -- ICON RESOURCE statement as opposed to an ICON CONTROL statement.
+                -- filename could have spaces and *should* be in quotes.
+                parse var s nameID ic fileName
+                if nameID~translate == iconID~translate then do
+                    found = .true
+                    iconfile = fileName~strip
+                end
+            end
+        end
+        if fl < 1 then leave
+    end
+
+    f~close
+
+    -- The file name in the resource script file will be in a C string format.
+    -- We need to change any escaped slashes.  In addition, the file name will
+    -- most likely be used in LoadImage() and must not be enclosed in quotes.
+    if iconFile~pos("\\") <> 0 then iconFile = iconFile~changestr("\\", '\')
+    iconFile = iconFile~strip('B', '"')
+
+    if iconFile == '' then do
+        msg = 'Resource script file "'resFile'" does not contain an ICON resource statement for ID:' iconID
+        j = MessageDialog(msg, 0, "Resource Script File Error", "OK", "WARNING", "SYSTEMMODAL")
+    end
+    return iconFile
+
+::method getResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
+::method idError private external "LIBRARY oodialog rsrcUtils_idError"
 ::method parseIncludeFile
   use strict arg hFile
 
@@ -104,6 +176,8 @@
   f~close
   return .true
 
+::method resolveIconID private external "LIBRARY oodialog rsrcUtils_resolveIconID_pvt"
+::method resolveSymbolicId unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
 ::method skipThroughIfDefs private
   use arg fObj, line
 
@@ -121,27 +195,6 @@
     if ifDefStack~items == 0 then leave
   end
 
-::method checkfile private
-   use arg f
-   if (f~lines = 0) then do
-      f~close
-      self~processingLoad = 0
-      ret = errorDialog("Error reading resource file!" f)
-      return 1
-   end
-   return 0
-
-::method errorfile private
-   use arg f, s
-   f~close
-   self~processingLoad = 0
-   ret = errorDialog("Error reading resource file:" f "("s")")
-
-::method idError private external "LIBRARY oodialog rsrcUtils_idError"
-::method resolveIconID private external "LIBRARY oodialog rsrcUtils_resolveIconID_pvt"
-::method resolveSymbolicId unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
-::method getResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
-::method checkID external "LIBRARY oodialog rsrcUtils_checkID"
 
 /**
  * Return the symbolic ID from the ConstDir that matches the numeric ID.
@@ -176,17 +229,21 @@
 ::class 'ApplicationManager' public inherit ResourceUtils
 
 ::method init external "LIBRARY oodialog app_init"
-::method useGlobalConstDir external "LIBRARY oodialog app_useGlobalConstDir"
+
 ::method addToConstDir external "LIBRARY oodialog app_addToConstDir"
 ::method autoDetection external "LIBRARY oodialog app_autoDetection"
-::method initAutoDetection external "LIBRARY oodialog app_initAutoDetection"  -- Internal use only.
 ::method defaultFont external "LIBRARY oodialog app_defaultFont"
+::method defaultIcon external "LIBRARY oodialog app_defaultIcon"
+::method initAutoDetection external "LIBRARY oodialog app_initAutoDetection"  -- Internal use only.
+::method useGlobalConstDir external "LIBRARY oodialog app_useGlobalConstDir"
+
 ::method setDefaults external "LIBRARY oodialog app_setDefaults"
 
 ::class 'DlgUtil' public
 ::method init class external "LIBRARY oodialog dlgutil_init_cls"
 ::method and class external "LIBRARY oodialog dlgutil_and_cls"
 ::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version_cls"
+::method errMsg class external "LIBRARY oodialog dlgutil_errMsg_cls"
 ::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
 ::method halt class external "LIBRARY oodialog dlgutil_halt_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
@@ -292,6 +349,7 @@
 ::attribute right set external "LIBRARY oodialog rect_setRight"
 ::attribute bottom get external "LIBRARY oodialog rect_bottom"
 ::attribute bottom set external "LIBRARY oodialog rect_setBottom"
+::method copy external "LIBRARY oodialog rect_copy"
 ::method string external "LIBRARY oodialog rect_string"
 
 ::class 'Point' public
@@ -368,6 +426,8 @@
 
 ::method test external "LIBRARY oodialog mouse_test"
 
+::class 'Keyboard' public
+::method getAsyncKeyState class external "LIBRARY oodialog kb_getAsyncKeyState_cls"
 
 ::class 'DayState' public
 ::method init external "LIBRARY oodialog ds_init"
@@ -817,7 +877,7 @@
    s = self~getTextSizeDu(message)
    sx = s~width
    sy = s~height
-   self~createCenter(sx+20, sy + 20, title,"NOMENU", , , , 1)
+   self~createCenter(sx+20, sy + 20, title, "", , , , 1)
    self~executeAsync( , 'SHOWTOP')
    if sleeping >= 0 then do
       if earlyReply then reply
@@ -831,74 +891,95 @@
 
 ::method initDialog
    expose pos
+
    if pos \== .nil then self~moveTo(pos)
+   .SystemMenu~new(self)~disable(.SystemMenu~SC_CLOSE)
 
 
 -- This class provides a simple dialog with a title, a message, one entry line,
 -- an OK and a Cancel push button.
 ::class 'InputBox' subclass UserDialog public
 
-::method sx attribute
-::method sy attribute
+::constant  IDC_EDIT   101
+::attribute sx
+::attribute sy
+::attribute editText unguarded
 
 ::method init
    expose message title datas. size
-   use arg message, title, default, size
-   if arg(3,"o") = 1 | default = "DEFAULT" then datas.101 = ""; else datas.101 = default
-   if arg(4,"o") = 1 | size = "SIZE" then size = 0
-   self~init:super(datas.)
+   use arg message, title, default = "", size = 0
+   self~init:super
+   self~editText = default
 
 ::method defineDialog
    expose message size dlgy
    if size = 0 then size = self~sx
-   self~createStaticText(-1, 10, 10, self~sx+2, self~sy, , message)
-   self~AddLine(10, self~sy+4+10, size)
+   self~createStaticText(-1, 10, 10, self~sx + 2, self~sy, , message)
+   self~addLine(10, self~sy + 4 + 10, size)
    self~createPushButtonGroup(self~sx-80, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method addLine
    use arg x, y, l
-   self~createEdit(101, x, y, l, , , "DATA")
-
+   self~createEdit(self~IDC_EDIT, x, y, l)
 
 ::method execute
-   expose message title datas. dlgy size
+   expose message title dlgy size
 
    s = self~getTextSizeDu(message)
-   self~sx = max(s~width,100,size)
+   self~sx = max(s~width, 100, size)
    self~sy = s~height
 
-   dlgy = (self~sy+4)*2+36
+   dlgy = (self~sy + 4) * 2 + 36
    dlgx = self~sx + 20
    if dlgx < 110 then dlgx = 110
 
    self~createCenter(dlgx, dlgy, title,,,,,4)
    self~execute:super("SHOWTOP")
-   if self~initCode = 1 then return datas.101
+   if self~initCode = 1 then return self~editText
    else return ""
 
+::method initDialog
+   self~newEdit(self~IDC_EDIT)~setText(self~editText)
 
--- This class is an InputBox dialog which entry line have the not visible flag.
+::method ok unguarded
+   self~editText = self~newEdit(self~IDC_EDIT)~getText
+   return self~ok:super
+
+::method initAutoDetection
+   self~noAutoDetection
+
+
+-- A subclass of an InputBox dialog that masks the user input. Suitable for
+-- asking the user for a password.
 ::class 'PasswordBox' subclass InputBox public
 
-::method AddLine
+::method addLine
    use arg x, y, l
-   self~createPasswordEdit(101, x, y, l, , , "DATA")
+   self~createPasswordEdit(self~IDC_EDIT, x, y, l)
 
 
--- This class is an InputBox dialog which entry line allows only numerical data.
+-- A subclass of an InputBox dialog that only accepts numerical data.
 ::class 'IntegerBox' subclass InputBox public
 
 ::method validate
-   self~GetDataStem(datas.)
-   if datas.101~DataType('W') = 0 then
-   do
-      call infoDialog "You did not enter numerical data"
-      return 0
+   text = self~newEdit(self~IDC_EDIT)~getText
+   if \ text~dataType('W') then do
+      msg = "You did not enter numerical data"
+      title = 'Data Input Error'
+      j = MessageDialog(msg, self~hwnd, title, 'OK', 'ERROR')
+      return .false
    end
-   else return 1
+   else return .true
 
 
 ::class 'MultiInputBox' subclass UserDialog public
+
+-- This class is too hard to implement without automatic data detection and
+-- still retain backwards compatibility.  So, we explicitly set it to on for
+-- this dialog.  That way it will work if the user has globaly set it to off or
+-- on.
+::method initAutoDetection
+   self~autoDetection
 
 ::method init
    expose message title datas. entries. len
@@ -941,6 +1022,7 @@
 
 ::class 'ListChoice' subclass UserDialog public
 
+::constant  IDC_LB   101
 ::attribute sx
 ::attribute sy
 ::attribute dlgx
@@ -949,14 +1031,14 @@
 ::attribute leny
 ::attribute message
 ::attribute useVScroll
+::attribute lbSelection unguarded
 
 ::method init
-   expose message title datas. input. lenx leny
-   use arg message, title, input., lenx, leny, predev
-   if arg(4,"o") = 1 then lenx = 0
-   if arg(5,"o") = 1 then leny = 0
-   if arg(6,"o") = 0 then datas.101 = predev; else datas.101 = ""
-   self~init:super(datas.)
+   expose message title input. lenx leny
+   use arg message, title, input., lenx = 0, leny = 0, predev = ''
+
+   self~init:super
+   self~lbSelection = predev
    s = self~getTextSizeDu(message)
    self~sx = s~width
    self~sy = s~height
@@ -965,21 +1047,21 @@
 
 ::method defineDialog
    expose message sx sy lenx leny dlgx dlgy
-   self~createStaticText(-1, 10, 10, sx+2, sy, , message)
+   self~createStaticText(-1, 10, 10, sx + 2, sy, , message)
    if self~useVScroll then style = "VSCROLL"
    else style = "PARTIAL"
-   self~createListBox(101, 10, sy+4+10, lenx, leny+4, style, "DATA")
-   self~createPushButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createListBox(self~IDC_LB, 10, sy + 4 + 10, lenx, leny+4, style)
+   self~createPushButtonGroup(dlgx - 100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method initDialog
    expose count input.
    do i = 1 to count
-      self~addListEntry(101, input.i)
+      self~addListEntry(self~IDC_LB, input.i)
    end
-   self~setListBoxData(101, "")
+   self~setListBoxData(self~IDC_LB, self~lbSelection)
 
 ::method execute
-   expose message title sx sy datas. input. count lenx leny dlgx dlgy useVScroll
+   expose message title sx sy input. count lenx leny dlgx dlgy useVScroll
 
    s = self~getTextSizeDu(message)
    sx = s~width
@@ -1022,7 +1104,7 @@
    self~createCenter(self~dlgx, self~dlgy, title,,,,, 4)
    self~execute:super("SHOWTOP")
 
-   if self~initCode = 1 then return datas.101
+   if self~initCode = 1 then return self~lbSelection
    else return ""
 
 ::method recalcListBoxWidth private
@@ -1039,6 +1121,14 @@
    if size~width > 15 then return size~width + 2
    else return size~width
 
+::method ok unguarded
+   self~lbSelection = self~newListBox(self~IDC_LB)~selected
+   return self~ok:super
+
+::method initAutoDetection
+   self~noAutoDetection
+
+
 
 ::class 'MultiListChoice' subclass ListChoice public
 
@@ -1049,18 +1139,29 @@
    self~createListBox(101, 10, self~sy+4+10, self~lenx, self~leny+4, style, "DATA")
    self~createPushButtonGroup(self~dlgx-100, self~dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
+::method ok unguarded
+   self~lbSelection = self~newListBox(self~IDC_LB)~selectedIndexes
+   return self~ok:.UserDialog
+
+
 
 ::class 'CheckList' subclass UserDialog public
 
   /* Entries is a stem variable with all the titles for the check boxes */
   /* Datas is a stem variable you can use to preselect the check boxes */
   /* 'Datas.i=1' means there will be a check mark on the i-th box */
-::method Init
+::method init
    expose message title datas. entries. len max
    use arg message, title, entries., datas., len, max
    if arg(5,"o") = 1 then len = 0
    if arg(6,"o") = 1 then max = 0
    self~init:super(datas.)
+
+-- Punt on this class and use automatic data detection to retain backwards
+-- compatibility.  We explicitly set it to on for this dialog.  That way it will
+-- work if the user has globaly set it to off or on.
+::method initAutoDetection
+   self~autoDetection
 
 ::method defineDialog
    expose message sx sy len dlgx dlgy entries. placex max
@@ -1106,88 +1207,85 @@
 ::constant  MIN_DLGCX   110  -- minimum size to accomdate ok / cancel buttons
 ::constant  MIN_RB_ID   101  -- first radio button resource ID
 
-::method init
-   expose message title entries. preSel len max enhanced
-   use strict arg  message, title, entries., preSel = 1, len = 0, max = 0
+::attribute selected unguarded
 
-   self~init:super(datas.)
+::method init
+    expose message title entries. preSel len max
+    use strict arg  message, title, entries., preSel = 1, len = 0, max = 0
+    self~init:super
+    self~selected = self~MIN_RB_ID - 1 + preSel
 
 ::method defineDialog
-   expose entries. dlgCX dlgCY msgCX msgCY message groupBoxX staticX len max
+    expose entries. dlgCX dlgCY msgCX msgCY message groupBoxX staticX len max
 
-   buttonTxt = "&Ok 1 OK &Cancel 2 CANCEL"
+    buttonTxt = "&Ok 1 OK &Cancel 2 CANCEL"
 
-   self~createStaticText(-1, staticX, 10, msgCX + 2, msgCY, , message)
-   self~createRadioButtonStem(self~MIN_RB_ID, groupBoxX, msgCY + 4 + 10, len, entries., max)
-   self~createPushButtonGroup(dlgCX - 100, dlgCY - 18, 0, 0, buttonTxt, 1, "DEFAULT")
+    self~createStaticText(-1, staticX, 10, msgCX + 2, msgCY, , message)
+    self~createRadioButtonStem(self~MIN_RB_ID, groupBoxX, msgCY + 4 + 10, len, entries., max)
+    self~createPushButtonGroup(dlgCX - 100, dlgCY - 18, 0, 0, buttonTxt, 1, "DEFAULT")
+
+::method initDialog
+    self~newRadioButton(self~selected)~check
 
 ::method execute
-   expose enhanced dlgCX dlgCY title count
-   datas. = self~dlgData
+    expose dlgCX dlgCY title count
 
-   self~calcSizes
+    self~calcSizes
+    self~createCenter(dlgCX, dlgCY, title, , , , , count + 5)
 
-   self~createCenter(dlgCX, dlgCY, title, , , , , count + 5)
+    self~execute:super("SHOWTOP")
+    if self~initCode = 1 then return (self~selected - self~MIN_RB_ID + 1)
+    else return ""
 
-   self~execute:super("SHOWTOP")
-   if self~initCode = 1 then do
-      offSet = self~MIN_RB_ID - 1
-      do i = self~MIN_RB_ID to offset + count
-         if datas.i = 1 then return i - offset
-      end
-      return 0
-   end
-   else do
-      return ""
-   end
+::method ok unguarded
+    expose count
+
+    do i = self~MIN_RB_ID to (self~MIN_RB_ID + count - 1)
+        if self~newRadioButton(i)~checked then do
+            self~selected = i
+            leave
+       end
+    end
+    return self~ok:super
 
 ::method calcSizes private
-   expose entries. max preSel message len msgCX msgCy count dlgCX dlgCY groupBoxX staticX
+    expose entries. max preSel message len msgCX msgCy count dlgCX dlgCY groupBoxX staticX
 
-   datas.   = self~dlgData
+    s = self~getTextSizeDu(message)
+    msgCX = s~width
+    msgCY = s~height
+    ll = 0; count = 0
+    do while var("entries."count + 1) = 1
+        count += 1
+        if len == 0 then do
+            s = self~getTextSizeDu(entries.count)
+            if s~width > ll then ll = s~width
+        end
+    end
+    if len <> 0 then ll = len
+    else ll += 20
 
-   s = self~getTextSizeDu(message)
-   msgCX = s~width
-   msgCY = s~height
-   ll = 0; count = 0
-   do while var("entries."count + 1) = 1
-      count += 1
-      if len == 0 then do
-          s = self~getTextSizeDu(entries.count)
-          if s~width > ll then ll = s~width
-      end
-   end
-   if len <> 0 then ll = len
-   else ll += 20
+    if max = 0 then max = count
+    dlgCY = max * trunc(msgCY * 1.5) + msgCY + 60
+    dlgCX = self~getMinDlgCX
+    groupBoxX = 10
+    staticX = 10
+    columns = (count % max)
+    if  (count // max) > 0 then columns = columns + 1
 
-   if max = 0 then max = count
-   dlgCY = max * trunc(msgCY * 1.5) + msgCY + 60
-   dlgCX = self~getMinDlgCX
-   groupBoxX = 10
-   staticX = 10
-   columns = (count % max)
-   if  (count // max) > 0 then columns = columns + 1
+    groupBoxCX = ll * columns
+    if msgCX >= groupBoxCX then do
+        if (msgCX + 24) > dlgCX then dlgCX = (msgCX + 24)
+    end
+    else do
+        if groupBoxCX + 24 > dlgCX then dlgCX = groupBoxCX + 24
+    end
 
-   groupBoxCX = ll * columns
-   if msgCX >= groupBoxCX then do
-      if (msgCX + 24) > dlgCX then dlgCX = (msgCX + 24)
-   end
-   else do
-      if groupBoxCX + 24 > dlgCX then dlgCX = groupBoxCX + 24
-   end
-
-   if groupBoxCX + 4 < dlgCX then do
-      groupBoxX = trunc((dlgCX - groupBoxCX) / 2)
-      if groupBoxCX >= msgCX then staticX = groupBoxX
-      else staticX = trunc((dlgCX - msgCX) / 2)
-   end
-
-   offset = self~MIN_RB_ID - 1
-   do i = self~MIN_RB_ID to offset + count
-      datas.i = 0
-   end
-   pr = (offset + preSel)
-   datas.pr = 1
+    if groupBoxCX + 4 < dlgCX then do
+        groupBoxX = trunc((dlgCX - groupBoxCX) / 2)
+        if groupBoxCX >= msgCX then staticX = groupBoxX
+        else staticX = trunc((dlgCX - msgCX) / 2)
+    end
 
 ::method getMinDlgCX private
     expose title
@@ -1201,146 +1299,267 @@
     if self~MIN_DLGCX < s~width then return s~width
     else return self~MIN_DLGCX
 
+::method initAutoDetection
+    self~noAutoDetection
 
 
--- Never documented and does not work well.  Could be usefull if fixed.
-::class 'StateIndicator' subclass UserDialog public
+::class 'ProgressDialog' public subclass UserDialog
 
-::method Xext attribute
-::method TitleTxt attribute
-::method Msg attribute
-::method Dims attribute
+::constant IDC_PB_MAIN    100
+::constant IDC_ST_MSG     101
+::constant IDC_ST_STATUS  102
+
+::constant BUTTON_CX      35
+::constant BUTTON_CY      14
+::constant DLG_WIDTH      91  -- 2 x button width + margins + interbutton spacing
+::constant CAPTION_TEXT   "Application Processing ..."
+::constant INCR_STEP      1
+::constant MARQUEE_PAUSE  100
+::constant MSG_TEXT       "Background processing is taking place.  Please be patient."
+::constant STATUS_TEXT    "Status: "
+::constant PADDING_DU     7
+::constant RANGE_MAX      100
+::constant RANGE_MIN      0
+
+::attribute absoluteWidth
+::attribute canCancel
+::attribute captionText
+::attribute incrStep
+::attribute initialStatusText
+::attribute marqueeMode
+::attribute marqueePause
+::attribute msgHeight    -- Number of lines, default 1
+::attribute msgText
+::attribute noMsg
+::attribute noStatus
+::attribute rangeMax
+::attribute rangeMin
+::attribute width
+::attribute worker unguarded private
 
 ::method init
-   use arg message, title, fixedx
-   if arg(3,'o') = 1 then self~XExt = 0; else self~XExt = fixedx
-   self~Msg = message
-   self~TitleTxt = title
-   self~dims = .directory~new
-   self~init:super("")
-   if self~initCode = 0 then self~Popup
+    use strict arg capt = (self~CAPTION_TEXT), msg = (self~MSG_TEXT), min = (self~RANGE_MIN), max = (self~RANGE_MAX), incr = (self~INCR_STEP)
+    self~init:super
+
+    self~captionText = capt
+    self~msgText     = msg
+    self~rangeMax    = max
+    self~rangeMin    = min
+    self~incrStep    = incr
+    self~setDefaults
+
+::method begin
+    expose width height
+    use strict arg
+
+    self~calcSizes
+    if self~createCenter(width, height, self~captionText) then do
+        self~popup('ShowTop')
+        ret = 0
+    end
+    else do
+        self~initCode = 1
+        msg   = "Failed to create underyling dialog."
+        title = 'ooDialog - Unexpected Error'
+        r = MessageDialog(msg, , title, 'OK', 'ERROR')
+        ret = 1
+    end
+    return ret
+
+::method complete unguarded
+    expose pb
+    use strict arg
+    if self~initCode <> 0 then return
+    if \ pb~isA(.ProgressBar) then return
+    if self~marqueeMode then pb~setMarquee(.false)
+    else pb~setPos(self~rangeMax)
+
+::method doStatus unguarded private
+    expose statusBar
+    use strict arg text
+    if self~noStatus then return
+    if self~initCode <> 0 then return
+    guard on when statusBar~isA(.Static)
+    statusBar~setText(text)
+
+::method endNow unguarded
+    return self~ok:super
+
+::method increase unguarded
+    expose pb
+    use strict arg incr = (self~incrStep)
+    if self~marqueeMode then return
+    if self~initCode <> 0 then return
+    guard on when pb~isA(.ProgressBar)
+    pb~step(incr)
+
+::method setInterruptible unguarded external "LIBRARY oodialog pd_setInterruptible"
+::method updateStatus unguarded
+    use strict arg text
+    self~doStatus("Status:" text)
+
+::method updateStatusText unguarded
+    use strict arg text
+    self~doStatus(text)
+
+::method calcSizes private
+    expose width height lineHeight
+    use strict arg
+
+    pad = self~PADDING_DU
+    if self~noMsg, self~noStatus then do
+        tempText = self~MSG_TEXT
+    end
+    else if \ self~noMsg, self~msgHeight < 2 then do
+        tempText = self~msgText
+    end
+    else do
+        tempText = self~MSG_TEXT
+    end
+    size = self~getTextSizeDU(tempText)
+    lineHeight = size~height
+
+    height = pad
+    if \ self~noMsg then do
+        height += lineHeight * self~msgHeight
+    end
+    if \ self~noStatus then do
+        height += pad + lineHeight
+    end
+
+    if height > pad then height += pad
+    height += lineHeight + pad
+
+    if self~canCancel then do
+        height += pad + self~BUTTON_CY
+    end
+
+    if self~absoluteWidth then do
+        width = self~width
+    end
+    else do
+      cx = size~width + (2 * pad)
+      if cx >= self~DLG_WIDTH then width = cx
+      else width = self~DLG_WIDTH
+    end
+
+::method setDefaults private
+
+    self~msgHeight         = 1
+    self~noMsg             = .false
+    self~noStatus          = .false
+    self~initialStatusText = self~STATUS_TEXT
+    self~absoluteWidth     = .false
+    self~width             = self~DLG_WIDTH
+    self~marqueePause      = self~MARQUEE_PAUSE
+    self~marqueeMode       = .false
+    self~worker            = .nil
+    self~canCancel         = .false
 
 ::method defineDialog
-   self~createStaticText(100, 10, 10, self~dims["sx"]+2, self~dims["sy"], , self~msg)
-
-::method initAutoDetection
-   self~noAutoDetection
-
-::method calcSize
-   size = self~getTextSizeDu(self~msg)
-   scrSize = screenSize()
-   self~dims["sx"] = size~width
-   self~dims["sy"] = size~height
-   if self~XExt = 0 then do
-       self~dims["cx"] = self~dims["sx"]+20
-       self~dims["cy"]= self~dims["sy"]*2.2+20
-   end
-   else do
-       self~dims["cx"] = self~XExt
-       lines = 1
-       if self~dims["sx"] + 20 > self~dims["cx"] then do
-           lines = Trunc(self~dims["sx"] / (self~dims["cx"] -20) + 0.98)
-           self~dims["sx"] = self~dims["cx"] - 20
-           self~dims["sy"] = Trunc(self~dims["sy"]*lines*1.1)
-       end
-       if lines >1 then self~dims["cy"] = self~dims["sy"]+20
-       else self~dims["cy"] = self~dims["sy"]*2.2+20
-   end
-   self~dims["x"] = trunc((scrSize[1]-self~dims["cx"]) /2)
-   self~dims["y"] = trunc((scrSize[2] - self~dims["cy"] - 20) /2)
-
-::method popUp
-   self~calcSize
-   self~create(self~dims["x"],self~dims["y"], self~dims["cx"], self~dims["cy"], self~TitleTxt,"NOMENU",,,1 )
-   self~startIt
-   self~show("SHOWTOP")
-
-::method destroy
-   self~finished = .true
-   self~stopIt
-
-::method "Message="
-   parse arg message
-   self~msg = message
-   self~calcSize
-   self~ResizeItem(100, self~dims["sx"]+2, self~dims["sy"])
-   if self~XExt = 0 then do
-       self~Resize(self~dims["cx"], self~dims["cy"], "HIDE")
-   end
-   else do
-       parse value self~GetWindowRect(self~dlgHandle) with l t r b
-       if self~dims["cy"] > (b-t) / self~factorY then self~Resize(self~dims["cx"], self~dims["cy"], "NORMAL")
-   end
-   self~setStaticData(100, message)
-   if self~XExt = 0 then self~Move(self~dims["x"], self~dims["y"], "NORMAL")
-
-
--- Never documented and does not work well.  Could be usefull if fixed.
-::class 'ProgressIndicator' subclass StateIndicator public
-
-::method lowValue attribute
-::method highValue attribute
-::method incStep attribute
-
-::method init
-   use arg message, title, low, high, step, fixedx
-   if arg(6,'o') = 1 then fixedx = 0
-   if arg(3,'o') = 1 then self~lowValue = 0; else self~lowValue = low
-   if arg(4,'o') = 1 then self~highValue = 100; else self~highValue = high
-   if arg(5,'o') = 1 then self~incStep = 10; else self~incStep = step
-   self~init:super(message, title, fixedx)
+    expose width height lineHeight
+    pad = self~PADDING_DU
+    style = 'SMOOTH'
+    if self~marqueeMode then style ||= ' MARQUEE'
+    cx   = width - 2 * pad
+    curY = pad
+    if \ self~noMsg then do
+      cy = lineheight * self~msgHeight
+      self~createStaticText(self~IDC_ST_MSG, pad, curY, cx, cy, , self~msgText)
+      curY += cy + pad
+    end
+    if \ self~noStatus then do
+        self~createStaticText(self~IDC_ST_STATUS, pad, curY, cx, lineHeight, , "" )
+        curY += lineHeight + pad
+    end
+    self~createProgressBar(self~IDC_PB_MAIN, pad, curY, cx, lineHeight, style)
+    curY += lineHeight + pad
+    if self~canCancel then do
+        self~createPushButton(IDCANCEL, width - pad - self~BUTTON_CX, curY, self~BUTTON_CX, self~BUTTON_CY, , 'Cancel')
+    end
 
 ::method initDialog
-   pb = self~newProgressBar(101)
-   if pb \= .nil then do
-       pb~setRange(self~lowValue, self~highValue)
-       pb~setPos(self~lowValue)
-       pb~setStep(self~incStep)
-   end
+    expose pb statusBar
 
-::method defineDialog
-   self~createProgressBar(101, 5, 5, self~sizex-10, 14)
-   self~createStaticText(100, 10, 25, self~dims["sx"]+2,self~dims["sy"], , self~msg)
+    pb = self~newProgressBar(self~IDC_PB_MAIN)
+    if self~marqueeMode then do
+        pb~setMarquee(.true, self~marqueePause)
+    end
+    else do
+        pb~setRange(self~rangeMin, self~rangeMax)
+        pb~setStep(self~incrStep)
+        pb~step
+    end
+    if \ self~noMsg then do
+        self~newStatic(self~IDC_ST_MSG)~setText(self~msgText)
+    end
+    if \ self~noStatus then do
+        statusBar = self~newStatic(self~IDC_ST_STATUS)
+        statusBar~setText(self~initialStatusText)
+    end
+
+-- Don't let the user close the dialog, unless the work can be stopped, or it
+-- is allowed.
+::method ok unguarded
+::method cancel unguarded
+    expose worker
+
+    if worker <> .nil then do
+        if worker~interruptible then do
+            worker~interrupt
+            return
+        end
+        self~giveStatus(.true)
+        return
+    end
+    else if self~canCancel then do
+        return self~cancel:super
+    end
+    self~giveStatus(.false)
+
+::method giveStatus unguarded private
+    expose pb worker
+    use strict arg tryLater
+    reply 0
+
+    if self~marqueeMode then do
+        msg = "Processing is not done yet, and can" || .endOfLine || -
+              "not be canceled at this time."       || .endOfLine
+    end
+    else do
+        r = pb~getFullRange
+        percentDone = trunc((pb~getPos / (r~max - r~min)) * 100)
+        msg = "Processing is only" percentDone"% done, and" || .endOfLine -
+              "can not be canceled at this time."           || .endOfLine
+    end
+    if tryLater then do
+        msg ||= "(Try canceling later.)" || .endOfLine
+    end
+    msg ||= .endOfLine || "Please be patient."
+
+    ret = MessageDialog(msg, , self~captionText, 'OK', 'INFORMATION')
+
+::method initAutoDetection
+    self~noAutoDetection
 
 
-::method calcSize
-   self~calcSize:super
-   self~dims["cy"] = self~dims["cy"]+10  /* 15 more for the progress bar */
-   scrSize = screenSize()
-   self~dims["x"] = trunc((scrSize[1]-self~dims["cx"]) /2)
-   self~dims["y"] = trunc((scrSize[2] - self~dims["cy"] - 20) /2)
+::class 'Interruptible' public mixinclass Object
+::method interrupt     unguarded abstract
+::method interruptible unguarded abstract
 
-::method "progress="
-   use arg newpos
-   self~newProgressBar(101)~setPos(newpos)
-
-::method increase
-   if arg(1,'e') = 1 then self~newProgressBar(101)~step(arg(1))
-   else self~newProgressBar(101)~step
-
-::method complete
-   self~newProgressBar(101)~setPos(self~highValue)
-
-::method "message="
-   forward class (super) continue
-   self~resizeItem(101,  self~sizex-10, 14)
+::class 'Alerter' public inherit Interruptible
+::attribute isCanceled get
+::method init
+    expose isCanceled
+    isCanceled = .false
+::method interruptible unguarded
+    return .true
+::method interrupt unguarded
+    expose isCanceled
+    isCanceled = .true
 
 
 /* - - - - - - - - - - - - - Public routines - - - - - - - - - - - - - - - - -*/
-
-::routine fileNameDialog public external "LIBRARY oodialog fileNameDlg_rtn"
-::routine msSleep public external "LIBRARY oodialog msSleep_rtn"
-::routine findWindow public external "LIBRARY oodialog findWindow_rtn"
-::routine play public external "LIBRARY oodialog playSound_rtn"
-
-::routine messageDialog public external "LIBRARY oodialog messageDialog_rtn"
-::routine infoDialog public
-   use strict arg info
-   return messageDialog(info, , "Information", "OK", "INFORMATION", "SETFOREGROUND TASKMODAL")
-
-::routine errorDialog public
-   use strict arg info
-   return messageDialog(info, , "Error", "OK", "HAND", "SETFOREGROUND TASKMODAL")
 
 ::routine askDialog public
    use strict arg info, defaultButton = 'Y'
@@ -1348,34 +1567,63 @@
    if defaultButton~left(1)~translate == 'N' then miscStyles ||= ' DEFBUTTON2'
    return (messageDialog(info, , "Question", "YESNO", "QUESTION", miscStyles) == 6)
 
+::routine errorDialog public
+   use strict arg info
+   return messageDialog(info, , "Error", "OK", "HAND", "SETFOREGROUND TASKMODAL")
+
+::routine fileNameDialog public external "LIBRARY oodialog fileNameDlg_rtn"
+::routine findWindow public external "LIBRARY oodialog findWindow_rtn"
+::routine infoDialog public
+   use strict arg info
+   return messageDialog(info, , "Information", "OK", "INFORMATION", "SETFOREGROUND TASKMODAL")
+
+::routine messageDialog public external "LIBRARY oodialog messageDialog_rtn"
+::routine msSleep public external "LIBRARY oodialog msSleep_rtn"
+::routine play public external "LIBRARY oodialog play_rtn"
 ::routine screenSize public
    return .DlgUtil~screenSize
 
-::routine systemMetrics public
-   use strict arg index
-   return .DlgUtil~getSystemMetrics(index)
-
-::routine routineTest public external "LIBRARY oodialog routineTest_rtn"
+::routine simpleFolderBrowse public external "LIBRARY oodialog simpleFolderBrowse_rtn"
+::routine winTimer public external "LIBRARY oodialog winTimer_rtn"
+::routine routineTest public external "LIBRARY oodialog routineTest_rtn"  -- internal use only
 
 
 /** The following routines are, mostly, duplicates of the public routines above.
  *  They are needed to maintain backward compatibilty with  pre-4.0.0, because
- *  both names were documented.
+ *  both names were documented.  They are all deprecated.
  */
-::routine sleepMS public external "LIBRARY oodialog msSleep_rtn"
-::routine winTimer public external "LIBRARY oodialog winTimer_rtn"
+/* ----- Start deprecated routines. ------------------------------------------*/
+::routine binaryAnd public
+  use strict arg n1, n2
+  return .DlgUtil~and(n1, n2)
+
+::routine errorMessage public
+   use strict arg info
+   return messageDialog(info, , "Error", "OK", "HAND", "SETFOREGROUND TASKMODAL")
+
 ::routine getFileNameWindow public external "LIBRARY oodialog fileNameDlg_rtn"
-::routine playSoundFile public external "LIBRARY oodialog playSound_rtn"
-::routine playSoundFileInLoop public external "LIBRARY oodialog playSound_rtn"
-::routine stopSoundFile public external "LIBRARY oodialog playSound_rtn"
+::routine getScreenSize public
+  vals = .DlgUtil~screenSize
+  return vals[1] vals[2] vals[3] vals[4]
+
+::routine getSysMetrics public
+  use strict arg index
+  return .DlgUtil~getSystemMetrics(index)
 
 ::routine infoMessage public
    use strict arg info
    return messageDialog(info, , "Information", "OK", "INFORMATION", "SETFOREGROUND TASKMODAL")
 
-::routine errorMessage public
-   use strict arg info
-   return messageDialog(info, , "Error", "OK", "HAND", "SETFOREGROUND TASKMODAL")
+::routine instMMFuncs public
+  return 1
+
+::routine playSoundFile public external "LIBRARY oodialog play_rtn"
+::routine playSoundFileInLoop public external "LIBRARY oodialog play_rtn"
+::routine sleepMS public external "LIBRARY oodialog msSleep_rtn"
+::routine stopSoundFile public external "LIBRARY oodialog play_rtn"
+::routine systemMetrics public
+   use strict arg index
+   return .DlgUtil~getSystemMetrics(index)
 
 ::routine yesNoMessage public
    use strict arg info, defaultButton = 'Y'
@@ -1383,112 +1631,12 @@
    if defaultButton~left(1)~translate == 'N' then miscStyles ||= ' DEFBUTTON2'
    return messageDialog(info, , "Question", "YESNO", "QUESTION", miscStyles) == 6
 
-::routine getSysMetrics public
-  use strict arg index
-  return .DlgUtil~getSystemMetrics(index)
-
-::routine getScreenSize public
-  vals = .DlgUtil~screenSize
-  return vals[1] vals[2] vals[3] vals[4]
-
-::routine instMMFuncs public
-  return 1
-
-::routine binaryAnd public
-  use strict arg n1, n2
-  return .DlgUtil~and(n1, n2)
-
-/* ----- End compatibility routines. -----------------------------------------*/
+/* ----- End deprecated routines. --------------------------------------------*/
 
 /*-------------------------- shortcut routines -------------------------------*/
 
-::routine TimedMessage public
-   use arg msg, title, duration, earlyReply = .false, pos = .nil
-   if \ duration~datatype('W') then return -1
-   if \ earlyReply~datatype('O') then earlyReply = .false
-   dlg = .TimedMessage~new(msg,title,duration, earlyReply, pos)
-   dlg~execute
-   if duration < 0 then return dlg
-   if \ earlyReply then drop dlg
-   return 0
-
-::routine InputBox public
-   use arg msg, title, default, size
-   dlg = .InputBox~new(msg,title,default,size)
-   ret = dlg~execute
-   drop dlg
-   return ret
-
-::routine IntegerBox public
-   use arg msg, title, default, size
-   dlg = .IntegerBox~new(msg,title,default,size)
-   ret = dlg~execute
-   drop dlg
-   return ret
-
-::routine PasswordBox public
-   use arg msg, title, default, size
-   dlg = .Passwordbox~new(msg,title,default,size)
-   ret = dlg~execute
-   drop dlg
-   return ret
-
-::routine MultiInputBox public
-   use arg msg, title, labels, datas, len
-   if arg(5,"o") = 1 then len = 0
-   num = labels~items
-   do i=1 to num
-      j = i+100
-      lab.i = labels[i]
-      dat.j = datas[i]
-   end
-   dlg = .MultiInputBox~new(msg, title, lab., dat., len)
-   if dlg~execute \= 1 then do; drop dlg; return .NIL; end
-   ret = .array~new(num)
-   do i=1 to num
-      attr = labels[i]~changestr(' ','')~changestr('&','')
-      Interpret 'ret[i] = dlg~'attr
-   end
-   drop dlg
-   return ret
-
-::routine ListChoice public
-   use arg msg, title, list, lx, ly, predev
-   if arg(4,"o") = 1 then lx = 0
-   if arg(5,"o") = 1 then ly = 0
-   if arg(6,"o") = 1 then predev = ""
-   num = list~items
-   do i=1 to num
-      lst.i = list[i]
-   end
-   dlg = .ListChoice~new(msg, title, lst., lx, ly, predev)
-   res = dlg~execute
-   drop dlg
-   if res = '' then return .nil
-   else return res
-
-::routine MultiListChoice public
-   use arg msg, title, list, lx, ly, predev
-   if arg(4,"o") = 1 then lx = 0
-   if arg(5,"o") = 1 then ly = 0
-   if arg(6,"o") = 1 then predev = ""
-   num = list~items
-   do i=1 to num
-      lst.i = list[i]
-   end
-   dlg = .MultiListChoice~new(msg, title, lst., lx, ly, predev)
-   res = dlg~execute
-   if res = '' then do; drop dlg; return .NIL; end
-   ret = .array~new
-   do i=1 to words(res)
-      ret[i] = list[word(res,i)]
-   end
-   drop dlg
-   return ret
-
 ::routine CheckList public
-   use arg msg, title, labels, checks, lx = 0, max = 0
-   if arg(4,"o") then checks = .array~new
+   use arg msg, title, labels, checks = (.array~new), lx = 0, max = 0
    num = labels~items
    do i=1 to num
       j = i+100
@@ -1508,6 +1656,73 @@
    drop dlg
    return ret
 
+::routine InputBox public
+   use arg msg, title, default = '', size = 0
+   dlg = .InputBox~new(msg,title,default,size)
+   ret = dlg~execute
+   drop dlg
+   return ret
+
+::routine IntegerBox public
+   use arg msg, title, default = '', size = 0
+   dlg = .IntegerBox~new(msg,title,default,size)
+   ret = dlg~execute
+   drop dlg
+   return ret
+
+::routine ListChoice public
+   use arg msg, title, list, lx = 0, ly = 0, predev = ""
+   num = list~items
+   do i=1 to num
+      lst.i = list[i]
+   end
+   dlg = .ListChoice~new(msg, title, lst., lx, ly, predev)
+   res = dlg~execute
+   drop dlg
+   if res = '' then return .nil
+   else return res
+
+::routine MultiInputBox public
+   use arg msg, title, labels, datas, len = 0
+   num = labels~items
+   do i=1 to num
+      j = i+100
+      lab.i = labels[i]
+      dat.j = datas[i]
+   end
+   dlg = .MultiInputBox~new(msg, title, lab., dat., len)
+   if dlg~execute \= 1 then do; drop dlg; return .NIL; end
+   ret = .array~new(num)
+   do i=1 to num
+      attr = labels[i]~changestr(' ','')~changestr('&','')
+      Interpret 'ret[i] = dlg~'attr
+   end
+   drop dlg
+   return ret
+
+::routine MultiListChoice public
+   use arg msg, title, list, lx = 0, ly = 0, predev = ""
+   num = list~items
+   do i=1 to num
+      lst.i = list[i]
+   end
+   dlg = .MultiListChoice~new(msg, title, lst., lx, ly, predev)
+   res = dlg~execute
+   if res = '' then do; drop dlg; return .NIL; end
+   ret = .array~new
+   do i=1 to words(res)
+      ret[i] = list[word(res,i)]
+   end
+   drop dlg
+   return ret
+
+::routine PasswordBox public
+   use arg msg, title, default = "", size = 0
+   dlg = .Passwordbox~new(msg,title,default,size)
+   ret = dlg~execute
+   drop dlg
+   return ret
+
 ::routine SingleSelection public
    use strict arg msg, title, labels, preSel = 1, rbWidth = 0, max = 0
 
@@ -1518,6 +1733,16 @@
    res = dlg~execute
    drop dlg
    return res
+
+::routine TimedMessage public
+   use arg msg, title, duration, earlyReply = .false, pos = .nil
+   if \ duration~datatype('W') then return -1
+   if \ earlyReply~datatype('O') then earlyReply = .false
+   dlg = .TimedMessage~new(msg,title,duration, earlyReply, pos)
+   dlg~execute
+   if duration < 0 then return dlg
+   if \ earlyReply then drop dlg
+   return 0
 
 
 /**
@@ -1855,7 +2080,7 @@ do forever
       ObjId = dlgObject~resolveSymbolicID(ObjId)
 
       if ObjId > 0 then
-         interpret 'dlgObjList~Insert(ObjId"@"'ObjX'"@"'ObjY'"@"'ObjW'"@"'ObjH')'
+         interpret 'dlgObjList~Insert(ObjId"@"' ObjX '"@"' ObjY '"@"' ObjW '"@"' ObjH ')'
    end
    else do
       -- skip past this create
@@ -1894,7 +2119,7 @@ do forever
       ObjId = dlgObject~resolveSymbolicID(ObjId)
 
       if ObjId > 0 then
-         interpret 'dlgObjList~Insert(ObjId"@"'ObjX'"@"'ObjY'"@"'ObjW'"@"'ObjH')'
+         interpret 'dlgObjList~Insert(ObjId"@"' ObjX '"@"' ObjY '"@"' ObjW '"@"' ObjH ')'
    end
    else do
      -- skip past this add

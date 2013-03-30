@@ -38,6 +38,15 @@
 #ifndef oodMouse_Included
 #define oodMouse_Included
 
+#define TRACK_MOUSE_KEYWORDS    "CANCEL, HOVER, LEAVE, NONCLIENT, or QUERY"
+#define WM_MOUSE_KEYWORDS       "MouseMove, MouseWheel, MouseLeave, MouseHover, NcMouseLeave, NcMouseHover, lButtonUp, lButtonDown, or CaptureChanged"
+#define MOUSE_BUTTON_KEYWORDS   "LEFT, RIGHT, MIDDLE, XBUTTON1, or XBUTTON2"
+#define SYSTEM_CURSOR_KEYWORDS  "APPSTARTING, ARROW, CROSS, HAND, HELP, IBEAM, NO, SIZEALL, SIZENESW, SIZENS, " \
+                                "SIZENWSE, SIZEWE, UPARROW, or WAIT"
+
+#define DLG_HAS_ENDED_MSG       "windows dialog has executed and been closed"
+
+
 // Struct for instantiating a new Rexx Mouse object.
 typedef struct newMouseParams
 {

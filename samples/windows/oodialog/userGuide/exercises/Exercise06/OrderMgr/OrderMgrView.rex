@@ -35,14 +35,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: OrderMgrView.rex 				  v01-00 07Jun12
+   Exercise 06: OrderMgrView.rex 				  v01-00 18Jan13
 
    Contains: 	   class: "OrderMgrView", "HRSomv"
-
-   This is a subclass of OrderMgrBaseView, and provides only the "application"
-   function of Order Management.
-
-   Pre-requisites: Class "OrderMgrBaseView
 
    Description: A sample Order Manager View class - part of the sample
         	Order Manager component.
@@ -50,26 +45,40 @@
    Outstanding Problems: None reported.
 
    Changes:
-     v01-00 07Jun12: First Version
-
+     v01-00 07Jun12: First Version (ooDialog 4.2.1) - used dlgArea for re-sizing.
+            18Jan13: Second Version (ooDialog 4.2.2) - uses ResizingAdmin for
+                     re-sizing.
 ------------------------------------------------------------------------------*/
+
+-- Use the global .constDir for symbolic IDs - load them from OrderMgrView.h
+.Application~addToConstDir("OrderMgr\OrderMgrView.h")
 
 call "OrderMgr\RequiresList.rex"
 
 ::REQUIRES "ooDialog.cls"
-::REQUIRES "OrderMgr\OrderMgrBaseView.rex"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  OrderMgrView							  v01-00 07Jun12
+  OrderMgrView							  v01-00 18Jan13
   --------------------
-  The "application" part of the "Order Manager View" component. This class
-  provides for all function except re-sizing and basic setup (OrderMgrBaseView
-  has the .h file and the .rc file for the menu).
-
+  To the user, this class is the Order Management Application. It provides
+  access to the various functions required for managing Sales orders.
+  In this Exercise, however, only very basic application function is provided.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
-::CLASS OrderMgrView SUBCLASS OrderMgrBaseView PUBLIC
+::CLASS OrderMgrView SUBCLASS RcDialog PUBLIC INHERIT ResizingAdmin
+
+  ::ATTRIBUTE lv PRIVATE	-- The ListView that contains the icons.
+
+  /*----------------------------------------------------------------------------
+    Class Methods
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  ::METHOD newInstance CLASS PUBLIC
+    say ".OrderMgrView-newInstance-01."
+    dlg = .OrderMgrView~new("OrderMgr\OrderMgrView.rc", IDD_ORDMGR)
+    dlg~activate
+
 
   /*----------------------------------------------------------------------------
     Instance Methods
@@ -80,11 +89,47 @@ call "OrderMgr\RequiresList.rex"
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   ::METHOD init
-    expose records
-    --say "OrderMgrView-init."
-    self~init:super
+    expose menuBar records
+    forward class (super) continue
+    say "OrderMgrView-init-01."
+    menuBar = .ScriptMenuBar~new("OrderMgr\OrderMgrView.rc", IDR_ORDMGR_MENU, , , .true)
     self~createIconList
     records = self~initRecords
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD defineDialog
+    say "OrderMgrView-defineDialog-01."
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD activate UNGUARDED
+    say "OrderMgrView-activate-01."
+    self~execute("SHOWTOP", IDI_DLG_OOREXX)
+
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  ::METHOD initDialog
+    expose menuBar records iconList
+    say "OrderMgrView-initDialog-01."
+    menuBar~attachTo(self)
+
+    -- Create a proxy for the List View and store in instance variable 'lv'.
+    self~lv = self~newListView(IDC_ORDMGR_ICONS)
+
+    -- Add the Image List to the ListView:
+    self~lv~setImageList(iconList, .Image~toID(LVSIL_NORMAL))
+    -- Add icons (i.e. records) to the ListView:
+    do i=1 to records~items
+      self~lv~addRow(, i-1, records[i]~name)
+    end
+
+    self~connectListViewEvent(IDC_ORDMGR_ICONS, "ACTIVATE", "onDoubleClick")
+    -- Following line required to allow icons to be dragged around the listview.
+    self~connectListViewEvent(IDC_ORDMGR_ICONS, "BEGINDRAG", "DefListDragHandler")
+    self~connectButtonEvent("IDC_ORDMGR_EXIT", "CLICKED",exitApp)
+    self~connectButtonEvent("IDC_ORDMGR_RESET","CLICKED",resetIcons)
+    self~setTitle(.HRSomv~WindowTitle)		-- set dialog title.
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD createIconList PRIVATE
@@ -138,16 +183,7 @@ call "OrderMgr\RequiresList.rex"
     return records
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD initDialog
-    expose records iconList
-    --say "OrderMgrView-initDialog."
-    self~initDialog:super
-    -- Add the Image List to the ListView:
-    self~lv~setImageList(iconList, .Image~toID(LVSIL_NORMAL))
-    -- Add icons (i.e. records) to the ListView:
-    do i=1 to records~items
-      self~lv~addRow(, i-1, records[i]~name)
-    end
+
 
 
   /*----------------------------------------------------------------------------
@@ -289,5 +325,7 @@ call "OrderMgr\RequiresList.rex"
   ::CONSTANT NewCust      "New Customer"
   ::CONSTANT NewProd      "New Product"
   ::CONSTANT HelpAbout    "Help - About"
-
+  ::CONSTANT WindowTitle  "Sales Order Management"	-- Dialog Caption
+  ::CONSTANT Reset        "Reset Icons"			-- PushButton
+  ::CONSTANT ExitApp      "Exit Application"		-- PushButton
 /*============================================================================*/

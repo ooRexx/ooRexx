@@ -37,8 +37,8 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= DlgData Popups
-DIST_SUBDIRS		= DlgData Popups
+SUBDIRS			= DlgData Person Popups Wow4
+DIST_SUBDIRS		= DlgData Person Popups Wow4
 
 MAINTAINERCLEANFILES	= Makefile.in *~
 

@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise07: GenericFile					  v01-01 25Aug12
+   Exercise07: GenericFile					  v01-00 11Jan13
 
   Contains:	class "GenericFile".
 
@@ -46,8 +46,11 @@
   Outstanding problems: None reported.
 
   Changes:
-  v01-00 21Jly12: First version.
-  v01-01 25Aug12: Moved file open from init method to a separate method.
+  v01-00
+    21Jly12: First version.
+    25Aug12: Moved file open from init method to a separate method.
+    16Dec12: Trivial correction of a couple of comments.
+    11Jan13: Commented-out 'say' instructions.
 
   Constraints: Format of each record must be:
                recordId | field2 | field3 | .... | fieldn
@@ -73,7 +76,7 @@
   ::ATTRIBUTE fileAsDirectory GET PUBLIC 	-- a directory containing:
   					 	--   * headers: a 1D array
   					 	--   * records: a 2D array
-  					 	--   * count:   the number iof records
+  					 	--   * count:   the number of records
   ::ATTRIBUTE fileAsDirectory SET PRIVATE
 
   /*----------------------------------------------------------------------------
@@ -112,9 +115,9 @@
     expose recordCount
     use strict arg fileName, columns
     recordCount = 0
-    say "GenericFile-readFile-01: fileName =" fileName "columns =" columns
+    --say "GenericFile-readFile-01: fileName =" fileName "columns =" columns
     file  = .stream~new(filename)
-    say "GenericFile-readFile-02: file~query(exists):" file~query("exists")
+    --say "GenericFile-readFile-02: file~query(exists):" file~query("exists")
     if file~query("exists") = "" then do
       say "GenericFile-readFile-03: file" filename " does not exist."
       return .false
@@ -144,7 +147,7 @@
       end
     end
     self~fileRecords = arrFileRecords
-    -- (3) Build a directory containing headers, records, and lins (or record count).
+    -- (3) Build a directory containing headers, records, and lines (or record count).
     dirFile = .directory~new
     dirFile[headers] = arrFileHeaders
     dirFile[count]   = recordCount

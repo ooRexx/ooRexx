@@ -53,6 +53,7 @@
 #include "oodMouse.hpp"
 #include "oodData.hpp"
 #include "oodPropertySheetDialog.hpp"
+#include "oodResizableDialog.hpp"
 
 /**
  * The dialog procedure function for all regular ooDialog dialogs.  Handles and
@@ -131,6 +132,16 @@
  *             be better to send a WM_CLOSE message, do a DestroyWindow() in the
  *             WM_CLOSE processing, and use the WM_DESTROY processing to clean
  *             up.  I.e., use the normal Windows strategy.
+ *
+ *             It is tempting to set pcpbd->hDlg here.  But, if we do we break
+ *             the deprecated CategoryDialog.  So, for now we don't do that.  At
+ *             some point, it would be best to simply say the CategoryDialog
+ *             support is removed and do that.  Note that the chidl dialogs of
+ *             the CategoryDialog, *only* use this window procedure.  So, it is
+ *             only here that we need to worry about this.  It is the
+ *             customDrawCheckIDs() that needs the handle.  No category child
+ *             dialog can have custom draw, so we set pcpbd->hDlg if we are
+ *             going to call that function.
  */
 LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -156,11 +167,12 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             RexxSetProcessMessages(FALSE);
         }
 
-        pcpbd->hDlg = hDlg;
         setWindowPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pcpbd);
 
         if ( pcpbd->isCustomDrawDlg && pcpbd->idsNotChecked )
         {
+            pcpbd->hDlg = hDlg;
+
             // We don't care what the outcome of this is, customDrawCheckIDs
             // will take care of aborting this dialog if the IDs are bad.
             customDrawCheckIDs(pcpbd);
@@ -224,7 +236,7 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return drawBackgroundBmp(pcpbd, hDlg);
 
         case WM_DRAWITEM:
-                return drawBitmapButton(pcpbd, lParam, msgEnabled);
+            return drawBitmapButton(pcpbd, lParam, msgEnabled);
 
         case WM_CTLCOLORDLG:
             return handleDlgColor(pcpbd);
@@ -241,9 +253,9 @@ LRESULT CALLBACK RexxDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_PALETTECHANGED:
             return paletteMessage(pcpbd, hDlg, uMsg, wParam, lParam);
 
-                default :
-                    break;
-            }
+        default:
+            break;
+    }
 
     return FALSE;
 }
@@ -283,6 +295,10 @@ LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             customDrawCheckIDs(pcpbd);
         }
 
+        if ( pcpbd->isResizableDlg )
+        {
+            return initializeResizableDialog(hDlg, pcpbd->dlgProcContext, pcpbd);
+        }
         return TRUE;
     }
 
@@ -305,6 +321,17 @@ LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     }
 
     // Don't process WM_DESTROY messages.
+
+    // We first deal with resizable stuff, then handle the rest with the normal
+    // ooDialog process.
+    if ( pcpbd->isResizableDlg )
+    {
+        MsgReplyType resizingReply = handleResizing(hDlg, uMsg, wParam, lParam, pcpbd);
+        if ( resizingReply != ContinueProcessing )
+        {
+            return (resizingReply == ReplyTrue ? TRUE : FALSE);
+        }
+    }
 
     bool msgEnabled = IsWindowEnabled(hDlg) ? true : false;
 
@@ -332,7 +359,7 @@ LRESULT CALLBACK RexxChildDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             return drawBackgroundBmp(pcpbd, hDlg);
 
         case WM_DRAWITEM:
-                return drawBitmapButton(pcpbd, lParam, msgEnabled);
+            return drawBitmapButton(pcpbd, lParam, msgEnabled);
 
         case WM_CTLCOLORDLG:
             return handleDlgColor(pcpbd);
@@ -1005,7 +1032,7 @@ BOOL endDialogPremature(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t)
     }
     else
     {
-    DestroyWindow(hDlg);
+        DestroyWindow(hDlg);
     }
 
 
@@ -1158,8 +1185,8 @@ RexxObjectPtr requiredBooleanReply(RexxThreadContext *c, pCPlainBaseDialog pcpbd
 
     if ( result == NULLOBJECT )
     {
-            endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
-        }
+        endDialogPremature(pcpbd, pcpbd->hDlg, RexxConditionRaised);
+    }
     return result;
 }
 
@@ -1770,6 +1797,39 @@ MsgReplyType processLVN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
             {
                 invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
             }
+
+            break;
+        }
+
+        case LVN_BEGINSCROLL :
+        case LVN_ENDSCROLL   :
+        {
+            NMLVSCROLL    *ps   = (NMLVSCROLL  *)lParam;
+            RexxObjectPtr  rxLV = createControlFromHwnd(c, pcpbd, ps->hdr.hwndFrom, winListView, true);
+            RexxObjectPtr  rxDx = c->Int32(ps->dx);
+            RexxObjectPtr  rxDy = c->Int32(ps->dy);
+
+            msgReply = ReplyTrue;
+
+            RexxArrayObject args = c->ArrayOfFour(idFrom, rxDx, rxDy, rxLV);
+
+            c->ArrayPut(args, code == LVN_BEGINSCROLL ? TheTrueObj : TheFalseObj, 5);
+
+            if ( expectReply )
+            {
+                invokeDirect(c, pcpbd, methodName, args);
+            }
+            else
+            {
+                RexxObjectPtr mth = c->String(methodName);
+                invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+                c->ReleaseLocalReference(mth);
+            }
+
+            c->ReleaseLocalReference(rxLV);
+            c->ReleaseLocalReference(rxDx);
+            c->ReleaseLocalReference(rxDy);
+            c->ReleaseLocalReference(args);
 
             break;
         }
@@ -2612,7 +2672,7 @@ MsgReplyType processMCN(RexxThreadContext *c, CSTRING methodName, uint32_t tag, 
  */
 MsgReplyType processUDN(RexxThreadContext *c, CSTRING methodName, LPARAM lParam, pCPlainBaseDialog pcpbd)
 {
-    LPNMUPDOWN    pUPD = (LPNMUPDOWN)lParam;
+    LPNMUPDOWN pUPD = (LPNMUPDOWN)lParam;
 
     RexxArrayObject args = c->ArrayOfFour(c->Int32(pUPD->iPos), c->Int32(pUPD->iDelta),
                                           idFrom2rexxArg(c, lParam), hwndFrom2rexxArg(c, lParam));
@@ -2717,9 +2777,9 @@ MsgReplyType searchNotifyTable(WPARAM wParam, LPARAM lParam, pCPlainBaseDialog p
         return ContinueProcessing;
     }
 
-    uint32_t code = ((NMHDR *)lParam)->code;
+    uint32_t code     = ((NMHDR *)lParam)->code;
     HWND     hwndFrom = ((NMHDR *)lParam)->hwndFrom;
-    size_t tableSize = pcpbd->enCSelf->nmNextIndex;
+    size_t tableSize  = pcpbd->enCSelf->nmNextIndex;
 
     register size_t i = 0;
     for ( i = 0; i < tableSize; i++ )
@@ -3382,7 +3442,7 @@ bool initEventNotification(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxOb
     memset(pcen, 0, sizeof(pCEventNotification));
 
     pcen->magic     = EVENTNOTIFICATION_MAGIC;
-    pcen->rexxSelf = self;
+    pcen->rexxSelf  = self;
     pcen->pDlgCSelf = pcpbd;
 
     if ( ! initCommandMessagesTable(c, pcen, pcpbd) )
@@ -3659,15 +3719,25 @@ static bool keyword2lvn(RexxMethodContext *c, CSTRING keyword, uint32_t *code, u
         *isDefEdit = true;
         *tag = TAG_LISTVIEW | TAG_PRESERVE_OLD;
     }
-    else if ( StrCmpI(keyword, "BEGINEDIT")   == 0 )
+    else if ( StrCmpI(keyword, "BEGINEDIT") == 0 )
     {
         lvn = LVN_BEGINLABELEDIT;
         *tag = TAG_LISTVIEW;
     }
-    else if ( StrCmpI(keyword, "ENDEDIT")     == 0 )
+    else if ( StrCmpI(keyword, "BEGINSCROLL") == 0 )
+    {
+        lvn = LVN_BEGINSCROLL;
+        *tag = TAG_LISTVIEW;
+    }
+    else if ( StrCmpI(keyword, "ENDEDIT") == 0 )
     {
          lvn = LVN_ENDLABELEDIT;
          *tag = TAG_LISTVIEW;
+    }
+    else if ( StrCmpI(keyword, "ENDSCROLL") == 0 )
+    {
+        lvn = LVN_ENDSCROLL;
+        *tag = TAG_LISTVIEW;
     }
     else if ( StrCmpI(keyword, "CLICK") == 0 )
     {
@@ -3745,6 +3815,8 @@ inline CSTRING lvn2name(uint32_t lvn, uint32_t tag)
         case LVN_COLUMNCLICK    : return "onColumnclick";
         case LVN_BEGINDRAG      : return "onBegindrag";
         case LVN_BEGINRDRAG     : return "onBeginrdrag";
+        case LVN_BEGINSCROLL    : return "onBeginScroll";
+        case LVN_ENDSCROLL      : return "onEndScroll";
         case LVN_ITEMACTIVATE   : return "onActivate";
         case LVN_GETINFOTIP     : return "onGetInfoTip";
         case NM_CLICK           : return "onClick";
@@ -4296,9 +4368,9 @@ void processKeyPress(pSubClassData pSCData, WPARAM wParam, LPARAM lParam)
         RexxThreadContext *c = pSCData->pcpbd->dlgProcContext;
 
         RexxStringObject mth  = c->String(pMethod);
-        RexxArrayObject args = getKeyEventRexxArgs(c, wParam,
-                                                   lParam & KEY_ISEXTENDED ? true : false,
-                                                   pSCData->pcdc == NULL   ? NULL : pSCData->pcdc->rexxSelf);
+        RexxArrayObject  args = getKeyEventRexxArgs(c, wParam,
+                                                    lParam & KEY_ISEXTENDED ? true : false,
+                                                    pSCData->pcdc == NULL   ? NULL : pSCData->pcdc->rexxSelf);
 
         invokeDispatch(c, pSCData->pcpbd->rexxSelf, mth, args);
 
@@ -5492,6 +5564,7 @@ err_out:
  *                      BEGINDRAG
  *                      BEGINRDRAG
  *                      BEGINEDIT
+ *                      BEGINSCROLL
  *                      CHANGED
  *                      CHANGING
  *                      COLUMNCLICK
@@ -5499,6 +5572,7 @@ err_out:
  *                      DELETE
  *                      DELETEALL
  *                      ENDEDIT
+ *                      ENDSCROLL
  *                      INSERTED
  *                      KEYDOWN
  *

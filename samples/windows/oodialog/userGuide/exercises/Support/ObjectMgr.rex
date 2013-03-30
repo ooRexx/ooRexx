@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
 
-   Support - ObjectMgr						 v00-01  23Apr12
+   Support - ObjectMgr						 v01-00  21Jan13
    -------------------
    A singleton component that manages model objects.
 
@@ -54,21 +54,20 @@
      bool    showModel( in string modelClass, in string modelInstance )
   }
 
+  Changes:
+    v01-00 23Apr12: First version.
+           11Jan13: Commented-out 'say' instructions.
+           21Jan13: Make 'addView' private and 'removeView' explicitly public.
+                    Minor typos in comments corrected.
+
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 
 call "RequiresList.rex"
---say "ObjectMgr-00."
---say "ObjectMgr-01: .CustomerView :" .CustomerView
---say "ObjectMgr-01: .CustomerModel:" .CustomerModel
-
-/*
-::REQUIRES "Customer\CustomerView.rex"
-::REQUIRES "Customer\CustomerModelsData.rex"
-::REQUIRES "Customer\CustomerListView.rex"
-*/
 
 
+/*//////////////////////////////////////////////////////////////////////////////
+  ============================================================================*/
 ::CLASS 'ObjectMgr' PUBLIC
 
   ::ATTRIBUTE objectBag PRIVATE-- a bag of objects - i.e. instances of Distributed
@@ -89,23 +88,23 @@ call "RequiresList.rex"
 
   /*----------------------------------------------------------------------------
     getComponentId - Returns a Component Id if it's in the ObjectBag,
-                     else calls doNewInstacne to get id, else returns .false.
+                     else calls doNewInstance to get id, else returns .false.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD getComponentId PUBLIC
     expose objectBag
     use strict arg className, instanceName
     className = className~upper; instanceName = instanceName~upper
-    say "ObjectMgr-getComponentId-00: className =" className "instanceName =" instanceName
+    --say "ObjectMgr-getComponentId-00: className =" className "instanceName =" instanceName
     ObjectName = className||"-"||instanceName
     if objectBag~hasIndex(objectName) then do		-- if class-instance already registered:
-      say "ObjectMgr-getComponentId-01: Class Found:" objectName
+      --say "ObjectMgr-getComponentId-01: Class Found:" objectName
       arr = objectBag[objectName]			-- Get info array for this class-instance.
       componentId = arr[1]
       return componentId				-- return component id
     end
     -- If we've got to here, then there's no id stored. So go get one:
     componentId = self~doNewInstance(className,instanceName)
-    say "ObjectMgr-getComponentId-03: componentId =" componentId
+    --say "ObjectMgr-getComponentId-03: componentId =" componentId
     if componentId = .false then return .false		-- Bad object name
     self~addComponentId(className,instanceName,componentId)
     return componentId
@@ -121,7 +120,7 @@ call "RequiresList.rex"
     use strict arg className, instanceName
     SIGNAL ON NOMETHOD NAME catchIt
     interpret "componentId = ."||className||"~newInstance("||"'"||instanceName||"'"||")"
-    say "ObjectMgr-doNewInstance-01: componentId =" componentId
+    --say "ObjectMgr-doNewInstance-01: componentId =" componentId
     -- add to object bag:
     return componentId
     catchIt:
@@ -155,13 +154,13 @@ call "RequiresList.rex"
   ::method addComponentId PRIVATE
     expose objectBag
     use strict arg className, instanceName, componentId
-    say "ObjectMgr-addComponentId-01:" classname instancename componentId
+    --say "ObjectMgr-addComponentId-01:" classname instancename componentId
     objectName = className||"-"||instanceName
     arr = .Array~new
     arr[1] = componentId
     arr[2] = .nil		-- Space for a View Name ('class-inst')
     objectBag[objectName] = arr
-    self~list
+    --self~list
     return
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -175,18 +174,18 @@ call "RequiresList.rex"
   ::METHOD showModel PUBLIC
     expose objectBag
     use arg modelClass, modelInstance, parentDlg
-    say "ObjectMgr-showModel-01a - modelNames:" modelClass modelInstance
-    say "ObjectMgr-showModel-01b - parentDlg: " parentDlg
+    --say "ObjectMgr-showModel-01a - modelNames:" modelClass modelInstance
+    --say "ObjectMgr-showModel-01b - parentDlg: " parentDlg
     --say "ObjectMgr-showModel-02 - modelClass: '"||modelClass||"';  modelInstance: '"||modelInstance||"'"
     -- If this is an "anonymous" component (instance name "A"|"a"), ask its
     -- class object for an instance name:
     if modelInstance = "A" | modelInstance = "a" then do
       anonModelClass = "."||modelClass
       interpret "modelInstance = "||anonModelClass||"~getInstanceName"
-      say "ObjectMgr-showModel-02 - modelInstance: " modelInstance
+      --say "ObjectMgr-showModel-02 - modelInstance: " modelInstance
     end
     modelId = self~getComponentId(modelClass, modelInstance)
-    say "ObjectMgr-showModel-03 - modelId:" modelId
+    --say "ObjectMgr-showModel-03 - modelId:" modelId
     if modelId = .false then do
       say "ObjectMgr-showModel-03b: Model" modelClass modelInstance "could not be found."
       return .false
@@ -197,7 +196,7 @@ call "RequiresList.rex"
     modelName = modelName~upper
     arr = objectBag[modelName]
     viewName = arr[2]
-    say "ObjectMgr-showModel-03c: ViewName =" viewName
+    --say "ObjectMgr-showModel-03c: ViewName =" viewName
     if viewName \= .nil then do		-- if view exists
       arr = objectBag[viewName]
       viewId = arr[1]
@@ -211,13 +210,13 @@ call "RequiresList.rex"
     parse var modelClass root "Model"
     viewClass = root||"View"
     viewClassId = "."||viewClass
-    say "ObjectMgr-showModel-04: viewClassId =" viewClassId
+    --say "ObjectMgr-showModel-04: viewClassId =" viewClassId
     interpret "targetObject =" viewClassId
-    say "ObjectMgr-showModel-05: parentDlg =" parentDlg
+    --say "ObjectMgr-showModel-05: parentDlg =" parentDlg
     msg = .Message~new(targetObject, "newInstance", "I", modelId, parentDlg)
     --say "ObjectMgr-showModel-06: Class is:" .CustomerView .ObjectMgr
     viewId = msg~send
-    say "ObjectMgr-showModel-07 - viewId:" viewId
+    --say "ObjectMgr-showModel-07 - viewId:" viewId
 
     self~addView(modelClass, modelInstance, viewClass, viewId)
     --self~addView(modelClass, modelInstance, "CustomerView", viewId)
@@ -228,10 +227,10 @@ call "RequiresList.rex"
   /*----------------------------------------------------------------------------
     addView - Adds a View to the ObjectBag.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ::METHOD addView
+  ::METHOD addView PRIVATE
     expose objectBag --viewBag
     use strict arg modelClass, modelInstance, viewClass, viewId
-    say "ObjectMgr-addView-01."
+    --say "ObjectMgr-addView-01."
     -- Get view's instanceName
     viewInstance = viewId~identityHash
 
@@ -243,33 +242,28 @@ call "RequiresList.rex"
     arr = objectBag[modelName]
     arr[2] = viewName
     -- Now add the View to the ObjectBag:
-    --trace i
     self~addComponentId(viewClass, viewInstance, viewId)
-    --trace off
-    say "ObjectMgr-addView-02: list with new View class:"
-    self~list
+    --say "ObjectMgr-addView-02: list with new View class:"
+    --self~list
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 
   /*----------------------------------------------------------------------------
-    removeView - Removes a view from the ObjectBag.
+    removeView - Removes a view from the ObjectBag. (Used by RcView & ResView.)
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD removeView PUBLIC
     expose objectBag
     use arg viewClass, viewInstance
     viewClass = viewClass~upper()	-- View class was uppered in addView method.
     viewClassInst = viewClass||"-"||viewInstance
-    say "ObjectMgr-removeView-01: viewClassInst:" viewClassInst
-    --say "ObjectMgr-removeView-02: ObjectBag List:"
-    --self~list
+    --say "ObjectMgr-removeView-01: viewClassInst:" "'"||viewClass||"'" "'"||viewClassInst||"'"
     r = objectBag~remove(viewClassInst)
-    say "ObjectMgr-removeView-03: r =" r
+    --say "ObjectMgr-removeView-02: r =" r
     do i over objectBag
       arr = objectBag[i]
       if arr[2] = viewClassInst then arr[2] = .nil
     end
-    say "ObjectMgr-removeView-04: ObjectBag List:"
-    self~list
+    --say "ObjectMgr-removeView-03: ObjectBag List:"
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 

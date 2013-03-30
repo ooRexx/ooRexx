@@ -1,0 +1,7 @@
+ProdNo  | ProdName          | ListPrice | UOM  | Size | Description
+AB100/W | Baffle            |    995    |  20  | S    | 3" aluminium baffles - suitable for all bonderers.
+CF300/X | Widget Box        |   2895    |   6  | M    | A 10 litre case with flat sides capable of holding quite a lot of stuff.
+CU003   | Widget, 5in       |  12499    | 100  | M    | Meets all possible Widget needs, except those not possible.
+EF500/W | Slodget           |   1730    |  10  | S    | 5" slodget for use with 3" baffles.
+LM400   | Driblet, 10 guage |  34000    |  25  | L    | 2' driblet guaranteed to dribletize most clambers.
+XY200   | Blad Anchor       |   3845    |   1  | M    | Fixes all small or medium blads.

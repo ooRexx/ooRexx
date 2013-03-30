@@ -239,3 +239,35 @@
 ::method customDraw external "LIBRARY oodialog cd_init"
 ::method customDrawControl external "LIBRARY oodialog cd_customDrawControl"
 ::method RGB external "LIBRARY oodialog image_colorRef_cls"
+
+
+::class 'ResizingAdmin' public mixinclass Object
+
+::constant IDC_DEFAULT_PINTO_WINDOW     0
+
+::attribute minSize get external   "LIBRARY oodialog ra_minSize"
+::attribute minSize set external   "LIBRARY oodialog ra_setMinSize"
+::attribute maxSize get external   "LIBRARY oodialog ra_maxSize"
+::attribute maxSize set external   "LIBRARY oodialog ra_setMaxSize"
+
+::method controlBottom external "LIBRARY oodialog ra_controlSide"
+::method controlLeft external "LIBRARY oodialog ra_controlSide"
+::method controlRight external "LIBRARY oodialog ra_controlSide"
+::method controlSizing external "LIBRARY oodialog ra_controlSizing"
+::method controlTop external "LIBRARY oodialog ra_controlSide"
+::method defaultBottom external "LIBRARY oodialog ra_defaultSide"
+::method defaultLeft external "LIBRARY oodialog ra_defaultSide"
+::method defaultRight external "LIBRARY oodialog ra_defaultSide"
+::method defaultSizing external "LIBRARY oodialog ra_defaultSizing"
+::method defaultTop external "LIBRARY oodialog ra_defaultSide"
+::method defineSizing
+  return 0
+
+::method noMaxSize external "LIBRARY oodialog ra_noMaxSize"
+::method noMinSize external "LIBRARY oodialog ra_noMinSize"
+::method pagedTab external "LIBRARY oodialog ra_pagedTab"
+::method useDefaultSizing external "LIBRARY oodialog ra_useDefaultSizing"
+::method wantSizeEnded external "LIBRARY oodialog ra_wantSizeEnded"
+
+-- Internal use only
+::method initResizing private  external "LIBRARY oodialog ra_initResizing"              -- Do not document

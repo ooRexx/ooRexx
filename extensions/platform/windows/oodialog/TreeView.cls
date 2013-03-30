@@ -114,12 +114,6 @@
 ::method getItemHeight unguarded external "LIBRARY oodialog tv_getItemHeight"
 ::method getItemRect unguarded external "LIBRARY oodialog tv_getItemRect"
 ::method getToolTips unguarded external "LIBRARY oodialog generic_getToolTips"
-::method hitTest unguarded
-   forward message "hitTestInfo" continue
-   info = result
-   if info~hItem = 0 then return 0
-   else return info~hItem info~location
-
 ::method hitTestInfo unguarded external "LIBRARY oodialog tv_hitTestInfo"
 ::method indent unguarded
    use strict arg
@@ -208,8 +202,16 @@
    use strict arg
    return self~sendWinIntMsg(self~TVM_GETVISIBLECOUNT, 0, 0)
 
+::method test unguarded external "LIBRARY oodialog tv_test"
+
 
 -- DEPRECATED
+::method hitTest unguarded
+   forward message "hitTestInfo" continue
+   info = result
+   if info~hItem = 0 then return 0
+   else return info~hItem info~location  -- This looks goofy, but it is what the original code did
+
 ::method removeImages unguarded
    return self~setImageList(.nil, 0)
 

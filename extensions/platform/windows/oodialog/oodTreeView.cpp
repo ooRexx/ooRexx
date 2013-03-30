@@ -162,7 +162,7 @@ static void parseTvModifyOpts(CSTRING opts, TVITEMEX *tvi)
  *        4096.  I think we should limit the length of text a user can assign to
  *        a tree-view item, but for now we'll just go with 4096.
  */
-HTREEITEM tvFindItem(HWND hTv, CSTRING text)
+HTREEITEM tvFindItem(HWND hTv, CSTRING text, HTREEITEM parent, bool abbrev)
 {
     if ( *text == '\0' )
     {
@@ -170,11 +170,16 @@ HTREEITEM tvFindItem(HWND hTv, CSTRING text)
     }
 
     HTREEITEM hTreeItem = NULL;
-    HTREEITEM root      = TreeView_GetRoot(hTv);
     TVITEM    tvi       = {0};
+    size_t    len       = strlen(text);
     char      buff[4096];
 
-    tvi.hItem = root;
+    if ( parent == NULL )
+    {
+        parent = TreeView_GetRoot(hTv);
+    }
+
+    tvi.hItem = parent;
     while ( tvi.hItem != NULL )
     {
          tvi.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_CHILDREN;
@@ -182,7 +187,11 @@ HTREEITEM tvFindItem(HWND hTv, CSTRING text)
          tvi.cchTextMax = sizeof(buff) - 1;
          if ( TreeView_GetItem(hTv, &tvi) )
          {
-             if ( stricmp(tvi.pszText, text) == 0 )
+             if ( abbrev && strnicmp(tvi.pszText, text, len) == 0 )
+             {
+                 return tvi.hItem;
+             }
+             else if ( stricmp(tvi.pszText, text) == 0 )
              {
                  return tvi.hItem;
              }
@@ -201,7 +210,7 @@ HTREEITEM tvFindItem(HWND hTv, CSTRING text)
                  {
                      tvi.hItem = TreeView_GetParent(hTv, tvi.hItem);
                      hTreeItem = TreeView_GetNextSibling(hTv, tvi.hItem);
-                     if ( hTreeItem == root )
+                     if ( hTreeItem == parent )
                      {
                          return NULL;
                      }
@@ -1743,11 +1752,17 @@ RexxMethod3(RexxObjectPtr, tv_expand, CSTRING, _hItem, NAME, method, CSELF, pCSe
  *  Finds the first item with the specified text.
  *
  */
-RexxMethod2(RexxObjectPtr, tv_find, CSTRING, text, CSELF, pCSelf)
+RexxMethod4(RexxObjectPtr, tv_find, CSTRING, text, OPTIONAL_CSTRING, startItem, OPTIONAL_logical_t, abbrev, CSELF, pCSelf)
 {
-    HWND hwnd  = getDChCtrl(pCSelf);
+    HWND hwnd       = getDChCtrl(pCSelf);
+    HTREEITEM hItem = NULL;
 
-    HTREEITEM hItem = tvFindItem(hwnd, text);
+    if ( argumentExists(2) )
+    {
+        hItem = (HTREEITEM)string2pointer(startItem);
+    }
+
+    hItem = tvFindItem(hwnd, text, hItem, abbrev ? true : false);
     return pointer2string(context, hItem);
 }
 
@@ -2076,6 +2091,17 @@ RexxMethod4(logical_t, tv_sortChildrenCB, CSTRING, _hItem, CSTRING, method, OPTI
     return rexxTreeViewSort(context, hItem, method, param, pcdc);
 }
 
+RexxMethod1(logical_t, tv_test, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return FALSE;
+    }
+
+    printf("No current test.\n");
+    return TRUE;
+}
 
 /**
  *  Methods for the .TvCustomDrawSimple class.

@@ -294,7 +294,7 @@
 
             hitTool = .ToolInfo~forHitTest(pbTest)
 
-            if ttTest~hitTest(hitTool, pos) then do
+            if ttTest~hitTestInfo(hitTool, pos) then do
                 say 'Got hit'
                 say 'Tool info  hwnd:    ' hitTool~rexxHwnd
                 say 'Tool info  id:      ' hitTool~rexxID

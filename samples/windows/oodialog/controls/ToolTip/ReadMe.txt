@@ -54,6 +54,16 @@
     ToolTip, add a tool as a rectangular area, create a multiline ToolTip,
     and create a balloon ToolTip
 
+    - comboBoxToolTip.rex
+
+    Shows how to add tool tips to a combo box.  When the list items in a
+    combo box are longer than the combo box is wide, it is difficult for
+    the user to know what they say.  The tool tip control is an elegant
+    solution to this problem.  But, adding tool tips and getting them to
+    work is a little more difficult than one might think.  This example
+    shows how to do it.
+
+
     - customPositionToolTip.rex
 
     Demonstrates how to do custom positioning of the info tip in a

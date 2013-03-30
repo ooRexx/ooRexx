@@ -112,8 +112,8 @@ inline bool isInIconView(HWND hList)
     if ( ComCtl32Version < COMCTL32_6_0 )
     {
         style = (uint32_t)GetWindowLong(hList, GWL_STYLE);
-    return ((style & LVS_TYPEMASK) == LVS_ICON) || ((style & LVS_TYPEMASK) == LVS_SMALLICON);
-}
+        return ((style & LVS_TYPEMASK) == LVS_ICON) || ((style & LVS_TYPEMASK) == LVS_SMALLICON);
+    }
     else
     {
         style = ListView_GetView(hList);
@@ -137,8 +137,8 @@ bool isInReportView(HWND hList)
     if ( ComCtl32Version < COMCTL32_6_0 )
     {
         style = (uint32_t)GetWindowLong(hList, GWL_STYLE);
-    return ((style & LVS_TYPEMASK) == LVS_REPORT);
-}
+        return ((style & LVS_TYPEMASK) == LVS_REPORT);
+    }
     else
     {
         style = ListView_GetView(hList);
@@ -287,6 +287,30 @@ static uint32_t changeStyle(RexxMethodContext *c, pCDialogControl pCSelf, CSTRIN
 err_out:
     oodSetSysErrCode(c->threadContext);
     return 0;
+}
+
+
+static uint32_t keyword2lvir(RexxMethodContext *c, CSTRING part, bool isItemRect)
+{
+    uint32_t flag = (uint32_t)-1;
+
+    if ( StrCmpI(part,      "BOUNDS") == 0 ) flag = LVIR_BOUNDS;
+    else if ( StrCmpI(part, "ICON")   == 0 ) flag = LVIR_ICON;
+    else if ( StrCmpI(part, "LABEL")  == 0 ) flag = LVIR_LABEL;
+    else if ( isItemRect )
+    {
+        if ( StrCmpI(part,  "SELECTBOUNDS") == 0 ) flag = LVIR_SELECTBOUNDS;
+        else
+        {
+            wrongArgValueException(c->threadContext, 2, "BOUNDS, ICON, LABEL, or SELECTBOUNDS", part);
+        }
+    }
+    else
+    {
+        wrongArgValueException(c->threadContext, 3, "BOUNDS, ICON, or LABEL", part);
+    }
+
+    return flag;
 }
 
 
@@ -1058,13 +1082,7 @@ static RexxObjectPtr newLvItem(RexxMethodContext *c, HWND hList, uint32_t itemIn
     }
     checkForCallBack(lvi, temp, true);
 
-    RexxClassObject rxLvI = rxGetContextClass(c, "LVITEM");
-    if ( rxLvI == NULLOBJECT )
-    {
-        goto err_out;
-    }
-
-    result = c->SendMessage2(rxLvI, "NEW", obj, c->String(LVITEM_OBJ_MAGIC));
+    result = c->SendMessage2(TheLvItemClass, "NEW", obj, c->String(LVITEM_OBJ_MAGIC));
     if ( result == NULLOBJECT )
     {
         result = TheNilObj;
@@ -1080,6 +1098,73 @@ err_out:
         safeLocalFree(lvi->pszText);
         safeLocalFree(lvi->puColumns);
         safeLocalFree(lvi->piColFmt);
+    }
+
+done_out:
+    return result;
+}
+
+/**
+ * Constructs a new LvItem object with just the text of the subitem.  The item
+ * is to be used for insertion only, it is not constructed to be suitable for a
+ * get item.
+ *
+ * @param c
+ * @param text  The text for the item, may be the special text call back value.
+ *
+ * @return RexxObjectPtr
+ */
+static RexxObjectPtr simpleNewLvItem(RexxMethodContext *c, CSTRING text)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    RexxBufferObject obj = c->NewBuffer(sizeof(LVITEM));
+    if ( obj == NULLOBJECT )
+    {
+        outOfMemoryException(c->threadContext);
+        goto done_out;
+    }
+
+    LPLVITEM lvi = (LPLVITEM)c->BufferData(obj);
+    memset(lvi, 0, sizeof(LVITEM));
+
+    if ( StrCmpI(text, "lpStrTextCallBack") == 0 )
+    {
+        lvi->pszText = LPSTR_TEXTCALLBACK;
+    }
+    else
+    {
+        size_t len = strlen(text);
+
+        if ( len > LVITEM_TEXT_MAX )
+        {
+            stringTooLongException(c->threadContext, 1, LVITEM_TEXT_MAX, len);
+            goto done_out;
+        }
+
+        lvi->pszText = (char *)LocalAlloc(LPTR, len + 1);
+        if ( lvi->pszText == NULL )
+        {
+            outOfMemoryException(c->threadContext);
+            goto done_out;
+        }
+
+        strcpy(lvi->pszText, text);
+    }
+
+    lvi->mask     = LVIF_TEXT | LVIF_GROUPID | LVIF_IMAGE;
+    lvi->iGroupId = I_GROUPIDNONE;
+    lvi->iImage   = I_IMAGENONE;
+
+    result = c->SendMessage2(TheLvItemClass, "NEW", obj, c->String(LVITEM_OBJ_MAGIC));
+    if ( result == NULLOBJECT )
+    {
+        safeLocalFree(lvi->pszText);
+        result = TheNilObj;
+    }
+    else
+    {
+        goto done_out;
     }
 
 done_out:
@@ -1130,20 +1215,85 @@ static RexxObjectPtr newLvSubitem(RexxMethodContext *c, HWND hList, uint32_t ite
     }
     checkForCallBack(lvi, temp, true);
 
-    RexxClassObject rxLvSi = rxGetContextClass(c, "LVSUBITEM");
-    if ( rxLvSi == NULLOBJECT )
-    {
-        safeLocalFree(lvi->pszText);
-        goto done_out;
-    }
-
     // Argument 2 is required, but when argument 1 is a buffer object, argument
     // 2 will be ignored.
-    result = c->SendMessage2(rxLvSi, "NEW", obj, TheOneObj);
+    result = c->SendMessage2(TheLvSubItemClass, "NEW", obj, TheOneObj);
+    if ( result == NULLOBJECT )
+    {
+        safeLocalFree(lvi->pszText);
+        result = TheNilObj;
+    }
 
 done_out:
     return result;
 }
+
+/**
+ * Returns a new LvSubItem object for the specified subitem in the list-view.
+ *
+ * The returned object can only be used for insertion where the item index will
+ * be fixed up at the time of insertion.
+ *
+ * @param c
+ * @param subitemIndex
+ *
+ * @return RexxObjectPtr
+ */
+static RexxObjectPtr simpleNewLvSubitem(RexxMethodContext *c, CSTRING text, uint32_t subitemIndex)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    RexxBufferObject obj = c->NewBuffer(sizeof(LVITEM));
+    if ( obj == NULLOBJECT )
+    {
+        outOfMemoryException(c->threadContext);
+        goto done_out;
+    }
+
+    LPLVITEM lvi = (LPLVITEM)c->BufferData(obj);
+    memset(lvi, 0, sizeof(LVITEM));
+
+    if ( StrCmpI(text, "lpStrTextCallBack") == 0 )
+    {
+        lvi->pszText = LPSTR_TEXTCALLBACK;
+    }
+    else
+    {
+        size_t len = strlen(text);
+
+        if ( len > LVITEM_TEXT_MAX )
+        {
+            stringTooLongException(c->threadContext, 1, LVITEM_TEXT_MAX, len);
+            goto done_out;
+        }
+
+        lvi->pszText = (char *)LocalAlloc(LPTR, len + 1);
+        if ( lvi->pszText == NULL )
+        {
+            outOfMemoryException(c->threadContext);
+            goto done_out;
+        }
+
+        strcpy(lvi->pszText, text);
+    }
+
+    lvi->iSubItem = subitemIndex;
+    lvi->mask     = LVIF_TEXT | LVIF_IMAGE;
+    lvi->iImage   = I_IMAGENONE;
+
+    // Argument 2 is required, but when argument 1 is a buffer object, argument
+    // 2 will be ignored.
+    result = c->SendMessage2(TheLvSubItemClass, "NEW", obj, TheOneObj);
+    if ( result == NULLOBJECT )
+    {
+        safeLocalFree(lvi->pszText);
+        result = TheNilObj;
+    }
+
+done_out:
+    return result;
+}
+
 
 /**
  * Iterates through all LvFullRow objects assigned as the item data of a
@@ -1219,6 +1369,189 @@ void maybeUpdateFullRowText(RexxThreadContext *c, NMLVDISPINFO *pdi)
             updateFullRowText(c, pclvfr, 0, pdi->item.pszText);
         }
     }
+}
+
+
+/**
+ * Set the item's, and each subitem's, text to the corresponding value in the
+ * pclvfr struct.
+ *
+ * @param pclvfr
+ * @param hList
+ * @param index
+ *
+ * @return The true object.
+ *
+ * @remarks  Originally this function was conceived to be used when the
+ *           list-view item's user data was a full row object and the Rexx
+ *           programmer wanted to sync the list-view item text with what he had
+ *           set the full row object to.
+ *
+ *           However, it would work well in other circustances.
+ *
+ *           Contrast this function with the similare updateTextUsingFullRow()
+ *           function.  This function unequivocally sets the item and every
+ *           subitem with the text in the full row struct.  The other function
+ *           checks for the LVIF_TEXT max and only updates the list-view if the
+ *           mask is set.  In addition, it optionally updates the full row
+ *           struct when the item has a full row struct assigned as the user
+ *           data.
+ */
+static RexxObjectPtr syncFullRowText(pCLvFullRow pclvfr, HWND hList, uint32_t index)
+{
+    for ( uint32_t i = 0; i <= pclvfr->subItemCount; i++ )
+    {
+        ListView_SetItemText(hList, index, i, (LPSTR)pclvfr->subItems[i]->pszText);
+    }
+    return TheTrueObj;
+}
+
+
+/**
+ * Sets the item's and subitem's text to the corresponding value in the pclvfr
+ * struct.  Checks for a LvFullRow object assigned as the user data for the item
+ * and updates that if needed
+ *
+ * @param c
+ * @param pclvfr
+ * @param hList
+ *
+ * @return The true object.
+ */
+static RexxObjectPtr updateTextUsingFullRow(RexxMethodContext *c, pCLvFullRow pclvfr, HWND hList)
+{
+    uint32_t index = pclvfr->subItems[0]->iItem;
+
+    pCLvFullRow pclvfrExisting = maybeGetFullRow(hList, index);
+
+    for ( uint32_t i = 0; i <= pclvfr->subItemCount; i++ )
+    {
+        if ( pclvfr->subItems[i]->mask & LVIF_TEXT )
+        {
+            ListView_SetItemText(hList, index, i, (LPSTR)pclvfr->subItems[i]->pszText);
+
+            if ( pclvfrExisting != NULL )
+            {
+                updateFullRowText(c->threadContext, pclvfrExisting, i, pclvfr->subItems[i]->pszText);
+            }
+        }
+    }
+    return TheTrueObj;
+}
+
+
+/**
+ * Set the item's, and each subitem's, values to the corresponding values in the
+ * pclvfr struct.
+ *
+ * @param pclvfr
+ * @param hList
+ * @param index
+ *
+ * @return True on success, false if an error occurs with ListView_SetItem().
+ *
+ * @remarks  Originally this function was conceived to be used when the
+ *           list-view item's user data was a full row object and the Rexx
+ *           programmer wanted to sync the list-view item text with what he had
+ *           set the full row object to.
+ *
+ *           However, it would work well in other circustances, *if*, there is
+ *           no full row user data assigned to the list-view item that needs to
+ *           be updated.
+ */
+static RexxObjectPtr syncFullRow(pCLvFullRow pclvfr, HWND hList, uint32_t index)
+{
+    for ( uint32_t i = 0; i <= pclvfr->subItemCount; i++ )
+    {
+        if ( ! ListView_SetItem(hList, pclvfr->subItems[i]) )
+        {
+            return TheFalseObj;
+        }
+    }
+    return TheTrueObj;
+}
+
+
+/**
+ * Sets the item's and subitem's values to the corresponding values in the
+ * pclvfr struct.  Checks for a LvFullRow object assigned as the user data for
+ * the item and updates that if needed
+ *
+ * @param c
+ * @param pclvfr
+ * @param hList
+ *
+ * @return The true object.
+ *
+ * @remarks  There are 3 scenarios we have to manage here.
+ *
+ *            1.) There is no current lParam user data set.  In this case the
+ *            lvItem is just used as is to do a set item.  If a lParam user data
+ *            value is set, we need to protect it.
+ *
+ *            2.) There is a current lParam user data set, but it is not a full
+ *            row object.  In this case, if lvItem contains a lParam user data
+ *            value, we need to replace the current value with the new value.
+ *
+ *            3.) There is a current lParam user data set and it is a full row
+ *            object.  In this case, if lvItem contains a lParm user data value
+ *            we need to update the current value with the new value.  If not,
+ *            we need to merge the new lvItem into the full row item.
+ */
+static RexxObjectPtr modifyFullRow(RexxMethodContext *c, pCDialogControl pcdc, pCLvFullRow pclvfr, HWND hList)
+{
+    uint32_t index = pclvfr->subItems[0]->iItem;
+
+    RexxObjectPtr oldUserData      = getCurrentLviUserData(hList, index);
+    pCLvFullRow   pclvfrExisting   = maybeGetFullRow(hList, index);
+    bool          lParamIsModified = (pclvfr->subItems[0]->mask & LVIF_PARAM) ? true : false;
+
+    for ( uint32_t i = 0; i <= pclvfr->subItemCount; i++ )
+    {
+        LPLVITEM pLvi = pclvfr->subItems[i];
+
+        if ( ! ListView_SetItem(hList, pLvi) )
+        {
+            return TheFalseObj;
+        }
+
+        if ( i == 0 )
+        {
+            if ( lParamIsModified )
+            {
+                protectLviUserData(c, pcdc, pLvi);
+            }
+
+            if ( oldUserData != TheNilObj )
+            {
+                if ( lParamIsModified )
+                {
+                    unProtectControlUserData(c, pcdc, oldUserData);
+                }
+                else if ( pclvfrExisting != NULL )
+                {
+                    mergeLviState(c, pclvfrExisting, pclvfrExisting->subItems[0], pLvi);
+                }
+            }
+        }
+        else
+        {
+            if ( pclvfrExisting != NULL && pclvfrExisting->subItemCount >= i )
+            {
+                if ( pLvi->mask & LVIF_TEXT )
+                {
+                    updateFullRowText(c->threadContext, pclvfrExisting, i, pLvi->pszText);
+                }
+
+                if ( pLvi->mask & LVIF_IMAGE )
+                {
+                    pclvfr->subItems[i]->iImage = pLvi->iImage;
+                }
+            }
+        }
+    }
+
+    return TheTrueObj;
 }
 
 
@@ -1778,6 +2111,118 @@ RexxMethod5(int32_t, lv_addRow, OPTIONAL_uint32_t, index, OPTIONAL_int32_t, imag
 done_out:
     return itemIndex;
 }
+
+
+/** ListView::addRowFromArray()
+ *
+ *  Inserts an item into this list-view from an array of values.  The string
+ *  value of each item in the array is used as the text for the item or
+ *  subitem(s).
+ *
+ *  The string value of the first item in the array will be the text for the
+ *  list-view item.  The string value of the second item in the array will be
+ *  the text for the first subitem of the list-view item.  The string value of
+ *  the third item in the array will be the text for the second subitem of the
+ *  list-view item, etc..
+ *
+ *  The array can not be sparse.
+ *
+ *  @param data  [required]  The array of objects whose string values are to be
+ *               used for the text of the item and subitems.
+ *
+ *  @param itemIndex  [optional]  The item index to use for the full row.  If
+ *                    omitted, the item is added after the last inserted item in
+ *                    the list-view
+ *
+ *  @param strIfNil   [opitonal]  String to use for the item or subitem text, if
+ *                    the object in the array is the .nil object.
+ *
+ *  @return  The index of the inserted item on success, or -1 on error.
+ *
+ *  @notes
+ */
+RexxMethod4(int32_t, lv_addRowFromArray, RexxArrayObject, data, OPTIONAL_uint32_t, itemIndex,
+            OPTIONAL_CSTRING, nullStr, CSELF, pCSelf)
+{
+    LVITEM  lvi    = { 0 };
+    int32_t iIndex = -1;
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+
+    size_t cCols = context->ArrayItems(data);
+    if ( cCols == 0 )
+    {
+        emptyArrayException(context->threadContext, 1);
+        goto done_out;
+    }
+
+    CSTRING itemText      = NULL;
+    bool    substitueText =  argumentOmitted(3) ? false : true;
+
+    // Insert the item first
+    RexxObjectPtr arrayItem = context->ArrayAt(data, 1);
+    if ( arrayItem == NULLOBJECT )
+    {
+        sparseArrayException(context->threadContext, 1, 1);
+        goto done_out;
+    }
+
+    if ( argumentOmitted(2) )
+    {
+        itemIndex = pcdc->lastItem + 1;
+    }
+    if ( substitueText )
+    {
+        itemText = arrayItem == TheNilObj ? nullStr : context->ObjectToStringValue(arrayItem);
+    }
+    else
+    {
+        itemText = context->ObjectToStringValue(arrayItem);
+    }
+
+    lvi.mask     = LVIF_TEXT | LVIF_GROUPID | LVIF_IMAGE;
+    lvi.iItem    = itemIndex;
+    lvi.pszText  = (LPSTR)itemText;
+    lvi.iGroupId = I_GROUPIDNONE;
+    lvi.iImage   = I_IMAGENONE;
+
+    iIndex = ListView_InsertItem(pcdc->hCtrl, &lvi);
+
+    if ( iIndex == -1 )
+    {
+        goto done_out;
+    }
+    pcdc->lastItem = iIndex;
+
+    for ( size_t i = 2; i <= cCols; i++ )
+    {
+        arrayItem = context->ArrayAt(data, i);
+        if ( arrayItem == NULLOBJECT )
+        {
+            sparseArrayException(context->threadContext, 1, i);
+            goto done_out;
+        }
+
+        if ( substitueText )
+        {
+            itemText = arrayItem == TheNilObj ? nullStr : context->ObjectToStringValue(arrayItem);
+        }
+        else
+        {
+            itemText = context->ObjectToStringValue(arrayItem);
+        }
+
+        ListView_SetItemText(pcdc->hCtrl, iIndex, (int)(i - 1), (LPSTR)itemText);
+    }
+
+done_out:
+    return iIndex;
+}
+
 
 /** ListView::addStyle()
  *  ListView::removeStyle()
@@ -2763,6 +3208,48 @@ RexxMethod2(RexxObjectPtr, lv_getItemPos, uint32_t, index, CSELF, pCSelf)
     return rxNewPoint(context, p.x, p.y);
 }
 
+/** ListView::getIitemRect()
+ *
+ *  Gets the bounding rectangle for all or part of an item in the current view.
+ *
+ *  @param  index  [required]  The index of the item for which the rectangle is
+ *                 being retrieve.
+ *
+ *  @param  part   [optional]  Keyword indicating which part of the item
+ *                 rectangle is sought.
+ *
+ *                 BOUNDS
+ *                 ICON
+ *                 LABEL
+ *                 SELECTBOUNDS
+ *
+ *                 The default is BOUNDS
+ *
+ *  @return  The specified bounding rectangle on success, the .nil object on
+ *           error.
+ */
+RexxMethod3(RexxObjectPtr, lv_getItemRect, uint32_t, index, OPTIONAL_CSTRING, part, CSELF, pCSelf)
+{
+    HWND hList = getDChCtrl(pCSelf);
+
+    uint32_t flag = LVIR_BOUNDS;
+    if ( argumentExists(2) )
+    {
+        flag = keyword2lvir(context, part, true);
+        if ( flag == (uint32_t)-1 )
+        {
+            return NULLOBJECT;
+        }
+    }
+
+    RECT r;
+    if ( ! ListView_GetItemRect(hList, index, &r, flag) )
+    {
+        return TheNilObj;
+    }
+    return rxNewRect(context, &r);
+}
+
 /** ListView::getSubitem()
  *
  *  Returns, or fills in, a LvSubItem object for the subitem specified.
@@ -2889,6 +3376,84 @@ done_out:
     return result;
 }
 
+/** ListView::getSubitemRect()
+ *
+ *  Gets the bounding rectangle for all or part of a subitem in the current view
+ *  of the list-view control.
+ *
+ *  @param  index     [required]  The index of the item for which the rectangle
+ *                    is being retrieve.
+ *
+ *  @param  subIndex  [required]  The index of the subitem for which the
+ *                    rectangle is being retrieved.
+ *
+ *  @param  part      [optional]  Keyword indicating which part of the subitem
+ *                    rectangle is sought.
+ *
+ *                    BOUNDS
+ *                    ICON
+ *                    LABEL
+ *
+ *                    The default is BOUNDS
+ *
+ *  @return  The specified bounding rectangle on success, the .nil object on
+ *           error.
+ *
+ *  @notes  On Vista, subIndex can be 0, in which case this method works exactly
+ *          like getItemRect(), with the exception that SELECTBOUNDS is not
+ *          accepted as a keyword.
+ *
+ *          If not on Vista, the list-view is required to be in report view.
+ */
+RexxMethod4(RexxObjectPtr, lv_getSubitemRect, uint32_t, index, uint32_t, subIndex, OPTIONAL_CSTRING, part, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return NULLOBJECT;
+    }
+    HWND hList = pcdc->hCtrl;
+
+    uint32_t flag = LVIR_BOUNDS;
+    if ( argumentExists(3) )
+    {
+        flag = keyword2lvir(context, part, false);
+        if ( flag == (uint32_t)-1 )
+        {
+            return NULLOBJECT;
+        }
+    }
+
+    RECT r = { 0 };
+
+    if ( _isAtLeastVista() )
+    {
+        LVITEMINDEX lvii;
+        lvii.iItem  = index;
+        lvii.iGroup = I_GROUPIDNONE;
+
+        if ( ! ListView_GetItemIndexRect(hList, &lvii, subIndex, flag, &r) )
+        {
+            return TheNilObj;
+        }
+    }
+    else
+    {
+        if ( ! isInReportView(hList) )
+        {
+            requiredOS(context, "getSubitemRect", "Vista", Vista_OS);
+            return TheNilObj;
+        }
+
+        if ( ! ListView_GetSubItemRect(hList, index, subIndex, flag, &r) )
+        {
+            return TheNilObj;
+        }
+    }
+
+    return rxNewRect(context, &r);
+}
+
 /** ListView::getView()
  *
  *
@@ -2957,7 +3522,8 @@ RexxMethod1(RexxObjectPtr, lv_hasCheckBoxes, CSELF, pCSelf)
  */
 RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
 {
-    int32_t result = -1;
+    LVHITTESTINFO hti = { 0 };
+    int32_t result    = -1;
 
     pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
     if ( pcdc == NULL )
@@ -2996,29 +3562,28 @@ RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
         info = (RexxDirectoryObject)_info;
     }
 
-    LVHITTESTINFO hti;
     hti.pt = point;
 
-    char buf[128];
+    char buf[256];
     *buf = '\0';
 
     if ( _isAtLeastVista() )
     {
-        result = ListView_HitTestEx(hwnd, &hti);
+        result = ListView_SubItemHitTestEx(hwnd, &hti);
 
         if ( haveDirectory )
         {
             context->DirectoryPut(info, context->Int32(hti.iGroup), "GROUP");
 
-            if ( hti.flags & LVHT_EX_FOOTER          ) strcat(buf, "Footer ");
-            if ( hti.flags & LVHT_EX_GROUP           ) strcat(buf, "Group ");
-            if ( hti.flags & LVHT_EX_GROUP_BACKGROUND) strcat(buf, "GroupBackground ");
-            if ( hti.flags & LVHT_EX_GROUP_COLLAPSE  ) strcat(buf, "GroupCollapse ");
-            if ( hti.flags & LVHT_EX_GROUP_FOOTER    ) strcat(buf, "GroupFooter ");
-            if ( hti.flags & LVHT_EX_GROUP_HEADER    ) strcat(buf, "GroupHeader ");
-            if ( hti.flags & LVHT_EX_GROUP_STATEICON ) strcat(buf, "GroupStateIcon ");
-            if ( hti.flags & LVHT_EX_GROUP_SUBSETLINK) strcat(buf, "GroupSubsetLink ");
-            if ( hti.flags & LVHT_EX_ONCONTENTS      ) strcat(buf, "OnContents ");
+            if ( (hti.flags & LVHT_EX_FOOTER          ) == LVHT_EX_FOOTER           ) strcat(buf, "Footer ");
+            if ( (hti.flags & LVHT_EX_GROUP           ) == LVHT_EX_GROUP            ) strcat(buf, "Group ");
+            if ( (hti.flags & LVHT_EX_GROUP_BACKGROUND) == LVHT_EX_GROUP_BACKGROUND ) strcat(buf, "GroupBackground ");
+            if ( (hti.flags & LVHT_EX_GROUP_COLLAPSE  ) == LVHT_EX_GROUP_COLLAPSE   ) strcat(buf, "GroupCollapse ");
+            if ( (hti.flags & LVHT_EX_GROUP_FOOTER    ) == LVHT_EX_GROUP_FOOTER     ) strcat(buf, "GroupFooter ");
+            if ( (hti.flags & LVHT_EX_GROUP_HEADER    ) == LVHT_EX_GROUP_HEADER     ) strcat(buf, "GroupHeader ");
+            if ( (hti.flags & LVHT_EX_GROUP_STATEICON ) == LVHT_EX_GROUP_STATEICON  ) strcat(buf, "GroupStateIcon ");
+            if ( (hti.flags & LVHT_EX_GROUP_SUBSETLINK) == LVHT_EX_GROUP_SUBSETLINK ) strcat(buf, "GroupSubsetLink ");
+            if ( (hti.flags & LVHT_EX_ONCONTENTS      ) == LVHT_EX_ONCONTENTS       ) strcat(buf, "OnContents ");
 
             if ( *buf != '\0' )
             {
@@ -3029,7 +3594,7 @@ RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
     }
     else
     {
-        result = ListView_HitTest(hwnd, &hti);
+        result = ListView_SubItemHitTest(hwnd, &hti);
     }
 
     if ( haveDirectory )
@@ -3039,15 +3604,19 @@ RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
 
         *buf = '\0';
 
-        if ( hti.flags & LVHT_ABOVE          ) strcat(buf, "Above ");
-        if ( hti.flags & LVHT_BELOW          ) strcat(buf, "Below ");
-        if ( hti.flags & LVHT_TORIGHT        ) strcat(buf, "ToRight ");
-        if ( hti.flags & LVHT_TOLEFT         ) strcat(buf, "ToLeft ");
-        if ( hti.flags & LVHT_NOWHERE        ) strcat(buf, "NoWhere ");
-        if ( hti.flags & LVHT_ONITEMICON     ) strcat(buf, "OnIcon ");
-        if ( hti.flags & LVHT_ONITEMLABEL    ) strcat(buf, "OnLabel ");
-        if ( hti.flags & LVHT_ONITEMSTATEICON) strcat(buf, "OnStateIcon ");
-        if ( hti.flags & LVHT_ONITEM         ) strcat(buf, "OnItem ");
+        // LVHT_ABOVE and LVHT_ONITEMSTATEICON are the value ;-(
+        if ( (hti.flags & LVHT_ABOVE          ) == LVHT_ABOVE && hti.iItem < 0 ) strcat(buf, "Above ");
+
+        if ( (hti.flags & LVHT_BELOW          ) == LVHT_BELOW           ) strcat(buf, "Below ");
+        if ( (hti.flags & LVHT_TORIGHT        ) == LVHT_TORIGHT         ) strcat(buf, "ToRight ");
+        if ( (hti.flags & LVHT_TOLEFT         ) == LVHT_TOLEFT          ) strcat(buf, "ToLeft ");
+        if ( (hti.flags & LVHT_NOWHERE        ) == LVHT_NOWHERE         ) strcat(buf, "NoWhere ");
+        if ( (hti.flags & LVHT_ONITEMICON     ) == LVHT_ONITEMICON      ) strcat(buf, "OnIcon ");
+        if ( (hti.flags & LVHT_ONITEMLABEL    ) == LVHT_ONITEMLABEL     ) strcat(buf, "OnLabel ");
+
+        if ( (hti.flags & LVHT_ONITEMSTATEICON) == LVHT_ONITEMSTATEICON && hti.iItem > -1 ) strcat(buf, "OnStateIcon ");
+
+        if ( (hti.flags & LVHT_ONITEM         ) == LVHT_ONITEM          ) strcat(buf, "OnItem ");
 
         if ( *buf != '\0' )
         {
@@ -3414,6 +3983,63 @@ RexxMethod5(RexxObjectPtr, lv_modifyColumnPx, uint32_t, index, OPTIONAL_CSTRING,
 
 err_out:
     return TheNegativeOneObj;
+}
+
+/** ListView::modifyFullRow()
+ *
+ *  Modifies a full row of a list-view item as specified.  That is, modifies the
+ *  item and all subitems, if any, of the list-view item.
+ *
+ *  @param row  [required]  This argument can be either the index of the item to
+ *              update, or a LvFullRow object to do the update with.
+ *
+ *              When row is an index, then the item data for the row *must* be a
+ *              LvFullRow object.  Using an index signals that the row has
+ *              already been updated and the programmer wants the list-view item
+ *              "synched" with the full row.
+ *
+ *              When row is a LvFullRow object, then the underlying list-view
+ *              item's values are set to the full row object's values.  Also,
+ *              for this case, if the item being updated also has a full row
+ *              object assigned the item data, that full row object's values are
+ *              updated, or merged, with the sent full row object's values.
+ *
+ *  @return  True on success, false on error.
+ */
+RexxMethod2(RexxObjectPtr, lv_modifyFullRow, OPTIONAL_RexxObjectPtr, row, CSELF, pCSelf)
+{
+    RexxObjectPtr   result = TheFalseObj;
+    pCDialogControl pcdc   = validateDCCSelf(context, pCSelf);
+
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+
+    uint32_t index;
+    HWND     hList = pcdc->hCtrl;
+
+    if ( context->IsOfType(row, "LVFULLROW") )
+    {
+        result = modifyFullRow(context, pcdc, (pCLvFullRow)context->ObjectToCSelf(row), hList);
+    }
+    else if ( context->UnsignedInt32(row, &index) )
+    {
+        pCLvFullRow pclvfr = maybeGetFullRow(hList, index);
+        if ( pclvfr == NULL )
+        {
+            userDefinedMsgException(context, 1, "the item data for the list-view item is not a LvFullRow object");
+            goto done_out;
+        }
+        result = syncFullRow(pclvfr, hList, index);
+    }
+    else
+    {
+        wrongArgValueException(context->threadContext, 1, "a LvFullRow object or the list-view item index", row);
+    }
+
+done_out:
+    return result;
 }
 
 /** ListView::modifyItem()
@@ -3794,6 +4420,63 @@ RexxMethod3(RexxObjectPtr, lv_setColumnWidthPx, uint32_t, index, OPTIONAL_RexxOb
     }
 
     return (ListView_SetColumnWidth(hList, index, width) ? TheZeroObj : TheOneObj);
+}
+
+/** ListView::setFullRowText()
+ *
+ *  Sets the text for the specified item and all subitems.
+ *
+ *  @param row  [required]  This argument can be either the index of the item to
+ *              update, or a LvFullRow object to do the update with.
+ *
+ *              When row is an index, then the item data for the row *must* be a
+ *              LvFullRow object.  Using an index signals that the text in the
+ *              full row has already been updated and the programmer wants the
+ *              list-view item "synched" with the text in the full row.
+ *
+ *              When row is a LvFullRow object, then the underlying list-view
+ *              item's text is set to the text in the full row object.  Only
+ *              the item and subitems that have the TEXT mask set are updated.
+ *              Also, for this case, if the item being updated also has a full
+ *              row object assigned the item data, that full row object's text
+ *              is updated
+ *
+ *  @return  True on success, false on error.
+ */
+RexxMethod2(RexxObjectPtr, lv_setFullRowText, OPTIONAL_RexxObjectPtr, row, CSELF, pCSelf)
+{
+    RexxObjectPtr   result = TheFalseObj;
+    pCDialogControl pcdc   = validateDCCSelf(context, pCSelf);
+
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+
+    uint32_t index;
+    HWND     hList = pcdc->hCtrl;
+
+    if ( context->IsOfType(row, "LVFULLROW") )
+    {
+        result = updateTextUsingFullRow(context, (pCLvFullRow)context->ObjectToCSelf(row), hList);
+    }
+    else if ( context->UnsignedInt32(row, &index) )
+    {
+        pCLvFullRow pclvfr = maybeGetFullRow(hList, index);
+        if ( pclvfr == NULL )
+        {
+            userDefinedMsgException(context, 1, "the item data for the list-view item is not a LvFullRow object");
+            goto done_out;
+        }
+        result = syncFullRowText(pclvfr, hList, index);
+    }
+    else
+    {
+        wrongArgValueException(context->threadContext, 1, "a LvFullRow object or the list-view item index", row);
+    }
+
+done_out:
+    return result;
 }
 
 /** ListView::setImageList()
@@ -4633,6 +5316,20 @@ done_out:
 }
 
 
+/** LvItem::init()      [Class]
+ *
+ */
+RexxMethod1(RexxObjectPtr, lvi_init_cls, OSELF, self)
+{
+    if ( isOfClassType(context, self, LVITEM_CLASS) )
+    {
+        TheLvItemClass = (RexxClassObject)self;
+        context->RequestGlobalReference(TheLvItemClass);
+    }
+    return NULLOBJECT;
+}
+
+
 /** LvItem::uninit()
  *
  */
@@ -5121,6 +5818,21 @@ uint32_t keyword2lvifSub(CSTRING flags)
     return c->String(buf);
 }
 
+
+/** LvSubItem::init()      [Class]
+ *
+ */
+RexxMethod1(RexxObjectPtr, lvsi_init_cls, OSELF, self)
+{
+    if ( isOfClassType(context, self, LVSUBITEM_CLASS) )
+    {
+        TheLvSubItemClass = (RexxClassObject)self;
+        context->RequestGlobalReference(TheLvSubItemClass);
+    }
+    return NULLOBJECT;
+}
+
+
 /** LvSubItem::uninit()
  *
  */
@@ -5509,6 +6221,196 @@ static RexxObjectPtr insertSubItemIntoRow(RexxMethodContext *c, RexxObjectPtr lv
 }
 
 
+/** LvFullRow::init()        [Class]
+ *
+ */
+RexxMethod1(RexxObjectPtr, lvfr_init_cls, OSELF, self)
+{
+    if ( isOfClassType(context, self, LVFULLROW_CLASS) )
+    {
+        TheLvFullRowClass = (RexxClassObject)self;
+        context->RequestGlobalReference(TheLvFullRowClass);
+    }
+    return NULLOBJECT;
+}
+
+
+/** LvFullRow::fromArray()   [Class]
+ *
+ *  Constructs a full row object from an array of values.  The string value of
+ *  each item in the array is used as the text for the item or subitem(s).
+ *
+ *  The string value of the first item in the array will be the text for the
+ *  list-view item.  The string value of the second item in the array will be
+ *  the text for the first subitem of the list-view item.  The string value of
+ *  the third item in the array will be the text for the second subitem of the
+ *  list-view item, etc..
+ *
+ *  The array can not be sparse.
+ *
+ *  @param data  [required]  The array of objects whose string values are to be
+ *               used for the text of the item and subitems.
+ *
+ *  @param itemIndex  [optional]  The item index to use for the full row.  If
+ *                    omitted, 0 is used for the item index.
+ *
+ *  @param strIfNil   [opitonal]  String to use for the item or subitem text, if
+ *                    the object in the array is the .nil object.
+ *
+ *  @param useForSorting  [optional]  If the constructed full row object should
+ *                        be assigned as the item data for the list-view item.
+ *                        This allows the ooDialog framework to sort the
+ *                        list-view item internally.
+ *
+ *  @return  A newly instantiated LvFullRow object on success, the .nil objec on
+ *           error.
+ *
+ *  @notes  The returned full row object is intended to be used to insert an
+ *          item into a list-view.  Other uses of the full row object may cause
+ *          unpredictable results.  It is the responsibility of the programmer
+ *          to determine if the full row object is suitable for some other use.
+ *          The programmer should consider that only the text attribute of the
+ *          full row item and its subitems is set.
+ *
+ *          Recall that if the full row object is used in either the addFullRow
+ *          or prependFullRow methods, the item index of the full row object is
+ *          ignored.  For the insertFullRow method, if the item index is 0, the
+ *          method will work fine, the full row will be inserted as the first
+ *          item in the list-view.  Therefore the optional <itemIndex> argument
+ *          is never needed, and, depending on the use of the full row object,
+ *          may be a waste of time.
+ */
+RexxMethod5(RexxObjectPtr, lvfr_fromArray_cls, RexxArrayObject, data, OPTIONAL_uint32_t, itemIndex,
+            OPTIONAL_CSTRING, nullStr, OPTIONAL_logical_t, useForSorting, OSELF, self)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    size_t cCols = context->ArrayItems(data);
+    if ( cCols == 0 )
+    {
+        emptyArrayException(context->threadContext, 1);
+        return result;
+    }
+
+    // Allocate and set up the CLvFullRow struct using Rexx memory
+    RexxBufferObject buf = context->NewBuffer(sizeof(CLvFullRow));
+    if ( buf == NULLOBJECT )
+    {
+        outOfMemoryException(context->threadContext);
+        return result;
+    }
+
+    pCLvFullRow pclvfr = (pCLvFullRow)context->BufferData(buf);
+    memset(pclvfr, 0, sizeof(CLvFullRow));
+
+    size_t size = LVFULLROW_DEF_SUBITEMS;
+    if ( cCols >= size )
+    {
+        size = 2 * cCols;
+    }
+
+    pclvfr->subItems   = (LPLVITEM *)LocalAlloc(LPTR, size * sizeof(LPLVITEM *));
+    pclvfr->rxSubItems = (RexxObjectPtr *)LocalAlloc(LPTR, size * sizeof(RexxObjectPtr *));
+
+    if ( pclvfr->subItems == NULL || pclvfr->rxSubItems == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        goto err_out;
+    }
+
+    CSTRING itemText      = NULL;
+    bool    substitueText =  argumentOmitted(3) ? false : true;
+
+    // Create a LvItem
+    RexxObjectPtr arrayItem = context->ArrayAt(data, 1);
+    if ( arrayItem == NULLOBJECT )
+    {
+        sparseArrayException(context->threadContext, 1, 1);
+        goto err_out;
+    }
+
+    if ( substitueText )
+    {
+        itemText = arrayItem == TheNilObj ? nullStr : context->ObjectToStringValue(arrayItem);
+    }
+    else
+    {
+        itemText = context->ObjectToStringValue(arrayItem);
+    }
+
+    RexxObjectPtr rxItem = simpleNewLvItem(context, itemText);
+    if ( rxItem == TheNilObj )
+    {
+        goto err_out;
+    }
+
+    LPLVITEM lvi = (LPLVITEM)context->ObjectToCSelf(rxItem);
+
+    lvi->iItem = itemIndex;
+
+    pclvfr->magic         = LVFULLROW_MAGIC;
+    pclvfr->size          = (uint32_t)size;
+    pclvfr->subItems[0]   = lvi;
+    pclvfr->rxSubItems[0] = rxItem;
+
+    if ( useForSorting )
+    {
+        pclvfr->subItems[0]->lParam = (LPARAM)pclvfr;
+        pclvfr->subItems[0]->mask  |= LVIF_PARAM;
+    }
+
+    // Create LvSubItem objects for each column and add them to the struct.
+    for ( size_t i = 1; i < cCols; i++ )
+    {
+        // Create a LvSubItem
+        arrayItem = context->ArrayAt(data, i + 1);
+        if ( arrayItem == NULLOBJECT )
+        {
+            sparseArrayException(context->threadContext, 1, i + 1);
+            goto err_out;
+        }
+
+        if ( substitueText )
+        {
+            itemText = arrayItem == TheNilObj ? nullStr : context->ObjectToStringValue(arrayItem);
+        }
+        else
+        {
+            itemText = context->ObjectToStringValue(arrayItem);
+        }
+
+        RexxObjectPtr rxSubItem = simpleNewLvSubitem(context, itemText, (uint32_t)i);
+        if ( rxSubItem == TheNilObj )
+        {
+            goto err_out;
+        }
+
+        lvi = (LPLVITEM)context->ObjectToCSelf(rxSubItem);
+
+        lvi->iItem = itemIndex;
+
+        pclvfr->subItems[i]   = lvi;
+        pclvfr->rxSubItems[i] = rxSubItem;
+
+        pclvfr->subItemCount++;
+    }
+
+    // Now instantiate the LvFullRow Rexx object.
+    result = context->SendMessage1(TheLvFullRowClass, "NEW", buf);
+    if ( result != NULLOBJECT )
+    {
+        return result;
+    }
+
+err_out:
+    safeLocalFree(pclvfr->subItems);
+    safeLocalFree(pclvfr->rxSubItems);
+    pclvfr->subItems = NULL;
+    pclvfr->rxSubItems = NULL;
+    return TheNilObj;
+}
+
+
 /** LvFullRow::uninit()
  *
  */
@@ -5679,6 +6581,35 @@ done:
     lvfrStoreItems(context, pclvfr);
 
 err_out:
+    return NULLOBJECT;
+}
+
+/** LvFullRow::userData             [attribute]
+ */
+RexxMethod1(RexxObjectPtr, lvfr_userData, CSELF, pCSelf)
+{
+    pCLvFullRow pclvfr = (pCLvFullRow)pCSelf;
+    if ( pclvfr->userData != NULLOBJECT )
+    {
+        return pclvfr->userData;
+    }
+    return TheNilObj;
+}
+RexxMethod2(RexxObjectPtr, lvfr_setUserData, RexxObjectPtr, obj, CSELF, pCSelf)
+{
+    pCLvFullRow pclvfr = (pCLvFullRow)pCSelf;
+
+    if ( obj == TheNilObj )
+    {
+        pclvfr->userData = NULL;
+        context->SetObjectVariable("USERDATA", NULLOBJECT);
+    }
+    else
+    {
+        pclvfr->userData = obj;
+        context->SetObjectVariable("USERDATA", obj);
+    }
+
     return NULLOBJECT;
 }
 

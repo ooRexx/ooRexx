@@ -111,6 +111,10 @@
 ::method sendMessage unguarded external "LIBRARY oodialog wb_sendMessage"
 ::method sendMessageHandle unguarded external "LIBRARY oodialog wb_sendMessage"
 ::method setRect unguarded external "LIBRARY oodialog wb_setRect"
+::method setStyleRaw unguarded
+  use strict arg newValue
+  return self~setWindowLong(-16, newValue)
+
 ::method setText unguarded external "LIBRARY oodialog wb_setText"
 ::method setTitle unguarded external "LIBRARY oodialog wb_setText"
 ::method setWindowPos unguarded external "LIBRARY oodialog wb_setWindowPos"
@@ -171,6 +175,7 @@
 
 -- These shortcut methods are for internal use, do not document.
 ::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt" -- Not intending to document getWindowLong, at this point
+::method setWindowLong private unguarded external "LIBRARY oodialog wb_setWindowLong_pvt" -- Not intending to document setWindowLong, at this point
 ::method sendWinHandle2Msg unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"   -- Internal use do not document
 ::method sendWinHandle2MsgH unguarded external "LIBRARY oodialog wb_sendWinHandle2Msg"  -- Internal use do not document
 ::method sendWinHandleMsg unguarded external "LIBRARY oodialog wb_sendWinHandleMsg"     -- Internal use do not document
@@ -263,6 +268,9 @@
 ::attribute autoDetect set external "LIBRARY oodialog pbdlg_setAutoDetect"
 
 ::attribute dlgHandle get unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
+
+::attribute dlgID get external "LIBRARY oodialog pbdlg_getDlgID"
+::attribute dlgID set external "LIBRARY oodialog pbdlg_setDlgID"
 
 -- finsished is now a boolean, when set to .true, the dialog ends.  Older ooDialog set it
 -- to 2 on an abnormal termination of the underlying dialog.  This is no longer done.

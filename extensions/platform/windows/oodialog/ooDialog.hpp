@@ -41,7 +41,8 @@
 
 #define NTDDI_VERSION   NTDDI_LONGHORN
 #define _WIN32_WINNT    0x0600
-#define _WIN32_IE       0x0600
+// #define _WIN32_IE       0x0600  <- old IE70 may be too much ?
+#define _WIN32_IE       _WIN32_IE_IE70
 #define WINVER          0x0600
 
 #define STRICT
@@ -57,7 +58,7 @@
 #define MAXDIALOGS              20
 
 #define MAXTABPAGES           MAXPROPPAGES
-#define MAXMANAGEDTABS        4
+#define MAXMANAGEDTABS           4
 
 #define MAXCUSTOMDRAWCONTROLS   20
 
@@ -108,6 +109,7 @@
 #define ICON_FILE                 0x00000001
 #define ICON_OODIALOG             0x00000002
 #define ICON_DLL                  0x00000004
+#define ICON_RC                   0x00000008
 
 /* Defines for the different possible versions of comctl32.dll up to Windows 7.
  * These DWORD "packed version" numbers are calculated using the following
@@ -282,6 +284,7 @@ typedef enum
     winMonthCalendar       = 16,
     winUpDown              = 17,
     winToolTip             = 18,
+    winComboLBox           = 19,
 
     // A special value used by the data table / data table connection functions.
     winNotAControl         = 42,
@@ -371,7 +374,7 @@ typedef struct {
     COLORREF ColorBk;
     COLORREF ColorFG;
     uint32_t itemID;
-   bool isSysBrush;
+    bool     isSysBrush;
     bool     useSysColors;
 } COLORTABLEENTRY;
 
@@ -442,6 +445,7 @@ typedef struct {
 // Masks for GetAsyncKeyState() and GetKeyState() returns.
 #define TOGGLED               0x00000001  // GetKeyState()
 #define ISDOWN                    0x8000  // GetAsyncKeyState()
+#define WASPRESSED                0x0001  // GetAsyncKeyState()
 
 /* Microsoft does not define these, just has this note:
  *
@@ -547,6 +551,92 @@ typedef struct _wmf {
 } WinMessageFilter;
 typedef WinMessageFilter *pWinMessageFilter;
 
+/* Stuff for the ResizingAdmin class (resizable dialogs.) */
+
+// How an edge of a control is pinned to the edge of another window.
+typedef enum
+{
+    myLeftPin = 1,       // control width does not change
+    myTopPin,            // control height does not change
+    proportionalPin,     // control position is proportional to pinned edge
+    stationaryPin,       // control position is unchanged from pinned edge
+    notAPin              // invalid
+} pinType_t;
+
+// Which edge of another window the control's edge is pinned to.
+typedef enum
+{
+    leftEdge = 1,  // pinned to the left edge
+    topEdge,       // pinned to the top edge
+    rightEdge,     // pinned to the right edge
+    bottomEdge,    // pinned to the bottom edge
+    xCenterEdge,   // centered horizontally ...
+    yCenterEdge,   // centered vertically ...
+    notAnEdge      // invalid
+} pinnedEdge_t;
+
+// Defines how one edge of a dialog control is pinned to some other window.
+typedef struct _edge {
+    pinnedEdge_t  pinToEdge;  // which edge of the pinned to window is pinned
+    pinType_t     pinType;    // how this edge is pinned
+    uint32_t      pinToID;    // the window this edge is pinned to
+} Edge;
+typedef Edge *pEdge;
+
+// Defines how all 4 edges of a dialog control are pinned to other windows
+typedef struct _controlEdges {
+    Edge      left;
+    Edge      top;
+    Edge      right;
+    Edge      bottom;
+} ControlEdges;
+typedef ControlEdges *pControlEdges;
+
+/* Struct for the resizing information for a single control */
+typedef struct _resizeInfoCtrl {
+    ControlEdges       edges;
+    RECT               originalRect;
+    RECT               currentRect;
+    HWND               hCtrl;
+    oodControl_t       ctrlType;
+    uint32_t           id;
+} ResizeInfoCtrl;
+typedef ResizeInfoCtrl *pResizeInfoCtrl;
+
+// For control dialogs, a struct for information for each tab control in the
+// dialog.
+typedef struct _pagedTab {
+    HWND      redrawThis;                // For control dialogs, we need a redrawThis for each tab control.
+    uint32_t  tabID;
+    uint32_t  dlgIDs[MAXCHILDDIALOGS];
+} PagedTab;
+typedef PagedTab *pPagedTab;
+
+/* Struct for the resizable dialog information (ResizingAdmin.) */
+typedef struct _resizeInfoDlg {
+    ControlEdges       defEdges;
+    pPagedTab          pagedTabs[MAXMANAGEDTABS];
+    RECT               originalRect;
+    RECT               currentRect;
+    SIZE               minSize;
+    SIZE               maxSize;
+    pResizeInfoCtrl    riCtrls;
+    HWND               redrawThis;     // Used for PropertySheetDialogs only
+    char              *sizeEndedMeth;
+    size_t             tableSize;      // should be ctrlTableSize
+    size_t             countCtrls;
+    size_t             countPagedTabs;
+    bool               sizeEndedWillReply;
+    bool               inDefineSizing;
+    bool               inSizeOrMove;
+    bool               isSizing;
+    bool               haveError;
+    bool               minSizeIsInitial;
+    bool               haveMaxSize;
+    bool               haveMinSize;
+} ResizeInfoDlg;
+typedef ResizeInfoDlg *pResizeInfoDlg;
+
 
 /* Struct for the WindowBase object CSelf. */
 typedef struct _wbCSelf {
@@ -588,7 +678,6 @@ typedef CEventNotification *pCEventNotification;
 typedef struct _pbdcCSelf {
     char         fontName[MAX_DEFAULT_FONTNAME];
     uint32_t     fontSize;
-
 } CPlainBaseDialogClass;
 typedef CPlainBaseDialogClass *pCPlainBaseDialogClass;
 
@@ -623,6 +712,7 @@ typedef struct _pbdCSelf {
     pCWindowBase         wndBase;
     pCEventNotification  enCSelf;
     pCWindowExtensions   weCSelf;
+    pResizeInfoDlg       resizeInfo;
     RexxObjectPtr        rexxSelf;      // This dialog's Rexx dialog object
     RexxObjectPtr        rexxParent;    // This dialog's Rexx parent dialog object
     HWND                 hDlg;          // The handle to this dialog's underlying Windows dialog
@@ -654,28 +744,30 @@ typedef struct _pbdCSelf {
     size_t               BT_size;
     size_t               countChilds;
     logical_t            autoDetect;
-    DWORD                dlgProcThreadID;
+    uint32_t             dlgProcThreadID;
     uint32_t             fontSize;
+    int32_t              dlgID;            // ID, usually set to resourceID if ResDlg or RcDlg, set to -1 if not resoloved during init()
     bool                 onTheTop;
-    bool                 isCategoryDlg;  // Need to use IsNestedDialogMessage()
-    bool                 isControlDlg;   // Dialog was created as DS_CONTROL | WS_CHILD
-    bool                 isOwnedDlg;     // Dialog has an owner dialog
+    bool                 isCategoryDlg;    // Need to use IsNestedDialogMessage()
+    bool                 isControlDlg;     // Dialog was created as DS_CONTROL | WS_CHILD
+    bool                 isOwnedDlg;       // Dialog has an owner dialog
     bool                 isOwnerDlg;       // Dialog is an owner dialog
-    bool                 isManagedDlg;   // Dialog has an owner dialog, which is a tab owner dialog
-    bool                 isPageDlg;      // Dialog is a property sheet page dialog
-    bool                 isPropSheetDlg; // Dialog is a property sheet dialog
-    bool                 isTabOwnerDlg;  // Dialog is a tab owner dialog
+    bool                 isManagedDlg;     // Dialog has an owner dialog, which is a tab owner dialog
+    bool                 isPageDlg;        // Dialog is a property sheet page dialog
+    bool                 isPropSheetDlg;   // Dialog is a property sheet dialog
+    bool                 isTabOwnerDlg;    // Dialog is a tab owner dialog
     bool                 isCustomDrawDlg;  // Dialog inherited CustomDraw
+    bool                 isResizableDlg;   // Dialog inherited ResizingAdmin
     bool                 idsNotChecked;
     bool                 badIDs;
-    bool                 isDlgHwndSet;   // Has setDlgHandle() been executed
+    bool                 isDlgHwndSet;     // Has setDlgHandle() been executed
     bool                 sharedIcon;
     bool                 didChangeIcon;
     bool                 isActive;
     bool                 isFinished;       // The value of the finished attribute
     bool                 dlgAllocated;
     bool                 abnormalHalt;
-    bool                 scrollNow;      // For scrolling text in windows.
+    bool                 scrollNow;        // For scrolling text in windows.
     bool                 bkgBrushIsSystem; // Do not delete brush if true.
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
@@ -956,12 +1048,14 @@ typedef struct _psdCSelf {
     char                *caption;
     uint32_t             pageCount;
     uint32_t             propSheetFlags;
+    uint32_t             id;               // Used to ID the property sheet if resizable
     intptr_t             getResultValue;   // Storage for the return from PSM_GETRESULT
     bool                 modeless;
     bool                 isNotWizard;
     bool                 isWiz97;
     bool                 isWizLite;
     bool                 isAeroWiz;
+    bool                 isFirstShow;      // For resizable dialogs, in subclass proc, indicates is 1st WM_SHOWWINDOW
 } CPropertySheetDialog;
 typedef CPropertySheetDialog *pCPropertySheetDialog;
 
@@ -1026,9 +1120,14 @@ extern RexxObjectPtr       TheZeroObj;
 extern RexxObjectPtr       TheTwoObj;
 extern RexxObjectPtr       TheOneObj;
 extern RexxObjectPtr       TheNegativeOneObj;
+
 extern RexxObjectPtr       TheApplicationObj;
 extern RexxDirectoryObject TheConstDir;
 extern oodConstDir_t       TheConstDirUsage;
+extern HICON               TheDefaultSmallIcon;
+extern HICON               TheDefaultBigIcon;
+extern bool                DefaultIconIsShared;
+
 extern RexxDirectoryObject TheDotLocalObj;
 extern RexxPointerObject   TheNullPtrObj;
 
@@ -1042,6 +1141,9 @@ extern RexxClassObject TheSizeClass;
 extern RexxClassObject TheRectClass;
 extern RexxClassObject TheLvCustomDrawSimpleClass;
 extern RexxClassObject TheTvCustomDrawSimpleClass;
+extern RexxClassObject TheLvFullRowClass;
+extern RexxClassObject TheLvItemClass;
+extern RexxClassObject TheLvSubItemClass;
 
 extern HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id);
 

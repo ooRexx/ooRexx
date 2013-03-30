@@ -130,8 +130,6 @@ extern char *            strdup_nospace(const char *str);
 extern char *            strdup_2methodName(const char *str);
 extern void              checkModal(pCPlainBaseDialog previous, logical_t modeless);
 
-extern pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos, pCDialogControl *ppcdc);
-
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern DWORD         oodGetSysErrCode(RexxThreadContext *);
 extern void          oodSetSysErrCode(RexxThreadContext *, DWORD);
@@ -165,6 +163,7 @@ extern RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r);
 extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, size_t argPos);
 extern RexxObjectPtr rxNewSize(RexxThreadContext *c, long cx, long cy);
 extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
+extern RexxObjectPtr rxNewSize(RexxMethodContext *c, PSIZE s);
 
 extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj);
 extern bool rxDirectoryFromArray(RexxMethodContext *c, RexxArrayObject a, size_t index, RexxDirectoryObject *d, size_t argPos);
@@ -174,8 +173,10 @@ extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING
 
 extern int               putUnicodeText(LPWORD dest, const char *text);
 extern LPWSTR            ansi2unicode(LPCSTR str);
-extern RexxStringObject  unicode2string(RexxMethodContext *c, PWSTR wstr);
+extern RexxStringObject  unicode2string(RexxThreadContext *c, PWSTR wstr);
 extern char *            unicode2ansi(PWSTR wstr);
+extern bool              printHResultErr(CSTRING api, HRESULT hr);
+extern bool              getFormattedErrMsg(char **errBuff, uint32_t errCode, uint32_t *thisErr);
 
 extern RexxObjectPtr     setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
 extern int               getKeywordValue(String2Int *cMap, const char * str);
@@ -230,6 +231,11 @@ typedef enum {def, autoCheck, threeState, autoThreeState, noSubtype } BUTTONSUBT
 extern BUTTONTYPE getButtonInfo(HWND, PBUTTONSUBTYPE, DWORD *);
 
 
+inline RexxStringObject unicode2string(RexxMethodContext *c, LPWSTR wstr)
+{
+    return unicode2string(c->threadContext, wstr);
+}
+
 inline int32_t oodGlobalID(RexxMethodContext *c, RexxObjectPtr id, size_t argPosID, bool strict)
 {
     return oodGlobalID(c->threadContext, id, argPosID, strict);
@@ -251,7 +257,7 @@ inline void safeLocalFree(void *p)
 
 inline void safeFree(void *p)
 {
-    if (p != NULL)
+    if ( p != NULL )
     {
         free(p);
     }
@@ -259,7 +265,7 @@ inline void safeFree(void *p)
 
 inline void safeDeleteObject(HANDLE h)
 {
-    if (h != NULL)
+    if ( h != NULL )
     {
         DeleteObject(h);
     }
@@ -393,9 +399,15 @@ extern void           controlFailedException(RexxThreadContext *, CSTRING, CSTRI
 extern void           wrongWindowStyleException(RexxMethodContext *c, CSTRING, CSTRING);
 extern void           bitmapTypeMismatchException(RexxMethodContext *c, CSTRING orig, CSTRING found, size_t pos);
 extern void           customDrawMismatchException(RexxThreadContext *c, uint32_t id, oodControl_t type);
+extern RexxObjectPtr  tooManyPagedTabsException(RexxMethodContext *c, uint32_t count, bool isPagedTab);
+extern RexxObjectPtr  methodCanOnlyBeInvokedException(RexxMethodContext *c, CSTRING methodName, CSTRING msg, RexxObjectPtr rxObj);
 extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, RexxObjectPtr rxDlg, CSTRING msg);
 extern RexxObjectPtr  methodCanNotBeInvokedException(RexxMethodContext *c, CSTRING methodName, CSTRING msg, RexxObjectPtr rxDlg);
 extern RexxObjectPtr  invalidAttributeException(RexxMethodContext *c, RexxObjectPtr rxDlg);
+
+extern pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos, pCDialogControl *ppcdc);
+extern pCDialogControl   requiredDlgControlCSelf(RexxMethodContext *c, RexxObjectPtr control, size_t argPos);
+extern pCPlainBaseDialog requiredPlainBaseDlg(RexxMethodContext *c, RexxObjectPtr dlg, size_t argPos);
 
 /**
  *  93.900

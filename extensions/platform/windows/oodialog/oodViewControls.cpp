@@ -1706,7 +1706,7 @@ RexxMethod1(RexxObjectPtr, mc_getToday, CSELF, pCSelf)
     return result;
 }
 
-/** MonthCalendar::hitTest()
+/** MonthCalendar::hitTestInfo()
  *
  *
  *  @note  Indexes for row, column, and calendar offset are 1-based.
@@ -1715,8 +1715,12 @@ RexxMethod1(RexxObjectPtr, mc_getToday, CSELF, pCSelf)
  *            for MCHITTESTINFO to exclude the Vista only fields.  Otherwise
  *            MonthCal_HitTest fails completely.
  *
+ *            Erroneously called hitTest in ooDialog 4.2.0.  Now both hitTest
+ *            and hitTestInfo are mapped to this method.  Need to preserve
+ *            hitTest for backwards compatibility, but only hitTestInfo is
+ *            documented from 4.2.2 onwards.
  */
-RexxMethod2(RexxObjectPtr, mc_hitTest, RexxObjectPtr, _pt, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, mc_hitTestInfo, RexxObjectPtr, _pt, CSELF, pCSelf)
 {
     HWND hMC = getMonthCalendar(context, pCSelf);
     if ( hMC == NULL )

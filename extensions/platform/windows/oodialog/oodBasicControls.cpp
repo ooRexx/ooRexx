@@ -55,6 +55,256 @@
 
 
 /**
+ * The genric implementation for the isGrandChild() method.  Currently only the
+ * edit and combo box controls have this method, so being static in this module
+ * is fine.
+ *
+ * This may need to change if the mehtod is used for more controls .
+ *
+ * @param context
+ * @param mthName
+ * @param wantTab
+ * @param pCSelf
+ *
+ * @return RexxObjectPtr
+ */
+static RexxObjectPtr genericIsGrandchild(RexxMethodContext *context, CSTRING mthName, logical_t wantTab,
+                                         CSELF pCSelf, oodControl_t type)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr    result = TheFalseObj;
+    WinMessageFilter wmf    = {0};
+
+    // For now there is only edit and combo box, may be others in the future.
+    if ( type == winComboBox )
+    {
+        wmf.method = "onComboBoxGrandChildEvent";
+        wmf.tag    = CTRLTAG_COMBOBOX | CTRLTAG_ISGRANDCHILD;
+    }
+    else
+    {
+        wmf.method = "onEditGrandChildEvent";
+        wmf.tag    = CTRLTAG_EDIT | CTRLTAG_ISGRANDCHILD;
+    }
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+    if ( ! requiredComCtl32Version(context, "isGrandChild", COMCTL32_6_0) )
+    {
+        goto done_out;
+    }
+    if ( type == winEdit && ! isSingleLineEdit(pcdc->hCtrl) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_SUPPORTED);
+        goto done_out;
+    }
+
+    if ( argumentExists(1) )
+    {
+        wmf.method = mthName;
+    }
+
+    wmf.wm       = WM_KILLFOCUS;
+    wmf.wmFilter = 0xFFFFFFFF;
+    wmf.wp       = 0;
+    wmf.wpFilter = 0;
+    wmf.lp       = 0;
+    wmf.lpFilter = 0;
+
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm       = WM_GETDLGCODE;
+    wmf.wmFilter = 0xFFFFFFFF;
+    wmf.wp       = 0;
+    wmf.wpFilter = 0;
+    wmf.lp       = 0;
+    wmf.lpFilter = 0;
+
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm       = WM_KEYDOWN;
+    wmf.wmFilter = 0xFFFFFFFF;
+    wmf.wp       = VK_RETURN;
+    wmf.wpFilter = 0xFFFFFFFF;
+    wmf.lp       = 0;
+    wmf.lpFilter = KEY_WASDOWN;
+
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm = WM_KEYUP;
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm = WM_CHAR;
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm       = WM_KEYDOWN;
+    wmf.wmFilter = 0xFFFFFFFF;
+    wmf.wp       = VK_ESCAPE;
+    wmf.wpFilter = 0xFFFFFFFF;
+    wmf.lp       = 0;
+    wmf.lpFilter = KEY_WASDOWN;
+
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm = WM_KEYUP;
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm = WM_CHAR;
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm       = WM_KEYDOWN;
+    wmf.wmFilter = 0xFFFFFFFF;
+    wmf.wp       = VK_TAB;
+    wmf.wpFilter = 0xFFFFFFFF;
+    wmf.lp       = 0;
+    wmf.lpFilter = KEY_WASDOWN;
+
+    if ( wantTab )
+    {
+        wmf.tag |= CTRLTAG_WANTTAB;
+    }
+
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm = WM_KEYUP;
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm = WM_CHAR;
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    result = TheTrueObj;
+
+done_out:
+    return result;
+}
+
+
+LRESULT grandchildEvent(pSubClassData pData, char *method, HWND hwnd, uint32_t msg,
+                        WPARAM wParam, LPARAM lParam, uint32_t tag)
+{
+    RexxThreadContext *c = pData->pcpbd->dlgProcContext;
+
+    if ( msg == WM_GETDLGCODE )
+    {
+        return (DLGC_WANTALLKEYS | DefSubclassProc(hwnd, msg, wParam, lParam));
+    }
+    else if ( msg == WM_KEYDOWN || msg == WM_KILLFOCUS )
+    {
+        CSTRING keyWord = "error";
+        LRESULT ret     = 0;
+
+        if ( msg == WM_KILLFOCUS )
+        {
+            keyWord = "killfocus";
+            ret = DefSubclassProc(hwnd, msg, wParam, lParam);
+        }
+        else
+        {
+            switch ( wParam )
+            {
+                case VK_RETURN :
+                    keyWord = "enter";
+                    break;
+
+                case VK_ESCAPE :
+                    keyWord = "escape";
+                    break;
+
+                case VK_TAB :
+                {
+                    if ( tag & CTRLTAG_WANTTAB )
+                    {
+                        keyWord = "tab";
+                        break;
+                    }
+
+                    BOOL previous = (GetAsyncKeyState(VK_SHIFT) & ISDOWN) ? 1 : 0;
+                    SendMessage(pData->pcpbd->hDlg, WM_NEXTDLGCTL, previous, FALSE);
+
+                    return 0;
+                }
+            }
+        }
+
+        RexxObjectPtr   ctrlID = c->UnsignedInt32(pData->id);
+        RexxObjectPtr   flag   = c->String(keyWord);
+        RexxArrayObject args   = c->ArrayOfThree(ctrlID, flag, pData->pcdc->rexxSelf);
+        RexxObjectPtr   reply  = c->SendMessage(pData->pcpbd->rexxSelf, method, args);
+
+        if ( ! checkForCondition(c, false) && reply != NULLOBJECT )
+        {
+            c->ReleaseLocalReference(ctrlID);
+            c->ReleaseLocalReference(flag);
+            c->ReleaseLocalReference(args);
+            c->ReleaseLocalReference(reply);
+
+            return ret;
+        }
+        else
+        {
+            // On error return DefSubclassProc()
+            return (ret == 0 ? DefSubclassProc(hwnd, msg, wParam, lParam) : ret);
+        }
+    }
+    else if ( msg == WM_KEYUP || msg == WM_CHAR )
+    {
+        return 0;
+    }
+
+    // Quiet compiler warnings, we can not really get here.
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+
+
+/**
  *  Methods for the .StaticControl.
  */
 #define STATIC_CLASS              "StaticControl"
@@ -854,7 +1104,22 @@ RexxMethod2(logical_t, bc_setTextMargin, RexxObjectPtr, r, CSELF, pCSelf)
     return 0;
 }
 
-RexxMethod1(RexxObjectPtr, bc_getIdealSize, CSELF, pCSelf)
+/** Button::getIdealSize()
+ *
+ *  Gets the size of the button that best fits the text and image, if an image
+ *  list is present.
+ *
+ *  @param  wantWidth  [optional]  Specifies the desired width of the button.
+ *                     If this argument is used, the operating system will
+ *                     calculate the idea height for a button of the width
+ *                     specified.  This functionality is not available on
+ *                     Windows XP
+ *
+ *  @return  On success returns a .Size object containing the operating
+ *           systems's calculation of the ideal size.  On error returns the .nil
+ *           object.
+ */
+RexxMethod2(RexxObjectPtr, bc_getIdealSize, OPTIONAL_uint32_t, wantWidth, CSELF, pCSelf)
 {
     if ( ! requiredComCtl32Version(context, "getIdealSize", COMCTL32_6_0) )
     {
@@ -864,7 +1129,12 @@ RexxMethod1(RexxObjectPtr, bc_getIdealSize, CSELF, pCSelf)
     HWND hwnd = getDChCtrl(pCSelf);
     RexxObjectPtr result = NULLOBJECT;
 
-    SIZE size;
+    SIZE size = { 0, 0 };
+
+    if ( argumentExists(1) )
+    {
+        size.cx;
+    }
     if ( Button_GetIdealSize(hwnd, &size) )
     {
         result = rxNewSize(context, size.cx, size.cy);
@@ -1225,6 +1495,112 @@ RexxMethod1(int, bc_test_cls, RexxObjectPtr, obj)
 #define BALLON_MAX_TITLE      99
 #define BALLON_MAX_TEXT     1023
 #define QUE_MAX_TEXT         255
+
+
+
+/**
+ * Generic function to get the cue text.  Used by both the combobox and the edit
+ * controls.
+ *
+ * @author Administrator (2/5/2013)
+ *
+ * @param c
+ * @param isEdit
+ * @param pCSelf
+ *
+ * @return RexxObjectPtr
+ */
+static RexxStringObject cbEditGetCue(RexxMethodContext *c, bool isEdit, void *pCSelf)
+{
+    RexxStringObject result = c->NullString();
+
+    pCDialogControl pcdc = validateDCCSelf(c, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return result;
+    }
+
+    if ( ! requiredComCtl32Version(c, "getCue", COMCTL32_6_0)  )
+    {
+        return result;
+    }
+
+    if ( ! isEdit && ! requiredOS(c, "setCue", "Vista", Vista_OS) )
+    {
+        return result;
+    }
+
+    WCHAR wszCue[QUE_MAX_TEXT + 1];
+
+    if ( isEdit )
+    {
+        if ( Edit_GetCueBannerText(pcdc->hCtrl, wszCue, QUE_MAX_TEXT) )
+        {
+            result = unicode2string(c, wszCue);
+        }
+    }
+    else
+    {
+        if ( ComboBox_GetCueBannerText(pcdc->hCtrl, wszCue, QUE_MAX_TEXT) )
+        {
+            result = unicode2string(c, wszCue);
+        }
+    }
+
+    return result;
+}
+
+
+/**
+ * Generic function to set the cue text.  Used for both a combo box and an edit
+ * control.
+ *
+ * @param c
+ * @param text
+ * @param show
+ * @param isEdit
+ * @param pCSelf
+ *
+ * @return RexxObjectPtr
+ */
+static RexxObjectPtr cbEditSetCue(RexxMethodContext *c, CSTRING text, logical_t show, bool isEdit, void *pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(c, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return TheOneObj;
+    }
+
+    if ( ! requiredComCtl32Version(c, "setCue", COMCTL32_6_0)  )
+    {
+        return TheOneObj;
+    }
+
+    if ( ! isEdit && ! requiredOS(c, "setCue", "Vista", Vista_OS) )
+    {
+        return TheOneObj;
+    }
+
+    // The text is limited to 255.
+    if ( strlen(text) > QUE_MAX_TEXT )
+    {
+        stringTooLongException(c->threadContext, 1, QUE_MAX_TEXT, strlen(text));
+        return TheOneObj;
+    }
+
+    WCHAR wszCue[QUE_MAX_TEXT + 1];
+    putUnicodeText((LPWORD)wszCue, text);
+
+    if ( isEdit )
+    {
+        return Edit_SetCueBannerTextFocused(pcdc->hCtrl, wszCue, show) ? TheZeroObj : TheOneObj;
+    }
+    else
+    {
+        return ComboBox_SetCueBannerText(pcdc->hCtrl, wszCue) ? TheZeroObj : TheOneObj;
+    }
+}
+
 
 /**
  * Take an edit control's window flags and construct a Rexx string that
@@ -1591,6 +1967,56 @@ done_out:
 }
 
 
+/** Edit::isGrandChild()
+ *
+ *  Notifies the framework that this edit control is a grandchild of the dialog
+ *  and configures the underlying edit control to send some event notifications
+ *  to the dialog, rather than its direcet parent.
+ *
+ *  @param  mthName  [optional] The method to be invoked in the Rexx dialog when
+ *                   one of the 4 default events happens.  The default if
+ *                   omitted is onEditGrandChildEvent()
+ *
+ *  @param  wantTab  [opitonal]  If the Rexx method should be invoked for the
+ *                   TAB event.  The default is false, the method is not invoked
+ *                   for the tab key event.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @notes   Requires common control library 6.2.0.
+ *
+ *           This method connects 4 event notifications from the grandchild edit
+ *           control to the method in the Rexx dialog.  3 of the events are key
+ *           down events, the RETURN, ESCAPE, and TAB key down events.  The
+ *           other event is the KILLFOCUS event.  All events invoke the same
+ *           method in the Rexx dialog.  One of the arguments sent to the event
+ *           handler is a keyword that specifies which event happened.
+ *
+ *           By default, the method is not invoked for the TAB key down event,
+ *           but that can be changed using the wantTab argument.
+ *
+ *           Sets the .SystemErrorCode.  This code is set on error, by us, the
+ *           OS does not set any.
+ *
+ *          This edit control must be a singel line edit control, otherwise the
+ *          system error code is set to:
+ *
+ *          ERROR_NOT_SUPPORTED (50)   The request is not supported.
+ *
+ *  @remarks  We need to always connect the VK_TAB key, even if the user does
+ *            not want the TAB nofication.  The reason is that we need to use
+ *            DLGC_WANTALLKEYS for WM_GETDLGCODE, which prevents the dialog
+ *            manager from handling TAB.  I don't see any way of asking for
+ *            RETURN and ESCAPE, but not TAB.  In the message processing loop,
+ *            we simply do invoke the Rexx method unless CTRLTAG_WANTTAB is set
+ *            in the tag.
+ */
+RexxMethod3(RexxObjectPtr, e_isGrandChild, OPTIONAL_CSTRING, mthName, OPTIONAL_logical_t, wantTab, CSELF, pCSelf)
+{
+    return genericIsGrandchild(context, mthName, wantTab, pCSelf, winEdit);
+}
+
+
 /** Edit::setTabStops()
  *
  *  Sets the tab stops for text copied into a multi-line edit control.
@@ -1756,7 +2182,7 @@ RexxMethod4(RexxObjectPtr, e_showBallon, CSTRING, title, CSTRING, text, OPTIONAL
  *                 characters or less.
  *  @param  show   [optional] Whether the cue should still display when the edit
  *                 control has the focus. The default is false, the cue text
- *                 disappears when the user clickd the edit control.
+ *                 disappears when the user sets focus to the edit control.
  *
  *  @return  0 on success, 1 on failure.
  *
@@ -1773,24 +2199,8 @@ RexxMethod4(RexxObjectPtr, e_showBallon, CSTRING, title, CSTRING, text, OPTIONAL
  */
 RexxMethod3(RexxObjectPtr, e_setCue, CSTRING, text, OPTIONAL_logical_t, show, CSELF, pCSelf)
 {
-    if ( ! requiredComCtl32Version(context, "setCue", COMCTL32_6_0)  )
-    {
-        return TheOneObj;
-    }
-
-    // The text is limited to 255.
-    if ( strlen(text) > QUE_MAX_TEXT )
-    {
-        stringTooLongException(context->threadContext, 1, QUE_MAX_TEXT, strlen(text));
-        return TheOneObj;
-    }
-
-    WCHAR wszCue[QUE_MAX_TEXT + 1];
-    putUnicodeText((LPWORD)wszCue, text);
-
-    return Edit_SetCueBannerTextFocused(getDChCtrl(pCSelf), wszCue, show) ? TheZeroObj : TheOneObj;
+    return cbEditSetCue(context, text, show, true, pCSelf);
 }
-
 
 /** Edit::getCue()
  *
@@ -1804,20 +2214,7 @@ RexxMethod3(RexxObjectPtr, e_setCue, CSTRING, text, OPTIONAL_logical_t, show, CS
  */
 RexxMethod1(RexxStringObject, e_getCue, CSELF, pCSelf)
 {
-    if ( ! requiredComCtl32Version(context, "getCue", COMCTL32_6_0)  )
-    {
-        return NULLOBJECT;
-    }
-
-    RexxStringObject result = context->NullString();
-    WCHAR wszCue[QUE_MAX_TEXT + 1];
-
-    if ( Edit_GetCueBannerText(getDChCtrl(pCSelf), wszCue, QUE_MAX_TEXT) )
-    {
-        result = unicode2string(context, wszCue);
-    }
-
-    return result;
+    return cbEditGetCue(context, true, pCSelf);
 }
 
 
@@ -2149,25 +2546,6 @@ static int32_t cbLbAddDirectory(HWND hCtrl, CSTRING drivePath, CSTRING fileAttri
 }
 
 
-RexxMethod1(RexxObjectPtr, lb_isSingleSelection, CSELF, pCSelf)
-{
-    return (isSingleSelectionListBox(getDChCtrl(pCSelf)) ? TheTrueObj : TheFalseObj);
-}
-
-/** ListBox::getText()
- *
- *  Return the text of the item at the specified index.
- *
- *  @param  index  The 1-based item index.  (The underlying list box uses
- *                 0-based indexes.)
- *
- *  @return  The item's text or the empty string on error.
- */
-RexxMethod2(RexxObjectPtr, lb_getText, uint32_t, index, CSELF, pCSelf)
-{
-    return cbLbGetText(context, ((pCDialogControl)pCSelf)->hCtrl, index, winListBox);
-}
-
 /** ListBox::add()
  *
  *  Adds a string item to the list box.
@@ -2186,6 +2564,183 @@ RexxMethod2(int32_t, lb_add, CSTRING, text, CSELF, pCSelf)
         ret++;
     }
     return ret;
+}
+
+
+/** ListBox::addDirectory()
+ *
+ *
+ */
+RexxMethod3(int32_t, lb_addDirectory, CSTRING, drivePath, OPTIONAL_CSTRING, fileAttributes, CSELF, pCSelf)
+{
+    return cbLbAddDirectory(((pCDialogControl)pCSelf)->hCtrl, drivePath, fileAttributes, winListBox);
+}
+
+
+/** ListBox::deselectIndex()
+ *
+ *  Deselects the specified item, or all items, in the list box.
+ *
+ *  @param  index  [OPTIONAL]  The one-based index of the item to deselect.  If
+ *                 this argument is omitted, 0 or -1, all items in the list box
+ *                 are deselected.
+ *
+ *  @return  -1 on error, otherwise 0.
+ *
+ *  @note  If the list box is a single-selection list box, the index argument is
+ *         simply ignored.  The return will always be 0.  For a
+ *         multiple-selection list box, if index is greater than the last item
+ *         in the listbox, -1 is returned.
+ */
+RexxMethod2(int32_t, lb_deselectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
+{
+    HWND hCtrl = getDChCtrl(pCSelf);
+    int32_t ret;
+
+    if ( isSingleSelectionListBox(hCtrl) )
+    {
+        ret = ((int32_t)SendMessage(hCtrl, LB_SETCURSEL, -1, 0) != -1 ? -1 : 0);
+    }
+    else
+    {
+        index = (index <= 0 ? -1 : index - 1);
+        ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, FALSE, index);
+    }
+    return ret;
+}
+
+
+/** ListBox::find()
+ *
+ *  Finds the index of the list box item that matches 'text'.  In all cases
+ *  the search is case insensitive.
+ *
+ *  @param  text        The text of the item to search for.  If not exact, this
+ *                      can be just an abbreviation, or prefix, of the item.
+ *                      Otherwise an exact match, disregarding case, is searched
+ *                      for.
+ *
+ *  @param  startIndex  [OPTIONAL] The one-based index of the item to start the
+ *                      search at.  If the search reaches the end of the items
+ *                      without a match, the search continues with the first
+ *                      item until all items have been examined.  When
+ *                      omitted, or 0, the search starts with the first item.
+ *
+ *  @param  exactly     [OPTIONAL]  Whether to do an exact match.  When this
+ *                      arugment is omitted, 'text' can just the abbreviation of
+ *                      the item to find.  I.e., 'San' would match "San Diego."
+ *                      If the argument is used and equals true or "Exact" then
+ *                      the item must match text exactly.  When using the
+ *                      "Exact" form, only the first letter is considered and
+ *                      case is insignificant.
+ *
+ *  @return  The one-based index of the item, if found, otherwise 0.
+ */
+RexxMethod4(int32_t, lb_find, CSTRING, text, OPTIONAL_uint32_t, startIndex, OPTIONAL_CSTRING, exactly, CSELF, pCSelf)
+{
+
+    return cbLbFind(((pCDialogControl)pCSelf)->hCtrl, text, startIndex, exactly, winListBox);
+}
+
+
+/** ListBox::getText()
+ *
+ *  Return the text of the item at the specified index.
+ *
+ *  @param  index  The 1-based item index.  (The underlying list box uses
+ *                 0-based indexes.)
+ *
+ *  @return  The item's text or the empty string on error.
+ */
+RexxMethod2(RexxObjectPtr, lb_getText, uint32_t, index, CSELF, pCSelf)
+{
+    return cbLbGetText(context, ((pCDialogControl)pCSelf)->hCtrl, index, winListBox);
+}
+
+
+/** ListBox::hitTestInfo()
+ *
+ *  Gets the one-based index of the item nearest the specified point in this
+ *  list box.
+ *
+ *  @param  pt  [required]  The position, x and y co-ordinates, of the point to
+ *              test. This can be specified in two forms.
+ *
+ *      Form 1:  arg 1 is a .Point object.
+ *      Form 2:  arg 1 is the x co-ordinate and arg2 is the y co-ordinate.
+ *
+ *  @param  info  [optional in/out]  A directory object in which all hit info is
+ *                returned.  If the directory is supplied, on return the
+ *                directory will have these indexes:
+ *
+ *                inClientArea    True if the point is in the clien area of the
+ *                                list box.  False if it is not in the client
+ *                                area
+ *
+ *                itemIndex       Same value as the return.  The index of
+ *                                the item nearest the specified point.
+ *
+ *  @return  The index of the item nearest the point.
+ *
+ *  @note    Any x, y coordinates will work.  I.e. -6000, -7000 will work. The
+ *           item index will be 1 and inClientArea will be false.  The operating
+ *           system always returns the item index that is *closest* to the point
+ *           specified.  Even if it is not very close at all.
+ */
+RexxMethod2(int32_t, lb_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
+{
+    int32_t result = -1;
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+    HWND hwnd = pcdc->hCtrl;
+
+    size_t sizeArray;
+    size_t argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 3, &sizeArray, &argsUsed) )
+    {
+        goto done_out;
+    }
+
+    bool haveDirectory = (sizeArray > argsUsed) ? true : false;
+    RexxDirectoryObject info;
+
+    // Check arg count against expected.
+    if ( sizeArray > (haveDirectory ? argsUsed + 1 : argsUsed) )
+    {
+        tooManyArgsException(context->threadContext, (haveDirectory ? argsUsed + 1 : argsUsed));
+        goto done_out;
+    }
+
+    if ( haveDirectory )
+    {
+        RexxObjectPtr _info = context->ArrayAt(args, argsUsed + 1);
+        if ( _info == NULLOBJECT || ! context->IsDirectory(_info) )
+        {
+            wrongClassException(context->threadContext, argsUsed + 1, "Directory");
+            goto done_out;
+        }
+
+        info = (RexxDirectoryObject)_info;
+    }
+
+    LPARAM ret = SendMessage(hwnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(point.x, point.y));
+
+    result = LOWORD(ret);
+    result++;
+
+    if ( haveDirectory )
+    {
+        context->DirectoryPut(info, context->Int32(result), "ITEMINDEX");
+        context->DirectoryPut(info, context->Logical(! HIWORD(ret)), "INCLIENTAREA");
+    }
+
+done_out:
+    return result;
 }
 
 /** ListBox::insert()
@@ -2252,6 +2807,17 @@ RexxMethod3(int32_t, lb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, p
     return ret;
 }
 
+
+/** ListBox::isSingleSelection()
+ *
+ *
+ */
+RexxMethod1(RexxObjectPtr, lb_isSingleSelection, CSELF, pCSelf)
+{
+    return (isSingleSelectionListBox(getDChCtrl(pCSelf)) ? TheTrueObj : TheFalseObj);
+}
+
+
 /** ListBox::select()
  *
  *  Selects the item in the list box that that begins with the letters specified
@@ -2266,84 +2832,6 @@ RexxMethod3(int32_t, lb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, p
 RexxMethod2(int32_t, lb_select, CSTRING, text, CSELF, pCSelf)
 {
     return cbLbSelect(((pCDialogControl)pCSelf)->hCtrl, text, winListBox);
-}
-
-
-/** ListBox::selectIndex()
- *
- *  Selects the specified item in the list box.
- *
- *  @param  index  [OPTIONAL]  The one-based index of the item to select.  See
- *                 the notes for the behavior is this argument is omitted or 0.
- *                 For a multiple-selection list box only, if this argument is
- *                 -1, then all items in the list box are selected.
- *
- *  @return  False on error, true on no error.
- *
- *  @note    For backwards compatibility, if the index argument is omitted, or
- *           0, the selection is removed from all items in the list box.  But
- *           really, the deselectIndex() method should be used.
- */
-RexxMethod2(int32_t, lb_selectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
-{
-    HWND hCtrl = getDChCtrl(pCSelf);
-    int32_t ret;
-
-    bool backwardCompat = (argumentOmitted(1) || index == 0 ? true : false);
-
-    if ( isSingleSelectionListBox(hCtrl) )
-    {
-        index = (backwardCompat ? -1 : index - 1);
-        ret = (int32_t)SendMessage(hCtrl, LB_SETCURSEL, index, 0);
-        ret = (ret != index ? 0 : 1);
-    }
-    else
-    {
-        if ( backwardCompat )
-        {
-            ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, FALSE, -1);
-        }
-        else
-        {
-            index = (index < 0 ? -1 : index - 1);
-            ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, TRUE, index);
-        }
-        ret = (ret == -1 ? 0 : 1);
-    }
-    return ret;
-}
-
-
-/** ListBox::deselectIndex()
- *
- *  Deselects the specified item, or all items, in the list box.
- *
- *  @param  index  [OPTIONAL]  The one-based index of the item to deselect.  If
- *                 this argument is omitted, 0 or -1, all items in the list box
- *                 are deselected.
- *
- *  @return  -1 on error, otherwise 0.
- *
- *  @note  If the list box is a single-selection list box, the index argument is
- *         simply ignored.  The return will always be 0.  For a
- *         multiple-selection list box, if index is greater than the last item
- *         in the listbox, -1 is returned.
- */
-RexxMethod2(int32_t, lb_deselectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
-{
-    HWND hCtrl = getDChCtrl(pCSelf);
-    int32_t ret;
-
-    if ( isSingleSelectionListBox(hCtrl) )
-    {
-        ret = ((int32_t)SendMessage(hCtrl, LB_SETCURSEL, -1, 0) != -1 ? -1 : 0);
-    }
-    else
-    {
-        index = (index <= 0 ? -1 : index - 1);
-        ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, FALSE, index);
-    }
-    return ret;
 }
 
 
@@ -2420,63 +2908,56 @@ done_out:
 }
 
 
-/** ListBox::find()
+/** ListBox::selectIndex()
  *
- *  Finds the index of the list box item that matches 'text'.  In all cases
- *  the search is case insensitive.
+ *  Selects the specified item in the list box.
  *
- *  @param  text        The text of the item to search for.  If not exact, this
- *                      can be just an abbreviation, or prefix, of the item.
- *                      Otherwise an exact match, disregarding case, is searched
- *                      for.
+ *  @param  index  [OPTIONAL]  The one-based index of the item to select.  See
+ *                 the notes for the behavior is this argument is omitted or 0.
+ *                 For a multiple-selection list box only, if this argument is
+ *                 -1, then all items in the list box are selected.
  *
- *  @param  startIndex  [OPTIONAL] The one-based index of the item to start the
- *                      search at.  If the search reaches the end of the items
- *                      without a match, the search continues with the first
- *                      item until all items have been examined.  When
- *                      omitted, or 0, the search starts with the first item.
+ *  @return  False on error, true on no error.
  *
- *  @param  exactly     [OPTIONAL]  Whether to do an exact match.  When this
- *                      arugment is omitted, 'text' can just the abbreviation of
- *                      the item to find.  I.e., 'San' would match "San Diego."
- *                      If the argument is used and equals true or "Exact" then
- *                      the item must match text exactly.  When using the
- *                      "Exact" form, only the first letter is considered and
- *                      case is insignificant.
- *
- *  @return  The one-based index of the item, if found, otherwise 0.
+ *  @note    For backwards compatibility, if the index argument is omitted, or
+ *           0, the selection is removed from all items in the list box.  But
+ *           really, the deselectIndex() method should be used.
  */
-RexxMethod4(int32_t, lb_find, CSTRING, text, OPTIONAL_uint32_t, startIndex, OPTIONAL_CSTRING, exactly, CSELF, pCSelf)
+RexxMethod2(int32_t, lb_selectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
 {
+    HWND hCtrl = getDChCtrl(pCSelf);
+    int32_t ret;
 
-    return cbLbFind(((pCDialogControl)pCSelf)->hCtrl, text, startIndex, exactly, winListBox);
+    bool backwardCompat = (argumentOmitted(1) || index == 0 ? true : false);
+
+    if ( isSingleSelectionListBox(hCtrl) )
+    {
+        index = (backwardCompat ? -1 : index - 1);
+        ret = (int32_t)SendMessage(hCtrl, LB_SETCURSEL, index, 0);
+        ret = (ret != index ? 0 : 1);
+    }
+    else
+    {
+        if ( backwardCompat )
+        {
+            ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, FALSE, -1);
+        }
+        else
+        {
+            index = (index < 0 ? -1 : index - 1);
+            ret = (int32_t)SendMessage(hCtrl, LB_SETSEL, TRUE, index);
+        }
+        ret = (ret == -1 ? 0 : 1);
+    }
+    return ret;
 }
 
 
-RexxMethod3(int32_t, lb_addDirectory, CSTRING, drivePath, OPTIONAL_CSTRING, fileAttributes, CSELF, pCSelf)
-{
-    return cbLbAddDirectory(((pCDialogControl)pCSelf)->hCtrl, drivePath, fileAttributes, winListBox);
-}
 
 /**
  * Methods for the ComboBox class.
  */
 #define COMBOBOX_CLASS   "ComboBox"
-
-
-/** ComboBox::getText()
- *
- *  Return the text of the item at the specified index.
- *
- *  @param  index  The 1-based item index.  (The underlying combo box uses
- *                 0-based indexes.)
- *
- *  @return  The item's text or the empty string on error.
- */
-RexxMethod2(RexxStringObject, cb_getText, uint32_t, index, CSELF, pCSelf)
-{
-    return cbLbGetText(context, ((pCDialogControl)pCSelf)->hCtrl, index, winComboBox);
-}
 
 
 /** ComboBox::add()
@@ -2500,49 +2981,12 @@ RexxMethod2(int32_t, cb_add, CSTRING, text, CSELF, pCSelf)
 }
 
 
-/** ComboBox::insert()
+/** ComboBox::addDirectory()
  *
- *  Inserts a string entry into the cobo box at the index specified.
- *
- *  @param  index  [OPTIONAL]  The one-based index of where the entry is to be
- *                 inserted.  If index is less than 0, the entry is inserted at
- *                 the end of the entries.  If index is 0, the new entry is
- *                 inserted as the first entry.
- *
- *                 When this argument is omitted, the entry is inserted after
- *                 the current selected entry.  If there is no selected entry,
- *                 the new entry is inserted as the last entry.
- *
- *  @param  text   The string to insert.
- *
- *  @return  The 1-based index of the added entry on success.  -1 (CB_ERR) on
- *           error and -2 (CB_ERRSPACE) if there is not enough room for the new
- *           entry.
  */
-RexxMethod3(int32_t, cb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, pCSelf)
+RexxMethod3(int32_t, cb_addDirectory, CSTRING, drivePath, OPTIONAL_CSTRING, fileAttributes, CSELF, pCSelf)
 {
-    return cbLbInsert(context, ((pCDialogControl)pCSelf)->hCtrl, index, text, winComboBox);
-}
-
-
-/** ComboBox::select()
- *
- *  Selects the entry in the combo box that that begins with the letters
- *  specified by text.  The search is case insensitive.  I.e., if text is 'new'
- *  it would select "New York".
- *
- *  @param  text  The text (or prefix) of the entry to select.
- *
- *  @return  The one-based index of the entry selected. 0 if no matching entry
- *           was found, or some other error.
- *
- *  @note  The first match found is selected.  For instance with two entries in
- *         the combo box of "San Diego" and "San Jose" and using for text 'san',
- *         the entry with the lowest index would be selected.
- */
-RexxMethod2(int32_t, cb_select, CSTRING, text, CSELF, pCSelf)
-{
-    return cbLbSelect(((pCDialogControl)pCSelf)->hCtrl, text, winComboBox);
+    return cbLbAddDirectory(((pCDialogControl)pCSelf)->hCtrl, drivePath, fileAttributes, winComboBox);
 }
 
 
@@ -2577,7 +3021,377 @@ RexxMethod4(int32_t, cb_find, CSTRING, text, OPTIONAL_uint32_t, startIndex, OPTI
     return cbLbFind(((pCDialogControl)pCSelf)->hCtrl, text, startIndex, exactly, winComboBox);
 }
 
-RexxMethod3(int32_t, cb_addDirectory, CSTRING, drivePath, OPTIONAL_CSTRING, fileAttributes, CSELF, pCSelf)
+
+/** ComboBox::getComboBoxInfo()
+ *
+ *  Returns a Directory object containing information for this combo box.
+ *
+ *  @remarks  The COMBOBOXINFO struct has a field, hwndItem, which is the edit
+ *            control for simple and drop-down combo boxes.  For a drop-down
+ *            list combo box I thought it would be a static control.  But,
+ *            testing seems to show it is the combo box itself.  Rather than try
+ *            to guess what type of control it is, we just use
+ *            controlHwnd2controltype() to determine its type.
+ */
+RexxMethod1(RexxObjectPtr, cb_getComboBoxInfo, CSELF, pCSelf)
 {
-    return cbLbAddDirectory(((pCDialogControl)pCSelf)->hCtrl, drivePath, fileAttributes, winComboBox);
+    oodResetSysErrCode(context->threadContext);
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr result = TheNilObj;
+    COMBOBOXINFO  cbi    = { sizeof(COMBOBOXINFO) };
+
+    if ( GetComboBoxInfo(pcdc->hCtrl, &cbi) )
+    {
+        RexxDirectoryObject d    = context->NewDirectory();
+        oodControl_t        type = controlHwnd2controlType(cbi.hwndItem);
+
+        RexxObjectPtr temp = createControlFromHwnd(context, pcdc, cbi.hwndItem, type, true);
+        context->DirectoryPut(d, temp, "TEXTOBJ");
+
+        temp = createControlFromHwnd(context, pcdc, cbi.hwndList, winComboLBox, true);
+        context->DirectoryPut(d, temp, "LISTBOXOBJ");
+
+        temp = rxNewRect(context, &cbi.rcButton);
+        context->DirectoryPut(d, temp, "BUTTONRECT");
+
+        temp = rxNewRect(context, &cbi.rcItem);
+        context->DirectoryPut(d, temp, "TEXTRECT");
+
+        CSTRING state = "error";
+        if ( cbi.stateButton == 0 )                          state = "notpressed";
+        else if ( cbi.stateButton == STATE_SYSTEM_INVISIBLE ) state = "absent";
+        else if ( cbi.stateButton == STATE_SYSTEM_PRESSED )   state = "pressed";
+
+        temp = context->String(state);
+        context->DirectoryPut(d, temp, "BUTTONSTATE");
+
+        result = d;
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+
+    return result;
+}
+
+
+/** ComboBox::getCue()
+ *
+ *  Retrieves the cue banner text, or the empty string if there is no cue set.
+ *
+ *  @return  The cue banner text on success, or the empty string on error and if
+ *           no cue is set
+ *
+ *  @remarks  For an edit control, this simply does not seem to work under XP.
+ *            However, it does work in Vista and Windows 7.
+ */
+RexxMethod1(RexxStringObject, cb_getCue, CSELF, pCSelf)
+{
+    return cbEditGetCue(context, false, pCSelf);
+}
+
+
+/** ComboBox::getEditControl()
+ *
+ *  Returns a Rexx Edit object that reprsents the child edit control used by the
+ *  combo box.
+ *
+ *  @notes  Sets the .SystemErrorCode.
+ */
+RexxMethod1(RexxObjectPtr, cb_getEditControl, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr result = TheNilObj;
+    COMBOBOXINFO  cbi    = { sizeof(COMBOBOXINFO) };
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+
+    if ( isDropDownListCB(pcdc->hCtrl) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_COMBOBOX_MESSAGE);
+        goto done_out;
+    }
+
+    if ( GetComboBoxInfo(pcdc->hCtrl, &cbi) )
+    {
+        result = createControlFromHwnd(context, pcdc, cbi.hwndItem, winEdit, true);
+    }
+    else
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+
+done_out:
+    return result;
+}
+
+
+/** ComboBox::getItemHeight()
+ *
+ *  Determines the height of the list items or the height of the selection field
+ *  in this combo box.
+ *
+ *  @param  getSelectionField  [optional]  If true get the selection field
+ *                             height, if false get the item height.  The
+ *                             default is false, get the item height.
+ *
+ *  @return  The height in pixels of the list box items or the selection field
+ *           as specified.  On error returns -1
+ */
+RexxMethod2(int32_t, cb_getItemHeight, OPTIONAL_logical_t, getSelectionField, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return 0;
+    }
+
+    WPARAM which = getSelectionField ? -1 : 0;
+    return (int32_t)SendMessage(pcdc->hCtrl, CB_GETITEMHEIGHT, which, 0);
+}
+
+
+/** ComboBox::getMinVisible()
+ *
+ * Retrieves the minimum visible number for this combo box.
+ *
+ * @notes  Requires Common Controls Library 6.0
+ */
+RexxMethod1(int32_t, cb_getMinVisible, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return 0;
+    }
+    if ( ! requiredComCtl32Version(context, "getMinVisible", COMCTL32_6_0)  )
+    {
+        return 0;
+    }
+
+    return ComboBox_GetMinVisible(pcdc->hCtrl);
+}
+
+
+/** ComboBox::getText()
+ *
+ *  Return the text of the item at the specified index.
+ *
+ *  @param  index  The 1-based item index.  (The underlying combo box uses
+ *                 0-based indexes.)
+ *
+ *  @return  The item's text or the empty string on error.
+ */
+RexxMethod2(RexxStringObject, cb_getText, uint32_t, index, CSELF, pCSelf)
+{
+    return cbLbGetText(context, ((pCDialogControl)pCSelf)->hCtrl, index, winComboBox);
+}
+
+
+/** ComboBox::insert()
+ *
+ *  Inserts a string entry into the cobo box at the index specified.
+ *
+ *  @param  index  [OPTIONAL]  The one-based index of where the entry is to be
+ *                 inserted.  If index is less than 0, the entry is inserted at
+ *                 the end of the entries.  If index is 0, the new entry is
+ *                 inserted as the first entry.
+ *
+ *                 When this argument is omitted, the entry is inserted after
+ *                 the current selected entry.  If there is no selected entry,
+ *                 the new entry is inserted as the last entry.
+ *
+ *  @param  text   The string to insert.
+ *
+ *  @return  The 1-based index of the added entry on success.  -1 (CB_ERR) on
+ *           error and -2 (CB_ERRSPACE) if there is not enough room for the new
+ *           entry.
+ */
+RexxMethod3(int32_t, cb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, pCSelf)
+{
+    return cbLbInsert(context, ((pCDialogControl)pCSelf)->hCtrl, index, text, winComboBox);
+}
+
+/** ComboBox::isDropDown()
+ ** ComboBox::isDropDownList()
+ ** ComboBox::isSimple()
+ *
+ *  Tests if this combo box is a drop-down combo box.
+ *
+ *  @remarks  We combine the 3 different Rexx methods into this one.
+ */
+RexxMethod2(logical_t, cb_isDropDown, NAME, method, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return FALSE;
+    }
+
+    if ( method[2] == 'S' )
+    {
+        return isSimpleCB(pcdc->hCtrl) ? TRUE : FALSE;
+    }
+    else if ( method[10] == '\0' )
+    {
+        return isDropDownListCB(pcdc->hCtrl) ? TRUE : FALSE;
+    }
+
+    return isDropDownCB(pcdc->hCtrl) ? TRUE : FALSE;
+}
+
+/** ComboBox::isGrandChild()
+ *
+ *  Notifies the framework that this combo box control is a grandchild of the
+ *  dialog and configures the underlying combo box control to send some event
+ *  notifications to the dialog, rather than its direcet parent.
+ *
+ *  @param  mthName  [optional] The method to be invoked in the Rexx dialog when
+ *                   one of the 4 default events happens.  The default if
+ *                   omitted is onComboBoxGrandChildEvent()
+ *
+ *  @param  wantTab  [opitonal]  If the Rexx method should be invoked for the
+ *                   TAB event.  The default is false, the method is not invoked
+ *                   for the tab key event.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @notes   Requires common control library 6.2.0.
+ *
+ *           This method connects 4 event notifications from the grandchild
+ *           combo box control to the method in the Rexx dialog.  3 of the
+ *           events are key down events, the RETURN, ESCAPE, and TAB key down
+ *           events. The other event is the KILLFOCUS event.  All events invoke
+ *           the same method in the Rexx dialog.  One of the arguments sent to
+ *           the event handler is a keyword that specifies which event happened.
+ *
+ *           By default, the method is not invoked for the TAB key down event,
+ *           but that can be changed using the wantTab argument.
+ *
+ *  @remarks  We need to always connect the VK_TAB key, even if the user does
+ *            not want the TAB nofication.  The reason is that we need to use
+ *            DLGC_WANTALLKEYS for WM_GETDLGCODE, which prevents the dialog
+ *            manager from handling TAB.  I don't see any way of asking for
+ *            RETURN and ESCAPE, but not TAB.  In the message processing loop,
+ *            we simply do not invoke the Rexx method unless CTRLTAG_WANTTAB is
+ *            set in the tag.
+ */
+RexxMethod3(RexxObjectPtr, cb_isGrandchild, OPTIONAL_CSTRING, mthName, OPTIONAL_logical_t, wantTab, CSELF, pCSelf)
+{
+    return genericIsGrandchild(context, mthName, wantTab, pCSelf, winComboBox);
+}
+
+
+/** ComboBox::select()
+ *
+ *  Selects the entry in the combo box that that begins with the letters
+ *  specified by text.  The search is case insensitive.  I.e., if text is 'new'
+ *  it would select "New York".
+ *
+ *  @param  text  The text (or prefix) of the entry to select.
+ *
+ *  @return  The one-based index of the entry selected. 0 if no matching entry
+ *           was found, or some other error.
+ *
+ *  @note  The first match found is selected.  For instance with two entries in
+ *         the combo box of "San Diego" and "San Jose" and using for text 'san',
+ *         the entry with the lowest index would be selected.
+ */
+RexxMethod2(int32_t, cb_select, CSTRING, text, CSELF, pCSelf)
+{
+    return cbLbSelect(((pCDialogControl)pCSelf)->hCtrl, text, winComboBox);
+}
+
+
+/** ComboBox::setCue()
+ *
+ *  Sets the cue, text for the edit control in a combo box.  This text prompts
+ *  the user for what to enter in the edit control.
+ *
+ *  @param  text   The text for the tip.  The length of the text must be 255
+ *                 characters or less.
+ *
+ *  @return  0 on success, 1 on failure.
+ *
+ *  @notes  Requires Vista  or later. Note the restriction on the length of
+ *          text.
+ *
+ */
+RexxMethod2(RexxObjectPtr, cb_setCue, CSTRING, text, CSELF, pCSelf)
+{
+    return cbEditSetCue(context, text, FALSE, false, pCSelf);
+}
+
+
+/** ComboBox::setItemHeight()
+ *
+ *  Sets the height of the list items or the selection field in a combo box.
+ *
+ *  @param  height             [required] The height in pixels to set the
+ *                             specified component.
+ *
+ *  @param  setSelectionField  [optional]  If true get the selection field
+ *                             height, if false get the item height.  The
+ *                             default is false, get the item height.
+ *
+ *  @return  If the height is wrong returns -1.
+ *
+ *  @note  The selection field height in a combo box is set independently of the
+ *         height of the list items. The programmer must ensure that the height
+ *         of the selection field is not smaller than the height of a particular
+ *         list item.
+ */
+RexxMethod3(int32_t, cb_setItemHeight, uint32_t, pixels, OPTIONAL_logical_t, setSelectionField, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return 0;
+    }
+
+    WPARAM which = setSelectionField ? -1 : 0;
+    return (int32_t)SendMessage(pcdc->hCtrl, CB_SETITEMHEIGHT, which, pixels);
+}
+
+
+/** ComboBox::setMinVisible()
+ *
+ *  Sets the minimum number of visible items in the drop-down list of a combo
+ *  box.
+ *
+ *  @param count  The minimum number of visible items.
+ *
+ *  @return True on success, otherwise false.
+ *
+ *  @notes  Requires Common Control library 6.0
+ *
+ *          When the number of items in the drop-down list is greater than the
+ *          minimum, the combo box uses a scrollbar. By default, 30 is the
+ *          minimum number of visible items.
+ */
+RexxMethod2(logical_t, cb_setMinVisible, int32_t, count, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return 0;
+    }
+    if ( ! requiredComCtl32Version(context, "setMinVisible", COMCTL32_6_0)  )
+    {
+        return 0;
+    }
+
+    return ComboBox_SetMinVisible(pcdc->hCtrl, count);
 }

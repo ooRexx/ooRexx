@@ -69,6 +69,7 @@
 
 
 #define MAX_PROPSHEET_DIALOGS        5
+#define DEFAULT_PROPSHETT_ID         100
 
 #define TOO_MANY_PROPSHEET_DIALOGS \
         "the concurrent creation of property sheet dialogs has reached the maximum (%d)"

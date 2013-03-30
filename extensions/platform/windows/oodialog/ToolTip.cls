@@ -62,7 +62,8 @@
 ::method getToolCount unguarded external "LIBRARY oodialog tt_getToolCount"
 ::method getToolInfo unguarded external "LIBRARY oodialog tt_getToolInfo"
 ::method hasCurrentTool unguarded external "LIBRARY oodialog tt_hasCurrentTool"
-::method hitTest unguarded external "LIBRARY oodialog tt_hitTest"
+::method hitTest unguarded external "LIBRARY oodialog tt_hitTestInfo"  -- Erroneously named in ooDialog 4.2.1 doc, need to preserve for backwards compatibility, but no longer documented.
+::method hitTestInfo unguarded external "LIBRARY oodialog tt_hitTestInfo"
 ::method manageAtypicalTool unguarded external "LIBRARY oodialog tt_manageAtypicalTool"
 ::method newToolRect unguarded external "LIBRARY oodialog tt_newToolRect"
 ::method pop unguarded external "LIBRARY oodialog tt_pop"

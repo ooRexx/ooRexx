@@ -37,8 +37,8 @@
 
 .NOTPARALLEL:
 
-SUBDIRS      = rc
-DIST_SUBDIRS = rc
+SUBDIRS      = rc subitem.editing
+DIST_SUBDIRS = rc subitem.editing
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 

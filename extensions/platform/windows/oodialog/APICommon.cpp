@@ -180,6 +180,39 @@ void *baseClassInitializationException(RexxMethodContext *c, CSTRING clsName)
 }
 
 /**
+ *  Error 98.900
+ *
+ *  98 The language processor detected a specific error during execution. The
+ *  associated error gives the reason for the error.
+ *
+ *  900 User message.
+ *
+ *  The PropertySheetDialog base class has not been initialized correctly; the
+ *  defineSizing method failed
+ *
+ * @param c         The method context we are operating under.
+ * @param clsName   The name of the base class.
+ * @param msg       Some *short* message to follow the ';'
+ *
+ * @return  A null pointer to void
+ *
+ * @remarks  This error is intended to be used when a some type of fatal error
+ *           happens during the native API processing of the init methods for a
+ *           class.  It should end the dialog.  At this point there is no dialog
+ *           window handle to do a endDialogPremature().
+ */
+void *baseClassInitializationException(RexxThreadContext *c, CSTRING clsName, CSTRING msg)
+{
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "The %s base class has not been initialized correctly; %s", clsName, msg);
+    return executionErrorException(c, buffer);
+}
+void *baseClassInitializationException(RexxMethodContext *c, CSTRING clsName, CSTRING msg)
+{
+    return baseClassInitializationException(c->threadContext, clsName, msg);
+}
+
+/**
  * Message
  *
  * Argument 1, the database connection object, can not be null
@@ -480,10 +513,24 @@ void wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index,
     userDefinedMsgException(c, buffer);
 }
 
+/**
+ * Index <index> of the array, argument <argPos>, must be <obj>
+ *
+ * Index 1 of the array, argument 2, must be "a Directory"
+ *
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param argPos   Array argument position.
+ * @param index    Index in array
+ * @param msg      Some string message, or object
+ * @param actual   Actual Rexx object, in string format.
+ */
 void wrongObjInArrayException(RexxThreadContext *c, size_t argPos, size_t index, CSTRING obj)
 {
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "Index %d of the array, argument %d, must be %s", index, argPos, obj);
+    snprintf(buffer, sizeof(buffer), "Index %d of the array, argument %d, must be \"%s\"", index, argPos, obj);
     userDefinedMsgException(c, buffer);
 }
 
@@ -617,11 +664,12 @@ void arrayToLargeException(RexxThreadContext *c, uint32_t found, uint32_t max, i
     userDefinedMsgException(c, buffer);
 }
 
-void sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index)
+RexxObjectPtr sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index)
 {
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "Argument %d must be a non-sparse array, index %d is missing", argPos, index);
     userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
 }
 
 /**
@@ -782,6 +830,30 @@ RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRIN
 /**
  * Similar to 93.915 and 93.914  (actually a combination of the two.)
  *
+ * Method argument <pos>, keyword must be exactly one of <list>; found
+ * "<actual>"
+ *
+ * Method argument 2 must be exactly one of left, right, top, or bottom found
+ * "Side"
+ *
+ * @param c
+ * @param pos
+ * @param list
+ * @param actual  String, actual keyword
+ *
+ * @return RexxObjectPtr
+ */
+RexxObjectPtr wrongArgKeywordException(RexxMethodContext *c, size_t pos, CSTRING list, CSTRING actual)
+{
+    char buffer[512];
+    snprintf(buffer, sizeof(buffer), "Method argument %d, keyword must be exactly one of %s; found \"%s\"", pos, list, actual);
+    userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
+}
+
+/**
+ * Similar to 93.915 and 93.914  (actually a combination of the two.)
+ *
  * Method argument <pos>, option must be one of <list>; found "<actual>"
  *
  * Method argument 2 must be one of [P]artially, or [E]ntirely; found "G"
@@ -804,6 +876,29 @@ RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING 
 RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual)
 {
     return wrongArgOptionException(c, pos, list, c->ObjectToStringValue(actual));
+}
+
+/**
+ * 93.914
+ * Method argument <argument> must be one of <values>; found "<value>"
+ *
+ * Method argument 1 must be one of the valid CSIDL_XXX constants; found "dog"
+ *
+ * @param argNumber
+ * @param acceptable
+ * @param actual
+ */
+RexxObjectPtr invalidConstantException(RexxMethodContext *c, size_t argNumber, char *msg,
+                                       const char *sub, RexxObjectPtr actual)
+{
+    char buffer[512];
+    snprintf(buffer, sizeof(buffer), msg, sub);
+
+    return wrongArgValueException(c->threadContext, argNumber, buffer, actual);
+}
+RexxObjectPtr invalidConstantException(RexxMethodContext *c, size_t argNumber, char *msg, const char *sub, const char *actual)
+{
+    return invalidConstantException(c, argNumber, msg, sub, c->String(actual));
 }
 
 /**
