@@ -444,7 +444,7 @@ $ Error_Symbol_or_string_requires
 244 String or symbol expected after ::REQUIRES keyword
 
 $ Error_Symbol_or_string_external
-245 String or symbol expected after EXTERNAL keyword
+245 String expected after EXTERNAL keyword
 
 $ Error_Symbol_or_string_metaclass
 246 String or symbol expected after METACLASS keyword
@@ -1780,6 +1780,30 @@ $ Error_Incomplete_do_loop
 
 $ Error_Invalid_subkeyword_attribute
 726 Unknown keyword on ::ATTRIBUTE directive; found "&1"
+
+$ Error_Translation_abstract_method
+727 Abstract methods cannot have a method body
+
+$ Error_Translation_attribute_method
+728 Attribute methods cannot have a method body
+
+$ Error_Translation_external_attribute
+729 External attributes cannot have a method body
+
+$ Error_Translation_external_method
+730 External methods cannot have a method body
+
+$ Error_Translation_body_error
+731 Attribute methods without a SET or GET designation cannot have a method body
+
+$ Error_Translation_constant_body
+732 Constant methods cannot have a method body
+
+$ Error_Translation_external_routine
+733 External routines cannot have a method body
+
+$ Error_Translation_abstract_attribute
+734 Abstract attributes cannot have a method body
 
 
 $ * -------------------------------------------------------------------------- */
