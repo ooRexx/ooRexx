@@ -48,7 +48,6 @@ touch ./interpreter/messages/errnumsrxqueue.xml
 touch ./interpreter/messages/gencat.inp
 touch ./interpreter/behaviour/ClassTypeCodes.h
 touch ./interpreter/behaviour/PrimitiveBehaviourNames.h
-touch ./interpreter/behaviour/PrimitiveBehaviour.cpp
 touch ./interpreter/behaviour/VirtualFunctionTable.cpp
 touch ./interpreter/platform/windows/winmsgtb.rc
 touch ./interpreter/platform/unix/rexx.cat
