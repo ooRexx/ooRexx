@@ -60,11 +60,8 @@
 # Currently RH does not define these like Fedora does, but they might in the future.
 # So we define them using the contents of the release file.
 %define build_distro rhel
-%if %(if grep -q "release 5.5" /etc/redhat-release; then echo 1; else echo 0; fi;)
-%define build_version 55
-%endif
-%if %(if grep -q "release 5.6" /etc/redhat-release; then echo 1; else echo 0; fi;)
-%define build_version 56
+%if %(if grep -q "release 5.9" /etc/redhat-release; then echo 1; else echo 0; fi;)
+%define build_version 59
 %endif
 %if %(if grep -q "release 6.0" /etc/redhat-release; then echo 1; else echo 0; fi;)
 %define build_version 60
