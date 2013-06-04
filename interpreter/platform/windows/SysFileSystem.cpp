@@ -132,27 +132,39 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, char *qualifi
 {
     LPTSTR  lpszLastNamePart;
     UINT errorMode;
-    /* already expanded?                 */
+
+    // If already expanded, there is nothing more to do.
     if (qualifiedName[0] != '\0')
     {
-        return;                            /* nothing more to do                */
+        return;
     }
-    /* copy the name to full area        */
-    strcpy(qualifiedName, unqualifiedName);
 
-    size_t namelen = strlen(qualifiedName);
+    // If the name is too long, set it to the empty string, otherwise copy the
+    // name to the full area
+    size_t len = strlen(unqualifiedName);
+    if ( len >= bufferSize)
+    {
+        qualifiedName[0] = '\0';
+        return;
+    }
+    else
+    {
+        strcpy(qualifiedName, unqualifiedName);
+    }
+
+    len = strlen(qualifiedName);
     /* name end in a colon?              */
-    if (qualifiedName[namelen - 1] == ':')
+    if (qualifiedName[len - 1] == ':')
     {
         // this could be the drive letter.  If so, make it the root of the current drive.
-        if (namelen == 2)
+        if (len == 2)
         {
             strcat(qualifiedName, "\\");
         }
         else
         {
             // potentially a device, we need to remove the colon.
-            qualifiedName[namelen - 1] = '\0';
+            qualifiedName[len - 1] = '\0';
             return;                            /* all finished                      */
 
         }

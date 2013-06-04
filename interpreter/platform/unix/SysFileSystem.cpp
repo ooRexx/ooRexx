@@ -179,17 +179,25 @@ void SysFileSystem::qualifyStreamName(
 /* Function:  Qualify a stream name for this system                */
 /*******************************************************************/
 {
-    char tempPath[MaximumFileNameBuffer];// temporary place to store the path/name
+    char tempPath[MaximumFileNameBuffer]; // temporary place to store the path/name
 
     /* already expanded? */
     if (*fullName != '\0')
     {
-        return;                            /* nothing more to do                */
+        return;                           /* nothing more to do               */
+    }
+
+    // Too long?
+    size_t len = strlen(name);
+    if ( len >= bufferSize || len >= MaximumFilenameBuffer)
+    {
+        fullName[0] = '\0';
+        return;
     }
 
     strcpy(tempPath, name);
     bool done = SysFileSystem::canonicalizeName(tempPath);
-    if (done && strlen(tempPath) < bufferSize)
+    if (done)
     {
         strcpy(fullName, tempPath);
     }
