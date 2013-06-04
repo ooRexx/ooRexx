@@ -42,5 +42,5 @@ DIST_SUBDIRS = rc
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
-EXTRA_DIST = *.rex *cls
+EXTRA_DIST = *.rex
 

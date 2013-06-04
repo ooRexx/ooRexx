@@ -38,7 +38,7 @@
 .NOTPARALLEL:
 
 SUBDIRS		= res
-DIST_SUBDIRS		= res
+DIST_SUBDIRS	= res
 
 MAINTAINERCLEANFILES	= Makefile.in *~
 

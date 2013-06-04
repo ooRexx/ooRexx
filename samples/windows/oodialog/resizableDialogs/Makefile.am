@@ -40,7 +40,6 @@
 SUBDIRS      = DialogAreaU ResizingAdmin
 DIST_SUBDIRS = DialogAreaU ResizingAdmin
 
-
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
 EXTRA_DIST = *.txt
