@@ -246,20 +246,19 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
         siStartInfo.wShowWindow = SHOWWINDOWFLAGS;
     }
 
-    if ( CreateProcess ( NULL,           // address of module name
-                         (LPSTR)cmdstring_ptr,// address of command line
-                         NULL,                // address of process security attrs
-                         NULL,                // address of thread security attrs
-                         true,                // new process inherits handles?
-                         // creation flags
-                         creationFlags,
-                         NULL,                // address of new environment block
-                         NULL,                // address of current directory name
-                         &siStartInfo,        // address of STARTUPINFO
-                         &piProcInfo))        // address of PROCESS_INFORMATION
-    // good rc from create now
-    // Wait for process to end and
+    if (CreateProcess(NULL,           // address of module name
+                      (LPSTR)cmdstring_ptr,// address of command line
+                      NULL,                // address of process security attrs
+                      NULL,                // address of thread security attrs
+                      true,                // new process inherits handles?
+                      // creation flags
+                      creationFlags,
+                      NULL,                // address of new environment block
+                      NULL,                // address of current directory name
+                      &siStartInfo,        // address of STARTUPINFO
+                      &piProcInfo))        // address of PROCESS_INFORMATION
     {
+        // CreateProcess succeeded, now wait for the process to end.
         if (titleChanged)
         {
             SetConsoleTitle(siStartInfo.lpTitle);
@@ -269,18 +268,19 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
 
         if (WAIT_FAILED != WaitForSingleObject ( piProcInfo.hProcess, INFINITE ) )
         {
-            // complete,ok?, get terminate rc
-            GetExitCodeProcess ( piProcInfo.hProcess, &rc );
+            // Completed ok, get termination rc
+            GetExitCodeProcess(piProcInfo.hProcess, &rc);
         }
         else
         {
-            rc = GetLastError ();         // bad termination? get error code
+            rc = GetLastError();    // Bad termination, get error code
             context->RaiseCondition("FAILURE", context->String(command), NULLOBJECT, context->WholeNumberToObject(rc));
             result = NULLOBJECT;
             return true;
         }
-        /* the new process must be detached so it will be discarded automatically after execution */
-        /* The thread must be closed first */
+
+        // The new process must be detached so it will be discarded
+        // automatically after execution.  The thread must be closed first
         if (titleChanged)
         {
             SetConsoleTitle(ctitle);
@@ -290,7 +290,8 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
     }
     else
     {
-        // return this as a failure for now...we might try this again later
+        // return this as a failure for now ... the caller might try this again
+        // later
         return false;
     }
 
@@ -330,9 +331,10 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
 {
     // address the command information
     const char *cmd = context->StringData(command);
-    const char *cl_opt = " /c ";         /* "/c" opt for sys cmd handler      */
+    const char *cl_opt = " /c "; // The "/c" opt for system commandd handler
     const char *interncmd;
-    /* remove quiet sign              */
+
+    // Remove the "quiet sign" if present
     if (cmd[0] == '@')
     {
         interncmd = cmd + 1;
@@ -348,11 +350,12 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
      * double quotes, and, if more than two, add a double quote to the front and
      * end of the string.
      */
-    bool noDirectInvoc = false;
-    bool inQuotes = false;
-    size_t quoteCount = 0;
+    size_t quoteCount    = 0;
+    bool   noDirectInvoc = false;
+    bool   inQuotes      = false;
     size_t i;
-    for (i = 0; i<strlen(interncmd); i++)
+
+    for (i = 0; i < strlen(interncmd); i++)
     {
         if (interncmd[i] == '"')
         {
@@ -375,26 +378,28 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         }
     }
 
-    i = 0; /* reset to zero for next usage ! */
+    i = 0; // reset to zero for next usage
 
-    // scan for the first whitespace character
+    // scan for the first non-whitespace character
     size_t j = 0;
     while (interncmd[j] == ' ')
     {
         j++;
     }
 
+    RexxObjectPtr result = NULLOBJECT;
+
     if (!noDirectInvoc)
     {
         char tmp[8];
         strncpy(tmp, &interncmd[j], 4);
         tmp[4] = '\0';
-        RexxObjectPtr  rc;                      /* Return code                       */
+
         if (!stricmp("set ",tmp))
         {
-            if (sys_process_set(context, cmd, &interncmd[j], rc))
+            if (sys_process_set(context, cmd, &interncmd[j], result))
             {
-                return rc;
+                return result;
             }
         }
         else
@@ -403,13 +408,13 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
             tmp[3] = '\0';
             if (!stricmp("cd ",tmp))
             {
-                if (sys_process_cd(context, cmd, &interncmd[j], rc))
+                if (sys_process_cd(context, cmd, &interncmd[j], result))
                 {
-                    return rc;
+                    return result;
                 }
             }
             else
-            {          /* check for drive letter change */
+            {   // Check if the command is to change drive
                 if ((tmp[1] == ':') && ((tmp[2] == ' ') || (!tmp[2])))
                 {
                     int code = _chdrive(toupper( tmp[0] ) - 'A' + 1);
@@ -420,12 +425,14 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
                     }
                     else
                     {
+                        // 0 result.
                         return context->False();
                     }
                 }
                 else
                 {
-                    /* check if a START command is specified, if so do not start it directly */
+                    // Check if a START command is specified, if so do not
+                    // invoke the command directly.
                     strncpy(tmp, &interncmd[j], 6);
                     tmp[6] = '\0';
                     noDirectInvoc = stricmp("start ",tmp) == 0;
@@ -434,33 +441,51 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         }
     }
 
-    const char *sys_cmd_handler;         /* Pointer to system cmd handler     */
-    // location of command interpreter
-    if (NULL == (sys_cmd_handler = getenv(COMSPEC)))
+    const char *sys_cmd_handler; // Pointer to system cmd handler
+
+    // Determine the system command interpreter.  This could be the full path
+    // name if COMSPEC is set, or a default name if it isn't.  We no longer
+    // suport Windows 95, so the default will be cmd.exe. But, it is still
+    // possible for people to set COMSPEC to command.com, so we could end up
+    // with command.com
+    if ( (sys_cmd_handler = getenv(COMSPEC)) == NULL )
     {
-        // CMD.EXE on NT Command.com on 32s
         sys_cmd_handler = CMDDEFNAMENT;
     }
-    /* Get len of handler                  */
-    size_t length_cmd_handler = strlen(sys_cmd_handler);
 
-    char  cmdstring[CMDBUFSIZENT];             /* Largest cmd we can give system    */
-    char *cmdstring_ptr = cmdstring;           /* Set pointer to cmd buffer           */
-    /****************************************************************************/
-    /* Compute maximum size of command we can fit into string being passed to   */
-    /* CreateProcess                                                            */
-    /****************************************************************************/
-    // string length is system specific
-    size_t maxStringLength = CMDBUFSIZENT;
-    size_t max_cmd_length = maxStringLength -     /* Maximum size of string         */
-                     (length_cmd_handler + 1) -   /* Minus length of sys cmd handler*/
-                     strlen(cl_opt) -             /* Minus length of cmd line option*/
-                     1;                           /* Minus length of terminating \0 */
+    // Determine the maximum possible buffer size needed to pass the final
+    // command to sysCommandNT().
+    size_t maxBufferSize = strlen(sys_cmd_handler) + 1
+                           + strlen(cl_opt)
+                           + strlen(&interncmd[j])
+                           + 2   // Two possible extra quotes
+                           + 1;  // Terminating null
+
+    char  cmdstring[CMDBUFSIZENT];    // Default static buffer.
+    char *cmdstring_ptr = cmdstring;  // Will point to static buffer.
+
+    if ( maxBufferSize > CMDBUFSIZENT )
+    {
+        // Allocate dynamic memory and set cmdstring_ptr to point to it.
+        cmdstring_ptr = (char *)LocalAlloc(LPTR, maxBufferSize);
+        if ( cmdstring_ptr == NULL )
+        {
+            context->RaiseException1(Rexx_Error_System_resources_user_defined,
+                                     context->String("Failed to allocate memory"));
+            return NULLOBJECT;
+        }
+    }
+    else
+    {
+        // We want maxBufferSize to relect the actual size of the buffer we are
+        // using so that we can test the return from SearchPath()
+        maxBufferSize = CMDBUFSIZENT;
+    }
 
     SystemInterpreter::exceptionConsole = false;
     SystemInterpreter::explicitConsole = false;
 
-    /* check whether or not program to invoke is cmd or command */
+    // Check whether or not the command to invoke is cmd.exe or command.com
     _strupr(strcpy(cmdstring_ptr, &interncmd[j]));
     bool searchFile = strstr(cmdstring_ptr, "CMD") != NULL;
 
@@ -494,8 +519,11 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         }
 
         LPSTR filepart;
-        bool fileFound = SearchPath(NULL, cmdstring_ptr, ".EXE", CMDBUFSIZENT-1, cmdstring, &filepart) != 0;
-        cmdstring_ptr = cmdstring;           /* Set pointer again to cmd buffer (might have been increased) */
+        uint32_t count = SearchPath(NULL, cmdstring_ptr, ".EXE", (uint32_t)(maxBufferSize - 1), cmdstring, &filepart);
+        bool fileFound = count != 0 && count <= maxBufferSize;
+
+        // Set pointer back again to cmd buffer (might have been increased)
+        cmdstring_ptr = cmdstring;
 
         if (fileFound && !stricmp(sys_cmd_handler, cmdstring_ptr))
         {
@@ -504,23 +532,34 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         }
     }
 
-    /* first check whether we can run command directly as a program (no file redirection when not cmd or command) */
+    // First check whether we can run the command directly as a program. (There
+    // can be no file redirection when not using cmd.exe or command.com)
     if (SystemInterpreter::explicitConsole || !noDirectInvoc)
     {
-        // try to invoke this directly.  A true failure allows us to fall through (for now)
-        RexxObjectPtr result = NULLOBJECT;
+        // Invoke this directly.  If we fail, we fall through and try again.
         if (sysCommandNT(context, cmd, &interncmd[j], true, result))
         {
+            if ( cmdstring_ptr != cmdstring )
+            {
+                // Not pointing to static buffer so we need to free it.
+                LocalFree(cmdstring_ptr);
+            }
             return result;
         }
     }
-    /* no we couldn't, so pass command to cmd.exe or command.com */
 
-    strcpy(cmdstring_ptr,sys_cmd_handler);    /* Put in system cmd handler      */
+    // We couldn't invoke the command directly, or we tried and failed.  So,
+    // pass the command to cmd.exe or command.com.
 
-    /* the following lines checks whether or not a /k option is specified */
-    /* if so the /c option must not be concatenated */
-    /* /k can only be specified as the first argument to keep the command handler active */
+
+    // Start the command buffer with the system cmd handler
+    strcpy(cmdstring_ptr,sys_cmd_handler);
+
+    // Check whether or not the user specified the /k option.  If so do not use
+    // the /c option.  The /k option can only be specified as the first
+    // argument, and if used, keeps the command handler process open after the
+    // command has finished.  Normally the /c option would be usee to close the
+    // command handler process when the command is finished..
     if (!( (strlen(interncmd) > j+1) && (interncmd[j] == '/')
            && ((interncmd[j+1] == 'k') || (interncmd[j+1] == 'K'))
            && ((interncmd[j+2] == ' ') || (interncmd[j+2] == '\0')) ))
@@ -533,7 +572,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         strcat(cmdstring_ptr," ");
     }
 
-    /* Add cmd to be executed, possibly quoting it to preserve embedded quotes. */
+    // Add cmd to be executed, possibly quoting it to preserve embedded quotes.
     if ( quoteCount> 2 )
     {
         strcat(cmdstring_ptr,"\"");
@@ -545,24 +584,28 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         strcat(cmdstring_ptr,interncmd);
     }
 
-    /****************************************************************************/
-    /* Invoke the system command handler to execute the command                 */
-    // On NT, this will be the actual rc from the executing program
-    // on Win32s this will be 0 if Winexec spawned the program, 1-31
-    // reflect errors from WinExec; where WinExec rc=0 is mapped to 1
-    /****************************************************************************/
-    // Call system specific routine
-    RexxObjectPtr rc = NULLOBJECT;
-
-    if (!sysCommandNT(context, cmd, cmdstring_ptr, false, rc))
+    // Invoke the command
+    if (!sysCommandNT(context, cmd, cmdstring_ptr, false, result))
     {
-        // bad termination? get error code
+        // Failed, get error code and return
         context->RaiseCondition("FAILURE", context->String(cmd), NULLOBJECT, context->WholeNumberToObject(GetLastError()));
+
+        if ( cmdstring_ptr != cmdstring )
+        {
+            // Not pointing to static buffer so we need to free it.
+            LocalFree(cmdstring_ptr);
+        }
         return NULLOBJECT;
     }
+
+    if ( cmdstring_ptr != cmdstring )
+    {
+        // Not pointing to static buffer so we need to free it.
+        LocalFree(cmdstring_ptr);
+    }
     SystemInterpreter::exceptionConsole = false;
-    return rc;
-}                                      // SystemCommand
+    return result;
+}
 
 
 /**
