@@ -65,7 +65,7 @@ stringsize_t lengthArgument(
     }
     stringsize_t    value;                /* converted number value            */
 
-    if (!argument->unsignedNumberValue(value))
+    if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS))
     {
         /* raise the error                   */
         reportException(Error_Incorrect_method_length, argument);
@@ -89,7 +89,7 @@ stringsize_t positionArgument(
     }
     stringsize_t    value;                /* converted number value            */
 
-    if (!argument->unsignedNumberValue(value) || value == 0)
+    if (!argument->unsignedNumberValue(value, Numerics::ARGUMENT_DIGITS) || value == 0)
     {
         /* raise the error                   */
         reportException(Error_Incorrect_method_position, argument);

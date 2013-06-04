@@ -118,9 +118,9 @@ public:
     static inline stringsize_t maxVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n2 : n1; }
     static inline wholenumber_t maxValueForDigits(size_t d)
     {
-        if (d > DEFAULT_DIGITS)
+        if (d > ARGUMENT_DIGITS)
         {
-            return validMaxWhole[DEFAULT_DIGITS - 1];
+            return validMaxWhole[ARGUMENT_DIGITS - 1];
         }
         else
         {
