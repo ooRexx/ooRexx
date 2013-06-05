@@ -153,6 +153,7 @@ build_samples_platform_dir = $(samples_@ORX_PLATFORM@_dir)
 catdir = $(prefix)/bin
 
 COMMON_CPPFLAGS = -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL) -DORX_FIX=0 \
+                  -DOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\" \
                   -DORX_SYS_STR=\"@ORX_SYS_STR@\" \
                   -DORX_CATDIR=\"$(catdir)\" \
                   -DORX_SHARED_LIBRARY_EXT=\"@ORX_SHARED_LIBRARY_EXT@\"
