@@ -37,8 +37,8 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= unix windows native.api
-DIST_SUBDIRS            = unix windows native.api
+SUBDIRS			= unix native.api
+DIST_SUBDIRS            = unix native.api
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 

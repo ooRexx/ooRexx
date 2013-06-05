@@ -189,7 +189,7 @@ void SysFileSystem::qualifyStreamName(
 
     // Too long?
     size_t len = strlen(name);
-    if ( len >= bufferSize || len >= MaximumFilenameBuffer)
+    if ( len >= bufferSize || len >= MaximumFileNameBuffer)
     {
         fullName[0] = '\0';
         return;
