@@ -563,6 +563,7 @@ PackageClass *PackageClass::newRexx(
         // if no directly provided source, resolve the name in the global context and have the instance
         // load the file.
         RexxString *resolvedName = instance->resolveProgramName(nameString, OREF_NULL, OREF_NULL);
+        ProtectedObject n(resolvedName);
         package = instance->loadRequires(activity, nameString, resolvedName);
     }
     else
