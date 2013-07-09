@@ -1300,20 +1300,29 @@ static BOOL getDispatchIDByName(const char *pszFunction, IDispatch *pDispatch, I
         hr = pDispatchEx->GetMemberProperties(id, which, &props);
         if ( FAILED(hr) )
         {
-            // This should not be possible.
-            goto done_out;
+            // This should not be possible, unless it is IE, which advertises
+            // things it doesn't support.
+            if ( hr != E_NOTIMPL )
+            {
+                goto done_out;
+            }
         }
 
-        if ( props & fdexPropCanGet )       flags |= DISPATCH_PROPERTYGET;
-        if ( props & fdexPropCanPut )       flags |= DISPATCH_PROPERTYPUT;
-        if ( props & fdexPropCanPutRef )    flags |= DISPATCH_PROPERTYPUTREF;
-        if ( props & fdexPropCanCall )      flags |= DISPATCH_METHOD;
-        if ( props & fdexPropCannotGet )    flags &= ~DISPATCH_PROPERTYGET;
-        if ( props & fdexPropCannotPut )    flags &= ~DISPATCH_PROPERTYPUT;
-        if ( props & fdexPropCannotPutRef ) flags &= ~DISPATCH_PROPERTYPUTREF;
-        if ( props & fdexPropCannotCall )   flags &= ~DISPATCH_METHOD;
+        if ( props != 0 )
+        {
+            if ( props & fdexPropCanGet )       flags |= DISPATCH_PROPERTYGET;
+            if ( props & fdexPropCanPut )       flags |= DISPATCH_PROPERTYPUT;
+            if ( props & fdexPropCanPutRef )    flags |= DISPATCH_PROPERTYPUTREF;
+            if ( props & fdexPropCanCall )      flags |= DISPATCH_METHOD;
+            if ( props & fdexPropCannotGet )    flags &= ~DISPATCH_PROPERTYGET;
+            if ( props & fdexPropCannotPut )    flags &= ~DISPATCH_PROPERTYPUT;
+            if ( props & fdexPropCannotPutRef ) flags &= ~DISPATCH_PROPERTYPUTREF;
+            if ( props & fdexPropCannotCall )   flags &= ~DISPATCH_METHOD;
+        }
 
-        // If flags are 0, something is wrong ... but we just ignore this for now.
+        // If flags are 0, something is wrong ... but with IE at least,
+        // GetMemberProperties() *never* works.  In this case we try to fall
+        // back to using the type info.
         if ( flags == 0 && pTypeInfo )
         {
             POLEFUNCINFO tempFuncInfo = NULL;
@@ -3706,6 +3715,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
         dp.rgdispidNamedArgs = NULL;
     }
 
+    ZeroMemory(&sResult, sizeof(VARIANT));
     dp.cArgs = (UINT)iArgCount;
     dp.rgvarg = pVarArgs;
     VariantInit(&sResult);
