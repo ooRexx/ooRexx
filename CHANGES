@@ -36,6 +36,12 @@ Unix/Linux
   Patches
   -------
 
+  - The rxapi daemon has been enhanced to support distributions that
+    support the systemd daemon control mechanism. The ooRexx installation
+    automatically detects the kind of daemon control system supported by
+    the Linux distribution and dynamically picks the best one to use.
+
+  - The rxapid script has been upgraded to be LSB compliant.
 
 
 z/OS
