@@ -1568,7 +1568,7 @@ RexxRoutine1(RexxObjectPtr,
         "Operation not possible due to RF-kill",
     };
 
-    if (en > sizeof(en) / sizeof(char *)) {
+    if (en >= sizeof(msgs) / sizeof(char *)) {
         return (RexxObjectPtr)context->NewStringFromAsciiz("Unknown");
     }
     return (RexxObjectPtr)context->NewStringFromAsciiz(msgs[en]);
