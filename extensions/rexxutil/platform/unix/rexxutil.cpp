@@ -2772,7 +2772,8 @@ static bool goodOpts(RexxCallContext *c, CSTRING opts, uint32_t *pOpts)
               options |= DO_FILES;
               break;
 
-          case 'I':                      // case insensitive? no op on Windows
+          case 'I':                      // case insensitive?
+              options |= CASELESS;
               break;
 
           default:                       // error, unknown option
