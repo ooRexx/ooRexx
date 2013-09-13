@@ -51,6 +51,15 @@
 
 REXXAPI_LIBS = $(REXX_LIBS)
 
+# Generate the version information.  Quit if there is an error.  We only do this
+# when we are building outside of the interpreter build.  Within the interpreter
+# build, the ooDialog source will be the latest released version of ooDialog.
+# That released version will have a static ooDialog.ver.incl file that reflects
+# the exact version at the time of release.
+!IF [generateVersionFile.bat] != 0
+!  ERROR Build error: could not gerate version file, ooDialog.ver.incl
+!ENDIF
+
 !else
 
 OOD_OUTDIR=$(OR_OUTDIR)
@@ -59,11 +68,6 @@ REXXAPI_LIBS = $(OR_OUTDIR)\rexx.lib $(OR_OUTDIR)\rexxapi.lib
 OOD_INCLUDE_FILE = "$(OR_LIBSRC)\ORXWIN32.MAK"
 
 !endif
-
-# Generate the version information.  Quit if there is an error.
-!IF [generateVersionFile.bat] != 0
-!  ERROR Build error: could not gerate version file, ooDialog.ver.incl
-!ENDIF
 
 !include ooDialog.ver.incl
 !include $(OOD_INCLUDE_FILE)
