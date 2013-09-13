@@ -45,8 +45,10 @@ tested recently.  Visual C++ 2005 or later is the best choice.
 
 ooRexx is built using the command line compiler and tools.  Therefore the
 Visual C++ Express tools will work fine.  In addition the (required) Windows
-SDK also contains the command line compiler tools.  Microsoft provides the
-Visual C++ Express tools free of charge.  More information and download
+SDK also contains the command line compiler tools.  Although, Microsoft
+makes changes over time.  The most current version of the Windows SDK may,
+or may not, contain the command line compiler tools.  Microsoft provides
+the Visual C++ Express tools free of charge.  More information and download
 options are available on MicroSoft's website here:
 
   http://www.microsoft.com/express/
@@ -57,19 +59,19 @@ Visual C++ 6.0 is no longer supported and the code base will not compile
 using that version of Visual C++.
 
 [Required] A current version of a Microsoft Windows SDK.  The minimum
-required is Windows Vista Update & .NET 3.0 SDK.  Later versions are fine.
-Microsoft provides Windows SDKs free of charge.
+required is "Microsoft Windows SDK for Windows 7 and .NET Framework 4."
+Later versions are fine. Microsoft provides the Windows SDKs free of charge.
 
 The environment variables for the C++ compiler and the Windows SDK *MUST* be
 set correctly to build ooRexx.  See the Environment set up section below for
 details.
 
 Note: The release ooRexx, built by the project team, is built using Visual
-C++ 2008 and the Windows Vista Update & .NET 3.0 SDK.  However, ooRexx
-builds without problems using later versions of these tools.  For instance,
-ooRexx can be built using Microsoft Visual Studio 2010 and the Microsoft
-Windows SDK for Windows 7 and .NET Framework 4.  ooRexx will build using the
-free Visual C++ Express editions.
+C++ 2010 and the "Microsoft Windows SDK for Windows 7 and .NET Framework 4."
+However, ooRexx builds without problems using later versions of these tools.
+For instance, ooRexx can be built using Microsoft Visual Studio 2012 and a
+late Windows SDK.  ooRexx will build using the free Visual C++ Express
+editions.
 
 Microsoft has the tendency to move the download URL for the Windows SDKs,
 often. A good starting point for locating a SDK is:
