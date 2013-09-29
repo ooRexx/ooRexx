@@ -50,14 +50,17 @@ typedef UINT_PTR  uintptr_t;
 #undef __REXX64__
 #endif
 
-#ifdef NATIVE_INTYPES
-/* If the plattform and compiler supports the
-* C9X 'proposed' standard for interger types,
-* use the provided inttypes.h
-* otherwise use our own defintions of the same types
+/* If the platform and compiler supports the C9X 'proposed' standard for
+ * integer types, and has inttypes.h, then use it by defining NATIVE_INTTYPES.
+ *
+ * Visual C++ since 2010 has stdint.h, but by 2013 still does not have
+ * inttypes.h.  In this case define HAVE_STDINT_H.  Otherwise use our own
+ * defintions of the same types
 */
-
+#if defined (NATIVE_INTYPES)
 #include <inttypes.h>
+#elif defined(HAVE_STDINT_H)
+#include <stdint.h>
 #else
 // portable ANSI types
 typedef short int16_t;
@@ -68,26 +71,6 @@ typedef char int8_t;
 typedef unsigned char uint8_t;
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
-#endif
-
-typedef DWORD thread_id_t;
-typedef DWORD process_id_t;
-
-#define REXXENTRY APIENTRY
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-typedef size_t (REXXENTRY *REXXPFN)();
-#ifdef __cplusplus
-}
-#endif
-
-#ifndef SIZE_MAX
-#define SIZE_MAX		(~((size_t)0))
-#endif
-#define SSIZE_MAX		((ssize_t)(SIZE_MAX >> 1))
-#define SSIZE_MIN		(~SSIZE_MAX - 1)
 
 #define UINTPTR_MAX     (~((uintptr_t)0))
 #define INTPTR_MAX      ((intptr_t)(UINTPTR_MAX >> 1))
@@ -108,6 +91,27 @@ typedef size_t (REXXENTRY *REXXPFN)();
 #define UINT64_MAX      (~((uint64_t)0))
 #define INT64_MAX       ((int64_t)(UINT64_MAX >> 1))
 #define INT64_MIN       (~INT64_MAX)
+#endif
+
+typedef DWORD thread_id_t;
+typedef DWORD process_id_t;
+
+#define REXXENTRY APIENTRY
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef size_t (REXXENTRY *REXXPFN)();
+#ifdef __cplusplus
+}
+#endif
+
+#ifndef SIZE_MAX
+#define SIZE_MAX		(~((size_t)0))
+#endif
+
+#define SSIZE_MAX		((ssize_t)(SIZE_MAX >> 1))
+#define SSIZE_MIN		(~SSIZE_MAX - 1)
 
 #define VLARexxEntry __cdecl           /* external entry points       */
 
