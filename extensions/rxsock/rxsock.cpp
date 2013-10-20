@@ -185,6 +185,10 @@ void stemToIntArray(RexxCallContext *context, RexxObjectPtr stemSource, int &cou
 
     // get the stem.0 item
     RexxObjectPtr countObj = stem.getValue((size_t)0);
+    if ( countObj == NULLOBJECT )
+    {
+        return;
+    }
 
     // try to convert this
     wholenumber_t temp;
