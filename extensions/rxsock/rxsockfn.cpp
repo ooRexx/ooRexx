@@ -731,12 +731,6 @@ RexxRoutine4(int, SockRecv, int, sock, CSTRING, var, int, dataLen, OPTIONAL_CSTR
 RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjectPtr, flagArg, OPTIONAL_RexxObjectPtr, stemSource)
 {
     StemManager stem(context);
-
-    if (!stem.resolveStem(stemSource))
-    {
-        return 0;
-    }
-
     sockaddr_in addr;
     socklen_t   addr_size;
 
