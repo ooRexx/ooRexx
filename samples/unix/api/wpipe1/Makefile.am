@@ -40,7 +40,7 @@
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
 AM_CFLAGS		= @CFLAGS@
-INCLUDES 		= -I $(top_srcdir)/api -I $(top_srcdir)/api/platform/unix
+AM_CPPFLAGS 		= -I $(top_srcdir)/api -I $(top_srcdir)/api/platform/unix
 
 EXTRA_DIST              = aspitest1.rex
 
