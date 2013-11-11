@@ -762,7 +762,7 @@ rxapi_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 #
 # Extra libraries for rxapi
 #
-rxapi_LDADD   = @ORX_LDADD_EXECUTABLE@
+rxapi_LIBADD   = @ORX_LDADD_EXECUTABLE@
 rxapi_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 
 #################### rexx ##########################
