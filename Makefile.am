@@ -499,6 +499,7 @@ librexxapi_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                           -I$(build_common_dir) \
                           -I$(build_common_platform_dir)
 
+librexxapi_la_LIBADD   = @ORX_LIBADD_LIBRARY@
 librexxapi_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_OS_EXTRA@
 
 #################### librexx.so ##########################
@@ -724,7 +725,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_interpreter_common_dir) \
                        -I$(build_interpreter_platform_dir)
 
-librexx_la_LIBADD   = @ORX_LDADD_EXECUTABLE@
+librexx_la_LIBADD   = @ORX_LIBADD_LIBRARY@
 librexx_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_PACKAGE@
 
 #################### rxapi ##########################
