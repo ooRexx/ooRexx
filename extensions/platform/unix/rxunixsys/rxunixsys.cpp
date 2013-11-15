@@ -811,25 +811,25 @@ RexxRoutine2(RexxObjectPtr,
     }
     else if (*ichar == 'P' || *ichar == 'p') {
         // 1- file type
-        if (S_IFDIR & mystat.st_mode == S_IFDIR) {
+        if ((S_IFDIR & mystat.st_mode) == S_IFDIR) {
             strcpy(buf, "d");
         }
-        else if (S_IFCHR & mystat.st_mode == S_IFCHR) {
+        else if ((S_IFCHR & mystat.st_mode) == S_IFCHR) {
             strcpy(buf, "c");
         }
-        else if (S_IFBLK & mystat.st_mode == S_IFBLK) {
+        else if ((S_IFBLK & mystat.st_mode) == S_IFBLK) {
             strcpy(buf, "b");
         }
-        else if (S_IFIFO & mystat.st_mode == S_IFIFO) {
+        else if ((S_IFIFO & mystat.st_mode) == S_IFIFO) {
             strcpy(buf, "p");
         }
-        else if (S_IFREG & mystat.st_mode == S_IFREG) {
+        else if ((S_IFREG & mystat.st_mode) == S_IFREG) {
             strcpy(buf, "-");
         }
-        else if (S_IFLNK & mystat.st_mode == S_IFLNK) {
+        else if ((S_IFLNK & mystat.st_mode) == S_IFLNK) {
             strcpy(buf, "l");
         }
-        else if (S_IFSOCK & mystat.st_mode == S_IFSOCK) {
+        else if ((S_IFSOCK & mystat.st_mode) == S_IFSOCK) {
             strcpy(buf, "s");
         }
         else strcpy(buf, "-");
