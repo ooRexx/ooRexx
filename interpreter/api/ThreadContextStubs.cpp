@@ -61,6 +61,7 @@
 #include "ActivityManager.hpp"
 #include "RexxStartDispatcher.hpp"
 #include "PackageManager.hpp"
+#include "MutableBufferClass.hpp"
 
 BEGIN_EXTERN_C()
 
@@ -1819,6 +1820,98 @@ void RexxEntry ClearCondition(RexxThreadContext *c)
     }
 }
 
+POINTER RexxEntry MutableBufferData(RexxThreadContext *c, RexxMutableBufferObject b)
+{
+    ApiContext context(c);
+    try
+    {
+        return (POINTER)((RexxMutableBuffer *)b)->getData();
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULL;
+}
+
+size_t RexxEntry MutableBufferLength(RexxThreadContext *c, RexxMutableBufferObject b)
+{
+    ApiContext context(c);
+    try
+    {
+        return ((RexxMutableBuffer *)b)->getLength();
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
+size_t RexxEntry SetMutableBufferLength(RexxThreadContext *c, RexxMutableBufferObject b, size_t length)
+{
+    ApiContext context(c);
+    try
+    {
+        return ((RexxMutableBuffer *)b)->setDataLength(length);
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
+size_t RexxEntry MutableBufferCapacity(RexxThreadContext *c, RexxMutableBufferObject b)
+{
+    ApiContext context(c);
+    try
+    {
+        return ((RexxMutableBuffer *)b)->getCapacity();
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
+POINTER RexxEntry SetMutableBufferCapacity(RexxThreadContext *c, RexxMutableBufferObject b, size_t length)
+{
+    ApiContext context(c);
+    try
+    {
+        ((RexxMutableBuffer *)b)->setCapacity(length);
+        return (POINTER)((RexxMutableBuffer *)b)->getData();
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
+RexxMutableBufferObject RexxEntry NewMutableBuffer(RexxThreadContext *c, size_t l)
+{
+    ApiContext context(c);
+    try
+    {
+        return (RexxMutableBufferObject)context.ret((RexxObject *)new RexxMutableBuffer(l, l));
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
+logical_t RexxEntry IsMutableBuffer(RexxThreadContext *c, RexxObjectPtr o)
+{
+    ApiContext context(c);
+    try
+    {
+        return isOfClass(MutableBuffer, (RexxObject *)o);
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return false;
+}
+
 END_EXTERN_C()
 
 RexxThreadInterface RexxActivity::threadContextFunctions =
@@ -1967,4 +2060,11 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     OREF_NULL,
     ObjectToCSelfScoped,
     DisplayCondition,
+    MutableBufferData,
+    MutableBufferLength,
+    SetMutableBufferLength,
+    NewMutableBuffer,
+    IsMutableBuffer,
+    MutableBufferCapacity,
+    SetMutableBufferCapacity,
 };

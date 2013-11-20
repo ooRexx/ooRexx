@@ -79,10 +79,10 @@
 #define REXX_VALUE_uint16_t               25
 #define REXX_VALUE_uint32_t               26
 #define REXX_VALUE_uint64_t               27
-#define REXX_VALUE___uint64_t              27
+#define REXX_VALUE___uint64_t             27  -- aliased
 #define REXX_VALUE_intptr_t               28
 #define REXX_VALUE_uintptr_t              29
-#define REXX_VALUE___uintptr_t              29
+#define REXX_VALUE___uintptr_t            29  -- aliased
 #define REXX_VALUE_logical_t              30
 #define REXX_VALUE_RexxArrayObject        31
 #define REXX_VALUE_RexxStemObject         32
@@ -90,6 +90,7 @@
 #define REXX_VALUE_ssize_t                34
 #define REXX_VALUE_POINTERSTRING          35
 #define REXX_VALUE_RexxClassObject        36
+#define REXX_VALUE_RexxMutableBufferObject 37
 
 #define REXX_OPTIONAL_ARGUMENT                 0x8000
 
@@ -119,6 +120,7 @@
 #define REXX_VALUE_OPTIONAL_RexxStemObject        (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_RexxStemObject)
 #define REXX_VALUE_OPTIONAL_POINTERSTRING         (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_POINTERSTRING)
 #define REXX_VALUE_OPTIONAL_RexxClassObject       (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_RexxClassObject)
+#define REXX_VALUE_OPTIONAL_RexxMutableBufferObject   (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_RexxMutableBufferObject)
 
 BEGIN_EXTERN_C()
 
@@ -297,6 +299,7 @@ typedef struct
         RexxArrayObject       value_RexxArrayObject;
         RexxStemObject        value_RexxStemObject;
         POINTER               value_POINTERSTRING;
+        RexxMutableBufferObject value_RexxMutableBufferObject;
 
         // following just duplicate the non-optional variations...
         // it was difficult (if not impossible) to get the
@@ -327,6 +330,7 @@ typedef struct
         RexxArrayObject       value_OPTIONAL_RexxArrayObject;
         RexxStemObject        value_OPTIONAL_RexxStemObject;
         POINTER               value_OPTIONAL_POINTERSTRING;
+        RexxMutableBufferObject value_OPTIONAL_RexxMutableBufferObject;
     } value;
 
     uint16_t type;            // type of the value
@@ -343,6 +347,8 @@ typedef struct
     inline void operator=(RexxArrayObject o) { type = REXX_VALUE_RexxArrayObject; value.value_RexxArrayObject = o; }
     inline operator RexxStemObject() { return value.value_RexxStemObject; }
     inline void operator=(RexxStemObject o) { type = REXX_VALUE_RexxStemObject; value.value_RexxStemObject = o; }
+    inline operator RexxMutableBufferObject() { return value.value_RexxMutableBufferObject; }
+    inline void operator=(RexxMutableBufferObject o) { type = REXX_VALUE_RexxMutableBufferObject; value.value_RexxMutableBufferObject = o; }
     inline operator CSTRING() { return value.value_CSTRING; }
     inline void operator=(CSTRING o) { type = REXX_VALUE_CSTRING; value.value_CSTRING = o; }
     inline operator POINTER() { return value.value_POINTER; }
@@ -593,6 +599,14 @@ typedef struct
 
     POINTER          (RexxEntry *ObjectToCSelfScoped)(RexxThreadContext *, RexxObjectPtr, RexxObjectPtr);
     wholenumber_t    (RexxEntry *DisplayCondition)(RexxThreadContext *);
+
+    POINTER          (RexxEntry *MutableBufferData)(RexxThreadContext *, RexxMutableBufferObject);
+    size_t           (RexxEntry *MutableBufferLength)(RexxThreadContext *, RexxMutableBufferObject);
+    size_t           (RexxEntry *SetMutableBufferLength)(RexxThreadContext *, RexxMutableBufferObject, size_t);
+    RexxMutableBufferObject  (RexxEntry *NewMutableBuffer)(RexxThreadContext *, size_t);
+    logical_t        (RexxEntry *IsMutableBuffer)(RexxThreadContext *, RexxObjectPtr);
+    size_t           (RexxEntry *MutableBufferCapacity)(RexxThreadContext *, RexxMutableBufferObject);
+    POINTER          (RexxEntry *SetMutableBufferCapacity)(RexxThreadContext *, RexxMutableBufferObject, size_t);
 
 } RexxThreadInterface;
 
@@ -1214,6 +1228,41 @@ struct RexxThreadContext_
     logical_t IsBuffer(RexxObjectPtr o)
     {
         return functions->IsBuffer(this, o);
+    }
+
+    POINTER MutableBufferData(RexxMutableBufferObject bo)
+    {
+        return functions->MutableBufferData(this, bo);
+    }
+
+    size_t MutableBufferLength(RexxMutableBufferObject bo)
+    {
+        return functions->MutableBufferLength(this, bo);
+    }
+
+    size_t SetMutableBufferLength(RexxMutableBufferObject bo, size_t l)
+    {
+        return functions->SetMutableBufferLength(this, bo, l);
+    }
+
+    RexxMutableBufferObject NewMutableBuffer(wholenumber_t n)
+    {
+        return functions->NewMutableBuffer(this, n);
+    }
+
+    logical_t IsMutableBuffer(RexxObjectPtr o)
+    {
+        return functions->IsMutableBuffer(this, o);
+    }
+
+    size_t MutableBufferCapacity(RexxMutableBufferObject bo)
+    {
+        return functions->MutableBufferCapacity(this, bo);
+    }
+
+    POINTER SetMutableBufferCapacity(RexxMutableBufferObject bo, size_t l)
+    {
+        return functions->SetMutableBufferCapacity(this, bo, l);
     }
 
     POINTER PointerValue(RexxPointerObject po)
@@ -1866,6 +1915,42 @@ struct RexxMethodContext_
     logical_t IsBuffer(RexxObjectPtr o)
     {
         return threadContext->IsBuffer(o);
+    }
+
+    POINTER MutableBufferData(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferData(bo);
+    }
+
+    size_t MutableBufferLength(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferLength(bo);
+    }
+
+    size_t SetMutableBufferLength(RexxMutableBufferObject bo, size_t l)
+    {
+        return threadContext->SetMutableBufferLength(bo, l);
+    }
+
+    RexxMutableBufferObject NewMutableBuffer(wholenumber_t n)
+    {
+        return threadContext->NewMutableBuffer(n);
+    }
+
+    logical_t IsMutableBuffer(RexxObjectPtr o)
+    {
+        return threadContext->IsMutableBuffer(o);
+    }
+
+
+    size_t MutableBufferCapacity(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferCapacity(bo);
+    }
+
+    POINTER SetMutableBufferCapacity(RexxMutableBufferObject bo, size_t l)
+    {
+        return threadContext->SetMutableBufferCapacity(bo, l);
     }
 
     POINTER PointerValue(RexxPointerObject po)
@@ -2582,6 +2667,42 @@ struct RexxCallContext_
         return threadContext->IsBuffer(o);
     }
 
+    POINTER MutableBufferData(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferData(bo);
+    }
+
+    size_t MutableBufferLength(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferLength(bo);
+    }
+
+    size_t SetMutableBufferLength(RexxMutableBufferObject bo, size_t l)
+    {
+        return threadContext->SetMutableBufferLength(bo, l);
+    }
+
+    RexxMutableBufferObject NewMutableBuffer(wholenumber_t n)
+    {
+        return threadContext->NewMutableBuffer(n);
+    }
+
+    logical_t IsMutableBuffer(RexxObjectPtr o)
+    {
+        return threadContext->IsMutableBuffer(o);
+    }
+
+
+    size_t MutableBufferCapacity(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferCapacity(bo);
+    }
+
+    POINTER SetMutableBufferCapacity(RexxMutableBufferObject bo, size_t l)
+    {
+        return threadContext->SetMutableBufferCapacity(bo, l);
+    }
+
     POINTER PointerValue(RexxPointerObject po)
     {
         return threadContext->PointerValue(po);
@@ -3296,6 +3417,42 @@ struct RexxExitContext_
     logical_t IsBuffer(RexxObjectPtr o)
     {
         return threadContext->IsBuffer(o);
+    }
+
+    POINTER MutableBufferData(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferData(bo);
+    }
+
+    size_t MutableBufferLength(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferLength(bo);
+    }
+
+    size_t SetMutableBufferLength(RexxMutableBufferObject bo, size_t l)
+    {
+        return threadContext->SetMutableBufferLength(bo, l);
+    }
+
+    RexxMutableBufferObject NewMutableBuffer(wholenumber_t n)
+    {
+        return threadContext->NewMutableBuffer(n);
+    }
+
+    logical_t IsMutableBuffer(RexxObjectPtr o)
+    {
+        return threadContext->IsMutableBuffer(o);
+    }
+
+
+    size_t MutableBufferCapacity(RexxMutableBufferObject bo)
+    {
+        return threadContext->MutableBufferCapacity(bo);
+    }
+
+    POINTER SetMutableBufferCapacity(RexxMutableBufferObject bo, size_t l)
+    {
+        return threadContext->SetMutableBufferCapacity(bo, l);
     }
 
     POINTER PointerValue(RexxPointerObject po)
