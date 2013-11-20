@@ -52,7 +52,7 @@
 #define ExtendUpper         0x00000010
 
 
-typedef struct copyElelmentParm {
+typedef struct copyElementParm {
    size_t firstChangedDimension;
    RexxArray *newArray;
    RexxArray *newDimArray;
