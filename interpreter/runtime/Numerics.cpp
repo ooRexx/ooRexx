@@ -436,6 +436,42 @@ bool Numerics::objectToInt64(RexxObject *source, int64_t &result)
 
 
 /**
+ * Validate that an object can be converted to an int64_t value
+ *
+ * @param source The source object.
+ *
+ * @return Returns an object that has been validated as a valid
+ *         int64_t value and can be passed to a native routine.  Returns
+ *         null if this object is not valid.
+ */
+RexxObject *Numerics::int64Object(RexxObject *source)
+{
+    // is this an integer value (very common)
+    if (isInteger(source))
+    {
+        return source;
+    }
+    else
+    {
+        // get this as a numberstring (which it might already be)
+        RexxNumberString *nString = source->numberString();
+        // not convertible to number string?  get out now
+        if (nString == OREF_NULL)
+        {
+            return OREF_NULL;
+        }
+
+        int64_t result;
+        // if not a valid whole number, reject this too
+        if (!nString->int64Value(&result, DIGITS64)) {
+            return OREF_NULL;
+        }
+        return nString;
+    }
+}
+
+
+/**
  * Convert an object into an unsigned int64 value.
  *
  * @param source   The source object.

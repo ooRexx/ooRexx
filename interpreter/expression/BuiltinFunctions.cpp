@@ -1887,9 +1887,9 @@ BUILTIN(LINEIN)
 
     RexxString *name = optional_string(LINEIN, name);/* get the string name               */
                                          /* get the line position             */
-    RexxInteger *line = optional_integer(LINEIN, line);
+    RexxObject *line = optional_big_integer(LINEIN, line);
     /* and the optional count of lines   */
-    RexxInteger *count = optional_integer(LINEIN, count);
+    RexxObject *count = optional_big_integer(LINEIN, count);
     if (check_queue(name))
     {             /* is this "QUEUE:"                  */
         RexxString *result;
@@ -1937,9 +1937,9 @@ BUILTIN(CHARIN)
                                          /* get the string name               */
     RexxString *name = optional_string(CHARIN, name);
     /* get the line position             */
-    RexxInteger *position = optional_integer(CHARIN, start);
+    RexxObject *position = optional_big_integer(CHARIN, start);
     /* and the optional count of chars   */
-    RexxInteger *count = optional_integer(CHARIN, count);
+    RexxObject *count = optional_big_integer(CHARIN, count);
     if (check_queue(name))               /* is this "QUEUE:"                  */
     {
                                          /* this isn't allowed                */
@@ -1979,7 +1979,7 @@ BUILTIN(LINEOUT)
     /* get the output string             */
     RexxString *string = optional_string(LINEOUT, string);
     /* get the line position             */
-    RexxInteger *line = optional_integer(LINEOUT, line);
+    RexxObject *line = optional_big_integer(LINEOUT, line);
     if (check_queue(name))
     {             /* is this "QUEUE:"                  */
                   /* if exit declines call             */
@@ -2036,7 +2036,7 @@ BUILTIN(CHAROUT)
     /* get the output string             */
     RexxString *string = optional_string(CHAROUT, string);
     /* get the line position             */
-    RexxInteger *position = optional_integer(CHAROUT, start);
+    RexxObject *position = optional_big_integer(CHAROUT, start);
     if (check_queue(name))               /* is this "QUEUE:"                  */
     {
                                          /* this isn't allowed                */

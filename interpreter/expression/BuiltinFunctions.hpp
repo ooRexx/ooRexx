@@ -56,6 +56,9 @@
 #define required_integer(x,n) stack->requiredIntegerArg(argcount - x##_##n, argcount, CHAR_##x)
 #define optional_integer(x,n) ((argcount >= x##_##n) ? stack->optionalIntegerArg(argcount - x##_##n, argcount, CHAR_##x) : OREF_NULL)
 
+#define required_big_integer(x,n) stack->requiredBigIntegerArg(argcount - x##_##n, argcount, CHAR_##x)
+#define optional_big_integer(x,n) ((argcount >= x##_##n) ? stack->optionalBigIntegerArg(argcount - x##_##n, argcount, CHAR_##x) : OREF_NULL)
+
 #define optional_argument(x,n) ((argcount >= x##_##n) ? stack->peek(argcount - x##_##n) : OREF_NULL )
 #define arg_exists(x,n) ((argcount >= x##_##n) ? false : stack->peek(argcount - x##_##n) != OREF_NULL )
 #define arg_omitted(x,n) ((argcount < x##_##n) ? true : stack->peek(argcount - x##_##n) == OREF_NULL )

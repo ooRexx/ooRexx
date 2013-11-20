@@ -245,3 +245,64 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(
     this->replace(position, newInt);     /* replace the argument              */
     return newInt;                       /* return the replacement value      */
 }
+
+
+/**
+ * Process an argument and ensure it is a valid integer
+ * that can be expressed as a 64-bit value.
+ *
+ * @param position The argument position for any error messages.
+ * @param argcount The number of arguments passed to the function.
+ * @param function The function name
+ *
+ * @return An object that can be converted to a 64-bit value for
+ *         pass-on to a native function.
+ */
+RexxObject *RexxExpressionStack::requiredBigIntegerArg(size_t position, size_t argcount, const char *function)
+{
+
+    RexxObject *argument = this->peek(position);     /* get the argument in question      */
+    // get this in the form of an object that is valid as a 64-bit integer, ready to
+    // be passed along as an argument to native code.
+    RexxObject *newArgument = Numerics::int64Object(argument);
+    // returns a null value if it doesn't convert properly
+    if (newArgument == OREF_NULL)
+    {
+        /* report an exception               */
+        reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
+    }
+    this->replace(position, newArgument);   /* replace the argument              */
+    return newArgument;
+}
+
+
+/**
+ * Process an argument and ensure it is a valid integer
+ * that can be expressed as a 64-bit value.
+ *
+ * @param position The argument position for any error messages.
+ * @param argcount The number of arguments passed to the function.
+ * @param function The function name
+ *
+ * @return An object that can be converted to a 64-bit value for
+ *         pass-on to a native function.
+ */
+RexxObject *RexxExpressionStack::optionalBigIntegerArg(size_t position, size_t argcount, const char *function)
+{
+    RexxObject *argument = this->peek(position);     /* get the argument in question      */
+    if (argument == OREF_NULL)           /* missing an optional argument?     */
+    {
+        return OREF_NULL;                  /* nothing there                     */
+    }
+    // get this in the form of an object that is valid as a 64-bit integer, ready to
+    // be passed along as an argument to native code.
+    RexxObject *newArgument = Numerics::int64Object(argument);
+    // returns a null value if it doesn't convert properly
+    if (newArgument == OREF_NULL)
+    {
+        /* report an exception               */
+        reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
+    }
+    this->replace(position, newArgument);   /* replace the argument              */
+    return newArgument;
+}

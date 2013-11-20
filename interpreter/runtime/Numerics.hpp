@@ -97,6 +97,7 @@ public:
     static bool objectToUnsignedInt64(RexxObject *o, uint64_t &result);
     static bool objectToUintptr(RexxObject *source, uintptr_t &result);
     static bool objectToIntptr(RexxObject *source, intptr_t &result);
+    static RexxObject *int64Object(RexxObject *source);
 
     static size_t formatWholeNumber(wholenumber_t integer, char *dest);
     static size_t formatStringSize(stringsize_t integer, char *dest);
