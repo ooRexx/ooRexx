@@ -86,7 +86,6 @@
 #include "PackageClass.hpp"
 #include "ContextClass.hpp"
 #include "StackFrameClass.hpp"
-#include "ExceptionClass.hpp"
 
 
 void RexxMemory::defineKernelMethod(
@@ -221,7 +220,6 @@ void RexxMemory::createImage()
   RexxBuffer::createInstance();
   WeakReference::createInstance();
   StackFrameClass::createInstance();
-  ExceptionClass::createInstance();
 
                                        /* build the common retriever tables */
   TheCommonRetrievers = (RexxDirectory *)new_directory();
@@ -1363,38 +1361,6 @@ void RexxMemory::createImage()
                                        /* Now call the class subclassable   */
                                        /* method                            */
   TheStackFrameClass->subClassable(false);
-
-  /***************************************************************************/
-  /*           EXCEPTION                                                     */
-  /***************************************************************************/
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheExceptionClassBehaviour, CPPM(ExceptionClass::newRexx), A_COUNT);
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheExceptionClassBehaviour->setMethodDictionaryScope(TheExceptionClass);
-
-
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod("INIT", TheExceptionBehaviour, CPPM(ExceptionClass::init), 5);
-  defineKernelMethod("TYPE", TheExceptionBehaviour, CPPM(ExceptionClass::getType), 0);
-  defineKernelMethod("MESSAGE", TheExceptionBehaviour, CPPM(ExceptionClass::getMessage), 0);
-  defineKernelMethod("DESCRIPTION", TheExceptionBehaviour, CPPM(ExceptionClass::getDescription), 0);
-  defineKernelMethod("ADDITIONAL", TheExceptionBehaviour, CPPM(ExceptionClass::getAdditional), 0);
-  defineKernelMethod("CAUSE", TheExceptionBehaviour, CPPM(ExceptionClass::getCause), 0);
-  defineKernelMethod("STACKFRAMES", TheExceptionBehaviour, CPPM(ExceptionClass::getStackFrames), 0);
-  defineKernelMethod("TRACEBACK", TheExceptionBehaviour, CPPM(ExceptionClass::getTraceBack), 0);
-  defineKernelMethod("CONDITION", TheExceptionBehaviour, CPPM(ExceptionClass::getCondition), 0);
-  defineKernelMethod("FILLINSTACKTRACE", TheExceptionBehaviour, CPPM(ExceptionClass::fillInStackTrace), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheExceptionBehaviour->setMethodDictionaryScope(TheExceptionClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheExceptionClass->subClassable(false);
 
   /***************************************************************************/
   /***************************************************************************/

@@ -258,6 +258,60 @@ void RexxMutableBuffer::ensureCapacity(size_t addedLength)
 
 
 /**
+ * Set the length of the data in the buffer.  The limit is
+ * the current capacity of the buffer.  If the length is
+ * extended beyond the current length, the extra characters
+ * of the buffer will be filled with nulls.
+ *
+ * @param newLength The new datalength.  This is capped to the capacity of
+ *                  the buffer.
+ *
+ * @return The actual length the data has been set to.  If the
+ *         target length is greater than the capacity, the capacity
+ *         value is returned.
+ */
+size_t RexxMutableBuffer::setDataLength(size_t newLength)
+{
+    // cap the data length at the capacity
+    size_t capacity = this->getCapacity();
+    if (newLength > capacity)
+    {
+        newLength = capacity;
+    }
+
+    size_t oldLength = this->getLength();
+    // set the new buffer length
+    dataLength = newLength;
+    // do we need to pad?
+    if (newLength > oldLength)
+    {
+        this->setData(oldLength, '\0', newLength - oldLength);
+    }
+
+    return newLength;
+}
+
+/**
+ * Set the capacity of the buffer.
+ *
+ * @param newLength The new buffer length
+ *
+ * @return The pointer to the data area in the buffer.
+ */
+char *RexxMutableBuffer::setCapacity(size_t newLength)
+{
+    // if the new length is longer than our current,
+    // extend by the delta
+    if (newLength > bufferLength)
+    {
+        ensureCapacity(bufferLength - newLength);
+    }
+    // return a pointer to the current buffer data
+    return getData();
+}
+
+
+/**
  * Return the length of the data in the buffer currently.
  *
  * @return The current length, as an Integer object.

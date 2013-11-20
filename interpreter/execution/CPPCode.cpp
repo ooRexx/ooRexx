@@ -449,7 +449,6 @@ void AbstractCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *r
 #include "WeakReferenceClass.hpp"
 #include "ContextClass.hpp"
 #include "StackFrameClass.hpp"
-#include "ExceptionClass.hpp"
 
 PCPPM CPPCode::exportedMethods[] =     /* start of exported methods table   */
 {
@@ -1009,18 +1008,6 @@ CPPM(StackFrameClass::getTraceLine),
 CPPM(StackFrameClass::getType),
 CPPM(StackFrameClass::getTarget),
 CPPM(StackFrameClass::newRexx),
-
-CPPM(ExceptionClass::newRexx),
-CPPM(ExceptionClass::init),
-CPPM(ExceptionClass::getType),
-CPPM(ExceptionClass::getMessage),
-CPPM(ExceptionClass::getDescription),
-CPPM(ExceptionClass::getAdditional),
-CPPM(ExceptionClass::getCause),
-CPPM(ExceptionClass::getCondition),
-CPPM(ExceptionClass::getStackFrames),
-CPPM(ExceptionClass::getTraceBack),
-CPPM(ExceptionClass::fillInStackTrace),
 NULL                                   /* final terminating method          */
 };
 

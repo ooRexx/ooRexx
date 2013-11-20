@@ -128,7 +128,11 @@ class RexxMutableBufferClass : public RexxClass {
    inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }
    inline void adjustGap(size_t offset, size_t _size, size_t _newSize) { data->adjustGap(offset, _size, _newSize, dataLength); }
    inline void setData(size_t offset, char character, size_t l) { data->setData(offset, character, l); }
+          size_t setDataLength(size_t l);
    inline char getChar(size_t offset) { return getData()[offset]; }
+   inline size_t getCapacity() { return bufferLength; }
+          char *setCapacity(size_t newLength);
+
 
    static void createInstance();
    static RexxClass *classInstance;

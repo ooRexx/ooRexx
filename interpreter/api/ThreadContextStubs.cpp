@@ -1877,8 +1877,7 @@ POINTER RexxEntry SetMutableBufferCapacity(RexxThreadContext *c, RexxMutableBuff
     ApiContext context(c);
     try
     {
-        ((RexxMutableBuffer *)b)->setCapacity(length);
-        return (POINTER)((RexxMutableBuffer *)b)->getData();
+        return (POINTER)((RexxMutableBuffer *)b)->setCapacity(length);
     }
     catch (RexxNativeActivation *)
     {

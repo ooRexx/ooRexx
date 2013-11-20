@@ -260,7 +260,7 @@ int64_t RexxDateTime::getUnixTime()
  */
 bool RexxDateTime::setBaseDate(wholenumber_t base)
 {
-    int basedays = base;
+    wholenumber_t basedays = base;
 
     // make sure this is in range.
     if (basedays < 0 || basedays > maxBaseTime.getBaseDate())
