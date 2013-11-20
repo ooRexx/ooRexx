@@ -462,7 +462,6 @@ nomethod:
       -- an unknown method is an argument problem.  report it as such.
   raise syntax 93.948 array(1, "Collection")
 
-
 /*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
@@ -606,7 +605,27 @@ nomethod:
 ::method 'makeArray'
   return self~allItems
 
+-- set methods that are defined in terms of other set methods, so
+-- they work for all of the collection types
+/*****************************************/
+/* EQUIVALENT  method                    */
+/*****************************************/
+::METHOD equivalent        -- determine collection equivalency
+use strict arg other
 
+-- this is like subset, but both collections must have the
+-- same number of items
+if self~items = other~items, self~subset(other) then return .true
+return .false
+
+/*****************************************/
+/* DISJOINT  method                      */
+/*****************************************/
+::METHOD disjoint        -- the two collections have nothing in common
+use strict arg other
+
+-- base this off of the intersection results
+return self~intersection(other)~isEmpty
 
 /*****************************************/
 /* DIFFERENCE method                     */
