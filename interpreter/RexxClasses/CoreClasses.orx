@@ -2156,6 +2156,35 @@ Output:
 
   return mb~string            -- now turn MutableBuffer object into a plain string
 
+/*****************************************/
+/* INTERSECTION  method                  */
+/*****************************************/
+::METHOD interSection -- intersection for a circularqueue
+use strict arg other
+
+signal on nomethod                     -- trap unknown method calls
+
+new = self~class~new(self~size)        -- create a new instance of this class
+reference = self~copy                  -- we need a reference we can remove stuff from to eliminate dups
+
+if \other~isA(.Collection) then do     -- if not a collection, then ask for an
+    other = other~makearray            -- array value and use that as the iterator
+end
+
+do item over other~allitems            -- loop over the items in the collection
+  if reference~hasitem(item) then do   -- if in both, this goes into the result
+      new~append(item)                 -- add to the target collection
+      reference~removeItem(item)       -- remove from the reference so we know we've seen this
+  end
+end
+
+return new                             -- NB, since we started with an empty collection
+                                       -- don't need to send the makearray
+
+nomethod:
+      -- an unknown method is an argument problem.  report it as such.
+  raise syntax 93.948 array(1, "Collection")
+
 ::CLASS 'Properties' subclass Directory public
 ::METHOD load class
   use arg input
