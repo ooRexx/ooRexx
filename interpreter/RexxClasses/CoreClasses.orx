@@ -706,11 +706,14 @@ signal on nomethod                     -- trap unknown method calls
 
 -- all set operations are done using the receiver index values.  However, the
 -- objects we use for the index differ depending on the other class.
+haveMap = .false
 
 if (other~isA(.OrderedCollection))     -- for ordered collections, us the items
     then indexes = other~allItems
-else if (other~isA(.MapCollection))    -- this includes the SetCollections
-    then indexes = other~allIndexes    -- use the index values
+else if (other~isA(.MapCollection)) then do    -- this includes the SetCollections
+    indexes = other~allIndexes         -- use the index values
+    haveMap = \other~isA(.set)         -- if a true mapping, we also need to validate value
+end
 else indexes = other~makearray         -- an arbitrary class supporting makearray
 
 new = self~copy                        -- make a new collection we can modify
@@ -722,6 +725,8 @@ count = other~items                    -- get the size of the array
 do index over self                     -- now check all of my indexes against the reference
    if \indexes~hasItem(index)
        then return .false              -- something missing, not a subset
+   -- if a real map collection, then we need to verify the full tuple
+   if havemap, self[index] \= other[index] then return .false
 end
 
 return .true                           -- collection is a proper subset
