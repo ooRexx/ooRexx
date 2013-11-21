@@ -2157,6 +2157,70 @@ Output:
   return mb~string            -- now turn MutableBuffer object into a plain string
 
 /*****************************************/
+/* UNION         method                  */
+/*****************************************/
+::METHOD 'union'  -- circularqueue union
+use strict arg other
+
+signal on nomethod                     -- trap unknown method calls
+
+new = self~copy                        -- copy the original (this removes sparse entries too)
+
+if \other~isA(.Collection) then do     -- if not a collection, then ask for an
+    other = other~makearray            -- array value and use that as the iterator
+end
+
+                                       -- the copy is the same size as the orignal.
+                                       -- we need to make sure we don't lose anything.
+if self~size < self~items + other~items then new~resize(self~items + other~items)
+
+                                       -- ordered lists behave more like bags...duplicates are allowed.
+new~appendAll(other~allItems)          -- append all of the other collection
+return new                             -- and return the collected object
+
+nomethod:
+      -- an unknown method is an argument problem.  report it as such.
+  raise syntax 93.948 array(1, "Collection")
+
+
+/*****************************************/
+/* XOR        method                     */
+/*****************************************/
+::METHOD xor   -- union xor
+use strict arg other
+
+signal on nomethod                     -- trap unknown method calls
+
+new = self~allItems                    -- we need to work off of a copy (as an array)
+reference = self~copy                  -- the reference handles adding duplicates
+
+if \other~isA(.Collection) then do     -- if not a collection, then ask for an
+    other = other~makearray            -- array value and use that as the iterator
+end
+
+do item over other~allitems            -- iterate over the items of the other collection
+  if reference~hasItem(item) then      -- in the accumulator collection still?
+  do
+      new~removeItem(item)             -- remove it
+      reference~removeItem(item)       -- remove it from both the accumulator and the ref
+  end
+  else
+  do
+      new~append(item)                 -- append to the end of the accumulator
+  end
+end
+                                       -- make sure we have enough room to hold all of the
+                                       -- items
+newQueue = self~class~new(max(self~size, new~items))
+newQueue~appendAll(new)
+
+return newQueue
+
+nomethod:
+      -- an unknown method is an argument problem.  report it as such.
+  raise syntax 93.948 array(1, "Collection")
+
+/*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
 ::METHOD interSection -- intersection for a circularqueue
