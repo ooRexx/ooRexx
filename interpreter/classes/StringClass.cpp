@@ -385,10 +385,10 @@ RexxNumberString *RexxString::numberString()
     {          /* not truly a string type?          */
         newSelf = this->requestString();   /* do the conversion                 */
                                            /* get a new numberstring Obj        */
-        OrefSet(newSelf, newSelf->NumberString, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
-        if (newSelf->NumberString != OREF_NULL)     /* Did number convert OK?            */
+        OrefSet(this, this->NumberString, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
+        if (this->NumberString != OREF_NULL)     /* Did number convert OK?            */
         {
-            newSelf->setHasReferences();     /* Make sure we are sent Live...     */
+            this->setHasReferences();     /* Make sure we are sent Live...     */
         }
     }
     else
