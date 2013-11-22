@@ -181,6 +181,7 @@ typedef struct copyElementParm {
    RexxObject  *of(RexxObject **, size_t);
    RexxObject  *empty();
    RexxObject  *isEmpty();
+   RexxObject  *fill(RexxObject *);
    RexxObject  *index(RexxObject *);
    RexxObject  *hasItem(RexxObject *);
    RexxObject  *removeItem(RexxObject *);

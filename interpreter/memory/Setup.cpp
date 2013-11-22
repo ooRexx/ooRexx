@@ -390,6 +390,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_REMOVEITEM   ,TheArrayBehaviour, CPPM(RexxArray::removeItem), 1);
   defineKernelMethod(CHAR_INSERT       ,TheArrayBehaviour, CPPM(RexxArray::insertRexx), 2);
   defineKernelMethod(CHAR_DELETE       ,TheArrayBehaviour, CPPM(RexxArray::deleteRexx), 1);
+  defineKernelMethod("FILL"            ,TheArrayBehaviour, CPPM(RexxArray::fill), 1);
   // there have been some problems with the quick sort used as the default sort, so map everything
   // to the stable sort.  The stable sort, in theory, uses more memory, but in practice, this is not true.
   defineKernelMethod(CHAR_SORT         ,TheArrayBehaviour, CPPM(RexxArray::stableSortRexx), 0);

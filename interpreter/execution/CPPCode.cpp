@@ -544,6 +544,7 @@ CPPM(RexxArray::stableSortRexx),
 CPPM(RexxArray::stableSortWithRexx),
 CPPM(RexxArray::insertRexx),
 CPPM(RexxArray::deleteRexx),
+CPPM(RexxArray::fill),
 
 CPPM(RexxArray::newRexx),
 CPPM(RexxArray::makeString),

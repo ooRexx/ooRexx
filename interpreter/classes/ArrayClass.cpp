@@ -240,6 +240,26 @@ RexxObject  *RexxArray::putRexx(RexxObject **arguments, size_t argCount)
 
 
 /**
+ * Fill all locations of the array with the given object
+ *
+ * @return No return value.
+ */
+RexxObject *RexxArray::fill(RexxObject *value)
+{
+    requiredArgument(value, ARG_ONE);
+    // sigh, we have to use OrefSet
+    for (size_t i = 0; i < this->size(); i++)
+    {
+
+        OrefSet(this, this->objects[i], value);
+    }
+    // the last element is now the size one
+    lastElement = size();
+    return OREF_NULL;     // no real return value
+}
+
+
+/**
  * Empty all of the items from an array.
  *
  * @return No return value.
