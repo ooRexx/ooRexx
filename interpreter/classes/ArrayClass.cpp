@@ -2233,20 +2233,11 @@ void *RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, R
 /* Function:  Rexx level creation of an ARRAY object                          */
 /******************************************************************************/
 {
-    RexxArray   *dim_array;
-    RexxInteger *current_dim;
-    RexxArray   *temp;
-    size_t i;                            /* control variable                    */
-    size_t cur_size;                     /* current dimentions size             */
-    size_t total_size;                   /* total dimensional size of the array */
-
-
-
     if (argCount == 0)
     {
         /* If no argument is passed          */
         /*  create an empty array.           */
-        temp = new ((size_t)0, ARRAY_DEFAULT_SIZE, arrayClass) RexxArray;
+        RexxArray *temp = new ((size_t)0, ARRAY_DEFAULT_SIZE, arrayClass) RexxArray;
         ProtectedObject p(temp);
         temp->sendMessage(OREF_INIT);      /* call any rexx init's              */
         return temp;
@@ -2255,15 +2246,21 @@ void *RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, R
     /* Special case for 1-dimensional    */
     if (argCount == 1)
     {
-        current_dim = (RexxInteger *)args[0];
+        RexxObject *current_dim = args[0];
+        // specified as an array of dimensions?
+        // this gets special handling
+        if (current_dim != OREF_NULL && isOfClass(Array, current_dim))
+        {
+            return RexxArray::createMultidimensional(((RexxArray *)current_dim)->data(), ((RexxArray *)current_dim)->items(), arrayClass);
+        }
         /* Make sure it's an integer         */
-        total_size = current_dim->requiredNonNegative(ARG_ONE, number_digits());
+        wholenumber_t total_size = current_dim->requiredNonNegative(ARG_ONE, number_digits());
         if (total_size < 0)
         {
             reportException(Error_Incorrect_method_array, total_size);
         }
 
-        if (total_size >= MAX_FIXEDARRAY_SIZE)
+        if ((size_t)total_size >= MAX_FIXEDARRAY_SIZE)
         {
             reportException(Error_Incorrect_method_array_too_big);
         }
@@ -2272,7 +2269,7 @@ void *RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, R
         /* which is what we want (it will be done by array_init above).         */
         /* Create new array of approp. size. */
 
-        temp = (RexxArray *)new_externalArray(total_size, arrayClass);
+        RexxArray *temp = (RexxArray *)new_externalArray(total_size, arrayClass);
         ProtectedObject p(temp);
         if (total_size == 0)
         {             /* Creating 0 sized array?           */
@@ -2284,18 +2281,35 @@ void *RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, R
         temp->sendMessage(OREF_INIT);      /* call any rexx init's              */
         return temp;                       /* Return the new array.             */
     }
+
+    return RexxArray::createMultidimensional(args, argCount, arrayClass);
+}
+
+/**
+ * Helper routine for creating a multidimensional array.
+ *
+ * @param dims   Pointer to an array of pointers to dimension objects.
+ * @param count  the number of dimensions to create
+ *
+ * @return The created array
+ */
+RexxArray *RexxArray::createMultidimensional(RexxObject **dims, size_t count, RexxClass *arrayClass)
+{
     /* Working with a multi-dimension    */
     /*  array, so get a dimension arr    */
-    dim_array = (RexxArray *)new_array(argCount);
-    total_size = 1;                      /* Set up for multiplication         */
-    for (i=0; i < argCount; i++)
+    RexxArray *dim_array = (RexxArray *)new_array(count);
+    ProtectedObject d(dim_array);
+    size_t total_size = 1;                      /* Set up for multiplication         */
+    for (size_t i = 0; i < count; i++)
     {
         /* make sure current parm is inte    */
-        current_dim = (RexxInteger *)args[i];
+        RexxObject *current_dim = (RexxInteger *)dims[i];
         if (current_dim == OREF_NULL)      /* was this one omitted?             */
+        {
             missingArgument(i+1);           /* must have this value              */
+        }
                                              /* get the long value                */
-        cur_size = current_dim->requiredNonNegative((int)(i+1));
+        size_t cur_size = current_dim->requiredNonNegative((int)(i+1));
         /* going to do an overflow?          */
         if (cur_size != 0 && ((MAX_FIXEDARRAY_SIZE / cur_size) < total_size))
         {
@@ -2314,7 +2328,7 @@ void *RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, R
         reportException(Error_Incorrect_method_array_too_big);
     }
     /* Create the new array              */
-    temp = (RexxArray *)new_externalArray(total_size, arrayClass);
+    RexxArray *temp = (RexxArray *)new_externalArray(total_size, arrayClass);
     /* put dimension array in new arr    */
     OrefSet(temp, temp->dimensions, dim_array);
     ProtectedObject p(temp);

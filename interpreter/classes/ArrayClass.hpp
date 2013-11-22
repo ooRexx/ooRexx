@@ -208,6 +208,8 @@ typedef struct copyElementParm {
    inline bool isMultiDimensional() { return this->dimensions != OREF_NULL && this->dimensions->size() != 1; }
    inline bool isSingleDimensional() { return !isMultiDimensional(); }
 
+   static RexxArray *createMultidimensional(RexxObject **dims, size_t count, RexxClass *);
+
    static void createInstance();
    // singleton class instance;
    static RexxClass *classInstance;
