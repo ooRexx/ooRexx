@@ -191,6 +191,7 @@ void APIServer::processMessages(SysServerConnection *connection)
             }
         } catch (std::bad_alloc &ba)
         {
+            ba;    // get rid of compile warning
             // this catches any C++ memory allocation errors, which we'll just return into a
             // memory failure result message.
             message.result = SERVER_ERROR;

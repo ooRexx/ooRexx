@@ -167,6 +167,7 @@ typedef struct copyElementParm {
    size_t       items();
    RexxObject  *itemsRexx();
    RexxObject  *dimension(RexxObject *);
+   RexxObject  *getDimensions();
    size_t       getDimension();
    RexxObject  *supplier();
    RexxObject  *join(RexxArray *);

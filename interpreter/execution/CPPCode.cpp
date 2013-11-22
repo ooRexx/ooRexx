@@ -518,6 +518,7 @@ CPPM(RexxClass::newRexx),
 CPPM(RexxArray::sizeRexx),             /* Array methods                     */
 CPPM(RexxArray::itemsRexx),
 CPPM(RexxArray::dimension),
+CPPM(RexxArray::getDimensions),
 CPPM(RexxArray::supplier),
 CPPM(RexxArray::getRexx),
 CPPM(RexxArray::putRexx),

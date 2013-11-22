@@ -682,6 +682,27 @@ size_t RexxArray::getDimension()
     }
 }
 
+/**
+ * Return an array of the dimensions of this array.
+ *
+ * @return An array item with one size item for each dimension of the
+ *         array.
+ */
+RexxObject *RexxArray::getDimensions()
+{
+    // if it is a single dimension array, return an array with the size
+    // as a single item
+    if (isSingleDimensional())
+    {
+        return new_array(new_integer(this->size()));
+    }
+    else
+    {
+        // return a copy of the dimensions array
+        return this->dimensions->copy();
+    }
+}
+
 RexxObject *RexxArray::dimension(      /* query dimensions of an array      */
      RexxObject *target)               /* dimension to query                */
 /******************************************************************************/

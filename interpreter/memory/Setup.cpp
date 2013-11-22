@@ -363,6 +363,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_BRACKETSEQUAL,TheArrayBehaviour, CPPM(RexxArray::putRexx), A_COUNT);
   defineKernelMethod(CHAR_AT           ,TheArrayBehaviour, CPPM(RexxArray::getRexx), A_COUNT);
   defineKernelMethod(CHAR_DIMENSION    ,TheArrayBehaviour, CPPM(RexxArray::dimension), 1);
+  defineKernelMethod("DIMENSIONS"      ,TheArrayBehaviour, CPPM(RexxArray::getDimensions), 0);
   defineKernelMethod(CHAR_HASINDEX     ,TheArrayBehaviour, CPPM(RexxArray::hasIndexRexx), A_COUNT);
   defineKernelMethod(CHAR_ITEMS        ,TheArrayBehaviour, CPPM(RexxArray::itemsRexx), 0);
   defineKernelMethod(CHAR_MAKEARRAY    ,TheArrayBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
