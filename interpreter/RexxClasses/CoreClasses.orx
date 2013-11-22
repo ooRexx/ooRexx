@@ -90,6 +90,7 @@ supplier_methods~put(.methods~supplier_supplier, 'SUPPLIER')
 .environment~setentry('COLUMNCOMPARATOR', .columncomparator)
 .environment~setentry('CASELESSCOLUMNCOMPARATOR', .caselesscolumncomparator)
 .environment~setentry('INVERTINGCOMPARATOR', .invertingcomparator)
+.environment~setentry('NUMERICCOMPARATOR', .numericcomparator)
 .environment~setentry('ORDERABLE', .orderable)
 
 say ('creating .!server and defining its instance methods')
@@ -1126,6 +1127,26 @@ expose comparator
 
 use strict arg left, right
 return -comparator~compare(left, right)
+
+-- string sorting comparator to order items
+-- based on numeric comparison rules
+::CLASS 'NumericComparator' MIXINCLASS Comparator
+::METHOD init
+expose precision
+use strict arg precision = (digits())
+
+-- use NUMERIC DIGITS to test the validity of the
+-- given precision
+numeric digits precision
+
+::METHOD compare
+expose precision
+use strict arg left, right
+
+numeric digits precision
+-- the sign from the subtraction result is the correct return
+-- value for an ordering comparison.
+return sign(left - right)
 
 ::CLASS 'CaselessColumnComparator' MIXINCLASS Comparator
 ::METHOD init
