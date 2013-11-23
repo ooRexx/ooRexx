@@ -927,18 +927,24 @@ StackFrameClass *RexxSource::createStackFrame()
     // calling this in the constructor argument list can cause the stack frame instance
     // to be inadvertently reclaimed if a GC is triggered while evaluating the constructor
     // arguments.
-    RexxString *traceback = traceBack(clauseLocation, 0, true);
+    RexxString *traceback = traceBack(OREF_NULL, clauseLocation, 0, true);
     return new StackFrameClass(FRAME_PARSE, programName, OREF_NULL, OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber());
 }
 
 
-RexxString *RexxSource::traceBack(
-     SourceLocation &location,         /* value to trace                    */
-     size_t         indent,            /* blank indentation                 */
-     bool           trace )            /* traced instruction (vs. error)    */
-/******************************************************************************/
-/* Function:  Format a source line for traceback or tracing                   */
-/******************************************************************************/
+/**
+ * Format a source line for tracing
+ *
+ * @param activation The activation of the current running code.  This can be
+ *                   null if this is a translation time error.
+ * @param location   The source line location.
+ * @param indent     The indentation amount to apply to the trace line
+ * @param trace      This is a traced line vs. an error line
+ *
+ * @return A formatted trace line, including headers and indentations.
+ */
+RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &location,
+     size_t indent, bool trace)
 {
     RexxString  *buffer;                 /* buffer for building result        */
     RexxString  *line;                   /* actual line data                  */
@@ -954,9 +960,32 @@ RexxString *RexxSource::traceBack(
                                          /* trace instruction format?         */
     if (line == OREF_NULLSTRING)
     {
-        RexxArray *args = new_array(this->programName);
-        ProtectedObject p(args);
-        line = ActivityManager::currentActivity->buildMessage(Message_Translations_no_source_available, args);
+        // old space code means this is part of the interpreter image.  Don't include
+        // the package name in the message
+        if (this->isOldSpace())
+        {
+            line = ActivityManager::currentActivity->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
+        }
+        // if we have an activation (and we should, since the only time we won't would be for a
+        // translation time error...and we have source then), ask it to provide a line describing
+        // the invocation situation
+        if (activation != OREF_NULL)
+        {
+            line = activation->formatSourcelessTraceLine(isInternalCode() ? OREF_REXX : this->programName);
+        }
+        // this could be part of the internal code...give a generic message that doesn't identify
+        // the actual package.
+        else if (this->isInternalCode())
+        {
+            line = ActivityManager::currentActivity->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
+        }
+        else
+        {
+            // generic package message.
+            RexxArray *args = new_array(this->programName);
+            ProtectedObject p(args);
+            line = ActivityManager::currentActivity->buildMessage(Message_Translations_no_source_available, args);
+        }
     }
 
     if (indent < 0)                      /* possible negative indentation?    */

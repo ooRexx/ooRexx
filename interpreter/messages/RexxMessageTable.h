@@ -623,6 +623,10 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Message_Translations_compiled_method_invocation)
       MINOR(Message_Translations_compiled_routine_invocation)
       MINOR(Message_Translations_no_source_available)
+      MINOR(Message_Translations_internal_code)
+      MINOR(Message_Translations_sourceless_method_invocation)
+      MINOR(Message_Translations_sourceless_routine_invocation)
+      MINOR(Message_Translations_sourceless_program_invocation)
 
   MAJOR(Table_end)                       /* make sure table is ended          */
 };

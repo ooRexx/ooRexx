@@ -267,6 +267,7 @@ class ActivationSettings
    RexxString      * formatTrace(RexxInstruction *, RexxSource *);
    RexxString      * getTraceBack();
    RexxDirectory   * local();
+   RexxString      * formatSourcelessTraceLine(RexxString *packageName);
    inline void       implicitExit()
    {
      /* at a main program level or completing an INTERPRET */

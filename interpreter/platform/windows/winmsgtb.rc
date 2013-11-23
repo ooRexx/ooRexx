@@ -638,6 +638,10 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Translation_constant_body    "Constant methods cannot have a method body"
    Error_Translation_external_routine    "External routines cannot have a method body"
    Error_Translation_abstract_attribute    "Abstract attributes cannot have a method body"
+   Message_Translations_internal_code    "Interpreter code (no source available)"
+   Message_Translations_sourceless_method_invocation    "Method &1 with scope ""&2"" in package ""&3"" (no source available)"
+   Message_Translations_sourceless_routine_invocation    "Routine &1 in package ""&2"" (no source available)"
+   Message_Translations_sourceless_program_invocation    "Program in ""&1"" (no source available)"
    
 END
 

@@ -620,6 +620,10 @@
 #define Message_Translations_compiled_method_invocation    101020
 #define Message_Translations_compiled_routine_invocation   101021
 #define Message_Translations_no_source_available           101022
+#define Message_Translations_internal_code                 101023
+#define Message_Translations_sourceless_method_invocation  101024
+#define Message_Translations_sourceless_routine_invocation 101025
+#define Message_Translations_sourceless_program_invocation 101026
 #define Error_RXSUBC_general                               999000
 #define Error_RXSUBC_register                              999001
 #define Error_RXSUBC_drop                                  999002

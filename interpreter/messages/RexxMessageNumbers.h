@@ -638,6 +638,10 @@
 #define Error_Translation_constant_body_msg                          732
 #define Error_Translation_external_routine_msg                       733
 #define Error_Translation_abstract_attribute_msg                     734
+#define Message_Translations_internal_code_msg                       735
+#define Message_Translations_sourceless_method_invocation_msg        736
+#define Message_Translations_sourceless_routine_invocation_msg       737
+#define Message_Translations_sourceless_program_invocation_msg       738
 
 
 #endif

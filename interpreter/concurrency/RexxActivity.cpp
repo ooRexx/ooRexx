@@ -954,7 +954,9 @@ void RexxActivity::generateProgramInformation(RexxDirectory *exobj)
         }
     }
 
-    if (source != OREF_NULL)             /* have source for this?             */
+    // if we have source, and this is not part of the interpreter image,
+    // add program information
+    if (source != OREF_NULL && !source->isOldSpace())             /* have source for this?             */
     {
         exobj->put(source->getProgramName(), OREF_PROGRAM);
         exobj->put(source->getPackage(), OREF_PACKAGE);
