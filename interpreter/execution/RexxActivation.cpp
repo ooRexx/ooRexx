@@ -4372,3 +4372,14 @@ RexxString *RexxActivation::formatSourcelessTraceLine(RexxString *packageName)
         return activity->buildMessage(Message_Translations_sourceless_program_invocation, info);
     }
 }
+
+
+/**
+ * Generate the stack frames for the current context.
+ *
+ * @return A list of the stackframes.
+ */
+RexxArray *RexxActivation::getStackFrames()
+{
+    return activity->generateStackFrames();
+}

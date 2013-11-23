@@ -268,6 +268,7 @@ class ActivationSettings
    RexxString      * getTraceBack();
    RexxDirectory   * local();
    RexxString      * formatSourcelessTraceLine(RexxString *packageName);
+   RexxArray       * getStackFrames();
    inline void       implicitExit()
    {
      /* at a main program level or completing an INTERPRET */

@@ -974,10 +974,10 @@ void RexxActivity::generateProgramInformation(RexxDirectory *exobj)
  *
  * @return A list of the stack frames in the call context.
  */
-RexxList *RexxActivity::generateStackFrames()
+RexxArray *RexxActivity::generateStackFrames()
 {
     // create lists for both the stack frames and the traceback lines
-    RexxList *stackFrames = new_list();
+    RexxArray *stackFrames = new_array((size_t)0);
     ProtectedObject p(stackFrames);
 
     ActivationFrame *frame = activationFrames;

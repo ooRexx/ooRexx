@@ -77,6 +77,7 @@ public:
     RexxObject *getRS();
     RexxObject *copyRexx();
     RexxObject *getName();
+    RexxObject *getStackFrames();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 

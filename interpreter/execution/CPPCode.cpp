@@ -1002,6 +1002,7 @@ CPPM(RexxContext::getCondition),
 CPPM(RexxContext::getLine),
 CPPM(RexxContext::getRS),
 CPPM(RexxContext::getName),
+CPPM(RexxContext::getStackFrames),
 
 CPPM(StackFrameClass::getName),
 CPPM(StackFrameClass::getExecutable),
@@ -1009,6 +1010,7 @@ CPPM(StackFrameClass::getLine),
 CPPM(StackFrameClass::getTraceLine),
 CPPM(StackFrameClass::getType),
 CPPM(StackFrameClass::getTarget),
+CPPM(StackFrameClass::getArguments),
 CPPM(StackFrameClass::newRexx),
 NULL                                   /* final terminating method          */
 };

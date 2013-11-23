@@ -54,6 +54,7 @@
 #define FRAME_PROGRAM "PROGRAM"
 
 class RexxSource;
+class RexxArray;
 
 class StackFrameClass : public RexxObject
 {

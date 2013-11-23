@@ -663,6 +663,7 @@ void RexxMemory::createImage()
   defineKernelMethod("LINE"             ,TheRexxContextBehaviour, CPPM(RexxContext::getLine), 0);
   defineKernelMethod("RS"               ,TheRexxContextBehaviour, CPPM(RexxContext::getRS), 0);
   defineKernelMethod(CHAR_NAME          ,TheRexxContextBehaviour, CPPM(RexxContext::getName), 0);
+  defineKernelMethod("STACKFRAMES"      ,TheRexxContextBehaviour, CPPM(RexxContext::getStackFrames), 0);
 
                                        /* Add the instance methods to the   */
                                        /* instance behaviour mdict          */
@@ -1355,6 +1356,7 @@ void RexxMemory::createImage()
   defineKernelMethod("TARGET", TheStackFrameBehaviour, CPPM(StackFrameClass::getTarget), 0);
   defineKernelMethod("TRACELINE", TheStackFrameBehaviour, CPPM(StackFrameClass::getTraceLine), 0);
   defineKernelMethod("TYPE", TheStackFrameBehaviour, CPPM(StackFrameClass::getType), 0);
+  defineKernelMethod("ARGUMENTS", TheStackFrameBehaviour, CPPM(StackFrameClass::getArguments), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
