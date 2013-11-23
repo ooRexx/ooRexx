@@ -53,6 +53,12 @@ say ('creating the system specific methods ...')
 -- Add serialization support
 call "Serializable.orx"
 
+-- add string class constant methods
+.String~!define_class_method("NL", .methods~string_cls_nl)
+.String~!define_class_method("CR", .methods~string_cls_cr)
+.String~!define_class_method("TAB", .methods~string_cls_tab)
+.String~!define_class_method("NULL", .methods~string_cls_null)
+
 say ('Adding setlike methods to RELATION')
 set_methods = .table~new               /* get a table directory             */
                                        /* add the many item methods       */
@@ -193,6 +199,18 @@ exit
 /* *** objects created above                                              *** */
 /* ************************************************************************** */
 /* ************************************************************************** */
+
+--/============================================================================/
+--/ Additional S T R I N G methods /
+--/============================================================================/
+::METHOD string_cls_nl
+ return "0a"x
+::METHOD string_cls_cr
+ return "0d"x
+::METHOD string_cls_tab
+ return "09"x
+::METHOD string_cls_null
+ return "00"x
 
 ::METHOD array_test
   say "Hello"
