@@ -171,7 +171,7 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, char *qualifi
     }
     /* get the fully expanded name       */
     errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-    GetFullPathName(qualifiedName, (DWORD)bufferSize, qualifiedName, &lpszLastNamePart);
+    DWORD rc = GetFullPathName(qualifiedName, (DWORD)bufferSize, qualifiedName, &lpszLastNamePart);
     SetErrorMode(errorMode);
 }
 
@@ -222,7 +222,12 @@ bool SysFileSystem::findFirstFile(const char *name)
  */
 bool SysFileSystem::fileExists(const char *name)
 {
-    return findFirstFile(name);
+    DWORD dwAttrib = GetFileAttributes(name);
+
+    return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+         !((dwAttrib & FILE_ATTRIBUTE_SYSTEM)
+          || (dwAttrib & FILE_ATTRIBUTE_HIDDEN)
+          || (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
 }
 
 
