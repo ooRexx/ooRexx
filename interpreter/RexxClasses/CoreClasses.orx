@@ -843,6 +843,7 @@ nomethod:
 ::method 'first' ABSTRACT
 ::method 'last' ABSTRACT
 ::method 'next' ABSTRACT
+::method 'previous' ABSTRACT
 ::method 'firstItem' ABSTRACT
 ::method 'lastItem' ABSTRACT
 
