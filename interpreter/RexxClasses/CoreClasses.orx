@@ -2037,12 +2037,12 @@ Output:
       raise syntax 93.914 array (2, '"F" (FIFO) or "L" (LIFO)', arg(2))
 
 
-   if newSize<size then       -- too many items, we need to remove the superfluous ones
+   if newSize < self~items then -- too many items, we need to remove the superfluous ones
    do
-      removeNr=size-newSize   -- number of elements to remove
+      removeNr=self~items - newSize -- number of elements to remove
 
       if order="L" then       -- LIFO: remove the newest entries (keep the oldest)
-         idx=self~items-removeNr+1    -- determine the index to which (includingly) the removes need to take place
+         idx=newSize + 1      -- determine the index to which (includingly) the removes need to take place
       else                    -- FIFO: remove the oldest entries (keep the newest)
          idx=1                -- remove the first element(s)
 
