@@ -2053,6 +2053,17 @@ Output:
    size=newSize               -- remember new size
    return newSize             -- return the new size
 
+-- override of the insert method to ensure we don't override the size
+::method insert
+  expose size
+
+  forward class(super) continue
+  newIndex = result           -- make sure we preserve the return value
+
+                              -- if this caused us to move beyond the queue size, delete the last item
+  if self~items > size then self~remove(self~last)
+
+  return newIndex
 
 ::METHOD queue                -- put an element into the queue, possibly replacing an existing one
   expose size
