@@ -1357,6 +1357,9 @@ void RexxMemory::createImage()
   defineKernelMethod("TRACELINE", TheStackFrameBehaviour, CPPM(StackFrameClass::getTraceLine), 0);
   defineKernelMethod("TYPE", TheStackFrameBehaviour, CPPM(StackFrameClass::getType), 0);
   defineKernelMethod("ARGUMENTS", TheStackFrameBehaviour, CPPM(StackFrameClass::getArguments), 0);
+  // the string method just maps to TRACELINE
+  defineKernelMethod("STRING", TheStackFrameBehaviour, CPPM(StackFrameClass::getTraceLine), 0);
+  defineKernelMethod("MAKESTRING", TheStackFrameBehaviour, CPPM(StackFrameClass::getTraceLine), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
