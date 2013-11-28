@@ -2277,7 +2277,7 @@ static bool safeGetCurrentDirectory(RexxCallContext *c, char **pPath, size_t *pP
     uint32_t ret = GetCurrentDirectory(0, 0);
     if ( ret == 0 )
     {
-        systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret);
+        systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", GetLastError());
         return false;
     }
 
@@ -2297,7 +2297,7 @@ static bool safeGetCurrentDirectory(RexxCallContext *c, char **pPath, size_t *pP
     ret = GetCurrentDirectory(ret, path);
     if ( ret == 0 )
     {
-        systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", ret);
+        systemServiceExceptionCode(c->threadContext, "GetCurrentDirectory", GetLastError());
         return false;
     }
 
@@ -2347,6 +2347,7 @@ static bool expandNonPath2fullPath(RexxCallContext *c, char *fSpec, char **pPath
 
         SetCurrentDirectory(buf);
         LocalFree(buf);
+        buf = NULL;
 
         if ( ! success )
         {
@@ -2942,12 +2943,61 @@ static char *getPathBuffer(RexxCallContext *context, size_t fSpecLen, size_t *pa
 }
 
 /**
+ * Tests for illegal file name characters in fSpec.
+ *
+ * @param fSpec
+ *
+ * @return bool
+ *
+ * @note  Double quotes in the file spec is not valid, spaces in file names do
+ *        not need to be within quotes in the string passed to the Windows API.
+ *
+ *        A ':' is only valid if it is the second character. Technically a '*'
+ *        and a '?' are not valid characters for a file name, but they are okay
+ *        for fSpec. Same thing for '\' and '/', they are not valid in a file
+ *        name, but they are valid in fSpec. A '/' is iffy. The Windows API
+ *        accepts '/' as a directory separator, but most Rexx programmers
+ *        probably don't know that.  Not sure if we should flag that as illegal
+ *        or not.
+ */
+static bool illegalFileNameChars(char * fSpec)
+{
+    static char illegal[] = "<>|\"";
+
+    for ( size_t i = 0; i < 4; i++ )
+    {
+        if ( strchr(fSpec, illegal[i]) != NULL )
+        {
+            return true;
+        }
+    }
+
+    char *pos = strchr(fSpec, ':');
+    if ( pos != NULL )
+    {
+        if ( ((int32_t)(pos - fSpec + 1)) != 2 )
+        {
+            return true;
+        }
+        if ( strchr(pos + 1, ':') != NULL )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+/**
  * SysFileTree() implementation.  Searches for files in a directory tree
  * matching the specified search pattern.
  *
  * @param  fSpec  [required] The search pattern, may contain glob characters
  *                 and full or partial path informattion. E.g., *.bat, or
- *                 ..\..\*.txt, or C:\temp
+ *                 ../../*.txt, or C:\temp.  May not contain illegal file name
+ *                 characters which are: ", <, >, |, and :  The semicolon is
+ *                 only legal if it is exactly the second character.  Do not use
+ *                 a double quote in fSpec, it is not needed and is taken as a
+ *                 character in a file name, which is an illegal character.
  *
  * @param  files  [required] A stem to contain the returned results.  On return,
  *                files.0 contains the count N of found files and files.1
@@ -2997,6 +3047,8 @@ RexxRoutine5(uint32_t, SysFileTree, CSTRING, fSpec, RexxStemObject, files, OPTIO
      size_t       pathLen  = 0;        // Size of buffer holding path.
      RXTREEDATA   treeData = {0};      // Struct for data.
 
+     context->SetStemArrayElement(files, 0, context->WholeNumber(0));
+
      treeData.files      = files;
      treeData.dFNameSpec = treeData.fNameSpec;
      treeData.nFNameSpec = FNAMESPEC_BUF_LEN;
@@ -3004,6 +3056,12 @@ RexxRoutine5(uint32_t, SysFileTree, CSTRING, fSpec, RexxStemObject, files, OPTIO
      fileSpec = getFileSpecFromArg(context, fSpec, &fSpecLen, &fSpecBufLen, 1);
      if ( fileSpec == NULL )
      {
+         goto done_out;
+     }
+
+     if ( illegalFileNameChars((char *)fSpec) )
+     {
+         result = ERROR_INVALID_NAME;
          goto done_out;
      }
 
