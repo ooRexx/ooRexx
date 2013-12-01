@@ -251,7 +251,7 @@ ln -sf %{_libdir}/librxunixsys.so %{_libdir}/librxunixsys.so.3
 ln -sf %{_datadir}/ooRexx/rexxtry.rex %{_bindir}/rexxtry.rex
 # Add the rxapi service
 if [ -x /usr/bin/systemctl ]; then
-   ln -sf %{_datadir}/ooRexx/rxapid.service /etc/systemd/system/multi-user.target.wants/rxapid.service
+   systemctl link /usr/share/ooRxee/rxapid.service
    echo "%{_libdir}/ooRexx" > /etc/ld.so.conf.d/ooRexx.conf
    ldconfig
    systemctl start rxapid.service
