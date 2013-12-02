@@ -90,16 +90,12 @@ ln -sf ${data_dir}/rexxtry.rex ${bin_dir}/rexxtry.rex
 
 # Debian specific set up for rxapid
 if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
-   ln -sf ${data_dir}/ooRexx/rxapid.service /etc/systemd/system/rxapid.service
-   echo ${lib_dir}/ooRexx > /etc/ld.so.conf.d/ooRexx.conf
-   ldconfig
+   systemctl link /usr/share/ooRexx/rxapid.service
+   systemctl --system daemon-reload
    systemctl start rxapid.service
 else
    cp ${bin_dir}/rxapid       /etc/init.d
    update-rc.d rxapid start 89 2 3 4 5 . stop 89 0 1 6 . > /dev/null 2>&1
-   # Add the /usr/lib/ooRexx subdir to the ld.conf
-   echo "${libdir}/ooRexx\n" > /etc/ld.so.conf.d/ooRexx.conf
-   ldconfig
    /etc/init.d/rxapid start
 fi
 

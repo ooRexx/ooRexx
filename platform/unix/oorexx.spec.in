@@ -252,22 +252,17 @@ ln -sf %{_datadir}/ooRexx/rexxtry.rex %{_bindir}/rexxtry.rex
 # Add the rxapi service
 if [ -x /usr/bin/systemctl ]; then
    systemctl link /usr/share/ooRxee/rxapid.service
-   echo "%{_libdir}/ooRexx" > /etc/ld.so.conf.d/ooRexx.conf
-   ldconfig
+   systemctl --system daemon-reload
    systemctl start rxapid.service
 elif [ -x /sbin/insserv ]; then
    ln -sf %{_bindir}/rxapid /etc/init.d/rxapid
    # try insserv first (for Suse)
    insserv -f rxapid
-   echo "%{_libdir}/ooRexx" > /etc/ld.so.conf.d/ooRexx.conf
-   ldconfig
    service rxapid start
 else
    ln -sf %{_bindir}/rxapid /etc/init.d/rxapid
    # else, try good old chkconfig
    chkconfig --add rxapid
-   echo "%{_libdir}/ooRexx" > /etc/ld.so.conf.d/ooRexx.conf
-   ldconfig
    service rxapid start
 fi
 
@@ -277,37 +272,24 @@ fi
 # Remove rxapi service
 if [ -x /usr/bin/systemctl ]; then
    systemctl stop rxapid.service
-   # Remove misc
    rm -f /etc/systemd/system/rxapid.service
-   rm -f /etc/ld.so.conf.d/ooRexx.conf
-   ldconfig
+   systemctl --system daemon-reload
 elif [ -x /sbin/insserv ]; then
    service rxapid stop
    # try insserv first (for Suse)
    insserv -f rxapid
    # Remove the rxapi daemon
    rm -f /etc/init.d/rxapid
-   # Remove misc
-   rm -f %{_bindir}/rexxtry.rex
-   rm -f /etc/ld.so.conf.d/ooRexx.conf
-   ldconfig
 else
    service rxapid stop
-   # else, try good old chkconfig
    chkconfig --del rxapid
-   # Remove the rxapi daemon
    rm -f /etc/init.d/rxapid
-   # Remove misc
-   rm -f %{_bindir}/rexxtry.rex
-   rm -f /etc/ld.so.conf.d/ooRexx.conf
-   ldconfig
 fi
+rm -f %{_bindir}/rexxtry.rex
 
 #******************************************************************************
 %postun
 #******************************************************************************
-rm -f /etc/ld.so.conf.d/ooRexx.conf
-ldconfig
 
 #******************************************************************************
 %changelog
