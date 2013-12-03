@@ -703,6 +703,7 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
         case REXX_VALUE_RexxArrayObject:
         case REXX_VALUE_RexxClassObject:
         case REXX_VALUE_RexxStemObject:
+        case REXX_VALUE_RexxMutableBufferObject:
         {
             return (RexxObject *)value->value.value_RexxObjectPtr; // just return the object value
         }
@@ -864,6 +865,17 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
             }
             /* set the result in                 */
             value->value.value_RexxClassObject = (RexxClassObject)o;
+            return true;
+        }
+        case REXX_VALUE_RexxMutableBufferObject: // required mutablebuffer object
+        {
+            // this must be a mutablebuffer object
+            if (!o->isInstanceOf(TheMutableBufferClass))
+            {
+                return false;
+            }
+            /* set the result in                 */
+            value->value.value_RexxMutableBufferObject = (RexxMutableBufferObject)o;
             return true;
         }
         case REXX_VALUE_int:            /* integer value                     */

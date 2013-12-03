@@ -304,7 +304,7 @@ char *RexxMutableBuffer::setCapacity(size_t newLength)
     // extend by the delta
     if (newLength > bufferLength)
     {
-        ensureCapacity(bufferLength - newLength);
+        ensureCapacity(newLength - bufferLength);
     }
     // return a pointer to the current buffer data
     return getData();
