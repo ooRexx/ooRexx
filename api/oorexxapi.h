@@ -3654,6 +3654,7 @@ END_EXTERN_C()
 #define ARGUMENT_TYPE_RexxArrayObject       RexxArrayObject
 #define ARGUMENT_TYPE_RexxStemObject        RexxStemObject
 #define ARGUMENT_TYPE_POINTERSTRING         POINTER
+#define ARGUMENT_TYPE_RexxMutableBufferObject RexxMutableBufferObject
 
 #define ARGUMENT_TYPE_OPTIONAL_RexxObjectPtr         RexxObjectPtr
 #define ARGUMENT_TYPE_OPTIONAL_int                   int
@@ -3681,6 +3682,7 @@ END_EXTERN_C()
 #define ARGUMENT_TYPE_OPTIONAL_RexxStemObject        RexxStemObject
 #define ARGUMENT_TYPE_OPTIONAL_POINTERSTRING         POINTER
 #define ARGUMENT_TYPE_OPTIONAL_RexxClassObject       RexxClassObject
+#define ARGUMENT_TYPE_OPTIONAL_RexxMutableBufferObject   RexxMutableBufferObject
 
 #define ARGUMENT_TYPE(t) ((t) & ~REXX_OPTIONAL_ARGUMENT)
 #define IS_OPTIONAL_ARGUMENT(t) (((t) & REXX_OPTIONAL_ARGUMENT) != 0)
