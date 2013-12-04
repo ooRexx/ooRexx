@@ -78,6 +78,9 @@
 %if %(if grep -q "release 6.4" /etc/redhat-release; then echo 1; else echo 0; fi;)
 %define build_version 64
 %endif
+%if %(if grep -q "release 6.5" /etc/redhat-release; then echo 1; else echo 0; fi;)
+%define build_version 65
+%endif
 %define _osdistname %{build_distro}%{build_version}
 %define _unknownos 0
 %endif
