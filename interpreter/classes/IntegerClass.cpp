@@ -133,6 +133,17 @@ RexxString *RexxInteger::makeString()
   return this->stringValue();          /* return the string value           */
 }
 
+
+/**
+ * Override for the default object makearray method.
+ *
+ * @return The results of our string representation's makearray.
+ */
+RexxArray *RexxInteger::makeArray()
+{
+  return this->stringValue()->makeArray();     // have the string value handle this
+}
+
 RexxInteger *RexxInteger::hasMethod(RexxString *methodName)
 /******************************************************************************/
 /* Function:  Handle a HASMETHOD request for an integer                       */

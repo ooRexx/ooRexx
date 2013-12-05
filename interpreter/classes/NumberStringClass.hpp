@@ -115,6 +115,7 @@
     inline RexxNumberString *numberString() { return this; }
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
+    RexxArray   *makeArray();
     RexxInteger *hasMethod(RexxString *);
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
