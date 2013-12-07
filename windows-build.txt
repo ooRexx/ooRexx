@@ -6,6 +6,15 @@ before building ooRexx.  These notes cover building the 3.x and 4.x versions
 of ooRexx.  (In this document the term "builder" is used to refer to the
 person building ooRexx from source.)
 
+If, after reading these instruction completely, you encounter insurmountable
+problems trying to build ooRexx on Windows, post a message to the developers
+list requesting help.  One of the developers will probably be happy to
+provide advice.  Subscribe to the list at:
+
+https://sourceforge.net/p/oorexx/mailman/
+
+The list is low volume and easy to unsubscribe to.
+
 Obtaining the source
 ====================
 
@@ -35,13 +44,19 @@ options, alternatives, or caveats are discussed at the relevant point in the
 build instructions.
 
 [Required] A version of MicroSoft's Visual C++ compiler.
+--------------------------------------------------------
 
 To build the 64-bit version of ooRexx, Visual C++ 2005, plus service packs,
 or later is required.
 
 To build the 32-bit version of ooRexx, it is possible that Visual C++ .NET
 2003 (known also as Visual C++ 7.1,) will suffice.  But this has not been
-tested recently.  Visual C++ 2005 or later is the best choice.
+tested recently, and the author doubts this version of Visual C++ will
+build the current code base.
+
+Visual C++ 2005 or later was documented as the best choice.  However, that
+was several years ago and has not been test recently.  Visual C++ 2008 is
+currently the best choice.
 
 ooRexx is built using the command line compiler and tools.  Therefore the
 Visual C++ Express tools will work fine.  In addition the (required) Windows
@@ -53,24 +68,30 @@ options are available on MicroSoft's website here:
 
   http://www.microsoft.com/express/
 
-Note:
------
-Visual C++ 6.0 is no longer supported and the code base will not compile
-using that version of Visual C++.
+Notes:
+------
+Visual C++ 6.0 is no longer supported and it is known the code base will not
+compile using that version of Visual C++.
 
-[Required] A current version of a Microsoft Windows SDK.  The minimum
-required is "Microsoft Windows SDK for Windows 7 and .NET Framework 4."
-Later versions are fine. Microsoft provides the Windows SDKs free of charge.
+Binaries built with Visual C++ newer than Visual C++ 2008 will no longer
+execute on Windows 2003.  It is known that the interpreter built with Visual
+C++ 2010 will not execute on Windows 2003.
+
+[Required] A current version of a Microsoft Windows SDK.
+--------------------------------------------------------
+
+The minimum required is "Microsoft Windows SDK for Windows 7.1" Later
+versions are fine.  Microsoft provides the Windows SDKs free of charge.
 
 The environment variables for the C++ compiler and the Windows SDK *MUST* be
 set correctly to build ooRexx.  See the Environment set up section below for
 details.
 
 Note: The release ooRexx, built by the project team, is built using Visual
-C++ 2010 and the "Microsoft Windows SDK for Windows 7 and .NET Framework 4."
-However, ooRexx builds without problems using later versions of these tools.
-For instance, ooRexx can be built using Microsoft Visual Studio 2012 and a
-late Windows SDK.  ooRexx will build using the free Visual C++ Express
+C++ 2010 and the "Microsoft Windows SDK for Windows 7.  and .NET Framework
+4." However, ooRexx builds without problems using later versions of these
+tools.  For instance, ooRexx can be built using Microsoft Visual Studio 2012
+and a late Windows SDK.  ooRexx will build using the free Visual C++ Express
 editions.
 
 Microsoft has the tendency to move the download URL for the Windows SDKs,
@@ -79,6 +100,7 @@ often. A good starting point for locating a SDK is:
   http://en.wikipedia.org/wiki/Microsoft_Windows_SDK
 
 [Optional] The Windows build-utilities package.
+-----------------------------------------------
 
 Note: This package is part of the ooRexx project and is available from
 SourceForge on the download page.  The package contains pre-compiled
@@ -87,6 +109,7 @@ build process.  For instance, the package contains a process killer, a
 touch program, and the ooRexxProcess.dll plugin for NSIS.
 
 [Required] Some form of a process killer.
+-----------------------------------------
 
 Note: The build process uses killer.exe, available in the build-utilities
 package.  However, other process killers can be used by editing some of the
@@ -95,6 +118,7 @@ If building on an XP system, the builder could edit the batch file(s) and
 replace killer with taskkill.
 
 [Required] Some form of a touch program, or Xalan/Xerces.
+---------------------------------------------------------
 
 Note: When using source checked out from SVN, 'touching' the proper files
 negates the necessity of having Xalan available.  The easiest approach here
@@ -116,12 +140,34 @@ and put them in a location in the path.
   http://xml.apache.org/xerces-c/
 
 [Optional]  Nullsoft Scriptable Install System (NSIS)
+-----------------------------------------------------
 
 Note: NSIS is used to build the Windows installer package.  It is only
 needed if the builder wants to also create the installer package.  Detailed
 notes on obtaining and installing NSIS are in the Build section.
 
   http://nsis.sourceforge.net/Main_Page
+
+Warning:
+--------
+
+NSIS is built using a maximum string length that is not safe to use when the
+system path is updated.  The Windows ooRexx installation package updates the
+system path.  To build a safe Windows ooRexx installation package, a special
+build of NSIS that supports long strings must be used.
+
+The ooRexx project provides the special build of NSIS on SourceForge:
+
+https://sourceforge.net/projects/oorexx/files/windows-build-tools/1.0/?
+
+or at
+
+https://sourceforge.net/projects/oorexx/files/oorexx-buildutils/1.2.0/
+
+Using the NSIS supplied in Nsis_shortStrings.zip is absolutely the best and
+easiest option.  Everything needed to create a safe Windows installation
+package is included.  No extra NSIS plugins need to be added.
+
 
 Building ooRexx
 ===============
@@ -375,10 +421,26 @@ The build process using makeorx can automatically create the Windows
 installer by using the PACKAGE option.  NSIS needs to be installed correctly
 for this to work.
 
+Note: The best option for installing NSIS is to use the
+Nsis_shortStrings.zip package provided by the ooRexx project on SourceForge
+at:
+
+https://sourceforge.net/projects/oorexx/files/windows-build-tools/1.0/?
+
+or at
+
+https://sourceforge.net/projects/oorexx/files/oorexx-buildutils/1.2.0/
+
+Using the NSIS supplied in Nsis_shortStrings.zip is absolutely the best and
+easiest option.  Everything needed to create a safe Windows installation
+package is included.  No extra NSIS plugins need to be added.
+
 After installing the base NSIS package, do the following:
 
 Be sure makensis.exe is in the path.  This file is located in the top-level
 directory of the installed NSIS package.
+
+Note: the additional plugis are NOT needed if Nsis_shortStrings.zip is used.
 
 2 additional NSIS plugins need to be added to the base install.  These files
 need to be put into the 'Plugins' subdirectory of the base install.  They

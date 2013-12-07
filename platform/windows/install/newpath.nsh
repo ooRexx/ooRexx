@@ -91,14 +91,15 @@ Function AddToPath
     StrCmp $2 ";" 0 +2 # if last char == ';' then
     StrCpy $1 $1 -1    # remove last char from path value
     ; There is a path limit of 1024 chars prior to XP sp2, 2048 after that. However, NSIS has a string limit
-    ; of 1024 unless a special build is used.  We check if the new path is going to be longer than 1024, and
-    ; if so, abort and tell the user she needs to update the path manually.
+    ; of 1024 unless a special build is used. The official ooRexx Windows builds now use the special NSIS build
+    ; with a string length of 8096.  We check if the new path is going to be longer than the string length of the
+    ; NSIS build, and if so, abort and tell the user she needs to update the path manually.
     StrLen $2 $1
     StrLen $3 $0
     IntOp $2 $2 + 2   ; 1 for semi-colon, 1 for a (maybe) terminating null.
                       ;NSIS docs not clear on if 1024 is the string limit or buffer limit
     IntOp $2 $2 + $3
-    IntCmp $2 1024 AddToPath_Abort_TooLong 0 AddToPath_Abort_TooLong  ; abort if equal or more than, less than continue
+    IntCmp $2 ${NSIS_MAX_STRLEN} AddToPath_Abort_TooLong 0 AddToPath_Abort_TooLong  ; abort if equal or more than, less than continue
     StrCpy $0 "$1;$0"
     StrCmp $R7 "true" AddToPath_AllUsers_doit
     ; Writing registry for current user.  It's okay here to write back only what we are adding.

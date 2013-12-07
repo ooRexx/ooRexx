@@ -186,6 +186,8 @@ Var DoUpgrade                  ; try to do an upgrade install                   
 Var DoUpgradeQuick             ; don't show options pages with diasabled controls  true / false
 Var UpgradeTypeAvailable       ; Level of uninstaller sufficient for upgrade type  true / false
 
+Var UserRequestAbort           ; General purpose, set to true if User replies Ok, wanting to abort.
+
 ; Dialog variables
 Var Dialog
 Var Label_One
@@ -1251,6 +1253,11 @@ SectionEnd
  * we install in the same place as previous.
  */
 Function .onInit
+
+  Call CheckStrLen
+  ${if} $UserRequestAbort == 'true'
+    abort
+  ${endif}
 
   ${if} ${CPU} == "x86_64"
     strcpy $INSTDIR "$PROGRAMFILES64\${SHORTNAME}"
@@ -3060,6 +3067,35 @@ Function CheckInstalledStatus
         StrCpy $UpgradeTypeAvailable 'true'
       ${endif}
     ${endif}
+  ${endif}
+
+FunctionEnd
+
+
+/** CheckInstalledStatus()
+ *
+ * Helper function used to determine if there is a previous version of ooRexx
+ * installed, and if so what level is the uninstaller at.
+ */
+Function CheckStrLen
+
+  StrCpy $UserRequestAbort 'false'
+
+  ; Max string length is 8192 in the long string build
+
+  ${if} ${NSIS_MAX_STRLEN} < 8192
+    MessageBox MB_YESNO \
+      "WARNING.  The current installer was built using the short$\n\
+      string version of NSIS.  There are 2 problems with this:$\n$\n\
+      1.)  This indicates this is not an official ooRexx installer.$\n\
+      2.)  There is the possiblity that using this installer will$\n\
+      delete the PATH on this system.$\n$\n\
+      It is not advised that this installer be used to install$\n\
+      ooRexx.  If you continue it is at your own risk.$\n$\n\
+      Do you wish to coninue despite the risk?" \
+      /SD IDNO IDYES done_return
+      StrCpy $UserRequestAbort 'true'
+      done_return:
   ${endif}
 
 FunctionEnd
