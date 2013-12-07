@@ -45,6 +45,8 @@
 /*                                                                          */
 /****************************************************************************/
 
+discard = locate()
+
 /* start the main dialog */
 MainDialog = .OLEINFO~new
 if MainDialog~InitCode = 0 then do
@@ -106,7 +108,7 @@ callFailed:
 
   cache = .nil
   /* load main dialog */
-  if self~Load("OLEINFO.rc", 4711 ) \= 0 then do
+  if self~Load(.application~srcDir"OLEINFO.rc", 4711 ) \= 0 then do
      self~InitCode = 1
      return 1
   end
@@ -163,7 +165,7 @@ callFailed:
   /* Method Help is connected to item 9 */
 ::method Help
   self~Help:super
-  file = .stream~new("help.txt")
+  file = .stream~new(.application~srcDir"help.txt")
   data.500 = file~charin(,file~chars)
   file~close
   temp = .HelpDialog~new(data.)
@@ -472,7 +474,7 @@ callFailed:
   end
 
 ::method getImages private
-  image = .Image~getImage("icons.bmp")
+  image = .Image~getImage(.application~srcDir"icons.bmp")
   imageList = .ImageList~create(.Size~new(16, 12), .Image~toID(ILC_COLOR4), 6, 0)
   if \image~isNull,  \imageList~isNull then do
       imageList~add(image)
@@ -541,7 +543,7 @@ callFailed:
   use arg rvalue, outarray
   InitRet = self~init:super
 
-  if self~Load("OLEINFO.rc", 4713 ) \= 0 then do
+  if self~Load(.application~srcDir"OLEINFO.rc", 4713 ) \= 0 then do
      self~InitCode = 1
      return 1
   end
@@ -594,7 +596,7 @@ callFailed:
   forward class (super) continue /* call parent constructor */
   InitRet = Result
 
-  if self~Load("OLEINFO.rc", 4712 ) \= 0 then do
+  if self~Load(.application~srcDir"OLEINFO.rc", 4712 ) \= 0 then do
      self~InitCode = 1
      return 1
   end
@@ -644,7 +646,7 @@ callFailed:
   forward class (super) continue /* call parent constructor */
   InitRet = Result
 
-  if self~Load("OLEINFO.rc", 4714 ) \= 0 then do
+  if self~Load(.application~srcDir"OLEINFO.rc", 4714 ) \= 0 then do
      self~InitCode = 1
      return 1
   end

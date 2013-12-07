@@ -672,16 +672,16 @@
                                          '0d0a'x || f "("s")")
                end
             end
-            when class = '"EDIT"' then
+            when class = 'WC_EDIT' | class = '"EDIT"' then
                self~createEdit(id, x, y, w, h, self~getRCStyle(style, "EDIT"), name)
 
-            when class = '"COMBOBOX"' then
+            when class = 'WC_COMBOBOX' | class = '"COMBOBOX"' then
                self~createComboBox(id, x, y, w, h, self~getRCStyle(style, "CB"), name)
 
-            when class = '"LISTBOX"' then
+            when class = 'WC_LISTBOX' | class = '"LISTBOX"' then
                self~createListBox(id, x, y, w, h, self~getRCStyle(style, "LB"), name)
 
-            when class = '"SCROLLBAR"' then
+            when class = 'WC_SCROLLBAR' | class = '"SCROLLBAR"' then
                self~createScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
 
             when class = 'WC_TREEVIEW' | class = '"SYSTREEVIEW32"' then

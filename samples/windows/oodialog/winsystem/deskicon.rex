@@ -42,6 +42,10 @@
 /* Description: Sample how to create a desktop icon using the AddDesktopIcon */
 /*              method from the WindowsProgramManager class                  */
 /*                                                                           */
+/*              TODO change this to a GUI application by creating a dialog   */
+/*                   that explains what is happening and has push buttons    */
+/*                   to iniate the actions.                                  */
+/*                                                                           */
 /*****************************************************************************/
 
 pm = .WindowsProgramManager~new

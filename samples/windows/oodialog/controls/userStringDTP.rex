@@ -101,9 +101,10 @@
  *   valid for June 5th 2011.
  */
 
-  .application~setDefaults('O', 'userStringDTP.h', .false)
+  sd = locate()
+  .application~setDefaults('O', sd'userStringDTP.h', .false)
 
-  dlg = .SystemTimeDlg~new('userStringDTP.rc', IDD_SYSTEMTIME)
+  dlg = .SystemTimeDlg~new(sd'userStringDTP.rc', IDD_SYSTEMTIME)
   dlg~execute("SHOWTOP")
 
 return 0
@@ -516,7 +517,7 @@ return 0
  * Do not confuse the help key (F1) event with the HELP command event.
  */
 ::method onHelp
-  .SystemTimeHelp~new('userStringDTP.rc', IDD_HELP)~execute("SHOWTOP")
+  .SystemTimeHelp~new(.application~srcDir'userStringDTP.rc', IDD_HELP)~execute("SHOWTOP")
 
 
 ::class 'SystemTimeHelp' subclass RcDialog

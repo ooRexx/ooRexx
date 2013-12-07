@@ -43,7 +43,8 @@
  * Description: Example demonstrating drawing functionality.
  */
 
-dlg = .MyDialogClass~new("drawings.rc", 100)
+sd = locate()
+dlg = .MyDialogClass~new(sd"drawings.rc", 100)
 if dlg~initCode <> 0 then return 99
 dlg~execute("SHOWTOP")
 

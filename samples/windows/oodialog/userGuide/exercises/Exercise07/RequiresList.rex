@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 07: The Order Management Application
-   Startup.rex 							  v01-02 11Aug12
+   Startup.rex 							  v01-02 01Apr13
 
    Description: This file is the "application" or "root" or "starter" part
                 of the sample Order Management application.
@@ -47,7 +47,8 @@
                      optional.
             11Jan13: Deleted Commented-out startup of MessageSender.
             21Mar13: Added Copyright notice.
-
+     v01-02 01Apr13: After ooDialog 4.2.2, "Samples" folder changed name to 
+                     "Extras", so change to ::Requires needed. 
 
 ------------------------------------------------------------------------------*/
 
@@ -61,7 +62,8 @@
   Changes:
   v01-00 16Sep12: First version.
          11Jan13: Commented-out 'say' instruction.
-
+         26May13: Corrected paths for ::REQUIRES afrer re-factoring.
+         
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 --say "RequiresList-01."
 ::REQUIRES "Customer\CustomerView.rex"
@@ -73,10 +75,10 @@
 ::REQUIRES "Order\OrderListView.rex"
 ::REQUIRES "Order\OrderModelsData.rex"
 ::REQUIRES "Order\OrderView.rex"
-::REQUIRES "..\Samples\Wow4\WowView.rex"
-::REQUIRES "..\Samples\Wow4\WowModel.rex"
-::REQUIRES "..\Samples\Wow4\WowData.rex"
-::REQUIRES "..\Samples\Person\PersonView.rex"
-::REQUIRES "..\Samples\Person\PersonModelData.rex"
+::REQUIRES "Extras\Wow4\WowView.rex"
+::REQUIRES "Extras\Wow4\WowModel.rex"
+::REQUIRES "Extras\Wow4\WowData.rex"
+::REQUIRES "Extras\Person\PersonView.rex"
+::REQUIRES "Extras\Person\PersonModelData.rex"
 /*============================================================================*/
 

@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 07:          					  v02-00 09Jan13
+   Exercise 07:          					  v02-00 01Apr13
 
    The ProductModel, ProductListModel, and ProductData Classes
 
@@ -53,6 +53,9 @@
          - 26Aug11: added some comments - no change to function.
    v00-04 21Aug12: ProducListModel added. Modified to fit the MV Framework.
    v02-00 13Jan12: Ex07: Some 'say' instructions removed or commented out.
+          01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                   folder, so change to ::Requires needed. 
+
 ------------------------------------------------------------------------------*/
 
 
@@ -69,8 +72,8 @@
   };
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
-::REQUIRES "..\Support\GenericFile.rex"
-::REQUIRES "..\Support\Model.rex"
+::REQUIRES "Support\GenericFile.rex"
+::REQUIRES "Support\Model.rex"
 
 ::CLASS ProductModel SUBCLASS Model PUBLIC
 

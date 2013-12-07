@@ -43,6 +43,8 @@
 /*   Creates a group and shortcuts to programs on the windows dektop        */
 /*   using the WindowsProgramManager class                                  */
 /*                                                                          */
+/*   TODO change this to a GUI application.                                 */
+/*                                                                          */
 /****************************************************************************/
 
 pm = .WindowsProgramManager~new

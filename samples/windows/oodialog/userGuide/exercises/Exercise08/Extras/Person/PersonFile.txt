@@ -1,0 +1,6 @@
+number | familyName | firstName | dob    | jobDescr       | baseSalary
+PA100  | Bloggs     | Joseph    | 721224 | Director       | 250400
+PA150  | James      | Alfred    | 751513 | Packer         |  38000
+PB100  | Smithson   | John      | 951704 | Programmer     |  40170
+PB104  | Patterson  | Patricia  | 790331 | Office Manager |  76430
+PC200  | Cardaj     | Jacob     | 740615 | Plant Manager  | 148250

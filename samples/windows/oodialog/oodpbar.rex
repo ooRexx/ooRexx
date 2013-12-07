@@ -45,7 +45,9 @@
 -- Use the global .constDir for symbolic IDs
 .application~useGlobalConstDir('O')
 
-myDialog = .MyDialogClass~new("rc\oodpbar.rc")
+sd = locate()
+
+myDialog = .MyDialogClass~new(sd"rc\oodpbar.rc")
 if myDialog~initCode = 0 then do
   rc = myDialog~execute("SHOWTOP")
 end

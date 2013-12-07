@@ -36,7 +36,8 @@
 /*----------------------------------------------------------------------------*/
 /* DlgAreaDemo.Rex  --  Demonstrate DlgArea & DlgAreaU Classes  --  Feb 2006 */
 
-.application~useGlobalConstDir("O", 'dlgAreaUDemo.h')
+sd = locate()
+.application~useGlobalConstDir("O", sd'dlgAreaUDemo.h')
 
 MyDlg=.MyDialog~new
 MyDlg~execute('ShowTop')

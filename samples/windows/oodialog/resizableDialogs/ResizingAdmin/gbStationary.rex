@@ -83,9 +83,10 @@
  *  bar, even if the size is set to 1 x 1 pixels.
  */
 
-  .application~setDefaults('O', 'rc\gbStationary.h', .false)
-
-  dlg = .ResizableDlg~new("rc\gbStationary.rc", IDD_RESIZABLE)
+  sd = locate()
+  .application~setDefaults('O', sd'rc\gbStationary.h', .false)
+  say sd"rc\gbStationary.rc"
+  dlg = .ResizableDlg~new(sd"rc\gbStationary.rc", IDD_RESIZABLE)
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 return 0
@@ -142,7 +143,7 @@ return 0
   self~defaultSizing(.array~of('STATIONARY', 'LEFT'),                     -
                      .array~of('STATIONARY', 'BOTTOM', IDC_LV_MAIN),      -
                      .array~of('STATIONARY', 'LEFT'),                     -
-                     .array~of('STATIONARY', 'BOTTOM', ICD_LV_MAIN)       -
+                     .array~of('STATIONARY', 'BOTTOM', IDC_LV_MAIN)       -
                     )
 
   -- The Ok and Cancel buttons are specified explicitly.  Note that the XCENTER

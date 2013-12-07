@@ -53,6 +53,11 @@
  * class.
  */
 
+  -- Locate the directory our source code is in.  Then this program can be
+  -- executed from anywhere.  It will work if the program is dragged and dropped
+  -- on ooDialog.exe for instance.
+  srcDir = locate()
+
   -- When using symbolic IDs with menus, as this program does, the programmer
   -- *must* use the global constant directory, (.constDir,) rather than the
   -- constDir attribute of a dialog.  Menus are independent of dialogs.
@@ -66,8 +71,9 @@
   --
   -- In this invokcation, the application is set to use the .constDir only, "O",
   -- symbols are loaded into the .constDir from the file: ContextMenu.h, and the
-  -- default for automatic data detection is set to off (.false.)
-  .application~setDefaults("O", 'ContextMenu.h', .false)
+  -- default for automatic data detection is set to off (.false.)  Note that we
+  -- create a complete path name for ContextMenu.h
+  .application~setDefaults("O", srcDir'ContextMenu.h', .false)
 
   -- The folloing demonstrates that menu objects are distinct from dialogs.
   --
@@ -82,7 +88,7 @@
   contextMenu = createListViewMenu()
 
   -- Create a RcDialog as normally done.
-  dlg = .ContextMenuDlg~new("ContextMenu.rc", IDD_CONTEXT)
+  dlg = .ContextMenuDlg~new(srcDir"ContextMenu.rc", IDD_CONTEXT)
 
   -- putMenu() is a method added to our dialog class.  It is used to pass the
   -- context menu object to the dialog.  There are any number of ways to

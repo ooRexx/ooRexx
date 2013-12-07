@@ -63,7 +63,7 @@
           to indicate an anonymous component to ObjectMgr.
        5. Added methods "person" and "messageSender" which launch a PersonModel
           and a Message Sender respectively.
-       27Feb: Commented-out several 'say's.
+       27Feb13: Commented-out several 'say's.
 
 ------------------------------------------------------------------------------*/
 

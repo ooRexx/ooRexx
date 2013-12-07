@@ -228,6 +228,8 @@
 
 ::class 'ApplicationManager' public inherit ResourceUtils
 
+::attribute srcDir get external "LIBRARY oodialog app_srcDir_atr"
+
 ::method init external "LIBRARY oodialog app_init"
 
 ::method addToConstDir external "LIBRARY oodialog app_addToConstDir"
@@ -235,15 +237,16 @@
 ::method defaultFont external "LIBRARY oodialog app_defaultFont"
 ::method defaultIcon external "LIBRARY oodialog app_defaultIcon"
 ::method initAutoDetection external "LIBRARY oodialog app_initAutoDetection"  -- Internal use only.
-::method useGlobalConstDir external "LIBRARY oodialog app_useGlobalConstDir"
-
+::method requiredOS external "LIBRARY oodialog app_requiredOS"
 ::method setDefaults external "LIBRARY oodialog app_setDefaults"
+::method useGlobalConstDir external "LIBRARY oodialog app_useGlobalConstDir"
 
 ::class 'DlgUtil' public
 ::method init class external "LIBRARY oodialog dlgutil_init_cls"
 ::method and class external "LIBRARY oodialog dlgutil_and_cls"
 ::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version_cls"
 ::method errMsg class external "LIBRARY oodialog dlgutil_errMsg_cls"
+::method getGUID class external "LIBRARY oodialog dlgutil_getGuid_cls"
 ::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
 ::method halt class external "LIBRARY oodialog dlgutil_halt_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
@@ -301,7 +304,7 @@
 ::class 'SM' public
 ::attribute cMouseButtons get class external "LIBRARY oodialog sm_cMouseButtons_cls"
 ::attribute cxCursor get class external      "LIBRARY oodialog sm_cxCursor_cls"
-::attribute cxDrag get class external        "LIBRARY oodialog sm_cyDrag_cls"
+::attribute cxDrag get class external        "LIBRARY oodialog sm_cxDrag_cls"
 ::attribute cxFixedFrame get class external  "LIBRARY oodialog sm_cxFixedFrame_cls"
 ::attribute cxScreen get class external      "LIBRARY oodialog sm_cxScreen_cls"
 ::attribute cxSize get class external        "LIBRARY oodialog sm_cxSize_cls"
@@ -1225,7 +1228,9 @@
     self~createPushButtonGroup(dlgCX - 100, dlgCY - 18, 0, 0, buttonTxt, 1, "DEFAULT")
 
 ::method initDialog
-    self~newRadioButton(self~selected)~check
+    rb = self~newRadioButton(self~selected)
+    if rb == .nil then return
+    rb~check
 
 ::method execute
     expose dlgCX dlgCY title count
@@ -1577,6 +1582,7 @@
    use strict arg info
    return messageDialog(info, , "Information", "OK", "INFORMATION", "SETFOREGROUND TASKMODAL")
 
+::routine locate public external "LIBRARY oodialog locate_rtn"
 ::routine messageDialog public external "LIBRARY oodialog messageDialog_rtn"
 ::routine msSleep public external "LIBRARY oodialog msSleep_rtn"
 ::routine play public external "LIBRARY oodialog play_rtn"

@@ -53,6 +53,7 @@
  */
 
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
+#include "oodShared.hpp"
 
 #include <stdio.h>
 #include <dlgs.h>

@@ -626,11 +626,12 @@ RexxMethod1(RexxObjectPtr, il_duplicate, CSELF, il)
     return NULL;
 }
 
-RexxMethod2(logical_t, il_remove, int, index, CSELF, il)
+RexxMethod2(logical_t, il_remove, int32_t, index, CSELF, il)
 {
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl != NULL )
     {
+        index--;
         return ImageList_Remove(himl, index);
     }
     nullObjectException(context->threadContext, IMAGELISTCLASS);

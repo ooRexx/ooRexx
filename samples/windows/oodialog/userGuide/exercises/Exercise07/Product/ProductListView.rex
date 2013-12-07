@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide - Exercise07
 
-  ProductListView						  v02-00 11Jan13
+  ProductListView						  v02-00 01Apr13
   -------------
   The view of a list of products.
 
@@ -44,6 +44,8 @@
     v01-00 06Jun12: First version
     v02-00 21Aug12: Modified for Exercise07 to use the Model-View Framework.
            11Jan13: Commented-out 'say' instructions.
+           01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                    folder, so change to ::Requires needed. 
 
   Contains: classes "ProductListView, HRSplv (for human-readable strings)
 
@@ -60,7 +62,7 @@
 
 ::REQUIRES "ooDialog.cls"
 ::REQUIRES "Product\ProductView.rex"
-::REQUIRES "..\Support\RcView.rex"
+::REQUIRES "Support\RcView.rex"
 
 
 /*//////////////////////////////////////////////////////////////////////////////

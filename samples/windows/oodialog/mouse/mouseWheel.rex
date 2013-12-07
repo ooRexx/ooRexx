@@ -58,6 +58,12 @@
  *  behavior with the implementing code in this file.
  */
 
+  -- First we locate the direcotry our source code is in.  This allows us to
+  -- build complete path names to our resource files, which in turn allows this
+  -- program to be run from anywhwere on the computer.  For instance the program
+  -- file can be dragged and dropped on ooDialog.exe and it will run correctly.
+  srcDir = locate()
+
   -- When programmers wish to use symbolic resource IDs in their programs, as
   -- this program does, it is much easier to use the global constant directory,
   -- (.constDir,) rather than the constDir attribute of a dialog.  Using the
@@ -73,9 +79,9 @@
   -- In this invokcation, the application is set to use the .constDir only, "O",
   -- symbols are loaded into the .constDir from the file: ContextMenu.h, and the
   -- default for automatic data detection is set to off (.false.)
-.application~setDefaults('O', 'mouseWheel.h', .false)
+.application~setDefaults('O', srcDir'mouseWheel.h', .false)
 
-dlg = .MouseDemo~new("mouseWheel.rc", IDD_MOUSE_DLG)
+dlg = .MouseDemo~new(srcDir"mouseWheel.rc", IDD_MOUSE_DLG)
 
 if dlg~initCode <> 0 then do
   msg = "Error initializing the Mouse Wheel Demonstration dialog." || '0d0a0d0a'x || -
@@ -446,7 +452,7 @@ return 0
  * Do not confuse the help key (F1) event with the HELP command event.
  */
 ::method onHelp
-  .MouseDemoHelp~new('mouseWheel.rc', IDD_HELP)~execute("SHOWTOP")
+  .MouseDemoHelp~new(.application~srcDir'mouseWheel.rc', IDD_HELP)~execute("SHOWTOP")
 
 
 /** class::MouseDemoHelp

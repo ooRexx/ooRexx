@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 07: The OrderView class				  v02-00 01Jan13
+   Exercise 07: The OrderView class				  v02-00 01Apr13
 
    OrderFormView.rex
 
@@ -53,6 +53,8 @@
      v02-00 08Jan13: Ex07 - changed to use the MVF.
             11Jan13: Removed stand-alone operation.
                      Commented-out 'say' instructions.
+            01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                     folder, so change to ::Requires needed. 
 
 ------------------------------------------------------------------------------*/
 
@@ -62,7 +64,7 @@
 
 ::REQUIRES "ooDialog.cls"
 ::REQUIRES "Order\OrderModelsData.rex"
-::REQUIRES "..\Support\RcView.rex"
+::REQUIRES "Support\RcView.rex"
 
 
 /*==============================================================================

@@ -60,53 +60,44 @@
 ::class 'WindowExtensions' public mixinclass Object
 
 ::method initWindowExtensions external "LIBRARY oodialog winex_initWindowExtensions"
-::method setFont unguarded external "LIBRARY oodialog winex_setFont"
-::method getFont unguarded external "LIBRARY oodialog winex_getFont"
 
--- createFont() has always been broken, maintained for program compatibility.
--- createFontEx() is a correct implementation.
+::method createBrush unguarded external "LIBRARY oodialog winex_createBrush"
 ::method createFont unguarded external "LIBRARY oodialog winex_createFont"
 ::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
+::method createPen unguarded external "LIBRARY oodialog winex_createPen"
 ::method deleteFont unguarded external "LIBRARY oodialog winex_deleteObject"
-
-::method scroll unguarded external "LIBRARY oodialog winex_scroll"
+::method deleteObject unguarded external "LIBRARY oodialog winex_deleteObject"
+::method drawAngleArc unguarded external "LIBRARY oodialog winex_drawAngleArc"
+::method drawArc unguarded external "LIBRARY oodialog winex_drawArcOrPie"
+::method drawLine unguarded external "LIBRARY oodialog winex_drawLine"
+::method drawPie unguarded external "LIBRARY oodialog winex_drawArcOrPie"
+::method drawPixel unguarded external "LIBRARY oodialog winex_drawPixel"
+::method fillDrawing unguarded external "LIBRARY oodialog winex_fillDrawing"
+::method fontColor unguarded external "LIBRARY oodialog winex_fontColor"
+::method fontToDC unguarded external "LIBRARY oodialog winex_objectToDC"
+::method freeDC unguarded external "LIBRARY oodialog winex_freeDC"
+::method getArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
+::method getDC unguarded external "LIBRARY oodialog winex_getDC"
+::method getFont unguarded external "LIBRARY oodialog winex_getFont"
+::method getPixel unguarded external "LIBRARY oodialog winex_getPixel"
+::method getTextAlign unguarded external "LIBRARY oodialog winex_getTextAlign"
+::method getTextExtent unguarded external "LIBRARY oodialog winex_getTextExtent"
 ::method hScrollPos unguarded external "LIBRARY oodialog winex_getScrollPos"
-::method setHScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
-::method vScrollPos unguarded  external "LIBRARY oodialog winex_getScrollPos"
-::method setVScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
-
 ::method loadBitmap unguarded external "LIBRARY oodialog winex_loadBitmap"
+::method objectToDC unguarded external "LIBRARY oodialog winex_objectToDC"
+::method opaqueText unguarded external "LIBRARY oodialog winex_textBkMode"
+::method rectangle unguarded external "LIBRARY oodialog winex_rectangle"
 ::method removeBitmap unguarded external "LIBRARY oodialog winex_removeBitmap"
-
+::method scroll unguarded external "LIBRARY oodialog winex_scroll"
+::method setArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
+::method setFont unguarded external "LIBRARY oodialog winex_setFont"
+::method setHScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
+::method setTextAlign unguarded external "LIBRARY oodialog winex_setTextAlign"
+::method setVScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
+::method transparentText unguarded external "LIBRARY oodialog winex_textBkMode"
+::method vScrollPos unguarded  external "LIBRARY oodialog winex_getScrollPos"
 ::method write unguarded external "LIBRARY oodialog winex_write"
 ::method writeDirect unguarded external "LIBRARY oodialog winex_writeDirect"
-::method createBrush unguarded external "LIBRARY oodialog winex_createBrush"
-::method createPen unguarded external "LIBRARY oodialog winex_createPen"
-::method deleteObject unguarded external "LIBRARY oodialog winex_deleteObject"
-
-::method getTextAlign unguarded external "LIBRARY oodialog winex_getTextAlign"  -- Document for 4.2.1, not for 4.2.0
-::method setTextAlign unguarded external "LIBRARY oodialog winex_setTextAlign"  -- Document for 4.2.1, not for 4.2.0
-::method getTextExtent unguarded external "LIBRARY oodialog winex_getTextExtent"
-::method getDC unguarded external "LIBRARY oodialog winex_getDC"
-::method freeDC unguarded external "LIBRARY oodialog winex_freeDC"
-::method objectToDC unguarded external "LIBRARY oodialog winex_objectToDC"
-::method fontToDC unguarded
-   use strict arg dc, hFont
-   return self~objectToDC(dc, hFont)
-
-::method rectangle unguarded external "LIBRARY oodialog winex_rectangle"
-::method drawLine unguarded external "LIBRARY oodialog winex_drawLine"
-::method drawPixel unguarded external "LIBRARY oodialog winex_drawPixel"
-::method getPixel unguarded external "LIBRARY oodialog winex_getPixel"
-::method fillDrawing unguarded external "LIBRARY oodialog winex_fillDrawing"
-::method drawArc unguarded external "LIBRARY oodialog winex_drawArcOrPie"
-::method drawPie unguarded external "LIBRARY oodialog winex_drawArcOrPie"
-::method drawAngleArc unguarded external "LIBRARY oodialog winex_drawAngleArc"
-::method getArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
-::method setArcDirection unguarded external "LIBRARY oodialog winex_getSetArcDirection"
-::method fontColor unguarded external "LIBRARY oodialog winex_fontColor"
-::method transparentText unguarded external "LIBRARY oodialog winex_textBkMode"
-::method opaqueText unguarded external "LIBRARY oodialog winex_textBkMode"
 
 
 -- DEPRECATED

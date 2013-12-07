@@ -132,7 +132,6 @@ extern RexxObjectPtr   rxNewBuiltinObject(RexxThreadContext *c, CSTRING classNam
 
 extern bool    isOutOfMemoryException(RexxThreadContext *c);
 extern bool    checkForCondition(RexxThreadContext *c, bool clear);
-extern void    standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition);
 extern bool    isInt(int, RexxObjectPtr, RexxThreadContext *);
 extern bool    isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
 extern void    dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
@@ -140,6 +139,25 @@ extern void    dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 extern CSTRING strPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
 extern CSTRING strPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
+/**
+ * Return true if the Rexx object is equivalent to true, otherwise return false.
+ *
+ * Note that a return of false does not imply that the Rexx object is equivalent
+ * to false.
+ *
+ * @param c
+ * @param obj
+ *
+ * @return bool
+ */
+inline bool isTrue(RexxThreadContext *c, RexxObjectPtr obj)
+{
+    return getLogical(c, obj) == 1;
+}
+inline bool isTrue(RexxMethodContext *c, RexxObjectPtr obj)
+{
+    return getLogical(c->threadContext, obj) == 1;
+}
 
 /**
  *  Message "msg" did not return a result
@@ -334,15 +352,6 @@ inline void directoryIndexExceptionMsg(RexxThreadContext *c, size_t pos, CSTRING
 inline void missingIndexesInDirectoryException(RexxMethodContext *c, int argPos, CSTRING indexes)
 {
     missingIndexesInDirectoryException(c->threadContext, argPos, indexes);
-}
-
-/**
- * Given a condition object, extracts and returns as a whole number the subcode
- * of the condition.
- */
-inline wholenumber_t conditionSubCode(RexxCondition *condition)
-{
-    return (condition->code - (condition->rc * 1000));
 }
 
 inline RexxObjectPtr rxNewBag(RexxMethodContext *c)

@@ -43,9 +43,8 @@
  * Description:  Scrolling text example.
  */
 
-signal on any name CleanUp
-
-dlg = .MyDialogClass~new("textScroll.rc", 100)
+sd = locate()
+dlg = .MyDialogClass~new(sd"textScroll.rc", 100)
 if dlg~initCode <> 0 then return 99
 dlg~execute("SHOWTOP")
 

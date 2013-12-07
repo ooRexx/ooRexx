@@ -171,10 +171,6 @@ extern bool rxLogicalFromDirectory(RexxMethodContext *, RexxDirectoryObject, CST
 extern bool rxNumberFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, uint32_t *, int, bool);
 extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, int *, int, bool);
 
-extern int               putUnicodeText(LPWORD dest, const char *text);
-extern LPWSTR            ansi2unicode(LPCSTR str);
-extern RexxStringObject  unicode2string(RexxThreadContext *c, PWSTR wstr);
-extern char *            unicode2ansi(PWSTR wstr);
 extern bool              printHResultErr(CSTRING api, HRESULT hr);
 extern bool              getFormattedErrMsg(char **errBuff, uint32_t errCode, uint32_t *thisErr);
 
@@ -229,12 +225,6 @@ typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONT
 typedef enum {def, autoCheck, threeState, autoThreeState, noSubtype } BUTTONSUBTYPE, *PBUTTONSUBTYPE;
 
 extern BUTTONTYPE getButtonInfo(HWND, PBUTTONSUBTYPE, DWORD *);
-
-
-inline RexxStringObject unicode2string(RexxMethodContext *c, LPWSTR wstr)
-{
-    return unicode2string(c->threadContext, wstr);
-}
 
 inline int32_t oodGlobalID(RexxMethodContext *c, RexxObjectPtr id, size_t argPosID, bool strict)
 {
@@ -740,17 +730,6 @@ inline HWND controlToHCtrl(RexxMethodContext *c, RexxObjectPtr ctrl)
 {
     pCDialogControl pcdc = (pCDialogControl)c->ObjectToCSelf(ctrl, TheDialogControlClass);
     return pcdc->hCtrl;
-}
-
-/**
- * Convenience function to put up an error message box.
- *
- * @param pszMsg    The message.
- * @param pszTitle  The title of for the message box.
- */
-inline void internalErrorMsgBox(CSTRING pszMsg, CSTRING pszTitle)
-{
-    MessageBox(0, pszMsg, pszTitle, MB_OK | MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL);
 }
 
 

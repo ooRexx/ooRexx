@@ -46,8 +46,10 @@
 #include <stdio.h>          // For printf()
 #include <shlwapi.h>        // For StrStrI()
 #include <shlobj.h>         // For ShChangeNotify()
+#include <Rpc.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodShared.hpp"
 #include "oodDeviceGraphics.hpp"
 #include "oodResources.hpp"
 #include "oodResourceIDs.hpp"
@@ -252,25 +254,18 @@ inline bool checkApplicationMagic(RexxMethodContext *c, RexxObjectPtr magic)
     return false;
 }
 
-void putDefaultSymbols(RexxMethodContext *c, RexxDirectoryObject constDir)
+static CSTRING getWindowsName(void)
 {
-    c->DirectoryPut(constDir, c->Int32(IDC_STATIC),       "IDC_STATIC");       // -1
-    c->DirectoryPut(constDir, c->Int32(IDOK      ),       "IDOK");             // 1
-    c->DirectoryPut(constDir, c->Int32(IDCANCEL  ),       "IDCANCEL");         // 2
-    c->DirectoryPut(constDir, c->Int32(IDABORT   ),       "IDABORT");          //  ...
-    c->DirectoryPut(constDir, c->Int32(IDRETRY   ),       "IDRETRY");
-    c->DirectoryPut(constDir, c->Int32(IDIGNORE  ),       "IDIGNORE");
-    c->DirectoryPut(constDir, c->Int32(IDYES     ),       "IDYES");
-    c->DirectoryPut(constDir, c->Int32(IDNO      ),       "IDNO");
-    c->DirectoryPut(constDir, c->Int32(IDCLOSE   ),       "IDCLOSE");
-    c->DirectoryPut(constDir, c->Int32(IDHELP    ),       "IDHELP");           // 9
-    c->DirectoryPut(constDir, c->Int32(IDTRYAGAIN),       "IDTRYAGAIN");       // 10
-    c->DirectoryPut(constDir, c->Int32(IDCONTINUE),       "IDCONTINUE");       // 11
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OODIALOG), "IDI_DLG_OODIALOG"); // This is 12
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON),  "IDI_DLG_APPICON");
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON2), "IDI_DLG_APPICON2");
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OOREXX),   "IDI_DLG_OOREXX");
-    c->DirectoryPut(constDir, c->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
+    char *name = "unknown";
+
+    if ( _isW2K()            )  return "W2K";
+    else if ( _isXP()        )  return "XP";
+    else if ( _isW2K3()      )  return "W2K3";
+    else if ( _isVista()     )  return "Vista";
+    else if ( _isServer2008() ) return "Server 2008";
+    else if ( _isWindows7()   ) return "Windows 7";
+
+    return "unknown";
 }
 
 static RexxObjectPtr setConstDirUsage(RexxMethodContext *c, CSTRING _mode, size_t argPos, CSTRING index)
@@ -610,8 +605,9 @@ RexxMethod2(RexxObjectPtr, app_init, RexxObjectPtr, magic, OSELF, self)
     pCApplicationManager pcam = (pCApplicationManager)context->BufferData(obj);
     memset(pcam, 0, sizeof(CApplicationManager));
 
-    pcam->autoDetect = true;
-    pcam->rexxSelf = self;
+    pcam->rxProgramDir = TheNilObj;
+    pcam->autoDetect  = true;
+    pcam->rexxSelf    = self;
 
     context->SetObjectVariable("CSELF", obj);
 
@@ -632,6 +628,36 @@ done_out:
     return NULLOBJECT;
 }
 
+void putDefaultSymbols(RexxMethodContext *c, RexxDirectoryObject constDir)
+{
+    c->DirectoryPut(constDir, c->Int32(IDC_STATIC),       "IDC_STATIC");       // -1
+    c->DirectoryPut(constDir, c->Int32(IDOK      ),       "IDOK");             // 1
+    c->DirectoryPut(constDir, c->Int32(IDCANCEL  ),       "IDCANCEL");         // 2
+    c->DirectoryPut(constDir, c->Int32(IDABORT   ),       "IDABORT");          //  ...
+    c->DirectoryPut(constDir, c->Int32(IDRETRY   ),       "IDRETRY");
+    c->DirectoryPut(constDir, c->Int32(IDIGNORE  ),       "IDIGNORE");
+    c->DirectoryPut(constDir, c->Int32(IDYES     ),       "IDYES");
+    c->DirectoryPut(constDir, c->Int32(IDNO      ),       "IDNO");
+    c->DirectoryPut(constDir, c->Int32(IDCLOSE   ),       "IDCLOSE");
+    c->DirectoryPut(constDir, c->Int32(IDHELP    ),       "IDHELP");           // 9
+    c->DirectoryPut(constDir, c->Int32(IDTRYAGAIN),       "IDTRYAGAIN");       // 10
+    c->DirectoryPut(constDir, c->Int32(IDCONTINUE),       "IDCONTINUE");       // 11
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OODIALOG), "IDI_DLG_OODIALOG"); // This is 12
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON),  "IDI_DLG_APPICON");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON2), "IDI_DLG_APPICON2");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OOREXX),   "IDI_DLG_OOREXX");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
+}
+
+/** ApplicationManger::srcDir()   [attribute]
+ *
+ *
+ */
+RexxMethod1(RexxObjectPtr, app_srcDir_atr, CSELF, pCSelf)
+{
+    pCApplicationManager pcam = (pCApplicationManager)pCSelf;
+    return pcam->rxProgramDir;
+}
 
 /** ApplicationManger::useGlobalConstDir()
  *
@@ -713,6 +739,59 @@ RexxMethod2(uint32_t, app_initAutoDetection, RexxObjectPtr, dlg, CSELF, pCSelf)
     return 0;
 }
 
+
+/** ApplicationManager::requiredOS()
+ *
+ *  Checks that we are operating on a required minimum Windows version
+ *
+ *  @param  os   [required]  The minimum Windows version the application needs
+ *                to execute. W2K, XP, W2K3, Vista, Windows7, case is not
+ *                significant.
+ *
+ *  @param  name [required]  The name of the application.
+ *
+ *  @return True if the minimum is meet, otherwise false.
+ *
+ *  @notes  Need to add Windows 8.
+ */
+RexxMethod3(RexxObjectPtr, app_requiredOS, CSTRING, os, CSTRING, name, CSELF, pCSelf)
+{
+    pCApplicationManager pcam = (pCApplicationManager)pCSelf;
+
+    bool allowed = false;
+
+    if (      StrCmpI(os, "W2K") == 0      ) allowed = _isAtLeastW2K();
+    else if ( StrCmpI(os, "XP") == 0       ) allowed = _isAtLeastXP();
+    else if ( StrCmpI(os, "W2K3") == 0     ) allowed = _isAtLeastW2K3();
+    else if ( StrCmpI(os, "VISTA") == 0    ) allowed = _isAtLeastVista();
+    else if ( StrCmpI(os, "WINDOWS7") == 0 ) allowed = _isAtLeastWindows7();
+    else
+    {
+        wrongArgValueException(context->threadContext, 1, "W2K, XP, W2K3, Vista, or Windows7", os);
+        return TheFalseObj;
+    }
+
+    size_t len = strlen(name);
+    if ( len >= 256 )
+    {
+        stringTooLongException(context->threadContext, 2, 255, len);
+        return TheFalseObj;
+    }
+
+    if ( ! allowed )
+    {
+        char buf[512];
+
+        _snprintf(buf, 511, "The %s application requires Windows %s or\n"
+                            "later.  It can not run on %s\n", name, os, getWindowsName());
+
+        MessageBox(NULL, buf, "ooDialog Application Error", MB_OK | MB_ICONWARNING | MB_SETFOREGROUND);
+
+        return TheFalseObj;
+    }
+
+    return TheTrueObj;
+}
 
 /** ApplicationManager::defaultFont()
  *
@@ -1059,11 +1138,20 @@ RexxMethod1(RexxStringObject, dlgutil_comctl32Version_cls, OPTIONAL_CSTRING, for
  * @param  format  [optional]  Keyword indicating which format the returned
  *                 string should be in.  Keywords are:
  *
- *         Short   4.1.0.5814
+ *         Short    4.1.0.5814
  *
- *         Full    ooDialog Version 4.1.0.5814 (an ooRexx Windows Extension)
+ *         Full     ooDialog Version 4.1.0.5814 (an ooRexx Windows Extension)
  *
- *         Level   4.2.0
+ *         Level    4.2.0
+ *
+ *         Complete
+ *
+ *              ooDialog: ooDialog Version 4.2.3.9166 (64 bit)
+ *                        Built Apr 16 2013 13:41:25
+ *                        Copyright (c) RexxLA 2005-2013.
+ *                        All Rights Reserved.
+ *
+ *              Rexx:     Open Object Rexx Version 4.2.0
  *
  *                 Only the first letter is required and case is not
  *                 significant.  If the argument is omitted the Full format is
@@ -1088,6 +1176,21 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
             _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", OOD_VER, OOD_REL, OOD_MOD, OOD_BLD);
             break;
 
+        case 'C' :
+        {
+            char *buff = getCompleteVersion(context->threadContext);
+            if ( buff == NULL )
+            {
+                outOfMemoryException(context->threadContext);
+                return context->NullString();
+            }
+
+            RexxStringObject s = context->String(buff);
+            LocalFree(buff);
+
+            return s;
+        } break;
+
         case 'F' :
         default :
             _snprintf(buf, sizeof(buf), "ooDialog Version %u.%u.%u.%u (an ooRexx Windows Extension)",
@@ -1097,6 +1200,74 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
     }
     return context->String(buf);
 }
+
+
+/** DlgUtil::getGuid()  [class method]
+ *
+ * Returns a GUID as a string .
+ *
+ * @param conventional  [optional] True or false to specify Microsoft's
+ *                      conventional format or universal format.  By default
+ *                      conventional is false.
+ *
+ * @return  A string representation of a GUID in the format specified, or .nil
+ *          on error.
+ *
+ * @notes   Sets the .systemErrorCode.
+ *
+ *          A new GUID is generated for each invocation of this method.
+ *
+ *          By default the string GUID will be similar to:
+ *
+ *             3d2c9438-a3b0-494d-ba5d-10f53e6ec9cf
+ *
+ *          If Microsoft's convention is requested the same GUID would be
+ *          returned as:
+ *
+ *             {3d2c9438-a3b0-494d-ba5d-10f53e6ec9cf}
+ *
+ *          A GUID and a UUID are synomous and can be used interchangable in
+ *          ooDialog.
+ */
+RexxMethod1(RexxObjectPtr, dlgutil_getGuid_cls, OPTIONAL_logical_t, conventional)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr result = TheNilObj;
+    UUID          uuid;
+
+    RPC_STATUS rpc = UuidCreate(&uuid);
+    if ( ! (rpc == RPC_S_OK || rpc == RPC_S_UUID_LOCAL_ONLY) )
+    {
+        oodSetSysErrCode(context->threadContext, rpc);
+        return result;
+    }
+
+    unsigned char *strUuid = NULL;
+    rpc = UuidToString(&uuid, &strUuid);
+    if ( rpc != RPC_S_OK )
+    {
+        oodSetSysErrCode(context->threadContext, rpc);
+        return result;
+    }
+
+    if ( conventional )
+    {
+        char buf[64];
+
+        _snprintf(buf, sizeof(buf), "{%s}", strUuid);
+        result = context->String(buf);
+    }
+    else
+    {
+        result = context->String((CSTRING)strUuid);
+    }
+
+     RpcStringFree(&strUuid);
+
+    return result;
+}
+
 
 RexxMethod1(int16_t, dlgutil_shiWord_cls, int32_t, dw) { return HIWORD(dw); }
 RexxMethod1(int16_t, dlgutil_sloWord_cls, int32_t, dw) { return LOWORD(dw); }
@@ -1426,15 +1597,21 @@ RexxMethod1(RexxStringObject, dlgutil_windowFromPoint_cls, RexxObjectPtr, pt)
     return NULLOBJECT;
 }
 
+
 /** DlgUtil::test()  [class method]
  *
  *  Simple method to use for testing.
  */
-RexxMethod1(uint64_t, dlgutil_test_cls, int64_t, n)
+RexxMethod0(RexxObjectPtr, dlgutil_test_cls)
 {
-    printf("DlgUtil::test() No tests at this time.\n");
+#ifdef _WIN64
+    printf("_WIN64 is defined\n");
+#else
+    printf("_WIN64 is NOT defined\n");
+#endif
+    printf("No test at this time.\n");
 
-    return 0;
+    return TheZeroObj;
 }
 
 /**

@@ -80,7 +80,145 @@
 ::method test external "LIBRARY oodialog bff_test"
 
 
-::class 'SimpleFolderBrowse' public
+::class 'CommonItemDialog' public inherit ComConstants
 
+::attribute options get external "LIBRARY oodialog cid_options"
+::attribute options set external "LIBRARY oodialog cid_setOptions"
+
+::method init external "LIBRARY oodialog cid_init"
+::method uninit external "LIBRARY oodialog cid_uninit"
+
+::method addPlace external "LIBRARY oodialog cid_addPlace"
+::method advise external "LIBRARY oodialog cid_advise"
+::method clearClientData external "LIBRARY oodialog cid_clearClientData"
+::method close unguarded external "LIBRARY oodialog cid_close"
+::method getCurrentSelection unguarded external "LIBRARY oodialog cid_getCurrentSelection"
+::method getFileName unguarded external "LIBRARY oodialog cid_getFileName"
+::method getFileTypeIndex unguarded external "LIBRARY oodialog cid_getFileTypeIndex"
+::method getFolder external "LIBRARY oodialog cid_getFolder"
+::method getResult external "LIBRARY oodialog cid_getResult"
+::method initCOM unguarded external "LIBRARY oodialog cid_initCOM"
+::method isReleased unguarded external "LIBRARY oodialog cid_isReleased"
+::method release external "LIBRARY oodialog cid_release"
+::method releaseCOM unguarded external "LIBRARY oodialog cid_releaseCOM"
+::method setClientGuid external "LIBRARY oodialog cid_setClientGuid"
+::method setDefaultExtension external "LIBRARY oodialog cid_setDefaultExtension"
+::method setDefaultFolder external "LIBRARY oodialog cid_setDefaultFolder"
+::method setFileName external "LIBRARY oodialog cid_setFileName"
+::method setFileNameLabel external "LIBRARY oodialog cid_setFileNameLabel"
+::method setFileTypeIndex external "LIBRARY oodialog cid_setFileTypeIndex"
+::method setFileTypes external "LIBRARY oodialog cid_setFileTypes"
+::method setFilter external "LIBRARY oodialog cid_setFilter"
+::method setFolder external "LIBRARY oodialog cid_setFolder"
+::method setCancelButtonLabel external "LIBRARY oodialog cid_setCancelButtonLabel"
+::method setOkButtonLabel external "LIBRARY oodialog cid_setOkButtonLabel"
+::method setTitle external "LIBRARY oodialog cid_setTitle"
+::method show unguarded external "LIBRARY oodialog cid_show"
+::method unadvise unguarded external "LIBRARY oodialog cid_unadvise"
+
+
+::class 'OpenFileDialog' public subclass CommonItemDialog
+::method init external "LIBRARY oodialog ofd_init"
+::method getResults external "LIBRARY oodialog ofd_getResults"
+
+
+::class 'SaveFileDialog' public subclass CommonItemDialog
+::method init external "LIBRARY oodialog sfd_init"
+::method setSaveAsItem external "LIBRARY oodialog sfd_setSaveAsItem"
+
+
+::class 'CommonDialogCustomizations' public mixinclass Object
+::method initCustomizations private external "LIBRARY oodialog cid_initCustomizations"  -- Internal use only
+::method addCheckButton external "LIBRARY oodialog cid_addCheckButton"
+::method addComboBox external "LIBRARY oodialog cid_addComboBox"
+::method addControlItem external "LIBRARY oodialog cid_addControlItem"
+::method addEditBox external "LIBRARY oodialog cid_addEditBox"
+::method addMenu external "LIBRARY oodialog cid_addMenu"
+::method addPushButton external "LIBRARY oodialog cid_addPushButton"
+::method addRadioButtonList external "LIBRARY oodialog cid_addRadioButtonList"
+::method addSeparator external "LIBRARY oodialog cid_addSeparator"
+::method addText external "LIBRARY oodialog cid_addText"
+::method check external "LIBRARY oodialog cid_setCheckButtonState"
+::method enableOpenDropDown external "LIBRARY oodialog cid_enableOpenDropDown"
+::method endVisualGroup external "LIBRARY oodialog cid_endVisualGroup"
+::method getCheckButtonState external "LIBRARY oodialog cid_getCheckButtonState"
+::method getControlItemState external "LIBRARY oodialog cid_getControlItemState"
+::method getControlState external "LIBRARY oodialog cid_getControlState"
+::method getEditBoxText external "LIBRARY oodialog cid_getEditBoxText"
+::method getSelectedControlItem external "LIBRARY oodialog cid_getSelectedControlItem"
+::method isChecked external "LIBRARY oodialog cid_getCheckButtonState"
+::method makeProminent external "LIBRARY oodialog cid_makeProminent"
+::method removeAllControlItems external "LIBRARY oodialog cid_removeAllControlItems"
+::method removeControlItem external "LIBRARY oodialog cid_removeControlItem"
+::method setCheckButtonState external "LIBRARY oodialog cid_setCheckButtonState"
+::method setControlItemState external "LIBRARY oodialog cid_setControlItemState"
+::method setControlItemText external "LIBRARY oodialog cid_setControlItemText"
+::method setControlLabel external "LIBRARY oodialog cid_setControlLabel"
+::method setControlState external "LIBRARY oodialog cid_setControlState"
+::method setEditBoxText external "LIBRARY oodialog cid_setEditBoxText"
+::method setSelectedControlItem external "LIBRARY oodialog cid_setSelectedControlItem"
+::method startVisualGroup external "LIBRARY oodialog cid_startVisualGroup"
+::method uncheck external "LIBRARY oodialog cid_setCheckButtonState"
+
+::class 'ComConstants' mixinclass Object
+::constant  CANCELED          2147943623
+::constant  E_NOTIMPL         34360000513  -- _HRESULT_TYPEDEF_(0x80004001L)
+::constant  S_FALSE           1
+::constant  S_OK              0
+
+
+::class 'ShellItemFilter' public inherit ComConstants
+::method init external "LIBRARY oodialog sif_init"
+::method includeItem unguarded
+    return self~S_OK
+
+
+::class 'CommonDialogEvents' public inherit ComConstants
+
+-- OnOverwrite and OnShareViolation response constants
+::constant  FDESVR_DEFAULT    0
+::constant  FDESVR_ACCEPT     1
+::constant  FDESVR_REFUSE     2
+
+
+::method init external "LIBRARY oodialog cde_init"
+::method onButtonClicked unguarded
+    return self~S_OK
+
+::method onCheckButtonToggled unguarded
+    return self~S_OK
+
+::method onControlActivating unguarded
+    return self~S_OK
+
+::method onFileOk unguarded
+    return self~S_OK
+
+::method onFolderChange unguarded
+    return self~S_OK
+
+::method onFolderChanging unguarded
+    return self~S_OK
+
+::method onHelp unguarded
+    return self~S_OK
+
+::method onItemSelected unguarded
+    return self~S_OK
+
+::method onOverwrite unguarded
+    return self~FDESVR_DEFAULT
+
+::method onSelectionChange unguarded
+    return self~S_OK
+
+::method onShareViolation unguarded
+    return self~FDESVR_DEFAULT
+
+::method onTypeChange unguarded
+    return self~S_OK
+
+
+::class 'SimpleFolderBrowse' public
 ::method getFolder class external "LIBRARY oodialog sfb_getFolder"
 

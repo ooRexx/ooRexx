@@ -48,18 +48,12 @@
  * This gives all the dialogs displayed an uniform appearance.
  */
 
-    -- A directory manager saves the current directory and can later go back to
-    -- that directory.  It also sets up the environment we need.  The class
-    -- itself is located in samplesSetup.rex
-    mgr = .DirectoryManager~new()
+    sd = locate()
+    .application~setDefaults('O', sd'rc\oodStandardDialogs.h')
+    .application~defaultIcon(sd'bmp\oodStandardDialogs.ico')
 
-    .application~setDefaults('O', 'rc\oodStandardDialogs.h')
-    .application~defaultIcon('bmp\oodStandardDialogs.ico')
-
-    dlg = .StandardDialogs~new("rc\oodStandardDialogs.rc", IDD_STDDLGS)
+    dlg = .StandardDialogs~new(sd"rc\oodStandardDialogs.rc", IDD_STDDLGS)
     dlg~execute("SHOWTOP")
-
-    mgr~goBack
 
 return 0
 -- End of entry point.

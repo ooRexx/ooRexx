@@ -46,31 +46,28 @@
  .constDir[IDC_CB]        = 101
  .constDir[IDC_PB_BITMAP] = 102
 
- -- A directory manager saves the current directory and can later go back to
- -- that directory.  It also sets up the environment we need.  The class
- -- itself is located in samplesSetup.rex
- mgr = .DirectoryManager~new()
+ sd = locate()
+ oldDir = directory()
+ j = directory(sd"bmp")
 
  b.IDC_CB = ''
  d = .BmpDialog~new(b.)
  d~createCenter(300, 200, "Bitmap Viewer")
  d~execute("SHOWTOP")
 
- mgr~goBack
+ j = directory(oldDir)
 
  return
 
 /*-------------------------------- requires --------------------------*/
 
 ::requires "ooDialog.cls"
-::requires "samplesSetup.rex"
 
 /*-------------------------------- dialog class ----------------------*/
 
 ::class 'BmpDialog' subclass UserDialog
 
 ::method defineDialog
-   ret = directory("bmp")
    self~createStaticText(IDC_STATIC, 10, 10, , , , "Filename: ")
 
    self~createComboBox(IDC_CB, 60, 10, 130, 180, "VSCROLL", "Filename")

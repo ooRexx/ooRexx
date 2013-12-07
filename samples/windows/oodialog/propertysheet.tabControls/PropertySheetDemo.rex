@@ -41,20 +41,23 @@
  * This example demonstrates how to use the PropertySheetDialog and has examples
  * of using 5 dialog controls, the: List View, Tree View, Progress Bar, Track
  * Bar, and Tab.
+ *
+ * Note: this program uses the public routine, locate(), to get the full path
+ * name to the directory this source code file is located. In places, the
+ * variable holding this value has been callously abbreviated to 'sd' which
+ * stands for source directory.
+ *
  */
 
-  -- A directory manager saves the current directory and can later go back to
-  -- that directory.  The class itself is located in DirectoryManaager.cls
-  mgr = .DirectoryManager~new()
-
-  .application~setDefaults("O", "rc\PropertySheetDemo.h", .false)
+  sd = locate()
+  .application~setDefaults("O", sd"rc\PropertySheetDemo.h", .false)
 
   -- Create the 5 dialog pages.
-  p1 = .ListViewDlg~new("rc\PropertySheetDemo.rc", IDD_LISTVIEW_DLG)
-  p2 = .TreeViewDlg~new("rc\PropertySheetDemo.rc", IDD_TREEVIEW_DLG)
-  p3 = .ProgressBarDlg~new("rc\PropertySheetDemo.rc", IDD_PROGRESSBAR_DLG)
-  p4 = .TrackBarDlg~new("rc\PropertySheetDemo.rc", IDD_TRACKBAR_DLG)
-  p5 = .TabDlg~new("rc\PropertySheetDemo.rc", IDD_TAB_DLG)
+  p1 = .ListViewDlg~new(sd"rc\PropertySheetDemo.rc", IDD_LISTVIEW_DLG)
+  p2 = .TreeViewDlg~new(sd"rc\PropertySheetDemo.rc", IDD_TREEVIEW_DLG)
+  p3 = .ProgressBarDlg~new(sd"rc\PropertySheetDemo.rc", IDD_PROGRESSBAR_DLG)
+  p4 = .TrackBarDlg~new(sd"rc\PropertySheetDemo.rc", IDD_TRACKBAR_DLG)
+  p5 = .TabDlg~new(sd"rc\PropertySheetDemo.rc", IDD_TAB_DLG)
 
   -- Create the PropertySheetDialog using an array of the 5 dialog pages.  The
   -- order of the pages in the array will be the order of the pages in the tab
@@ -69,16 +72,16 @@
   -- Show the property sheet.
   propDlg~execute
 
-  mgr~goBack
   return 0
 
 ::requires "ooDialog.cls"
-::requires "DirectoryManager.cls"
 
 ::class 'ListViewDlg' subclass RcPSPDialog
 
 ::method initDialog
     expose lv
+
+    sd = locate()
 
     -- Instantiate a Rexx list view object that represents the underlying
     -- Windows list-view.  The list-view style is report.
@@ -94,7 +97,7 @@
     -- Set the images for the items in the list-view.  The list-view control was
     -- created without the SHAREIMAGES styles, so it takes care of releasing the
     -- image list when the program ends.
-    image = .Image~getImage("rc\propertySheetDemoListView.bmp")
+    image = .Image~getImage(sd"rc\propertySheetDemoListView.bmp")
     imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
     if \image~isNull,  \imageList~isNull then do
         imageList~add(image)
@@ -170,7 +173,8 @@
     tv = self~newTreeView(IDC_TV_MAIN)
 
     -- Create and set the ImageList for the tree view items
-    image = .Image~getImage("rc\propertySheetDemoTreeView.bmp")
+    sd = locate()
+    image = .Image~getImage(sd"rc\propertySheetDemoTreeView.bmp")
     imageList = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR8), 10, 0)
     if \image~isNull,  \imageList~isNull then do
           imageList~add(image)
@@ -495,8 +499,9 @@
 
    -- Create a COLORREF (pure white) and load our bitmap.  The bitmap is a
    -- series of 16x16 images, each one a colored letter.
+   sd = locate()
    cRef = .Image~colorRef(255, 255, 255)
-   image = .Image~getImage("rc\propertySheetDemoTab.bmp")
+   image = .Image~getImage(sd"rc\propertySheetDemoTab.bmp")
 
    -- Create our image list, as a masked image list.
    flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))

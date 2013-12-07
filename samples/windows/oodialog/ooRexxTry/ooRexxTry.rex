@@ -55,6 +55,9 @@ See documentation for version control
 04/19/09    Enhanced the menu to use check marks for font name, size, and silent.
 */
 
+    -- Capture the location of our source code program
+    discard = locate()
+
     parse arg isDefault
     .local~useDefault = .false
     if isDefault~translate = 'DEFAULT' then
@@ -216,10 +219,11 @@ exit
     if \.useDefault then
         do
             -- Read oorexxtry.ini position & size the dialog based on its values
-            k1 = SysIni('oorexxtry.ini','oorexxtry','k1')
-            k2 = SysIni('oorexxtry.ini','oorexxtry','k2')
-            k3 = SysIni('oorexxtry.ini','oorexxtry','k3')
-            k4 = SysIni('oorexxtry.ini','oorexxtry','k4')
+            sd = .application~srcDir
+            k1 = SysIni(sd'oorexxtry.ini','oorexxtry','k1')
+            k2 = SysIni(sd'oorexxtry.ini','oorexxtry','k2')
+            k3 = SysIni(sd'oorexxtry.ini','oorexxtry','k3')
+            k4 = SysIni(sd'oorexxtry.ini','oorexxtry','k4')
             if k1 = 'ERROR:' | k2 = 'ERROR:' | k3 = 'ERROR:' | k4 = 'ERROR:' then
                 nop -- First exection will not find the ini file
             else
@@ -383,16 +387,17 @@ return
 
     r = self~windowRect
     -- Write out the size,position,fontname,fontsize, & silent to the .ini file
+    sd = .application~srcDir
     if \self~isMinimized & \self~isMaximized then
         do
-            rv = SysIni('oorexxtry.ini','oorexxtry','k1',r~left)
-            rv = SysIni('oorexxtry.ini','oorexxtry','k2',r~top)
-            rv = SysIni('oorexxtry.ini','oorexxtry','k3',r~right)
-            rv = SysIni('oorexxtry.ini','oorexxtry','k4',r~bottom)
+            rv = SysIni(sd'oorexxtry.ini','oorexxtry','k1',r~left)
+            rv = SysIni(sd'oorexxtry.ini','oorexxtry','k2',r~top)
+            rv = SysIni(sd'oorexxtry.ini','oorexxtry','k3',r~right)
+            rv = SysIni(sd'oorexxtry.ini','oorexxtry','k4',r~bottom)
         end
-    rv = SysIni('oorexxtry.ini','oorexxtry','fn',.fontname)
-    rv = SysIni('oorexxtry.ini','oorexxtry','fs',.fontsize)
-    rv = SysIni('oorexxtry.ini','oorexxtry','sl',.silent)
+    rv = SysIni(sd'oorexxtry.ini','oorexxtry','fn',.fontname)
+    rv = SysIni(sd'oorexxtry.ini','oorexxtry','fs',.fontsize)
+    rv = SysIni(sd'oorexxtry.ini','oorexxtry','sl',.silent)
 return self~ok:super
 
 -- Clipboard menu option
@@ -601,16 +606,17 @@ return self~ok:super
     select
         when msg = 72 then
             do
+                sd = .application~srcDir
                 if \self~isMinimized & \self~isMaximized then
                     do
-                        rv = SysIni('oorexxtry.ini','oorexxtry','k1',r~left)
-                        rv = SysIni('oorexxtry.ini','oorexxtry','k2',r~top)
-                        rv = SysIni('oorexxtry.ini','oorexxtry','k3',r~right)
-                        rv = SysIni('oorexxtry.ini','oorexxtry','k4',r~bottom)
+                        rv = SysIni(sd'oorexxtry.ini','oorexxtry','k1',r~left)
+                        rv = SysIni(sd'oorexxtry.ini','oorexxtry','k2',r~top)
+                        rv = SysIni(sd'oorexxtry.ini','oorexxtry','k3',r~right)
+                        rv = SysIni(sd'oorexxtry.ini','oorexxtry','k4',r~bottom)
                     end
-                rv = SysIni('oorexxtry.ini','oorexxtry','fn',.fontname)
-                rv = SysIni('oorexxtry.ini','oorexxtry','fs',.fontsize)
-                rv = SysIni('oorexxtry.ini','oorexxtry','sl',.silent)
+                rv = SysIni(sd'oorexxtry.ini','oorexxtry','fn',.fontname)
+                rv = SysIni(sd'oorexxtry.ini','oorexxtry','fs',.fontsize)
+                rv = SysIni(sd'oorexxtry.ini','oorexxtry','sl',.silent)
             end
         otherwise
             nop
@@ -996,9 +1002,10 @@ return 0
     .local~title          = 'ooRexxTry'       -- Title to use for the dialogs
 
 -- If the .ini file is present, use it for font/silent variables
-    .local~fontname = SysIni('oorexxtry.ini','oorexxtry','fn')
-    .local~fontsize = SysIni('oorexxtry.ini','oorexxtry','fs')
-    .local~silent   = SysIni('oorexxtry.ini','oorexxtry','sl')
+    sd = .application~srcDir
+    .local~fontname = SysIni(sd'oorexxtry.ini','oorexxtry','fn')
+    .local~fontsize = SysIni(sd'oorexxtry.ini','oorexxtry','fs')
+    .local~silent   = SysIni(sd'oorexxtry.ini','oorexxtry','sl')
 
 -- Else use some defaults
     if .fontname = 'ERROR:' | .useDefault then

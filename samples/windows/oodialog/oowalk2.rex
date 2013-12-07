@@ -62,12 +62,9 @@
  *  animation.
  */
 
- -- A directory manager saves the current directory and can later go back to
- -- that directory.  It also sets up the environment we need.  The class
- -- itself is located in samplesSetup.rex
- mgr = .DirectoryManager~new()
+ srcDir = locate()
 
- dlg = .WalkerDialog~new('res\oowalk2.dll',100,data.)
+ dlg = .WalkerDialog~new(srcDir'res\oowalk2.dll',100,data.)
 
  if dlg~initCode \= 0 then do
    mgr~goBack
@@ -75,7 +72,6 @@
  end
  dlg~execute("SHOWTOP")
 
- mgr~goBack
  return
 
 /*---------------------------- requires -----------------------------*/

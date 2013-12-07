@@ -40,15 +40,7 @@
  *  oophil.rex  An ooDialog demonstration of the Philosopher's Forks
  */
 
-  -- A directory manager saves the current directory and can later go back to
-  -- that directory.  It also sets up the environment we need.  The class
-  -- itself is located in samplesSetup.rex
-  mgr = .DirectoryManager~new()
-
-  curdir = directory()
-  parse source . . me
-  mydir = me~left(me~lastpos('\')-1)             /* install directory */
-  mydir = directory(mydir)                       /* current is "my"   */
+  myDir = locate()
 
 /*---------------------- run default parameters ----------------------*/
 
@@ -62,9 +54,9 @@
 /*---------------------- dialogs & resources -------------------------*/
 
   v.anidialogID = 100            /* animation dialog graphical        */
-  v.anidialog = 'rc\oophil2.rc'
+  v.anidialog = myDir'rc\oophil2.rc'
   v.setdialogID = 101            /* setup dialog for parameters       */
-  v.setdialog = 'rc\oophil1.rc'
+  v.setdialog = myDir'rc\oophil1.rc'
 
 /*---------------------- animation dialog IDs ------------------------*/
 
@@ -77,36 +69,36 @@
 
 /*---------------------- animation audio files -----------------------*/
 
-  v.help      = 'wav\philhelp.wav'
-  v.stop      = 'wav\philstop.wav'
-  v.eat       = 'wav\phileat.wav'
-  v.sleep     = 'wav\philslep.wav'
-  v.wait      = 'wav\philwait.wav'
-  v.ouch      = 'wav\philouch.wav'
-  v.cakewhere = 'wav\philstrt.wav'
-  v.cakenew   = 'wav\philcake.wav'
+  v.help      = myDir'wav\philhelp.wav'
+  v.stop      = myDir'wav\philstop.wav'
+  v.eat       = myDir'wav\phileat.wav'
+  v.sleep     = myDir'wav\philslep.wav'
+  v.wait      = myDir'wav\philwait.wav'
+  v.ouch      = myDir'wav\philouch.wav'
+  v.cakewhere = myDir'wav\philstrt.wav'
+  v.cakenew   = myDir'wav\philcake.wav'
 
   v.helptext  = "<<< The values of this dialog determine the" ,
                 "behavior of the Philosophers' Forks execution <<<"
 
 /*----------------------- bitmaps (will be memory loaded) ------------*/
 
-  vb.bmpblank  = 'bmp\blank.bmp'
-  vb.bmpphil   = 'bmp\philphil.bmp'
-  vb.bmpwait   = 'bmp\philwait.bmp'
-  vb.bmpeat    = 'bmp\phileat.bmp'
-  vb.bmpeat2   = 'bmp\phileat2.bmp'
-  vb.bmpsleep  = 'bmp\philslep.bmp'
-  vb.bmpouch   = 'bmp\philouch.bmp'
-  vb.bmpfork   = 'bmp\fork.bmp'
-  vb.bmphandr  = 'bmp\handrite.bmp'
-  vb.bmphandl  = 'bmp\handleft.bmp'
-  vb.bmphandrf = 'bmp\handfkri.bmp'
-  vb.bmphandlf = 'bmp\handfkle.bmp'
-  vb.bmppiece  = 'bmp\cakepiec.bmp'
+  vb.bmpblank  = myDir'bmp\blank.bmp'
+  vb.bmpphil   = myDir'bmp\philphil.bmp'
+  vb.bmpwait   = myDir'bmp\philwait.bmp'
+  vb.bmpeat    = myDir'bmp\phileat.bmp'
+  vb.bmpeat2   = myDir'bmp\phileat2.bmp'
+  vb.bmpsleep  = myDir'bmp\philslep.bmp'
+  vb.bmpouch   = myDir'bmp\philouch.bmp'
+  vb.bmpfork   = myDir'bmp\fork.bmp'
+  vb.bmphandr  = myDir'bmp\handrite.bmp'
+  vb.bmphandl  = myDir'bmp\handleft.bmp'
+  vb.bmphandrf = myDir'bmp\handfkri.bmp'
+  vb.bmphandlf = myDir'bmp\handfkle.bmp'
+  vb.bmppiece  = myDir'bmp\cakepiec.bmp'
   do i=1 to 11
      icake = 'BMPCAKE'i
-     vb.icake = 'bmp\cake'i'.bmp'
+     vb.icake = myDir'bmp\cake'i'.bmp'
   end
 
 /*---------------------- main logic ----------------------------------*/
@@ -114,8 +106,7 @@
   setUpDlg = .SetUpDialog~new(parms., v., vb.)
   setUpDlg~execute("SHOWTOP")
 
-  mgr~goBack
-  return
+  return 0
 
 
 /*---------------------- requires ooDialog ----------------------------*/
@@ -150,7 +141,7 @@
 
    -- Load the bitmaps in to memory
    do i over vb.
-     v.i = self~LoadBitmap(vb.i)
+     v.i = self~loadBitmap(vb.i)
    end
 
 -- The user incremented (or decremented) one of the up down controls.  We

@@ -85,20 +85,23 @@
  *  even the maximum number of items using the internal sort.
  */
 
+    -- Ensure we can be run from any directory.
+    srcDir = locate()
+
     -- Set the defaults for this application.  Use the global .constDir 'O'nly,
     -- Read the 'addManyRows.h' file for symbolic resource ID  definitions.
     -- And, turn automatica data detection off (.false.)
-    .application~setDefaults('O', 'resources\addManyRows.h', .false)
+    .application~setDefaults('O', srcDir'resources\addManyRows.h', .false)
 
     -- Allow the user to pick the number of items to be inserted into the
     -- list-view.
-    dlgIntro = .ExampleSetUpDlg~new('resources\addManyRows.rc', IDD_INTRO)
+    dlgIntro = .ExampleSetUpDlg~new(srcDir'resources\addManyRows.rc', IDD_INTRO)
     if dlgIntro~execute('SHOWTOP') == dlgIntro~IDCANCEL then do
       ret = MessageDialog('You are missing out on an excellent example', ,'User Canceled', 'OK', 'WARNING')
       return 99
     end
 
-    dlg = .AddManyRowsDlg~new('resources\addManyRows.rc', IDD_ADD_ROWS)
+    dlg = .AddManyRowsDlg~new(srcDir'resources\addManyRows.rc', IDD_ADD_ROWS)
     if dlg~initCode = 0 then do
         dlg~itemCount = dlgIntro~selectedCount
         dlg~execute("SHOWTOP")
@@ -214,7 +217,7 @@ return 0
 ::method onSortInternally unguarded
     expose list staticInternal
 
-    dlg = .SortSetupDlg~new('resources\addManyRows.rc', IDD_SORT_PARAMS)
+    dlg = .SortSetupDlg~new(.application~srcDir'resources\addManyRows.rc', IDD_SORT_PARAMS)
     if dlg~execute('SHOWTOP') == dlg~IDCANCEL then return 0
 
     d = .directory~new
@@ -263,7 +266,7 @@ return 0
         if MessageDialog(msg, self~hwnd, title, 'YESNO', 'WARNING') == self~IDNO then return 0
     end
 
-    dlg = .SortSetupDlg~new('resources\addManyRows.rc', IDD_SORT_PARAMS)
+    dlg = .SortSetupDlg~new(.application~srcDir'resources\addManyRows.rc', IDD_SORT_PARAMS)
     if dlg~execute('SHOWTOP') == dlg~IDCANCEL then return 0
 
     rexxColumn    = dlg~column

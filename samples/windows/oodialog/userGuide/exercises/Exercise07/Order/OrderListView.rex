@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 07: The Order ListView 				  v02-00 11Jan13
+   Exercise 07: The Order ListView 				  v02-00 01Apr13
 
    Contains: class "OrderListView", "HRSolv"
 
@@ -51,6 +51,8 @@
    v02-00 25Aug12: Updated for Ex07 using the MVF.
           08Jan13: Removed stand-alone startup (not now needed).
           11Jan13: Commented-out 'say' instructions.
+          01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                   folder, so change to ::Requires needed. 
 
    Outstanding Problems: None reported.
 
@@ -62,7 +64,7 @@
 
 ::REQUIRES "ooDialog.cls"
 ::REQUIRES "Order\OrderView.rex"
-::REQUIRES "..\Support\RcView.rex"
+::REQUIRES "Support\RcView.rex"
 
 
 /*//////////////////////////////////////////////////////////////////////////////

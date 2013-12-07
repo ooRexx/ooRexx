@@ -48,9 +48,10 @@
  * a menu bar example.
  */
 
-  .application~setDefaults("O", "UserMenuBar.h", .false)
+  sd = locate()
+  .application~setDefaults("O", sd"UserMenuBar.h", .false)
 
-  dlg = .SimpleDialog~new("UserMenuBar.rc", IDD_MAIN_DIALOG)
+  dlg = .SimpleDialog~new(sd"UserMenuBar.rc", IDD_MAIN_DIALOG)
   if dlg~initCode <> 0 then do
     return 99
   end
@@ -73,10 +74,14 @@ return 0
 ::constant IDES_TEXT      "Ides of March - name of March 15 in Roman calendar."
 ::constant TITANIC_TEXT   "472 lifeboat seats not used when 1,503 people died on the Titanic."
 
-
 ::method init
+  expose srcDir
 
   forward class (super) continue
+
+  -- Grab the source dir value here and save it in an instance variable for
+  -- convenience.
+  srcDir = .application~srcDir
 
   if \ self~createMenuBar then do
     self~initCode = 1
@@ -268,9 +273,9 @@ return 0
 
 
 ::method insertText unguarded
-  expose edit
+  expose edit srcDir
 
-  dlg = .InsertDialog~new("UserMenuBar.rc", IDD_INSERT_DIALOG, , "UserMenuBar.h")
+  dlg = .InsertDialog~new(srcDir"UserMenuBar.rc", IDD_INSERT_DIALOG, , srcDir"UserMenuBar.h")
 
   if dlg~execute("SHOWTOP", IDI_DLG_OODIALOG) == .PlainBaseDialog~IDOK then do
     edit~setText(dlg~selectedText)
@@ -278,9 +283,9 @@ return 0
 
 
 ::method selectText unguarded
-  expose edit
+  expose edit srcDir
 
-  dlg = .SelectDialog~new("UserMenuBar.rc", IDD_SELECT_DIALOG, , "UserMenuBar.h")
+  dlg = .SelectDialog~new(srcDir"UserMenuBar.rc", IDD_SELECT_DIALOG, , srcDir"UserMenuBar.h")
   dlg~currentText = edit~getText
   edit~select(1, 1)
 
@@ -304,9 +309,9 @@ return 0
 
 
 ::method setAcceleration unguarded
-  expose upDown
+  expose upDown srcDir
 
-  dlg = .AccelDialog~new("UserMenuBar.rc", IDD_ACCEL_DIALOG, , "UserMenuBar.h")
+  dlg = .AccelDialog~new(srcDir"UserMenuBar.rc", IDD_ACCEL_DIALOG, , srcDir"UserMenuBar.h")
 
   if dlg~execute("SHOWTOP", IDI_DLG_APPICON2) == .PlainBaseDialog~IDOK then do
     accel = dlg~acceleration
@@ -315,9 +320,9 @@ return 0
 
 
 ::method setRange unguarded
-  expose upDown
+  expose upDown srcDir
 
-  dlg = .RangeDialog~new("UserMenuBar.rc", IDD_RANGE_DIALOG, , "UserMenuBar.h")
+  dlg = .RangeDialog~new(srcDir"UserMenuBar.rc", IDD_RANGE_DIALOG, , srcDir"UserMenuBar.h")
 
   if dlg~execute("SHOWTOP", IDI_DLG_OOREXX) == .PlainBaseDialog~IDOK then do
     r = dlg~range
@@ -332,9 +337,9 @@ return 0
 
 
 ::method setPosition unguarded
-  expose upDown
+  expose upDown srcDir
 
-  dlg = .PositionDialog~new("UserMenuBar.rc", IDD_POSITION_DIALOG, , "UserMenuBar.h")
+  dlg = .PositionDialog~new(srcDir"UserMenuBar.rc", IDD_POSITION_DIALOG, , srcDir"UserMenuBar.h")
   dlg~upDown = upDown
 
   if dlg~execute("SHOWTOP", IDI_DLG_DEFAULT) == .PlainBaseDialog~IDOK then do
@@ -344,8 +349,9 @@ return 0
 
 
 ::method aboutUserMenuBar unguarded
+  expose srcDir
 
-  dlg = .AboutDialog~new("UserMenuBar.rc", IDD_ABOUT_DIALOG, , "UserMenuBar.h")
+  dlg = .AboutDialog~new(srcDir"UserMenuBar.rc", IDD_ABOUT_DIALOG, , srcDir"UserMenuBar.h")
 
   dlg~execute("SHOWTOP", IDI_DLG_DEFAULT)
 
@@ -558,7 +564,7 @@ return 0
 ::method initDialog
    expose font
 
-   bitmap = .Image~getImage("UserMenuBar.bmp")
+   bitmap = .Image~getImage(.application~srcDir"UserMenuBar.bmp")
    self~newStatic(IDC_ST_BITMAP)~setImage(bitmap)
 
    font = self~createFontEx("Ariel", 14)

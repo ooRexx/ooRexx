@@ -38,36 +38,23 @@
 
 /**
  * Contains common set up code for a number of the ooDialog sample programs.
+ * All we do here is set up the sound path.
  *
  * This file is intended to be used in a ::requires directive by the sample
- * programs that use this common code.
+ * programs that need this common code.
  */
-/*------------------------------convenience class---------------------*/
-
-::class 'DirectoryManager' public
-
-::method init
-  expose originalDirectory
-
-  -- Save our current directory.
-  originalDirectory = directory()
-
-  -- Get the full path to this program file.
-  parse source . . pgmFile
-
-  -- Get the directory this program file is located in, and then cd to it.
-  pgmDir = pgmFile~left(pgmFile~lastpos('\') - 1)
-  pgmDir = directory(pgmDir)
 
   -- Add the wav subdirectory to the sound path environment variable. The wav
   -- directory is a subdirectory of this program file's location that contains
-  -- the wave files played in this program.
-  env = 'ENVIRONMENT'
-  win = value('WINDIR', , env)
-  sp = value('SOUNDPATH', , env)
-  sp = value('SOUNDPATH', win';'pgmDir'\WAV;' sp, env)
+  -- the wave files played in the programs that require this file.
+  pgmDir = locate()
+  env    = 'ENVIRONMENT'
+  win    = value('WINDIR', , env)
+  if .OS~isAtLeastVista then do
+    media = win'\Media'
+    win   = win';'media
+  end
+  sp     = value('SOUNDPATH', , env)
+  sp     = value('SOUNDPATH', win';'pgmDir'WAV;'sp, env)
 
-::method goBack
-  expose originalDirectory
-  ret = directory(originalDirectory)
-
+::requires "ooDialog.cls"

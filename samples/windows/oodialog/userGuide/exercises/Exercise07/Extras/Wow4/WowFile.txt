@@ -1,0 +1,27 @@
+Words of Wisdom
+Agnes Allen's Law: Almost anything is easier to get into than out of.
+Airplane Law: When the plane you are on is late, the plane you want to transfer to is on time.
+Fourteenth Corollary of Atwood's General Law of Dynamic Negatives: No books are lost by loaning except those you particularly wanted to keep.
+Baker's Byroad: When you're over the hill, you pick up speed.
+First Law of Bicycling: No matter which way you ride, it's uphill and against the wind.
+Brooks's Law: Adding manpower to a late software project makes it later.
+Grossman's Misquote of H. L. Mencken: Complex problems have simple, easy-to-understand wrong answers.
+Rule of Accuracy: When working toward the solution of a problem, it always helps if you know the answer.  Corollary:  Provided, of course, that you know there is a problem.
+Acheson's Rule of the Bureaucracy: A memorandum is written not to inform the reader but to protect the writer.
+Ade's Law: Anybody can win -- unless there happens to be a second entry.
+Bradley's Bromide: If computers get too powerful, we can organize them into a committee - that will do them in.
+Civilization: Civilization advances by extending the number of important operations which we can do without thinking of them.
+Fred Allen's Law: I'd rather have a free bottle in front of me than a prefrontal lobotomy.
+Beardsley's Warning to Lawyers: Beware of and eschew pompous prolixity.
+Boling's Postulate: If you're feeling good, don't worry.  You'll get over it.
+Laws of Programming: Definition:  A working  program is  one  that has  only unobserved bugs.
+Rules of Pratt: #1 If a severe problem manifests itself, no solution is acceptable unless it is involved, expensive, and time consuming.
+Computers vs People: One good reason why computers can do more work than people is that they never have to stop and answer the phone.
+First law of programming: Problems that go away by themselves come back by themselves.
+It is useless for the sheep to pass resolutions in favor of vegetarianism while the wolf remains of a different opinion.
+Many are called, Few are chosen. Even fewer get to do the choosing.
+Tell them 30 billion stars and they believe you. Say "Wet paint" and they check for themselves.
+Entropy isn't what it used to be. (Al Vesper.)
+Never try to teach a pig to whistle. It wastes your time, and annoys the pig.
+No one can attain perfection but, if you chase perfection, you can catch excellence! (Vince Lombardi)
+Murphy's 11th Law: It is impossible to make anything foolproof because fools are very ingenious.

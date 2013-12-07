@@ -45,11 +45,12 @@
   The embedded controls allow the user to do in-place editing of the
   subitems in the list-view when in report mode.
 
-  To activate subitem editing, the user first selects a row by clicking on
-  it with the mouse. If the user then clicks one more time, the embedded
-  control becomes active.  The user enters the value desired.  At that
-  point, hitting enter makes the change.  If the user hits the escape key,
-  or clicks somewhere else on the list-view, the change is abandoned.
+  For these first 3 examples, to activate subitem editing, the user first
+  selects a row by clicking on it with the mouse.  If the user then clicks
+  one more time, the embedded control becomes active.  The user enters the
+  value desired.  At that point, hitting enter makes the change.  If the
+  user hits the escape key, or clicks somewhere else on the list-view, the
+  change is abandoned.
 
     - dropDownComboBox.rex
 
@@ -63,3 +64,14 @@
 
     Embeds an edit control in the list-view.
 
+  The importList.rex example use a slightly different UI.  The first
+  column of the list view has an embedded combo box.  To activate the
+  control the user single clicks on the first column of an item.  The
+  third column has an embedded edit control.  To activate the edit
+  control, the user double clicks on the third column of an item.  For
+  both controls if the user clicks anywhere else in the application, or
+  hits the enter or tab key, the current text in the control is saved.
+  The Esc key cancels any change.  The example also shows how to use the
+  ResizingAdmin class and the BrowseForFolder class.
+
+    - importList.rex

@@ -50,6 +50,7 @@
 #include "oodMessaging.hpp"
 #include "oodControl.hpp"
 #include "oodResources.hpp"
+#include "oodShared.hpp"
 
 
 /**
@@ -692,7 +693,6 @@ void freeRelayData(pSubClassData pSCData)
         {
             pSCData->pcdc->pRelayEvent = NULL;
         }
-        LocalFree(pSCData);
     }
 
     LeaveCriticalSection(&crit_sec);
@@ -853,8 +853,11 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
                         result = TRUE;
                     }
 
-                    c->ReleaseLocalReference(rxToolID);
                     c->ReleaseLocalReference(args);
+                    if ( rxToolID != TheNilObj )
+                    {
+                        c->ReleaseLocalReference(rxToolID);
+                    }
 
                     return result;
                 }
@@ -871,7 +874,7 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
 
                     RexxDirectoryObject info = c->NewDirectory();
 
-                    RexxObjectPtr   rxToolID  = getToolIDFromLParam(c, lParam);
+                    RexxObjectPtr    rxToolID = getToolIDFromLParam(c, lParam);
                     RexxObjectPtr    userData = nmtdi->lParam == NULL ? TheNilObj : (RexxObjectPtr)nmtdi->lParam;
                     RexxStringObject flags    = ttdiFlags2keyword(c, nmtdi->uFlags);
 
@@ -934,9 +937,12 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
 
                     c->ReleaseLocalReference(_text);
                     c->ReleaseLocalReference(flags);
-                    c->ReleaseLocalReference(rxToolID);
                     c->ReleaseLocalReference(info);
                     c->ReleaseLocalReference(args);
+                    if ( rxToolID != TheNilObj )
+                    {
+                        c->ReleaseLocalReference(rxToolID);
+                    }
 
                     return TRUE;
                 }
@@ -955,8 +961,11 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
 
                     // ignore return.
 
-                    c->ReleaseLocalReference(rxToolID);
                     c->ReleaseLocalReference(args);
+                    if ( rxToolID != TheNilObj )
+                    {
+                        c->ReleaseLocalReference(rxToolID);
+                    }
 
                     return 0;
                 }
@@ -982,8 +991,11 @@ LRESULT CALLBACK ManageAtypicalToolProc(HWND hwnd, uint32_t msg, WPARAM wParam, 
                     }
 
                     c->ReleaseLocalReference(reply);
-                    c->ReleaseLocalReference(rxToolID);
                     c->ReleaseLocalReference(args);
+                    if ( rxToolID != TheNilObj )
+                    {
+                        c->ReleaseLocalReference(rxToolID);
+                    }
 
                     return 0;
                 }
@@ -2308,6 +2320,7 @@ RexxMethod4(logical_t, tt_manageAtypicalTool, RexxObjectPtr, toolObject, OPTIONA
     if ( pred == NULL )
     {
         freeRelayData(pSCData);
+        LocalFree(pSCData);
         outOfMemoryException(context->threadContext);
         goto err_out;
     }
@@ -2385,6 +2398,7 @@ RexxMethod4(logical_t, tt_manageAtypicalTool, RexxObjectPtr, toolObject, OPTIONA
 
 err_out:
     freeRelayData(pSCData);
+    LocalFree(pSCData);
     return FALSE;
 }
 

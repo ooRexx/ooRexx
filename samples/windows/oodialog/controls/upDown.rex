@@ -50,9 +50,10 @@
  * the UpDown class.
  */
 
-  .application~setDefaults("O", "upDown.h", .false)
+  sd = locate()
+  .application~setDefaults("O", sd"upDown.h", .false)
 
-  dlg = .AnUpDownDlg~new("upDown.rc", IDD_UP_DOWN)
+  dlg = .AnUpDownDlg~new(sd"upDown.rc", IDD_UP_DOWN)
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 return 0

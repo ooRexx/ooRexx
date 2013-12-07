@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 07: The OrderFormView class				  v02-00 27Feb13
+   Exercise 07: The OrderFormView class				  v02-00 01Apr13
    OrderFormView.rex
 
    Contains: class "OrderFormView", class "HRSofv".
@@ -47,6 +47,9 @@
                      Removed stand-alone startup (not now needed).
             25Feb13: Added control dialogs in tab sheet.
             27Feb13: Made Order Date functional.
+            01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                     folder, so change to ::Requires needed. 
+            
 ------------------------------------------------------------------------------*/
 
 
@@ -54,7 +57,7 @@
 
 
 ::REQUIRES "ooDialog.cls"
-::REQUIRES "..\support\RcView.rex"
+::REQUIRES "support\RcView.rex"
 
 /*==============================================================================
   OrderFormView							  v02-00 27Feb13

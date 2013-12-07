@@ -47,6 +47,7 @@
 #include <string.h>
 #include <errno.h>
 #include "oorexxapi.h"
+#include "oodShared.hpp"
 #include "APICommon.hpp"
 
 
@@ -981,9 +982,9 @@ RexxObjectPtr invalidReturnWholeNumberException(RexxThreadContext *c, CSTRING na
  */
 void notBooleanReplyException(RexxThreadContext *c, CSTRING method, RexxObjectPtr actual)
 {
-    TCHAR buf[256];
-    _snprintf(buf, sizeof(buf), "The return from method %s() must be a logical; found %s",
-              method, c->ObjectToStringValue(actual));
+    char buf[256];
+    snprintf(buf, sizeof(buf), "The return from method %s() must be a logical; found %s",
+             method, c->ObjectToStringValue(actual));
 
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
 }
@@ -1324,47 +1325,6 @@ bool isOutOfMemoryException(RexxThreadContext *c)
 
 
 /**
- * Outputs the typical condition message.  For example:
- *
- *      4 *-* say dt~number
- * Error 97 running C:\work\qTest.rex line 4:  Object method not found
- * Error 97.1:  Object "a DateTime" does not understand message "NUMBER"
- *
- * @param c          The thread context we are operating in.
- * @param condObj    The condition information object.  The object returned from
- *                   the C++ API GetConditionInfo()
- * @param condition  The RexxCondition struct.  The filled in struct from the
- *                   C++ API DecodeConditionInfo().
- *
- * @assumes  There is a condition and that condObje and condition are valid.
- */
-void standardConditionMsg(RexxThreadContext *c, RexxDirectoryObject condObj, RexxCondition *condition)
-{
-    RexxObjectPtr list = c->SendMessage0(condObj, "TRACEBACK");
-    if ( list != NULLOBJECT )
-    {
-        RexxArrayObject a = (RexxArrayObject)c->SendMessage0(list, "ALLITEMS");
-        if ( a != NULLOBJECT )
-        {
-            size_t count = c->ArrayItems(a);
-            for ( size_t i = 1; i <= count; i++ )
-            {
-                RexxObjectPtr o = c->ArrayAt(a, i);
-                if ( o != NULLOBJECT )
-                {
-                    printf("%s\n", c->ObjectToStringValue(o));
-                }
-            }
-        }
-    }
-    printf("Error %d running %s line %d: %s\n", condition->rc, c->CString(condition->program),
-           condition->position, c->CString(condition->errortext));
-
-    printf("Error %d.%03d:  %s\n", condition->rc, conditionSubCode(condition), c->CString(condition->message));
-}
-
-
-/**
  * Given a thread context, checks for a raised condition, and prints out the
  * standard condition message if there is a condition.
  *
@@ -1378,20 +1338,17 @@ bool checkForCondition(RexxThreadContext *c, bool clear)
 {
     if ( c->CheckCondition() )
     {
-        RexxCondition condition;
-        RexxDirectoryObject condObj = c->GetConditionInfo();
-
-        if ( condObj != NULLOBJECT )
+        char *msg = getStandardConditionMsg(c, NULL, NULL);
+        if ( msg )
         {
-            c->DecodeConditionInfo(condObj, &condition);
-            standardConditionMsg(c, condObj, &condition);
-
-            if ( clear )
-            {
-                c->ClearCondition();
-            }
-            return true;
+            printf(msg);
+            LocalFree(msg);
         }
+        if ( clear )
+        {
+            c->ClearCondition();
+        }
+        return true;
     }
     return false;
 }

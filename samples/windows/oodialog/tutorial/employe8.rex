@@ -41,7 +41,8 @@
  * Type: Open Object REXX Script
  */
 
-dlg = .MyDialogClass~new("employe5.rc", 100)
+sd = locate()
+dlg = .MyDialogClass~new(sd"employe5.rc", 100)
 if dlg~initCode <> 0 then exit
 dlg~execute("SHOWTOP")
 
@@ -180,7 +181,7 @@ exit
    end
 
 ::method empList
-   lDlg = .EmployeeListClass~new("employe5.rc", 101)
+   lDlg = .EmployeeListClass~new(.application~srcDir"employe5.rc", 101)
    lDlg~parent = self
    lDlg~execute("SHOWTOP")
 

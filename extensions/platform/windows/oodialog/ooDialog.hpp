@@ -307,38 +307,6 @@ typedef enum {globalOnly, globalFirst, globalLast, globalNever} oodConstDir_t;
 
 #define APPLICATION_MANAGER_MAGIC  0xdeadfeed
 
-inline LONG_PTR setWindowPtr(HWND hwnd, int index, LONG_PTR newPtr)
-{
-#ifndef __REXX64__
-#pragma warning(disable:4244)
-#endif
-    return SetWindowLongPtr(hwnd, index, newPtr);
-#ifndef __REXX64__
-#pragma warning(default:4244)
-#endif
-}
-
-inline LONG_PTR getWindowPtr(HWND hwnd, int index)
-{
-    return GetWindowLongPtr(hwnd, index);
-}
-
-inline LONG_PTR setClassPtr(HWND hwnd, int index, LONG_PTR newPtr)
-{
-#ifndef __REXX64__
-#pragma warning(disable:4244)
-#endif
-    return SetClassLongPtr(hwnd, index, newPtr);
-#ifndef __REXX64__
-#pragma warning(default:4244)
-#endif
-}
-
-inline LONG_PTR getClassPtr(HWND hwnd, int index)
-{
-    return GetClassLongPtr(hwnd, index);
-}
-
 /* structures to manage the dialogs */
 typedef struct {
    PCHAR      rexxMethod;
@@ -1004,7 +972,7 @@ typedef struct _pspCSelf {
     RexxStringObject        extraOpts;        // Storage for extra options, used by RcPSPDialog, available for other uses.
     HICON                   hIcon;            // tabIcon attribute, C++ part if using .Image
     uint32_t                iconID;           // tabIcon attribute, C++ part if using resource ID
-    INT_PTR                 pageID;           // Identifies the page to the Windows property sheet, resource ID or pointer
+    intptr_t                 pageID;           // Identifies the page to the Windows property sheet, resource ID or pointer
     char                   *pageTitle;
     char                   *headerTitle;
     char                   *headerTitleAero;  // Must be Unicode for Aero.
@@ -1073,7 +1041,7 @@ typedef struct _pdi {
     RexxStringObject    extraOpts;
     char               *pageTitle;        // Page title (could be null.)
     char               *newTitle;         // If pagetitle is null, this is the generated page title
-    INT_PTR             pageID;           // Returned, but only used by property sheet pages.
+    intptr_t             pageID;           // Returned, but only used by property sheet pages.
     oodClass_t          pageType;
     uint32_t            resID;
     uint32_t            pageNumber;       // Page number, zero-based index
@@ -1086,6 +1054,7 @@ typedef PageDialogInfo *pPageDialogInfo;
 /* Struct for the AppliationManager object CSelf. */
 typedef struct _amCSelf {
     RexxObjectPtr     rexxSelf;
+    RexxObjectPtr     rxProgramDir;  // The directory the main program resides in, or .nil
     bool              autoDetect;
 } CApplicationManager;
 typedef CApplicationManager *pCApplicationManager;

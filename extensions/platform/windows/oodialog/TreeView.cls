@@ -113,6 +113,7 @@
 ::method getItemData unguarded external "LIBRARY oodialog tv_getItemData"
 ::method getItemHeight unguarded external "LIBRARY oodialog tv_getItemHeight"
 ::method getItemRect unguarded external "LIBRARY oodialog tv_getItemRect"
+::method getStateImage unguarded external "LIBRARY oodialog tv_getStateImage"
 ::method getToolTips unguarded external "LIBRARY oodialog generic_getToolTips"
 ::method hitTestInfo unguarded external "LIBRARY oodialog tv_hitTestInfo"
 ::method indent unguarded
@@ -186,6 +187,7 @@
 ::method setImageList unguarded external "LIBRARY oodialog tv_setImageList"
 ::method setItemData unguarded external "LIBRARY oodialog tv_setItemData"
 ::method setItemHeight unguarded external "LIBRARY oodialog tv_setItemHeight"
+::method setStateImage unguarded external "LIBRARY oodialog tv_setStateImage"
 ::method setToolTips unguarded external "LIBRARY oodialog generic_setToolTips"
 
 -- The old code did not have recurse arg and had a comment saying "recursive not yet supported"

@@ -45,10 +45,12 @@
  * show without overlap.
  */
 
-    -- Use the global .constDir for symbolic IDs, load them from basicResize.h
-    .application~setDefaults('O', 'rc\basicResize.h', .false)
+    sd = locate()
 
-    dlg = .ResizableDlg~new("rc\basicResize.rc", IDD_RESIZABLE)
+    -- Use the global .constDir for symbolic IDs, load them from basicResize.h
+    .application~setDefaults('O', sd'rc\basicResize.h', .false)
+
+    dlg = .ResizableDlg~new(sd"rc\basicResize.rc", IDD_RESIZABLE)
     dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 return 0

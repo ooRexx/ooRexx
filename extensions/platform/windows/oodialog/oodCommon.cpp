@@ -50,6 +50,7 @@
 #include <shlwapi.h>
 #include "oodResourceIDs.hpp"
 #include "APICommon.hpp"
+#include "oodShared.hpp"
 #include "oodCommon.hpp"
 
 
@@ -2277,6 +2278,21 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             }
             break;
 
+        case COMCTL32_6_16 :
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "6.16";
+            }
+            else if ( type == COMCTL32_OS_PART )
+            {
+                part = "Windows 7";
+            }
+            else
+            {
+                part = "comctl32.dll version 6.16 (Windows 7)";
+            }
+            break;
+
         default :
             part = "Unknown";
             break;
@@ -2331,171 +2347,6 @@ RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style)
     {
         result = c->UnsignedInt32(style);
     }
-    return result;
-}
-
-
-/**
- *  Pust an ANSI character string converted to a wide (Unicode) character string
- *  in the specified buffer.
- *
- *  This is a convenience function that assumes the caller has passed a buffer
- *  known to be big enough.
- *
- *  It works correctly for the empty string "" and is designed to treat a null
- *  pointer for text as the empty string.  For both cases, the wide character
- *  null is copied to the destination buffer and a count of 1 is returned.
- *
- * @param dest  Buffer in which to place the converted string.  Must be big
- *              enough.
- * @param text  The text to convert.  As explained above, this can be a null
- *              pointer in which case it is treated as though it is the empty
- *              string.
- *
- * @return The number of wide character values copied to the buffer.  This will
- *         always be at least one, if an error occurs, the wide character null
- *         is copied to the destination and 1 is returned.
- */
-int putUnicodeText(LPWORD dest, const char *text)
-{
-    int count = 1;
-    if ( text == NULL )
-    {
-        *dest = 0;
-    }
-    else
-    {
-        int countWideChars = (int)strlen(text) + 1;
-
-        count = MultiByteToWideChar(CP_ACP, 0, text, -1, (LPWSTR)dest, countWideChars);
-        if ( count == 0 )
-        {
-            // Unlikely that this failed, but if it did, treat it as an empty
-            // string.
-            *dest = 0;
-            count++;
-        }
-    }
-    return count;
-}
-
-
-/**
- * Alocates a buffer and converts an ANSI string into a wide (Unicode) character
- * string.
- *
- * @param str     The ANSI string to convert, can not be null, must be null
- *                terminated.
- *
- * @return The converted string, or null on failure.
- *
- * @note  The caller is responsible for freeing the returned string.  Memory is
- *        allocated using LocalAlloc.
- */
-LPWSTR ansi2unicode(LPCSTR str)
-{
-    if ( str == NULL )
-    {
-        return NULL;
-    }
-
-    LPWSTR wstr = NULL;
-
-    size_t len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-
-    if ( len != 0 )
-    {
-        wstr = (LPWSTR)LocalAlloc(LPTR, len * 2);
-        if ( wstr != NULL )
-        {
-            if ( MultiByteToWideChar(CP_ACP, 0, str, -1, wstr, (int)len ) == 0)
-            {
-                // Conversion failed.
-                LocalFree(wstr);
-                wstr = NULL;
-            }
-        }
-    }
-
-    return wstr;
-}
-
-
-/**
- * Allocates a buffer and converts a wide character (Unicode) string to an Ansi
- * string.
- *
- * @param wstr    The string to convert.
- * @param len     The length, including the terminating null, of the wide string
- *                to convert.  If this length does not include the terminating
- *                null, the returned string will not include a terminating
- *                string.
- *
- *                If -1 is passed for this parameter, the length will be
- *                calculated and assumed the terminating null is desired.
- *
- * @return The converted string, or null on error.
- *
- * @note  The caller is responsible for freeing the returned string.  Memory is
- *        allocated using malloc.
- */
-char *unicode2ansi(LPWSTR wstr)
-{
-    if (wstr == NULL)
-    {
-        return NULL;
-    }
-
-    char *ansiStr = NULL;
-    int32_t neededLen = WideCharToMultiByte(CP_ACP, 0, wstr, -1, NULL, 0, NULL, NULL);
-
-    if ( neededLen != 0 )
-    {
-        ansiStr = (char *)malloc(neededLen);
-        if ( ansiStr != NULL )
-        {
-            if ( WideCharToMultiByte(CP_ACP, 0, wstr, -1, ansiStr, neededLen, NULL, NULL) == 0 )
-            {
-                /* conversion failed */
-                free(ansiStr);
-                ansiStr = NULL;
-            }
-        }
-    }
-
-    return ansiStr;
-}
-
-/**
- * Converts a wide character (Unicode) string to a Rexx string object.
- *
- * @param c    Thread context we are operating in.
- * @param wstr Wide character string to convert.
- *
- * @return The conveted string as a new Rexx string object on success.
- *
- * @remarks  The Rexx null string is returned if an error occurs.  A second
- *           function could be added if it is necessary to distinguish types of
- *           errors.
- */
-RexxStringObject unicode2string(RexxThreadContext *c, LPWSTR wstr)
-{
-    RexxStringObject result = c->NullString();
-    if ( wstr == NULL )
-    {
-        goto done_out;
-    }
-
-    char *str = unicode2ansi(wstr);
-    if ( str == NULL )
-    {
-        goto done_out;
-    }
-
-    result = c->String(str);
-    free(str);
-
-done_out:
     return result;
 }
 
@@ -2568,6 +2419,7 @@ bool getFormattedErrMsg(char **errBuff, uint32_t errCode, uint32_t *thisErr)
 
     return true;
 }
+
 /**
  * Formats a HRESULT error code and prints it to the console.  This is more for
  * use as an internal debugging tool.
@@ -2595,6 +2447,7 @@ bool printHResultErr(CSTRING api, HRESULT hr)
     safeLocalFree(msg);
     return false;
 }
+
 /**
  * Fills in a RECT structure using an argument array passed to a Rexx object
  * method.

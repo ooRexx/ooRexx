@@ -64,9 +64,10 @@
  *  shown and hidden manually, which is what is done in this program.
  */
 
-  .application~setDefaults('O', 'comboBoxToolTip.h', .false)
+  sd = locate()
+  .application~setDefaults('O', sd'comboBoxToolTip.h', .false)
 
-  dlg = .CitiesOfTheWorldDlg~new('comboBoxToolTip.rc', IDD_MAJOR_CITIES)
+  dlg = .CitiesOfTheWorldDlg~new(sd'comboBoxToolTip.rc', IDD_MAJOR_CITIES)
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
   return 0

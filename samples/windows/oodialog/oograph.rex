@@ -46,6 +46,12 @@
  *
  *              The main program, this program, shows how to use the
  *              scrollBitmapFromTo() and scrollInControl() methods.
+ *
+ * Note: this program uses the public routine, locate(), to get the full path
+ * name to the directory this source code file is located. In places, the
+ * variable holding this value has been callously abbreviated to 'sd' which
+ * stands for source directory.
+ *
  */
 
   -- Use the global .constDir for symbolic IDs
@@ -58,15 +64,9 @@
   .constDir[IDC_PB_VIEWER]    = 111
   .constDir[IDC_PB_DRAW]      = 112
 
-   -- A directory manager saves the current directory and can later go back to
-   -- that directory.  It also sets up the environment we need.  The class
-   -- itself is located in samplesSetup.rex
-   mgr = .DirectoryManager~new()
-
    d = .GraphDialog~new()
    if d~initCode \= 0 then do
       say "Dialog init did not work"
-      mgr~goBack
       return d~initCode
    end
 
@@ -74,7 +74,6 @@
    d~createCenter(trunc(770 / d~FactorX), trunc(470 / d~FactorY), title)
    d~execute("SHOWTOP")
 
-   mgr~goBack
    return 0
 
 /*-------------------------------- requires --------------------------*/
@@ -87,7 +86,7 @@
 ::class 'GraphDialog' subclass UserDialog
 
 ::method defineDialog
-   expose but2size
+   expose but2size sd
    but2pos  = trunc(170 / self~factorY)
    but2size = trunc(300 / self~factorY)
 
@@ -106,8 +105,10 @@
    -- install.bmp   550 x 100 pixels
    -- install2.bmp  450 x 120 pixels
 
-   self~createBitmapButton(IDC_BMP_TOP, 1, 10, self~sizeX-1, trunc(130 / self~factorY), "USEPAL", , , "bmp\install.bmp")
-   self~createBitmapButton(IDC_BMP_MIDDLE, 20, but2pos, self~sizeX - 20, but2size, , , , "bmp\install2.bmp")
+   sd = locate()
+
+   self~createBitmapButton(IDC_BMP_TOP, 1, 10, self~sizeX-1, trunc(130 / self~factorY), "USEPAL", , , sd"bmp\install.bmp")
+   self~createBitmapButton(IDC_BMP_MIDDLE, 20, but2pos, self~sizeX - 20, but2size, , , , sd"bmp\install2.bmp")
 
    pos = .Point~new(trunc(self~sizeX * self~factorX) + 10, 0)
    self~setBitmapPosition(IDC_BMP_TOP, pos)
@@ -210,26 +211,26 @@
 
 -- Invoke the Bitmap Viewer program (oobmpvu.rex.)
 ::method bitmapViewer
-   expose m
+   expose m sd
 
    -- Stop the scrolling and hide ourself.
    if \ m~completed then self~scrollInControl(IDC_PB_OWNERDRAW)
    self~hide
 
-   call "oobmpvu.rex"
+   call sd"oobmpvu.rex"
 
    -- Show ourself and become the topmost.
    self~~show~toTheTop
 
 -- Invoke the Color Draw Demo program (oodraw.rex.)
 ::method ooDraw
-   expose m
+   expose m sd
 
    -- Stop the scrolling and hide ourself.
    if \ m~completed then self~scrollInControl(IDC_PB_OWNERDRAW)
    self~hide
 
-   call "oodraw.rex"
+   call sd"oodraw.rex"
 
    -- Show ourself and become the topmost.
    self~~show~toTheTop

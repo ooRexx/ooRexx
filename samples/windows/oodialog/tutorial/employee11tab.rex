@@ -43,14 +43,16 @@
  * Description:  Example to demonstrate the property sheet dialog class.
  */
 
+  sd = locate()
+
   -- Note to self, we do not use data attributes in this app, need explanation.
-  .application~setDefaults("O", "employee11tab.h", .false)
+  .application~setDefaults("O", sd"employee11tab.h", .false)
 
   -- Create the dialog pages.
-  p1 = .EmployeeAdd~new("employee11tab.rc", IDD_EMPLOYEES_ADD)
-  p2 = .EmployeeEdit~new("employee11tab.rc", IDD_EMPLOYEES_EDIT)
-  p3 = .EmployeeBrowse~new("employee11tab.rc", IDD_EMPLOYEES_BROWSE)
-  p4 = .EmployeeList~new("employee11tab.rc", IDD_EMPLOYEES_LIST)
+  p1 = .EmployeeAdd~new(sd"employee11tab.rc", IDD_EMPLOYEES_ADD)
+  p2 = .EmployeeEdit~new(sd"employee11tab.rc", IDD_EMPLOYEES_EDIT)
+  p3 = .EmployeeBrowse~new(sd"employee11tab.rc", IDD_EMPLOYEES_BROWSE)
+  p4 = .EmployeeList~new(sd"employee11tab.rc", IDD_EMPLOYEES_LIST)
 
   pages = .array~of(p1, p2, p3, p4)
   dlg = .AcmeEmployeesDlg~new(pages, "NOAPPLYNOW", "Acme Software - Employee Manager Version 10.00.0")
@@ -671,7 +673,7 @@
 
     self~connectListViewEvent(IDC_LV_EMPLOYEES, "SELECTCHANGED", onSelectionChanged)
 
-    mb = .ScriptMenuBar~new('employee11tab.rc', IDM_CONTEXT_MENUBAR)
+    mb = .ScriptMenuBar~new(.application~srcDir'employee11tab.rc', IDM_CONTEXT_MENUBAR)
     contextMenu = mb~getPopup(IDM_POP_CONTEXT)
 
 ::method newEmployeeNotify
@@ -805,8 +807,10 @@
 ::method ensureSelection private
     expose lv
 
-    lv~select(self~empIndex - 1)
-    lv~focus(self~empIndex - 1)
+    index = self~empIndex - 1
+    if index < 0 then index = 0
+    lv~select(index)
+    lv~focus(index)
 
     return 0
 

@@ -50,6 +50,7 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
+#include "oodShared.hpp"
 #include "oodMessaging.hpp"
 #include "oodResources.hpp"
 #include "oodMouse.hpp"

@@ -52,6 +52,8 @@
 #include "oodMessaging.hpp"
 #include "oodMouse.hpp"
 #include "oodResources.hpp"
+#include "oodShared.hpp"
+#include "oodDeviceGraphics.hpp"
 
 
 /**
@@ -2960,6 +2962,84 @@ RexxMethod2(int32_t, lb_selectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
 #define COMBOBOX_CLASS   "ComboBox"
 
 
+void freeComboBoxData(pSubClassData pSCData)
+{
+    if ( pSCData )
+    {
+        // This is just a color table entry at this time.
+        if ( pSCData->pData )
+        {
+            COLORTABLEENTRY *cte = (COLORTABLEENTRY *)pSCData->pData;
+            if ( ! cte->isSysBrush )
+            {
+                DeleteObject(cte->ColorBrush);
+            }
+        }
+        safeLocalFree(pSCData->pData);
+        pSCData->pData = NULL;
+    }
+}
+
+
+/**
+ * Handles the WM_CTLCOLORxxx messages for the combo box subclass, i.e. for the
+ * setFullColor() and removeFullColor() methods.  Called from the subclass
+ * procedure.
+ *
+ * @param pSCData
+ * @param hwnd
+ * @param msg
+ * @param wParam
+ * @param lParam
+ * @param tag
+ *
+ * @return LRESULT
+ *
+ * @note  In the regular control color code, we need to determine if we are
+ *        using system colors or not because ColorBk and ColorFG have not been
+ *        converted. But for this subclassed combobox we have already converted
+ *        those colors to system colors during setFullColor().
+ *
+ *        For removeFullColor() we can not actually remove the subclass because
+ *        it is possible the user has also invoked some other method that
+ *        involves subclassing the specific combobox.  So what we do is look for
+ *        hBrush set back to null and FG / BK both set to CLR_DEFAULT.  When we
+ *        see this we just pass the message on to the combo box without any
+ *        intervention.
+ */
+LRESULT comboBoxColor(pSubClassData pSCData, HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam, uint32_t tag)
+{
+    COLORTABLEENTRY *cte = (COLORTABLEENTRY *)pSCData->pData;
+    HBRUSH hBrush        = cte->ColorBrush;
+
+    if ( hBrush == NULL && cte->ColorBk == CLR_DEFAULT && cte->ColorFG == CLR_DEFAULT )
+    {
+        return DefSubclassProc(hwnd, msg, wParam, lParam);
+    }
+
+    if ( cte->ColorBk != CLR_DEFAULT )
+    {
+        SetBkColor((HDC)wParam, cte->ColorBk);
+        if ( cte->ColorFG != CLR_DEFAULT )
+        {
+            SetTextColor((HDC)wParam, cte->ColorFG);
+        }
+    }
+    else if ( cte->ColorFG != CLR_DEFAULT )
+    {
+        // We are only setting the text color, so I guess the brush should
+        // be what the combo box would use.  We get that brush by sending the
+        // message on to the combo box and saving what is returned.
+        hBrush = (HBRUSH)DefSubclassProc(hwnd, msg, wParam, lParam);
+
+        SetBkMode((HDC)wParam, TRANSPARENT);
+        SetTextColor((HDC)wParam, cte->ColorFG);
+    }
+
+    return (LRESULT)hBrush;
+}
+
+
 /** ComboBox::add()
  *
  *  Adds a string entry to the combo box.
@@ -3294,6 +3374,56 @@ RexxMethod3(RexxObjectPtr, cb_isGrandchild, OPTIONAL_CSTRING, mthName, OPTIONAL_
 }
 
 
+/** ComboBox::removeFullColor()
+ *
+ *  Removes the combo box suclass, if it exists, that provides the
+ *  implementation of changing the combo box colors.
+ *
+ * @return True on success, false otherwise
+ *
+ * @notes  We can not remove the subclass procedure because it is universal to
+ *         the control and may be used for some other messages.  (This is
+ *         unlikely, but possible.)  So, what we do is set a flag that disables
+ *         the custom coloring.
+ */
+RexxMethod1(RexxObjectPtr, cb_removeFullColor, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr result = TheFalseObj;
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+    if ( ! requiredComCtl32Version(context, "removeFullColor", COMCTL32_6_0) )
+    {
+        goto done_out;
+    }
+
+    pSubClassData pscd   = (pSubClassData)pcdc->pscd;
+    if ( pscd == NULL )
+    {
+        goto done_out;
+    }
+    if ( pscd->pData == NULL )
+    {
+        goto done_out;
+    }
+
+    COLORTABLEENTRY *cte = (COLORTABLEENTRY *)pscd->pData;
+    cte->ColorBrush = NULL;
+    cte->isSysBrush = false;
+    cte->ColorBk    = CLR_DEFAULT;
+    cte->ColorFG    = CLR_DEFAULT;
+    result          = TheTrueObj;
+
+done_out:
+    return result;
+}
+
+
 /** ComboBox::select()
  *
  *  Selects the entry in the combo box that that begins with the letters
@@ -3332,6 +3462,199 @@ RexxMethod2(int32_t, cb_select, CSTRING, text, CSELF, pCSelf)
 RexxMethod2(RexxObjectPtr, cb_setCue, CSTRING, text, CSELF, pCSelf)
 {
     return cbEditSetCue(context, text, FALSE, false, pCSelf);
+}
+
+
+/** ComboBox::setFullColor()
+ *
+ *  Sets the color for this combobox.
+ *
+ *  Allow system colors but all colors must be the same, all system colors or
+ *  all non-system colores
+ *
+ *  For system colors, the user specifies a keyword, or the system color number,
+ *  we then get the COLORREF for that number.
+ *
+ * @return RexxObjectPtr
+ *
+ * @notes  If a subclass already exists and a custom color struct is present, we
+ *         just change the values and return. If the subclass already exists,
+ *         but no custom color struct exists we need to do everything as though
+ *         no subclass existed.
+ *
+ *         Currently the only other subclassing method is isGrandchild().
+ *         Although we haven't thought through something like the generic dialog
+ *         control subclassings (?)  connectChar()
+ */
+RexxMethod4(RexxObjectPtr, cb_setFullColor, OPTIONAL_RexxObjectPtr, _bk, OPTIONAL_RexxObjectPtr, _fg,
+            OPTIONAL_logical_t, _sysColor, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RexxObjectPtr    result = TheFalseObj;
+    WinMessageFilter wmf    = {0};
+
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        goto done_out;
+    }
+    if ( ! requiredComCtl32Version(context, "setFullColor", COMCTL32_6_0) )
+    {
+        goto done_out;
+    }
+    if ( argumentOmitted(1) && argumentOmitted(2) )
+    {
+        goto done_out;
+    }
+
+    bool    useSysColor = _sysColor ? true : false;
+    uint32_t bkColor = CLR_DEFAULT;
+    uint32_t fgColor = CLR_DEFAULT;
+
+    if ( useSysColor )
+    {
+        if ( argumentExists(1) && ! getSystemColor(context, _bk, &bkColor, 1) )
+        {
+            goto done_out;
+        }
+        if ( argumentExists(2) && ! getSystemColor(context, _fg, &fgColor, 2) )
+        {
+            goto done_out;
+        }
+
+        if ( bkColor != CLR_DEFAULT )
+        {
+            bkColor = GetSysColor(bkColor);
+        }
+        if ( fgColor != CLR_DEFAULT )
+        {
+            fgColor = GetSysColor(fgColor);
+        }
+    }
+    else
+    {
+        if ( argumentExists(1) && ! context->UnsignedInt32(_bk, &bkColor) )
+        {
+            goto done_out;
+        }
+        if ( argumentExists(2) && ! context->UnsignedInt32(_fg, &fgColor) )
+        {
+            goto done_out;
+        }
+    }
+
+    COLORTABLEENTRY *cte    = NULL;
+    pSubClassData    pscd   = (pSubClassData)pcdc->pscd;
+    bool             exists = false;
+
+    if ( pscd != NULL && pscd->pData != NULL )
+    {
+        // This specific combo box control has already been subclassed and has
+        // had custom colors added.  The message filters are already set up, we
+        // just need to change the colors.
+        cte    = (COLORTABLEENTRY *)pscd->pData;
+        exists = true;
+    }
+    else
+    {
+        cte = (COLORTABLEENTRY *)LocalAlloc(LPTR, sizeof(COLORTABLEENTRY));
+        if ( cte == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+    }
+
+    if ( cte->ColorBrush != NULL && ! cte->isSysBrush )
+    {
+        DeleteObject(cte->ColorBrush);
+    }
+
+    cte->ColorBk = bkColor;
+    cte->ColorFG = fgColor;
+
+    if ( useSysColor )
+    {
+        cte->ColorBrush = GetSysColorBrush(bkColor);
+        cte->isSysBrush = true;
+    }
+    else
+    {
+        cte->ColorBrush = CreateSolidBrush(bkColor);
+        cte->isSysBrush = false;
+    }
+
+    if ( exists )
+    {
+        result = TheTrueObj;
+        goto done_out;
+    }
+
+    // There is no method invocation needed
+    wmf.method = "NOOP";
+    wmf.tag    = CTRLTAG_COMBOBOX | CTRLTAG_COLORS;
+
+    // If the subclass was already set, we need to add our private data here,
+    // otherwise we can just send it along and the subclassing procedure will
+    // add it.
+    if ( pscd == NULL )
+    {
+        wmf.pData = cte;
+        wmf.pfn   = freeComboBoxData;
+    }
+    else
+    {
+        pscd->pData = cte;
+        pscd->pfn   = freeComboBoxData;
+    }
+
+    wmf.wm       = WM_CTLCOLORBTN;
+    wmf.wmFilter = 0xFFFFFFFF;
+    wmf.wp       = 0;
+    wmf.wpFilter = 0;
+    wmf.lp       = 0;
+    wmf.lpFilter = 0;
+
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm       = WM_CTLCOLOREDIT;
+    wmf.wmFilter = 0xFFFFFFFF;
+    wmf.wp       = 0;
+    wmf.wpFilter = 0;
+    wmf.lp       = 0;
+    wmf.lpFilter = 0;
+
+    wmf.pData = NULL;
+    wmf.pfn   = NULL;
+
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    wmf.wm       = WM_CTLCOLORLISTBOX;
+    wmf.wmFilter = 0xFFFFFFFF;
+    wmf.wp       = 0;
+    wmf.wpFilter = 0;
+    wmf.lp       = 0;
+    wmf.lpFilter = 0;
+
+    if ( ! addSubclassMessage(context, pcdc, &wmf) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
+        goto done_out;
+    }
+
+    result = TheTrueObj;
+
+done_out:
+    return result;
 }
 
 

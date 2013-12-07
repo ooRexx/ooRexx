@@ -334,6 +334,7 @@
    use strict arg
    return self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 1, 0)
 
+::method removeFullColor unguarded external "LIBRARY oodialog cb_removeFullColor"
 ::method select unguarded external "LIBRARY oodialog cb_select"
 ::method selected unguarded
    use strict arg
@@ -356,6 +357,7 @@
    lParam = .DlgUtil~makeLParam(startndx - 1, endndx)
    return self~sendWinIntMsg(self~CB_SETEDITSEL, 0, lParam) == -1
 
+::method setFullColor unguarded external "LIBRARY oodialog cb_setFullColor"
 ::method setHorizontalExtent unguarded
    use strict arg extent
    self~sendWinIntMsg(self~CB_SETHORIZONTALEXTENT, extent, 0)

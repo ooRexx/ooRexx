@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 07: Customer Models and Data Classes	  	  v02-00 31Jan13
+   Exercise 07: Customer Models and Data Classes	  	  v02-00 01Apr13
 
    Contains: 	   classes "CustomerModel" "CustomerListModel" and "CustomerData".
 
@@ -52,10 +52,13 @@
           31Jan13: Removed 'query' method (it's in the superclass) from both
                    Customer and CustomerList - also removed code storing data
                    in self~myData.
+          01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                   folder, so change to ::Requires needed. 
+                   
 ------------------------------------------------------------------------------*/
 
-::REQUIRES "..\Support\GenericFile.rex"
-::REQUIRES "..\Support\Model.rex"
+::REQUIRES "Support\GenericFile.rex"
+::REQUIRES "Support\Model.rex"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================

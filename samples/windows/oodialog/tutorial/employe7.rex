@@ -41,7 +41,8 @@
  * Type: Open Object REXX Script
  */
 
-dlg = .MyDialogClass~new("employe8.rc", 100)
+sd = locate()
+dlg = .MyDialogClass~new(sd"employe8.rc", 100)
 if dlg~initCode <> 0 then exit
 dlg~execute("SHOWTOP")
 
@@ -56,9 +57,12 @@ exit
 ::attribute empCurrent
 
 ::method init
+    expose sd
 
     forward class (super) continue
     if self~initCode <> 0 then return self~initCode
+
+    sd = .application~srcDir
 
     self~employees = .array~new(10)
     self~empCount = 1
@@ -76,20 +80,20 @@ exit
     -- over from the previous millenium.  It is seldom seen in modern dialogs.
     -- Most likely you will not find the appearance of this dialog very
     -- appealing.
-    self~backgroundBitmap("logo.bmp")
+    self~backgroundBitmap(sd"logo.bmp")
 
     return self~initCode
 
 
 ::method createImageList private
-    expose imageList
+    expose imageList sd
 
     size  = .Size~new(45, 41)
     flags = .DlgUtil~or(.Image~toID(ILC_COLOR8), .Image~toID(ILC_MASK))
     imageList = .ImageList~create(size, flags, 1)
 
     cRef  = .Image~colorRef(255, 255, 255)
-    image = .Image~getImage('add.bmp')
+    image = .Image~getImage(sd'add.bmp')
     imageList~addMasked(image, cRef)
 
 

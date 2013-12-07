@@ -51,11 +51,14 @@
  *  method.
  */
 
+    -- Get the directory our source code files are located in.
+    sd = locate()
+
     --  Use the global .constDir, only, for symbolic IDs, load the symbols from
     --  the basicResize.h file.
-    .application~setDefaults('O', 'rc\basicResize.h', .false)
+    .application~setDefaults('O', sd'rc\basicResize.h', .false)
 
-    dlg = .ResizableDlg~new("rc\basicResize.rc", IDD_RESIZABLE)
+    dlg = .ResizableDlg~new(sd"rc\basicResize.rc", IDD_RESIZABLE)
     dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 return 0

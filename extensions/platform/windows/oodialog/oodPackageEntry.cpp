@@ -47,8 +47,10 @@
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 #include <shlwapi.h>
 #include <stdio.h>
+#include <delayimp.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodShared.hpp"
 
 
 HINSTANCE            MyInstance = NULL;
@@ -384,8 +386,115 @@ void RexxEntry ooDialogUnload(RexxThreadContext *c)
     /* GdiplusShutdown(gdiplusToken); */
 }
 
+
+/**
+ * As ooDialog is enhanced to support more of Windows 7 features, it is linked
+ * to Windows library procedures that are not available in the XP systen DLLs.
+ * This causes oodialog.dll to fail to load on XP.  In an attempt to extend the
+ * life of ooDialog on XP, we are going to use delayed loading of one or more
+ * DLLs.
+ *
+ * This hook function is called by the delayed DLL library loading mechanism
+ * when the delayed load fails.  Typically this is because the DLL can not be
+ * found.  But, in our case it is more likely that the procedure entrance is not
+ * found
+ *
+ * There is nothing we can do about this, so a message is printed and the
+ * application is terminated.
+ *
+ * @param dliNotify   Reason for the failure.
+ * @param pdli        Information about the failure.
+ *
+ * @return Return a proper HMODULE or valid proc address if this function can
+ *         recover from the error, otherwise NULL.  We can not recover from this
+ *         so we return NULL.
+ */
+FARPROC WINAPI delayFailHook(unsigned int dliNotify, PDelayLoadInfo pdli)
+{
+    switch (dliNotify)
+    {
+        case dliFailLoadLib :
+            printf("Failed to load %s, error code: %d.  Ensure %s is available.\n",
+                   pdli->szDll, pdli->dwLastError, pdli->szDll);
+            break;
+
+        case dliFailGetProc :
+            if (pdli->dlp.fImportByName)
+            {
+                printf("Failed to get procedure: %s in %s.  Last error: %d\n",
+                       pdli->dlp.szProcName, pdli->szDll, pdli->dwLastError);
+            }
+            else
+            {
+                printf("Failed to get procedure, ordinal: %s in %s.  Last error: %d\n",
+                       pdli->dlp.szProcName, pdli->szDll, pdli->dwLastError);
+            }
+            break;
+
+        default :
+            printf("Unknown error trying to delay load %s.\n", pdli->szDll);
+            break;
+    }
+
+    printf("The error is unrecoverable, have to abort.\n");
+
+    return NULL;
+}
+
+PfnDliHook __pfnDliFailureHook2 = delayFailHook;
+
+#if 0
+/**
+ * Temp for testing, will be removed.
+ *
+ * @param dliNotify
+ * @param pdli
+ *
+ * @return FARPROC
+ */
+FARPROC WINAPI delayNoteHook(unsigned int dliNotify, PDelayLoadInfo pdli)
+{
+    switch (dliNotify)
+    {
+        case dliStartProcessing :
+            printf("Check to see if library %s is already loaded.\n", pdli->szDll);
+            break;
+
+        case dliNotePreLoadLibrary :
+            printf("Going to call LoadLibrary() for library %s.\n", pdli->szDll);
+            break;
+
+        case dliNotePreGetProcAddress :
+            if (pdli->dlp.fImportByName)
+            {
+                printf("Going to call GetProcAddress() to get procedure: %s in %s.\n", pdli->dlp.szProcName, pdli->szDll);
+            }
+            else
+            {
+                printf("Failed to get procedure, ordinal: %d in %s.  Last error: %d\n", pdli->dlp.dwOrdinal, pdli->szDll);
+            }
+            break;
+
+        case dliNoteEndProcessing :
+            printf("Done processing for library %s.\n", pdli->szDll);
+            break;
+
+        default :
+            printf("Unknown notification for delayed load library %s.\n", pdli->szDll);
+            break;
+    }
+
+    return NULL;
+}
+PfnDliHook __pfnDliNotifyHook2 = delayNoteHook;
+#endif
+
+
+
+
 REXX_TYPED_ROUTINE_PROTOTYPE(fileNameDlg_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(findWindow_rtn);
+REXX_TYPED_ROUTINE_PROTOTYPE(locate_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(messageDialog_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(msSleep_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(play_rtn);
@@ -398,6 +507,7 @@ RexxRoutineEntry oodialog_functions[] =
 {
     REXX_TYPED_ROUTINE(fileNameDlg_rtn,        fileNameDlg_rtn),
     REXX_TYPED_ROUTINE(findWindow_rtn,         findWindow_rtn),
+    REXX_TYPED_ROUTINE(locate_rtn,             locate_rtn),
     REXX_TYPED_ROUTINE(messageDialog_rtn,      messageDialog_rtn),
     REXX_TYPED_ROUTINE(msSleep_rtn,            msSleep_rtn),
     REXX_TYPED_ROUTINE(play_rtn,               play_rtn),
@@ -412,6 +522,7 @@ RexxRoutineEntry oodialog_functions[] =
 // DlgUtil
 REXX_METHOD_PROTOTYPE(dlgutil_init_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_comctl32Version_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_getGuid_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_version_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_errMsg_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_hiWord_cls);
@@ -440,11 +551,13 @@ REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
 // ApplicationManager
 REXX_METHOD_PROTOTYPE(app_init);
+REXX_METHOD_PROTOTYPE(app_srcDir_atr);
 REXX_METHOD_PROTOTYPE(app_addToConstDir);
 REXX_METHOD_PROTOTYPE(app_autoDetection);
 REXX_METHOD_PROTOTYPE(app_defaultFont);
 REXX_METHOD_PROTOTYPE(app_defaultIcon);
 REXX_METHOD_PROTOTYPE(app_initAutoDetection);
+REXX_METHOD_PROTOTYPE(app_requiredOS);
 REXX_METHOD_PROTOTYPE(app_setDefaults);
 REXX_METHOD_PROTOTYPE(app_useGlobalConstDir);
 
@@ -550,6 +663,7 @@ REXX_METHOD_PROTOTYPE(wb_clear);
 REXX_METHOD_PROTOTYPE(wb_foreGroundWindow);
 REXX_METHOD_PROTOTYPE(wb_screenClient);
 REXX_METHOD_PROTOTYPE(wb_mapWindowPoints);
+REXX_METHOD_PROTOTYPE(wb_updateWindow);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 REXX_METHOD_PROTOTYPE(wb_setWindowLong_pvt);
 
@@ -1017,8 +1131,10 @@ REXX_METHOD_PROTOTYPE(cb_getText);
 REXX_METHOD_PROTOTYPE(cb_insert);
 REXX_METHOD_PROTOTYPE(cb_isDropDown);
 REXX_METHOD_PROTOTYPE(cb_isGrandchild);
+REXX_METHOD_PROTOTYPE(cb_removeFullColor);
 REXX_METHOD_PROTOTYPE(cb_select);
 REXX_METHOD_PROTOTYPE(cb_setCue);
+REXX_METHOD_PROTOTYPE(cb_setFullColor);
 REXX_METHOD_PROTOTYPE(cb_setItemHeight);
 REXX_METHOD_PROTOTYPE(cb_setMinVisible);
 
@@ -1258,6 +1374,7 @@ REXX_METHOD_PROTOTYPE(tv_getItemHeight);
 REXX_METHOD_PROTOTYPE(tv_getItemRect);
 REXX_METHOD_PROTOTYPE(tv_getNextItem);
 REXX_METHOD_PROTOTYPE(tv_getSpecificItem);
+REXX_METHOD_PROTOTYPE(tv_getStateImage);
 REXX_METHOD_PROTOTYPE(tv_hitTestInfo);
 REXX_METHOD_PROTOTYPE(tv_insert);
 REXX_METHOD_PROTOTYPE(tv_itemInfo);
@@ -1268,6 +1385,7 @@ REXX_METHOD_PROTOTYPE(tv_selectItem);
 REXX_METHOD_PROTOTYPE(tv_setImageList);
 REXX_METHOD_PROTOTYPE(tv_setItemData);
 REXX_METHOD_PROTOTYPE(tv_setItemHeight);
+REXX_METHOD_PROTOTYPE(tv_setStateImage);
 REXX_METHOD_PROTOTYPE(tv_sortChildrenCB);
 REXX_METHOD_PROTOTYPE(tv_test);
 
@@ -1555,10 +1673,90 @@ REXX_METHOD_PROTOTYPE(bff_test);
 
 REXX_METHOD_PROTOTYPE(sfb_getFolder);
 
+// CommonItemDialog
+REXX_METHOD_PROTOTYPE(cid_options);
+REXX_METHOD_PROTOTYPE(cid_setOptions);
+
+REXX_METHOD_PROTOTYPE(cid_uninit);
+REXX_METHOD_PROTOTYPE(cid_init);
+
+REXX_METHOD_PROTOTYPE(cid_addPlace);
+REXX_METHOD_PROTOTYPE(cid_advise);
+REXX_METHOD_PROTOTYPE(cid_clearClientData);
+REXX_METHOD_PROTOTYPE(cid_close);
+REXX_METHOD_PROTOTYPE(cid_getCurrentSelection);
+REXX_METHOD_PROTOTYPE(cid_getFileName);
+REXX_METHOD_PROTOTYPE(cid_getFileTypeIndex);
+REXX_METHOD_PROTOTYPE(cid_getFolder);
+REXX_METHOD_PROTOTYPE(cid_getResult);
+REXX_METHOD_PROTOTYPE(cid_initCOM);
+REXX_METHOD_PROTOTYPE(cid_isReleased);
+REXX_METHOD_PROTOTYPE(cid_release);
+REXX_METHOD_PROTOTYPE(cid_releaseCOM);
+REXX_METHOD_PROTOTYPE(cid_setClientGuid);
+REXX_METHOD_PROTOTYPE(cid_setDefaultExtension);
+REXX_METHOD_PROTOTYPE(cid_setDefaultFolder);
+REXX_METHOD_PROTOTYPE(cid_setFileName);
+REXX_METHOD_PROTOTYPE(cid_setFileNameLabel);
+REXX_METHOD_PROTOTYPE(cid_setFileTypeIndex);
+REXX_METHOD_PROTOTYPE(cid_setFileTypes);
+REXX_METHOD_PROTOTYPE(cid_setFilter);
+REXX_METHOD_PROTOTYPE(cid_setFolder);
+REXX_METHOD_PROTOTYPE(cid_setCancelButtonLabel);
+REXX_METHOD_PROTOTYPE(cid_setOkButtonLabel);
+REXX_METHOD_PROTOTYPE(cid_setTitle);
+REXX_METHOD_PROTOTYPE(cid_show);
+REXX_METHOD_PROTOTYPE(cid_unadvise);
+
+// OpenFileDialog
+REXX_METHOD_PROTOTYPE(ofd_init);
+REXX_METHOD_PROTOTYPE(ofd_getResults);
+
+// SaveFileDialog
+REXX_METHOD_PROTOTYPE(sfd_init);
+REXX_METHOD_PROTOTYPE(sfd_setSaveAsItem);
+
+// CommonDialogCustomizations
+REXX_METHOD_PROTOTYPE(cid_initCustomizations);
+REXX_METHOD_PROTOTYPE(cid_addCheckButton);
+REXX_METHOD_PROTOTYPE(cid_addComboBox);
+REXX_METHOD_PROTOTYPE(cid_addControlItem);
+REXX_METHOD_PROTOTYPE(cid_addEditBox);
+REXX_METHOD_PROTOTYPE(cid_addMenu);
+REXX_METHOD_PROTOTYPE(cid_addPushButton);
+REXX_METHOD_PROTOTYPE(cid_addRadioButtonList);
+REXX_METHOD_PROTOTYPE(cid_addSeparator);
+REXX_METHOD_PROTOTYPE(cid_addText);
+REXX_METHOD_PROTOTYPE(cid_enableOpenDropDown);
+REXX_METHOD_PROTOTYPE(cid_endVisualGroup);
+REXX_METHOD_PROTOTYPE(cid_getCheckButtonState);
+REXX_METHOD_PROTOTYPE(cid_getControlItemState);
+REXX_METHOD_PROTOTYPE(cid_getControlState);
+REXX_METHOD_PROTOTYPE(cid_getEditBoxText);
+REXX_METHOD_PROTOTYPE(cid_getSelectedControlItem);
+REXX_METHOD_PROTOTYPE(cid_makeProminent);
+REXX_METHOD_PROTOTYPE(cid_removeAllControlItems);
+REXX_METHOD_PROTOTYPE(cid_removeControlItem);
+REXX_METHOD_PROTOTYPE(cid_setCheckButtonState);
+REXX_METHOD_PROTOTYPE(cid_setControlItemState);
+REXX_METHOD_PROTOTYPE(cid_setControlItemText);
+REXX_METHOD_PROTOTYPE(cid_setControlLabel);
+REXX_METHOD_PROTOTYPE(cid_setControlState);
+REXX_METHOD_PROTOTYPE(cid_setEditBoxText);
+REXX_METHOD_PROTOTYPE(cid_setSelectedControlItem);
+REXX_METHOD_PROTOTYPE(cid_startVisualGroup);
+
+// CommonDialgoEvents
+REXX_METHOD_PROTOTYPE(cde_init);
+
+// ShellItemFilter
+REXX_METHOD_PROTOTYPE(sif_init);
+
 
 RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_init_cls,               dlgutil_init_cls),
     REXX_METHOD(dlgutil_comctl32Version_cls,    dlgutil_comctl32Version_cls),
+    REXX_METHOD(dlgutil_getGuid_cls,            dlgutil_getGuid_cls),
     REXX_METHOD(dlgutil_version_cls,            dlgutil_version_cls),
     REXX_METHOD(dlgutil_errMsg_cls,             dlgutil_errMsg_cls),
     REXX_METHOD(dlgutil_hiWord_cls,             dlgutil_hiWord_cls),
@@ -1586,10 +1784,12 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_test_cls,               dlgutil_test_cls),
 
     REXX_METHOD(app_init,                       app_init),
+    REXX_METHOD(app_srcDir_atr,                 app_srcDir_atr),
     REXX_METHOD(app_addToConstDir,              app_addToConstDir),
     REXX_METHOD(app_autoDetection,              app_autoDetection),
     REXX_METHOD(app_defaultFont,                app_defaultFont),
     REXX_METHOD(app_defaultIcon,                app_defaultIcon),
+    REXX_METHOD(app_requiredOS,                 app_requiredOS),
     REXX_METHOD(app_setDefaults,                app_setDefaults),
     REXX_METHOD(app_initAutoDetection,          app_initAutoDetection),
     REXX_METHOD(app_useGlobalConstDir,          app_useGlobalConstDir),
@@ -1693,6 +1893,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_setWindowLong_pvt,           wb_setWindowLong_pvt),
     REXX_METHOD(wb_show,                        wb_show),
     REXX_METHOD(wb_showFast,                    wb_showFast),
+    REXX_METHOD(wb_updateWindow,                wb_updateWindow),
     REXX_METHOD(wb_windowRect,                  wb_windowRect),
 
     REXX_METHOD(en_init_eventNotification,      en_init_eventNotification),
@@ -2151,8 +2352,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(cb_insert,                      cb_insert),
     REXX_METHOD(cb_isDropDown,                  cb_isDropDown),
     REXX_METHOD(cb_isGrandchild,                cb_isGrandchild),
+    REXX_METHOD(cb_removeFullColor,             cb_removeFullColor),
     REXX_METHOD(cb_select,                      cb_select),
     REXX_METHOD(cb_setCue,                      cb_setCue),
+    REXX_METHOD(cb_setFullColor,                cb_setFullColor),
     REXX_METHOD(cb_setItemHeight,               cb_setItemHeight),
     REXX_METHOD(cb_setMinVisible,               cb_setMinVisible),
 
@@ -2365,6 +2568,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tv_getItemRect,                 tv_getItemRect),
     REXX_METHOD(tv_getNextItem,                 tv_getNextItem),
     REXX_METHOD(tv_getSpecificItem,             tv_getSpecificItem),
+    REXX_METHOD(tv_getStateImage,               tv_getStateImage),
     REXX_METHOD(tv_hitTestInfo,                 tv_hitTestInfo),
     REXX_METHOD(tv_insert,                      tv_insert),
     REXX_METHOD(tv_itemText,                    tv_itemText),
@@ -2375,6 +2579,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(tv_setImageList,                tv_setImageList),
     REXX_METHOD(tv_setItemData,                 tv_setItemData),
     REXX_METHOD(tv_setItemHeight,               tv_setItemHeight),
+    REXX_METHOD(tv_setStateImage,               tv_setStateImage),
     REXX_METHOD(tv_sortChildrenCB,              tv_sortChildrenCB),
     REXX_METHOD(tv_test,                        tv_test),
 
@@ -2673,6 +2878,80 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bff_test,                       bff_test),
 
     REXX_METHOD(sfb_getFolder,                  sfb_getFolder),
+
+// CommonItemDialog
+    REXX_METHOD(cid_options,                    cid_options),
+    REXX_METHOD(cid_setOptions,                 cid_setOptions),
+
+    REXX_METHOD(cid_uninit,                     cid_uninit),
+    REXX_METHOD(cid_init,                    	cid_init),
+
+    REXX_METHOD(cid_addPlace,                   cid_addPlace),
+    REXX_METHOD(cid_advise,                     cid_advise),
+    REXX_METHOD(cid_clearClientData,            cid_clearClientData),
+    REXX_METHOD(cid_close,                      cid_close),
+    REXX_METHOD(cid_getCurrentSelection,        cid_getCurrentSelection),
+    REXX_METHOD(cid_getFileName,                cid_getFileName),
+    REXX_METHOD(cid_getFileTypeIndex,           cid_getFileTypeIndex),
+    REXX_METHOD(cid_getFolder,                  cid_getFolder),
+    REXX_METHOD(cid_getResult,                  cid_getResult),
+    REXX_METHOD(cid_initCOM,                    cid_initCOM),
+    REXX_METHOD(cid_isReleased,                 cid_isReleased),
+    REXX_METHOD(cid_release,                    cid_release),
+    REXX_METHOD(cid_releaseCOM,                 cid_releaseCOM),
+    REXX_METHOD(cid_setClientGuid,              cid_setClientGuid),
+    REXX_METHOD(cid_setDefaultExtension,        cid_setDefaultExtension),
+    REXX_METHOD(cid_setDefaultFolder,           cid_setDefaultFolder),
+    REXX_METHOD(cid_setFileName,                cid_setFileName),
+    REXX_METHOD(cid_setFileNameLabel,           cid_setFileNameLabel),
+    REXX_METHOD(cid_setFileTypeIndex,           cid_setFileTypeIndex),
+    REXX_METHOD(cid_setFileTypes,               cid_setFileTypes),
+    REXX_METHOD(cid_setFilter,                  cid_setFilter),
+    REXX_METHOD(cid_setFolder,                  cid_setFolder),
+    REXX_METHOD(cid_setCancelButtonLabel,       cid_setCancelButtonLabel),
+    REXX_METHOD(cid_setOkButtonLabel,           cid_setOkButtonLabel),
+    REXX_METHOD(cid_setTitle,                   cid_setTitle),
+    REXX_METHOD(cid_show,                       cid_show),
+    REXX_METHOD(cid_unadvise,                   cid_unadvise),
+
+    REXX_METHOD(ofd_init,                    	ofd_init),
+    REXX_METHOD(ofd_getResults,                 ofd_getResults),
+
+    REXX_METHOD(sfd_init,                    	sfd_init),
+    REXX_METHOD(sfd_setSaveAsItem,              sfd_setSaveAsItem),
+
+    REXX_METHOD(cid_initCustomizations,         cid_initCustomizations),
+    REXX_METHOD(cid_addCheckButton,             cid_addCheckButton),
+    REXX_METHOD(cid_addComboBox,                cid_addComboBox),
+    REXX_METHOD(cid_addControlItem,             cid_addControlItem),
+    REXX_METHOD(cid_addEditBox,                 cid_addEditBox),
+    REXX_METHOD(cid_addMenu,                    cid_addMenu),
+    REXX_METHOD(cid_addPushButton,              cid_addPushButton),
+    REXX_METHOD(cid_addRadioButtonList,         cid_addRadioButtonList),
+    REXX_METHOD(cid_addSeparator,               cid_addSeparator),
+    REXX_METHOD(cid_addText,                    cid_addText),
+    REXX_METHOD(cid_enableOpenDropDown,         cid_enableOpenDropDown),
+    REXX_METHOD(cid_endVisualGroup,             cid_endVisualGroup),
+    REXX_METHOD(cid_getCheckButtonState,        cid_getCheckButtonState),
+    REXX_METHOD(cid_getControlItemState,        cid_getControlItemState),
+    REXX_METHOD(cid_getControlState,            cid_getControlState),
+    REXX_METHOD(cid_getEditBoxText,             cid_getEditBoxText),
+    REXX_METHOD(cid_getSelectedControlItem,     cid_getSelectedControlItem),
+    REXX_METHOD(cid_makeProminent,              cid_makeProminent),
+    REXX_METHOD(cid_removeAllControlItems,      cid_removeAllControlItems),
+    REXX_METHOD(cid_removeControlItem,          cid_removeControlItem),
+    REXX_METHOD(cid_setCheckButtonState,        cid_setCheckButtonState),
+    REXX_METHOD(cid_setControlItemState,        cid_setControlItemState),
+    REXX_METHOD(cid_setControlItemText,         cid_setControlItemText),
+    REXX_METHOD(cid_setControlLabel,            cid_setControlLabel),
+    REXX_METHOD(cid_setControlState,            cid_setControlState),
+    REXX_METHOD(cid_setEditBoxText,             cid_setEditBoxText),
+    REXX_METHOD(cid_setSelectedControlItem,     cid_setSelectedControlItem),
+    REXX_METHOD(cid_startVisualGroup,           cid_startVisualGroup),
+
+    REXX_METHOD(cde_init,                       cde_init),
+
+    REXX_METHOD(sif_init,                       sif_init),
 
     REXX_LAST_METHOD()
 };

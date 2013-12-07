@@ -50,6 +50,7 @@
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodShared.hpp"
 #include "oodControl.hpp"
 #include "oodMessaging.hpp"
 #include "oodData.hpp"
@@ -2652,6 +2653,40 @@ done_out:
     return result;
 }
 
+
+/** WindowsBase::updateWindow()
+ *
+ *  Updates the client area of the specified window by sending a WM_PAINT
+ *  message to the window, if the window's update region is not empty. The
+ *  function sends a WM_PAINT message directly to the window procedure of the
+ *  specified window, bypassing the application queue. If the update region is
+ *  empty, no message is sent.
+ *
+ *  @return  true for success, false on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *         The effect of this is to immediately repaint any portion of a window
+ *         that needs it.  For example, the redrawItems() method of the ListView
+ *         class causes the list view to redraw the items specified.  However,
+ *         the list view  does not redraw the items until the next WM_PAINT
+ *         message.  To cause the list view to immediately redraw the items, use
+ *         the updateWindow().
+ */
+RexxMethod1(RexxObjectPtr, wb_updateWindow, CSELF, pCSelf)
+{
+    HWND hwnd = wbSetUp(context, pCSelf);
+    if ( hwnd != NULL )
+    {
+        if ( UpdateWindow(hwnd) == 0 )
+        {
+            oodSetSysErrCode(context->threadContext);
+            return TheFalseObj;
+        }
+        return TheTrueObj;
+    }
+    return TheFalseObj;
+}
 
 /** WindowBase::getWindowLong()  [private]
  *

@@ -54,9 +54,10 @@
  * will lead you straight to the documentation
  */
 
-  .application~setDefaults("O", 'sysInfo.h', .false)
+  sd = locate()
+  .application~setDefaults("O", sd'sysInfo.h', .false)
 
-  sysInfoDlg = .SystemClass~new('sysinfo.rc', SYSINFO_DLG)
+  sysInfoDlg = .SystemClass~new(sd'sysinfo.rc', SYSINFO_DLG)
   if sysInfoDlg~initCode == 0 then do
     sysInfoDlg~execute("SHOWTOP")
   end

@@ -49,11 +49,12 @@
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 #include "oodDeviceGraphics.hpp"
-#include "oodMessaging.hpp"
 #include "oodMouse.hpp"
 #include "oodData.hpp"
 #include "oodPropertySheetDialog.hpp"
 #include "oodResizableDialog.hpp"
+#include "oodShared.hpp"
+#include "oodMessaging.hpp"
 
 /**
  * The dialog procedure function for all regular ooDialog dialogs.  Handles and
@@ -480,7 +481,7 @@ LRESULT handleWmUser(pCPlainBaseDialog pcpbd, HWND hDlg, UINT uMsg, WPARAM wPara
             if ( setPropSheetHook(pcpsd) )
             {
                 SetLastError(0);
-                INT_PTR ret = PropertySheet((PROPSHEETHEADER *)wParam);
+                intptr_t ret = PropertySheet((PROPSHEETHEADER *)wParam);
                 oodSetSysErrCode(pcpbd->dlgProcContext);
                 ReplyMessage((LRESULT)ret);
             }

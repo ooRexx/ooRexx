@@ -63,9 +63,9 @@ BEGIN
             VALUE "CompanyName", "Rexx Language Association\0"
             VALUE "FileDescription", "ooDialog an Open Object Rexx extension\0"
             VALUE "FileVersion", OODIALOG_VER_STR "\0"
-            VALUE "InternalName", "ooDialog GUI\0"
+            VALUE "InternalName", "ooDialog\0"
             VALUE "LegalCopyright", "Copyright © RexxLA " OODIALOG_COPY_YEAR ".\0"
-            VALUE "OriginalFilename", "oodialog.dll\0"
+            VALUE "OriginalFilename", OODIALOG_BIN_NAME "\0"
             VALUE "ProductName", "Open Object Rexx for Windows\0"
             VALUE "ProductVersion",  OODIALOG_VER_STR "\0"
         END

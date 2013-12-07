@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: ProductView.rex - The ProductView component       v01-01 06Jum12
+   Exercise 06: ProductView.rex - The ProductView component       v01-01 01Apr13
 
    Contains: 	   classes "ProductView", "AboutDialog", and "HRSpv".
 
@@ -50,15 +50,17 @@
 
    Changes:
    v01-00 03Jun12: First version for Exercise05.
-   v01-01 06Jun12: Minor changes for Exercise06.
-
+   v01-01 06Jun12: Minor changes for Exercise06.   
+          01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                   folder, so change to ::Requires needed. 
+   
 ------------------------------------------------------------------------------*/
 
 .Application~addToConstDir("Product\ProductView.h")
 
 
 ::requires "ooDialog.cls"
-::requires "..\Support\NumberOnlyEditEx.cls"
+::requires "Support\NumberOnlyEditEx.cls"
 ::requires "Product\ProductModelData.rex"
 
 

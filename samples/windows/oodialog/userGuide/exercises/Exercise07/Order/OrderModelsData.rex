@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 07: The OrderModel and OrderData Classes	  	  v02-00 11Jan13
+   Exercise 07: The OrderModel and OrderData Classes	  	  v02-00 01Apr13
 
    Contains: 	   classes "OrderModel", OrderListModel, and "OrderData".  --Ex07
    Pre-requisites: None.
@@ -46,11 +46,14 @@
    Changes:
    v01-00 07Jun12: First version.
    v02-00 08Jan13: Modified to use the MVF.
+          01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                   folder, so change to ::Requires needed. 
+
 ------------------------------------------------------------------------------*/
 
 
-::REQUIRES "..\Support\Model.rex"
-::REQUIRES "..\Support\GenericFile.rex"
+::REQUIRES "Support\Model.rex"
+::REQUIRES "Support\GenericFile.rex"
 
 
 /*//////////////////////////////////////////////////////////////////////////////

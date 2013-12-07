@@ -48,15 +48,18 @@
  *    control.  Demonstrates some other list-view features, such as info tips,
  *    user item data, in place label editing, drag and drop in icon view, etc..
  *
+ *
+ * Note: this program uses the public routine, locate(), to get the full path
+ * name to the directory this source code file is located. In places, the
+ * variable holding this value has been callously abbreviated to 'sd' which
+ * stands for source directory.
+ *
  */
 
-  -- A directory manager saves the current directory and can later go back to
-  -- that directory.  The class itself is located in DirectoryManaager.cls
-  mgr = .DirectoryManager~new()
+  srcDir = locate()
+  .application~useGlobalConstDir("O", srcDir'rc\oodListViews.h')
 
-  .application~useGlobalConstDir("O", 'rc\oodListViews.h')
-
-  dlg = .ListsDialog~new("rc\oodListViews.rc", IDD_LISTVIEWS)
+  dlg = .ListsDialog~new(srcDir"rc\oodListViews.rc", IDD_LISTVIEWS)
 
   if dlg~initCode <> 0 then do
     say "Error instantiating the ListsDialog, aborting"
@@ -65,12 +68,9 @@
 
   dlg~execute("SHOWTOP")
 
-  mgr~goBack
-
   return 0
 
 ::requires "ooDialog.cls"
-::requires "DirectoryManager.cls"
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -79,9 +79,13 @@
 ::class 'ListsDialog' subclass RcDialog
 
 ::method init
+  expose sd
+
   forward class (super) continue
 
   if self~initCode <> 0 then return self~initCode
+
+  sd = locate()
 
   self~createImageLists
   self~initRecords
@@ -97,7 +101,7 @@
 
 
 ::method initDialog
-  expose tabControl pageDialog smallIcons normalIcons records pbBackward pbForward ckInfoTips
+  expose tabControl pageDialog smallIcons normalIcons records pbBackward pbForward ckInfoTips sd
 
   -- Set the Use Info Tips check box.
   ckInfoTips = self~newCheckBox(IDC_CK_INFOTIPS)
@@ -126,7 +130,7 @@
   w = (displayRect~right * (7 / 12)) % 4
   tabControl~setMinTabWidth(w)
 
-  pageDialog = .PageDialog~new("rc\oodListViews.rc", IDD_PAGE, , , , , self)
+  pageDialog = .PageDialog~new(sd"rc\oodListViews.rc", IDD_PAGE, , , , , self)
   pageDialog~useInfoTips = .true
   pageDialog~initialize(smallIcons, normalIcons, records)
 
@@ -280,9 +284,9 @@
  * show up as a new item in the list-view.
  */
 ::method onAdd unguarded
-  expose pageDialog
+  expose pageDialog sd
 
-  dlg = .AddressDialog~new('rc\oodListViews.rc', IDD_ADDRESS)
+  dlg = .AddressDialog~new(sd'rc\oodListViews.rc', IDD_ADDRESS)
 
   if dlg~initCode = 0 then do
     if dlg~execute("SHOWTOP") == self~IDOK then do
@@ -317,11 +321,11 @@
  * values the user entered and have the page dialog update the list-view item.
  */
 ::method onEdit unguarded
-  expose pageDialog
+  expose pageDialog sd
 
   rec = pageDialog~getSelectedRecord
 
-  dlg = .AddressDialog~new('rc\oodListViews.rc', IDD_ADDRESS, rec)
+  dlg = .AddressDialog~new(sd'rc\oodListViews.rc', IDD_ADDRESS, rec)
 
   if dlg~initCode = 0 then do
     if dlg~execute("SHOWTOP") == self~IDOK then do
@@ -418,9 +422,9 @@
  * very flexible.
  */
 ::method createImageLists private
-  expose smallIcons normalIcons
+  expose smallIcons normalIcons sd
 
-  small = .Image~getImage("rc\oodListViews1.bmp")
+  small = .Image~getImage(sd"rc\oodListViews1.bmp")
   tmpIL = .ImageList~create(.Size~new(16, 12), .Image~toID(ILC_COLOR4), 4, 0)
   if \small~isNull,  \tmpIL~isNull then do
       tmpIL~add(small)
@@ -431,7 +435,7 @@
     smallIcons = .nil
   end
 
-  normal = .Image~getImage("rc\oodListViews2.bmp")
+  normal = .Image~getImage(sd"rc\oodListViews2.bmp")
   tmpIL = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR4), 4, 0)
   if \normal~isNull,  \tmpIL~isNull then do
       tmpIL~add(normal)

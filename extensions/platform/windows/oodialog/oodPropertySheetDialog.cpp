@@ -57,6 +57,7 @@
 #include "oodResourceIDs.hpp"
 #include "oodControl.hpp"
 #include "oodResizableDialog.hpp"
+#include "oodShared.hpp"
 #include "oodPropertySheetDialog.hpp"
 
 
@@ -290,13 +291,13 @@ RexxArrayObject getTranslateAccelatorArgs(RexxThreadContext *c, uint32_t _wmMsg,
  *
  * @return INT_PRT
  */
-INT_PTR getSetActiveValue(RexxThreadContext *c, pCPropertySheetDialog pcpsd, RexxObjectPtr result, CSTRING name)
+intptr_t getSetActiveValue(RexxThreadContext *c, pCPropertySheetDialog pcpsd, RexxObjectPtr result, CSTRING name)
 {
-    INT_PTR ret = -2;
+    intptr_t ret = -2;
 
     if ( c->IsPointer(result) )
     {
-        return (INT_PTR)c->PointerValue((RexxPointerObject)result);
+        return (intptr_t)c->PointerValue((RexxPointerObject)result);
     }
 
     int max = (int)pcpsd->pageCount;
@@ -457,10 +458,10 @@ PROPSHEETHOOKDATA *getPropSheetHookData(HWND hwnd)
  *
  * @return The handle to the image or the resource ID.
  */
-INT_PTR getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr image, size_t argPos,
+intptr_t getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr image, size_t argPos,
                      bool *isImage, uint8_t *type)
 {
-    INT_PTR result = 0;
+    intptr_t result = 0;
 
     if ( c->IsOfType(image, "IMAGE") )
     {
@@ -469,7 +470,7 @@ INT_PTR getImageOrID(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr ima
         {
             *isImage = true;
             *type = (uint8_t)oodImage->type;
-            result = (INT_PTR)oodImage->hImage;
+            result = (intptr_t)oodImage->hImage;
         }
     }
     else
@@ -1030,7 +1031,7 @@ inline bool isPSMsg(uint32_t uMsg, LPARAM lParam)
 void doSetActiveCommon(RexxThreadContext *c, pCPropertySheetPage pcpsp, HWND hPage, CSTRING name)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pcpsp->cppPropSheet;
-    INT_PTR reply = 0;
+    intptr_t reply = 0;
 
     RexxObjectPtr result = c->SendMessage1(pcpsp->rexxSelf, name, pcpsd->rexxSelf);
 
@@ -2425,7 +2426,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setAppIcon_atr, RexxObjectPtr, icon, CSELF, pCS
     bool    isImage;
     uint8_t type;
 
-    INT_PTR result = getImageOrID(context, pcpsd->rexxSelf, icon, 1, &isImage, &type);
+    intptr_t result = getImageOrID(context, pcpsd->rexxSelf, icon, 1, &isImage, &type);
     if ( result != 0 )
     {
         if ( isImage )
@@ -2488,7 +2489,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setHeader_atr, RexxObjectPtr, header, CSELF, pC
     bool    isImage;
     uint8_t type;
 
-    INT_PTR result = getImageOrID(context, pcpsd->rexxSelf, header, 1, &isImage, &type);
+    intptr_t result = getImageOrID(context, pcpsd->rexxSelf, header, 1, &isImage, &type);
     if ( result != 0 )
     {
         if ( isImage )
@@ -2622,7 +2623,7 @@ RexxMethod2(RexxObjectPtr, psdlg_setWatermark_atr, RexxObjectPtr, watermark, CSE
     bool    isImage;
     uint8_t type;
 
-    INT_PTR result = getImageOrID(context, pcpsd->rexxSelf, watermark, 1, &isImage, &type);
+    intptr_t result = getImageOrID(context, pcpsd->rexxSelf, watermark, 1, &isImage, &type);
     if ( result != 0 )
     {
         if ( isImage )
@@ -3257,7 +3258,7 @@ RexxMethod2(RexxObjectPtr, psdlg_indexToID, int32_t, index, CSELF, pCSelf)
 {
     pCPropertySheetDialog pcpsd = (pCPropertySheetDialog)pCSelf;
 
-    INT_PTR result = -2;
+    intptr_t result = -2;
 
     int max = (int)pcpsd->pageCount;
 
@@ -4306,7 +4307,7 @@ RexxObjectPtr initUserTemplate(RexxThreadContext *c, pPageDialogInfo ppdi)
 
     if ( ! c->CheckCondition() && pcdd->active != NULL )
     {
-        ppdi->pageID = (INT_PTR)pcdd->base;
+        ppdi->pageID = (intptr_t)pcdd->base;
 
         // Set the number of dialog items field in the dialog template.
         ((DLGTEMPLATEEX *)pcdd->base)->cDlgItems = (WORD)pcdd->count;
@@ -4373,7 +4374,7 @@ RexxObjectPtr initRcTemplate(RexxThreadContext *c, pPageDialogInfo ppdi)
 
     if ( ! c->CheckCondition() && pcdd->active != NULL )
     {
-        ppdi->pageID = (INT_PTR)pcdd->base;
+        ppdi->pageID = (intptr_t)pcdd->base;
 
         // Set the number of dialog items field in the dialog template.
         ((DLGTEMPLATEEX *)pcdd->base)->cDlgItems = (WORD)pcdd->count;
@@ -4397,7 +4398,7 @@ RexxObjectPtr initResTemplate(RexxThreadContext *c, pPageDialogInfo ppdi)
     {
         goto err_out;
     }
-    ppdi->pageID = (INT_PTR)ppdi->resID;
+    ppdi->pageID = (intptr_t)ppdi->resID;
 
     return TheTrueObj;
 
@@ -4592,7 +4593,7 @@ RexxMethod2(RexxObjectPtr, psp_setTabIcon_atr, RexxObjectPtr, icon, CSELF, pCSel
     bool    isImage;
     uint8_t type;
 
-    INT_PTR result = getImageOrID(context, pcpsp->rexxSelf, icon, 1, &isImage, &type);
+    intptr_t result = getImageOrID(context, pcpsp->rexxSelf, icon, 1, &isImage, &type);
     if ( result != 0 )
     {
         if ( isImage )

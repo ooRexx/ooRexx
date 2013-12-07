@@ -657,6 +657,7 @@ logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t 
             pcpbd->ColorTab[i].isSysBrush = false;
         }
     }
+    printf("i=%d bk=%d fg=%d brush=%p\n", i, bkColor, fgColor, pcpbd->ColorTab[i].ColorBrush);
     return 0;
 }
 
@@ -1673,42 +1674,42 @@ bool getSystemColor(RexxMethodContext *c, RexxObjectPtr clr, uint32_t *color, si
 
     CSTRING keyword = c->ObjectToStringValue(clr);
 
-    if (      StrCmpI(keyword, "3DDKSHADOW")              == 0) *color =21;
-    else if ( StrCmpI(keyword, "3DFACE")                  == 0) *color =15;
-    else if ( StrCmpI(keyword, "3DHIGHLIGHT")             == 0) *color =20;
-    else if ( StrCmpI(keyword, "3DHILIGHT")               == 0) *color =20;
-    else if ( StrCmpI(keyword, "3DLIGHT")                 == 0) *color =22;
-    else if ( StrCmpI(keyword, "3DSHADOW")                == 0) *color =16;
-    else if ( StrCmpI(keyword, "ACTIVEBORDER")            == 0) *color =10;
-    else if ( StrCmpI(keyword, "ACTIVECAPTION")           == 0) *color = 2;
-    else if ( StrCmpI(keyword, "APPWORKSPACE")            == 0) *color =12;
-    else if ( StrCmpI(keyword, "BACKGROUND")              == 0) *color = 1;
-    else if ( StrCmpI(keyword, "BTNFACE")                 == 0) *color =15;
-    else if ( StrCmpI(keyword, "BTNHIGHLIGHT")            == 0) *color =20;
-    else if ( StrCmpI(keyword, "BTNHILIGHT")              == 0) *color =20;
-    else if ( StrCmpI(keyword, "BTNSHADOW")               == 0) *color =16;
-    else if ( StrCmpI(keyword, "BTNTEXT")                 == 0) *color =18;
-    else if ( StrCmpI(keyword, "CAPTIONTEXT")             == 0) *color = 9;
-    else if ( StrCmpI(keyword, "DESKTOP")                 == 0) *color = 1;
-    else if ( StrCmpI(keyword, "GRADIENTACTIVECAPTION")   == 0) *color =27;
-    else if ( StrCmpI(keyword, "GRADIENTINACTIVECAPTION") == 0) *color =28;
-    else if ( StrCmpI(keyword, "GRAYTEXT")                == 0) *color =17;
-    else if ( StrCmpI(keyword, "HIGHLIGHT")               == 0) *color =13;
-    else if ( StrCmpI(keyword, "HIGHLIGHTTEXT")           == 0) *color =14;
-    else if ( StrCmpI(keyword, "HOTLIGHT")                == 0) *color =26;
-    else if ( StrCmpI(keyword, "INACTIVEBORDER")          == 0) *color =11;
-    else if ( StrCmpI(keyword, "INACTIVECAPTION")         == 0) *color = 3;
-    else if ( StrCmpI(keyword, "INACTIVECAPTIONTEXT")     == 0) *color =19;
-    else if ( StrCmpI(keyword, "INFOBK")                  == 0) *color =24;
-    else if ( StrCmpI(keyword, "INFOTEXT")                == 0) *color =23;
-    else if ( StrCmpI(keyword, "MENU")                    == 0) *color = 4;
-    else if ( StrCmpI(keyword, "MENUHILIGHT")             == 0) *color =29;
-    else if ( StrCmpI(keyword, "MENUBAR")                 == 0) *color =30;
-    else if ( StrCmpI(keyword, "MENUTEXT")                == 0) *color = 7;
-    else if ( StrCmpI(keyword, "SCROLLBAR")               == 0) *color = 0;
-    else if ( StrCmpI(keyword, "WINDOW")                  == 0) *color = 5;
-    else if ( StrCmpI(keyword, "WINDOWFRAME")             == 0) *color = 6;
-    else if ( StrCmpI(keyword, "WINDOWTEXT")              == 0) *color = 8;
+    if (      StrCmpI(keyword, "3DDKSHADOW")              == 0) *color = 21;
+    else if ( StrCmpI(keyword, "3DFACE")                  == 0) *color = 15;
+    else if ( StrCmpI(keyword, "3DHIGHLIGHT")             == 0) *color = 20;
+    else if ( StrCmpI(keyword, "3DHILIGHT")               == 0) *color = 20;
+    else if ( StrCmpI(keyword, "3DLIGHT")                 == 0) *color = 22;
+    else if ( StrCmpI(keyword, "3DSHADOW")                == 0) *color = 16;
+    else if ( StrCmpI(keyword, "ACTIVEBORDER")            == 0) *color = 10;
+    else if ( StrCmpI(keyword, "ACTIVECAPTION")           == 0) *color =  2;
+    else if ( StrCmpI(keyword, "APPWORKSPACE")            == 0) *color = 12;
+    else if ( StrCmpI(keyword, "BACKGROUND")              == 0) *color =  1;
+    else if ( StrCmpI(keyword, "BTNFACE")                 == 0) *color = 15;
+    else if ( StrCmpI(keyword, "BTNHIGHLIGHT")            == 0) *color = 20;
+    else if ( StrCmpI(keyword, "BTNHILIGHT")              == 0) *color = 20;
+    else if ( StrCmpI(keyword, "BTNSHADOW")               == 0) *color = 16;
+    else if ( StrCmpI(keyword, "BTNTEXT")                 == 0) *color = 18;
+    else if ( StrCmpI(keyword, "CAPTIONTEXT")             == 0) *color =  9;
+    else if ( StrCmpI(keyword, "DESKTOP")                 == 0) *color =  1;
+    else if ( StrCmpI(keyword, "GRADIENTACTIVECAPTION")   == 0) *color = 27;
+    else if ( StrCmpI(keyword, "GRADIENTINACTIVECAPTION") == 0) *color = 28;
+    else if ( StrCmpI(keyword, "GRAYTEXT")                == 0) *color = 17;
+    else if ( StrCmpI(keyword, "HIGHLIGHT")               == 0) *color = 13;
+    else if ( StrCmpI(keyword, "HIGHLIGHTTEXT")           == 0) *color = 14;
+    else if ( StrCmpI(keyword, "HOTLIGHT")                == 0) *color = 26;
+    else if ( StrCmpI(keyword, "INACTIVEBORDER")          == 0) *color = 11;
+    else if ( StrCmpI(keyword, "INACTIVECAPTION")         == 0) *color =  3;
+    else if ( StrCmpI(keyword, "INACTIVECAPTIONTEXT")     == 0) *color = 19;
+    else if ( StrCmpI(keyword, "INFOBK")                  == 0) *color = 24;
+    else if ( StrCmpI(keyword, "INFOTEXT")                == 0) *color = 23;
+    else if ( StrCmpI(keyword, "MENU")                    == 0) *color =  4;
+    else if ( StrCmpI(keyword, "MENUHILIGHT")             == 0) *color = 29;
+    else if ( StrCmpI(keyword, "MENUBAR")                 == 0) *color = 30;
+    else if ( StrCmpI(keyword, "MENUTEXT")                == 0) *color =  7;
+    else if ( StrCmpI(keyword, "SCROLLBAR")               == 0) *color =  0;
+    else if ( StrCmpI(keyword, "WINDOW")                  == 0) *color =  5;
+    else if ( StrCmpI(keyword, "WINDOWFRAME")             == 0) *color =  6;
+    else if ( StrCmpI(keyword, "WINDOWTEXT")              == 0) *color =  8;
     else
     {
         TCHAR buffer[512];

@@ -64,9 +64,10 @@
  * example, with less work.
  */
 
-  .application~setDefaults('O', 'customPositionToolTip.h', .false)
+  sd = locate()
+  .application~setDefaults('O', sd'customPositionToolTip.h', .false)
 
-  dlg = .TreeViewDialog~new('customPositionToolTip.rc', IDD_TREEVIEW)
+  dlg = .TreeViewDialog~new(sd'customPositionToolTip.rc', IDD_TREEVIEW)
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 

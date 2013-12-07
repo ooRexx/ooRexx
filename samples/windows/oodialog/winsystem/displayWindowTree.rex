@@ -56,12 +56,14 @@
  *
  */
 
+sd = locate()
+
 -- Use the global .constDir for symbolic IDs and turn auto detection off.
-.application~setDefaults("O", "winSystemDlgs.h", .false)
+.application~setDefaults("O", sd"winSystemDlgs.h", .false)
 
 -- Create and show our ooDialog dialog.  The logic of the program is contained
 -- within the WindowListDlg class.
-dlg = .WindowListDlg~new("winSystemDlgs.rc", IDD_WINDOW_List)
+dlg = .WindowListDlg~new(sd"winSystemDlgs.rc", IDD_WINDOW_List)
 if dlg~initCode == 0 then do
   dlg~execute("SHOWTOP")
   return 0

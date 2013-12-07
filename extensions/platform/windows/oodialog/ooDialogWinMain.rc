@@ -1,0 +1,203 @@
+//----------------------------------------------------------------------------*/
+//                                                                            */
+// Copyright (c) 2013-2013 Rexx Language Association. All rights reserved.    */
+//                                                                            */
+// This program and the accompanying materials are made available under       */
+// the terms of the Common Public License v1.0 which accompanies this         */
+// distribution. A copy is also available at the following address:           */
+// http://www.oorexx.org/license.html                                         */
+//                                                                            */
+// Redistribution and use in source and binary forms, with or                 */
+// without modification, are permitted provided that the following            */
+// conditions are met:                                                        */
+//                                                                            */
+// Redistributions of source code must retain the above copyright             */
+// notice, this list of conditions and the following disclaimer.              */
+// Redistributions in binary form must reproduce the above copyright          */
+// notice, this list of conditions and the following disclaimer in            */
+// the documentation and/or other materials provided with the distribution.   */
+//                                                                            */
+// Neither the name of Rexx Language Association nor the names                */
+// of its contributors may be used to endorse or promote products             */
+// derived from this software without specific prior written permission.      */
+//                                                                            */
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+// OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+//                                                                            */
+//----------------------------------------------------------------------------*/
+
+#include <windows.h>
+#include <commctrl.h>
+#include "oodExecutable.hpp"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST MANIFEST_FILE
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_CONFIGURE_SERVICES DIALOGEX 0, 0, 229, 164
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Configure ooDialog Services"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    CONTROL         "Configure File Associations", IDC_STATIC, WC_BUTTON, BS_GROUPBOX, 12, 10, 207, 56
+    CONTROL         "For Current User", IDC_RB_CURRENT, WC_BUTTON, BS_AUTORADIOBUTTON, 22, 24, 71, 12
+    CONTROL         "For All Users", IDC_RB_ALL, WC_BUTTON, BS_AUTORADIOBUTTON, 22, 47, 71, 12
+    CONTROL         "Configure", IDC_PB_CONFIGURE, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 141, 33, 67, 16
+    CONTROL         "Process Execution Status:", IDC_STATIC, WC_BUTTON, BS_GROUPBOX, 12, 82, 119, 72
+    CONTROL         "User is in admin group:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 22, 95, 78, 8
+    CONTROL         "x", IDC_ST_INADMINGROUP, WC_STATIC, NOT WS_GROUP | SS_LEFT, 101, 95, 30, 8
+    CONTROL         "Process is run as admin:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 22, 109, 78, 8
+    CONTROL         "x", IDC_ST_ISRUNASADMIN, WC_STATIC, NOT WS_GROUP | SS_LEFT, 101, 109, 30, 8
+    CONTROL         "Process is elevated:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 22, 123, 78, 8
+    CONTROL         "x", IDC_ST_ISELEVATED, WC_STATIC, NOT WS_GROUP | SS_LEFT, 101, 123, 30, 8
+    CONTROL         "Integrity Level:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 22, 138, 78, 8
+    CONTROL         "x", IDC_ST_IL, WC_STATIC, NOT WS_GROUP | SS_LEFT, 101, 138, 30, 8
+    CONTROL         "Done", IDCANCEL, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 169, 140, 50, 14
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_FILEASSOC DIALOGEX 0, 0, 405, 330
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Configure ooDialog.exe File Associations"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    CONTROL         "Associating File Extensions with ooDialog.exe for All Users", IDC_GB_ASSOCIATE, WC_BUTTON, BS_GROUPBOX, 11, 10, 341, 90
+    CONTROL         "File Type:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 25, 26, 31, 8
+    CONTROL         "ooDialog.RexxScript", IDC_ST_FTYPE, WC_STATIC, NOT WS_GROUP | SS_LEFT, 110, 26, 67, 8
+    CONTROL         "Running As Administrator:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 192, 26, 83, 8
+    CONTROL         "False", IDC_ST_RUNAS, WC_STATIC, NOT WS_GROUP | SS_LEFT, 292, 26, 25, 8
+    CONTROL         "Scope:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 25, 43, 35, 8
+    CONTROL         "All Users", IDC_ST_SCOPE, WC_STATIC, NOT WS_GROUP | SS_LEFT, 110, 43, 67, 8
+    CONTROL         "Process is Elevated:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 192, 43, 83, 8
+    CONTROL         "False", IDC_ST_ELEVATED, WC_STATIC, NOT WS_GROUP | SS_LEFT, 292, 43, 25, 8
+    CONTROL         "File Type is Registered:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 25, 61, 78, 8
+    CONTROL         "True", IDC_ST_REGISTERED, WC_STATIC, NOT WS_GROUP | SS_LEFT, 110, 61, 18, 8
+    CONTROL         "Registered For All Users?", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 25, 79, 80, 8
+    CONTROL         "Yes", IDC_ST_REGALL, WC_STATIC, NOT WS_GROUP | SS_LEFT, 110, 79, 12, 8
+    CONTROL         "Registered For Current User?", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 192, 79, 95, 8
+    CONTROL         "Yes", IDC_ST_REGCURRENT, WC_STATIC, NOT WS_GROUP | SS_LEFT, 292, 79, 25, 8
+    CONTROL         "Un-register ooDialog File Type", IDC_PB_REGISTER, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 19, 109, 176, 14
+    CONTROL         "PATHEXT Extension:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 227, 121, 70, 8
+    CONTROL         "", IDC_EDIT_PE_EXT, WC_EDIT, NOT WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL, 227, 134, 48, 12
+    CONTROL         "Add", IDC_PB_ADD_PE_EXT, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 282, 133, 43, 14
+    CONTROL         "File Association Extension:", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_RIGHT, 11, 134, 88, 8
+    CONTROL         "", IDC_EDIT_FA_EXT, WC_EDIT, NOT WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL, 103, 134, 33, 12
+    CONTROL         "Add", IDC_PB_ADD_FA_EXT, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 142, 134, 43, 14
+    CONTROL         "Suggested\nExtensions", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_CENTER, 10, 158, 70, 19
+    CONTROL         "", IDC_LB_SUGGESTED, WC_LISTBOX, WS_TABSTOP | WS_VSCROLL | NOT WS_BORDER | LBS_NOINTEGRALHEIGHT | LBS_USETABSTOPS | LBS_NOTIFY, 10, 176, 70, 88
+    CONTROL         "Add -->", IDC_PB_ADD_CURRENT, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 86, 192, 50, 14
+    CONTROL         "<-- Remove", IDC_PB_REMOVE_CURRENT, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 86, 211, 50, 14
+    CONTROL         "Currently\nAssociated", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_CENTER, 142, 158, 70, 19
+    CONTROL         "", IDC_LB_CURRENT, WC_LISTBOX, WS_TABSTOP | WS_VSCROLL | NOT WS_BORDER | LBS_NOINTEGRALHEIGHT | LBS_USETABSTOPS | LBS_NOTIFY, 142, 176, 70, 88
+    CONTROL         "Add -->", IDC_PB_ADD_PATHEXT, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 225, 192, 50, 14
+    CONTROL         "Configure PATHEXT for the Current User:", IDC_GB_PATHEXT, WC_BUTTON, BS_GROUPBOX, 220, 108, 177, 193
+    CONTROL         "PATHEXT is only changed when Update is checked and Done is clicked.", IDC_ST_PATHEXT_DETAILS, WC_STATIC, NOT WS_GROUP | SS_LEFT, 229, 269, 162, 18
+    CONTROL         "Currently in PATHEXT", IDC_STATIC, WC_STATIC, NOT WS_GROUP | SS_LEFT, 282, 158, 81, 8
+    CONTROL         "", IDC_LB_PATHEXT, WC_LISTBOX, WS_TABSTOP | WS_VSCROLL | NOT WS_BORDER | LBS_NOINTEGRALHEIGHT | LBS_USETABSTOPS | LBS_NOTIFY, 282, 170, 70, 94
+    CONTROL         "", IDC_PB_UP, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON | BS_ICON, 365, 170, 18, 16
+    CONTROL         "", IDC_PB_DOWN, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON | BS_ICON, 365, 196, 18, 16
+    CONTROL         "", IDC_PB_DEL, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON | BS_ICON, 365, 222, 18, 16
+    CONTROL         "", IDC_PB_DELXX, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON | BS_ICON, 365, 248, 18, 16
+    CONTROL         "Update the PATHEXT when done", IDC_CK_UPDATE, WC_BUTTON,WS_TABSTOP | BS_AUTOCHECKBOX | BS_MULTILINE, 225, 287, 127, 14
+    CONTROL         "Registry Values View Mode:", IDC_GB_VIEW, WC_BUTTON, BS_GROUPBOX, 10, 278, 202, 42
+    CONTROL         "Single Column View", IDC_RB_SINGLE_VIEW, WC_BUTTON, WS_TABSTOP | BS_AUTORADIOBUTTON, 19, 297, 80, 10
+    CONTROL         "Double Column View", IDC_RB_DOUBLE_VIEW, WC_BUTTON, BS_AUTORADIOBUTTON, 118, 297, 92, 10
+    CONTROL         "Done", IDOK, WC_BUTTON, WS_TABSTOP | BS_DEFPUSHBUTTON, 290, 306, 50, 14
+    CONTROL         "Help", IDHELP, WC_BUTTON, WS_TABSTOP | BS_PUSHBUTTON, 345, 306, 50, 14
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_OODIALOG_DISPLAY DIALOGEX 0, 0, 402, 206
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_GROUP | WS_TABSTOP | WS_POPUP | WS_SYSMENU
+EXSTYLE WS_EX_WINDOWEDGE
+CAPTION "ooDialog Execute Program: Condition Raised"
+FONT 10, "Ms Shell Dlg", 400, 0, 0
+{
+    CONTROL         "", IDC_ST_DISPLAY_ICON, WC_STATIC, SS_ICON | SS_CENTERIMAGE | SS_REALSIZEIMAGE, 10, 10, 28, 18
+    CONTROL         "A Condition was raised while executing oograph.rex", IDC_ST_SHORT_MSG, WC_STATIC, NOT WS_GROUP | SS_LEFT, 49, 12, 343, 22
+    CONTROL         "", IDC_EDIT, WC_EDIT, WS_VSCROLL | NOT WS_BORDER | NOT WS_TABSTOP | ES_MULTILINE | ES_READONLY | ES_WANTRETURN, 10, 39, 382, 125
+    CONTROL         "", IDC_GB_SERVICES, WC_BUTTON, NOT WS_VISIBLE | BS_GROUPBOX, 11, 168, 272, 28
+    CONTROL         "Configure other ooDialog services", IDC_CK_FILEASSOC, WC_BUTTON, NOT WS_VISIBLE | NOT WS_TABSTOP | BS_AUTOCHECKBOX, 27, 182, 124, 8
+    CONTROL         "Close", IDOK, WC_BUTTON, WS_TABSTOP | BS_DEFPUSHBUTTON, 342, 182, 50, 14
+}
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_SYS_DEFAULT
+STRINGTABLE
+{
+    IDS_FRIENDLY_NAME             "ooDialog Program"
+    IDS_INFOTIP                   "Double-click to run this ooDialog program"
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_APP_BLUE_BEAKER_ICON ICON           "AppIconBlueBeaker.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_APP_ICON       ICON           "AppIcon2.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_DELETE         ICON           ".\\_deleteX.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_DOWN_ARROW     ICON           ".\\_downArrowBlue.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_DELETE_XX      ICON           ".\\_deleteXX.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_UP_ARROW       ICON           ".\\_upArrowBlue.ico"
+
+
+1 VERSIONINFO
+ FILEVERSION OODIALOG_VER,OODIALOG_REL,OODIALOG_SUB,OODIALOG_BLD
+ PRODUCTVERSION OODIALOG_VER,OODIALOG_REL,OODIALOG_SUB,OODIALOG_BLD
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Rexx Language Association\0"
+            VALUE "FileDescription", "ooDialog Program Launcher\0"
+            VALUE "FileVersion", OODIALOG_VER_STR "\0"
+            VALUE "InternalName", "ooDialog\0"
+            VALUE "LegalCopyright", "Copyright © RexxLA " OODIALOG_COPY_YEAR ".\0"
+            VALUE "OriginalFilename", OODIALOG_BIN_NAME "\0"
+            VALUE "ProductName", "ooDialog, a Windows Extension to Open Object Rexx\0"
+            VALUE "ProductVersion",  OODIALOG_VER_STR "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+

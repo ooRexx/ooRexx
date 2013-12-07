@@ -81,8 +81,11 @@
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 use arg
 
-  rcFile = "resources\imageButton.rc"
-  symbolFile = "resources\imageButton.h"
+  -- Ensure we can be run from any directory.
+  srcDir = locate()
+
+  rcFile = srcDir"resources\imageButton.rc"
+  symbolFile = srcDir"resources\imageButton.h"
 
   .application~setDefaults("O", symbolFile, .false)
 
@@ -94,7 +97,7 @@ use arg
     return 99
   end
 
-  dlg~Execute("SHOWTOP", IDI_DLG_OOREXX)
+  dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 return 0
 -- End of entry point.
@@ -142,14 +145,16 @@ return 0
   -- the if tests to its converse to get an idea of the dialog behavior when
   -- errors happen.  Have fun, experiment.
 
+  srcDir = .application~srcDir
+
   -- The images are loaded from files.
   files = .array~new()
-  files[1] = "resources\Normal.bmp"       -- Normal
-  files[2] = "resources\Hot.bmp"          -- Hot (hover)
-  files[3] = "resources\Pushed.bmp"       -- Pushed
-  files[4] = "resources\Disabled.bmp"     -- Disabled
-  files[5] = "resources\Default.bmp"      -- Default button
-  files[6] = "resources\Hot.bmp"          -- Stylus hot, tablet PC only
+  files[1] = srcDir"resources\Normal.bmp"       -- Normal
+  files[2] = srcDir"resources\Hot.bmp"          -- Hot (hover)
+  files[3] = srcDir"resources\Pushed.bmp"       -- Pushed
+  files[4] = srcDir"resources\Disabled.bmp"     -- Disabled
+  files[5] = srcDir"resources\Default.bmp"      -- Default button
+  files[6] = srcDir"resources\Hot.bmp"          -- Stylus hot, tablet PC only
 
   -- .ImageList~create() exposes the Windows API ImageList_Create().  Use the
   -- MSDN documentation to fully understand this API.  Simply do a Google search

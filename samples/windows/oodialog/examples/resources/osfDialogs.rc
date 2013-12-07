@@ -1,0 +1,80 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2013-2013 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+#include <windows.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include "osfDialogs.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_SAVE_FILE DIALOGEX 0, 0, 257, 123
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Save File Dialog Example"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    LTEXT           "Result of the Save File Dialog execution will be shown here:", IDC_STATIC, 11, 10, 235, 11, SS_LEFT | SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT, 10, 23, 236, 12, NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Filter (remove from view) files with these extensions:", IDC_STATIC, 11, 49, 235, 11, SS_LEFT | SS_CENTERIMAGE
+    GROUPBOX        "", IDC_STATIC, 10, 59, 236, 32
+    AUTOCHECKBOX    "*.exe", IDC_CK_EXE, 21, 72, 35, 9
+    AUTOCHECKBOX    "*.dll", IDC_CK_DLL, 71, 72, 35, 9
+    AUTOCHECKBOX    "*.cls", IDC_CK_CLS, 117, 72, 35, 9
+    AUTOCHECKBOX    "None", IDC_CK_NONE, 197, 72, 35, 9
+    DEFPUSHBUTTON   "Show Save File Dialog", IDC_PB_SHOW, 10, 99, 85, 14
+    PUSHBUTTON      "Done", IDCANCEL, 197, 99, 50, 14
+}
+
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDD_SIMPLE_OSF_DIALOGS DIALOGEX 0, 0, 256, 193
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Open File or Save File Demonstration"
+FONT 8, "Ms Shell Dlg", 400, 0, 1
+{
+    GROUPBOX        "Pick the Open / Save File Dialog to display:", IDC_STATIC, 10, 10, 236, 106
+    AUTORADIOBUTTON "Simple Open File", IDC_RB_OPEN, 23, 27, 66, 11
+    AUTORADIOBUTTON "Simple Save File", IDC_RB_SAVE, 23, 49, 66, 11
+    AUTORADIOBUTTON "Open Multiple Files", IDC_RB_OPEN_MULTI, 23, 72, 85, 11
+    AUTORADIOBUTTON "Open File Easy Customizations", IDC_RB_OPEN_CUSTOM, 117, 27, 110, 11
+    AUTORADIOBUTTON "Save File Default Name", IDC_RB_SAVE_DEFAULT, 117, 49, 110, 11
+    AUTORADIOBUTTON "Open File in Specified Folder", IDC_RB_OPEN_FOLDER, 117, 72, 110, 11
+    DEFPUSHBUTTON   "Show", IDC_PB_SHOW_OSF, 84, 93, 50, 14
+    LTEXT           "Result of the Open / Save File Dialog execution will be shown here:", IDC_STATIC, 10, 136, 235, 11, SS_LEFT | SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT_OSF, 10, 149, 236, 12, NOT WS_TABSTOP | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Done", IDCANCEL, 196, 169, 50, 14
+}

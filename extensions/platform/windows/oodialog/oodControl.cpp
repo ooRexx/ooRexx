@@ -53,6 +53,7 @@
 #include "oodDeviceGraphics.hpp"
 #include "oodData.hpp"
 #include "oodMouse.hpp"
+#include "oodShared.hpp"
 #include "oodControl.hpp"
 
 const char *controlType2winName(oodControl_t control)
@@ -1007,9 +1008,18 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
 
         case CTRLTAG_COMBOBOX :
         {
-            if ( tag & CTRLTAG_ISGRANDCHILD )
+            switch ( tag & CTRLTAG_FLAGMASK )
             {
-                return grandchildEvent(pData, method, hwnd, msg, wParam, lParam, tag);
+                case CTRLTAG_ISGRANDCHILD :
+                    return grandchildEvent(pData, method, hwnd, msg, wParam, lParam, tag);
+                    break;
+
+                case CTRLTAG_COLORS :
+                    return comboBoxColor(pData, hwnd, msg, wParam, lParam, tag);
+                    break;
+
+                default :
+                    break;
             }
             break;
         }
@@ -1306,18 +1316,20 @@ bool setControlSubclass(RexxMethodContext *c, pCDialogControl pcdc)
  */
 bool addSubclassMessage(RexxMethodContext *c, pCDialogControl pcdc, pWinMessageFilter pwmf)
 {
-    if ( pcdc->pscd == NULL )
+    pSubClassData pscd = (pSubClassData)pcdc->pscd;
+
+    if ( pscd == NULL )
     {
         if ( ! setControlSubclass(c, pcdc) )
         {
             return false;
         }
+
+        pscd = (pSubClassData)pcdc->pscd;
+
+        pscd->pData = pwmf->pData;
+        pscd->pfn   = pwmf->pfn;
     }
-
-    pSubClassData pscd = (pSubClassData)pcdc->pscd;
-
-    pscd->pData = pwmf->pData;
-    pscd->pfn   = pwmf->pfn;
 
     if ( pscd->msgs == NULL )
     {

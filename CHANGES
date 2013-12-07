@@ -1,7 +1,7 @@
             Fixes in Open Object Rexx 4.2.0
 
-The following is the list of fixes and enhancements added to ooRexx since the
-4.1.2 release.
+The following is a list of fixes, enhancements, and other relevant changes
+to ooRexx since the 4.1.3 release.
 
 
 All Platforms
@@ -24,6 +24,13 @@ Windows
 
   Requests For Enhancement
   ------------------------
+
+
+  Miscellaneous
+  -------------
+
+  - The version of ooDialog distributed with ooRexx is updated to ooDialog
+    version 4.2.3.
 
 
 Unix/Linux

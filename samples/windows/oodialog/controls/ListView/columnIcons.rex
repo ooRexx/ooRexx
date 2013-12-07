@@ -36,14 +36,15 @@
 /*----------------------------------------------------------------------------*/
 
 /**
- *  This example shows ...
- *
+ *  This example shows how to add icons to the invidual columns of a list-view
+ *  when it is in report view.
  *
  */
 
-    .application~useGlobalConstDir('O', "rc\columnIcons.h")
+    sd = locate()
+    .application~useGlobalConstDir('O', sd"rc\columnIcons.h")
 
-    dlg = .ListViews~new("rc\columnIcons.dll", IDD_DIALOG)
+    dlg = .ListViews~new(sd"rc\columnIcons.dll", IDD_DIALOG)
     if dlg~initCode == 0 then do
         dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
     end
@@ -75,6 +76,7 @@
 ::method onReport
     expose list
     list~setView("REPORT")
+    return 0
 
 ::method onList
     expose list

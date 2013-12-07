@@ -41,7 +41,8 @@
  * date is shown in a static text control.
  */
 
-  dlg = .SimpleMonthCalendar~new("simpleMonthCalendar.rc", IDD_MONTHCAL, , "simpleMonthCalendar.h" )
+  sd = locate()
+  dlg = .SimpleMonthCalendar~new(sd"simpleMonthCalendar.rc", IDD_MONTHCAL, , sd"simpleMonthCalendar.h" )
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 return 0

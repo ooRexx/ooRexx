@@ -45,6 +45,9 @@
 /*                                                                          */
 /****************************************************************************/
 
+/* Find our installation direcotory */
+
+j = locate()
 
 /* create the dialog */
 calcDlg = .Calculator~new
@@ -73,7 +76,7 @@ exit   /* leave program */
   forward class (super) continue /* call parent constructor */
   InitRet = Result
 
-  if self~load("rc\CALCULATOR.RC", ) \= 0 then do
+  if self~load(.application~srcDir"rc\CALCULATOR.RC", ) \= 0 then do
      self~initCode = 1
      return 1
   end

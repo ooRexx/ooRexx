@@ -39,9 +39,10 @@
  * A simple dialog to demonstrate a .ScriptMenu.
  */
 
-  .application~useGlobalConstDir("O", "ScriptMenuBar.h")
+  sd = locate()
+  .application~useGlobalConstDir("O", sd"ScriptMenuBar.h")
 
-  dlg = .SimpleDialog~new("ScriptMenuBar.rc", IDD_SCRIPTMENUBAR_DLG)
+  dlg = .SimpleDialog~new(sd"ScriptMenuBar.rc", IDD_SCRIPTMENUBAR_DLG)
   if dlg~initCode <> 0 then do
     return 99
   end
@@ -57,7 +58,8 @@ return 0
 ::method initDialog
   expose menuBar lv
 
-  menuBar = .ScriptMenuBar~new("ScriptMenuBar.rc", IDR_MENU_LV, , , .true, self)
+  sd = .application~srcDir
+  menuBar = .ScriptMenuBar~new(sd"ScriptMenuBar.rc", IDR_MENU_LV, , , .true, self)
 
   lv = self~newListView(IDC_LV)
   lv~insertColumnPX(0, "First Name", 70)
@@ -166,7 +168,7 @@ return 0
 
 ::method about unguarded
 
-  dlg = .AboutDialog~new("ScriptMenuBar.rc", IDD_ABOUT_DIALOG)
+  dlg = .AboutDialog~new(.application~srcDir"ScriptMenuBar.rc", IDD_ABOUT_DIALOG)
 
   dlg~execute("SHOWTOP", IDI_DLG_DEFAULT)
 
@@ -183,7 +185,7 @@ return 0
 ::method initDialog
    expose font
 
-   bitmap = .Image~getImage("UserMenuBar.bmp")
+   bitmap = .Image~getImage(.application~srcDir"UserMenuBar.bmp")
    self~newStatic(IDC_ST_BITMAP)~setImage(bitmap)
 
    font = self~createFontEx("Ariel", 14)

@@ -387,11 +387,17 @@ return .true
  * @return True if the dialog was shown, false if it was not.
  *
  * @see getWindowTree()
+ *
+ * @note  We use the locate() function to get the directory this source code is
+ *        located in.  And then, use that value to create a complete path name
+ *        to our resource files.  This ensures the .rc and .h files will always
+ *        be found
  */
 ::routine showWindowTree public
   use strict arg tree
 
-  dlg = .WindowTreeDlg~new("winSystemDlgs.rc", IDD_WINDOW_TREE, , "winSystemDlgs.h")
+  sd = locate()
+  dlg = .WindowTreeDlg~new(sd"winSystemDlgs.rc", IDD_WINDOW_TREE, , sd"winSystemDlgs.h")
   if dlg~initCode == 0 then do
     dlg~useTree(tree)
     dlg~execute("SHOWTOP")
@@ -795,8 +801,13 @@ return populatedMenubar
   -- Initialize our ooDialog superclass.  The dialog template is stored in the
   -- resource script file: winSystemDlgs.rec with a symbolic ID of IDD_MENU_TREE
   -- and the symbolic IDs for the dialog are defined in winSystemDlgs.h
-
-  self~init:super("winSystemDlgs.rc", IDD_MENU_TREE, , "winSystemDlgs.h")
+  --
+  -- Note:  We use the locate() function to get the directory this source code
+  -- is located in.  And then, use that value to create a complete path name to
+  -- our resource files.  This ensures the .rc and .h files will always be
+  -- found.
+  sd = locate()
+  self~init:super(sd"winSystemDlgs.rc", IDD_MENU_TREE, , sd"winSystemDlgs.h")
   self~execute("SHOWTOP")
 
 /** initDialog()

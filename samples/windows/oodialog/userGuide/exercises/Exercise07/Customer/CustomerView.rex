@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 07: The CustomerView component             		  v02-00 09Jan13
+   Exercise 07: The CustomerView component             		  v02-00 01Apr13
 
    Contains: 	   class "CustomerView";  routine "startCustomerView".
    Pre-requisites: RcView.rex, CustomerView.rc, CustomerView.h.
@@ -51,6 +51,8 @@
    v02-00 09Aug12: Changed to use MVF.
           09Jan13: Removed stand-alone startup (not now needed).
                    Changes to CustomerView (not at v03-00).
+          01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                   folder, so change to ::Requires needed. 
 ------------------------------------------------------------------------------*/
 
 
@@ -58,12 +60,11 @@
 
 
 ::REQUIRES "ooDialog.cls"
---::requires "CustomerModelData.rex"
-::REQUIRES "..\support\RcView.rex"
+::REQUIRES "support\RcView.rex"
 
 /*//////////////////////////////////////////////////////////////////////////////
   ==============================================================================
-  CustomerView							  v03-00 09Jan13
+  CustomerView							  v03-00 01Apr13
   -------------
   The "view" (or "gui") part of the Customer component - part of the sample
   Order Management application.

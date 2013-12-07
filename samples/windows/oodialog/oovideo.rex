@@ -41,17 +41,20 @@
 /*                                                                          */
 /* Description: Video archive                                               */
 /*                                                                          */
+/*
+ * Note: this program uses the public routine, locate(), to get the full path
+ * name to the directory this source code file is located. In places, the
+ * variable holding this value has been callously abbreviated to 'sd' which
+ * stands for source directory.
+ *
 /****************************************************************************/
 
- -- A directory manager saves the current directory and can later go back to
- -- that directory.  It also sets up the environment we need.  The class
- -- itself is located in samplesSetup.rex
- mgr = .DirectoryManager~new()
+  srcDir = locate()
 
   -- Use the global .constDir for symbolic IDs
-  .application~useGlobalConstDir('O', 'rc\ldvideo.h')
+  .application~useGlobalConstDir('O', srcDir'rc\ldvideo.h')
 
- logfile = 'oovideo.log'
+ logfile = srcDir'oovideo.log'
  a.IDC_EDIT_TAPE_NO = "10000"
  a.IDC_EDIT_TAPE_LABEL = "Actionfilms 1"
  a.IDC_EDIT_FILM1 = "Gone with the Wind"
@@ -66,11 +69,10 @@
  a.IDC_RB_C180 = 1
  a.IDC_CK_HIFI = 1
 
- dlg = .MyDialog~new("rc\ldvideo.rc", IDD_VIDEO_DLG, A., , "CONNECTBUTTONS")
+ dlg = .MyDialog~new(srcDir"rc\ldvideo.rc", IDD_VIDEO_DLG, A., , "CONNECTBUTTONS")
 
  if dlg~initcode > 0 then do
     call errorDialog "Couldn't load the Video dialog"
-    mgr~goBack
     return 99
  end
  else if dlg~execute("SHOWTOP") = .MyDialog~IDOK then do
@@ -95,7 +97,6 @@
     "type" logfile
  end
 
- mgr~goBack
  return
 
 /*--------------------------------- requires -------------------------*/
@@ -108,6 +109,9 @@
 ::class 'MyDialog' subclass RcDialog
 
 ::method initDialog
+   expose sd
+
+   sd = locate()
 
    cb = self~newComboBox(IDC_CB_LOCATION)
    cb~add("Drawer 1")
@@ -127,9 +131,10 @@
    return 0
 
 ::method validate
+   expose sd
    tst = self~newEdit(IDC_EDIT_TAPE_NO)~getText
    if tst <> "" then do
-      call Play "wav\take.wav"
+      call Play sd"wav\take.wav"
       return .true
    end
    else do
@@ -141,7 +146,9 @@
   return .false
 
 ::method cancel unguarded
-   ret = Play("wav\cancel.wav", yes)
+   expose sd
+
+   ret = Play(sd"wav\cancel.wav", yes)
 
    msg   = "Do you really want to cancel?       "
    title = 'Exiting Video Database Application'
@@ -158,5 +165,4 @@
    ret = MessageDialog(msg, self~hwnd, title, 'OK', 'WARNING')
 
    return 0
-
 

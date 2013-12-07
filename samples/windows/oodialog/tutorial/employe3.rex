@@ -41,7 +41,8 @@
  * Type: Open Object REXX Script
  */
 
-dlg = .MyDialogClass~new("employe2.rc", 100)
+sd = locate()
+dlg = .MyDialogClass~new(sd"employe2.rc", 100)
 if dlg~initCode <> 0 then exit
 
 dlg~execute("SHOWTOP")

@@ -58,6 +58,7 @@
 #include "oodMessaging.hpp"
 #include "oodResourceIDs.hpp"
 #include "oodResizableDialog.hpp"
+#include "oodShared.hpp"
 #include "oodUser.hpp"
 
 BOOL IsNestedDialogMessage(pCPlainBaseDialog pcpbd, LPMSG lpmsg);
@@ -593,6 +594,10 @@ RexxMethod7(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
         {
             result = context->SendMessage1(self, "TABOWNERDLGINIT", p);
         }
+    }
+    else
+    {
+        baseClassInitializationException(context, "UserDialog", "DynamicDialog initialization has been skipped");
     }
 
     return result;

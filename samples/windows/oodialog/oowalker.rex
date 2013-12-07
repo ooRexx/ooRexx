@@ -62,26 +62,22 @@
  *  animation.
  */
 
- -- A directory manager saves the current directory and can later go back to
- -- that directory.  It also sets up the environment we need.  The class
- -- itself is located in samplesSetup.rex
- mgr = .DirectoryManager~new()
+ srcDir = locate()
 
- dlg = .WalkerDialog~new("rc\walker.rc", , data.)
+ .application~useGlobalConstDir('O', srcDir"rc\walker.h")
+ dlg = .WalkerDialog~new(srcDir"rc\walker.rc", , data.)
 
  if dlg~initCode \= 0 then do
-    mgr~goBack
     return 99
  end
  dlg~execute("SHOWTOP")
 
- mgr~goBack
- return
+ return 0
 
 /*---------------------------- requires -----------------------------*/
 
 ::requires "ooDialog.cls"
-::requires "samplesSetup.rex"
+::requires "samplesSetup.rex"  -- For sound path
 
 /*---------------------------- walker dialog ------------------------*/
 
@@ -98,7 +94,7 @@
    -- Load the bitmaps from the bitmap files into an array.
    bitmaps = .array~new(8)
    do i= 1 to 8
-      bitmaps[i] = self~loadBitmap("bmp\wlkfig"i".bmp")
+      bitmaps[i] = self~loadBitmap(.application~srcDir"bmp\wlkfig"i".bmp")
    end
 
    -- Create the animated button class and pass the array of bitmaps.

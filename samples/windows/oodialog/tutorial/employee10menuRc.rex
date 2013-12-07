@@ -45,9 +45,10 @@
  *               application.
  */
 
-    .application~setDefaults('O', 'employe7.h', .false)
+    sd = locate()
+    .application~setDefaults('O', sd'employe7.h', .false)
 
-    dlg = .MyDialogClass~new("employe7.rc", IDD_EMPLOYEES7)
+    dlg = .MyDialogClass~new(sd"employe7.rc", IDD_EMPLOYEES7)
     if dlg~initCode <> 0 then return 99
     dlg~execute("SHOWTOP")
 
@@ -62,7 +63,7 @@ return 0
 ::attribute empCount
 
 ::method init
-    expose menuBar
+    expose menuBar sd
 
     forward class (super) continue
     if self~initCode <> 0 then return self~initCode
@@ -79,7 +80,8 @@ return 0
     self~connectEditEvent(IDC_EDIT_NAME, "CHANGE", onNameChange)
     self~connectUpDownEvent(IDC_UPD, "DELTAPOS", onEmpChange)
 
-    menuBar = .ScriptMenuBar~new("employe7.rc", IDM_MENUBAR, 0)
+    sd = .application~srcDir
+    menuBar = .ScriptMenuBar~new(sd"employe7.rc", IDM_MENUBAR, 0)
     menuBar~connectCommandEvent(IDM_ADD, "onAdd", self)
     menuBar~connectCommandEvent(IDM_PRINT, "onPrint", self)
     menuBar~connectCommandEvent(IDM_LIST, "onList", self)
@@ -217,7 +219,8 @@ return 0
 
 
 ::method onList
-   lDlg = .EmployeeListClass~new("employe7.rc", IDD_EMPLOYEE_LIST)
+   expose sd
+   lDlg = .EmployeeListClass~new(sd"employe7.rc", IDD_EMPLOYEE_LIST)
    lDlg~parent = self
    lDlg~execute("SHOWTOP")
 

@@ -40,9 +40,10 @@
  * ooDialog program using the .Mouse class.
  */
 
-  .application~setDefaults('O', 'dragNdrop.h', .false)
+  sd = locate()
+  .application~setDefaults('O', sd'dragNdrop.h', .false)
 
-  dlg = .DreamTeamDlg~new('dragNdrop.rc', IDD_NFL_DLG)
+  dlg = .DreamTeamDlg~new(sd'dragNdrop.rc', IDD_NFL_DLG)
 
   if dlg~initCode == 0 then do
     dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
@@ -59,7 +60,7 @@
   -- This will load a cursor from a file.  The file has to actually be a cursor
   -- or the method will fail.  The operating system will refuse to load anything
   -- but an actual cursor.  The return is an .Image object.
-  dropOkCursor = .Mouse~loadCursorFromFile("dragging.cur")
+  dropOkCursor = .Mouse~loadCursorFromFile(.application~srcDir"dragging.cur")
   if dropOkCursor == 0 then do
     say 'Error loading Drop Ok Cursor system error code:' .SystemErrorCode
     self~initCode = 1
@@ -437,7 +438,7 @@
 
   rows = .Array~new
 
-  fileObj = .stream~new("nflPlayers.txt")
+  fileObj = .stream~new(.application~srcDir"nflPlayers.txt")
   players = fileObj~makeArray
 
   do line over players

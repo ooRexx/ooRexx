@@ -88,6 +88,8 @@
 #define CTRLTAG_ISGRANDCHILD      0x00000400
 #define CTRLTAG_WANTTAB           0x00000800
 
+#define CTRLTAG_COLORS            0x00000100  // Only for combo box
+
 /**
  * The last byte is for, well 'extra' information.  Use TAG_EXTRAMASK to
  * isolate the byte.
@@ -240,6 +242,7 @@ extern void               unProtectControlObject(RexxMethodContext *c, pCDialogC
 extern RexxObjectPtr      createToolTip(RexxMethodContext *context, RexxObjectPtr rxID, CSTRING styleFlags, pCPlainBaseDialog pcpbd);
 extern bool               tvSubclassEdit(HWND hTV, HWND hEdit, uintptr_t tvID);
 extern LRESULT            grandchildEvent(pSubClassData pData, char *method, HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam, uint32_t tag);
+extern LRESULT            comboBoxColor(pSubClassData pData, HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM lParam, uint32_t tag);
 
 #define ButtonAtom           0x0080
 #define EditAtom             0x0081

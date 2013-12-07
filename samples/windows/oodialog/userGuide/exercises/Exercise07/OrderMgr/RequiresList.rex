@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 07: RequiresList.rex 				  v01-00 07Jun12
+   Exercise 07: RequiresList.rex 				  v01-00 01Apr13
 
    Contains: 	   The list of View components that OrderMgrView requires.
 
@@ -47,6 +47,9 @@
 
    Changes:
      v01-00 07Jun12: First Version
+            01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                     folder, so change to ::Requires needed. 
+     
 ------------------------------------------------------------------------------*/
 
 --say "RequiresList."
@@ -55,5 +58,5 @@
 ::REQUIRES "Product\ProductListView.rex"
 ::REQUIRES "Order\OrderListView.rex"
 ::REQUIRES "Order\OrderFormView.rex"
-::REQUIRES "..\Support\MessageSender.rex"
+::REQUIRES "Support\MessageSender.rex"
 

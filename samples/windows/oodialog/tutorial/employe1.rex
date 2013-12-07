@@ -41,9 +41,10 @@
  * Type: Open Object REXX Script
  */
 
+sd = locate()
 dlg = .UserDialog~new
 if dlg~initCode <> 0 then exit
-if dlg~load("employe1.rc", 100) \= 0 then exit
+if dlg~load(sd"employe1.rc", 100) \= 0 then exit
 if dlg~execute("SHOWTOP") = 1 then do
     say dlg~name
     say dlg~city

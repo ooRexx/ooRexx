@@ -47,6 +47,7 @@
 
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodShared.hpp"
 #include "oodMessaging.hpp"
 #include "oodControl.hpp"
 #include "oodResources.hpp"

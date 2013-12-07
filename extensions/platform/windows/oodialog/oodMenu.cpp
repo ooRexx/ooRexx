@@ -44,6 +44,7 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodMessaging.hpp"
+#include "oodShared.hpp"
 #include "oodMenu.hpp"
 
 
@@ -89,7 +90,6 @@
  *
  * ERROR_INVALID_PARAMETER        87 -
  * The parameter is incorrect.
- *
  *
  * ERROR_INVALID_WINDOW_HANDLE  1400 -
  * Invalid window handle.

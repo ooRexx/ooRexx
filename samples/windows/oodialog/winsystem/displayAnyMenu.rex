@@ -66,10 +66,11 @@
  *   findTheWindow()              windowsSystem.frm
  */
 
-.application~useGlobalConstDir("O", "winSystemDlgs.h")
+sd = locate()
+.application~useGlobalConstDir("O", sd"winSystemDlgs.h")
 
 -- Prompt the user for a window title
-dlg = .UserPrompt~new("winSystemDlgs.rc", IDD_USER_PROMPT)
+dlg = .UserPrompt~new(sd"winSystemDlgs.rc", IDD_USER_PROMPT)
 
 if dlg~initCode <> 0 then do
   msg = "Error initializing the UserPrompt dialog." || '0d0a0d0a'x || -

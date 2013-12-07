@@ -43,7 +43,8 @@
  *  a large button as the drawing surface.
  */
 
- .application~useGlobalConstDir("O", 'ooDraw.h')
+ sd = locate()
+ .application~useGlobalConstDir("O", sd'ooDraw.h')
 
  d = .drawDlg~new
  if d~initCode <> 0 then do

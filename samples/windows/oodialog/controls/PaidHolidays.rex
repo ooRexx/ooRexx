@@ -59,9 +59,10 @@
  * To fully understand this program, please read the ooDialog doc.
  */
 
-  .application~useGlobalConstDir("O", "paidHolidays.h")
+  sd = locate()
+  .application~useGlobalConstDir("O", sd"paidHolidays.h")
 
-  dlg = .HolidayCalendarDlg~new("paidHolidays.rc", IDD_HOLIDAY_DLG)
+  dlg = .HolidayCalendarDlg~new(sd"paidHolidays.rc", IDD_HOLIDAY_DLG)
 
   if dlg~initCode == 0 then do
     dlg~execute("SHOWTOP", IDI_DLG_OOREXX)

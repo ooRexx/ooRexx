@@ -58,12 +58,15 @@
  *  the option.
  */
 
+    -- Determine which directory our source code files are in:
+    sd = locate()
+
     -- Set the defaults for this application.  Use the global .constDir 'O'nly,
     -- Read the 'customDrawListview.h' file for symbolic resource ID
     -- definitions.  And, turn automatica data detection off (.false.)
-    .application~setDefaults('O', 'rc\customDrawListview.h', .false)
+    .application~setDefaults('O', sd'rc\customDrawListview.h', .false)
 
-    dlg = .CustomDrawDlg~new('rc\customDrawListview.rc', IDD_CUSTOMDRAW)
+    dlg = .CustomDrawDlg~new(sd'rc\customDrawListview.rc', IDD_CUSTOMDRAW)
     if dlg~initCode = 0 then do
         dlg~execute("SHOWTOP")
     end

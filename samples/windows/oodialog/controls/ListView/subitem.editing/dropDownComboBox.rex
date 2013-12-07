@@ -224,7 +224,7 @@ return 0
 
     if key == 'enter' then do
         text = editCtrl~getText~strip
-        if tex \== '' then list~setItemText(lastIdx, lastCol, text)
+        if text \== '' then list~setItemText(lastIdx, lastCol, text)
         self~hideComboBox(editCtrl)
     end
     else if key == 'escape' then self~hideComboBox(editCtrl)

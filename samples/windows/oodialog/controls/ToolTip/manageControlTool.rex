@@ -96,9 +96,10 @@
  * in other situations.
  */
 
-  .application~setDefaults('O', 'manageControlTool.h', .false)
+  sd = locate()
+  .application~setDefaults('O', sd'manageControlTool.h', .false)
 
-  dlg = .TreeViewDialog~new('manageControlTool.rc', IDD_TREEVIEW)
+  dlg = .TreeViewDialog~new(sd'manageControlTool.rc', IDD_TREEVIEW)
   dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
 
 

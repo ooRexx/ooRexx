@@ -53,9 +53,10 @@
  * down keys and observe what happens.
  */
 
-  .application~setDefaults('O', 'fiscalReports.h', .false)
+  sd = locate()
+  .application~setDefaults('O', sd'fiscalReports.h', .false)
 
-  dlg = .FiscalReports~new('fiscalReports.rc', IDD_FISCAL_REPORTS)
+  dlg = .FiscalReports~new(sd'fiscalReports.rc', IDD_FISCAL_REPORTS)
   dlg~execute("SHOWTOP")
 
 return 0

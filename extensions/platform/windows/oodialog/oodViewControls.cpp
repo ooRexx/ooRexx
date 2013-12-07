@@ -50,6 +50,7 @@
 #include "oodMessaging.hpp"
 #include "oodControl.hpp"
 #include "oodResources.hpp"
+#include "oodShared.hpp"
 
 /**
  * Methods for the DateTimePicker class.

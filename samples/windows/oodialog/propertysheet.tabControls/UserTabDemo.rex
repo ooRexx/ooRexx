@@ -38,8 +38,8 @@
 /**
  * UserTabDemo.rex
  */
-
-    .application~useGlobalConstDir('O', 'rc\UserTabDemo.h')
+    sd = locate()
+    .application~useGlobalConstDir('O', sd'rc\UserTabDemo.h')
     .application~autoDetection(.false)
     .application~defaultFont('Tahoma', 10)
 

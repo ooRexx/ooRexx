@@ -47,6 +47,7 @@
 
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodShared.hpp"
 #include "oodMessaging.hpp"
 #include "oodControl.hpp"
 #include "oodResources.hpp"
@@ -1395,13 +1396,32 @@ RexxMethod2(RexxObjectPtr, tv_itemInfo, CSTRING, _hItem, CSELF, pCSelf)
  *
  *  @return  The image list, if it exists, otherwise .nil.
  */
-RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
+RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_RexxObjectPtr, _type, OSELF, self)
 {
+    uint32_t type;
+
     if ( argumentOmitted(1) )
     {
         type = TVSIL_NORMAL;
     }
-    else if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
+    else if ( context->UnsignedInt32(_type, &type) )
+    {
+        ; // Do nothing, we're good now;
+    }
+    else
+    {
+        CSTRING t = context->ObjectToStringValue(_type);
+
+        if (      StrCmpI(t, "NORMAL") == 0 ) type = TVSIL_NORMAL;
+        else if ( StrCmpI(t, "STATE")  == 0 ) type = TVSIL_STATE;
+        else
+        {
+            wrongArgKeywordException(context, 1, "NORMAL or STATE", t);
+            return TheNilObj;
+        }
+    }
+
+    if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
     {
         return invalidTypeException(context->threadContext, 2, "TVSIL_XXX flag");
     }
@@ -1595,6 +1615,38 @@ RexxMethod3(RexxObjectPtr, tv_getNextItem, CSTRING, _hItem, NAME, method, CSELF,
     else if ( strcmp(method, "PREVIOUSVISIBLE") == 0 ) flag = TVGN_PREVIOUSVISIBLE;
 
     return pointer2string(context, TreeView_GetNextItem(hwnd, hItem, flag));
+}
+
+
+/** TreeView::getStateImage()
+ *
+ *  Returns the index of the state image for the specified tree-view item
+ *
+ *  @param  hItem  [required]  The handle of the item whose state image index is
+ *                 to be retrieved.
+ *
+ *  @return  Returns the index of the state image for the tree-view item, which
+ *           will be 0 if there is not state imge index.  Returns -1 on error.
+ */
+RexxMethod2(RexxObjectPtr, tv_getStateImage, CSTRING, _hItem, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return 0;
+    }
+
+    TVITEMEX  tvi = { 0 };
+    tvi.hItem     = (HTREEITEM)string2pointer(_hItem);;
+    tvi.mask      = TVIF_STATE;
+    tvi.stateMask = TVIS_STATEIMAGEMASK;
+
+    if ( TreeView_GetItem(pcdc->hCtrl, &tvi) == 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    return context->UnsignedInt32((tvi.state & TVIS_STATEIMAGEMASK) >> 12);
 }
 
 
@@ -1883,10 +1935,11 @@ RexxMethod2(RexxObjectPtr, tv_removeItemData, CSTRING, _hItem, CSELF, pCSelf)
  *
  *  Sets or removes one of a tree-view's image lists.
  *
- *  @param ilSrc  The image list source. Either an .ImageList object that
- *                references the image list to be set, or a single bitmap from
- *                which the image list is constructed, or .nil.  If ilSRC is
- *                .nil, an existing image list, if any is removed.
+ *  @param ilSrc  [requiredd]  The image list source. Either an .ImageList
+ *                object that references the image list to be set, or a single
+ *                bitmap from which the image list is constructed, or .nil.  If
+ *                ilSRC is .nil or omitted, an existing image list, if any is
+ *                removed.
  *
  *  @param width  [optional]  This arg serves two purposes.  If ilSrc is .nil or
  *                an .ImageList object, this arg indentifies which of the
@@ -1894,11 +1947,15 @@ RexxMethod2(RexxObjectPtr, tv_removeItemData, CSTRING, _hItem, CSELF, pCSelf)
  *                default is TVSI_NORMAL.
  *
  *                If ilSrc is a bitmap, then this arg is the width of a single
- *                image.  The default is the height of the actual bitmap.
+ *                image.  The default is the height of the actual bitmap.  This
+ *                usage is only retained for the deprecated TreeView::setImages.
+ *                That method is no longer documented, so we do not document
+ *                this usage.
  *
- *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in which case it
- *                is the height of the bitmap.  The default is the height of the
- *                actual bitmap
+ *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in
+ *                which case it is the height of the bitmap.  The default is the
+ *                height of the actual bitmap.  This usasge is only retained for
+ *                the deprecated setImages() method.
  *
  *  @return       Returns the exsiting .ImageList object if there is one, or
  *                .nil if there is not an existing object.
@@ -1912,17 +1969,42 @@ RexxMethod2(RexxObjectPtr, tv_removeItemData, CSTRING, _hItem, CSELF, pCSelf)
  *         reserved for adding more images to the image list, etc..
  *
  *         The image list can only be assigned to the normal image list.  There
- *         is no way to use the image list for the state image list.
+ *         is no way to use the image list for the state image list. This usage
+ *         is no longer documented.
  */
-RexxMethod4(RexxObjectPtr, tv_setImageList, RexxObjectPtr, ilSrc,
-            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, CSELF, pCSelf)
+RexxMethod4(RexxObjectPtr, tv_setImageList, OPTIONAL_RexxObjectPtr, ilSrc,
+            OPTIONAL_RexxObjectPtr, _width, OPTIONAL_int32_t, height, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
     HWND hwnd = getDChCtrl(pCSelf);
 
-    HIMAGELIST himl = NULL;
-    int type = TVSIL_NORMAL;
     RexxObjectPtr imageList = NULLOBJECT;
+    HIMAGELIST    himl      = NULL;
+
+    if ( argumentOmitted(1) )
+    {
+        ilSrc = TheNilObj;
+    }
+
+    int type  = TVSIL_NORMAL;
+    int width = 0;
+
+    if ( argumentExists(2) )
+    {
+        if ( ! context->Int32(_width, &width) )
+        {
+            // If it is not a number, it has to be a keyword;
+            CSTRING t = context->ObjectToStringValue(_width);
+
+            if (      StrCmpI(t, "NORMAL") == 0 ) width = TVSIL_NORMAL;
+            else if ( StrCmpI(t, "STATE")  == 0 ) width = TVSIL_STATE;
+            else
+            {
+                wrongArgKeywordException(context, 2, "NORMAL or STATE", t);
+                return TheNilObj;
+            }
+        }
+    }
 
     if ( ilSrc == TheNilObj )
     {
@@ -2064,6 +2146,40 @@ RexxMethod2(int32_t, tv_setItemHeight, int32_t, cyItem, CSELF, pCSelf)
 {
     HWND hwnd  = getDChCtrl(pCSelf);
     return TreeView_SetItemHeight(hwnd, cyItem);
+}
+
+
+/** TreeView::setStateImage()
+ *
+ *  Assigns the index of the state image for the specified tree-view item.
+ *
+ *  @param  hItem  [required]  The handle of the item whose state image index is
+ *                 to be retrieved.
+ *
+ *  @param  index  [required]  The index to assign.
+ *
+ *  @return  Returns true on success, false on error.
+ */
+RexxMethod3(RexxObjectPtr, tv_setStateImage, CSTRING, _hItem, uint8_t, index, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return TheFalseObj;
+    }
+
+    TVITEMEX  tvi = { 0 };
+    tvi.hItem     = (HTREEITEM)string2pointer(_hItem);;
+    tvi.mask      = TVIF_STATE;
+    tvi.stateMask = TVIS_STATEIMAGEMASK;
+    tvi.state     = INDEXTOSTATEIMAGEMASK(index);
+
+    if ( TreeView_SetItem(pcdc->hCtrl, &tvi) == 0 )
+    {
+        return TheFalseObj;
+    }
+
+    return TheTrueObj;
 }
 
 

@@ -1,0 +1,77 @@
+''                                                                              || .endOfLine || -
+''                                                                              || .endOfLine || -
+'                   Changing the System Date and Time'                          || .endOfLine || -
+'                   ================================='                          || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    This program allows you to change the system date and or time by'          || .endOfLine || -
+'    setting the displayed date and time in the date and time picker control'   || .endOfLine || -
+'    in the center of the dialog to the desired new date (and / or new'         || .endOfLine || -
+'    time.)'                                                                    || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    User Interface'                                                            || .endOfLine || -
+'    =============='                                                            || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    Two fields on the left of the dialog show the current system date and'     || .endOfLine || -
+'    time.'                                                                     || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    Two fields on the right of the dialog show the date and time the system'   || .endOfLine || -
+'    date and time will be changed to, if the user clicks the okay button at'   || .endOfLine || -
+'    that point.  When there is no change to the system date and time, the'     || .endOfLine || -
+'    fields are empty and colored greenish as a visual clue that nothing'       || .endOfLine || -
+'    will change.  When there will be a change to the system date and time'     || .endOfLine || -
+'    the fields are colored reddish.'                                           || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    The new system date and time are specified by changing the date and /'     || .endOfLine || -
+'    or time in the date and time picker control in the center of the'          || .endOfLine || -
+'    dialog.  This is done through the standard date and time picker user'      || .endOfLine || -
+'    interface.'                                                                || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    This program allows directly entering what are termed 'shortcut''          || .endOfLine || -
+'    strings.'                                                                  || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    When the program starts, the DTP control is set to the current system'     || .endOfLine || -
+'    date and time.  Of course as the dialog executes the system time is'       || .endOfLine || -
+'    advancing.  If the DTP is changed to a new date and / or time, but then'   || .endOfLine || -
+'    those changes need to be undone, it would be difficult to manually set'    || .endOfLine || -
+'    the DTP control to the current system date and time.  So that operation'   || .endOfLine || -
+'    is one set of shortcuts.'                                                  || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    The other set of shortcuts allows directly changing the DTP display to'    || .endOfLine || -
+'    some time or date by just typing it in.  For instance, to change the'      || .endOfLine || -
+'    date to May 12, 2050, rather than page through the DTP control to get'     || .endOfLine || -
+'    there, 5/12/2050 can be typed directly in the DTP control.'                || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    To directly type in the DTP control, use either the F2 key, or mouse'      || .endOfLine || -
+'    click on the DTP control's display area when the DTP currently has the'    || .endOfLine || -
+'    focus.  This is a (little known?) feature of the DTP control itself.'      || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    The valid shortcuts are these:'                                            || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    Reset shortcut:'                                                           || .endOfLine || -
+''                                                                              || .endOfLine || -
+'      This shortcut resets any changes to the date and or time to none.  It'   || .endOfLine || -
+'      also resets the date and time picker control to the current system'      || .endOfLine || -
+'      date and time.'                                                          || .endOfLine || -
+''                                                                              || .endOfLine || -
+'      Type 'reset', 'cancel' 'r', or 'c'  Case is not significant.'            || .endOfLine || -
+''                                                                              || .endOfLine || -
+'    New date and or new time shortcut:'                                        || .endOfLine || -
+''                                                                              || .endOfLine || -
+'      This shortcut allows directly entering a new date, or a new time,'       || .endOfLine || -
+'      or both.'                                                                || .endOfLine || -
+''                                                                              || .endOfLine || -
+'      Formats for new date:  mm/dd, or mm/dd/yyyy'                             || .endOfLine || -
+''                                                                              || .endOfLine || -
+'      Formats for new time:  hh:mm, or hh:mm:ss'                               || .endOfLine || -
+''                                                                              || .endOfLine || -
+'      When both date and time are entered, the date must precede the time.'    || .endOfLine || -
+'      The date and time must be separated by one or more spaces.  It is not'   || .endOfLine || -
+'      required to enter both a date and a time.  Only a new date can be'       || .endOfLine || -
+'      entered, or only a new time.'                                            || .endOfLine || -
+''                                                                              || .endOfLine || -
+'      Months (mm), days (dd), hours (hh), minutes (mm), or seconds(ss) can'    || .endOfLine || -
+'      contain a leading 0, but are not required to.  I.e., for June 5th,'      || .endOfLine || -
+'      the new date string can be 06/05, 6/05, 06/5, or 6/5.  The year'         || .endOfLine || -
+'      (yyyy) portion of the new date string is required to be the 4 digit'     || .endOfLine || -
+'      year. I.e.  6/5/11 is not valid for June 5th 2011.'                      || .endOfLine || -
+''                                                                              || .endOfLine

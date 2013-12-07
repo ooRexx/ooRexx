@@ -42,18 +42,14 @@
 /*--------------------------------------------------------------------------*/
 
 
-  -- A directory manager saves the current directory and can later go back to
-  -- that directory.  It also sets up the environment we need.  The class
-  -- itself is located in samplesSetup.rex
-  mgr = .DirectoryManager~new()
+  -- Ensure we can find our resource files.
+  srcDir = locate()
 
-  d = .SampleDlg~new("rc\sample.rc", 100)
+  d = .SampleDlg~new(srcDir"rc\sample.rc", 100)
   if d~initCode <> 0 then do
-     mgr~goBack
      return 99
   end
   d~execute("SHOWTOP")
-  mgr~goBack
   return 0
 
 
@@ -67,19 +63,20 @@
 ::class 'SampleDlg' subclass RcDialog
 
 ::method initDialog
-   self~installBitmapButton(101, "VIDEO",    "bmp\s2arch.bmp"  ,,,,"FRAME STRETCH")
-   self~installBitmapButton(102, "PET",      "bmp\s2anim.bmp"  ,,,,"FRAME STRETCH")
-   self~installBitmapButton(103, "PHIL",     "bmp\s2philf.bmp" ,,,,"FRAME STRETCH")
-   self~installBitmapButton(104, "GRAPHD",   "bmp\s2scroll.bmp",,,,"FRAME STRETCH")
-   self~installBitmapButton(105, "WALKER",   "bmp\s2walker.bmp",,,,"FRAME STRETCH")
-   self~installBitmapButton(106, "BANDIT",   "bmp\s2jack.bmp"  ,,,,"FRAME STRETCH")
-   self~installBitmapButton(107, "USER",     "bmp\s2input.bmp" ,,,,"FRAME STRETCH")
-   self~installBitmapButton(108, "WIZ97",    "bmp\s2mov.bmp"   ,,,,"FRAME STRETCH")
-   self~installBitmapButton(109, "TREE",     "bmp\s2tree.bmp"  ,,,,"FRAME STRETCH")
-   self~installBitmapButton(110, "LIST",     "bmp\s2list.bmp"  ,,,,"FRAME STRETCH")
-   self~installBitmapButton(111, "PROGRESS", "bmp\s2prog.bmp"  ,,,,"FRAME STRETCH")
-   self~installBitmapButton(112, "PROPERTY", "bmp\s2prop.bmp"  ,,,,"FRAME STRETCH")
-   self~backgroundBitmap("bmp\s2backg.bmp", "USEPAL")
+   sd = .application~srcDir
+   self~installBitmapButton(101, "VIDEO",    sd"bmp\s2arch.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(102, "PET",      sd"bmp\s2anim.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(103, "PHIL",     sd"bmp\s2philf.bmp" ,,,,"FRAME STRETCH")
+   self~installBitmapButton(104, "GRAPHD",   sd"bmp\s2scroll.bmp",,,,"FRAME STRETCH")
+   self~installBitmapButton(105, "WALKER",   sd"bmp\s2walker.bmp",,,,"FRAME STRETCH")
+   self~installBitmapButton(106, "BANDIT",   sd"bmp\s2jack.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(107, "USER",     sd"bmp\s2input.bmp" ,,,,"FRAME STRETCH")
+   self~installBitmapButton(108, "WIZ97",    sd"bmp\s2mov.bmp"   ,,,,"FRAME STRETCH")
+   self~installBitmapButton(109, "TREE",     sd"bmp\s2tree.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(110, "LIST",     sd"bmp\s2list.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(111, "PROGRESS", sd"bmp\s2prog.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(112, "PROPERTY", sd"bmp\s2prop.bmp"  ,,,,"FRAME STRETCH")
+   self~backgroundBitmap(sd"bmp\s2backg.bmp", "USEPAL")
 
 ::method video
    self~loadApp("oovideo.rex")
@@ -91,7 +88,7 @@
    self~loadApp("oophil.rex")
 
 ::method walker
-   self~loadApp("oowalker.rex")
+   self~loadApp("oowalk2.rex")
 
 ::method bandit
    self~loadApp("oobandit.rex", 3300)
@@ -103,19 +100,19 @@
    self~loadApp("oodStandardDialogs.rex", 2800)
 
 ::method wiz97
-   self~loadApp("propertySheet.tabControls\ticketWizard.rex")
+   self~loadApp(.application~srcDir"propertySheet.tabControls\ticketWizard.rex")
 
 ::method tree
-   self~loadApp("controls\TreeView\treeViewCustomDraw.rex")
+   self~loadApp(.application~srcDir"controls\TreeView\treeViewCustomDraw.rex")
 
 ::method list
-   self~loadApp("propertySheet.tabControls\oodListViews.rex")
+   self~loadApp(.application~srcDir"propertySheet.tabControls\oodListViews.rex")
 
 ::method progress
    self~loadApp("oodpbar.rex")
 
 ::method property
-   self~loadApp("propertySheet.tabControls\PropertySheetDemo.rex")
+   self~loadApp(.application~srcDir"propertySheet.tabControls\PropertySheetDemo.rex")
 
 
 ::method cancel
@@ -138,11 +135,9 @@
    ret = play("start.wav", "yes")
    d = .TimedMessage~new("Application will be started, please wait","Samples", pauseTime)
    d~execute
-   /* save current directory */
-   curDir = Directory()
+
    call (appname)
-   /* switch back to previous directory */
-   ret = Directory(curDir)
+
    /* make sure main window is enabled and the topmost window */
    self~enable
    self~toTheTop

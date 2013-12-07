@@ -124,6 +124,7 @@
 ::method title unguarded external "LIBRARY oodialog wb_getText"
 ::method "title=" unguarded external "LIBRARY oodialog wb_setText"
 ::method update unguarded external "LIBRARY oodialog wb_redrawClient"
+::method updateWindow unguarded external "LIBRARY oodialog wb_updateWindow"
 ::method windowRect unguarded external "LIBRARY oodialog wb_windowRect"
 
 

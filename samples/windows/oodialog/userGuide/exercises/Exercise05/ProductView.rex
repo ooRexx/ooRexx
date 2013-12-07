@@ -51,7 +51,7 @@
 ------------------------------------------------------------------------------*/
 
 ::requires "ooDialog.cls"
-::requires "..\Support\NumberOnlyEditEx.cls"
+::requires "Support\NumberOnlyEditEx.cls"
 ::requires "ProductModelData.rex"
 
 

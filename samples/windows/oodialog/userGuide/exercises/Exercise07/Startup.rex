@@ -36,7 +36,7 @@
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
    Exercise 07: The Order Management Application
-   Startup.rex 							  v01-02 11Aug12
+   Startup.rex 							  v01-02 01Apr13
 
    Description: This file is the "application" or "root" or "starter" part
                 of the sample Order Management application.
@@ -46,7 +46,8 @@
      v01-01 07Aug12: Support for ObjectMgr and ViewMgr added. MessageSender is
                      optional.
             11Jan13: Deleted Commented-out startup of MessageSender.
-
+            01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
+                     folder, so change to ::Requires needed. 
 
 ------------------------------------------------------------------------------*/
 
@@ -67,7 +68,7 @@ vm = .ViewMgr~new
 .OrderMgrView~newInstance
 
 ::REQUIRES "OrderMgr\OrderMgrView.rex"
-::REQUIRES "..\Support\ObjectMgr.rex"
-::REQUIRES "..\Support\ViewMgr.rex"
-::REQUIRES "..\Support\MessageSender.rex"
+::REQUIRES "Support\ObjectMgr.rex"
+::REQUIRES "Support\ViewMgr.rex"
+::REQUIRES "Support\MessageSender.rex"
 /******************************************************************************/
