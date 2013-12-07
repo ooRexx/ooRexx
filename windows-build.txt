@@ -164,7 +164,7 @@ or at
 
 https://sourceforge.net/projects/oorexx/files/oorexx-buildutils/1.2.0/
 
-Using the NSIS supplied in Nsis_shortStrings.zip is absolutely the best and
+Using the NSIS supplied in Nsis_longStrings.zip is absolutely the best and
 easiest option.  Everything needed to create a safe Windows installation
 package is included.  No extra NSIS plugins need to be added.
 
@@ -422,7 +422,7 @@ installer by using the PACKAGE option.  NSIS needs to be installed correctly
 for this to work.
 
 Note: The best option for installing NSIS is to use the
-Nsis_shortStrings.zip package provided by the ooRexx project on SourceForge
+Nsis_longStrings.zip package provided by the ooRexx project on SourceForge
 at:
 
 https://sourceforge.net/projects/oorexx/files/windows-build-tools/1.0/?
@@ -431,7 +431,7 @@ or at
 
 https://sourceforge.net/projects/oorexx/files/oorexx-buildutils/1.2.0/
 
-Using the NSIS supplied in Nsis_shortStrings.zip is absolutely the best and
+Using the NSIS supplied in Nsis_longStrings.zip is absolutely the best and
 easiest option.  Everything needed to create a safe Windows installation
 package is included.  No extra NSIS plugins need to be added.
 
@@ -440,7 +440,7 @@ After installing the base NSIS package, do the following:
 Be sure makensis.exe is in the path.  This file is located in the top-level
 directory of the installed NSIS package.
 
-Note: the additional plugis are NOT needed if Nsis_shortStrings.zip is used.
+Note: the additional plugis are NOT needed if Nsis_longStrings.zip is used.
 
 2 additional NSIS plugins need to be added to the base install.  These files
 need to be put into the 'Plugins' subdirectory of the base install.  They
