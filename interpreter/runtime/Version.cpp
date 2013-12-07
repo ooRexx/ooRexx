@@ -70,7 +70,13 @@ RexxString *Interpreter::getVersionNumber()
             day++;                             /* step over it                      */
         }
                                                /* format the result                 */
-        sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT) 6.04 %s %s %s", ORX_VER, ORX_REL, ORX_MOD, day, month, year);
+        sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT)_%s-bit 6.04 %s %s %s", ORX_VER, ORX_REL, ORX_MOD,
+#ifdef __REXX64__
+			"64",
+#else
+			"32",
+#endif
+			day, month, year);
         versionNumber = new_string(buffer);  /* return as a rexx string           */
     }
     return versionNumber;
