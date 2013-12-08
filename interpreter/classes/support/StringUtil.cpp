@@ -724,7 +724,8 @@ size_t StringUtil::validateSet(const char *String, size_t Length, const char *Se
     size_t   Residue = 0;                /* if space_found, # set             */
                                          /* members                           */
 
-    if (*String == ch_SPACE)             /* if no leading blank               */
+    // leading whitespace not permitted
+    if (*String == ch_SPACE || *String == ch_TAB)
     {
         if (Hex)                           /* hex version?                      */
         {
@@ -751,7 +752,7 @@ size_t StringUtil::validateSet(const char *String, size_t Length, const char *Se
         }
         else
         {
-            if (c == ch_SPACE || c == '\t')
+            if (c == ch_SPACE || c == ch_TAB)
             {             /* if c blank                        */
                 SpaceLocation = Current;       /* save the space location           */
                 if (!SpaceFound)
@@ -791,7 +792,7 @@ size_t StringUtil::validateSet(const char *String, size_t Length, const char *Se
         }
     }
     /* if trailing blank or grouping bad */
-    if ((c == ch_SPACE) || (SpaceFound && ((Count % Modulus) != Residue)))
+    if ((c == ch_SPACE || c == ch_TAB) || (SpaceFound && ((Count % Modulus) != Residue)))
     {
         if (Hex)                           /* hex version?                      */
         {
