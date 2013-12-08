@@ -18,7 +18,7 @@ File List
 =========
 
 Linux rpm and deb packages contain the distribution name, version of the
-system they were built on, and an indicator of the bitness of the interpter.
+system they were built on, and an indicator of the bitness of the interpreter.
 For instance, ooRexx-4.2.0-9643.opensuse1230.x86_64.rpm was built on
 OpenSuSE 13.30 and is a 64 bit interpreter.
 
@@ -105,8 +105,8 @@ Changes in ooRexx 4.2.0
 =======================
 
 For the ooRexx 4.2.0 release, changes have been relatively well documented
-through the Tracker featue of the ooRexx project on SourceForge.  The ticket
-number of each change and a synopsis of the change is recorded in the CHAGES
+through the Tracker feature of the ooRexx project on SourceForge.  The ticket
+number and the ticket title of each change is recorded in the CHANGES
 document.  If more information is desired, look up the tracker item on
 SourceForge.
 
@@ -114,7 +114,7 @@ The Bug tracker is located at:
 
   https://sourceforge.net/p/oorexx/bugs/
 
-The Requests For Enhancment tracker is located at:
+The Requests For Enhancement tracker is located at:
 
   https://sourceforge.net/p/oorexx/feature-requests/
 
