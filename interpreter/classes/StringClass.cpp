@@ -1493,7 +1493,7 @@ RexxString *RexxString::stringTrace()
     for (; i > 0; i--)
     {                 /* loop for the entire string        */
                       /* control character?                */
-        if (*Current < ' ')
+        if (*Current < ch_SPACE)
         {
             NonDisplay = true;               /* got a non-displayable             */
             break;                           /* get out of here                   */
@@ -1513,7 +1513,7 @@ RexxString *RexxString::stringTrace()
     for (; i > 0; i--)
     {                 /* loop for the entire string        */
                       /* control character?                */
-        if (*outptr < ' ' && *outptr != '\t')
+        if (*outptr < ch_SPACE && *outptr != ch_TAB)
         {
             *outptr = '?';                 /* yes, change to question           */
         }

@@ -629,7 +629,7 @@ RexxString *RexxString::x2b()
         {              /* while still string to pack        */
             ch = *Source++;                  /* get current char and bump         */
                                              /* pointer                           */
-            if (ch != ch_SPACE)
+            if (ch != ch_SPACE && ch != ch_TAB)
             {            /* if not a filler space             */
                 Val = StringUtil::hexDigitToInt(ch);       /* convert hex to int first          */
                 StringUtil::unpackNibble(Val, Nibble);     /* then convert to binary            */
