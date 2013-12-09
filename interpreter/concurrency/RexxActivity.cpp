@@ -489,6 +489,7 @@ RexxDirectory *RexxActivity::createConditionObject(RexxString *condition, RexxOb
 {
     // condition objects are directories
     RexxDirectory *conditionObj = new_directory();
+    ProtectedObject p(conditionObj);
                                        /* put in the condition name         */
     conditionObj->put(condition, OREF_CONDITION);
                                        /* fill in default description       */

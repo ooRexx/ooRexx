@@ -155,7 +155,10 @@ RexxObjectPtr RexxEntry SendMessageArray(RexxThreadContext *c, RexxObjectPtr o, 
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxObject *)o)->sendMessage(new_upper_string(m), (RexxArray *)a));
+        RexxString *message = new_upper_string(m);
+        ProtectedObject p(message);
+
+        return context.ret(((RexxObject *)o)->sendMessage(message, (RexxArray *)a));
     }
     catch (RexxNativeActivation *)
     {
@@ -169,7 +172,9 @@ RexxObjectPtr RexxEntry SendMessage0(RexxThreadContext *c, RexxObjectPtr o, CSTR
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxObject *)o)->sendMessage(new_upper_string(m)));
+        RexxString *message = new_upper_string(m);
+        ProtectedObject p(message);
+        return context.ret(((RexxObject *)o)->sendMessage(message));
     }
     catch (RexxNativeActivation *)
     {
@@ -183,7 +188,9 @@ RexxObjectPtr RexxEntry SendMessage1(RexxThreadContext *c, RexxObjectPtr o, CSTR
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxObject *)o)->sendMessage(new_upper_string(m), (RexxObject *)a1));
+        RexxString *message = new_upper_string(m);
+        ProtectedObject p(message);
+        return context.ret(((RexxObject *)o)->sendMessage(message, (RexxObject *)a1));
     }
     catch (RexxNativeActivation *)
     {
@@ -196,7 +203,9 @@ RexxObjectPtr RexxEntry SendMessage2(RexxThreadContext *c, RexxObjectPtr o, CSTR
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxObject *)o)->sendMessage(new_upper_string(m), (RexxObject *)a1, (RexxObject *)a2));
+        RexxString *message = new_upper_string(m);
+        ProtectedObject p(message);
+        return context.ret(((RexxObject *)o)->sendMessage(message, (RexxObject *)a1, (RexxObject *)a2));
     }
     catch (RexxNativeActivation *)
     {
@@ -252,6 +261,7 @@ logical_t RexxEntry IsOfType(RexxThreadContext *c, RexxObjectPtr o, CSTRING cn)
         // convert the name to a string instance, and get the class object from
         // our current context
         RexxString *name = new_upper_string(cn);
+        ProtectedObject p(name);
         RexxClass *classObject = context.context->findClass(name);
         // if not found, this is always false
         if (classObject == OREF_NULL)
@@ -272,8 +282,10 @@ logical_t RexxEntry HasMethod(RexxThreadContext *c, RexxObjectPtr o, CSTRING n)
     ApiContext context(c);
     try
     {
+        RexxString *name = new_upper_string(n);
+        ProtectedObject p(name);
         // convert the name to a string instance, and check the environments.
-        return ((RexxObject *)o)->hasMethod(new_upper_string(n)) == TheTrueObject;
+        return ((RexxObject *)o)->hasMethod(name) == TheTrueObject;
 
     }
     catch (RexxNativeActivation *)
@@ -289,6 +301,7 @@ RexxPackageObject RexxEntry LoadPackage(RexxThreadContext *c, CSTRING n)
     try
     {
         RexxString *name = new_string(n);
+        ProtectedObject p(name);
         RexxString *resolvedName = context.activity->getInstance()->resolveProgramName(name, OREF_NULL, OREF_NULL);
 
         // convert the name to a string instance, and check the environments.
@@ -306,7 +319,9 @@ RexxPackageObject RexxEntry LoadPackageFromData(RexxThreadContext *c, CSTRING n,
     ApiContext context(c);
     try
     {
-        return (RexxPackageObject)context.ret(context.activity->getInstance()->loadRequires(context.activity, new_string(n), d, l));
+        RexxString *name = new_string(n);
+        ProtectedObject p(name);
+        return (RexxPackageObject)context.ret(context.activity->getInstance()->loadRequires(context.activity, name, d, l));
     }
     catch (RexxNativeActivation *)
     {
@@ -321,6 +336,7 @@ logical_t RexxEntry LoadLibraryPackage(RexxThreadContext *c, CSTRING n)
     try
     {
         RexxString *name = new_string(n);
+        ProtectedObject p(name);
 
         // convert the name to a string instance, and check the environments.
         return PackageManager::loadLibrary(name) != OREF_NULL;
@@ -338,6 +354,7 @@ logical_t RexxEntry RegisterLibrary(RexxThreadContext *c, CSTRING n, RexxPackage
     try
     {
         RexxString *name = new_string(n);
+        ProtectedObject p(name);
 
         // convert the name to a string instance, and check the environments.
         return PackageManager::registerPackage(name, e);
@@ -356,6 +373,7 @@ RexxClassObject RexxEntry FindClass(RexxThreadContext *c, CSTRING n)
     {
         // convert the name to a string instance, and check the environments.
         RexxString *name = new_upper_string(n);
+        ProtectedObject p(name);
         return (RexxClassObject)context.ret(context.context->findClass(name));
 
     }
@@ -373,6 +391,7 @@ RexxClassObject RexxEntry FindClassFromPackage(RexxThreadContext *c, RexxPackage
     {
         // convert the name to a string instance, and check the environments.
         RexxString *name = new_upper_string(n);
+        ProtectedObject p(name);
         return (RexxClassObject)context.ret(((PackageClass *)m)->findClass(name));
 
     }
@@ -482,13 +501,15 @@ RexxObjectPtr RexxEntry CallProgram(RexxThreadContext *c, const char * p, RexxAr
 }
 
 
-RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING name, CSTRING source, stringsize_t length)
+RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING n, CSTRING source, stringsize_t length)
 {
     ApiContext context(c);
     try
     {
+        RexxString *name = new_upper_string(n);
+        ProtectedObject p(name);
         // convert the name to a string instance, and check the environments.
-        return (RexxMethodObject)context.ret(new RexxMethod(new_string(name), source, length));
+        return (RexxMethodObject)context.ret(new RexxMethod(new_string(n), source, length));
     }
     catch (RexxNativeActivation *)
     {
@@ -497,13 +518,15 @@ RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING name, CSTRING
 }
 
 
-RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING name, CSTRING source, stringsize_t length)
+RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING source, stringsize_t length)
 {
     ApiContext context(c);
     try
     {
+        RexxString *name = new_upper_string(n);
+        ProtectedObject p(name);
         // convert the name to a string instance, and check the environments.
-        return (RexxRoutineObject)context.ret(new RoutineClass(new_string(name), source, length));
+        return (RexxRoutineObject)context.ret(new RoutineClass(name, source, length));
     }
     catch (RexxNativeActivation *)
     {
@@ -1164,7 +1187,9 @@ void  RexxEntry DirectoryPut(RexxThreadContext *c, RexxDirectoryObject t, RexxOb
     ApiContext context(c);
     try
     {
-        ((RexxDirectory *)t)->put((RexxObject *)o, new_string(i));
+        RexxString *index = new_upper_string(i);
+        ProtectedObject p(index);
+        ((RexxDirectory *)t)->put((RexxObject *)o, index);
     }
     catch (RexxNativeActivation *)
     {
@@ -1176,7 +1201,9 @@ RexxObjectPtr RexxEntry DirectoryAt(RexxThreadContext *c, RexxDirectoryObject t,
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxDirectory *)t)->at(new_string(i)));
+        RexxString *index = new_upper_string(i);
+        ProtectedObject p(index);
+        return context.ret(((RexxDirectory *)t)->at(index));
     }
     catch (RexxNativeActivation *)
     {
@@ -1189,7 +1216,9 @@ RexxObjectPtr RexxEntry DirectoryRemove(RexxThreadContext *c, RexxDirectoryObjec
     ApiContext context(c);
     try
     {
-        return context.ret(((RexxDirectory *)t)->remove(new_string(i)));
+        RexxString *index = new_upper_string(i);
+        ProtectedObject p(index);
+        return context.ret(((RexxDirectory *)t)->remove(index));
     }
     catch (RexxNativeActivation *)
     {
@@ -1278,6 +1307,7 @@ size_t RexxEntry ArrayAppendString(RexxThreadContext *c, RexxArrayObject a, CSTR
     try
     {
         RexxString *str = new_string(s, (stringsize_t)l);
+        ProtectedObject p(str);
         return ((RexxArray *)a)->append(str);
     }
     catch (RexxNativeActivation *)
@@ -1561,18 +1591,20 @@ RexxSupplierObject RexxEntry NewSupplier(RexxThreadContext *c, RexxArrayObject v
     return NULLOBJECT;
 }
 
-RexxStemObject RexxEntry NewStem(RexxThreadContext *c, CSTRING name)
+RexxStemObject RexxEntry NewStem(RexxThreadContext *c, CSTRING n)
 {
     ApiContext context(c);
     try
     {
-        if (name == NULL)
+        if (n == NULL)
         {
             return (RexxStemObject)context.ret(new RexxStem(OREF_NULL));
         }
         else
         {
-            return (RexxStemObject)context.ret(new RexxStem(new_string(name)));
+            RexxString *name = new_upper_string(n);
+            ProtectedObject p(name);
+            return (RexxStemObject)context.ret(new RexxStem(name));
         }
 
     }
@@ -1743,13 +1775,15 @@ void RexxEntry APIRaiseException(RexxThreadContext *c, size_t n, RexxArrayObject
     }
 }
 
-void RexxEntry RaiseCondition(RexxThreadContext *c, CSTRING name, RexxStringObject desc, RexxObjectPtr add, RexxObjectPtr result)
+void RexxEntry RaiseCondition(RexxThreadContext *c, CSTRING n, RexxStringObject desc, RexxObjectPtr add, RexxObjectPtr result)
 {
     ApiContext context(c);
     try
     {
+        RexxString *name = new_upper_string(n);
+        ProtectedObject p(name);
         context.context->enableConditionTrap();
-        context.activity->raiseCondition(new_upper_string(name), OREF_NULL, (RexxString *)desc, (RexxObject *)add, (RexxObject *)result);
+        context.activity->raiseCondition(name, OREF_NULL, (RexxString *)desc, (RexxObject *)add, (RexxObject *)result);
     }
     catch (RexxNativeActivation *)
     {
