@@ -3069,7 +3069,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Overflow</SymbolicName>
     <Text>Arithmetic overflow/underflow</Text>
-    <Explanation><para>The result of an arithmetic operation requires an exponent that is greater than the platform limit of nine digits for 32-bit systems or 18 for 64-bit systems.</para>
+    <Explanation><para>The result of an arithmetic operation requires an exponent that is greater than the platform limit of nine digits.</para>
     <para>This error can occur during the evaluation of an expression (often as a result of trying to divide a number by 0) or while stepping a DO loop control variable.</para></Explanation>
     <Subcodes>
       <SubMessage>

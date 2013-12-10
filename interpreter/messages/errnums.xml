@@ -2249,7 +2249,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>The result of an arithmetic operation requires an exponent that is greater than the platform limit of nine digits for 32-bit systems or 18 for 64-bit systems.</para>
+<para>The result of an arithmetic operation requires an exponent that is greater than the platform limit of nine digits.</para>
 <para>This error can occur during the evaluation of an expression (often as a result of trying to divide a number by 0) or while stepping a DO loop control variable.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
