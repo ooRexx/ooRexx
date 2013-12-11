@@ -151,7 +151,7 @@ diskr_option : '(' diskr_options
 diskr_options : FINIS
       {
       ExecIO_Options.fFinis = true;
-      }                                  
+      }
    |  FINIS FIFO
       {
       ExecIO_Options.fFinis = false;
@@ -286,6 +286,7 @@ int yylex (
       ulNumSym++;
       return kwsearch (token);
       }
+   return 0;
    }
 
 

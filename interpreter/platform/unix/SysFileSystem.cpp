@@ -421,7 +421,7 @@ bool SysFileSystem::primitiveSearchName(const char *name, const char *path, cons
     strncpy(tempName, name, sizeof(tempName));
     if (extension != NULL)
     {
-        strncat(tempName, extension, sizeof(tempName));
+        strncat(tempName, extension, sizeof(tempName) - strlen(tempName) - 1);
     }
 
     // only do the direct search if this is qualified enough that
@@ -535,7 +535,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
         memcpy(resolvedName, p, sublength);
         resolvedName[sublength] = '/';
         resolvedName[sublength + 1] = '\0';
-        strncat(resolvedName, name, PATH_MAX + 1);
+        strncat(resolvedName, name, PATH_MAX - strlen(resolvedName));
 
         // take care of any special conditions in the name structure
         // a failure here means an invalid name of some sort
@@ -581,7 +581,7 @@ bool SysFileSystem::canonicalizeName(char *name)
             strncpy(tempName, name, PATH_MAX + 1);
             strcpy(name, getenv("HOME"));
             // We don't need to add a slash : If we have "~" alone, then no final slash expected (same as for "~user"). If "~/..." then we have the slash already
-            strncat(name, tempName + 1, PATH_MAX + 1);
+            strncat(name, tempName + 1, PATH_MAX - strlen(name));
         }
         else
         {
@@ -591,7 +591,7 @@ bool SysFileSystem::canonicalizeName(char *name)
             char userName[PATH_MAX + 3];
 
             // make a copy of the name
-            strncpy(tempName, name, PATH_MAX + 1);
+            strncpy(tempName, name, PATH_MAX - strlen(tempName));
             // look for the start of a directory
             char *slash = strchr(tempName,'/');
             // if there is a directory after the username, we need
@@ -617,11 +617,11 @@ bool SysFileSystem::canonicalizeName(char *name)
                 return false;                    /* nothing happend            */
             }
 
-            strncpy(name, ppwd->pw_dir, PATH_MAX + 1);
+            strncpy(name, ppwd->pw_dir, PATH_MAX - strlen(name));
             // if we have a directory after the username, copy the whole thing
             if (slash != NULL)
             {
-                strncat(name, slash, PATH_MAX + 1);
+                strncat(name, slash, PATH_MAX - strlen(name));
             }
         }
     }
@@ -636,8 +636,8 @@ bool SysFileSystem::canonicalizeName(char *name)
         // make a copy of the name
         strncpy(tempName, name, PATH_MAX + 1);
         getcwd(name, PATH_MAX + 1);
-        strncat(name, "/", PATH_MAX + 1);
-        strncat(name, tempName, PATH_MAX + 1);
+        strncat(name, "/", PATH_MAX - strlen(name));
+        strncat(name, tempName, PATH_MAX - strlen(name));
     }
 
     // NOTE:  realpath() is more portable than canonicalize_file_name().

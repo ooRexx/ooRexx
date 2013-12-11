@@ -408,7 +408,7 @@ bool SysFileSystem::primitiveSearchName(const char *name, const char *path, cons
     strncpy(tempName, name, sizeof(tempName));
     if (extension != NULL)
     {
-        strncat(tempName, extension, sizeof(tempName));
+        strncat(tempName, extension, sizeof(tempName) - strlen(tempName) - 1);
     }
 
     *resolvedName = '\0';
@@ -885,7 +885,7 @@ SysFileIterator::SysFileIterator(const char *p)
     // save the pattern and convert into a wild card
     // search
     strncpy(pattern, p, sizeof(pattern));
-    strncat(pattern, "\\*", sizeof(pattern));
+    strncat(pattern, "\\*", sizeof(pattern) - strlen(pattern) - 1);
 
     // this assumes we'll fail...if we find something,
     // we'll flip this

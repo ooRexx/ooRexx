@@ -352,6 +352,7 @@ int yylex (
       ulNumSym++;
       return kwsearch (token);
       }
+   return 0;
    }
 
 
