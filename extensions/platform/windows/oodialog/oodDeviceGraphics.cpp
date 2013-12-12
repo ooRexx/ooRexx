@@ -657,7 +657,6 @@ logical_t oodColorTable(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t 
             pcpbd->ColorTab[i].isSysBrush = false;
         }
     }
-    printf("i=%d bk=%d fg=%d brush=%p\n", i, bkColor, fgColor, pcpbd->ColorTab[i].ColorBrush);
     return 0;
 }
 
