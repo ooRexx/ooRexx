@@ -3693,7 +3693,7 @@ size_t RexxEntry SysVersion(const char *name, size_t numargs, CONSTRXSTRING args
 
 RexxRoutine1(int, SysRmDir, CSTRING, dir)
 {
-    return RemoveDirectory(dir) == 0 ? 0 : GetLastError();
+    return RemoveDirectory(dir) != 0 ? 0 : GetLastError();
 }
 
 
@@ -4946,7 +4946,7 @@ RexxRoutine2(int, SysSetPriority, RexxObjectPtr, classArg, RexxObjectPtr, levelA
         rc = SetThreadPriority(thread, (int)level);
     }
 
-    return rc == 0 ? 0 : GetLastError();
+    return rc != 0 ? 0 : GetLastError();
 }
 
 
