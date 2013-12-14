@@ -83,9 +83,9 @@ const int  query_system_position = 0x10;
 
 
 // short hand defines for some file states
-#define RDWR_CREAT  (O_RDWR | O_CREAT)
-#define WR_CREAT    (O_WRONLY | O_CREAT)
-#define IREAD_IWRITE (S_IREAD | S_IWRITE)
+#define RDWR_CREAT  (RX_O_RDWR | RX_O_CREAT)
+#define WR_CREAT    (RX_O_WRONLY | RX_O_CREAT)
+#define IREAD_IWRITE (RX_S_IREAD | RX_S_IWRITE)
 
 /**
  * Helper routine for the method stubs to validate the
@@ -614,7 +614,7 @@ const char *StreamInfo::handleOpen(const char *options)
         ParseAction  OpenActionread[] = {
             ParseAction(MEB, write_only),
             ParseAction(MEB, read_write),
-            ParseAction(BitOr, oflag, O_RDONLY),
+            ParseAction(BitOr, oflag, RX_O_RDONLY),
             ParseAction(SetBool, read_only, true),
             ParseAction()
         };
@@ -784,7 +784,7 @@ void StreamInfo::implicitOpen(int type)
     read_write = true;
     if (type == operation_nocreate)
     {
-        open(O_RDWR, IREAD_IWRITE, RX_SH_DENYWR);
+        open(RX_O_RDWR, IREAD_IWRITE, RX_SH_DENYWR);
     }
     else
     {
@@ -805,12 +805,12 @@ void StreamInfo::implicitOpen(int type)
         {
             // In Windows, all files are readable. Therefore S_IWRITE is
             // equivalent to S_IREAD | S_IWRITE.
-            open(O_WRONLY, IREAD_IWRITE, RX_SH_DENYWR);
+            open(RX_O_WRONLY, IREAD_IWRITE, RX_SH_DENYWR);
             write_only = true;
         }
         else
         {
-            open(O_RDONLY, S_IREAD, RX_SH_DENYWR);
+            open(RX_O_RDONLY, RX_S_IREAD, RX_SH_DENYWR);
             read_only = true;
         }
 
@@ -2219,10 +2219,10 @@ const char *StreamInfo::streamOpen(const char *options)
             ParseAction(MEB, read_write),
             ParseAction(MEB, write_only),
             ParseAction(MEB, append),
-            ParseAction(ME, oflag, O_TRUNC),
+            ParseAction(ME, oflag, RX_O_TRUNC),
             ParseAction(SetBool, read_only, true),
-            ParseAction(BitOr, oflag, O_RDONLY),
-            ParseAction(BitOr, pmode, S_IREAD),
+            ParseAction(BitOr, oflag, RX_O_RDONLY),
+            ParseAction(BitOr, pmode, RX_S_IREAD),
             ParseAction()
         };
 
@@ -2231,7 +2231,7 @@ const char *StreamInfo::streamOpen(const char *options)
             ParseAction(MEB, read_only),
             ParseAction(SetBool, write_only, true),
             ParseAction(BitOr, oflag, WR_CREAT),
-            ParseAction(BitOr, pmode, S_IWRITE),
+            ParseAction(BitOr, pmode, RX_S_IWRITE),
             ParseAction()
         };
         ParseAction OpenActionboth[] = {
@@ -2244,15 +2244,15 @@ const char *StreamInfo::streamOpen(const char *options)
         };
         ParseAction OpenActionappend[] = {
             ParseAction(MEB, read_only),
-            ParseAction(ME, oflag, O_TRUNC),
+            ParseAction(ME, oflag, RX_O_TRUNC),
             ParseAction(SetBool, append, true),
-            ParseAction(BitOr, oflag, O_APPEND),
+            ParseAction(BitOr, oflag, RX_O_APPEND),
             ParseAction()
         };
         ParseAction OpenActionreplace[] = {
             ParseAction(MEB, read_only),
-            ParseAction(ME, oflag, O_APPEND),
-            ParseAction(BitOr, oflag, O_TRUNC),
+            ParseAction(ME, oflag, RX_O_APPEND),
+            ParseAction(BitOr, oflag, RX_O_TRUNC),
             ParseAction()
         };
         ParseAction OpenActionnobuffer[] = {
@@ -2287,26 +2287,26 @@ const char *StreamInfo::streamOpen(const char *options)
 
     #ifdef STREAM_AUTOSYNC
         ParseAction OpenActionautosync[] = {
-            ParseAction(BitOr, oflag, O_SYNC),
+            ParseAction(BitOr, oflag, RX_O_SYNC),
             ParseAction()
         };
     #endif
 
     #ifdef STREAM_SHAREDOPEN
         ParseAction OpenActionshareread[] = {
-            ParseAction(MI, oflag, O_DELAY),
-            ParseAction(BitOr, oflag, O_RSHARE),
+            ParseAction(MI, oflag, RX_O_DELAY),
+            ParseAction(BitOr, oflag, RX_O_RSHARE),
             ParseAction()
         };
         ParseAction OpenActionnoshare[] = {
-            ParseAction(MI, oflag, O_DELAY),
-            ParseAction(BitOr, oflag, O_NSHARE),
+            ParseAction(MI, oflag, RX_O_DELAY),
+            ParseAction(BitOr, oflag, RX_O_NSHARE),
             ParseAction()
         };
         ParseAction OpenActiondelay[] = {
-            ParseAction(MI, oflag, O_RSHARE),
-            ParseAction(MI, oflag, O_NSHARE),
-            ParseAction(BitOr, oflag, O_DELAY),
+            ParseAction(MI, oflag, RX_O_RSHARE),
+            ParseAction(MI, oflag, RX_O_NSHARE),
+            ParseAction(BitOr, oflag, RX_O_DELAY),
             ParseAction()
         };
     #endif
@@ -2362,7 +2362,7 @@ const char *StreamInfo::streamOpen(const char *options)
                                         /* but not reclength, give back a    */
                                         /* syntax error - don't know what to */
                                         /* do                                */
-    if (record_based && (oflag & O_TRUNC) && !binaryRecordLength)
+    if (record_based && (oflag & RX_O_TRUNC) && !binaryRecordLength)
     {
         raiseException(Rexx_Error_Incorrect_method);
     }
@@ -2370,13 +2370,13 @@ const char *StreamInfo::streamOpen(const char *options)
     // If read/write/both/append not specified, the default is BOTH, with the initial
     // positioning at the end
     // (According to the current doc.)
-    if (!(oflag & (O_WRONLY | RDWR_CREAT )) && !read_only)
+    if (!(oflag & (RX_O_WRONLY | RDWR_CREAT )) && !read_only)
     {
-        oflag |= O_RDWR | RDWR_CREAT;    /* set this up for read/write mode   */
+        oflag |= RX_O_RDWR | RDWR_CREAT;    /* set this up for read/write mode   */
         pmode = IREAD_IWRITE;            /* save the pmode info               */
         read_write = true;
         // remember the append status
-        if ((oflag & O_APPEND) != 0)
+        if ((oflag & RX_O_APPEND) != 0)
         {
             append = true;
         }
@@ -2402,13 +2402,13 @@ const char *StreamInfo::streamOpen(const char *options)
     }
     /* if write only specified           */
     /*      - try both first             */
-    if (oflag & O_WRONLY)
+    if (oflag & RX_O_WRONLY)
     {
         /* set both flags                    */
         read_write = true;
         write_only = true;
 
-        oflag &= ~O_WRONLY;              /* turn off the write only flag      */
+        oflag &= ~RX_O_WRONLY;           /* turn off the write only flag      */
         oflag |= RDWR_CREAT;             /* and turn on the read/write        */
         pmode = IREAD_IWRITE;            /* set the new pmode                 */
     }
@@ -2421,7 +2421,7 @@ const char *StreamInfo::streamOpen(const char *options)
         // bug 3274050 : no longer limited to device, a regular file can have write-only permissions
         if (write_only || fileInfo.isDevice())
         {
-            if (!open(WR_CREAT, S_IWRITE, shared))
+            if (!open(WR_CREAT, RX_S_IWRITE, shared))
             {
                 char work[32];
 
@@ -2456,7 +2456,7 @@ const char *StreamInfo::streamOpen(const char *options)
 /*          so set it to one                                                                */
 /********************************************************************************************/
                                         /* persistent writeable stream?      */
-    if (!fileInfo.isTransient() && (oflag & (O_WRONLY | RDWR_CREAT)))
+    if (!fileInfo.isTransient() && (oflag & (RX_O_WRONLY | RDWR_CREAT)))
     {
         if (size() > 0)
         {   /* existing stream?                  */

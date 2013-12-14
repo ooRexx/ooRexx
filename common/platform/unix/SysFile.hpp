@@ -66,8 +66,8 @@
 #define RX_SH_DENYRW      0
 #define RX_SH_DENYNO      0
 // shareMode flags
-#define RX_S_IWRITE       S_IWUSR | S_IWGRP
-#define RX_S_IREAD        S_IRUSR | S_IRGRP
+#define RX_S_IWRITE       (S_IWUSR | S_IWGRP | S_IWOTH)
+#define RX_S_IREAD        (S_IRUSR | S_IRGRP | S_IROTH)
 
 class SysFile
 {
