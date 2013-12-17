@@ -40,6 +40,7 @@ Name "${LONGNAME} ${VERSION}"
 !include "newpath.nsh"
 !include "WriteEnv.nsh"
 !include "StrFunc.nsh"
+!include "x64.nsh"
 
 ; Docs for the string functions say they need to be declared before use:
 ${StrTok}
@@ -56,8 +57,26 @@ ${UnStrTok}
 !define MUI_LICENSEPAGE
 !define MUI_COMPONENTSPAGE
 !define MUI_DIRECTORYPAGE
+
+;---------- Finish page set up --------------------------
 !define MUI_FINISHPAGE
 !define MUI_FINISHPAGE_NOAUTOCLOSE
+
+; Note that the finish page run function is used here to instead
+; create a Desktop icon.  The 'run_function' is set to our create
+; Desktop function, where we can do whatever we want.
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_NOTCHECKED
+!define MUI_FINISHPAGE_RUN_TEXT "Create ${LONGNAME} Desktop Shortcut"
+!define MUI_FINISHPAGE_RUN_FUNCTION CreateDesktopShortcut
+
+!define MUI_FINISHPAGE_SHOWREADME $INSTDIR\CPLv1.0.txt
+!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "Show ${LONGNAME} License"
+;!define MUI_FINISHPAGE_SHOWREADME_FUNCTION SomeFunctionToBeCreated
+
+!define MUI_FINISHPAGE_LINK "Getting started with Windows ${LONGNAME}"
+!define MUI_FINISHPAGE_LINK_LOCATION "http://www.rexxla.org/rexxlang/rexxtut.html"
 
 !define MUI_ABORTWARNING
 
@@ -142,6 +161,9 @@ Var UninstLog
   Page custom Confirm_page
 
   !insertmacro MUI_PAGE_INSTFILES
+
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE Finish_Page_pre
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW Finish_Page_show
   !insertmacro MUI_PAGE_FINISH
 
   /* Uninstaller pages */
@@ -169,6 +191,7 @@ Var RxapiIsRunning             ; is rxapi running:                              
 Var RegVal_uninstallString     ; uninstall string (program) found in regsitry
 Var RegVal_uninstallLocation   ; location of uninstall program found in registry
 Var RegVal_uninstallVersion    ; Version / level of uninstaller program.  This only exists at 410 or greater
+Var RegVal_uninstallBitness    ; The uninstaller is 32 or 64 bit.  This only exists at 420 or greater.
 Var RegVal_rexxAssociation     ; File association string for rexx.exe     (.ext / ftype - i.e. .rex RexxScript)
 Var RegVal_rexxEditor          ; ... and editor file name
 Var RegVal_rexxHideAssociation ; File association string for rexxhide.exe (.ext / ftype - i.e. .rexg RexxHide)
@@ -176,6 +199,7 @@ Var RegVal_rexxPawsAssociation ; File association string for rexxpaws.exe (.ext 
 Var RegVal_sendTo_rexx         ; Add / don't add Send To Rexx item
 Var RegVal_sendTo_rexxHide     ; Add / don't add Send To rexxpaws item
 Var RegVal_sendTo_rexxPaws     ; Add / don't add Send To rexxhide item
+Var RegVal_desktop_icon        ; Create / don't create a Desktop icon
 
 Var AssociationProgramName     ; Executable being associated  (i.e rexxpaws.exe, rexx.exe, etc..)
 Var AssociationText            ; Descriptive text that goes in registry  (i.e. ooRexx Rexx GUI Program)
@@ -261,12 +285,7 @@ Var DeleteWholeTree
 
 Section -openlogfile
   CreateDirectory "$INSTDIR"
-  IfFileExists "$INSTDIR\${UninstLog}" +3
-    FileOpen $UninstLog "$INSTDIR\${UninstLog}" w
-    Goto +4
-  SetFileAttributes "$INSTDIR\${UninstLog}" NORMAL
-  FileOpen $UninstLog "$INSTDIR\${UninstLog}" a
-  FileSeek $UninstLog 0 END
+  Call OpenUninstallLog
 SectionEnd
 
 ;-------------------------------------------------------------------------------
@@ -321,14 +340,6 @@ Section "${LONGNAME} Core (required)" SecMain
   ${File} "${SRCDIR}\platform\windows\" "rexx.ico"
   ${File} "${SRCDIR}\" "CPLv1.0.txt"
 
-  ; readmes
-  ${SetOutPath} $INSTDIR\doc
-  ${File} "${SRCDIR}\doc\" "readme.pdf"
-  File /oname=CHANGES.txt "${SRCDIR}\CHANGES"
-  File /oname=ReleaseNotes.txt "${SRCDIR}\ReleaseNotes"
-  ${AddItem} $INSTDIR\doc\CHANGES.txt
-  ${AddItem} $INSTDIR\doc\ReleaseNotes.txt
-
   ; Set output path to the installation directory just in case
   SetOutPath $INSTDIR
 
@@ -342,25 +353,21 @@ Section "${LONGNAME} Core (required)" SecMain
 
   ; Add the Start Menu folder and start adding the items.
   ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}"
+
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Try Rexx.lnk" "$INSTDIR\rexx.exe" '"$INSTDIR\rexxtry.rex"' "$INSTDIR\rexx.exe"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Try Rexx.lnk"
+
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Try Rexx (GUI).lnk" "$INSTDIR\rexx.exe" '"$INSTDIR\ooRexxTry.rex"' "$INSTDIR\rexx.exe"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Try Rexx (GUI).lnk"
 
-  ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\Documentation"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx README.lnk" "$INSTDIR\doc\readme.pdf" "" "$INSTDIR\doc\readme.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx README.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx CHANGES.lnk" "$INSTDIR\doc\CHANGES.txt" "" "$INSTDIR\doc\CHANGES.txt" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx CHANGES.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ReleaseNotes.lnk" "$INSTDIR\doc\ReleaseNotes.txt" "" "$INSTDIR\doc\ReleaseNotes.txt" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ReleaseNotes.lnk"
-
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Uninstall ${SHORTNAME}.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Uninstall ${SHORTNAME}.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\LICENSE.lnk" "$INSTDIR\CPLv1.0.txt" "" "$INSTDIR\CPLv1.0.txt" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\LICENSE.lnk"
-  WriteINIStr "$SMPROGRAMS\${LONGNAME}\ooRexx Home Page.url" "InternetShortcut" "URL" "http://www.oorexx.org/"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\ooRexx Home Page.url"
+
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} LICENSE.lnk" "$INSTDIR\CPLv1.0.txt" "" "$INSTDIR\CPLv1.0.txt" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} LICENSE.lnk"
+
+  WriteINIStr "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Home Page.url" "InternetShortcut" "URL" "http://www.oorexx.org/"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Home Page.url"
 
   ; If we are doing an upgrade, these settings are all left however they were.
   ${if} $DoUpgrade == 'false'
@@ -404,6 +411,7 @@ Section "${LONGNAME} Core (required)" SecMain
   WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallString" '"$INSTDIR\${UNINSTALLER}"'
   WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UnInstallLocation" "$INSTDIR" ; dont quote it
   WriteRegStr       HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallVersion" "${VERSION}"
+  WriteRegStr       HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallBitness" "${CPU}"
   WriteRegDWORD     HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "NoModify" 0x00000001
   WriteRegDWORD     HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "NoRepair" 0x00000001
 
@@ -425,8 +433,10 @@ SectionEnd
 
 Section "${LONGNAME} Samples" SecDemo
   DetailPrint "********** Samples **********"
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\" "0ReadMe.first"
   ${File} "${SRCDIR}\samples\" "rexxcps.rex"
   ${File} "${SRCDIR}\samples\" "ccreply.rex"
@@ -451,24 +461,28 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\" "usecomp.rex"
   ${File} "${SRCDIR}\samples\" "usepipe.rex"
   ${File} "${SRCDIR}\samples\windows\rexutils\" "drives.rex"
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\misc
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.empty"
   ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.input"
   ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.readMe"
   ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.rex"
-  ${CreateDirectory} $INSTDIR\samples\ole
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\ole\" "ReadMe.first"
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\adsi
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\ole\adsi\" "*.rex"
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\apps
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\ole\apps\" "MSAccessDemo.rex"
   ${File} "${SRCDIR}\samples\windows\ole\apps\" "oleUtils.frm"
   ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp01.rex"
@@ -486,41 +500,32 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp12.rex"
   ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp13.rex"
   ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp14.rex"
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\methinfo
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\ole\methinfo\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\ole\methinfo\" "*.cls"
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\wmi
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\ole\wmi\" "*.rex"
+
 ;;; Temporarily block out the orxscrpt samples
 ;;;   ; Set output path to the installation directory.
 ;;;   SetOutPath $INSTDIR\samples\wsh
-;;;   ; Distribution files...
+;;;   ; Add the files ...
 ;;;   ${File} "${SRCDIR}\samples\windows\wsh\" "*.rex"
 ;;;   ${File} "${SRCDIR}\samples\windows\wsh\" "*.htm"
 ;;;   ${File} "${SRCDIR}\samples\windows\wsh\" "*.wsf"
 ;;;   ${File} "${SRCDIR}\samples\windows\wsh\" "*.wsc"
-  ; Create start menu shortcuts
-  SetOutPath $INSTDIR\samples
-  ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\RexxCPS.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\rexxcps.rex"' "$INSTDIR\rexx.exe"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\RexxCPS.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Date.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\qdate.rex"' "$INSTDIR\rexx.exe"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Date.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Time.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\qtime.rex"' "$INSTDIR\rexx.exe"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Time.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Drive Info.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\drives.rex"' "$INSTDIR\rexx.exe"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Drive Info.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\MS Access.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\ole\apps\MSAccessDemo.rex"' "$INSTDIR\rexx.exe"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\MS Access.lnk"
+
   ;
   ; OOdialog samples
   ;
   ${SetOutPath} $INSTDIR\samples\oodialog
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "oodialog.ico"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "*.ico"
@@ -528,13 +533,13 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\bmp
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "*.ico"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\controls
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\controls\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\controls\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\controls\" "*.h"
@@ -599,20 +604,20 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\examples
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.txt"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\examples\resources
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\resources\" "*.rc"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\menus
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\menus\" "*.bmp"
@@ -620,7 +625,7 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\mouse
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\mouse\" "*.rc"
@@ -629,7 +634,7 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\oleinfo
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.txt"
   ${File} "${SRCDIR}\samples\windows\oodialog\oleinfo\" "*.bmp"
@@ -637,17 +642,17 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\ooRexxTry
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\" "ooRexxTry.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\ooRexxTry\doc
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\doc\" "ooRexxTry.pdf"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\propertySheet.tabControls
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabControls\" "oodListViews.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabControls\" "PropertySheetDemo.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\propertySheet.tabControls\" "TabDemo.rex"
@@ -666,34 +671,34 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\rc
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "*.rc"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\res
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\res\" "*.dll"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\resizableDialogs
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\resizableDialogs\" "*.txt"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\resizableDialogs\DialogAreaU
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\resizableDialogs\DialogAreaU\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\resizableDialogs\DialogAreaU\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\resizableDialogs\ResizingAdmin
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\resizableDialogs\ResizingAdmin\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\resizableDialogs\ResizingAdmin\rc
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\resizableDialogs\ResizingAdmin\rc\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\resizableDialogs\ResizingAdmin\rc\" "*.dll"
   ${File} "${SRCDIR}\samples\windows\oodialog\resizableDialogs\ResizingAdmin\rc\" "*.h"
@@ -701,7 +706,7 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\simple
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\simple\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\simple\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\simple\" "*.rex"
@@ -709,14 +714,14 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\sysinfo
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\sysinfo\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\sysinfo\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\sysinfo\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\source
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${BINDIR}\" "ooDialog.cls"
   ${File} "${BINDIR}\" "oodWin32.cls"
   ${File} "${BINDIR}\" "oodPlain.cls"
@@ -743,7 +748,7 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\tutorial
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\tutorial\" "*.rc"
@@ -751,120 +756,122 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\" "*.txt"
+
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise02
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise02\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise03
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise03\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise04
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise04\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise04\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise04\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise04\Extras
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise04\Extras\" "*.txt"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise04\Extras\DlgData
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise04\Extras\DlgData\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise04\Extras\DlgData\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise04\Extras\DlgData\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise04\Extras\DlgData\res
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise04\Extras\DlgData\res\" "*.dll"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise05
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise05\res
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\res\" "res.mak"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\res\" "ProductView.dll"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\res\" "ProductIcon.bmp"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise05\Support
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise05\Support\" "NumberOnlyEditEx.cls"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Customer
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Customer\bmp
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\bmp\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Customer\bmp\" "*.ico"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Extras
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Extras\" "*.txt"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Extras\Popups
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Extras\Popups\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Order
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Order\bmp
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\bmp\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Order\bmp\" "*.ico"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\OrderMgr
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\OrderMgr\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\OrderMgr\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\OrderMgr\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Product
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Product\res
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\res\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\res\" "*.dll"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Product\res\" "*.ico"
@@ -872,17 +879,17 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise06\Support
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise06\Support\" "*.cls"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\Customer
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Customer\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Customer\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Customer\" "*.rex"
@@ -890,18 +897,18 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\Customer\bmp
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Customer\bmp\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Customer\bmp\" "*.ico"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\Extras
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Extras\" "*.txt"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\Extras\Person
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Extras\Person\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Extras\Person\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Extras\Person\" "*.rex"
@@ -909,7 +916,7 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\Order
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Order\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Order\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Order\" "*.rex"
@@ -917,20 +924,20 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\Order\bmp
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Order\bmp\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Order\bmp\" "*.ico"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\OrderMgr
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\OrderMgr\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\OrderMgr\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\OrderMgr\" "*.rex"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\Product
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Product\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Product\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Product\" "*.rex"
@@ -938,7 +945,7 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise07\Product\res
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Product\res\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Product\res\" "*.dll"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Product\res\" "*.ico"
@@ -953,12 +960,12 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise07\Support\" "*.rex"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\" "*.rex"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Customer
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Customer
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Customer\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Customer\" "*.rc"
@@ -966,19 +973,19 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Customer\" "*.txt"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Customer\bmp
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Customer\bmp
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Customer\bmp\" "*.ico"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Customer\bmp\" "*.bmp"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Customer\bmp\" "*.cur"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Extras
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Extras
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Extras\" "*.txt"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Extras\Person
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Extras\Person
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Extras\Person\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Extras\Person\" "*.rc"
@@ -986,7 +993,7 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Extras\Person\" "*.txt"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Order
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Order
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Order\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Order\" "*.rc"
@@ -994,19 +1001,19 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Order\" "*.txt"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Order\bmp
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Order\bmp
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Order\bmp\" "*.ico"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Order\bmp\" "*.bmp"
 
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\OrderMgr
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\OrderMgr
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\OrderMgr\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\OrderMgr\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\OrderMgr\" "*.rex"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Product
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Product
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Product\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Product\" "*.rc"
@@ -1014,7 +1021,7 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Product\" "*.txt"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Product\res
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Product\res
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Product\res\" "*.ico"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Product\res\" "*.bmp"
@@ -1022,7 +1029,7 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Product\res\" "res.mak"
 
   ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\samples\windows\oodialog\userGuide\exercises\Exercise08\Support
+  ${SetOutPath} $INSTDIR\samples\oodialog\userGuide\exercises\Exercise08\Support
   ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Support\" "*.cls"
   ${File} "${SRCDIR}\samples\windows\oodialog\userGuide\exercises\Exercise08\Support\" "*.h"
@@ -1031,43 +1038,167 @@ Section "${LONGNAME} Samples" SecDemo
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\wav
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.wav"
   ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.txt"
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\winsystem
+  ; Add the files ...
   ${File} "${SRCDIR}\samples\windows\oodialog\winsystem\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\winsystem\" "*.rc"
   ${File} "${SRCDIR}\samples\windows\oodialog\winsystem\" "*.h"
   ${File} "${SRCDIR}\samples\windows\oodialog\winsystem\" "*.frm"
 
-  ; Create start menu shortcuts
+  ;
+  ; API samples
+  ;
+  ${SetOutPath} $INSTDIR\samples\api
+  ${File} "${SRCDIR}\samples\windows\api\" "readme.txt"
+  ; Set output path to the installation directory for callrxnt.
+  ${SetOutPath} $INSTDIR\samples\api\callrxnt
+  ; Add the files ...
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "backward.fnc"
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.c"
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.ico"
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.mak"
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.exe"
 
-  ; I believe the set out path above is in effect and we do not need to do it here.
+  ; Set output path to the installation directory for callrxwn.
+  ${SetOutPath} $INSTDIR\samples\api\callrxwn
+  ; Add the files ...
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "backward.fnc"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.c"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.h"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.ico"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.mak"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.exe"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.rc"
+
+  ; Set output path to the installation directory for rexxexit.
+  ${SetOutPath} $INSTDIR\samples\api\rexxexit
+  ; Add the files ...
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.c"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.ico"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.mak"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.exe"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "testRexxExit"
+
+  ; Set output path to the installation directory the wpipe examples.
+  ${SetOutPath} $INSTDIR\samples\api\wpipe
+  ; Add the files ...
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\" "readme.txt"
+
+  ; Set output path to the installation directory for wpipe 1.
+  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe1
+  ; Add the files ...
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "apitest1.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.mak"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.dll"
+
+  ; Set output path to the installation directory for wpipe 2.
+  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe2
+  ; Add the files ...
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "apitest2.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.mak"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.dll"
+
+  ; Set output path to the installation directory for wpipe 3.
+  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe3
+  ; Add the files ...
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "apitest3.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.mak"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.dll"
+
+  ;
+  ; C++ API samples
+  ;
+  ${SetOutPath} $INSTDIR\samples\native.api
+  ${File} "${SRCDIR}\samples\native.api\" "ReadMe.txt"
+  ; Set output path to the installation directory for callexample.
+  ${SetOutPath} $INSTDIR\samples\native.api\call.example
+  ; Add the files ...
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "backward.fnc"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "HelloWorld.rex"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "Makefile.windows"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "ReadMe.txt"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "runRexxProgram.cpp"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "stackOverflow.cpp"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "tooRecursiveTrapped.rex"
+  ${File} "${SRCDIR}\samples\native.api\call.example\" "tooRecursiveUnhandled.rex"
+
+  ;
+  ; Create start menu shortcuts for some of the example programs.
+  ;
+
+  ; $OUTDIR is used as the working directory (the start in directory.)  Change
+  ; $OUTDIR by using SetOutPath.  Don't use the ${SetOutPath} macro which adds
+  ; the directory to the uninstall log.  That is not relevant here.
+
+  ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples"
+
+  SetOutPath $INSTDIR\samples
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\RexxCPS.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\rexxcps.rex"' "$INSTDIR\rexx.exe"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\RexxCPS.lnk"
+
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Date.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\qdate.rex"' "$INSTDIR\rexx.exe"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Date.lnk"
+
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Time.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\qtime.rex"' "$INSTDIR\rexx.exe"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Time.lnk"
+
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Drive Info.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\drives.rex"' "$INSTDIR\rexx.exe"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Drive Info.lnk"
+
+  SetOutPath $INSTDIR\samples\ole\apps
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\MS Access.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\ole\apps\MSAccessDemo.rex"' "$INSTDIR\rexx.exe"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\MS Access.lnk"
+
+  SetOutPath $INSTDIR\samples\oodialog\winsystem
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Window Tree.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\winsystem\displayWindowTree.rex"' "$INSTDIR\rexx.exe"
   ${AddItem}        "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Window Tree.lnk"
 
-  CreateShortCut  "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Windows Manager.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\winsystem\usewmgr.rex"' "$INSTDIR\rexx.exe"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Windows Manager.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\winsystem\usewmgr.rex"' "$INSTDIR\rexx.exe"
   ${AddItem}         "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Windows Manager.lnk"
 
-  SetOutPath $INSTDIR\samples\oodialog
   ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog"
 
   SetOutPath $INSTDIR\samples\oodialog\Controls\ComboBox
-  CreateShortCut  "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\Combo Box Types.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\Controls\ComboBox\comboBoxTypes.rex"' "$INSTDIR\samples\oodialog\oodialog.ico"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\Combo Box Types.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\Controls\ComboBox\comboBoxTypes.rex"' "$INSTDIR\samples\oodialog\oodialog.ico"
   ${AddItem}         "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\Combo Box Types.lnk"
 
   SetOutPath $INSTDIR\samples\oodialog\Controls\ToolTip
-  CreateShortCut  "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\Custom Position Tool Tips.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\Controls\ToolTip\customPositionToolTip.rex"' "$INSTDIR\samples\oodialog\oodialog.ico"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\Custom Position Tool Tips.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\Controls\ToolTip\customPositionToolTip.rex"' "$INSTDIR\samples\oodialog\oodialog.ico"
   ${AddItem}         "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\Custom Position Tool Tips.lnk"
 
   SetOutPath $INSTDIR\samples\oodialog\Controls\ListView
-  CreateShortCut  "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\List-view Views.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\Controls\ListView\columnIcons.rex"' "$INSTDIR\samples\oodialog\oodialog.ico"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\List-view Views.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\Controls\ListView\columnIcons.rex"' "$INSTDIR\samples\oodialog\oodialog.ico"
   ${AddItem}         "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\List-view Views.lnk"
 
+  SetOutPath $INSTDIR\samples\oodialog
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\Samples.lnk" "$INSTDIR\ooDialog.exe" '"$INSTDIR\samples\oodialog\sample.rex"' "$INSTDIR\samples\oodialog\oodialog.ico"
   ${AddItem}        "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\ooDialog\Samples.lnk"
+
+  ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API"
+
+  SetOutPath $INSTDIR\samples\api\callrxnt
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Console.lnk" "$INSTDIR\samples\api\callrxnt\callrxnt.exe" "" "$INSTDIR\samples\api\callrxnt\callrxnt.ico"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Console.lnk"
+
+  SetOutPath $INSTDIR\samples\api\callrxwn
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk" "$INSTDIR\samples\api\callrxwn\callrxwn.exe" "" "$INSTDIR\samples\api\callrxwn\callrxwn.ico"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk"
+
+  SetOutPath $INSTDIR\samples\api\rexxexit
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk" "$INSTDIR\samples\api\rexxexit\rexxexit.exe" 'testRexxExit "189 8"' "$INSTDIR\samples\api\rexxexit\rexxexit.ico"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk"
+
 SectionEnd
 
 ;------------------------------------------------------------------------
@@ -1077,7 +1208,7 @@ Section "${LONGNAME} Development Kit" SecDev
   DetailPrint "********** Development Kit **********"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\api
-  ; Distribution files...
+  ; Add the files ...
   ${File} "${BINDIR}\" "rexx.lib"
   ${File} "${BINDIR}\" "rexxapi.lib"
   ${File} "${SRCDIR}\api\" "oorexxapi.h"
@@ -1087,99 +1218,7 @@ Section "${LONGNAME} Development Kit" SecDev
   ${File} "${SRCDIR}\api\platform\windows\" "rexxapitypes.h"
   ${File} "${SRCDIR}\api\platform\windows\" "rexxplatformapis.h"
   ${File} "${SRCDIR}\api\platform\windows\" "rexxplatformdefs.h"
-  ;
-  ; API samples
-  ;
-  ${SetOutPath} $INSTDIR\samples\api
-  ${File} "${SRCDIR}\samples\windows\api\" "readme.txt"
-  ; Set output path to the installation directory for callrxnt.
-  ${SetOutPath} $INSTDIR\samples\api\callrxnt
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "backward.fnc"
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.c"
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.ico"
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.mak"
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.exe"
-  ; Set output path to the installation directory for callrxwn.
-  ${SetOutPath} $INSTDIR\samples\api\callrxwn
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "backward.fnc"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.c"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.h"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.ico"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.mak"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.exe"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.rc"
-  ; Set output path to the installation directory for rexxexit.
-  ${SetOutPath} $INSTDIR\samples\api\rexxexit
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.c"
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.ico"
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.mak"
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.exe"
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "testRexxExit"
-  ; Set output path to the installation directory the wpipe examples.
-  ${SetOutPath} $INSTDIR\samples\api\wpipe
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\" "readme.txt"
-  ; Set output path to the installation directory for wpipe 1.
-  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe1
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "apitest1.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.dll"
-  ; Set output path to the installation directory for wpipe 2.
-  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe2
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "apitest2.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.dll"
-  ; Set output path to the installation directory for wpipe 3.
-  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe3
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "apitest3.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.dll"
-  ;
-  ; C++ API samples
-  ;
-  ${SetOutPath} $INSTDIR\samples\native.api
-  ${File} "${SRCDIR}\samples\native.api\" "ReadMe.txt"
-  ; Set output path to the installation directory for callexample.
-  ${SetOutPath} $INSTDIR\samples\native.api\call.example
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\native.api\call.example\" "backward.fnc"
-  ${File} "${SRCDIR}\samples\native.api\call.example\" "HelloWorld.rex"
-  ${File} "${SRCDIR}\samples\native.api\call.example\" "Makefile.windows"
-  ${File} "${SRCDIR}\samples\native.api\call.example\" "ReadMe.txt"
-  ${File} "${SRCDIR}\samples\native.api\call.example\" "runRexxProgram.cpp"
-  ${File} "${SRCDIR}\samples\native.api\call.example\" "stackOverflow.cpp"
-  ${File} "${SRCDIR}\samples\native.api\call.example\" "tooRecursiveTrapped.rex"
-  ${File} "${SRCDIR}\samples\native.api\call.example\" "tooRecursiveUnhandled.rex"
-  ;
-  ; Create start menu shortcuts
-  ;
-  ; All three of these examples have files that the executable needs to locate
-  ; in the same directory. The short cut menu item has to have the 'Start in:'
-  ; field set to the directory of the executable. The 'SetOutPath' command is
-  ; what controls that.
-  ;
-  ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API"
-  SetOutPath $INSTDIR\samples\api\callrxnt
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Console.lnk" "$INSTDIR\samples\api\callrxnt\callrxnt.exe" "" "$INSTDIR\samples\api\callrxnt\callrxnt.ico"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Console.lnk"
-  SetOutPath $INSTDIR\samples\api\callrxwn
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk" "$INSTDIR\samples\api\callrxwn\callrxwn.exe" "" "$INSTDIR\samples\api\callrxwn\callrxwn.ico"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk"
-  SetOutPath $INSTDIR\samples\api\rexxexit
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk" "$INSTDIR\samples\api\rexxexit\rexxexit.exe" 'testRexxExit "189 8"' "$INSTDIR\samples\api\rexxexit\rexxexit.ico"
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk"
+
 SectionEnd
 
 ;------------------------------------------------------------------------
@@ -1190,6 +1229,17 @@ Section "${LONGNAME} Documentation" SecDoc
 
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\doc
+
+  ; readmes
+  ${File} "${SRCDIR}\doc\" "readme.pdf"
+
+  ; We can't use the ${File} macro here because we need to change the file name.
+  ; That means we also have to add the item manually to the uninstall log.
+  File /oname=CHANGES.txt "${SRCDIR}\CHANGES"
+  File /oname=ReleaseNotes.txt "${SRCDIR}\ReleaseNotes"
+  ${AddItem} $INSTDIR\doc\CHANGES.txt
+  ${AddItem} $INSTDIR\doc\ReleaseNotes.txt
+
   ${File} "${SRCDIR}\doc\" "rexxpg.pdf"
   ${File} "${SRCDIR}\doc\" "rexxref.pdf"
   ${File} "${SRCDIR}\doc\" "rxmath.pdf"
@@ -1204,30 +1254,39 @@ Section "${LONGNAME} Documentation" SecDoc
   ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\doc\" "ooRexxTry.pdf"
 
   ; Create start menu shortcuts
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk" "$INSTDIR\doc\rexxref.pdf" "" "$INSTDIR\doc\rexxref.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Programming Guide.lnk" "$INSTDIR\doc\rexxpg.pdf" "" "$INSTDIR\doc\rexxpg.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Programming Guide.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Mathematical Functions Reference.lnk" "$INSTDIR\doc\rxmath.pdf" "" "$INSTDIR\doc\rxmath.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Mathematical Functions Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx TCP-IP Sockets Functions Reference.lnk" "$INSTDIR\doc\rxsock.pdf" "" "$INSTDIR\doc\rxsock.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx TCP-IP Sockets Functions Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx rxFTP Class Reference.lnk" "$INSTDIR\doc\rxftp.pdf" "" "$INSTDIR\doc\rxftp.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx rxFTP Class Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog Reference.lnk" "$INSTDIR\doc\oodialog.pdf" "" "$INSTDIR\doc\oodialog.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog Release Notes.lnk" "$INSTDIR\doc\ooDialog_ReleaseNotes.txt" "" "$INSTDIR\doc\ooDialog_ReleaseNotes.txt" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog Release Notes.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog User Guide.lnk" "$INSTDIR\doc\oodguide.pdf" "" "$INSTDIR\doc\oodguide.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooDialog User Guide.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Rexx Extensions Reference.lnk" "$INSTDIR\doc\rexxextensions.pdf" "" "$INSTDIR\doc\rexxextensions.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Windows Extensions Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Unix Extensions Reference.lnk" "$INSTDIR\doc\unixextensions.pdf" "" "$INSTDIR\doc\unixextensions.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Windows Extensions Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Windows Extensions Reference.lnk" "$INSTDIR\doc\winextensions.pdf" "" "$INSTDIR\doc\winextensions.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Windows Extensions Reference.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexxTry Reference.lnk" "$INSTDIR\doc\ooRexxTry.pdf" "" "$INSTDIR\doc\ooRexxTry.pdf" 0
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexxTry Reference.lnk"
+  ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation"
+
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx README.lnk" "$INSTDIR\doc\readme.pdf" "" "$INSTDIR\doc\readme.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx README.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx CHANGES.lnk" "$INSTDIR\doc\CHANGES.txt" "" "$INSTDIR\doc\CHANGES.txt" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx CHANGES.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx ReleaseNotes.lnk" "$INSTDIR\doc\ReleaseNotes.txt" "" "$INSTDIR\doc\ReleaseNotes.txt" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx ReleaseNotes.lnk"
+
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Reference.lnk" "$INSTDIR\doc\rexxref.pdf" "" "$INSTDIR\doc\rexxref.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Programming Guide.lnk" "$INSTDIR\doc\rexxpg.pdf" "" "$INSTDIR\doc\rexxpg.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Programming Guide.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Mathematical Functions Reference.lnk" "$INSTDIR\doc\rxmath.pdf" "" "$INSTDIR\doc\rxmath.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Mathematical Functions Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx TCP-IP Sockets Functions Reference.lnk" "$INSTDIR\doc\rxsock.pdf" "" "$INSTDIR\doc\rxsock.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx TCP-IP Sockets Functions Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx rxFTP Class Reference.lnk" "$INSTDIR\doc\rxftp.pdf" "" "$INSTDIR\doc\rxftp.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx rxFTP Class Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooDialog Reference.lnk" "$INSTDIR\doc\oodialog.pdf" "" "$INSTDIR\doc\oodialog.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooDialog Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooDialog Release Notes.lnk" "$INSTDIR\doc\ooDialog_ReleaseNotes.txt" "" "$INSTDIR\doc\ooDialog_ReleaseNotes.txt" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooDialog Release Notes.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooDialog User Guide.lnk" "$INSTDIR\doc\oodguide.pdf" "" "$INSTDIR\doc\oodguide.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooDialog User Guide.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Rexx Extensions Reference.lnk" "$INSTDIR\doc\rexxextensions.pdf" "" "$INSTDIR\doc\rexxextensions.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Rexx Extensions Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Unix Extensions Reference.lnk" "$INSTDIR\doc\unixextensions.pdf" "" "$INSTDIR\doc\unixextensions.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Unix Extensions Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Windows Extensions Reference.lnk" "$INSTDIR\doc\winextensions.pdf" "" "$INSTDIR\doc\winextensions.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexx Windows Extensions Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexxTry Reference.lnk" "$INSTDIR\doc\ooRexxTry.pdf" "" "$INSTDIR\doc\ooRexxTry.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Documentation\ooRexxTry Reference.lnk"
 
 SectionEnd
 
@@ -1235,8 +1294,7 @@ SectionEnd
 ;  Hidden section to close the log file
 
 Section -closelogfile
- FileClose $UninstLog
- SetFileAttributes "$INSTDIR\${UninstLog}" READONLY|SYSTEM|HIDDEN
+ Call CloseUninstallLog
 SectionEnd
 
 ;===============================================================================
@@ -1260,7 +1318,19 @@ Function .onInit
   ${endif}
 
   ${if} ${CPU} == "x86_64"
-    strcpy $INSTDIR "$PROGRAMFILES64\${SHORTNAME}"
+    ${If} ${RunningX64}
+      strcpy $INSTDIR "$PROGRAMFILES64\${SHORTNAME}"
+    ${else}
+      ; If we install 64 bit binaries on a 32 bit OS, things won't work.
+      MessageBox MB_OK \
+        "The installer detected that this operaring system is 32 bit.  This$\n\
+        installer contains 64-bit binaries.  These binaries will not$\n\
+        work on a 32-bit operating.$\n$\n\
+        The installer will quit.  Please use the 32-bit ooRexx installer$\n\
+        to install on this operating system." \
+        /SD IDOK
+        Abort
+    ${endIf}
   ${endif}
 
   ;
@@ -1280,6 +1350,7 @@ Function .onInit
   ReadRegStr $RegVal_uninstallString HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallString"
   ReadRegStr $RegVal_uninstallLocation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UnInstallLocation"
   ReadRegStr $RegVal_uninstallVersion HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallVersion"
+  ReadRegStr $RegVal_uninstallBitness HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallBitness"
   ReadRegStr $RegVal_rexxEditor HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxEditor"
   ReadRegStr $RegVal_rexxAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxAssociation"
   ReadRegStr $RegVal_rexxHideAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxHideAssociation"
@@ -1287,6 +1358,20 @@ Function .onInit
   ReadRegStr $RegVal_sendTo_rexx HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexx"
   ReadRegStr $RegVal_sendTo_rexxHide HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexxHide"
   ReadRegStr $RegVal_sendTo_rexxPaws HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "SendToRexxPaws"
+  ReadRegStr $RegVal_desktop_icon HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "CreateDesktopIcon"
+
+  ; When the uninstaller and current installer are for differen addressing
+  ; modes, we have had reports of problems.  We try to prevent that by giving
+  ; the user the chance to uninstall separately, then rerun the installer.  This
+  ; can only happen if the current platform is 64-bit.  And, I think it can only
+  ; happen if rxapi is *not* installed as a service.  We check for the former,
+  ; but not the later.
+  ${If} ${RunningX64}
+    Call CheckBitnessMatch
+    ${if} $UserRequestAbort == 'true'
+      abort
+    ${endif}
+  ${endif}
 
   ; Check for previous version and if the upgrade type of uninstall is available.
   Call CheckInstalledStatus
@@ -1383,6 +1468,29 @@ Function ShowHideForceInstall
 		ShowWindow $Force_Install_CK ${SW_SHOW}
     ${NSD_Uncheck} $Force_Install_CK
 	${endif}
+FunctionEnd
+
+/** OpenUninstallLog()
+ *
+ * Opens up the uninstall log.  In the hidden OpenLogFile section, the $INSTDIR
+ * must be created before this function is callled.
+ */
+Function OpenUninstallLog
+  IfFileExists "$INSTDIR\${UninstLog}" +3
+    FileOpen $UninstLog "$INSTDIR\${UninstLog}" w
+    Goto +4
+  SetFileAttributes "$INSTDIR\${UninstLog}" NORMAL
+  FileOpen $UninstLog "$INSTDIR\${UninstLog}" a
+  FileSeek $UninstLog 0 END
+FunctionEnd
+
+/** CloseUninstallLog()
+ *
+ * Closes up the uninstall log.
+ */
+Function CloseUninstallLog
+  FileClose $UninstLog
+  SetFileAttributes "$INSTDIR\${UninstLog}" READONLY|SYSTEM|HIDDEN
 FunctionEnd
 
 /** Uninstall_Old_ooRexx_Leave()  Callback function.
@@ -1832,6 +1940,79 @@ Function Directory_Page_show
     EnableWindow $mui.DirectoryPage.BrowseButton 0
 
     Call PageDisableQuit
+  ${endif}
+
+FunctionEnd
+
+/** Finish_Page_pre()  Call back function
+ *
+ * Invoked by the installer before the finish page is created.
+ *
+ * If this is an upgrade install, the creation or not, of the desktop icon can
+ * not be changed.  So we always create the icon here if we are going to.
+ *
+ * If this is a QUICK upgrade install, we abort here so that the finish page is
+ * not shown at all
+ *
+ * At the time this is run, the registry values have been deleted.  The value in
+ * RegVal_desktop_icon is the value in the registry when this installer was
+ * started.  If there is an existing ooRexx, the ooRexx uninstaller is run and
+ * it always deletes all the existing registry entries.  If we are doing an
+ * upgrade and creating the icon we write a 1 for the registry value.  If we are
+ * not creating the icon we write a 0 just to be tidy.  Leaving out the entry
+ * altogether would be fine.  If we are not doing an upgrade, we do not do
+ * anything here, the Finish page will be shown and the CreateDesktopIcon()
+ * function will do the appropriate thing.
+ */
+Function Finish_Page_pre
+
+  ${if} $DoUpgrade == 'true'
+    ${if} $RegVal_desktop_icon == '1'
+      CreateShortcut "$DESKTOP\Open Object Rexx Resources.lnk" "$SMPROGRAMS\${LONGNAME}\" "" "$INSTDIR\rexx.exe"
+      Call OpenUninstallLog
+      ${AddItem} "$DESKTOP\Open Object Rexx Resources.lnk"
+      WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "CreateDesktopIcon" 1
+      Call CloseUninstallLog
+    ${else}
+      WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "CreateDesktopIcon" 0
+    ${endif}
+    ${if} $DoUpgradeQuick == 'true'
+      Abort
+    ${endif}
+  ${endif}
+
+FunctionEnd
+
+/** Finish_Page_show()  Call back function
+ *
+ * Invoked by the installer right before the finish page is shown.
+ *
+ * Note that if this is a quick upgrade type, we never get here.
+ *
+ * If this is an upgrade install, the create desktop icon value can not be
+ * changed.  We use function to show the create desktop icon value by checking
+ * or not checking the check box, but we disable the check box.  For the show
+ * getting started with Windows ooRex checkbox, we assume on an upgrade install,
+ * the user doesn't need this at all and we make the check box invisible.
+ *
+ * When it is not an upgrade install, nothing is done.
+ */
+Function Finish_Page_show
+
+  ${if} $DoUpgrade == 'true'
+    SendMessage $mui.FinishPage.Text ${WM_SETTEXT} 0 \
+      "STR:${LONGNAME} ${VERSION} has been installed on your computer.  Whether a Desktop \
+      Icon has been created or not is indicated by the state of the check box. This can not \
+      be changed for an upgrade type of install.$\n$\n  Click Finish to close this Wizard."
+
+    SendMessage $mui.FinishPage.Run ${BM_SETCHECK} ${BST_CHECKED} $RegVal_desktop_icon
+    EnableWindow $mui.FinishPage.Run 0
+
+    ShowWindow $mui.FinishPage.ShowReadme ${SW_HIDE}
+
+    ; Show or not show the link?
+    ShowWindow $mui.FinishPage.Link ${SW_HIDE}
+
   ${endif}
 
 FunctionEnd
@@ -3041,6 +3222,25 @@ Function SetSendToVars
 
 FunctionEnd
 
+/** test */
+
+/** CreateDesktopShortCut()
+ *
+ * This callback function is executed if, on the finish page, the user checks
+ * the Create Desktop Icon check box.  The short cut we create is a link to the
+ * Open Object Rexx Start Menu folder.
+ */
+Function CreateDesktopShortcut
+
+    CreateShortcut "$DESKTOP\Open Object Rexx Resources.lnk" "$SMPROGRAMS\${LONGNAME}\" "" "$INSTDIR\rexx.exe"
+
+    Call OpenUninstallLog
+    ${AddItem} "$DESKTOP\Open Object Rexx Resources.lnk"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "CreateDesktopIcon" 1
+    Call CloseUninstallLog
+
+FunctionEnd
+
 /** CheckInstalledStatus()
  *
  * Helper function used to determine if there is a previous version of ooRexx
@@ -3072,10 +3272,39 @@ Function CheckInstalledStatus
 FunctionEnd
 
 
-/** CheckInstalledStatus()
+/** CheckBitnessMatch()
  *
- * Helper function used to determine if there is a previous version of ooRexx
- * installed, and if so what level is the uninstaller at.
+ * Checks that the bitness of the ooRexx to be installed matches the bitness of
+ * the ooRexx to be uninstalled.
+ */
+Function CheckBitnessMatch
+
+  StrCpy $UserRequestAbort 'false'
+
+  ${if} $RegVal_uninstallBitness != ""
+    ${if} $RegVal_uninstallBitness != ${CPU}
+      MessageBox MB_YESNO \
+        "WARNING.  You are installing the ${CPU} version of ooRexx.$\n\
+        The installed version of ooRexx is the $RegVal_uninstallBitness version.$\n\
+        Running the uninstaller from within the installer in this case$\n\
+        is known to cause problems, and is not supported.$\n$\n\
+        The previous version of ooRexx should be uninstalled separately.  To$\n\
+        do this, halt this installation.  Run the uninstall program using$\n\
+        the Control Panel, or the Start Menu item under the Open Object$\n\
+        Rexx program group.  Then restart this installation program.$\n$\n\
+        Do you wish to continue the installation knowing there may be$\n\
+        problems with the install?" \
+        /SD IDNO IDYES done_return
+        StrCpy $UserRequestAbort 'true'
+        done_return:
+    ${endif}
+  ${endif}
+
+FunctionEnd
+
+/** CheckStrLen()
+ *
+ * Checks that this installer is built using the long string version of NSIS.
  */
 Function CheckStrLen
 
@@ -3092,7 +3321,7 @@ Function CheckStrLen
       delete the PATH on this system.$\n$\n\
       It is not advised that this installer be used to install$\n\
       ooRexx.  If you continue it is at your own risk.$\n$\n\
-      Do you wish to coninue despite the risk?" \
+      Do you wish to continue despite the risk?" \
       /SD IDNO IDYES done_return
       StrCpy $UserRequestAbort 'true'
       done_return:
@@ -3688,6 +3917,7 @@ Function un.Delete_Installed_Files
     RMDir /r "$INSTDIR"
     DetailPrint "Removing all Start Menu short cuts by removing the $SMPROGRAMS\${LONGNAME} folder"
     RMDir /r "$SMPROGRAMS\${LONGNAME}"
+    Delete "$DESKTOP\Open Object Rexx Resources.lnk"
 
   ${else}
     DetailPrint "Uninstall files using the install log file"
