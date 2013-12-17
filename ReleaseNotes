@@ -69,19 +69,29 @@ Installation and Configuration
 Prior to Installation:
 ----------------------
 
+For installation help and other relevant notes, prior to installation,
+please read the "_ReadMe.pdf" PDF file which is placed with the downloadable
+files for this release on SourceForge.
+
 Important: An "upgrade" type of installation is neither tested nor supported
 on any platform.  Please completely uninstall a prior version of ooRexx
 before installing a new version.  Installing over the top of an existing
 installation is likely to produce unpredictable results.
 
-Note:  On Windows only, the installer will detect a previous installation
-and launch the uninstalltion program automatically.  The uninstall program
-will completely uninstall the previous version of ooRexx and then return
-control to the installer.
+Windows Only Note:
+------------------
 
-For installation help and other relevant notes, prior to installation,
-please read the "_ReadMe.pdf" PDF file which is placed with the downloadable
-files for this release on SourceForge.
+On Windows only, the installer will detect a previous installation and
+launch the uninstalltion program automatically.  The uninstall program will
+completely uninstall the previous version of ooRexx and then return control
+to the installer.
+
+Warning:  If a previous Windows install exists and is not the same
+addressing mode (32 or 64) as the version of ooRexx about to be installed,
+there are potential problems when the uninstaller is launched from the
+installer automatically.  In this case it is strongly advised that the
+uninstallation program be run first to completely uninstall the current
+version of ooRexx and then the new installer be run.
 
 A Note on Linux packages:
 -------------------------
@@ -105,8 +115,8 @@ Changes in ooRexx 4.2.0
 =======================
 
 For the ooRexx 4.2.0 release, changes have been relatively well documented
-through the Tracker feature of the ooRexx project on SourceForge.  The ticket
-number and the ticket title of each change is recorded in the CHANGES
+through the Tracker feature of the ooRexx project on SourceForge.  The
+ticket number and the ticket title of each change is recorded in the CHANGES
 document.  If more information is desired, look up the tracker item on
 SourceForge.
 
