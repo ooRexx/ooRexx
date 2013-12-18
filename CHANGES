@@ -1,177 +1,29 @@
-            Fixes in Open Object Rexx 4.2.0
+            Fixes in Open Object Rexx 4.3.0
 
 The following is a list of fixes, enhancements, and other relevant changes
-to ooRexx since the 4.1.3 release.  The numbers for each item can be used to
+to ooRexx since the 4.2.0 release.  The numbers for each item can be used to
 look up the item in the appropriate tracker in the ooRexx project on
-SourceForge.  I.e., the Gugs tracker the, Feature Requests tracker, etc..
+SourceForge.  I.e., the Bugs tracker the, Feature Requests tracker, etc..
 
   Bugs
   ----
 
-  * 1023	charin(file,pos,len) for length(pos)>9 fails
+  * xxxx	...
 
-  * 1086	Stackspace check on 64-bit platform not large enough
-
-  * 1101	typo in typedef of ArrayClass.hpp ?
-
-  * 1110	::ATTRIBUTE external accepts a symbol, but string is required.
-
-  * 1118	append to circularqueue: more items than size permits
-
-  * 1137	Rexxutil Semaphore Create and Open Bugs
-
-  * 1148	LOSTDIGITS not raised when expected
-
-  * 1157	Abnormal termination ooDialog
-
-  * 1159	Stream command "query exists" ans sysfiletree return false
-            positives
-
-  * 1163	ooDialog (rev 9048) crash
-
-  * 1172	Wrong script file name in error message
-
-  * 1174	Performance of hasItem on Sets
-
-  * 1182	BIFs Do Not Accept Arguments>999999999
-
-  * 1183	"insert" method resizes CircularQueue w/?o letting "size" know
-
-  * 1184	CIrcularQueue resize() method removes too many items
-
-  * 1186	ooRexx/?oodialog will either hang or crash from deadlock
-            condition
-
-  * 1196	Subclassing string to limit strings to numbers only does not
-            work as expected
-
-  * 1200	optional parms to SockRecvFrom aren't optional 4.1.3 64-bit
-            debian 7
-
-  * 1209	The subset method is not using the item value with map
-            collections
-
-  * 1210	intersection method broken for circular queue class.
-
-  * 1211	circular queue union and xor methods losing items
-
-  * 1212	Classes that start with a digit are not working.
-
-  * 1213	OrderedCollection is missing previous method definition.
-
-  * 1215	Numeric strings not working with DO OVER
-
-  * 1216	x2c not recognizing invalid leading or trailing tabs
 
 
   Requests For Enhancement
   ------------------------
 
-  * 105	Add a method that will return string subwords as an array.
+  * xxx	...
 
-  * 318	Add a removeAll method to relation class.
-
-  * 354	Encode "address mode" into "parse version" string
-
-  * 357	Add a packages method to .Package
-
-  * 364	Add some character constants to the string class
-
-  * 373	Add some new CSelf API variants
-
-  * 380	C9x integer types
-
-  * 390	Add trace information about method invocations
-
-  * 402	charin() to support whole numbers according to NUMERIC DIGIT
-
-  * 421	Add new .trace monitor object to ooRexx
-
-  * 422	Add sort methods to all OrderedCollections.
-
-  * 423	Add methods to the array class for insertion/?deletion
-
-  * 426	Add section method to Queue and OrderedCollection classes.
-
-  * 429	Context object to include method name
-
-  * 430	Add SysKill Function
-
-  * 431	Add SysClose function
-
-  * 434	Add traceback and program information to all conditions
-
-  * 446	Enhancement to rexx.cpp
-
-  * 448	Add an API to handle display of condition information.
-
-  * 454	Add a disjoint method to the set methods.
-
-  * 456	Add a comparator for sorting numeric array items.
-
-  * 457	Consider adding a second class initialization method
-
-  * 459	Add a uniqueIndexes method to the relation class
-
-  * 461	add space method to mutablebuffer
-
-  * 466	Allow ABSTRACT on ::ATTRIBUTE directives.
-
-  * 469	Allow strip to work with a set of characters.
-
-  * 471	add floor, ceiling, and round math operations
-
-  * 472	Add firstitem, lastitem methods to ordered collections.
-
-  * 473	String compares should have special exception for .nil
-
-  * 477	make name used for invoking currently executing routine or
-        method available via .context
-
-  * 497	Add MutableBuffer APIs
-
-  * 500	Add Unix SIGTERM and SIGHUP processing
-
-  * 510	Add a dimensions method to the array class
-
-  * 511	The array class new method should allow an array of dimensions.
-
-  * 539	Add systemd support
-
-  * 547	Use NSIS build with support for longer than 1024 strings
-
-  * 557	Add methods to the array class that will fill all cells with a
-        default value
-
-  * 558	Collection classes should have equivalence methods.
-
-  * 561	Improve tracing of no source available lines.
-
-  * 563	Allow the stack frames to be retrieved from the .context object.
-
-  * 564	Add string method to the StackFrame class
 
 
   Documentation Bugs
   ------------------
 
-  * 124	DateTime and TimeSpan now inherit from Orderable.
+  * yyy	...
 
-  * 184	Documentation on .routines environment symbol missing
-
-  * 185	Reference 7.4.13
-
-  * 189	External function file search order doc not clear
-
-  * 190	Suggest corrections to 5.3.8
-
-  * 194	blank and null string are inherited methods
-
-  * 205	Missing closing parentheses for some xref-tags
-
-  * 206	OVER subkeyword restriczion(s)
-
-  * 207	rexxref 1.13.5.1. Evaluated Compound Variables
 
 
 Windows
@@ -181,7 +33,7 @@ Windows
   -------------
 
   - The version of ooDialog distributed with ooRexx is updated to ooDialog
-    version 4.2.3.
+    version a.b.c.
 
   - ooDialog has a separate release notes file that shows changes in
     ooDialog.  The file: ooDialog_ReleaseNotes.txt is located with the other
@@ -192,13 +44,4 @@ Windows
 Unix/Linux
 ==========
 
-  Patches
-  -------
-
-  - The rxapi daemon has been enhanced to support distributions that
-    support the systemd daemon control mechanism. The ooRexx installation
-    automatically detects the kind of daemon control system supported by
-    the Linux distribution and dynamically picks the best one to use.
-
-  - The rxapid script has been upgraded to be LSB compliant.
-
+  ???

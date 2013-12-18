@@ -20,7 +20,7 @@
 /*              the instance and a following FtpSetUser method can establish  */
 /*              a new connection to an FTP server.                            */
 /*                                                                            */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -902,7 +902,7 @@ self~traceflg = 0                -- .true = display ftp commands
 self~exttraceflg = .false        -- .true = display ftp commands prefixed with time
 self~tracelog = .nil             -- trace log stream
 self~user = ''                   -- user account on the ftp server
-self~version = '4.2.0'           -- current version of this class
+self~version = '4.3.0'           -- current version of this class
 self~bufsize = 4096              -- default buffer size for send/receive
 self~thrdstatus = ''
 return
@@ -935,7 +935,7 @@ else
 	self~tracelog~lineout(line)
 self~tracelog~flush()
 
-return 
+return
 
 
 /*----------------------------------------------------------------------------*/
@@ -1927,7 +1927,7 @@ self~response = .array~new()
 /* check/get args */
 if arg() > 4 then raise syntax 93.902 array (4)
 if arg() < 1 then raise syntax 93.901 array (1)
-	
+
 select
    when arg() = 1 then do
 	   use arg fname
@@ -1962,7 +1962,7 @@ select
      end
    otherwise nop
    end
-   		
+
 /* open the trace file */
 if mode = '' then mode = 'R'
 self~tracelog = .stream~new(fname)
@@ -1972,7 +1972,7 @@ if mode = 'R' then do
      end
    else do
    	 retc = self~tracelog~open('write replace')
-     end   	
+     end
    end
 else do
 	 if sharemode = 'S' then do

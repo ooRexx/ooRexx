@@ -1,15 +1,14 @@
                              Open Object Rexx
 
                               Release Notes
-                              Version 4.2.0
+                              Version 4.3.0
 
-  Copyright 2005-2013 Rexx Language Association.  All rights reserved.
-                               December 2013
+  Copyright 2005-2014 Rexx Language Association.  All rights reserved.
+                               July 2014
 
 Note
 ====
-ooRexx 4.2.0 is a new feature and bug fix release.  There are a large number
-of new features and enhancements in this release.
+ooRexx 4.3.0 is a ...
 
 Fixed bugs and implemented feature requests opened through the SourceForge
 Tracker for the ooRexx project are listed in the CHANGES document.
@@ -19,7 +18,7 @@ File List
 
 Linux rpm and deb packages contain the distribution name, version of the
 system they were built on, and an indicator of the bitness of the interpreter.
-For instance, ooRexx-4.2.0-9643.opensuse1230.x86_64.rpm was built on
+For instance, ooRexx-4.3.0-10643.opensuse1330.x86_64.rpm was built on
 OpenSuSE 13.30 and is a 64 bit interpreter.
 
 All package names contain an indication if the package is built as a 32-bit
@@ -50,14 +49,14 @@ ReadMe.txt
 A copy of this file because SourceForge will display the contents of a
 readme file in the file download section.
 
-ooRexx-4.2.0.*
+ooRexx-4.3.0.*
 The installation packages for various operating systems.
 
-ooRexx-4.2.0-source.tar.gz
+ooRexx-4.3.0-source.tar.gz
 The source code for this version of ooRexx, suitable for building on an
 unix-like system.  Includes the configure script.
 
-ooRexx-4.2.0-source.zip
+ooRexx-4.3.0-source.zip
 The source code for this version of ooRexx, suitable for building and
 packaging on a Windows system.  Includes the PDF documentation files which
 are required for the packaging step.
@@ -111,10 +110,10 @@ Depending on resources, the ooRexx team may be able to build a specific
 package for that distribution.
 
 
-Changes in ooRexx 4.2.0
+Changes in ooRexx 4.3.0
 =======================
 
-For the ooRexx 4.2.0 release, changes have been relatively well documented
+For the ooRexx 4.3.0 release, changes have been relatively well documented
 through the Tracker feature of the ooRexx project on SourceForge.  The
 ticket number and the ticket title of each change is recorded in the CHANGES
 document.  If more information is desired, look up the tracker item on
