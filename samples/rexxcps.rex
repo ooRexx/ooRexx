@@ -42,7 +42,7 @@ trace o
 
 parse arg count averaging .
 if count == '' then do
-    count=30
+    count=100
 end
 if averaging == '' then do
     averaging=100
@@ -66,12 +66,6 @@ do i=1 to averaging
   end
 empty=empty/averaging
 
-noterm=(system='CMS'); if pos('O',tracevar)=1 then noterm=0
-if noterm then do
-   say 'Calibration (empty DO):' empty 'secs (average of' averaging')'
-   say 'Spooling trace NOTERM'
-   'CP SPOOL CON * START NOTERM'; 'CP CLOSE CON PUR'
-   end
 
 /* Now the true timer loop .. average timing again */
 full=0
@@ -125,10 +119,6 @@ do i=1 to averaging
   trace off
   end
 full=full/averaging
-if noterm then do
-   'CP CLOSE CON'; 'CP SPOOL CON * START TERM'
-   say 'Spooling now back on TERM'
-   end
 
 looptime=(full-empty)/count
 /* Developer's statistics: */
@@ -151,5 +141,3 @@ subroutine:
   parse var a3 b1 b2 b3 .
   do 1; rc=a1 a2 a3; parse var rc c1 c2 c3; end
   return
-
-novalue: if noterm then 'CP SP CON STOP TERM'
