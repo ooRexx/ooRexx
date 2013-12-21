@@ -3824,7 +3824,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
         }
     }
 
-    if ( hResult == S_OK )
+    if ( SUCCEEDED(hResult) )
     {
         // If Variant2Rexx() raises an exception we drop through and catch the
         // clean up code and are okay here.
