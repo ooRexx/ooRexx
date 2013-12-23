@@ -46,7 +46,7 @@
 
 
 
-LocalRegistrationManager::LocalRegistrationManager() : LocalAPISubsystem()
+LocalRegistrationManager::LocalRegistrationManager() : locked(false), LocalAPISubsystem()
 {
     // no state in this
 }
@@ -114,6 +114,23 @@ RexxReturnCode LocalRegistrationManager::registerCallback(RegistrationType type,
  */
 RegistrationTable &LocalRegistrationManager::locateTable(RegistrationType type)
 {
+    // if this is the first request for local registration information, we need to
+    // lock the rxapi library into memory by requesting an additional load.  This
+    // is necessary because some apps dynamically load rexxapi, call a function, then
+    // unload the library.  This wipes out the local registration tables.  By doing a
+    // second load, then we are protected until the process goes away.
+    if (!locked)
+    {
+        SysLibrary lib;
+        // not necessarily an error if this fails, but we will be subject to
+        // the loading/unloading behavior.  It is possible this might not be
+        // an issue for most applications, so an error doesn't really seem necessary.
+        if (lib.load("rexxapi"))
+        {
+            locked = true;
+        }
+    }
+
     if (type == FunctionAPI)
     {
         return functions;

@@ -72,6 +72,7 @@ protected:
 
     RegistrationTable &locateTable(RegistrationType type);
 
+    bool              locked;            // indicates we've locked the library against unloading
     RegistrationTable functions;         // our tables for process-specific registrations
     RegistrationTable exits;
     RegistrationTable commandHandlers;
