@@ -921,32 +921,26 @@ void RexxActivity::generateProgramInformation(RexxDirectory *exobj)
     exobj->put(traceback, OREF_TRACEBACK);
 
     ActivationFrame *frame = activationFrames;
-    while (frame != OREF_NULL && frame->getSource() == OREF_NULL)
+
+    RexxSource *source = OREF_NULL;
+    StackFrameClass *firstFrame = OREF_NULL;
+
+    while (frame != NULL)
     {
+        StackFrameClass *stackFrame = frame->createStackFrame();
+        // save the topmost source object we can find for error reporting
+        if (source == OREF_NULL && frame->getSource() != OREF_NULL)
+        {
+            firstFrame = stackFrame;
+            source = frame->getSource();
+        }
+        stackFrames->append(stackFrame);
+        traceback->append(stackFrame->getTraceLine());
         frame = frame->next;
     }
 
-    RexxSource *source = OREF_NULL;
-
-    // if we have a frame, then process the list
-    if (frame != NULL)
+    if (firstFrame != OREF_NULL)
     {
-        StackFrameClass *firstFrame = frame->createStackFrame();
-        // save the source object associated with that frame
-        source = frame->getSource();
-        stackFrames->append(firstFrame);
-        traceback->append(firstFrame->getTraceLine());
-
-        // step to the next frame
-        frame = frame->next;
-        while (frame != NULL)
-        {
-            StackFrameClass *stackFrame = frame->createStackFrame();
-            stackFrames->append(stackFrame);
-            traceback->append(stackFrame->getTraceLine());
-            frame = frame->next;
-        }
-
         RexxObject *lineNumber = firstFrame->getLine();
         if (lineNumber != TheNilObject)
         {
@@ -964,7 +958,7 @@ void RexxActivity::generateProgramInformation(RexxDirectory *exobj)
     }
     else
     {
-        // if not available, then this is explicitly a NULLSTRINg.
+        // if not available, then this is explicitly a NULLSTRING.
         exobj->put(OREF_NULLSTRING, OREF_PROGRAM);
     }
 }
@@ -982,22 +976,12 @@ RexxArray *RexxActivity::generateStackFrames()
     ProtectedObject p(stackFrames);
 
     ActivationFrame *frame = activationFrames;
-    while (frame != OREF_NULL && frame->getSource() == OREF_NULL)
+
+    while (frame != NULL)
     {
+        StackFrameClass *stackFrame = frame->createStackFrame();
+        stackFrames->append(stackFrame);
         frame = frame->next;
-    }
-
-    RexxSource *source = OREF_NULL;
-
-    // if we have a frame, then process the list
-    if (frame != NULL)
-    {
-        while (frame != NULL)
-        {
-            StackFrameClass *stackFrame = frame->createStackFrame();
-            stackFrames->append(stackFrame);
-            frame = frame->next;
-        }
     }
     return stackFrames;
 }
