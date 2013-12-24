@@ -68,10 +68,11 @@ public:
     inline ~LocalAPIManager() { }
 
     static LocalAPIManager *getInstance();
-    static void deleteInstance();
+    static void shutdownInstance();
 
     void initProcess();
     void terminateProcess();
+    void shutdownConnections();
 
     inline SessionID getSession() { return session; }
     inline void getUserID(char *buffer) { strcpy(buffer, userid); }
@@ -87,6 +88,7 @@ protected:
 
     static LocalAPIManager* singleInstance;  // the single local instance
     static SysMutex messageLock;             // threading synchronizer
+    bool           restartRequired;          // indicates we need a restart after termination
     bool           connectionEstablished;    // local initialization state
     SessionID      session;                  // the session identifier
     char           userid[MAX_USERID_LENGTH]; // name of the user

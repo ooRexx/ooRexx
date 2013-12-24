@@ -61,6 +61,17 @@ LocalAPIManager *LocalAPIManager::getInstance()
         // to the process-specific initialization now.
         singleInstance->initProcess();
     }
+    else {
+        // if we shut everything down at interpreter termination, reestablish the connections.
+        if (singleInstance->restartRequired)
+        {
+            // resetting this will prevent us from going into conversion loops.
+            singleInstance->restartRequired = false;
+            // we could have been shutdown by a previous interpreter termination.
+            // make sure we have a connection
+            singleInstance->establishServerConnection();
+        }
+    }
     return singleInstance;
 }
 
@@ -68,15 +79,15 @@ LocalAPIManager *LocalAPIManager::getInstance()
 /**
  * Shutdown the instance of the API manager.
  */
-void LocalAPIManager::deleteInstance()
+void LocalAPIManager::shutdownInstance()
 {
     Lock lock(messageLock);                     // make sure we single thread this
     if (singleInstance != NULL)
     {
-                              // clean up all local resources
-        singleInstance->terminateProcess();
-        delete singleInstance;  // release the single instance memory
-        singleInstance = NULL;
+        // shutdown any connections with the server
+        singleInstance->shutdownConnections();
+        // mark that we need a restart
+        singleInstance->restartRequired = true;
     }
 }
 
@@ -131,6 +142,19 @@ void LocalAPIManager::terminateProcess()
     macroSpaceManager.terminateProcess();
     registrationManager.terminateProcess();
 
+    // shutdown the connections
+    shutdownConnections();
+}
+
+
+/**
+ * Perform connection cleanup after an interpreter instance
+ * stops
+ */
+void LocalAPIManager::shutdownConnections()
+{
+    // the queue manager needs to terminate the session queue first
+
     // clean up the connection pools
     while (!connections.empty())
     {
@@ -139,6 +163,8 @@ void LocalAPIManager::terminateProcess()
         // tell the server we're going away and clean up
         closeConnection(connection);
     }
+    // no active connections
+    connectionEstablished = false;
 }
 
 
@@ -147,6 +173,9 @@ void LocalAPIManager::terminateProcess()
  */
 void LocalAPIManager::initProcess()
 {
+    // we don't need a restart since we're just starting up
+    restartRequired = false;
+
     // 1) get our session id and userid information.
     session = SysProcess::getPid();
     SysProcess::getUserID(userid);

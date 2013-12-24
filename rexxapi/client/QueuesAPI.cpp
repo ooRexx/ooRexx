@@ -353,7 +353,7 @@ RexxReturnCode RexxEntry RexxPullFromQueue(
 RexxReturnCode RexxEntry RexxDeleteSessionQueue()
 {
     // this shuts down the entire environment
-    LocalAPIManager::deleteInstance();
+    LocalAPIManager::shutdownInstance();
     return RXQUEUE_OK;
 }
 
