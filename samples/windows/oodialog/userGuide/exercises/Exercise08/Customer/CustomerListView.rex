@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -80,7 +80,7 @@
     v02-00 17Aug12: Exercise07 - modified to use the MVF.
            08Jan13: Removed stand-alone startup (not now needed).
     v03-00 24May13: Inherits directly from RcDialog plus the View & Component mixins
- 
+
 
 
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -153,7 +153,7 @@
     self~connectButtonEvent("IDC_CUSTLIST_SHOWCUST","CLICKED",showCustomer)
     self~connectListViewEvent("IDC_CUSTLIST_LIST","ACTIVATE",openItem)	 	-- Double-click
     --self~connectListViewEvent("IDC_CUSTLIST_LIST","BEGINDRAG",beginDM)	 	-- Button 1 down
-    
+
     self~loadList
 
 

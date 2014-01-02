@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -39,9 +39,9 @@
 
    Contains: 	   class: "EventMgr"
 
-   Description: The Event Manager records interest in events, and sends 
+   Description: The Event Manager records interest in events, and sends
                 notification messages when the event is triggered by receipt of
-                a "triggerEvent" message. 
+                a "triggerEvent" message.
 
    Pre-requisites: None.
 
@@ -59,24 +59,24 @@
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
   ::CLASS EventMgr PUBLIC
-  
+
   ::ATTRIBUTE dirEvents PRIVATE
-  
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD init
     -- Initiated by the MVF object.
     self~dirEvents = .directory~new
     .local~my.EventMgr = self
     return self
 
-    
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD registerInterest PUBLIC
     use strict arg event, object
     -- Check if dir has an entry for this event yet
     -- NOTE: In this version:
     --       Multiple registrations by an object for same event NOT checked!
-    --       That means if it doesn't de-register, it gets multiple notifies! 
+    --       That means if it doesn't de-register, it gets multiple notifies!
     if self~dirEvents[event] = .nil then do
       --say "EventList-registerInterest-01: No event array for '"||event||"'"
       arr = .array~new
@@ -86,9 +86,9 @@
     arr = self~dirEvents[event]
     if arr~hasItem(object) then nop -- no point in registering twice!
     else arr~append(object)
-    return .true  
-    
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  
+    return .true
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD triggerEvent PUBLIC
     -- If event not registered, returns .false; else invokes "notify" on all
     -- objects registered for the event and returns .true.
@@ -98,13 +98,13 @@
     if arr = .nil then return .false	-- event not registered.
     else do
       do i over arr
-        --say "EventMgr-triggerEvent-02: sending 'notify' for" event "to" i	 
+        --say "EventMgr-triggerEvent-02: sending 'notify' for" event "to" i
         i~notify(event)
       end
       return .true
     end
 
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD deRegisterInterest PUBLIC
     use strict arg event, object
     -- Returns .false if event not registered or if object not registered;
@@ -118,10 +118,10 @@
       return .false
     end
     return .true
-    
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  
+
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD list
-    say "EventMgr-list-01."  
+    say "EventMgr-list-01."
     say "----Event-List---------------"
     do i over self~dirEvents
       arr = self~dirEvents[i]
@@ -131,5 +131,4 @@
       end
       say "Event '"||i||"':" str
     end
-    say "-----------------------------"; say    
-    
+    say "-----------------------------"; say

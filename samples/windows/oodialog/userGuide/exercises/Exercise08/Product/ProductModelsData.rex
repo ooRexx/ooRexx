@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -54,8 +54,8 @@
    v00-04 21Aug12: ProducListModel added. Modified to fit the MV Framework.
    v02-00 13Jan12: Ex07: Some 'say' instructions removed or commented out.
           01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
-                   folder, so change to ::Requires needed. 
-          24May13: Minor changes to comments for Ex08. 
+                   folder, so change to ::Requires needed.
+          24May13: Minor changes to comments for Ex08.
 
 ------------------------------------------------------------------------------*/
 

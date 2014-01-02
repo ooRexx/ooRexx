@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,9 +53,9 @@
                    Customer and CustomerList - also removed code storing data
                    in self~myData.
           01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
-                   folder, so change to ::Requires needed. 
-          24May13: Updated comments only to say Ex08. 
-                   
+                   folder, so change to ::Requires needed.
+          24May13: Updated comments only to say Ex08.
+
 ------------------------------------------------------------------------------*/
 
 ::REQUIRES "Support\GenericFile.rex"

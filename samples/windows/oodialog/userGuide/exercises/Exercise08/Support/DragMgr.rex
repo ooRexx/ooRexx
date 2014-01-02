@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,8 +42,8 @@
 
    Notes: A 'source' view is a dialog that's "picked up" by pressing and holding
           button 1 (usually the left button) of the mouse.
-          A 'target' view is a dialog that's dropped onto by releasing 
-          button 1 over the target dialog. 
+          A 'target' view is a dialog that's dropped onto by releasing
+          button 1 over the target dialog.
 
    Interface DragMgr {
      setTarget
@@ -51,7 +51,7 @@
      removeDlg
      list         lists tables of source & target dialogs.
      dmPickup 	  captures mouse - i.e. sets the mouse capture to the window
-           	  of this mouse instance. 
+           	  of this mouse instance.
      moving	  If over a target (as supered by a dlg instance):
                   - check if this is a valid target AND is topmost window
 		  - If over a valid drop area send dmQueryDrop(sourceDlg,mousePos)
@@ -59,7 +59,7 @@
 		  - If response is .true then show dropOKCursor
 		    else show noDropCursor (system-provided).
      dmDrop	  - If cursor is no-drop then no-op.
-		    Else send dmDrop(sourceDlg) to drop target. 
+		    Else send dmDrop(sourceDlg) to drop target.
      }
 
   Changes:
@@ -81,15 +81,15 @@
   ::ATTRIBUTE sourceDialogs PRIVATE  -- dlg - mouse, dropOkCursor, pickupArea
   ::ATTRIBUTE dragInProgress
   --::ATTRIBUTE draggingSourceDlg PRIVATE
-  
-    
+
+
   /*----------------------------------------------------------------------------
     init - initialises the Drag Manager
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD init
     expose icons dragging cursorIsNoDrop noDropCursor
     .local~my.DragMgr = self
-    --say "DragMgr-init-01: .local~my.DragMgr =" .local~my.DragMgr 
+    --say "DragMgr-init-01: .local~my.DragMgr =" .local~my.DragMgr
     self~dragInProgress = .false
     self~targetDialogs = .Table~new	-- Index = dlg id
     					-- Item = an Array: hwnd, dropArea,
@@ -105,7 +105,7 @@
 
     return self
 
-    
+
   /*----------------------------------------------------------------------------
     setTarget - Adds a target view component to the Targets table
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -116,7 +116,7 @@
     items[1] = hwnd;  items[2] = dropArea
     self~targetDialogs[dlg] = items
 
-    
+
   /*----------------------------------------------------------------------------
     setSource - Adds a source view component to the Targets table
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -126,18 +126,18 @@
     use strict arg sourceWin, mouse, cursorFile, pickupArea, srcDlg	-- ***
     -- cursorFile is relative path and filename e.g. "bmp\customer.cur".
     --say "DragManager-setSource-01: sourceWin, Area =" sourceWin||"," pickupArea
-    
+
     dropOkCursor = .Mouse~loadCursorFromFile(cursorFile)
     if dropOkCursor == 0 then do
       say "DragManager-setSource-02:" .HRSdm~badOkCursor .SystemErrorCode
     end
 
     items    = .Array~new
-    items[1] = mouse;  items[2] = dropOkCursor;  
+    items[1] = mouse;  items[2] = dropOkCursor;
     items[3] = pickupArea;  items[4] = srcDlg
     self~sourceDialogs[sourceWin] = items
 
-    
+
   /*----------------------------------------------------------------------------
     RemoveDlg - Removes a dialog from the Targets table when the dialog closes.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -147,7 +147,7 @@
     self~sourceDialogs~remove(dlg)
     self~targetDialogs~remove(dlg)
 
-    
+
   /*----------------------------------------------------------------------------
     dmPickup - Handles drag initiation when the user "picks up" a dialog.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -179,7 +179,7 @@
     --say "DragManager-dmPickup-04: dragging =" dragging
     return
 
-    
+
   /*----------------------------------------------------------------------------
     moving - Handles mouse movements - detects when mouse over a dialog, and if
              it's a 'target' dialog, asks it whether it will accept a drop.
@@ -309,7 +309,7 @@
 
     return
 
-    
+
   /*----------------------------------------------------------------------------
     list - A debug mehod that lists source and target dialogs on the console.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */

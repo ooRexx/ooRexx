@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -54,11 +54,11 @@
             11Jan13: Removed stand-alone operation.
                      Commented-out 'say' instructions.
             01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
-                     folder, so change to ::Requires needed. 
-     v03-00 26May13: Update to use View & Component mixins. 
+                     folder, so change to ::Requires needed.
+     v03-00 26May13: Update to use View & Component mixins.
                      Comment-out the "Are you sure" when dialog closes.
                      Delete commented-out code in the 'showData' method.
-     
+
 ------------------------------------------------------------------------------*/
 
 
@@ -81,7 +81,7 @@
     v02-00 25Aug12: Ex07 - changed to use the MVF.
            08Jan13: Extraneous comments removed; some 'say' stmts commented out.
            11Jan13: Commented-out 'say' instructions.
-    v03-00 26May13: Update to use View & Component mixins.           
+    v03-00 26May13: Update to use View & Component mixins.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 ::CLASS OrderView SUBCLASS RcDialog PUBLIC INHERIT View Component	-- Ex08

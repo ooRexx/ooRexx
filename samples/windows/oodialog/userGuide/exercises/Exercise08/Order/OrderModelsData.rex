@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,7 +47,7 @@
    v01-00 07Jun12: First version.
    v02-00 08Jan13: Modified to use the MVF.
           01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
-                   folder, so change to ::Requires needed. 
+                   folder, so change to ::Requires needed.
    v02-01 06Jun13: Added drag/drop code to OrderFormModel
 
 ------------------------------------------------------------------------------*/
@@ -125,8 +125,8 @@
 
   Changes:
    v01-00 04Oct12.
-   v02-00 06Jun13: Added drag/drop class method (dmQueryDrop) which checks 
-                   whether the dragged source is a Customer. 
+   v02-00 06Jun13: Added drag/drop class method (dmQueryDrop) which checks
+                   whether the dragged source is a Customer.
 
 
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -149,7 +149,7 @@
     modelId = RESULT							--Ex07
     return modelId							--Ex07
 
-    
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     dmQueryDrop - Check whether a drag/drop operation is allowed to drop
                   on an order form.
@@ -161,7 +161,7 @@
     if sourceClassName = "PRODUCTMODEL" then return .true
     else return .false
 
-    	    
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     getInstanceName - over-rides super's method.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -.*/

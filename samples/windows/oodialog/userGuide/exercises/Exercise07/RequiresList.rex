@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,8 +47,8 @@
                      optional.
             11Jan13: Deleted Commented-out startup of MessageSender.
             21Mar13: Added Copyright notice.
-     v01-02 01Apr13: After ooDialog 4.2.2, "Samples" folder changed name to 
-                     "Extras", so change to ::Requires needed. 
+     v01-02 01Apr13: After ooDialog 4.2.2, "Samples" folder changed name to
+                     "Extras", so change to ::Requires needed.
 
 ------------------------------------------------------------------------------*/
 
@@ -63,7 +63,7 @@
   v01-00 16Sep12: First version.
          11Jan13: Commented-out 'say' instruction.
          26May13: Corrected paths for ::REQUIRES afrer re-factoring.
-         
+
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 --say "RequiresList-01."
 ::REQUIRES "Customer\CustomerView.rex"

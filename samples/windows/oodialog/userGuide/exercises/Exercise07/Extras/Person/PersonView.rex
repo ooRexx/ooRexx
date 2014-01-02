@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,7 +47,7 @@
    Changes:
    v01-00 01Oct12: First version.
           01Apr13: After ooDialog 4.2.2, Samples folder renamed to 'Extras'
-                   and Support moved to within execise foldes. 
+                   and Support moved to within execise foldes.
                    so changes to ::Requires and ~addToConstDir needed.
           26May13: Corrected h path after re-factoring Extras folder.
 

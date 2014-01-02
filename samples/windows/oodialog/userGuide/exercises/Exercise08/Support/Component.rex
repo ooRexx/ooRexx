@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,12 +35,12 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide - Support
-   Exercise 08: View.rex 				  	  
+   Exercise 08: View.rex
 
    Component							  v01-00 13May13
    ---------
-   A superclass for all components (View, Model and data). Part of the MVF. 
-   
+   A superclass for all components (View, Model and data). Part of the MVF.
+
    Contains: 	   class: "Component"
 
    Description: *** To be provided. ***
@@ -60,11 +60,11 @@
   ==============================================================================
   Object						  	  v01-00 13May13
   ------
-  The superclass for all application components. 
+  The superclass for all application components.
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
 
 --::CLASS View SUBCLASS RcDialog PUBLIC
-::CLASS Component PUBLIC MIXINCLASS Object 
+::CLASS Component PUBLIC MIXINCLASS Object
 
 
   /*----------------------------------------------------------------------------
@@ -72,22 +72,22 @@
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::method init
     say "Component-init-01."
-    
+
   ::METHOD saySomething
     say "Component-saySomething: Hi there!."
     return .true
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  
+
   /*----------------------------------------------------------------------------
     Event Management
     --------------------------------------------------------------------------*/
-    
+
   /*----------------------------------------------------------------------------
-    registerInterest 
+    registerInterest
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD registerInterest
-    use strict arg eventName, interestedObject 
+    use strict arg eventName, interestedObject
     eventMgr = .local~my.EventMgr
     --say "Component~registerInterest-01: event =" eventName||"; object =" interestedObject
     r = eventMgr~registerInterest(eventName,interestedObject)
@@ -96,24 +96,23 @@
 
 
   /*----------------------------------------------------------------------------
-    triggerEvent 
+    triggerEvent
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD triggerEvent
-    use arg eventName 
+    use arg eventName
     eventMgr = .local~my.EventMgr
-    --say "Component-triggerEvent-01: event =" eventName||"; r =" r 
+    --say "Component-triggerEvent-01: event =" eventName||"; r =" r
     r = eventMgr~triggerEvent(eventName)  -- if r = 0 then no-one's registered.
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
-    deRegisterInterest 
+    deRegisterInterest
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD deRegisterInterest
-    use arg eventName, uninterestedObject 
+    use arg eventName, uninterestedObject
     eventMgr = .local~my.EventMgr
-    --say "Component-deRegisterIntrest-01: event =" eventName||"; object =" uninterestedObject||" r =" r 
+    --say "Component-deRegisterIntrest-01: event =" eventName||"; object =" uninterestedObject||" r =" r
     r = eventMgr~deregisterInterest(eventName, uninterestedObject)  -- if r = 0 then no-one's registered.
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */    
-      
+  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 /*============================================================================*/
-    

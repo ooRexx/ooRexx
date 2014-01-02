@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -62,7 +62,7 @@
                      (not saved over a dialog close).
             11Feb13: No change to function - minor tidy-up of a few comments.
             14Feb13: Correct text in the Help dialog.
-     v01-01 25May13: Added Event Manager to list of target objects. 
+     v01-01 25May13: Added Event Manager to list of target objects.
             26Jun13: Added Drag Manager to list of target objects.
             03Jly13: Changed "Exercise07" to "Exercise08" for .h file folder.
 
@@ -404,7 +404,7 @@
         eventMgr~list
         return "special"
       end
-      else do 
+      else do
         targetMethodError = .true
         return .false
       end
@@ -416,12 +416,12 @@
         dragMgr~list
         return "special"
       end
-      else do 
+      else do
         targetMethodError = .true
         return .false
       end
-    end    
-    	    
+    end
+
 -- Following Code does not work - left here in case needed in any following exercises.
 /*    else do
       --say "MessageSender-parseData-01d."

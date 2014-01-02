@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,7 +45,7 @@
     v02-00 21Aug12: Modified for Exercise07 to use the Model-View Framework.
            11Jan13: Commented-out 'say' instructions.
            01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
-                    folder, so change to ::Requires needed. 
+                    folder, so change to ::Requires needed.
 
   Contains: classes "ProductListView, HRSplv (for human-readable strings)
 

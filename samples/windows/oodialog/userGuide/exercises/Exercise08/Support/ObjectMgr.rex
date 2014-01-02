@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -60,8 +60,8 @@
            21Jan13: Make 'addView' private and 'removeView' explicitly public.
                     Minor typos in comments corrected.
     v01-01 06Jun13: Added methods 'modelClassFromView and 'modelIdFromView -
-                    given a view (a dialog), which return the model class name 
-                    and model object id respectively. Purpose: to support 
+                    given a view (a dialog), which return the model class name
+                    and model object id respectively. Purpose: to support
                     Drag/Drop.
 
   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
@@ -232,7 +232,7 @@ call "RequiresList.rex"
                         (Added to support drag/drop)
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD modelIdFromView PUBLIC
-    expose objectBag  
+    expose objectBag
     use strict arg viewId
     parse var viewId . viewClassName
     --say "ObjectMgr-modelIdFromView-01: viewName =" viewClassName
@@ -248,7 +248,7 @@ call "RequiresList.rex"
     end myLoop
     --say "ObjectMgr-modelIdFromView-02: modelId =" modelId
     return modelId
-  
+
   /*----------------------------------------------------------------------------
     modelClassFromView - Returns the class name of the model for a given view.
                         (Added to support drag/drop)
@@ -273,7 +273,7 @@ call "RequiresList.rex"
     --say "ObjectMgr-modelClassFromView-02: modelName, className =" modelName||"," classname
     return className
 
-    
+
   /*----------------------------------------------------------------------------
     addView - Adds a View to the ObjectBag.
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */

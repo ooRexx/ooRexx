@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -65,7 +65,7 @@
           and a Message Sender respectively.
        27Feb13: Commented-out several 'say's.
        08May13: Modified some comments - no change to function.
-     v03-00 11May13: Added triggering of event "appClosing".  
+     v03-00 11May13: Added triggering of event "appClosing".
 
 ------------------------------------------------------------------------------*/
 
@@ -381,7 +381,7 @@ call "OrderMgr\RequiresList.rex"
   /*::METHOD triggerEvent
     use strict arg event
     idEventMgr = .local~my.EventMgr
-  */  
+  */
 /*============================================================================*/
 
 

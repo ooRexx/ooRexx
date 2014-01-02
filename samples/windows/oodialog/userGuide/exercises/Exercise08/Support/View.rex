@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,12 +35,12 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide - Support
-   Exercise 08: View.rex 				  	  
+   Exercise 08: View.rex
 
    ViewMixin							  v01-02 18Jun13
    ---------
    A mixin superclass for View components (part of the Model-View Framework).
-   
+
    Contains: 	   class: "ViewMixin"
 
    Description: A mixin superclass for all xxxView components.
@@ -54,8 +54,8 @@
      v01-01 06Jun13: Added drag/drop methods. Also store model id as an
                      attribute ('myModel') to save subclases having to do it.
                      Note - some drag/drop methods are there as catch-alls for
-                     when a subclass does not implement them. Default action 
-                     still to be verified. 
+                     when a subclass does not implement them. Default action
+                     still to be verified.
             18Jun13: Changed "drop" method to "dmDrop" and "pickup" to "dmPickup"
                      (both sent to DragMgr).
 
@@ -177,10 +177,10 @@
     self~offset
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  
+
   /*----------------------------------------------------------------------------
     Drag/Drop Methods
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
   /*----------------------------------------------------------------------------
     dmSetAsSource - called by a view component to define itself as a drag source.
@@ -206,7 +206,7 @@
       --say "View-dmSetAsSource-02 - default pickup client area =" dmSourceArea
     end
     --else say "View-dmSetAsSource-03 - pickup client area =" dmSourceArea
-    
+
     if dmSourceControl = "DMSOURCECONTROL" then do 	-- The source is a dialog.
       --say "View-dmSetAsSource-04: source is a dialog."
       sourceWin = self
@@ -264,7 +264,7 @@
     --say "View-dmOnLBdown-00; self, keystate, mousePos =" self||"," keystate||"," mousePos
     info = self~dmGetItemInfo				-- for listviews
     if info = 0 then nop --say "View-dmOnLBdown-01 - info is zero."
-    
+
     else do
       nop --say "View-dmOnLBdown-02; info, sourceWin =" info||"," sourceWin
       -- store the info somewhere - how about "drag data"?.
@@ -274,11 +274,11 @@
     self~DragMgr~dmPickup(sourceWin, keyState, mousePos)  -- pre-listview
     return 0
 
-  ::METHOD dmGetItemInfo	-- Dummy method for when sublcass does not 
+  ::METHOD dmGetItemInfo	-- Dummy method for when sublcass does not
                                 -- implement it.
     return 0
-    
-    
+
+
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ::METHOD dmOnMove
     expose sourceWin
@@ -331,21 +331,21 @@
     return self~ok:super
 */
 
-    
+
   /*----------------------------------------------------------------------------
     Event Management Methods. *** INCOMPLETE ***
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
     /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   --::METHOD triggerEvent
   --  use strict arg event
   --  idEventMgr = .local~my.EventMgr
-    
+
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ::METHOD viewDoIt
     --say "View-viewDoIt-01."
-    
-      
+
+
 /*============================================================================*/
 
 
@@ -359,5 +359,5 @@
 ::CLASS HRS PRIVATE		-- Human-Readable Strings
   ::CONSTANT dmSrcNulCursor  "View-dmSetAsSource - Error: Source Cursor is null."
   ::CONSTANT dmTgtBadParam   "View-dmSetAsTarget - Error: null dlg or null hwnd or both."
-  
-  
+
+

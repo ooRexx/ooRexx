@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2013 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -52,10 +52,10 @@
           09Jan13: Removed stand-alone startup (not now needed).
                    Changes to CustomerView (not at v03-00).
           01Apr13: After ooDialog 4.2.2, Support folder moved to exercise
-                   folder, so change to ::Requires needed. 
+                   folder, so change to ::Requires needed.
    v03-00 24May13: Inherits directly from RcDialog plus the View & Component mixins
           06Jun13: Added set self as drag/drop source in initDialog method.
-   
+
 ------------------------------------------------------------------------------*/
 
 
@@ -150,9 +150,9 @@
     forward class (super) continue	-- Ex07: Required for MV framework.
     custData = RESULT			-- Ex07: instance data returned by super
     					-- Ex07: ('forward' returns any result via 'RESULT'.)
-    --say "CustomerView-activate-01."    					
+    --say "CustomerView-activate-01."
     self~popUpAsChild(rootDlg,"SHOWTOP",,"IDI_CUST_DLGICON")			-- Ex07: deleted "standalone" startup.
-    --say "CustomerView-activate-01."  
+    --say "CustomerView-activate-01."
     return
 
 
@@ -179,10 +179,10 @@
     self~connectButtonEvent("IDC_CUST_BTN_SHOWLASTORDER","CLICKED",showLastOrder)
 
     self~setTitle(.HRScv~dlgTitle)		-- set dialog title.
-    
+
     -- set self as drag/drop source.
     r = self~dmSetAsSource:super("Customer\bmp\Customer.cur")
-    
+
     -- Show app data:
     self~showData
 
