@@ -180,11 +180,13 @@ void RexxTrigger::parse(
             {
                 _value = target->getWord();    /* just get the next word            */
             }
+            ProtectedObject p(_value);   // needs protecting if the assignment is a compound var.
             variable = this->variables[i];   /* get the next variable retriever   */
             if (variable != OREF_NULL)
             {     /* not a place holder dummy?         */
                   /* set the value                     */
                 // NOTE:  The different variable tpes handle their own assignment tracing
+
                 variable->assign(context, stack, _value);
                 // if only tracing results and not intermediates, then we need to
                 // trace this value explicitly.
@@ -216,6 +218,7 @@ void RexxTrigger::parse(
                 {
                     _value = target->getWord();   /* just get the next word            */
                 }
+                ProtectedObject p(_value);   // needs protecting if the assignment is a compound var.
                 /* set the value                     */
                 variable->assign(context, stack, _value);
             }
