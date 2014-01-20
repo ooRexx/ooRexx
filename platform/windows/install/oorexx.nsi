@@ -293,6 +293,11 @@ SectionEnd
 
 Section "${LONGNAME} Core (required)" SecMain
   SectionIn 1 RO
+
+  DetailPrint "Beginning installation of ooRexx"
+  DetailPrint "  NSIS installer with max string length ${NSIS_MAX_STRLEN}"
+  DetailPrint ""
+
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR
   ; Distribution executables...
