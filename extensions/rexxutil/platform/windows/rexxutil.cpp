@@ -2281,6 +2281,9 @@ static bool safeGetCurrentDirectory(RexxCallContext *c, char **pPath, size_t *pP
         return false;
     }
 
+    // we might need to add a trailing backslash here, so make sure we leave enough room
+    ret += FNAMESPEC_BUF_EXTRA;
+
     path = (char *)LocalAlloc(LPTR, ret);
     if ( path == NULL )
     {
