@@ -17,8 +17,9 @@
 !define SHORTNAME      "ooRexx"            ;Short name (no slash) of package
 !define DISPLAYICON    "$INSTDIR\rexx.exe,0"
 !define UNINSTALLER    "uninstall.exe"
-!define KEYFILE1       "rexx.exe"
-!define KEYFILE2       "rxapi.dll"
+!define KEYFILE1       "rexx.dll"
+!define KEYFILE2       "rexx.exe"
+!define KEYFILE3       "rxapi.exe"
 
 ; Default file extensions and ftypes
 !define DefRexxExt       ".rex"
@@ -70,9 +71,9 @@ ${UnStrTok}
 !define MUI_FINISHPAGE_RUN_TEXT "Create ${LONGNAME} Desktop Shortcut"
 !define MUI_FINISHPAGE_RUN_FUNCTION CreateDesktopShortcut
 
-!define MUI_FINISHPAGE_SHOWREADME $INSTDIR\CPLv1.0.txt
+!define MUI_FINISHPAGE_SHOWREADME $INSTDIR\doc\ReleaseNotes.txt
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-!define MUI_FINISHPAGE_SHOWREADME_TEXT "Show ${LONGNAME} License"
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "Show ${LONGNAME} Release Notes"
 ;!define MUI_FINISHPAGE_SHOWREADME_FUNCTION SomeFunctionToBeCreated
 
 !define MUI_FINISHPAGE_LINK "Getting started with Windows ${LONGNAME}"
@@ -210,6 +211,7 @@ Var DoUpgrade                  ; try to do an upgrade install                   
 Var DoUpgradeQuick             ; don't show options pages with diasabled controls  true / false
 Var UpgradeTypeAvailable       ; Level of uninstaller sufficient for upgrade type  true / false
 
+Var  keyFileName               ; used to contruct full path to key files.
 Var UserRequestAbort           ; General purpose, set to true if User replies Ok, wanting to abort.
 
 ; Dialog variables
@@ -1381,6 +1383,15 @@ Function .onInit
   ; Check for previous version and if the upgrade type of uninstall is available.
   Call CheckInstalledStatus
 
+  ; If a previous version is installed, make sure the key files are not locked.
+  ; If they are, we abort unconditionally.
+  ${If} $PreviousVersionInstalled == 'true'
+    Call CheckLockedFiles
+    ${if} $UserRequestAbort == 'true'
+      abort
+    ${endif}
+  ${endif}
+
   ; Set the send to dialog control variables.
   Call SetSendToVars
 
@@ -1733,9 +1744,22 @@ Function Do_The_Uninstall
     Goto DoAbort
   ${endif}
 
+  ${if} $0 == 5
+    ; 5 is only set when there are locked files
+    MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
+               "The uninstall of the previous version of ${SHORTNAME} was terminated by$\n\
+               the uninstall script.  The most likely cause of this is that there are$\n\
+               Rexx programs still running, which prevents critical files from being$\n\
+               updated.$\n$\n\
+               The installation will abort.$\n$\n\
+               You must ensure all Rexx programs are ended.  Then restart the installation." \
+               /SD IDOK
 
-  ; Return code is 2 or greater, but not 4.  2 is uninstall canceled by script,
-  ; we treat anything greater than 2 in the same way.
+    Goto DoAbort
+  ${endif}
+
+  ; Return code is 2 or greater, but not 4 or 5.  2 is uninstall canceled by
+  ; script, we treat anything greater than 2 in the same way.
   MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
              "The uninstall of the previous version of ${SHORTNAME} was terminated by$\n\
              the uninstall script.  The most likely cause of this is that the rxapi$\n\
@@ -1749,10 +1773,11 @@ Function Do_The_Uninstall
              2.) Try stopping rxapi manually and rerunning the installation.  If$\n\
              rxapi is installed as a service, use the service manager to stop rxapi.$\n\
              Otherwise, use the task manager to stop the rxapi process.$\n$\n\
-             3.) Elect to not stop rxapi and to not remove the previous version.  To do$\n\
-             this, rerun the installation and click No when asked to uninstall the previous$\n\
-             version.  Then click Yes when asked if you want to continue.  However, if$\n\
-             you do this ${SHORTNAME} will not be installed correctly." \
+             3.) Elect to not stop rxapi and to not remove the previous version.  To$\n\
+             do this, rerun the installation and click No when asked to uninstall$\n\
+             the previous version.  Then click Yes when asked if you want to$\n\
+             continue.  However, if you do this ${SHORTNAME} will not be installed$\n\
+             correctly." \
              /SD IDOK
   Goto DoAbort
 
@@ -1863,15 +1888,24 @@ Function Ok_Stop_RxAPI_leave
     Quit
 
   NotRunning:
+
 FunctionEnd
 
 /** Components_Page_pre()  Call back function
  *
- * Invoked by the installer before the components page is created.
+ * Invoked by the installer before the components page is created.  We do one
+ * last check that there are no locked files.  If there are we quit.  This could
+ * be frustrating for a user, but we know that things will fail if we proceed.
  *
  * If this is a QUICK upgrade install, we skip the page.
  */
 Function Components_Page_pre
+
+  StrCpy $UserRequestAbort 'false'
+  Call CheckLockedFilesAll
+  ${if} $$UserRequestAbort == 'true'
+    Quit
+  ${endif}
 
   ${if} $DoUpgrade == 'true'
   ${andif} $DoUpgradeQuick == 'true'
@@ -3277,6 +3311,127 @@ Function CheckInstalledStatus
 FunctionEnd
 
 
+/** CheckLockedFiles()
+ *
+ * Helper function used to determine if the key files are locked.  Other checks
+ * in the installer don't seem to work consistently.  This function is only
+ * called if we determine there is a previous version installed.  It is called
+ * from on init.  If the files are locked we just quite unconditionally.
+ */
+Function CheckLockedFiles
+
+  StrCpy $keyFileName '$RegVal_uninstallLocation\${KEYFILE1}'
+
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$RegVal_uninstallLocation\${KEYFILE2}'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  ; Key file rxapi is running probably, we can't check for it here,  We will
+  ; check for it after stopping it.
+  goto done_out
+
+  rexxIsRunning:
+      MessageBox MB_OK \
+        "WARNING.  The file, $keyFileName is locked and can not be updated.$\n\
+        by the installation.  This indicates that all Rexx programs have not$\n\
+        been halted.$\n$\n\
+        Continuing with installation in this case is known to cause problems.$\n\
+        The installer will quit.  Ensure all Rexx programs are halted and then$\n\
+        retry the install."
+
+        StrCpy $UserRequestAbort 'true'
+
+  done_out:
+
+FunctionEnd
+
+
+/** CheckLockedFilesAll()
+ *
+ * Helper function used to determine if files are locked.  This function is
+ * called right before we show the Components page.  Which is after rxapi should
+ * have been stopped.  If any of these files are locked, we know the install
+ * will be inconsistent.  If the files are locked we just quite unconditionally.
+ */
+Function CheckLockedFilesAll
+
+  StrCpy $keyFileName '$INSTDIR\${KEYFILE1}'
+
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\${KEYFILE2}'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\${KEYFILE3}'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\rexxhide.exe'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\rexxpaws.exe'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\ooDialog.exe'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\ooDialog.dll'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  goto done_out
+
+  rexxIsRunning:
+      MessageBox MB_OK \
+        "WARNING.  The file, $keyFileName is locked and can not be updated.$\n\
+        by the installation.  This indicates that all Rexx programs have not$\n\
+        been halted.$\n$\n\
+        Continuing with installation in this case is known to cause problems.$\n\
+        The installer will quit.  Ensure all Rexx programs are halted and then$\n\
+        retry the install."
+
+        StrCpy $UserRequestAbort 'true'
+
+  done_out:
+
+FunctionEnd
+
+
 /** CheckBitnessMatch()
  *
  * Checks that the bitness of the ooRexx to be installed matches the bitness of
@@ -3587,7 +3742,8 @@ Section "Uninstall"
    temporarily comment out orxscrpt stuff while it is disabled in the build.
 
    ; orxscrpt.dll needs to be degistered  NOTE WSH DLL name may have changed.
-   !insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_PROTECTED "$INSTDIR\orxscrpt.dll"
+   !insertmacro Un
+   InstallLib REGDLL NOTSHARED REBOOT_PROTECTED "$INSTDIR\orxscrpt.dll"
    ;
    ; In the old WSH code, entering the orxscrpt.dll started up the interpreter.
    ; This may no longer be the case.  If it is, rxapi will need to be stopped
@@ -3612,6 +3768,22 @@ Section "Uninstall"
       ${endif}
     ${endif}
 
+    ; One last check, see if rxapi.exe is locked.
+    StrCpy $keyFileName '$INSTDIR\${KEYFILE3}'
+
+    LockedList::IsFileLocked $keyFileName
+    Pop $R0
+    ${If} $R0 == true
+        MessageBox MB_OK|MB_ICONSTOP \
+        "Unexpected error the file:$\n$\n\
+          $keyFileName$\n$\n\
+        is locked. The uninstall will abort.  Report $\n\
+        this error to the ${SHORTNAME} developers." \
+        /SD IDOK
+        SetErrorLevel 3
+        Quit
+    ${EndIf}
+
     ; Get rid of the file associations.  Also removes the extension from
     ; PATHEXT.
     Call un.DeleteFileAssociations
@@ -3627,6 +3799,22 @@ Section "Uninstall"
     Push $IsAdminUser ; "true" or "false"
     Call un.DeleteEnvStr
   ${endif}
+
+  ; One last check, see if rxapi.exe is locked.
+  StrCpy $keyFileName '$INSTDIR\${KEYFILE3}'
+
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+      MessageBox MB_OK|MB_ICONSTOP \
+      "Unexpected error the file:$\n$\n\
+        $keyFileName$\n$\n\
+      is locked. The uninstall will abort.  Report $\n\
+      this error to the ${SHORTNAME} developers." \
+      /SD IDOK
+      SetErrorLevel 3
+      Quit
+  ${EndIf}
 
   ; Upgrade or not, we always remove the installation stuff.
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}"
@@ -3670,6 +3858,13 @@ Function un.onInit
     SetShellVarContext all
   ${endif}
 
+  StrCpy $UserRequestAbort 'false'
+  Call un.CheckLockedFiles
+  ${if} $UserRequestAbort == 'true'
+    setErrorLevel 5
+    abort
+  ${endif}
+
   ; Read in the file associations done by the installer.
   ReadRegStr $RegVal_rexxAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxAssociation"
   ReadRegStr $RegVal_rexxHideAssociation HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "RexxHideAssociation"
@@ -3679,6 +3874,7 @@ Function un.onInit
   StrCpy $InStopRxapiPage 'false'
   Call un.CheckIsRxapiService
   Call un.CheckIsRxapiRunning
+
 FunctionEnd
 
 
@@ -3774,6 +3970,75 @@ FunctionEnd
 Function un.CheckOkToStopRxapiBack
   ${NSD_GetState} $StopRxAPI_CK $StopRxAPI_CK_State
   StrCpy $InStopRxapiPage 'false'
+FunctionEnd
+
+/*
+ *
+ * Helper function used to determine if the key files are locked.  Other checks
+ * in the installer don't seem to work consistently.  This function is only
+ * called if we determine there is a previous version installed.  It is called
+ * from on init.  If the files are locked we just quite unconditionally.
+ */
+Function un.CheckLockedFiles
+
+  StrCpy $keyFileName '$INSTDIR\${KEYFILE1}'
+
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\${KEYFILE2}'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\rexxhide.exe'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\rexxpaws.exe'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\ooDialog.exe'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  StrCpy $keyFileName '$INSTDIR\ooDialog.dll'
+  LockedList::IsFileLocked $keyFileName
+  Pop $R0
+  ${If} $R0 == true
+    goto rexxIsRunning
+  ${EndIf}
+
+  goto done_out
+
+  rexxIsRunning:
+      MessageBox MB_OK \
+        "WARNING.  The file, $keyFileName is locked and can not be deleted.$\n\
+        by the uninstaller.  This indicates that all Rexx programs have not$\n\
+        been halted.$\n$\n\
+        Continuing with the uninstall in this case is known to cause problems.$\n\
+        The uninstaller will quit.  Ensure all Rexx programs are halted and$\n\
+        then retry the uninstall."
+
+        StrCpy $UserRequestAbort 'true'
+
+  done_out:
+
 FunctionEnd
 
 /** un.Uninstall_By_Log_page()  Custom page function.
