@@ -506,7 +506,7 @@ RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING n, CSTRING so
     ApiContext context(c);
     try
     {
-        RexxString *name = new_upper_string(n);
+        RexxString *name = new_string(n);
         ProtectedObject p(name);
         // convert the name to a string instance, and check the environments.
         return (RexxMethodObject)context.ret(new RexxMethod(new_string(n), source, length));
@@ -523,7 +523,7 @@ RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING 
     ApiContext context(c);
     try
     {
-        RexxString *name = new_upper_string(n);
+        RexxString *name = new_string(n);
         ProtectedObject p(name);
         // convert the name to a string instance, and check the environments.
         return (RexxRoutineObject)context.ret(new RoutineClass(name, source, length));
@@ -1187,7 +1187,7 @@ void  RexxEntry DirectoryPut(RexxThreadContext *c, RexxDirectoryObject t, RexxOb
     ApiContext context(c);
     try
     {
-        RexxString *index = new_upper_string(i);
+        RexxString *index = new_string(i);
         ProtectedObject p(index);
         ((RexxDirectory *)t)->put((RexxObject *)o, index);
     }
@@ -1201,7 +1201,7 @@ RexxObjectPtr RexxEntry DirectoryAt(RexxThreadContext *c, RexxDirectoryObject t,
     ApiContext context(c);
     try
     {
-        RexxString *index = new_upper_string(i);
+        RexxString *index = new_string(i);
         ProtectedObject p(index);
         return context.ret(((RexxDirectory *)t)->at(index));
     }
@@ -1216,7 +1216,7 @@ RexxObjectPtr RexxEntry DirectoryRemove(RexxThreadContext *c, RexxDirectoryObjec
     ApiContext context(c);
     try
     {
-        RexxString *index = new_upper_string(i);
+        RexxString *index = new_string(i);
         ProtectedObject p(index);
         return context.ret(((RexxDirectory *)t)->remove(index));
     }
@@ -1602,7 +1602,7 @@ RexxStemObject RexxEntry NewStem(RexxThreadContext *c, CSTRING n)
         }
         else
         {
-            RexxString *name = new_upper_string(n);
+            RexxString *name = new_string(n);
             ProtectedObject p(name);
             return (RexxStemObject)context.ret(new RexxStem(name));
         }
