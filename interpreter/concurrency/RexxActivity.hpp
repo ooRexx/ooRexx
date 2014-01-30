@@ -187,7 +187,7 @@ typedef enum
    void        unwindToDepth(size_t depth);
    void        unwindToFrame(RexxActivation *frame);
    void        cleanupStackFrame(RexxActivationBase *poppedStackFrame);
-   RexxArray  *generateStackFrames();
+   RexxArray  *generateStackFrames(bool skipFirst);
    RexxActivity *spawnReply();
 
    void        exitKernel();

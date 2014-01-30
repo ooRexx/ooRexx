@@ -967,9 +967,13 @@ void RexxActivity::generateProgramInformation(RexxDirectory *exobj)
 /**
  * Generate a list of stack frames for an Exception object.
  *
- * @return A list of the stack frames in the call context.
+ * @param skipFirst Determines if we should skip the first frame.  Used primarily
+ *                  for the RexxContext stackFrames() method to avoid returning
+ *                  the stackframes method as the first item.
+ *
+ * @return An array of the stack frames in the call context.
  */
-RexxArray *RexxActivity::generateStackFrames()
+RexxArray *RexxActivity::generateStackFrames(bool skipFirst)
 {
     // create lists for both the stack frames and the traceback lines
     RexxArray *stackFrames = new_array((size_t)0);
@@ -979,8 +983,16 @@ RexxArray *RexxActivity::generateStackFrames()
 
     while (frame != NULL)
     {
-        StackFrameClass *stackFrame = frame->createStackFrame();
-        stackFrames->append(stackFrame);
+        // if asked to skip the first frame, just turn the flag off
+        // and go around again
+        if (skipFirst)
+        {
+            skipFirst = false;
+        }
+        else {
+            StackFrameClass *stackFrame = frame->createStackFrame();
+            stackFrames->append(stackFrame);
+        }
         frame = frame->next;
     }
     return stackFrames;

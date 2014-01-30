@@ -305,5 +305,7 @@ RexxObject *RexxContext::getName()
 RexxObject *RexxContext::getStackFrames()
 {
     checkValid();
-    return activation->getStackFrames();
+    // we don't want to include the stackframes frame in the list, so ask
+    // that it be skipped.
+    return activation->getStackFrames(true);
 }

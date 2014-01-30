@@ -4379,7 +4379,7 @@ RexxString *RexxActivation::formatSourcelessTraceLine(RexxString *packageName)
  *
  * @return A list of the stackframes.
  */
-RexxArray *RexxActivation::getStackFrames()
+RexxArray *RexxActivation::getStackFrames(bool skipFirst)
 {
-    return activity->generateStackFrames();
+    return activity->generateStackFrames(skipFirst);
 }
