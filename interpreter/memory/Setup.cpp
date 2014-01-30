@@ -649,7 +649,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_NEW     ,TheRexxContextClassBehaviour, CPPM(RexxContext::newRexx), A_COUNT);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
-  TheRexxContextBehaviour->setMethodDictionaryScope(TheRexxContextClass);
+  TheRexxContextClassBehaviour->setMethodDictionaryScope(TheRexxContextClass);
 
   defineKernelMethod(CHAR_COPY          ,TheRexxContextBehaviour, CPPM(RexxContext::copyRexx), 0);
   defineKernelMethod(CHAR_PACKAGE       ,TheRexxContextBehaviour, CPPM(RexxContext::getPackage), 0);
