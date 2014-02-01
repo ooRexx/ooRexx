@@ -323,16 +323,8 @@ return .false
 ::routine  getAddressingMode public
   use strict arg
 
-  tmpOutFile = 'tmpXXX_delete.me'
-
-  'rexx -v >' tmpOutFile '2>&1'
-
-  fsObj = .stream~new(tmpOutFile)
-  tmpArray = fsObj~arrayin
-  parse value tmpArray[3] with . . mode
-  fsObj~close
-
-  j = SysFileDelete(tmpOutFile)
+  parse version rexx'_'ver'_'mode'-bit' .
+  return mode
 
 return mode
 
