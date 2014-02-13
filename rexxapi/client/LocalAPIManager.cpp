@@ -180,14 +180,29 @@ void LocalAPIManager::initProcess()
     session = SysProcess::getPid();
     SysProcess::getUserID(userid);
 
-    // Initialization steps:
-    // 2) make sure the global environment is started
-    establishServerConnection();
+    ServiceException *startError = NULL;
+
+    try
+    {
+        // Initialization steps:
+        // 2) make sure the global environment is started
+        establishServerConnection();
+    } catch (ServiceException *e)
+    {
+        // save this for potential rethrowing after the managers are
+        startError = e;
+    }
 
     // 3) initialize the API subsystems
     registrationManager.initializeLocal(this);
-    queueManager.initializeLocal(this);
     macroSpaceManager.initializeLocal(this);
+    queueManager.initializeLocal(this);
+
+    // if we had an exception trying to connect to rxapi, reraise that exception now.
+    if (startError != NULL)
+    {
+        throw startError;
+    }
 }
 
 
