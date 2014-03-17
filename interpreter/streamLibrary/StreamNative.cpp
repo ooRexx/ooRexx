@@ -3066,7 +3066,7 @@ RexxObjectPtr StreamInfo::queryStreamPosition(const char *options)
         return context->Int64ToObject(position);
     }
     // no method specified?
-    if (!(position_flags && (query_read_position | query_write_position)))
+    if (!(position_flags & (query_read_position | query_write_position)))
     {
         // is this a write-only stream?  Return that
         if (write_only)
