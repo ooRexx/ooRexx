@@ -1220,7 +1220,7 @@ BUILTIN(DATE)
                 /* get the month name                */
                 RexxString *month_name = SystemInterpreter::getMessageText(Message_Translations_January + month - 1);
                 /* format as a date                  */
-                sprintf(work, "%u %s %4.4u", day, month_name->getStringData(), year);
+                sprintf(work, "%ld %s %4.4ld", day, month_name->getStringData(), year);
                 break;
 
             }

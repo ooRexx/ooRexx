@@ -497,12 +497,6 @@ RexxReturnCode LocalQueueManager::processServiceException(ServiceException *e)
         case BAD_WAIT_FLAG:
             return RXQUEUE_BADWAITFLAG;
 
-        case QUEUE_DOES_NOT_EXIST:
-            return RXQUEUE_NOTREG;
-
-        case QUEUE_IN_USE:
-            return RXQUEUE_ACCESS;
-
         default:
             return RXQUEUE_MEMFAIL;
     }

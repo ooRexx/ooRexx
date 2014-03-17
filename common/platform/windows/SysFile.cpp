@@ -854,7 +854,7 @@ bool SysFile::setPosition(int64_t location, int64_t &position)
 
 
     // is this location within the buffer bounds?
-    if (location >= (filePointer - bufferedInput) && location < filePointer)
+    if (location >= (int64_t)(filePointer - bufferedInput) && location < filePointer)
     {
         // just shift the buffer position;
         bufferPosition = (size_t)(location - (filePointer - (int64_t)bufferedInput));

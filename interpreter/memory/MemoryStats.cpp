@@ -130,10 +130,10 @@ void SegmentStats::printStats()
 /* Function:  Print out statistics for a segment set snapshot                 */
 /******************************************************************************/
 {
-  printf("\n\n %s:  Total bytes %d in %d segments \n", name, totalBytes, count);
-  printf("Largest segment is %d bytes, smallest is %d bytes\n", largestSegment, smallestSegment);
-  printf("Total Live objects %d, using %d bytes\n", liveObjects, liveBytes);
-  printf("Total Dead objects %d, using %d bytes\n\n", deadObjects, deadBytes);
+  printf("\n\n %s:  Total bytes %lu in %lu segments \n", name, totalBytes, count);
+  printf("Largest segment is %lu bytes, smallest is %lu bytes\n", largestSegment, smallestSegment);
+  printf("Total Live objects %lu, using %lu bytes\n", liveObjects, liveBytes);
+  printf("Total Dead objects %lu, using %lu bytes\n\n", deadObjects, deadBytes);
 }
 
 
@@ -142,7 +142,7 @@ void ObjectStats::printStats(int type)
 /* Function:  Print out accumulated statistics for an individual objec type   */
 /******************************************************************************/
 {
-    printf("    %3d                     %8d            %8d  \n", type, count, size);
+    printf("    %3d                     %8lu            %8lu  \n", type, count, size);
 }
 
 

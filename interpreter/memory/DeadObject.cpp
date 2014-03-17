@@ -218,7 +218,7 @@ void DeadObjectPool::checkObjectOverlap(DeadObject *obj)
 
     while (check != NULL && check->isReal()) {
         if (check->overlaps(obj)) {
-            printf("Object at %p for length %d overlaps object at %p for length %d\n", obj, obj->getObjectSize(), check, check->getObjectSize());
+            printf("Object at %p for length %lu overlaps object at %p for length %lu\n", obj, obj->getObjectSize(), check, check->getObjectSize());
             Interpreter::logicError("Overlapping dead objects added to the cache.");
         }
         check = check->next;

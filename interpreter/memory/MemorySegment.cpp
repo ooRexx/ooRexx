@@ -51,10 +51,10 @@ void MemorySegment::dump(const char *owner, size_t counter, FILE *keyfile, FILE 
 /******************************************************************************/
 {
                                        /* print header for segment          */
-      fprintf(stderr,"Dumping %s Segment %d from %p for %u\n", owner, counter, &segmentStart, segmentSize);
+      fprintf(stderr,"Dumping %s Segment %lu from %p for %lu\n", owner, counter, &segmentStart, segmentSize);
                                        /* now dump the segment              */
-      fprintf(keyfile, "%s addr.%d = %p\n", owner, counter, &segmentStart);
-      fprintf(keyfile, "%s size.%d = %u\n", owner, counter, segmentSize);
+      fprintf(keyfile, "%s addr.%lu = %p\n", owner, counter, &segmentStart);
+      fprintf(keyfile, "%s size.%lu = %lu\n", owner, counter, segmentSize);
       fwrite(&segmentStart, 1, segmentSize, dumpfile);
 }
 

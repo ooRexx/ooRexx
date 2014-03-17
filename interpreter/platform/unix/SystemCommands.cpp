@@ -195,7 +195,7 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
         return false;
     }
 
-    for (i=0;(name[i]!='=')&&(i<iLength);name[i++])
+    for (i=0;(name[i]!='=')&&(i<iLength);i++)
     {
         cmd_name[i] = name[i];
     }

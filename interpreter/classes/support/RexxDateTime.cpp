@@ -273,7 +273,7 @@ bool RexxDateTime::setBaseDate(wholenumber_t base)
 
     basedays++;                  //
                                  // get to start of current 400 years
-    year = (basedays / OLYMPIAD_DAYS) * OLYMPIAD;
+    year = (int)((basedays / OLYMPIAD_DAYS) * OLYMPIAD);
     // adjust the input date downward
     basedays -= BASE_DAYS(year);
     // if this ended on a boundary, then this was the last day of
@@ -285,7 +285,7 @@ bool RexxDateTime::setBaseDate(wholenumber_t base)
     else
     {
         // now adjust to the start of the current century
-        year += (basedays / CENTURY_DAYS) * CENTURY;
+        year += (int)((basedays / CENTURY_DAYS) * CENTURY);
         basedays = basedays % CENTURY_DAYS;
         // another boundary condition for the century.
         // Since this is a non-olympiad, it's the last day of
@@ -297,7 +297,7 @@ bool RexxDateTime::setBaseDate(wholenumber_t base)
         else
         {
             // now get to the start of next 4-year leap cycle
-            year += (basedays / LEAP_DAYS) * LEAP_CYCLE;
+            year += (int)((basedays / LEAP_DAYS) * LEAP_CYCLE);
             basedays = basedays % LEAP_DAYS;
             // yet another boundary condition.  if 0, the
             // current day is the last day of the leap year
@@ -308,7 +308,7 @@ bool RexxDateTime::setBaseDate(wholenumber_t base)
             else
             {
                 // still may have a few more years to process
-                year += basedays / YEAR_DAYS;
+                year += (int)(basedays / YEAR_DAYS);
                 // this will be the actual year day
                 basedays = basedays % YEAR_DAYS;
                 // if basedays is now 0, we're on the last day of the
@@ -338,7 +338,7 @@ bool RexxDateTime::setBaseDate(wholenumber_t base)
         {
             month = i;               // the index is the month number
                                      // and adjust for the days
-            day = basedays - monthTable[i - 1];
+            day = (int)(basedays - monthTable[i - 1]);
             break;                   /* finished                          */
         }
     }
@@ -901,7 +901,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                     return false;
                 }
                 // add in the current centry
-                year += (currentYear / 100) * 100;
+                year += (int)((currentYear / 100) * 100);
                 // did we go back in time by doing that?
                 // if by more than 50 years, we need to use the sliding window
                 if (year < currentYear)
@@ -1099,7 +1099,7 @@ bool RexxDateTime::getNumber(const char *input, wholenumber_t length, int *targe
         // step to the next position
         input++;
     }
-    *target = value;
+    *target = (int)value;
     return true;     // good number
 }
 
@@ -1139,7 +1139,7 @@ bool RexxDateTime::getNumber(const char *input, wholenumber_t length, int *targe
 void RexxDateTime::formatBaseDate(char *buffer)
 {
     // format this into the buffer as a number
-    sprintf(buffer, "%d", getBaseDate());
+    sprintf(buffer, "%ld", getBaseDate());
 }
 
 
@@ -1289,7 +1289,7 @@ void RexxDateTime::formatWeekDay(char *buffer)
  */
 void RexxDateTime::formatCivilTime(char *buffer)
 {
-    wholenumber_t adjustedHours = hours;
+    int adjustedHours = hours;
     if (adjustedHours == 0)
     {
         adjustedHours = 12;

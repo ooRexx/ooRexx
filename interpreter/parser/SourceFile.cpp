@@ -953,7 +953,7 @@ RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &lo
     char         linenumber[11];         /* formatted line number             */
 
                                            /* format the value                  */
-    sprintf(linenumber,"%u", location.getLineNumber());
+    sprintf(linenumber,"%lu", location.getLineNumber());
 
     line = this->extract(location);      /* extract the source string         */
                                          /* doesn't exist and this isn't a    */
@@ -986,11 +986,6 @@ RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &lo
             ProtectedObject p(args);
             line = ActivityManager::currentActivity->buildMessage(Message_Translations_no_source_available, args);
         }
-    }
-
-    if (indent < 0)                      /* possible negative indentation?    */
-    {
-        indent = 0;                        /* just reset it                     */
     }
                                            /* get an output string              */
     buffer = raw_string(line->getLength() + INSTRUCTION_OVERHEAD + indent * INDENT_SPACING);

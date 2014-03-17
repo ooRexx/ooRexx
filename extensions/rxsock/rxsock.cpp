@@ -206,7 +206,7 @@ void stemToIntArray(RexxCallContext *context, RexxObjectPtr stemSource, int &cou
         return;
     }
 
-    count = temp;
+    count = (int)temp;
 
     /*---------------------------------------------------------------
      * get each value ...
