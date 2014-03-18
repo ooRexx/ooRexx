@@ -199,13 +199,13 @@ LISTENTRY * RexxList::getEntry(
         /* raise an exception                */
         reportException(Error_Incorrect_method_index, _index);
     }
-    /* get the binary value              */
-    size_t item_index = integer_index->getValue();
-    if (item_index < 0)                  /* not a valid index?                */
+    if (integer_index->getValue() < 0)                  /* not a valid index?                */
     {
         /* raise an exception                */
         reportException(Error_Incorrect_method_index, _index);
     }
+    /* get the binary value              */
+    size_t item_index = integer_index->getValue();
     if (item_index >= this->size)        /* out of possible range?            */
     {
         return NULL;                       /* not found                         */

@@ -1235,7 +1235,7 @@ RexxArray  *RexxMemory::newObjects(
         /* point to the next object space. */
         largeObject = (RexxObject *)((char *)largeObject + objSize);
         /* copy the information from the prototype */
-        memcpy((void *)largeObject, prototype, sizeof(RexxInternalObject));
+        memcpy((void *)largeObject, (void *)prototype, sizeof(RexxInternalObject));
     }
     arrayOfObjects->put(largeObject, i);  /* put the last Object */
 
@@ -1502,7 +1502,7 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
             Interpreter::logicError("Rexx saved image exceeds expected maximum");
         }
         /* Copy object to image buffer. */
-        memcpy((void *)bufferReference, markObject, size);
+        memcpy((void *)bufferReference, (void *)markObject, size);
         /* clear the mark in the copy        */
         bufferReference->clearObjectMark();
         /* Retrieve the behaviour obj */

@@ -391,9 +391,9 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
     memset(rightPtr + right->length, '\0', totalDigits - right->length);
     resultPtr = Output;                   /* Set up result, point to end of    */
                                           /* make copies of right number info  */
-    memcpy(SaveRight, right, sizeof(RexxNumberStringBase));
+    memcpy((void *)SaveRight, (void *)right, sizeof(RexxNumberStringBase));
     /* make copies of left number info   */
-    memcpy(SaveLeft, left, sizeof(RexxNumberStringBase));
+    memcpy((void *)SaveLeft, (void *)left, sizeof(RexxNumberStringBase));
     if (DivOP == OT_REMAINDER)
     {          /* Are we doing remainder divide?    */
         SaveLeftPtr  = leftPtr;              /* Save initial pointers to left     */
@@ -751,7 +751,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
                     /* yes, do the power operation.      */
                     /* get storage for Accumulator data. */
         AccumObj = (RexxNumberStringBase *)buffer_alloc(sizeof(RexxNumberStringBase));
-        memcpy(AccumObj, left, sizeof(RexxNumberStringBase));
+        memcpy((void *)AccumObj, (void *)left, sizeof(RexxNumberStringBase));
         /* initialize the Accumulator object.*/
         /* this has all data of NumberString */
         /* except the digits data            */
