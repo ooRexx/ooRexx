@@ -80,30 +80,20 @@ done:
 
 house:                                         /* Housekeeping.             */
   parse version version                        /* Fill-in 2 user variables. */
-  parse source source
-  parse source sysrx . procrx .                /* Get system & proc names.  */
+  parse source sysrx .                         /* Get system name.          */
   remindrx = "Enter 'exit' to end."            /* How to escape rexxtry.    */
   helprx = '   ',                              /* add extra help info       */
     "  Or '?' for online REXX help."
   promptrx = ''                                /* Null if not one-liner.    */
-  if words(source) > 3 then                    /* procname has blanks */
-     procrx = subword(source, 3)
+  procrx = .context~package~name               /* fully resolved name       */
   if argrx<>'' then
     promptrx = procrx' '                       /*   Name part of user line. */
-  select                                       /* System-specific...        */
-    when sysrx = 'OS/2' | abbrev(sysrx,  'Windows') then
-      posrx = lastpos('\', procrx)             /*   Find name separator.    */
-    when sysrx = 'LINUX' | sysrx = 'AIX' | sysrx = 'SUNOS' then
-      posrx = lastpos('/', procrx)             /*   Find name separator.    */
-    otherwise
-      posrx = 0                                /*   No name separator.      */
-  end
-  procrx = substr(procrx, posrx+1)             /* Pick up the proc name.    */
+  filerx = .File~new(procrx)                   /* get a file object for parsing */
+  procrx = filerx~name                         /* Pick up the proc name.    */
   temprx = ' 'procrx' on 'sysrx                /* Make border...            */
-    posrx = 69-length(temprx)                  /*   where to overlay name,  */
-    bordrx = copies('.', 68)                   /*   background of periods,  */
-    bordrx =,                                  /*   name right-adjusted.    */
-      overlay(temprx, bordrx, posrx)
+  posrx = 69-length(temprx)                    /*   where to overlay name,  */
+  bordrx = copies('.', 68)                     /*   background of periods,  */
+  bordrx = overlay(temprx, bordrx, posrx)      /*   name right-adjusted.    */
   save = ''                                    /* Don't save user input.    */
   trace = 'Off'                                /* Init user trace variable. */
   return result                                /* Preserve result contents. */
@@ -121,7 +111,7 @@ clear:
   select                                       /* SAA-portable code.        */
     when abbrev(sysrx,  'Windows') then
       'CLS'                                    /* system to clear screen    */
-    when sysrx = 'LINUX' | sysrx = 'AIX' | sysrx = 'SUNOS' then
+    when sysrx = 'LINUX' | sysrx = 'AIX' | sysrx = 'SUNOS' | sysrx = 'MACOS' then
       'clear'                                  /* system to clear screen    */
     otherwise nop                              /* No such command available */
   end; say
