@@ -1886,7 +1886,7 @@ RexxObject *RexxArray::removeItem(RexxObject *target)
         return TheNilObject;
     }
     // remove the item at the location
-    put(OREF_NULL, _index);
+    remove(_index);
     return target;
 }
 
