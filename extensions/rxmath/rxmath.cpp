@@ -308,13 +308,9 @@ public:
                 result = nsi * nco * tan(angle);
                 break;
             case COTANGENT:                  /* cotangent function         */
-                /* overflow?                  */
-                if ((result = tan(angle)) == 0.0)
-                {
-                    context->InvalidRoutine();
-                    return NULLOBJECT;
-                }
-                result = nsi * nco / result; /* real result                */
+                // this could produce a divide by zero, which gives a real result
+                // with floating point values (+infinity or -infinity)
+                result = nsi * nco / tan(result); /* real result                */
                 break;
         }
 
@@ -605,7 +601,7 @@ RexxRoutine1(RexxObjectPtr, RxCalcPi, OPTIONAL_uint32_t, precision)
 /* Input:               a number                                    */
 /* Output:              Angle for matching trigonometric value.     */
 /*                      Returns nan if the first argument is out    */
-/*                      of range, e.g., RxCalcSin(1.1) -> nan       */   
+/*                      of range, e.g., RxCalcSin(1.1) -> nan       */
 /* Notes:                                                           */
 /*   These routines take one to three parameters.                   */
 /*   The form of the call is:                                       */
