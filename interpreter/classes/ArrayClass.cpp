@@ -1684,12 +1684,6 @@ void RexxArray::shrink(
     size_t _size = this->size();                 /* get the size                      */
     size_t newSize = _size - amount;             /* get the new size                  */
 
-    size_t i = newSize + 1;                     /* address first removed element     */
-    for (i = newSize + 1; i <= _size; i++)/* for all removed elements          */
-    {
-        this->put(OREF_NULL, i);           /* clear out the element             */
-    }
-                                           /* adjust the size .                 */
     this->expansionArray->arraySize = newSize;
 }
 
