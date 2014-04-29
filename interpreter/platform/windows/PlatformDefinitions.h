@@ -143,7 +143,9 @@
  // Re-directed output...
  #include <stdio.h>                    // for following file ref...
  // another annoying incompatibility in MS compiler.
- #define isnan(x) _isnan(x)
+#if _MSC_VER < 1800
+#define isnan(x) _isnan(x)
+#endif
 
  // Exception handling
  typedef BOOL __stdcall CONSOLECTRLHANDLER(DWORD);
