@@ -257,10 +257,10 @@ set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhi
 
 #################### explicit targets ##########################
 find_program(ORX_HAVE_XALAN xalan)
-if (NOT $ORX_HAVE_XALAN})
+if (NOT ${ORX_HAVE_XALAN})
    find_program(ORX_HAVE_XALAN Xalan)
 endif ()
-if ($ORX_HAVE_XALAN})
+if (${ORX_HAVE_XALAN})
    if (${ORX_HAVE_XALAN} EQUAL "Xalan")
       add_custom_command(OUTPUT ${build_messages_dir}/errnums.xml
                          COMMAND ${ORX_HAVE_XALAN} -o ${build_messages_dir}/errnums.xml ${build_messages_dir}/rexxmsg.xml ${build_messages_dir}/errnums.xsl
