@@ -53,7 +53,7 @@ set (CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/CMakeFiles/bin)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (ooRexx) 
+project (ooRexx)
 # The version of ooRexx to make
 set (ORX_MAJOR 4)
 set (ORX_MINOR 3)
@@ -81,11 +81,11 @@ set(VERSION_INFO "-version-info ${ORX_CURRENT}:${ORX_REVISION}:${ORX_AGE}")
 
 # The following are general settings
 # Always create shared libraries (DLLs)
-set (CMAKE_CXX_CREATE_SHARED_MODULE 1) 
+set (CMAKE_CXX_CREATE_SHARED_MODULE 1)
 # All bin output files go here
-#set (EXECUTABLE_OUTPUT_PATH bin)  
+#set (EXECUTABLE_OUTPUT_PATH bin)
 # All output shared libraries go here
-#set (LIBRARY_OUTPUT_PATH lib)  
+#set (LIBRARY_OUTPUT_PATH lib)
 # Set the platform subdirectory name
 if (WIN32)
    set (ORX_PLATFORM_DIR platform/windows)
@@ -295,6 +295,7 @@ else ()
                common/platform/unix/SysLibrary.cpp
                common/platform/unix/SysFile.cpp
                common/platform/unix/SysThread.cpp)
+endif ()
 target_include_directories(rexxapi PUBLIC
                ${build_rexxapi_client_dir}
                ${build_rexxapi_client_platform_dir}
@@ -303,7 +304,6 @@ target_include_directories(rexxapi PUBLIC
                ${build_common_dir}
                ${build_common_platform_dir}
                ${build_lib_dir})
-endif ()
 if (WIN32)
    # TODO: add any Win libs as necessary
 else ()
