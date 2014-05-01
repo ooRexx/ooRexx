@@ -321,19 +321,19 @@ if ($ORX_HAVE_XALAN})
                          WORKING_DIRECTORY ${build_messages_dir})
       add_custom_command(OUTPUT ${build_behaviour_dir}/ClassTypeCodes.h
                          COMMAND ${ORX_HAVE_XALAN} -out ${build_behaviour_dir}/ClassTypeCodes.h -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_behaviour_dir}/ClassTypeCodes.xsl
-                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml
                          WORKING_DIRECTORY ${build_behaviour_dir})
       add_custom_command(OUTPUT ${build_behaviour_dir}/PrimitiveBehaviourNames.h
                          COMMAND ${ORX_HAVE_XALAN} -out ${build_behaviour_dir}/PrimitiveBehaviourNames.h -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_behaviour_dir}/PrimitiveBehaviourNames.xsl
-                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml
                          WORKING_DIRECTORY ${build_behaviour_dir})
       add_custom_command(OUTPUT ${build_behaviour_dir}/PrimitiveBehaviours.cpp
                          COMMAND ${ORX_HAVE_XALAN} -out ${build_behaviour_dir}/PrimitiveBehaviours.cpp -in ${build_behaviour_dir}/PrimitiveClasses.xml -xsl ${build_behaviour_dir}/PrimitiveBehaviours.xsl
-                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml
                          WORKING_DIRECTORY ${build_behaviour_dir})
       add_custom_command(OUTPUT ${build_behaviour_dir}/VirtualFunctionTable.cpp
                          COMMAND ${ORX_HAVE_XALAN} -out ${build_behaviour_dir}/VirtualFunctionTable.cpp -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_behaviour_dir}/VirtualFunctionTable.xsl
-                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml
                          WORKING_DIRECTORY ${build_behaviour_dir})
    endif ()
 endif ()
