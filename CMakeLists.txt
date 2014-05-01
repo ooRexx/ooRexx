@@ -370,11 +370,10 @@ target_include_directories(rexxapi PUBLIC
             ${build_common_platform_dir}
             ${build_lib_dir})
 if (WIN32)
-   # TODO: add any Win libs as necessary
+   target_link_libraries(rexxapi ws2_32)
 else ()
    target_link_libraries(rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
-
 
 
 
