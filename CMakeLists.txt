@@ -105,8 +105,11 @@ if (WIN32)
                    /DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
                    /DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
                    /DORX_CATDIR="${catdir}"
+                   /D_CRT_SECURE_NO_DEPRECATE
+                   /D_CRT_SECURE_NO_WARNINGS
+                   /D_CRT_NONSTDC_NO_DEPRECATE
                    /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-                   /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC)
+                   /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od)
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
                    -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
