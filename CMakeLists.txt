@@ -82,10 +82,6 @@ set(VERSION_INFO "-version-info ${ORX_CURRENT}:${ORX_REVISION}:${ORX_AGE}")
 # The following are general settings
 # Always create shared libraries (DLLs)
 set (CMAKE_CXX_CREATE_SHARED_MODULE 1)
-# All bin output files go here
-#set (EXECUTABLE_OUTPUT_PATH bin)
-# All output shared libraries go here
-#set (LIBRARY_OUTPUT_PATH lib)
 # Set the platform subdirectory name
 if (WIN32)
    set (ORX_PLATFORM_DIR platform/windows)
@@ -104,14 +100,25 @@ else ()
 endif ()
 
 # Set compiler and linker flags common to all build environments
-add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
-                 -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
-                 -DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
-                 -DORX_CATDIR="${catdir}"
-                 -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
+if (WIN32)
+   add_definitions(/DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} /DORX_MOD=${ORX_MOD_LVL}
+                   /DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
+                   /DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
+                   /DORX_CATDIR="${catdir}"
+                   /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+                   /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC)
+else ()
+   add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
+                   -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
+                   -DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
+                   -DORX_CATDIR="${catdir}"
+                   -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
+endif ()
 
 # Check for libraries and functions
-if (NOT WIN32)
+if (WIN32)
+   # TODO: add Windows checks here
+else ()
    find_library(ORX_SYSLIB_DL dl)
    find_library(ORX_SYSLIB_PTHREAD pthread)
    if (${ORX_SYSLIB_PTHREAD})
@@ -164,14 +171,14 @@ check_include_file(usersec.h HAVE_USERSEC_H)
 check_include_file(attr/xattr.h HAVE_ATTR_XATTR_H)
 
 # Configure files
-if (NOT WIN32)
-   configure_file(platform/unix/oorexx.spec.in platform/unix/oorexx.spec)
-   configure_file(platform/unix/debian/changelog.in platform/unix/debian/changelog)
-   configure_file(platform/unix/debian/postinst.in platform/unix/debian/postinst)
-   configure_file(rexxapi/server/platform/unix/rxapid.in rexxapi/server/platform/unix/rxapid)
-   configure_file(xsl.sh.in xsl.sh)
-   configure_file(platform/unix/oorexx-config.in platform/unix/oorexx-config)
-endif ()
+# TODO: revisit this section later
+#if (NOT WIN32)
+#   configure_file(platform/unix/oorexx.spec.in platform/unix/oorexx.spec)
+#   configure_file(platform/unix/debian/changelog.in platform/unix/debian/changelog)
+#   configure_file(platform/unix/debian/postinst.in platform/unix/debian/postinst)
+#   configure_file(rexxapi/server/platform/unix/rxapid.in rexxapi/server/platform/unix/rxapid)
+#   configure_file(platform/unix/oorexx-config.in platform/unix/oorexx-config)
+#endif ()
 
 
 
@@ -248,62 +255,72 @@ set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhi
 #/* Build targets                                                              */
 #/*----------------------------------------------------------------------------*/
 
-#################### librexxapi.so ##########################
-if (WIN32)
-   add_library(rexxapi SHARED
-               rexxapi/client/ClientMessage.cpp
-               rexxapi/client/LocalAPIContext.cpp
-               rexxapi/client/LocalAPIManager.cpp
-               rexxapi/client/LocalMacroSpaceManager.cpp
-               rexxapi/client/LocalQueueManager.cpp
-               rexxapi/client/LocalRegistrationManager.cpp
-               rexxapi/client/MacroSpaceApi.cpp
-               rexxapi/client/QueuesAPI.cpp
-               rexxapi/client/RegistrationAPI.cpp
-               rexxapi/client/platform/windows/SysLegacyAPI.cpp
-               rexxapi/client/platform/windows/SysLocalAPIManager.cpp
-               rexxapi/common/RegistrationTable.cpp
-               rexxapi/common/ServiceMessage.cpp
-               rexxapi/common/platform/windows/SysAPIManager.cpp
-               rexxapi/common/platform/windows/SysCSStream.cpp
-               rexxapi/common/platform/windows/SysProcess.cpp
-               common/Utilities.cpp
-               common/platform/windows/SysSemaphore.cpp
-               common/platform/windows/SysLibrary.cpp
-               common/platform/windows/SysFile.cpp
-               common/platform/windows/SysThread.cpp)
-else ()
-   add_library(rexxapi SHARED
-               rexxapi/client/ClientMessage.cpp
-               rexxapi/client/LocalAPIContext.cpp
-               rexxapi/client/LocalAPIManager.cpp
-               rexxapi/client/LocalMacroSpaceManager.cpp
-               rexxapi/client/LocalQueueManager.cpp
-               rexxapi/client/LocalRegistrationManager.cpp
-               rexxapi/client/MacroSpaceApi.cpp
-               rexxapi/client/QueuesAPI.cpp
-               rexxapi/client/RegistrationAPI.cpp
-               rexxapi/client/platform/unix/SysLegacyAPI.cpp
-               rexxapi/client/platform/unix/SysLocalAPIManager.cpp
-               rexxapi/common/RegistrationTable.cpp
-               rexxapi/common/ServiceMessage.cpp
-               rexxapi/common/platform/unix/SysAPIManager.cpp
-               rexxapi/common/platform/unix/SysCSStream.cpp
-               rexxapi/common/platform/unix/SysProcess.cpp
-               common/Utilities.cpp
-               common/platform/unix/SysSemaphore.cpp
-               common/platform/unix/SysLibrary.cpp
-               common/platform/unix/SysFile.cpp
-               common/platform/unix/SysThread.cpp)
+#################### message files ##########################
+find_program(ORX_HAVE_XALAN xalan)
+if (NOT $ORX_HAVE_XALAN})
+   find_program(ORX_HAVE_XALAN Xalan)
 endif ()
+if ($ORX_HAVE_XALAN})
+   if (${ORX_HAVE_XALAN} EQUAL "Xalan")
+      add_custom_command(OUTPUT $(build_messages_dir)/errnums.xml
+                         COMMAND ${ORX_HAVE_XALAN} -o $(build_messages_dir)/errnums.xml $(build_messages_dir)/rexxmsg.xml $(build_messages_dir)/errnums.xsl
+                         WORKING_DIRECTORY $(build_messages_dir))
+      add_custom_command(OUTPUT $(build_messages_dir)/errnumsrexxc.xml
+                         COMMAND ${ORX_HAVE_XALAN} -o $(build_messages_dir)/errnumsrexxc.xml $(build_messages_dir)/rexxmsg.xml $(build_messages_dir)/errnumsrexxc.xsl
+                         WORKING_DIRECTORY $(build_messages_dir))
+      add_custom_command(OUTPUT $(build_messages_dir)/errnumsrxqueue.xml
+                         COMMAND ${ORX_HAVE_XALAN} -o $(build_messages_dir)/errnumsrxqueue.xml $(build_messages_dir)/rexxmsg.xml $(build_messages_dir)/errnumsrxqueue.xsl
+                         WORKING_DIRECTORY $(build_messages_dir))
+      add_custom_command(OUTPUT $(build_messages_dir)/errnumssubcom.xml
+                         COMMAND ${ORX_HAVE_XALAN} -o $(build_messages_dir)/errnumssubcom.xml $(build_messages_dir)/rexxmsg.xml $(build_messages_dir)/errnumssubcom.xsl
+                         WORKING_DIRECTORY $(build_messages_dir))
+   else ()
+      add_custom_command(OUTPUT $(build_messages_dir)/errnums.xml
+                         COMMAND ${ORX_HAVE_XALAN} -out $(build_messages_dir)/errnums.xml -in $(build_messages_dir)/rexxmsg.xml -xsl $(build_messages_dir)/errnums.xsl
+                         WORKING_DIRECTORY $(build_messages_dir))
+      add_custom_command(OUTPUT $(build_messages_dir)/errnumsrexxc.xml
+                         COMMAND ${ORX_HAVE_XALAN} -out $(build_messages_dir)/errnumsrexxc.xml -in $(build_messages_dir)/rexxmsg.xml -xsl $(build_messages_dir)/errnumsrexxc.xsl
+                         WORKING_DIRECTORY $(build_messages_dir))
+      add_custom_command(OUTPUT $(build_messages_dir)/errnumsrxqueue.xml
+                         COMMAND ${ORX_HAVE_XALAN} -out $(build_messages_dir)/errnumsrxqueue.xml -in $(build_messages_dir)/rexxmsg.xml -xsl $(build_messages_dir)/errnumsrxqueue.xsl
+                         WORKING_DIRECTORY $(build_messages_dir))
+      add_custom_command(OUTPUT $(build_messages_dir)/errnumssubcom.xml
+                         COMMAND ${ORX_HAVE_XALAN} -out $(build_messages_dir)/errnumssubcom.xml -in $(build_messages_dir)/rexxmsg.xml -xsl $(build_messages_dir)/errnumssubcom.xsl
+                         WORKING_DIRECTORY $(build_messages_dir))
+   endif ()
+endif ()
+
+#################### librexxapi.so ##########################
+add_library(rexxapi SHARED
+            ${build_rexxapi_client_dir}/ClientMessage.cpp
+            ${build_rexxapi_client_dir}/LocalAPIContext.cpp
+            ${build_rexxapi_client_dir}/LocalAPIManager.cpp
+            ${build_rexxapi_client_dir}/LocalMacroSpaceManager.cpp
+            ${build_rexxapi_client_dir}/LocalQueueManager.cpp
+            ${build_rexxapi_client_dir}/LocalRegistrationManager.cpp
+            ${build_rexxapi_client_dir}/MacroSpaceApi.cpp
+            ${build_rexxapi_client_dir}/QueuesAPI.cpp
+            ${build_rexxapi_client_dir}/RegistrationAPI.cpp
+            ${build_rexxapi_client_platform_dir}/SysLegacyAPI.cpp
+            ${build_rexxapi_client_platform_dir}/SysLocalAPIManager.cpp
+            ${build_rexxapi_common_dir}/RegistrationTable.cpp
+            ${build_rexxapi_common_dir}/ServiceMessage.cpp
+            ${build_rexxapi_common_platform_dir}/SysAPIManager.cpp
+            ${build_rexxapi_common_platform_dir}/SysCSStream.cpp
+            ${build_rexxapi_common_platform_dir}/SysProcess.cpp
+            ${build_common_dir}/Utilities.cpp
+            ${build_common_platform_dir}/SysSemaphore.cpp
+            ${build_common_platform_dir}/SysLibrary.cpp
+            ${build_common_platform_dir}/SysFile.cpp
+            ${build_common_platform_dir}/SysThread.cpp)
 target_include_directories(rexxapi PUBLIC
-               ${build_rexxapi_client_dir}
-               ${build_rexxapi_client_platform_dir}
-               ${build_rexxapi_common_dir}
-               ${build_rexxapi_common_platform_dir}
-               ${build_common_dir}
-               ${build_common_platform_dir}
-               ${build_lib_dir})
+            ${build_rexxapi_client_dir}
+            ${build_rexxapi_client_platform_dir}
+            ${build_rexxapi_common_dir}
+            ${build_rexxapi_common_platform_dir}
+            ${build_common_dir}
+            ${build_common_platform_dir}
+            ${build_lib_dir})
 if (WIN32)
    # TODO: add any Win libs as necessary
 else ()
