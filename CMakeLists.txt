@@ -255,38 +255,86 @@ set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhi
 #/* Build targets                                                              */
 #/*----------------------------------------------------------------------------*/
 
-#################### message files ##########################
+#################### explicit targets ##########################
 find_program(ORX_HAVE_XALAN xalan)
 if (NOT $ORX_HAVE_XALAN})
    find_program(ORX_HAVE_XALAN Xalan)
 endif ()
 if ($ORX_HAVE_XALAN})
    if (${ORX_HAVE_XALAN} EQUAL "Xalan")
-      add_custom_command(OUTPUT $(build_messages_dir)/errnums.xml
-                         COMMAND ${ORX_HAVE_XALAN} -o $(build_messages_dir)/errnums.xml $(build_messages_dir)/rexxmsg.xml $(build_messages_dir)/errnums.xsl
-                         WORKING_DIRECTORY $(build_messages_dir))
-      add_custom_command(OUTPUT $(build_messages_dir)/errnumsrexxc.xml
-                         COMMAND ${ORX_HAVE_XALAN} -o $(build_messages_dir)/errnumsrexxc.xml $(build_messages_dir)/rexxmsg.xml $(build_messages_dir)/errnumsrexxc.xsl
-                         WORKING_DIRECTORY $(build_messages_dir))
-      add_custom_command(OUTPUT $(build_messages_dir)/errnumsrxqueue.xml
-                         COMMAND ${ORX_HAVE_XALAN} -o $(build_messages_dir)/errnumsrxqueue.xml $(build_messages_dir)/rexxmsg.xml $(build_messages_dir)/errnumsrxqueue.xsl
-                         WORKING_DIRECTORY $(build_messages_dir))
-      add_custom_command(OUTPUT $(build_messages_dir)/errnumssubcom.xml
-                         COMMAND ${ORX_HAVE_XALAN} -o $(build_messages_dir)/errnumssubcom.xml $(build_messages_dir)/rexxmsg.xml $(build_messages_dir)/errnumssubcom.xsl
-                         WORKING_DIRECTORY $(build_messages_dir))
+      add_custom_command(OUTPUT ${build_messages_dir}/errnums.xml
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_messages_dir}/errnums.xml ${build_messages_dir}/rexxmsg.xml ${build_messages_dir}/errnums.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_messages_dir}/errnumsrexxc.xml
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_messages_dir}/errnumsrexxc.xml ${build_messages_dir}/rexxmsg.xml ${build_messages_dir}/errnumsrexxc.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_messages_dir}/errnumsrxqueue.xml
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_messages_dir}/errnumsrxqueue.xml ${build_messages_dir}/rexxmsg.xml ${build_messages_dir}/errnumsrxqueue.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_messages_dir}/errnumssubcom.xml
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_messages_dir}/errnumssubcom.xml ${build_messages_dir}/rexxmsg.xml ${build_messages_dir}/errnumssubcom.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_messages_dir}/gencat.inp
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_messages_dir}/gencat.inp ${build_messages_dir}/rexxmsg.xml ${build_interpreter_platform_dir}/UnixGencat.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_behaviour_dir}/ClassTypeCodes.h
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_behaviour_dir}/ClassTypeCodes.h ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/ClassTypeCodes.xsl
+                         DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml
+                         WORKING_DIRECTORY ${build_behaviour_dir})
+      add_custom_command(OUTPUT ${build_behaviour_dir}/PrimitiveBehaviourNames.h
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_behaviour_dir}/PrimitiveBehaviourNames.h ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/PrimitiveBehaviourNames.xsl
+                         DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml
+                         WORKING_DIRECTORY ${build_behaviour_dir})
+      add_custom_command(OUTPUT ${build_behaviour_dir}/PrimitiveBehaviours.cpp
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_behaviour_dir}/PrimitiveBehaviours.cpp ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/PrimitiveBehaviours.xsl
+                         DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml
+                         WORKING_DIRECTORY ${build_behaviour_dir})
+      add_custom_command(OUTPUT ${build_behaviour_dir}/VirtualFunctionTable.cpp
+                         COMMAND ${ORX_HAVE_XALAN} -o ${build_behaviour_dir}/VirtualFunctionTable.cpp ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/VirtualFunctionTable.xsl
+                         DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml
+                         WORKING_DIRECTORY ${build_behaviour_dir})
    else ()
-      add_custom_command(OUTPUT $(build_messages_dir)/errnums.xml
-                         COMMAND ${ORX_HAVE_XALAN} -out $(build_messages_dir)/errnums.xml -in $(build_messages_dir)/rexxmsg.xml -xsl $(build_messages_dir)/errnums.xsl
-                         WORKING_DIRECTORY $(build_messages_dir))
-      add_custom_command(OUTPUT $(build_messages_dir)/errnumsrexxc.xml
-                         COMMAND ${ORX_HAVE_XALAN} -out $(build_messages_dir)/errnumsrexxc.xml -in $(build_messages_dir)/rexxmsg.xml -xsl $(build_messages_dir)/errnumsrexxc.xsl
-                         WORKING_DIRECTORY $(build_messages_dir))
-      add_custom_command(OUTPUT $(build_messages_dir)/errnumsrxqueue.xml
-                         COMMAND ${ORX_HAVE_XALAN} -out $(build_messages_dir)/errnumsrxqueue.xml -in $(build_messages_dir)/rexxmsg.xml -xsl $(build_messages_dir)/errnumsrxqueue.xsl
-                         WORKING_DIRECTORY $(build_messages_dir))
-      add_custom_command(OUTPUT $(build_messages_dir)/errnumssubcom.xml
-                         COMMAND ${ORX_HAVE_XALAN} -out $(build_messages_dir)/errnumssubcom.xml -in $(build_messages_dir)/rexxmsg.xml -xsl $(build_messages_dir)/errnumssubcom.xsl
-                         WORKING_DIRECTORY $(build_messages_dir))
+      add_custom_command(OUTPUT ${build_messages_dir}/errnums.xml
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_messages_dir}/errnums.xml -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_messages_dir}/errnums.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_messages_dir}/errnumsrexxc.xml
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_messages_dir}/errnumsrexxc.xml -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_messages_dir}/errnumsrexxc.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_messages_dir}/errnumsrxqueue.xml
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_messages_dir}/errnumsrxqueue.xml -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_messages_dir}/errnumsrxqueue.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_messages_dir}/errnumssubcom.xml
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_messages_dir}/errnumssubcom.xml -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_messages_dir}/errnumssubcom.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_messages_dir}/gencat.inp
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_messages_dir}/gencat.inp -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_interpreter_platform_dir}/UnixGencat.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_messages_dir})
+      add_custom_command(OUTPUT ${build_behaviour_dir}/ClassTypeCodes.h
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_behaviour_dir}/ClassTypeCodes.h -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_behaviour_dir}/ClassTypeCodes.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_behaviour_dir})
+      add_custom_command(OUTPUT ${build_behaviour_dir}/PrimitiveBehaviourNames.h
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_behaviour_dir}/PrimitiveBehaviourNames.h -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_behaviour_dir}/PrimitiveBehaviourNames.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_behaviour_dir})
+      add_custom_command(OUTPUT ${build_behaviour_dir}/PrimitiveBehaviours.cpp
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_behaviour_dir}/PrimitiveBehaviours.cpp -in ${build_behaviour_dir}/PrimitiveClasses.xml -xsl ${build_behaviour_dir}/PrimitiveBehaviours.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_behaviour_dir})
+      add_custom_command(OUTPUT ${build_behaviour_dir}/VirtualFunctionTable.cpp
+                         COMMAND ${ORX_HAVE_XALAN} -out ${build_behaviour_dir}/VirtualFunctionTable.cpp -in ${build_messages_dir}/rexxmsg.xml -xsl ${build_behaviour_dir}/VirtualFunctionTable.xsl
+                         DEPENDS ${build_messages_dir}/rexxmsg.xml
+                         WORKING_DIRECTORY ${build_behaviour_dir})
    endif ()
 endif ()
 
