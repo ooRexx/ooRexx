@@ -43,8 +43,8 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST MANIFEST_FILE
 REXXICO ICON "rexx.ico"
 
 1 VERSIONINFO
- FILEVERSION OOREXX_VER,OOREXX_REL,OOREXX_SUB,OOREXX_BLD
- PRODUCTVERSION OOREXX_VER,OOREXX_REL,OOREXX_SUB,OOREXX_BLD
+ FILEVERSION ORX_VER,ORX_REL,ORX_MOD,ORX_BLD
+ PRODUCTVERSION ORX_VER,ORX_REL,ORX_MOD,ORX_BLD
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -61,12 +61,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Rexx Language Association\0"
             VALUE "FileDescription", "Open Object Rexx Interface\0"
-            VALUE "FileVersion", OOREXX_VER_STR "\0"
+            VALUE "FileVersion", ORX_VER_STR "\0"
             VALUE "InternalName", "Rexx console\0"
             VALUE "LegalCopyright", "Copyright © RexxLA " OOREXX_COPY_YEAR ".\0"
             VALUE "OriginalFilename", "REXX.EXE\0"
             VALUE "ProductName", "Open Object Rexx for Windows\0"
-            VALUE "ProductVersion",  OOREXX_VER_STR "\0"
+            VALUE "ProductVersion",  ORX_VER_STR "\0"
         END
     END
     BLOCK "VarFileInfo"

@@ -225,8 +225,8 @@ $(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ)  \
 # need import libraries and def files still
 #
 $(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXLOBJ) \
-                         $(OR_OUTDIR)\$(@B).lib $(INT_PLATFORM)\rexx.def    \
-                         $(OR_OUTDIR)\winmsgtb.res $(OR_OUTDIR)\verinfo.res
+                         $(OR_OUTDIR)\$(@B).lib $(INT_PLATFORM)\rexx.def \
+                         $(OR_OUTDIR)\winmsgtb.res
  type <<$(OR_OUTDIR)\oryxk.lst
    $(ORYXKOBJ) $(ORYXLOBJ)
 <<
@@ -340,12 +340,6 @@ $(OR_OUTDIR)\winmsgtb.res: $(INT_PLATFORM)\winmsgtb.rc $(INTERPRETER_MESSAGES)\D
     @ECHO ResourceCompiling $(@)
         $(rc) $(rcflags_common) $(OR_ORYXRCINCL) -r -fo$(@) $(INT_PLATFORM)\winmsgtb.rc
 
-
-# Update the version information block
-$(OR_OUTDIR)\verinfo.res: $(INT_PLATFORM)\verinfo.rc
-    @ECHO.
-    @ECHO ResourceCompiling $(@B).res
-        $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_INTERPRETER_SRC)\$(@B).rc
 
 #
 #

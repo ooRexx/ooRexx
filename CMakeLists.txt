@@ -101,7 +101,11 @@ endif ()
 
 # Set compiler and linker flags common to all build environments
 if (WIN32)
-   add_definitions(/DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} /DORX_MOD=${ORX_MOD_LVL}
+   add_definitions(/DORX_VER=${ORX_MAJOR}
+            /DORX_REL=${ORX_MINOR}
+            /DORX_MOD=${ORX_MOD_LVL}
+            /DORX_BLD=${ORX_BLD_LVL}
+            /DORX_VER_STR=${ORX_VER_STR}
             /DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
             /DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
             /DORX_CATDIR="${catdir}"
@@ -109,7 +113,8 @@ if (WIN32)
             /D_CRT_SECURE_NO_DEPRECATE
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
-            /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od)
+            /DWIN32 /D_WINDOWS)
+   set(CMAKE_CXX_FLAGS "/W3 /GR /EHsc /MDd /Zi /Ob0 /Od")
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
             -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
@@ -368,7 +373,9 @@ set (common_rexxapi_sources
 
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_rexxapi_sources ${build_rexxapi_client_platform_dir}/rexxapi.def)
+   set (platform_rexxapi_sources
+            ${build_rexxapi_client_platform_dir}/rexxapi.def
+            ${build_interpreter_platform_dir}/verinfo.rc)
 endif ()
 
 #################### librexxapi.so ##########################
@@ -588,7 +595,8 @@ set (common_interpreter_sources ${classes_sources}
 
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_interpreter_sources ${build_interpreter_platform_dir}/rexx.def)
+   set (platform_interpreter_sources ${build_interpreter_platform_dir}/rexx.def
+            ${build_interpreter_platform_dir}/winmsgtb.rc)
 else ()
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/RexxMain.cpp)
 endif ()
