@@ -626,8 +626,9 @@ target_include_directories(rexx PUBLIC
             ${build_interpreter_platform_dir})
 # Extra link library definitions
 if (WIN32)
+   target_link_libraries(rexx rexxapi)
 else ()
-   target_link_libraries(rexx ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+   target_link_libraries(rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 
 
