@@ -209,13 +209,13 @@ APIFILES = $(OR_OUTDIR_API)\oorexxapi.h $(OR_OUTDIR_API)\oorexxerrors.h $(OR_OUT
 # the type command creates a file of all objects as input to the lib
 #
 $(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ)  \
-                  $(INT_PLATFORM)\wrexx.def
+                  $(INT_PLATFORM)\rexx.def
    type <<$(OR_OUTDIR)\oryxk.lst
    $(ORYXKOBJ) $(ORYXLOBJ)
 <<
         $(OR_IMPLIB)    \
         -machine:$(CPU) \
-        -def:$(INT_PLATFORM)\wrexx.def \
+        -def:$(INT_PLATFORM)\rexx.def \
         @$(OR_OUTDIR)\oryxk.lst \
         -out:$(OR_OUTDIR)\$(@B).lib
 
@@ -225,7 +225,7 @@ $(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ)  \
 # need import libraries and def files still
 #
 $(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXLOBJ) \
-                         $(OR_OUTDIR)\$(@B).lib $(INT_PLATFORM)\wrexx.def    \
+                         $(OR_OUTDIR)\$(@B).lib $(INT_PLATFORM)\rexx.def    \
                          $(OR_OUTDIR)\winmsgtb.res $(OR_OUTDIR)\verinfo.res
  type <<$(OR_OUTDIR)\oryxk.lst
    $(ORYXKOBJ) $(ORYXLOBJ)
