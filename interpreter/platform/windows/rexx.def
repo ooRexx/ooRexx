@@ -64,5 +64,3 @@ RexxGetVersionInformation     @114
 RexxStemSort                  @124
 RexxCreateInterpreter         @125
 
-SECTIONS
-   .sdata READ WRITE SHARED

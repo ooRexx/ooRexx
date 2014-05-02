@@ -56,7 +56,7 @@ void SysActivity::close()
 }
 
 
-DWORD WINAPI call_thread_function(void * arguments)
+DWORD WINAPI dispatch_activity_function(void * arguments)
 {
     // hand this off to the thread object
     ((RexxActivity *)arguments)->runThread();
@@ -75,10 +75,10 @@ void SysActivity::create(RexxActivity *activity, size_t stackSize)
 {
     DWORD res;
 
-    hThread = CreateThread(NULL, stackSize, call_thread_function, (void *)activity, 0, &res);
+    hThread = CreateThread(NULL, stackSize, dispatch_activity_function, (void *)activity, 0, &res);
     if (hThread == NULL)
     {
-        reportException(Error_System_service_service, "ERROR CREATING THREAD");
+        reportException(Error_System_service_service, "Error creating thread");
     }
     threadId = res;
 }

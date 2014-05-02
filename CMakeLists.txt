@@ -588,7 +588,7 @@ set (common_interpreter_sources ${classes_sources}
 
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_interpreter_sources ${build_rexxapi_client_platform_dir}/rexxapi.def)
+   set (platform_interpreter_sources ${build_interpreter_platform_dir}/rexx.def)
 else ()
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/RexxMain.cpp)
 endif ()
@@ -628,7 +628,7 @@ target_include_directories(rexx PUBLIC
             ${build_interpreter_platform_dir})
 # Extra link library definitions
 if (WIN32)
-   target_link_libraries(rexx rexxapi)
+   target_link_libraries(rexx rexxapi comctl32)
 else ()
    target_link_libraries(rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
