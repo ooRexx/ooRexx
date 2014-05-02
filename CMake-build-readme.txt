@@ -27,5 +27,5 @@ ooRexx on multiple platforms (Windows, Linux, etc) using CMake.
 
    After the completion of these commands there should be a bin subdirectory 
    created in your current directory (the build subdirectory). It should contain
-   All the binaries and install files.
+   all the binaries and install files.
 

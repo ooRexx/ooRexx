@@ -212,7 +212,7 @@ set (build_instructions_dir ${build_interpreter_dir}/instructions)
 set (build_memory_dir ${build_interpreter_dir}/memory)
 set (build_messages_dir ${build_interpreter_dir}/messages)
 set (build_package_dir ${build_interpreter_dir}/package)
-set (build_parser_di= ${build_interpreter_dir}/parser)
+set (build_parser_dir ${build_interpreter_dir}/parser)
 set (build_interpreter_common_dir ${build_interpreter_dir}/platform/common)
 set (build_rexxclasses_dir ${build_interpreter_dir}/RexxClasses)
 set (build_runtime_dir ${build_interpreter_dir}/runtime)
@@ -380,7 +380,224 @@ else ()
 endif ()
 
 
-
+#################### librexx.so ##########################
+# Sources for librexx.so
+set (interpreter_api_sources ${build_interpreter_api_dir}/CallContextStubs.cpp
+                     ${build_interpreter_api_dir}/InterpreterAPI.cpp
+                     ${build_interpreter_api_dir}/InterpreterInstanceStubs.cpp
+                     ${build_interpreter_api_dir}/MethodContextStubs.cpp
+                     ${build_interpreter_api_dir}/ThreadContextStubs.cpp)
+set (classes_support_sources ${build_classes_support_dir}/ProgramMetaData.cpp
+                          ${build_classes_support_dir}/RexxCollection.cpp 
+                          ${build_classes_support_dir}/RexxCompoundElement.cpp
+                          ${build_classes_support_dir}/RexxCompoundTable.cpp
+                          ${build_classes_support_dir}/RexxCompoundTail.cpp
+                          ${build_classes_support_dir}/RexxDateTime.cpp 
+                          ${build_classes_support_dir}/RexxHashTable.cpp
+                          ${build_classes_support_dir}/RexxListTable.cpp
+                          ${build_classes_support_dir}/StringUtil.cpp)
+set (classes_sources ${build_classes_dir}/ArrayClass.cpp
+                  ${build_classes_dir}/BufferClass.cpp
+                  ${build_classes_dir}/ClassClass.cpp 
+                  ${build_classes_dir}/ContextClass.cpp 
+                  ${build_classes_dir}/DirectoryClass.cpp
+                  ${build_classes_dir}/IntegerClass.cpp
+                  ${build_classes_dir}/ListClass.cpp 
+                  ${build_classes_dir}/MessageClass.cpp
+                  ${build_classes_dir}/MethodClass.cpp 
+                  ${build_classes_dir}/MutableBufferClass.cpp
+                  ${build_classes_dir}/NumberStringClass.cpp
+                  ${build_classes_dir}/NumberStringMath.cpp 
+                  ${build_classes_dir}/NumberStringMath2.cpp
+                  ${build_classes_dir}/ObjectClass.cpp 
+                  ${build_classes_dir}/PackageClass.cpp
+                  ${build_classes_dir}/PointerClass.cpp
+                  ${build_classes_dir}/QueueClass.cpp 
+                  ${build_classes_dir}/RelationClass.cpp
+                  ${build_classes_dir}/RoutineClass.cpp 
+                  ${build_classes_dir}/RexxQueueMethods.cpp
+                  ${build_classes_dir}/StackClass.cpp
+                  ${build_classes_dir}/StemClass.cpp 
+                  ${build_classes_dir}/StringClass.cpp 
+                  ${build_classes_dir}/StringClassBit.cpp
+                  ${build_classes_dir}/StringClassConversion.cpp
+                  ${build_classes_dir}/StringClassMisc.cpp
+                  ${build_classes_dir}/StringClassSub.cpp 
+                  ${build_classes_dir}/StringClassUtil.cpp
+                  ${build_classes_dir}/StringClassWord.cpp
+                  ${build_classes_dir}/SupplierClass.cpp 
+                  ${build_classes_dir}/TableClass.cpp 
+                  ${build_classes_dir}/IdentityTableClass.cpp
+                  ${build_classes_dir}/WeakReferenceClass.cpp
+                  ${build_classes_dir}/StackFrameClass.cpp)
+set (package_sources ${build_package_dir}/LibraryPackage.cpp
+                  ${build_package_dir}/PackageManager.cpp)
+set (memory_sources ${build_memory_dir}/DeadObject.cpp
+                 ${build_memory_dir}/MemorySegment.cpp
+                 ${build_memory_dir}/MemoryStats.cpp 
+                 ${build_memory_dir}/ProtectedObject.cpp
+                 ${build_memory_dir}/RexxEnvelope.cpp 
+                 ${build_memory_dir}/RexxInternalStack.cpp
+                 ${build_memory_dir}/RexxSmartBuffer.cpp 
+                 ${build_memory_dir}/UninitDispatcher.cpp
+                 ${build_memory_dir}/Setup.cpp 
+                 ${build_memory_dir}/RexxMemory.cpp)
+set (execution_sources ${build_execution_dir}/CPPCode.cpp
+                    ${build_execution_dir}/RexxActivation.cpp
+                    ${build_execution_dir}/RexxActivationStack.cpp
+                    ${build_execution_dir}/RexxCode.cpp 
+                    ${build_execution_dir}/RexxLocalVariables.cpp 
+                    ${build_execution_dir}/RexxNativeActivation.cpp
+                    ${build_execution_dir}/RexxNativeCode.cpp 
+                    ${build_execution_dir}/RexxVariable.cpp 
+                    ${build_execution_dir}/RexxVariableDictionary.cpp 
+                    ${build_execution_dir}/SecurityManager.cpp)
+set (behaviour_sources ${build_behaviour_dir}/PrimitiveBehaviours.cpp
+                    ${build_behaviour_dir}/RexxBehaviour.cpp 
+                    ${build_behaviour_dir}/VirtualFunctionTable.cpp)
+set (concurrency_sources ${build_concurrency_dir}/ActivityDispatcher.cpp
+                      ${build_concurrency_dir}/ActivityManager.cpp 
+                      ${build_concurrency_dir}/ActivationFrame.cpp 
+                      ${build_concurrency_dir}/CallbackDispatcher.cpp 
+                      ${build_concurrency_dir}/TrappingDispatcher.cpp 
+                      ${build_concurrency_dir}/ExitHandler.cpp 
+                      ${build_concurrency_dir}/CommandHandler.cpp 
+                      ${build_concurrency_dir}/MessageDispatcher.cpp
+                      ${build_concurrency_dir}/RexxActivity.cpp 
+                      ${build_concurrency_dir}/RexxStartDispatcher.cpp 
+                      ${build_concurrency_dir}/TranslateDispatcher.cpp)
+set (expression_sources ${build_expression_dir}/BuiltinFunctions.cpp 
+                     ${build_expression_dir}/CommonExternalFunctions.cpp 
+                     ${build_expression_dir}/ExpressionCompoundVariable.cpp
+                     ${build_expression_dir}/ExpressionDotVariable.cpp
+                     ${build_expression_dir}/ExpressionFunction.cpp
+                     ${build_expression_dir}/ExpressionMessage.cpp 
+                     ${build_expression_dir}/ExpressionOperator.cpp
+                     ${build_expression_dir}/ExpressionStack.cpp
+                     ${build_expression_dir}/ExpressionStem.cpp 
+                     ${build_expression_dir}/ExpressionVariable.cpp 
+                     ${build_expression_dir}/IndirectVariableReference.cpp
+                     ${build_expression_dir}/ExpressionLogical.cpp)
+set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp 
+                        ${build_instructions_dir}/AssignmentInstruction.cpp 
+                        ${build_instructions_dir}/CallInstruction.cpp 
+                        ${build_instructions_dir}/ClassDirective.cpp 
+                        ${build_instructions_dir}/CommandInstruction.cpp 
+                        ${build_instructions_dir}/DoBlock.cpp 
+                        ${build_instructions_dir}/DoInstruction.cpp 
+                        ${build_instructions_dir}/DropInstruction.cpp 
+                        ${build_instructions_dir}/ElseInstruction.cpp 
+                        ${build_instructions_dir}/EndIf.cpp 
+                        ${build_instructions_dir}/EndInstruction.cpp 
+                        ${build_instructions_dir}/ExitInstruction.cpp 
+                        ${build_instructions_dir}/ExposeInstruction.cpp 
+                        ${build_instructions_dir}/ForwardInstruction.cpp 
+                        ${build_instructions_dir}/GuardInstruction.cpp 
+                        ${build_instructions_dir}/IfInstruction.cpp 
+                        ${build_instructions_dir}/InterpretInstruction.cpp 
+                        ${build_instructions_dir}/LabelInstruction.cpp 
+                        ${build_instructions_dir}/LeaveInstruction.cpp 
+                        ${build_instructions_dir}/LibraryDirective.cpp 
+                        ${build_instructions_dir}/MessageInstruction.cpp 
+                        ${build_instructions_dir}/NopInstruction.cpp 
+                        ${build_instructions_dir}/NumericInstruction.cpp 
+                        ${build_instructions_dir}/OptionsInstruction.cpp 
+                        ${build_instructions_dir}/OtherwiseInstruction.cpp 
+                        ${build_instructions_dir}/ParseInstruction.cpp 
+                        ${build_instructions_dir}/ParseTarget.cpp 
+                        ${build_instructions_dir}/ParseTrigger.cpp 
+                        ${build_instructions_dir}/ProcedureInstruction.cpp 
+                        ${build_instructions_dir}/QueueInstruction.cpp 
+                        ${build_instructions_dir}/RaiseInstruction.cpp 
+                        ${build_instructions_dir}/ReplyInstruction.cpp 
+                        ${build_instructions_dir}/RequiresDirective.cpp 
+                        ${build_instructions_dir}/ReturnInstruction.cpp 
+                        ${build_instructions_dir}/RexxInstruction.cpp 
+                        ${build_instructions_dir}/SayInstruction.cpp 
+                        ${build_instructions_dir}/SelectInstruction.cpp 
+                        ${build_instructions_dir}/SignalInstruction.cpp 
+                        ${build_instructions_dir}/ThenInstruction.cpp 
+                        ${build_instructions_dir}/TraceInstruction.cpp 
+                        ${build_instructions_dir}/UseStrictInstruction.cpp)
+set (parser_sources ${build_parser_dir}/Clause.cpp 
+                 ${build_parser_dir}/KeywordConstants.cpp 
+                 ${build_parser_dir}/InstructionParser.cpp 
+                 ${build_parser_dir}/Scanner.cpp 
+                 ${build_parser_dir}/SourceFile.cpp 
+                 ${build_parser_dir}/Token.cpp)
+set (platform_sources ${build_interpreter_platform_dir}/ErrorMessages.cpp 
+                   ${build_interpreter_platform_dir}/ExternalFunctions.cpp 
+                   ${build_interpreter_platform_dir}/FileSystem.cpp 
+                   ${build_interpreter_platform_dir}/MemorySupport.cpp 
+                   ${build_interpreter_platform_dir}/MiscSystem.cpp 
+                   ${build_interpreter_platform_dir}/RexxMain.cpp 
+                   ${build_interpreter_platform_dir}/SysActivity.cpp 
+                   ${build_interpreter_platform_dir}/SysFileSystem.cpp 
+                   ${build_interpreter_platform_dir}/SysInterpreterInstance.cpp 
+                   ${build_interpreter_platform_dir}/SystemCommands.cpp 
+                   ${build_interpreter_platform_dir}/SystemInitialization.cpp 
+                   ${build_interpreter_platform_dir}/SystemInterpreter.cpp 
+                   ${build_interpreter_platform_dir}/TimeSupport.cpp 
+                   ${build_interpreter_platform_dir}/UseridFunction.cpp 
+                   ${build_interpreter_platform_dir}/ValueFunction.cpp)
+set (common_sources ${build_common_dir}/Utilities.cpp 
+                 ${build_common_platform_dir}/SysFile.cpp 
+                 ${build_common_platform_dir}/SysLibrary.cpp 
+                 ${build_common_platform_dir}/SysSemaphore.cpp 
+                 ${build_common_platform_dir}/SysThread.cpp)
+set (runtime_sources ${build_runtime_dir}/GlobalData.cpp 
+                   ${build_runtime_dir}/GlobalNames.cpp 
+                   ${build_runtime_dir}/InternalPackage.cpp 
+                   ${build_runtime_dir}/Interpreter.cpp 
+                   ${build_runtime_dir}/InterpreterInstance.cpp 
+                   ${build_runtime_dir}/Numerics.cpp 
+                   ${build_runtime_dir}/RexxMisc.cpp 
+                   ${build_runtime_dir}/Version.cpp)
+set (streamlibrary_sources ${build_streamlibrary_dir}/StreamCommandParser.cpp 
+                        ${build_streamlibrary_dir}/StreamNative.cpp 
+                        ${build_streamlibrary_dir}/FileNative.cpp)
+add_library(rexx SHARED
+                     ${classes_sources}
+                     ${classes_support_sources} 
+                     ${interpreter_api_sources}
+                     ${behaviour_sources} 
+                     ${execution_sources} 
+                     ${memory_sources}
+                     ${package_sources}
+                     ${concurrency_sources} 
+                     ${expression_sources}
+                     ${instructions_sources} 
+                     ${parser_sources}
+                     ${platform_sources} 
+                     ${common_sources}
+                     ${runtime_sources}
+                     ${streamlibrary_sources})
+set (core_classes ${build_rexxclasses_dir}/CoreClasses.orx 
+               ${build_rexxclasses_dir}/StreamClasses.orx 
+               ${build_rexxclasses_dir}/Serializable.orx)
+set (core_platform_classes ${build_interpreter_platform_dir}/PlatformObjects.orx)
+target_include_directories(rexx PUBLIC
+                       ${build_lib_dir} 
+                       ${build_api_dir}
+                       ${build_api_platform_dir} 
+                       ${build_common_dir}
+                       ${build_common_platform_dir} 
+                       ${build_interpreter_dir} 
+                       ${build_behaviour_dir} 
+                       ${build_execution_dir} 
+                       ${build_memory_dir}
+                       ${build_package_dir}
+                       ${build_concurrency_dir} 
+                       ${build_expression_dir}
+                       ${build_instructions_dir}
+                       ${build_classes_dir}
+                       ${build_classes_support_dir}
+                       ${build_runtime_dir} 
+                       ${build_parser_dir}
+                       ${build_messages_dir}
+                       ${build_streamlibrary_dir}
+                       ${build_interpreter_common_dir}
+                       ${build_interpreter_platform_dir})
 
 
 
