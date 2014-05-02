@@ -165,7 +165,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
     return OREF_NULL;                     /* no message retrieved              */
 #else
     sprintf(DataArea,"Cannot get description for error %d",msgid);
-    return new_string(&DataArea);
+    return new_string(DataArea);
 #endif
 }
 
