@@ -342,9 +342,8 @@ set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhi
 #                     WORKING_DIRECTORY ${build_behaviour_dir})
 #endif ()
 
-#################### librexxapi.so ##########################
-# Library definition
-add_library(rexxapi SHARED
+# Full set of files used in all platforms.
+set (common_rexxapi_sources
             ${build_rexxapi_client_dir}/ClientMessage.cpp
             ${build_rexxapi_client_dir}/LocalAPIContext.cpp
             ${build_rexxapi_client_dir}/LocalAPIManager.cpp
@@ -366,6 +365,17 @@ add_library(rexxapi SHARED
             ${build_common_platform_dir}/SysLibrary.cpp
             ${build_common_platform_dir}/SysFile.cpp
             ${build_common_platform_dir}/SysThread.cpp)
+
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rexxapi_sources ${build_rexxapi_client_platform_dir}/rexxapi.def)
+endif ()
+
+#################### librexxapi.so ##########################
+# Library definition
+add_library(rexxapi SHARED
+            ${common_rexxapi_sources}
+            ${platform_rexxapi_sources})
 # Include file definition
 target_include_directories(rexxapi PUBLIC
             ${build_rexxapi_client_dir}
@@ -558,10 +568,9 @@ set (runtime_sources ${build_runtime_dir}/GlobalData.cpp
 set (streamlibrary_sources ${build_streamlibrary_dir}/StreamCommandParser.cpp
             ${build_streamlibrary_dir}/StreamNative.cpp
             ${build_streamlibrary_dir}/FileNative.cpp)
-# Library definition
-if (WIN32)
-   add_library(rexx SHARED
-            ${classes_sources}
+
+# Full set of files used in all platforms.
+set (common_interpreter_sources ${classes_sources}
             ${classes_support_sources}
             ${interpreter_api_sources}
             ${behaviour_sources}
@@ -576,27 +585,20 @@ if (WIN32)
             ${common_sources}
             ${runtime_sources}
             ${streamlibrary_sources})
+
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_interpreter_sources ${build_rexxapi_client_platform_dir}/rexxapi.def)
 else ()
-   add_library(rexx SHARED
-            ${classes_sources}
-            ${classes_support_sources}
-            ${interpreter_api_sources}
-            ${behaviour_sources}
-            ${execution_sources}
-            ${memory_sources}
-            ${package_sources}
-            ${concurrency_sources}
-            ${expression_sources}
-            ${instructions_sources}
-            ${parser_sources}
-            ${platform_sources}
-            ${common_sources}
-            ${runtime_sources}
-            ${streamlibrary_sources}
-            # Extra source files needed for *nix
-            ${build_interpreter_platform_dir}/RexxMain.cpp)
+   set (platform_interpreter_sources ${build_interpreter_platform_dir}/RexxMain.cpp)
 endif ()
-# Not sure what these are for
+
+# Library definition
+   add_library(rexx SHARED
+            ${common_interpreter_sources}
+            ${platform_interpreter_sources})
+
+# These are the core classes built into the .img file.
 set (core_classes ${build_rexxclasses_dir}/CoreClasses.orx
             ${build_rexxclasses_dir}/StreamClasses.orx
             ${build_rexxclasses_dir}/Serializable.orx)
