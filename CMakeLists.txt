@@ -64,6 +64,7 @@ set (ORX_VERSION ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
 set (ORX_VER_STR ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
 string(TIMESTAMP ORX_YEAR %Y)
 set (ORX_COPY_YEAR 2005-${ORX_YEAR})
+string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR})
 
 # The following supports the versioning of the rexx shared libraries
 # This defines the oorexx library version. For ooRexx this should always be the
@@ -122,7 +123,7 @@ else ()
             -DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
             -DORX_CATDIR="${catdir}"
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-            -DLINUX)
+            -D${ORX_SYS_STR})
 endif ()
 
 
@@ -158,9 +159,9 @@ check_include_file(nl_types.h HAVE_NL_TYPES_H)
 check_function_exists(nsleep HAVE_NSLEEP)
 check_include_file(pthread.h HAVE_PTHREAD_H)
 check_function_exists(pthread_mutexattr_settype HAVE_PTHREAD_MUTEXATTR_SETTYPE)
-check_symbol_exists(PTHREAD_MUTEX_ERRORCHECK "pthread.h" HAVEPTHREAD_MUTEX_ERRORCHECK)
-check_symbol_exists(PTHREAD_MUTEX_RECURSIVE "pthread.h" HAVEPTHREAD_MUTEX_RECURSIVE)
-check_symbol_exists(PTHREAD_MUTEX_RECURSIVE_NP "pthread.h" HAVEPTHREAD_MUTEX_RECURSIVE_NP)
+check_symbol_exists(PTHREAD_MUTEX_ERRORCHECK "pthread.h" HAVE_PTHREAD_MUTEX_ERRORCHECK)
+check_symbol_exists(PTHREAD_MUTEX_RECURSIVE "pthread.h" HAVE_PTHREAD_MUTEX_RECURSIVE)
+check_symbol_exists(PTHREAD_MUTEX_RECURSIVE_NP "pthread.h" HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 check_include_file(pwd.h HAVE_PWD_H)
 check_include_file(sched.h HAVE_SCHED_H)
 check_function_exists(setlocale HAVE_SETLOCALE)
