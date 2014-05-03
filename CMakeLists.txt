@@ -102,6 +102,7 @@ else ()
 endif ()
 
 # Set compiler and linker flags common to all build environments
+include_directories(${CMAKE_SOURCE_DIR}/build/)
 if (WIN32)
    add_definitions(/DORX_VER=${ORX_MAJOR}
             /DORX_REL=${ORX_MINOR}
