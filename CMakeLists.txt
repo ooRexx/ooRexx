@@ -64,7 +64,8 @@ set (ORX_VERSION ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
 set (ORX_VER_STR ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
 string(TIMESTAMP ORX_YEAR %Y)
 set (ORX_COPY_YEAR 2005-${ORX_YEAR})
-string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR})
+string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR)
+message(${ORX_SYS_STR})
 
 # The following supports the versioning of the rexx shared libraries
 # This defines the oorexx library version. For ooRexx this should always be the
@@ -116,7 +117,7 @@ if (WIN32)
             /D_CRT_SECURE_NO_DEPRECATE
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
-            /DWIN32 /D_WINDOWS)
+            /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
    set(CMAKE_CXX_FLAGS "/W3 /GR /EHsc /MDd /Zi /Ob0 /Od")
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
@@ -124,7 +125,7 @@ else ()
             -DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
             -DORX_CATDIR="${catdir}"
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-            -D${ORX_SYS_STR})
+            -D${ORX_SYS_STR} -DHAVE_CONFIG_H)
 endif ()
 
 
@@ -631,7 +632,7 @@ else ()
 endif ()
 
 # Library definition
-   add_library(rexx SHARED
+add_library(rexx SHARED
             ${common_interpreter_sources}
             ${platform_interpreter_sources})
 
