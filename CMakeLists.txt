@@ -200,6 +200,7 @@ set (PACKAGE_STRING ${PROJECT_NAME})
 set (PACKAGE_TARNAME "ooRexx.tar")
 set (PACKAGE_URL "http://www.oorexx.org/")
 set (PACKAGE_VERSION ${ORX_VER_STR})
+set (VERSION ${ORX_VER_STR})
 set (STDC_HEADERS 1)
 
 
