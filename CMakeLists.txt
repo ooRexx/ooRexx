@@ -65,7 +65,6 @@ set (ORX_VER_STR ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
 string(TIMESTAMP ORX_YEAR %Y)
 set (ORX_COPY_YEAR 2005-${ORX_YEAR})
 string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR)
-message(${ORX_SYS_STR})
 
 # The following supports the versioning of the rexx shared libraries
 # This defines the oorexx library version. For ooRexx this should always be the
