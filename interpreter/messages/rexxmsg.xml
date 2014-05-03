@@ -1,3 +1,43 @@
+<!--
+This file contains all of the error message definitions for the ooRexx interpreter.
+When this file is updated, run the genmsgs build script (e.g. platform/windows/genmsgs.bat)
+which will update the various header files used for error messages as well as generate the
+file that can be embedded in the documentation error messages section.  The fields have the
+following meanings:
+
+Code - This is the major error code.
+
+Subcode - This is the error message subcode.  These are combined to get the complete
+error message number (e.g., 93.901).  This is specified as a 3-digit number with leading
+zeroes included.  If this is a new major message, use a subcode of 000
+
+MessageNumber - This is the message number used to look up the message text for an error
+condition.  All message numbers must be unique, so when adding a new message, pick the
+next available number.  RexxMessageNumbers.h contains the current message number mappings,
+so you can find what number to use by scrolling to the bottom of that file.
+
+Component - The component this message is associated with.  New Rexx error conditions are
+in the Rexx component.  The Translation component are elements of translatable text that
+do not correspond to error conditions.  Otherwise, the component should be the utility
+that uses the message (e.g., RXQUEUE, SUBCOM, etc.)
+
+Severity - Not really used.  Rexx component messages should be Warning, the utilities Error
+
+SymbolicName - A unique symbolic name for code to reference the error message from code.  Rexx
+error conditions should start with Error_, and sub messages should add modifiers on to the
+symbolic name of the major code (e.g. Error_Program_unreadable and Error_Program_unreadable_name)
+
+Text - Text of the error message.  Message substitutions are indicated using the <Sub> tag, which
+specifies the substitution filename and the substitution position.  The position allows the
+substitutions to be reordered in message translations.
+
+Explanation - An explanation of the error condition for documentation.  All major error codes must
+have explanation text for the documentation.  For the subcodes, it is optional.
+
+UserAction - user action text for the documentation.  There should text for the major code, this is
+optional for the subcodes.
+-->
+
 <Messages>
   <Message>
     <Code>3</Code>

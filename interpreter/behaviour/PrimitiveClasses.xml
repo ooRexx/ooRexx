@@ -1,3 +1,39 @@
+<!--
+This file contains all of the class definitions for ooRexx classes that are allocated
+and managed via the garbage collector. When this file is updated, run the genclass build script
+(e.g. platform/windows/genclass.bat) which will update the various header files
+used for class definitions as well as generate the C++ source files that compile to class
+tables. The fields have the following meanings:
+
+Exported - These are classes that can be accessed and manipulated by ooRexx programmers
+(String, Array, etc.)
+
+Internal - The internal classes are only used in the internals of the interpreter.  Internal
+classes may also be part of the persistent rexx image file or part of the compiled image
+of a program.
+
+Transient - Classes that are used at runtime but are never saved as part of the image.  These
+classes record current interpreter state, such as the runtime stack or the activity instances.
+
+NOTE:  Order is very important within the categories.  To maintain image compatibility, new
+classes must be added to the end of their specific category.
+
+Fields within the class definitions are:
+
+id - A symbolic id of the class.  This is a simple name that is used to generate identifiers
+within code.
+
+class - The actual C++ class name of the class.
+
+include - The name of the include file that defines this class.
+
+classclass - Some classes have a separate class object C++ definition.  If this exists, specify
+the C++ name of the class definition.
+
+operators - Some classes have special optimazations for the operator methods (String, Integer, etc.).
+If the class has its own operator table, specify operators with a value of true.
+-->
+
 <RexxClasses>
 <CopyRight>
 Copyright (c) 2007 Rexx Language Association. All rights reserved.
