@@ -1,4 +1,4 @@
-Fldr/* config.h.in.  Generated from CMake.  */
+/* config.h.in.  Generated from CMake.  */
 
 /* Define to 1 if you have the <attr/xattr.h> header file. */
 #cmakedefine HAVE_ATTR_XATTR_H
