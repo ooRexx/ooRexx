@@ -285,7 +285,6 @@ set (build_extensions_hostemu_dir ${build_extensions_hostemu_dir}/platform/unix)
 # The following are windows only
 set (build_extensions_ole_dir ${build_extensions_dir}/platform/windows/ole)
 set (build_extensions_oodialog_dir ${build_extensions_dir}/platform/windows/oodialog)
-set (build_extensions_orxscrpt_dir ${build_extensions_dir}/platform/windows/orxscrpt)
 set (build_extensions_rxwinsys_dir ${build_extensions_dir}/platform/windows/rxwinsys)
 set (build_utilities_rexxpaws_dir ${build_utilities_dir}/platform/windows/rexxpaws)
 set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhide)
@@ -670,8 +669,12 @@ else ()
 endif ()
 
 #################### rexx (executable) ##########################
-# Sources for rexx
+# Sources for rexx.  Note, the target must not be rexx, since we already
+# have a rexx library target
 add_executable(rexx_exe ${build_utilities_rexx_dir}/rexx.cpp)
+# This allows the executable to have the same name as the library.
+SET_TARGET_PROPERTIES(rexx_exe
+  PROPERTIES OUTPUT_NAME rexx)
 # Include file definition
 target_include_directories(rexx_exe PUBLIC
             ${build_lib_dir}
@@ -757,7 +760,9 @@ endif ()
 
 #################### librexxutil.so ################
 # Sources for librexxutil.so
-add_library(rexxutil SHARED ${build_extensions_rexxutil_platform_dir}/rexxutil.cpp)
+add_library(rexxutil SHARED ${build_extensions_rexxutil_platform_dir}/rexxutil.cpp
+                            ${build_extensions_rexxutil_platform_dir}/rexxutil.def
+                            ${build_interpreter_platform_dir}/verinfo.rc)
 # Include file definition
 target_include_directories(rexxutil PUBLIC
              ${build_lib_dir}
@@ -766,10 +771,10 @@ target_include_directories(rexxutil PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 if (WIN32)
-   target_link_libraries(rexxutil rexx rexxapi)
+   target_link_libraries(rexxutil rexx rexxapi shlwapi)
 else ()
    target_link_libraries(rexxutil rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()                  
+endif ()
 
 #################### librxmath.so ################
 # Sources for librxmath.so
@@ -818,7 +823,7 @@ target_link_libraries(rxregexp rexx rexxapi)
 #   target_link_libraries(rexxutil rexx rexxapi)
 #else ()
 #   target_link_libraries(rexxutil rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-#endif ()                  
+#endif ()
 
 #################### librxunixsys.so ################
 if (NOT WIN32)
@@ -830,79 +835,83 @@ target_include_directories(rxunixsys PUBLIC
              ${build_api_platform_dir}
              ${extensions_unix_dir}/rxunixsys)
 # Extra link library definitions
-target_link_libraries(rxregexp rexx rexxapi)
-endif ()                  
+target_link_libraries(rxunixsys rexx rexxapi)
+endif ()
 
 set (build_utilities_rexxpaws_dir ${build_utilities_dir}/platform/windows/rexxpaws)
 set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhide)
 
 #################### orexxole.dll ################
-if (WIN32)
-# Sources for orexxole.dll
-add_library(orexxole SHARED ${build_extensions_ole_dir}/orexxole.c
-             ${build_extensions_ole_dir}/OLEVariant.c
-             ${build_extensions_ole_dir}/events.cpp
-             ${build_extensions_ole_dir}/orexxole.cls)
-# Include file definition
-target_include_directories(orexxole PUBLIC
-             ${build_extensions_ole_dir})
-# Extra link library definitions
-target_link_libraries(orexxole rexx rexxapi)
-endif ()                  
+#if (WIN32)
+## Sources for orexxole.dll
+#add_library(orexxole SHARED ${build_extensions_ole_dir}/orexxole.c
+#             ${build_extensions_ole_dir}/OLEVariant.c
+#             ${build_extensions_ole_dir}/events.cpp
+#             ${build_extensions_ole_dir}/orexxole.cls)
+## Include file definition
+#target_include_directories(orexxole PUBLIC
+#             ${build_extensions_ole_dir})
+## Extra link library definitions
+#target_link_libraries(orexxole rexx rexxapi)
+#endif ()
 
 #################### oodialog.dll ################
-if (WIN32)
-# Sources for oodialog.dll
-add_library(oodialog SHARED ${build_extensions_ole_dir}/ooDIALOG.cpp
-             ${build_extensions_oodialog_dir}/APICommon.cpp
-             ${build_extensions_oodialog_dir}/BaseDialog.cls
-             ${build_extensions_oodialog_dir}/oodBarControls.cpp
-             ${build_extensions_oodialog_dir}/oodBaseDialog.cpp
-             ${build_extensions_oodialog_dir}/oofBasicControls.cpp
-             ${build_extensions_oodialog_dir}/oodCommon.cpp
-             ${build_extensions_oodialog_dir}/oodControl.cpp
-             ${build_extensions_oodialog_dir}/oodData.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/oodDialog.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp )
-# Include file definition
-target_include_directories(rxunixsys PUBLIC
-             ${build_extensions_oodialog_dir})
-# Extra link library definitions
-target_link_libraries(oodialog rexx rexxapi)
-endif ()                  
-
-#################### orxscrpt.dll ################
-if (WIN32)
-# Sources for orxscrpt.dll
-add_library(orxscrpt SHARED ${build_extensions_orxscrpt_dir}/orxscrpt.cpp
-             ${build_extensions_orxscrpt_dir}/classfactory.cpp
-             ${build_extensions_orxscrpt_dir}/dllfuncs.cpp
-             ${build_extensions_orxscrpt_dir}/eng2rexx.cpp
-             ${build_extensions_orxscrpt_dir}/engfact.cpp
-             ${build_extensions_orxscrpt_dir}/nameditem.cpp
-             ${build_extensions_orxscrpt_dir}/orxdispid.cpp
-             ${build_extensions_orxscrpt_dir}/orxevents.cpp
-             ${build_extensions_orxscrpt_dir}/orxidispatch.cpp
-             ${build_extensions_orxscrpt_dir}/rexx2inx.rex
-             ${build_extensions_orxscrpt_dir}/scriptProcessEngine.cpp
-             ${build_extensions_orxscrpt_dir}/scriptutil.cpp
-             ${build_extensions_orxscrpt_dir}/scrptdebug.cpp
-             ${build_extensions_orxscrpt_dir}/security.rex
-             ${build_extensions_orxscrpt_dir}/ThreadDispatcher.cpp)
-# Include file definition
-target_include_directories(rxunixsys PUBLIC
-             ${build_extensions_orxscrpt_dir})
-# Extra link library definitions
-target_link_libraries(orexxole rexx rexxapi)
-endif ()                  
+#if (WIN32)
+#set (OOD_MAJOR 4)
+#set (OOD_MINOR 2)
+#set (OOD_MOD_LVL 3)
+#set (OOD_BLD_LVL 9606)
+#set (OOD_VER_STR "4.2.3.9606")
+#set (OOD_COPY_YEAR "2005-2013")
+#set (OOD_SVN_REVSION 9150)
+#
+## Sources for oodialog.dll
+#add_library(oodialog SHARED
+#             ${build_extensions_oodialog_dir}/ooDialog.cpp
+#             ${build_extensions_oodialog_dir}/APICommon.cpp
+#             ${build_extensions_oodialog_dir}/oodBarControls.cpp
+#             ${build_extensions_oodialog_dir}/oodBaseDialog.cpp
+#             ${build_extensions_oodialog_dir}/oodBasicControls.cpp
+#             ${build_extensions_oodialog_dir}/oodCommon.cpp
+#             ${build_extensions_oodialog_dir}/oodControl.cpp
+#             ${build_extensions_oodialog_dir}/oodData.cpp
+#             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+#             ${build_extensions_oodialog_dir}/oodKeyboard.cpp
+#             ${build_extensions_oodialog_dir}/oodListView.cpp
+#             ${build_extensions_oodialog_dir}/oodMenu.cpp
+#             ${build_extensions_oodialog_dir}/oodMessaging.cpp
+#             ${build_extensions_oodialog_dir}/oodMouse.cpp
+#             ${build_extensions_oodialog_dir}/oodPackageEntry.cpp
+#             ${build_extensions_oodialog_dir}/oodPropertySheetDialog.cpp
+#             ${build_extensions_oodialog_dir}/oodResizableDialog.cpp
+#             ${build_extensions_oodialog_dir}/oodResources.cpp
+#             ${build_extensions_oodialog_dir}/oodRoutines.cpp
+#             ${build_extensions_oodialog_dir}/oodShared.cpp
+#             ${build_extensions_oodialog_dir}/oodShellObjects.cpp
+#             ${build_extensions_oodialog_dir}/oodTreeView.cpp
+#             ${build_extensions_oodialog_dir}/oodUser.cpp
+#             ${build_extensions_oodialog_dir}/oodUtilities.cpp
+#             ${build_extensions_oodialog_dir}/oodViewControls.cpp
+#             ${build_extensions_oodialog_dir}/oodWinMain.cpp
+#             ${build_extensions_oodialog_dir}/ooDialog.def
+#             ${build_extensions_oodialog_dir}/ooDialog.rc)
+## Override the compile definitions with ooDialog-exclusive defines
+#set_property(TARGET oodialog
+#       PROPERTY COMPILE_DEFINITIONS
+#       OOD_VER=${OOD_MAJOR}
+#       OOD_REL=${OOD_MINOR}
+#       OOD_MOD=${OOD_MOD_LVL}
+#       OOD_BLD=${OOD_BLD_LVL}
+#       OOD_COPY_YEAR=${OOD_COPY_YEAR}
+#       OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
+#       OOD_BIN_NAME="oodialog.dll")
+#
+## Include file definition
+#target_include_directories(oodialog PUBLIC
+#             ${build_extensions_oodialog_dir})
+## Extra link library definitions
+#target_link_libraries(oodialog rexx rexxapi)
+#endif ()
 
 
 
