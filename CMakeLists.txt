@@ -782,8 +782,16 @@ else ()
 endif ()
 
 #################### librxmath.so ################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rxmath_sources
+            ${build_platform_dir}/rxmath.def
+            ${build_interpreter_platform_dir}/verinfo.rc)
+endif ()
 # Sources for librxmath.so
-add_library(rxmath SHARED ${build_extensions_rxmath_dir}/rxmath.cpp)
+add_library(rxmath SHARED ${build_extensions_rxmath_dir}/rxmath.cpp
+                          ${platform_rxmath_sources})
+
 # Include file definition
 target_include_directories(rxmath PUBLIC
              ${build_lib_dir}
@@ -793,17 +801,33 @@ target_include_directories(rxmath PUBLIC
 target_link_libraries(rxmath rexx rexxapi)
 
 #################### librxsock.so ################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rxsock_sources
+            ${build_platform_dir}/rxsock.def
+            ${build_interpreter_platform_dir}/verinfo.rc)
+endif ()
+
 # Sources for librxsock.so
 add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
-             ${build_extensions_rxsock_dir}/rxsockfn.cpp)
+             ${build_extensions_rxsock_dir}/rxsockfn.cpp
+             ${platform_rxsock_sources})
 # Extra link library definitions
 target_link_libraries(rxsock rexx rexxapi)
 
 #################### librxregexp.so ################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rxregexp_sources
+            ${build_platform_dir}/rxrexexp.def
+            ${build_interpreter_platform_dir}/verinfo.rc)
+endif ()
+
 # Sources for librxregexp.so
 add_library(rxregexp SHARED ${build_extensions_rxregexp_dir}/automaton.cpp
              ${build_extensions_rxregexp_dir}/dblqueue.cpp
-             ${build_extensions_rxregexp_dir}/rxregexp.cpp)
+             ${build_extensions_rxregexp_dir}/rxregexp.cpp
+             ${platform_rxrexexp_sources})
 # Include file definition
 target_include_directories(rxregexp PUBLIC
              ${build_lib_dir}
