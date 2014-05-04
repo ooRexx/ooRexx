@@ -759,10 +759,15 @@ else ()
 endif ()
 
 #################### librexxutil.so ################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rexxutil_sources
+            ${build_extensions_rexxutil_platform_dir}/rexxutil.def
+            ${build_interpreter_platform_dir}/verinfo.rc)
+endif ()
 # Sources for librexxutil.so
 add_library(rexxutil SHARED ${build_extensions_rexxutil_platform_dir}/rexxutil.cpp
-                            ${build_extensions_rexxutil_platform_dir}/rexxutil.def
-                            ${build_interpreter_platform_dir}/verinfo.rc)
+                            ${platform_rexxutil_sources})
 # Include file definition
 target_include_directories(rexxutil PUBLIC
              ${build_lib_dir}
