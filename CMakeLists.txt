@@ -104,6 +104,11 @@ endif ()
 # Set compiler and linker flags common to all build environments
 include_directories(${CMAKE_SOURCE_DIR}/build/)
 if (WIN32)
+   if ($ENV{CPU} STREQUAL "X64")
+      set (MANIFEST_FILE rexx64.exe.manifest)
+   else ()
+      set (MANIFEST_FILE rexx32.exe.manifest)
+   endif ()
    add_definitions(/DORX_VER=${ORX_MAJOR}
             /DORX_REL=${ORX_MINOR}
             /DORX_MOD=${ORX_MOD_LVL}
@@ -113,6 +118,7 @@ if (WIN32)
             /DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
             /DORX_CATDIR="${catdir}"
             /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            /DMANIFEST_FILE=${MANIFEST_FILE}
             /D_CRT_SECURE_NO_DEPRECATE
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
@@ -669,9 +675,15 @@ else ()
 endif ()
 
 #################### rexx (executable) ##########################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rexx_exe_sources
+            ${build_platform_dir}/rexx.rc)
+endif ()
 # Sources for rexx.  Note, the target must not be rexx, since we already
 # have a rexx library target
-add_executable(rexx_exe ${build_utilities_rexx_dir}/rexx.cpp)
+add_executable(rexx_exe ${build_utilities_rexx_dir}/rexx.cpp
+                        ${platform_rexx_exe_sources})
 # This allows the executable to have the same name as the library.
 SET_TARGET_PROPERTIES(rexx_exe
   PROPERTIES OUTPUT_NAME rexx)
@@ -693,9 +705,15 @@ endif ()
 set (core_classes ${build_rexxclasses_dir}/CoreClasses.orx
             ${build_rexxclasses_dir}/StreamClasses.orx
             ${build_rexxclasses_dir}/Serializable.orx)
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rexximage_sources
+            ${build_platform_dir}/rexx.rc)
+endif ()
 # Sources for rexximg
 add_executable(rexximg ${build_utilities_rexximage_dir}/rexximage.cpp
-            ${core_classes})
+            ${core_classes}
+            ${platform_rexximage_sources})
 # Include file definition
 target_include_directories(rexximg PUBLIC
             ${build_lib_dir}
@@ -709,8 +727,14 @@ else ()
 endif ()
 
 #################### rexxc (executable) #########################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rexxc_sources
+            ${build_platform_dir}/rexx.rc)
+endif ()
 # Sources for rexxc
-add_executable(rexxc ${build_utilities_rexxc_dir}/RexxCompiler.cpp)
+add_executable(rexxc ${build_utilities_rexxc_dir}/RexxCompiler.cpp
+                     ${platform_rexxc_sources})
 # Include file definition
 target_include_directories(rexxc PUBLIC
             ${build_lib_dir}
@@ -725,8 +749,14 @@ else ()
 endif ()
 
 #################### rxqueue (executable) #########################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rxqueue_sources
+            ${build_interpreter_platform_dir}/verinfo.rc)
+endif ()
 # Sources for rxqueue
-add_executable(rxqueue ${build_utilities_rxqueue_dir}/rxqueue.cpp)
+add_executable(rxqueue ${build_utilities_rxqueue_dir}/rxqueue.cpp
+                     ${platform_rxqueue_sources})
 # Include file definition
 target_include_directories(rxqueue PUBLIC
             ${build_lib_dir}
@@ -742,8 +772,14 @@ else ()
 endif ()
 
 #################### rxsubcom (executable) #########################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_subcom_sources
+            ${build_interpreter_platform_dir}/verinfo.rc)
+endif ()
 # Sources for rxsubcom
-add_executable(rxsubcom ${build_utilities_rxsubcom_dir}/rxsubcom.cpp)
+add_executable(rxsubcom ${build_utilities_rxsubcom_dir}/rxsubcom.cpp
+                     ${platform_subcom_sources})
 # Include file definition
 target_include_directories(rxsubcom PUBLIC
              ${build_lib_dir}
