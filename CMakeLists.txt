@@ -124,7 +124,9 @@ else ()
             -DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
             -DORX_CATDIR="${catdir}"
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-            -D${ORX_SYS_STR} -DHAVE_CONFIG_H)
+            -D${ORX_SYS_STR} -DOPSYS_${ORX_SYS_STR} -DHAVE_CONFIG_H)
+    set (ORX_SYSLIB_DL dl)
+    set (ORX_SYSLIB_PTHREAD pthread)
 endif ()
 
 
@@ -253,8 +255,8 @@ set (build_runtime_dir ${build_interpreter_dir}/runtime)
 set (build_streamlibrary_dir ${build_interpreter_dir}/streamLibrary)
 set (build_extensions_dir extensions)
 set (build_extensions_platform_dir ${build_extensions_dir}/${ORX_PLATFORM_DIR})
-set (build_extensions_rexutils_dir ${build_extensions_dir}/rexxutil)
-set (build_extensions_rexutils_platform_dir ${build_extensions_rexutils_dir}/${ORX_PLATFORM_DIR})
+set (build_extensions_rexxutil_dir ${build_extensions_dir}/rexxutil)
+set (build_extensions_rexxutil_platform_dir ${build_extensions_rexxutil_dir}/${ORX_PLATFORM_DIR})
 set (build_extensions_rxftp_dir ${build_extensions_dir}/rxftp)
 set (build_extensions_csvstream_dir ${build_extensions_dir}/csvStream)
 set (build_extensions_rxmath_dir ${build_extensions_dir}/rxmath)
@@ -268,6 +270,7 @@ set (build_utilities_rexximage_dir ${build_utilities_dir}/rexximage)
 set (build_utilities_rxqueue_dir ${build_utilities_dir}/rxqueue/${ORX_PLATFORM_DIR})
 set (build_utilities_rxsubcom_dir ${build_utilities_dir}/rxsubcom/${ORX_PLATFORM_DIR})
 set (build_api_dir api)
+set (build_api_platform_dir api/${ORX_PLATFORM_DIR})
 set (build_samples_dir samples)
 set (api_dir ${build_api_dir}/${ORX_PLATFORM_DIR})
 
@@ -635,10 +638,6 @@ add_library(rexx SHARED
             ${common_interpreter_sources}
             ${platform_interpreter_sources})
 
-# These are the core classes built into the .img file.
-set (core_classes ${build_rexxclasses_dir}/CoreClasses.orx
-            ${build_rexxclasses_dir}/StreamClasses.orx
-            ${build_rexxclasses_dir}/Serializable.orx)
 set (core_platform_classes ${build_interpreter_platform_dir}/PlatformObjects.orx)
 # Include file definition
 target_include_directories(rexx PUBLIC
@@ -670,16 +669,240 @@ else ()
    target_link_libraries(rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 
+#################### rexx (executable) ##########################
+# Sources for rexx
+add_executable(rexx_exe ${build_utilities_rexx_dir}/rexx.cpp)
+# Include file definition
+target_include_directories(rexx_exe PUBLIC
+            ${build_lib_dir}
+            ${build_api_dir}
+            ${build_api_platform_dir}
+            ${build_messages_dir})
+# Extra link library definitions
+if (WIN32)
+   target_link_libraries(rexx_exe rexx rexxapi)
+else ()
+   target_link_libraries(rexx_exe rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()
 
+#################### rexximage (bin file) ##########################
+# These are the core classes built into the .img file.
+set (core_classes ${build_rexxclasses_dir}/CoreClasses.orx
+            ${build_rexxclasses_dir}/StreamClasses.orx
+            ${build_rexxclasses_dir}/Serializable.orx)
+# Sources for rexximg
+add_executable(rexximg ${build_utilities_rexximage_dir}/rexximage.cpp
+            ${core_classes})
+# Include file definition
+target_include_directories(rexximg PUBLIC
+            ${build_lib_dir}
+            ${build_api_dir}
+            ${build_api_platform_dir})
+# Extra link library definitions
+if (WIN32)
+   target_link_libraries(rexximg rexx rexxapi)
+else ()
+   target_link_libraries(rexximg rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()
 
+#################### rexxc (executable) #########################
+# Sources for rexxc
+add_executable(rexxc ${build_utilities_rexxc_dir}/RexxCompiler.cpp)
+# Include file definition
+target_include_directories(rexxc PUBLIC
+            ${build_lib_dir}
+            ${build_api_dir}
+            ${build_api_platform_dir}
+            ${build_messages_dir})
+# Extra link library definitions
+if (WIN32)
+   target_link_libraries(rexxc rexx rexxapi)
+else ()
+   target_link_libraries(rexxc rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()
 
+#################### rxqueue (executable) #########################
+# Sources for rxqueue
+add_executable(rxqueue ${build_utilities_rxqueue_dir}/rxqueue.cpp)
+# Include file definition
+target_include_directories(rxqueue PUBLIC
+            ${build_lib_dir}
+            ${build_api_dir}
+            ${build_api_platform_dir}
+            ${build_interpreter_platform_dir}
+            ${build_messages_dir})
+# Extra link library definitions
+if (WIN32)
+   target_link_libraries(rxqueue rexx rexxapi)
+else ()
+   target_link_libraries(rxqueue rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()
 
+#################### rxsubcom (executable) #########################
+# Sources for rxsubcom
+add_executable(rxsubcom ${build_utilities_rxsubcom_dir}/rxsubcom.cpp)
+# Include file definition
+target_include_directories(rxsubcom PUBLIC
+             ${build_lib_dir}
+             ${build_api_dir}
+             ${build_api_platform_dir}
+             ${build_interpreter_platform_dir}
+             ${build_messages_dir})
+# Extra link library definitions
+if (WIN32)
+   target_link_libraries(rxsubcom rexx rexxapi)
+else ()
+   target_link_libraries(rxsubcom rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()
 
+#################### librexxutil.so ################
+# Sources for librexxutil.so
+add_library(rexxutil SHARED ${build_extensions_rexxutil_platform_dir}/rexxutil.cpp)
+# Include file definition
+target_include_directories(rexxutil PUBLIC
+             ${build_lib_dir}
+             ${build_api_dir}
+             ${build_api_platform_dir}
+             ${build_messages_dir})
+# Extra link library definitions
+if (WIN32)
+   target_link_libraries(rexxutil rexx rexxapi)
+else ()
+   target_link_libraries(rexxutil rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()                  
 
+#################### librxmath.so ################
+# Sources for librxmath.so
+add_library(rxmath SHARED ${build_extensions_rxmath_dir}/rxmath.cpp)
+# Include file definition
+target_include_directories(rxmath PUBLIC
+             ${build_lib_dir}
+             ${build_api_dir}
+             ${build_api_platform_dir})
+# Extra link library definitions
+target_link_libraries(rxmath rexx rexxapi)
 
+#################### librxsock.so ################
+# Sources for librxsock.so
+add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
+             ${build_extensions_rxsock_dir}/rxsockfn.cpp)
+# Extra link library definitions
+target_link_libraries(rxsock rexx rexxapi)
 
+#################### librxregexp.so ################
+# Sources for librxregexp.so
+add_library(rxregexp SHARED ${build_extensions_rxregexp_dir}/automaton.cpp
+             ${build_extensions_rxregexp_dir}/dblqueue.cpp
+             ${build_extensions_rxregexp_dir}/rxregexp.cpp)
+# Include file definition
+target_include_directories(rxregexp PUBLIC
+             ${build_lib_dir}
+             ${build_api_dir}
+             ${build_api_platform_dir}
+             ${build_messages_dir})
+# Extra link library definitions
+target_link_libraries(rxregexp rexx rexxapi)
 
+##################### libhostemu.so ################
+## Sources for libhostemu.so
+#hostemu_SOURCES = ${extensions_hostemu_unix_dir}/hostemu.cpp
+#             ${build_extensions_hostemu_dir}/hostemu.h
+#             ${build_extensions_hostemu_dir}/cmdparse.ypp}
+## Include file definition
+#target_include_directories(hostemu PUBLIC
+#             ${build_api_dir}
+#             ${build_api_platform_dir}
+#             ${build_extensions_hostemu_dir})
+## Extra link library definitions
+#if (WIN32)
+#   target_link_libraries(rexxutil rexx rexxapi)
+#else ()
+#   target_link_libraries(rexxutil rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+#endif ()                  
 
+#################### librxunixsys.so ################
+if (NOT WIN32)
+# Sources for librxunixsys.so
+add_library(rxunixsys SHARED ${build_extensions_platform_dir}/rxunixsys/rxunixsys.cpp)
+# Include file definition
+target_include_directories(rxunixsys PUBLIC
+             ${build_api_dir}
+             ${build_api_platform_dir}
+             ${extensions_unix_dir}/rxunixsys)
+# Extra link library definitions
+target_link_libraries(rxregexp rexx rexxapi)
+endif ()                  
+
+set (build_utilities_rexxpaws_dir ${build_utilities_dir}/platform/windows/rexxpaws)
+set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhide)
+
+#################### orexxole.dll ################
+if (WIN32)
+# Sources for orexxole.dll
+add_library(orexxole SHARED ${build_extensions_ole_dir}/orexxole.c
+             ${build_extensions_ole_dir}/OLEVariant.c
+             ${build_extensions_ole_dir}/events.cpp
+             ${build_extensions_ole_dir}/orexxole.cls)
+# Include file definition
+target_include_directories(orexxole PUBLIC
+             ${build_extensions_ole_dir})
+# Extra link library definitions
+target_link_libraries(orexxole rexx rexxapi)
+endif ()                  
+
+#################### oodialog.dll ################
+if (WIN32)
+# Sources for oodialog.dll
+add_library(oodialog SHARED ${build_extensions_ole_dir}/ooDIALOG.cpp
+             ${build_extensions_oodialog_dir}/APICommon.cpp
+             ${build_extensions_oodialog_dir}/BaseDialog.cls
+             ${build_extensions_oodialog_dir}/oodBarControls.cpp
+             ${build_extensions_oodialog_dir}/oodBaseDialog.cpp
+             ${build_extensions_oodialog_dir}/oofBasicControls.cpp
+             ${build_extensions_oodialog_dir}/oodCommon.cpp
+             ${build_extensions_oodialog_dir}/oodControl.cpp
+             ${build_extensions_oodialog_dir}/oodData.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+             ${build_extensions_oodialog_dir}/oodDialog.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp )
+# Include file definition
+target_include_directories(rxunixsys PUBLIC
+             ${build_extensions_oodialog_dir})
+# Extra link library definitions
+target_link_libraries(oodialog rexx rexxapi)
+endif ()                  
+
+#################### orxscrpt.dll ################
+if (WIN32)
+# Sources for orxscrpt.dll
+add_library(orxscrpt SHARED ${build_extensions_orxscrpt_dir}/orxscrpt.cpp
+             ${build_extensions_orxscrpt_dir}/classfactory.cpp
+             ${build_extensions_orxscrpt_dir}/dllfuncs.cpp
+             ${build_extensions_orxscrpt_dir}/eng2rexx.cpp
+             ${build_extensions_orxscrpt_dir}/engfact.cpp
+             ${build_extensions_orxscrpt_dir}/nameditem.cpp
+             ${build_extensions_orxscrpt_dir}/orxdispid.cpp
+             ${build_extensions_orxscrpt_dir}/orxevents.cpp
+             ${build_extensions_orxscrpt_dir}/orxidispatch.cpp
+             ${build_extensions_orxscrpt_dir}/rexx2inx.rex
+             ${build_extensions_orxscrpt_dir}/scriptProcessEngine.cpp
+             ${build_extensions_orxscrpt_dir}/scriptutil.cpp
+             ${build_extensions_orxscrpt_dir}/scrptdebug.cpp
+             ${build_extensions_orxscrpt_dir}/security.rex
+             ${build_extensions_orxscrpt_dir}/ThreadDispatcher.cpp)
+# Include file definition
+target_include_directories(rxunixsys PUBLIC
+             ${build_extensions_orxscrpt_dir})
+# Extra link library definitions
+target_link_libraries(orexxole rexx rexxapi)
+endif ()                  
 
 
 
