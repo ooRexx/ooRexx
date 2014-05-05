@@ -895,18 +895,20 @@ target_link_libraries(rxunixsys rexx rexxapi)
 endif ()
 
 #################### orexxole.dll ################
-#if (WIN32)
-## Sources for orexxole.dll
-#add_library(orexxole SHARED ${build_extensions_ole_dir}/orexxole.c
-#             ${build_extensions_ole_dir}/OLEVariant.c
-#             ${build_extensions_ole_dir}/events.cpp
-#             ${build_extensions_ole_dir}/orexxole.cls)
-## Include file definition
-#target_include_directories(orexxole PUBLIC
-#             ${build_extensions_ole_dir})
-## Extra link library definitions
-#target_link_libraries(orexxole rexx rexxapi)
-#endif ()
+if (WIN32)
+# Sources for orexxole.dll
+add_library(orexxole SHARED ${build_extensions_ole_dir}/orexxole.cpp
+             ${build_extensions_ole_dir}/OLEVariant.cpp
+             ${build_extensions_ole_dir}/events.cpp
+             ${build_extensions_ole_dir}/orexxole.def
+             ${build_interpreter_platform_dir}/verinfo.rc
+             ${build_extensions_ole_dir}/orexxole.cls)
+# Include file definition
+target_include_directories(orexxole PUBLIC
+             ${build_extensions_ole_dir})
+# Extra link library definitions
+target_link_libraries(orexxole rexx rexxapi)
+endif ()
 
 #################### oodialog.dll ################
 #if (WIN32)
