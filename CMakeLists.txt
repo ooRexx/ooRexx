@@ -875,7 +875,7 @@ target_link_libraries(rxregexp rexx rexxapi)
 # Sources for libhostemu.so
 # Note that we ignore the dependency on hostemu.ypp for now.
 add_library(hostemu SHARED ${build_extensions_hostemu_platform_dir}/hostemu.cpp
-             ${build_extensions_hostemu_dir}/cmdparse.cpp}
+             ${build_extensions_hostemu_dir}/cmdparse.cpp)
 # Include file definition
 target_include_directories(hostemu PUBLIC
              ${build_api_dir}
