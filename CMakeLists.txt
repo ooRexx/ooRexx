@@ -866,6 +866,7 @@ target_include_directories(rxregexp PUBLIC
 target_link_libraries(rxregexp rexx rexxapi)
 
 #################### libhostemu.so ################
+if (NOT WIN32)
 # Sources for libhostemu.so
 # Note that we ignore the dependency on hostemu.ypp for now.
 add_library(hostemu SHARED ${build_extensions_hostemu_dir}/hostemu.cpp)
@@ -879,6 +880,7 @@ if (WIN32)
    target_link_libraries(hostemu rexx rexxapi)
 else ()
    target_link_libraries(hostemu rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()
 endif ()
 
 #################### librxunixsys.so ################
