@@ -867,22 +867,20 @@ target_include_directories(rxregexp PUBLIC
 # Extra link library definitions
 target_link_libraries(rxregexp rexx rexxapi)
 
-##################### libhostemu.so ################
-## Sources for libhostemu.so
-#hostemu_SOURCES = ${extensions_hostemu_unix_dir}/hostemu.cpp
-#             ${build_extensions_hostemu_dir}/hostemu.h
-#             ${build_extensions_hostemu_dir}/cmdparse.ypp}
-## Include file definition
-#target_include_directories(hostemu PUBLIC
-#             ${build_api_dir}
-#             ${build_api_platform_dir}
-#             ${build_extensions_hostemu_dir})
-## Extra link library definitions
-#if (WIN32)
-#   target_link_libraries(rexxutil rexx rexxapi)
-#else ()
-#   target_link_libraries(rexxutil rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-#endif ()
+#################### libhostemu.so ################
+# Sources for libhostemu.so
+add_library(hostemu SHARED ${build_extensions_hostemu_dir}/hostemu.cpp)
+# Include file definition
+target_include_directories(hostemu PUBLIC
+             ${build_api_dir}
+             ${build_api_platform_dir}
+             ${build_extensions_hostemu_dir})
+# Extra link library definitions
+if (WIN32)
+   target_link_libraries(hostemu rexx rexxapi)
+else ()
+   target_link_libraries(hostemu rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()
 
 #################### librxunixsys.so ################
 if (NOT WIN32)
