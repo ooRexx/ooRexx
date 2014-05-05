@@ -66,6 +66,12 @@ string(TIMESTAMP ORX_YEAR %Y)
 set (ORX_COPY_YEAR 2005-${ORX_YEAR})
 string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR)
 
+include(FindSubversion)
+IF(Subversion_FOUND)
+    Subversion_WC_INFO(${CMAKE_SOURCE_DIR} MY)
+    SET(ORX_BLD_LVL "${MY_WC_REVISION}")
+ENDIF(Subversion_FOUND)
+
 # The following supports the versioning of the rexx shared libraries
 # This defines the oorexx library version. For ooRexx this should always be the
 # same as the ORX_MAJOR number.
