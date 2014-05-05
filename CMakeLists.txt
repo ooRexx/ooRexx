@@ -897,9 +897,6 @@ target_include_directories(rxunixsys PUBLIC
 target_link_libraries(rxunixsys rexx rexxapi)
 endif ()
 
-set (build_utilities_rexxpaws_dir ${build_utilities_dir}/platform/windows/rexxpaws)
-set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhide)
-
 #################### orexxole.dll ################
 #if (WIN32)
 ## Sources for orexxole.dll
@@ -972,6 +969,35 @@ set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhi
 #target_link_libraries(oodialog rexx rexxapi)
 #endif ()
 
+
+#################### rexxhide (executable) ##########################
+if (WIN32)
+# Sources for rexxhide.
+add_executable(rexxhide WIN32 ${build_utilities_rexxhide_dir}/rexxhide.cpp
+                        ${build_platform_dir}/rexx.rc)
+# Include file definition
+target_include_directories(rexxhide PUBLIC
+            ${build_lib_dir}
+            ${build_api_dir}
+            ${build_api_platform_dir}
+            ${build_messages_dir})
+target_link_libraries(rexxhide rexx rexxapi)
+endif ()
+
+
+#################### rexxpaws (executable) ##########################
+if (WIN32)
+# Sources for rexxpaws.
+add_executable(rexxpaws ${build_utilities_rexxpaws_dir}/rexxpaws.cpp
+                        ${build_platform_dir}/rexx.rc)
+# Include file definition
+target_include_directories(rexxhide PUBLIC
+            ${build_lib_dir}
+            ${build_api_dir}
+            ${build_api_platform_dir}
+            ${build_messages_dir})
+target_link_libraries(rexxpaws rexx rexxapi)
+endif ()
 
 
 
