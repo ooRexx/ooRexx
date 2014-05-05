@@ -269,6 +269,7 @@ set (build_extensions_rxmath_dir ${build_extensions_dir}/rxmath)
 set (build_extensions_rxregexp_dir ${build_extensions_dir}/rxregexp)
 set (build_extensions_rxsock_dir ${build_extensions_dir}/rxsock)
 set (build_extensions_hostemu_dir ${build_extensions_dir}/hostemu)
+set (build_extensions_hostemu_platform_dir ${build_extensions_hostemu_dir}/${ORX_PLATFORM_DIR})
 set (build_utilities_dir utilities)
 set (build_utilities_rexx_dir ${build_utilities_dir}/rexx/${ORX_PLATFORM_DIR})
 set (build_utilities_rexxc_dir ${build_utilities_dir}/rexxc/${ORX_PLATFORM_DIR})
@@ -287,7 +288,6 @@ else ()
 endif ()
 
 # The following are unix only
-set (build_extensions_hostemu_dir ${build_extensions_hostemu_dir}/platform/unix)
 # The following are windows only
 set (build_extensions_ole_dir ${build_extensions_dir}/platform/windows/ole)
 set (build_extensions_oodialog_dir ${build_extensions_dir}/platform/windows/oodialog)
@@ -872,10 +872,9 @@ target_include_directories(rxregexp PUBLIC
 target_link_libraries(rxregexp rexx rexxapi)
 
 #################### libhostemu.so ################
-if (NOT WIN32)
 # Sources for libhostemu.so
 # Note that we ignore the dependency on hostemu.ypp for now.
-add_library(hostemu SHARED ${build_extensions_hostemu_dir}/hostemu.cpp)
+add_library(hostemu SHARED ${build_extensions_hostemu_platform_dir}/hostemu.cpp)
 # Include file definition
 target_include_directories(hostemu PUBLIC
              ${build_api_dir}
@@ -886,7 +885,6 @@ if (WIN32)
    target_link_libraries(hostemu rexx rexxapi)
 else ()
    target_link_libraries(hostemu rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
 endif ()
 
 #################### librxunixsys.so ################
