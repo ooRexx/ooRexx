@@ -378,6 +378,7 @@ set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhi
 #                     WORKING_DIRECTORY ${build_behaviour_dir})
 #endif ()
 
+#################### librexxapi.so ##########################
 # Full set of files used in all platforms.
 set (common_rexxapi_sources
             ${build_rexxapi_client_dir}/ClientMessage.cpp
@@ -401,15 +402,12 @@ set (common_rexxapi_sources
             ${build_common_platform_dir}/SysLibrary.cpp
             ${build_common_platform_dir}/SysFile.cpp
             ${build_common_platform_dir}/SysThread.cpp)
-
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexxapi_sources
             ${build_rexxapi_client_platform_dir}/rexxapi.def
             ${build_interpreter_platform_dir}/verinfo.rc)
 endif ()
-
-#################### librexxapi.so ##########################
 # Library definition
 add_library(rexxapi SHARED
             ${common_rexxapi_sources}
@@ -869,6 +867,7 @@ target_link_libraries(rxregexp rexx rexxapi)
 
 #################### libhostemu.so ################
 # Sources for libhostemu.so
+# Note that we ignore the dependency on hostemu.ypp for now.
 add_library(hostemu SHARED ${build_extensions_hostemu_dir}/hostemu.cpp)
 # Include file definition
 target_include_directories(hostemu PUBLIC
