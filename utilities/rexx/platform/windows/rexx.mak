@@ -62,7 +62,7 @@ ICOFILES=$(OR_OUTDIR)\orxw.ico
 # We build this module as ORX.EXE, then copy it to rexx.exe so we can avoid problems
 # with debug information for rexx.dll and rexx.exe.
 $(OR_OUTDIR)\ORX.exe : $(REXXCOBJ) $(OR_OUTDIR)\rexx.res
-    $(OR_LINK) $(REXXCOBJ) $(OR_OUTDIR)\rexx.res $(lflags_common_console) /STACK:524288 \
+    $(OR_LINK) $(REXXCOBJ) $(OR_OUTDIR)\rexx.res $(lflags_common_console) /STACK:524288 /MANIFEST /MANIFESTFILE:$(M_FILE)\
     $(OR_OUTDIR)\rexxapi.lib \
     $(OR_OUTDIR)\rexx.lib \
     -out:$(OR_OUTDIR)\$(@B).exe
