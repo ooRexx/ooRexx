@@ -104,11 +104,6 @@ endif ()
 # Set compiler and linker flags common to all build environments
 include_directories(${CMAKE_SOURCE_DIR}/build/)
 if (WIN32)
-   if ($ENV{CPU} STREQUAL "X64")
-      set (MANIFEST_FILE rexx64.exe.manifest)
-   else ()
-      set (MANIFEST_FILE rexx32.exe.manifest)
-   endif ()
    add_definitions(/DORX_VER=${ORX_MAJOR}
             /DORX_REL=${ORX_MINOR}
             /DORX_MOD=${ORX_MOD_LVL}
@@ -118,7 +113,6 @@ if (WIN32)
             /DORX_SYS_STR="${CMAKE_SYSTEM_NAME}"
             /DORX_CATDIR="${catdir}"
             /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-            /DMANIFEST_FILE=${MANIFEST_FILE}
             /D_CRT_SECURE_NO_DEPRECATE
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
