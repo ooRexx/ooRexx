@@ -412,7 +412,7 @@ set (common_rexxapi_sources
 if (WIN32)
    set (platform_rexxapi_sources
             ${build_rexxapi_client_platform_dir}/rexxapi.def
-            ${build_interpreter_platform_dir}/verinfo.rc)
+            ${build_platform_dir}/verinfo.rc)
 endif ()
 # Library definition
 add_library(rexxapi SHARED
@@ -750,7 +750,7 @@ endif ()
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rxqueue_sources
-            ${build_interpreter_platform_dir}/verinfo.rc)
+            ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for rxqueue
 add_executable(rxqueue ${build_utilities_rxqueue_dir}/rxqueue.cpp
@@ -773,7 +773,7 @@ endif ()
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_subcom_sources
-            ${build_interpreter_platform_dir}/verinfo.rc)
+            ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for rxsubcom
 add_executable(rxsubcom ${build_utilities_rxsubcom_dir}/rxsubcom.cpp
@@ -797,7 +797,7 @@ endif ()
 if (WIN32)
    set (platform_rexxutil_sources
             ${build_extensions_rexxutil_platform_dir}/rexxutil.def
-            ${build_interpreter_platform_dir}/verinfo.rc)
+            ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for librexxutil.so
 add_library(rexxutil SHARED ${build_extensions_rexxutil_platform_dir}/rexxutil.cpp
@@ -820,7 +820,7 @@ endif ()
 if (WIN32)
    set (platform_rxmath_sources
             ${build_platform_dir}/rxmath.def
-            ${build_interpreter_platform_dir}/verinfo.rc)
+            ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for librxmath.so
 add_library(rxmath SHARED ${build_extensions_rxmath_dir}/rxmath.cpp
@@ -839,7 +839,7 @@ target_link_libraries(rxmath rexx rexxapi)
 if (WIN32)
    set (platform_rxsock_sources
             ${build_platform_dir}/rxsock.def
-            ${build_interpreter_platform_dir}/verinfo.rc)
+            ${build_platform_dir}/verinfo.rc)
 endif ()
 
 # Sources for librxsock.so
@@ -854,7 +854,7 @@ target_link_libraries(rxsock rexx rexxapi)
 if (WIN32)
    set (platform_rxregexp_sources
             ${build_platform_dir}/rxrexexp.def
-            ${build_interpreter_platform_dir}/verinfo.rc)
+            ${build_platform_dir}/verinfo.rc)
 endif ()
 
 # Sources for librxregexp.so
@@ -872,10 +872,17 @@ target_include_directories(rxregexp PUBLIC
 target_link_libraries(rxregexp rexx rexxapi)
 
 #################### libhostemu.so ################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_hostemu_sources
+            ${build_extensions_hostemu_platform_dir}/hostemu.def
+            ${build_platform_dir}/verinfo.rc)
+endif ()
 # Sources for libhostemu.so
 # Note that we ignore the dependency on hostemu.ypp for now.
 add_library(hostemu SHARED ${build_extensions_hostemu_platform_dir}/hostemu.cpp
-             ${build_extensions_hostemu_dir}/cmdparse.cpp)
+             ${build_extensions_hostemu_dir}/cmdparse.cpp
+             ${platform_hostemu_sources})
 # Include file definition
 target_include_directories(hostemu PUBLIC
              ${build_api_dir}
@@ -908,7 +915,7 @@ add_library(orexxole SHARED ${build_extensions_ole_dir}/orexxole.cpp
              ${build_extensions_ole_dir}/OLEVariant.cpp
              ${build_extensions_ole_dir}/events.cpp
              ${build_extensions_ole_dir}/orexxole.def
-             ${build_interpreter_platform_dir}/verinfo.rc
+             ${build_platform_dir}/verinfo.rc
              ${build_extensions_ole_dir}/orexxole.cls)
 # Include file definition
 target_include_directories(orexxole PUBLIC
