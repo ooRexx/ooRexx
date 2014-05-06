@@ -714,17 +714,24 @@ target_include_directories(rexximage PUBLIC
             ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(rexximage rexx rexxapi ${platform_rexximg_libs})
+
 # Build the rexx.img file
+if (WIN32)
+  set (platform_rexx_img_depends orexxole)
+endif ()
+
 # The following hangs on the rexximage command. Probably a library path problem.
-#add_custom_command(OUTPUT rexx.img POST_BUILD
-#           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_rexx_classes_dir}/*.orx ./
-#           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_rexx_classes_dir}/*.orx ./
-#           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_interpreter_platform_dir}/*.orx ./
-#           COMMAND ./rexximage
-#           COMMAND rm -f *.orx
-#            DEPENDS rexximage
-#            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-#add_custom_target(rexx_img ALL DEPENDS rexx.img)
+add_custom_command(OUTPUT rexx.img POST_BUILD
+           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_rexx_classes_dir}/*.orx ./
+           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_rexx_classes_dir}/*.orx ./
+           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_interpreter_platform_dir}/*.orx ./
+           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_extensions_ole_dir}/*.cls ./
+           COMMAND ./rexximage
+           COMMAND rm -f *.orx
+           COMMAND rm -f *.cls
+            DEPENDS rexximage rxapi rexxutil ${platform_rexx_img_depends}
+            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_custom_target(rexx_img ALL DEPENDS rexx.img)
 
 #################### rxapi (executable) #########################
 # additional source files required by specific platforms
