@@ -724,6 +724,44 @@ else ()
    target_link_libraries(rexximg rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 
+#################### rxapi (executable) #########################
+# additional source files required by specific platforms
+if (WIN32)
+   set (platform_rxapi_sources
+            ${build_rexxapi_server_platform_dir}/rxapi.rc
+            ${build_rexxapi_server_platform_dir}/rxapi.ico)
+endif ()
+if (WIN32)
+   # Sources for rxapi
+   add_executable(rxapi ${build_rexxapi_server_platform_dir}/APIService.cpp
+            ${build_rexxapi_server_dir}/APIServer.cpp
+            ${build_rexxapi_server_dir}/APIServerInstance.cpp
+            ${build_rexxapi_server_dir}/APIServerThread.cpp
+            ${build_rexxapi_server_dir}/MacroSpaceManager.cpp
+            ${build_rexxapi_server_dir}/QueueManager.cpp
+            ${build_rexxapi_server_dir}/RegistrationManager.cpp
+            ${platform_rxapi_sources})
+   # Include file definition
+   target_include_directories(rxapi PUBLIC
+            ${build_rexxapi_server_dir})
+   # Extra link library definitions
+   target_link_libraries(rxapi rexx rexxapi)
+else ()
+   # Sources for rxapi
+   add_executable(rxapi ${build_rexxapi_server_platform_dir}/linux/APIService.cpp
+            ${build_rexxapi_server_dir}/APIServer.cpp
+            ${build_rexxapi_server_dir}/APIServerInstance.cpp
+            ${build_rexxapi_server_dir}/APIServerThread.cpp
+            ${build_rexxapi_server_dir}/MacroSpaceManager.cpp
+            ${build_rexxapi_server_dir}/QueueManager.cpp
+            ${build_rexxapi_server_dir}/RegistrationManager.cpp)
+   # Include file definition
+   target_include_directories(rxapi PUBLIC
+            ${build_rexxapi_server_dir})
+   # Extra link library definitions
+   target_link_libraries(rxapi rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+endif ()
+
 #################### rexxc (executable) #########################
 # additional source files required by specific platforms
 if (WIN32)
