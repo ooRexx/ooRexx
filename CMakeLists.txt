@@ -255,7 +255,7 @@ set (build_messages_dir ${build_interpreter_dir}/messages)
 set (build_package_dir ${build_interpreter_dir}/package)
 set (build_parser_dir ${build_interpreter_dir}/parser)
 set (build_interpreter_common_dir ${build_interpreter_dir}/platform/common)
-set (build_rexxclasses_dir ${build_interpreter_dir}/RexxClasses)
+set (build_rexx_classes_dir ${build_interpreter_dir}/RexxClasses)
 set (build_runtime_dir ${build_interpreter_dir}/runtime)
 set (build_streamlibrary_dir ${build_interpreter_dir}/streamLibrary)
 set (build_extensions_dir extensions)
@@ -695,25 +695,36 @@ target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs})
 
 #################### rexximage (bin file) ##########################
 # These are the core classes built into the .img file.
-set (core_classes ${build_rexxclasses_dir}/CoreClasses.orx
-            ${build_rexxclasses_dir}/StreamClasses.orx
-            ${build_rexxclasses_dir}/Serializable.orx)
+set (core_classes ${build_rexx_classes_dir}/CoreClasses.orx
+            ${build_rexx_classes_dir}/StreamClasses.orx
+            ${build_rexx_classes_dir}/Serializable.orx)
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexximage_sources
             ${build_platform_dir}/rexx.rc)
 endif ()
 # Sources for rexximg
-add_executable(rexximg ${build_utilities_rexximage_dir}/rexximage.cpp
+add_executable(rexximage ${build_utilities_rexximage_dir}/rexximage.cpp
             ${core_classes}
             ${platform_rexximage_sources})
 # Include file definition
-target_include_directories(rexximg PUBLIC
+target_include_directories(rexximage PUBLIC
             ${build_lib_dir}
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(rexximg rexx rexxapi ${platform_rexximg_libs})
+target_link_libraries(rexximage rexx rexxapi ${platform_rexximg_libs})
+# Build the rexx.img file
+# The following hangs on the rexximage command. Probably a library path problem.
+#add_custom_command(OUTPUT rexx.img POST_BUILD
+#           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_rexx_classes_dir}/*.orx ./
+#           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_rexx_classes_dir}/*.orx ./
+#           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_interpreter_platform_dir}/*.orx ./
+#           COMMAND ./rexximage
+#           COMMAND rm -f *.orx
+#            DEPENDS rexximage
+#            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+#add_custom_target(rexx_img ALL DEPENDS rexx.img)
 
 #################### rxapi (executable) #########################
 # additional source files required by specific platforms
