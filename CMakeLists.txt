@@ -924,6 +924,20 @@ target_include_directories(orexxole PUBLIC
 target_link_libraries(orexxole rexx rexxapi)
 endif ()
 
+#################### rxwinsys.dll ################
+if (WIN32)
+# Sources for rxwinwys.dll
+add_library(rxwinsys SHARED ${build_extensions_rxwinsys_dir}/rxwinsys.cpp
+             ${build_extensions_rxwinsys_dir}/rxwinsys.def
+             ${build_platform_dir}/verinfo.rc
+             ${build_extensions_rxwinsys_dir}/winsystm.cls)
+# Include file definition
+target_include_directories(rxwinsys PUBLIC
+             ${build_extensions_rxwinsys_dir})
+# Extra link library definitions
+target_link_libraries(rxwinsys rexx rexxapi shlwapi)
+endif ()
+
 #################### oodialog.dll ################
 #if (WIN32)
 #set (OOD_MAJOR 4)
