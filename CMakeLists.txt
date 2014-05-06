@@ -135,7 +135,6 @@ else ()
     set (ORX_SYSLIB_PTHREAD pthread)
 endif ()
 
-
 # Check header files and functions. These are all defined to the config.h file.
 check_include_file(attr/xattr.h HAVE_ATTR_XATTR_H)
 check_function_exists(catopen HAVE_CATOPEN)
@@ -414,6 +413,9 @@ if (WIN32)
    set (platform_rexxapi_sources
             ${build_rexxapi_client_platform_dir}/rexxapi.def
             ${build_platform_dir}/verinfo.rc)
+   set (platform_rexxapi_libs wsock32)
+else ()
+   set (platform_rexxapi_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Library definition
 add_library(rexxapi SHARED
@@ -429,12 +431,7 @@ target_include_directories(rexxapi PUBLIC
             ${build_common_platform_dir}
             ${build_lib_dir})
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(rexxapi ws2_32)
-else ()
-   target_link_libraries(rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
-
+target_link_libraries(rexxapi ${platform_rexxapi_libs})
 
 #################### librexx.so ##########################
 # Sources for librexx.so
@@ -633,8 +630,10 @@ set (common_interpreter_sources ${classes_sources}
 if (WIN32)
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/rexx.def
             ${build_interpreter_platform_dir}/winmsgtb.rc)
+   set (platform_interpreter_libs comctl32)
 else ()
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/RexxMain.cpp)
+   set (platform_rexx_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 
 # Library definition
@@ -666,18 +665,17 @@ target_include_directories(rexx PUBLIC
             ${build_streamlibrary_dir}
             ${build_interpreter_common_dir}
             ${build_interpreter_platform_dir})
+
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(rexx rexxapi comctl32)
-else ()
-   target_link_libraries(rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
+target_link_libraries(rexx rexxapi ${platform_interpreter_libs})
 
 #################### rexx (executable) ##########################
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexx_exe_sources
             ${build_platform_dir}/rexx.rc)
+else ()
+   set (platform_rexx_exe_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for rexx.  Note, the target must not be rexx, since we already
 # have a rexx library target
@@ -693,11 +691,7 @@ target_include_directories(rexx_exe PUBLIC
             ${build_api_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(rexx_exe rexx rexxapi)
-else ()
-   target_link_libraries(rexx_exe rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
+target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs})
 
 #################### rexximage (bin file) ##########################
 # These are the core classes built into the .img file.
@@ -719,11 +713,7 @@ target_include_directories(rexximg PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(rexximg rexx rexxapi)
-else ()
-   target_link_libraries(rexximg rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
+target_link_libraries(rexximg rexx rexxapi ${platform_rexximg_libs})
 
 #################### rxapi (executable) #########################
 # additional source files required by specific platforms
@@ -733,11 +723,11 @@ if (WIN32)
             ${build_rexxapi_server_platform_dir}/rxapi.rc
             ${build_rexxapi_server_platform_dir}/rxapi.ico)
    set (rxapi_executable_type WIN32)
-   set (rxapi_platform_libs wsock32 shlwapi)
+   set (platform_rxapi_libs wsock32 shlwapi)
 else ()
    set (platform_rxapi_sources
             ${build_rexxapi_server_platform_dir}/linux/APIService.cpp)
-   set (rxapi_platform_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+   set (platform_rxapi_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for rxapi
 add_executable(rxapi ${rxapi_executable_type}
@@ -760,13 +750,15 @@ add_executable(rxapi ${rxapi_executable_type}
 target_include_directories(rxapi PUBLIC
          ${build_rexxapi_server_dir})
 # Extra link library definitions
-target_link_libraries(rxapi rexx rexxapi ${rxapi_platform_libs})
+target_link_libraries(rxapi rexx rexxapi ${platform_rxapi_libs})
 
 #################### rexxc (executable) #########################
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexxc_sources
             ${build_platform_dir}/rexx.rc)
+else ()
+   set (platform_rexxc_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for rexxc
 add_executable(rexxc ${build_utilities_rexxc_dir}/RexxCompiler.cpp
@@ -778,17 +770,15 @@ target_include_directories(rexxc PUBLIC
             ${build_api_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(rexxc rexx rexxapi)
-else ()
-   target_link_libraries(rexxc rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
+target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs})
 
 #################### rxqueue (executable) #########################
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rxqueue_sources
             ${build_platform_dir}/verinfo.rc)
+else ()
+   set (platform_rxqueue_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for rxqueue
 add_executable(rxqueue ${build_utilities_rxqueue_dir}/rxqueue.cpp
@@ -801,17 +791,15 @@ target_include_directories(rxqueue PUBLIC
             ${build_interpreter_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(rxqueue rexx rexxapi)
-else ()
-   target_link_libraries(rxqueue rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
+target_link_libraries(rxqueue rexx rexxapi ${platform_rxqueue_libs})
 
 #################### rxsubcom (executable) #########################
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_subcom_sources
             ${build_platform_dir}/verinfo.rc)
+else ()
+   set (platform_subcom_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for rxsubcom
 add_executable(rxsubcom ${build_utilities_rxsubcom_dir}/rxsubcom.cpp
@@ -824,11 +812,7 @@ target_include_directories(rxsubcom PUBLIC
              ${build_interpreter_platform_dir}
              ${build_messages_dir})
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(rxsubcom rexx rexxapi)
-else ()
-   target_link_libraries(rxsubcom rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
+target_link_libraries(rxsubcom rexx rexxapi ${platform_subcom_libs})
 
 #################### librexxutil.so ################
 # additional source files required by specific platforms
@@ -836,6 +820,9 @@ if (WIN32)
    set (platform_rexxutil_sources
             ${build_extensions_rexxutil_platform_dir}/rexxutil.def
             ${build_platform_dir}/verinfo.rc)
+   set (platform_rexxutil_libs shlwapi)
+else ()
+   set (platform_rexxutil_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for librexxutil.so
 add_library(rexxutil SHARED ${build_extensions_rexxutil_platform_dir}/rexxutil.cpp
@@ -847,11 +834,7 @@ target_include_directories(rexxutil PUBLIC
              ${build_api_platform_dir}
              ${build_messages_dir})
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(rexxutil rexx rexxapi shlwapi)
-else ()
-   target_link_libraries(rexxutil rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
+target_link_libraries(rexxutil rexx rexxapi ${platform_rexxutil_libs})
 
 #################### librxmath.so ################
 # additional source files required by specific platforms
@@ -870,7 +853,7 @@ target_include_directories(rxmath PUBLIC
              ${build_api_dir}
              ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(rxmath rexx rexxapi)
+target_link_libraries(rxmath rexx rexxapi ${platform_rxmath_libs})
 
 #################### librxsock.so ################
 # additional source files required by specific platforms
@@ -885,7 +868,7 @@ add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
              ${build_extensions_rxsock_dir}/rxsockfn.cpp
              ${platform_rxsock_sources})
 # Extra link library definitions
-target_link_libraries(rxsock rexx rexxapi)
+target_link_libraries(rxsock rexx rexxapi ${platform_rxsock_libs})
 
 #################### librxregexp.so ################
 # additional source files required by specific platforms
@@ -907,7 +890,7 @@ target_include_directories(rxregexp PUBLIC
              ${build_api_platform_dir}
              ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rxregexp rexx rexxapi)
+target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs})
 
 #################### libhostemu.so ################
 # additional source files required by specific platforms
@@ -915,6 +898,8 @@ if (WIN32)
    set (platform_hostemu_sources
             ${build_extensions_hostemu_platform_dir}/hostemu.def
             ${build_platform_dir}/verinfo.rc)
+else ()
+   set (platform_hostemu_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for libhostemu.so
 # Note that we ignore the dependency on hostemu.ypp for now.
@@ -927,11 +912,7 @@ target_include_directories(hostemu PUBLIC
              ${build_api_platform_dir}
              ${build_extensions_hostemu_dir})
 # Extra link library definitions
-if (WIN32)
-   target_link_libraries(hostemu rexx rexxapi)
-else ()
-   target_link_libraries(hostemu rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
+target_link_libraries(hostemu rexx rexxapi ${platform_hostemu_libs})
 
 #################### librxunixsys.so ################
 if (NOT WIN32)
