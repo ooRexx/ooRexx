@@ -300,6 +300,7 @@ set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhi
 #/* Build targets                                                              */
 #/*----------------------------------------------------------------------------*/
 
+
 #################### explicit targets ##########################
 #find_program(ORX_HAVE_XALAN xalan)
 #if (${ORX_HAVE_XALAN} MATCHES ORX_HAVE_XALAN-NOTFOUND)
@@ -728,39 +729,38 @@ endif ()
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rxapi_sources
+            ${build_rexxapi_server_platform_dir}/APIService.cpp
             ${build_rexxapi_server_platform_dir}/rxapi.rc
             ${build_rexxapi_server_platform_dir}/rxapi.ico)
-endif ()
-if (WIN32)
-   # Sources for rxapi
-   add_executable(rxapi ${build_rexxapi_server_platform_dir}/APIService.cpp
-            ${build_rexxapi_server_dir}/APIServer.cpp
-            ${build_rexxapi_server_dir}/APIServerInstance.cpp
-            ${build_rexxapi_server_dir}/APIServerThread.cpp
-            ${build_rexxapi_server_dir}/MacroSpaceManager.cpp
-            ${build_rexxapi_server_dir}/QueueManager.cpp
-            ${build_rexxapi_server_dir}/RegistrationManager.cpp
-            ${platform_rxapi_sources})
-   # Include file definition
-   target_include_directories(rxapi PUBLIC
-            ${build_rexxapi_server_dir})
-   # Extra link library definitions
-   target_link_libraries(rxapi rexx rexxapi)
+   set (rxapi_executable_type WIN32)
+   set (rxapi_platform_libs wsock32 shlwapi)
 else ()
-   # Sources for rxapi
-   add_executable(rxapi ${build_rexxapi_server_platform_dir}/linux/APIService.cpp
-            ${build_rexxapi_server_dir}/APIServer.cpp
-            ${build_rexxapi_server_dir}/APIServerInstance.cpp
-            ${build_rexxapi_server_dir}/APIServerThread.cpp
-            ${build_rexxapi_server_dir}/MacroSpaceManager.cpp
-            ${build_rexxapi_server_dir}/QueueManager.cpp
-            ${build_rexxapi_server_dir}/RegistrationManager.cpp)
-   # Include file definition
-   target_include_directories(rxapi PUBLIC
-            ${build_rexxapi_server_dir})
-   # Extra link library definitions
-   target_link_libraries(rxapi rexx rexxapi ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+   set (platform_rxapi_sources
+            ${build_rexxapi_server_platform_dir}/linux/APIService.cpp)
+   set (rxapi_platform_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
+# Sources for rxapi
+add_executable(rxapi ${rxapi_executable_type}
+         ${build_rexxapi_server_dir}/APIServer.cpp
+         ${build_rexxapi_server_dir}/APIServerInstance.cpp
+         ${build_rexxapi_server_dir}/APIServerThread.cpp
+         ${build_rexxapi_server_dir}/MacroSpaceManager.cpp
+         ${build_rexxapi_server_dir}/QueueManager.cpp
+         ${build_rexxapi_server_dir}/RegistrationManager.cpp
+         ${build_rexxapi_common_dir}/RegistrationTable.cpp
+         ${build_rexxapi_common_dir}/ServiceMessage.cpp
+         ${build_rexxapi_common_platform_dir}/SysAPIManager.cpp
+         ${build_rexxapi_common_platform_dir}/SysCSStream.cpp
+         ${build_rexxapi_common_platform_dir}/SysProcess.cpp
+         ${build_common_dir}/Utilities.cpp
+         ${build_common_platform_dir}/SysSemaphore.cpp
+         ${build_common_platform_dir}/SysThread.cpp
+         ${platform_rxapi_sources})
+# Include file definition
+target_include_directories(rxapi PUBLIC
+         ${build_rexxapi_server_dir})
+# Extra link library definitions
+target_link_libraries(rxapi rexx rexxapi ${rxapi_platform_libs})
 
 #################### rexxc (executable) #########################
 # additional source files required by specific platforms
