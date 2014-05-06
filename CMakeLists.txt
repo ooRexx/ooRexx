@@ -715,22 +715,55 @@ target_include_directories(rexximage PUBLIC
 # Extra link library definitions
 target_link_libraries(rexximage rexx rexxapi ${platform_rexximg_libs})
 
+# Copy the class files to the build directory
+ADD_CUSTOM_COMMAND(
+   OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreClasses.orx
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/CoreClasses.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreClasses.orx
+   DEPENDS ${build_rexx_classes_dir}/CoreClasses.orx
+   )
+
+ADD_CUSTOM_COMMAND(
+   OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StreamClasses.orx
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/StreamClasses.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StreamClasses.orx
+   DEPENDS ${build_rexx_classes_dir}/StreamClasses.orx
+   )
+
+ADD_CUSTOM_COMMAND(
+   OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/Serializable.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
+   DEPENDS ${build_rexx_classes_dir}/Serializable.orx
+   )
+
+ADD_CUSTOM_COMMAND(
+   OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_interpreter_platform_dir}/PlatformObjects.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx
+   DEPENDS ${build_interpreter_platform_dir}/PlatformObjects.orx
+   )
+
+# These are the portable class files the image requires
+set (image_class_files
+   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreClasses.orx
+   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StreamClasses.orx
+   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
+   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx)
+
 # Build the rexx.img file
 if (WIN32)
-  set (platform_rexx_img_depends orexxole)
+# On Windows, the ole support is also included in the image
+  ADD_CUSTOM_COMMAND(
+     OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls
+     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_ole_dir}/orexxole.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls
+     DEPENDS ${build_extensions_ole_dir}/orexxole.cls
+     )
+  set (platform_rexx_img_depends orexxole
+       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls)
 endif ()
 
 # The following hangs on the rexximage command. Probably a library path problem.
 add_custom_command(OUTPUT rexx.img POST_BUILD
-           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_rexx_classes_dir}/*.orx ./
-           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_rexx_classes_dir}/*.orx ./
-           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_interpreter_platform_dir}/*.orx ./
-           COMMAND cp ${CMAKE_SOURCE_DIR}/${build_extensions_ole_dir}/*.cls ./
            COMMAND ./rexximage
-           COMMAND rm -f *.orx
-           COMMAND rm -f *.cls
-            DEPENDS rexximage rxapi rexxutil ${platform_rexx_img_depends}
-            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+           DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
+           WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_custom_target(rexx_img ALL DEPENDS rexx.img)
 
 #################### rxapi (executable) #########################
