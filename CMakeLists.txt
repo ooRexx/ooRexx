@@ -123,7 +123,13 @@ if (WIN32)
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
-   set(CMAKE_CXX_FLAGS "/W3 /GR /EHsc /MDd /Zi /Ob0 /Od")
+   if ($ENV{CPU} STREQUAL "X64")
+      set (MANIFEST_FILE rexx64.exe.manifest)
+   else ()
+      set (MANIFEST_FILE rexx32.exe.manifest)
+   endif ()
+
+   set (CMAKE_EXE_LINKER_FLAGS "/STACK:524288 /MANIFEST /MANIFESTFILE:${MANIFEST_FILE}")
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
             -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
@@ -760,7 +766,7 @@ if (WIN32)
 endif ()
 
 # The following hangs on the rexximage command. Probably a library path problem.
-add_custom_command(OUTPUT rexx.img POST_BUILD
+add_custom_command(OUTPUT rexx.img
            COMMAND ./rexximage
            DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

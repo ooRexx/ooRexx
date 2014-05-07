@@ -41,6 +41,7 @@
 #include "ClientMessage.hpp"
 #include "SynchronizedBlock.hpp"
 #include <list>
+#include <stdio.h>
 
 // initialize static variables
 LocalAPIManager* LocalAPIManager::singleInstance = NULL;
