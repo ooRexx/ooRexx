@@ -832,6 +832,15 @@ target_include_directories(rxapi PUBLIC
 # Extra link library definitions
 target_link_libraries(rxapi rexx rexxapi ${platform_rxapi_libs})
 
+# Kill the rxapi daemon whenever we have to build, otherwise the build
+# will fail
+if (WIN32)
+   add_custom_command(TARGET rxapi PRE_BUILD
+        COMMAND ${CMAKE_SOURCE_DIR}/${ORX_PLATFORM_DIR}/killapi.bat
+        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        VERBATIM)
+endif ()
+
 #################### rexxc (executable) #########################
 # additional source files required by specific platforms
 if (WIN32)
