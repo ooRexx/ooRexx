@@ -45,6 +45,7 @@ include(CheckIncludeFile)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
 include(CheckSymbolExists)
+include(CheckCSourceCompiles)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
@@ -165,16 +166,33 @@ check_include_file(limits.h HAVE_LIMITS_H)
 check_include_file(locale.h HAVE_LOCALE_H)
 check_include_file(malloc.h HAVE_MALLOC_H)
 check_include_file(memory.h HAVE_MEMORY_H)
-check_include_file(memset HAVE_MEMSET)
+check_function_exists(memset HAVE_MEMSET)
 check_include_file(mesg.h HAVE_MESG_H)
 check_function_exists(nanosleep HAVE_NANOSLEEP)
 check_include_file(netinet/in.h HAVE_NETINET_IN_H)
 check_include_file(nl_types.h HAVE_NL_TYPES_H)
 check_function_exists(nsleep HAVE_NSLEEP)
 check_include_file(pthread.h HAVE_PTHREAD_H)
+set(CMAKE_REQUIRED_LIBRARIES "pthread;pthread_nonshared")
 check_function_exists(pthread_mutexattr_settype HAVE_PTHREAD_MUTEXATTR_SETTYPE)
-check_symbol_exists(PTHREAD_MUTEX_ERRORCHECK "pthread.h" HAVE_PTHREAD_MUTEX_ERRORCHECK)
-check_symbol_exists(PTHREAD_MUTEX_RECURSIVE "pthread.h" HAVE_PTHREAD_MUTEX_RECURSIVE)
+check_c_source_compiles("#include <pthread.h>
+                         int main(int arg, char **argv) {
+                         int tryme;
+                         tryme = PTHREAD_MUTEX_ERRORCHECK;
+                         return 0;}"
+                        HAVE_PTHREAD_MUTEX_ERRORCHECK)
+check_c_source_compiles("#include <pthread.h>
+                         int main(int arg, char **argv) {
+                         int tryme;
+                         tryme = PTHREAD_MUTEX_RECURSIVE;
+                         return 0;}"
+                        HAVE_PTHREAD_MUTEX_RECURSIVE)
+check_c_source_compiles("#include <pthread.h>
+                         int main(int arg, char **argv) {
+                         int tryme;
+                         tryme = PTHREAD_MUTEX_RECURSIVE_NP;
+                         return 0;}"
+                        HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 check_symbol_exists(PTHREAD_MUTEX_RECURSIVE_NP "pthread.h" HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 check_include_file(pwd.h HAVE_PWD_H)
 check_include_file(sched.h HAVE_SCHED_H)
@@ -204,7 +222,12 @@ check_include_file(sys/types.h HAVE_SYS_TYPES_H)
 check_include_file(sys/utsname.h HAVE_SYS_UTSNAME_H)
 check_include_file(sys/wait.h HAVE_SYS_WAIT_H)
 check_include_file(time.h HAVE_TIME_H)
-check_symbol_exists(semun "sys/sem.h" HAVE_UNION_SEMUN)
+check_c_source_compiles("#include <sys/types.h>
+                         #include <sys/sem.h>
+                         int main(int arg, char **argv) {
+                         union semun semopts;
+                         return 0;}"
+                        HAVE_UNION_SEMUN)
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(usersec.h HAVE_USERSEC_H)
 check_function_exists(vprintf HAVE_VPRINTF)
