@@ -461,6 +461,10 @@ target_include_directories(rexxapi PUBLIC
             ${build_lib_dir})
 # Extra link library definitions
 target_link_libraries(rexxapi ${platform_rexxapi_libs})
+if (WIN32)
+else ()
+   set_target_properties(rexxapi PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+endif ()
 
 #################### librexx.so ##########################
 # Sources for librexx.so
@@ -697,6 +701,10 @@ target_include_directories(rexx PUBLIC
 
 # Extra link library definitions
 target_link_libraries(rexx rexxapi ${platform_interpreter_libs})
+if (WIN32)
+else ()
+   set_target_properties(rexx PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+endif ()
 
 #################### rexx (executable) ##########################
 # additional source files required by specific platforms
@@ -924,6 +932,10 @@ target_include_directories(rexxutil PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexxutil rexx rexxapi ${platform_rexxutil_libs})
+if (WIN32)
+else ()
+   set_target_properties(rexxutil PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+endif ()
 
 #################### librxmath.so ################
 # additional source files required by specific platforms
@@ -958,6 +970,10 @@ add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
              ${platform_rxsock_sources})
 # Extra link library definitions
 target_link_libraries(rxsock rexx rexxapi ${platform_rxsock_libs})
+if (WIN32)
+else ()
+   set_target_properties(rxsock PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+endif ()
 
 #################### librxregexp.so ################
 # additional source files required by specific platforms
@@ -980,6 +996,10 @@ target_include_directories(rxregexp PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs})
+if (WIN32)
+else ()
+   set_target_properties(rxregexp PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+endif ()
 
 #################### libhostemu.so ################
 # additional source files required by specific platforms
@@ -1014,6 +1034,7 @@ target_include_directories(rxunixsys PUBLIC
              ${extensions_unix_dir}/rxunixsys)
 # Extra link library definitions
 target_link_libraries(rxunixsys rexx rexxapi)
+set_target_properties(rexxapi PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
 endif ()
 
 #################### orexxole.dll ################
