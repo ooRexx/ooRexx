@@ -1163,6 +1163,49 @@ target_include_directories(oodialog PUBLIC
              ${build_extensions_oodialog_dir})
 # Extra link library definitions
 target_link_libraries(oodialog rexx rexxapi winmm comdlg32 comctl32 shlwapi oleacc uxtheme rpcrt4 propsys delayimp)
+
+#################### ooDialog.exe (executable) ##########################
+# Sources for ooDialog.exe
+add_executable(oodialog_exe WIN32 ${build_extensions_oodialog_dir}/oodWinMain.cpp
+                                  ${build_extensions_oodialog_dir}/oodShared.cpp
+                                  ${build_extensions_oodialog_dir}/ooDialogWinMain.rc)
+set_property(TARGET oodialog_exe
+       PROPERTY COMPILE_DEFINITIONS
+       OOD_VER=${OOD_MAJOR}
+       OOD_REL=${OOD_MINOR}
+       OOD_MOD=${OOD_MOD_LVL}
+       OOD_BLD=${OOD_BLD_LVL}
+       OOD_COPY_YEAR=${OOD_COPY_YEAR}
+       OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
+       OOD_BIN_NAME="oodialog.exe")
+# This allows the executable to have the same name as the library.
+SET_TARGET_PROPERTIES(oodialog_exe PROPERTIES OUTPUT_NAME ooDialog)
+# Include file definition
+target_include_directories(oodialog_exe PUBLIC
+             ${build_extensions_oodialog_dir})
+target_link_libraries(oodialog_exe rexx rexxapi shlwapi)
+
+#################### ooDialog.com (executable) ##########################
+# Sources for ooDialog.com
+add_executable(oodialog_com ${build_extensions_oodialog_dir}/oodMain.cpp
+                            ${build_extensions_oodialog_dir}/oodShared.cpp
+                            ${build_extensions_oodialog_dir}/ooDialogMain.rc)
+set_property(TARGET oodialog_com
+       PROPERTY COMPILE_DEFINITIONS
+       OOD_VER=${OOD_MAJOR}
+       OOD_REL=${OOD_MINOR}
+       OOD_MOD=${OOD_MOD_LVL}
+       OOD_BLD=${OOD_BLD_LVL}
+       OOD_COPY_YEAR=${OOD_COPY_YEAR}
+       OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
+       OOD_BIN_NAME="oodialog.com")
+# This allows the executable to have the same name as the library.
+SET_TARGET_PROPERTIES(oodialog_com PROPERTIES OUTPUT_NAME ooDialog)
+SET_TARGET_PROPERTIES(oodialog_com PROPERTIES SUFFIX com)
+# Include file definition
+target_include_directories(oodialog_com PUBLIC
+             ${build_extensions_oodialog_dir})
+target_link_libraries(oodialog_com rexx rexxapi shell32 Advapi32)
 endif ()
 
 

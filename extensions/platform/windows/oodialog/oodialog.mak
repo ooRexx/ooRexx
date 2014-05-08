@@ -79,7 +79,7 @@ ood_ver_strings = $(copy_year_str) $(ver_str)
 ood_ver_def = -DOOD_VER=$(OOD_MAJOR) -DOOD_REL=$(OOD_MINOR) -DOOD_MOD=$(OOD_MOD_LVL) -DOOD_BLD=$(OOD_BLD_LVL) $(ood_ver_strings)
 
 # We use our own rc flags version.
-rcflags_oodialog = rc /DWIN32 -dOOD_VER=$(OOD_MAJOR) -dOOD_REL=$(OOD_MINOR) -dOOD_MOD=$(OOD_MOD_LVL) -dOOD_BLD=$(OOD_BLD_LVL) -dOOD_VER_STR=\"$(OOD_VER_STR)\" -dOOD_COPY_YEAR=\"$(OOD_COPY_YEAR)\" -dMANIFEST_FILE=$(M_FILE)
+rcflags_oodialog = rc /DWIN32 -dOOD_VER=$(OOD_MAJOR) -dOOD_REL=$(OOD_MINOR) -dOOD_MOD=$(OOD_MOD_LVL) -dOOD_BLD=$(OOD_BLD_LVL) -dOOD_VER_STR=\"$(OOD_VER_STR)\" -dOOD_COPY_YEAR=\"$(OOD_COPY_YEAR)\"
 
 C=cl
 OPTIONS= $(cflags_common) $(ood_ver_def) $(cflags_dll) $(OR_ORYXINCL)
@@ -220,7 +220,7 @@ $(OOD_OUTDIR)\ooDialog.exe : $(OOD_OUTDIR)\oodWinMain.obj $(OOD_OUTDIR)\oodShare
     $(OR_LINK) \
     $(OOD_OUTDIR)\oodWinMain.obj $(OOD_OUTDIR)\oodShared.obj $(OOD_OUTDIR)\ooDialogWinMain.res \
     $(lflags_common) \
-    /STACK:524288 \
+    /STACK:524288 /MANIFEST /MANIFESTFILE:$(M_FILE)\
     /PDB:ooDialogM.pdb \
     $(REXXAPI_LIBS) \
     shlwapi.lib \
@@ -232,7 +232,7 @@ $(OOD_OUTDIR)\ooDialog.com : $(OOD_OUTDIR)\oodMain.obj $(OOD_OUTDIR)\oodShared.o
     $(OR_LINK) \
     $(OOD_OUTDIR)\oodMain.obj $(OOD_OUTDIR)\oodShared.obj $(OOD_OUTDIR)\ooDialogMain.res \
     $(lflags_common_console) \
-    /STACK:262144 \
+    /STACK:262144 /MANIFEST /MANIFESTFILE:$(M_FILE)\
     /PDB:ooDialogC.pdb \
     $(REXXAPI_LIBS) \
     shell32.lib Advapi32.lib\
