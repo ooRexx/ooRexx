@@ -106,7 +106,7 @@ if (WIN32)
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
    set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
-   find_path(INSTALL_LIB_DIR libc.so PATHS /usr/lib/* /usr/lib64)
+   find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib/* ${CMAKE_INSTALL_PREFIX}/lib64)
 endif ()
 
 # Set compiler and linker flags common to all build environments
@@ -733,7 +733,7 @@ target_include_directories(rexx_exe PUBLIC
 target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs})
 if (WIN32)
 else ()
-   install(TARGETS rexx_exe RUNTIME DESTINATION /usr/bin)
+   install(TARGETS rexx_exe RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif ()
 
 #################### rexximage (bin file) ##########################
@@ -810,7 +810,7 @@ add_custom_command(OUTPUT rexx.img
 add_custom_target(rexx_img ALL DEPENDS rexx.img)
 if (WIN32)
 else ()
-   install(FILES build/bin/rexx.img DESTINATION /usr/bin)
+   install(FILES build/bin/rexx.img DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif ()
 
 #################### rxapi (executable) #########################
@@ -860,7 +860,7 @@ if (WIN32)
 endif ()
 if (WIN32)
 else ()
-   install(TARGETS rxapi RUNTIME DESTINATION /usr/bin)
+   install(TARGETS rxapi RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif ()
 
 #################### rexxc (executable) #########################
@@ -884,7 +884,7 @@ target_include_directories(rexxc PUBLIC
 target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs})
 if (WIN32)
 else ()
-   install(TARGETS rexxc RUNTIME DESTINATION /usr/bin)
+   install(TARGETS rexxc RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif ()
 
 #################### rxqueue (executable) #########################
@@ -909,7 +909,7 @@ target_include_directories(rxqueue PUBLIC
 target_link_libraries(rxqueue rexx rexxapi ${platform_rxqueue_libs})
 if (WIN32)
 else ()
-   install(TARGETS rxqueue RUNTIME DESTINATION /usr/bin)
+   install(TARGETS rxqueue RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif ()
 
 #################### rxsubcom (executable) #########################
@@ -934,7 +934,7 @@ target_include_directories(rxsubcom PUBLIC
 target_link_libraries(rxsubcom rexx rexxapi ${platform_subcom_libs})
 if (WIN32)
 else ()
-   install(TARGETS rxsubcom RUNTIME DESTINATION /usr/bin)
+   install(TARGETS rxsubcom RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif ()
 
 #################### librexxutil.so ################
@@ -1239,6 +1239,21 @@ target_link_libraries(rexxpaws rexx rexxapi)
 endif ()
 
 
+#################### misc files ##########################
+
+if (WIN32)
+else ()
+   install(FILES rexxapi/server/platform/unix/rxapid DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
+endif ()
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1262,10 +1277,10 @@ if (BUILD_RPM)
    set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
    set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
-   set(CPACK_PACKAGING_INSTALL_PREXIX "/usr")
+   set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_post.txt)
    set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_preun.txt)
-   if (${INSTALL_LIB_DIR} STREQUAL /usr/lib64)
+   if (${INSTALL_LIB_DIR} STREQUAL ${CMAKE_INSTALL_PREFIX}/lib64)
       set(orx_install_arch "x86_64")
    else ()
       set(orx_install_arch "i386")
