@@ -1209,18 +1209,15 @@ endif ()
 #################### Unix Package Targets ##########################
 #################### Unix Package Targets ##########################
 #################### Unix Package Targets ##########################
-# TODO: This does not work yet.
 if (BUILD_RPM)
-#   set(CPACK_INSTALL_CMAKE_PROJECTS "./;ooRexx;ALL;/")
-   set(VERSION ${ORX_VERSION})
-   set(CPACK_PACKAGE_VERSION ${ORX_VERSION})
-   set(CPACK_GENERATOR "RPM;TGZ")
+   SET(CPACK_PACKAGE_VERSION_MAJOR ${ORX_MAJOR})
+   SET(CPACK_PACKAGE_VERSION_MINOR ${ORX_MINOR})
+   SET(CPACK_PACKAGE_VERSION_PATCH ${ORX_MOD_LVL})
    set(CPACK_PACKAGE_NAME "ooRexx")
    set(CPACK_PACKAGE_RELEASE 1)
    set(CPACK_PACKAGE_CONTACT "W. David Ashley")
    set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
    set(CPACK_PACKAGING_INSTALL_PREXIX "/usr")
-   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
    set(CPACK_RPM_USER_SPECFILE "${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec")
 endif ()
 
