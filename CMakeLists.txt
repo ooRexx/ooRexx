@@ -815,11 +815,11 @@ if (WIN32)
 endif ()
 
 # Build the rexx.img file
-# Run the rexximage executable to generate the output file
 add_custom_command(OUTPUT rexx.img
            COMMAND ./rexximage
            DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_custom_target(rexx_img ALL DEPENDS rexx.img)
 if (WIN32)
 else ()
    install(FILES build/bin/rexx.img DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
