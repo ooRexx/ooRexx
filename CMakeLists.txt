@@ -733,11 +733,11 @@ if (WIN32)
 endif ()
 
 # Build the rexx.img file
-add_custom_command(OUTPUT rexx.img
+add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img
            COMMAND ./rexximage
            DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-add_custom_target(rexx_img ALL DEPENDS rexx.img)
+add_custom_target(rexx_img ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img)
 if (WIN32)
 else ()
    install(FILES build/bin/rexx.img DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
@@ -1165,9 +1165,9 @@ set (oodialog_source_classFiles
 # fully built first.  The files are generated into the output directory.
 add_custom_command(OUTPUT oodPlain.cls oodWin32.cls ooDialog.cls
            COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx build_ooDialog_cls.rex ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-           DEPENDS rexx.img ${build_extensions_oodialog_dir}/build_ooDialog_cls.rex ${oodialog_source_classfiles}
+           DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img ${build_extensions_oodialog_dir}/build_ooDialog_cls.rex ${oodialog_source_classfiles}
            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/${build_extensions_oodialog_dir})
-add_custom_target(oodialog_cls ALL DEPENDS oodPlain.cls oodWin32.cls ooDialog.cls)
+add_custom_target(oodialog_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls)
 endif ()
 
 
