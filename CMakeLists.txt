@@ -247,7 +247,7 @@ set (STDC_HEADERS 1)
 configure_file(config.h.in.cmake config.h)
 # TODO: revisit this section later
 if (NOT WIN32)
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec)
+#   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec)
 #   configure_file(platform/unix/debian/changelog.in platform/unix/debian/changelog)
 #   configure_file(platform/unix/debian/postinst.in platform/unix/debian/postinst)
 #   configure_file(rexxapi/server/platform/unix/rxapid.in rexxapi/server/platform/unix/rxapid)
@@ -1258,17 +1258,36 @@ if (BUILD_RPM)
    SET(CPACK_PACKAGE_VERSION_PATCH ${ORX_MOD_LVL})
    set(CPACK_PACKAGE_NAME "ooRexx")
    set(CPACK_PACKAGE_RELEASE 1)
-   set(CPACK_PACKAGE_CONTACT "W. David Ashley")
+   set(CPACK_RPM_PACKAGE_LICENSE "CPL 1.0")
+   set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
+   set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
    set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
    set(CPACK_PACKAGING_INSTALL_PREXIX "/usr")
-   set(CPACK_RPM_USER_SPECFILE "${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec")
+   if (${INSTALL_LIB_DIR} STREQUAL /usr/lib64)
+      set(orx_install_arch "x86_64")
+   else ()
+      set(orx_install_arch "i386")
+   endif ()
+   set(CPACK_RPM_PACKAGE_ARCHITECTURE ${orx_install_arch})
+   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
+   set(CPACK_RPM_PACKAGE_DESCRIPTION 
+"Open Object Rexx is an object-oriented scripting language. The language
+is designed for both beginners and experienced Rexx programmers. It is
+easy to learn and use, and provides an excellent vehicle to enter the
+world of object-oriented programming without much effort.
+
+It extends the procedural way of Rexx programming with object-oriented
+features that allow you to gradually change your programming style as
+you learn more about objects.
+
+For more information on ooRexx, visit http://www.oorexx.org/
+For more information on Rexx, visit http://www.rexxla.org/")
 endif ()
 
 
+
+
+
+# Do not move the following statement!! It must be the last statement in this file.
 include(CPack)
-
-
-
-
-
 
