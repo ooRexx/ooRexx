@@ -67,11 +67,24 @@ string(TIMESTAMP ORX_YEAR %Y)
 set (ORX_COPY_YEAR 2005-${ORX_YEAR})
 string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR)
 
-include(FindSubversion)
-IF(Subversion_FOUND)
-    Subversion_WC_INFO(${CMAKE_SOURCE_DIR} MY)
-    SET(ORX_BLD_LVL "${MY_WC_REVISION}")
-ENDIF(Subversion_FOUND)
+# Get the SVN revision number of an svn command line client is
+# available.  This version will run at build time rather than only
+# at configuration generation time.
+FIND_PROGRAM(SVN_EXECUTABLE svn
+  DOC "subversion command line client")
+
+# only do this if we have an svn client.
+if (SVN_EXECUTABLE)
+    MACRO(Subversion_GET_REVISION dir variable)
+      EXECUTE_PROCESS(COMMAND ${SVN_EXECUTABLE} info ${dir}
+        OUTPUT_VARIABLE ${variable}
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+      STRING(REGEX REPLACE "^(.*\n)?Revision: ([^\n]+).*"
+        "\\2" ${variable} "${${variable}}")
+    ENDMACRO(Subversion_GET_REVISION)
+
+    Subversion_GET_REVISION(${CMAKE_SOURCE_DIR} ORX_BLD_LVL)
+endif ()
 
 # The following supports the versioning of the rexx shared libraries
 # This defines the oorexx library version. For ooRexx this should always be the
@@ -761,25 +774,25 @@ target_link_libraries(rexximage rexx rexxapi ${platform_rexximg_libs})
 # Copy the class files to the build directory
 ADD_CUSTOM_COMMAND(
    OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreClasses.orx
-   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/CoreClasses.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreClasses.orx
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/CoreClasses.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreClasses.orx
    DEPENDS ${build_rexx_classes_dir}/CoreClasses.orx
    )
 
 ADD_CUSTOM_COMMAND(
    OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StreamClasses.orx
-   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/StreamClasses.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StreamClasses.orx
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/StreamClasses.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StreamClasses.orx
    DEPENDS ${build_rexx_classes_dir}/StreamClasses.orx
    )
 
 ADD_CUSTOM_COMMAND(
    OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
-   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/Serializable.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/Serializable.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
    DEPENDS ${build_rexx_classes_dir}/Serializable.orx
    )
 
 ADD_CUSTOM_COMMAND(
    OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx
-   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_interpreter_platform_dir}/PlatformObjects.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_interpreter_platform_dir}/PlatformObjects.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx
    DEPENDS ${build_interpreter_platform_dir}/PlatformObjects.orx
    )
 
@@ -790,24 +803,22 @@ set (image_class_files
    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx)
 
-# Build the orexxole.cls file
-if (WIN32)
 # On Windows, the ole support is also included in the image
+if (WIN32)
   ADD_CUSTOM_COMMAND(
      OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls
-     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_ole_dir}/orexxole.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls
+     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_ole_dir}/orexxole.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls
      DEPENDS ${build_extensions_ole_dir}/orexxole.cls
      )
   set (platform_rexx_img_depends orexxole
        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls)
 endif ()
 
-# The following hangs on the rexximage command. Probably a library path problem.
+# Run the rexximage executable to generate the output file
 add_custom_command(OUTPUT rexx.img
            COMMAND ./rexximage
            DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-add_custom_target(rexx_img ALL DEPENDS rexx.img)
 if (WIN32)
 else ()
    install(FILES build/bin/rexx.img DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
@@ -1206,6 +1217,38 @@ SET_TARGET_PROPERTIES(oodialog_com PROPERTIES SUFFIX com)
 target_include_directories(oodialog_com PUBLIC
              ${build_extensions_oodialog_dir})
 target_link_libraries(oodialog_com rexx rexxapi shell32 Advapi32)
+
+
+# Generate the oodialog .cls files used for the ::requires.  These are generated from
+# from a set of individual source files
+set (oodialog_source_classFiles
+   ${build_extensions_oodialog_dir}/UtilityClasses.cls
+   ${build_extensions_oodialog_dir}/AnimatedButton.cls
+   ${build_extensions_oodialog_dir}/BaseDialog.cls
+   ${build_extensions_oodialog_dir}/ControlDialog.cls
+   ${build_extensions_oodialog_dir}/DialogControls.cls
+   ${build_extensions_oodialog_dir}/ListView.cls
+   ${build_extensions_oodialog_dir}/TreeView.cls
+   ${build_extensions_oodialog_dir}/ToolTip.cls
+   ${build_extensions_oodialog_dir}/DialogExtensions.cls
+   ${build_extensions_oodialog_dir}/DynamicDialog.cls
+   ${build_extensions_oodialog_dir}/EventNotification.cls
+   ${build_extensions_oodialog_dir}/PlainBaseDialog.cls
+   ${build_extensions_oodialog_dir}/RcDialog.cls
+   ${build_extensions_oodialog_dir}/Menu.cls
+   ${build_extensions_oodialog_dir}/ResDialog.cls
+   ${build_extensions_oodialog_dir}/UserDialog.cls
+   ${build_extensions_oodialog_dir}/DeprecatedClasses.cls
+   ${build_extensions_oodialog_dir}/ShellObjects.cls)
+
+
+# We run a rexx program to generate these files, so we need to have the interpreter
+# fully built first.  The files are generated into the output directory.
+add_custom_command(OUTPUT oodPlain.cls oodWin32.cls ooDialog.cls
+           COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx build_ooDialog_cls.rex ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+           DEPENDS rexx.img ${build_extensions_oodialog_dir}/build_ooDialog_cls.rex ${oodialog_source_classfiles}
+           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/${build_extensions_oodialog_dir})
+add_custom_target(oodialog_cls ALL DEPENDS oodPlain.cls oodWin32.cls ooDialog.cls)
 endif ()
 
 
@@ -1287,7 +1330,7 @@ if (BUILD_RPM)
    endif ()
    set(CPACK_RPM_PACKAGE_ARCHITECTURE ${orx_install_arch})
    set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
-   set(CPACK_RPM_PACKAGE_DESCRIPTION 
+   set(CPACK_RPM_PACKAGE_DESCRIPTION
 "Open Object Rexx is an object-oriented scripting language. The language
 is designed for both beginners and experienced Rexx programmers. It is
 easy to learn and use, and provides an excellent vehicle to enter the
