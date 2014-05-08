@@ -106,6 +106,7 @@ if (WIN32)
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
    set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
+   find_path(INSTALL_LIB_DIR libc.so PATHS /usr/lib /usr/lib64)
 endif ()
 
 # Set compiler and linker flags common to all build environments
@@ -463,6 +464,7 @@ target_include_directories(rexxapi PUBLIC
 target_link_libraries(rexxapi ${platform_rexxapi_libs})
 if (WIN32)
 else ()
+   install(TARGETS rexxapi LIBRARY DESTINATION ${INSTALL_LIB_DIR})
    set_target_properties(rexxapi PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
 endif ()
 
@@ -703,6 +705,7 @@ target_include_directories(rexx PUBLIC
 target_link_libraries(rexx rexxapi ${platform_interpreter_libs})
 if (WIN32)
 else ()
+   install(TARGETS rexx LIBRARY DESTINATION ${INSTALL_LIB_DIR})
    set_target_properties(rexx PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
 endif ()
 
@@ -729,6 +732,10 @@ target_include_directories(rexx_exe PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs})
+if (WIN32)
+else ()
+   install(TARGETS rexx_exe RUNTIME DESTINATION /usr/bin)
+endif ()
 
 #################### rexximage (bin file) ##########################
 # These are the core classes built into the .img file.
@@ -802,6 +809,10 @@ add_custom_command(OUTPUT rexx.img
            DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_custom_target(rexx_img ALL DEPENDS rexx.img)
+if (WIN32)
+else ()
+   install(FILES rexx.img RUNTIME DESTINATION /usr/bin)
+endif ()
 
 #################### rxapi (executable) #########################
 # additional source files required by specific platforms
@@ -848,6 +859,10 @@ if (WIN32)
         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
         VERBATIM)
 endif ()
+if (WIN32)
+else ()
+   install(TARGETS rxapi RUNTIME DESTINATION /usr/bin)
+endif ()
 
 #################### rexxc (executable) #########################
 # additional source files required by specific platforms
@@ -868,6 +883,10 @@ target_include_directories(rexxc PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs})
+if (WIN32)
+else ()
+   install(TARGETS rexxc RUNTIME DESTINATION /usr/bin)
+endif ()
 
 #################### rxqueue (executable) #########################
 # additional source files required by specific platforms
@@ -889,6 +908,10 @@ target_include_directories(rxqueue PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rxqueue rexx rexxapi ${platform_rxqueue_libs})
+if (WIN32)
+else ()
+   install(TARGETS rxqueue RUNTIME DESTINATION /usr/bin)
+endif ()
 
 #################### rxsubcom (executable) #########################
 # additional source files required by specific platforms
@@ -910,6 +933,10 @@ target_include_directories(rxsubcom PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rxsubcom rexx rexxapi ${platform_subcom_libs})
+if (WIN32)
+else ()
+   install(TARGETS rxsubcom RUNTIME DESTINATION /usr/bin)
+endif ()
 
 #################### librexxutil.so ################
 # additional source files required by specific platforms
@@ -934,6 +961,7 @@ target_include_directories(rexxutil PUBLIC
 target_link_libraries(rexxutil rexx rexxapi ${platform_rexxutil_libs})
 if (WIN32)
 else ()
+   install(TARGETS rexxutil LIBRARY DESTINATION ${INSTALL_LIB_DIR})
    set_target_properties(rexxutil PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
 endif ()
 
@@ -955,6 +983,11 @@ target_include_directories(rxmath PUBLIC
              ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(rxmath rexx rexxapi ${platform_rxmath_libs})
+if (WIN32)
+else ()
+   install(TARGETS rxmath LIBRARY DESTINATION ${INSTALL_LIB_DIR})
+   set_target_properties(rxmath PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+endif ()
 
 #################### librxsock.so ################
 # additional source files required by specific platforms
@@ -972,6 +1005,7 @@ add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
 target_link_libraries(rxsock rexx rexxapi ${platform_rxsock_libs})
 if (WIN32)
 else ()
+   install(TARGETS rxsock LIBRARY DESTINATION ${INSTALL_LIB_DIR})
    set_target_properties(rxsock PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
 endif ()
 
@@ -998,6 +1032,7 @@ target_include_directories(rxregexp PUBLIC
 target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs})
 if (WIN32)
 else ()
+   install(TARGETS rexxapi LIBRARY DESTINATION ${INSTALL_LIB_DIR})
    set_target_properties(rxregexp PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
 endif ()
 
@@ -1022,6 +1057,11 @@ target_include_directories(hostemu PUBLIC
              ${build_extensions_hostemu_dir})
 # Extra link library definitions
 target_link_libraries(hostemu rexx rexxapi ${platform_hostemu_libs})
+if (WIN32)
+else ()
+   install(TARGETS hostemu LIBRARY DESTINATION ${INSTALL_LIB_DIR})
+   set_target_properties(hostemu PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+endif ()
 
 #################### librxunixsys.so ################
 if (NOT WIN32)
@@ -1034,7 +1074,8 @@ target_include_directories(rxunixsys PUBLIC
              ${extensions_unix_dir}/rxunixsys)
 # Extra link library definitions
 target_link_libraries(rxunixsys rexx rexxapi)
-set_target_properties(rexxapi PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+set_target_properties(rxunixsys PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
+install(TARGETS rxunixsys LIBRARY DESTINATION ${INSTALL_LIB_DIR})
 endif ()
 
 #################### orexxole.dll ################
@@ -1154,6 +1195,5 @@ target_include_directories(rexxhide PUBLIC
             ${build_messages_dir})
 target_link_libraries(rexxpaws rexx rexxapi)
 endif ()
-
 
 
