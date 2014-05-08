@@ -810,7 +810,7 @@ add_custom_command(OUTPUT rexx.img
 add_custom_target(rexx_img ALL DEPENDS rexx.img)
 if (WIN32)
 else ()
-   install(FILES rexx.img RUNTIME DESTINATION /usr/bin)
+   install(FILES build/bin/rexx.img DESTINATION /usr/bin)
 endif ()
 
 #################### rxapi (executable) #########################
