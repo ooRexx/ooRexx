@@ -106,7 +106,7 @@ if (WIN32)
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
    set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
-   find_path(INSTALL_LIB_DIR libc.so PATHS /usr/lib /usr/lib64)
+   find_path(INSTALL_LIB_DIR libc.so PATHS /usr/lib/* /usr/lib64)
 endif ()
 
 # Set compiler and linker flags common to all build environments
@@ -790,7 +790,7 @@ set (image_class_files
    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx)
 
-# Build the rexx.img file
+# Build the orexxole.cls file
 if (WIN32)
 # On Windows, the ole support is also included in the image
   ADD_CUSTOM_COMMAND(
@@ -1031,7 +1031,7 @@ target_include_directories(rxregexp PUBLIC
 target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs})
 if (WIN32)
 else ()
-   install(TARGETS rexxapi LIBRARY DESTINATION ${INSTALL_LIB_DIR})
+   install(TARGETS rxregexp LIBRARY DESTINATION ${INSTALL_LIB_DIR})
    set_target_properties(rxregexp PROPERTIES VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
 endif ()
 
