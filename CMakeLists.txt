@@ -246,13 +246,13 @@ set (STDC_HEADERS 1)
 # Configure files
 configure_file(config.h.in.cmake config.h)
 # TODO: revisit this section later
-#if (NOT WIN32)
-#   configure_file(platform/unix/oorexx.spec.in platform/unix/oorexx.spec)
+if (NOT WIN32)
+   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec)
 #   configure_file(platform/unix/debian/changelog.in platform/unix/debian/changelog)
 #   configure_file(platform/unix/debian/postinst.in platform/unix/debian/postinst)
 #   configure_file(rexxapi/server/platform/unix/rxapid.in rexxapi/server/platform/unix/rxapid)
 #   configure_file(platform/unix/oorexx-config.in platform/unix/oorexx-config)
-#endif ()
+endif ()
 
 
 
@@ -316,7 +316,6 @@ else ()
    set (samples_dir ${build_samples_dir}/unix)
 endif ()
 
-# The following are unix only
 # The following are windows only
 set (build_extensions_ole_dir ${build_extensions_dir}/platform/windows/ole)
 set (build_extensions_oodialog_dir ${build_extensions_dir}/platform/windows/oodialog)
@@ -1195,5 +1194,41 @@ target_include_directories(rexxhide PUBLIC
             ${build_messages_dir})
 target_link_libraries(rexxpaws rexx rexxapi)
 endif ()
+
+
+
+
+
+
+
+
+
+
+#################### Unix Package Targets ##########################
+#################### Unix Package Targets ##########################
+#################### Unix Package Targets ##########################
+#################### Unix Package Targets ##########################
+#################### Unix Package Targets ##########################
+# TODO: This does not work yet.
+if (BUILD_RPM)
+#   set(CPACK_INSTALL_CMAKE_PROJECTS "./;ooRexx;ALL;/")
+   set(VERSION ${ORX_VERSION})
+   set(CPACK_PACKAGE_VERSION ${ORX_VERSION})
+   set(CPACK_GENERATOR "RPM;TGZ")
+   set(CPACK_PACKAGE_NAME "ooRexx")
+   set(CPACK_PACKAGE_RELEASE 1)
+   set(CPACK_PACKAGE_CONTACT "W. David Ashley")
+   set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
+   set(CPACK_PACKAGING_INSTALL_PREXIX "/usr")
+   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
+   set(CPACK_RPM_USER_SPECFILE "${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec")
+endif ()
+
+
+include(CPack)
+
+
+
+
 
 
