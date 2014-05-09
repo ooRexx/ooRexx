@@ -1217,23 +1217,27 @@ if (NOT WIN32)
    install(FILES build/bin/rexx.cat DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
    add_custom_command(OUTPUT rexx.1.gz
-              COMMAND gzip ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.1
-              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+              COMMAND gzip -kf ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.1
+              DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.1.gz
+              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir})
    add_custom_target(rexx_man ALL DEPENDS rexx.1.gz)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.1.gz DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1 PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
    add_custom_command(OUTPUT rexxc.1.gz
-              COMMAND gzip ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexxc.1
-              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+              COMMAND gzip -kf ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexxc.1
+              DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexxc.1.gz
+              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir})
    add_custom_target(rexxc_man ALL DEPENDS rexxc.1.gz)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexxc.1.gz DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1 PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
    add_custom_command(OUTPUT rxsubcom.1.gz
-              COMMAND gzip ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxsubcom.1
-              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+              COMMAND gzip -kf ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxsubcom.1
+              DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxsubcom.1.gz
+              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir})
    add_custom_target(rxsubcom_man ALL DEPENDS rxsubcom.1.gz)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxsubcom.1.gz DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1 PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
    add_custom_command(OUTPUT rxqueue.1.gz
-              COMMAND gzip ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxqueue.1
-              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+              COMMAND gzip -kf ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxqueue.1
+              DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxqueue.1.gz
+              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir})
    add_custom_target(rxqueue_man ALL DEPENDS rxqueue.1.gz)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxqueue.1.gz DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1 PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
@@ -1273,7 +1277,7 @@ endif ()
 
 
 
-add_subdirectory (samples)
+#add_subdirectory (samples)
 
 
 
