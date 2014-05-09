@@ -1,7 +1,7 @@
 #!/bin/sh
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2007-201 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2014 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,50 +36,17 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-rm -f /usr/bin/rexx
-rm -f /usr/bin/rexxc
-rm -f /usr/bin/rxqueue
-rm -f /usr/bin/rxsubcom
-rm -f /usr/bin/rxdelipc
-rm -f /usr/bin/rexx.img
-rm -f /usr/bin/rexx.cat
-rm -f /usr/bin/rxregexp.cls
-rm -f /usr/bin/rxftp.cls
-rm -f /usr/bin/socket.cls
-rm -f /usr/bin/streamsocket.cls
-rm -f /usr/bin/mime.cls
-rm -f /usr/bin/smtp.cls
-rm -f /usr/bin/oorexx-config
-rm -f /usr/bin/*.rex
+# Although rexxtry is technically a sample, historically we have set it up to
+# be used like the other executables.
+ln -sf ${data_dir}/rexxtry.rex ${bin_dir}/rexxtry.rex
 
-rm -rf /usr/lib/ooRexx
-
-rm -f /usr/share/man/man1/oorexx-config.1
-rm -f /usr/share/man/man1/rexx.1
-rm -f /usr/share/man/man1/rexxc.1
-rm -f /usr/share/man/man1/rxsubcom.1
-rm -f /usr/share/man/man1/rxqueue.1
-rm -f /usr/share/man/man1/rxdelipc.1  # remove from previous ooRexx versions
-rm -f /usr/include/rexx.h
-rm -f /usr/include/rexxapidefs.h
-rm -f /usr/include/rexxapitypes.h
-rm -f /usr/include/rexxplatformapis.h
-rm -f /usr/include/rexxplatformdefs.h
-rm -f /usr/include/oorexxapi.h
-rm -f /usr/include/oorexxerrors.h
-rm -f /usr/bin/rexxtry.rex
-rm -rf /usr/share/ooRexx
-
-# Debian specific removal of rxapid
+# Debian specific set up for rxapid
 if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
-   systemctl stop rxapid.service
-   rm /etc/systemd/system/rxapid.service
+   systemctl link /usr/share/ooRexx/rxapid.service
    systemctl --system daemon-reload
+   systemctl start rxapid.service
 else
-   if [ -e /etc/init.d/rxapid ]; then
-      /etc/init.d/rxapid stop
-   fi
-   rm -f /etc/init.d/rxapid
-   update-rc.d rxapid remove
+   cp ${bin_dir}/rxapid       /etc/init.d
+   update-rc.d rxapid start 89 2 3 4 5 . stop 89 0 1 6 . > /dev/null 2>&1
+   /etc/init.d/rxapid start
 fi
-

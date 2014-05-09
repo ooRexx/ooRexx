@@ -1305,6 +1305,8 @@ add_subdirectory (samples)
 #################### Unix Package Targets ##########################
 #################### Unix Package Targets ##########################
 #################### Unix Package Targets ##########################
+
+# Build an RPM
 if (BUILD_RPM)
    SET(CPACK_PACKAGE_VERSION_MAJOR ${ORX_MAJOR})
    SET(CPACK_PACKAGE_VERSION_MINOR ${ORX_MINOR})
@@ -1327,6 +1329,42 @@ if (BUILD_RPM)
    set(CPACK_RPM_PACKAGE_ARCHITECTURE ${orx_install_arch})
    set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
    set(CPACK_RPM_PACKAGE_DESCRIPTION
+"Open Object Rexx is an object-oriented scripting language. The language
+is designed for both beginners and experienced Rexx programmers. It is
+easy to learn and use, and provides an excellent vehicle to enter the
+world of object-oriented programming without much effort.
+
+It extends the procedural way of Rexx programming with object-oriented
+features that allow you to gradually change your programming style as
+you learn more about objects.
+
+For more information on ooRexx, visit http://www.oorexx.org/
+For more information on Rexx, visit http://www.rexxla.org/")
+endif ()
+
+# Build a DEB
+if (BUILD_DEB)
+   SET(CPACK_PACKAGE_VERSION_MAJOR ${ORX_MAJOR})
+   SET(CPACK_PACKAGE_VERSION_MINOR ${ORX_MINOR})
+   SET(CPACK_PACKAGE_VERSION_PATCH ${ORX_MOD_LVL})
+   set(CPACK_PACKAGE_NAME "ooRexx")
+   set(CPACK_DEBIAN_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
+   set(CPACK_PACKAGE_RELEASE 1)
+   set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.oorexx.org/")
+   set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
+   set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
+   set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Rexx Language Association")
+   set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
+   set)CPACK_DEBIAN_CONTROL_EXTRA
+           "${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake_postinst;${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake_prerm")
+   if (${INSTALL_LIB_DIR} STREQUAL ${CMAKE_INSTALL_PREFIX}/lib64)
+      set(orx_install_arch "x86_64")
+   else ()
+      set(orx_install_arch "i386")
+   endif ()
+   set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${orx_install_arch})
+   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
+   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION
 "Open Object Rexx is an object-oriented scripting language. The language
 is designed for both beginners and experienced Rexx programmers. It is
 easy to learn and use, and provides an excellent vehicle to enter the
