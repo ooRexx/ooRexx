@@ -403,8 +403,7 @@ target_include_directories(rexxapi PUBLIC
             ${build_lib_dir})
 # Extra link library definitions
 target_link_libraries(rexxapi ${platform_rexxapi_libs})
-message("INSTALL_LIB_DIR is ${INSTALL_LIB_DIR}")
-install(TARGETS rexxapi LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS rexxapi LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rexxapi PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librexx.so ##########################
@@ -642,7 +641,7 @@ target_include_directories(rexx PUBLIC
 
 # Extra link library definitions
 target_link_libraries(rexx rexxapi ${platform_interpreter_libs})
-install(TARGETS rexx LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS rexx LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rexx PROPERTIES VERSION ${ORX_VERSION})
 
 #################### rexx (executable) ##########################
@@ -876,7 +875,7 @@ target_include_directories(rexxutil PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexxutil rexx rexxapi ${platform_rexxutil_libs})
-install(TARGETS rexxutil LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS rexxutil LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rexxutil PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxmath.so ################
@@ -897,7 +896,7 @@ target_include_directories(rxmath PUBLIC
              ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(rxmath rexx rexxapi ${platform_rxmath_libs})
-install(TARGETS rxmath LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS rxmath LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rxmath PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxsock.so ################
@@ -914,7 +913,7 @@ add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
              ${platform_rxsock_sources})
 # Extra link library definitions
 target_link_libraries(rxsock rexx rexxapi ${platform_rxsock_libs})
-install(TARGETS rxsock LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS rxsock LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rxsock PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxregexp.so ################
@@ -938,7 +937,7 @@ target_include_directories(rxregexp PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs})
-install(TARGETS rxregexp LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS rxregexp LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rxregexp PROPERTIES VERSION ${ORX_VERSION})
 
 #################### libhostemu.so ################
@@ -962,7 +961,7 @@ target_include_directories(hostemu PUBLIC
              ${build_extensions_hostemu_dir})
 # Extra link library definitions
 target_link_libraries(hostemu rexx rexxapi ${platform_hostemu_libs})
-install(TARGETS hostemu LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS hostemu LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(hostemu PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxunixsys.so ################
@@ -977,7 +976,7 @@ target_include_directories(rxunixsys PUBLIC
 # Extra link library definitions
 target_link_libraries(rxunixsys rexx rexxapi)
 set_target_properties(rxunixsys PROPERTIES VERSION ${ORX_VERSION})
-install(TARGETS rxunixsys LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS rxunixsys LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 endif ()
 
 #################### orexxole.dll ################
@@ -994,7 +993,7 @@ target_include_directories(orexxole PUBLIC
              ${build_extensions_ole_dir})
 # Extra link library definitions
 target_link_libraries(orexxole rexx rexxapi)
-install(TARGETS orexxole LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS orexxole LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 endif ()
 
 #################### rxwinsys.dll ################
@@ -1009,7 +1008,7 @@ target_include_directories(rxwinsys PUBLIC
              ${build_extensions_rxwinsys_dir})
 # Extra link library definitions
 target_link_libraries(rxwinsys rexx rexxapi shlwapi)
-install(TARGETS rxwinsys LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS rxwinsys LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 endif ()
 
 #################### oodialog.dll ################
@@ -1068,7 +1067,7 @@ target_include_directories(oodialog PUBLIC
              ${build_extensions_oodialog_dir})
 # Extra link library definitions
 target_link_libraries(oodialog rexx rexxapi winmm comdlg32 comctl32 shlwapi oleacc uxtheme rpcrt4 propsys delayimp)
-install(TARGETS oodialog LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS oodialog LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 
 #################### ooDialog.exe (executable) ##########################
 # Sources for ooDialog.exe
