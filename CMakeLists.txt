@@ -1274,7 +1274,7 @@ endif ()
 
 
 
-
+add_subdirectory (samples)
 
 
 
