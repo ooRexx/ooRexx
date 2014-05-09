@@ -1233,10 +1233,26 @@ else ()
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxapi.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   # TODO: do rexx.1 man page here
-   # TODO: do rexxc.1 man page here
-   # TODO: do rxsubcom.1 man page here
-   # TODO: do rxwueue.1 man page here
+   add_custom_command(OUTPUT rexx.1.gz
+              COMMAND gzip ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.1
+              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+   add_custom_target(rexx_man ALL DEPENDS rexx.1.gz)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.1.gz DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1 PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   add_custom_command(OUTPUT rexxc.1.gz
+              COMMAND gzip ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexxc.1
+              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+   add_custom_target(rexxc_man ALL DEPENDS rexxc.1.gz)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexxc.1.gz DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1 PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   add_custom_command(OUTPUT rxsubcom.1.gz
+              COMMAND gzip ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxsubcom.1
+              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+   add_custom_target(rxsubcom_man ALL DEPENDS rxsubcom.1.gz)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxsubcom.1.gz DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1 PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   add_custom_command(OUTPUT rxqueue.1.gz
+              COMMAND gzip ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxqueue.1
+              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+   add_custom_target(rxqueue_man ALL DEPENDS rxqueue.1.gz)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxqueue.1.gz DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1 PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.csh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
