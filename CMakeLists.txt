@@ -1355,7 +1355,7 @@ if (BUILD_DEB)
    set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Rexx Language Association")
    set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
-   set)CPACK_DEBIAN_CONTROL_EXTRA
+   set(CPACK_DEBIAN_CONTROL_EXTRA
            "${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake_postinst;${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake_prerm")
    if (${INSTALL_LIB_DIR} STREQUAL ${CMAKE_INSTALL_PREFIX}/lib64)
       set(orx_install_arch "x86_64")
