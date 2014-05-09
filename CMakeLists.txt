@@ -1351,18 +1351,8 @@ if (BUILD_DEB)
    endif ()
    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${orx_install_arch})
    set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
-   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION
-"Open Object Rexx is an object-oriented scripting language. The language
-is designed for both beginners and experienced Rexx programmers. It is
-easy to learn and use, and provides an excellent vehicle to enter the
-world of object-oriented programming without much effort.
-
-It extends the procedural way of Rexx programming with object-oriented
-features that allow you to gradually change your programming style as
-you learn more about objects.
-
-For more information on ooRexx, visit http://www.oorexx.org/
-For more information on Rexx, visit http://www.rexxla.org/")
+   # The DEB generator does not support a multi-line description.
+   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
 endif ()
 
 
