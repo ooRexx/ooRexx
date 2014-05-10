@@ -780,12 +780,17 @@ target_include_directories(rxapi PUBLIC
 target_link_libraries(rxapi rexx rexxapi ${platform_rxapi_libs})
 
 # Kill the rxapi daemon whenever we have to build, otherwise the build
-# will fail
+# will fail.  Unfortunately, the killing of the process is not immediate,
+# so we attach this as a dependency to multiple early pieces of the project
+# to give it a chance to free up the file.
 if (WIN32)
-   add_custom_command(TARGET rxapi PRE_BUILD
-        COMMAND ${CMAKE_SOURCE_DIR}/${ORX_PLATFORM_DIR}/killapi.bat
-        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-        VERBATIM)
+   add_custom_target(kill_rexxapi
+        ${CMAKE_SOURCE_DIR}/${ORX_PLATFORM_DIR}/killapi.bat)
+   # add this as a dependency for major bits to give it a chance to
+   # execute early.
+   add_dependencies(rexx kill_rexxapi)
+   add_dependencies(rexxapi kill_rexxapi)
+   add_dependencies(rxapi kill_rexxapi)
 endif ()
 install(TARGETS rxapi RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
