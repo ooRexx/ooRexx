@@ -117,14 +117,21 @@ endif ()
 # Set path to look for include files
 include_directories(BEFORE api api/${ORX_PLATFORM_DIR})
 
+
+# Common install variables
+   SET(CPACK_PACKAGE_VERSION_MAJOR ${ORX_MAJOR})
+   SET(CPACK_PACKAGE_VERSION_MINOR ${ORX_MINOR})
+   SET(CPACK_PACKAGE_VERSION_PATCH ${ORX_MOD_LVL})
+   set(CPACK_PACKAGE_NAME "ooRexx")
+   set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
+
 # Set install variables
 if (WIN32)
-   set (CMAKE_INSTALL_PREFIX /ooRexx)
-   set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-   set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-   set (INSTALL_CLS_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-   set (INSTALL_REX_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-   set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
+   set (INSTALL_EXECUTABLE_bin)
+   set (INSTALL_LIB_DIR bin)
+   set (INSTALL_CLS_DIR bin)
+   set (INSTALL_REX_DIR bin)
+   set (INSTALL_INCLUDE_DIR include)
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
    set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
@@ -1285,11 +1292,20 @@ endif ()
 #add_subdirectory (samples)
 
 
+#################### NSIS Package Targets ##########################
+#################### NSIS Package Targets ##########################
+#################### NSIS Package Targets ##########################
+#################### NSIS Package Targets ##########################
+#################### NSIS Package Targets ##########################
 
+# Build an NSIS installer
+if (BUILD_NSIS)
+set(CPACK_GENERATOR NSIS)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MyLib - CPack Component Installation Example")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
+SET(CPACK_NSIS_MODIFY_PATH ON)
 
-
-
-
+endif ()
 
 
 #################### Unix Package Targets ##########################
@@ -1300,16 +1316,11 @@ endif ()
 
 # Build an RPM
 if (BUILD_RPM)
-   SET(CPACK_PACKAGE_VERSION_MAJOR ${ORX_MAJOR})
-   SET(CPACK_PACKAGE_VERSION_MINOR ${ORX_MINOR})
-   SET(CPACK_PACKAGE_VERSION_PATCH ${ORX_MOD_LVL})
-   set(CPACK_PACKAGE_NAME "ooRexx")
    set(CPACK_RPM_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
    set(CPACK_PACKAGE_RELEASE 1)
    set(CPACK_RPM_PACKAGE_LICENSE "CPL 1.0")
    set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
-   set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
    set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_post.txt)
    set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_preun.txt)
@@ -1336,15 +1347,10 @@ endif ()
 
 # Build a DEB
 if (BUILD_DEB)
-   SET(CPACK_PACKAGE_VERSION_MAJOR ${ORX_MAJOR})
-   SET(CPACK_PACKAGE_VERSION_MINOR ${ORX_MINOR})
-   SET(CPACK_PACKAGE_VERSION_PATCH ${ORX_MOD_LVL})
-   set(CPACK_PACKAGE_NAME "ooRexx")
    set(CPACK_DEBIAN_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
    set(CPACK_PACKAGE_RELEASE 1)
    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
-   set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Rexx Language Association")
    set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
    set(CPACK_DEBIAN_CONTROL_EXTRA
