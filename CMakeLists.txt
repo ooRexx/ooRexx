@@ -127,7 +127,7 @@ include_directories(BEFORE api api/${ORX_PLATFORM_DIR})
 
 # Set install variables
 if (WIN32)
-   set (INSTALL_EXECUTABLE_bin)
+   set (INSTALL_EXECUTABLE_DIR bin)
    set (INSTALL_LIB_DIR bin)
    set (INSTALL_CLS_DIR bin)
    set (INSTALL_REX_DIR bin)
