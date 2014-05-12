@@ -344,9 +344,9 @@ set (build_samples_dir samples)
 set (api_dir ${build_api_dir}/${ORX_PLATFORM_DIR})
 
 if (WIN32)
-   set (samples_dir ${build_samples_dir}/windows)
+   set (platform_samples_dir ${build_samples_dir}/windows)
 else ()
-   set (samples_dir ${build_samples_dir}/unix)
+   set (platform_samples_dir ${build_samples_dir}/unix)
 endif ()
 
 # The following are windows only
@@ -1160,7 +1160,7 @@ add_custom_target(oodialog_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ood
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodDialog.cls DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 endif ()
 
 
@@ -1289,7 +1289,7 @@ endif ()
 
 
 
-#add_subdirectory (samples)
+add_subdirectory (samples)
 
 
 #################### NSIS Package Targets ##########################

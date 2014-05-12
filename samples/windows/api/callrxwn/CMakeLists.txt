@@ -43,7 +43,18 @@ cmake_minimum_required (VERSION 2.6)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (samples-windows)
+project (callrxwn)
 
-add_subdirectory (api)
-
+#################### callrexx1 (executable) #########################
+# Sources for callrxwn
+add_executable(callrxwn WIN32
+    ${PROJECT_SOURCE_DIR}/callrxwn.c
+    ${PROJECT_SOURCE_DIR}/callrxwn.rc
+    ${PROJECT_SOURCE_DIR}/callrxwn.ico)
+# Include file definition
+target_include_directories(callrxwn PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+# Extra link library definitions
+target_link_libraries(callrxwn rexx)
+install(TARGETS callrxwn RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

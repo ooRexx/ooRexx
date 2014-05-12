@@ -208,15 +208,15 @@ CD  %OR_APISAMPLESRC%\rexxexit
 IF %USELOGFILE% equ 1 ( NMAKE /F rexxexit.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxexit.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_APISAMPLESRC%\wpipe\wpipe1
+CD  %OR_APISAMPLESRC%\wpipe1
 IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi1.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi1.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_APISAMPLESRC%\wpipe\wpipe2
+CD  %OR_APISAMPLESRC%\wpipe2
 IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi2.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi2.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_APISAMPLESRC%\wpipe\wpipe3
+CD  %OR_APISAMPLESRC%\wpipe3
 IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi3.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi3.mak )
 if ERRORLEVEL 1 goto error
 

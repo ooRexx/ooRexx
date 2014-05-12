@@ -43,7 +43,16 @@ cmake_minimum_required (VERSION 2.6)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (samples-windows)
+project (wpipe1)
 
-add_subdirectory (api)
-
+#################### wpipe1 (executable) #########################
+# Sources for wpipe1
+add_library(rexxapi1 SHARED ${PROJECT_SOURCE_DIR}/rexxapi1.c
+                          ${PROJECT_SOURCE_DIR}/rexxapi1.def)
+# Include file definition
+target_include_directories(rexxapi1 PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+# Extra link library definitions
+target_link_libraries(rexxapi1 rexx rexxapi)
+install(TARGETS rexxapi1 LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})

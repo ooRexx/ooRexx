@@ -96,3 +96,38 @@ rexxexit   - Console mode application
              The two numbers need to be in quotes because rexxexit no more
              than two arguments, the input file name and a single argument for
              the input file.
+
+The API samples in the directories WPIPE1, WPIPE2, WPIPE3 demonstrate:
+
+- How to register external functions from within external functions
+
+- How you can provide external functions (written in C) in a dynamic link
+  library that can be accessed from Open Object Rexx (after they have been
+  registered)
+
+- How data can be returned from external functions.
+
+- How the REXX Variable Pool Interface can be used to access and modify Open
+  Object Rexx variables
+
+WPIPE1
+======
+Start: "REXX APITEST1"
+Description: Registers a number of functions that produce some screen output or
+             return some data.
+
+WPIPE2
+======
+Start: "REXX APITEST2"
+Description: Sets the value of a variable by using the REXX Variable Pool
+             Interface
+
+WPIPE3
+======
+Start: "REXX APITEST3"
+Description: Demonstrates a more extensive use of the REXX Variable Pool
+             Interface
+
+For more information about the Open Object Rexx API, see Chapter 10, "Classic
+Rexx Application Programming Intefaces" in the Open Object Rexx Programming
+Guide.
