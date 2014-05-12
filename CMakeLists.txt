@@ -1288,8 +1288,8 @@ endif ()
 
 
 
-
-add_subdirectory (samples)
+# direct output into a samples subdir and only build on request
+add_subdirectory (samples samples EXCLUDE_FROM_ALL)
 
 
 #################### NSIS Package Targets ##########################
