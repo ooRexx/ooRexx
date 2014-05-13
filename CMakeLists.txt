@@ -1351,7 +1351,7 @@ if (BUILD_DEB)
    set(CPACK_PACKAGE_RELEASE 1)
    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
-   set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Rexx Language Association")
+   set(CPACK_DEBIAN_PACKAGE_MAINTAINER "wdashley@sourceforge.net")
    set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
    set(CPACK_DEBIAN_CONTROL_EXTRA
            "${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/postinst;${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/prerm")
