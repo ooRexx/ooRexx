@@ -159,11 +159,13 @@ if (WIN32)
             /D_CRT_NONSTDC_NO_DEPRECATE
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
    if ($ENV{CPU} STREQUAL "X64")
-      set (MANIFEST_FILE rexx64.exe.manifest)
+      set (MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
    else ()
-      set (MANIFEST_FILE rexx32.exe.manifest)
+      set (MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx32.exe.manifest)
    endif ()
-
+   message("Original manifest file: ${MANIFEST_FILE}")
+   file(TO_NATIVE_PATH ${MANIFEST_FILE} MANIFEST_FILE)
+   message("Native manifest file: ${MANIFEST_FILE}")
    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:524288 /MANIFEST /MANIFESTFILE:${MANIFEST_FILE}")
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
