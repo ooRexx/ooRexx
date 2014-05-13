@@ -46,10 +46,10 @@ include(CheckLibraryExists)
 include(CheckFunctionExists)
 include(CheckSymbolExists)
 include(CheckCSourceCompiles)
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
-set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
-set (CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set (CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 
 #/*----------------------------------------------------------------------------*/
@@ -1152,9 +1152,9 @@ set (oodialog_source_classFiles
 
 # We run a rexx program to generate these files, so we need to have the interpreter
 # fully built first.  The files are generated into the output directory.
-add_custom_command(OUTPUT oodPlain.cls oodWin32.cls ooDialog.cls
+add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls
            COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx build_ooDialog_cls.rex ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-           DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img ${build_extensions_oodialog_dir}/build_ooDialog_cls.rex ${oodialog_source_classfiles}
+           DEPENDS rexx_exe rexx_img ${build_extensions_oodialog_dir}/build_ooDialog_cls.rex ${oodialog_source_classfiles}
            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/${build_extensions_oodialog_dir})
 add_custom_target(oodialog_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls)
 
