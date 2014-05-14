@@ -159,14 +159,12 @@ if (WIN32)
             /D_CRT_NONSTDC_NO_DEPRECATE
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
    if ($ENV{CPU} STREQUAL "X64")
-      set (MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
+      set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
    else ()
-      set (MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx32.exe.manifest)
+      set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx32.exe.manifest)
    endif ()
-   message("Original manifest file: ${MANIFEST_FILE}")
-   file(TO_NATIVE_PATH ${MANIFEST_FILE} MANIFEST_FILE)
-   message("Native manifest file: ${MANIFEST_FILE}")
-   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:524288 /MANIFEST /MANIFESTFILE:${MANIFEST_FILE}")
+   file(TO_NATIVE_PATH ${EXE_MANIFEST_FILE} EXE_MANIFEST_FILE)
+   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:524288")
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_FIX=0
             -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
@@ -676,6 +674,13 @@ target_include_directories(rexx_exe PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs})
+# Merge in extra manifest information on Windows
+if (WIN32)
+add_custom_command(TARGET rexx_exe POST_BUILD
+   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexx.exe;#1" "-outputresource:bin\\rexx.exe;#1"
+   COMMENT "Adding custom manifest to rexx.exe...")
+endif ()
+
 install(TARGETS rexx_exe RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rexximage (bin file) ##########################
@@ -822,6 +827,11 @@ target_include_directories(rexxc PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs})
+if (WIN32)
+add_custom_command(TARGET rexxc POST_BUILD
+   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxc.exe;#1" "-outputresource:bin\\rexxc.exe;#1"
+   COMMENT "Adding custom manifest to rexxc.exe...")
+endif ()
 install(TARGETS rexxc RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxqueue (executable) #########################
@@ -1103,6 +1113,9 @@ SET_TARGET_PROPERTIES(oodialog_exe PROPERTIES OUTPUT_NAME ooDialog)
 target_include_directories(oodialog_exe PUBLIC
              ${build_extensions_oodialog_dir})
 target_link_libraries(oodialog_exe rexx rexxapi shlwapi)
+add_custom_command(TARGET oodialog_exe POST_BUILD
+   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.exe;#1" "-outputresource:bin\\ooDialog.exe;#1"
+   COMMENT "Adding custom manifest to ooDialog.exe...")
 install(TARGETS oodialog_exe RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### ooDialog.com (executable) ##########################
@@ -1121,11 +1134,14 @@ set_property(TARGET oodialog_com
        OOD_BIN_NAME="oodialog.com")
 # This allows the executable to have the same name as the library.
 SET_TARGET_PROPERTIES(oodialog_com PROPERTIES OUTPUT_NAME ooDialog)
-SET_TARGET_PROPERTIES(oodialog_com PROPERTIES SUFFIX com)
+SET_TARGET_PROPERTIES(oodialog_com PROPERTIES SUFFIX .com)
 # Include file definition
 target_include_directories(oodialog_com PUBLIC
              ${build_extensions_oodialog_dir})
 target_link_libraries(oodialog_com rexx rexxapi shell32 Advapi32)
+add_custom_command(TARGET oodialog_com POST_BUILD
+   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.com;#1" "-outputresource:bin\\ooDialog.com;#1"
+   COMMENT "Adding custom manifest to ooDialog.com...")
 install(TARGETS oodialog_com RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 
@@ -1178,6 +1194,9 @@ target_include_directories(rexxhide PUBLIC
             ${build_api_platform_dir}
             ${build_messages_dir})
 target_link_libraries(rexxhide rexx rexxapi)
+add_custom_command(TARGET rexxhide POST_BUILD
+   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxhide.exe;#1" "-outputresource:bin\\rexxhide.exe;#1"
+   COMMENT "Adding custom manifest to rexxhide.exe...")
 install(TARGETS rexxhide RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
@@ -1194,6 +1213,9 @@ target_include_directories(rexxhide PUBLIC
             ${build_api_platform_dir}
             ${build_messages_dir})
 target_link_libraries(rexxpaws rexx rexxapi)
+add_custom_command(TARGET rexxpaws POST_BUILD
+   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxpaws.exe;#1" "-outputresource:bin\\rexxpaws.exe;#1"
+   COMMENT "Adding custom manifest to rexxpaws.exe...")
 install(TARGETS rexxpaws RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
