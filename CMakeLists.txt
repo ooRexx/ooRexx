@@ -799,7 +799,8 @@ target_link_libraries(rxapi rexx rexxapi ${platform_rxapi_libs})
 # to give it a chance to free up the file.
 if (WIN32)
    add_custom_target(kill_rexxapi
-        ${CMAKE_SOURCE_DIR}/${ORX_PLATFORM_DIR}/killapi.bat)
+        ${CMAKE_SOURCE_DIR}/${ORX_PLATFORM_DIR}/killapi.bat
+        COMMENT "Killing rxapi daemon...")
    # add this as a dependency for major bits to give it a chance to
    # execute early.
    add_dependencies(rexx kill_rexxapi)
