@@ -1762,9 +1762,11 @@ void RexxMemory::saveImage(void)
     fclose(image);
     free(image_buffer);
 
+#ifdef MEMPROFILE
     printf("Object stats for this image save are \n");
     _imageStats.printSavedImageStats();
     printf("\n\n Total bytes for this image %lu bytes \n", image_offset);
+#endif
 }
 
 

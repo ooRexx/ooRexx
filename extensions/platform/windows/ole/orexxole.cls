@@ -40,8 +40,6 @@
 .OLEVariant~!REXXDefined
 .environment~setentry("OLEOBJECT", .OLEObject)
 .environment~setentry("OLEVARIANT", .OLEVariant)
-If Arg(1) = "REXX" Then
-  Say "OLEObject class setup"
 
 ::CLASS 'OLEObject'
 ::METHOD New CLASS

@@ -43,8 +43,6 @@
 /******************************************************************************/
 
 use arg kernel_methods
-
-say ('creating the system specific methods ...')
                                        /* name the common objects           */
 .environment~objectname = "The Environment Directory"
 .kernel~objectname = "The kernel directory"
@@ -59,7 +57,6 @@ call "Serializable.orx"
 .String~!define_class_method("TAB", .methods~string_cls_tab)
 .String~!define_class_method("NULL", .methods~string_cls_null)
 
-say ('Adding setlike methods to RELATION')
 set_methods = .table~new               /* get a table directory             */
                                        /* add the many item methods       */
 set_methods~put(.methods~many_union,        'UNION')
@@ -99,7 +96,6 @@ supplier_methods~put(.methods~supplier_supplier, 'SUPPLIER')
 .environment~setentry('NUMERICCOMPARATOR', .numericcomparator)
 .environment~setentry('ORDERABLE', .orderable)
 
-say ('creating .!server and defining its instance methods')
 server = .object~subclass('server')
 server_mdict = .table~new
 
@@ -123,7 +119,6 @@ server~!rexxdefined                     /* Mark as unchangeable          */
 .Bag~define('[]=', .methods['PUT'])
 .Bag~!REXXDefined
 
-Say "Adding serialization support..."
 .Array~inherit(.Serializable)
 array_methods = .Table~new
 array_methods~put(.methods~array_wo, "WRITEOBJECT")
@@ -182,11 +177,7 @@ queue_methods~put(.methods~queue_ro, "READOBJECT")
 
 call 'StreamClasses.orx'
 
-say 'Stream methods setup'
-
 call 'PlatformObjects.orx'                   -- now load platform-specific builtin classes
-
-say ('Base objects created')
 
 -- add all of the defined routine functions into our global list
 .kernel~functions['RXQUEUE'] = .routines~rxqueue
@@ -211,9 +202,6 @@ exit
  return "09"x
 ::METHOD string_cls_null
  return "00"x
-
-::METHOD array_test
-  say "Hello"
 
 /* Serializable support methods */
 ::METHOD array_wo
