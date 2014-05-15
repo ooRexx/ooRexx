@@ -26,13 +26,23 @@ ooRexx on multiple platforms (Windows, Linux, etc) using CMake.
 4. You are now ready to create everything necessary in building ooRexx on your
    platform. On Windows run the following commands:
 
-   cmake -G "NMake Makefiles" C:\ooRexx\source lication
+   cmake -G "NMake Makefiles" -DBUILD_NSIS C:\ooRexx\source lication
    nmake
    cpack ./
 
-   On Linux run the following commands:
+   On Linux run the following commands to build an rpm:
 
-   cmake -DBUILD_RPM=1 /ooRexx/source/location # use -DBUILD_DEB=1 for debian
+   # OS_DIST is optional on the following command. It is used to
+   # modify the install package name.
+   cmake -DBUILD_RPM=1 -DOS_DIST=fedora20 /ooRexx/source/location
+   make
+   cpack ./
+
+   On Linux run the following commands to build a deb:
+
+   # OS_DIST is optional on the following command. It is used to
+   # modify the install package name.
+   cmake -DBUILD_DEB=1 -DOS_DIST=ubuntu1404 /ooRexx/source/location
    make
    cpack ./
 
