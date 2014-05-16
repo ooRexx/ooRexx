@@ -158,7 +158,7 @@ if (WIN32)
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
-   if ($ENV{CPU} STREQUAL "X64")
+   if ($ENV{Platform} STREQUAL "X64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
    else ()
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx32.exe.manifest)
