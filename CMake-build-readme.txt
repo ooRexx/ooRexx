@@ -6,7 +6,7 @@ There are a number of advantages to using CMake which include support for
 multiple platforms (Windows, Linux, AIX, etc.), a simple build
 mechanism, and many others.
 
-One of the big advantages for developers is that CMake is designed to 
+One of the big advantages for developers is that CMake is designed to
 perform "out of source" builds of the target project. This means that
 builds should be performed from a disk location that is NOT in the
 project source tree. Using this methodology keeps the project source tree
@@ -26,7 +26,7 @@ ooRexx on multiple platforms (Windows, Linux, etc) using CMake.
 4. You are now ready to create everything necessary in building ooRexx on your
    platform. On Windows run the following commands:
 
-   cmake -G "NMake Makefiles" -DBUILD_NSIS C:\ooRexx\source lication
+   cmake -G "NMake Makefiles" -DBUILD_NSIS=1 C:\ooRexx\source lication
    nmake
    cpack ./
 
@@ -46,7 +46,7 @@ ooRexx on multiple platforms (Windows, Linux, etc) using CMake.
    make
    cpack ./
 
-   After the completion of these commands there should be a bin subdirectory 
+   After the completion of these commands there should be a bin subdirectory
    created in your current directory. It should contain all the binaries
    and install files (if the build succeeded).
 
