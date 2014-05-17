@@ -969,7 +969,7 @@ set_target_properties(rxregexp PROPERTIES VERSION ${ORX_VERSION})
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_hostemu_sources
-            ${build_extensions_hostemu_platform_dir}/hostemu.def
+            ${build_platform_dir}/hostemu.def
             ${build_platform_dir}/verinfo.rc)
 else ()
    set (platform_hostemu_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
