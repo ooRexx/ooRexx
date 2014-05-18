@@ -750,7 +750,7 @@ endif ()
 
 # Build the rexx.img file
 add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img
-           COMMAND ./rexximage
+           COMMAND $<TARGET_FILE:rexximage>
            DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_custom_target(rexx_img ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img)
@@ -1011,8 +1011,7 @@ add_library(orexxole SHARED ${build_extensions_ole_dir}/orexxole.cpp
              ${build_extensions_ole_dir}/OLEVariant.cpp
              ${build_extensions_ole_dir}/events.cpp
              ${build_extensions_ole_dir}/orexxole.def
-             ${build_platform_dir}/verinfo.rc
-             ${build_extensions_ole_dir}/orexxole.cls)
+             ${build_platform_dir}/verinfo.rc)
 # Include file definition
 target_include_directories(orexxole PUBLIC
              ${build_extensions_ole_dir})
@@ -1172,7 +1171,7 @@ set (oodialog_source_classFiles
 # We run a rexx program to generate these files, so we need to have the interpreter
 # fully built first.  The files are generated into the output directory.
 add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls
-           COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx build_ooDialog_cls.rex ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+           COMMAND $<TARGET_FILE:rexx_exe> build_ooDialog_cls.rex ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
            DEPENDS rexx_exe rexx_img ${build_extensions_oodialog_dir}/build_ooDialog_cls.rex ${oodialog_source_classfiles}
            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/${build_extensions_oodialog_dir})
 add_custom_target(oodialog_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls)
