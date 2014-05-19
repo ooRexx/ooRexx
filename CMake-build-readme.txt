@@ -26,7 +26,7 @@ ooRexx on multiple platforms (Windows, Linux, etc) using CMake.
 4. You are now ready to create everything necessary in building ooRexx on your
    platform. On Windows run the following commands:
 
-   cmake -G "NMake Makefiles" -DBUILD_NSIS=1 C:\ooRexx\source lication
+   cmake -G "NMake Makefiles" -DBUILD_NSIS=1 C:\ooRexx\source location
    nmake
    cpack ./
 
