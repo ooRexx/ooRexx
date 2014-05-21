@@ -828,11 +828,6 @@ target_include_directories(rexxc PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs})
-if (WIN32)
-add_custom_command(TARGET rexxc POST_BUILD
-   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxc.exe;#1" "-outputresource:bin\\rexxc.exe;#1"
-   COMMENT "Adding custom manifest to rexxc.exe...")
-endif ()
 install(TARGETS rexxc RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxqueue (executable) #########################
