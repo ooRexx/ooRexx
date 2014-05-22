@@ -1,5 +1,3 @@
-# Add links for some ooRexx scripts
-ln -sf %{_datadir}/ooRexx/rexxtry.rex %{_bindir}/rexxtry.rex
 # Add the rxapi service
 if [ -x /usr/bin/systemctl ]; then
    systemctl link %{_datadir}/ooRexx/rxapid.service

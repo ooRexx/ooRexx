@@ -36,10 +36,6 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-# Although rexxtry is technically a sample, historically we have set it up to
-# be used like the other executables.
-ln -sf ${data_dir}/rexxtry.rex ${bin_dir}/rexxtry.rex
-
 # Debian specific set up for rxapid
 if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
    systemctl link /usr/share/ooRexx/rxapid.service
