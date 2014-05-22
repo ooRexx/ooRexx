@@ -42,7 +42,7 @@ if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
    systemctl --system daemon-reload
    systemctl start rxapid.service
 else
-   cp /usr/rxapid       /etc/init.d
+   cp /usr/bin/rxapid       /etc/init.d
    update-rc.d rxapid start 89 2 3 4 5 . stop 89 0 1 6 . > /dev/null 2>&1
    /etc/init.d/rxapid start
 fi
