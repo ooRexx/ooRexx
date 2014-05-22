@@ -705,30 +705,20 @@ target_include_directories(rexximage PUBLIC
 # Extra link library definitions
 target_link_libraries(rexximage rexx rexxapi ${platform_rexximg_libs})
 
+# handy macro for copying files from the source into the build directory.
+macro (copy_build_file name source)
+    ADD_CUSTOM_COMMAND(
+       OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${source}/${name} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}
+       DEPENDS ${source}/${name}
+       )
+endmacro (copy_build_file)
+
 # Copy the class files to the build directory
-ADD_CUSTOM_COMMAND(
-   OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreClasses.orx
-   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/CoreClasses.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreClasses.orx
-   DEPENDS ${build_rexx_classes_dir}/CoreClasses.orx
-   )
-
-ADD_CUSTOM_COMMAND(
-   OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StreamClasses.orx
-   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/StreamClasses.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StreamClasses.orx
-   DEPENDS ${build_rexx_classes_dir}/StreamClasses.orx
-   )
-
-ADD_CUSTOM_COMMAND(
-   OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
-   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_rexx_classes_dir}/Serializable.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Serializable.orx
-   DEPENDS ${build_rexx_classes_dir}/Serializable.orx
-   )
-
-ADD_CUSTOM_COMMAND(
-   OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx
-   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_interpreter_platform_dir}/PlatformObjects.orx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/PlatformObjects.orx
-   DEPENDS ${build_interpreter_platform_dir}/PlatformObjects.orx
-   )
+copy_build_file(CoreClasses.orx ${build_rexx_classes_dir})
+copy_build_file(StreamClasses.orx ${build_rexx_classes_dir})
+copy_build_file(Serializable.orx ${build_rexx_classes_dir})
+copy_build_file(PlatformObjects.orx ${build_interpreter_platform_dir})
 
 # These are the portable class files the image requires
 set (image_class_files
@@ -739,11 +729,7 @@ set (image_class_files
 
 # On Windows, the ole support is also included in the image
 if (WIN32)
-  ADD_CUSTOM_COMMAND(
-     OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls
-     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_ole_dir}/orexxole.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls
-     DEPENDS ${build_extensions_ole_dir}/orexxole.cls
-     )
+  copy_build_file(orexxole.cls ${build_extensions_ole_dir})
   set (platform_rexx_img_depends orexxole
        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.cls)
 endif ()
