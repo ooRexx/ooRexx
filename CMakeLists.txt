@@ -1356,7 +1356,7 @@ if (BUILD_DEB)
    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "David Ashley <wdashley@sourceforge.net>")
-   set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
+   set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
            "${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/postinst;${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/prerm;")
    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
