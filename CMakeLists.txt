@@ -1357,14 +1357,22 @@ if (BUILD_DEB)
    set(CPACK_PACKAGE_CONTACT "wdashley@sourceforge.net")
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "David Ashley <wdashley@sourceforge.net>")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+   # we need to copy these files so we can change the permissions
+   file(COPY ${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/postinst
+           DESTINATION ${CMAKE_BINARY_DIR}
+           FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
+           GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+   file(COPY ${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/prerm
+           DESTINATION ${CMAKE_BINARY_DIR}
+           FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
+           GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-           "${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/postinst;${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/prerm;")
+           "${CMAKE_BINARY_DIR}/postinst;${CMAKE_BINARY_DIR}/prerm;")
    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
       set(orx_install_arch "x86_64")
    else ()
       set(orx_install_arch "i386")
    endif ()
-#   set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${orx_install_arch})
    if (DEFINED OS_DIST)
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}.${OS_DIST}")
    else ()
