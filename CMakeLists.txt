@@ -410,7 +410,8 @@ target_include_directories(rexxapi PUBLIC
             ${build_lib_dir})
 # Extra link library definitions
 target_link_libraries(rexxapi ${platform_rexxapi_libs})
-install(TARGETS rexxapi LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS rexxapi LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
+                        ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR} COMPONENT DevLib)
 set_target_properties(rexxapi PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librexx.so ##########################
@@ -648,7 +649,8 @@ target_include_directories(rexx PUBLIC
 
 # Extra link library definitions
 target_link_libraries(rexx rexxapi ${platform_interpreter_libs})
-install(TARGETS rexx LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS rexx LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
+                     ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR} COMPONENT DevLib)
 set_target_properties(rexx PROPERTIES VERSION ${ORX_VERSION})
 
 #################### rexx (executable) ##########################
@@ -681,7 +683,7 @@ add_custom_command(TARGET rexx_exe POST_BUILD
    COMMENT "Adding custom manifest to rexx.exe...")
 endif ()
 
-install(TARGETS rexx_exe RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS rexx_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rexximage (bin file) ##########################
 # These are the core classes built into the .img file.
@@ -740,7 +742,7 @@ add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img
            DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_custom_target(rexx_img ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img)
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
 
 #################### rxapi (executable) #########################
 # additional source files required by specific platforms
@@ -793,7 +795,7 @@ if (WIN32)
    add_dependencies(rexxapi kill_rexxapi)
    add_dependencies(rxapi kill_rexxapi)
 endif ()
-install(TARGETS rxapi RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS rxapi RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rexxc (executable) #########################
 # additional source files required by specific platforms
@@ -814,7 +816,7 @@ target_include_directories(rexxc PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs})
-install(TARGETS rexxc RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS rexxc RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxqueue (executable) #########################
 # additional source files required by specific platforms
@@ -836,7 +838,7 @@ target_include_directories(rxqueue PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rxqueue rexx rexxapi ${platform_rxqueue_libs})
-install(TARGETS rxqueue RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS rxqueue RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxsubcom (executable) #########################
 # additional source files required by specific platforms
@@ -858,7 +860,7 @@ target_include_directories(rxsubcom PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rxsubcom rexx rexxapi ${platform_subcom_libs})
-install(TARGETS rxsubcom RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS rxsubcom RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### librexxutil.so ################
 # additional source files required by specific platforms
@@ -881,7 +883,7 @@ target_include_directories(rexxutil PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexxutil rexx rexxapi ${platform_rexxutil_libs})
-install(TARGETS rexxutil LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS rexxutil LIBRARY COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rexxutil PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxmath.so ################
@@ -902,7 +904,7 @@ target_include_directories(rxmath PUBLIC
              ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(rxmath rexx rexxapi ${platform_rxmath_libs})
-install(TARGETS rxmath LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS rxmath LIBRARY COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rxmath PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxsock.so ################
@@ -919,7 +921,7 @@ add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
              ${platform_rxsock_sources})
 # Extra link library definitions
 target_link_libraries(rxsock rexx rexxapi ${platform_rxsock_libs})
-install(TARGETS rxsock LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS rxsock LIBRARY COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rxsock PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxregexp.so ################
@@ -943,7 +945,7 @@ target_include_directories(rxregexp PUBLIC
              ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs})
-install(TARGETS rxregexp LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS rxregexp LIBRARY COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(rxregexp PROPERTIES VERSION ${ORX_VERSION})
 
 #################### libhostemu.so ################
@@ -967,7 +969,7 @@ target_include_directories(hostemu PUBLIC
              ${build_extensions_hostemu_dir})
 # Extra link library definitions
 target_link_libraries(hostemu rexx rexxapi ${platform_hostemu_libs})
-install(TARGETS hostemu LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS hostemu LIBRARY COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 set_target_properties(hostemu PROPERTIES VERSION ${ORX_VERSION})
 
 #################### librxunixsys.so ################
@@ -998,7 +1000,7 @@ target_include_directories(orexxole PUBLIC
              ${build_extensions_ole_dir})
 # Extra link library definitions
 target_link_libraries(orexxole rexx rexxapi)
-install(TARGETS orexxole LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS orexxole LIBRARY COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 endif ()
 
 #################### rxwinsys.dll ################
@@ -1013,7 +1015,7 @@ target_include_directories(rxwinsys PUBLIC
              ${build_extensions_rxwinsys_dir})
 # Extra link library definitions
 target_link_libraries(rxwinsys rexx rexxapi shlwapi)
-install(TARGETS rxwinsys LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS rxwinsys LIBRARY COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 endif ()
 
 #################### oodialog.dll ################
@@ -1072,7 +1074,7 @@ target_include_directories(oodialog PUBLIC
              ${build_extensions_oodialog_dir})
 # Extra link library definitions
 target_link_libraries(oodialog rexx rexxapi winmm comdlg32 comctl32 shlwapi oleacc uxtheme rpcrt4 propsys delayimp)
-install(TARGETS oodialog LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS oodialog LIBRARY COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
 
 #################### ooDialog.exe (executable) ##########################
 # Sources for ooDialog.exe
@@ -1097,7 +1099,7 @@ target_link_libraries(oodialog_exe rexx rexxapi shlwapi)
 add_custom_command(TARGET oodialog_exe POST_BUILD
    COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.exe;#1" "-outputresource:bin\\ooDialog.exe;#1"
    COMMENT "Adding custom manifest to ooDialog.exe...")
-install(TARGETS oodialog_exe RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS oodialog_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### ooDialog.com (executable) ##########################
 # Sources for ooDialog.com
@@ -1123,7 +1125,7 @@ target_link_libraries(oodialog_com rexx rexxapi shell32 Advapi32)
 add_custom_command(TARGET oodialog_com POST_BUILD
    COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.com;#1" "-outputresource:bin\\ooDialog.com;#1"
    COMMENT "Adding custom manifest to ooDialog.com...")
-install(TARGETS oodialog_com RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS oodialog_com RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 
 # Generate the oodialog .cls files used for the ::requires.  These are generated from
@@ -1157,9 +1159,9 @@ add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE
            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/${build_extensions_oodialog_dir})
 add_custom_target(oodialog_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls)
 
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 endif ()
 
 
@@ -1178,7 +1180,7 @@ target_link_libraries(rexxhide rexx rexxapi)
 add_custom_command(TARGET rexxhide POST_BUILD
    COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxhide.exe;#1" "-outputresource:bin\\rexxhide.exe;#1"
    COMMENT "Adding custom manifest to rexxhide.exe...")
-install(TARGETS rexxhide RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS rexxhide RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
 
@@ -1197,31 +1199,31 @@ target_link_libraries(rexxpaws rexx rexxapi)
 add_custom_command(TARGET rexxpaws POST_BUILD
    COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxpaws.exe;#1" "-outputresource:bin\\rexxpaws.exe;#1"
    COMMENT "Adding custom manifest to rexxpaws.exe...")
-install(TARGETS rexxpaws RUNTIME DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(TARGETS rexxpaws RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
 
 #################### misc files ##########################
 
 # These artifacts apply to all platforms
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxregexp_dir}/rxregexp.cls DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxregexp_dir}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxftp_dir}/rxftp.cls DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxftp_dir}/rxftp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_csvstream_dir}/csvStream.cls DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_csvstream_dir}/csvStream.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/socket.cls DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/streamsocket.cls DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/mime.cls DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/smtp.cls DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/socket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/streamsocket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexx.h DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexxapidefs.h DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxapitypes.h DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatformapis.h DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatformdefs.h DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxapi.h DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexx.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexxapidefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxapitypes.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatformapis.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatformdefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxapi.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
 if (NOT WIN32)
    install(FILES rexxapi/server/platform/unix/rxapid DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
