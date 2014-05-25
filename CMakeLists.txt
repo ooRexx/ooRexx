@@ -1254,7 +1254,7 @@ if (NOT WIN32)
               ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/${name}.${cat})
       add_custom_target(${name}_man ALL DEPENDS ${name}.${cat}.gz)
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}.${cat}.gz
-          DESTINATION share/man/man${cat}
+          DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man${cat}
           PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
    endmacro (add_manpage)
 
