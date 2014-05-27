@@ -1,0 +1,16 @@
+# Add the rxapi service
+if [ -x /usr/bin/systemctl ]; then
+   systemctl link @CMAKE_INSTALL_PREFIX@/share/ooRexx/rxapid.service
+   systemctl --system daemon-reload
+   systemctl start rxapid.service
+elif [ -x /sbin/insserv ]; then
+   ln -sf @INSTALL_EXECUTABLE_DIR@/rxapid /etc/init.d/rxapid
+   # try insserv first (for Suse)
+   insserv -f rxapid
+   service rxapid start
+else
+   ln -sf @INSTALL_EXECUTABLE_DIR@/rxapid /etc/init.d/rxapid
+   # else, try good old chkconfig
+   chkconfig --add rxapid
+   service rxapid start
+fi

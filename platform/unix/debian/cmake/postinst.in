@@ -38,11 +38,11 @@
 
 # Debian specific set up for rxapid
 if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
-   systemctl link /usr/share/ooRexx/rxapid.service
+   systemctl link @CMAKE_INSTALL_PREFIX@/share/ooRexx/rxapid.service
    systemctl --system daemon-reload
    systemctl start rxapid.service
 else
-   cp /usr/bin/rxapid       /etc/init.d
+   cp @INSTALL_EXECUTABLE_DIR@/rxapid       /etc/init.d
    update-rc.d rxapid start 89 2 3 4 5 . stop 89 0 1 6 . > /dev/null 2>&1
    /etc/init.d/rxapid start
 fi
