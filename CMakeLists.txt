@@ -140,6 +140,7 @@ else ()
    set (INSTALL_REX_DIR ${CMAKE_INSTALL_PREFIX}/bin)
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
    find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib/* ${CMAKE_INSTALL_PREFIX}/lib64)
+   set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
 
 # Set compiler and linker flags common to all build environments
@@ -1235,7 +1236,8 @@ endif ()
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
 if (NOT WIN32)
-   install(FILES rexxapi/server/platform/unix/rxapid DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
+   # This pevents the rpm from generating thse paths in the install.
+   set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION ${CMAKE_INSTALL_PREFIX}/share/man ${CMAKE_INSTALL_PREFIX}/share/man/man1)
 
    add_custom_command(OUTPUT rexx.cat
               COMMAND gencat rexx.cat ${CMAKE_CURRENT_SOURCE_DIR}/${build_messages_dir}/gencat.inp
@@ -1250,19 +1252,19 @@ if (NOT WIN32)
               COMMAND gzip -c
               ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/${name}.${cat}
               > ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}.${cat}.gz
-              DEPENDS
-              ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/${name}.${cat})
+              DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/${name}.${cat})
       add_custom_target(${name}_man ALL DEPENDS ${name}.${cat}.gz)
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}.${cat}.gz
-          DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man${cat}
+          DESTINATION ${INSTALL_MAN_DIR}/man${cat}
           PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
    endmacro (add_manpage)
 
-#   add_manpage (rexx 1)
-#   add_manpage (rexxc 1)
-#   add_manpage (rxqueue 1)
-#   add_manpage (rxsubcom 1)
+   add_manpage (rexx 1)
+   add_manpage (rexxc 1)
+   add_manpage (rxqueue 1)
+   add_manpage (rxsubcom 1)
 
+   install(FILES rexxapi/server/platform/unix/rxapid DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.csh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxapid.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
