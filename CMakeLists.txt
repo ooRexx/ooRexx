@@ -143,6 +143,13 @@ else ()
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
 
+
+# Scaffolding of some stuff to do NSIS installs.  This is incomplete, but I want
+# to get this checked in so I don't forget how to do this.
+MACRO(install_component_shortcut component command)
+    LIST(APPEND CPACK_COMPONENT_SHORTCUT_${component} ${command})
+ENDMACRO ()
+
 # Set compiler and linker flags common to all build environments
 include_directories(${PROJECT_BINARY_DIR})
 if (WIN32)
