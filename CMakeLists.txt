@@ -1243,8 +1243,6 @@ endif ()
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
 if (NOT WIN32)
-   # This pevents the rpm from generating thse paths in the install.
-   set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION ${CMAKE_INSTALL_PREFIX}/share/man ${CMAKE_INSTALL_PREFIX}/share/man/man1)
    add_custom_command(OUTPUT rexx.cat
               COMMAND gencat rexx.cat ${CMAKE_CURRENT_SOURCE_DIR}/${build_messages_dir}/gencat.inp
               DEPENDS ${image_class_files} ${platform_rexx_img_depends}
@@ -1414,7 +1412,7 @@ if (BUILD_DEB)
    # The DEB generator does not support a multi-line description.
    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
    # Be sure to do this AFTER you set the CPACK_PACKAGE_FILE_NAME
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/fixup_deb.sh.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/fixup_deb.sh)
+   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/fixup_deb.sh.in ${CMAKE_BINARY_DIR}/fixup_deb.sh)
 endif ()
 
 
