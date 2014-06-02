@@ -39,7 +39,7 @@
 #/*----------------------------------------------------------------------------*/
 #/* Global settings                                                            */
 #/*----------------------------------------------------------------------------*/
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8)
 cmake_policy(SET CMP0010 OLD)
 include(CheckIncludeFile)
 include(CheckLibraryExists)
@@ -284,16 +284,8 @@ set (VERSION ${ORX_VER_STR})
 set (STDC_HEADERS 1)
 
 
-# Configure files
+# Configure files config.h
 configure_file(config.h.in.cmake ${PROJECT_BINARY_DIR}/config.h)
-# TODO: revisit this section later
-if (NOT WIN32)
-#   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/oorexx.spec)
-#   configure_file(platform/unix/debian/changelog.in platform/unix/debian/changelog)
-#   configure_file(platform/unix/debian/postinst.in platform/unix/debian/postinst)
-#   configure_file(rexxapi/server/platform/unix/rxapid.in rexxapi/server/platform/unix/rxapid)
-#   configure_file(platform/unix/oorexx-config.in platform/unix/oorexx-config)
-endif ()
 
 
 
@@ -1223,24 +1215,24 @@ endif ()
 #################### misc files ##########################
 
 # These artifacts apply to all platforms
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxregexp_dir}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxregexp_dir}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxftp_dir}/rxftp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxftp_dir}/rxftp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_csvstream_dir}/csvStream.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_csvstream_dir}/csvStream.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/socket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/streamsocket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/socket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/streamsocket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexx.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexxapidefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxapitypes.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatformapis.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatformdefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxapi.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexx.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexxapidefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxapitypes.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatformapis.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatformdefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxapi.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
 if (NOT WIN32)
    add_custom_command(OUTPUT rexx.cat
@@ -1409,10 +1401,10 @@ if (BUILD_DEB)
    else ()
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
    endif ()
-   # The DEB generator does not support a multi-line description.
-   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
    # Be sure to do this AFTER you set the CPACK_PACKAGE_FILE_NAME
    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/fixup_deb.sh.in ${CMAKE_BINARY_DIR}/fixup_deb.sh)
+   # The DEB generator does not support a multi-line description.
+   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
 endif ()
 
 
