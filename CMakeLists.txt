@@ -131,6 +131,7 @@ if (WIN32)
    set (INSTALL_LIB_DIR bin)
    set (INSTALL_CLS_DIR bin)
    set (INSTALL_REX_DIR bin)
+   set (INSTALL_DOC_DIR doc)
    set (INSTALL_INCLUDE_DIR include)
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
@@ -1309,11 +1310,34 @@ set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MyLib - CPack Component Installation Example")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
 SET(CPACK_NSIS_MODIFY_PATH ON)
+# The Docs are an optional build step, so we only add them if we have
+# been configured with a doc source directory
+set(CPACK_NSIS_INSTALL_COMPONENTS Core DevLib Samples)
 
 install_component_shortcut(Core "Try Rexx" rexx.exe rexxtry.rex rexx.exe "")
 install_component_shortcut(Core "Try Rexx (GUI)" rexx.exe ooRexxTry.rex rexx.exe "")
 install_component_shortcut(Core "Uninstall ooRexx" uninstall.exe "" uninstall.exe 0)
 install_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
+
+# if we have a doc source directory, then add the Docs component to the installer and
+# install each of the doc files
+if (DOC_SOURCE_DIR)
+  list(append CPACK_NSIS_INSTALL_COMPONENTS Docs)
+  install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
+  install(FILES ${DOC_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
+  install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/rxsock.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/rxftp.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/oodialog.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${build_extensions_oodialog_dir}/ooDialog_ReleaseNotes.txt COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/oodguide.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${samples}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+endif ()
 
 endif ()
 
