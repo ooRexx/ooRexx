@@ -97,6 +97,11 @@ Var UninstLog
 
 !define SHACF_FILESYSTEM 1  ; For SHAutoComplete()
 
+!macro ConfigureShortcut Name Program Arg Icon Icon_index
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${Name}.lnk" "$INSTDIR\${Program}" '"${Arg}"' "$INSTDIR\${Icon}" ${Icon_index}
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${Name}.lnk"
+!macroend
+
 !macro AddItem Path
  FileWrite $UninstLog "${Path}$\r$\n"
 !macroend

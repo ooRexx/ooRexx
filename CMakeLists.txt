@@ -145,8 +145,7 @@ endif ()
 
 # Create and add a shortcut item to the list for a component
 MACRO(install_component_shortcut component name prog arg icon icon_index)
-  LIST(APPEND CPACK_COMPONENT_SHORTCUTS_${component} "CreateShortCut \"\$SMPROGRAMS\\\${LONGNAME}\\${SHORTNAME} ${name}.lnk\" \"\$INSTDIR\\${prog}\" '\"${arg}\"' \"$INSTDIR\\${icon}\" ${icon_index}")
-  LIST(APPEND CPACK_COMPONENT_SHORTCUTS_${component} "\${AddItem} \"\$SMPROGRAMS\\\${LONGNAME}\\${name}.lnk\"")
+  set(CPACK_COMPONENT_SHORTCUTS_${component} "${CPACK_COMPONENT_SHORTCUTS_${component}}\nConfigureShortCut \\\"${name}\\\" ${prog} \\\"${arg}\\\" ${icon} ${icon_index}")
 ENDMACRO ()
 
 # Set compiler and linker flags common to all build environments
@@ -1315,6 +1314,7 @@ install_component_shortcut(Core "Try Rexx" rexx.exe rexxtry.rex rexx.exe "")
 install_component_shortcut(Core "Try Rexx (GUI)" rexx.exe ooRexxTry.rex rexx.exe "")
 install_component_shortcut(Core "Uninstall ooRexx" uninstall.exe "" uninstall.exe 0)
 install_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
+
 endif ()
 
 
