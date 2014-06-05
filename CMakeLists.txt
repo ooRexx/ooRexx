@@ -1315,6 +1315,10 @@ if (BUILD_NSIS)
 set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
 set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
+# ask for a modify the pack dialg
+set(CPACK_NSIS_MODIFY_PATH ON)
+set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\rexx.exe")
+set(CPACK_NSIS_URL_INFO_ABOUT "http://www.oorexx.org")
 set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
 # Not sure why this is not working.  Claims it cannoth file the file, but it exists.
 # It might need to be an installed file...not sure
@@ -1339,11 +1343,11 @@ set(CPACK_NSIS_INSTALL_COMPONENTS Core DevLib Samples)
 set(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
 
 # Add addititional Windows-only install files
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Docs DESTINATION ${INSTALL_EXECUTABLE_DIR})
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Docs DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 # technically a sample, but this is so useful we add it to the binary dir
-install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Docs DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 install_component_shortcut(Core "Try Rexx" rexx.exe rexxtry.rex rexx.exe "")
 install_component_shortcut(Core "Try Rexx (GUI)" rexx.exe ooRexxTry.rex rexx.exe "")
