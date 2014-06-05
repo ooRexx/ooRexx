@@ -45,7 +45,7 @@ cmake_minimum_required (VERSION 2.6)
 #/*----------------------------------------------------------------------------*/
 project (callrxnt)
 
-#################### callrexx1 (executable) #########################
+#################### callrxnt (executable) #########################
 # additional source files required by specific platforms
 set (platform_callrxnt_libs ${ORX_SYSLIB_DL})
 # Sources for callrxnt
@@ -58,4 +58,8 @@ target_include_directories(callrxnt PUBLIC
             ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(callrxnt rexx ${platform_callrxnt_libs})
-install(TARGETS callrxnt RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS callrxnt RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
+install(FILES ${PROJECT_SOURCE_DIR}/callrxnt.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
+install(FILES ${PROJECT_SOURCE_DIR}/callrxnt.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
+install(FILES ${PROJECT_SOURCE_DIR}/callrxnt.mak COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/backward.fnc COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)

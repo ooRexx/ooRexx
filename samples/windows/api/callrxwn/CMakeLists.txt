@@ -45,7 +45,7 @@ cmake_minimum_required (VERSION 2.6)
 #/*----------------------------------------------------------------------------*/
 project (callrxwn)
 
-#################### callrexx1 (executable) #########################
+#################### callrxwn (executable) #########################
 # Sources for callrxwn
 add_executable(callrxwn WIN32
     ${PROJECT_SOURCE_DIR}/callrxwn.c
@@ -57,4 +57,10 @@ target_include_directories(callrxwn PUBLIC
             ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(callrxwn rexx)
-install(TARGETS callrxwn RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS callrxwn RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxwn)
+install(FILES ${PROJECT_SOURCE_DIR}/callrxwn.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxwn)
+install(FILES ${PROJECT_SOURCE_DIR}/callrxwn.h COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxwn)
+install(FILES ${PROJECT_SOURCE_DIR}/callrxwn.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxwn)
+install(FILES ${PROJECT_SOURCE_DIR}/callrxwn.mak COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxwn)
+install(FILES ${PROJECT_SOURCE_DIR}/callrxwn.rc COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxwn)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/backward.fnc COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxwn)

@@ -689,8 +689,7 @@ add_custom_command(TARGET rexx_exe POST_BUILD
    COMMENT "Adding custom manifest to rexx.exe...")
 endif ()
 
-install(TARGETS rexx_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
-                         LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
+install(TARGETS rexx_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rexximage (bin file) ##########################
 # These are the core classes built into the .img file.
@@ -1300,7 +1299,7 @@ endif ()
 
 
 
-# direct output into a samples subdir and only build on request
+# direct output into a samples subdir
 add_subdirectory (samples samples)
 
 

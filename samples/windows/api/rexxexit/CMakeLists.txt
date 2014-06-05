@@ -45,7 +45,7 @@ cmake_minimum_required (VERSION 2.6)
 #/*----------------------------------------------------------------------------*/
 project (rexxexit)
 
-#################### callrexx1 (executable) #########################
+#################### rexxexit (executable) #########################
 # additional source files required by specific platforms
 set (platform_rexxexit_libs ${ORX_SYSLIB_DL})
 # Sources for rexxexit
@@ -58,4 +58,7 @@ target_include_directories(rexxexit PUBLIC
             ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(rexxexit rexx ${platform_rexxexit_libs})
-install(TARGETS rexxexit RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS rexxexit RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/rexxexit)
+install(FILES ${PROJECT_SOURCE_DIR}/rexxexit.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/rexxexit)
+install(FILES ${PROJECT_SOURCE_DIR}/rexxexit.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/rexxexit)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/testRexxExit COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/rexxexit)

@@ -55,4 +55,8 @@ target_include_directories(rexxapi1 PUBLIC
             ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(rexxapi1 rexx rexxapi)
-install(TARGETS rexxapi1 LIBRARY DESTINATION ${INSTALL_LIB_DIR} ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR})
+install(TARGETS rexxapi1 RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
+install(FILES ${PROJECT_SOURCE_DIR}/rexxapi1.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
+install(FILES ${PROJECT_SOURCE_DIR}/rexxapi1.def COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
+install(FILES ${PROJECT_SOURCE_DIR}/rexxapi1.mak COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/apitest1.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
