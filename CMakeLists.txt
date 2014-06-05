@@ -136,7 +136,8 @@ if (WIN32)
    set (INSTALL_CLS_DIR bin)
    set (INSTALL_REX_DIR bin)
    set (INSTALL_DOC_DIR doc)
-   set (INSTALL_INCLUDE_DIR include)
+   set (INSTALL_INCLUDE_DIR api)
+   set (INSTALL_SAMPLES_DIR samples)
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
    set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
@@ -1228,6 +1229,8 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/socket.
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/streamsocket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+# technically a sample, but this is so useful we add it to the binary dir
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/rexxtry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexx.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexxapidefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
@@ -1243,8 +1246,7 @@ if (NOT WIN32)
               DEPENDS ${image_class_files} ${platform_rexx_img_depends}
               WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
    add_custom_target(rexx_cat ALL DEPENDS rexx.cat)
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.cat DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/rexxtry.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.cat DESTINATION ${CATDIR} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
    macro (add_manpage name cat)
       add_custom_command(OUTPUT ${name}.${cat}.gz
@@ -1334,10 +1336,59 @@ set(CPACK_COMPONENT_DOCS_DESCRIPTION "Complete documentation for Open Object Rex
 # been configured with a doc source directory
 set(CPACK_NSIS_INSTALL_COMPONENTS Core DevLib Samples)
 
+set(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
+
+# Add addititional Windows-only install files
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Docs DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Docs DESTINATION ${INSTALL_EXECUTABLE_DIR})
+
+# technically a sample, but this is so useful we add it to the binary dir
+install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Docs DESTINATION ${INSTALL_EXECUTABLE_DIR})
+
 install_component_shortcut(Core "Try Rexx" rexx.exe rexxtry.rex rexx.exe "")
 install_component_shortcut(Core "Try Rexx (GUI)" rexx.exe ooRexxTry.rex rexx.exe "")
 install_component_shortcut(Core "Uninstall ooRexx" uninstall.exe "" uninstall.exe 0)
 install_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
+
+# now the samples
+
+install(FILES ${SAMPLES_SOURCE}/windows/0ReadMe.first COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/rexxcps.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/ccreply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/complex.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/factor.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/greply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/guess.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/ktguard.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/makestring.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/month.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/philfork.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/pipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/properties.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/qdate.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/qtime.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/scclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/scserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/semcls.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/sfclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/sfserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/stack.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/usecomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/windows/rexutils/drives.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+
+# misc samples
+install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.empty COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.input COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.readMe COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+install(PROGRAMS ${SAMPLES_SOURCE}/windows/misc/fileDrop.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+
+# ole samples
+install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/ole)
+
+# oodialog samples
+install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
+install(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
 
 # if we have a doc source directory, then add the Docs component to the installer and
 # install each of the doc files

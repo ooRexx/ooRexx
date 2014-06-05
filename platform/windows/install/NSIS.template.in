@@ -99,7 +99,7 @@ Var UninstLog
 
 !macro ConfigureShortcut Name Program Arg Icon Icon_index
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${Name}.lnk" "$INSTDIR\${Program}" '"${Arg}"' "$INSTDIR\${Icon}" ${Icon_index}
-  ${AddItem} "$SMPROGRAMS\${LONGNAME}\${Name}.lnk"
+  !insertmacro AddItem "$SMPROGRAMS\${LONGNAME}\${Name}.lnk"
 !macroend
 
 !macro AddItem Path
