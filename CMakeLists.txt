@@ -124,6 +124,10 @@ include_directories(BEFORE api api/${ORX_PLATFORM_DIR})
    SET(CPACK_PACKAGE_VERSION_PATCH ${ORX_MOD_LVL})
    set(CPACK_PACKAGE_NAME "ooRexx")
    set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
+   set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_SOURCE_DIR}/ReleaseNotes)
+   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open Object Rexx Interpreter")
+   set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/CPLv1.0.txt)
+   set(CPACK_RESOURCE_FILE_README ${CMAKE_SOURCE_DIR}/ReleaseNotes)
 
 # Set install variables
 if (WIN32)
@@ -1307,9 +1311,25 @@ endif ()
 # Build an NSIS installer
 if (BUILD_NSIS)
 set(CPACK_GENERATOR NSIS)
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MyLib - CPack Component Installation Example")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
-SET(CPACK_NSIS_MODIFY_PATH ON)
+set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
+set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
+# Not sure why this is not working.  Claims it cannoth file the file, but it exists.
+# It might need to be an installed file...not sure
+# set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
+set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
+
+# Component setups
+set(CPACK_COMPONENT_CORE_DISPLAY_NAME "Open Object Rexx Core (required)")
+set(CPACK_COMPONENT_CORE_DESCRIPTION "The Open Object Rexx interpreter and extension libraries.")
+set(CPACK_COMPONENT_CORE_REQUIRED 1)
+set(CPACK_COMPONENT_SAMPLES_DISPLAY_NAME "Open Object Rexx Samples")
+set(CPACK_COMPONENT_SAMPLES_DESCRIPTION "Sample programs that demonstrate Open Object Rexx features.")
+set(CPACK_COMPONENT_DEVLIB_DISPLAY_NAME "Open Object Rexx Development Kit")
+set(CPACK_COMPONENT_DEVLIB_DESCRIPTION "Header files and libraries for using the Open Object Rexx native programming interfaces.")
+set(CPACK_COMPONENT_DOCS_DISPLAY_NAME "Open Object Rexx Documentation")
+set(CPACK_COMPONENT_DOCS_DESCRIPTION "Complete documentation for Open Object Rexx in PDF form.")
+
 # The Docs are an optional build step, so we only add them if we have
 # been configured with a doc source directory
 set(CPACK_NSIS_INSTALL_COMPONENTS Core DevLib Samples)

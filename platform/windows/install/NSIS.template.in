@@ -17,7 +17,7 @@
 !define VERSION        "@CPACK_PACKAGE_VERSION@"
 !define PATCH          "@CPACK_PACKAGE_VERSION_PATCH@"
 !define INST_DIR       "@CPACK_TEMPORARY_DIRECTORY@"
-!define SHORTNAME      "@CPACK_NSIS_PACKAGE_SHORTNAME@"            ;Short name (no slash) of package
+!define SHORTNAME      "@CPACK_PACKAGE_NAME@"            ;Short name (no slash) of package
 !define DISPLAYICON    "$INSTDIR\rexx.exe,0"
 !define UNINSTALLER    "uninstall.exe"
 !define KEYFILE1       "rexx.dll"
