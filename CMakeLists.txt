@@ -150,8 +150,10 @@ else ()
 endif ()
 
 # Create and add a shortcut item to the list for a component
+# This also adds entries to delete the equivalent shortcut
 MACRO(install_component_shortcut component name prog arg icon icon_index)
-  set(CPACK_COMPONENT_SHORTCUTS_${component} "${CPACK_COMPONENT_SHORTCUTS_${component}}\nConfigureShortCut \\\"${name}\\\" ${prog} \\\"${arg}\\\" ${icon} ${icon_index}")
+  set(CPACK_CREATE_COMPONENT_SHORTCUTS_${component} "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}\n!installmacro ConfigureShortCut \\\"${name}\\\" ${prog} \\\"${arg}\\\" ${icon} ${icon_index}")
+  set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!installmacro RemoveShortCut \\\"${name}\\\"")
 ENDMACRO ()
 
 # Set compiler and linker flags common to all build environments
