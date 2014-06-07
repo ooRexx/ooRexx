@@ -147,6 +147,13 @@ MACRO(install_component_shortcut component name prog arg icon icon_index)
   set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \\\"${name}\\\"")
 ENDMACRO ()
 
+# Create and add a shortcut item to the list for a component for running a rexx program
+# This also adds entries to delete the equivalent shortcut
+MACRO(install_rexx_shortcut component name launcher program)
+  set(CPACK_CREATE_COMPONENT_SHORTCUTS_${component} "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureRexxShortCut \\\"${name}\\\" ${launcher} \\\"${program}\\\"")
+  set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \\\"${name}\\\"")
+ENDMACRO ()
+
 # Function to build component short cut includes that get inserted into the
 # into the NSIS template
 function(build_NSIS_shortcuts)
@@ -1390,8 +1397,8 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION
 install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 # add extra shortcuts (uninstall one is automatically added)
-install_component_shortcut(Core "Try Rexx" rexx.exe rexxtry.rex rexx.exe "")
-install_component_shortcut(Core "Try Rexx (GUI)" rexx.exe ooRexxTry.rex rexx.exe "")
+install_rexx_shortcut(Core "Try Rexx" rexx rexxtry.rex)
+install_rexx_shortcut(Core "Try Rexx (GUI)" rexx ooRexxTry.rex)
 install_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
 
 # now the samples
@@ -1433,6 +1440,20 @@ install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${
 # oodialog samples
 install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
 install(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
+
+# sample shortcuts
+# NOTE:  because of multiple levels of escaping going on, the subdirectory "\" require EIGHT backslashes
+install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\RexxCPS" rexxpaws "samples\\\\\\\\rexxcps.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Query Date" rexxpaws "samples\\\\\\\\qdate.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Display Window Tree" ooDialog "samples\\\\\\\\oodialog\\\\\\\\winsystem\\\\\\\\displayWindowTree.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Windows Manager" ooDialog "samples\\\\\\\\oodialog\\\\\\\\winsystem\\\\\\\\usewmgr.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Combo Box Types" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ComboBox\\\\\\\\comboBoxTypes.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Custom Position Tool Tips" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ToolTip\\\\\\\\customPositionToolTip.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\List-view Views" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ListView\\\\\\\\columnIcons.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Samples" ooDialog "samples\\\\\\\\sample.rex")
+install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx in a Console" "samples\\\\\\\\api\\\\\\\\callrxnt\\\\\\\\callrxnt.exe" "" "samples\\\\\\\\api\\\\\\\\callrxnt\\\\\\\\callrxnt.ico" "")
+install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx in a Window" "samples\\\\\\\\api\\\\\\\\callrxwn\\\\\\\\callrxwn.exe" "" "samples\\\\\\\\api\\\\\\\\callrxwn\\\\\\\\callrxwn.ico" "")
+install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx with Exits" "samples\\\\\\\\api\\\\\\\\rexxexit\\\\\\\\rexxexit.exe" "" "samples\\\\\\\\api\\\\\\\\rexxexit\\\\\\\\rexxexit.ico" "")
 
 # if we have a doc source directory, then add the Docs component to the installer and
 # install each of the doc files

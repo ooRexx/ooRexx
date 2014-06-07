@@ -56,7 +56,13 @@ Var AR_RegFlags
 # Create a shortcut using the information provided from CMake.  This versions simplifies
 # the process of escaping all of the special characters in CMake
 !macro ConfigureShortCut Name Program Arg Icon Icon_index
-  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\\${Name}.lnk" "$INSTDIR\${Program}" '"${Arg}"' "$INSTDIR\${Icon}" ${Icon_index}
+  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\${Name}.lnk" "$INSTDIR\${Program}" '"${Arg}"' "$INSTDIR\${Icon}" ${Icon_index}
+!macroend
+
+# Create a shortcut for running a Rexx program using the information provided from CMake.  This versions simplifies
+# the process of escaping all of the special characters in CMake
+!macro ConfigureRexxShortCut Name Launcher RexxProgram
+  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\${Name}.lnk" "$INSTDIR\${Laucher}.exe" '"${RexxProgram}"' "$INSTDIR\{Launcher}.exe"
 !macroend
 
 # The reverse of CreateShortCut.  This removes a short cut for a component.
