@@ -154,6 +154,13 @@ MACRO(install_rexx_shortcut component name launcher program)
   set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \\\"${name}\\\"")
 ENDMACRO ()
 
+# Create and add a shortcut for a documentation element
+# This also adds entries to delete the equivalent shortcut
+MACRO(install_doc_shortcut name file)
+  set(CPACK_CREATE_COMPONENT_SHORTCUTS_Docs "${CPACK_CREATE_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \\\"${name}\\\" \\\"${file}\\\"")
+  set(CPACK_DELETE_COMPONENT_SHORTCUTS_Docs "${CPACK_DELETE_COMPONENT_SHORTCUTS_Docs}\n!insertmacro RemoveShortCut \\\"${name}\\\"")
+ENDMACRO ()
+
 # Function to build component short cut includes that get inserted into the
 # into the NSIS template
 function(build_NSIS_shortcuts)
@@ -1473,6 +1480,20 @@ if (DOC_SOURCE_DIR)
   install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
   install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
   install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+
+#  install_doc_shortcut("ooRexx README" "readme.pdf")
+  install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
+  install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
+  install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
+  install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
+  install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
+  install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
+  install_doc_shortcut("ooDialog Reference" "oodialog.pdf")
+  install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
+  install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
+  install_doc_shortcut("ooRexx Extensions Reference" "rexxextensions.pdf")
+  install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
+  install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
 endif ()
 
 # build the NSIS shortcut creation/deletion macros that are inserted into the template

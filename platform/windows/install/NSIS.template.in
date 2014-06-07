@@ -65,6 +65,11 @@ Var AR_RegFlags
   CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\${Name}.lnk" "$INSTDIR\${Laucher}.exe" '"${RexxProgram}"' "$INSTDIR\{Launcher}.exe"
 !macroend
 
+# Create a shortcut for a documentation file (all come from the same directory)
+!macro ConfigureDocShortCut Name File
+  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\Docuentation\${Name}.lnk" "$INSTDIR\doc\${File}" "" "$INSTDIR\doc\${File}" 0
+!macroend
+
 # The reverse of CreateShortCut.  This removes a short cut for a component.
 # the process of escaping all of the special characters in CMake
 !macro RemoveShortCut Name
