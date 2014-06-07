@@ -138,6 +138,43 @@ if (WIN32)
    set (INSTALL_DOC_DIR doc)
    set (INSTALL_INCLUDE_DIR api)
    set (INSTALL_SAMPLES_DIR samples)
+
+
+# Create and add a shortcut item to the list for a component
+# This also adds entries to delete the equivalent shortcut
+MACRO(install_component_shortcut component name prog arg icon icon_index)
+  set(CPACK_CREATE_COMPONENT_SHORTCUTS_${component} "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}\n!installmacro ConfigureShortCut \\\"${name}\\\" ${prog} \\\"${arg}\\\" ${icon} ${icon_index}")
+  set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!installmacro RemoveShortCut \\\"${name}\\\"")
+ENDMACRO ()
+
+# Function to build component short cut includes that get inserted into the
+# into the NSIS template
+function(build_NSIS_shortcuts)
+   # This creates a macro for each component to create the shortcuts
+   foreach(component ${CPACK_NSIS_INSTALL_COMPONENTS})
+      # get the shortcut information into a local variable
+      set(shortcuts "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}")
+      # opening macro definition, the shortcut lines (if any), and the macro close
+      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Create_Shortcuts_\\\${${component}}\n${shortcuts}\n\n!macroend\n")
+   endforeach()
+   # This creates a macro for each component to delete the shortcuts
+   foreach(component ${CPACK_NSIS_INSTALL_COMPONENTS})
+      # get the shortcut information into a local variable
+      set(shortcuts "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}")
+      # opening macro definition, the shortcut lines (if any), and the macro close
+      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Remove_ShortCuts\\\${${component}}
+IntCmp \\\$${component}_was_installed 0 noremove_shortcuts_${component}
+${shortcuts}
+
+noremove_shortcuts_${component}:
+!macroend
+")
+   endforeach()
+
+   # set the final variable
+   set(CPACK_COMPONENT_SECTION_SHORTCUTS ${SECTION_SHORTCUTS} PARENT_SCOPE)
+endfunction()
+
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
    set (catdir ${CMAKE_INSTALL_PREFIX}/bin)
@@ -148,13 +185,6 @@ else ()
    find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib/* ${CMAKE_INSTALL_PREFIX}/lib64)
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
-
-# Create and add a shortcut item to the list for a component
-# This also adds entries to delete the equivalent shortcut
-MACRO(install_component_shortcut component name prog arg icon icon_index)
-  set(CPACK_CREATE_COMPONENT_SHORTCUTS_${component} "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}\n!installmacro ConfigureShortCut \\\"${name}\\\" ${prog} \\\"${arg}\\\" ${icon} ${icon_index}")
-  set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!installmacro RemoveShortCut \\\"${name}\\\"")
-ENDMACRO ()
 
 # Set compiler and linker flags common to all build environments
 include_directories(${PROJECT_BINARY_DIR})
@@ -1418,6 +1448,9 @@ if (DOC_SOURCE_DIR)
   install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
   install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 endif ()
+
+# build the NSIS shortcut creation/deletion macros that are inserted into the template
+build_NSIS_shortcuts()
 
 endif ()
 
