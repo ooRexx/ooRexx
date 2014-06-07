@@ -1313,6 +1313,10 @@ add_subdirectory (samples samples)
 
 # Build an NSIS installer
 if (BUILD_NSIS)
+# Add the install directory to the module path so the custom template can be located.
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
+
+# NSIS generator configuration
 set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
 set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
