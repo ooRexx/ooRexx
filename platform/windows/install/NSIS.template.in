@@ -552,6 +552,10 @@ FunctionEnd
 @CPACK_NSIS_COMPONENT_SECTIONS@
 
 ;--------------------------------
+; Macros for creating shortcuts for each component
+@CPACK_NSIS_COMPONENT_SECTION_SHORTCUTS@
+
+;--------------------------------
 ; Define some macro setting for the gui
 @CPACK_NSIS_INSTALLER_MUI_ICON_CODE@
 @CPACK_NSIS_INSTALLER_ICON_CODE@

@@ -172,7 +172,7 @@ noremove_shortcuts_${component}:
    endforeach()
 
    # set the final variable
-   set(CPACK_COMPONENT_SECTION_SHORTCUTS ${SECTION_SHORTCUTS} PARENT_SCOPE)
+   set(CPACK_NSIS_COMPONENT_SECTION_SHORTCUTS ${SECTION_SHORTCUTS} PARENT_SCOPE)
 endfunction()
 
 else ()
