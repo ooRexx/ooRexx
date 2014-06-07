@@ -143,8 +143,8 @@ if (WIN32)
 # Create and add a shortcut item to the list for a component
 # This also adds entries to delete the equivalent shortcut
 MACRO(install_component_shortcut component name prog arg icon icon_index)
-  set(CPACK_CREATE_COMPONENT_SHORTCUTS_${component} "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}\n!installmacro ConfigureShortCut \\\"${name}\\\" ${prog} \\\"${arg}\\\" ${icon} ${icon_index}")
-  set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!installmacro RemoveShortCut \\\"${name}\\\"")
+  set(CPACK_CREATE_COMPONENT_SHORTCUTS_${component} "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureShortCut \\\"${name}\\\" ${prog} \\\"${arg}\\\" ${icon} \\\"${icon_index}\\\"")
+  set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \\\"${name}\\\"")
 ENDMACRO ()
 
 # Function to build component short cut includes that get inserted into the
@@ -155,14 +155,19 @@ function(build_NSIS_shortcuts)
       # get the shortcut information into a local variable
       set(shortcuts "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}")
       # opening macro definition, the shortcut lines (if any), and the macro close
-      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Create_Shortcuts_\\\${${component}}\n${shortcuts}\n\n!macroend\n")
+      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Create_Shortcuts_\\\${${component}}
+IntCmp \\\$${component}_was_installed 0 nocreate_shortcuts_${component}
+${shortcuts}
+
+nocreate_shortcuts_${component}:
+!macroend\n")
    endforeach()
    # This creates a macro for each component to delete the shortcuts
    foreach(component ${CPACK_NSIS_INSTALL_COMPONENTS})
       # get the shortcut information into a local variable
       set(shortcuts "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}")
       # opening macro definition, the shortcut lines (if any), and the macro close
-      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Remove_ShortCuts\\\${${component}}
+      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Remove_ShortCuts_\\\${${component}}
 IntCmp \\\$${component}_was_installed 0 noremove_shortcuts_${component}
 ${shortcuts}
 
@@ -1384,9 +1389,9 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION
 # technically a sample, but this is so useful we add it to the binary dir
 install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
+# add extra shortcuts (uninstall one is automatically added)
 install_component_shortcut(Core "Try Rexx" rexx.exe rexxtry.rex rexx.exe "")
 install_component_shortcut(Core "Try Rexx (GUI)" rexx.exe ooRexxTry.rex rexx.exe "")
-install_component_shortcut(Core "Uninstall ooRexx" uninstall.exe "" uninstall.exe 0)
 install_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
 
 # now the samples
