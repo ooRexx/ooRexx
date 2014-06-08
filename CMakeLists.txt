@@ -1415,142 +1415,144 @@ endif()
 
 # Build an NSIS installer using CPack (NOTE: This does not really work at the moment)
 if (BUILD_CPACK_NSIS)
-# Add the install directory to the module path so the custom template can be located.
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
+    # Add the install directory to the module path so the custom template can be located.
+    if (DOC_SOURCE_DIR)
+        set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
+    endif()
 
-# NSIS generator configuration
-set(CPACK_GENERATOR NSIS)
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
-set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
-# ask for a modify the pack dialg
-set(CPACK_NSIS_MODIFY_PATH ON)
-set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\rexx.exe")
-set(CPACK_NSIS_URL_INFO_ABOUT "http://www.oorexx.org")
-set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
-# Not sure why this is not working.  Claims it cannoth file the file, but it exists.
-# It might need to be an installed file...not sure
-# set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
-set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
+    # NSIS generator configuration
+    #set(CPACK_GENERATOR NSIS)
+    #set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
+    #set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
+    # ask for a modify the pack dialg
+    #et(CPACK_NSIS_MODIFY_PATH ON)
+    #et(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\rexx.exe")
+    #et(CPACK_NSIS_URL_INFO_ABOUT "http://www.oorexx.org")
+    #et(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
+    # Not sure why this is not working.  Claims it cannoth file the file, but it exists.
+    # It might need to be an installed file...not sure
+    # set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
+    set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
 
-# Component setups
-set(CPACK_COMPONENT_CORE_DISPLAY_NAME "Open Object Rexx Core (required)")
-set(CPACK_COMPONENT_CORE_DESCRIPTION "The Open Object Rexx interpreter and extension libraries.")
-set(CPACK_COMPONENT_CORE_REQUIRED 1)
-set(CPACK_COMPONENT_SAMPLES_DISPLAY_NAME "Open Object Rexx Samples")
-set(CPACK_COMPONENT_SAMPLES_DESCRIPTION "Sample programs that demonstrate Open Object Rexx features.")
-set(CPACK_COMPONENT_DEVLIB_DISPLAY_NAME "Open Object Rexx Development Kit")
-set(CPACK_COMPONENT_DEVLIB_DESCRIPTION "Header files and libraries for using the Open Object Rexx native programming interfaces.")
-set(CPACK_COMPONENT_DOCS_DISPLAY_NAME "Open Object Rexx Documentation")
-set(CPACK_COMPONENT_DOCS_DESCRIPTION "Complete documentation for Open Object Rexx in PDF form.")
+    # Component setups
+    #et(CPACK_COMPONENT_CORE_DISPLAY_NAME "Open Object Rexx Core (required)")
+    #et(CPACK_COMPONENT_CORE_DESCRIPTION "The Open Object Rexx interpreter and extension libraries.")
+    #et(CPACK_COMPONENT_CORE_REQUIRED 1)
+    #et(CPACK_COMPONENT_SAMPLES_DISPLAY_NAME "Open Object Rexx Samples")
+    #et(CPACK_COMPONENT_SAMPLES_DESCRIPTION "Sample programs that demonstrate Open Object Rexx features.")
+    #et(CPACK_COMPONENT_DEVLIB_DISPLAY_NAME "Open Object Rexx Development Kit")
+    #et(CPACK_COMPONENT_DEVLIB_DESCRIPTION "Header files and libraries for using the Open Object Rexx native programming interfaces.")
+    #et(CPACK_COMPONENT_DOCS_DISPLAY_NAME "Open Object Rexx Documentation")
+    #et(CPACK_COMPONENT_DOCS_DESCRIPTION "Complete documentation for Open Object Rexx in PDF form.")
+    #
+    # The Docs are an optional build step, so we only add them if we have
+    # been configured with a doc source directory
+    #et(CPACK_NSIS_INSTALL_COMPONENTS Core DevLib Samples)
+    #
+    #et(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
+    #
+    # Add addititional Windows-only install files
+    #nstall(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+    #nstall(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+    #
+    # technically a sample, but this is so useful we add it to the binary dir
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
-# The Docs are an optional build step, so we only add them if we have
-# been configured with a doc source directory
-set(CPACK_NSIS_INSTALL_COMPONENTS Core DevLib Samples)
+    # add extra shortcuts (uninstall one is automatically added)
+    #nstall_rexx_shortcut(Core "Try Rexx" rexx rexxtry.rex)
+    #nstall_rexx_shortcut(Core "Try Rexx (GUI)" rexx ooRexxTry.rex)
+    #nstall_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
+    #
+    # now the samples
 
-set(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
+    #nstall(FILES ${SAMPLES_SOURCE}/windows/0ReadMe.first COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/rexxcps.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/ccreply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/complex.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/factor.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/greply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/guess.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/ktguard.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/makestring.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/month.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/philfork.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/pipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/properties.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/qdate.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/qtime.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/scclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/scserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/semcls.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/sfclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/sfserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/stack.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/usecomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/windows/rexutils/drives.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+    #
+    # misc samples
+    #nstall(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.empty COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+    #nstall(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.input COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+    #nstall(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.readMe COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+    #nstall(PROGRAMS ${SAMPLES_SOURCE}/windows/misc/fileDrop.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+    #
+    # ole samples
+    #nstall(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/ole)
+    #
+    # oodialog samples
+    #nstall(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
+    #nstall(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
 
-# Add addititional Windows-only install files
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+    # sample shortcuts
+    # NOTE:  because of multiple levels of escaping going on, the subdirectory "\" require EIGHT backslashes
+    #nstall_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\RexxCPS" rexxpaws "samples\\\\\\\\rexxcps.rex")
+    #nstall_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Query Date" rexxpaws "samples\\\\\\\\qdate.rex")
+    #nstall_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Display Window Tree" ooDialog "samples\\\\\\\\oodialog\\\\\\\\winsystem\\\\\\\\displayWindowTree.rex")
+    #nstall_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Windows Manager" ooDialog "samples\\\\\\\\oodialog\\\\\\\\winsystem\\\\\\\\usewmgr.rex")
+    #nstall_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Combo Box Types" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ComboBox\\\\\\\\comboBoxTypes.rex")
+    #nstall_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Custom Position Tool Tips" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ToolTip\\\\\\\\customPositionToolTip.rex")
+    #nstall_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\List-view Views" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ListView\\\\\\\\columnIcons.rex")
+    #nstall_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Samples" ooDialog "samples\\\\\\\\sample.rex")
+    #nstall_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx in a Console" "samples\\\\\\\\api\\\\\\\\callrxnt\\\\\\\\callrxnt.exe" "" "samples\\\\\\\\api\\\\\\\\callrxnt\\\\\\\\callrxnt.ico" "")
+    #nstall_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx in a Window" "samples\\\\\\\\api\\\\\\\\callrxwn\\\\\\\\callrxwn.exe" "" "samples\\\\\\\\api\\\\\\\\callrxwn\\\\\\\\callrxwn.ico" "")
+    #nstall_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx with Exits" "samples\\\\\\\\api\\\\\\\\rexxexit\\\\\\\\rexxexit.exe" "" "samples\\\\\\\\api\\\\\\\\rexxexit\\\\\\\\rexxexit.ico" "")
+    #
+    # if we have a doc source directory, then add the Docs component to the installer and
+    # install each of the doc files
+    #f (DOC_SOURCE_DIR)
+    # list(APPEND CPACK_NSIS_INSTALL_COMPONENTS Docs)
+    #  install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
+    # install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
+    # install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${DOC_SOURCE_DIR}/rxsock.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${DOC_SOURCE_DIR}/rxftp.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${DOC_SOURCE_DIR}/oodialog.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${build_extensions_oodialog_dir}/ooDialog_ReleaseNotes.txt COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${DOC_SOURCE_DIR}/oodguide.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+    # install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
-# technically a sample, but this is so useful we add it to the binary dir
-install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-
-# add extra shortcuts (uninstall one is automatically added)
-install_rexx_shortcut(Core "Try Rexx" rexx rexxtry.rex)
-install_rexx_shortcut(Core "Try Rexx (GUI)" rexx ooRexxTry.rex)
-install_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
-
-# now the samples
-
-install(FILES ${SAMPLES_SOURCE}/windows/0ReadMe.first COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/rexxcps.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/ccreply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/complex.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/factor.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/greply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/guess.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/ktguard.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/makestring.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/month.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/philfork.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/pipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/properties.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/qdate.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/qtime.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/scclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/scserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/semcls.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/sfclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/sfserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/stack.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/usecomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/windows/rexutils/drives.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-
-# misc samples
-install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.empty COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
-install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.input COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
-install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.readMe COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
-install(PROGRAMS ${SAMPLES_SOURCE}/windows/misc/fileDrop.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
-
-# ole samples
-install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/ole)
-
-# oodialog samples
-install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
-install(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
-
-# sample shortcuts
-# NOTE:  because of multiple levels of escaping going on, the subdirectory "\" require EIGHT backslashes
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\RexxCPS" rexxpaws "samples\\\\\\\\rexxcps.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Query Date" rexxpaws "samples\\\\\\\\qdate.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Display Window Tree" ooDialog "samples\\\\\\\\oodialog\\\\\\\\winsystem\\\\\\\\displayWindowTree.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Windows Manager" ooDialog "samples\\\\\\\\oodialog\\\\\\\\winsystem\\\\\\\\usewmgr.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Combo Box Types" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ComboBox\\\\\\\\comboBoxTypes.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Custom Position Tool Tips" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ToolTip\\\\\\\\customPositionToolTip.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\List-view Views" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ListView\\\\\\\\columnIcons.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Samples" ooDialog "samples\\\\\\\\sample.rex")
-install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx in a Console" "samples\\\\\\\\api\\\\\\\\callrxnt\\\\\\\\callrxnt.exe" "" "samples\\\\\\\\api\\\\\\\\callrxnt\\\\\\\\callrxnt.ico" "")
-install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx in a Window" "samples\\\\\\\\api\\\\\\\\callrxwn\\\\\\\\callrxwn.exe" "" "samples\\\\\\\\api\\\\\\\\callrxwn\\\\\\\\callrxwn.ico" "")
-install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx with Exits" "samples\\\\\\\\api\\\\\\\\rexxexit\\\\\\\\rexxexit.exe" "" "samples\\\\\\\\api\\\\\\\\rexxexit\\\\\\\\rexxexit.ico" "")
-
-# if we have a doc source directory, then add the Docs component to the installer and
-# install each of the doc files
-if (DOC_SOURCE_DIR)
-  list(APPEND CPACK_NSIS_INSTALL_COMPONENTS Docs)
-#  install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
-  install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rxsock.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rxftp.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/oodialog.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${build_extensions_oodialog_dir}/ooDialog_ReleaseNotes.txt COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/oodguide.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-
-#  install_doc_shortcut("ooRexx README" "readme.pdf")
-  install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
-  install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
-  install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
-  install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
-  install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
-  install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
-  install_doc_shortcut("ooDialog Reference" "oodialog.pdf")
-  install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
-  install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
-  install_doc_shortcut("ooRexx Extensions Reference" "rexxextensions.pdf")
-  install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
-  install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
-endif ()
-
-# build the NSIS shortcut creation/deletion macros that are inserted into the template
-build_NSIS_shortcuts()
+    #  install_doc_shortcut("ooRexx README" "readme.pdf")
+    # install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
+    # install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
+    # install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
+    # install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
+    # install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
+    # install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
+    # install_doc_shortcut("ooDialog Reference" "oodialog.pdf")
+    # install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
+    # install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
+    # install_doc_shortcut("ooRexx Extensions Reference" "rexxextensions.pdf")
+    # install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
+    # install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
+    #ndif ()
+    #
+    # build the NSIS shortcut creation/deletion macros that are inserted into the template
+    #build_NSIS_shortcuts()
 
 endif ()
 

@@ -1095,34 +1095,35 @@ Section "${LONGNAME} Samples" SecDemo
   ; Set output path to the installation directory the wpipe examples.
   ${SetOutPath} $INSTDIR\samples\api\wpipe
   ; Add the files ...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\" "readme.txt"
+  ;${File} "${SRCDIR}\samples\windows\api\wpipe\" "readme.txt"
 
   ; Set output path to the installation directory for wpipe 1.
-  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe1
+  ${SetOutPath} $INSTDIR\samples\api\wpipe1
   ; Add the files ...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "apitest1.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.dll"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe1\" "rexxapi1.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe1\" "rexxapi1.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe1\" "apitest1.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe1\" "rexxapi1.mak"
+  ;${File} "${SRCDIR}\samples\windows\api\wpipe1\" "rexxapi1.dll"
+  ${File} "${BINDIR}\" "rexxapi1.dll"
 
   ; Set output path to the installation directory for wpipe 2.
-  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe2
+  ${SetOutPath} $INSTDIR\samples\api\wpipe2
   ; Add the files ...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "apitest2.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.dll"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe2\" "rexxapi2.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe2\" "rexxapi2.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe2\" "apitest2.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe2\" "rexxapi2.mak"
+  ${File} "${BINDIR}\" "rexxapi2.dll"
 
   ; Set output path to the installation directory for wpipe 3.
-  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe3
+  ${SetOutPath} $INSTDIR\samples\api\wpipe3
   ; Add the files ...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "apitest3.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.dll"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe3\" "rexxapi3.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe3\" "rexxapi3.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe3\" "apitest3.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe3\" "rexxapi3.mak"
+  ${File} "${BINDIR}\" "rexxapi3.dll"
 
   ;
   ; C++ API samples
