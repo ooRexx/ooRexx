@@ -1384,36 +1384,33 @@ add_subdirectory (samples samples)
 #################### NSIS Package Targets ##########################
 
 # Build an NSIS installer without using CPack
-if (BUILD_NSIS)
-  find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
+find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
 
-  # only do this if we have NSIS installed
-  if (NSIS_EXECUTABLE)
-     # we're using verbatim for the command, so we need to get the
-     # directories in native form first
+# only do this if we have NSIS installed
+if (NSIS_EXECUTABLE)
+   # we're using verbatim for the command, so we need to get the
+   # directories in native form first
 
-     file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
-     file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR} NATIVE_BINARY_DIR)
+   file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
+   file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR} NATIVE_BINARY_DIR)
 
-     add_custom_target(nsis_installer
-        DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
-                ${DOC_SOURCE_DIR}/rexxpg.pdf
-                ${DOC_SOURCE_DIR}/rexxref.pdf
-                ${DOC_SOURCE_DIR}/rxmath.pdf
-                ${DOC_SOURCE_DIR}/rxsock.pdf
-                ${DOC_SOURCE_DIR}/rxftp.pdf
-                ${DOC_SOURCE_DIR}/oodialog.pdf
-                ${DOC_SOURCE_DIR}/oodguide.pdf
-                ${DOC_SOURCE_DIR}/rexxextensions.pdf
-                ${DOC_SOURCE_DIR}/winextensions.pdf
-                ${build_platform_dir}/install/cpack.nsi
-        VERBATIM
-        COMMAND ${NSIS_EXECUTABLE} "/DVERSION=${ORX_VERSION} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DCPU=${CPU} cpack.nsi"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
-        COMMENT "Building NSIS installer")
-  endif()
+   add_custom_target(nsis_installer
+      DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
+              ${DOC_SOURCE_DIR}/rexxpg.pdf
+              ${DOC_SOURCE_DIR}/rexxref.pdf
+              ${DOC_SOURCE_DIR}/rxmath.pdf
+              ${DOC_SOURCE_DIR}/rxsock.pdf
+              ${DOC_SOURCE_DIR}/rxftp.pdf
+              ${DOC_SOURCE_DIR}/oodialog.pdf
+              ${DOC_SOURCE_DIR}/oodguide.pdf
+              ${DOC_SOURCE_DIR}/rexxextensions.pdf
+              ${DOC_SOURCE_DIR}/winextensions.pdf
+              ${build_platform_dir}/install/cpack.nsi
+      VERBATIM
+      COMMAND ${NSIS_EXECUTABLE} "/DVERSION=${ORX_VERSION} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DCPU=${CPU} cpack.nsi"
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
+      COMMENT "Building NSIS installer")
 endif()
-
 
 # Build an NSIS installer using CPack (NOTE: This does not really work at the moment)
 if (BUILD_CPACK_NSIS)
