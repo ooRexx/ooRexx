@@ -121,6 +121,7 @@
 ;Include Modern UI
 
   !include "MUI2.nsh"
+  !include "InstallOptions.nsh"
   !include "Library.nsh"
   !include "LogicLib.nsh"
   !include "FileFunc.nsh"
