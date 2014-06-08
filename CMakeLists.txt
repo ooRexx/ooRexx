@@ -62,6 +62,7 @@ set (ORX_MINOR 3)
 set (ORX_MOD_LVL 0)
 set (ORX_BLD_LVL 0)
 set (ORX_VERSION ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
+set (ORX_NODOT_VERSION ${ORX_MAJOR}${ORX_MINOR}${ORX_MOD_LVL})
 set (ORX_VER_STR ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
 string(TIMESTAMP ORX_YEAR %Y)
 set (ORX_COPY_YEAR 2005-${ORX_YEAR})
@@ -223,8 +224,10 @@ if (WIN32)
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
    if ($ENV{Platform} STREQUAL "X64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
+      set (CPU "x64")
    else ()
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx32.exe.manifest)
+      set (CPU "x32")
    endif ()
    file(TO_NATIVE_PATH ${EXE_MANIFEST_FILE} EXE_MANIFEST_FILE)
    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:524288")
@@ -1380,8 +1383,40 @@ add_subdirectory (samples samples)
 #################### NSIS Package Targets ##########################
 #################### NSIS Package Targets ##########################
 
-# Build an NSIS installer
+# Build an NSIS installer without using CPack
 if (BUILD_NSIS)
+  find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
+
+  # only do this if we have NSIS installed
+  if (NSIS_EXECUTABLE)
+     # we're using verbatim for the command, so we need to get the
+     # directories in native form first
+
+     file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
+     file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR} NATIVE_BINARY_DIR)
+
+     add_custom_target(nsis_installer
+        DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
+                ${DOC_SOURCE_DIR}/rexxpg.pdf
+                ${DOC_SOURCE_DIR}/rexxref.pdf
+                ${DOC_SOURCE_DIR}/rxmath.pdf
+                ${DOC_SOURCE_DIR}/rxsock.pdf
+                ${DOC_SOURCE_DIR}/rxftp.pdf
+                ${DOC_SOURCE_DIR}/oodialog.pdf
+                ${DOC_SOURCE_DIR}/oodguide.pdf
+                ${DOC_SOURCE_DIR}/rexxextensions.pdf
+                ${DOC_SOURCE_DIR}/winextensions.pdf
+                ${build_platform_dir}/install/cpack.nsi
+        VERBATIM
+        COMMAND ${NSIS_EXECUTABLE} "/DVERSION=${ORX_VERSION} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DCPU=${CPU} cpack.nsi"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
+        COMMENT "Building NSIS installer")
+  endif()
+endif()
+
+
+# Build an NSIS installer using CPack (NOTE: This does not really work at the moment)
+if (BUILD_CPACK_NSIS)
 # Add the install directory to the module path so the custom template can be located.
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
 
