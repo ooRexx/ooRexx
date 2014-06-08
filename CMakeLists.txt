@@ -1413,8 +1413,9 @@ if (NSIS_EXECUTABLE)
       COMMENT "Building NSIS installer")
 endif()
 
-# Build an NSIS installer using CPack (NOTE: This does not really work at the moment)
-if (BUILD_CPACK_NSIS)
+# Build an NSIS installer using CPack (NOTE: This does not really work at the moment,
+# leaving this enabled so the install artifacts are still getting built).
+if (WIN32)
 # Add the install directory to the module path so the custom template can be located.
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
 
@@ -1519,7 +1520,7 @@ install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx
 # install each of the doc files
 if (DOC_SOURCE_DIR)
   list(APPEND CPACK_NSIS_INSTALL_COMPONENTS Docs)
-#  install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+  install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
   install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
@@ -1534,7 +1535,7 @@ if (DOC_SOURCE_DIR)
   install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
   install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
-#  install_doc_shortcut("ooRexx README" "readme.pdf")
+  install_doc_shortcut("ooRexx README" "readme.pdf")
   install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
   install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
   install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
