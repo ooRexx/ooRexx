@@ -1269,18 +1269,38 @@ endif ()
 #################### misc files ##########################
 
 # These artifacts apply to all platforms
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxregexp_dir}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+# For the .cls class files, we copy these to the build directory so that the build has a full
+# working copy of the class files for testing/development purposes
+copy_build_file(rxregexp.cls ${build_extensions_rxregexp_dir})
+copy_build_file(rxftp.cls ${build_extensions_rxftp_dir})
+copy_build_file(csvStream.cls ${build_extensions_csvstream_dir})
+copy_build_file(socket.cls ${build_extensions_rxsock_dir})
+copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
+copy_build_file(mime.cls ${build_extensions_rxsock_dir})
+copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
+copy_build_file(rexxtry.rex ${build_samples_dir})
+add_custom_target(class_files ALL DEPENDS
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxftp.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/csvStream.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxtry.rex)
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxftp_dir}/rxftp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_csvstream_dir}/csvStream.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxftp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/socket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/streamsocket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_rxsock_dir}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/csvStream.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 # technically a sample, but this is so useful we add it to the binary dir
-install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/rexxtry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/rexxtry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexx.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexxapidefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
