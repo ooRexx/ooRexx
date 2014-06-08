@@ -85,6 +85,7 @@ if (SVN_EXECUTABLE)
     ENDMACRO(Subversion_GET_REVISION)
 
     Subversion_GET_REVISION(${CMAKE_SOURCE_DIR} ORX_BLD_LVL)
+    set (ORX_VERSION_NSIS ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}.${ORX_BLD_LVL})
 endif ()
 
 message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
@@ -1392,7 +1393,7 @@ if (NSIS_EXECUTABLE)
    # directories in native form first
 
    file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
-   file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR} NATIVE_BINARY_DIR)
+   file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
 
    add_custom_target(nsis_installer
       DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
@@ -1407,7 +1408,7 @@ if (NSIS_EXECUTABLE)
               ${DOC_SOURCE_DIR}/winextensions.pdf
               ${build_platform_dir}/install/cpack.nsi
       VERBATIM
-      COMMAND ${NSIS_EXECUTABLE} "/DVERSION=${ORX_VERSION} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DCPU=${CPU} cpack.nsi"
+      COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DCPU=${CPU} cpack.nsi
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
       COMMENT "Building NSIS installer")
 endif()
