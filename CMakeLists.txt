@@ -142,6 +142,11 @@ if (WIN32)
    set (INSTALL_SAMPLES_DIR samples)
 
 # NSIS builder locations
+   # The DOC source dir is usually specified in native form...need to convert it
+   # to the CMAKE format for the install commands.
+   file(TO_CMAKE_PATH ${DOC_SOURCE_DIR} DOC_SOURCE_DIR)
+   message("Doc source dir is ${DOC_SOURCE_DIR}")
+
    # location where we assemble everything to build the installer
    set (NSIS_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
    # location for pulling together the install file set
@@ -1371,47 +1376,14 @@ add_subdirectory (samples samples)
 #################### NSIS Package Targets ##########################
 #################### NSIS Package Targets ##########################
 
-# Build an NSIS installer without using CPack
-find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
-
-# only do this if we have NSIS installed
-if (NSIS_EXECUTABLE)
-   # we're using verbatim for the command, so we need to get the
-   # directories in native form first
-   file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
-   file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
-   file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
-
-   # Name of the installer file we're going to create
-   set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${CPU}.exe")
-
-   add_custom_target(nsis_installer
-      DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
-              ${DOC_SOURCE_DIR}/rexxpg.pdf
-              ${DOC_SOURCE_DIR}/rexxref.pdf
-              ${DOC_SOURCE_DIR}/rxmath.pdf
-              ${DOC_SOURCE_DIR}/rxsock.pdf
-              ${DOC_SOURCE_DIR}/rxftp.pdf
-              ${DOC_SOURCE_DIR}/oodialog.pdf
-              ${DOC_SOURCE_DIR}/oodguide.pdf
-              ${DOC_SOURCE_DIR}/rexxextensions.pdf
-              ${DOC_SOURCE_DIR}/winextensions.pdf
-              ${build_platform_dir}/install/cpack.nsi
-      VERBATIM
-      COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DDOCDIR=${NATIVE_DOC_DIR} /DCPU=${CPU} cpack.nsi
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE} ${CMAKE_CURRENT_BINARY_DIR}/${INSTALLER_FILE}
-      COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE}
-      COMMENT "Building NSIS installer")
-endif()
-
 # Build an NSIS installer using CPack (NOTE: This does not really work at the moment,
 # leaving this enabled so the install artifacts are still getting built).
 if (WIN32)
 # Add the install directory to the module path so the custom template can be located.
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
 
-# NSIS generator configuration
+# We do not use the NSIS generator directly, but rather configure our
+# own NSIS installation from a template
 set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
 set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
@@ -1488,10 +1460,10 @@ install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.readMe COMPONENT Samples D
 install(PROGRAMS ${SAMPLES_SOURCE}/windows/misc/fileDrop.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
 
 # ole samples
-install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/ole)
+install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 # oodialog samples
-install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
+install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
 
 # sample shortcuts
@@ -1541,6 +1513,48 @@ install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
 
 # build the NSIS shortcut creation/deletion macros that are inserted into the template
 build_NSIS_shortcuts()
+
+# Build an NSIS installer without using CPack
+find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
+
+# only do this if we have NSIS installed
+if (NSIS_EXECUTABLE)
+   # we're using verbatim for the command, so we need to get the
+   # directories in native form first
+   file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
+   file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
+   file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
+
+   # Name of the installer file we're going to create
+   set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${CPU}.exe")
+
+   add_custom_target(nsis_installer
+      DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
+              ${DOC_SOURCE_DIR}/rexxpg.pdf
+              ${DOC_SOURCE_DIR}/rexxref.pdf
+              ${DOC_SOURCE_DIR}/rxmath.pdf
+              ${DOC_SOURCE_DIR}/rxsock.pdf
+              ${DOC_SOURCE_DIR}/rxftp.pdf
+              ${DOC_SOURCE_DIR}/oodialog.pdf
+              ${DOC_SOURCE_DIR}/oodguide.pdf
+              ${DOC_SOURCE_DIR}/rexxextensions.pdf
+              ${DOC_SOURCE_DIR}/winextensions.pdf
+              ${build_platform_dir}/install/cpack.nsi
+      VERBATIM
+      COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DDOCDIR=${NATIVE_DOC_DIR} /DCPU=${CPU} cpack.nsi
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE} ${CMAKE_CURRENT_BINARY_DIR}/${INSTALLER_FILE}
+      COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE}
+      COMMENT "Building NSIS installer")
+
+      # Target for building an NSIS installation.  This will copy all of the install
+      # files into a directory structure that mimics how
+      add_custom_target(nsis_install_dirs
+         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+         COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+         COMMENT "Building NSIS file install structure")
+endif()
 
 endif ()
 
