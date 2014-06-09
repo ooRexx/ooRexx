@@ -125,6 +125,7 @@ include_directories(BEFORE api api/${ORX_PLATFORM_DIR})
    SET(CPACK_PACKAGE_VERSION_MINOR ${ORX_MINOR})
    SET(CPACK_PACKAGE_VERSION_PATCH ${ORX_MOD_LVL})
    set(CPACK_PACKAGE_NAME "ooRexx")
+   set(CPACK_PACKAGE_LONG_NAME "Open Object Rexx")
    set(CPACK_PACKAGE_VENDOR "Rexx Language Association")
    set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_SOURCE_DIR}/ReleaseNotes)
    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open Object Rexx Interpreter")
@@ -179,7 +180,7 @@ function(build_NSIS_shortcuts)
       # get the shortcut information into a local variable
       set(shortcuts "${NSIS_COMPONENT_SHORTCUTS_${component}}")
       # Write this out to a file that can be included
-      FILE(WRITE "${NSIS_BUILD_DIR}/shortcut_creation_manifest_${component}.nsh" ${shortcuts})
+      FILE(WRITE "${NSIS_BUILD_DIR}/${component}_shortcut_manifest.nsh" ${shortcuts})
    endforeach()
 endfunction()
 
@@ -212,10 +213,10 @@ if (WIN32)
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
    if ($ENV{Platform} STREQUAL "X64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
-      set (CPU "x64")
+      set (NSIS_CPU "x86_64")
    else ()
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx32.exe.manifest)
-      set (CPU "x32")
+      set (NSIS_CPU "x86_32")
    endif ()
    file(TO_NATIVE_PATH ${EXE_MANIFEST_FILE} EXE_MANIFEST_FILE)
    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:524288")
@@ -1384,18 +1385,17 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install 
 
 # We do not use the NSIS generator directly, but rather configure our
 # own NSIS installation from a template
-set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
 set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
 # ask for a modify the pack dialg
-set(CPACK_NSIS_MODIFY_PATH ON)
-set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\rexx.exe")
+set(CPACK_NSIS_INSTALLED_ICON_NAME "rexx.exe,0")
 set(CPACK_NSIS_URL_INFO_ABOUT "http://www.oorexx.org")
 set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
+set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
+
 # Not sure why this is not working.  Claims it cannoth file the file, but it exists.
 # It might need to be an installed file...not sure
 # set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
-set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
 
 # Component setups
 set(CPACK_COMPONENT_CORE_DISPLAY_NAME "Open Object Rexx Core (required)")
@@ -1541,7 +1541,7 @@ if (NSIS_EXECUTABLE)
               ${DOC_SOURCE_DIR}/winextensions.pdf
               ${build_platform_dir}/install/cpack.nsi
       VERBATIM
-      COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DDOCDIR=${NATIVE_DOC_DIR} /DCPU=${CPU} cpack.nsi
+      COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DDOCDIR=${NATIVE_DOC_DIR} /DCPU=${NSIS_CPU} cpack.nsi
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE} ${CMAKE_CURRENT_BINARY_DIR}/${INSTALLER_FILE}
       COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE}
