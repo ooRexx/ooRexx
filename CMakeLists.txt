@@ -1084,7 +1084,8 @@ target_include_directories(rxwinsys PUBLIC
 # Extra link library definitions
 target_link_libraries(rxwinsys rexx rexxapi shlwapi)
 # Make sure winsystm.cls gets copied
-add_dependencies(rxwinsys ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
+add_custom_target(winsystm_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
+#add_dependencies(rxwinsys ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
 install(TARGETS rxwinsys RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
