@@ -145,46 +145,46 @@ if (WIN32)
 # Create and add a shortcut item to the list for a component
 # This also adds entries to delete the equivalent shortcut
 MACRO(install_component_shortcut component name prog arg icon icon_index)
-  set(CPACK_CREATE_COMPONENT_SHORTCUTS_${component} "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureShortCut \\\"${name}\\\" ${prog} \\\"${arg}\\\" ${icon} \\\"${icon_index}\\\"")
-  set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \\\"${name}\\\"")
+  set(NSIS_CREATE_COMPONENT_SHORTCUTS_${component} "${NSIS_CREATE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureShortCut \"${name}\" ${prog} \"${arg}\" ${icon} \"${icon_index}\"")
+  set(NSIS_DELETE_COMPONENT_SHORTCUTS_${component} "${NSIS_DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \"${name}\"")
 ENDMACRO ()
 
 # Create and add a shortcut item to the list for a component for running a rexx program
 # This also adds entries to delete the equivalent shortcut
 MACRO(install_rexx_shortcut component name launcher program)
-  set(CPACK_CREATE_COMPONENT_SHORTCUTS_${component} "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureRexxShortCut \\\"${name}\\\" ${launcher} \\\"${program}\\\"")
-  set(CPACK_DELETE_COMPONENT_SHORTCUTS_${component} "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \\\"${name}\\\"")
+  set(NSIS_CREATE_COMPONENT_SHORTCUTS_${component} "${CREATE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureRexxShortCut \"${name}\" ${launcher} \"${program}\"")
+  set(NSIS_DELETE_COMPONENT_SHORTCUTS_${component} "${DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \"${name}\"")
 ENDMACRO ()
 
 # Create and add a shortcut for a documentation element
 # This also adds entries to delete the equivalent shortcut
 MACRO(install_doc_shortcut name file)
-  set(CPACK_CREATE_COMPONENT_SHORTCUTS_Docs "${CPACK_CREATE_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \\\"${name}\\\" \\\"${file}\\\"")
-  set(CPACK_DELETE_COMPONENT_SHORTCUTS_Docs "${CPACK_DELETE_COMPONENT_SHORTCUTS_Docs}\n!insertmacro RemoveShortCut \\\"${name}\\\"")
+  set(NSIS_CREATE_COMPONENT_SHORTCUTS_Docs "${NSIS_CREATE_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
+  set(NSIS_DELETE_COMPONENT_SHORTCUTS_Docs "${NSIS_DELETE_COMPONENT_SHORTCUTS_Docs}\n!insertmacro RemoveShortCut \"${name}\"")
 ENDMACRO ()
 
 # Function to build component short cut includes that get inserted into the
 # into the NSIS template
 function(build_NSIS_shortcuts)
    # This creates a macro for each component to create the shortcuts
-   foreach(component ${CPACK_NSIS_INSTALL_COMPONENTS})
+   foreach(component ${NSIS_INSTALL_COMPONENTS})
       # get the shortcut information into a local variable
-      set(shortcuts "${CPACK_CREATE_COMPONENT_SHORTCUTS_${component}}")
+      set(shortcuts "${NSIS_CREATE_COMPONENT_SHORTCUTS_${component}}")
       # opening macro definition, the shortcut lines (if any), and the macro close
-      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Create_Shortcuts_\\\${${component}}
-IntCmp \\\$${component}_was_installed 0 nocreate_shortcuts_${component}
+      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Create_Shortcuts_\${${component}}
+IntCmp \$${component}_was_installed 0 nocreate_shortcuts_${component}
 ${shortcuts}
 
 nocreate_shortcuts_${component}:
 !macroend\n")
    endforeach()
    # This creates a macro for each component to delete the shortcuts
-   foreach(component ${CPACK_NSIS_INSTALL_COMPONENTS})
+   foreach(component ${NSIS_INSTALL_COMPONENTS})
       # get the shortcut information into a local variable
-      set(shortcuts "${CPACK_DELETE_COMPONENT_SHORTCUTS_${component}}")
+      set(shortcuts "${NSIS_DELETE_COMPONENT_SHORTCUTS_${component}}")
       # opening macro definition, the shortcut lines (if any), and the macro close
-      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Remove_ShortCuts_\\\${${component}}
-IntCmp \\\$${component}_was_installed 0 noremove_shortcuts_${component}
+      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Remove_ShortCuts_\${${component}}
+IntCmp \$${component}_was_installed 0 noremove_shortcuts_${component}
 ${shortcuts}
 
 noremove_shortcuts_${component}:
@@ -193,7 +193,7 @@ noremove_shortcuts_${component}:
    endforeach()
 
    # set the final variable
-   set(CPACK_NSIS_COMPONENT_SECTION_SHORTCUTS ${SECTION_SHORTCUTS} PARENT_SCOPE)
+   set(NSIS_COMPONENT_SECTION_SHORTCUTS ${SECTION_SHORTCUTS} PARENT_SCOPE)
 endfunction()
 
 else ()
@@ -1396,12 +1396,12 @@ find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
 if (NSIS_EXECUTABLE)
    # we're using verbatim for the command, so we need to get the
    # directories in native form first
-
    file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
    file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
    file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
-   file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/ooRexx.${ORX_VERSION_NSIS}-${CPU}.exe NATIVE_INSTALLER)
-   file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR} NATIVE_CURRENT_DIR)
+
+   # Name of the installer file we're going to create
+   set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${CPU}.exe")
 
    add_custom_target(nsis_installer
       DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
@@ -1418,7 +1418,8 @@ if (NSIS_EXECUTABLE)
       VERBATIM
       COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DDOCDIR=${NATIVE_DOC_DIR} /DCPU=${CPU} cpack.nsi
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
-      COMMAND copy ${NATIVE_INSTALLER} ${NATIVE_CURRENT_DIR}
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE} ${CMAKE_CURRENT_BINARY_DIR}/${INSTALLER_FILE}
+      COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE}
       COMMENT "Building NSIS installer")
 endif()
 
@@ -1455,7 +1456,7 @@ set(CPACK_COMPONENT_DOCS_DESCRIPTION "Complete documentation for Open Object Rex
 
 # The Docs are an optional build step, so we only add them if we have
 # been configured with a doc source directory
-set(CPACK_NSIS_INSTALL_COMPONENTS Core DevLib Samples)
+set(NSIS_INSTALL_COMPONENTS Core Docs DevLib Samples)
 
 set(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
 
@@ -1512,52 +1513,49 @@ install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATI
 install(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
 
 # sample shortcuts
-# NOTE:  because of multiple levels of escaping going on, the subdirectory "\" require EIGHT backslashes
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\RexxCPS" rexxpaws "samples\\\\\\\\rexxcps.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Query Date" rexxpaws "samples\\\\\\\\qdate.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Display Window Tree" ooDialog "samples\\\\\\\\oodialog\\\\\\\\winsystem\\\\\\\\displayWindowTree.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\Windows Manager" ooDialog "samples\\\\\\\\oodialog\\\\\\\\winsystem\\\\\\\\usewmgr.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Combo Box Types" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ComboBox\\\\\\\\comboBoxTypes.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Custom Position Tool Tips" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ToolTip\\\\\\\\customPositionToolTip.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\List-view Views" ooDialog "samples\\\\\\\\oodialog\\\\\\\\Controls\\\\\\\\ListView\\\\\\\\columnIcons.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\\\\\ooDialog\\\\\\\\Samples" ooDialog "samples\\\\\\\\sample.rex")
-install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx in a Console" "samples\\\\\\\\api\\\\\\\\callrxnt\\\\\\\\callrxnt.exe" "" "samples\\\\\\\\api\\\\\\\\callrxnt\\\\\\\\callrxnt.ico" "")
-install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx in a Window" "samples\\\\\\\\api\\\\\\\\callrxwn\\\\\\\\callrxwn.exe" "" "samples\\\\\\\\api\\\\\\\\callrxwn\\\\\\\\callrxwn.ico" "")
-install_component_shortcut(Samples "ooRexx Samples\\\\\\\\API\\\\\\\\Call ooRexx with Exits" "samples\\\\\\\\api\\\\\\\\rexxexit\\\\\\\\rexxexit.exe" "" "samples\\\\\\\\api\\\\\\\\rexxexit\\\\\\\\rexxexit.ico" "")
+# NOTE:  because of multiple levels of escaping going on, the subdirectory "\" require FOUR backslashes
+install_rexx_shortcut(Samples "ooRexx Samples\\\\RexxCPS" rexxpaws "samples\\\\rexxcps.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\Query Date" rexxpaws "samples\\\\qdate.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\Display Window Tree" ooDialog "samples\\\\oodialog\\\\winsystem\\\\displayWindowTree.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\Windows Manager" ooDialog "samples\\\\oodialog\\\\winsystem\\\\usewmgr.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Combo Box Types" ooDialog "samples\\\\oodialog\\\\Controls\\\\ComboBox\\\\comboBoxTypes.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Custom Position Tool Tips" ooDialog "samples\\\\oodialog\\\\Controls\\\\ToolTip\\\\customPositionToolTip.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\List-view Views" ooDialog "samples\\\\oodialog\\\\Controls\\\\ListView\\\\columnIcons.rex")
+install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Samples" ooDialog "samples\\\\sample.rex")
+install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx in a Console" "samples\\\\api\\\\callrxnt\\\\callrxnt.exe" "" "samples\\\\api\\\\callrxnt\\\\callrxnt.ico" "")
+install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx in a Window" "samples\\\\api\\\\callrxwn\\\\callrxwn.exe" "" "samples\\\\api\\\\callrxwn\\\\callrxwn.ico" "")
+install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx with Exits" "samples\\\\api\\\\rexxexit\\\\rexxexit.exe" "" "samples\\\\api\\\\rexxexit\\\\rexxexit.ico" "")
 
 # if we have a doc source directory, then add the Docs component to the installer and
 # install each of the doc files
-if (DOC_SOURCE_DIR)
-  list(APPEND CPACK_NSIS_INSTALL_COMPONENTS Docs)
-  install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
-  install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rxsock.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rxftp.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/oodialog.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${build_extensions_oodialog_dir}/ooDialog_ReleaseNotes.txt COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/oodguide.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-  install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
+install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/rxsock.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/rxftp.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/oodialog.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${build_extensions_oodialog_dir}/ooDialog_ReleaseNotes.txt COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/oodguide.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
-  install_doc_shortcut("ooRexx README" "readme.pdf")
-  install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
-  install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
-  install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
-  install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
-  install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
-  install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
-  install_doc_shortcut("ooDialog Reference" "oodialog.pdf")
-  install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
-  install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
-  install_doc_shortcut("ooRexx Extensions Reference" "rexxextensions.pdf")
-  install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
-  install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
-endif ()
+install_doc_shortcut("ooRexx README" "readme.pdf")
+install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
+install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
+install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
+install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
+install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
+install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
+install_doc_shortcut("ooDialog Reference" "oodialog.pdf")
+install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
+install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
+install_doc_shortcut("ooRexx Extensions Reference" "rexxextensions.pdf")
+install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
+install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
 
 # build the NSIS shortcut creation/deletion macros that are inserted into the template
 build_NSIS_shortcuts()
