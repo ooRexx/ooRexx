@@ -1554,6 +1554,13 @@ if (NSIS_EXECUTABLE)
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
          COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
          COMMENT "Building NSIS file install structure")
+
+      # Target for building the NSIS file manifests from the install information
+      add_custom_target(nsis_file_manifests
+         DEPENDS nsis_install_dirs
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+         COMMAND ${CMAKE_COMMAND} -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/BuildComponentManifests.cmake
+         COMMENT "Building NSIS file install manifests")
 endif()
 
 endif ()
