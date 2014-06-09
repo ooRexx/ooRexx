@@ -125,7 +125,7 @@ Var UninstLog
 ;Configuration
 
   ;General
-  OutFile "${SHORTNAME}${NODOTVER}-${CPU}.exe"
+  OutFile "${SHORTNAME}.${VERSION}-${CPU}.exe"
   ShowInstdetails show
   ShowUninstDetails show
   SetOverwrite on
