@@ -1240,7 +1240,7 @@ Section "${LONGNAME} Documentation" SecDoc
   ${SetOutPath} $INSTDIR\doc
 
   ; readmes
-  ${File} "${SRCDIR}\doc\" "readme.pdf"
+  ${File} "${DOCDIR}\" "readme.pdf"
 
   ; We can't use the ${File} macro here because we need to change the file name.
   ; That means we also have to add the item manually to the uninstall log.
@@ -1249,17 +1249,16 @@ Section "${LONGNAME} Documentation" SecDoc
   ${AddItem} $INSTDIR\doc\CHANGES.txt
   ${AddItem} $INSTDIR\doc\ReleaseNotes.txt
 
-  ${File} "${SRCDIR}\doc\" "rexxpg.pdf"
-  ${File} "${SRCDIR}\doc\" "rexxref.pdf"
-  ${File} "${SRCDIR}\doc\" "rxmath.pdf"
-  ${File} "${SRCDIR}\doc\" "rxsock.pdf"
-  ${File} "${SRCDIR}\doc\" "rxftp.pdf"
-  ${File} "${SRCDIR}\doc\" "oodialog.pdf"
+  ${File} "${DOCDIR}\" "rexxpg.pdf"
+  ${File} "${DOCDIR}\" "rexxref.pdf"
+  ${File} "${DOCDIR}\" "rxmath.pdf"
+  ${File} "${DOCDIR}\" "rxsock.pdf"
+  ${File} "${DOCDIR}\" "rxftp.pdf"
+  ${File} "${DOCDIR}\" "oodialog.pdf"
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "ooDialog_ReleaseNotes.txt"
-  ${File} "${SRCDIR}\doc\" "oodguide.pdf"
-  ${File} "${SRCDIR}\doc\" "rexxextensions.pdf"
-  ${File} "${SRCDIR}\doc\" "unixextensions.pdf"
-  ${File} "${SRCDIR}\doc\" "winextensions.pdf"
+  ${File} "${DOCDIR}\" "oodguide.pdf"
+  ${File} "${DOCDIR}\" "rexxextensions.pdf"
+  ${File} "${DOCDIR}\" "winextensions.pdf"
   ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\doc\" "ooRexxTry.pdf"
 
   ; Create start menu shortcuts

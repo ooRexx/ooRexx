@@ -1072,11 +1072,13 @@ endif ()
 
 #################### rxwinsys.dll ################
 if (WIN32)
+# need to copy this to the binary dir
+copy_build_file(winsystm.cls ${build_extensions_rxwinsys_dir})
 # Sources for rxwinwys.dll
 add_library(rxwinsys SHARED ${build_extensions_rxwinsys_dir}/rxwinsys.cpp
              ${build_extensions_rxwinsys_dir}/rxwinsys.def
              ${build_platform_dir}/verinfo.rc
-             ${build_extensions_rxwinsys_dir}/winsystm.cls)
+             ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
 # Include file definition
 target_include_directories(rxwinsys PUBLIC
              ${build_extensions_rxwinsys_dir})
@@ -1394,6 +1396,7 @@ if (NSIS_EXECUTABLE)
 
    file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
    file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
+   file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
 
    add_custom_target(nsis_installer
       DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
@@ -1408,7 +1411,7 @@ if (NSIS_EXECUTABLE)
               ${DOC_SOURCE_DIR}/winextensions.pdf
               ${build_platform_dir}/install/cpack.nsi
       VERBATIM
-      COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DCPU=${CPU} cpack.nsi
+      COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DNODOTVER=${ORX_NODOT_VERSION} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DDOCDIR=${NATIVE_DOC_DIR} /DCPU=${CPU} cpack.nsi
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
       COMMENT "Building NSIS installer")
 endif()
