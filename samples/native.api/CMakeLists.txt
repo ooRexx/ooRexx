@@ -43,12 +43,7 @@ cmake_minimum_required (VERSION 2.6)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (samples)
+project (samples-native-api)
 
-add_subdirectory(native.api)
+add_subdirectory (call.example)
 
-if (WIN32)
-    add_subdirectory (windows)
-else ()
-    add_subdirectory (unix)
-endif ()

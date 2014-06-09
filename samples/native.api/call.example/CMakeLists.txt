@@ -43,12 +43,42 @@ cmake_minimum_required (VERSION 2.6)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (samples)
+project (call.example)
 
-add_subdirectory(native.api)
+#################### callrxnt (executable) #########################
+# additional source files required by specific platforms
+set (platform_libs ${ORX_SYSLIB_DL})
+# Sources for call.example
+add_executable(stackOverflow
+    ${PROJECT_SOURCE_DIR}/stackOverflow.cpp)
+# Include file definition
+target_include_directories(stackOverflow PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+target_link_libraries(stackOverflow rexx rexxapi ${ORX_SYSLIB_DL})
 
+add_executable(runRexxProgram
+    ${PROJECT_SOURCE_DIR}/runRexxProgram.cpp)
+# Include file definition
+target_include_directories(runRexxProgram PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+target_link_libraries(runRexxProgram rexx rexxapi ${ORX_SYSLIB_DL})
+
+target_link_libraries(runRexxProgram rexx rexxapi ${platform_callrxnt_libs})
+
+#install the directory files
+install(TARGETS stackOverflow RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api/)
+install(FILES ${PROJECT_SOURCE_DIR}/stackOverflow.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
+install(TARGETS runRexxProgram RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api/)
+install(FILES ${PROJECT_SOURCE_DIR}/runRexxProgram.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/HelloWorld.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/backward.fnc COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/tooRecursiveTrapped.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/tooRecursiveUnhandled.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
+install(FILES ${PROJECT_SOURCE_DIR}/ReadMe.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
 if (WIN32)
-    add_subdirectory (windows)
-else ()
-    add_subdirectory (unix)
-endif ()
+  install(FILES ${PROJECT_SOURCE_DIR}/Makefile.windows COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
+else()
+  install(FILES ${PROJECT_SOURCE_DIR}/Makefile.linux COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
+endif()
