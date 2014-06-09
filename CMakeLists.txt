@@ -1077,14 +1077,16 @@ copy_build_file(winsystm.cls ${build_extensions_rxwinsys_dir})
 # Sources for rxwinwys.dll
 add_library(rxwinsys SHARED ${build_extensions_rxwinsys_dir}/rxwinsys.cpp
              ${build_extensions_rxwinsys_dir}/rxwinsys.def
-             ${build_platform_dir}/verinfo.rc
-             ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
+             ${build_platform_dir}/verinfo.rc)
 # Include file definition
 target_include_directories(rxwinsys PUBLIC
              ${build_extensions_rxwinsys_dir})
 # Extra link library definitions
 target_link_libraries(rxwinsys rexx rexxapi shlwapi)
+# Make sure winsystm.cls gets copied
+add_dependencies(rxwinsys ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
 install(TARGETS rxwinsys RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
 #################### oodialog.dll ################
