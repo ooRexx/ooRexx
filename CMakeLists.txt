@@ -141,59 +141,41 @@ if (WIN32)
    set (INSTALL_INCLUDE_DIR api)
    set (INSTALL_SAMPLES_DIR samples)
 
+# NSIS builder locations
+   # location where we assemble everything to build the installer
+   set (NSIS_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
+   # location for pulling together the install file set
+   set (NSIS_FILE_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS/files)
 
 # Create and add a shortcut item to the list for a component
 # This also adds entries to delete the equivalent shortcut
 MACRO(install_component_shortcut component name prog arg icon icon_index)
-  set(NSIS_CREATE_COMPONENT_SHORTCUTS_${component} "${NSIS_CREATE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureShortCut \"${name}\" ${prog} \"${arg}\" ${icon} \"${icon_index}\"")
-  set(NSIS_DELETE_COMPONENT_SHORTCUTS_${component} "${NSIS_DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \"${name}\"")
+  set(NSIS_COMPONENT_SHORTCUTS_${component} "${NSIS_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureShortCut \"${name}\" ${prog} \"${arg}\" ${icon} \"${icon_index}\"")
 ENDMACRO ()
 
 # Create and add a shortcut item to the list for a component for running a rexx program
 # This also adds entries to delete the equivalent shortcut
 MACRO(install_rexx_shortcut component name launcher program)
-  set(NSIS_CREATE_COMPONENT_SHORTCUTS_${component} "${CREATE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureRexxShortCut \"${name}\" ${launcher} \"${program}\"")
-  set(NSIS_DELETE_COMPONENT_SHORTCUTS_${component} "${DELETE_COMPONENT_SHORTCUTS_${component}}\n!insertmacro RemoveShortCut \"${name}\"")
+  set(NSIS_COMPONENT_SHORTCUTS_${component} "${NSIS_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureRexxShortCut \"${name}\" ${launcher} \"${program}\"")
 ENDMACRO ()
 
 # Create and add a shortcut for a documentation element
 # This also adds entries to delete the equivalent shortcut
 MACRO(install_doc_shortcut name file)
-  set(NSIS_CREATE_COMPONENT_SHORTCUTS_Docs "${NSIS_CREATE_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
-  set(NSIS_DELETE_COMPONENT_SHORTCUTS_Docs "${NSIS_DELETE_COMPONENT_SHORTCUTS_Docs}\n!insertmacro RemoveShortCut \"${name}\"")
+  set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
 ENDMACRO ()
 
 # Function to build component short cut includes that get inserted into the
 # into the NSIS template
 function(build_NSIS_shortcuts)
-   # This creates a macro for each component to create the shortcuts
+   message("Building NSIS shortcuts")
+   # This creates an include file  for each component to create the shortcuts
    foreach(component ${NSIS_INSTALL_COMPONENTS})
       # get the shortcut information into a local variable
-      set(shortcuts "${NSIS_CREATE_COMPONENT_SHORTCUTS_${component}}")
-      # opening macro definition, the shortcut lines (if any), and the macro close
-      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Create_Shortcuts_\${${component}}
-IntCmp \$${component}_was_installed 0 nocreate_shortcuts_${component}
-${shortcuts}
-
-nocreate_shortcuts_${component}:
-!macroend\n")
+      set(shortcuts "${NSIS_COMPONENT_SHORTCUTS_${component}}")
+      # Write this out to a file that can be included
+      FILE(WRITE "${NSIS_BUILD_DIR}/shortcut_creation_manifest_${component}.nsh" ${shortcuts})
    endforeach()
-   # This creates a macro for each component to delete the shortcuts
-   foreach(component ${NSIS_INSTALL_COMPONENTS})
-      # get the shortcut information into a local variable
-      set(shortcuts "${NSIS_DELETE_COMPONENT_SHORTCUTS_${component}}")
-      # opening macro definition, the shortcut lines (if any), and the macro close
-      set(SECTION_SHORTCUTS "${SECTION_SHORTCUTS}\n!macro Remove_ShortCuts_\${${component}}
-IntCmp \$${component}_was_installed 0 noremove_shortcuts_${component}
-${shortcuts}
-
-noremove_shortcuts_${component}:
-!macroend
-")
-   endforeach()
-
-   # set the final variable
-   set(NSIS_COMPONENT_SECTION_SHORTCUTS ${SECTION_SHORTCUTS} PARENT_SCOPE)
 endfunction()
 
 else ()
