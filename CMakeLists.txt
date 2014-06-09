@@ -146,7 +146,6 @@ if (WIN32)
    # The DOC source dir is usually specified in native form...need to convert it
    # to the CMAKE format for the install commands.
    file(TO_CMAKE_PATH ${DOC_SOURCE_DIR} DOC_SOURCE_DIR)
-   message("Doc source dir is ${DOC_SOURCE_DIR}")
 
    # location where we assemble everything to build the installer
    set (NSIS_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
@@ -1525,8 +1524,25 @@ if (NSIS_EXECUTABLE)
    file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
    file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
 
+   set(NSIS_INSTALLER_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
+   set(NSIS_INSTALLER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install)
+
    # Name of the installer file we're going to create
-   set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${CPU}.exe")
+   set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.exe")
+   set(INSTALLER_SCRIPT "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.nsi")
+
+   # create an installer file from the template
+   message("Building NSIS template ${INSTALLER_SCRIPT}")
+   configure_file(${NSIS_INSTALLER_SOURCE_DIR}/cpack.nsi.template.in ${NSIS_INSTALLER_DIR}/${INSTALLER_SCRIPT} @ONLY)
+
+# handy macro for copying files from the source into the source directory.
+macro (copy_install_file name)
+    ADD_CUSTOM_COMMAND(
+       OUTPUT ${NSIS_INSTALLER_DIR}/${name}
+       COMMAND ${CMAKE_COMMAND} -E copy ${NSIS_INSTALLER_SOURCE_DIR}/${name} ${NSIS_INSTALLER_DIR}/${name}
+       DEPENDS ${NSIS_INSTALLER_SOURCE_DIR}/${name}
+    )
+endmacro (copy_install_file)
 
    add_custom_target(nsis_installer
       DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
@@ -1547,20 +1563,45 @@ if (NSIS_EXECUTABLE)
       COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE}
       COMMENT "Building NSIS installer")
 
-      # Target for building an NSIS installation.  This will copy all of the install
-      # files into a directory structure that mimics how
-      add_custom_target(nsis_install_dirs
-         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-         COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-         COMMENT "Building NSIS file install structure")
+   # copy additional include files required by the makensis command
+   copy_install_file(admin.nsh)
+   copy_install_file(newpath.nsh)
+   copy_install_file(WriteEnv.nsh)
+   copy_install_file(orange.bmp)
+   copy_install_file(orange-uninstall.bmp)
 
-      # Target for building the NSIS file manifests from the install information
-      add_custom_target(nsis_file_manifests
-         DEPENDS nsis_install_dirs
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-         COMMAND ${CMAKE_COMMAND} -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/BuildComponentManifests.cmake
-         COMMENT "Building NSIS file install manifests")
+   # a target to make sure these get copied (not part of ALL, but the installer will depend on it
+   add_custom_target(nsis_includes DEPENDS
+      ${NSIS_INSTALLER_DIR}/admin.nsh
+      ${NSIS_INSTALLER_DIR}/newpath.nsh
+      ${NSIS_INSTALLER_DIR}/WriteEnv.nsh
+      ${NSIS_INSTALLER_DIR}/orange.bmp
+      ${NSIS_INSTALLER_DIR}/orange-uninstall.bmp)
+
+   # Target for building an NSIS installation.  This will copy all of the install
+   # files into a directory structure that mimics how
+   add_custom_target(nsis_install_dirs
+      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+      COMMENT "Building NSIS file install structure")
+
+   # Target for building the NSIS file manifests from the install information
+   add_custom_target(nsis_file_manifests
+      DEPENDS nsis_install_dirs
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMAND ${CMAKE_COMMAND} -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/BuildComponentManifests.cmake
+      COMMENT "Building NSIS file install manifests")
+
+   add_custom_target(nsis_template_installer
+      DEPENDS nsis_file_manifests
+              nsis_install_dirs
+              nsis_includes
+              ${NSIS_INSTALLER_DIR}/${INSTALLER_SCRIPT}
+      VERBATIM
+      COMMAND ${NSIS_EXECUTABLE} ${INSTALLER_SCRIPT}
+      WORKING_DIRECTORY ${NSIS_INSTALLER_DIR}
+      COMMENT "Building NSIS installer from template in ${NSIS_INSTALLER_DIR}")
 endif()
 
 endif ()

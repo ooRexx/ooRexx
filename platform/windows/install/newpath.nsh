@@ -58,26 +58,11 @@ Function AddToPath
   AddToPath_Not_PATH:
   StrCpy $3 $0
   AddToPath_cont:
-  Call IsNT
-  Pop $1
-  StrCmp $1 1 AddToPath_NT
-    ; Not on NT
-    StrCpy $1 $WINDIR 2
-    FileOpen $1 "$1\autoexec.bat" a
-    FileSeek $1 -1 END
-    FileReadByte $1 $2
-    IntCmp $2 26 0 +2 +2 # DOS EOF
-      FileSeek $1 -1 END # write over EOF
-    FileWrite $1 "$\r$\nSET $R8=%$R8%;$3$\r$\n"
-    FileClose $1
-    SetRebootFlag true
-    Goto AddToPath_done
 
   ; A very few users have reported that their path setting was erased and
   ; replaced by only the ooRexx install directory.  This could happen if there
   ; is an error reading the current system path from the registry.  If we detect
   ; this problem we do not change the PATH (or PATHEXT.)
-  AddToPath_NT:
     StrCmp $R7 "true" AddToPath_AllUsers
     ReadRegStr $1 HKCU "Environment" "$R8"          ; The current user's path, it could be blank
     Goto AddToPath_UserCont
@@ -162,48 +147,6 @@ Function un.RemoveFromPath
 
   IntFmt $6 "%c" 26 # DOS EOF
 
-  Call un.IsNT
-  Pop $1
-  StrCmp $1 1 unRemoveFromPath_NT
-    ; Not on NT
-    StrCpy $1 $WINDIR 2
-    FileOpen $1 "$1\autoexec.bat" r
-    GetTempFileName $4
-    FileOpen $2 $4 w
-    ;
-    ; Only compare shortpath if PATH env variable
-    ;
-    StrCmp $R8 "PATH" "" unRemoveFromPath_Not_PATH
-    GetFullPathName /SHORT $0 $0
-    unRemoveFromPath_Not_PATH:
-    StrCpy $0 "SET $R8=%$R8%;$0"
-    Goto unRemoveFromPath_dosLoop
-
-    unRemoveFromPath_dosLoop:
-      FileRead $1 $3
-      StrCpy $5 $3 1 -1 # read last char
-      StrCmp $5 $6 0 +2 # if DOS EOF
-        StrCpy $3 $3 -1 # remove DOS EOF so we can compare
-      StrCmp $3 "$0$\r$\n" unRemoveFromPath_dosLoopRemoveLine
-      StrCmp $3 "$0$\n" unRemoveFromPath_dosLoopRemoveLine
-      StrCmp $3 "$0" unRemoveFromPath_dosLoopRemoveLine
-      StrCmp $3 "" unRemoveFromPath_dosLoopEnd
-      FileWrite $2 $3
-      Goto unRemoveFromPath_dosLoop
-      unRemoveFromPath_dosLoopRemoveLine:
-        SetRebootFlag true
-        Goto unRemoveFromPath_dosLoop
-
-    unRemoveFromPath_dosLoopEnd:
-      FileClose $2
-      FileClose $1
-      StrCpy $1 $WINDIR 2
-      Delete "$1\autoexec.bat"
-      CopyFiles /SILENT $4 "$1\autoexec.bat"
-      Delete $4
-      Goto unRemoveFromPath_done
-
-  unRemoveFromPath_NT:
     StrCmp $R7 "true" unRemoveFromPath_AllUsers
     ReadRegStr $1 HKCU "Environment" "$R8"
     Goto unRemoveFromPath_UserCont

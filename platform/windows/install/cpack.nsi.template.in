@@ -6,18 +6,12 @@
 ;   services.dll       -> http://nsis.sourceforge.net/File:Services.zip
 ;   ooRexxProcess.dll  -> http://sourceforge.net/projects/oorexx/files/  under oorexx-buildutils
 ;
-; Run as:
-;  makensis /DVERSION=x.x /DNODOTVER=xx /DSRCDIR=xxx /DBINDIR=xxx /DCPU=xxx oorexx.nsi
-;  eg
-;  makensis /DVERSION=4.0.0 /DNODOTVER=400 /DSRCDIR=d:\oorexx\oorexx /DBINDIR=d:\oorexx\oorexx\win32rel /DCPU=x64 oorexx.nsi
-; Note:
-;  oorexx.nsi MUST be in the current directory.
 
 !define LONGNAME       "@CPACK_PACKAGE_LONG_NAME@"  ;Long Name (for descriptions)
-!define SHORTNAME      "@CPACK_PACKAGE_LONG_NAME@"            ;Short name (no slash) of package
+!define SHORTNAME      "@CPACK_PACKAGE_NAME@"       ;Short name (no slash) of package
 !define DISPLAYICON    "$INSTDIR\@CPACK_NSIS_INSTALLED_ICON_NAME@"
 !define VERSION        "@ORX_VERSION_NSIS@"
-!define SRCDIR         "@NATIVE_SOURCE_DIR@"
+!define CPU            "@NSIS_CPU@"
 !define UNINSTALLER    "uninstall.exe"
 !define KEYFILE1       "rexx.dll"
 !define KEYFILE2       "rexx.exe"
@@ -39,7 +33,6 @@ Name "${LONGNAME} ${VERSION}"
 !include "FileFunc.nsh"
 !include "WordFunc.nsh"
 !include "admin.nsh"
-!include "isnt.nsh"
 !include "newpath.nsh"
 !include "WriteEnv.nsh"
 !include "StrFunc.nsh"
