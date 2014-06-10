@@ -50,7 +50,7 @@
 
 #include "oorexxapi.h"
 #include <stdio.h>
-#include <sting.h>
+#include <string.h>
 
 #if defined(_WIN32)
 #define _CDECL __cdecl
