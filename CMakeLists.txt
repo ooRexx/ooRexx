@@ -85,7 +85,6 @@ if (SVN_EXECUTABLE)
     ENDMACRO(Subversion_GET_REVISION)
 
     Subversion_GET_REVISION(${CMAKE_SOURCE_DIR} ORX_BLD_LVL)
-    set (ORX_VERSION_NSIS ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}.${ORX_BLD_LVL})
 endif ()
 
 message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
@@ -143,6 +142,15 @@ if (WIN32)
    set (INSTALL_SAMPLES_DIR samples)
 
 # NSIS builder locations
+
+   # locations of NSIS directories.  The first is where we build from,
+   # the second is source for any template files for configuring the build.
+   set(NSIS_INSTALLER_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
+   set(NSIS_INSTALLER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/install)
+
+   # NSIS version identifier that includes the build level
+   set (ORX_VERSION_NSIS ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}.${ORX_BLD_LVL})
+
    # The DOC source dir is usually specified in native form...need to convert it
    # to the CMAKE format for the install commands.
    file(TO_CMAKE_PATH ${DOC_SOURCE_DIR} DOC_SOURCE_DIR)
@@ -169,19 +177,6 @@ ENDMACRO ()
 MACRO(install_doc_shortcut name file)
   set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
 ENDMACRO ()
-
-# Function to build component short cut includes that get inserted into the
-# into the NSIS template
-function(build_NSIS_shortcuts)
-   message("Building NSIS shortcuts")
-   # This creates an include file  for each component to create the shortcuts
-   foreach(component ${NSIS_INSTALL_COMPONENTS})
-      # get the shortcut information into a local variable
-      set(shortcuts "${NSIS_COMPONENT_SHORTCUTS_${component}}")
-      # Write this out to a file that can be included
-      FILE(WRITE "${NSIS_BUILD_DIR}/${component}_shortcut_manifest.nsh" ${shortcuts})
-   endforeach()
-endfunction()
 
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
@@ -1511,7 +1506,10 @@ install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
 install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
 
 # build the NSIS shortcut creation/deletion macros that are inserted into the template
-build_NSIS_shortcuts()
+configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Core_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Core_shortcut_manifest.nsh @ONLY)
+configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Docs_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Docs_shortcut_manifest.nsh @ONLY)
+configure_file(${NSIS_INSTALLER_SOURCE_DIR}/DevLib_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/DevLib_shortcut_manifest.nsh @ONLY)
+configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Samples_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Samples_shortcut_manifest.nsh @ONLY)
 
 # Build an NSIS installer without using CPack
 find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
@@ -1523,9 +1521,6 @@ if (NSIS_EXECUTABLE)
    file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
    file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
    file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
-
-   set(NSIS_INSTALLER_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
-   set(NSIS_INSTALLER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install)
 
    # Name of the installer file we're going to create
    set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.exe")
