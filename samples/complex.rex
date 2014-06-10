@@ -51,120 +51,139 @@
 /*  the complex number class.                                                 */
 /******************************************************************************/
 
-                                            /* complex number data class      */
-::class complex public inherit stringlike
+                                              /* complex number data class      */
+::class "Complex" public inherit stringlike orderable
 
-::method init                               /* initialize a complex number    */
-expose real imaginary                       /* expose the state data          */
-use arg first, second                       /* access the two numbers         */
-real = first + 0                            /* force rounding                 */
-if arg(2,'o') then                          /* no second argument?            */
-  imaginary = 0                             /* imaginary part is zero         */
-else
-  imaginary = second + 0                    /* force rounding on the second   */
+::method init                                 /* initialize a complex number    */
+  expose real imaginary                       /* expose the state data          */
+  use strict arg real, imaginary = 0          /* access the two numbers         */
+  real += 0                                   /* force rounding                 */
+  imaginary += 0
 
-::method '[]' class                         /* create a new complex number    */
-use arg first, second                       /* access the two numbers         */
-if arg(2,'o') then                          /* only one argument?             */
-  return self~new(first)                    /* just create as a real number   */
-else
-  return self~new(first, second)            /* create both parts              */
+::method '[]' class                           /* create a new complex number    */
+  forward message("NEW")                      /* just a synonym for NEW         */
 
-::method real                               /* return real part of a complex  */
-expose real                                 /* access the state information   */
-return real                                 /* return that value              */
+-- read-only attributes for the real and imaginary parts
+::attribute real GET
+::attribute imaginary GET
 
-::method imaginary                          /* return imaginary part          */
-expose imaginary                            /* access the state information   */
-return imaginary                            /* return the value               */
+::method '+'                                  /* addition method                */
+  expose real imaginary                       /* access the state values        */
+  use strict arg adder = .nil                 /* get the operand                */
+  if arg(1,'o') then                          /* prefix plus operation?         */
+    return self                               /* don't do anything with this    */
 
-::method '+'                                /* addition method                */
-expose real imaginary                       /* access the state values        */
-use arg adder                               /* get the operand                */
-if arg(1,'o') then                          /* prefix plus operation?         */
-  return self                               /* don't do anything with this    */
-tempreal = real + adder~real                /* add the real parts             */
-                                            /* add the imaginary parts        */
-tempimaginary = imaginary + adder~imaginary
-                                            /* return a new item of same class*/
-return self~class~new(tempreal, tempimaginary)
+  if adder~isa(.string) then                  /* if just a simple number,       */
+    adder = self~class~new(adder)             /* convert to complex             */
 
-::method '-'                                /* subtraction method             */
-expose real imaginary                       /* access the state values        */
-use arg adder                               /* get the operand                */
-if arg(1,'o') then                          /* prefix minus operation?        */
-                                            /* negate the number              */
-  return self~class~new(-real, -imaginary)
-tempreal = real - adder~real                /* subtract the real part         */
-                                            /* subtract the imaginary part    */
-tempimaginary = imaginary - adder~imaginary
-                                            /* return a new item              */
-return self~class~new(tempreal, tempimaginary)
+                                              /* return a new item of same class*/
+                                              /* (this could potentially be a   */
+                                              /* subclass of Complex            */
+  return self~class~new(real + adder~real, imaginary + adder~imaginary )
 
-::method '*'                                /* multiplication method          */
-expose real imaginary                       /* access the state values        */
-use arg multiplier                          /* get the operand                */
-                                            /* calculate the real part        */
-tempreal = (real * multiplier~real) - (imaginary * multiplier~imaginary)
-                                            /* calculate the imaginary part   */
-tempimaginary = (real * multiplier~imaginary) + (imaginary * multiplier~real)
-                                            /* return a new item              */
-return self~class~new(tempreal, tempimaginary)
+::method '-'                                  /* subtraction method             */
+  expose real imaginary                       /* access the state values        */
+  use strict arg adder = .nil                 /* get the operand                */
+  if arg(1,'o') then                          /* prefix minus operation?        */
+                                              /* negate the number              */
+    return self~class~new(-real, -imaginary)
 
-::method '/'                                /* division method                */
-expose real imaginary                       /* access the state values        */
-use arg divisor                             /* get the operand                */
-a=real                                      /* get real and imaginaries for   */
-b=imaginary                                 /* both numbers                   */
-c=divisor~real
-d=divisor~imaginary
-qr=((b*d)+(a*c))/(c**2+d**2)                /* generate the new result values */
-qi=((b*c)-(a*d))/(c**2+d**2)
-return self~class~new(qr,qi)                /* return the new value           */
+  if adder~isa(.string) then                  /* if just a simple number,       */
+    adder = self~class~new(adder)             /* convert to complex             */
 
-::method '%'                                /* integer division method        */
-expose real imaginary                       /* access the state values        */
-use arg divisor                             /* get the operand                */
-a=real                                      /* get real and imaginaries for   */
-b=imaginary                                 /* both numbers                   */
-c=divisor~real
-d=divisor~imaginary
-qr=((b*d)+(a*c))%(c**2+d**2)                /* generate the new result values */
-qi=((b*c)-(a*d))%(c**2+d**2)
-return self~class~new(qr,qi)                /* return the new value           */
+                                              /* return a new item              */
+  return self~class~new(real - adder~real, imaginary - adder~imaginary)
 
-::method '//'                               /* remainder method               */
-expose real imaginary                       /* access the state values        */
-use arg divisor                             /* get the operand                */
-a=real                                      /* get real and imaginaries for   */
-b=imaginary                                 /* both numbers                   */
-c=divisor~real
-d=divisor~imaginary
-qr=((b*d)+(a*c))//(c**2+d**2)               /* generate the new result values */
-qi=((b*c)-(a*d))//(c**2+d**2)
-return self~class~new(qr,qi)                /* return the new value           */
+::method '*'                                  /* multiplication method          */
+  expose real imaginary                       /* access the state values        */
+  use strict arg multiplier                   /* get the operand                */
 
-::method string                             /* format as a string value       */
-expose real imaginary                       /* get the state info             */
-return real'+'imaginary'i'                  /* format as real+imaginaryi      */
+  if multiplier~isa(.string) then             /* if just a simple number,       */
+    multiplier = self~class~new(multiplier)   /* convert to complex             */
+                                              /* calculate the real part        */
+  tempreal = (real * multiplier~real) - (imaginary * multiplier~imaginary)
+                                              /* calculate the imaginary part   */
+  tempimaginary = (real * multiplier~imaginary) + (imaginary * multiplier~real)
+                                              /* return a new item              */
+  return self~class~new(tempreal, tempimaginary)
 
-::class vector subclass complex public      /* vector subclass of complex     */
+::method '/'                                  /* division method                */
+  expose real imaginary                       /* access the state values        */
+  use strict arg divisor                      /* get the operand                */
 
-::method '[]' class                         /* quick creation of a vector item*/
-use arg first, second                       /* get the arguments              */
-return self~new(first, second)              /* create a new vector item       */
+  if divisor~isa(.string) then                /* if just a simple number,       */
+    divisor = self~class~new(divisor)         /* convert to complex             */
 
-::method string                             /* format as a string value       */
-return '('self~real','self~imaginary')'     /* format as '(a,b)'              */
+  a=real                                      /* get real and imaginaries for   */
+  b=imaginary                                 /* both numbers                   */
+  c=divisor~real
+  d=divisor~imaginary
+  qr=((b*d)+(a*c))/(c**2+d**2)                /* generate the new result values */
+  qi=((b*c)-(a*d))/(c**2+d**2)
+  return self~class~new(qr,qi)                /* return the new value           */
 
-                                            /* class for adding generalized   */
-                                            /* string support to an object    */
-::CLASS stringlike PUBLIC MIXINCLASS object
+::method '%'                                  /* integer division method        */
+  expose real imaginary                       /* access the state values        */
+  use strict arg divisor                      /* get the operand                */
 
-::METHOD unknown UNGUARDED                  /* create an unknown method       */
-  use arg msgname, args                     /* get the message and arguments  */
-                                            /* forward to the string value    */
-  return .message~new(self~string, msgname, 'a', args)~send
+  if divisor~isa(.string) then                /* if just a simple number,       */
+    divisor = self~class~new(divisor)         /* convert to complex             */
 
-::METHOD makestring                         /* add MAKESTRING capability      */
-  return self~string                        /* return the string value        */
+  a=real                                      /* get real and imaginaries for   */
+  b=imaginary                                 /* both numbers                   */
+  c=divisor~real
+  d=divisor~imaginary
+  qr=((b*d)+(a*c))%(c**2+d**2)                /* generate the new result values */
+  qi=((b*c)-(a*d))%(c**2+d**2)
+  return self~class~new(qr,qi)                /* return the new value           */
+
+::method '//'                                 /* remainder method               */
+  expose real imaginary                       /* access the state values        */
+  use strict arg divisor                      /* get the operand                */
+
+  if divisor~isa(.string) then                /* if just a simple number,       */
+    divisor = self~class~new(divisor)         /* convert to complex             */
+
+  intdiv = self%divisor                       /* do the integer division        */
+
+  return self - (intdiv * divisor)            /* remultiply and subtract        */
+
+::method string                               /* format as a string value       */
+  expose real imaginary                       /* get the state info             */
+  if imaginary = 0 then return real           /* if no imaginary, don't format  */
+  return real'+'imaginary'i'                  /* format as real+imaginaryi      */
+
+-- Technically, complex numbers are not mathematically orderable.  This is considered
+-- a "lexical" ordering, which is still a useful operation and demonstrates the use
+-- of the orderable mixin class.  Ordering is defined by first comparing the real parts,
+-- and if they are equal, then compare the imaginary parts
+::method compareTo
+  expose real imaginary
+  use strict arg other
+
+  res = real~compareTo(other~real)
+  if res = 0 then return imaginary~compareTo(other~imaginary)
+  return res
+
+::class "Vector" subclass complex public      /* vector subclass of complex     */
+-- NOTE:  This inherits the "[]" and init methods from the parent...nothing additional
+-- required
+
+::method string                               /* format as a string value       */
+-- The subclass cannot access the real and imaginary object variables directly,
+-- so it uses the attribute methods to get the values
+  return '('self~real','self~imaginary')'     /* always format as '(a,b)'       */
+
+                                              /* class for adding generalized   */
+                                              /* string support to an object    */
+::class "Stringlike" PUBLIC MIXINCLASS object
+
+-- This unknown method forwards all method invocations to the object's string value,
+-- effectively adding all of the string methods to the class
+::method unknown UNGUARDED                    /* create an unknown method       */
+  use arg msgname, args                       /* get the message and arguments  */
+                                              /* just forward to the string val.*/
+  forward to(self~string) message(msgname) arguments(args)
+
+::method makestring                           /* add MAKESTRING capability      */
+  return self~string                          /* return the string value        */
