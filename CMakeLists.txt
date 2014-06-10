@@ -1574,11 +1574,16 @@ endmacro (copy_install_file)
       ${NSIS_INSTALLER_DIR}/orange-uninstall.bmp)
 
    # Target for building an NSIS installation.  This will copy all of the install
-   # files into a directory structure that mimics how
+   # files into a directory structure that mimics how.  We do this in 4 stages to install each of
+   # the components into a different directory, since them might install files into common directories
+   # at install time.
    add_custom_target(nsis_install_dirs
       DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Core -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Core -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Docs -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Docs -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=DevLib -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/DevLib -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Samples -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Samples -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
       COMMENT "Building NSIS file install structure")
 
    # Target for building the NSIS file manifests from the install information

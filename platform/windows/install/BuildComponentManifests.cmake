@@ -70,10 +70,12 @@ endfunction()
 set(NSIS_DIR ${BINARY_DIR}/NSIS)
 set(NSIS_FILES ${NSIS_DIR}/files)
 
-# Core component files
-build_component_manifest(Core ${NSIS_DIR}/Core_component_manifest.nsh "\$INSTDIR" ${NSIS_FILES}/bin)
-build_component_manifest(Docs ${NSIS_DIR}/Docs_component_manifest.nsh "\$INSTDIR\\doc" ${NSIS_FILES}/doc)
-build_component_manifest(Samples ${NSIS_DIR}/Samples_component_manifest.nsh "\$INSTDIR\\samples" ${NSIS_FILES}/samples)
-build_component_manifest(DevLib ${NSIS_DIR}/DevLib_component_manifest.nsh "\$INSTDIR\\api" ${NSIS_FILES}/api)
+# Core component files.  NOTE:  All of these files get stored in the root rather than the bin directory,
+# So we start copying from the bin directory rather than Core to get the targets correct.
+build_component_manifest(Core ${NSIS_DIR}/Core_component_manifest.nsh "\$INSTDIR" ${NSIS_FILES}/Core/bin)
+# The rest of the components install in subdirectories, so just copy the whole file structure.
+build_component_manifest(Docs ${NSIS_DIR}/Docs_component_manifest.nsh "\$INSTDIR" ${NSIS_FILES}/Docs)
+build_component_manifest(Samples ${NSIS_DIR}/Samples_component_manifest.nsh "\$INSTDIR" ${NSIS_FILES}/Samples)
+build_component_manifest(DevLib ${NSIS_DIR}/DevLib_component_manifest.nsh "\$INSTDIR" ${NSIS_FILES}/DevLib)
 
 
