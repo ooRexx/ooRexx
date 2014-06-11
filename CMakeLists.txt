@@ -133,11 +133,14 @@ include_directories(BEFORE api api/${ORX_PLATFORM_DIR})
 
 # Set install variables
 if (WIN32)
-   set (INSTALL_EXECUTABLE_DIR bin)
-   set (INSTALL_LIB_DIR bin)
-   set (INSTALL_CLS_DIR bin)
-   set (INSTALL_REX_DIR bin)
-   set (INSTALL_DOC_DIR doc)
+   # NOTE: specifying "." for the destination will place the files in the
+   # root directory of the NSIS install.  This needs to be a "." to get
+   # the files in the correct location.
+   set (INSTALL_EXECUTABLE_DIR .)
+   set (INSTALL_LIB_DIR .)
+   set (INSTALL_CLS_DIR .)
+   set (INSTALL_REX_DIR .)
+   set (INSTALL_DOC_DIR .)
    set (INSTALL_INCLUDE_DIR api)
    set (INSTALL_SAMPLES_DIR samples)
 
@@ -384,6 +387,8 @@ set (build_api_dir api)
 set (build_api_platform_dir api/${ORX_PLATFORM_DIR})
 set (build_samples_dir samples)
 set (api_dir ${build_api_dir}/${ORX_PLATFORM_DIR})
+
+set(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
 
 if (WIN32)
    set (platform_samples_dir ${build_samples_dir}/windows)
@@ -1415,7 +1420,6 @@ if (WIN32)
    # been configured with a doc source directory
    set(NSIS_INSTALL_COMPONENTS Core Docs DevLib Samples)
 
-   set(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
 
    # Add addititional Windows-only install files
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
