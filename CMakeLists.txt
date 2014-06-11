@@ -696,8 +696,7 @@ install(TARGETS rexx RUNTIME DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
                      ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR} COMPONENT DevLib)
 set_target_properties(rexx PROPERTIES VERSION ${ORX_VERSION})
 
-#################### rexx (executable) ##########################
-# additional source files required by specific platforms
+#################### orexx (executable) ##########################
 if (WIN32)
    set (platform_rexx_exe_sources
             ${build_platform_dir}/rexx.rc)
@@ -711,6 +710,16 @@ add_executable(rexx_exe ${build_utilities_rexx_dir}/rexx.cpp
 # This allows the executable to have the same name as the library.
 SET_TARGET_PROPERTIES(rexx_exe
   PROPERTIES OUTPUT_NAME rexx)
+
+if (WIN32)
+# We need to override the PDB output file name for rexx.exe so it doesn't overwrite
+# the file for rexx.dll, which essentially makes the interpreter undebuggable on Windows
+# we want to append, which is a little bit of a pain.
+   get_property(link_flags TARGET rexx_exe PROPERTY LINK_FLAGS_DEBUG)
+   set(link_flags "${link_flags} /PDB:bin\\orexx.pdb")
+   set_target_properties(rexx_exe PROPERTIES LINK_FLAGS_DEBUG ${link_flags})
+endif ()
+
 # Include file definition
 target_include_directories(rexx_exe PUBLIC
             ${build_lib_dir}

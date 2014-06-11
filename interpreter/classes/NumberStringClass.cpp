@@ -1825,14 +1825,19 @@ RexxObject *RexxNumberString::roundInternal()
                         return this->truncInternal(0);
                     }
                 }
-
+                // no integer digits in the rounding?, then the result will be one
+                // or minus one)
+                if (this->length == 0)
+                {
+                    return this->sign < 0 ? IntegerMinusOne : IntegerOne;
+                }
                 // ok, we rounded all the way out.  At this point, every digit in
                 // the buffer is a zero.  Doing the rounding is easy here, just
                 // stuff a 1 in the first digit and bump the exponent by 1
                 *this->number = 1;
                 this->exp += 1;
                 // and again, the trunc code can handle all of the formatting
-            return this->truncInternal(0);
+                return this->truncInternal(0);
             }
         }
     }
