@@ -160,23 +160,23 @@ if (WIN32)
    # location for pulling together the install file set
    set (NSIS_FILE_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS/files)
 
-# Create and add a shortcut item to the list for a component
-# This also adds entries to delete the equivalent shortcut
-MACRO(install_component_shortcut component name prog arg icon icon_index)
-  set(NSIS_COMPONENT_SHORTCUTS_${component} "${NSIS_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureShortCut \"${name}\" ${prog} \"${arg}\" ${icon} \"${icon_index}\"")
-ENDMACRO ()
+   # Create and add a shortcut item to the list for a component
+   # This also adds entries to delete the equivalent shortcut
+   MACRO(install_component_shortcut component name prog arg icon icon_index)
+     set(NSIS_COMPONENT_SHORTCUTS_${component} "${NSIS_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureShortCut \"${name}\" ${prog} \"${arg}\" ${icon} \"${icon_index}\"")
+   ENDMACRO ()
 
-# Create and add a shortcut item to the list for a component for running a rexx program
-# This also adds entries to delete the equivalent shortcut
-MACRO(install_rexx_shortcut component name launcher program)
-  set(NSIS_COMPONENT_SHORTCUTS_${component} "${NSIS_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureRexxShortCut \"${name}\" ${launcher} \"${program}\"")
-ENDMACRO ()
+   # Create and add a shortcut item to the list for a component for running a rexx program
+   # This also adds entries to delete the equivalent shortcut
+   MACRO(install_rexx_shortcut component name launcher program)
+     set(NSIS_COMPONENT_SHORTCUTS_${component} "${NSIS_COMPONENT_SHORTCUTS_${component}}\n!insertmacro ConfigureRexxShortCut \"${name}\" ${launcher} \"${program}\"")
+   ENDMACRO ()
 
-# Create and add a shortcut for a documentation element
-# This also adds entries to delete the equivalent shortcut
-MACRO(install_doc_shortcut name file)
-  set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
-ENDMACRO ()
+   # Create and add a shortcut for a documentation element
+   # This also adds entries to delete the equivalent shortcut
+   MACRO(install_doc_shortcut name file)
+     set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
+   ENDMACRO ()
 
 else ()
    set (CMAKE_INSTALL_PREFIX /usr)
@@ -185,6 +185,7 @@ else ()
    set (INSTALL_CLS_DIR ${CMAKE_INSTALL_PREFIX}/bin)
    set (INSTALL_REX_DIR ${CMAKE_INSTALL_PREFIX}/bin)
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
+   set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib/* ${CMAKE_INSTALL_PREFIX}/lib64)
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
@@ -1063,206 +1064,206 @@ endif ()
 
 #################### rxwinsys.dll ################
 if (WIN32)
-# need to copy this to the binary dir
-copy_build_file(winsystm.cls ${build_extensions_rxwinsys_dir})
-# Sources for rxwinwys.dll
-add_library(rxwinsys SHARED ${build_extensions_rxwinsys_dir}/rxwinsys.cpp
-             ${build_extensions_rxwinsys_dir}/rxwinsys.def
-             ${build_platform_dir}/verinfo.rc)
-# Include file definition
-target_include_directories(rxwinsys PUBLIC
-             ${build_extensions_rxwinsys_dir})
-# Extra link library definitions
-target_link_libraries(rxwinsys rexx rexxapi shlwapi)
-# Make sure winsystm.cls gets copied
-add_custom_target(winsystm_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
-#add_dependencies(rxwinsys ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
-install(TARGETS rxwinsys RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   # need to copy this to the binary dir
+   copy_build_file(winsystm.cls ${build_extensions_rxwinsys_dir})
+   # Sources for rxwinwys.dll
+   add_library(rxwinsys SHARED ${build_extensions_rxwinsys_dir}/rxwinsys.cpp
+                ${build_extensions_rxwinsys_dir}/rxwinsys.def
+                ${build_platform_dir}/verinfo.rc)
+   # Include file definition
+   target_include_directories(rxwinsys PUBLIC
+                ${build_extensions_rxwinsys_dir})
+   # Extra link library definitions
+   target_link_libraries(rxwinsys rexx rexxapi shlwapi)
+   # Make sure winsystm.cls gets copied
+   add_custom_target(winsystm_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
+   #add_dependencies(rxwinsys ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls)
+   install(TARGETS rxwinsys RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
+   install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
 #################### oodialog.dll ################
 if (WIN32)
-set (OOD_MAJOR 4)
-set (OOD_MINOR 2)
-set (OOD_MOD_LVL 3)
-set (OOD_BLD_LVL 9606)
-set (OOD_VER_STR "4.2.3.9606")
-set (OOD_COPY_YEAR "2005-2013")
-set (OOD_SVN_REVSION 9150)
+   set (OOD_MAJOR 4)
+   set (OOD_MINOR 2)
+   set (OOD_MOD_LVL 3)
+   set (OOD_BLD_LVL 9606)
+   set (OOD_VER_STR "4.2.3.9606")
+   set (OOD_COPY_YEAR "2005-2013")
+   set (OOD_SVN_REVSION 9150)
 
-# Sources for oodialog.dll
-add_library(oodialog SHARED
-             ${build_extensions_oodialog_dir}/APICommon.cpp
-             ${build_extensions_oodialog_dir}/oodBarControls.cpp
-             ${build_extensions_oodialog_dir}/oodBaseDialog.cpp
-             ${build_extensions_oodialog_dir}/oodBasicControls.cpp
-             ${build_extensions_oodialog_dir}/oodCommon.cpp
-             ${build_extensions_oodialog_dir}/oodControl.cpp
-             ${build_extensions_oodialog_dir}/oodData.cpp
-             ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-             ${build_extensions_oodialog_dir}/ooDialog.cpp
-             ${build_extensions_oodialog_dir}/oodKeyboard.cpp
-             ${build_extensions_oodialog_dir}/oodListView.cpp
-             ${build_extensions_oodialog_dir}/oodMenu.cpp
-             ${build_extensions_oodialog_dir}/oodMessaging.cpp
-             ${build_extensions_oodialog_dir}/oodMouse.cpp
-             ${build_extensions_oodialog_dir}/oodPackageEntry.cpp
-             ${build_extensions_oodialog_dir}/oodPropertySheetDialog.cpp
-             ${build_extensions_oodialog_dir}/oodResizableDialog.cpp
-             ${build_extensions_oodialog_dir}/oodResources.cpp
-             ${build_extensions_oodialog_dir}/oodRoutines.cpp
-             ${build_extensions_oodialog_dir}/oodShared.cpp
-             ${build_extensions_oodialog_dir}/oodShellObjects.cpp
-             ${build_extensions_oodialog_dir}/oodToolTip.cpp
-             ${build_extensions_oodialog_dir}/oodTreeView.cpp
-             ${build_extensions_oodialog_dir}/oodUser.cpp
-             ${build_extensions_oodialog_dir}/oodUtilities.cpp
-             ${build_extensions_oodialog_dir}/oodViewControls.cpp
-             ${build_extensions_oodialog_dir}/ooDialog.def
-             ${build_extensions_oodialog_dir}/ooDialog.rc)
-# Override the compile definitions with ooDialog-exclusive defines
-set_property(TARGET oodialog
-       PROPERTY COMPILE_DEFINITIONS
-       OOD_VER=${OOD_MAJOR}
-       OOD_REL=${OOD_MINOR}
-       OOD_MOD=${OOD_MOD_LVL}
-       OOD_BLD=${OOD_BLD_LVL}
-       OOD_COPY_YEAR=${OOD_COPY_YEAR}
-       OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
-       OOD_BIN_NAME="oodialog.dll")
+   # Sources for oodialog.dll
+   add_library(oodialog SHARED
+                ${build_extensions_oodialog_dir}/APICommon.cpp
+                ${build_extensions_oodialog_dir}/oodBarControls.cpp
+                ${build_extensions_oodialog_dir}/oodBaseDialog.cpp
+                ${build_extensions_oodialog_dir}/oodBasicControls.cpp
+                ${build_extensions_oodialog_dir}/oodCommon.cpp
+                ${build_extensions_oodialog_dir}/oodControl.cpp
+                ${build_extensions_oodialog_dir}/oodData.cpp
+                ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
+                ${build_extensions_oodialog_dir}/ooDialog.cpp
+                ${build_extensions_oodialog_dir}/oodKeyboard.cpp
+                ${build_extensions_oodialog_dir}/oodListView.cpp
+                ${build_extensions_oodialog_dir}/oodMenu.cpp
+                ${build_extensions_oodialog_dir}/oodMessaging.cpp
+                ${build_extensions_oodialog_dir}/oodMouse.cpp
+                ${build_extensions_oodialog_dir}/oodPackageEntry.cpp
+                ${build_extensions_oodialog_dir}/oodPropertySheetDialog.cpp
+                ${build_extensions_oodialog_dir}/oodResizableDialog.cpp
+                ${build_extensions_oodialog_dir}/oodResources.cpp
+                ${build_extensions_oodialog_dir}/oodRoutines.cpp
+                ${build_extensions_oodialog_dir}/oodShared.cpp
+                ${build_extensions_oodialog_dir}/oodShellObjects.cpp
+                ${build_extensions_oodialog_dir}/oodToolTip.cpp
+                ${build_extensions_oodialog_dir}/oodTreeView.cpp
+                ${build_extensions_oodialog_dir}/oodUser.cpp
+                ${build_extensions_oodialog_dir}/oodUtilities.cpp
+                ${build_extensions_oodialog_dir}/oodViewControls.cpp
+                ${build_extensions_oodialog_dir}/ooDialog.def
+                ${build_extensions_oodialog_dir}/ooDialog.rc)
+   # Override the compile definitions with ooDialog-exclusive defines
+   set_property(TARGET oodialog
+          PROPERTY COMPILE_DEFINITIONS
+          OOD_VER=${OOD_MAJOR}
+          OOD_REL=${OOD_MINOR}
+          OOD_MOD=${OOD_MOD_LVL}
+          OOD_BLD=${OOD_BLD_LVL}
+          OOD_COPY_YEAR=${OOD_COPY_YEAR}
+          OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
+          OOD_BIN_NAME="oodialog.dll")
 
-# Include file definition
-target_include_directories(oodialog PUBLIC
-             ${build_extensions_oodialog_dir})
-# Extra link library definitions
-target_link_libraries(oodialog rexx rexxapi winmm comdlg32 comctl32 shlwapi oleacc uxtheme rpcrt4 propsys delayimp)
-install(TARGETS oodialog RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
+   # Include file definition
+   target_include_directories(oodialog PUBLIC
+                ${build_extensions_oodialog_dir})
+   # Extra link library definitions
+   target_link_libraries(oodialog rexx rexxapi winmm comdlg32 comctl32 shlwapi oleacc uxtheme rpcrt4 propsys delayimp)
+   install(TARGETS oodialog RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
 
-#################### ooDialog.exe (executable) ##########################
-# Sources for ooDialog.exe
-add_executable(oodialog_exe WIN32 ${build_extensions_oodialog_dir}/oodWinMain.cpp
-                                  ${build_extensions_oodialog_dir}/oodShared.cpp
-                                  ${build_extensions_oodialog_dir}/ooDialogWinMain.rc)
-set_property(TARGET oodialog_exe
-       PROPERTY COMPILE_DEFINITIONS
-       OOD_VER=${OOD_MAJOR}
-       OOD_REL=${OOD_MINOR}
-       OOD_MOD=${OOD_MOD_LVL}
-       OOD_BLD=${OOD_BLD_LVL}
-       OOD_COPY_YEAR=${OOD_COPY_YEAR}
-       OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
-       OOD_BIN_NAME="oodialog.exe")
-# This allows the executable to have the same name as the library.
-SET_TARGET_PROPERTIES(oodialog_exe PROPERTIES OUTPUT_NAME ooDialog)
-# Include file definition
-target_include_directories(oodialog_exe PUBLIC
-             ${build_extensions_oodialog_dir})
-target_link_libraries(oodialog_exe rexx rexxapi shlwapi)
-add_custom_command(TARGET oodialog_exe POST_BUILD
-   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.exe;#1" "-outputresource:bin\\ooDialog.exe;#1"
-   COMMENT "Adding custom manifest to ooDialog.exe...")
-install(TARGETS oodialog_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   #################### ooDialog.exe (executable) ##########################
+   # Sources for ooDialog.exe
+   add_executable(oodialog_exe WIN32 ${build_extensions_oodialog_dir}/oodWinMain.cpp
+                                     ${build_extensions_oodialog_dir}/oodShared.cpp
+                                     ${build_extensions_oodialog_dir}/ooDialogWinMain.rc)
+   set_property(TARGET oodialog_exe
+          PROPERTY COMPILE_DEFINITIONS
+          OOD_VER=${OOD_MAJOR}
+          OOD_REL=${OOD_MINOR}
+          OOD_MOD=${OOD_MOD_LVL}
+          OOD_BLD=${OOD_BLD_LVL}
+          OOD_COPY_YEAR=${OOD_COPY_YEAR}
+          OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
+          OOD_BIN_NAME="oodialog.exe")
+   # This allows the executable to have the same name as the library.
+   SET_TARGET_PROPERTIES(oodialog_exe PROPERTIES OUTPUT_NAME ooDialog)
+   # Include file definition
+   target_include_directories(oodialog_exe PUBLIC
+                ${build_extensions_oodialog_dir})
+   target_link_libraries(oodialog_exe rexx rexxapi shlwapi)
+   add_custom_command(TARGET oodialog_exe POST_BUILD
+      COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.exe;#1" "-outputresource:bin\\ooDialog.exe;#1"
+      COMMENT "Adding custom manifest to ooDialog.exe...")
+   install(TARGETS oodialog_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
-#################### ooDialog.com (executable) ##########################
-# Sources for ooDialog.com
-add_executable(oodialog_com ${build_extensions_oodialog_dir}/oodMain.cpp
-                            ${build_extensions_oodialog_dir}/oodShared.cpp
-                            ${build_extensions_oodialog_dir}/ooDialogMain.rc)
-set_property(TARGET oodialog_com
-       PROPERTY COMPILE_DEFINITIONS
-       OOD_VER=${OOD_MAJOR}
-       OOD_REL=${OOD_MINOR}
-       OOD_MOD=${OOD_MOD_LVL}
-       OOD_BLD=${OOD_BLD_LVL}
-       OOD_COPY_YEAR=${OOD_COPY_YEAR}
-       OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
-       OOD_BIN_NAME="oodialog.com")
-# This allows the executable to have the same name as the library.
-SET_TARGET_PROPERTIES(oodialog_com PROPERTIES OUTPUT_NAME ooDialog)
-SET_TARGET_PROPERTIES(oodialog_com PROPERTIES SUFFIX .com)
-# Include file definition
-target_include_directories(oodialog_com PUBLIC
-             ${build_extensions_oodialog_dir})
-target_link_libraries(oodialog_com rexx rexxapi shell32 Advapi32)
-add_custom_command(TARGET oodialog_com POST_BUILD
-   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.com;#1" "-outputresource:bin\\ooDialog.com;#1"
-   COMMENT "Adding custom manifest to ooDialog.com...")
-install(TARGETS oodialog_com RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-
-
-# Generate the oodialog .cls files used for the ::requires.  These are generated from
-# from a set of individual source files
-set (oodialog_source_classFiles
-   ${build_extensions_oodialog_dir}/UtilityClasses.cls
-   ${build_extensions_oodialog_dir}/AnimatedButton.cls
-   ${build_extensions_oodialog_dir}/BaseDialog.cls
-   ${build_extensions_oodialog_dir}/ControlDialog.cls
-   ${build_extensions_oodialog_dir}/DialogControls.cls
-   ${build_extensions_oodialog_dir}/ListView.cls
-   ${build_extensions_oodialog_dir}/TreeView.cls
-   ${build_extensions_oodialog_dir}/ToolTip.cls
-   ${build_extensions_oodialog_dir}/DialogExtensions.cls
-   ${build_extensions_oodialog_dir}/DynamicDialog.cls
-   ${build_extensions_oodialog_dir}/EventNotification.cls
-   ${build_extensions_oodialog_dir}/PlainBaseDialog.cls
-   ${build_extensions_oodialog_dir}/RcDialog.cls
-   ${build_extensions_oodialog_dir}/Menu.cls
-   ${build_extensions_oodialog_dir}/ResDialog.cls
-   ${build_extensions_oodialog_dir}/UserDialog.cls
-   ${build_extensions_oodialog_dir}/DeprecatedClasses.cls
-   ${build_extensions_oodialog_dir}/ShellObjects.cls)
+   #################### ooDialog.com (executable) ##########################
+   # Sources for ooDialog.com
+   add_executable(oodialog_com ${build_extensions_oodialog_dir}/oodMain.cpp
+                               ${build_extensions_oodialog_dir}/oodShared.cpp
+                               ${build_extensions_oodialog_dir}/ooDialogMain.rc)
+   set_property(TARGET oodialog_com
+          PROPERTY COMPILE_DEFINITIONS
+          OOD_VER=${OOD_MAJOR}
+          OOD_REL=${OOD_MINOR}
+          OOD_MOD=${OOD_MOD_LVL}
+          OOD_BLD=${OOD_BLD_LVL}
+          OOD_COPY_YEAR=${OOD_COPY_YEAR}
+          OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
+          OOD_BIN_NAME="oodialog.com")
+   # This allows the executable to have the same name as the library.
+   SET_TARGET_PROPERTIES(oodialog_com PROPERTIES OUTPUT_NAME ooDialog)
+   SET_TARGET_PROPERTIES(oodialog_com PROPERTIES SUFFIX .com)
+   # Include file definition
+   target_include_directories(oodialog_com PUBLIC
+                ${build_extensions_oodialog_dir})
+   target_link_libraries(oodialog_com rexx rexxapi shell32 Advapi32)
+   add_custom_command(TARGET oodialog_com POST_BUILD
+      COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.com;#1" "-outputresource:bin\\ooDialog.com;#1"
+      COMMENT "Adding custom manifest to ooDialog.com...")
+   install(TARGETS oodialog_com RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 
-# We run a rexx program to generate these files, so we need to have the interpreter
-# fully built first.  The files are generated into the output directory.
-add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls
-           COMMAND $<TARGET_FILE:rexx_exe> build_ooDialog_cls.rex ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-           DEPENDS rexx_exe rexx_img ${build_extensions_oodialog_dir}/build_ooDialog_cls.rex ${oodialog_source_classfiles}
-           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/${build_extensions_oodialog_dir})
-add_custom_target(oodialog_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls)
+   # Generate the oodialog .cls files used for the ::requires.  These are generated from
+   # from a set of individual source files
+   set (oodialog_source_classFiles
+      ${build_extensions_oodialog_dir}/UtilityClasses.cls
+      ${build_extensions_oodialog_dir}/AnimatedButton.cls
+      ${build_extensions_oodialog_dir}/BaseDialog.cls
+      ${build_extensions_oodialog_dir}/ControlDialog.cls
+      ${build_extensions_oodialog_dir}/DialogControls.cls
+      ${build_extensions_oodialog_dir}/ListView.cls
+      ${build_extensions_oodialog_dir}/TreeView.cls
+      ${build_extensions_oodialog_dir}/ToolTip.cls
+      ${build_extensions_oodialog_dir}/DialogExtensions.cls
+      ${build_extensions_oodialog_dir}/DynamicDialog.cls
+      ${build_extensions_oodialog_dir}/EventNotification.cls
+      ${build_extensions_oodialog_dir}/PlainBaseDialog.cls
+      ${build_extensions_oodialog_dir}/RcDialog.cls
+      ${build_extensions_oodialog_dir}/Menu.cls
+      ${build_extensions_oodialog_dir}/ResDialog.cls
+      ${build_extensions_oodialog_dir}/UserDialog.cls
+      ${build_extensions_oodialog_dir}/DeprecatedClasses.cls
+      ${build_extensions_oodialog_dir}/ShellObjects.cls)
 
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+
+   # We run a rexx program to generate these files, so we need to have the interpreter
+   # fully built first.  The files are generated into the output directory.
+   add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls
+              COMMAND $<TARGET_FILE:rexx_exe> build_ooDialog_cls.rex ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+              DEPENDS rexx_exe rexx_img ${build_extensions_oodialog_dir}/build_ooDialog_cls.rex ${oodialog_source_classfiles}
+              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/${build_extensions_oodialog_dir})
+   add_custom_target(oodialog_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls)
+
+   install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodPlain.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodWin32.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooDialog.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
 
 #################### rexxhide (executable) ##########################
 if (WIN32)
-# Sources for rexxhide.
-add_executable(rexxhide WIN32 ${build_utilities_rexxhide_dir}/rexxhide.cpp
-                        ${build_platform_dir}/rexx.rc)
-# Include file definition
-target_include_directories(rexxhide PUBLIC
-            ${build_lib_dir}
-            ${build_api_dir}
-            ${build_api_platform_dir}
-            ${build_messages_dir})
-target_link_libraries(rexxhide rexx rexxapi)
-add_custom_command(TARGET rexxhide POST_BUILD
-   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxhide.exe;#1" "-outputresource:bin\\rexxhide.exe;#1"
-   COMMENT "Adding custom manifest to rexxhide.exe...")
-install(TARGETS rexxhide RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   # Sources for rexxhide.
+   add_executable(rexxhide WIN32 ${build_utilities_rexxhide_dir}/rexxhide.cpp
+                           ${build_platform_dir}/rexx.rc)
+   # Include file definition
+   target_include_directories(rexxhide PUBLIC
+               ${build_lib_dir}
+               ${build_api_dir}
+               ${build_api_platform_dir}
+               ${build_messages_dir})
+   target_link_libraries(rexxhide rexx rexxapi)
+   add_custom_command(TARGET rexxhide POST_BUILD
+      COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxhide.exe;#1" "-outputresource:bin\\rexxhide.exe;#1"
+      COMMENT "Adding custom manifest to rexxhide.exe...")
+   install(TARGETS rexxhide RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
 
 #################### rexxpaws (executable) ##########################
 if (WIN32)
-# Sources for rexxpaws.
-add_executable(rexxpaws ${build_utilities_rexxpaws_dir}/rexxpaws.cpp
-                        ${build_platform_dir}/rexx.rc)
-# Include file definition
-target_include_directories(rexxhide PUBLIC
-            ${build_lib_dir}
-            ${build_api_dir}
-            ${build_api_platform_dir}
-            ${build_messages_dir})
-target_link_libraries(rexxpaws rexx rexxapi)
-add_custom_command(TARGET rexxpaws POST_BUILD
-   COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxpaws.exe;#1" "-outputresource:bin\\rexxpaws.exe;#1"
-   COMMENT "Adding custom manifest to rexxpaws.exe...")
-install(TARGETS rexxpaws RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   # Sources for rexxpaws.
+   add_executable(rexxpaws ${build_utilities_rexxpaws_dir}/rexxpaws.cpp
+                           ${build_platform_dir}/rexx.rc)
+   # Include file definition
+   target_include_directories(rexxhide PUBLIC
+               ${build_lib_dir}
+               ${build_api_dir}
+               ${build_api_platform_dir}
+               ${build_messages_dir})
+   target_link_libraries(rexxpaws rexx rexxapi)
+   add_custom_command(TARGET rexxpaws POST_BUILD
+      COMMAND "mt.exe" -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxpaws.exe;#1" "-outputresource:bin\\rexxpaws.exe;#1"
+      COMMENT "Adding custom manifest to rexxpaws.exe...")
+   install(TARGETS rexxpaws RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
 
@@ -1310,6 +1311,31 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_platform_dir}/rexxplatform
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxapi.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
 
+# common sample programs
+install(PROGRAMS ${SAMPLES_SOURCE}/rexxcps.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/ccreply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/complex.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/greply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/guess.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/ktguard.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/makestring.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/month.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/philfork.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/pipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/properties.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/qdate.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/qtime.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/scclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/scserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/semcls.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/sfclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/sfserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/stack.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/usecomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/arithmeticEvaluation.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/arrayCallback.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+
 if (NOT WIN32)
    add_custom_command(OUTPUT rexx.cat
               COMMAND gencat rexx.cat ${CMAKE_CURRENT_SOURCE_DIR}/${build_messages_dir}/gencat.inp
@@ -1340,34 +1366,8 @@ if (NOT WIN32)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.csh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxapid.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
 
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/ccreply.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/complex.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/greply.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/guess.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/ktguard.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/month.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/philfork.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/pipe.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/properties.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/qdate.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/qtime.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/rexxcps.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/scclient.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/scserver.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/semcls.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/sfclient.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/sfserver.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/sscclient.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/stack.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/usecomp.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/usepipe.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/arithmeticEvaluation.rex DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
 endif ()
-
-
-
-
 
 
 # direct output into a samples subdir
@@ -1380,238 +1380,214 @@ add_subdirectory (samples samples)
 #################### NSIS Package Targets ##########################
 #################### NSIS Package Targets ##########################
 
-# Build an NSIS installer using CPack (NOTE: This does not really work at the moment,
-# leaving this enabled so the install artifacts are still getting built).
 if (WIN32)
-# Add the install directory to the module path so the custom template can be located.
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
+   # Add the install directory to the module path so the custom template can be located.
+   set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
 
-# We do not use the NSIS generator directly, but rather configure our
-# own NSIS installation from a template
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
-set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
-# ask for a modify the pack dialg
-set(CPACK_NSIS_INSTALLED_ICON_NAME "rexx.exe,0")
-set(CPACK_NSIS_URL_INFO_ABOUT "http://www.oorexx.org")
-set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
-set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
+   # We do not use the NSIS generator directly, but rather configure our
+   # own NSIS installation from a template
+   set(CPACK_PACKAGE_INSTALL_DIRECTORY "Open Object Rexx")
+   set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
+   # ask for a modify the pack dialg
+   set(CPACK_NSIS_INSTALLED_ICON_NAME "rexx.exe,0")
+   set(CPACK_NSIS_URL_INFO_ABOUT "http://www.oorexx.org")
+   set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
+   set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
 
-# Not sure why this is not working.  Claims it cannoth file the file, but it exists.
-# It might need to be an installed file...not sure
-# set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
+   # Not sure why this is not working.  Claims it cannoth file the file, but it exists.
+   # It might need to be an installed file...not sure
+   # set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
 
-# Component setups
-set(CPACK_COMPONENT_CORE_DISPLAY_NAME "Open Object Rexx Core (required)")
-set(CPACK_COMPONENT_CORE_DESCRIPTION "The Open Object Rexx interpreter and extension libraries.")
-set(CPACK_COMPONENT_CORE_REQUIRED 1)
-set(CPACK_COMPONENT_SAMPLES_DISPLAY_NAME "Open Object Rexx Samples")
-set(CPACK_COMPONENT_SAMPLES_DESCRIPTION "Sample programs that demonstrate Open Object Rexx features.")
-set(CPACK_COMPONENT_DEVLIB_DISPLAY_NAME "Open Object Rexx Development Kit")
-set(CPACK_COMPONENT_DEVLIB_DESCRIPTION "Header files and libraries for using the Open Object Rexx native programming interfaces.")
-set(CPACK_COMPONENT_DOCS_DISPLAY_NAME "Open Object Rexx Documentation")
-set(CPACK_COMPONENT_DOCS_DESCRIPTION "Complete documentation for Open Object Rexx in PDF form.")
+   # Component setups
+   set(CPACK_COMPONENT_CORE_DISPLAY_NAME "Open Object Rexx Core (required)")
+   set(CPACK_COMPONENT_CORE_DESCRIPTION "The Open Object Rexx interpreter and extension libraries.")
+   set(CPACK_COMPONENT_CORE_REQUIRED 1)
+   set(CPACK_COMPONENT_SAMPLES_DISPLAY_NAME "Open Object Rexx Samples")
+   set(CPACK_COMPONENT_SAMPLES_DESCRIPTION "Sample programs that demonstrate Open Object Rexx features.")
+   set(CPACK_COMPONENT_DEVLIB_DISPLAY_NAME "Open Object Rexx Development Kit")
+   set(CPACK_COMPONENT_DEVLIB_DESCRIPTION "Header files and libraries for using the Open Object Rexx native programming interfaces.")
+   set(CPACK_COMPONENT_DOCS_DISPLAY_NAME "Open Object Rexx Documentation")
+   set(CPACK_COMPONENT_DOCS_DESCRIPTION "Complete documentation for Open Object Rexx in PDF form.")
 
-# The Docs are an optional build step, so we only add them if we have
-# been configured with a doc source directory
-set(NSIS_INSTALL_COMPONENTS Core Docs DevLib Samples)
+   # The Docs are an optional build step, so we only add them if we have
+   # been configured with a doc source directory
+   set(NSIS_INSTALL_COMPONENTS Core Docs DevLib Samples)
 
-set(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
+   set(SAMPLES_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir})
 
-# Add addititional Windows-only install files
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   # Add addititional Windows-only install files
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
-# technically a sample, but this is so useful we add it to the binary dir
-install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   # technically a sample, but this is so useful we add it to the binary dir
+   install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
-# add extra shortcuts (uninstall one is automatically added)
-install_rexx_shortcut(Core "Try Rexx" rexx rexxtry.rex)
-install_rexx_shortcut(Core "Try Rexx (GUI)" rexx ooRexxTry.rex)
-install_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
+   # add extra shortcuts (uninstall one is automatically added)
+   install_rexx_shortcut(Core "Try Rexx" rexx rexxtry.rex)
+   install_rexx_shortcut(Core "Try Rexx (GUI)" rexx ooRexxTry.rex)
+   install_component_shortcut(Core "ooRexx License" CPLv1.0.txt "" CPLv1.0.txt 0)
 
-# now the samples
+   # now the samples
 
-install(FILES ${SAMPLES_SOURCE}/windows/0ReadMe.first COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/rexxcps.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/ccreply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/complex.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/greply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/guess.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/ktguard.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/makestring.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/month.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/philfork.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/pipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/properties.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/qdate.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/qtime.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/scclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/scserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/semcls.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/sfclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/sfserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/stack.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/usecomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/arithmeticEvaluation.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/windows/rexutils/drives.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+   install(FILES ${SAMPLES_SOURCE}/windows/0ReadMe.first COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+   install(PROGRAMS ${SAMPLES_SOURCE}/windows/rexutils/drives.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
-# misc samples
-install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.empty COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
-install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.input COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
-install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.readMe COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
-install(PROGRAMS ${SAMPLES_SOURCE}/windows/misc/fileDrop.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+   # misc samples
+   install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.empty COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+   install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.input COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+   install(FILES ${SAMPLES_SOURCE}/windows/misc/fileDrop.readMe COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
+   install(PROGRAMS ${SAMPLES_SOURCE}/windows/misc/fileDrop.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/misc)
 
-# ole samples
-install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+   # ole samples
+   install(DIRECTORY ${SAMPLES_SOURCE}/windows/ole COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
-# oodialog samples
-install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
+   # oodialog samples
+   install(DIRECTORY ${SAMPLES_SOURCE}/windows/oodialog COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+   install(FILES ${build_extensions_oodialog_dir}/oodialog.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/oodialog)
 
-# sample shortcuts
-# NOTE:  because of multiple levels of escaping going on, the subdirectory "\" require FOUR backslashes
-install_rexx_shortcut(Samples "ooRexx Samples\\\\RexxCPS" rexxpaws "samples\\\\rexxcps.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\Query Date" rexxpaws "samples\\\\qdate.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\Display Window Tree" ooDialog "samples\\\\oodialog\\\\winsystem\\\\displayWindowTree.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\Windows Manager" ooDialog "samples\\\\oodialog\\\\winsystem\\\\usewmgr.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Combo Box Types" ooDialog "samples\\\\oodialog\\\\Controls\\\\ComboBox\\\\comboBoxTypes.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Custom Position Tool Tips" ooDialog "samples\\\\oodialog\\\\Controls\\\\ToolTip\\\\customPositionToolTip.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\List-view Views" ooDialog "samples\\\\oodialog\\\\Controls\\\\ListView\\\\columnIcons.rex")
-install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Samples" ooDialog "samples\\\\sample.rex")
-install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx in a Console" "samples\\\\api\\\\callrxnt\\\\callrxnt.exe" "" "samples\\\\api\\\\callrxnt\\\\callrxnt.ico" "")
-install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx in a Window" "samples\\\\api\\\\callrxwn\\\\callrxwn.exe" "" "samples\\\\api\\\\callrxwn\\\\callrxwn.ico" "")
-install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx with Exits" "samples\\\\api\\\\rexxexit\\\\rexxexit.exe" "" "samples\\\\api\\\\rexxexit\\\\rexxexit.ico" "")
+   # sample shortcuts
+   # NOTE:  because of multiple levels of escaping going on, the subdirectory "\" require FOUR backslashes
+   install_rexx_shortcut(Samples "ooRexx Samples\\\\RexxCPS" rexxpaws "samples\\\\rexxcps.rex")
+   install_rexx_shortcut(Samples "ooRexx Samples\\\\Query Date" rexxpaws "samples\\\\qdate.rex")
+   install_rexx_shortcut(Samples "ooRexx Samples\\\\Display Window Tree" ooDialog "samples\\\\oodialog\\\\winsystem\\\\displayWindowTree.rex")
+   install_rexx_shortcut(Samples "ooRexx Samples\\\\Windows Manager" ooDialog "samples\\\\oodialog\\\\winsystem\\\\usewmgr.rex")
+   install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Combo Box Types" ooDialog "samples\\\\oodialog\\\\Controls\\\\ComboBox\\\\comboBoxTypes.rex")
+   install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Custom Position Tool Tips" ooDialog "samples\\\\oodialog\\\\Controls\\\\ToolTip\\\\customPositionToolTip.rex")
+   install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\List-view Views" ooDialog "samples\\\\oodialog\\\\Controls\\\\ListView\\\\columnIcons.rex")
+   install_rexx_shortcut(Samples "ooRexx Samples\\\\ooDialog\\\\Samples" ooDialog "samples\\\\sample.rex")
+   install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx in a Console" "samples\\\\api\\\\callrxnt\\\\callrxnt.exe" "" "samples\\\\api\\\\callrxnt\\\\callrxnt.ico" "")
+   install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx in a Window" "samples\\\\api\\\\callrxwn\\\\callrxwn.exe" "" "samples\\\\api\\\\callrxwn\\\\callrxwn.ico" "")
+   install_component_shortcut(Samples "ooRexx Samples\\\\API\\\\Call ooRexx with Exits" "samples\\\\api\\\\rexxexit\\\\rexxexit.exe" "" "samples\\\\api\\\\rexxexit\\\\rexxexit.ico" "")
 
-# if we have a doc source directory, then add the Docs component to the installer and
-# install each of the doc files
-install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
-install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${DOC_SOURCE_DIR}/rxsock.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${DOC_SOURCE_DIR}/rxftp.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${DOC_SOURCE_DIR}/oodialog.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${build_extensions_oodialog_dir}/ooDialog_ReleaseNotes.txt COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${DOC_SOURCE_DIR}/oodguide.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   # if we have a doc source directory, then add the Docs component to the installer and
+   # install each of the doc files
+   install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
+   install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/rxsock.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/rxftp.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/oodialog.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${build_extensions_oodialog_dir}/ooDialog_ReleaseNotes.txt COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/oodguide.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
-install_doc_shortcut("ooRexx README" "readme.pdf")
-install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
-install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
-install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
-install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
-install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
-install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
-install_doc_shortcut("ooDialog Reference" "oodialog.pdf")
-install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
-install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
-install_doc_shortcut("ooRexx Extensions Reference" "rexxextensions.pdf")
-install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
-install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
+   install_doc_shortcut("ooRexx README" "readme.pdf")
+   install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
+   install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
+   install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
+   install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
+   install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
+   install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
+   install_doc_shortcut("ooDialog Reference" "oodialog.pdf")
+   install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
+   install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
+   install_doc_shortcut("ooRexx Extensions Reference" "rexxextensions.pdf")
+   install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
+   install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
 
-# build the NSIS shortcut creation/deletion macros that are inserted into the template
-configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Core_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Core_shortcut_manifest.nsh @ONLY)
-configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Docs_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Docs_shortcut_manifest.nsh @ONLY)
-configure_file(${NSIS_INSTALLER_SOURCE_DIR}/DevLib_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/DevLib_shortcut_manifest.nsh @ONLY)
-configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Samples_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Samples_shortcut_manifest.nsh @ONLY)
+   # build the NSIS shortcut creation/deletion macros that are inserted into the template
+   configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Core_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Core_shortcut_manifest.nsh @ONLY)
+   configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Docs_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Docs_shortcut_manifest.nsh @ONLY)
+   configure_file(${NSIS_INSTALLER_SOURCE_DIR}/DevLib_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/DevLib_shortcut_manifest.nsh @ONLY)
+   configure_file(${NSIS_INSTALLER_SOURCE_DIR}/Samples_shortcut_manifest.nsh.in ${NSIS_INSTALLER_DIR}/Samples_shortcut_manifest.nsh @ONLY)
 
-# Build an NSIS installer without using CPack
-find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
+   # Build an NSIS installer without using CPack
+   find_program(NSIS_EXECUTABLE makensis DOC "NSIS Compiler")
 
-# only do this if we have NSIS installed
-if (NSIS_EXECUTABLE)
-   # we're using verbatim for the command, so we need to get the
-   # directories in native form first
-   file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
-   file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
-   file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
+   # only do this if we have NSIS installed
+   if (NSIS_EXECUTABLE)
+      # we're using verbatim for the command, so we need to get the
+      # directories in native form first
+      file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} NATIVE_SOURCE_DIR)
+      file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin NATIVE_BINARY_DIR)
+      file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
 
-   # Name of the installer file we're going to create
-   set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.exe")
-   set(INSTALLER_SCRIPT "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.nsi")
+      # Name of the installer file we're going to create
+      set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.exe")
+      set(INSTALLER_SCRIPT "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.nsi")
 
-   # create an installer file from the template
-   message("Building NSIS template ${INSTALLER_SCRIPT}")
-   configure_file(${NSIS_INSTALLER_SOURCE_DIR}/cpack.nsi.template.in ${NSIS_INSTALLER_DIR}/${INSTALLER_SCRIPT} @ONLY)
+      # create an installer file from the template
+      message("Building NSIS template ${INSTALLER_SCRIPT}")
+      configure_file(${NSIS_INSTALLER_SOURCE_DIR}/cpack.nsi.template.in ${NSIS_INSTALLER_DIR}/${INSTALLER_SCRIPT} @ONLY)
 
-# handy macro for copying files from the source into the source directory.
-macro (copy_install_file name)
-    ADD_CUSTOM_COMMAND(
-       OUTPUT ${NSIS_INSTALLER_DIR}/${name}
-       COMMAND ${CMAKE_COMMAND} -E copy ${NSIS_INSTALLER_SOURCE_DIR}/${name} ${NSIS_INSTALLER_DIR}/${name}
-       DEPENDS ${NSIS_INSTALLER_SOURCE_DIR}/${name}
-    )
-endmacro (copy_install_file)
+   # handy macro for copying files from the source into the source directory.
+   macro (copy_install_file name)
+       ADD_CUSTOM_COMMAND(
+          OUTPUT ${NSIS_INSTALLER_DIR}/${name}
+          COMMAND ${CMAKE_COMMAND} -E copy ${NSIS_INSTALLER_SOURCE_DIR}/${name} ${NSIS_INSTALLER_DIR}/${name}
+          DEPENDS ${NSIS_INSTALLER_SOURCE_DIR}/${name}
+       )
+   endmacro (copy_install_file)
 
-   add_custom_target(nsis_installer
-      DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
-              ${DOC_SOURCE_DIR}/rexxpg.pdf
-              ${DOC_SOURCE_DIR}/rexxref.pdf
-              ${DOC_SOURCE_DIR}/rxmath.pdf
-              ${DOC_SOURCE_DIR}/rxsock.pdf
-              ${DOC_SOURCE_DIR}/rxftp.pdf
-              ${DOC_SOURCE_DIR}/oodialog.pdf
-              ${DOC_SOURCE_DIR}/oodguide.pdf
-              ${DOC_SOURCE_DIR}/rexxextensions.pdf
-              ${DOC_SOURCE_DIR}/winextensions.pdf
-              ${build_platform_dir}/install/cpack.nsi
-      VERBATIM
-      COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DDOCDIR=${NATIVE_DOC_DIR} /DCPU=${NSIS_CPU} cpack.nsi
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE} ${CMAKE_CURRENT_BINARY_DIR}/${INSTALLER_FILE}
-      COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE}
-      COMMENT "Building NSIS installer")
+      add_custom_target(nsis_installer
+         DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
+                 ${DOC_SOURCE_DIR}/rexxpg.pdf
+                 ${DOC_SOURCE_DIR}/rexxref.pdf
+                 ${DOC_SOURCE_DIR}/rxmath.pdf
+                 ${DOC_SOURCE_DIR}/rxsock.pdf
+                 ${DOC_SOURCE_DIR}/rxftp.pdf
+                 ${DOC_SOURCE_DIR}/oodialog.pdf
+                 ${DOC_SOURCE_DIR}/oodguide.pdf
+                 ${DOC_SOURCE_DIR}/rexxextensions.pdf
+                 ${DOC_SOURCE_DIR}/winextensions.pdf
+                 ${build_platform_dir}/install/cpack.nsi
+         VERBATIM
+         COMMAND ${NSIS_EXECUTABLE} /DVERSION=${ORX_VERSION_NSIS} /DSRCDIR=${NATIVE_SOURCE_DIR} /DBINDIR=${NATIVE_BINARY_DIR} /DDOCDIR=${NATIVE_DOC_DIR} /DCPU=${NSIS_CPU} cpack.nsi
+         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install
+         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE} ${CMAKE_CURRENT_BINARY_DIR}/${INSTALLER_FILE}
+         COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/${INSTALLER_FILE}
+         COMMENT "Building NSIS installer")
 
-   # copy additional include files required by the makensis command
-   copy_install_file(admin.nsh)
-   copy_install_file(newpath.nsh)
-   copy_install_file(WriteEnv.nsh)
-   copy_install_file(orange.bmp)
-   copy_install_file(orange-uninstall.bmp)
+      # copy additional include files required by the makensis command
+      copy_install_file(admin.nsh)
+      copy_install_file(newpath.nsh)
+      copy_install_file(WriteEnv.nsh)
+      copy_install_file(orange.bmp)
+      copy_install_file(orange-uninstall.bmp)
 
-   # a target to make sure these get copied (not part of ALL, but the installer will depend on it
-   add_custom_target(nsis_includes DEPENDS
-      ${NSIS_INSTALLER_DIR}/admin.nsh
-      ${NSIS_INSTALLER_DIR}/newpath.nsh
-      ${NSIS_INSTALLER_DIR}/WriteEnv.nsh
-      ${NSIS_INSTALLER_DIR}/orange.bmp
-      ${NSIS_INSTALLER_DIR}/orange-uninstall.bmp)
+      # a target to make sure these get copied (not part of ALL, but the installer will depend on it
+      add_custom_target(nsis_includes DEPENDS
+         ${NSIS_INSTALLER_DIR}/admin.nsh
+         ${NSIS_INSTALLER_DIR}/newpath.nsh
+         ${NSIS_INSTALLER_DIR}/WriteEnv.nsh
+         ${NSIS_INSTALLER_DIR}/orange.bmp
+         ${NSIS_INSTALLER_DIR}/orange-uninstall.bmp)
 
-   # Target for building an NSIS installation.  This will copy all of the install
-   # files into a directory structure that mimics how.  We do this in 4 stages to install each of
-   # the components into a different directory, since them might install files into common directories
-   # at install time.
-   add_custom_target(nsis_install_dirs
-      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Core -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Core -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Docs -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Docs -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=DevLib -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/DevLib -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-      COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Samples -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Samples -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
-      COMMENT "Building NSIS file install structure")
+      # Target for building an NSIS installation.  This will copy all of the install
+      # files into a directory structure that mimics how.  We do this in 4 stages to install each of
+      # the components into a different directory, since them might install files into common directories
+      # at install time.
+      add_custom_target(nsis_install_dirs
+         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+         COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Core -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Core -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+         COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Docs -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Docs -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+         COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=DevLib -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/DevLib -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+         COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=Samples -DCMAKE_INSTALL_PREFIX=${NSIS_FILE_DIR}/Samples -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_install.cmake
+         COMMENT "Building NSIS file install structure")
 
-   # Target for building the NSIS file manifests from the install information
-   add_custom_target(nsis_file_manifests
-      DEPENDS nsis_install_dirs
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMAND ${CMAKE_COMMAND} -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/BuildComponentManifests.cmake
-      COMMENT "Building NSIS file install manifests")
+      # Target for building the NSIS file manifests from the install information
+      add_custom_target(nsis_file_manifests
+         DEPENDS nsis_install_dirs
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+         COMMAND ${CMAKE_COMMAND} -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/BuildComponentManifests.cmake
+         COMMENT "Building NSIS file install manifests")
 
-   add_custom_target(nsis_template_installer
-      DEPENDS nsis_file_manifests
-              nsis_install_dirs
-              nsis_includes
-              ${NSIS_INSTALLER_DIR}/${INSTALLER_SCRIPT}
-      VERBATIM
-      COMMAND ${NSIS_EXECUTABLE} ${INSTALLER_SCRIPT}
-      WORKING_DIRECTORY ${NSIS_INSTALLER_DIR}
-      COMMENT "Building NSIS installer from template in ${NSIS_INSTALLER_DIR}")
-endif()
+      add_custom_target(nsis_template_installer
+         DEPENDS nsis_file_manifests
+                 nsis_install_dirs
+                 nsis_includes
+                 ${NSIS_INSTALLER_DIR}/${INSTALLER_SCRIPT}
+         VERBATIM
+         COMMAND ${NSIS_EXECUTABLE} ${INSTALLER_SCRIPT}
+         WORKING_DIRECTORY ${NSIS_INSTALLER_DIR}
+         COMMENT "Building NSIS installer from template in ${NSIS_INSTALLER_DIR}")
+   endif()
 
 endif ()
 
