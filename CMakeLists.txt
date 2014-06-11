@@ -140,7 +140,7 @@ if (WIN32)
    set (INSTALL_LIB_DIR .)
    set (INSTALL_CLS_DIR .)
    set (INSTALL_REX_DIR .)
-   set (INSTALL_DOC_DIR .)
+   set (INSTALL_DOC_DIR doc)
    set (INSTALL_INCLUDE_DIR api)
    set (INSTALL_SAMPLES_DIR samples)
 
