@@ -2539,7 +2539,7 @@ BUILTIN(ENDLOCAL)
     return SystemInterpreter::popEnvironment(context);
 }
 
-#define QUALIFY_MIN 0
+#define QUALIFY_MIN 1
 #define QUALIFY_MAX 1
 #define QUALIFY_name  1
 
