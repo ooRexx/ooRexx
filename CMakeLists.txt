@@ -1431,6 +1431,46 @@ if (WIN32)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
+   # if this is a Debug or RelWithDebInfo configuration, also install the .pdb files in the binary locations
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/hostemu.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oodialog.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexx.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/orexxole.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxapi.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxc.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxexit.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxhide.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexximage.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxpaws.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxutil.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxapi.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxmath.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxqueue.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxsock.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxsubcom.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxwinsys.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
+       CONFIGURATIONS Debug RelWithDebInfo)
+
    # technically a sample, but this is so useful we add it to the binary dir
    install(PROGRAMS ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/ooRexxTry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
@@ -1590,6 +1630,7 @@ if (WIN32)
          COMMAND ${CMAKE_COMMAND} -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/BuildComponentManifests.cmake
          COMMENT "Building NSIS file install manifests")
 
+      # and finally, build the installer manifests
       add_custom_target(nsis_template_installer
          DEPENDS nsis_file_manifests
                  nsis_install_dirs
@@ -1599,6 +1640,12 @@ if (WIN32)
          COMMAND ${NSIS_EXECUTABLE} ${INSTALLER_SCRIPT}
          WORKING_DIRECTORY ${NSIS_INSTALLER_DIR}
          COMMENT "Building NSIS installer from template in ${NSIS_INSTALLER_DIR}")
+
+      # an extra to cleanup the installer directory to start fresh
+      add_custom_target(remove_nsis_installer
+          COMMAND ${CMAKE_COMMAND} -E remove_directory ${NSIS_INSTALLER_DIR}
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+          COMMENT "Removing NSIS installer build files")
    endif()
 
 endif ()
