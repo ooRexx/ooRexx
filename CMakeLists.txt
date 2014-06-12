@@ -989,7 +989,7 @@ set_target_properties(rxsock PROPERTIES VERSION ${ORX_VERSION})
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rxregexp_sources
-            ${build_platform_dir}/rxrexexp.def
+            ${build_platform_dir}/rxregexp.def
             ${build_platform_dir}/verinfo.rc)
 endif ()
 
@@ -997,7 +997,7 @@ endif ()
 add_library(rxregexp SHARED ${build_extensions_rxregexp_dir}/automaton.cpp
              ${build_extensions_rxregexp_dir}/dblqueue.cpp
              ${build_extensions_rxregexp_dir}/rxregexp.cpp
-             ${platform_rxrexexp_sources})
+             ${platform_rxregexp_sources})
 # Include file definition
 target_include_directories(rxregexp PUBLIC
              ${build_lib_dir}
