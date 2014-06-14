@@ -183,12 +183,12 @@ RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activatio
     // create the class object using the appropriate mechanism
     if (mixinClass)
     {
-        classObject = subclass->mixinclass(idName, metaclass, classMethods);
+        classObject = subclass->mixinclass(source, idName, metaclass, classMethods);
     }
     else
     {
         /* doing a subclassing               */
-        classObject = subclass->subclass(idName, metaclass, classMethods);
+        classObject = subclass->subclass(source, idName, metaclass, classMethods);
     }
     /* add the class to the directory    */
     source->addInstalledClass(publicName, classObject, publicClass);

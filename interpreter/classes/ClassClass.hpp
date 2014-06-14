@@ -44,7 +44,9 @@
 #ifndef Included_RexxClass
 #define Included_RexxClass
 
-
+// required for method signatures
+ class RexxSource;
+ class PackageClass;
 
  class RexxClass : public RexxObject {
   public:
@@ -102,13 +104,18 @@
    RexxObject *inherit(RexxClass *, RexxClass *);
    RexxObject *uninherit(RexxClass *);
    RexxObject *enhanced(RexxObject **, size_t);
-   RexxClass  *mixinclass(RexxString *, RexxClass *, RexxTable *);
-   RexxClass  *subclass(RexxString *, RexxClass *, RexxTable *);
+   RexxClass  *mixinclass(RexxSource *, RexxString *, RexxClass *, RexxTable *);
+   RexxClass  *subclass(RexxSource *, RexxString *, RexxClass *, RexxTable *);
+   RexxClass  *mixinclassRexx(RexxString *, RexxClass *, RexxTable *);
+   RexxClass  *subclassRexx(RexxString *, RexxClass *, RexxTable *);
    RexxClass  *newRexx(RexxObject **args, size_t argCount);
    void        setMetaClass(RexxClass *);
    bool        isCompatibleWith(RexxClass *other);
    RexxObject *isSubclassOf(RexxClass *other);
    RexxString  *defaultNameRexx();
+   void        setSource(RexxSource *s);
+   RexxSource *getSource();
+   RexxObject *getPackage();
 
 
    inline bool         isRexxDefined() { return (classFlags & REXX_DEFINED) != 0; };
@@ -170,5 +177,6 @@
      uint32_t       classFlags;         /* top of this header file           */
 
      RexxList      *subClasses;         // our list of weak referenced subclasses
+     RexxSource    *source;             // source we're defined in (if any)
  };
  #endif

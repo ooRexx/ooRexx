@@ -57,6 +57,8 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "WeakReferenceClass.hpp"
+#include "SourceFile.hpp"
+#include "PackageClass.hpp"
 
 
 // singleton class instance
@@ -80,6 +82,7 @@ void RexxClass::live(size_t liveMark)
     memory_mark(this->classSuperClasses);
     memory_mark(this->instanceSuperClasses);
     memory_mark(this->subClasses);
+    memory_mark(this->source);
 }
 
 void RexxClass::liveGeneral(int reason)
@@ -99,6 +102,7 @@ void RexxClass::liveGeneral(int reason)
     memory_mark_general(this->classSuperClasses);
     memory_mark_general(this->instanceSuperClasses);
     memory_mark_general(this->subClasses);
+    memory_mark_general(this->source);
 }
 
 void RexxClass::flatten(RexxEnvelope *envelope)
@@ -1302,7 +1306,7 @@ RexxObject *RexxClass::enhanced(
     /* make sure it was a real value     */
     requiredArgument(enhanced_instance_mdict, ARG_ONE);
     /* subclass the reciever class       */
-    RexxClass *dummy_subclass = this->subclass(new_string("Enhanced Subclass"), OREF_NULL, OREF_NULL);
+    RexxClass *dummy_subclass = this->subclass(OREF_NULL, new_string("Enhanced Subclass"), OREF_NULL, OREF_NULL);
     ProtectedObject p(dummy_subclass);
     /* turn into a real method dictionary*/
     enhanced_instance_mdict = dummy_subclass->methodDictionaryCreate(enhanced_instance_mdict, (RexxClass *)TheNilObject);
@@ -1329,18 +1333,40 @@ RexxObject *RexxClass::enhanced(
     return enhanced_object;              /* send back the new improved version*/
 }
 
-RexxClass  *RexxClass::mixinclass(
-    RexxString  * mixin_id,            /* ID name of the class              */
-    RexxClass   * meta_class,          /* source meta class                 */
-                                       /* extra class methods               */
-    RexxTable   * enhancing_class_methods)
-/*****************************************************************************/
-/* Function:  Create a new class object containng class and instance methods */
-/*            to be used for multiple inheritance .                          */
-/*****************************************************************************/
+
+/**
+ * Create a mixinclass of a class directly from Rexx code.
+ *
+ * @param class_id   The id of the created class.
+ * @param meta_class The meta class to create this from.
+ * @param enhancing_class_methods
+ *                   Additional class methods.
+ *
+ * @return A created class object.
+ */
+RexxClass  *RexxClass::mixinclassRexx(RexxString  *class_id, RexxClass *meta_class, RexxTable *enhancing_class_methods)
+{
+    // just forward with no source object specified
+    return this->mixinclass(OREF_NULL, class_id, meta_class, enhancing_class_methods);
+}
+
+/**
+ * Create a mixin class that can be used for INHERIT.
+ *
+ * @param source     The source this is created from (can be null if created
+ *                   using methods.
+ * @param mixin_id   The id of the class object.
+ * @param meta_class The metaclass this is created from
+ * @param enhancing_class_methods
+ *                   Additional class methods to be added to this class.
+ *
+ * @return A created class object.
+ */
+RexxClass  *RexxClass::mixinclass(RexxSource  *source, RexxString  *mixin_id,
+    RexxClass   *meta_class, RexxTable   *enhancing_class_methods)
 {
     /* call subclass with the parameters */
-    RexxClass *mixin_subclass = this->subclass(mixin_id, meta_class, enhancing_class_methods);
+    RexxClass *mixin_subclass = this->subclass(source, mixin_id, meta_class, enhancing_class_methods);
     mixin_subclass->setMixinClass();     /* turn on the mixin info            */
                                          /* change the base class to the base */
                                          /* class of the reciever             */
@@ -1354,15 +1380,37 @@ RexxClass  *RexxClass::mixinclass(
 }
 
 
-RexxClass  *RexxClass::subclass(
-    RexxString  * class_id,            /* ID name of the class              */
-    RexxClass   * meta_class,          /* source meta class                 */
-                                       /* extra class methods               */
-    RexxTable   * enhancing_class_methods)
-/*****************************************************************************/
-/* Function:  Create a new class object that is a subclass of this class     */
-/*            object.                                                        */
-/*****************************************************************************/
+/**
+ * Create a subclass of a class directly from Rexx code.
+ *
+ * @param class_id   The id of the created class.
+ * @param meta_class The meta class to create this from.
+ * @param enhancing_class_methods
+ *                   Additional class methods.
+ *
+ * @return A created class object.
+ */
+RexxClass  *RexxClass::subclassRexx(RexxString  *class_id, RexxClass *meta_class, RexxTable *enhancing_class_methods)
+{
+    // just forward with no source object specified
+    return this->subclass(OREF_NULL, class_id, meta_class, enhancing_class_methods);
+}
+
+
+/**
+ * Create a subclass of a class.
+ *
+ * @param source     The source containing the directive this is created from.
+ *                   If created dynamically from a method, this will be null.
+ * @param class_id   The id of the created class.
+ * @param meta_class The meta class to create this from.
+ * @param enhancing_class_methods
+ *                   Additional class methods.
+ *
+ * @return A created class object.
+ */
+RexxClass  *RexxClass::subclass(RexxSource *source, RexxString  *class_id,
+    RexxClass   *meta_class, RexxTable   * enhancing_class_methods)
 {
     if (meta_class == OREF_NULL)         /* if there is no metaclass specified*/
     {
@@ -1378,6 +1426,8 @@ RexxClass  *RexxClass::subclass(
     /* get a copy of the metaclass class */
     meta_class->sendMessage(OREF_NEW, class_id, p);
     RexxClass *new_class = (RexxClass *)(RexxObject *)p;
+    // hook this up with the source as early as possible.
+    new_class->setSource(source);
     if (this->isMetaClass())             /* if the superclass is a metaclass  */
     {
         new_class->setMetaClass();         /* mark the new class as a meta class*/
@@ -1534,6 +1584,46 @@ RexxString *RexxClass::defaultNameRexx()
 /******************************************************************************/
 {
     return this->defaultName();          /* forward to the virtual function   */
+}
+
+/**
+ * Set the source object what a class was created in.  This
+ * will be the source that contains the ::class directive
+ * that defined the class.
+ *
+ * @param s      The package file containing the ::class directive that
+ *               created this class.
+ */
+void RexxClass::setSource(RexxSource *s)
+{
+    OrefSet(this, this->source, s);
+}
+
+/**
+ * Return the package containing the directive that
+ * defined a class.
+ *
+ * @return The package containing the directive that defined this
+ *         class, or .nil if this class was not created from a
+ *         directive.
+ */
+RexxObject *RexxClass::getPackage()
+{
+    // if not created from a directive, there is no package
+    if (source == OREF_NULL)
+    {
+        return TheNilObject;
+    }
+
+    PackageClass *package = source->getPackage();
+    // it is possible the source does not have a package object (internal classes
+    // are in this category)
+    if (package == OREF_NULL)
+    {
+        return TheNilObject;
+    }
+
+    return package;
 }
 
 

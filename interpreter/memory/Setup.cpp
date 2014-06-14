@@ -264,9 +264,9 @@ void RexxMemory::createImage()
   defineProtectedKernelMethod(CHAR_METACLASS       ,TheClassBehaviour, CPPM(RexxClass::getMetaClass), 0);
   defineKernelMethod(CHAR_METHOD          ,TheClassBehaviour, CPPM(RexxClass::method), 1);
   defineKernelMethod(CHAR_METHODS         ,TheClassBehaviour, CPPM(RexxClass::methods), 1);
-  defineKernelMethod(CHAR_MIXINCLASS      ,TheClassBehaviour, CPPM(RexxClass::mixinclass), 3);
+  defineKernelMethod(CHAR_MIXINCLASS      ,TheClassBehaviour, CPPM(RexxClass::mixinclassRexx), 3);
   defineKernelMethod(CHAR_QUERYMIXINCLASS ,TheClassBehaviour, CPPM(RexxClass::queryMixinClass), 0);
-  defineKernelMethod(CHAR_SUBCLASS        ,TheClassBehaviour, CPPM(RexxClass::subclass), 3);
+  defineKernelMethod(CHAR_SUBCLASS        ,TheClassBehaviour, CPPM(RexxClass::subclassRexx), 3);
   defineProtectedKernelMethod(CHAR_SUBCLASSES      ,TheClassBehaviour, CPPM(RexxClass::getSubClasses), 0);
   defineProtectedKernelMethod(CHAR_SUPERCLASSES    ,TheClassBehaviour, CPPM(RexxClass::getSuperClasses), 0);
   defineProtectedKernelMethod(CHAR_SUPERCLASS      ,TheClassBehaviour, CPPM(RexxClass::getSuperClass), 0);
@@ -281,6 +281,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_ISSUBCLASSOF           ,TheClassBehaviour, CPPM(RexxClass::isSubclassOf), 1);
   defineProtectedKernelMethod(CHAR_SHRIEKREXXDEFINED,TheClassBehaviour, CPPM(RexxClass::setRexxDefined), 0);
   defineKernelMethod(CHAR_DEFAULTNAME            ,TheClassBehaviour, CPPM(RexxClass::defaultNameRexx), 0);
+  defineKernelMethod(CHAR_PACKAGE                ,TheClassBehaviour, CPPM(RexxClass::getPackage), 0);
   // this is explicitly inserted into the class behaviour because it gets used
   // prior to the instance behavior merges.
   defineKernelMethod(CHAR_HASHCODE               ,TheClassBehaviour, CPPM(RexxObject::hashCode), 0);
