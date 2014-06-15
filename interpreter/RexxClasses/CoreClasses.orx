@@ -2316,9 +2316,14 @@ nomethod:
   return properties
 
 
+-- load a properties object from a stream.  The source can be
+-- a string name of a file, a .File object, or a stream object.
 ::METHOD load
   use strict arg input
-  if input~isInstanceOf(.string) then  -- if a string use it as a filename
+
+  -- if a string name or a file, create a stream object and close
+  -- once we are done.
+  if input~isA(.string) | input~isA(.File) then
   do
      stream=.stream~new(input)      -- create stream object
      self~load(stream)              -- load its properties
@@ -2343,10 +2348,14 @@ nomethod:
   notready:
   return
 
+-- save a properties object to a file.  The target can be
+-- a string name of a file, a .File object, or a stream object.
 ::METHOD save
   use strict arg output
 
-  if output~isInstanceOf(.string) then  -- if a string use it as a filename
+  -- if a string name or a file, create a stream object and close
+  -- once we are done.
+  if output~isA(.string) | output~isA(.File) then
   do
      stream=.stream~new(output)     -- create stream object
      stream~open("WRITE REPLACE")   -- make sure we open in replace mode
