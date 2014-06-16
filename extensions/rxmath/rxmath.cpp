@@ -310,7 +310,7 @@ public:
             case COTANGENT:                  /* cotangent function         */
                 // this could produce a divide by zero, which gives a real result
                 // with floating point values (+infinity or -infinity)
-                result = nsi * nco / tan(result); /* real result                */
+                result = nsi * nco / tan(angle); /* real result            */
                 break;
         }
 
