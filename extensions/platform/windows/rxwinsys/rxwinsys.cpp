@@ -39,6 +39,8 @@
 #include <windows.h>
 #include "oorexxapi.h"
 #include <stdio.h>
+//#include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <ddeml.h>
 #include <time.h>
@@ -317,6 +319,23 @@ RexxStringObject pointer2string(RexxMethodContext *c, void *pointer)
     char buf[32];
     pointer2string(buf, pointer);
     return c->String(buf);
+}
+
+/*
+ * This function behaves exactly like rxStr2Number(), except it is for 32-bit
+ * numbers, and ERANGE can differentiate between a valid ULONG_MAX and an error
+ * return.  It works with normal ASCII numbers 1, 15, 68, etc., or hex numbers
+ * 0x1, 0xf, 0x44.
+ */
+bool rxStr2Number32(CSTRING str, uint32_t *number)
+{
+    char *end;
+    *number = strtoul(str, &end, 0);
+    if ( (end - str != strlen(str)) || errno == ERANGE )
+    {
+        return false;
+    }
+    return true;
 }
 
 // TODO END
@@ -3765,16 +3784,22 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
     }
     else if ( strcmp(argv[0].strptr, "MSG") == 0 )
     {
-        UINT   msg;
+        uint32_t  msg;
         WPARAM wp;
         LPARAM lp;
 
         CHECKARG(5,6);
 
         GET_HANDLE(argv[1].strptr, hW);
-        GET_HANDLE(argv[2].strptr, msg);
         GET_HANDLE(argv[3].strptr, wp);
         GET_HANDLE(argv[4].strptr, lp);
+
+        // Can't use GET_HANDLE, on 64 bit OS. Message IDs are 32 bit numbers.
+        // Can't use atoi because we have allowed things like 0x111.
+        if ( ! rxStr2Number32(argv[2].strptr, &msg) )
+        {
+            RETVAL(1);
+        }
 
         /* The 6th arg can, optionally, be used as an extra qualifier.  Currently
          * only used in one case.
