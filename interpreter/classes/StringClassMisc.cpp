@@ -689,6 +689,22 @@ RexxInteger *RexxString::posRexx(RexxString  *needle, RexxInteger *pstart, RexxI
 
 
 /**
+ * Test if a string contains a given string within a specified
+ * range.
+ *
+ * @param needle The search needle
+ * @param pstart The starting search position.
+ * @param range  The length of the range
+ *
+ * @return .true if the string is found, .false otherwise.
+ */
+RexxObject *RexxString::containsRexx(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
+{
+    return StringUtil::containsRexx(getStringData(), getLength(), needle, pstart, range);
+}
+
+
+/**
  * Do a caseless search for one string in another.
  *
  * @param needle The search string.
@@ -707,6 +723,28 @@ RexxInteger *RexxString::caselessPosRexx(RexxString *needle, RexxInteger *pstart
     /* pass on to the primitive function */
     /* and return as an integer object   */
     return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range));
+}
+
+
+/**
+ * Do a caseless search for one string in another.
+ *
+ * @param needle The search string.
+ * @param pstart The starting position for the search.
+ * @param range  A maximum range for the search.
+ *
+ * @return .true if the string is found, .false otherwise.
+ */
+RexxObject *RexxString::caselessContains(RexxString *needle, RexxInteger *pstart, RexxInteger *range)
+{
+    /* force needle to a string          */
+    needle = stringArgument(needle, ARG_ONE);
+    /* get the starting position         */
+    size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
+    size_t _range = optionalLengthArgument(range, getLength() - _start + 1, ARG_THREE);
+    /* pass on to the primitive function */
+    /* and return as an integer object   */
+    return StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range) > 0 ? TheTrueObject : TheFalseObject;
 }
 
 

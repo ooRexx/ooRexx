@@ -124,6 +124,31 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
  * @param length     The length of the string data.
  * @param needle     The needle to search for.
  * @param pstart     The starting position.
+ * @param range      The length of the string to search within.
+ *
+ * @return .true if the string is found, .false otherwise.
+ */
+RexxObject *StringUtil::containsRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart, RexxInteger *range)
+{
+    /* force needle to a string          */
+    needle = stringArgument(needle, ARG_ONE);
+    /* get the starting position         */
+    size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
+    size_t _range = optionalLengthArgument(range, length - _start + 1, ARG_THREE);
+    /* pass on to the primitive function */
+    /* and return as an integer object   */
+    return pos(stringData, length, needle, _start - 1, _range) > 0 ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
+ * Test if a given string contains the designated substring
+ *
+ * @param stringData The stringData to search within.
+ * @param length     The length of the string data.
+ * @param needle     The needle to search for.
+ * @param pstart     The starting position.
+ * @param range      The length of the string to search within.
  *
  * @return An integer object giving the located position.
  */

@@ -861,6 +861,8 @@ CPPM(RexxString::caselessLastPosRexx),
 CPPM(RexxString::caselessPosRexx),
 CPPM(RexxString::translate),
 CPPM(RexxString::verify),
+CPPM(RexxString::containsRexx),
+CPPM(RexxString::caselessContains),
 
                                           /* following methods are in OKBBITS  */
 CPPM(RexxString::bitAnd),
@@ -936,6 +938,8 @@ CPPM(RexxMutableBuffer::words),
 CPPM(RexxMutableBuffer::wordPos),
 CPPM(RexxMutableBuffer::caselessWordPos),
 CPPM(RexxMutableBuffer::delWord),
+CPPM(RexxMutableBuffer::containsRexx),
+CPPM(RexxMutableBuffer::caselessContains),
 
 CPPM(RexxSupplier::available),         /* Supplier methods                  */
 CPPM(RexxSupplier::next),

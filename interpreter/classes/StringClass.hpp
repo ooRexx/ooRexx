@@ -274,6 +274,8 @@ inline char IntToHexDigit(int n)
 
    RexxInteger *posRexx(RexxString *, RexxInteger *, RexxInteger *);
    RexxInteger *caselessPosRexx(RexxString *, RexxInteger *, RexxInteger *);
+   RexxObject  *containsRexx(RexxString *, RexxInteger *, RexxInteger *);
+   RexxObject  *caselessContains(RexxString *, RexxInteger *, RexxInteger *);
    size_t       pos(RexxString *, size_t);
    size_t       caselessPos(RexxString *, size_t);
 

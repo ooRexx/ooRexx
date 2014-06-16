@@ -648,6 +648,7 @@ RexxString *RexxMutableBuffer::substr(RexxInteger *argposition,
  *
  * @param needle The search needle.
  * @param pstart the starting position.
+ * @param range  The length of the search range.
  *
  * @return The index of the located string.  Returns 0 if no matches
  *         are found.
@@ -655,6 +656,22 @@ RexxString *RexxMutableBuffer::substr(RexxInteger *argposition,
 RexxInteger *RexxMutableBuffer::posRexx(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
 {
     return StringUtil::posRexx(getStringData(), getLength(), needle, pstart, range);
+}
+
+
+/**
+ * Test if the buffer contains a given string within a specified
+ * range.
+ *
+ * @param needle The search needle.
+ * @param pstart the starting position.
+ * @param range  The length of the search range.
+ *
+ * @return .true if the string is found, .false otherwise
+ */
+RexxObject *RexxMutableBuffer::containsRexx(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
+{
+    return StringUtil::containsRexx(getStringData(), getLength(), needle, pstart, range);
 }
 
 
@@ -679,6 +696,7 @@ RexxInteger *RexxMutableBuffer::lastPos(RexxString  *needle, RexxInteger *_start
  *
  * @param needle The search needle.
  * @param pstart the starting position.
+ * @param range  The length of the range to search in.
  *
  * @return The index of the located string.  Returns 0 if no matches
  *         are found.
@@ -693,6 +711,27 @@ RexxInteger *RexxMutableBuffer::caselessPos(RexxString  *needle, RexxInteger *ps
     /* pass on to the primitive function */
     /* and return as an integer object   */
     return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range));
+}
+
+/**
+ * Perform a caseless search for a string within the buffer.
+ *
+ * @param needle The search needle.
+ * @param pstart the starting position.
+ * @param range  The length of the range to search in.
+ *
+ * @return .true if the string is found, .false otherwise.
+ */
+RexxObject *RexxMutableBuffer::caselessContains(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
+{
+    /* force needle to a string          */
+    needle = stringArgument(needle, ARG_ONE);
+    /* get the starting position         */
+    size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
+    size_t _range = optionalLengthArgument(range, getLength() - _start + 1, ARG_THREE);
+    /* pass on to the primitive function */
+    /* and return as an integer object   */
+    return StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range) > 0 ? TheTrueObject : TheFalseObject;
 }
 
 
