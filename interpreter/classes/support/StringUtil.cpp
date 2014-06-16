@@ -1760,7 +1760,7 @@ RexxInteger *StringUtil::wordLength(const char *data, size_t length, RexxInteger
  *
  * @return the location of the start of the search phrase.
  */
-RexxInteger *StringUtil::wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart)
+stringsize_t StringUtil::wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart)
 {
     phrase = stringArgument(phrase, ARG_ONE);/* get the phrase we are looking for */
     stringsize_t needleLength = phrase->getLength();       /* get the length also               */
@@ -1781,7 +1781,7 @@ RexxInteger *StringUtil::wordPos(const char *data, size_t length, RexxString  *p
                                          /* haystack, this is a failure       */
     if (needleWords > (haystackWords - count + 1) || needleWords == 0 || count > haystackWords)
     {
-        return IntegerZero;
+        return 0;
     }
 
     const char *nextHaystack;
@@ -1844,7 +1844,7 @@ RexxInteger *StringUtil::wordPos(const char *data, size_t length, RexxString  *p
 
         if (i == 0)                      /* all words matched, we             */
         {
-            return new_integer(count);   // return the position
+            return count;                // return the position
         }
         haystack = nextHaystack;         /* set the search position           */
                                          /* step to next haytack pos          */
@@ -1852,7 +1852,7 @@ RexxInteger *StringUtil::wordPos(const char *data, size_t length, RexxString  *p
         count++;                         /* remember the word position        */
     }
 
-    return IntegerZero;                // not found
+    return 0;                          // not found
 }
 
 
@@ -1866,7 +1866,7 @@ RexxInteger *StringUtil::wordPos(const char *data, size_t length, RexxString  *p
  *
  * @return the location of the start of the search phrase.
  */
-RexxInteger *StringUtil::caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart)
+stringsize_t StringUtil::caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart)
 {
     phrase = stringArgument(phrase, ARG_ONE);/* get the phrase we are looking for */
     stringsize_t needleLength = phrase->getLength();       /* get the length also               */
@@ -1887,7 +1887,7 @@ RexxInteger *StringUtil::caselessWordPos(const char *data, size_t length, RexxSt
                                          /* haystack, this is a failure       */
     if (needleWords > (haystackWords - count + 1) || needleWords == 0 || count > haystackWords)
     {
-        return IntegerZero;
+        return 0;
     }
 
     const char *nextHaystack;
@@ -1950,7 +1950,7 @@ RexxInteger *StringUtil::caselessWordPos(const char *data, size_t length, RexxSt
 
         if (i == 0)                      /* all words matched, we             */
         {
-            return new_integer(count);   // return the position
+            return count;                // return the position
         }
         haystack = nextHaystack;         /* set the search position           */
                                          /* step to next haytack pos          */
@@ -1958,5 +1958,5 @@ RexxInteger *StringUtil::caselessWordPos(const char *data, size_t length, RexxSt
         count++;                         /* remember the word position        */
     }
 
-    return IntegerZero;                // not found
+    return 0;                          // not found
 }

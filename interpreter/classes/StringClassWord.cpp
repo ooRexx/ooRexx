@@ -293,7 +293,21 @@ RexxInteger *RexxString::wordLength(RexxInteger *position)
  */
 RexxInteger *RexxString::wordPos(RexxString  *phrase, RexxInteger *pstart)
 {
-    return StringUtil::wordPos(getStringData(), getLength(), phrase, pstart);
+    return new_integer(StringUtil::wordPos(getStringData(), getLength(), phrase, pstart));
+}
+
+
+/**
+ * Test if a string contains a given phrase
+ *
+ * @param phrase The search phrase
+ * @param pstart The starting search position.
+ *
+ * @return The index of the match location.
+ */
+RexxObject *RexxString::containsWord(RexxString  *phrase, RexxInteger *pstart)
+{
+    return StringUtil::wordPos(getStringData(), getLength(), phrase, pstart) > 0 ? TheTrueObject : TheFalseObject;
 }
 
 
@@ -307,8 +321,23 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase, RexxInteger *pstart)
  */
 RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstart)
 {
-    return StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart);
+    return new_integer(StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart));
 }
+
+
+/**
+ * Perform a caseless wordpos search on a string object.
+ *
+ * @param phrase The search phrase
+ * @param pstart The starting search position.
+ *
+ * @return The index of the match location.
+ */
+RexxObject *RexxString::caselessContainsWord(RexxString  *phrase, RexxInteger *pstart)
+{
+    return StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart)  > 0 ? TheTrueObject : TheFalseObject;
+}
+
 
 /* the WORDS function */
 /******************************************************************************/

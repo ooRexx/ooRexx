@@ -119,6 +119,8 @@ class RexxMutableBufferClass : public RexxClass {
    RexxInteger *words();
    RexxInteger *wordPos(RexxString *, RexxInteger *);
    RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
+   RexxObject  *containsWord(RexxString *, RexxInteger *);
+   RexxObject  *caselessContainsWord(RexxString *, RexxInteger *);
    RexxMutableBuffer *delWord(RexxInteger *position, RexxInteger *plength);
    RexxMutableBuffer *space(RexxInteger *space_count, RexxString  *pad);
 

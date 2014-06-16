@@ -87,8 +87,8 @@ public:
     static RexxString *word(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordIndex(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordLength(const char *data, size_t length, RexxInteger *position);
-    static RexxInteger *wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
-    static RexxInteger *caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
+    static stringsize_t wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
+    static stringsize_t caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
     static RexxArray   *words(const char *data, size_t length);
     static const char  *locateSeparator(const char *start, const char *end, const char *sepData, size_t sepLength);
 

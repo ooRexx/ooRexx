@@ -884,9 +884,11 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_LASTPOS                      ,TheStringBehaviour, CPPM(RexxString::lastPosRexx), 3);
   defineKernelMethod(CHAR_POS                          ,TheStringBehaviour, CPPM(RexxString::posRexx), 3);
   defineKernelMethod("CONTAINS"                        ,TheStringBehaviour, CPPM(RexxString::containsRexx), 3);
+  defineKernelMethod("CASELESSCONTAINS"                ,TheStringBehaviour, CPPM(RexxString::caselessContains), 3);
+  defineKernelMethod("CONTAINSWORD"                    ,TheStringBehaviour, CPPM(RexxString::containsWord), 2);
+  defineKernelMethod("CASELESSCONTAINSWORD"            ,TheStringBehaviour, CPPM(RexxString::caselessContainsWord), 2);
   defineKernelMethod(CHAR_CASELESSLASTPOS              ,TheStringBehaviour, CPPM(RexxString::caselessLastPosRexx), 3);
   defineKernelMethod(CHAR_CASELESSPOS                  ,TheStringBehaviour, CPPM(RexxString::caselessPosRexx), 3);
-  defineKernelMethod("CASELESSCONTAINS"                ,TheStringBehaviour, CPPM(RexxString::caselessContains), 3);
   defineKernelMethod(CHAR_TRANSLATE                    ,TheStringBehaviour, CPPM(RexxString::translate), 5);
   defineKernelMethod(CHAR_VERIFY                       ,TheStringBehaviour, CPPM(RexxString::verify), 4);
   defineKernelMethod(CHAR_BITAND                       ,TheStringBehaviour, CPPM(RexxString::bitAnd), 2);
@@ -978,9 +980,11 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_DELSTR                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::mydelete), 2);
   defineKernelMethod(CHAR_SUBSTR                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::substr), 3);
   defineKernelMethod(CHAR_POS                          ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::posRexx), 3);
-  defineKernelMethod("CONTAINS"                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::containsRexx), 3);
   defineKernelMethod(CHAR_LASTPOS                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lastPos), 3);
+  defineKernelMethod("CONTAINS"                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::containsRexx), 3);
   defineKernelMethod("CASELESSCONTAINS"                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessContains), 3);
+  defineKernelMethod("CONTAINSWORD"                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::containsWord), 2);
+  defineKernelMethod("CASELESSCONTAINSWORD"            ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessContainsWord), 2);
   defineKernelMethod(CHAR_CASELESSLASTPOS              ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessLastPos), 3);
   defineKernelMethod(CHAR_SUBCHAR                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::subchar), 1);
   defineKernelMethod(CHAR_GETBUFFERSIZE                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::getBufferSize), 0);

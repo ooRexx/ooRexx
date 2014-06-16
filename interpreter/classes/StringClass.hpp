@@ -254,6 +254,8 @@ inline char IntToHexDigit(int n)
    RexxInteger *wordLength(RexxInteger *);
    RexxInteger *wordPos(RexxString *, RexxInteger *);
    RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
+   RexxObject  *containsWord(RexxString *, RexxInteger *);
+   RexxObject  *caselessContainsWord(RexxString *, RexxInteger *);
    RexxInteger *words();
                                        /* the following methods are in    */
                                        /* OKBMISC                         */
