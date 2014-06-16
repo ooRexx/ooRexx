@@ -403,6 +403,20 @@ set (build_extensions_rxwinsys_dir ${build_extensions_dir}/platform/windows/rxwi
 set (build_utilities_rexxpaws_dir ${build_utilities_dir}/platform/windows/rexxpaws)
 set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhide)
 
+if (WIN32)
+# This replaces the /MD compile flag with /MT.
+set(CompilerFlags
+        CMAKE_CXX_FLAGS
+        CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_C_FLAGS
+        CMAKE_C_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELEASE
+        )
+foreach(CompilerFlag ${CompilerFlags})
+  string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+endforeach()
+endif ()
 
 #/*----------------------------------------------------------------------------*/
 #/* Build targets                                                              */
