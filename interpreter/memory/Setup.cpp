@@ -985,6 +985,7 @@ void RexxMemory::createImage()
   defineKernelMethod("CASELESSCONTAINS"                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessContains), 3);
   defineKernelMethod("CONTAINSWORD"                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::containsWord), 2);
   defineKernelMethod("CASELESSCONTAINSWORD"            ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessContainsWord), 2);
+  defineKernelMethod(CHAR_CASELESSPOS                  ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessPos), 3);
   defineKernelMethod(CHAR_CASELESSLASTPOS              ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessLastPos), 3);
   defineKernelMethod(CHAR_SUBCHAR                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::subchar), 1);
   defineKernelMethod(CHAR_GETBUFFERSIZE                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::getBufferSize), 0);
