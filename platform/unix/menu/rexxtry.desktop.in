@@ -2,7 +2,7 @@
 Version=4.3
 Name=RexxTry
 Comment=RexxTry
-Exec=/usr/bin/rexxtry.rex
+Exec=@CMAKE_INSTALL_PREFIX@/bin/rexxtry.rex
 Icon=oorexx
 Terminal=true
 Type=Application

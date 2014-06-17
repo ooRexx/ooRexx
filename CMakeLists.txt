@@ -1681,7 +1681,8 @@ if (BUILD_RPM)
    # Set up the desktop menu
    SET(ORX_DESKTOP_DIR     ${CMAKE_INSTALL_PREFIX}/share/applications)
    SET(ORX_PIXMAPS_DIR     ${CMAKE_INSTALL_PREFIX}/share/icons)
-   INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.desktop DESTINATION ${ORX_DESKTOP_DIR})
+   configure_file(${ORX_PLATFORM_DIR}/menu/rexxtry.desktop.in ${PROJECT_BINARY_DIR}/rexxtry.desktop)
+   INSTALL (FILES ${PROJECT_BINARY_DIR}/rexxtry.desktop DESTINATION ${ORX_DESKTOP_DIR})
    INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.xml DESTINATION ${ORX_DESKTOP_DIR})
    # Copy the ooRexx pixmap
    INSTALL (FILES ${ORX_PLATFORM_DIR}/oorexx.png DESTINATION ${ORX_PIXMAPS_DIR})
