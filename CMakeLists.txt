@@ -1741,6 +1741,22 @@ endif ()
 
 # Build a DEB
 if (BUILD_DEB)
+   # Set up the desktop menu
+   SET(ORX_DESKTOP_DIR     ${CMAKE_INSTALL_PREFIX}/share/applications)
+   SET(ORX_PIXMAPS_DIR     ${CMAKE_INSTALL_PREFIX}/share/icons)
+   configure_file(${ORX_PLATFORM_DIR}/menu/rexxtry.desktop.in ${PROJECT_BINARY_DIR}/rexxtry.desktop)
+   INSTALL (FILES ${PROJECT_BINARY_DIR}/rexxtry.desktop DESTINATION ${ORX_DESKTOP_DIR})
+   INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.xml DESTINATION ${ORX_DESKTOP_DIR})
+   # Copy the ooRexx pixmap
+   INSTALL (FILES ${ORX_PLATFORM_DIR}/oorexx.png DESTINATION ${ORX_PIXMAPS_DIR})
+   # try to set up the menu system
+   find_program(XDG-MIME_EXECUTABLE xdg-mime)
+   find_program(XDG-DESKTOP-MENU_EXECUTABLE xdg-desktop-menu)
+   INSTALL(CODE "
+     execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.xml)
+     execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.desktop)
+     execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${ORX_DESKTOP_DIR}/rexxtry.desktop application/x-ooRexx-item)
+     ")
    set(CPACK_GENERATOR DEB)
    # The package name MUST be in lower case.
    set(CPACK_DEBIAN_PACKAGE_NAME oorexx)
