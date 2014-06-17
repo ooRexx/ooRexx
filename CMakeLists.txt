@@ -1678,8 +1678,27 @@ endif ()
 
 # Build an RPM
 if (BUILD_RPM)
+   # Set up the desktop menu
+   SET(ORX_DESKTOP_DIR     ${CMAKE_INSTALL_PREFIX}/share/applications)
+   SET(ORX_PIXMAPS_DIR     ${CMAKE_INSTALL_PREFIX}/share/icons)
+   INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.desktop DESTINATION ${ORX_DESKTOP_DIR})
+   INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.xml DESTINATION ${ORX_DESKTOP_DIR})
+   # Copy the ooRexx pixmap
+   INSTALL (FILES ${ORX_PLATFORM_DIR}/oorexx.png DESTINATION ${ORX_PIXMAPS_DIR})
+   # try to set up the menu system
+   find_program(XDG-MIME_EXECUTABLE xdg-mime)
+   find_program(XDG-DESKTOP-MENU_EXECUTABLE xdg-desktop-menu)
+   INSTALL(CODE "
+     execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.xml)
+     execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.desktop)
+     execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${ORX_DESKTOP_DIR}/rexxtry.desktop application/x-ooRexx-item)
+     ")
    # This pevents the rpm from generating these subdirectories in the install.
-   set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION ${CMAKE_INSTALL_PREFIX}/share/man ${CMAKE_INSTALL_PREFIX}/share/man/man1)
+   set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION 
+      ${CMAKE_INSTALL_PREFIX}/share/man 
+      ${CMAKE_INSTALL_PREFIX}/share/man/man1
+      ${CMAKE_INSTALL_PREFIX}/share/applications
+      ${CMAKE_INSTALL_PREFIX}/share/icons)
    set(CPACK_GENERATOR RPM)
    set(CPACK_RPM_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
    if (DEFINED PROD)
