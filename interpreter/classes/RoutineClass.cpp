@@ -108,7 +108,7 @@ RoutineClass::RoutineClass(RexxString *name)
     ProtectedObject p(this);
     OrefSet(this, this->executableName, name);
     // get a source object to generat this from
-    RexxSource *_source = new RexxSource(name);
+    RexxSource *_source = RexxSource::createSource(name);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
     RexxCode *codeObj = _source->generateCode(false);
@@ -130,30 +130,7 @@ RoutineClass::RoutineClass(RexxString *name, RexxBuffer *s)
     ProtectedObject p(this);
     OrefSet(this, this->executableName, name);
     // get a source object to generat this from
-    RexxSource *_source = new RexxSource(name, s);
-    ProtectedObject p2(_source);
-    // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode(false);
-    OrefSet(this, this->code, codeObj);
-}
-
-
-/**
- * Initialize a Routine object using directly provided source.
- *
- * @param name   The name of the routine.
- * @param data   The source data buffer pointer.
- * @param length the length of the source buffer.
- */
-RoutineClass::RoutineClass(RexxString *name, const char *data, size_t length)
-{
-    // we need to protect this object until the constructor completes.
-    // the code generation step will create lots of new objects, giving a
-    // pretty high probability that it will be collected.
-    ProtectedObject p(this);
-    OrefSet(this, this->executableName, name);
-    // get a source object to generat this from
-    RexxSource *_source = new RexxSource(name, data, length);
+    RexxSource *_source = RexxSource::createSource(name, s);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
     RexxCode *codeObj = _source->generateCode(false);
@@ -175,7 +152,7 @@ RoutineClass::RoutineClass(RexxString *name, RexxArray *s)
     ProtectedObject p(this);
     OrefSet(this, this->executableName, name);
     // get a source object to generat this from
-    RexxSource *_source = new RexxSource(name, s);
+    RexxSource *_source = RexxSource::createSource(name, s);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
     RexxCode *codeObj = _source->generateCode(false);

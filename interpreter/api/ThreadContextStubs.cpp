@@ -501,15 +501,17 @@ RexxObjectPtr RexxEntry CallProgram(RexxThreadContext *c, const char * p, RexxAr
 }
 
 
-RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING n, CSTRING source, stringsize_t length)
+RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING n, CSTRING s, stringsize_t l)
 {
     ApiContext context(c);
     try
     {
         RexxString *name = new_string(n);
         ProtectedObject p(name);
+        RexxBuffer *source = new_buffer(s, l);
+        ProtectedObject p2(source);
         // convert the name to a string instance, and check the environments.
-        return (RexxMethodObject)context.ret(new RexxMethod(new_string(n), source, length));
+        return (RexxMethodObject)context.ret(new RexxMethod(name, source));
     }
     catch (RexxNativeActivation *)
     {
@@ -518,15 +520,17 @@ RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING n, CSTRING so
 }
 
 
-RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING source, stringsize_t length)
+RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING s, stringsize_t l)
 {
     ApiContext context(c);
     try
     {
         RexxString *name = new_string(n);
         ProtectedObject p(name);
+        RexxBuffer *source = new_buffer(s, l);
+        ProtectedObject p2(source);
         // convert the name to a string instance, and check the environments.
-        return (RexxRoutineObject)context.ret(new RoutineClass(name, source, length));
+        return (RexxRoutineObject)context.ret(new RoutineClass(name, source));
     }
     catch (RexxNativeActivation *)
     {

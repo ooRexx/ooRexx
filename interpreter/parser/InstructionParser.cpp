@@ -107,6 +107,344 @@
 #include "ProtectedObject.hpp"
 
 
+RexxInstruction *RexxSource::instruction()
+/******************************************************************************/
+/* Function:  Process an individual REXX clause                               */
+/******************************************************************************/
+{
+    RexxToken       *_first;              /* first token of clause             */
+    RexxToken       *second;             /* second token of clause            */
+    RexxInstruction *_instruction;        /* current working instruction       */
+    RexxObject      *term;               /* term for a message send           */
+    RexxObject      *subexpression;      /* subexpression of a clause         */
+    int              _keyword;            /* resolved instruction keyword      */
+
+    _instruction = OREF_NULL;             /* default to no instruction found   */
+    _first = nextReal();                  /* get the first token               */
+
+    if (_first->classId == TOKEN_DCOLON)
+    {/* reached the end of a block?       */
+        firstToken();                      /* reset the location                */
+        this->reclaimClause();             /* give back the clause              */
+    }
+    else
+    {                               /* have a real instruction to process*/
+        second = nextToken();              /* now get the second token          */
+                                           /* is this a label?  (can be either  */
+                                           /* a symbol or a literal)            */
+        if ((_first->classId == TOKEN_SYMBOL || _first->classId == TOKEN_LITERAL) && second->classId == TOKEN_COLON)
+        {
+            if (this->flags&_interpret)      /* is this an interpret?             */
+            {
+                                             /* this is an error                  */
+                syntaxError(Error_Unexpected_label_interpret, _first);
+            }
+            firstToken();                    /* reset to the beginning            */
+            _instruction = this->labelNew(); /* create a label instruction        */
+            second = nextToken();            /* get the next token                */
+                                             /* not the end of the clause?        */
+            if (!second->isEndOfClause())
+            {
+                previousToken();               /* give this token back              */
+                trimClause();                  /* make this start of the clause     */
+                this->reclaimClause();         /* give the remaining clause back    */
+            }
+            return _instruction;
+        }
+
+        // this is potentially an assignment of the form "symbol = expr"
+        if (_first->isSymbol())
+        {
+            // "symbol == expr" is considered an error
+            if (second->subclass == OPERATOR_STRICT_EQUAL)
+            {
+                syntaxError(Error_Invalid_expression_general, second);
+            }
+            // true assignment instruction?
+            if (second->subclass == OPERATOR_EQUAL)
+            {
+                return this->assignmentNew(_first);
+            }
+            // this could be a special assignment operator such as "symbol += expr"
+            else if (second->classId == TOKEN_ASSIGNMENT)
+            {
+                return this->assignmentOpNew(_first, second);
+            }
+            // other
+
+        }
+
+        /* some other type of instruction    */
+        /* we need to skip over the first    */
+        /* term of the instruction to        */
+        /* determine the type of clause,     */
+        /* including recognition of keyword  */
+        /* instructions                      */
+        firstToken();                    /* reset to the first token          */
+        term = this->messageTerm();      /* get the first term of instruction */
+        second = nextToken();            /* get the next token                */
+
+
+        // some sort of recognizable message term?  Need to check for the
+        // special cases.
+        if (term != OREF_NULL)
+        {
+            // if parsing the message term consumed everything, this is a message instruction
+            if (second->isEndOfClause())
+            {
+                return this->messageNew((RexxExpressionMessage *)term);
+            }
+            else if (second->subclass == OPERATOR_STRICT_EQUAL)
+            {
+                // messageterm == something is an invalid assignment
+                syntaxError(Error_Invalid_expression_general, second);
+            }
+            // messageterm = something is a pseudo assignment
+            else if (second->subclass == OPERATOR_EQUAL)
+            {
+                this->saveObject(term);      /* protect this                      */
+                // we need an expression following the op token
+                subexpression = this->subExpression(TERM_EOC);
+                if (subexpression == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_general, second);
+                }
+                // this is a message assignment
+                _instruction = this->messageAssignmentNew((RexxExpressionMessage *)term, subexpression);
+                this->toss(term);              /* release the term                  */
+                return _instruction;
+            }
+            // one of the special operator forms?
+            else if (second->classId == TOKEN_ASSIGNMENT)
+            {
+                this->saveObject(term);      /* protect this                      */
+                // we need an expression following the op token
+                subexpression = this->subExpression(TERM_EOC);
+                if (subexpression == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_general, second);
+                }
+                // this is a message assignment
+                _instruction = this->messageAssignmentOpNew((RexxExpressionMessage *)term, second, subexpression);
+                this->toss(term);              /* release the term                  */
+                return _instruction;
+            }
+        }
+
+        // ok, none of the special cases passed....not start the keyword processing
+
+        firstToken();                  /* reset to the first token          */
+        _first = nextToken();          /* get the first token again         */
+                                       /* is first a symbol that matches a  */
+                                       /* defined REXX keyword?             */
+        if (_first->isSymbol() && (_keyword = this->keyword(_first)))
+        {
+
+            switch (_keyword)
+            {           /* process each instruction type     */
+
+                case KEYWORD_NOP:          /* NOP instruction                   */
+                    /* add the instruction to the parse  */
+                    _instruction = this->nopNew();
+                    break;
+
+                case KEYWORD_DROP:         /* DROP instruction                  */
+                    /* add the instruction to the parse  */
+                    _instruction = this->dropNew();
+                    break;
+
+                case KEYWORD_SIGNAL:       /* various forms of SIGNAL           */
+                    /* add the instruction to the parse  */
+                    _instruction = this->signalNew();
+                    break;
+
+                case KEYWORD_CALL:         /* various forms of CALL             */
+                    /* add the instruction to the parse  */
+                    _instruction = this->callNew();
+                    break;
+
+                case KEYWORD_RAISE:        /* RAISE instruction                 */
+                    /* add the instruction to the parse  */
+                    _instruction = this->raiseNew();
+                    break;
+
+                case KEYWORD_ADDRESS:      /* ADDRESS instruction               */
+                    /* add the instruction to the parse  */
+                    _instruction = this->addressNew();
+                    break;
+
+                case KEYWORD_NUMERIC:      /* NUMERIC instruction               */
+                    /* add the instruction to the parse  */
+                    _instruction = this->numericNew();
+                    break;
+
+                case KEYWORD_TRACE:        /* TRACE instruction                 */
+                    /* add the instruction to the parse  */
+                    _instruction = this->traceNew();
+                    break;
+
+                case KEYWORD_DO:           /* all variations of DO instruction  */
+                    /* add the instruction to the parse  */
+                    _instruction = this->doNew();
+                    break;
+
+                case KEYWORD_LOOP:         /* all variations of LOOP instruction  */
+                    /* add the instruction to the parse  */
+                    _instruction = this->loopNew();
+                    break;
+
+                case KEYWORD_EXIT:         /* EXIT instruction                  */
+                    /* add the instruction to the parse  */
+                    _instruction = this->exitNew();
+                    break;
+
+                case KEYWORD_INTERPRET:    /* INTERPRET instruction             */
+                    /* add the instruction to the parse  */
+                    _instruction = this->interpretNew();
+                    break;
+
+                case KEYWORD_PUSH:         /* PUSH instruction                  */
+                    /* add the instruction to the parse  */
+                    _instruction = this->queueNew(QUEUE_LIFO);
+                    break;
+
+                case KEYWORD_QUEUE:        /* QUEUE instruction                 */
+                    /* add the instruction to the parse  */
+                    _instruction = this->queueNew(QUEUE_FIFO);
+                    break;
+
+                case KEYWORD_REPLY:        /* REPLY instruction                 */
+                    /* interpreted?                      */
+                    if (this->flags&_interpret)
+                        syntaxError(Error_Translation_reply_interpret);
+                    /* add the instruction to the parse  */
+                    _instruction = this->replyNew();
+                    break;
+
+                case KEYWORD_RETURN:       /* RETURN instruction                */
+                    /* add the instruction to the parse  */
+                    _instruction = this->returnNew();
+                    break;
+
+                case KEYWORD_IF:           /* IF instruction                    */
+                    /* add the instruction to the parse  */
+                    _instruction = this->ifNew(KEYWORD_IF);
+                    break;
+
+                case KEYWORD_ITERATE:      /* ITERATE instruction               */
+                    /* add the instruction to the parse  */
+                    _instruction = this->leaveNew(KEYWORD_ITERATE);
+                    break;
+
+                case KEYWORD_LEAVE:        /* LEAVE instruction                 */
+                    /* add the instruction to the parse  */
+                    _instruction = this->leaveNew(KEYWORD_LEAVE);
+                    break;
+
+                case KEYWORD_EXPOSE:       /* EXPOSE instruction                */
+                    /* interpreted?                      */
+                    if (this->flags&_interpret)
+                        syntaxError(Error_Translation_expose_interpret);
+                    /* add the instruction to the parse  */
+                    _instruction = this->exposeNew();
+                    break;
+
+                case KEYWORD_FORWARD:      /* FORWARD instruction               */
+                    /* interpreted?                      */
+                    if (this->flags&_interpret)
+                        syntaxError(Error_Translation_forward_interpret);
+                    /* add the instruction to the parse  */
+                    _instruction = this->forwardNew();
+                    break;
+
+                case KEYWORD_PROCEDURE:    /* PROCEDURE instruction             */
+                    /* add the instruction to the parse  */
+                    _instruction = this->procedureNew();
+                    break;
+
+                case KEYWORD_GUARD:        /* GUARD instruction                 */
+                    /* interpreted?                      */
+                    if (this->flags&_interpret)
+                        syntaxError(Error_Translation_guard_interpret);
+                    /* add the instruction to the parse  */
+                    _instruction = this->guardNew();
+                    break;
+
+                case KEYWORD_USE:          /* USE instruction                   */
+                    /* interpreted?                      */
+                    if (this->flags&_interpret)
+                        syntaxError(Error_Translation_use_interpret);
+                    /* add the instruction to the parse  */
+                    _instruction = this->useNew();
+                    break;
+
+                case KEYWORD_ARG:          /* ARG instruction                   */
+                    /* add the instruction to the parse  */
+                    _instruction = this->parseNew(SUBKEY_ARG);
+                    break;
+
+                case KEYWORD_PULL:         /* PULL instruction                  */
+                    /* add the instruction to the parse  */
+                    _instruction = this->parseNew(SUBKEY_PULL);
+                    break;
+
+                case KEYWORD_PARSE:        /* PARSE instruction                 */
+                    /* add the instruction to the parse  */
+                    _instruction = this->parseNew(KEYWORD_PARSE);
+                    break;
+
+                case KEYWORD_SAY:          /* SAY instruction                   */
+                    /* add the instruction to the parse  */
+                    _instruction = this->sayNew();
+                    break;
+
+                case KEYWORD_OPTIONS:      /* OPTIONS instruction               */
+                    /* add the instruction to the parse  */
+                    _instruction = this->optionsNew();
+                    break;
+
+                case KEYWORD_SELECT:       /* SELECT instruction                */
+                    /* add the instruction to the parse  */
+                    _instruction = this->selectNew();
+                    break;
+
+                case KEYWORD_WHEN:         /* WHEN in an SELECT instruction     */
+                    /* add the instruction to the parse  */
+                    _instruction = this->ifNew(KEYWORD_WHEN);
+                    break;
+
+                case KEYWORD_OTHERWISE:    /* OTHERWISE in a SELECT             */
+                    /* add the instruction to the parse  */
+                    _instruction = this->otherwiseNew(_first);
+                    break;
+
+                case KEYWORD_ELSE:         /* unexpected ELSE                   */
+                    /* add the instruction to the parse  */
+                    _instruction = this->elseNew(_first);
+                    break;
+
+                case KEYWORD_END:          /* END for a block construct         */
+                    /* add the instruction to the parse  */
+                    _instruction = this->endNew();
+                    break;
+
+                case KEYWORD_THEN:         /* unexpected THEN                   */
+                    /* raise an error                    */
+                    syntaxError(Error_Unexpected_then_then);
+                    break;
+
+            }
+        }
+        else
+        {                         /* this is a "command" instruction   */
+            firstToken();                /* reset to the first token          */
+                                         /* process this instruction          */
+            _instruction = this->commandNew();
+        }
+    }
+    return _instruction;                 /* return the created instruction    */
+}
+
 RexxInstruction *RexxSource::addressNew()
 /****************************************************************************/
 /* Function:  Create a new ADDRESS translator object                        */
@@ -158,6 +496,24 @@ RexxInstruction *RexxSource::addressNew()
     /* now complete this                 */
     new ((void *)newObject) RexxInstructionAddress(_expression, environment, command);
     return newObject; /* done, return this                 */
+}
+
+
+RexxInstruction *RexxSource::sourceNewObject(
+    size_t        size,                /* Object size                       */
+    RexxBehaviour *_behaviour,         /* Object's behaviour                */
+    int            type )              /* Type of instruction               */
+/******************************************************************************/
+/* Function:  Create a "raw" translator instruction object                    */
+/******************************************************************************/
+{
+  RexxObject *newObject = new_object(size);        /* Get new object                    */
+  newObject->setBehaviour(_behaviour); /* Give new object its behaviour     */
+                                       /* do common initialization          */
+  new ((void *)newObject) RexxInstruction (this->clause, type);
+                                       /* now protect this                  */
+  OrefSet(this, this->currentInstruction, (RexxInstruction *)newObject);
+  return (RexxInstruction *)newObject; /* return the new object             */
 }
 
 

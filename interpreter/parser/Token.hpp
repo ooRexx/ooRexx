@@ -400,6 +400,8 @@ class RexxToken : public RexxInternalObject {
   inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
 
   inline bool       isVariable() { return (this->subclass == SYMBOL_VARIABLE || this->subclass == SYMBOL_STEM || this->subclass == SYMBOL_COMPOUND); };
+  inline bool       isSimpleVariable() { return this->subclass == SYMBOL_VARIABLE; };
+  inline bool       isDot() { return (this->subclass == SYMBOL_DOTSYMBOL); }
   inline bool       isLiteral()  { return (this->classId == TOKEN_LITERAL); };
   inline bool       isSymbolOrLiteral()  { return (this->classId == TOKEN_LITERAL) || (this->classId == TOKEN_SYMBOL); };
   inline bool       isConstant()  { return (this->classId == TOKEN_SYMBOL && this->subclass != SYMBOL_VARIABLE && this->subclass != SYMBOL_STEM && this->subclass != SYMBOL_COMPOUND); };

@@ -47,7 +47,7 @@
 
 #define DEFINING
 #include "RexxCore.h"
-#include "SourceFile.hpp"
+#include "LanguageParser.hpp"
 #include "Token.hpp"
 
 /*********************************************************************/
@@ -56,7 +56,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-KeywordEntry RexxSource::directives[] = {              /* language directive table          */
+KeywordEntry LanguageParser::directives[] = {              /* language directive table          */
     KeywordEntry(CHAR_ATTRIBUTE,   DIRECTIVE_ATTRIBUTE),
     KeywordEntry(CHAR_CLASS,       DIRECTIVE_CLASS),
     KeywordEntry(CHAR_CONSTANT,    DIRECTIVE_CONSTANT),
@@ -72,7 +72,7 @@ KeywordEntry RexxSource::directives[] = {              /* language directive tab
 /*                                                                   */
 /*********************************************************************/
 
-KeywordEntry RexxSource::keywordInstructions[] = {     /* language keyword table     */
+KeywordEntry LanguageParser::keywordInstructions[] = {     /* language keyword table     */
    KeywordEntry(CHAR_ADDRESS,    KEYWORD_ADDRESS),
    KeywordEntry(CHAR_ARG,        KEYWORD_ARG),
    KeywordEntry(CHAR_CALL,       KEYWORD_CALL),
@@ -116,7 +116,7 @@ KeywordEntry RexxSource::keywordInstructions[] = {     /* language keyword table
 /*                                                                   */
 /*********************************************************************/
 
-KeywordEntry RexxSource::subKeywords[] = {             /* language keyword table     */
+KeywordEntry LanguageParser::subKeywords[] = {             /* language keyword table     */
    KeywordEntry(CHAR_ADDITIONAL,  SUBKEY_ADDITIONAL),
    KeywordEntry(CHAR_ARG,         SUBKEY_ARG),
    KeywordEntry(CHAR_ARGUMENTS,   SUBKEY_ARGUMENTS),
@@ -159,7 +159,7 @@ KeywordEntry RexxSource::subKeywords[] = {             /* language keyword table
 /*                                                                   */
 /*********************************************************************/
 
-KeywordEntry RexxSource::builtinFunctions[] = {        /* built-in function table    */
+KeywordEntry LanguageParser::builtinFunctions[] = {        /* built-in function table    */
 #ifdef EBCDIC
     KeywordEntry(CHAR_QUEUEEXIT,   BUILTIN_QUEUEEXIT),
     KeywordEntry(CHAR_ABBREV,      BUILTIN_ABBREV),
@@ -331,7 +331,7 @@ KeywordEntry RexxSource::builtinFunctions[] = {        /* built-in function tabl
 /*                                                                   */
 /*********************************************************************/
 
-KeywordEntry RexxSource::conditionKeywords[] = {       /* condition option table     */
+KeywordEntry LanguageParser::conditionKeywords[] = {       /* condition option table     */
   KeywordEntry(CHAR_ANY,            CONDITION_ANY),
   KeywordEntry(CHAR_ERROR,          CONDITION_ERROR),
   KeywordEntry(CHAR_FAILURE,        CONDITION_FAILURE),
@@ -352,7 +352,7 @@ KeywordEntry RexxSource::conditionKeywords[] = {       /* condition option table
 /*                                                                   */
 /*********************************************************************/
 
-KeywordEntry RexxSource::parseOptions[] = {            /* parse option table         */
+KeywordEntry LanguageParser::parseOptions[] = {            /* parse option table         */
   KeywordEntry(CHAR_ARG,           SUBKEY_ARG),
   KeywordEntry(CHAR_CASELESS,      SUBKEY_CASELESS),
   KeywordEntry(CHAR_LINEIN,        SUBKEY_LINEIN),
@@ -371,7 +371,7 @@ KeywordEntry RexxSource::parseOptions[] = {            /* parse option table    
 /*                                                                   */
 /*********************************************************************/
 
-KeywordEntry RexxSource::subDirectives[] = {           /* language directive subkeywords    */
+KeywordEntry LanguageParser::subDirectives[] = {           /* language directive subkeywords    */
     KeywordEntry(CHAR_ABSTRACT,    SUBDIRECTIVE_ABSTRACT),
     KeywordEntry(CHAR_ATTRIBUTE,   SUBDIRECTIVE_ATTRIBUTE),
     KeywordEntry(CHAR_CLASS,       SUBDIRECTIVE_CLASS),
@@ -405,7 +405,7 @@ KeywordEntry RexxSource::subDirectives[] = {           /* language directive sub
  * @return The numeric identifier for the constant.  Returns 0 if not
  *         found in the target table.
  */
-int RexxSource::resolveKeyword(RexxString *token, KeywordEntry *Table, int Table_Size)
+int LanguageParser::resolveKeyword(RexxString *token, KeywordEntry *Table, int Table_Size)
 {
     const char *Name = token->getStringData();
     stringsize_t Length = token->getLength();
