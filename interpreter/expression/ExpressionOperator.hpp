@@ -48,21 +48,21 @@ class RexxExpressionOperator : public RexxInternalObject {
  public:
   inline RexxExpressionOperator() { ; }
 
-  RexxExpressionOperator(int, RexxObject *, RexxObject *);
+  RexxExpressionOperator(TokenSubclass, RexxObject *, RexxObject *);
   inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
   void   live(size_t);
   void   liveGeneral(int reason);
   void   flatten(RexxEnvelope *);
 
-  inline const char *operatorName() { return operatorNames[oper - 1]; }
+  inline const char *operatorName() { return operatorNames[oper]; }
 
 protected:
     // table of operator names
     static const char *operatorNames[];
 
-    int  oper;                           /* operator to perform               */
-    RexxObject *right_term;              /* right term of the operator        */
-    RexxObject *left_term;               /* left term of the operator         */
+    TokenSubclass  oper;                 // operation to perform
+    RexxObject *right_term;              // right term of the operator
+    RexxObject *left_term;               // left term of the operator
 };
 
 class RexxBinaryOperator : public RexxExpressionOperator {
@@ -72,7 +72,7 @@ class RexxBinaryOperator : public RexxExpressionOperator {
   inline void  operator delete(void *) { ; }
   inline void  operator delete(void *, void *) { ; }
 
-  inline RexxBinaryOperator(int op, RexxObject *left, RexxObject *right)
+  inline RexxBinaryOperator(TokenSubclass op, RexxObject *left, RexxObject *right)
       : RexxExpressionOperator(op, left, right) { ; }
   inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);

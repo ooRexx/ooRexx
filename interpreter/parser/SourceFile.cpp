@@ -1253,4 +1253,50 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
 }
 
 
+/**
+ * Initialize the source object for having directives added.
+ */
+void RexxSource::initializeForDirectives()
+{
+    // create objects to hold the package specifics.
+    routines = new_directory();
+    publicRoutines = new_directory();
+    requires = new_list();
+    libraries = new_list();
+    classes = new_list();
+}
 
+/**
+ * After all directives have been processed, check to see
+ * which collections we can get rid of because they are
+ * unnecessary overhead.
+ */
+void RexxSource::clearEmptyDependencies()
+{
+
+    // clear out any other lists that might be empty
+    if (requires->isEmpty())
+    {
+        requires = OREF_NULL;
+    }
+
+    if (libraries->isEmpty())
+    {
+        libraries = OREF_NULL;
+    }
+
+    if (routines->isEmpty())
+    {
+        routines = OREF_NULL;
+    }
+
+    if (publicRoutines->isEmpty())
+    {
+        publicRoutines = OREF_NULL;
+    }
+
+    if (methods->isEmpty())
+    {
+        methods = OREF_NULL;
+    }
+}

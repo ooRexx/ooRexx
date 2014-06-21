@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,76 +48,7 @@
 #include "ArrayClass.hpp"
 #include "SourceFile.hpp"
 
-int LanguageParser::precedence(
-    RexxToken  *token)                 /* target token                      */
-/******************************************************************************/
-/* Fucntion:  Determine a token's operator precedence                         */
-/******************************************************************************/
-{
-    switch (token->subclass)
-    {           /* process based on subclass         */
 
-        default:
-            return 0;                        /* this is the bottom of the heap    */
-            break;
-
-        case OPERATOR_OR:
-        case OPERATOR_XOR:
-            return 1;                         /* various OR types are next         */
-            break;
-
-        case OPERATOR_AND:
-            return 2;                         /* AND operator ahead of ORs         */
-            break;
-
-        case OPERATOR_EQUAL:               /* comparisons are all together      */
-        case OPERATOR_BACKSLASH_EQUAL:
-        case OPERATOR_GREATERTHAN:
-        case OPERATOR_BACKSLASH_GREATERTHAN:
-        case OPERATOR_LESSTHAN:
-        case OPERATOR_BACKSLASH_LESSTHAN:
-        case OPERATOR_GREATERTHAN_EQUAL:
-        case OPERATOR_LESSTHAN_EQUAL:
-        case OPERATOR_STRICT_EQUAL:
-        case OPERATOR_STRICT_BACKSLASH_EQUAL:
-        case OPERATOR_STRICT_GREATERTHAN:
-        case OPERATOR_STRICT_BACKSLASH_GREATERTHAN:
-        case OPERATOR_STRICT_LESSTHAN:
-        case OPERATOR_STRICT_BACKSLASH_LESSTHAN:
-        case OPERATOR_STRICT_GREATERTHAN_EQUAL:
-        case OPERATOR_STRICT_LESSTHAN_EQUAL:
-        case OPERATOR_LESSTHAN_GREATERTHAN:
-        case OPERATOR_GREATERTHAN_LESSTHAN:
-            return 3;                         /* concatenates are next             */
-            break;
-
-        case OPERATOR_ABUTTAL:
-        case OPERATOR_CONCATENATE:
-        case OPERATOR_BLANK:
-            return 4;                         /* concatenates are next             */
-            break;
-
-        case OPERATOR_PLUS:
-        case OPERATOR_SUBTRACT:
-            return 5;                         /* plus and minus next               */
-            break;
-
-        case OPERATOR_MULTIPLY:
-        case OPERATOR_DIVIDE:
-        case OPERATOR_INTDIV:
-        case OPERATOR_REMAINDER:
-            return 6;                         /* mulitiply and divide afer simples */
-            break;
-
-        case OPERATOR_POWER:
-            return 7;                         /* almost the top of the heap        */
-            break;
-
-        case OPERATOR_BACKSLASH:
-            return 8;                         /* NOT is the top honcho             */
-            break;
-    }
-}
 
 /*********************************************************************
 *  The following table detects alphanumeric characters and           *
@@ -189,221 +120,288 @@ int LanguageParser::characterTable[]={
                                        /* scanning operations...mostly to   */
                                        /* save some keystrokes and make     */
                                        /* things a little more readable     */
-#define GETCHAR()  ((unsigned char)(this->current[this->line_offset]))
-#define MORELINE() (this->line_offset < this->current_length)
-#define OPERATOR(op) (this->clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, location))
-#define CHECK_ASSIGNMENT(op, token) (token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op))
-
-void LanguageParser::endLocation(
-  SourceLocation &location )           /* token location information        */
-/****************************************************************************/
-/* Function:  Record a tokens ending location                               */
-/****************************************************************************/
-{
-    // copy the end line location
-    location.setEnd(line_number, line_offset);
+#define OPERATOR(op) (clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, location))
+#define CHECK_ASSIGNMENT(op) \
+{\
+   RexxToken *token = clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, location); \
+   token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op)); \
+   return token; \
 }
 
-bool LanguageParser::nextSpecial(
-  unsigned int  target,                /* desired target character          */
-  SourceLocation &location )           /* token location information        */
-/****************************************************************************/
-/* Function:  Find the next special character and verify against a target   */
-/****************************************************************************/
+
+/**
+ * Save the current scanning location as a start position
+ *
+ * @param location A location object to store this in.
+ */
+void LanguageParser::startLocation(SourceLocation &location )
 {
-    unsigned int inch = this->locateToken(OREF_NULL); /* find the next token               */
+    // copy the start line location into the location object.
+    location.setStart(line_number, lineOffset);
+}
+
+/**
+ * Save the current scanning location.
+ *
+ * @param location A location object to store this in.
+ */
+void LanguageParser::endLocation(SourceLocation &location )
+{
+    // copy the end line location into the location object.
+    location.setEnd(line_number, lineOffset);
+}
+
+
+/**
+ * Save the current scanning location for a single character..
+ *
+ * @param location A location object to store this in.
+ */
+void LanguageParser::setLocation(SourceLocation &location )
+{
+    // copy the end line location into the location object.
+    location.setLocation(lineNumber, lineOffset, lineNumber, lineOffset + 1);
+}
+
+
+/**
+ * Find the next special character and validate
+ * against a target character.
+ *
+ * @param target   The type of special we expect to find.
+ * @param location A location object to record the object location against.
+ *
+ * @return true if we found the special, false otherwise.
+ */
+bool LanguageParser::nextSpecial(unsigned int target, SourceLocation &location )
+{
+    // find the start of the next token.
+    unsigned int inch;
+
+    // locate the next token.  Blanks are not significant here
+    CharacterClass tokenClass = locateToken(inch, false);
     /* have something else on this line? */
-    if (inch != CLAUSEEND_EOF && inch != CLAUSEEND_EOL)
+    if (tokenClass != CLAUSE_EOF && tokenClass != CLAUSE_EOL)
     {
-        if (GETCHAR() == target)
-        {         /* is the next character a match?    */
-            this->line_offset++;             /* step over the next                */
-            this->endLocation(location);     /* update the end location part      */
-            return true;                     /* got what we need!                 */
+        // is the next character a match for our target?
+        if (getChar() == target)
+        {
+            // step the position and record where we are as the end position
+            stepPosition()
+            endLocation(location);
+            return true;
         }
     }
     return false;                        // didn't find the one we're looking for
 }
 
+
+/**
+ * Scan over a Rexx comment, including checking for
+ * comment nesting.
+ */
 void LanguageParser::comment()
-/****************************************************************************/
-/* Function:  Scan source to skip over a nest of comments                   */
-/****************************************************************************/
 {
-    int level = 1;                           /* start the comment nesting         */
-    this->line_offset += 2;              /* step over the comment start       */
-    size_t startline = this->line_number;       /* remember the starting position    */
+    // comments can nest, so we need to keep track of our nesting level while
+    // parsing.
+    int level = 1;
+    // step over the starting comment delimiter
+    stepPosition(2);
+
+    // we'll need to remember the starting lineNumber if we have an error.
+    size_t startLine = lineNumber;
+
+    // loop until our nesting level goes to zero.  We can also terminate
+    // via an error if we hit the end of the file without finding the
+    // closing delimiter.
     while (level > 0)
     {                  /* while still in a comment nest     */
-                       /* hit the end of a line?            */
-        if (this->line_offset >= this->current_length)
+
+        // hit the end of a line?, just step to the next line and keep going
+        if (!moreChars())
         {
-            this->nextLine();                /* need to go to the next line       */
-                                             /* no more lines?                    */
-            if (this->line_number > this->line_count)
+            nextLine();
+
+            // but out of lines?  We've got a missing comment terminator
+            if (!moreLines())
             {
-                /* record current position in clause */
-                this->clause->setEnd(this->line_count, this->line_offset);
+                // record the ending position in our current clause
+                clause->setEnd(lineCount, lineOffset);
                 // update the error information
                 clauseLocation = clause->getLocation();
-                /* error, must report                */
                 syntaxError(Error_Unmatched_quote_comment, new_integer(startline));
             }
-            continue;                        /* go loop around                    */
+            // keep scanning for the terminator
+            continue;
         }
-        unsigned int inch = GETCHAR();                  /* get the next character            */
-        this->line_offset++;               /* step past the character           */
-                                           /* is this the end delimeter?        */
-        if (inch == '*' && GETCHAR() == '/')
+
+        // get the current char and step the position.
+        unsigned int inch = nextChar();
+        // at the end delimiter (NB:  followingChar() checks if we're at the end of the line)
+        if (inch == '*' && followingChar() == '/')
         {
-            level--;                         /* reduce the nesting level          */
-            this->line_offset++;             /* step the pointer over the close   */
+            // this is our closer, step over the position and reduce the level.
+            stepPosition();
+            level--;
         }
-        /* start of a new comment?           */
-        else if (inch == '/' && GETCHAR() == '*')
+        // start of a new nested character?
+        else if (inch == '/' && followingChar() == '*')
         {
-            level++;                         /* increment the level               */
-            this->line_offset++;             /* step the pointer over new start   */
+            // we have a new nesting level to process
+            stepPosition();
+            level++;
         }
     }
 }
 
-unsigned int LanguageParser::locateToken(
-  RexxToken *previous )                /* previous token                    */
-/****************************************************************************/
-/* Function:  Locate next significant token in source, skipping extra       */
-/*            blanks and comments.                                          */
-/****************************************************************************/
+/**
+ * Locate the next "real" token in the parsing stream,
+ * skipping extra blanks and comments.
+ *
+ * @param character If this is a "normal" character, this is the character value.
+ * @param blanksSignificant
+ *                  Indicates if blank characters should be considered as
+ *                  significant in the current context.
+ *
+ * @return A type of the next token character.  If the type is
+ *         NORMAL_CHAR, the character is also returned in the
+ *         character reference argument.
+ */
+CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksSignificant)
 {
-    size_t          startline;            /* backward reset line number        */
-    size_t          startoffset;          /* backward reset offset             */
+    // default to having an invalid character
+    character = INVALID_CHARACTER;
 
-    bool            blanks = false;       /* are blanks significant?           */
-
-    unsigned int character = 0;           /* no specific character type yet    */
-                                          /* check if blanks should be returned*/
-    if (previous != OREF_NULL &&          /* no previous token, or             */
-        /* have a symbol, literal, right     */
-        /* paren or right square bracket     */
-        (previous->classId == TOKEN_SYMBOL ||
-         previous->classId == TOKEN_LITERAL ||
-         previous->classId == TOKEN_RIGHT ||
-         previous->classId == TOKEN_SQRIGHT))
+    // no more lines?  indicate a we've hit the end of the file.
+    if (!moreLines())
     {
-        blanks = true;                      /* blanks are significant here       */
+        return CLAUSEEND_EOF;
+    }
+    // or, we could be at the end of the line...still a clause terminator,
+    // but for a different reason.
+    else if (!moreChars())
+    {
+        return CLAUSEEND_EOL;
     }
 
-                                            /* no more lines in file?            */
-    if (this->line_number > this->line_count)
+    // ok, we will scan as long as we have line left.
+    while (moreChars())
     {
-        character = CLAUSEEND_EOF;          /* return an end-of-file             */
-    }
-    else if (!MORELINE())                 /* reached the line end?             */
-    {
-        character = CLAUSEEND_EOL;          /* return an end-of-line             */
-    }
-    else
-    {
-        /* while more program to scan        */
-        while (this->line_offset < this->current_length)
-        {
-            unsigned int inch = GETCHAR();                 /* get the next character            */
-            if (inch==' ' || inch=='\t')
-            {    /* blank or tab?                     */
-                if (blanks)
-                {                   /* is this significant?              */
-                    character = TOKEN_BLANK;      /* have a blank character            */
-                    break;                        /* got what we need                  */
-                }
-                else
-                {
-                    this->line_offset++;          /* step the position                 */
-                    continue;                     /* go around again                   */
-                }
+        // next character from the line.
+        unsigned char inch = getChar();
+        // a recognized whitespace character?
+        if (inch==' ' || inch=='\t')
+        {    /* blank or tab?                     */
+            // if blanks are significant, then return the indicator.
+            if (blanksSignificant) {
+                return SIGNIFICANT_BLANK;
             }
-            /* possible continuation character?  */
-            else if (inch == ',' || inch == '-')
+            else
             {
-                /* line comment?                     */
-                if (inch == '-' && this->line_offset + 1 < this->current_length &&
-                    this->current[this->line_offset + 1] == '-')
+                // an ignorable blank...just step over it and try for another
+                stepPosition();
+            }
+        }
+        // possible continuation character?  We accept either ',' or '-' as a
+        // continuation, but we also need to recognize that "--" is a line comment.
+        else if (inch == ',' || inch == '-')
+        {
+            // line comment?  Just truncate the line and and process as if
+            // we ran out of characters and hit the end of the line.
+            if (inch == '-' && followingChar() == '-')
+            {
+                truncateLine();
+                return CLAUSEEND_EOL;
+            }
+
+            // assume for now that this is a real character...we need to
+            // check for an end-of-line, ignoring any following blanks or comments.
+            character = inch;
+
+            // remember the current positions
+            size_t startOffset = lineOffset;
+            size_t startLine = lineNumber;
+            // step over the current position to continue scanning.
+            stepPosition();
+
+            // skip blanks and tokens.  If we find anything else, we backup and treat
+            // the character we found as a real character.
+            while (true)
+            {
+                // hit the end of the clause while scanning for a continuation?
+                if (!moreChars())
                 {
-                    this->line_offset = this->current_length;
+                    // we've hit the end of the line without finding anything
+                    // other than comments and white space.  If there are
+                    // more lines in the file, we step to the next line.
+                    // The continuation is functionally equivalent to a
+                    // blank, so if blanks are significant, we can stop now,
+                    // otherwise we need to continue scanning for a token character.
+                    if (moreLines())
+                    {
+                        this->nextLine();
+                        if (blanksSignificant) {
+                            return SIGNIFICANT_BLANK;
+                        }
+                    }
                     break;
                 }
 
-                character = inch;               /* assume for now real character     */
-                /* we check for EOL (possibly following blanks and comments)         */
-                startoffset = this->line_offset;/* remember the location             */
-                startline = this->line_number;  /* remember the line position        */
-                this->line_offset++;            /* step the position                 */
+                // grab the next character and check for comments or white space
+                unsigned int inch2 = getChar();
 
-                                                /* skip blanks and comments          */
-                while (this->line_offset < this->current_length)
+                // blanks are common, so check them first.
+                if (inch2 == ' ' || inch2 == '\t')
                 {
-                    unsigned int inch2 = GETCHAR();            /* pick up the next character        */
-                                                  /* comment level start?              */
-                    if (inch2 == '/' && (this->line_offset + 1 < this->current_length) &&
-                        this->current[this->line_offset + 1] == '*')
-                    {
-                        this->comment();            /* go skip over the comment          */
-                        continue;                   /* and continue scanning             */
-                    }
-                    /* line comment?                     */
-                    if (inch2 == '-' && (this->line_offset + 1 < this->current_length) &&
-                        this->current[this->line_offset + 1] == '-')
-                    {
-                        /* go skip overto the end of line    */
-                        this->line_offset = this->current_length;
-                        break;
-                    }
-                    /* non-blank outside comment         */
-                    if (inch2 != ' ' && inch2 != '\t')
-                    {
-                        break;                      /* done scanning                     */
-                    }
-                    this->line_offset++;          /* step over this character          */
+                    stepPosition();
+                    continue;
                 }
-                /* found an EOL?                     */
-                if (this->line_offset >= this->current_length)
+                // start of a traditional comment type?
+                // we just step over the comment and continue.  Note, this might
+                // actually step one or more lines...that's fine, the continuation still
+                // holds.
+                if (inch2 == '/' && followingChar() == '*')
                 {
-                    /* more lines in file?               */
-                    if (this->line_number < this->line_count)
-                    {
-                        this->nextLine();           /* step to the next line             */
-                        if (blanks)
-                        {               /* blanks allowed?                   */
-                            character = TOKEN_BLANK;  /* make this a blank token           */
-                            break;                    /* finished here                     */
-                        }
-                    }
+                    this->comment();
+                    continue;
                 }
-                else
-                {                          /* reset to the starting position    */
-                    this->position(startline, startoffset);
-                    character = inch;             /* this is a real character          */
-                    break;                        /* other non-blank, done scanning    */
+
+                // line comment after a continuation char?  Truncate the line at this
+                // position and loop around again to the end-of-line test so we
+                // will handle the continuation.
+                if (inch2 == '-' && followingChar() == '-')
+                {
+                    truncateLine();
+                    continue;
                 }
-            }
-            /* comment level start?              */
-            else if (inch == '/' && (this->line_offset + 1 < this->current_length) &&
-                     this->current[this->line_offset + 1] == '*')
-            {
-                this->comment();                /* go skip over the comment          */
-            }
-            else
-            {                            /* got the character                 */
-                character = inch;               /* this is a good character          */
-                break;                          /* done looping                      */
+
+                // found something other than ignorable stuff, so the ',' or '-' is
+                // a real character.  Return this now, after stepping back to the
+                // saved position
+                position(startLine, startOffset);
+                character = inch;
+                return NORMAL_CHAR;
             }
         }
-        if (!MORELINE())                    /* fallen off the end of the line?   */
+        // could be a comment start.  Swallow that and continue.  Comments
+        // are always ignored.  Note that his could leave us on a new line.
+        else if (inch == '/' && followingChar() == '*')
         {
-            character = CLAUSEEND_EOL;        /* this is an end of clause          */
+            comment();                /* go skip over the comment          */
+        }
+        else
+        {
+            // got a normal character, so we're done.
+            character = inch;
+            return NORMAL_CHAR;
+            break;                          /* done looping                      */
         }
     }
-    return character;                     /* return the character              */
+
+    // hit the end of the line without finding anything.  Indicate end of clause
+    return CLAUSEEND_EOL;
 }
+
 
 RexxString *LanguageParser::packLiteral(
   size_t     start,                    /* start of the literal in line      */
@@ -617,780 +615,1026 @@ RexxString *LanguageParser::packLiteral(
     return value;                         /* return newly created string       */
 }
 
-RexxToken *LanguageParser::sourceNextToken(
-    RexxToken *previous )              /* previous token scanned off        */
-/*********************************************************************/
-/* Extract a token from the source and create a new token object.    */
-/* The token type and sub-type are set in the token, and any string  */
-/* value extracted.                                                  */
-/*********************************************************************/
+/**
+ * Extract a token from the source and create a new token object.
+ * The token type and sub-type are set in the token, and any string
+ * value extracted.
+ *
+ * @param previous Any previous token, necessary for determining if a
+ *                 blank is significant.  This can be NULL.
+ *
+ * @return A new Token object representing the class of token.
+ */
+RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
 {
-    RexxToken  *token = OREF_NULL;        /* working token                     */
-    RexxString *value;                    /* associate string value            */
-    unsigned int inch;                    /* working input character           */
-    size_t eoffset;                       /* location of exponential           */
-    int    state;                         /* state of symbol scanning          */
-    size_t start;                         /* scan start location               */
-    size_t litend;                        /* end of literal data               */
-    size_t length;                        /* length of extracted token         */
-    int    dot_count;                     /* count of periods in symbol        */
-    unsigned int literal_delimiter;       /* literal string delimiter          */
-    int    type;                          /* type of literal token             */
-    size_t i;                             /* loop counter                      */
-    size_t j;                             /* loop counter                      */
-    int    subclass;                      /* sub type of the token             */
-    int    numeric;                       /* numeric type flag                 */
-    SourceLocation location;              /* token location information        */
-    char   tran;                          /* translated character              */
-    char   badchar[4];                    /* working buffer for errors         */
-    char   hexbadchar[4];                 /* working buffer for errors         */
-
-    /* definitions of states of exponential numeric scan */
-#define EXP_START    0
-#define EXP_EXCLUDED 1
-#define EXP_DIGIT    2
-#define EXP_SPOINT   3
-#define EXP_POINT    4
-#define EXP_E        5
-#define EXP_ESIGN    6
-#define EXP_EDIGIT   7
-
+    // ok, loop util we have a token to return
     for (;;)
-    {                           /* loop until we find a significant  */
-                                /* token                             */
-        inch = this->locateToken(previous);/* locate the next token position    */
+    {
+        // we need to know if blanks are significant in this context.
+        bool blanksSignificant = previous == OREF_NULL ? false : previous->isBlankSignificant();
+        unsigned int inch ;
+
+        // locate the next token position
+        CharacterClass tokenClass = locateToken(inch, blanksSignificant);
 
         // record a starting location.
-        location.setLocation(line_number, line_offset, line_number, line_offset + 1);
+        startLocation(location);
 
-        if (inch == CLAUSEEND_EOF)
-        {       /* reach the end of the source?      */
-            token = OREF_NULL;               /* no token to return                */
-            break;                           /* finished                          */
+        // hit the end of the file while scanning for the next token?  Return nothing
+        if (tokenClass == CLAUSE_EOF)
+        {
+            return OREF_NULL;
         }
-        else if (inch == CLAUSEEND_EOL)
-        {  /* some other end-of-clause          */
-           /* make end the end of the line      */
-            location.setEndOffset(current_length);
-            /* return a clause terminator        */
-            token = this->clause->newToken(TOKEN_EOC, CLAUSEEND_EOL, OREF_NULL, location);
-            this->nextLine();                /* step to the next line             */
-            break;                           /* have something to return          */
+
+        // we hit the end of line on the clause
+        else if (tokenClass == CLAUSE_EOL)
+        {
+            // mark the end offset as the current length of the line.
+            location.setEndOffset(currentLength);
+            // step to the next line and return a terminator token.
+            nextLine()
+            return clause->newToken(TOKEN_EOC, CLAUSEEND_EOL, location);
         }
-        else if (inch == TOKEN_BLANK )
-        {   /* some sort of white space?         */
-            /* now go ahead to the next token    */
-            inch = this->locateToken(OREF_NULL);
-            /* is this blank significant?        */
-            if (inch != CLAUSEEND_EOL  &&    /* not at the end                    */
-                (isSymbolCharacter(inch) ||   /* and next is a symbol token        */
-                 inch == '\"' ||              /* or start of a " quoted literal    */
-                 inch == '\'' ||              /* or start of a ' quoted literal    */
-                 inch == '('  ||              /* or a left parenthesis             */
-                 inch == '['))
-            {              /* or a left square bracket          */
-                           /* return blank token                */
-                token = this->clause->newToken(TOKEN_BLANK, OPERATOR_BLANK, (RexxString *)OREF_BLANK, location);
-            }
-            else                             /* non-significant blank             */
+
+        // we have what should be a significant blank character
+        else if (tokenClass == SIGNIFICANT_BLANK )
+        {
+            // ok, this is possibly a significant blanks, so scan ahead to the
+            // next real token, ignoring the possibility of additional blanks.
+            tokenClass = locateToken(inch, false);
+
+            // in order for this blank to be truely significant, the next token
+            // needs to be the start of a symbol, the start of a quoted literal,
+            // or a paren or square bracket.
+            if (inch == NORMAL_CHAR &&  (isSymbolCharacter(inch) ||
+                 inch == '\"' || inch == '\'' ||
+                 inch == '('  || inch == '['))
             {
-                continue;                      /* just loop around again            */
+                // this is a blank operator token
+                return clause->newToken(TOKEN_BLANK, OPERATOR_BLANK, OREF_BLANK, location);
             }
+
+            // this is actually a non-significant blank, try again.
+            continue;
         }
         else
-        {                             /* non-special token type            */
-                                      /* process different token types     */
-            tran = translateChar(inch);      /* do the table mapping              */
+        {
+            // we've handled the special categories, so now process based on the
+            // what we find in the first character.
+
+            // translate this character to see if we have a good symbol character.
+            tran = translateChar(inch);
             if (tran != 0)
-            {                 /* have a symbol character?          */
-                state = EXP_START;             /* in a clean state now              */
-                eoffset = 0;                   /* no exponential sign yet           */
-                start = this->line_offset;     /* remember token start position     */
-                dot_count = 0;                 /* no periods yet                    */
-                for (;;)
-                {                     /* loop through the token            */
-                    if (inch == '.')             /* have a period?                    */
-                    {
-                        dot_count++;               /* remember we saw this one          */
-                    }
-
-                    /* finite state machine to establish numeric constant (with possible     */
-                    /* included sign in exponential form)                                    */
-
-                    switch (state)
-                    {             /* process based on current state    */
-
-                        case EXP_START:            /* beginning of scan                 */
-                            /* have a digit at the start?        */
-                            if (inch >= '0' && inch <= '9')
-                            {
-                                state = EXP_DIGIT;     /* now scanning digits               */
-                            }
-                            else if (inch == '.')    /* start with a decimal point?       */
-                            {
-                                state = EXP_SPOINT;    /* now scanning after the decimal    */
-                            }
-                            else                     /* must be a non-numeric character   */
-                            {
-                                state = EXP_EXCLUDED;  /* no longer a number                */
-                            }
-                            break;                   /* go process the next character     */
-
-                        case EXP_DIGIT:            /* have at least one digit mantissa  */
-                            if (inch=='.')           /* decimal point?                    */
-                            {
-                                state = EXP_POINT;     /* we've hit a decimal point         */
-                            }
-                            else if (tran=='E')      /* start of exponential?             */
-                            {
-                                state = EXP_E;         /* remember we've had the 'E' form   */
-                            }
-                                                       /* non-digit?                        */
-                            else if (inch < '0' || inch > '9')
-                            {
-                                state = EXP_EXCLUDED;  /* no longer scanning a number       */
-                            }
-                            /* a digit leaves the state unchanged at EXP_DIGIT                      */
-                            break;                   /* go get the next character         */
-
-                        case EXP_SPOINT:           /* leading decimal point             */
-                            /* not a digit?                      */
-                            if (inch < '0' || inch > '9')
-                            {
-                                state = EXP_EXCLUDED;  /* not a number                      */
-                            }
-                            else                     /* digit character                   */
-                            {
-                                state = EXP_POINT;     /* processing a decimal number       */
-                            }
-                            break;                   /* go process the next character     */
-
-                        case EXP_POINT:            /* have a decimal point              */
-                            if (tran == 'E')         /* found the exponential?            */
-                            {
-                                state = EXP_E;         /* set exponent state                */
-                            }
-                                                       /* non-digit found?                  */
-                            else if (inch < '0' || inch > '9')
-                            {
-                                state = EXP_EXCLUDED;  /* can't be a number                 */
-                            }
-                            /* a digit leaves the state unchanged at EXP_POINT                  */
-                            break;                   /* go get another character          */
-
-                        case EXP_E:                /* just had an exponent              */
-                            /* next one a digit?                 */
-                            if (inch >= '0' && inch <= '9')
-                            {
-                                state = EXP_EDIGIT;    /* now looking for exponent digits   */
-                            }
-                            /* a sign will be collected by the apparent end of symbol code below */
-                            break;                   /* finished                          */
-
-                        case EXP_ESIGN:            /* just had a signed exponent        */
-                            /* got a digit?                      */
-                            if (inch >= '0' && inch <= '9')
-                            {
-                                state = EXP_EDIGIT;    /* now looking for the exponent      */
-                            }
-                            else
-                            {
-                                state = EXP_EXCLUDED;  /* can't be a number                 */
-                            }
-                            break;                   /* go get the next digits            */
-
-                        case EXP_EDIGIT:           /* processing the exponent digits    */
-                            /* not a digit?                      */
-                            if (inch < '0' || inch > '9')
-                            {
-                                state = EXP_EXCLUDED;  /* can't be a number                 */
-                            }
-                            break;                   /* go get the next character         */
-
-                            /* once EXP_EXCLUDED is reached the state doesn't change */
-                    }
-                    this->line_offset++;         /* step the source pointer           */
-                                                 /* had a bad exponent part?          */
-                    if (eoffset && state == EXP_EXCLUDED)
-                    {
-                        /* back up the scan pointer          */
-                        this->line_offset = eoffset;
-                        break;                     /* and we're finished with this      */
-                    }
-                    if (!MORELINE())             /* reached the end of the line?      */
-                    {
-                        break;                     /* done processing                   */
-                    }
-
-                    inch = GETCHAR();            /* get the next character            */
-                    tran = translateChar(inch);  /* translate the next character      */
-                    if (tran != 0)               /* good symbol character?            */
-                    {
-                        continue;                  /* loop through the state machine    */
-                    }
-                                                   /* check for sign in correct state   */
-                    if (state == EXP_E && (inch == '+' || inch == '-'))
-                    {
-                        /* remember current position         */
-                        eoffset = this->line_offset;
-                        state = EXP_ESIGN;         /* now looking for the exponent      */
-                        this->line_offset++;       /* step past the sign                */
-                        if (!MORELINE())
-                        {         /* reached the end of the line?      */
-                            state = EXP_EXCLUDED;    /* can't be a number                 */
-                            break;                   /* quit looping                      */
-                        }
-                        inch = GETCHAR();          /* get the next character            */
-                        tran = translateChar(inch);/* translate the next character      */
-                        if (tran != 0)             /* good character?                   */
-                        {
-                            continue;                /* loop around                       */
-                        }
-                        else
-                        {                     /* bad character                     */
-                            state = EXP_EXCLUDED;    /* not a number                      */
-                            break;                   /* break out of here                 */
-                        }
-                    }
-                    else
-                    {
-                        break;                     /* reached a non-symbol character    */
-                    }
-                }
-                /* this must be the end of the symbol - check whether we have too much   */
-                /* need to step backward?            */
-                if (eoffset && state != EXP_EDIGIT)
-                {
-                    this->line_offset = eoffset; /* restore the source pointer        */
-                }
-                                                 /* get the token length              */
-                length = this->line_offset - start;
-                value = raw_string(length);    /* get the final value               */
-                numeric = 0;                   /* not a numeric constant yet        */
-                for (i = 0; i < length; i++)
-                { /* copy over and translate the value */
-                  /* copy over the symbol value        */
-                  /* (translating to uppercase         */
-                  /* get the next character            */
-                    inch = this->current[start + i];
-                    if (isSymbolCharacter(inch))       /* normal symbol character (not +/-) */
-                    {
-                        inch = translateChar(inch);      /* translate to uppercase            */
-                    }
-                    value->putChar(i, inch);
-                }
-                value->setUpperOnly();         /* only contains uppercase           */
-                                               /* now force to a common string      */
-                value = this->commonString(value);
-                /* record current position in clause */
-                this->clause->setEnd(this->line_number, this->line_offset);
-                if (length > (size_t)MAX_SYMBOL_LENGTH)/* result too long?                  */
-                {
-                    // update the error information
-                    clauseLocation = clause->getLocation();
-                    /* report the error                  */
-                    syntaxError(Error_Name_too_long_name, value);
-                }
-                inch = this->current[start];   /* get the first character           */
-                if (length == 1 && inch == '.')/* have a solo period?               */
-                {
-                    subclass = SYMBOL_DUMMY;     /* this is the place holder          */
-                }
-                                                 /* have a digit?                     */
-                else if (inch >= '0' && inch <= '9')
-                {
-                    subclass = SYMBOL_CONSTANT;  /* have a constant symbol            */
-                                                 /* can we optimize to an integer?    */
-                    if (state == EXP_DIGIT && length < Numerics::DEFAULT_DIGITS)
-                    {
-                        /* no leading zero or only zero?     */
-                        if (inch != '0' || length == 1)
-                        {
-                            /* we can make this an integer object*/
-                            numeric = INTEGER_CONSTANT;
-                        }
-                    }
-                }
-                else if (inch == '.')
-                {
-                   /* this is an environment symbol     */
-                   subclass = SYMBOL_DOTSYMBOL;
-                }
-                else
-                {                         /* variable type symbol              */
-                                          /* set the default extended type     */
-                    subclass = SYMBOL_VARIABLE;
-                    if (dot_count > 0)
-                    {         /* have a period in the name?        */
-                              /* end in a dot?                     */
-                        if (dot_count == 1 && value->getChar(length-1) == '.')
-                        {
-                            /* this is a stem variable           */
-                            subclass = SYMBOL_STEM;
-                        }
-                        else                       /* have a compound variable          */
-                        {
-                            subclass = SYMBOL_COMPOUND;
-                        }
-                    }
-                }
-                this->endLocation(location);   /* record the end position           */
-                                               /* get a symbol token                */
-                token = this->clause->newToken(TOKEN_SYMBOL, subclass, value, location);
-                token->setNumeric(numeric);    /* record any numeric side info      */
+            {
+                // scan off a symbol and return it.
+                return scanSymbol();
             }
-            /* start of a quoted string?         */
+            // go scan a literal string
             else if (inch=='\'' || inch=='\"')
             {
-                literal_delimiter = inch;      /* save the starting character       */
-                start = this->line_offset + 1; /* save the starting point           */
-                dot_count = 0;                 /* no doubled quotes yet             */
-                type = 0;                      /* working with a straight literal   */
-                for (;;)
-                {                   /* spin through the string           */
-                    this->line_offset++;       /* step the pointer                  */
-                    if (!MORELINE())
-                    {         /* reached the end of the line?      */
-                              /* record current position in clause */
-                        this->clause->setEnd(this->line_number, this->line_offset);
-                        // update the error information
-                        clauseLocation = clause->getLocation();
-                        if (literal_delimiter == '\'')
-                        {
-                            /* raise the appropriate error       */
-                            syntaxError(Error_Unmatched_quote_single);
-                        }
-                        else
-                        {
-                            /* must be a double quote            */
-                            syntaxError(Error_Unmatched_quote_double);
-                        }
-                    }
-                    inch = GETCHAR();          /* get the next character            */
-                                               /* is this the delimiter?            */
-                    if (literal_delimiter == inch)
-                    {
-                        /* remember end location             */
-                        litend = this->line_offset - 1;
-                        this->line_offset++;     /* step to the next character        */
-                        if (!MORELINE())         /* end of the line?                  */
-                        {
-                            break;                 /* we're finished                    */
-                        }
-                        inch = GETCHAR();        /* get the next character            */
-                                                 /* not a doubled quote?              */
-                        if (inch != literal_delimiter)
-                        {
-                            break;                 /* got the end                       */
-                        }
-                        dot_count++;             /* remember count of doubled quotes  */
-                    }
-                }
-                if (MORELINE())
-                {              /* have more on this line?           */
-                    inch = GETCHAR();            /* get the next character            */
-                                                 /* potentially a hex string?         */
-                    if (inch == 'x' || inch == 'X')
-                    {
-                        this->line_offset++;       /* step to the next character        */
-                                                   /* the end of the line, or           */
-                                                   /* have another symbol character     */
-                        if (MORELINE() && isSymbolCharacter(GETCHAR()))
-                        {
-                            this->line_offset--;     /* step back to the X                */
-                        }
-                        else
-                        {
-                            type = LITERAL_HEX;      /* set the appropriate type          */
-                        }
-                    }
-                    /* potentially a binary string?      */
-                    else if (inch == 'b' || inch == 'B')
-                    {
-                        this->line_offset++;       /* step to the next character        */
-                                                   /* the end of the line, or           */
-                                                   /* have another symbol character     */
-                        if (MORELINE() && isSymbolCharacter(GETCHAR()))
-                        {
-                            this->line_offset--;     /* step back to the B                */
-                        }
-                        else
-                        {
-                            type = LITERAL_BIN;      /* set the appropriate type          */
-                        }
-                    }
-                }
-                length = litend - start + 1;   /* calculate the literal length      */
-                                               /* record current position in clause */
-                this->clause->setEnd(this->line_number, this->line_offset);
-                if (type)                      /* need to pack a literal?           */
-                {
-                    /* compress into packed form         */
-                    value = this->packLiteral(start, litend - start + 1, type) ;
-                }
-                else
-                {
-                    length = litend - start + 1; /* get length of literal data        */
-                                                 /* get the final value string        */
-                    value = raw_string(length - dot_count);
-                    /* copy over and translate the value */
-                    for (i = 0, j = 0; j < length; i++, j++)
-                    {
-                        /* get the next character            */
-                        inch = this->current[start + j];
-                        /* same as our delimiter?            */
-                        if (inch == literal_delimiter)
-                        {
-                            j++;                     /* step one extra                    */
-                        }
-                        value->putChar(i, inch);   /* copy over the literal data        */
-                    }
-                    /* now force to a common string      */
-                    value = this->commonString(value);
-                }
-                this->endLocation(location);  /* record the end position           */
-                /* get a string token                */
-                token = this->clause->newToken(TOKEN_LITERAL, 0, value, location);
+                return scanLiteral();
             }
+            // we have some other special character
             else
-            {                           /* other special character           */
-                this->line_offset++;            /* step past it                      */
+            {
+                // step past the operator character position...we might need
+                // to look at additional characters
+                stepPosition();
 
                 switch (inch)
-                {                 /* process operators and punctuation */
+                {
+                    // these are likely various option or punctuation characters.
 
-                    case ')':                     /* right parenthesis?                */
-                        /* this is a special character class */
-                        token = this->clause->newToken(TOKEN_RIGHT, 0, OREF_NULL, location);
+                    // closing paren (')')
+                    case ')':
+                    {
+                        return clause->newToken(TOKEN_RIGHT, location);
                         break;
+                    }
 
-                    case ']':                     /* right square bracket              */
-                        /* this is a special character class */
-                        token = this->clause->newToken(TOKEN_SQRIGHT, 0, OREF_NULL, location);
+                    // closing square bracket (']')
+                    case ']':
+                    {
+                        return clause->newToken(TOKEN_SQRIGHT, location);
                         break;
+                    }
 
-                    case '(':                     /* left parenthesis                  */
-                        /* this is a special character class */
-                        token = this->clause->newToken(TOKEN_LEFT, 0, OREF_NULL, location);
+                    // open paren ('(')
+                    case '(':
+                    {
+                        return clause->newToken(TOKEN_LEFT, location);
                         break;
+                    }
 
-                    case '[':                     /* left square bracket               */
-                        /* this is a special character class */
-                        token = this->clause->newToken(TOKEN_SQLEFT, 0, OREF_NULL, location);
+                    // open left bracket ('[')
+                    case '[':
+                    {
+
+                        return clause->newToken(TOKEN_SQLEFT, location);
                         break;
+                    }
 
-                    case ',':                     /* comma                             */
-                        /* this is a special character class */
-                        token = this->clause->newToken(TOKEN_COMMA, 0, OREF_NULL, location);
+                    // comma...probably an argument list delimiter, since
+                    // continuation commas are handled at scan time.
+                    case ',':
+                    {
+                        return clause->newToken(TOKEN_COMMA, location);
                         break;
+                    }
 
-                    case ';':                     /* semicolon                         */
-                        /* this is a special character class */
-                        token = this->clause->newToken(TOKEN_EOC, CLAUSEEND_SEMICOLON, OREF_NULL, location);
+                    // semicolon...always a clause terminator
+                    case ';':
+                    {
+                        return clause->newToken(TOKEN_EOC, CLAUSEEND_SEMICOLON, location);
                         break;
+                    }
 
-                    case ':':                     /* colon                             */
-                        /* next one a colon also?            */
-                        if (this->nextSpecial(':', location))
+                    // colon...lots uses depending on context.
+                    case ':':
+                    {
+                        // next one a colon also?
+                        if (nextSpecial(':', location))
                         {
-                            /* this is a special character class */
-                            token = this->clause->newToken(TOKEN_DCOLON, 0, OREF_NULL, location);
+                            // double colon is a special character class.
+                            return clause->newToken(TOKEN_DCOLON, location);
                         }
                         else
                         {
-                            /* this is a special character class */
-                            token = this->clause->newToken(TOKEN_COLON, 0, OREF_NULL, location);
+                            // single is nothing special
+                            return clause->newToken(TOKEN_COLON, location);
                         }
                         break;
+                    }
 
-                    case '~':                     /* message send?                     */
-                        /* next one a tilde also?            */
+                    // the twiddle...we also handle the double case as a special
+                    case '~':
+                    {
                         if (this->nextSpecial('~', location))
-                            /* this is a special character class */
-                            token = this->clause->newToken(TOKEN_DTILDE, 0, OREF_NULL, location);
-                        else
-                            /* this is a special character class */
-                            token = this->clause->newToken(TOKEN_TILDE, 0, OREF_NULL, location);
-                        break;
-
-                    case '+':                     /* plus sign                         */
-                        /* addition operator                 */
-                        token = OPERATOR(PLUS);     /* this is an operator class         */
-                        CHECK_ASSIGNMENT(PLUS, token); // this is allowed as an assignment shortcut
-                        break;
-
-                    case '-':                     /* minus sign                        */
-                        /* subtraction operator              */
-                        token = OPERATOR(SUBTRACT); /* this is an operator class         */
-                        CHECK_ASSIGNMENT(SUBTRACT, token); // this is allowed as an assignment shortcut
-                        break;
-
-                    case '%':                     /* percent sign                      */
-                        /* integer divide operator           */
-                        token = OPERATOR(INTDIV);   /* this is an operator class         */
-                        CHECK_ASSIGNMENT(INTDIV, token);  // this is allowed as an assignment shortcut
-                        break;
-
-                    case '/':                     /* forward slash                     */
-                        /* this is division                  */
-                        /* next one a slash also?            */
-                        if (this->nextSpecial('/', location))
                         {
-
-                            token = OPERATOR(REMAINDER);
-                            CHECK_ASSIGNMENT(REMAINDER, token);  // this is allowed as an assignment shortcut
+                            // this is a special character class
+                            return clause->newToken(TOKEN_DTILDE, location);
                         }
-                        /* this is an operator class         */
                         else
                         {
-                            token = OPERATOR(DIVIDE); /* this is an operator class         */
-                            CHECK_ASSIGNMENT(DIVIDE, token);  // this is allowed as an assignment shortcut
+                            return clause->newToken(TOKEN_TILDE, location);
                         }
                         break;
+                    }
 
-                    case '*':                     /* asterisk?                         */
-                        /* this is multiply                  */
-                        /* next one a star also?             */
+                    // addition operator
+                    case '+':
+                    {
+                        CHECK_ASSIGNMENT(PLUS);                       // this is allowed as an assignment shortcut
+                        break;
+                    }
+
+                    // subtraction operator
+                    case '-':
+                    {
+                        CHECK_ASSIGNMENT(SUBTRACT);                  // this is allowed as an assignment shortcut
+                        break;
+                    }
+
+                    // integer division operator
+                    case '%':
+                    {
+                        CHECK_ASSIGNMENT(INTDIV);                   // this is allowed as an assignment shortcut
+                        break;
+                    }
+
+                    // division, or first char of remainder operator
+                    case '/':
+                    {
+                        // two slashes is a special operator
+                        if (nextSpecial('/', location))
+                        {
+                            // remainder operatior
+                            RexxToken *token = OPERATOR(REMAINDER);
+                        }
+                        // normal division
+                        else
+                        {
+                            CHECK_ASSIGNMENT(DIVIDE);  // this is allowed as an assignment shortcut
+                        }
+                        break;
+                    }
+
+                    // multiply, or potentially a power operator
+                    case '*':
+                    {
+                        // two start is power
                         if (this->nextSpecial('*', location))
                         {
-                            token = OPERATOR(POWER);  /* this is an operator class         */
-                            CHECK_ASSIGNMENT(POWER, token);  // this is allowed as an assignment shortcut
+                            return OPERATOR(POWER);  // this is not an assignment operator
                         }
-                        else                        /* this is an operator class         */
+                        // standard multiply
+                        else
                         {
-
-                            token = OPERATOR(MULTIPLY);
-                            CHECK_ASSIGNMENT(MULTIPLY, token);  // this is allowed as an assignment shortcut
+                            CHECK_ASSIGNMENT(MULTIPLY)          // this is allowed as an assignment shortcut
                         }
                         break;
+                    }
 
-                    case '&':                     /* ampersand?                        */
-                        /* this is the and operator          */
-                        /* next one an ampersand also?       */
+                    // ampersand...an AND or XOR operator
+                    case '&':
+                    {
+                        // double ampersand?
                         if (this->nextSpecial('&', location))
                         {
 
-                            token = OPERATOR(XOR);    /* this is an operator class         */
-                            CHECK_ASSIGNMENT(XOR, token);  // this is allowed as an assignment shortcut
+                            CHECK_ASSIGNMENT(XOR);  // this is allowed as an assignment shortcut
                         }
-                        else                        /* this is an operator class         */
+                        // simple AND operation
+                        else
                         {
-                            token = OPERATOR(AND);
-                            CHECK_ASSIGNMENT(AND, token);  // this is allowed as an assignment shortcut
+                            CHECK_ASSIGNMENT(AND);         // this is allowed as an assignment shortcut
                         }
                         break;
+                    }
 
-                    case '|':                     /* vertical bar?                     */
-                        /* this is an or operator            */
-                        /* next one a vertical bar also?     */
-                        if (this->nextSpecial('|', location))
-                        {
-                            /* this is a concatenation           */
-                            token = OPERATOR(CONCATENATE);
-                            CHECK_ASSIGNMENT(CONCATENATE, token);  // this is allowed as an assignment shortcut
-                        }
-                        else                        /* this is an operator class         */
-                        {
+                    // vertical bar...could be the logical OR or concatenate.
+                    case '|':
+                    {
+                         // doubled is concatenate, which cannot be used as an assignment shortcut.
+                         if (this->nextSpecial('|', location))
+                         {
+                             return OPERATOR(CONCATENATE);
+                         }
+                         // logical OR, which can be an assignment shortcut
+                         else
+                         {
+                             CHECK_ASSIGNMENT(OR);         // this is allowed as an assignment shortcut
+                         }
+                         break;
+                    }
 
-                            token = OPERATOR(OR);     /* this is the OR operator           */
-                            CHECK_ASSIGNMENT(OR, token);  // this is allowed as an assignment shortcut
-                        }
-                        break;
-
-                    case '=':                     /* equal sign?                       */
-                        /* set this an an equal              */
-                        /* next one an equal sign also?      */
+                    // equal sign...doubled can have special meaning too.
+                    case '=':
+                    {
+                        // double is a strict equal operator
                         if (this->nextSpecial('=', location))
                         {
-                            /* this is an operator class         */
-                            token = OPERATOR(STRICT_EQUAL);
+                            return OPERATOR(STRICT_EQUAL);
                         }
-                        else                        /* this is an operator class         */
+                        // simple equal
+                        else
                         {
-                            token = OPERATOR(EQUAL);
+                            return OPERATOR(EQUAL);
                         }
                         break;
+                    }
 
-                    case '<':                     /* less than sign?                   */
-                        /* next one a less than also?        */
-                        if (this->nextSpecial('<', location))
+                    // less than sign...could be quite a few operators depending
+                    // on what it is followed by
+                    case '<':
+                    {
+                         // << or <<=
+                         if (this->nextSpecial('<', location))
+                         {
+                             // <<=
+                             if (this->nextSpecial('=', location))
+                             {
+                                 return OPERATOR(STRICT_LESSTHAN_EQUAL);
+                             }
+                             // <<
+                             else
+                             {
+                                 token = OPERATOR(STRICT_LESSTHAN);
+                             }
+                         }
+                         // <=
+                         else if (this->nextSpecial('=', location))
+                         {
+                             return OPERATOR(LESSTHAN_EQUAL);
+                         }
+                         // <>
+                         else if (this->nextSpecial('>', location))
+                         {
+                             return OPERATOR(LESSTHAN_GREATERTHAN);
+                         }
+                         // just plain old <
+                         else
+                         {
+                             return OPERATOR(LESSTHAN);
+                         }
+                         break;
+                    }
+
+                    // greater than sign.  Like less than, a lot of
+                    // operators start with this.
+                    case '>':
+                    {
+                        // >> or >>=
+                        if (nextSpecial('>', location))
                         {
-                            /* have an equal sign after that?    */
-                            if (this->nextSpecial('=', location))
+                            // >>=
+                            if (nextSpecial('=', location))
                             {
-                                /* this is an operator class         */
-                                token = OPERATOR(STRICT_LESSTHAN_EQUAL);
+                                return OPERATOR(STRICT_GREATERTHAN_EQUAL);
                             }
-                            else                      /* this is an operator class         */
+                            // >>
+                            else
                             {
-                                token = OPERATOR(STRICT_LESSTHAN);
+                                return OPERATOR(STRICT_GREATERTHAN);
                             }
                         }
-                        /* next one an equal sign?           */
+                        // >=
                         else if (this->nextSpecial('=', location))
                         {
-                            /* this is the <= operator           */
-                            token = OPERATOR(LESSTHAN_EQUAL);
+                            return OPERATOR(GREATERTHAN_EQUAL);
                         }
-                        /* next one a greater than sign?     */
-                        else if (this->nextSpecial('>', location))
-                        {
-                            /* this is the <> operator           */
-                            token = OPERATOR(LESSTHAN_GREATERTHAN);
-                        }
-                        else                        /* this simply the < operator        */
-                        {
-                            token = OPERATOR(LESSTHAN);
-                        }
-                        break;
-
-                    case '>':                     /* greater than sign?                */
-                        /* next one a greater than also?     */
-                        if (this->nextSpecial('>', location))
-                        {
-                            /* have an equal sign after that?    */
-                            if (this->nextSpecial('=', location))
-                            {
-                                /* this is the >>= operator          */
-                                token = OPERATOR(STRICT_GREATERTHAN_EQUAL);
-                            }
-                            else                      /* this is the >> operator           */
-                            {
-                                token = OPERATOR(STRICT_GREATERTHAN);
-                            }
-                        }
-                        /* next one an equal sign?           */
-                        else if (this->nextSpecial('=', location))
-                        {
-                            /* this is the >= operator           */
-                            token = OPERATOR(GREATERTHAN_EQUAL);
-                        }
-                        /* next one a less than sign?        */
+                        // ><
                         else if (this->nextSpecial('<', location))
                         {
-                            /* this is the <> operator           */
-                            token = OPERATOR(GREATERTHAN_LESSTHAN);
+                            return OPERATOR(GREATERTHAN_LESSTHAN);
                         }
-                        else                        /* this simply the > operator        */
+                        // Just >
+                        else
                         {
-                            token = OPERATOR(GREATERTHAN);
+                            return OPERATOR(GREATERTHAN);
                         }
                         break;
+                    }
 
-                    case '\\':                    /* backslash                         */
-                        /* next one an equal sign?           */
+                    // backslash...logical not or a negated comparison
+                    case '\\':
+                    {
+                        // \=
                         if (this->nextSpecial('=', location))
                         {
-                            /* have an equal sign after that?    */
+                            // \==
                             if (this->nextSpecial('=', location))
                             {
-                                /* this is the \== operator          */
-                                token = OPERATOR(STRICT_BACKSLASH_EQUAL);
+                                return OPERATOR(STRICT_BACKSLASH_EQUAL);
                             }
-                            else                      /* this is the \= operator           */
+                            // \=
+                            else
                             {
-                                token = OPERATOR(BACKSLASH_EQUAL);
+                                return OPERATOR(BACKSLASH_EQUAL);
                             }
                         }
-                        /* next one a greater than sign?     */
+                        // \> variations
                         else if (this->nextSpecial('>', location))
                         {
-                            /* have another greater than next?   */
+                            // \>>
                             if (this->nextSpecial('>', location))
                             {
-                                /* this is the \>> operator          */
-                                token = OPERATOR(STRICT_BACKSLASH_GREATERTHAN);
+                                return OPERATOR(STRICT_BACKSLASH_GREATERTHAN);
                             }
-                            else                      /* this is the \> operator           */
+                            // \>
+                            else
                             {
-                                token = OPERATOR(BACKSLASH_GREATERTHAN);
+                                return OPERATOR(BACKSLASH_GREATERTHAN);
                             }
                         }
-                        /* next one a less than sign?        */
+                        // \< variations s than sign?        */
                         else if (this->nextSpecial('<', location))
                         {
-                            /* have another less than next?      */
+                            // \<<
                             if (this->nextSpecial('<', location))
                             {
-                                /* this is the \<< operator          */
-                                token = OPERATOR(STRICT_BACKSLASH_LESSTHAN);
+                                return OPERATOR(STRICT_BACKSLASH_LESSTHAN);
                             }
-                            else                      /* this is the \< operator           */
+                            // \<
+                            else
                             {
-                                token = OPERATOR(BACKSLASH_LESSTHAN);
+                                return OPERATOR(BACKSLASH_LESSTHAN);
                             }
                         }
-                        else                        /* this is just the NOT operator     */
-                        {
-                            token = OPERATOR(BACKSLASH);
-                        }
-                        break;
-
-                    // we accept either of these as alternatives
-                    case (unsigned char)0xAA:      /* logical not  (need unsigned cast) */
-                    case (unsigned char)0xAC:      /* logical not  (need unsigned cast) */
-                        /* next one an equal sign?           */
-                        if (this->nextSpecial('=', location))
-                        {
-                            /* have an equal sign after that?    */
-                            if (this->nextSpecial('=', location))
-                            {
-                                /* this is the \== operator          */
-                                token = OPERATOR(STRICT_BACKSLASH_EQUAL);
-                            }
-                            else                      /* this is the \= operator           */
-                            {
-                                token = OPERATOR(BACKSLASH_EQUAL);
-                            }
-                        }
-                        /* next one a greater than sign?     */
-                        else if (this->nextSpecial('>', location))
-                        {
-                            /* have another greater than next?   */
-                            if (this->nextSpecial('>', location))
-                            {
-                                /* this is the \>> operator          */
-                                token = OPERATOR(STRICT_BACKSLASH_GREATERTHAN);
-                            }
-                            else                      /* this is the \> operator           */
-                            {
-                                token = OPERATOR(BACKSLASH_GREATERTHAN);
-                            }
-                        }
-                        /* next one a less than sign?        */
-                        else if (this->nextSpecial('<', location))
-                        {
-                            /* have another less than next?      */
-                            if (this->nextSpecial('<', location))
-                            {
-                                /* this is the \<< operator          */
-                                token = OPERATOR(STRICT_BACKSLASH_LESSTHAN);
-                            }
-                            else                      /* this is the \< operator           */
-                            {
-                                token = OPERATOR(BACKSLASH_LESSTHAN);
-                            }
-                        }                           /* this is just the BACKSLASH operator     */
+                        // simple \ logical not
                         else
                         {
                             token = OPERATOR(BACKSLASH);
                         }
                         break;
+                    }
 
-                    default:                      /* something else found              */
-                        /* record current position in clause */
-                        this->clause->setEnd(this->line_number, this->line_offset);
+                    // we accept either of these as alternatives.  This is the similar
+                    // situation as \...lots of variants
+                    case (unsigned char)0xAA:      /* logical not  (need unsigned cast) */
+                    case (unsigned char)0xAC:      /* logical not  (need unsigned cast) */
+                    {
+                        // not equal variants                */
+                        if (this->nextSpecial('=', location))
+                        {
+                            // not ==
+                            if (this->nextSpecial('=', location))
+                            {
+                                return OPERATOR(STRICT_BACKSLASH_EQUAL);
+                            }
+                            // not =
+                            else
+                            {
+                                return OPERATOR(BACKSLASH_EQUAL);
+                            }
+                        }
+                        // not > variants
+                        else if (this->nextSpecial('>', location))
+                        {
+                            // not >>
+                            if (this->nextSpecial('>', location))
+                            {
+                                return OPERATOR(STRICT_BACKSLASH_GREATERTHAN);
+                            }
+                            // not >
+                            else
+                            {
+                                return OPERATOR(BACKSLASH_GREATERTHAN);
+                            }
+                        }
+                        // not < variants
+                        else if (this->nextSpecial('<', location))
+                        {
+                            // not <<
+                            if (this->nextSpecial('<', location))
+                            {
+                                return OPERATOR(STRICT_BACKSLASH_LESSTHAN);
+                            }
+                            // not <
+                            else
+                            {
+                                return OPERATOR(BACKSLASH_LESSTHAN);
+                            }
+                        }
+                        // just a logical NOT
+                        else
+                        {
+                            return OPERATOR(BACKSLASH);
+                        }
+                        break;
+                    }
+
+                    // invalid character of some type
+                    default:
+                    {
+                        char   badchar[4];                    // working buffers for the errors
+                        char   hexbadchar[4];
+
+                        // mark current position n in clause */
+                        clause->setEnd(lineNumber, lineOffset);
                         // update the error information
                         clauseLocation = clause->getLocation();
                         sprintf(badchar, "%c", inch);
                         sprintf(hexbadchar, "%2.2X", inch);
-                        /* report the error                  */
+                        // report the error with the invalid character displayed normally and in hex.
                         syntaxError(Error_Invalid_character_char, new_string(badchar), new_string(hexbadchar));
                         break;
+                    }
                 }
             }
         }
         break;                             /* have a token now                  */
     }
     return token;                        /* return the next token             */
+}
+
+/**
+ * Scan a symbol from the source and return a token
+ * identifying the type of symbol (constant, dot, variable, etc.).
+ *
+ * @return A token object describing the symbol.
+ */
+RexxToken *LanguageParser::scanSymbol()
+{
+
+// different scanning states for scanning numeric symbols
+enum
+{
+    EXP_START,
+    EXP_EXCLUDED,
+    EXP_DIGIT,
+    EXP_SPOINT,
+    EXP_POINT,
+    EXP_E,
+    EXP_ESIGN,
+    EXP_EDIGIT,
+} SymbolScanState;
+
+    // we're in a clean scan state now
+    SymbolScanState state = EXP_START;
+    size_t eoffset = 0;                   // position of expoential sign for backing up.
+    size_t start = lineOffset;            // remember token start position
+    int dotCount = 0;                     // no periods yet
+
+    // set the start position for the token
+    SourceLocation location;
+    startLocation(location;)
+
+    unsigned int getChar();               // ok, get the current character to start this off
+    // ok, loop through the token until we've consumed it all.
+    for (;;)
+    {
+        // keep a count of periods...we use this to determine stem/compound and numeric values
+        if (inch == '.')
+        {
+            dotCount++;
+        }
+
+        // finite state machine to establish numeric constant (with possible
+        // included sign in exponential form)
+
+        switch (state)
+        {
+            // this is our beginning state...we know nothing about this symbol yet.
+
+            case EXP_START:
+            {
+                // have a digit at the start?  Potential number, so
+                // we're looking for digits here.
+                if (inch >= '0' && inch <= '9')
+                {
+                    state = EXP_DIGIT;
+                }
+                // if this is a dot, then we've got a starting decimal
+                // point.  This could be a number or an environment symbol
+                else if (inch == '.')
+                {
+                    state = EXP_SPOINT;
+                }
+                // a non-numeric character.  A number is not possible.
+                else
+                {
+                    state = EXP_EXCLUDED;
+                }
+                break;
+            }
+
+            // we're scanning digits, still potentially a number.
+            case EXP_DIGIT:
+            {
+                // is this a period?  Since we're scanning digits, this
+                // is must be the first period and is a decimal point.
+                // switch to scanning the part after the decimal.
+                if (inch=='.')
+                {
+                    state = EXP_POINT;
+                }
+                // So far, the form is "digitsE"...this can still be a number,
+                // but know we're looking for an exponent.
+                else if (inch=='E' | inch == 'e')
+                {
+                    state = EXP_E;
+                }
+                // other non-digit?  We're no longer scanning a number.
+                else if (inch < '0' || inch > '9')
+                {
+                    state = EXP_EXCLUDED;
+                }
+                // if we encounter a digit, the state is unchanged
+                break;
+            }
+
+            // we're scanning from a leading decimal point.  How we
+            // go from here depends on the next character.
+            case EXP_SPOINT:
+            {
+                // not a digit immediately after the period, we're
+                // scanning a normal symbol from here.
+                if (inch < '0' || inch > '9')
+                {
+                    state = EXP_EXCLUDED;  /* not a number                      */
+                }
+                // second character is a digit, so we're scanning the
+                // part after the decimal.
+                else
+                {
+                    state = EXP_POINT;
+                }
+                break;
+            }
+
+            // scanning after a decimal point.  From here, we could hit
+            // the 'E' for exponential notation.
+            case EXP_POINT:
+            {
+                // potential exponential, switch scan to the exponent part.
+                if (inch == 'E' || inch == 'e')
+                {
+                    state = EXP_E;
+                }
+                // non-digit other than an 'E'?, no longer a valid numeric.
+                else if (inch < '0' || inch > '9')
+                {
+                    state = EXP_EXCLUDED;
+                }
+                // if we find a digit, the state is unchanged.
+                break;
+            }
+
+            // we have a valid number up to an 'E'...now we can have digits or
+            // a sign for the exponent.  The digit will be handled here, but
+            // the +/- is either a symbol terminator or part of the symbol.
+            // we check that at the end-of-symbol processing
+            case EXP_E:
+            {
+                // switching to process the exponent digits
+                if (inch >= '0' && inch <= '9')
+                {
+                    state = EXP_EDIGIT;
+                }
+                // we handle the sign situation below.
+                break;
+            }
+
+            // we're scanning a potential numeric value, and we've just
+            // had the sign, so we're looking for digits after that.   If there
+            // are no digits, then the sign actually terminated the symbol, so
+            // we need to back up.
+            case EXP_ESIGN:
+            {
+                // found a digit here?  switching into exponent scan mode.
+                if (inch >= '0' && inch <= '9')
+                {
+                    state = EXP_EDIGIT;
+                }
+                else
+                {
+                    // non-digit cannot be a number.
+                    state = EXP_EXCLUDED;
+                }
+                break;
+            }
+
+            // scanning for exponent digits.  No longer numeric if we find a non-digit.
+            case EXP_EDIGIT:
+            {
+                if (inch < '0' || inch > '9')
+                {
+                    state = EXP_EXCLUDED;
+                }
+                break;                   /* go get the next character         */
+            }
+
+            // once EXP_EXCLUDED is reached the state doesn't change.  We're
+            // just consuming symbol characters from here.
+        }
+
+        // handled all of the states, now handle the termination checks.
+        stepPosition();
+
+        // did we step past an exponential sign but found an invalid exponent?
+        if (eoffset != 0 && state == EXP_EXCLUDED)
+        {
+            // we need to back up the scan pointer to the sign position and
+            // stop...this is the end of the symbol.
+            lineOffset = eoffset;
+            break;                     /* and we're finished with this      */
+        }
+
+        // have we reached the end of the line?  Also done.
+        if (!moreChars())
+        {
+            break;
+        }
+
+        // get the next character and validate as a symbol character.
+        inch = getChar();
+        // if this was a good symbol character, run around the loop again and
+        // see how this impacts the state machine
+        if (translateChar(inch) != 0)
+        {
+            continue;
+        }
+
+        // we have a non-symbol character abutting the symbol characters.  If
+        // we just scanned the 'E' (or 'e') in a potential exponent number,
+        // a '+' or '-' is potentially part of the symbol value.
+        if (state == EXP_E && (inch == '+' || inch == '-'))
+        {
+            // the sign might be at the end of the line.  If there
+            // are no characters after that, no point in switching states.
+            if (!haveNextChar())
+            {
+                // this is not a number and we've found the end position
+                state = EXP_EXCLUDED;
+                break;
+            }
+
+            // this only works if there are only digits after this point.
+            // we need to remember this position in case we have to back up.
+            eoffset = lineOffset;
+            // step past the sign and switch the scanning state to look for
+            // the exponent digits after a sign.
+            stepPosition()
+            state = EXP_ESIGN;
+
+            // everything is all set up so we can back up.  Now get the next
+            // character and see how things go from here.
+            inch = getChar();
+            // if this was a good symbol character, run around the loop again and
+            // see how this impacts the state machine
+            if (translateChar(inch) != 0)
+            {
+                continue;
+            }
+
+            // this is not a number...mark it so and also back up to before
+            // the sign position.
+            state = EXP_EXCLUDED;
+            // we need to back up the scan pointer to the sign position and
+            // stop...this is the end of the symbol.
+            lineOffset = eoffset;
+            break;
+        }
+        else
+        {
+            // We've reached a non-symbol character.  State remains in whatever
+            // the last state was.
+            break;
+        }
+    }
+
+    // ok, we've located the end position of the symbol token.  The final state
+    // will tell us what sort of symbol we have.  Generally, EXP_EXCLUDED indicates
+    // a non-numeric value, all other states will be valid numbers.
+
+    // lineOffset is now one character past the end of the symbol.
+    size_t length = lineOffset - start;
+    // we're going to need to copy this into a string object.
+    RexxString *value = raw_string(length);
+
+    // we also can tag numeric types.
+    TokenSubclass numeric = SUBTYPE_NONE;
+
+    // ok, copy each character over, translating to uppercase.
+    for (i = 0; i < length; i++)
+    {
+        inch = getChar(start + i);
+        unsigned int tran = translateChar(inch);
+        // if this translates ok, then this is a normal symbol
+        // character.
+        if (tran != 0)
+        {
+            value->putChar(i, tran);
+        }
+        else
+        {
+            // this is an exponent sign.  Use the original
+            value->putChar(i, inch);
+        }
+    }
+
+    // mark the value as being all uppercase.
+    value->setUpperOnly();
+    // get the common string value so we don't keep around multiple copies
+    // of variable names.
+    value = commonString(value);
+    // record the current position in the clause
+    clause->setEnd(lineNumber, lineOffset);
+
+    // but is this symbol too long?  Sigh, this is an error, but
+    // we need the symbol name for the error message.
+    if (length > (size_t)MAX_SYMBOL_LENGTH)
+    {
+        // update the error information
+        clauseLocation = clause->getLocation();
+        syntaxError(Error_Name_too_long_name, value);
+    }
+
+    // now see if we can figure out some subtypes.
+    TokenSubclass subclass = SUBTYPE_NONE;
+
+    // we determine a lot from the first character.
+    inch = getChar(start);
+
+    // a solo period?  This is a special symbol, at least in parse templates.
+    if (length == 1 && inch == '.')
+    {
+        subclass = SYMBOL_DUMMY;
+    }
+    // leading digit?  this is a constant symbol, but we might know
+    // even more based on the final scan state.
+    else if (inch >= '0' && inch <= '9')
+    {
+        // this is a constant symbol
+        subclass = SYMBOL_CONSTANT;
+        // if all digits and shorter than default digits, we can
+        // use integer objects instead.
+        if (state == EXP_DIGIT && length < Numerics::DEFAULT_DIGITS)
+        {
+            // no leading zero or only zero?
+            if (inch != '0' || length == 1)
+            {
+                // we can make this an integer object
+                numeric = INTEGER_CONSTANT;
+            }
+        }
+    }
+    // beginning with a period, this is a dot symbol (although
+    // potentially a number.
+    else if (inch == '.')
+    {
+        // Beginning with a period, this is either a dot symbol or a
+        // number.  If the last scan state was EXP_EXCLUDED, this
+        // is a dot symbol
+        if (state == EXP_EXCLUDED)
+        {
+            subclass = SYMBOL_DOTSYMBOL;
+        }
+        else
+        {
+            // this is a constant symbol, but we can't do anything
+            // additional with the numeric information.
+            subclass = SYMBOL_CONSTANT;
+        }
+    }
+    else
+    {
+        // a variable symbol, this has other subtypes.
+        subclass = SYMBOL_VARIABLE;
+
+        // if the symbol contains a period, this is either a stem or compound variable
+        if (dotCount > 0)
+        {
+            // a stem variable has just one dot and that is on the end.
+            if (dotCount == 1 && value->getChar(length - 1) == '.')
+            {
+                subclass = SYMBOL_STEM;
+            }
+            else
+            {
+                // this is a compound symbol
+                subclass = SYMBOL_COMPOUND;
+            }
+        }
+    }
+
+    // now mark the token end location
+    endLocation(location);
+
+    // get a symbol token, including the numeric information.
+    RexxToken *token = clause->newToken(TOKEN_SYMBOL, subclass, value, location);
+    token->setNumeric(numeric);
+    return token;
+}
+
+
+/**
+ * Scan off a literal string (including hex or binary literals),
+ * and return as a literal token.
+ *
+ * @return A token representing the literal.
+ */
+RexxToken *LanguageParser::scanLiteral()
+{
+    // set the start position for the token
+    SourceLocation location;
+    startLocation(location;)
+
+    // get the opening quote character and save for end matching
+    unsigned int inch = getChar();
+    unsigned int literalDelimiter = inch;
+
+    size_t literalEnd = 0;       // will be the literal end position
+
+    // save staring point, which is just past the quote.
+    size_t start = lineOffset + 1;
+    // keep track of doubled quotes so we know how large the final string will be
+    int doubleQuotes = 0;
+
+    // this is a simple literal until we can check after the end.
+    TokenSubclass type = LITERAL_STRING;
+
+    // ok, scan through the string looking for the closing delimiter.
+    for (;;)
+    {
+        // first time, we're stepping over the opening quote, after that,
+        // stepping over the previous character.
+        stepPosition();
+
+        // reached the end of the line without finding the closing
+        // quote?  this is an error
+        if (!moreChars())
+        {
+            // mark the end of the clause
+            clause->setEnd(lineNumber, lineOffset);
+            // update the error information
+            clauseLocation = clause->getLocation();
+
+            // we have different errors depending on the type of delimier
+            if (literal_delimiter == '\'')
+            {
+                syntaxError(Error_Unmatched_quote_single);
+            }
+            else
+            {
+                syntaxError(Error_Unmatched_quote_double);
+            }
+        }
+
+        // get the next character and perform the delimiter checks.
+        inch = getChar();
+
+        if (literalDelimiter == inch)
+        {
+            // remember the (potential) data end position
+            literalEnd = lineOffset - 1;
+            // we need to look at what is after the delimiter.  There are
+            // three possibilities:  1)  a doubled delimiter, 2) the symbol
+            // 'X' for a hex literal, and 3) the symbol 'B' for a bit literal.
+            // We only take care of 1) here, 2) and 3) will be handled after
+            // we've determined this is a closing literal.
+            stepPosition();
+
+            // line ends with the literal...this is easy.
+            if (!moreChars())
+            {
+                break;
+            }
+
+            // ok, now check for the doubled one.
+            inch = getChar();
+            if (inch != literalDelimiter)
+            {
+                break;             // really was the end
+            }
+            // still in the string, but final string will be shorter than
+            // the scanned string.
+            doubleQuotes++;
+        }
+    }
+
+    // OK, we've found the end delimiter.  So far, so good.  Now we need to
+    // take a peek after the literal to see we have a hex or bit literal.  We're
+    // currently positioned at the first character after the literal end.
+
+    // did we end the line with this literal?  If not, we need to look for
+    // the hex or bin markers.
+    if (moreChars())
+    {
+        // ok, get the next character.
+        inch = getChar();
+
+        // ok, followed by an X, but we need to make sure this is not part of
+        // some longer symbol
+        if (inch == 'x' || inch == 'X')
+        {
+            // if the following character is not a symbol character,
+            // NOTE:  This also handles end-of-line situations.
+            if (!isSymbolCharacter(getNextChar()))
+            {
+                stepPosition();
+                type = LITERAL_HEX;      /* set the appropriate type          */
+            }
+        }
+        // and perform the same check for a binary string
+        else if (inch == 'b' || inch == 'B')
+        {
+            if (!isSymbolCharacter(getNextChar()))
+            {
+                stepPosition();
+                type = LITERAL_BIN;      /* set the appropriate type          */
+            }
+        }
+    }
+
+    // literalEnd is pointing at the last character, start is pointing at the first, so
+    // we need to add 1 to the length.
+    size_t length = literalEnd - start + 1;
+
+    // record the position
+    clause->setEnd(lineNumber, lineOffset);
+
+    RexxString *value;
+
+    // does this literal require packing?
+    if (type != LITERAL_STRING)
+    {
+        // pack the final value
+        value = packLiteral(start, length, type) ;
+    }
+    else
+    {
+        // no doubled quotes?  Just grab this directly without
+        // scanning, which is faster
+        if (doubleQuotes == 0)
+        {
+            value = newString(current + start, length);
+        }
+        else
+        {
+            // get a string to hold the final length, minus the number
+            // of doubled quotes.
+            value = raw_string(length - doubleQuotes);
+            // copy over the value, accounting for the doubled quotes
+            for (i = 0, j = start; j < length; i++, j++)
+            {
+                // get the next character and check against the delimiter
+                inch = getChar(j);
+                if (inch == literalDelimiter)
+                {
+                    // just step one extra character for the doubleds.
+                    j++;                     /* step one extra                    */
+                }
+                value->putChar(i, inch);   /* copy over the literal data        */
+            }
+        }
+    }
+
+    // force this to a common string
+    value = commonString(value);
+
+    // update the token location and create a new token for this
+    endLocation(location);
+    return clause->newToken(TOKEN_LITERAL, type, value, location);
 }

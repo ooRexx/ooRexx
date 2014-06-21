@@ -48,18 +48,40 @@
 #include "Token.hpp"
 #include "SourceFile.hpp"
 
+
+
+/**
+ * Create a new Token object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return Storage for a new instance of a Token.
+ */
+void *RexxToken::operator new(size_t size)
+{
+    return new_object(size, T_Token);
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxToken::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
     memory_mark(this->value);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxToken::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
     memory_mark_general(this->value);
 }
@@ -84,12 +106,74 @@ void RexxToken::checkAssignment(RexxSource *source, RexxString *newValue)
 }
 
 
-void *RexxToken::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new token object                                       */
-/******************************************************************************/
+/**
+ * Determine a Token's operator precedence.
+ *
+ * @return A numeric ranking for operator characters.
+ */
+int RexxToken::precedence()
 {
-                                       /* Get new object                    */
-    return new_object(size, T_Token);
-}
+    // the subclass determines what type of operator this is.
+    switch (subclass)
+    {
+        default:
+            return 0;                         // this is the bottom of the heap
+            break;
 
+        case OPERATOR_OR:
+        case OPERATOR_XOR:
+            return 1;                         // various OR types are next
+            break;
+
+        case OPERATOR_AND:
+            return 2;                         // AND operator ahead of ORs
+            break;
+
+        case OPERATOR_EQUAL:                  // comparisons are all together
+        case OPERATOR_BACKSLASH_EQUAL:
+        case OPERATOR_GREATERTHAN:
+        case OPERATOR_BACKSLASH_GREATERTHAN:
+        case OPERATOR_LESSTHAN:
+        case OPERATOR_BACKSLASH_LESSTHAN:
+        case OPERATOR_GREATERTHAN_EQUAL:
+        case OPERATOR_LESSTHAN_EQUAL:
+        case OPERATOR_STRICT_EQUAL:
+        case OPERATOR_STRICT_BACKSLASH_EQUAL:
+        case OPERATOR_STRICT_GREATERTHAN:
+        case OPERATOR_STRICT_BACKSLASH_GREATERTHAN:
+        case OPERATOR_STRICT_LESSTHAN:
+        case OPERATOR_STRICT_BACKSLASH_LESSTHAN:
+        case OPERATOR_STRICT_GREATERTHAN_EQUAL:
+        case OPERATOR_STRICT_LESSTHAN_EQUAL:
+        case OPERATOR_LESSTHAN_GREATERTHAN:
+        case OPERATOR_GREATERTHAN_LESSTHAN:
+            return 3;
+            break;
+
+        case OPERATOR_ABUTTAL:                // concatentates
+        case OPERATOR_CONCATENATE:
+        case OPERATOR_BLANK:
+            return 4;
+            break;
+
+        case OPERATOR_PLUS:                   // plus and minus
+        case OPERATOR_SUBTRACT:
+            return 5;
+            break;
+
+        case OPERATOR_MULTIPLY:               // multiply and divide versions
+        case OPERATOR_DIVIDE:
+        case OPERATOR_INTDIV:
+        case OPERATOR_REMAINDER:
+            return 6;
+            break;
+
+        case OPERATOR_POWER:
+            return 7;                         // almost the top of the heap
+            break;
+
+        case OPERATOR_BACKSLASH:
+            return 8;                         // NOT is the top honcho
+            break;
+    }
+}

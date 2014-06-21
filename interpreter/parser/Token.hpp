@@ -75,20 +75,11 @@ enum {
 enum {
     SUBTYPE_NONE = 0,
 
-    // symbol characters
-    SYMBOL_CONSTANT  =  100,
-    SYMBOL_VARIABLE,
-    SYMBOL_NAME,
-    SYMBOL_COMPOUND,
-    SYMBOL_STEM,
-    SYMBOL_DUMMY,
-    SYMBOL_DOTSYMBOL,
-    INTEGER_CONSTANT,
-    LITERAL_HEX,
-    LITERAL_BIN,
-
-    // Operator sub-types
-    OPERATOR_PLUS      = 200,
+    // Operator sub-types.
+    // NOTE:  The operator subtypes are used for table
+    // lookups, so these need start with the index of
+    // 1.
+    OPERATOR_PLUS      = 1,
     OPERATOR_SUBTRACT,
     OPERATOR_MULTIPLY,
     OPERATOR_DIVIDE,
@@ -120,6 +111,26 @@ enum {
     OPERATOR_OR,
     OPERATOR_XOR,
     OPERATOR_BACKSLASH,
+
+    // symbol characters
+    SYMBOL_CONSTANT  =  100,
+    SYMBOL_VARIABLE,
+    SYMBOL_NAME,
+    SYMBOL_COMPOUND,
+    SYMBOL_STEM,
+    SYMBOL_DUMMY,
+    SYMBOL_DOTSYMBOL,
+    INTEGER_CONSTANT,
+    LITERAL_STRING,
+    LITERAL_HEX,
+    LITERAL_BIN,
+
+    // special clause end types
+    CLAUSEEND_EOF = 200,
+    CLAUSEEND_SEMICOLON,
+    CLAUSEEND_EOL,
+    CLAUSEEND_NULL,
+
 } TokenSubclass;
 
 
@@ -149,16 +160,21 @@ class RexxToken : public RexxInternalObject {
     inline bool       isSymbol() { return classId == TOKEN_SYMBOL; };
     inline bool       isOperator() { return classId == TOKEN_OPERATOR; }
     inline bool       isEndOfClause() { return classId == TOKEN_EOC; }
+    inline bool       isBlankSignificant() { return (classId == TOKEN_SYMBOL || classId == TOKEN_LITERAL ||
+         classId == TOKEN_RIGHT || classId == TOKEN_SQRIGHT); }
     inline void       setNumeric(TokenSubclass v)   { this->numeric = v; };
     inline const SourceLocation &getLocation() { return tokenLocation; }
-    inline void  setLocation(SourceLocation &l) { tokenLocation = l; }
+    inline void       setLocation(SourceLocation &l) { tokenLocation = l; }
            void       checkAssignment(RexxSource *source, RexxString *newValue);
+           int        precedence();
 
-    SourceLocation tokenLocation;          // token source location
     RexxString   *value;                   // token string value
     TokenClass    classId;                 // class of token
     TokenSubclass subclass;                // specialized type of token
     TokenSubclass numeric;                 // even further specialization
+
+protected:
+    SourceLocation tokenLocation;          // token source location
 };
 
 

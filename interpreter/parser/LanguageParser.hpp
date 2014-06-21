@@ -186,13 +186,13 @@ enum {
     DIRECTIVE_CONSTANT
 } DirectiveKeyword;
 
-// Identify different token types
+// Identify different token types returned by
+// locateToken()
 enum {
     NORMAL_CHAR,
-    CLAUSEEND_EOF,
-    CLAUSEEND_SEMICOLON,
-    CLAUSEEND_EOL,
-    CLAUSEEND_NULL,
+    SIGNIFICANT_BLANK,
+    CLAUSE_EOF,
+    CLAUSE_EOL,
 } CharacterClass;
 
 /* token extended types - end of clause */
@@ -375,6 +375,9 @@ const int DEBUG_NOTRACE     =  0x0800;
 // the mask for accessing just the debug flags
 const size_t TRACE_DEBUG_MASK  = 0xff00;
 
+// an invalid 8-bit character marker.
+const unsigned int INVALID_CHARACTER = '00000100';
+
                                        /* handy defines to easy coding      */
 #define new_instruction(name, type) this->sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
 #define new_variable_instruction(name, type, size) this->sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
@@ -430,7 +433,6 @@ class LanguageParser: public RexxInternalObject {
     static int  parseOption(RexxToken *);
     static int  keyDirective(RexxToken *);
     static int  subDirective(RexxToken *);
-    static int  precedence(RexxToken *);
     void        nextLine();
     void        position(size_t, size_t);
     void        live(size_t);
@@ -443,10 +445,11 @@ class LanguageParser: public RexxInternalObject {
     RexxString *extract(SourceLocation &);
     RexxArray  *extractSource(SourceLocation &);
     RexxArray  *extractSource();
+    void        getLocation(SourceLocation &);
     void        startLocation(SourceLocation &);
     void        endLocation(SourceLocation &);
     bool        nextSpecial(unsigned int, SourceLocation &);
-    unsigned int locateToken(RexxToken *);
+    unsigned int locateToken(bool);
     void        globalSetup();
     RexxString *packLiteral(size_t, size_t, int);
     RexxCode   *generateCode(bool isMethod);
@@ -551,22 +554,28 @@ class LanguageParser: public RexxInternalObject {
 
     inline bool        needsInstallation() { return (this->flags&_install) != 0; }
     inline void        install(RexxActivation *activation) { if (needsInstallation()) this->processInstall(activation); };
-    inline void        addReference(RexxObject *reference) { this->calls->addLast(reference); }
-    inline void        pushDo(RexxInstruction *i) { this->control->pushRexx((RexxObject *)i); }
-    inline RexxInstruction *popDo() { return (RexxInstruction *)(this->control->pullRexx()); };
-    inline RexxInstruction *topDo() { return (RexxInstruction *)(this->control->peek()); };
+    inline void        addReference(RexxObject *reference) { calls->addLast(reference); }
+    inline void        pushDo(RexxInstruction *i) { control->pushRexx((RexxObject *)i); }
+    inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pullRexx()); };
+    inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); };
            void        setProgramName(RexxString *name);
-    inline RexxString *getProgramName() { return this->programName; }
-    inline RexxString *getProgramDirectory() { return this->programDirectory; }
-    inline RexxString *getProgramExtension() { return this->programExtension; }
-    inline RexxString *getProgramFile() { return this->programFile; }
-    inline RexxDirectory *getMethods() { return this->methods; };
-    inline RexxDirectory *getRoutines() { return this->routines; };
-    inline void        pushOperator(RexxToken *operatorToken) { this->operators->pushRexx((RexxObject *)operatorToken); };
-    inline RexxToken  *popOperator() { return (RexxToken *)(this->operators->pullRexx()); };
-    inline RexxToken  *topOperator() { return (RexxToken *)(this->operators->peek()); };
-    inline void        reclaimClause()  { this->flags |= reclaimed; };
-    inline bool        atEnd(void) { return (!(this->flags&reclaimed) && (this->line_number > (this->line_count))); };
+    inline void        pushOperator(RexxToken *operatorToken) { operators->pushRexx((RexxObject *)operatorToken); };
+    inline RexxToken  *popOperator() { return (RexxToken *)(operators->pullRexx()); };
+    inline RexxToken  *topOperator() { return (RexxToken *)(operators->peek()); };
+    inline void        reclaimClause()  { flags.set(reclaimed); };
+    inline bool        atEnd(void) { return (!(flags.test(reclaimed)) && !moreLines); };
+
+    inline unsigned int getChar() { return (unsigned char)(current[lineOffset]); }
+    inline unsigned int getChar(size_t o) { return (unsigned char)(current[o]); }
+    inline unsigned int nextChar() { return (unsigned char)(current[lineOffset++]); }
+    inline unsigned int getNextChar() { return (unsigned char)(current[lineOffset + 1]); }
+    inline unsigned int followingChar() { return haveNextChar() ? getNextChar() : INVALID_CHARACTER; }
+    inline void        stepPosition() { lineOffset++; }
+    inline void        stepPosition(size_t o) { lineOffset += o; }
+    inline bool        moreChars() { return lineOffset < currentLength; }
+    inline bool        haveNextChar() {  return lineOffset < currentLength; }
+    inline bool        moreLines() { return (lineNumber <= lineCount); }
+    inline void        truncateLine() { lineOffset = currentLength; }
 
     inline RexxToken  *nextToken() { return clause->next(); }
     inline RexxToken  *nextReal() { return clause->nextRealToken(); }
@@ -640,18 +649,21 @@ class LanguageParser: public RexxInternalObject {
     inline void setLocalRoutines(RexxDirectory *r) { routines = r; }
     inline void setPublicRoutines(RexxDirectory *r) { public_routines = r; }
 
-    static inline bool isSymbolCharacter(char ch)
+    static inline bool isSymbolCharacter(unsigned int ch)
     {
         // The anding is necessary to keep characters > 0x7F from being
         // treated as negative numbers and returning bogus values.
-        return characterTable[((unsigned int)ch) & 0xff] != 0;
+        // the test for less that 256 is necessary because we have
+        // a magic "not-a-character" marker that's out of range.
+        return ch < 256 && characterTable[ch & 0xff] != 0;
     }
 
-    static inline int translateChar(char ch)
+    static inline int translateChar(unsigned int ch)
     {
         // The anding is necessary to keep characters > 0x7F from being
-        // treated as negative numbers and returning bogus values.
-        return characterTable[((unsigned int)ch) & 0xff];
+        // treated as negative numbers and returning bogus values.  This
+        // assumes were're working with a good character already.
+        return characterTable[ch & 0xff];
     }
 
     void addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
@@ -709,23 +721,22 @@ protected:
     ProgramSource *source;               // the source we're translating.
     FlagSet<ParsingFlags, 32> flags;     // a set of flags with parse state
     const char *current;                 // current working line
-    size_t current_length;               // length of current line
+    size_t currentLength;                // length of current line
     RexxClause *clause;                  // current clause being created
     SourceLocation clauseLocation;       // current clause location for errors
     size_t lineNumber;                   // current line position
     size_t lineOffset;                   // current offset with in the line
     size_t interpretAdjust;              // INTERPRET adjustment TODO:  might not need this in the parser.
 
-    RexxIdentityTable *savelist;         /* saved objects                     */
-    RexxStack       *holdstack;          /* stack for holding temporaries     */
+    RexxIdentityTable *saveList;         /* saved objects                     */
+    RexxStack       *holdStack;          /* stack for holding temporaries     */
     RexxDirectory   *literals;           /* root of associated literal list   */
     RexxDirectory   *strings;            /* common pool of created strings    */
     RexxQueue       *control;            /* queue of control structures       */
     RexxQueue       *terms;              /* stack of expression terms         */
     RexxQueue       *subTerms;           /* stack for arguments lists, et al. */
     RexxQueue       *operators;          /* stack of expression terms         */
-    RexxDirectory   *class_dependencies; /* dependencies between classes      */
-    ClassDirective  *active_class;       /* currently active ::CLASS directive*/
+    ClassDirective  *activeClass;        /* currently active ::CLASS directive*/
 
                                          /* start of block parsing section    */
 
@@ -734,12 +745,12 @@ protected:
     RexxInstruction *currentInstruction; /* current "protected" instruction   */
     RexxDirectory   *variables;          /* root of associated variable list  */
     RexxDirectory   *labels;             /* root of associated label list     */
-    RexxIdentityTable *guard_variables;    /* exposed variables in guard list   */
-    RexxDirectory   *exposed_variables;  /* root of exposed variables list    */
+    RexxIdentityTable *guardVariables;   /* exposed variables in guard list   */
+    RexxDirectory   *exposedVariables;   /* root of exposed variables list    */
     RexxList        *calls;              /* root of call list                 */
-    size_t           currentstack;       /* current expression stack depth    */
-    size_t           maxstack;           /* maximum stack depth               */
-    size_t           variableindex;      /* current variable index slot       */
+    size_t           currentStack;       /* current expression stack depth    */
+    size_t           maxStack;           /* maximum stack depth               */
+    size_t           variableIndex;      /* current variable index slot       */
 
 
 

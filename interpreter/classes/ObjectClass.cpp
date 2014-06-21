@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -2609,6 +2609,17 @@ void *RexxObject::getCSelf(RexxObject *scope)
     }
     return NULL;                     /* no object available               */
 }
+/******************************************************************************/
+/* Typed method invocation macros                                             */
+/******************************************************************************/
+
+RexxObject *RexxObject::callOperatorMethod(size_t methodOffset, RexxObject *argument)
+{
+    // The behavior manages the operator tables.
+    PCPPM cppEntry = behaviour->getOperatorMethod(methodOffset);
+    // Go issue the method directly.
+    return (this->*((PCPPM1)cppEntry))(argument);
+}
 
 
 /**
@@ -2627,6 +2638,12 @@ void *RexxNilObject::operator new(size_t size)
 }
 
 
+/**
+ * This is the default table of methods that implement
+ * the operators.  The order of this table must match
+ * the order of the OPERATOR_* definitions in the TokenSubclass
+ * enum defined by the RexxToken class.
+ */
 PCPPM RexxObject::operatorMethods[] =
 {
    NULL,

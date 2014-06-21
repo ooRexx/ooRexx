@@ -1,3 +1,46 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/* Object REXX Kernel                                                         */
+/*                                                                            */
+/* Main language parser transient class.                                      */
+/*                                                                            */
+/******************************************************************************/
 
 /**
  * Perform garbage collection on a live object.
@@ -122,7 +165,7 @@ RexxCode *LanguageParser::generateCode(bool isMethod)
  *
  * @return A translated code object.
  */
-RexxCode *RexxSource::translateInterpret(RexxDirectory *_labels )
+RexxCode *LanguageParser::translateInterpret(RexxDirectory *_labels )
 {
     // setup the environment
     initialize();
@@ -134,19 +177,23 @@ RexxCode *RexxSource::translateInterpret(RexxDirectory *_labels )
 }
 
 
-RexxObject *RexxSource::toss(
-    RexxObject *object)                /* object to "release"               */
-/******************************************************************************/
-/* Function:  Remove an object from the save list                             */
-/******************************************************************************/
+/**
+ * Remove an object from the save list.
+ *
+ * TODO:  See if we can eliminate this.
+ *
+ * @param object The object to process.
+ */
+void LanguageParser::toss(RexxObject *object)
 {
-    /* have a real object                */
+    // if we have a real object, remove it from the
+    // save list and push it on to the hold stack for
+    // temporary protection.
     if (object != OREF_NULL)
     {
-        this->savelist->remove(object);    /* remove from the save table        */
-        this->holdObject(object);          /* return this object as held        */
+        saveList->remove(object);
+        holdObject(object);
     }
-    return object;                       /* return the object                 */
 }
 
 
@@ -342,7 +389,7 @@ void LanguageParser::nextLine()
     if (clause != OREF_NULL)       // do we have a clause object active?
     {
         // record the current position in the clause...this marks the location end.
-        clause->setEnd(line_number, line_offset);
+        clause->setEnd(lineNumber, lineOffset);
     }
     // move to the start of the next line
     position(line_number + 1, 0);
@@ -359,7 +406,8 @@ void LanguageParser::position(size_t line, size_t offset)
     lineNumber = line;                 // set the new position information
     lineOffset = offset;
 
-    // retrieve the line specifics from the source object
+    // retrieve the line specifics from the source object.  If this
+    // is out of bounds, current will be nulled out.
     source->getLine(line, current, currentLength);
 }
 
@@ -372,9 +420,8 @@ void LanguageParser::position(size_t line, size_t offset)
  */
 void LanguageParser::nextClause()
 {
-    RexxToken   *token;                  /* current token being processed     */
-    SourceLocation location;             /* location of the clause            */
-    SourceLocation token_location;       /* location of each token            */
+    SourceLocation location;             // location of the clause
+    SourceLocation tokenLocation;        // location of each token
 
     // if reclamed is true, we have previously given up on processing a clause, so
     // the tokens are already available.  This is not typically the case.
@@ -390,7 +437,7 @@ void LanguageParser::nextClause()
             clause->setStart(lineNumber, lineOffset);
             // get the next source token.  White space tokens are ignored in this context,
             // as we're looking for the beginning of a real clause.
-            token = sourceNextToken(OREF_NULL);
+            RexxToken *token = sourceNextToken(OREF_NULL);
             // OREF_NULL indicates we've hit the end of the source.  Mark us as
             // finished and return
             if (token == OREF_NULL)
@@ -409,8 +456,8 @@ void LanguageParser::nextClause()
         }
         // get the clause start position from the first token, and
         // make a copy for the start
-        token_location = token->getLocation();
-        location = token_location;
+        tokenLocation = token->getLocation();
+        location = tokenLocation;
         // record this in the clause for potential error reporting.
         clause->setLocation(location);
 
@@ -421,7 +468,7 @@ void LanguageParser::nextClause()
             // a clause.
             token = sourceNextToken(token);
             // and save the position again.
-            token_location = token->getLocation();
+            tokenLocation = token->getLocation();
             // and quit once we've hit an end-of-clause (note, we'll never
             // see a null return here because there will be an end of clause
             // implied by the end of line.  We only see the null case when
@@ -433,7 +480,7 @@ void LanguageParser::nextClause()
         }
 
         // the location of the last scanned token is the clause end position.
-        location.setEnd(token_location);
+        location.setEnd(tokenLocation);
         // and set this in the class to give it the full bounds.
         clause->setLocation(location);
     }
@@ -444,171 +491,161 @@ void LanguageParser::nextClause()
     clauseLocation = clause->getLocation();
 }
 
-RexxCode *RexxSource::translate(
-    RexxDirectory *_labels)             /* interpret labels                  */
-/******************************************************************************/
-/* Function:  Translate a source object into a method object                  */
-/******************************************************************************/
+
+
+/**
+ * Translate a source object into executable code.
+ *
+ * @param _labels labels inherited from the caller's context. Used only
+ *                for compiling interpret instruction code.
+ *
+ * @return The compile code object.
+ */
+RexxCode *LanguageParser::translate(RexxDirectory *_labels)
 {
+    // create a stack frame so errors can display the parsing location.
     ParseActivationFrame frame(ActivityManager::currentActivity, this);
 
     // set up the package global defaults
-    digits = Numerics::DEFAULT_DIGITS;
-    form = Numerics::DEFAULT_FORM;
-    fuzz = Numerics::DEFAULT_FUZZ;
-    traceSetting = DEFAULT_TRACE_SETTING;
-    traceFlags = RexxActivation::default_trace_flags;
+    package->digits = Numerics::DEFAULT_DIGITS;
+    package->form = Numerics::DEFAULT_FORM;
+    package->fuzz = Numerics::DEFAULT_FUZZ;
+    package->traceSetting = DEFAULT_TRACE_SETTING;
+    package->traceFlags = RexxActivation::default_trace_flags;
 
     /* go translate the lead block       */
     RexxCode *newMethod = this->translateBlock(_labels);
     // we save this in case we need to explicitly run this at install time
-    OrefSet(this, this->initCode, newMethod);
-    if (!this->atEnd())                  /* have directives to process?       */
+    package->setInitCode(newMethod);
+    // we might have directives to process, which adds additional stuff
+    // to the package.
+    if (!atEnd())                  /* have directives to process?       */
     {
-        /* create the routines directory     */
-        OrefSet(this, this->routines, new_directory());
-        /* create the routines directory     */
-        OrefSet(this, this->public_routines, new_directory());
-        /* and a directory of dependencies   */
-        OrefSet(this, this->class_dependencies, new_directory());
-        /* create the requires directory     */
-        OrefSet(this, this->requires, new_list());
-        // and a list of load libraries requiring loading.
-        OrefSet(this, this->libraries, new_list());
-        /* create the classes list           */
-        OrefSet(this, this->classes, new_list());
-        /* no active class definition        */
-        OrefSet(this, this->active_class, OREF_NULL);
-                                           /* translation stopped by a directive*/
-        if (this->flags&_interpret)        /* is this an interpret?             */
+        // we store a lot of stuff in the package object we're building.  Have
+        // it set up to receive that information.
+        package->initializeForDirectives();
+        // for us to manage the class dependencies
+        classDependencies = new_directory();
+        // no active class definition
+        activeClass = OREF_NULL;
+
+        // translation must have been stopped by a directive.  If this is an
+        // interpret, this is an error.
+        if (flags.set(interpret))
         {
-            this->nextClause();              /* get the directive clause          */
-                                             /* raise an error                    */
+            // step to the next clause to report the error
+            nextClause();
             syntaxError(Error_Translation_directive_interpret);
         }
-        /* create a directory for ..methods  */
-        OrefSet(this, this->methods, new_directory());
 
-        while (!this->atEnd())             /* loop until end of source          */
+        // now loop until we hit the end of the source processing directives.
+        while (!atEnd())
         {
-            this->directive();               /* process the directive             */
+            directive();
         }
-        this->resolveDependencies();       /* go resolve class dependencies     */
+        // resolve any class dependencies
+        resolveDependencies();
     }
-    return newMethod;                    /* return the method                 */
+    // we return the first section of code, but the package was updated with
+    // all other pieces.
+    return newMethod;
 }
 
 
-void RexxSource::resolveDependencies()
-/*********************************************************************/
-/* Function:  Resolve dependencies between ::CLASS directives,       */
-/*            rearranging the order of the directives to preserve    */
-/*            relative ordering wherever possible.  Classes with no  */
-/*            dependencies in this source file will be done first,   */
-/*            followed by those with dependencies in the appropriate */
-/*            order                                                  */
-/*********************************************************************/
+/**
+ * Resolve dependencies between ::CLASS directives,
+ * rearranging the order of the directives to preserve
+ * relative ordering wherever possible.  Classes with no
+ * dependencies in this source file will be done first,
+ * followed by those with dependencies in the appropriate
+ * order
+ */
+void LanguageParser::resolveDependencies()
 {
     // get our class list
-    if (classes->items() == 0)           /* nothing to process?               */
+    if (package->classes->items() == 0)
     {
-        /* clear out the classes list        */
-        OrefSet(this, this->classes, OREF_NULL);
+        // if the package doesn't have any classes, clear out the directory
+        // so we don't have to carry this around.
+        package->classes = OREF_NULL;
+        return;
     }
     else                                 /* have classes to process           */
     {
-        size_t i;
+        // get a local variable for easier processing
+        RexxList *classes = package->classes;
+
+        // create a directory for managing the dependencies between the classes
+        RexxDirectory *classDependencies = new_directory();
+        ProtectedObject p1(classDependencies);
+
+
         // run through the class list having each directive set up its
         // dependencies
-        for (i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+        for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
         {
-            /* get the next class                */
-            ClassDirective *current_class = (ClassDirective *)(classes->getValue(i));
-            // have the class figure out it's in-package dependencies
-            current_class->addDependencies(class_dependencies);
+            ClassDirective *currentClass = (ClassDirective *)(classes->getValue(i));
+            currentClass->addDependencies(classDependencies);
         }
 
-        RexxList *class_order = new_list();  // get a list for doing the order
-        ProtectedObject p(class_order);
+        RexxList *classOrder = new_list();  // get a list for doing the order
+        ProtectedObject p2(classOrder);
 
-/* now we repeatedly scan the pending directory looking for a class         */
-/* with no in-program dependencies - it's an error if there isn't one       */
-/* as we build the classes we have to remove them (their names) from        */
-/* pending list and from the remaining dependencies                         */
+        // now we repeatedly scan the pending directory looking for a class
+        // with no in-program dependencies - it's an error if there isn't one
+        // as we build the classes we have to remove them (their names) from
+        // pending list and from the remaining dependencies
         while (classes->items() > 0)
         {
             // this is the next one we process
-            ClassDirective *next_install = OREF_NULL;
+            ClassDirective *nextInstall = OREF_NULL;
             for (i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
             {
-                 /* get the next class                */
-                ClassDirective *current_class = (ClassDirective *)(classes->getValue(i));
+                // get the next directive
+                ClassDirective *currentClass = (ClassDirective *)(classes->getValue(i));
                 // if this class doesn't have any additional dependencies, pick it next.
-                if (current_class->dependenciesResolved())
+                if (currentClass->dependenciesResolved())
                 {
-                    next_install = current_class;
+                    nextInstall = currentClass;
                     // add this to the class ordering
-                    class_order->append((RexxObject *)next_install);
+                    classOrder->append((RexxObject *)nextInstall);
                     // remove this from the processing list
                     classes->removeIndex(i);
                 }
             }
-            if (next_install == OREF_NULL)   /* nothing located?                  */
+
+            // if nothing was located during this pass, we must have circular dependencies
+            // this is an error.
+            if (nextInstall == OREF_NULL)
             {
                 // directive line where we can give as the source of the error
-                ClassDirective *error_class = (ClassDirective *)(classes->getValue(classes->firstIndex()));
-                clauseLocation = error_class->getLocation();
-                /* raise an error                    */
-                syntaxError(Error_Execution_cyclic, this->programName);
+                ClassDirective *errorClass = (ClassDirective *)(classes->getValue(classes->firstIndex()));
+                clauseLocation = errorClass->getLocation();
+                syntaxError(Error_Execution_cyclic, package->programName);
             }
-            RexxString *class_name = next_install->getName();
+
+            // ok, now go remove these from the dependencies
+            RexxString *className = nextInstall->getName();
 
             // now go through the pending list telling each of the remaining classes that
             // they can remove this dependency from their list
             for (i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
-            {    /* go remove the dependencies        */
-                 /* get a class                       */
-                ClassDirective *current_class = (ClassDirective *)classes->getValue(i);
-                current_class->removeDependency(class_name);
+            {
+                ClassDirective *currentClass = (ClassDirective *)classes->getValue(i);
+                currentClass->removeDependency(className);
             }
         }
 
-        /* replace the original class list   */
-        OrefSet(this, this->classes, class_order);
-        /* don't need the dependencies now   */
-        OrefSet(this, this->class_dependencies, OREF_NULL);
+        // replace the original class list
+        package->classes = classOrder;
     }
 
-    if (this->requires->items() == 0)     /* nothing there?                    */
-    {
-        /* just clear it out                 */
-        OrefSet(this, this->requires, OREF_NULL);
-    }
-    if (this->libraries->items() == 0)     /* nothing there?                    */
-    {
-        /* just clear it out                 */
-        OrefSet(this, this->libraries, OREF_NULL);
-    }
-    if (this->routines->items() == 0)    /* no routines to process?           */
-    {
-        /* just clear it out also            */
-        OrefSet(this, this->routines, OREF_NULL);
-    }
-    /* now finally the public routines   */
-    if (this->public_routines->items() == 0)
-    {
-        /* just clear it out also            */
-        OrefSet(this, this->public_routines, OREF_NULL);
-    }
-    if (this->methods->items() == 0)     /* and also the methods directory    */
-    {
-        /* just clear it out also            */
-        OrefSet(this, this->methods, OREF_NULL);
-    }
+    // clear out any directories in the package that don't hold anything.
+    package->clearEmptyDependencies();
 }
 
 
-void RexxSource::flushControl(
+void LanguageParser::flushControl(
     RexxInstruction *_instruction)      /* next instruction                  */
 /******************************************************************************/
 /* Function:  Flush any pending compound instructions from the control stack  */
@@ -671,7 +708,7 @@ void RexxSource::flushControl(
     }
 }
 
-RexxCode *RexxSource::translateBlock(
+RexxCode *LanguageParser::translateBlock(
     RexxDirectory *_labels )            /* labels (for interpret)            */
 /******************************************************************************/
 /* Function:  Translate a block of REXX code (delimited by possible           */
@@ -1002,7 +1039,7 @@ RexxCode *RexxSource::translateBlock(
     return new RexxCode(this, this->first, this->labels, (this->maxstack+ 10), this->variableindex);
 }
 
-RexxVariableBase *RexxSource::addVariable(
+RexxVariableBase *LanguageParser::addVariable(
     RexxString *varname)               /* variable to add                   */
 /******************************************************************************/
 /* Function:  Resolve a variable name to a single common retriever object     */
@@ -1039,7 +1076,7 @@ RexxVariableBase *RexxSource::addVariable(
     return retriever;                    /* return variable accesser          */
 }
 
-RexxStemVariable *RexxSource::addStem(
+RexxStemVariable *LanguageParser::addStem(
     RexxString *stemName)              /* stem to add                       */
 /******************************************************************************/
 /* Function:  Process creation of stem variables                              */
@@ -1076,7 +1113,7 @@ RexxStemVariable *RexxSource::addStem(
 }
 
 
-RexxCompoundVariable *RexxSource::addCompound(
+RexxCompoundVariable *LanguageParser::addCompound(
     RexxString *name)                  /* name of the compound variable     */
 /******************************************************************************/
 /* Function:  Parse to completion a compound variable                         */
@@ -1145,7 +1182,7 @@ RexxCompoundVariable *RexxSource::addCompound(
 }
 
 
-void RexxSource::expose(
+void LanguageParser::expose(
     RexxString *name )                 /* variable name to add to list      */
 /******************************************************************************/
 /* Function:  Add a variable name to the list of exposed variables for the    */
@@ -1157,7 +1194,7 @@ void RexxSource::expose(
 }
 
 
-RexxString *RexxSource::commonString(
+RexxString *LanguageParser::commonString(
     RexxString *string )               /* string token to "collapse"        */
 /******************************************************************************/
 /* Function:  Compress all string tokens needed by a group of programs into   */
@@ -1176,14 +1213,14 @@ RexxString *RexxSource::commonString(
 }
 
 
-RexxObject *RexxSource::addVariable(RexxToken *token)
+RexxObject *LanguageParser::addVariable(RexxToken *token)
 {
     needVariable(token);
     return addText(token);
 }
 
 
-RexxObject *RexxSource::addText(
+RexxObject *LanguageParser::addText(
     RexxToken *token)                  /* token to process                  */
 /******************************************************************************/
 /* Function:  Generalized text token addition                                 */
@@ -1299,7 +1336,7 @@ RexxObject *RexxSource::addText(
     return retriever;                    /* return created retriever          */
 }
 
-RexxVariableBase *RexxSource::getRetriever(
+RexxVariableBase *LanguageParser::getRetriever(
     RexxString *name)                  /* name of the variable to process   */
 /******************************************************************************/
 /* Function:  Generalized method attribute retriever                          */
@@ -1334,7 +1371,7 @@ RexxVariableBase *RexxSource::getRetriever(
 }
 
 
-void RexxSource::addClause(
+void LanguageParser::addClause(
     RexxInstruction *_instruction)      /* new label to add                  */
 /******************************************************************************/
 /* Add an instruction to the tree code execution stream                       */
@@ -1360,7 +1397,7 @@ void RexxSource::addClause(
 }
 
 
-void RexxSource::addLabel(
+void LanguageParser::addLabel(
     RexxInstruction      *label,       /* new label to add                  */
     RexxString           *labelname )  /* the label name                    */
 /******************************************************************************/
@@ -1376,7 +1413,7 @@ void RexxSource::addLabel(
 }
 
 
-RexxInstruction *RexxSource::findLabel(
+RexxInstruction *LanguageParser::findLabel(
     RexxString *labelname)             /* target label                      */
 /******************************************************************************/
 /* Search the label table for a label name match                              */
@@ -1393,7 +1430,7 @@ RexxInstruction *RexxSource::findLabel(
     }
 }
 
-void RexxSource::setGuard()
+void LanguageParser::setGuard()
 /******************************************************************************/
 /* Function:  Set on guard expression variable "gathering"                    */
 /******************************************************************************/
@@ -1406,7 +1443,7 @@ void RexxSource::setGuard()
     }
 }
 
-RexxArray *RexxSource::getGuard()
+RexxArray *LanguageParser::getGuard()
 /******************************************************************************/
 /* Function:  Complete guard expression variable collection and return the    */
 /*            table of variables.                                             */
@@ -1420,7 +1457,7 @@ RexxArray *RexxSource::getGuard()
     return guards;                       /* return the guards array           */
 }
 
-RexxObject *RexxSource::constantExpression()
+RexxObject *LanguageParser::constantExpression()
 /******************************************************************************/
 /* Function:  Evaluate a "constant" expression for REXX instruction keyword   */
 /*            values.  A constant expression is a literal string, constant    */
@@ -1468,7 +1505,7 @@ RexxObject *RexxSource::constantExpression()
     return _expression;                   /* and return it                     */
 }
 
-RexxObject *RexxSource::constantLogicalExpression()
+RexxObject *LanguageParser::constantLogicalExpression()
 /******************************************************************************/
 /* Function:  Evaluate a "constant" expression for REXX instruction keyword   */
 /*            values.  A constant expression is a literal string, constant    */
@@ -1518,7 +1555,7 @@ RexxObject *RexxSource::constantLogicalExpression()
     return _expression;                   /* and return it                     */
 }
 
-RexxObject *RexxSource::parenExpression(RexxToken *start)
+RexxObject *LanguageParser::parenExpression(RexxToken *start)
 /******************************************************************************/
 /* Function:  Evaluate a "parenthetical" expression for REXX instruction      */
 /*            values.  A parenthetical expression is an expression enclosed   */
@@ -1539,7 +1576,7 @@ RexxObject *RexxSource::parenExpression(RexxToken *start)
   return _expression;                   /* and return it                     */
 }
 
-RexxObject *RexxSource::expression(
+RexxObject *LanguageParser::expression(
   int   terminators )                  /* expression termination context    */
 /******************************************************************************/
 /* Function:  Parse off an expression, stopping when one of the possible set  */
@@ -1553,7 +1590,7 @@ RexxObject *RexxSource::expression(
   return this->subExpression(terminators);
 }
 
-RexxObject *RexxSource::subExpression(
+RexxObject *LanguageParser::subExpression(
   int   terminators )                  /* expression termination context    */
 /******************************************************************************/
 /* Function:  Parse off a sub- expression, stopping when one of the possible  */
@@ -1650,7 +1687,7 @@ RexxObject *RexxSource::subExpression(
                         break;                     /* out of here                       */
                     }
                                                    /* current have higher precedence?   */
-                    if (this->precedence(token) > this->precedence(second))
+                    if (token->precedence() > token->precedence())
                     {
                         break;                     /* finished also                     */
                     }
@@ -1727,7 +1764,7 @@ RexxObject *RexxSource::subExpression(
     return this->popTerm();              /* expression is top of term stack   */
 }
 
-RexxArray *RexxSource::argArray(
+RexxArray *LanguageParser::argArray(
   RexxToken   *_first,                 /* token starting arglist            */
   int          terminators )           /* expression termination context    */
 /******************************************************************************/
@@ -1749,7 +1786,7 @@ RexxArray *RexxSource::argArray(
     return _argArray;                     /* return the argument array         */
 }
 
-size_t RexxSource::argList(
+size_t LanguageParser::argList(
   RexxToken   *_first,                  /* token starting arglist            */
   int          terminators )           /* expression termination context    */
 /******************************************************************************/
@@ -1808,7 +1845,7 @@ size_t RexxSource::argList(
     return realcount;                    /* return the argument count         */
 }
 
-RexxObject *RexxSource::function(
+RexxObject *LanguageParser::function(
     RexxToken     *token,              /* arglist start (for error reports) */
     RexxToken     *name,               /* function name                     */
     int            terminators )       /* expression termination context    */
@@ -1832,7 +1869,7 @@ RexxObject *RexxSource::function(
   return (RexxObject *)_function;      /* and return this to the caller     */
 }
 
-RexxObject *RexxSource::collectionMessage(
+RexxObject *LanguageParser::collectionMessage(
   RexxToken   *token,                  /* arglist start (for error reports) */
   RexxObject  *target,                 /* target term                       */
   int          terminators )           /* expression termination context    */
@@ -1853,7 +1890,7 @@ RexxObject *RexxSource::collectionMessage(
   return _message;                     /* return the message item           */
 }
 
-RexxToken  *RexxSource::getToken(
+RexxToken  *LanguageParser::getToken(
     int   terminators,                 /* expression termination context    */
     int   errorcode)                   /* expected error code               */
 /******************************************************************************/
@@ -1873,7 +1910,7 @@ RexxToken  *RexxSource::getToken(
     return token;                        /* return the token                  */
 }
 
-RexxObject *RexxSource::message(
+RexxObject *LanguageParser::message(
   RexxObject  *target,                 /* message send target               */
   bool         doubleTilde,            /* class of message send             */
   int          terminators )           /* expression termination context    */
@@ -1961,7 +1998,7 @@ RexxObject *RexxSource::message(
  *         the clause position pointer will either be unchanged or
  *         positioned at the next token of the clause.
  */
-RexxObject *RexxSource::variableOrMessageTerm()
+RexxObject *LanguageParser::variableOrMessageTerm()
 {
     // try for a message term first.  If not successful, see if the
     // next token is a variable symbol.
@@ -1990,7 +2027,7 @@ RexxObject *RexxSource::variableOrMessageTerm()
 
 
 
-RexxObject *RexxSource::messageTerm()
+RexxObject *LanguageParser::messageTerm()
 /******************************************************************************/
 /* Function:  Parse off an instruction leading message term element           */
 /******************************************************************************/
@@ -2033,7 +2070,7 @@ RexxObject *RexxSource::messageTerm()
     return term;                         /* OREF_NULL if not a message term)  */
 }
 
-RexxObject *RexxSource::messageSubterm(
+RexxObject *LanguageParser::messageSubterm(
   int   terminators )                  /* expression termination context    */
 /******************************************************************************/
 /* Function:  Parse off a message subterm within an expression                */
@@ -2105,7 +2142,7 @@ RexxObject *RexxSource::messageSubterm(
     return term;                         /* OREF_NULL if not a message term)  */
 }
 
-RexxObject *RexxSource::subTerm(
+RexxObject *LanguageParser::subTerm(
   int   terminators )                  /* expression termination context    */
 /******************************************************************************/
 /* Function:  Parse off a subterm of an expression, from simple ones like     */
@@ -2197,7 +2234,7 @@ RexxObject *RexxSource::subTerm(
     return term;                         /* return this term                  */
 }
 
-void RexxSource::pushTerm(
+void LanguageParser::pushTerm(
     RexxObject *term )                 /* term to push                      */
 /******************************************************************************/
 /* Function:  Push a term onto the expression term stack                      */
@@ -2213,7 +2250,7 @@ void RexxSource::pushTerm(
     }
 }
 
-RexxObject *RexxSource::popTerm()
+RexxObject *LanguageParser::popTerm()
 /******************************************************************************/
 /* Function:  Pop a term off of the expression term stack                     */
 /******************************************************************************/
@@ -2226,7 +2263,7 @@ RexxObject *RexxSource::popTerm()
   return term;                         /* and return it                   */
 }
 
-RexxObject *RexxSource::popNTerms(
+RexxObject *LanguageParser::popNTerms(
      size_t count )                    /* number of terms to pop            */
 /******************************************************************************/
 /* Function:  Pop multiple terms off of the operator stack                    */
@@ -2243,7 +2280,7 @@ RexxObject *RexxSource::popNTerms(
     return result;                       /* and return it                     */
 }
 
-void RexxSource::isExposeValid()
+void LanguageParser::isExposeValid()
 /******************************************************************************/
 /* Function:  Validate placement of an EXPOSE instruction.  The EXPOSE must   */
 /*            be the first instruction and this must not be an interpret      */
@@ -2265,7 +2302,7 @@ void RexxSource::isExposeValid()
     }
 }
 
-RexxArray  *RexxSource::words(
+RexxArray  *LanguageParser::words(
     RexxString *string)                /* target string                     */
 /******************************************************************************/
 /* Function:  Break up a string into an array of words for parsing and        */
@@ -2302,7 +2339,7 @@ RexxArray  *RexxSource::words(
     return wordarray;                    /* return as an array                */
 }
 
-void RexxSource::errorCleanup()
+void LanguageParser::errorCleanup()
 /******************************************************************************/
 /* Function:  Free up all of the parsing elements because of an error         */
 /******************************************************************************/
@@ -2310,7 +2347,7 @@ void RexxSource::errorCleanup()
   this->cleanup();                     /* do needed cleanup                 */
 }
 
-void RexxSource::error(int errorcode)
+void LanguageParser::error(int errorcode)
 /******************************************************************************/
 /* Function:  Raise an error caused by source translation problems.           */
 /******************************************************************************/
@@ -2320,7 +2357,7 @@ void RexxSource::error(int errorcode)
   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
 }
 
-void RexxSource::error(int errorcode, SourceLocation &location, RexxArray *subs)
+void LanguageParser::error(int errorcode, SourceLocation &location, RexxArray *subs)
 /******************************************************************************/
 /* Function:  Raise an error caused by source translation problems.           */
 /******************************************************************************/
@@ -2331,7 +2368,7 @@ void RexxSource::error(int errorcode, SourceLocation &location, RexxArray *subs)
   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, subs, OREF_NULL);
 }
 
-void RexxSource::errorLine(
+void LanguageParser::errorLine(
      int   errorcode,                  /* error to raise                    */
      RexxInstruction *_instruction)    /* instruction for the line number   */
 /******************************************************************************/
@@ -2344,7 +2381,7 @@ void RexxSource::errorLine(
   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
 }
 
-void RexxSource::errorPosition(
+void LanguageParser::errorPosition(
      int        errorcode,             /* error to raise                    */
      RexxToken *token )                /* token value for description       */
 /******************************************************************************/
@@ -2358,7 +2395,7 @@ void RexxSource::errorPosition(
   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(token_location.getOffset()), new_integer(token_location.getLineNumber())), OREF_NULL);
 }
 
-void RexxSource::errorToken(
+void LanguageParser::errorToken(
      int        errorcode,             /* error to raise                    */
      RexxToken *token )                /* token value for description       */
 /******************************************************************************/
@@ -2427,7 +2464,7 @@ void RexxSource::errorToken(
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
-void RexxSource::error(
+void LanguageParser::error(
      int         errorcode,            /* error to raise                    */
      RexxObject *value )               /* value for description             */
 /******************************************************************************/
@@ -2439,7 +2476,7 @@ void RexxSource::error(
   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
-void RexxSource::error(
+void LanguageParser::error(
      int         errorcode,            /* error to raise                    */
      RexxObject *value1,               /* first value for description       */
      RexxObject *value2 )              /* second value for description      */
@@ -2452,7 +2489,7 @@ void RexxSource::error(
   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
-void RexxSource::error(
+void LanguageParser::error(
      int         errorcode,            /* error to raise                    */
      RexxObject *value1,               /* first value for description       */
      RexxObject *value2,               /* second value for description      */
@@ -2466,7 +2503,7 @@ void RexxSource::error(
   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
-void RexxSource::blockError(
+void LanguageParser::blockError(
     RexxInstruction *_instruction )     /* unclosed control instruction      */
 /******************************************************************************/
 /* Function:  Raise an error for an unclosed block instruction.               */

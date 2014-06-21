@@ -521,15 +521,4 @@ inline RexxArray * REQUEST_ARRAY(RexxObject *obj) { return ((obj)->requestArray(
 /* The next macro is specifically for REQUESTing an INTEGER,                  */
 inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(Numerics::ARGUMENT_DIGITS));}
 
-/******************************************************************************/
-/* Typed method invocation macros                                             */
-/******************************************************************************/
-
-inline RexxObject * callOperatorMethod(RexxObject *object, size_t methodOffset, RexxObject *argument) {
-                                       /* get the entry point               */
-  PCPPM cppEntry = object->behaviour->getOperatorMethod(methodOffset);
-                                       /* go issue the method               */
-  return (object->*((PCPPM1)cppEntry))(argument);
-}
-
 #endif

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -66,7 +66,9 @@ class RexxClause : public RexxInternalObject {
   void        setEnd(size_t, size_t);
   void        trim();
   void        newClause();
-  RexxToken  *newToken(int, int, RexxString *, SourceLocation &);
+  RexxToken  *newToken(TokenClass, TokenSubclass, RexxString *, SourceLocation &);
+  inline RexxToken  *newToken(TokenClass c, TokenSubclass sc, SourceLocation &l) { return newToken(c, sc, OREF_NULL, l); }
+  inline RexxToken  *newToken(TokenClass c, SourceLocation &l) { return newToken(c, SUBTYPE_NONE, OREF_NULL, l); }
   RexxToken  *nextRealToken();
   inline void        firstToken() {this->current = this->first;};
   inline const SourceLocation &getLocation() { return clauseLocation; }

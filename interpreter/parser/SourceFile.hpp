@@ -179,27 +179,28 @@ class RexxSource: public RexxInternalObject {
     SecurityManager *getSecurityManager() { return securityManager; }
 
     inline RexxDirectory *getLocalRoutines() { return routines; }
-    inline RexxDirectory *getPublicRoutines() { return public_routines; }
+    inline RexxDirectory *getPublicRoutines() { return publicRoutines; }
     inline void setLocalRoutines(RexxDirectory *r) { routines = r; }
-    inline void setPublicRoutines(RexxDirectory *r) { public_routines = r; }
+    inline void setPublicRoutines(RexxDirectory *r) { publicRoutines = r; }
 
     void addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
     void addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
 
-    RexxDirectory *getInstalledClasses() { install(); return installed_classes; }
-    RexxDirectory *getInstalledPublicClasses() { install(); return installed_public_classes; }
-    RexxDirectory *getImportedClasses() { install(); return merged_public_classes; }
-    RexxDirectory *getInstalledRoutines() { install(); return routines; }
-    RexxDirectory *getInstalledPublicRoutines() { install(); return public_routines; }
-    RexxDirectory *getImportedRoutines() { install(); return merged_public_routines; }
-    RexxDirectory *getDefinedMethods() { install(); return methods; }
-    RexxList      *getPackages() { install(); return loadedPackages; }
-    size_t         getDigits() { return digits; }
-    bool           getForm() { return form; }
-    size_t         getFuzz() { return fuzz; }
-    size_t         getTraceSetting() { return traceSetting; }
-    size_t         getTraceFlags() { return traceFlags; }
-    RexxString    *getTrace() { return formatTraceSetting(traceSetting); }
+    inline RexxDirectory *getInstalledClasses() { install(); return installedClasses; }
+    inline RexxDirectory *getInstalledPublicClasses() { install(); return installedPublicClasses; }
+    inline RexxDirectory *getImportedClasses() { install(); return mergedPublicClasses; }
+    inline RexxDirectory *getInstalledRoutines() { install(); return routines; }
+    inline RexxDirectory *getInstalledPublicRoutines() { install(); return publicRoutines; }
+    inline RexxDirectory *getImportedRoutines() { install(); return mergedPublicRoutines; }
+    inline RexxDirectory *getDefinedMethods() { install(); return methods; }
+    inline RexxList      *getPackages() { install(); return loadedPackages; }
+    inline size_t         getDigits() { return digits; }
+    inline bool           getForm() { return form; }
+    inline size_t         getFuzz() { return fuzz; }
+    inline size_t         getTraceSetting() { return traceSetting; }
+    inline size_t         getTraceFlags() { return traceFlags; }
+    inline RexxString    *getTrace() { return formatTraceSetting(traceSetting); }
+    inline void           setInitCode(RexxCode *c) { initCode = c: }
 
     static pbuiltin builtinTable[];      /* table of builtin function stubs   */
 
@@ -247,16 +248,16 @@ protected:
     PackageClass  *package;              // our package wrapper
     RexxSource    *parentSource;         // a parent source context environment;
     RexxDirectory *routines;             // routines found on directives
-    RexxDirectory *public_routines;      // PUBLIC routines directive routines
+    RexxDirectory *publicRoutines;       // PUBLIC routines directive routines
     RexxList      *libraries;            // packages requiring loading
     RexxList      *requires;             // requires directives
     RexxList      *classes;              // classes found on directives
                                          // all public installed classes
-    RexxDirectory *installed_public_classes;
-    RexxDirectory *installed_classes;    // entire list of installed classes
-    RexxDirectory *merged_public_classes;// entire merged set of classes
+    RexxDirectory *installedPublicClasses;
+    RexxDirectory *installedClasses;    // entire list of installed classes
+    RexxDirectory *mergedPublicClasses;  // entire merged set of classes
                                          // all public required routines
-    RexxDirectory *merged_public_routines;
+    RexxDirectory *mergedPublicRoutines;
     RexxDirectory *methods;              // methods found on directives
 
     // settings inherited from ::options statements
