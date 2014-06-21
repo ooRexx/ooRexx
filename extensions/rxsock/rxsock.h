@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -133,7 +133,7 @@ public:
      */
     bool resolveStem(RexxObjectPtr source)
     {
-        // handle the case where no stem was provided at all 
+        // handle the case where no stem was provided at all
         if (source == NULL) {
             return false;
         }
@@ -174,7 +174,7 @@ public:
             if (stem == NULL)
             {
                 // context->InvalidRoutine();
-                // don't call context->InvalidRoutine() because we 
+                // don't call context->InvalidRoutine() because we
                 // want to allow an empty string as a parm
                 return false;
             }

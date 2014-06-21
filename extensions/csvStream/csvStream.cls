@@ -25,7 +25,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -190,7 +190,7 @@ do until (inLiteral  = .false) ,
       if i > textLength
       then do
          if fieldText \= ''
-         then do  
+         then do
             self~csvState = 'ERROR'
             self~LastDataError = 'Bad CSV data field' fieldno '- unmatched qualifier ('||blip||')'
          end /* DO */
@@ -227,7 +227,7 @@ do until (inLiteral  = .false) ,
                end /* Do */
 
                if fieldText~countstr(blip) // 2 \= 0
-               then do 
+               then do
                   self~csvState = 'ERROR'
                   self~LastDataError = 'Bad CSV data field' fieldno '- unmatched qualifier ('||blip||') found'
                end /* DO */
