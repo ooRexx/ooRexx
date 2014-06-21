@@ -2506,7 +2506,7 @@ void RexxSource::blockError(
     }
 }
 
-size_t RexxSource::processVariableList(
+size_t LanguageParser::processVariableList(
   int        type )                    /* type of instruction               */
 /****************************************************************************/
 /* Function:  Process a variable list for PROCEDURE, DROP, and USE          */
@@ -2616,7 +2616,7 @@ size_t RexxSource::processVariableList(
     return list_count;                   /* return the count                  */
 }
 
-RexxObject *RexxSource::parseConditional(
+RexxObject *LanguageParser::parseConditional(
      int   *condition_type,            /* type of condition                 */
      int    error_message )            /* extra "stuff" error message       */
 /******************************************************************************/
@@ -2705,7 +2705,7 @@ RexxObject *RexxSource::parseConditional(
  *         element if a single expression is located, and a complex
  *         logical expression operator for a list of expressions.
  */
-RexxObject *RexxSource::parseLogical(RexxToken *_first, int terminators)
+RexxObject *LanguageParser::parseLogical(RexxToken *_first, int terminators)
 {
     size_t count = argList(_first, terminators);
     // arglist has swallowed the terminator token, so we need to back up one.

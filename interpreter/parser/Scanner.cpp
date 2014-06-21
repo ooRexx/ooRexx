@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2015 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,7 +48,7 @@
 #include "ArrayClass.hpp"
 #include "SourceFile.hpp"
 
-int RexxSource::precedence(
+int LanguageParser::precedence(
     RexxToken  *token)                 /* target token                      */
 /******************************************************************************/
 /* Fucntion:  Determine a token's operator precedence                         */
@@ -124,7 +124,7 @@ int RexxSource::precedence(
 *  special characters that can be part of an REXX symbol.            *
 *  The table also convert lower case letters to upper case.          *
 *********************************************************************/
-int RexxSource::characterTable[]={
+int LanguageParser::characterTable[]={
 #ifdef EBCDIC
  // This table was built using the IBM-1047 code page. It should be
  // universal across all EBCDIC code pages!
@@ -194,7 +194,7 @@ int RexxSource::characterTable[]={
 #define OPERATOR(op) (this->clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, location))
 #define CHECK_ASSIGNMENT(op, token) (token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op))
 
-void RexxSource::endLocation(
+void LanguageParser::endLocation(
   SourceLocation &location )           /* token location information        */
 /****************************************************************************/
 /* Function:  Record a tokens ending location                               */
@@ -204,7 +204,7 @@ void RexxSource::endLocation(
     location.setEnd(line_number, line_offset);
 }
 
-bool RexxSource::nextSpecial(
+bool LanguageParser::nextSpecial(
   unsigned int  target,                /* desired target character          */
   SourceLocation &location )           /* token location information        */
 /****************************************************************************/
@@ -225,7 +225,7 @@ bool RexxSource::nextSpecial(
     return false;                        // didn't find the one we're looking for
 }
 
-void RexxSource::comment()
+void LanguageParser::comment()
 /****************************************************************************/
 /* Function:  Scan source to skip over a nest of comments                   */
 /****************************************************************************/
@@ -268,7 +268,7 @@ void RexxSource::comment()
     }
 }
 
-unsigned int RexxSource::locateToken(
+unsigned int LanguageParser::locateToken(
   RexxToken *previous )                /* previous token                    */
 /****************************************************************************/
 /* Function:  Locate next significant token in source, skipping extra       */
@@ -405,7 +405,7 @@ unsigned int RexxSource::locateToken(
     return character;                     /* return the character              */
 }
 
-RexxString *RexxSource::packLiteral(
+RexxString *LanguageParser::packLiteral(
   size_t     start,                    /* start of the literal in line      */
   size_t     length,                   /* length of the literal to reduce   */
   int        type )                    /* type of literal to process        */
@@ -617,7 +617,7 @@ RexxString *RexxSource::packLiteral(
     return value;                         /* return newly created string       */
 }
 
-RexxToken *RexxSource::sourceNextToken(
+RexxToken *LanguageParser::sourceNextToken(
     RexxToken *previous )              /* previous token scanned off        */
 /*********************************************************************/
 /* Extract a token from the source and create a new token object.    */

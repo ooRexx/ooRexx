@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -292,7 +292,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
             {                                /* compatibility to windows, no drive   */
                 return context->NullString();
             }
-        
+
         case FILESPEC_LOCATION:          /* extract the file name               */
             {                                /* everything to left of slash        */
                 return context->String(name, pathEnd - name);

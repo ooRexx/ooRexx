@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -107,7 +107,7 @@
 #include "ProtectedObject.hpp"
 
 
-RexxInstruction *RexxSource::instruction()
+RexxInstruction *LanguageParser::instruction()
 /******************************************************************************/
 /* Function:  Process an individual REXX clause                               */
 /******************************************************************************/
@@ -445,7 +445,7 @@ RexxInstruction *RexxSource::instruction()
     return _instruction;                 /* return the created instruction    */
 }
 
-RexxInstruction *RexxSource::addressNew()
+RexxInstruction *LanguageParser::addressNew()
 /****************************************************************************/
 /* Function:  Create a new ADDRESS translator object                        */
 /****************************************************************************/
@@ -499,7 +499,7 @@ RexxInstruction *RexxSource::addressNew()
 }
 
 
-RexxInstruction *RexxSource::sourceNewObject(
+RexxInstruction *LanguageParser::sourceNewObject(
     size_t        size,                /* Object size                       */
     RexxBehaviour *_behaviour,         /* Object's behaviour                */
     int            type )              /* Type of instruction               */
@@ -517,7 +517,7 @@ RexxInstruction *RexxSource::sourceNewObject(
 }
 
 
-RexxInstruction *RexxSource::assignmentNew(
+RexxInstruction *LanguageParser::assignmentNew(
      RexxToken  *target )              /* target variable instruction       */
 /****************************************************************************/
 /* Function:  Create a new ASSIGNMENT translator object                     */
@@ -547,7 +547,7 @@ RexxInstruction *RexxSource::assignmentNew(
  *
  * @return The constructed instruction object.
  */
-RexxInstruction *RexxSource::assignmentOpNew(RexxToken *target, RexxToken *operation)
+RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *operation)
 {
     this->needVariable(target);     // make sure this is a variable
     // we require an expression for the additional part, which is required
@@ -568,7 +568,7 @@ RexxInstruction *RexxSource::assignmentOpNew(RexxToken *target, RexxToken *opera
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::callNew()
+RexxInstruction *LanguageParser::callNew()
 /****************************************************************************/
 /* Function:  Create a new CALL translator object                           */
 /****************************************************************************/
@@ -783,7 +783,7 @@ RexxInstruction *RexxSource::callNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::commandNew()
+RexxInstruction *LanguageParser::commandNew()
 /****************************************************************************/
 /* Function:  Create a new COMMAND instruction object                       */
 /****************************************************************************/
@@ -797,7 +797,7 @@ RexxInstruction *RexxSource::commandNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::doNew()
+RexxInstruction *LanguageParser::doNew()
 /****************************************************************************/
 /* Function:  Create a new DO translator object                             */
 /****************************************************************************/
@@ -807,7 +807,7 @@ RexxInstruction *RexxSource::doNew()
     return this->createDoLoop((RexxInstructionDo *)newObject, false);
 }
 
-RexxInstruction *RexxSource::loopNew()
+RexxInstruction *LanguageParser::loopNew()
 /****************************************************************************/
 /* Function:  Create a new LOOP translator object                           */
 /****************************************************************************/
@@ -823,7 +823,7 @@ RexxInstruction *RexxSource::loopNew()
  *
  * @return
  */
-RexxInstruction *RexxSource::createDoLoop()
+RexxInstruction *LanguageParser::createDoLoop()
 {
     // NOTE:  we create a DO instruction for both DO and LOOP
     RexxInstruction *newObject = new_instruction(DO, Do); /* create a new translator object    */
@@ -837,7 +837,7 @@ RexxInstruction *RexxSource::createDoLoop()
  *
  * @return
  */
-RexxInstruction *RexxSource::createLoop()
+RexxInstruction *LanguageParser::createLoop()
 {
     // NOTE:  we create a DO instruction for both DO and LOOP
     RexxInstruction *newObject = new_instruction(LOOP, Do); /* create a new translator object    */
@@ -846,7 +846,7 @@ RexxInstruction *RexxSource::createLoop()
 }
 
 
-RexxInstruction *RexxSource::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
+RexxInstruction *LanguageParser::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
 /******************************************************************************/
 /* Function:  Create a new DO translator object                               */
 /******************************************************************************/
@@ -1136,7 +1136,7 @@ RexxInstruction *RexxSource::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
     return newDo;
 }
 
-RexxInstruction *RexxSource::dropNew()
+RexxInstruction *LanguageParser::dropNew()
 /****************************************************************************/
 /* Function:  Create a new DROP translator object                           */
 /****************************************************************************/
@@ -1150,7 +1150,7 @@ RexxInstruction *RexxSource::dropNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::elseNew(
+RexxInstruction *LanguageParser::elseNew(
      RexxToken  *token)                /* ELSE keyword token                */
 /****************************************************************************/
 /* Function:  Create a new ELSE translator object                           */
@@ -1163,7 +1163,7 @@ RexxInstruction *RexxSource::elseNew(
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::endNew()
+RexxInstruction *LanguageParser::endNew()
 /****************************************************************************/
 /* Function:  Create a new END translator object                            */
 /****************************************************************************/
@@ -1192,7 +1192,7 @@ RexxInstruction *RexxSource::endNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::endIfNew(
+RexxInstruction *LanguageParser::endIfNew(
      RexxInstructionIf *parent )       /* target parent IF or WHEN clause   */
 /****************************************************************************/
 /* Function:  Create a new DUMMY END IF translator object                   */
@@ -1205,7 +1205,7 @@ RexxInstruction *RexxSource::endIfNew(
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::exitNew()
+RexxInstruction *LanguageParser::exitNew()
 /****************************************************************************/
 /* Function:  Create a EXIT instruction object                              */
 /****************************************************************************/
@@ -1219,7 +1219,7 @@ RexxInstruction *RexxSource::exitNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::exposeNew()
+RexxInstruction *LanguageParser::exposeNew()
 /****************************************************************************/
 /* Function:  Create a new EXPOSE translator object                         */
 /****************************************************************************/
@@ -1234,7 +1234,7 @@ RexxInstruction *RexxSource::exposeNew()
     return newObject; /* done, return this                 */
 }
 
-void RexxSource::RexxInstructionForwardCreate(
+void LanguageParser::RexxInstructionForwardCreate(
     RexxInstructionForward *newObject) /* target FORWARD instruction        */
 /****************************************************************************/
 /* Function:  Create a FORWARD instruction object                           */
@@ -1359,7 +1359,7 @@ void RexxSource::RexxInstructionForwardCreate(
     }
 }
 
-RexxInstruction *RexxSource::forwardNew()
+RexxInstruction *LanguageParser::forwardNew()
 /****************************************************************************/
 /* Function:  Create a new RAISE translator object                             */
 /****************************************************************************/
@@ -1371,7 +1371,7 @@ RexxInstruction *RexxSource::forwardNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::guardNew()
+RexxInstruction *LanguageParser::guardNew()
 /******************************************************************************/
 /* Function:  Create a new GUARD translator object                            */
 /******************************************************************************/
@@ -1447,7 +1447,7 @@ RexxInstruction *RexxSource::guardNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::ifNew(
+RexxInstruction *LanguageParser::ifNew(
     int   type )                       /* type of instruction (IF or WHEN)  */
 /****************************************************************************/
 /* Function:  Create a new INTERPRET instruction object                     */
@@ -1479,7 +1479,7 @@ RexxInstruction *RexxSource::ifNew(
 }
 
 
-RexxInstruction *RexxSource::instructionNew(
+RexxInstruction *LanguageParser::instructionNew(
      int type )                        /* instruction type                  */
 /****************************************************************************/
 /* Function:  Create a new INSTRUCTION translator object                    */
@@ -1491,7 +1491,7 @@ RexxInstruction *RexxSource::instructionNew(
     return newObject;                    /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::interpretNew()
+RexxInstruction *LanguageParser::interpretNew()
 /****************************************************************************/
 /* Function:  Create a new INTERPRET instruction object                     */
 /****************************************************************************/
@@ -1510,7 +1510,7 @@ RexxInstruction *RexxSource::interpretNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::labelNew()
+RexxInstruction *LanguageParser::labelNew()
 /******************************************************************************/
 /* Function:  Create a new LABEL instruction translator object                */
 /******************************************************************************/
@@ -1530,7 +1530,7 @@ RexxInstruction *RexxSource::labelNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::leaveNew(
+RexxInstruction *LanguageParser::leaveNew(
      int type )                        /* type of queueing operation        */
 /****************************************************************************/
 /* Function:  Create a new LEAVE/ITERATE instruction translator object      */
@@ -1577,7 +1577,7 @@ RexxInstruction *RexxSource::leaveNew(
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::messageNew(
+RexxInstruction *LanguageParser::messageNew(
   RexxExpressionMessage *_message)      /* message to process                */
 /****************************************************************************/
 /* Function:  Create a new MESSAGE instruction translator object            */
@@ -1591,7 +1591,7 @@ RexxInstruction *RexxSource::messageNew(
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::messageAssignmentNew(
+RexxInstruction *LanguageParser::messageAssignmentNew(
   RexxExpressionMessage *_message,      /* message to process                */
   RexxObject            *_expression )  /* assignment value                  */
 /****************************************************************************/
@@ -1620,7 +1620,7 @@ RexxInstruction *RexxSource::messageAssignmentNew(
  *
  * @return The constructed message operator.
  */
-RexxInstruction *RexxSource::messageAssignmentOpNew(RexxExpressionMessage *_message, RexxToken *operation, RexxObject *_expression)
+RexxInstruction *LanguageParser::messageAssignmentOpNew(RexxExpressionMessage *_message, RexxToken *operation, RexxObject *_expression)
 {
     ProtectedObject p(_message);        // protect this
     ProtectedObject p2(_expression);    // also need to protect this portion
@@ -1641,7 +1641,7 @@ RexxInstruction *RexxSource::messageAssignmentOpNew(RexxExpressionMessage *_mess
 }
 
 
-RexxInstruction *RexxSource::nopNew()
+RexxInstruction *LanguageParser::nopNew()
 /****************************************************************************/
 /* Function:  Create a NOP instruction object                               */
 /****************************************************************************/
@@ -1659,7 +1659,7 @@ RexxInstruction *RexxSource::nopNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::numericNew()
+RexxInstruction *LanguageParser::numericNew()
 /****************************************************************************/
 /* Function:  Create a NUMERIC instruction object                           */
 /****************************************************************************/
@@ -1761,7 +1761,7 @@ RexxInstruction *RexxSource::numericNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::optionsNew()
+RexxInstruction *LanguageParser::optionsNew()
 /****************************************************************************/
 /* Function:  Create an OPTIONS instruction object                          */
 /****************************************************************************/
@@ -1778,7 +1778,7 @@ RexxInstruction *RexxSource::optionsNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::otherwiseNew(
+RexxInstruction *LanguageParser::otherwiseNew(
   RexxToken  *token)                   /* OTHERWISE token                   */
 /****************************************************************************/
 /* Function:  Create an OTHERWISE instruction object                        */
@@ -1791,7 +1791,7 @@ RexxInstruction *RexxSource::otherwiseNew(
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::parseNew(
+RexxInstruction *LanguageParser::parseNew(
   int argpull)                         /* type of parsing operation         */
 /****************************************************************************/
 /* Function:  Create a PARSE instruction object                             */
@@ -2090,7 +2090,7 @@ RexxInstruction *RexxSource::parseNew(
     return newObject;                    /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::procedureNew()
+RexxInstruction *LanguageParser::procedureNew()
 /****************************************************************************/
 /* Function:  Create a new PROCEDURE translator object                      */
 /****************************************************************************/
@@ -2119,7 +2119,7 @@ RexxInstruction *RexxSource::procedureNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::queueNew(
+RexxInstruction *LanguageParser::queueNew(
   int type)                            /* type of queueing operation        */
 /****************************************************************************/
 /* Function:  Create a QUEUE instruction object                             */
@@ -2133,7 +2133,7 @@ RexxInstruction *RexxSource::queueNew(
     new((void *)newObject) RexxInstructionQueue(_expression, type);
     return newObject;  /* done, return this                 */
 }
-RexxInstruction *RexxSource::raiseNew()
+RexxInstruction *LanguageParser::raiseNew()
 /****************************************************************************/
 /* Function:  Create a new RAISE translator object                             */
 /****************************************************************************/
@@ -2323,7 +2323,7 @@ RexxInstruction *RexxSource::raiseNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::replyNew()
+RexxInstruction *LanguageParser::replyNew()
 /****************************************************************************/
 /* Function:  Create a REPLY instruction object                             */
 /****************************************************************************/
@@ -2336,7 +2336,7 @@ RexxInstruction *RexxSource::replyNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::returnNew()
+RexxInstruction *LanguageParser::returnNew()
 /****************************************************************************/
 /* Function:  Create a RETURN instruction object                            */
 /****************************************************************************/
@@ -2350,7 +2350,7 @@ RexxInstruction *RexxSource::returnNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::sayNew()
+RexxInstruction *LanguageParser::sayNew()
 /****************************************************************************/
 /* Function:  Create a SAY instruction object                               */
 /****************************************************************************/
@@ -2363,7 +2363,7 @@ RexxInstruction *RexxSource::sayNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::selectNew()
+RexxInstruction *LanguageParser::selectNew()
 /****************************************************************************/
 /* Function:  Create a SELECT instruction object                            */
 /****************************************************************************/
@@ -2414,7 +2414,7 @@ RexxInstruction *RexxSource::selectNew()
     return  newObject;
 }
 
-RexxInstruction *RexxSource::signalNew()
+RexxInstruction *LanguageParser::signalNew()
 /****************************************************************************/
 /* Function:  Create a SIGNAL instruction object                            */
 /****************************************************************************/
@@ -2612,7 +2612,7 @@ RexxInstruction *RexxSource::signalNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::thenNew(
+RexxInstruction *LanguageParser::thenNew(
      RexxToken         *token,         /* THEN keyword token                */
      RexxInstructionIf *parent )       /* target parent IF or WHEN clause   */
 /****************************************************************************/
@@ -2626,7 +2626,7 @@ RexxInstruction *RexxSource::thenNew(
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *RexxSource::traceNew()
+RexxInstruction *LanguageParser::traceNew()
 /****************************************************************************/
 /* Function:  Create a TRACE instruction object                             */
 /****************************************************************************/
@@ -2751,7 +2751,7 @@ RexxInstruction *RexxSource::traceNew()
  *
  * @return The executable instruction object.
  */
-RexxInstruction *RexxSource::useNew()
+RexxInstruction *LanguageParser::useNew()
 {
     bool strictChecking = false;  // no strict checking enabled yet
 

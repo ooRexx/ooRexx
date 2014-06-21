@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2015 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,21 +48,6 @@
 #include "Token.hpp"
 #include "SourceFile.hpp"
 
-RexxToken::RexxToken(
-    int            _classId,            /* class of token                    */
-    int            _subclass,           /* token subclass                    */
-    RexxString     *_value,             /* token value                       */
-    SourceLocation &_location)          /* token location descriptor         */
-/******************************************************************************/
-/* Function:  Complete set up of a TOKEN object                               */
-/******************************************************************************/
-{
-    OrefSet(this, this->value, _value);   /* use the provided string value     */
-    this->classId = _classId;             /* no assigned token class           */
-    this->subclass = _subclass;           /* no specialization yet             */
-    this->tokenLocation = _location;      /* copy it over                      */
-}
-
 void RexxToken::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
@@ -77,18 +62,6 @@ void RexxToken::liveGeneral(int reason)
 /******************************************************************************/
 {
     memory_mark_general(this->value);
-}
-
-void RexxToken::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxToken)
-
-    flatten_reference(newThis->value, envelope);
-
-  cleanUpFlatten
 }
 
 

@@ -42,7 +42,7 @@
 /******************************************************************************/
 
 
-void RexxSource::checkDirective(int errorCode)
+void LanguageParser::checkDirective(int errorCode)
 /******************************************************************************/
 /* Function:  Verify that no code follows a directive except for more         */
 /*            directive instructions.                                         */
@@ -79,7 +79,7 @@ void RexxSource::checkDirective(int errorCode)
  * @return True if there is a non-directive clause following the current
  *         clause.
  */
-bool RexxSource::hasBody()
+bool LanguageParser::hasBody()
 {
     // assume there's no body here
     bool result = false;
@@ -115,7 +115,7 @@ bool RexxSource::hasBody()
 /**
  * Process a ::CLASS directive for a source file.
  */
-void RexxSource::classDirective()
+void LanguageParser::classDirective()
 {
     RexxToken *token = nextReal();       /* get the next token                */
     /* not a symbol or a string          */
@@ -280,7 +280,7 @@ void RexxSource::classDirective()
  * @param errorMsg
  *               The error code to use if there is a duplicate.
  */
-void RexxSource::checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg)
+void LanguageParser::checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg)
 {
     /* no previous ::CLASS directive?    */
     if (this->active_class == OREF_NULL)
@@ -316,7 +316,7 @@ void RexxSource::checkDuplicateMethod(RexxString *name, bool classMethod, int er
  * @param classMethod
  *               The class/instance method indicator.
  */
-void RexxSource::addMethod(RexxString *name, RexxMethod *method, bool classMethod)
+void LanguageParser::addMethod(RexxString *name, RexxMethod *method, bool classMethod)
 {
     if (this->active_class == OREF_NULL)
     {
@@ -333,7 +333,7 @@ void RexxSource::addMethod(RexxString *name, RexxMethod *method, bool classMetho
 /**
  * Process a ::METHOD directive in a source file.
  */
-void RexxSource::methodDirective()
+void LanguageParser::methodDirective()
 {
     int  Private = DEFAULT_ACCESS_SCOPE;    /* this is a public method           */
     int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
@@ -586,7 +586,7 @@ void RexxSource::methodDirective()
 /**
  * Process a ::OPTIONS directive in a source file.
  */
-void RexxSource::optionsDirective()
+void LanguageParser::optionsDirective()
 {
     // all options are of a keyword/value pattern
     for (;;)
@@ -725,7 +725,7 @@ void RexxSource::optionsDirective()
  *
  * @return A method object representing this method.
  */
-RexxMethod *RexxSource::createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure)
+RexxMethod *LanguageParser::createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure)
 {
                                  /* create a new native method        */
     RexxNativeCode *nmethod = PackageManager::resolveMethod(library, procedure);
@@ -749,7 +749,7 @@ RexxMethod *RexxSource::createNativeMethod(RexxString *name, RexxString *library
  * @param library    The returned library name.
  * @param procedure  The returned package name.
  */
-void RexxSource::decodeExternalMethod(RexxString *methodName, RexxString *externalSpec, RexxString *&library, RexxString *&procedure)
+void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *externalSpec, RexxString *&library, RexxString *&procedure)
 {
     // this is the default
     procedure = methodName;
@@ -791,7 +791,7 @@ void RexxSource::decodeExternalMethod(RexxString *methodName, RexxString *extern
 /**
  * Process a ::ATTRIBUTE directive in a source file.
  */
-void RexxSource::attributeDirective()
+void LanguageParser::attributeDirective()
 {
     int  Private = DEFAULT_ACCESS_SCOPE;    /* this is a public method           */
     int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
@@ -1105,7 +1105,7 @@ void RexxSource::attributeDirective()
 /**
  * Process a ::CONSTANT directive in a source file.
  */
-void RexxSource::constantDirective()
+void LanguageParser::constantDirective()
 {
     RexxToken *token = nextReal();   /* get the next token                */
                                      /* not a symbol or a string          */
@@ -1189,7 +1189,7 @@ void RexxSource::constantDirective()
  * @param guardedMethod
  *               The method's guarded attribute.
  */
-void RexxSource::createMethod(RexxString *name, bool classMethod,
+void LanguageParser::createMethod(RexxString *name, bool classMethod,
     bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
     // NOTE:  It is necessary to translate the block and protect the code
@@ -1223,7 +1223,7 @@ void RexxSource::createMethod(RexxString *name, bool classMethod,
  * @param guardedMethod
  *                  The method's guarded attribute.
  */
-void RexxSource::createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever,
+void LanguageParser::createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever,
     bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
     // create the kernel method for the accessor
@@ -1248,7 +1248,7 @@ void RexxSource::createAttributeGetterMethod(RexxString *name, RexxVariableBase 
  * @param guardedMethod
  *               The method's guarded attribute.
  */
-void RexxSource::createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever,
+void LanguageParser::createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever,
     bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
     // create the kernel method for the accessor
@@ -1273,7 +1273,7 @@ void RexxSource::createAttributeSetterMethod(RexxString *name, RexxVariableBase 
  * @param guardedMethod
  *               The method's guarded attribute.
  */
-void RexxSource::createAbstractMethod(RexxString *name,
+void LanguageParser::createAbstractMethod(RexxString *name,
     bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
     // create the kernel method for the accessor
@@ -1292,7 +1292,7 @@ void RexxSource::createAbstractMethod(RexxString *name,
  * @param target The target method directory.
  * @param name   The name of the attribute.
  */
-void RexxSource::createConstantGetterMethod(RexxString *name, RexxObject *value)
+void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *value)
 {
     ConstantGetterCode *code = new ConstantGetterCode(value);
     // add this as an unguarded method
@@ -1312,7 +1312,7 @@ void RexxSource::createConstantGetterMethod(RexxString *name, RexxObject *value)
 /**
  * Process a ::routine directive in a source file.
  */
-void RexxSource::routineDirective()
+void LanguageParser::routineDirective()
 {
     RexxToken *token = nextReal();   /* get the next token                */
                                      /* not a symbol or a string          */
@@ -1518,7 +1518,7 @@ void RexxSource::routineDirective()
 /**
  * Process a ::REQUIRES directive.
  */
-void RexxSource::requiresDirective()
+void LanguageParser::requiresDirective()
 {
     RexxToken *token = nextReal();   /* get the next token                */
                                      /* not a symbol or a string          */
@@ -1544,7 +1544,7 @@ void RexxSource::requiresDirective()
 /**
  * Process a ::REQUIRES name LIBRARY directive.
  */
-void RexxSource::libraryDirective(RexxString *name, RexxToken *token)
+void LanguageParser::libraryDirective(RexxString *name, RexxToken *token)
 {
     // we have an extra token on a ::REQUIRES directive.  The only thing accepted here
     // is the token LIBRARY.
@@ -1569,7 +1569,7 @@ void RexxSource::libraryDirective(RexxString *name, RexxToken *token)
 }
 
 
-void RexxSource::directive()
+void LanguageParser::directive()
 /********************************************************************/
 /* Function:  parse a directive statement                           */
 /********************************************************************/

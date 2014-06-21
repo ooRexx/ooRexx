@@ -3,12 +3,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -104,7 +104,7 @@ typedef enum
     T_StackFrameClass = 47,
 
     T_Last_Exported_Class = 47,
-    
+
     T_First_Internal_Class = 48,
 
     T_NilObject = 48,
@@ -177,7 +177,7 @@ typedef enum
     T_ParseTrigger = 115,
 
     T_Last_Internal_Class = 115,
-    
+
     T_First_Transient_Class = 116,
 
     T_Memory = 116,
@@ -198,7 +198,7 @@ typedef enum
     T_Last_Transient_Class = 129,
     T_Last_Primitive_Class = 129,
     T_Last_Class_Type = 129,
-    
+
 } ClassTypeCode;
 
 /* -------------------------------------------------------------------------- */

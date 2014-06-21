@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -642,7 +642,7 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_sourceless_method_invocation    "Method &1 with scope ""&2"" in package ""&3"" (no source available)"
    Message_Translations_sourceless_routine_invocation    "Routine &1 in package ""&2"" (no source available)"
    Message_Translations_sourceless_program_invocation    "Program in ""&1"" (no source available)"
-   
+
 END
 
 1 VERSIONINFO
@@ -683,4 +683,3 @@ END
 /* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
 /* --            ==================================================        -- */
 /* -------------------------------------------------------------------------- */
-   
