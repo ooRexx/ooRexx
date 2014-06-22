@@ -402,7 +402,7 @@ class RexxToken : public RexxInternalObject {
     inline void  operator delete(void *, void *) { ; }
 
     inline RexxToken(TokenClass c, SourceLocation &l, TokenSubclass sc = SUBTYPE_NONE, RexxString *v = OREF_NULL) : class(c), subclass(sc),
-        value(v), numeric(SUBTYPE_NONE), location(l) { };
+        stringValue(v), numeric(SUBTYPE_NONE), location(l) { };
 
     inline RexxToken(RESTORETYPE restoreType) { ; };
     void       live(size_t);
@@ -411,6 +411,14 @@ class RexxToken : public RexxInternalObject {
     inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
     inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
 
+    inline bool       isType(TokenClass t) { return classId = t; }
+    inline bool       isSubtype(TokenSubclass t) { return subclass = t; }
+    inline bool       type() { return classId; }
+    inline bool       subtype() { return subclass; }
+    inline bool       value() { return stringValue; }
+    inline void       setType(TokenClass t) { classId = t; }
+    inline void       setSubtype(TokenSubclass t) { subclass = t; }
+    inline void       setValue(RexxString *v) { stringValue = v; }
     inline bool       isVariable() { return (subclass == SYMBOL_VARIABLE || subclass == SYMBOL_STEM || subclass == SYMBOL_COMPOUND); };
     inline bool       isSimpleVariable() { return subclass == SYMBOL_VARIABLE; };
     inline bool       isDot() { return (subclass == SYMBOL_DOTSYMBOL); }
@@ -428,12 +436,11 @@ class RexxToken : public RexxInternalObject {
            void       checkAssignment(RexxSource *source, RexxString *newValue);
            int        precedence();
 
-    RexxString   *value;                   // token string value
+protected:
+    RexxString   *stringValue;             // token string value
     TokenClass    classId;                 // class of token
     TokenSubclass subclass;                // specialized type of token
     TokenSubclass numeric;                 // even further specialization
-
-protected:
     SourceLocation tokenLocation;          // token source location
 };
 

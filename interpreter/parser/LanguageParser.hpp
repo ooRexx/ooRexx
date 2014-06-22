@@ -266,6 +266,7 @@ class LanguageParser: public RexxInternalObject {
     RexxObject *messageSubterm(int);
     RexxObject *subTerm(int);
     void        pushTerm(RexxObject *);
+    RexxObject *requiredTerm(RexxToken *token, int errorCode = Error_Invalid_expression_general);
     RexxObject *popTerm();
     RexxObject *popNTerms(size_t);
     void        isExposeValid();

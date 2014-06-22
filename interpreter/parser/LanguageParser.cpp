@@ -1646,371 +1646,482 @@ void LanguageParser::addClause(RexxInstruction *_instruction)
 }
 
 
-void LanguageParser::addLabel(
-    RexxInstruction      *label,       /* new label to add                  */
-    RexxString           *labelname )  /* the label name                    */
-/******************************************************************************/
-/* Function:  add a label to the global label table.                          */
-/******************************************************************************/
+/**
+ * Add a label to our global table.  Note, in Rexx it is
+ * not an error to have duplicate labels, but ony the
+ * first can be used as a target.  We do not overwrite
+ * a given name if it is already in the table.
+ *
+ * @param label     The label instruction to add.
+ * @param labelname The label name.
+ */
+void LanguageParser::addLabel(RexxInstruction *label, RexxString *labelname )
 {
-    /* not already in the table?         */
-    if (this->labels->fastAt(labelname) == OREF_NULL)
+    if (labels->fastAt(labelname) == OREF_NULL)
     {
-        /* add this item                     */
-        this->labels->put((RexxObject *)label, labelname);
+        labels->put((RexxObject *)label, labelname);
     }
 }
 
 
-RexxInstruction *LanguageParser::findLabel(
-    RexxString *labelname)             /* target label                      */
-/******************************************************************************/
-/* Search the label table for a label name match                              */
-/******************************************************************************/
+/**
+ * Locate a label for a name match.
+ *
+ * @param labelname The label name.
+ *
+ * @return The label instruction, or OREF_NULL if the label doesn't exist
+ */
+RexxInstruction *LanguageParser::findLabel(RexxString *labelname)
 {
-    if (this->labels != OREF_NULL)       /* have labels?                      */
+    // it's possible we don't have a label table.
+    if (labels != OREF_NULL)
     {
-        /* just return entry from the table  */
-        return(RexxInstruction *)this->labels->fastAt(labelname);
+        return(RexxInstruction *)labels->fastAt(labelname);
     }
-    else
-    {
-        return OREF_NULL;                  /* don't return anything             */
-    }
+    return OREF_NULL;
 }
 
+
+/**
+ * We're about to process a WHEN expression on a GUARD
+ * instruction, so we need to turn on variable capture
+ * so we know what exposed variables are referenced in the
+ * expression.
+ */
 void LanguageParser::setGuard()
-/******************************************************************************/
-/* Function:  Set on guard expression variable "gathering"                    */
-/******************************************************************************/
 {
-    /* just starting to trap?            */
-    if (this->guard_variables == OREF_NULL)
+    // create the guard variable table if it is not already created...
+    // it would be unusual for this to already exist.
+    if (guardVariables == OREF_NULL)
     {
-        /* create the guard table            */
-        OrefSet(this, this->guard_variables, new_identity_table());
+        guardVariables = new_identity_table();
     }
 }
 
+
+/**
+ * Complete guard variable collection and return the table of
+ * variable names.
+ *
+ * @return An array of the guard variable names.
+ */
 RexxArray *LanguageParser::getGuard()
-/******************************************************************************/
-/* Function:  Complete guard expression variable collection and return the    */
-/*            table of variables.                                             */
-/******************************************************************************/
 {
-    /* convert into an array             */
-    RexxArray *guards = this->guard_variables->makeArray();
-    /* discard the table                 */
-    OrefSet(this, this->guard_variables, OREF_NULL);
-    /* just starting to trap?            */
-    return guards;                       /* return the guards array           */
+    // TODO:  Might want to check if the variable retrievers might be a better
+    // option here.
+
+    // get the indices as an array of names.
+    RexxArray *guards = guardVariables->makeArray();
+    // turn off collection by tossing the table.
+    guardVariables = OREF_NULL;
+    return guards;
 }
 
+/**
+ * Parse out a "constant" expression for a Rexx instruction.
+ * a constant expression is a literal string, a constant
+ * symbol, or an expression enclosed in parentheses.  Most
+ * new instructions use constant expressions, since they
+ * are not terminated by instruction subkeywords, and thus
+ * more immune to breakage when new options are added.
+ *
+ * @return An object that can be used to evaluate this option
+ *         expression.
+ */
 RexxObject *LanguageParser::constantExpression()
-/******************************************************************************/
-/* Function:  Evaluate a "constant" expression for REXX instruction keyword   */
-/*            values.  A constant expression is a literal string, constant    */
-/*            symbol, or an expression enclosed in parentheses.               */
-/******************************************************************************/
 {
-    RexxToken  *token;                   /* current token                     */
-    RexxToken  *second;                  /* second token                      */
-    RexxObject *_expression = OREF_NULL; /* parse expression                  */
-
-    token = nextReal();                  /* get the first token               */
+    // everthing keys off of the first token.
+    RexxToken *token = nextReal();
+    // just a literal token?
     if (token->isLiteral())              /* literal string expression?        */
     {
-        _expression = this->addText(token); /* get the literal retriever         */
+        // process this as text and return.  This is automatically
+        // protected from GC.
+        return addText(token);
     }
-    else if (token->isConstant())        /* how about a constant symbol?      */
+    // could be a constant symbol like a number or an environment variable
+    // like .nil or .true.
+    else if (token->isConstant())
     {
-        _expression = this->addText(token); /* get the literal retriever         */
+        return addText(token);
     }
-    /* got an end of expression?         */
+    // is this missing entirely?
     else if (token->isEndOfClause())
     {
-        previousToken();                   /* push the token back               */
-        return OREF_NULL;                  /* nothing here (may be optional)    */
+        // we don't raise an error here because we don't know that instruction
+        // or context where this is needed.  Just back up one token and return
+        // a NULL value.
+        previousToken();
+        return OREF_NULL;
     }
-    /* not a left paren here?            */
-    else if (token->classId != TOKEN_LEFT)
+    // only other option here is an expression in parens.  If this
+    // is not there, raise an error (this is a generic error, so
+    // we can do this here.
+    else if (!token->isType(TOKEN_LEFT))
     {
-        /* this is an invalid expression     */
         syntaxError(Error_Invalid_expression_general, token);
     }
     else
     {
-        /* get the subexpression             */
-        _expression = this->subExpression(TERM_EOC | TERM_RIGHT);
-        second = nextToken();              /* get the terminator token          */
-                                           /* not terminated by a right paren?  */
-        if (second->classId != TOKEN_RIGHT)
+        // parse our a subexpression, terminating on the end of clause or
+        // a right paren (the right paren is actually the required terminator)
+        RexxObject *exp = this->subExpression(TERM_EOC | TERM_RIGHT);
+        // now verify that the terminator token was a right paren.  If not,
+        // issue an error message using the original opening token so we know
+        // which one is an issue.
+        if (!nextToken()->isType(TOKEN_RIGHT))
         {
-            /* this is an error                  */
             syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
         }
+        // protect the expression from GC and return it.
+        holdObject(exp);
+        return exp;
     }
-    this->holdObject(_expression);        /* protect the expression            */
-    return _expression;                   /* and return it                     */
+    return OREF_NULL;
 }
 
+/**
+ * Evaluate a "constant" expression for REXX instruction keyword
+ * values.  A constant expression is a literal string, constant
+ * symbol, or an expression enclosed in parentheses.  The
+ * expression inside parens can be a complex logical expression.
+ * That is, something like (a = b, c = d), which acts like a
+ * logical AND with evaluation shortcutting.
+ *
+ * @return A parsed out expression.
+ */
 RexxObject *LanguageParser::constantLogicalExpression()
-/******************************************************************************/
 /* Function:  Evaluate a "constant" expression for REXX instruction keyword   */
 /*            values.  A constant expression is a literal string, constant    */
 /*            symbol, or an expression enclosed in parentheses.  The          */
 /*            expression inside parens can be a complex logical expression.   */
 /******************************************************************************/
 {
-    RexxToken  *token;                   /* current token                     */
-    RexxToken  *second;                  /* second token                      */
-    RexxObject *_expression = OREF_NULL; /* parse expression                  */
-
-    token = nextReal();                  /* get the first token               */
-    if (token->isLiteral())              /* literal string expression?        */
+    // This is very similar to constant expression, until we get to the
+    // expression inside the parents.
+    RexxToken *token = nextReal();
+    if (token->isLiteral())
     {
-
-        _expression = this->addText(token); /* get the literal retriever         */
+        return addText(token);
     }
-    else if (token->isConstant())        /* how about a constant symbol?      */
+    else if (token->isConstant())
     {
-        _expression = this->addText(token); /* get the literal retriever         */
+        _return addText(token);
     }
-    /* got an end of expression?         */
     else if (token->isEndOfClause())
     {
-        previousToken();                   /* push the token back               */
-        return OREF_NULL;                  /* nothing here (may be optional)    */
+        previousToken();
+        return OREF_NULL;
     }
-    /* not a left paren here?            */
-    else if (token->classId != TOKEN_LEFT)
+    else if (!token->isType(TOKEN_LEFT))
     {
-        /* this is an invalid expression     */
         syntaxError(Error_Invalid_expression_general, token);
     }
     else
     {
-        /* get the subexpression             */
-        _expression = this->parseLogical(token, TERM_EOC | TERM_RIGHT);
-        second = nextToken();              /* get the terminator token          */
-                                           /* not terminated by a right paren?  */
-        if (second->classId != TOKEN_RIGHT)
+        // we use a different method for parsing the expression that knows
+        // about the logical lists
+        RexxObject *expression = parseLogical(token, TERM_EOC | TERM_RIGHT);
+        // now verify that the terminator token was a right paren.  If not,
+        // issue an error message using the original opening token so we know
+        // which one is an issue.
+        if (!nextToken()->isType(TOKEN_RIGHT))
         {
-            /* this is an error                  */
             syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
         }
+        // protect the expression from GC and return it.
+        holdObject(exp);
+        return exp;
     }
-    this->holdObject(_expression);        /* protect the expression            */
-    return _expression;                   /* and return it                     */
+    return OREF_NULL;
 }
 
+
+/**
+ * Evaluate a "parenthetical" expression for REXX instruction
+ * values.  A parenthetical expression is an expression enclosed
+ * in parentheses.
+ *
+ * @param start  The starting token of the expression.  This will be
+ *               the opening paren and is used for error reporting.
+ *
+ * @return The parsed expression.
+ */
 RexxObject *LanguageParser::parenExpression(RexxToken *start)
-/******************************************************************************/
-/* Function:  Evaluate a "parenthetical" expression for REXX instruction      */
-/*            values.  A parenthetical expression is an expression enclosed   */
-/*            in parentheses.                                                 */
-/******************************************************************************/
 {
-  // NB, the opening paren has already been parsed off
+    // NB, the opening paren has already been parsed off and is in
+    // the start token, which we only need for error reporting.
 
-  RexxObject *_expression = this->subExpression(TERM_EOC | TERM_RIGHT);
-  RexxToken *second = nextToken();   /* get the terminator token          */
-                                     /* not terminated by a right paren?  */
-  if (second->classId != TOKEN_RIGHT)
-  {
-      syntaxErrorAt(Error_Unmatched_parenthesis_paren, start);
-  }
-                                     /* this is an error                  */
-  this->holdObject(_expression);        /* protect the expression            */
-  return _expression;                   /* and return it                     */
-}
+    RexxObject *exp = subExpression(TERM_EOC | TERM_RIGHT);
 
-RexxObject *LanguageParser::expression(
-  int   terminators )                  /* expression termination context    */
-/******************************************************************************/
-/* Function:  Parse off an expression, stopping when one of the possible set  */
-/*            of terminator tokens is reached.  The terminator token is       */
-/*            placed back on the token queue.                                 */
-/******************************************************************************/
-{
-  nextReal();                          /* get the first real token          */
-  previousToken();                     /* now put it back                   */
-                                       /* parse off the subexpression       */
-  return this->subExpression(terminators);
-}
-
-RexxObject *LanguageParser::subExpression(
-  int   terminators )                  /* expression termination context    */
-/******************************************************************************/
-/* Function:  Parse off a sub- expression, stopping when one of the possible  */
-/*            set of terminator tokens is reached.  The terminator token is   */
-/*            placed back on the token queue.                                 */
-/******************************************************************************/
-{
-    RexxObject    *left;                 /* left term of operation            */
-    RexxObject    *right;                /* right term of operation           */
-    RexxToken     *token;                /* current working token             */
-    RexxToken     *second;               /* look ahead token                  */
-    RexxObject    *subexpression;        /* final subexpression               */
-    SourceLocation location;             /* token location info               */
-
-                                         /* get the left term                 */
-    left = this->messageSubterm(terminators);
-    if (left == OREF_NULL)               /* end of the expression?            */
+    // this must be terminated by a right paren
+    if (!nextToken()->isType(TOKEN_RIGHT))
     {
-        return OREF_NULL;                  /* done processing here              */
+        syntaxErrorAt(Error_Unmatched_parenthesis_paren, start);
     }
-    this->pushTerm(left);                /* add the term to the term stack    */
-                                         /* add a fence item to operator stack*/
-    this->pushOperator((RexxToken *)TheNilObject);
-    token = nextToken();                 /* get the next token                */
-                                         /* loop until end of expression      */
-    while (!this->terminator(terminators, token))
+
+    // protect the expression and return it.
+    holdObject(exp);
+    return exp;
+}
+
+/**
+ * Parse off an expression, stopping when one of the possible set
+ * of terminator tokens is reached.  The terminator token is
+ * placed back on the token queue.
+ *
+ * @param terminators
+ *               An int containing the bit flag versions of the terminators.
+ *
+ * @return An executable expression object.
+ */
+RexxObject *LanguageParser::expression(int terminators)
+{
+    // get the first real token.  This will skip over all of the
+    // white space, comments, etc. to get to the real meat of the expression.
+    // we then back up so that the real expression processing will see that as
+    // the first token.
+    nextReal();
+    previousToken();
+    // and go parse this.
+    return subExpression(terminators);
+}
+
+
+/**
+ * Parse off a sub- expression, stopping when one of the possible
+ * set of terminator tokens is reached.  The terminator token is
+ * placed back on the token queue.  This is generally
+ * called in the context of parsing different bits of
+ * an expression and is frequently called recursively.
+ *
+ * @param terminators
+ *               an int containing flags that indicate what terminators
+ *               should be used to stop parsing this subexpression.
+ *
+ * @return
+ */
+RexxObject *LanguageParser::subExpression(int terminators )
+{
+    // generally, expressions proceed with term-operator-term, with various modifications.
+    // start by processing of a term value.
+    RexxObject *left = messageSubterm(terminators);
+    RexxObject *right = OREF_NULL;
+
+    // hmmm, nothing found, so we're done.
+    if (left == OREF_NULL)
     {
-        switch (token->classId)
+        return OREF_NULL;
+    }
+
+    // we keep both a stack of expression terms and one of operators and process
+    // things based on precedence.
+
+    // pus the term to the stack
+    pushTerm(left);
+
+    // add a fence value to the operator stack to wall us off from other
+    // active subexpressions.
+    pushOperator((RexxToken *)TheNilObject);
+    // now see what is next.
+    RexxToken *token = nextToken();
+    // loop until we find a terminator in our current token
+    while (!terminator(terminators, token))
+    {
+        switch (token->type())
         {
+            // either a single or double message send operation.
+            // this uses a term from the stack as a target, and can possibly
+            // have an argument list attached.
+            case  TOKEN_TILDE:
+            case  TOKEN_DTILDE:
+            {
+                // there must be a left term here to act as the target
+                left = requiredTerm(token);
 
-            case  TOKEN_TILDE:               /* have a message send operation     */
-            case  TOKEN_DTILDE:              /* have a double twiddle operation   */
-                left = this->popTerm();        /* get the left term from the stack  */
-                if (left == OREF_NULL)         /* not there?                        */
-                {
-                    /* this is an invalid expression     */
-                    syntaxError(Error_Invalid_expression_general, token);
-                }
-                /* process a message term            */
-                subexpression = this->message(left, token->classId == TOKEN_DTILDE, terminators);
-                this->pushTerm(subexpression); /* push this back on the term stack  */
+                // create a message term from the target...this also figures out
+                // the message name and any arguments.
+                RexxObject *subexpression = message(left, token->isType(TOKEN_DTILDE), terminators);
+                // that goes back on the term stack
+                pushTerm(subexpression);
                 break;
+            }
 
-            case  TOKEN_SQLEFT:              /* collection syntax message         */
-                left = this->popTerm();        /* get the left term from the stack  */
-                if (left == OREF_NULL)         /* not there?                        */
-                {
-                    /* this is an invalid expression     */
-                    syntaxError(Error_Invalid_expression_general, token);
-                }
-                /* process a message term            */
-                subexpression = this->collectionMessage(token, left, terminators);
-                this->pushTerm(subexpression); /* push this back on the term stack  */
+            // a left square bracket.  This will turn into a "[]" message.
+            case  TOKEN_SQLEFT:
+            {
+                // the term is required
+                left = requiredTerm();
+                // this is a message to the left term, and may (ok, probably) have
+                // arguments as well
+                RexxObject *subexpression = collectionMessage(token, left, terminators);
+                // and this goes back on to the term stack
+                pushTerm(subexpression);
                 break;
+            }
 
-            case  TOKEN_SYMBOL:              /* Symbol in the expression          */
-            case  TOKEN_LITERAL:             /* Literal in the expression         */
-            case  TOKEN_LEFT:                /* start of subexpression            */
-
-                location = token->getLocation(); /* get the token start position      */
-                                                 /* abuttal ends on the same line     */
+            // we have a symbol, which may be a variable, a literal string, or
+            // an open paren, which may be the start of a parenthetical sub-expression
+            // because we're looking for an operator at this point, this is actually
+            // an implied abuttal operation.
+            case  TOKEN_SYMBOL:
+            case  TOKEN_LITERAL:
+            case  TOKEN_LEFT:
+            {
+                // get the token location.  We're going to turn this into a zero-length
+                // token for the abuttal operation.
+                SourceLocation location = token->getLocation();
                 location.setEnd(location.getLineNumber(), location.getOffset());
-                /* This is actually an abuttal       */
+                // create a dummy token, push the abuttal token back on the queue, and fall
+                // through to the next section where the blank concatenate operator is handled.
                 token = new RexxToken (TOKEN_OPERATOR, OPERATOR_ABUTTAL, OREF_NULLSTRING, location);
-                previousToken();               /* step back on the token list       */
+                previousToken();
+            }
+            // NOTE:  The above section falls through to this piece
 
-            case  TOKEN_BLANK:               /* possible blank concatenate        */
-                second = nextReal();           /* get the next token                */
-                                               /* blank prior to a terminator?      */
-                if (this->terminator(terminators, second))
-                {
-                    break;                       /* not a real operator               */
-                }
-                else                           /* have a blank operator             */
-                {
-                    previousToken();             /* push this back                    */
-                }
-                                                 /* fall through to operator logic    */
+            // A blank within an expression.  This is a concatenate (although, if we've
+            // fallen through from the section above, this is really an abuttal operation)
+            case  TOKEN_BLANK:
+            {
+                // this potentially could be a blank before one of the terminators (for example,
+                // a blank before a WHILE keyword on a LOOP.  This is the same with abuttal.
+                // We need to check for the terminators, and if we get a hit, we're done here.
+                 RexxToken *second = nextReal();
+                 // not a real operator if adjacent to a terminator
+                 if (this->terminator(terminators, second))
+                 {
+                     break;
+                 }
+                 // back up to the operator token and fall through to the operator logic.
+                 // this will then sort things out based on the sub type of the token.
+                 previousToken();
+            }
 
-            case  TOKEN_OPERATOR:            /* have a dyadic operator            */
-                /* actually a prefix only one?       */
-                if (token->subclass == OPERATOR_BACKSLASH)
+            // we have an operator of some sort (including the blank and abuttal concatenates)
+            // At this point, these will be dyadic operators, so we need to screen out the
+            // the not operator, which can only be a prefix one.
+            case  TOKEN_OPERATOR:
+            {
+                // check for the backslash, which is a problem here.
+                if (token->isSubtype(OPERATOR_BACKSLASH))
                 {
-                    /* this is an invalid expression     */
                     syntaxError(Error_Invalid_expression_general, token);
                 }
-                /* handle operator precedence        */
+
+                // we now need to handle operator precedence with anything we have on the stack
                 for (;;)
                 {
-                    second = this->topOperator();/* get the top term                  */
-                                                 /* hit the fence term?               */
+                    // get the top of the operator stack.  If we hit the fence, we've
+                    // unwound any pending operations to the beginning, and we can quit this
+                    // loop.
+                    RexxToken *second = topOperator();
                     if (second == (RexxToken *)TheNilObject)
                     {
-                        break;                     /* out of here                       */
+                        break;
                     }
-                                                   /* current have higher precedence?   */
-                    if (token->precedence() > token->precedence())
+
+                    // check the token precedence,  If our new operator has higher
+                    // precedenc, we're done popping.
+                    if (token->precedence() > second->precedence())
                     {
-                        break;                     /* finished also                     */
+                        break;
                     }
-                    right = this->popTerm();     /* get the right term                */
-                    left = this->popTerm();      /* and the left term                 */
-                                                 /* not enough terms?                 */
-                    if (right == OREF_NULL || left == OREF_NULL)
-                    {
-                        /* this is an invalid expression     */
-                        syntaxError(Error_Invalid_expression_general, token);
-                    }
-                    /* create a new operation            */
+
+                    // these are both required terms here.
+                    right = requiredTerm(token);
+                    left = requiredTerm(token);
+
+                    // pop off the top operator, and push a new term on the stack to
+                    // replace this.
                     RexxToken *op = popOperator();
-                    subexpression = (RexxObject *)new RexxBinaryOperator(op->subclass, left, right);
-                    /* push this back on the term stack  */
-                    this->pushTerm(subexpression);
+                    pushTerm((RexxObject *)new RexxBinaryOperator(op->subType(), left, right));
                 }
-                this->pushOperator(token);     /* push this operator onto stack     */
-                right = this->messageSubterm(terminators);
-                /* end of the expression?            */
-                if (right == OREF_NULL && token->subclass != OPERATOR_BLANK)
+
+                // finished popping lower precedence items.  Now push this operator on
+                // to the stack.  We need to evaluate its right-hand side before this can be handled.
+                pushOperator(token);
+                // evaluate a right-hand side to this expression.
+                right = messageSubterm(terminators);
+                // Ok, we need a right term here, unless this is actually a blank operator.
+                // in theory, we've already handled that possibility, but it doesn't hurt
+                // to check.
+                if (right == OREF_NULL && !token->isSubtype(OPERATOR_BLANK))
                 {
-                    /* have a bad expression             */
                     syntaxError(Error_Invalid_expression_general, token);
                 }
-                this->pushTerm(right);         /* add the term to the term stack    */
+                // add the term to the stack.  We can handle this once the
+                // operator gets popped off of the stack.
+                pushTerm(right);
                 break;
+            }
 
+            // this one of the assignment operators, out of location.  This is just
+            // reported as an error here.
             case TOKEN_ASSIGNMENT:
-                // special assignment token in a bad context.  We report this as an error.
-                /* this is an invalid expression     */
+            {
                 syntaxError(Error_Invalid_expression_general, token);
                 break;
+            }
 
-            case TOKEN_COMMA:                /* found a comma in the expression   */
-                /* should have been trapped as an    */
-                /* expression terminator, so this is */
-                /* not a valid expression            */
+            // found a comma in an expression.  In all contexts where this
+            // is allowed, this should be handled as a subexpression terminator.
+            // In all other cases, this is an error.
+            case TOKEN_COMMA:
+            {
                 syntaxError(Error_Unexpected_comma_comma);
                 break;
+            }
 
-            case TOKEN_RIGHT:                /* found a paren in the expression   */
+            // We've encountered a right paren.  Like the comma, if this is
+            // expected, it acts as a terminator.  This is a stray and must
+            // be reported.
+            case TOKEN_RIGHT:
+            {
                 syntaxError(Error_Unexpected_comma_paren);
                 break;
+            }
 
-            case TOKEN_SQRIGHT:              /* found a bracket in the expression */
+            // another good character in a bad location.
+            case TOKEN_SQRIGHT:
+            {
                 syntaxError(Error_Unexpected_comma_bracket);
                 break;
+            }
 
-            default:                         /* something unexpected              */
-                /* not a valid expression            */
+            // something unexpected that we have no specific error for.
+            default:
+            {
                 syntaxError(Error_Invalid_expression_general, token);
                 break;
+            }
         }
-        token = nextToken();               /* get the next token                */
+
+        // ok, grab the next token and keep processing.
+        token = nextToken();
     }
-    token= this->popOperator();          /* get top operator token            */
-                                         /* process pending operations        */
+
+    // we've hit a terminator for this subexpression.  We probably
+    // have some pending operators on the operator stack that we need
+    // to handle.  These will be in proper precedence order, so we just
+    // need to pop of the operators and terms and handle them.
+    token = popOperator();
+
+    // keep popping until we hit our fence value
     while (token != (RexxToken *)TheNilObject)
     {
-        right = this->popTerm();           /* get the right term                */
-        left = this->popTerm();            /* now get the left term             */
-                                           /* missing any terms?                */
-        if (left == OREF_NULL || right == OREF_NULL)
-        {
-            /* this is an invalid expression     */
-            syntaxError(Error_Invalid_expression_general, token);
-        }
-        /* create a new operation            */
-        subexpression = (RexxObject *)new RexxBinaryOperator(token->subclass, left, right);
-        this->pushTerm(subexpression);     /* push this back on the term stack  */
-        token = this->popOperator();       /* get top operator token            */
+        // we need two terms
+        right = requiredTerm(token);
+        left = requiredTerm(token);
+
+        // all of these operators are binaries, and get pushed back on the stack
+        pushTerm((RexxObject *)new RexxBinaryOperator(token->subType(), left, right));
+        // and pop another operator.
+        token = popOperator();
     }
-    return this->popTerm();              /* expression is top of term stack   */
+
+    // our final subexpression is at the top of the term stack, so pop it
+    // off and return.
+    return popTerm();
 }
 
 RexxArray *LanguageParser::argArray(
@@ -2510,6 +2621,32 @@ RexxObject *LanguageParser::popTerm()
   term = this->terms->pop();           /* pop the term                    */
   this->holdObject(term);              /* give it a little protection     */
   return term;                         /* and return it                   */
+}
+
+/**
+ * Pop a term item off of the execution stack.  Will
+ * raise an error if this is not there.
+ *
+ * @param token     The token giving the context location.  Used to
+ *                  identify the error position.
+ * @param errorCode The error code.  The default is the generic syntax error.
+ *
+ * @return The object popped off of the stack.
+ */
+RexxObject *LanguageParser::requiredTerm(RexxToken *token, int errorCode)
+{
+    // we track the size count when we push/pop
+    currentStack--;
+    // pop the term off of the stack
+    term = terms->pop();
+    // we need a term, if this is not here, this is a syntax error
+    if (term == OREF_NULL)
+    {
+        syntaxError(errCode, token);
+    }
+    // give this term some short-term GC protection and return it.
+    holdObject(term);
+    return term;
 }
 
 RexxObject *LanguageParser::popNTerms(
