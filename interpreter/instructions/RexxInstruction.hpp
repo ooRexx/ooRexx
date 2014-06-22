@@ -71,7 +71,9 @@ class RexxInstruction : public RexxInternalObject {
 
   virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
 
-  inline void setNext(RexxInstruction *next) { OrefSet(this, this->nextInstruction, next); };
+  // NOTE:  This method is only used during program translation, so we can skip using
+  // OrefSet to set this variable.
+  inline void setNext(RexxInstruction *next) { nextInstruction = next; };
   void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
   void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
   inline      void        setType(InstructionKeyword type) { instructionType = type; };

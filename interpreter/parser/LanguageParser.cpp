@@ -1385,218 +1385,264 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
 }
 
 
-void LanguageParser::expose(
-    RexxString *name )                 /* variable name to add to list      */
-/******************************************************************************/
-/* Function:  Add a variable name to the list of exposed variables for the    */
-/*            method.                                                         */
-/******************************************************************************/
+/**
+ * Add a variable name to the list of variables exposed
+ * by a method.
+ *
+ * @param name   The name of the variable.
+ */
+void LanguageParser::expose(RexxString *name )
 {
-                                       /* add to the exposed variables list */
-    this->exposed_variables->put(name, name);
+
+    exposedVariables->put(name, name);
 }
 
 
-RexxString *LanguageParser::commonString(
-    RexxString *string )               /* string token to "collapse"        */
-/******************************************************************************/
-/* Function:  Compress all string tokens needed by a group of programs into   */
-/*            a single, common set of strings.                                */
-/******************************************************************************/
+/**
+ * Compress all string tokens needed by a group of programs into
+ * a single, common set of strings.  It is fairly common
+ * for a program to have duplicate versions of strings
+ * in the form of variable names, etc.  This ensures there
+ * is just a single version of these available.
+ *
+ * @param string The string to add to the set.
+ *
+ * @return The commonized string.  If this string is already
+ *         in the common table, the previously added one will be
+ *         returned.
+ */
+RexxString *LanguageParser::commonString(RexxString *string)
 {
-    /* check the global table first      */
-    RexxString *result = (RexxString *)this->strings->fastAt(string);
-    /* not in the table                  */
-    if (result == OREF_NULL)
+    // check the global table first for this value.
+    RexxString *result = (RexxString *)strings->fastAt(string);
+    // if not in the table, we add this new one, otherwise we
+    // return the table version
+    if (result != OREF_NULL)
     {
-        this->strings->put(string, string);/* add this to the table             */
-        result = string;                   /* also the final value              */
+        return result;
     }
-    return result;                       /* return the string                 */
+    strings->put(string, string);
+    return string;
 }
 
 
+/**
+ * Handle adding a variable to a program.  This verifies that
+ * the token is a valid variable, then creates a retriever that
+ * can be used in an expression to obtain the variable value.
+ *
+ * @param token  The token holding the variable name.
+ *
+ * @return A retriever object that can be used as an expression
+ *         term.
+ */
 RexxObject *LanguageParser::addVariable(RexxToken *token)
 {
+    // we first validate that this token represents a valid variable,
     needVariable(token);
+    // then create the text retriever object.
     return addText(token);
 }
 
-
-RexxObject *LanguageParser::addText(
-    RexxToken *token)                  /* token to process                  */
-/******************************************************************************/
-/* Function:  Generalized text token addition                                 */
-/******************************************************************************/
+// generate a retriever for a specific token type.  Note that we
+// keep two caches of retrievers here.  There are tokens that true
+// literals (strings, dot-variables, etc) and variable text tokens.  The
+// literals can be kept in a common set across the entire package and
+// reused.  The variables, however, contain information that is unique
+// to each code block within the package.  These need to be kept in a
+// different list that is rebuilt in each code block.
+RexxObject *LanguageParser::addText(RexxToken *token)
 {
-    RexxObject       *retriever;         /* created retriever                 */
-    RexxObject       *value;             /* evaluated literal value           */
+    // these should be text type tokens that have a real value.
+    RexxString *name = token->value;
 
-    RexxString *name = token->value;     /* get the string value for this     */
+    // we might already have processed this before.
+    // if not, we need to examine this and find the
+    // most appropriate form.
+    RexxObject *retriever = literals->fastAt(name);
+    if (retriever != OREF_NULL)
+    {
+        return retriever;
+    }
+
+    // now switch on the major token class id.
     switch (token->classId)
     {
-
-        case TOKEN_SYMBOL:                 /* various types of symbols          */
-            /* each symbol subtype requires a    */
-            /* different retrieval method        */
+        // various categories of symbols.
+        case TOKEN_SYMBOL:
+        {
+            // each symbol subtype requires a
+            // different retrieval method
             switch (token->subclass)
             {
-
-                case SYMBOL_DUMMY:             /* just a dot symbol                 */
-                case SYMBOL_CONSTANT:          /* a literal symbol                  */
-
-                    /* see if we've had this before      */
-                    retriever = this->literals->fastAt(name);
-                    /* first time literal?               */
-                    if (retriever == OREF_NULL)
+                // the dummy placeholder period and symbols
+                // that start with a digit are just literal strings.
+                case SYMBOL_DUMMY:
+                case SYMBOL_CONSTANT:
+                {
+                    // if this is a pure integer value within the default
+                    // digits, create an integer object
+                    if (token->numeric == INTEGER_CONSTANT)
                     {
-                        /* can we create an integer object?  */
-                        if (token->numeric == INTEGER_CONSTANT)
+                        value = name->requestInteger(Numerics::DEFAULT_DIGITS);
+                        // this should not happen, given we've already validated
+                        // this, but belt and braces and all that...just
+                        // stick with the string value if it does occur.
+                        if (value == TheNilObject)
                         {
-                            /* create this as an integer         */
-                            value = name->requestInteger(Numerics::DEFAULT_DIGITS);
-                            /* conversion error?                 */
-                            if (value == TheNilObject)
-                            {
-                                value = name;          /* just go with the string value     */
-                            }
-                            else
-                                /* snip off the string number string */
-                                /* value that was created when the   */
-                                /* integer value was created.  This  */
-                                /* is rarely used, but contributes   */
-                                /* to the saved program size         */
-                                name->setNumberString(OREF_NULL);
+                            value = name;
                         }
                         else
-                        {
-                            value = name;            /* just use the string value         */
-                                                     /* give it a number string value     */
-                            name->setNumberString((RexxObject *)value->numberString());
-                        }
-                        /* the constant is the retriever     */
-                        this->literals->put(value, name);
-                        retriever = value;         /* the retriever is the value itthis */
+                            // snip off the string number string
+                            // value that was created when the
+                            // integer value was created.  This
+                            // is rarely used, but contributes
+                            // to the saved program size. It will
+                            // be rebuilt on demand if it is needed.
+                            name->setNumberString(OREF_NULL);
                     }
-                    break;
-
-                case SYMBOL_VARIABLE:          /* simple variable symbol            */
-                    /* add variable to proper dictionary */
-                    retriever = (RexxObject *)this->addVariable(name);
-                    break;
-
-                case SYMBOL_STEM:              /* stem variable                     */
-                    /* add variable to proper dictionary */
-                    retriever = (RexxObject *)this->addStem(name);
-                    break;
-
-                case SYMBOL_COMPOUND:          /* compound variable, need more      */
-                    /* add variable to proper dictionary */
-                    retriever = (RexxObject *)this->addCompound(name);
-                    break;
-
-                case SYMBOL_DOTSYMBOL:         /* variable with a leading dot       */
-                    /* get a lookup object               */
-                    /* see if we've had this before      */
-                    retriever = this->variables->fastAt(name);
-                    /* first time dot variable?          */
-                    if (retriever == OREF_NULL)
+                    else
                     {
-                        /* create the shorter name           */
-                        value = name->extract(1, name->getLength() - 1);
-                        /* add this to the common pile       */
-                        value = this->commonString((RexxString *)value);
-                        /* create a retriever for this       */
-                        retriever = (RexxObject *)new RexxDotVariable((RexxString *)value);
-                        /* add this to the common table      */
-                        this->variables->put(retriever, name);
+                        // just use the string value, but also try to create and
+                        // attach the string's numeric value.
+                        value = name;
+                        name->setNumberString((RexxObject *)value->numberString());
                     }
+                    // and stash the retriever value so we can resolve this if used again.
+                    literals->put(value, name);
+                    // strings and integers work directly as expression terms, so we can
+                    // just return this directly.
+                    return value;
                     break;
+                }
 
-                default:                       /* all other types (shouldn't happen)*/
-                    retriever = OREF_NULL;       /* return nothing                    */
+                // simple variable.
+                case SYMBOL_VARIABLE:
+                {
+                    // do the variable resolution
+                    return (RexxObject *)addVariable(name);
                     break;
+                }
+
+                // stem variable, handled much like simple variables.
+                case SYMBOL_STEM:
+                {
+                    return (RexxObject *)addStem(name);
+                    break;
+                }
+
+                // compound variable...need to chop this up into its
+                // component pieces.
+                case SYMBOL_COMPOUND:
+                {
+                    return (RexxObject *)addCompound(name);
+                    break;
+                }
+
+                // this is a non-numeric symbol that starts with a dot.  These
+                // are treated as environment symbols.
+                case SYMBOL_DOTSYMBOL:
+                {
+                    // create the shorter name and add to the common set
+                    value = name->extract(1, name->getLength() - 1);
+                    value = commonString(name->extract(1, name->getLength() - 1));
+                    // create a retriever for this using the shorter name.
+                    retriever = (RexxObject *)new RexxDotVariable((RexxString *)value);
+                    literals->put(retriever, name);
+                    return retriever;
+                    break;
+                }
             }
             break;
+        }
 
-        case TOKEN_LITERAL:                /* literal strings                   */
-            /* get a lookup object               */
-            /* see if we've had this before      */
-            retriever = this->literals->fastAt(name);
-            /* first time literal?               */
-            if (retriever == OREF_NULL)
-            {
-                /* the constant is the retriever     */
-                this->literals->put(name,  name);
-                retriever = name;              /* use the name directly             */
-            }
+        // just a straight literal string
+        case TOKEN_LITERAL:
+        {
+            // strings are their own expression retrievers, so just add
+            // this to the table and return it directly
+            literals->put(name,  name);
+            return name;
             break;
-
-        default:                           /* all other tokens                  */
-            retriever = OREF_NULL;           /* don't return anything             */
-            break;
+        }
     }
-    return retriever;                    /* return created retriever          */
+
+    // not a token type that can have a retriever
+    return OREF_NULL;
 }
 
-RexxVariableBase *LanguageParser::getRetriever(
-    RexxString *name)                  /* name of the variable to process   */
-/******************************************************************************/
-/* Function:  Generalized method attribute retriever                          */
-/******************************************************************************/
-{
-    RexxVariableBase *retriever = OREF_NULL; /* created retriever                 */
 
-    /* go validate the symbol            */
+/**
+ * Build a retriever for a string name.  This will be
+ * a version that uses dynamic lookup for variables rather
+ * than using pre-assigned slots.  Generally used for
+ * dynamic lookups such as from the variable pool interface.
+ *
+ * @param name   The variable name.
+ *
+ * @return A retriever object for looking up this value.
+ */
+RexxVariableBase *LanguageParser::getRetriever(RexxString *name)
+{
+    // first validate that this is a symbol and get the type of symbol.
     switch (name->isSymbol())
     {
+        // TODO:  make this constants an enum type.
 
-        case STRING_NAME:                  /* valid simple name                 */
-            /* get a simple dynamic retriever    */
-            retriever = (RexxVariableBase *)new RexxParseVariable(name, 0);
+        // simple variable name
+        case STRING_NAME:
+            return (RexxVariableBase *)new RexxParseVariable(name, 0);
             break;
 
-        case STRING_STEM:                  /* this is a stem name               */
-            /* force dynamic lookup each time    */
-            retriever = (RexxVariableBase *)new RexxStemVariable(name, 0);
+        // stem name.
+        case STRING_STEM:
+            return (RexxVariableBase *)new RexxStemVariable(name, 0);
             break;
 
-        case STRING_COMPOUND_NAME:         /* compound variable name            */
-            /* get a direct retriever for this   */
-            retriever = (RexxVariableBase *)RexxVariableDictionary::buildCompoundVariable(name, true);
+        // compound name...more complicated.
+        case STRING_COMPOUND_NAME:
+            return (RexxVariableBase *)RexxVariableDictionary::buildCompoundVariable(name, true);
             break;
 
-        default:                           /* all other invalid cases           */
-            /* have an invalid attribute         */
+        default:
+            // this is invalid and a syntax error
             syntaxError(Error_Translation_invalid_attribute, name);
     }
-    return retriever;                    /* return created retriever          */
+    return OREF_NULL;
 }
 
 
-void LanguageParser::addClause(
-    RexxInstruction *_instruction)      /* new label to add                  */
-/******************************************************************************/
-/* Add an instruction to the tree code execution stream                       */
-/******************************************************************************/
+
+/**
+ * Add a new instruction to the code execution chain.  Instructions
+ * are a linear chain of instruction objects, with all
+ * branching handled by additional links within instructions.
+ *
+ * @param _instruction
+ *               The new instruction to add.
+ */
+void LanguageParser::addClause(RexxInstruction *_instruction)
 {
-    /* is this the first one?            */
-    if (this->first == OREF_NULL)
+    // is this the first one in the chain?
+    if (first == OREF_NULL)
     {
-        /* make this the first one           */
-        OrefSet(this, this->first, _instruction);
-        /* and the last one                  */
-        OrefSet(this, this->last, _instruction);
+        // we keep track of both the first and last members
+        // of the chain.
+        first = _instruction;
+        last =  _instruction;
     }
-    /* non-root instruction              */
+    // adding on to the chain.  We just need to chain these and
+    // update the last pointer
     else
     {
-        this->last->setNext(_instruction);  /* add on to the last instruction    */
-        /* this is the new last instruction  */
-        OrefSet(this, this->last, _instruction);
+        last->setNext(_instruction);
+        last = _instruction);
     }
-    /* now safe from garbage collection  */
-    this->toss((RexxObject *)_instruction);
+
+    // we add the instruction objects to the global table to
+    // protect them from garbage collection until they are protected...
+    // we can remove this now.
+    toss((RexxObject *)_instruction);
 }
 
 
