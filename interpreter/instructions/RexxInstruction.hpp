@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -50,6 +50,7 @@ class RexxSource;
 class RexxClause;
 
 #include "SourceLocation.hpp"
+#include <bitset>
 
 class RexxInstruction : public RexxInternalObject {
  public:
@@ -58,7 +59,7 @@ class RexxInstruction : public RexxInternalObject {
   inline void  operator delete(void *) { }
   inline void  operator delete(void *, void *) { }
 
-  RexxInstruction(RexxClause *clause, int type);
+  RexxInstruction(RexxClause *clause, InstructionKeyword type);
   inline RexxInstruction(RESTORETYPE restoreType) { ; };
   inline RexxInstruction() { ; }
 
@@ -73,13 +74,13 @@ class RexxInstruction : public RexxInternalObject {
   inline void setNext(RexxInstruction *next) { OrefSet(this, this->nextInstruction, next); };
   void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
   void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
-  inline      void        setType(size_t type) { instructionType = (uint16_t)type; };
-  inline      size_t      getType()            { return instructionType;  };
+  inline      void        setType(InstructionKeyword type) { instructionType = type; };
+  inline      InstructionKeyword getType()     { return instructionType;  };
   inline      bool        isType(size_t type)  { return instructionType == type; }
   inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
 
-  uint16_t    instructionType;            // name of the instruction           */
-  uint16_t    instructionFlags;           // general flag area
+  InstructionKeyword  instructionType;    // name of the instruction
+  bitset<32>          instructionFlags;   // general flag area
 
   SourceLocation    instructionLocation;  // location of the instruction in its source
   RexxInstruction  *nextInstruction;      // the next instruction object in the assembled chain.

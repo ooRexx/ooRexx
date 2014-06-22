@@ -311,7 +311,7 @@ bool LanguageParser::terminator(int terminators,  RexxToken *token)
             {
                 // map the keyword token to a key word code.  This are generally
                 // keyword options on DO/LOOP, although THEN and WHEN are also terminators
-                switch (this->subKeyword(token))
+                switch (token->subKeyword())
                 {
                     case SUBKEY_TO:
                     {
@@ -417,8 +417,10 @@ void LanguageParser::position(size_t line, size_t offset)
  * tokens contained within the clause and is used by
  * the parser to determine the type of instruction and
  * create the instruction parse tree.
+ *
+ * @return true if we managed to get a clause, false otherwise.
  */
-void LanguageParser::nextClause()
+bool LanguageParser::nextClause()
 {
     SourceLocation location;             // location of the clause
     SourceLocation tokenLocation;        // location of each token
@@ -443,7 +445,7 @@ void LanguageParser::nextClause()
             if (token == OREF_NULL)
             {
                 flags.set(noClause);
-                return;
+                return false;
             }
             // we have a token, but is it an end of clause marker (explicit or implicit
             // semicolon).  If not, we've got a real clause to process.
@@ -489,6 +491,8 @@ void LanguageParser::nextClause()
     flags.reset(reclaimed);
     // always set the error information for the clause being processed.
     clauseLocation = clause->getLocation();
+    // we have a clause
+    return true;
 }
 
 
@@ -645,75 +649,87 @@ void LanguageParser::resolveDependencies()
 }
 
 
-void LanguageParser::flushControl(
-    RexxInstruction *_instruction)      /* next instruction                  */
-/******************************************************************************/
-/* Function:  Flush any pending compound instructions from the control stack  */
-/*            for new added instructions                                      */
-/******************************************************************************/
+/**
+ * Flush an pending instructions from the control stack
+ * for a new added instruction.
+ *
+ * @param _instruction
+ *               The newly added instruction.
+ */
+void LanguageParser::flushControl(RexxInstruction *_instruction)
 {
-    size_t           type;               /* instruction type                  */
-    RexxInstruction *second;             /* additional created instructions   */
-
-    /* loop through the control stack    */
+    // loop through the control stack
     for (;;)
     {
-        type = this->topDo()->getType();   /* get the instruction type          */
-        /* pending ELSE close?               */
+        // get the type of the instruction at the top of the control
+        // stack.
+        InstructionKeyword type = topDo()->getType();   /* get the instruction type          */
+        // is this a pending ELSE clause?    */
         if (type == KEYWORD_ELSE)
         {
-            second = this->popDo();          /* pop the item off of the control   */
-                                             /* create a new end marker           */
-            second = this->endIfNew((RexxInstructionIf *)second);
-            /* have an instruction?              */
+            // pop the instruction off of the stack
+            RexxInstruction *second = popDo();
+            // and create a new end marker for that instruction.
+            RexxInstruction second = endIfNew((RexxInstructionIf *)second);
+            // have an instruction to add?
             if (_instruction != OREF_NULL)
             {
-                this->addClause(_instruction);  /* add this here                     */
-                _instruction = OREF_NULL;       /* don't process more instructions   */
+                // add to the current location and don't process any additional
+                // instructions.
+                addClause(_instruction);
+                _instruction = OREF_NULL;
             }
-            this->addClause(second);         /* add the clause to the list        */
+            // now add the else terminator behind this.
+            addClause(second);
+            // we can go around again on this one.
         }
-        /* nested IF-THEN situation?         */
+        // nested IF-THEN situation?
         else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
         {
-            second = this->popDo();          /* pop the item off of the control   */
-            /* have an instruction?              */
+            // get the top item
+            RexxInstruction *second = popDo();
+            // have an instruction to add?
             if (_instruction != OREF_NULL)
             {
-                this->addClause(_instruction); /* add this here                     */
-                _instruction = OREF_NULL;      /* don't process more instructions   */
-                                               /* create a new end marker           */
-                second = this->endIfNew((RexxInstructionIf *)second);
-                this->addClause(second);       /* add the clause to the list        */
-                this->pushDo(second);          /* add to the control stack too      */
+                // insert this here and null it out.
+                addClause(_instruction);
+                _instruction = OREF_NULL;
             }
-            else
-            {
-                /* create a new end marker           */
-                second = this->endIfNew((RexxInstructionIf *)second);
-                this->addClause(second);       /* add the clause to the list        */
-                this->pushDo(second);          /* add to the control stack too      */
-            }
-            break;                           /* finish up here                    */
+            // we need a new end marker
+            second = endIfNew((RexxInstructionIf *)second);
+            // we add this clause behine the new one, and also add this
+            // to the control stack as a pending instruction
+            this->addClause(second);
+            this->pushDo(second);
+
+            // we're done with this
+            break;
         }
-        /* some other type of construct      */
+        // some other type of construct.  We just add the instruction to the
+        // execution stream
         else
         {
-            if (_instruction != OREF_NULL)    /* have an instruction?              */
+            if (_instruction != OREF_NULL)
             {
-                this->addClause(_instruction);  /* add this here                     */
+                addClause(_instruction);
             }
-            break;                           /* finished flushing                 */
+            // all done flushing
+            break;
         }
     }
 }
 
-RexxCode *LanguageParser::translateBlock(
-    RexxDirectory *_labels )            /* labels (for interpret)            */
-/******************************************************************************/
-/* Function:  Translate a block of REXX code (delimited by possible           */
-/*            directive instructions                                          */
-/******************************************************************************/
+
+/**
+ * Translate a block of REXX code (delimited by possible
+ * directive instructions
+ *
+ * @param _labels A parent label context (generally only used for
+ *                interpret instructions).
+ *
+ * @return A RexxCode object for this block.
+ */
+RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
 {
     RexxInstruction *_instruction;        /* created instruction item          */
     RexxInstruction *second;             /* secondary clause for IF/WHEN      */
@@ -721,185 +737,233 @@ RexxCode *LanguageParser::translateBlock(
     size_t           type;               /* instruction type information      */
     size_t           controltype;        /* type on the control stack         */
 
-                                         /* no instructions yet               */
-    OrefSet(this, this->first, OREF_NULL);
-    OrefSet(this, this->last, OREF_NULL);
-    /* allocate the call list            */
-    OrefSet(this, this->calls, new_list());
-    /* create variables and lit tables   */
-    OrefSet(this, this->variables, (RexxDirectory *)TheCommonRetrievers->copy());
-    /* restart the variable index        */
-    this->variableindex = FIRST_VARIABLE_INDEX;
-    OrefSet(this, this->exposed_variables, new_directory());
-    if (this->flags&_interpret)          /* this an interpret?                */
+    // initialize the parsing environment.
+    first = OREF_NULL;
+    last = OREF_NULL;
+    // get a list of all calls that might need resolution
+    calls = new_list()
+    // a table of variables...starting with the special variables we allocated space for.
+    variables = (RexxDirectory *)TheCommonRetrievers->copy();
+    // restart the variable index        */
+    variableIndex = FIRST_VARIABLE_INDEX;
+    exposedVariables = new_directory();
+
+    // is this an interpret instruction?  use the provided labels
+    if (flags.test(interpret))
     {
-        /* just use the existing label set   */
-        OrefSet(this, this->labels, _labels);
+        labels = _labels;
     }
+    // we need to keep a new labels directory
     else
     {
-        /* create a new labels directory     */
-        OrefSet(this, this->labels, new_directory());
+        labels = new_directory();
     }
-    /* not collecting guard variables yet*/
-    OrefSet(this, this->guard_variables, OREF_NULL);
-    this->maxstack = 0;                  /* clear all of the stack accounting */
-    this->currentstack = 0;              /* fields                            */
-    this->flags &= ~no_clause;           /* not reached the end yet           */
+    // until we need guard variables, we don't need the table
+    guardVariables = OREF_NULL
 
-                                         /* add the first dummy instruction   */
+    // clear the stack accounting fields
+    maxStack = 0;
+    currentStack = 0;
+    // we're not at the end yet
+    flags.reset(noClause);
+
+    // add a dummy instruction at the front.  All other instructions get chained off of this.
     _instruction = new RexxInstruction(OREF_NULL, KEYWORD_FIRST);
-    this->pushDo(_instruction);           /* set bottom of control stack       */
-    this->addClause(_instruction);        /* add to the instruction list       */
-    this->nextClause();                  /* get the next physical clause      */
-    for (;;)                             /* process all clauses               */
+    // this is the bottom of the control stack, and also the
+    // first clause of the code stream.
+    pushDo(_instruction);
+    addClause(_instruction);
+
+    // time to start actual parsing.  Continue until we reach the end
+    nextClause();
+    for (;;)
     {
-        _instruction = OREF_NULL;           /* zero the instruction pointer      */
-        while (!(this->flags&no_clause))   /* scan through all labels           */
+        // start with on instruction
+        _instruction = OREF_NULL;
+        // At this point, we want to consume any label clauses, since they are
+        // not real instructions.
+        while (!(flags.test(noClause))
         {
-            /* resolve the instruction type      */
-            _instruction = this->instruction();
-            if (_instruction == OREF_NULL)    /* found a directive clause?         */
+            // resolve this clause into an instruction
+            _instruction = instruction();
+            // if nothing is returned, this must be a directive, which terminates
+            // parsing of this block.
+            if (_instruction == OREF_NULL)
             {
-                break;                         /* return to higher level            */
+                break;
             }
-            /* is this a label?                  */
-            if (_instruction->getType() != KEYWORD_LABEL)
+            // not a label, break out of the loop
+            if (!_instruction->isType(KEYWORD_LABEL))
             {
-                break;                         /* have a non-label clause           */
+                break;
             }
-            this->addClause(_instruction);    /* add this to clause list           */
-            this->nextClause();              /* get the next physical clause      */
-            _instruction = OREF_NULL;         /* no instruction any more           */
+            // append the label and try again
+            addClause(_instruction);
+            nextClause();
+            // need to zero this out in case we break the loop for an end of file
+            _instruction = OREF_NULL;
         }
-        /* get an end-of-clause?             */
-        if (this->flags&no_clause || _instruction == OREF_NULL)
+        // ok, have we hit the end of the file or the end of the block?
+        if (flags.test(noClause) || _instruction == OREF_NULL)
         {
-            /* get the control stack type        */
-            controltype = this->topDo()->getType();
-            /* while end of an IF or WHEN        */
+            // see what we have at the top of the control stack, we probably
+            // have some cleanup to do.
+            InstructionKeyword controltype = topDo()->getType();
+            // handle any then or when terminators
             while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN)
             {
-                this->popDo();                 /* pop pending closing IFs           */
-                this->flushControl(OREF_NULL); /* flush any IFs or ELSEs            */
-                                               /* get the control stack type        */
-                controltype = this->topDo()->getType();
+                // pop these from the stack and flush and pending control instructions
+                popDo();
+                flushControl(OREF_NULL);
+                controltype = topDo()->getType();
             }
-            /* any unclosed composite clauses?   */
-            if (this->topDo()->getType() != KEYWORD_FIRST)
+            // In theory, at this point we should be at the first instruction.
+            // if not, we have an unclosed block instruction, which is an error
+            if (topDo()->getType() != KEYWORD_FIRST)
             {
-                /* report the block error            */
-                blockSyntaxError(this->topDo());
+                blockSyntaxError(topDo());
             }
-            this->popDo();                   /* remove the top one                */
-            break;                           /* done parsing this section         */
+            // remove the top instruction from the stack, and we're done
+            popDo();
+            break;
         }
-        type = _instruction->getType();     /* get the top instruction type      */
-        if (type != KEYWORD_ELSE)          /* have a pending THEN to finish     */
+
+        // now check if we need to adjust the control stack for this new instruction.
+        InstructionKeyword type = _instruction->getType();
+        // if this is not an ELSE, we might have a pending THEN to finish.
+        if (type != KEYWORD_ELSE)
         {
-            /* get the control stack type        */
-            controltype = this->topDo()->getType();
-            /* while end of an IF or WHEN        */
+            // get the type at the type of the stack.
+            InstructionKeyword controltype = topDo()->getType();
+            // we might need to pop off multiple pending thens while end of an IF or WHEN
             while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN)
             {
-                this->popDo();                 /* pop pending closing IFs           */
-                this->flushControl(OREF_NULL); /* flush any IFs or ELSEs            */
-                                               /* get the control stack type        */
-                controltype = this->topDo()->getType();
+                popDo();
+                flushControl(OREF_NULL);
+                controltype = topDo()->getType();
             }
         }
+
+        // now check the actual disposition of this instruction.  If it is a control type
+        // add it immediately to the stream
         if (type == KEYWORD_IF || type == KEYWORD_SELECT || type == KEYWORD_DO || type == KEYWORD_LOOP)
         {
-            this->addClause(_instruction);   /* add to instruction heap           */
+            addClause(_instruction);
         }
-        else if (type != KEYWORD_ELSE)     /* not a new control level           */
+        // if this is an ELSE, we don't add a new level, but rather flush
+        // any pending control levels.
+        else if (type != KEYWORD_ELSE)
         {
-            this->flushControl(_instruction); /* flush any IFs or ELSEs            */
+            this->flushControl(_instruction);
         }
-        /* have a bad instruction within a   */
-        /* SELECT instruction?               */
-        if (this->topDo()->getType() == KEYWORD_SELECT &&
+        // validate allowed instructions in a SELECT
+        if (topDo()->isType(KEYWORD_SELECT) &&
             (type != KEYWORD_WHEN && type != KEYWORD_OTHERWISE && type != KEYWORD_END ))
         {
-            syntaxError(Error_When_expected_whenotherwise, this->topDo());
+            syntaxError(Error_When_expected_whenotherwise, topDo());
         }
 
-        switch (type)                      /* post process the instructions     */
+        // now handle the different instructions to ensure they
+        // are valid in their particular contexts.
+        switch (type)
         {
-            case KEYWORD_WHEN:               /* WHEN clause of SELECT             */
-                second = this->topDo();        /* get the top of the queue          */
-                                               /* not working on a SELECT?          */
-                if (second->getType() != KEYWORD_SELECT)
+            // a WHEN clause.  The top of the Do stack must be a select.
+            case KEYWORD_WHEN:
+            {
+                // the top of the queue must be a SELECT instruction
+                RexxInstruction *second = topDo();
+                if (!second->isType(KEYWORD_SELECT))
                 {
                     syntaxError(Error_Unexpected_when_when);
                 }
-                /* add this to the select list       */
+                // let the select know that another WHEN was added
                 ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)_instruction);
-                /* just fall into IF logic           */
+                // just fall into IF logic
+            }
 
-            case  KEYWORD_IF:                /* start of an IF instruction        */
-                token = nextReal();            /* get the terminator token          */
-                                               /* have a terminator before the THEN?*/
+            // processing of an IF instruction, and also a WHEN (from above)
+            case  KEYWORD_IF:
+            {
+                // we need to finish the IF instruction.
+                // get the next token
+                RexxToken *token = nextReal();
+                // Did the line end with no THEN?  It must be on the next
+                // line,
                 if (token->isEndOfClause())
                 {
-                    this->nextClause();          /* get the next physical clause      */
-                    if (this->flags&no_clause)   /* get an end-of-file?               */
+                    // get the next full clause, which should start with
+                    // the THEN keyword.
+                    // did we hit the end of file?, this is an error
+                    if (!nextClause())
                     {
-                        /* raise an error                    */
                         syntaxError(Error_Then_expected_if, _instruction);
                     }
-                    token = nextReal();          /* get the first token               */
-                                                 /* not a THEN keyword?               */
-                    if (!token->isSymbol() || this->keyword(token) != KEYWORD_THEN)
+
+                    // now check the next token and ensure it is a THEN keyword.
+                    token = nextReal();
+                    // Not a THEN keyword?  This is an error
+                    if (token->keyword() != KEYWORD_THEN)
                     {
-                        /* have an error                     */
                         syntaxError(Error_Then_expected_if, _instruction);
                     }
-                    /* create a new then clause          */
-                    second = this->thenNew(token, (RexxInstructionIf *)_instruction);
-                    token = nextReal();          /* get token after THEN keyword      */
-                                                 /* terminator here?                  */
+                    // create a new then clause attached to the IF
+                    RexxInstruction *second = thenNew(token, (RexxInstructionIf *)_instruction);
+                    // now get the next token.. and ensure is something after the THEN
+                    token = nextReal();
+
+                    // if this is a clause end (e.g, end of line), parse off a clause
+                    // to make sure there is something there
                     if (token->isEndOfClause())
                     {
-                        this->nextClause();        /* get the next physical clause      */
-                        if (this->flags&no_clause) /* get an end-of-file?               */
+                        if (!nextClause())
                         {
-                            /* raise an error                    */
                             syntaxError(Error_Incomplete_do_then, _instruction);
                         }
                     }
                     else
                     {
-                        previousToken();           /* step back a token                 */
-                        trimClause();              /* make this start of the clause     */
+                        // step back a token and trim the THEN off of the clause.
+                        previousToken();
+                        trimClause();
                     }
                 }
-                else                           /* if expr THEN form                 */
+                // we have THEN on the same line as the IF
+                else
                 {
-                    /* create a new then clause          */
-                    second = this->thenNew(token, (RexxInstructionIf *)_instruction);
-                    token = nextReal();          /* get token after THEN keyword      */
-                                                 /* terminator here?                  */
+                    // attach a THEN to the IF
+                    RexxInstruction *second = thenNew(token, (RexxInstructionIf *)_instruction);
+                    // there might not be anything after the THEN, so we have to check
+
+                    token = nextReal();
+                    // if the THEN was the last thing, ensure we have something on the
+                    // next line
                     if (token->isEndOfClause())
                     {
-                        this->nextClause();        /* get the next physical clause      */
-                        if (this->flags&no_clause) /* get an end-of-file?               */
+                        // we must have a clause, else there is an error
+                        if (!nextClause())
                         {
-                            /* raise an error                    */
                             syntaxError(Error_Incomplete_do_then, _instruction);
                         }
                     }
                     else
                     {
-                        previousToken();           /* step back a token                 */
-                        trimClause();              /* make this start of the clause     */
+                        // ok, back up one token and trim the clause to remove the THEN
+                        previousToken();
+                        trimClause();
                     }
                 }
-                this->addClause(second);       /* add this to the instruction list  */
-                this->pushDo(second);          /* add to top of control queue       */
-                continue;                      /* straight around to process clause */
-                                               /* remainder                         */
-            case  KEYWORD_ELSE:              /* have an ELSE instruction          */
+
+                // add this to the instruction list and also add this to the
+                // DO stack in case there is an ELSE to process.
+                addClause(second);
+                pushDo(second);
+                // back to the top to get a new instruction
+                continue;
+            }
+
+            // we have an ELSE instruction.  Need to verify this is in a correct context.
+            case  KEYWORD_ELSE:
+            {
                 second = this->topDo();        /* get the top block                 */
                 if (this->topDo()->getType() != KEYWORD_ENDTHEN)
                 {
@@ -930,6 +994,7 @@ RexxCode *LanguageParser::translateBlock(
                 }
                 continue;                      /* straight around to process clause */
                                                /* remainder                         */
+            }
 
             case  KEYWORD_OTHERWISE:         /* start of an OTHERWISE group       */
                 second = this->topDo();        /* get the top of the queue          */
@@ -2677,7 +2742,7 @@ RexxObject *LanguageParser::parseConditional(
         if (token->isSymbol())
         {
             /* process the symbol                */
-            switch (this->subKeyword(token) )
+            switch (token->subKeyword() )
             {
 
                 case SUBKEY_WHILE:              /* DO WHILE exprw                    */
