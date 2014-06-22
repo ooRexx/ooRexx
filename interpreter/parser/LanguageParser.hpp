@@ -50,6 +50,7 @@
 #include "StackClass.hpp"
 #include "Token.hpp"
 #include "Clause.hpp"
+#include "RexxInstruction.hpp"
 
 class RexxInstruction;
 class RexxInstructionDo;
@@ -296,6 +297,8 @@ class LanguageParser: public RexxInternalObject {
     inline void        pushDo(RexxInstruction *i) { control->pushRexx((RexxObject *)i); }
     inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pullRexx()); };
     inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); };
+    inline InstructionKeyword topDoType() { return ((RexxInstruction *)(control->peek()))->getType(); };
+    inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); };
            void        setProgramName(RexxString *name);
     inline void        pushOperator(RexxToken *operatorToken) { operators->pushRexx((RexxObject *)operatorToken); };
     inline RexxToken  *popOperator() { return (RexxToken *)(operators->pullRexx()); };
@@ -331,6 +334,9 @@ class LanguageParser: public RexxInternalObject {
     inline void        syntaxError(int errorcode, RexxToken *token) { this->errorToken(errorcode, token); }
     inline void        syntaxError(int errorcode) { this->error(errorcode); }
     inline bool        isInternalCode() { return this->isOldSpace(); }
+    inline bool        capturingGuardVariables() { return guardVariables != OREF_NULL; }
+           bool        isExposed(RexxString *varName);
+
     StackFrameClass *createStackFrame();
 
     RexxInstruction *addressNew();

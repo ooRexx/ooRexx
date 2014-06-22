@@ -663,7 +663,7 @@ void LanguageParser::flushControl(RexxInstruction *_instruction)
     {
         // get the type of the instruction at the top of the control
         // stack.
-        InstructionKeyword type = topDo()->getType();   /* get the instruction type          */
+        InstructionKeyword type = topDoType();   /* get the instruction type          */
         // is this a pending ELSE clause?    */
         if (type == KEYWORD_ELSE)
         {
@@ -808,18 +808,18 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
         {
             // see what we have at the top of the control stack, we probably
             // have some cleanup to do.
-            InstructionKeyword controltype = topDo()->getType();
+            InstructionKeyword controltype = topDoType();
             // handle any then or when terminators
             while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN)
             {
                 // pop these from the stack and flush and pending control instructions
                 popDo();
                 flushControl(OREF_NULL);
-                controltype = topDo()->getType();
+                controltype = topDoType();
             }
             // In theory, at this point we should be at the first instruction.
             // if not, we have an unclosed block instruction, which is an error
-            if (topDo()->getType() != KEYWORD_FIRST)
+            if (topDoIsType(KEYWORD_FIRST))
             {
                 blockSyntaxError(topDo());
             }
@@ -834,13 +834,13 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
         if (type != KEYWORD_ELSE)
         {
             // get the type at the type of the stack.
-            InstructionKeyword controltype = topDo()->getType();
+            InstructionKeyword controltype = topDoType();
             // we might need to pop off multiple pending thens while end of an IF or WHEN
             while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN)
             {
                 popDo();
                 flushControl(OREF_NULL);
-                controltype = topDo()->getType();
+                controltype = topDoType();
             }
         }
 
@@ -857,7 +857,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
             this->flushControl(_instruction);
         }
         // validate allowed instructions in a SELECT
-        if (topDo()->isType(KEYWORD_SELECT) &&
+        if (topDoType(KEYWORD_SELECT) &&
             (type != KEYWORD_WHEN && type != KEYWORD_OTHERWISE && type != KEYWORD_END ))
         {
             syntaxError(Error_When_expected_whenotherwise, topDo());
@@ -964,69 +964,99 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
             // we have an ELSE instruction.  Need to verify this is in a correct context.
             case  KEYWORD_ELSE:
             {
-                second = this->topDo();        /* get the top block                 */
-                if (this->topDo()->getType() != KEYWORD_ENDTHEN)
+                // ok, the top instruction is the key.  It must be the
+                // tail end of a THEN instruction that we can attach to.
+                second = topDo();
+                if (!second->isType(KEYWORD_ENDTHEN))
                 {
-                    /* have an error                     */
                     syntaxError(Error_Unexpected_then_else);
                 }
-                this->addClause(_instruction); /* add to instruction heap           */
-                second = this->popDo();        /* pop the ENDTHEN item              */
-                this->pushDo(_instruction);     /* add to the control list           */
-                /* join the THEN and ELSE together   */
+
+                // ok, add the ELSE to the instruction list, pop the
+                // THEN off of the control stack, push the ELSE on to the stack,
+                // and hook them together.  The ELSE will need to be completed
+                // once the next instruction has been parsed off.
+                addClause(_instruction);
+                second = popDo();
+                // this is the ELSE
+                pushDo(_instruction);
+                // join the THEN and ELSE together
                 ((RexxInstructionElse *)_instruction)->setParent((RexxInstructionEndIf *)second);
                 ((RexxInstructionEndIf *)second)->setEndInstruction((RexxInstructionEndIf *)_instruction);
-                token = nextReal();            /* get the next token                */
-                                               /* have an ELSE keyword alone?       */
+
+                // check for a dangling ELSE now.
+                token = nextReal();
+
+                // if the next token is the end of the line (or potentially, a semicolon)
+                // we're not at the end.
                 if (token->isEndOfClause())
                 {
-                    this->nextClause();          /* get the next physical clause      */
-                    if (this->flags&no_clause)   /* get an end-of-file?               */
+                    // dangling ELSE if we can't get another clause.
+                    if (!nextClause())
                     {
-                        /* raise an error                    */
                         syntaxError(Error_Incomplete_do_else, _instruction);
                     }
                 }
-                else                           /* ELSE instruction form             */
+                // ELSE followed by an instruction on the same line.  We need to
+                // push the token we grabbed back on to the clause and trim off the
+                // ELSE part we've already process.
+                else
                 {
-                    previousToken();             /* step back a token                 */
-                    trimClause();                /* make this start of the clause     */
+                    previousToken();
+                    trimClause();
                 }
-                continue;                      /* straight around to process clause */
-                                               /* remainder                         */
+                // continue parsing instructions.
+                continue;
             }
 
-            case  KEYWORD_OTHERWISE:         /* start of an OTHERWISE group       */
-                second = this->topDo();        /* get the top of the queue          */
-                                               /* not working on a SELECT?          */
-                if (second->getType() != KEYWORD_SELECT)
+
+            // found the start of an OTHERWISE group.  We need to verify that
+            // we're really working on a SELECT.
+            case  KEYWORD_OTHERWISE:
+            {
+                // we must have a SELECT at the top of the control stack
+                second = topDo();
+                if (!second->isType(KEYWORD_SELECT))
                 {
                     syntaxError(Error_Unexpected_when_otherwise);
                 }
-                /* hook up the OTHERWISE instruction */
+
+                // hook the otherwise up to the SELECT and push the otherwise
+                // on to the top of the stack until we find an END.
                 ((RexxInstructionSelect *)second)->setOtherwise((RexxInstructionOtherwise *)_instruction);
-                this->pushDo(_instruction);     /* add this to the control queue     */
-                token = nextReal();            /* get the next token                */
-                                               /* OTHERWISE instr form?             */
+                pushDo(_instruction);
+
+                // we could have the OTHERWISE on the same line as its following instruction, so
+                // we need to trim the instruction
+                token = nextReal();
                 if (!token->isEndOfClause())
                 {
-                    previousToken();             /* step back a token                 */
-                    trimClause();                /* make this start of the clause     */
-                    continue;                    /* straight around to process clause */
-                                                 /* remainder                         */
+                    previousToken();
+                    trimClause();
+                    // we have a clause, go back around and process this
+                    continue;
                 }
-                break;                         /* normal OTHERWISE processing       */
+                // on the next line, fall through to the bottom of the loop
+                // to get the next clause.
+                break;
+            }
 
-
-            case  KEYWORD_END:               /* END instruction for DO or SELECT  */
-                second = this->popDo();        /* get the top of the queue          */
-                type = second->getType();      /* get the instruction type          */
-                                               /* not working on a block?           */
+            // An END instruction.  This could the the closure for a DO, LOOP, or SELECT.
+            // its matchup should be on the top of the control stack.
+            case  KEYWORD_END:
+            {
+                // ok, pop the top instruction.  If this is the
+                // correct type, we're finished with this.  If not the
+                // correct type, we have an error.
+                second = popDo();
+                type = second->getType();
+                // verity the type
                 if (type != KEYWORD_SELECT && type != KEYWORD_OTHERWISE && type != KEYWORD_DO && type != KEYWORD_LOOP)
                 {
-                    if (type == KEYWORD_ELSE)    /* on an else?                       */
+                    // we have a couple of specific errors based on what sort of instruction is
+                    // on the top.
+                    if (type == KEYWORD_ELSE)
                     {
-                        /* give the specific error           */
                         syntaxError(Error_Unexpected_end_else);
                     }
                     else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
@@ -1036,188 +1066,283 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                     }
                     else
                     {
-                        /* have a misplaced END              */
                         syntaxError(Error_Unexpected_end_nodo);
                     }
                 }
-                if (type == KEYWORD_OTHERWISE) /* OTHERWISE part of a SELECT?       */
+
+                // ok, we have something good, now there is some additional
+                // processing required for specific block instructions
+
+                // if the top of the stack is an OTHERWISE, then the
+                // END is really closing the SELECT.  Replace the Otherwise
+                // with the Select.
+                if (type == KEYWORD_OTHERWISE)
                 {
-                    second = this->popDo();      /* need to pop one more item off     */
+                    second = popDo();
                 }
-                /* matching a select?                */
-                if (second->getType() == KEYWORD_SELECT)
+
+                // Now do the apprpriate closure action based on the instruction type.
+                if (second->isType(KEYWORD_SELECT))
                 {
-                    /* match up the instruction          */
                     ((RexxInstructionSelect *)second)->matchEnd((RexxInstructionEnd *)_instruction, this);
                 }
                 else                           /* must be a DO block                */
                 {
-                    /* match up the instruction          */
                     ((RexxInstructionDo *)second)->matchEnd((RexxInstructionEnd *)_instruction, this);
                 }
-                this->flushControl(OREF_NULL); /* finish pending IFs or ELSEs       */
-                break;
 
-            case  KEYWORD_DO:                // start of new DO group (also picks up LOOP instruction)
+                // We've just completed a large block instruction.  It is possible that
+                // this was part of something like "if a then do;..end", in which case, the
+                // conditional instruction is still in a pending state.  Flush out the control
+                // stack to complete now that the block has been closed.
+                flushControl(OREF_NULL);
+                break;
+            }
+
+            // start of new DO group (also picks up LOOP instruction)
+            // this gets pushed on to the top of the control stack until
+            // we find an END instruction.
+            case  KEYWORD_DO:
             case  KEYWORD_LOOP:
-                this->pushDo(_instruction);    /* add this to the control queue     */
+            {
+                pushDo(_instruction);
                 break;
+            }
 
-            case  KEYWORD_SELECT:            /* start of new SELECT group         */
-                this->pushDo(_instruction);    /* and also to the control queue     */
+            // new select group.  Again, we push this on the start of the stack
+            // while it awaits its associated WHEN, OTHERWISE, and END bits.
+            case  KEYWORD_SELECT:
+            {
+                pushDo(_instruction);
                 break;
+            }
 
-            default:                         /* other types of instruction        */
+            // all other types of instructions don't require additional processing.
+            default:
                 break;
         }
-        this->nextClause();                /* get the next physical clause      */
+        // grab another clause and go around.
+        nextClause();
     }
-    /* now go resolve any label targets  */
-    _instruction = (RexxInstruction *)(this->calls->removeFirst());
-    /* while still more references       */
+
+    // ok, we have a stack of pending call/function calls to handle.
+    // now that we've got all of the labels scanned off, we can figure out
+    // what sort of targets these calls will resolve to.
+    _instruction = (RexxInstruction *)(calls->removeFirst());
+
+    // loop through the entire call list
     while (_instruction != (RexxInstruction *)TheNilObject)
     {
-        /* actually a function call?         */
+        // function calls are expression objects, while CALLs
+        // are instructions. Similar, but have different
+        // processing methods
         if (isOfClass(FunctionCallTerm, _instruction))
         {
-            /* resolve the function call         */
-            ((RexxExpressionFunction *)_instruction)->resolve(this->labels);
+            ((RexxExpressionFunction *)_instruction)->resolve(labels);
         }
         else
         {
-            /* resolve the CALL/SIGNAL/FUNCTION  */
-            /* label targets                     */
-            ((RexxInstructionCallBase *)_instruction)->resolve(this->labels);
+            // ok, technically, this could be either a CALL or a SIGNAL.
+            ((RexxInstructionCallBase *)_instruction)->resolve(labels);
         }
-        /* now get the next instruction      */
-        _instruction = (RexxInstruction *)(this->calls->removeFirst());
+        _instruction = (RexxInstruction *)(calls->removeFirst());
     }
-    /* remove the first instruction      */
-    OrefSet(this, this->first, this->first->nextInstruction);
-    /* no labels needed?                 */
-    if (this->labels != OREF_NULL && this->labels->items() == 0)
+
+    // the first instruction is just a dummy we use to anchor
+    // everything will parsing.  We can unchaind that now.
+    first = first->nextInstruction;
+    // if this code block does not contain labels (pretty common if
+    // using an oo style), get rid of those too
+    if (labels != OREF_NULL && labels->isEmpty())
     {
-        /* release that directory also       */
-        OrefSet(this, this->labels, OREF_NULL);
+        labels = OREF_NULL;
     }
-    /* create a rexx code object         */
-    return new RexxCode(this, this->first, this->labels, (this->maxstack+ 10), this->variableindex);
+    // now create a code object that is attached to the package.
+    // this will have all of the information needed to execute this code.
+    return new RexxCode(package, first, labels, (maxStack + 10), variableIndex);
 }
 
-RexxVariableBase *LanguageParser::addVariable(
-    RexxString *varname)               /* variable to add                   */
-/******************************************************************************/
-/* Function:  Resolve a variable name to a single common retriever object     */
-/*            per method                                                      */
-/******************************************************************************/
+/**
+ * Test if a named variable has been previously
+ * exposed.
+ *
+ * @param varName The variable name.
+ *
+ * @return True if the variable has been exposed, false otherwise.
+ */
+bool LanguageParser::isExposed(RexxString *varName)
 {
-                                         /* check the directory for an entry  */
-    RexxVariableBase *retriever = (RexxVariableBase *)this->variables->fastAt(varname);
+    return exposedVariables != OREF_NULL && exposedVariables->fastAt(varName) != OREF_NULL;
+}
+
+/**
+ * Perform a variable capture operation if we're
+ * evaluating a GUARD WHEN expression.
+ *
+ * @param varname   The name of the variable
+ * @param retriever The associated variable retriever.
+ */
+void LanguageParser::captureGuardVariable(RexxString *varname, RexxVariableBase *retriever)
+{
+    // are we collecting guard variable references (usually the case when
+    // parsing a GUARD WHEN expression.
+    if (capturingGuardVariables())
+    {
+        // in the context of this method, we have a list of exposed variables.
+        // if this is one of the exposed variables, then also add this to the guard
+        // variables list so we know which variables will force a re-evaluation.
+        if (isExposed(varname))
+        {
+            // add to the guard list
+            guardVariables->put((RexxObject *)retriever, (RexxObject *)retriever);
+        }
+    }
+}
+
+
+/**
+ * Resolve a variable name to a single common retriever object
+ * per code block.
+ *
+ * @param varname The name of the target variable.
+ *
+ * @return A retrieve object for accessing the variable.  This
+ *         will identify a variable slot in the code stack frame.
+ */
+RexxVariableBase *LanguageParser::addVariable(RexxString *varname)
+{
+    // we might have this already (fairly common in most programs).  If
+    // not we cache a new one for the next time.
+    RexxVariableBase *retriever = (RexxVariableBase *)variables->fastAt(varname);
     if (retriever == OREF_NULL)          /* not in the table yet?             */
     {
-        if (!(this->flags&_interpret))     /* not in an interpret?              */
+        // ok, have to create a new one.
+
+        // if we're in normal operation, we allocate a slot in the stack frame
+        // and tie a variable reference to that slot.  If this is an interpret,
+        // then the variable value must be resolved dynamically.
+        if (!isInterpret())
         {
-            this->variableindex++;           /* step the counter                  */
-                                             /* create a new variable retriever   */
-            retriever = new RexxParseVariable(varname, this->variableindex);
+            variableIndex++;
+            retriever = new RexxParseVariable(varname, variableIndex);
         }
-        else                               /* force dynamic lookup each time    */
+        else
         {
+            // a slot index of zero tells the retriever to perform a dynamic
+            // lookup
             retriever = new RexxParseVariable(varname, 0);
         }
-        /* add to the variable table         */
-        this->variables->put((RexxObject *)retriever, varname);
+        // and add this to the table.
+        variables->put((RexxObject *)retriever, varname);
     }
-    /* collecting guard variables?       */
-    if (this->guard_variables != OREF_NULL)
+    // Small optimization here.  In order for a variable to be added to the
+    // guard variable list, it must have been exposed already.  That means
+    // the variable will already be in this table, so we don't need to
+    // perform the capturing test then.
+    else
     {
-        /* in the list of exposed variables? */
-        if (this->exposed_variables != OREF_NULL && this->exposed_variables->fastAt(varname) != OREF_NULL)
-        {
-            /* add this to the guard list        */
-            this->guard_variables->put((RexxObject *)retriever, (RexxObject *)retriever);
-        }
+        captureGuardVariable(varname, retriever);
     }
-    return retriever;                    /* return variable accesser          */
+    // return the variable accesser, either a new one or one pulled from the cache.
+    return retriever;
 }
 
-RexxStemVariable *LanguageParser::addStem(
-    RexxString *stemName)              /* stem to add                       */
-/******************************************************************************/
-/* Function:  Process creation of stem variables                              */
-/******************************************************************************/
+
+/**
+ * Add a stem variable instance to the execution instance.
+ * This is like the addVariable, but the retriever
+ * in question is for a Stem variable.
+ *
+ * @param stemName The name of the stem (including the period).
+ *
+ * @return A retriever for the specified variable.
+ */
+RexxStemVariable *LanguageParser::addStem(RexxString *stemName)
 {
-    /* check the table for an entry      */
-    RexxStemVariable *retriever = (RexxStemVariable *)(this->variables->fastAt(stemName));
-    if (retriever == OREF_NULL)          /* not in the table yet?             */
+    // like with normal variables, we might have this already cached.
+    RexxStemVariable *retriever = (RexxStemVariable *)(variables->fastAt(stemName));
+    if (retriever == OREF_NULL)
     {
-        if (!(this->flags&_interpret))     /* not in an interpret?              */
+        if (!isInterpret())
         {
-            this->variableindex++;           /* step the counter                  */
-                                             /* create a new variable retriever   */
-            retriever = new RexxStemVariable(stemName, this->variableindex);
+            // non-interpret uses an allocated stack frame slot
+            variableIndex++;
+            retriever = new RexxStemVariable(stemName, variableIndex);
         }
-        else                               /* force dynamic lookup each time    */
+        else
         {
+            // interpret uses dynamic lookup
             retriever = new RexxStemVariable(stemName, 0);
         }
-        /* add to the variable table         */
-        this->variables->put((RexxObject *)retriever, stemName);
+        variables->put((RexxObject *)retriever, stemName);
     }
-    /* collecting guard variables?       */
-    if (this->guard_variables != OREF_NULL)
+    // Small optimization here.  In order for a variable to be added to the
+    // guard variable list, it must have been exposed already.  That means
+    // the variable will already be in this table, so we don't need to
+    // perform the capturing test then.
+    else
     {
-        /* in the list of exposed variables? */
-        if (this->exposed_variables != OREF_NULL && this->exposed_variables->fastAt(stemName) != OREF_NULL)
-        {
-            /* add this to the guard list        */
-            this->guard_variables->put((RexxObject *)retriever, (RexxObject *)retriever);
-        }
+        captureGuardVariable(stemName, retriever);
     }
     return retriever;                    /* return variable accesser          */
 }
 
 
-RexxCompoundVariable *LanguageParser::addCompound(
-    RexxString *name)                  /* name of the compound variable     */
-/******************************************************************************/
-/* Function:  Parse to completion a compound variable                         */
-/******************************************************************************/
-{
-    RexxStemVariable     *stemRetriever; /* retriever for the stem value      */
-    RexxString           *stemName;      /* stem part of compound variable    */
-    RexxString           *tail;          /* tail section string value         */
-    const char *          start;         /* starting scan position            */
-    size_t                length;        /* length of tail section            */
-    const char *          _position;     /* current position                  */
-    const char *          end;           // the end scanning position
-    size_t                tailCount;     /* count of tails in compound        */
 
-    length = name->getLength();          /* get the string length             */
-    _position = name->getStringData();   /* start scanning at first character */
-    start = _position;                   /* save the starting point           */
-    end = _position + length;            // save our end marker
+/**
+ * Add a compound variable reference to our variable tables.
+ * This is a two part operation...first we make sure the
+ * stem variable is added, which uses a specific slot.  Then
+ * we use that information to create a retriever for
+ * the specific compound variable.
+ *
+ * @param name   The name of the compound variable.
+ *
+ * @return A retriever for this variable.
+ */
+RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
+{
+    // we cache compound variables also...see if we've encountered
+    // this exact name before.
+    RexxCompoundVariable *retriever = (RexxCompoundVariable *)(variables->fastAt(name));
+    if (retriever \= OREF_NULL)
+    {
+        return retriever;
+    }
+
+    // we need to start out by scanning the name to separate the
+    // stem and tail portions of the variable name.
+    size_t length = name->getLength();
+    const char *_position = name->getStringData();
+    const char *start = _position;
+    const char *end = _position + length;
 
     // we know this is a compound, so there must be at least one period.
-    /* scan to the first period          */
     while (*_position != '.')
     {
-        _position++;                       /* step to the next character        */
+        _position++;
     }
-    /* get the stem string               */
-    stemName = new_string(start, _position - start + 1);
-    stemRetriever = this->addStem(stemName); /* get a retriever item for this     */
 
-    tailCount = 0;                       /* no tails yet                      */
-    do                                   /* process rest of the variable      */
+    // create a Rexx string version of the stem name and retrieve this
+    // from the
+    RexxString *stemName = new_string(start, _position - start + 1);
+    RexxStemVariable *stemRetriever = this->addStem(stemName);
+
+    ProtectedObject p(stemRetriever);
+
+    // now split the tail piece into its component parts so that
+    // we can optimize construction of the final tail lookup.
+    tailCount = 0;
+    do
     {
         // we're here because we just saw a previous period.  that's either the
         // stem variable period or the last tail element we processed.
         // either way, we step past it.  If this period is a trailing one,
         // we'll add a null tail element, which is exactly what we want.
-        _position++;                       /* step past previous period         */
-        start = _position;                 /* save the start position           */
-                                           /* scan for the next period          */
+        _position++;
+        start = _position;
+
+        // scan for the next period
         while (_position < end)
         {
             if (*_position == '.')         // found the next one?
@@ -1226,24 +1351,37 @@ RexxCompoundVariable *LanguageParser::addCompound(
             }
             _position++;                   // continue looking
         }
-        /* extract the tail piece            */
-        tail = new_string(start, _position - start);
-        /* have a null tail piece or         */
-        /* section begin with a digit?       */
+
+        // we found a tail piece.  Now figure out if this is
+        // something that cannot be a variable.  Also make sure
+        // this is part of the common string cache.
+        RexxString *tail = commonString(new_string(start, _position - start));
         if (!(tail->getLength() == 0 || (*start >= '0' && *start <= '9')))
         {
-            /* push onto the term stack          */
-            this->subTerms->push((RexxObject *)(this->addVariable(tail)));
+            // this is a real variable piece.  Add this to the global
+            // variable table and push its retriever on to the term stack
+            // for safe keeping.
+            subTerms->push((RexxObject *)(addVariable(tail)));
         }
         else
         {
-            /* just use the string value directly*/
-            this->subTerms->push(this->commonString(tail));
+            // this is a constant string value.  We can evaluate this
+            // directly, so push it directly on to the stack.
+            subTerms->push(tail);
         }
-        tailCount++;                       /* up the tail count                 */
+        // make sure we count the number of tails
+        tailCount++;
     } while (_position < end);
-    /* finally, create the compound var  */
-    return new (tailCount) RexxCompoundVariable(stemName, stemRetriever->index, this->subTerms, tailCount);
+    // This will pull the items off of the term stack and populate its internal
+    // tail table for lookup processing.
+    RexxCompoundVariable *retriever = new (tailCount) RexxCompoundVariable(stemName, stemRetriever->index, subTerms, tailCount);
+    // add this to the retriever table so that all references to a compound variable with the
+    // same full name will resolved to the same retriever.  We're safe just using the
+    // variables table for this.
+    variables->put((RexxObject *)retriever, name);
+
+    // NOTE: compound variables do get get added to the guard list.
+    return retriever;
 }
 
 
