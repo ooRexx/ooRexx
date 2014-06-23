@@ -53,21 +53,19 @@ void LanguageParser::live(size_t liveMark)
     memory_mark(this->first);
     memory_mark(this->currentInstruction);
     memory_mark(this->last);
-    memory_mark(this->savelist);
-    memory_mark(this->holdstack);
+    memory_mark(this->holdStack);
     memory_mark(this->variables);
     memory_mark(this->literals);
     memory_mark(this->labels);
     memory_mark(this->strings);
-    memory_mark(this->guard_variables);
-    memory_mark(this->exposed_variables);
+    memory_mark(this->guardVariables);
+    memory_mark(this->exposedVariables);
     memory_mark(this->control);
     memory_mark(this->terms);
     memory_mark(this->subTerms);
     memory_mark(this->operators);
     memory_mark(this->calls);
-    memory_mark(this->class_dependencies);
-    memory_mark(this->active_class);
+    memory_mark(this->activeClass);
 }
 
 /**
@@ -83,21 +81,19 @@ void LanguageParser::liveGeneral(int reason)
     memory_mark_general(this->first);
     memory_mark_general(this->currentInstruction);
     memory_mark_general(this->last);
-    memory_mark_general(this->savelist);
-    memory_mark_general(this->holdstack);
+    memory_mark_general(this->holdStack);
     memory_mark_general(this->variables);
     memory_mark_general(this->literals);
     memory_mark_general(this->labels);
     memory_mark_general(this->strings);
-    memory_mark_general(this->guard_variables);
-    memory_mark_general(this->exposed_variables);
+    memory_mark_general(this->guardVariables);
+    memory_mark_general(this->exposedVariables);
     memory_mark_general(this->control);
     memory_mark_general(this->terms);
     memory_mark_general(this->subTerms);
     memory_mark_general(this->operators);
     memory_mark_general(this->calls);
-    memory_mark_general(this->class_dependencies);
-    memory_mark_general(this->active_class);
+    memory_mark_general(this->activeClass);
 }
 
 
@@ -174,26 +170,6 @@ RexxCode *LanguageParser::translateInterpret(RexxDirectory *_labels )
 
     // translate, using the inherited labels
     return translate(_labels);
-}
-
-
-/**
- * Remove an object from the save list.
- *
- * TODO:  See if we can eliminate this.
- *
- * @param object The object to process.
- */
-void LanguageParser::toss(RexxObject *object)
-{
-    // if we have a real object, remove it from the
-    // save list and push it on to the hold stack for
-    // temporary protection.
-    if (object != OREF_NULL)
-    {
-        saveList->remove(object);
-        holdObject(object);
-    }
 }
 
 
@@ -1828,7 +1804,7 @@ RexxObject *LanguageParser::subExpression(int terminators )
                 left = requiredTerm();
                 // this is a message to the left term, and may (ok, probably) have
                 // arguments as well
-                RexxObject *subexpression = collectionMessage(token, left, terminators);
+                RexxObject *subexpression = collectionMessage(token, left);
                 // and this goes back on to the term stack
                 pushTerm(subexpression);
                 break;
@@ -2118,18 +2094,15 @@ size_t LanguageParser::argList(RexxToken *firstToken, int terminators )
  *
  * @param token  The token that marks the start of the argument list.
  * @param name   The function name token.
- * @param terminators
- *               The list of terminators for parsing the argument list.
  *
  * @return A function expression object that can invoke this function.
  */
-RexxObject *LanguageParser::function(RexxToken *token, RexxToken *name, int terminators )
+RexxObject *LanguageParser::function(RexxToken *token, RexxToken *name)
 {
     // parse off the argument list, leaving the arguments in the subterm stack.
-    // NOTE:  we turn off the SQRIGHT terminator because this function might be
-    // invoked from inside of a [] message argument list.  We don't want to get
-    // the nesting wrong.
-    size_t argCount = argList(token, ((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
+    // NOTE:  Because we have a closed () construct delimiting the function arguments,
+    // we can ignore any terminators specified from the parent context.
+    size_t argCount = argList(token, (TERM_EOC | TERM_RIGHT));
 
     // create a function item.  This will also pull the argument items from the
     // subterm stack
@@ -2156,19 +2129,15 @@ RexxObject *LanguageParser::function(RexxToken *token, RexxToken *name, int term
  *
  * @return A message expression object.
  */
-RexxObject *LanguageParser::collectionMessage(RexxToken *token, RexxObject *target, int terminators )
+RexxObject *LanguageParser::collectionMessage(RexxToken *token, RexxObject *target)
 {
     // this was popped from the term stack, so we need to give is a little protection
     // until we're done parsing.
     ProtectedObject p(target);
 
-    // TODO:  Need to revisit terminators here in light of the question about
-    // parentheticals and keyword terminators.  I suspect we should not pass these
-    // along, but rather just say what is needed for THIS piece.
-
-    // get the arguments.  Like with builtin function calls, we need to turn off the
-    // right paren from the terminator list to keep the nesting right.
-    size_t argCount = argList(token, ((terminators | TERM_SQRIGHT) & ~TERM_RIGHT));
+    // get the arguments.  Like with builtin function calls, we just ignore any
+    // prior terminator context and rely on the fact that the brackes must match.
+    size_t argCount = argList(token, (TERM_EOC | TERM_SQRIGHT));
 
     // create the message item.
     RexxObject *msg = (RexxObject *)new (argCount) RexxExpressionMessage(target, (RexxString *)OREF_BRACKETS,
@@ -2375,7 +2344,7 @@ RexxObject *LanguageParser::messageTerm()
         // this could be a bracket lookup, which is a collection message.
         if (token~isType(TOKEN_SQLEFT))
         {
-            term = collectionMessage(token, start, TERM_EOC);
+            term = collectionMessage(token, start);
         }
         else
         {
@@ -2495,7 +2464,7 @@ RexxObject *LanguageParser::messageSubterm(int terminators)
             // we have two possibilities here, a bracket message or a twiddle form.
             if (token~isType(TOKEN_SQLEFT))
             {
-                term = collectionMessage(token, term, terminators);
+                term = collectionMessage(token, term);
             }
             else
             {
@@ -2707,454 +2676,218 @@ RexxObject *LanguageParser::popNTerms(size_t count)
     return result;                       /* and return it                     */
 }
 
-void LanguageParser::isExposeValid()
-/******************************************************************************/
-/* Function:  Validate placement of an EXPOSE instruction.  The EXPOSE must   */
-/*            be the first instruction and this must not be an interpret      */
-/*            invocation.  NOTE:  labels are not allowed preceeding, as that  */
-/*            will give a target for SIGNAL or CALL that will result in an    */
-/*            invalid EXPOSE execution.                                       */
-/******************************************************************************/
-{
-    if (this->flags&_interpret)          /* is this an interpret?             */
-    {
-        /* give the interpret error          */
-        syntaxError(Error_Translation_expose_interpret);
-    }
-    /* not the first instruction?        */
-    if (this->last->getType() != KEYWORD_FIRST)
-    {
-        /* general placement error           */
-        syntaxError(Error_Translation_expose);
-    }
-}
 
-RexxArray  *LanguageParser::words(
-    RexxString *string)                /* target string                     */
-/******************************************************************************/
-/* Function:  Break up a string into an array of words for parsing and        */
-/*            interpretation.                                                 */
-/******************************************************************************/
+/**
+ * Break up a string into an array of words for parsing and
+ * interpretation.  The first word will be uppercased, and all
+ * of the strings will be added to the common string pool.
+ *
+ * @param string The string we break up.
+ *
+ * @return An array of the words.
+ */
+RexxArray  *LanguageParser::words(RexxString *string)
 {
-    RexxQueue  *wordlist;                /* created list of words             */
-    RexxArray  *wordarray;               /* array version of the list         */
-    RexxString *word;                    /* current word                      */
-    size_t      count;                   /* count of words                    */
-    size_t      i;                       /* loop counter                      */
+    // reduce this to an array of words... this is the easy part.
+    RexxArray *wordArray = string->subWords(OREF_NULL, OREF_NULL);
+    size_t count = wordArray->items();
 
-    wordlist = this->subTerms;           /* use the subterms list             */
-                                         /* get the first word                */
-    word = ((RexxString *)(string->word(IntegerOne)))->upper();
-    word = this->commonString(word);     /* get the common version of this    */
-    wordlist->push(word);                /* add to the word list              */
-    count = 1;                           /* one word so far                   */
-                                         /* while still more words            */
-    for (i = 3, word = (RexxString *)(string->word(IntegerTwo)); word->getLength() != 0; i++)
+    // it's possible this could contain nothing...just return the
+    // empty array
+    if (count == 0)
     {
-        count++;                           /* have another word                 */
-        word = this->commonString(word);   /* get the common version of this    */
-        wordlist->push(word);              /* add this word to the list         */
-                                           /* get the next word                 */
-        word = (RexxString *)string->word(new_integer(i));
+        return wordArray;
     }
-    wordarray = new_array(count);        /* get an array return value         */
-    while (count > 0)                    /* while more words                  */
-    {
-        /* copy into the array               */
-        wordarray->put(wordlist->pop(), count--);
-    }
-    return wordarray;                    /* return as an array                */
-}
 
-void LanguageParser::errorCleanup()
-/******************************************************************************/
-/* Function:  Free up all of the parsing elements because of an error         */
-/******************************************************************************/
-{
-  this->cleanup();                     /* do needed cleanup                 */
+    // we could be creating new objects here, better protect this
+    ProtectedObject p(wordArray);
+
+    // we know we have at least 1 word here.  Replace the first one
+    // with the uppercase, commonstring version.
+
+    wordArray->put(commonString(((RexxString *)wordArray->get(1))->upper()), 1)
+
+    // now make commonstring versions of the rest of the words
+    for (i = 2; i <= count; i++)
+    {
+        wordArray->put(commonString(((RexxString *)wordArray->get(1))), 1)
+    }
+
+    return wordArray;
 }
 
 void LanguageParser::error(int errorcode)
-/******************************************************************************/
-/* Function:  Raise an error caused by source translation problems.           */
-/******************************************************************************/
 {
-  this->errorCleanup();                /* release any saved objects         */
-                                       /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
 }
 
 void LanguageParser::error(int errorcode, SourceLocation &location, RexxArray *subs)
-/******************************************************************************/
-/* Function:  Raise an error caused by source translation problems.           */
-/******************************************************************************/
 {
-  this->errorCleanup();                /* release any saved objects         */
-  clauseLocation = location;           // set the error location
-                                       /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, subs, OREF_NULL);
+    // set the error location.  This location is picked up from the
+    // parse context stack frame we set up before we started
+    clauseLocation = location;
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, subs, OREF_NULL);
 }
 
-void LanguageParser::errorLine(
-     int   errorcode,                  /* error to raise                    */
-     RexxInstruction *_instruction)    /* instruction for the line number   */
+void LanguageParser::errorLine(int errorcode, RexxInstruction *_instruction)
 /******************************************************************************/
 /* Function:  Raise an error where one of the error message substitutions is  */
 /*            the line number of another instruction object                   */
 /******************************************************************************/
 {
-  this->errorCleanup();                /* release any saved objects         */
-                                       /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
 }
 
-void LanguageParser::errorPosition(
-     int        errorcode,             /* error to raise                    */
-     RexxToken *token )                /* token value for description       */
+void LanguageParser::errorPosition(int errorcode, RexxToken *token )
 /******************************************************************************/
 /* Function:  Raise an error, displaying the location of a token associated   */
 /*            with the error.                                                 */
 /******************************************************************************/
 {
-  SourceLocation token_location = token->getLocation(); /* get the token location            */
-  this->errorCleanup();                /* release any saved objects         */
-                                       /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(token_location.getOffset()), new_integer(token_location.getLineNumber())), OREF_NULL);
+    SourceLocation tokenLocation = token->getLocation(); /* get the token location            */
+
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(tokenLocation.getOffset()), new_integer(tokenLocation.getLineNumber())), OREF_NULL);
 }
 
-void LanguageParser::errorToken(
-     int        errorcode,             /* error to raise                    */
-     RexxToken *token )                /* token value for description       */
+void LanguageParser::errorToken(int errorcode, RexxToken *token )
 /******************************************************************************/
 /* Function:  Raise an error, displaying the value of a token in the error    */
 /*            message.                                                        */
 /******************************************************************************/
 {
-    RexxString *value = token->value;                /* get the token value               */
+    // get the token string value.
+    RexxString *value = token->value;
     if (value == OREF_NULL)
     {
-        switch (token->classId)
+        // some tokens don't directly have a string value...we can provide one here
+        switch (token->type())
         {
-
-            case TOKEN_BLANK:                /* blank operator                    */
-                value = new_string(" ", 1);    /* use a blank                       */
+            // blank operator
+            case TOKEN_BLANK:
+                value = new_string(" ", 1);
                 break;
 
-            case TOKEN_EOC:                  /* source terminator                 */
-                value = new_string(";", 1);    /* use a semicolon                   */
+            // end of clause...just use a semicolon, even though it might be
+            // a linend.
+            case TOKEN_EOC:
+                value = new_string(";", 1);
                 break;
 
-            case TOKEN_COMMA:                /* comma                             */
-                value = new_string(",", 1);    /* display a comma                   */
+            // comma
+            case TOKEN_COMMA:
+                value = new_string(",", 1);
                 break;
 
-            case TOKEN_LEFT:                 /* left parentheses                  */
-                value = new_string("(", 1);    /* display that                      */
+            case TOKEN_LEFT:
+                value = new_string("(", 1);
                 break;
 
-            case TOKEN_RIGHT:                /* right parentheses                 */
-                value = new_string(")", 1);    /* display that                      */
+            case TOKEN_RIGHT:
+                value = new_string(")", 1);
                 break;
 
-            case TOKEN_SQLEFT:               /* left square bracket               */
-                value = new_string("[", 1);    /* display that                      */
+            case TOKEN_SQLEFT:
+                value = new_string("[", 1);
                 break;
 
-            case TOKEN_SQRIGHT:              /* right square bracket              */
-                value = new_string("]", 1);    /* display that                      */
+            case TOKEN_SQRIGHT:
+                value = new_string("]", 1);
                 break;
 
-            case TOKEN_COLON:                /* colon                             */
-                value = new_string(":", 1);    /* display that                      */
+            case TOKEN_COLON:
+                value = new_string(":", 1);
                 break;
 
-            case TOKEN_TILDE:                /* twiddle operator                  */
-                value = new_string("~", 1);    /* display that                      */
+            case TOKEN_TILDE:
+                value = new_string("~", 1);
                 break;
 
-            case TOKEN_DTILDE:               /* double twiddle operator           */
-                value = new_string("~~", 2);   /* display that                      */
+            case TOKEN_DTILDE:
+                value = new_string("~~", 2);
                 break;
 
-            case TOKEN_DCOLON:               /* double colon operator             */
-                value = new_string("::", 2);   /* display that                      */
+            case TOKEN_DCOLON:
+                value = new_string("::", 2);
                 break;
 
-            default:                         /* ????? token                       */
-                /* just use a null string            */
+            // token we don't have an answer for...just use a null string
+            default:
                 value = (RexxString *)OREF_NULLSTRING;
                 break;
         }
     }
-    this->errorCleanup();                /* release any saved objects         */
-                                         /* pass on the exception info        */
+
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
-void LanguageParser::error(
-     int         errorcode,            /* error to raise                    */
-     RexxObject *value )               /* value for description             */
+void LanguageParser::error(int errorcode, RexxObject *value )
 /******************************************************************************/
 /* Function:  Issue an error message with a single substitution parameter.    */
 /******************************************************************************/
 {
-  this->errorCleanup();                /* release any saved objects         */
-                                       /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
+   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
-void LanguageParser::error(
-     int         errorcode,            /* error to raise                    */
-     RexxObject *value1,               /* first value for description       */
-     RexxObject *value2 )              /* second value for description      */
+void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2 )
 /******************************************************************************/
 /* Function:  Issue an error message with two substitution parameters.        */
 /******************************************************************************/
 {
-  this->errorCleanup();                /* release any saved objects         */
-                                       /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
+   ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
-void LanguageParser::error(
-     int         errorcode,            /* error to raise                    */
-     RexxObject *value1,               /* first value for description       */
-     RexxObject *value2,               /* second value for description      */
-     RexxObject *value3 )              /* third value for description       */
+void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2, RexxObject *value3 )
 /****************************************************************************/
 /* Function:  Issue an error message with three substitution parameters.    */
 /****************************************************************************/
 {
-  this->errorCleanup();                /* release any saved objects         */
-                                       /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
-void LanguageParser::blockError(
-    RexxInstruction *_instruction )     /* unclosed control instruction      */
+void LanguageParser::blockError(RexxInstruction *_instruction)
 /******************************************************************************/
 /* Function:  Raise an error for an unclosed block instruction.               */
 /******************************************************************************/
 {
-    // get the instruction location and set as the current error location
-    clauseLocation = this->last->getLocation();
+    // get the last instruction location and set as the current error location
+    clauseLocation = last->getLocation();
 
     switch (_instruction->getType())
-    {   /* issue proper message type         */
-        case KEYWORD_DO:                   /* incomplete DO                     */
-            /* raise an error                    */
+    {
+        // each type of block instruction has its own message
+
+        // DO instruction
+        case KEYWORD_DO:
             syntaxError(Error_Incomplete_do_do, _instruction);
             break;
-        case KEYWORD_LOOP:                   /* incomplete LOOP                     */
-            /* raise an error                    */
+
+        // LOOP instruction
+        case KEYWORD_LOOP:
             syntaxError(Error_Incomplete_do_loop, _instruction);
             break;
 
-        case KEYWORD_SELECT:               /* incomplete SELECT                 */
+        // SELECT instruction
+        case KEYWORD_SELECT:
             syntaxError(Error_Incomplete_do_select, _instruction);
             break;
 
-        case KEYWORD_OTHERWISE:            /* incomplete SELECT                 */
+        // OTHERWISE section of a SELECT
+        case KEYWORD_OTHERWISE:
             syntaxError(Error_Incomplete_do_otherwise, _instruction);
             break;
 
-        case KEYWORD_IF:                   /* incomplete IF                     */
-        case KEYWORD_IFTHEN:               /* incomplete IF                     */
-        case KEYWORD_WHENTHEN:             /* incomplete IF                     */
+        // different variants of an IF
+        case KEYWORD_IF:
+        case KEYWORD_IFTHEN:
+        case KEYWORD_WHENTHEN:
             syntaxError(Error_Incomplete_do_then, _instruction);
             break;
 
-        case KEYWORD_ELSE:                 /* incomplete ELSE                   */
+        // ELSE problem
+        case KEYWORD_ELSE:
             syntaxError(Error_Incomplete_do_else, _instruction);
             break;
     }
-}
-
-size_t LanguageParser::processVariableList(
-  int        type )                    /* type of instruction               */
-/****************************************************************************/
-/* Function:  Process a variable list for PROCEDURE, DROP, and USE          */
-/****************************************************************************/
-{
-    RexxToken   *token;                  /* current working token             */
-    int          list_count;             /* count of variables in list        */
-    RexxObject  *retriever;              /* variable retriever object         */
-
-    list_count = 0;                      /* no variables yet                  */
-    token = nextReal();                  /* get the first variable            */
-
-    /* while not at the end of the clause*/
-    while (!token->isEndOfClause())
-    {
-        /* have a variable name?             */
-        if (token->isSymbol())
-        {
-            /* non-variable symbol?              */
-            if (token->subclass == SYMBOL_CONSTANT)
-            {
-                /* report the error                  */
-                syntaxError(Error_Invalid_variable_number, token);
-            }
-            else if (token->subclass == SYMBOL_DUMMY)
-            {
-                /* report the error                  */
-                syntaxError(Error_Invalid_variable_period, token);
-            }
-            retriever = this->addText(token);/* get a retriever for this          */
-            this->subTerms->push(retriever); /* add to the variable list          */
-            if (type == KEYWORD_EXPOSE)      /* this an expose operation?         */
-            {
-                this->expose(token->value);    /* add to the expose list too        */
-            }
-            list_count++;                    /* record the variable               */
-        }
-        /* have a variable reference         */
-        else if (token->classId == TOKEN_LEFT)
-        {
-            list_count++;                    /* record the variable               */
-            token = nextReal();              /* get the next token                */
-                                             /* not a symbol?                     */
-            if (!token->isSymbol())
-            {
-                /* must be a symbol here             */
-                syntaxError(Error_Symbol_expected_varref);
-            }
-            /* non-variable symbol?              */
-            if (token->subclass == SYMBOL_CONSTANT)
-            {
-                /* report the error                  */
-                syntaxError(Error_Invalid_variable_number, token);
-            }
-            else if (token->subclass == SYMBOL_DUMMY)
-            {
-                /* report the error                  */
-                syntaxError(Error_Invalid_variable_period, token);
-            }
-
-            retriever = this->addText(token);/* get a retriever for this          */
-                                             /* make this an indirect reference   */
-            retriever = (RexxObject *)new RexxVariableReference((RexxVariableBase *)retriever);
-            this->subTerms->queue(retriever);/* add to the variable list          */
-            this->currentstack++;            /* account for the varlists          */
-
-            token = nextReal();              /* get the next token                */
-            if (token->isEndOfClause()) /* nothing following?                */
-            {
-                /* report the missing paren          */
-                syntaxError(Error_Variable_reference_missing);
-            }
-            /* must be a right paren here        */
-            else if (token->classId != TOKEN_RIGHT)
-            {
-                /* this is an error                  */
-                syntaxError(Error_Variable_reference_extra, token);
-            }
-        }
-        /* something bad....                 */
-        else
-        {                             /* this is invalid                   */
-            if (type == KEYWORD_DROP)        /* DROP form?                        */
-            {
-                /* give appropriate message          */
-                syntaxError(Error_Symbol_expected_drop);
-            }
-            else                             /* else give message for EXPOSEs     */
-            {
-                syntaxError(Error_Symbol_expected_expose);
-            }
-        }
-        token = nextReal();                /* get the next variable             */
-    }
-    if (list_count == 0)
-    {               /* no variables?                     */
-        if (type == KEYWORD_DROP)          /* DROP form?                        */
-        {
-            /* give appropriate message          */
-            syntaxError(Error_Symbol_expected_drop);
-        }
-        else                               /* else give message for EXPOSEs     */
-        {
-            syntaxError(Error_Symbol_expected_expose);
-        }
-    }
-    return list_count;                   /* return the count                  */
-}
-
-RexxObject *LanguageParser::parseConditional(
-     int   *condition_type,            /* type of condition                 */
-     int    error_message )            /* extra "stuff" error message       */
-/******************************************************************************/
-/* Function:  Allow for WHILE or UNTIL keywords following some other looping  */
-/*            construct.  This returns SUBKEY_WHILE or SUBKEY_UNTIL to flag   */
-/*            the caller that a conditional has been used.                    */
-/******************************************************************************/
-{
-    RexxToken  *token;                   /* current working token             */
-    int         _keyword;                /* keyword of parsed conditional     */
-    RexxObject *_condition;              /* parsed out condition              */
-
-    _condition = OREF_NULL;               /* default to no condition           */
-    _keyword = 0;                         /* no conditional yet                */
-    token = nextReal();                  /* get the terminator token          */
-
-    /* real end of instruction?          */
-    if (!token->isEndOfClause())
-    {
-        /* may have WHILE/UNTIL              */
-        if (token->isSymbol())
-        {
-            /* process the symbol                */
-            switch (token->subKeyword() )
-            {
-
-                case SUBKEY_WHILE:              /* DO WHILE exprw                    */
-                    /* get next subexpression            */
-                    _condition = this->parseLogical(OREF_NULL, TERM_COND);
-                    if (_condition == OREF_NULL) /* nothing really there?             */
-                    {
-                        /* another invalid DO                */
-                        syntaxError(Error_Invalid_expression_while);
-                    }
-                    token = nextToken();          /* get the terminator token          */
-                                                  /* must be end of instruction        */
-                    if (!token->isEndOfClause())
-                    {
-                        syntaxError(Error_Invalid_do_whileuntil);
-                    }
-                    _keyword = SUBKEY_WHILE;       /* this is the WHILE form            */
-                    break;
-
-                case SUBKEY_UNTIL:              /* DO UNTIL expru                    */
-                    /* get next subexpression            */
-                    /* get next subexpression            */
-                    _condition = this->parseLogical(OREF_NULL, TERM_COND);
-
-                    if (_condition == OREF_NULL)   /* nothing really there?             */
-                    {
-                        /* another invalid DO                */
-                        syntaxError(Error_Invalid_expression_until);
-                    }
-                    token = nextToken();          /* get the terminator token          */
-                                                  /* must be end of instruction        */
-                    if (!token->isEndOfClause())
-                    {
-                        syntaxError(Error_Invalid_do_whileuntil);
-                    }
-                    _keyword = SUBKEY_UNTIL;       /* this is the UNTIL form            */
-                    break;
-
-                default:                        /* nothing else is valid here!       */
-                    /* raise an error                    */
-                    syntaxError(error_message, token);
-                    break;
-            }
-        }
-    }
-    if (condition_type != NULL)          /* need the condition type?          */
-    {
-        *condition_type = _keyword;        /* set the keyword                   */
-    }
-    return _condition;                   /* return the condition expression   */
 }
 
 
@@ -3162,18 +2895,21 @@ RexxObject *LanguageParser::parseConditional(
  * Parse off a "logical list expression", consisting of a
  * list of conditionals separated by commas.
  *
- * @param terminators
- *               The set of terminators for this logical context.
- *
  * @return OREF_NULL if no expressions is found, a single expression
  *         element if a single expression is located, and a complex
  *         logical expression operator for a list of expressions.
  */
 RexxObject *LanguageParser::parseLogical(RexxToken *_first, int terminators)
 {
+    // These are not delimited lists, but are part of keyword contexts where
+    // other keywords terminate the expression (e.g., IF, WHEN, WHILE), so we
+    // need to pass along the terminators.
+
+    // we can just pretend this is an argument list for now.
     size_t count = argList(_first, terminators);
     // arglist has swallowed the terminator token, so we need to back up one.
     previousToken();
+
     // let the caller deal with completely missing expressions
     if (count == 0)
     {
@@ -3187,5 +2923,5 @@ RexxObject *LanguageParser::parseLogical(RexxToken *_first, int terminators)
     }
 
                                        /* create a new function item        */
-    return (RexxObject *)new (count) RexxExpressionLogical(this, count, this->subTerms);
+    return (RexxObject *)new (count) RexxExpressionLogical(this, count, subTerms);
 }

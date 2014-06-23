@@ -176,8 +176,6 @@ class LanguageParser: public RexxInternalObject {
     RexxCode   *interpret(RexxString *, RexxDirectory *, size_t);
     void        checkDirective(int errorCode);
     bool        hasBody();
-    RexxObject *toss(RexxObject *);
-    void        cleanup();
     void        mergeRequired(RexxSource *);
     PackageClass *loadRequires(RexxActivity *activity, RexxString *target);
     PackageClass *loadRequires(RexxActivity *activity, RexxString *target, RexxArray *s);
@@ -237,8 +235,8 @@ class LanguageParser: public RexxInternalObject {
     RexxObject *subExpression(int);
     size_t      argList(RexxToken *, int);
     RexxArray  *argArray(RexxToken *, int);
-    RexxObject *function(RexxToken *, RexxToken *, int);
-    RexxObject *collectionMessage(RexxToken *, RexxObject *, int);
+    RexxObject *function(RexxToken *, RexxToken *);
+    RexxObject *collectionMessage(RexxToken *, RexxObject *);
     RexxToken  *getToken(int term, int error = 0);
     RexxObject *message(RexxObject *, bool, int);
     RexxObject *messageTerm();

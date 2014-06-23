@@ -2888,3 +2888,214 @@ RexxInstruction *LanguageParser::useNew()
     return newObject;
 }
 
+
+/**
+ * Validate placement of an EXPOSE instruction.  The EXPOSE must
+ * be the first instruction and this must not be an interpret
+ * invocation.  NOTE:  labels are not allowed preceeding, as that
+ * will give a target for SIGNAL or CALL that will result in an
+ * invalid EXPOSE execution.
+ */
+void LanguageParser::isExposeValid()
+{
+    // expose is never allowed in an interpret
+    if (isInterpret())
+    {
+        syntaxError(Error_Translation_expose_interpret);
+    }
+
+    // the last instruction in the chain must be our dummy
+    // first instruction
+    if (!last->isType(KEYWORD_FIRST))
+    {
+        syntaxError(Error_Translation_expose);
+    }
+}
+
+
+size_t LanguageParser::processVariableList(
+  int        type )
+/****************************************************************************/
+/* Function:  Process a variable list for PROCEDURE, DROP, and USE          */
+/****************************************************************************/
+{
+    RexxToken   *token;                  /* current working token             */
+    int          list_count;             /* count of variables in list        */
+    RexxObject  *retriever;              /* variable retriever object         */
+
+    list_count = 0;                      /* no variables yet                  */
+    token = nextReal();                  /* get the first variable            */
+
+    /* while not at the end of the clause*/
+    while (!token->isEndOfClause())
+    {
+        /* have a variable name?             */
+        if (token->isSymbol())
+        {
+            /* non-variable symbol?              */
+            if (token->subclass == SYMBOL_CONSTANT)
+            {
+                /* report the error                  */
+                syntaxError(Error_Invalid_variable_number, token);
+            }
+            else if (token->subclass == SYMBOL_DUMMY)
+            {
+                /* report the error                  */
+                syntaxError(Error_Invalid_variable_period, token);
+            }
+            retriever = this->addText(token);/* get a retriever for this          */
+            this->subTerms->push(retriever); /* add to the variable list          */
+            if (type == KEYWORD_EXPOSE)      /* this an expose operation?         */
+            {
+                this->expose(token->value);    /* add to the expose list too        */
+            }
+            list_count++;                    /* record the variable               */
+        }
+        /* have a variable reference         */
+        else if (token->classId == TOKEN_LEFT)
+        {
+            list_count++;                    /* record the variable               */
+            token = nextReal();              /* get the next token                */
+                                             /* not a symbol?                     */
+            if (!token->isSymbol())
+            {
+                /* must be a symbol here             */
+                syntaxError(Error_Symbol_expected_varref);
+            }
+            /* non-variable symbol?              */
+            if (token->subclass == SYMBOL_CONSTANT)
+            {
+                /* report the error                  */
+                syntaxError(Error_Invalid_variable_number, token);
+            }
+            else if (token->subclass == SYMBOL_DUMMY)
+            {
+                /* report the error                  */
+                syntaxError(Error_Invalid_variable_period, token);
+            }
+
+            retriever = this->addText(token);/* get a retriever for this          */
+                                             /* make this an indirect reference   */
+            retriever = (RexxObject *)new RexxVariableReference((RexxVariableBase *)retriever);
+            this->subTerms->queue(retriever);/* add to the variable list          */
+            this->currentstack++;            /* account for the varlists          */
+
+            token = nextReal();              /* get the next token                */
+            if (token->isEndOfClause()) /* nothing following?                */
+            {
+                /* report the missing paren          */
+                syntaxError(Error_Variable_reference_missing);
+            }
+            /* must be a right paren here        */
+            else if (token->classId != TOKEN_RIGHT)
+            {
+                /* this is an error                  */
+                syntaxError(Error_Variable_reference_extra, token);
+            }
+        }
+        /* something bad....                 */
+        else
+        {                             /* this is invalid                   */
+            if (type == KEYWORD_DROP)        /* DROP form?                        */
+            {
+                /* give appropriate message          */
+                syntaxError(Error_Symbol_expected_drop);
+            }
+            else                             /* else give message for EXPOSEs     */
+            {
+                syntaxError(Error_Symbol_expected_expose);
+            }
+        }
+        token = nextReal();                /* get the next variable             */
+    }
+    if (list_count == 0)
+    {               /* no variables?                     */
+        if (type == KEYWORD_DROP)          /* DROP form?                        */
+        {
+            /* give appropriate message          */
+            syntaxError(Error_Symbol_expected_drop);
+        }
+        else                               /* else give message for EXPOSEs     */
+        {
+            syntaxError(Error_Symbol_expected_expose);
+        }
+    }
+    return list_count;                   /* return the count                  */
+}
+
+RexxObject *LanguageParser::parseConditional(
+     int   *condition_type,            /* type of condition                 */
+     int    error_message )            /* extra "stuff" error message       */
+/******************************************************************************/
+/* Function:  Allow for WHILE or UNTIL keywords following some other looping  */
+/*            construct.  This returns SUBKEY_WHILE or SUBKEY_UNTIL to flag   */
+/*            the caller that a conditional has been used.                    */
+/******************************************************************************/
+{
+    RexxToken  *token;                   /* current working token             */
+    int         _keyword;                /* keyword of parsed conditional     */
+    RexxObject *_condition;              /* parsed out condition              */
+
+    _condition = OREF_NULL;               /* default to no condition           */
+    _keyword = 0;                         /* no conditional yet                */
+    token = nextReal();                  /* get the terminator token          */
+
+    /* real end of instruction?          */
+    if (!token->isEndOfClause())
+    {
+        /* may have WHILE/UNTIL              */
+        if (token->isSymbol())
+        {
+            /* process the symbol                */
+            switch (token->subKeyword() )
+            {
+
+                case SUBKEY_WHILE:              /* DO WHILE exprw                    */
+                    /* get next subexpression            */
+                    _condition = this->parseLogical(OREF_NULL, TERM_COND);
+                    if (_condition == OREF_NULL) /* nothing really there?             */
+                    {
+                        /* another invalid DO                */
+                        syntaxError(Error_Invalid_expression_while);
+                    }
+                    token = nextToken();          /* get the terminator token          */
+                                                  /* must be end of instruction        */
+                    if (!token->isEndOfClause())
+                    {
+                        syntaxError(Error_Invalid_do_whileuntil);
+                    }
+                    _keyword = SUBKEY_WHILE;       /* this is the WHILE form            */
+                    break;
+
+                case SUBKEY_UNTIL:              /* DO UNTIL expru                    */
+                    /* get next subexpression            */
+                    /* get next subexpression            */
+                    _condition = this->parseLogical(OREF_NULL, TERM_COND);
+
+                    if (_condition == OREF_NULL)   /* nothing really there?             */
+                    {
+                        /* another invalid DO                */
+                        syntaxError(Error_Invalid_expression_until);
+                    }
+                    token = nextToken();          /* get the terminator token          */
+                                                  /* must be end of instruction        */
+                    if (!token->isEndOfClause())
+                    {
+                        syntaxError(Error_Invalid_do_whileuntil);
+                    }
+                    _keyword = SUBKEY_UNTIL;       /* this is the UNTIL form            */
+                    break;
+
+                default:                        /* nothing else is valid here!       */
+                    /* raise an error                    */
+                    syntaxError(error_message, token);
+                    break;
+            }
+        }
+    }
+    if (condition_type != NULL)          /* need the condition type?          */
+    {
+        *condition_type = _keyword;        /* set the keyword                   */
+    }
+    return _condition;                   /* return the condition expression   */
+}

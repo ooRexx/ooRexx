@@ -46,8 +46,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
-#include "SourceFile.hpp"
-
+#include "LanguageParser.hpp"
 
 
 /*********************************************************************
@@ -403,217 +402,342 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
 }
 
 
-RexxString *LanguageParser::packLiteral(
-  size_t     start,                    /* start of the literal in line      */
-  size_t     length,                   /* length of the literal to reduce   */
-  int        type )                    /* type of literal to process        */
-/****************************************************************************/
-/* Function:  Convert and check a hex or binary constant, packing it down   */
-/*            into a string object.                                         */
-/****************************************************************************/
+/**
+ * Convert and check a hex constant, packing it down into a
+ * string object.
+ *
+ * @param start  the start of the string data in the current
+ *               source line.
+ *
+ * @param length The length of the raw string data.
+ *
+ * @return A Rexx string packed into 8-bit character form.
+ */
+RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
 {
-    int    _first;                       /* switch to mark first group        */
-    int    blanks;                       /* switch to say if scanning blanks  */
-    int    count;                        /* count for group                   */
-    size_t i;                            /* loop counter                      */
-    size_t j;                            /* loop counter                      */
-    size_t k;                            /* loop counter                      */
-    size_t m;                            /* temporary integer                 */
-    int    byte;                         /* individual byte of literal        */
-    int    nibble;                       /* individual nibble of literal      */
-    size_t oddhex;                       /* odd number of characters in first */
-    size_t inpointer;                    /* current input position            */
-    int    outpointer;                   /* current output pointer            */
-    RexxString *value;                   /* reduced value                     */
-    size_t real_length;                  /* real number of digits in string   */
-    char   error_output[2];              /* used for formatting error         */
-
-    _first = true;                        /* initialize group flags and        */
-    count = 0;                            /* counters                          */
-    blanks = false;
-    error_output[1] = '\0';               /* terminate string                  */
-                                          /* set initial input/output positions*/
-    inpointer = start;                    /* get initial starting position     */
-
-    if (!length)                          /* hex or binary null string?        */
+    // ""X is legal...it is just a null string
+    // the rest is not nearly as easy :-)
+    if (!length)
     {
-        value = OREF_NULLSTRING;            /* this is a null string             */
+        return OREF_NULLSTRING;
     }
-    else
-    {                                /* data to reduce                    */
-        /* first scan is to check REXX rules for validity of grouping             */
-        /* and to remove blanks                                                   */
 
-        real_length = length;                /* pick up the string length         */
-        for (i = 0; i < length; i++)
-        {       /* loop through entire string        */
-                /* got a blank?                      */
-            if (this->current[inpointer] == ' ' || this->current[inpointer] == '\t')
+    // the first group gets special handling in terms of padding
+    bool firstGroup = true;
+    // this is our counter for group packing
+    int groupCount = 0;
+    // our count of nibble characters we find...we can calculate the result length from this
+    int nibbleCount = 0;
+    // a pointer for scanning the data
+    const char * inPointer = current + start;
+
+    /* first scan is to check REXX rules for validity of grouping             */
+    /* and to remove blanks                                                   */
+
+    // this is our counter of the packed string length.  We only count
+    // the characters that get packed.
+    size_t packedlength = length;
+
+    // scan the entire input string
+    for (size_t i = 0; i < length; i++)
+    {
+        // do we have a white space character?
+        if (*inPointer] == ' ' || *inPointer == '\t')
+        {
+            // now check to see if this is in a valid position.  We do not allow
+            // blanks at the beginning of the string, and if we are past the
+            // first group, then blanks must appear at even character boundaries.
+            if (i == 0  ||                 // this is the test for the beginning
+               (!firstGroup &&             // ok, we've processed the first group, this must be on a boundary
+                ((groupCount & 1) != 0))   // not evenly divisible by two...bad placement.
             {
-                blanks = true;                    /* remember scanning blanks          */
-                /* don't like initial blanks or groups after the first                  */
-                /* which are not in twos (hex) or fours (binary)                        */
-                if (i == 0 ||                     /* if at the beginning               */
-                    (!_first &&                   /* or past first group and not the   */
-                     /* correct size                      */
-                     (((count&1) && type == LITERAL_HEX) ||
-                      ((count&3) && type == LITERAL_BIN))))
-                {
-                    m = i+1;                        /* place holder for new_integer invocation */
-                    // update the error information
-                    clauseLocation = clause->getLocation();
-                    if (type == LITERAL_HEX)        /* hex string?                       */
-                    {
-                        /* report correct error              */
-                        syntaxError(Error_Invalid_hex_hexblank, new_integer(m));
-                    }
-                    else                            /* need the binary message           */
-                    {
-                        syntaxError(Error_Invalid_hex_binblank, new_integer(m));
-                    }
-                }
-                count = 0;                        /* this starts a new group           */
-                real_length--;                    /* this shortens the value           */
+                // update the error information
+                clauseLocation = clause->getLocation();
+                // NOTE:  our position is origin 0, we need to report this using
+                // origin 1 position.
+                syntaxError(Error_Invalid_hex_hexblank, new_integer(i + 1));
 
+            }
+            // we start a new group now
+            groupCount = 0;
+            // once we see a blank, we're no longer in the first group
+            firstGroup = false;
+        }
+
+        // non-blank character...for now, just count how many we have.
+        else
+        {
+            // keep track of how large this group is and how many
+            // total nibbles we have.
+            groupCount++
+            nibbleCount++;
+        }
+
+        inPointer++;                        /* step the input position           */
+    }
+
+    // now we need to check for trailing blanks.  If our last group count is
+    // now zero, which means we've not seen a real character since our last
+    // blank character.  This means trailing blanks!
+
+    if (groupCount == 0)
+    {
+        // report this at the end position...there might be
+        // prior trailing blanks, but one is as good as another.
+        syntaxError(Error_Invalid_hex_hexblank, new_integer(length));
+    }
+
+    // second scan is to create the string value determined by the
+    // hex constant.
+
+    // reset the scan pointer
+    inPointer = current + start;
+
+    // this tells us how to process the first nibble
+    size_t nibbleStart = (nibbleCount & 1);
+
+    // get the final value size, rounding up if there are an odd
+    // number of nibbles.  The first grouping of the string can have
+    // an odd numbers, allowing things like 'a'x rather than '0a'x.
+    size_t characterCount = nibbleCount / 2 + nibbleStart;
+
+    // allocate a string we can pack the nibbles into
+    RexxString *value = raw_string(characterCount);
+
+    // this is for poking characters into the result
+    size_t outPosition = 0;
+
+    // scan the string again, packing the result number of
+    // characters.
+    for (size_t i = 0; i < characterCount; i++)
+    {
+        unsigned char byte = 0;
+
+        // get the nibble character and pack it.
+        unsigned char *nibble = (unsigned char)*inPointer++;
+        // scan over white space, if we're there.
+        while (nibble == ' ' || nibble == '\t')
+        {
+            nibble = (unsigned char)*inPointer++;
+        }
+
+        // if we had an odd number of nibbles, the first time
+        // we execute this loop, we'll only process 1 nibble.  After
+        // the first time, we'll always do two at a time.  Since
+        // we validated that the groups have an even number of non-blank
+        // characters after the first, this will handle things fine.
+        // Note also, since we do not allow leading blanks, we'll be
+        // positioned correctly at the start.
+        for (size_t k = nibbleStart; k < 2; k++)
+        {
+            // this should be a real character now
+            nibble = (unsigned char)*inPointer++;
+            // validate the digit and convert to a base binary value.
+            // regular digit
+            if (nibble >= '0' && nibble <= '9')
+            {
+                nibble -= '0';
+            }
+            // lowercase hex
+            else if (nibble >= 'a' && nibble <= 'f')
+            {
+                nibble -= 'a';
+                nibble += 10;
+            }
+            // uppercase hex
+            else if (nibble >= 'A' && nibble <= 'F')
+            {
+                nibble -= 'A';
+                nibble += 10;
             }
             else
             {
-                if (blanks)                       /* had a blank group?                */
-                {
-                    _first = false;                 /* no longer on the lead grouping    */
-                }
-                blanks = false;                   /* not processing blanks now         */
-                count++;                          /* count this significant character  */
+                // invalid character
+                clauseLocation = clause->getLocation();
+                char errorOutput[2];
+                errorOutput[0] = nibble;
+                errorOutput[1] = '\0';
+                syntaxError(Error_Invalid_hex_invhex, new_string(&error_output[0]));
             }
-            inpointer++;                        /* step the input position           */
+            // shift over the last nibble and add in the new one
+            byte <<= 4;
+            byte += nibble;
         }
-
-        if (blanks ||                        /* trailing blanks or                */
-            (!_first &&                      /* last group isn't correct count?   */
-             (((count&1) && type == LITERAL_HEX) ||
-              ((count&3) && type == LITERAL_BIN))))
-        {
-            m = i-1;                           /* place holder for new_integer invocation */
-            // update the error information
-            clauseLocation = clause->getLocation();
-            if (type == LITERAL_HEX)           /* hex string?                       */
-            {
-                /* report correct error              */
-                syntaxError(Error_Invalid_hex_hexblank, new_integer(m));
-            }
-            else                               /* need the binary message           */
-            {
-                syntaxError(Error_Invalid_hex_binblank, new_integer(m));
-            }
-        }
-
-        /* second scan is to create the string value determined by the            */
-        /* hex or binary constant.                                                */
-
-        i = real_length;                     /* get the adjusted length           */
-                                             /* reset the scan pointers           */
-        inpointer = start;                   /* reset the scan pointer            */
-        outpointer = 0;                      /* set the position a start          */
-        if (type == LITERAL_HEX)
-        {           /* hex literal?                      */
-            oddhex = i&1;                      /* get any odd count                 */
-            i >>= 1;                           /* divide by 2 ... and               */
-            i += oddhex;                       /* add in the odd count              */
-            value = raw_string(i);             /* get the final value               */
-
-            for (j = 0; j < i; j++)
-            {          /* loop for the appropriate count    */
-                byte = 0;                        /* current byte is zero              */
-                for (k = oddhex; k < 2; k++)
-                {   /* loop either 1 or 2 times          */
-                    /* get the next nibble               */
-                    nibble = this->current[inpointer];
-                    inpointer++;                   /* step to the next character        */
-                    while (nibble == ' ' || nibble == '\t')
-                    {   /* step over any inter-nibble blanks */
-                        /* get the next nibble               */
-                        nibble = this->current[inpointer];
-                        inpointer++;                 /* step to the next character        */
-                    }
-                    /* real digit?                       */
-                    if (nibble >= '0' && nibble <= '9')
-                        nibble -= '0';               /* make base zero                    */
-                                                     /* lowercase hex digit?              */
-                    else if (nibble >= 'a' && nibble <= 'f')
-                    {
-                        nibble -= 'a';               /* subtract lowest and               */
-                        nibble += 10;                /* add 10 to digit                   */
-                    }                              /* uppercase hex digit?              */
-                    else if (nibble >= 'A' && nibble <= 'F')
-                    {
-                        nibble -= 'A';               /* subtract lowest and               */
-                        nibble += 10;                /* add 10 to digit                   */
-                    }
-                    else
-                    {
-                        // update the error information
-                        clauseLocation = clause->getLocation();
-                        error_output[0] = nibble;    /* copy the error character          */
-                                                     /* report the invalid character      */
-                        syntaxError(Error_Invalid_hex_invhex, new_string(&error_output[0]));
-                    }
-                    byte <<= 4;                    /* shift the last nibble over        */
-                    byte += nibble;                /* add in the next nibble            */
-                }
-                oddhex = 0;                      /* remainder are full bytes          */
-                value->putChar(outpointer, byte);/* store this in the output position */
-                outpointer++;                    /* step to the next position         */
-            }
-            value = this->commonString(value); /* now force to a common string      */
-        }
-        else
-        {                               /* convert to binary                 */
-            oddhex = i&7;                      /* get the leading byte count        */
-            if (oddhex)                        /* incomplete byte?                  */
-            {
-                oddhex = 8 - oddhex;             /* get the padding count             */
-            }
-            i += oddhex;                       /* and add that into total           */
-            i >>= 3;                           /* get the byte count                */
-            value = raw_string(i);             /* get the final value               */
-
-            for (j = 0; j < i; j++)
-            {          /* loop through the entire string    */
-                byte = 0;                        /* zero the byte                     */
-                for (k = oddhex; k < 8; k++)
-                {   /* loop through each byte segment    */
-                    /* get the next bit                  */
-                    nibble = this->current[inpointer];
-                    inpointer++;                   /* step to the next character        */
-                    while (nibble == ' ' || nibble == '\t')
-                    {  /* step over any inter-nibble blanks */
-                        /* get the next nibble               */
-                        nibble = this->current[inpointer];
-                        inpointer++;                 /* step to the next character        */
-                    }
-                    byte <<= 1;                    /* shift the accumulator             */
-                    if (nibble == '1')             /* got a one bit?                    */
-                    {
-                        byte++;                      /* add in the bit                    */
-                    }
-                    else if (nibble != '0')
-                    {      /* not a '0' either?                 */
-                        // update the error information
-                        clauseLocation = clause->getLocation();
-                        error_output[0] = nibble;    /* copy the error character          */
-                                                     /* report the invalid character      */
-                        syntaxError(Error_Invalid_hex_invbin, new_string(&error_output[0]));
-                    }
-                }
-                oddhex = 0;                      /* use 8 bits for the remaining group*/
-                value->putChar(outpointer, byte);/* store this in the output position */
-                outpointer++;                    /* step to the next position         */
-            }
-            value = this->commonString(value); /* now force to a common string      */
-        }
+        // we always process two nibbles at a time from here.
+        nibbleStart = 0;
+        // store in the output string
+        value->putChar(outPosition++, byte);
     }
-    return value;                         /* return newly created string       */
+
+    // return this...the caller will handle making this a common string.
+    return value;
 }
+
+
+/**
+ * Convert and check a binary constant, packing it down into a
+ * string object.
+ *
+ * @param start  the start of the string data in the current
+ *               source line.
+ *
+ * @param length The length of the raw string data.
+ *
+ * @return A Rexx string packed into 8-bit character form.
+ */
+RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
+{
+    // ""B is legal...it is just a null string
+    // the rest is not nearly as easy :-)
+    if (!length)
+    {
+        return OREF_NULLSTRING;
+    }
+
+    // the first group gets special handling in terms of padding
+    bool firstGroup = true;
+    // this is our counter for group packing
+    int groupCount = 0;
+    // our count of bit characters we find...we can calculate the result length from this
+    int bitCount = 0;
+    // a pointer for scanning the data
+    const char * inPointer = current + start;
+
+    /* first scan is to check REXX rules for validity of grouping             */
+    /* and to remove blanks                                                   */
+
+    // this is our counter of the packed string length.  We only count
+    // the characters that get packed.
+    size_t packedlength = length;
+
+    // scan the entire input string
+    for (size_t i = 0; i < length; i++)
+    {
+        // do we have a white space character?
+        if (*inPointer] == ' ' || *inPointer == '\t')
+        {
+            // now check to see if this is in a valid position.  We do not allow
+            // blanks at the beginning of the string, and if we are past the
+            // first group, then blanks must appear at even nibble (4 bit) boundaries.
+            if (i == 0  ||                 // this is the test for the beginning
+               (!firstGroup &&             // ok, we've processed the first group, this must be on a boundary
+                ((groupCount & 3) != 0))   // not evenly divisible by four...bad placement.
+            {
+                // update the error information
+                clauseLocation = clause->getLocation();
+                // NOTE:  our position is origin 0, we need to report this using
+                // origin 1 position.
+                syntaxError(Error_Invalid_hex_binblank, new_integer(i + 1));
+
+            }
+            // we start a new group now
+            groupCount = 0;
+            // once we see a blank, we're no longer in the first group
+            firstGroup = false;
+        }
+
+        // non-blank character...for now, just count how many we have.
+        else
+        {
+            // keep track of how large this group is and how many
+            // total nibbles we have.
+            groupCount++
+            bitCount++;
+        }
+
+        inPointer++;                        /* step the input position           */
+    }
+
+    // now we need to check for trailing blanks.  If our last group count is
+    // now zero, which means we've not seen a real character since our last
+    // blank character.  This means trailing blanks!
+
+    if (groupCount == 0)
+    {
+        // report this at the end position...there might be
+        // prior trailing blanks, but one is as good as another.
+        syntaxError(Error_Invalid_hex_binblank, new_integer(length));
+    }
+
+    // second scan is to create the string value determined by the
+    // hex constant.
+
+    // reset the scan pointer
+    inPointer = current + start;
+
+    // this tells us how to process the first byte
+    size_t byteSize = (bitCount & 7);
+
+    // get the final value size, rounding up if there are extra bits
+    // for the first byte.  The first grouping of the string can have
+    // an odd number of bits.
+
+    size_t characterCount = bitCount / 8 + (byteSize \= 0);
+
+    // if we have an even multiple of 8 bits, adjust the
+    // first byte size.  After the first group, we always process
+    // in groups of 8.
+    if (byteSize == 0)
+    {
+        byteSize = 8;
+    }
+
+    // allocate a string we can pack the nibbles into
+    RexxString *value = raw_string(characterCount);
+
+    // this is for poking characters into the result
+    size_t outPosition = 0;
+
+    // scan the string again, packing the result number of
+    // characters.
+    for (size_t i = 0; i < characterCount; i++)
+    {
+        unsigned char byte = 0;
+
+        // if we had an odd number of bits, the first time
+        // we execute this loop, we'll process fewer than 8 bits.  After
+        // the first time, we'll always do eight at a time.  Since
+        // we validated that the groups have an even number of non-blank
+        // characters after the first, this will handle things fine.
+        // Note also, since we do not allow leading blanks, we'll be
+        // positioned correctly at the start.
+        for (size_t k = 0; k < byteSize; k++)
+        {
+            // get the bit character and pack it.
+            unsigned char *bit = (unsigned char)*inPointer++;
+            // We can have white space between nibbles, so we need to do this here.
+            while (bit == ' ' || bit == '\t')
+            {
+                bit = (unsigned char)*inPointer++;
+            }
+            // shift our accumulator
+            byte <<= 1;
+            // if this is a one bit, add this in
+            if (bit == '1')
+            {
+                byte++;
+            }
+            // other option is a 0, else give an error
+            else if (bit \= '0')
+            {
+                // invalid character
+                clauseLocation = clause->getLocation();
+                char errorOutput[2];
+                errorOutput[0] = bit;
+                errorOutput[1] = '\0';
+                syntaxError(Error_Invalid_hex_invhex, new_string(&errorOutput[0]));
+            }
+        }
+        // we always process 8 bits after the first byte
+        byteSize = 8;
+        // store in the output string
+        value->putChar(outPosition++, byte);
+    }
+
+    // return this...the caller will handle making this a common string.
+    return value;
+}
+
 
 /**
  * Extract a token from the source and create a new token object.
@@ -1600,8 +1724,14 @@ RexxToken *LanguageParser::scanLiteral()
     // does this literal require packing?
     if (type != LITERAL_STRING)
     {
-        // pack the final value
-        value = packLiteral(start, length, type) ;
+        if (type == LITERAL_HEX)
+        {
+            value = packHexLiteral(start, length);
+        }
+        else
+        {
+            value = packBinaryLiteral(start, length);
+        }
     }
     else
     {
