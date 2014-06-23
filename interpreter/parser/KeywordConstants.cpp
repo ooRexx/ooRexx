@@ -479,7 +479,7 @@ InstructionKeyword RexxToken::keyword()
  *
  * @return The builtin code.
  */
-BuiltinCode RexxSource::builtin()
+BuiltinCode RexxToken::builtin()
 {
     // This can be a symbol or a literal
     if (!isSymbolOrLiteral())

@@ -256,132 +256,6 @@ void LanguageParser::needVariableOrDotSymbol(RexxToken  *token)
 
 
 /**
- * Test if a token qualifies as a terminator in the current
- * parsing context.
- *
- * @param terminators
- *               The list of terminators.
- * @param token  The test token.
- *
- * @return true if this is a terminator, false if it doesn't match
- *         one of the terminator classes.
- */
-bool LanguageParser::terminator(int terminators,  RexxToken *token)
-{
-    // process based on terminator class
-    switch (token->classId)
-    {
-        case  TOKEN_EOC:                     // end-of-clause is always a terminator
-        {
-            previousToken();
-            return true;
-        }
-        case  TOKEN_RIGHT:                   // found a right paren
-        {
-            if (terminators&TERM_RIGHT)
-            {
-                previousToken();
-                return true;
-            }
-            break;
-        }
-        case  TOKEN_SQRIGHT:                 // closing square bracket?
-        {
-            if (terminators&TERM_SQRIGHT)
-            {
-                previousToken();
-                return true;
-            }
-            break;
-        }
-        case  TOKEN_COMMA:                   // a comma is a terminator in argument subexpressions
-        {
-            if (terminators&TERM_COMMA)
-            {
-                previousToken();
-                return true;
-            }
-            break;
-        }
-        case  TOKEN_SYMBOL:                  // the token is a symbol...need to check on keyword terminators
-        {
-            // keyword terminators all set a special keyword flag.  We only check
-            // symbols that are simple variables.
-            if (terminators&TERM_KEYWORD && token->isSimpleVariable())
-            {
-                // map the keyword token to a key word code.  This are generally
-                // keyword options on DO/LOOP, although THEN and WHEN are also terminators
-                switch (token->subKeyword())
-                {
-                    case SUBKEY_TO:
-                    {
-                        if (terminators&TERM_TO)
-                        {
-                            previousToken();
-                            return true;
-                        }
-                        break;
-                    }
-                    case SUBKEY_BY:
-                    {
-                         if (terminators&TERM_BY)
-                         {
-                             previousToken();
-                             return true;
-                         }
-                         break;
-                    }
-                    case SUBKEY_FOR:
-                    {
-                        if (terminators&TERM_FOR)
-                        {
-                            previousToken();
-                            return true;
-                        }
-                        break;
-                    }
-                    case SUBKEY_WHILE:           // a single terminator type picks up both
-                    case SUBKEY_UNTIL:           // while and until
-                    {
-                        if (terminators&TERM_WHILE)
-                        {
-                            previousToken();
-                            return true;
-                        }
-                        break;
-                    }
-                    case SUBKEY_WITH:            // WITH keyword in PARSE value
-                    {
-                        if (terminators&TERM_WITH)
-                        {
-                            previousToken();
-                            return true;
-                        }
-                        break;
-                    }
-                    case SUBKEY_THEN:            // THEN subkeyword from IF or WHEN
-                    {
-                        if (terminators&TERM_THEN)
-                        {
-                            previousToken();
-                            return true;
-                        }
-                        break;
-                    }
-                    default:                     // not a terminator type
-                        break;
-                }
-            }
-        }
-        default:
-            break;
-    }
-
-    return false;                    // no terminator found
-}
-
-
-/**
  * Advance the current position to the next line.
  */
 void LanguageParser::nextLine()
@@ -1926,7 +1800,7 @@ RexxObject *LanguageParser::subExpression(int terminators )
     // now see what is next.
     RexxToken *token = nextToken();
     // loop until we find a terminator in our current token
-    while (!terminator(terminators, token))
+    while (!token->isTerminator(terminators))
     {
         switch (token->type())
         {
@@ -1988,7 +1862,7 @@ RexxObject *LanguageParser::subExpression(int terminators )
                 // We need to check for the terminators, and if we get a hit, we're done here.
                  RexxToken *second = nextReal();
                  // not a real operator if adjacent to a terminator
-                 if (this->terminator(terminators, second))
+                 if (second->isTerminator(terminators))
                  {
                      break;
                  }
@@ -2124,159 +1998,228 @@ RexxObject *LanguageParser::subExpression(int terminators )
     return popTerm();
 }
 
-RexxArray *LanguageParser::argArray(
-  RexxToken   *_first,                 /* token starting arglist            */
-  int          terminators )           /* expression termination context    */
-/******************************************************************************/
-/* Function:  Parse off an array of argument expressions                      */
-/******************************************************************************/
+/**
+ * Parse off multiple arguments for a some sort of
+ * call, function, or method invocation, returning them
+ * as an array.
+ *
+ * @param firstToken The first token of the expresssion.
+ * @param terminators
+ *                   The set of terminators that will end the list.
+ *
+ * @return An array object holding the argument expressions.
+ */
+RexxArray *LanguageParser::argArray(RexxToken *firstToken, int terminators )
 {
-    size_t     argCount;                 /* count of arguments                */
-    RexxArray *_argArray;                 /* returned array                    */
+    // scan a set of arguments until we hit our terminator (likely to be
+    // a ')' or ']'.  Arguments are delimited by ','
+    size_t argCount = argList(firstToken, terminators);
 
-    /* scan off the argument list        */
-    argCount = this->argList(_first, terminators);
-    _argArray = new_array(argCount);      /* get a new argument list           */
-    /* now copy the argument pointers    */
+    // The arguments are pushed on to the term stack.  We need to allocate
+    // an array and copy them into the array
+    RexxArray *args = new_array(argCount);
+
+    // arguments are pushed on to the term stack in reverse order, so
+    // we fill from the end.  Note that missing arguments are
+    // just pushed on to the stack as OREF_NULL.
     while (argCount > 0)
     {
-        /* in reverse order                  */
-        _argArray->put(this->subTerms->pop(), argCount--);
+        args->put(subTerms->pop(), argCount--);
     }
-    return _argArray;                     /* return the argument array         */
+
+    return args;
 }
 
-size_t LanguageParser::argList(
-  RexxToken   *_first,                  /* token starting arglist            */
-  int          terminators )           /* expression termination context    */
-/******************************************************************************/
-/* Function:  Parse off a list of argument expressions                        */
-/******************************************************************************/
+/**
+ * Perform the parsing of a list of arguments where each
+ * argument is separated by commas.  Each argument expression
+ * is pushed on to the term stack in last-to-first order,
+ * with omitted arguments represented by OREF_NULL.
+ *
+ * @param firstToken The first token of the expression list, which is
+ *                   really the delimiter that opens the list.
+ * @param terminators
+ *                   The list of terminators for this expression type.
+ *
+ * @return The count of argument expressions we found.  Note that
+ *         an empty expression following a final "," does not
+ *         count as a real argument.
+ */
+size_t LanguageParser::argList(RexxToken *firstToken, int terminators )
 {
-    RexxQueue    *arglist;               /* argument list                     */
-    RexxObject   *subexpr;               /* current subexpression             */
-    RexxToken    *token;                 /* current working token             */
-    size_t        realcount;             /* count of real arguments           */
-    size_t        total;                 /* total arguments                   */
+    size_t realcount = 0;            // real count is arguments up to the last real one
+    size_t total = 0;                // total is the full count of arguments we attempt to parse.
+    RexxToken *terminatorToken;      // the terminator token that ended a sub expression
 
-    arglist = this->subTerms;            /* use the subterms list             */
-    realcount = 0;                       /* no arguments yet                  */
-    total = 0;
-    /* get the first real token, which   */
-    nextReal();                          /* skips any leading blanks on CALL  */
-    previousToken();                     /* now put it back                   */
-    /* loop until get a full terminator  */
+    // we need to skip ahead to the first real token, then backup one to be
+    // properly positioned for the start.  If this is a CALL instruction, this
+    // will skip the blank between the CALL keyword and the start of the expression,
+    // which counts as a significant blank by the tokenizer.
+    nextReal();
+    previousToken();
+
+    // now loop until we get a terminator.  Since we're processing an argument
+    // list here, we add in the COMMA to whatever terminators we've been handed.
     for (;;)
     {
-        /* parse off next argument expression*/
-        subexpr = this->subExpression(terminators | TERM_COMMA);
-        arglist->push(subexpr);            /* add next argument to list         */
-        this->pushTerm(subexpr);           /* add the term to the term stack    */
-        total++;                           /* increment the total               */
-        if (subexpr != OREF_NULL)          /* real expression?                  */
+        // parse off an argument expression
+        RexxObject *subExpr = this->subExpression(terminators | TERM_COMMA);
+        // We have two term stacks.  The main term stack is used for expression evaluation.
+        // the subTerm stack is used for processing expression lists like this.
+        subTerms->push(subExpr);
+
+        // now check the total.  Real count will be the last
+        // expression that requires evaluation.
+        total++;
+        // if we got something back, this is our new real total.
+        if (subExpr != OREF_NULL)
         {
-            realcount = total;               /* update the real count             */
+            realcount = total;
         }
-        token = nextToken();               /* get the next token                */
-        if (token->classId != TOKEN_COMMA) /* start of next argument?           */
+
+        // the next token will be our terminator.  If this is not
+        // a comma, we have more expressions to parse.
+        terminatorToken = nextToken();
+        if (!terminatorToken->isType(TOKEN_COMMA))
         {
-            break;                           /* no, all finished                  */
+            break;
         }
     }
-    /* not closed with expected ')'?     */
-    if (terminators & TERM_RIGHT && token->classId != TOKEN_RIGHT)
+
+
+    // if this is a function or method invocation, we're expecting this list to be
+    // ended by a right parent.  firstToken gives the position of the missing
+    // left paren.
+    if (terminators & TERM_RIGHT && !token->isType(TOKEN_RIGHT))
     {
-        /* raise an error                    */
-        syntaxErrorAt(Error_Unmatched_parenthesis_paren, _first);
+        syntaxErrorAt(Error_Unmatched_parenthesis_paren, firstToken);
     }
-    /* not closed with expected ']'?     */
-    if (terminators&TERM_SQRIGHT && token->classId != TOKEN_SQRIGHT)
+
+    // same deal with square brackets, different error message.
+    if (terminators&TERM_SQRIGHT && !token->isType(TOKEN_SQRIGHT))
     {
-        /* have an unmatched bracket         */
-        syntaxErrorAt(Error_Unmatched_parenthesis_square, _first);
+        syntaxErrorAt(Error_Unmatched_parenthesis_square, firstToken);
     }
-    this->popNTerms(total);              /* pop all items off the term stack  */
-    /* pop off any trailing omitteds     */
+
+    // all arguments are on the subterm stack now.  If we had trailing
+    // commas on the list, pop off any of the extras
     while (total > realcount)
     {
-        arglist->pop();                    /* just pop off the dummy            */
-        total--;                           /* reduce the total                  */
+        subTerms->pop();
+        total--;
     }
-    return realcount;                    /* return the argument count         */
+    // return the count of real argument expressions.
+    return realcount;
 }
 
-RexxObject *LanguageParser::function(
-    RexxToken     *token,              /* arglist start (for error reports) */
-    RexxToken     *name,               /* function name                     */
-    int            terminators )       /* expression termination context    */
-/******************************************************************************/
-/* Function:  Parse off a REXX function call                                  */
-/******************************************************************************/
+/**
+ * Parse off a function call and create an expression
+ * object that can process the call.
+ *
+ * @param token  The token that marks the start of the argument list.
+ * @param name   The function name token.
+ * @param terminators
+ *               The list of terminators for parsing the argument list.
+ *
+ * @return A function expression object that can invoke this function.
+ */
+RexxObject *LanguageParser::function(RexxToken *token, RexxToken *name, int terminators )
 {
-  size_t        argCount;              /* count of function arguments       */
-  RexxExpressionFunction *_function;    /* newly created function argument   */
+    // parse off the argument list, leaving the arguments in the subterm stack.
+    // NOTE:  we turn off the SQRIGHT terminator because this function might be
+    // invoked from inside of a [] message argument list.  We don't want to get
+    // the nesting wrong.
+    size_t argCount = argList(token, ((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
 
-  saveObject((RexxObject *)name);      // protect while parsing the argument list
+    // create a function item.  This will also pull the argument items from the
+    // subterm stack
+    RexxObject *func = (RexxObject *)new (argCount) RexxExpressionFunction(name->value(), argCount,
+        subTerms, name->builtin(), name->isLiteral());
 
-                                       /* process the argument list         */
-  argCount = this->argList(token, ((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
-
-                                       /* create a new function item        */
-  _function = new (argCount) RexxExpressionFunction(name->value, argCount, this->subTerms, this->resolveBuiltin(name->value), name->isLiteral());
-                                       /* add to table of references        */
-  this->addReference((RexxObject *)_function);
-  removeObj((RexxObject *)name);       // end of protected windoww.
-  return (RexxObject *)_function;      /* and return this to the caller     */
+    // at this point, we can't resolve the final target of this call.  It could be
+    // a builtin, a call to an internal label, or an external call.  We'll resolve this
+    // once we've finished this code block and have all of the labels.
+    addReference(func);
+    return func;
 }
 
-RexxObject *LanguageParser::collectionMessage(
-  RexxToken   *token,                  /* arglist start (for error reports) */
-  RexxObject  *target,                 /* target term                       */
-  int          terminators )           /* expression termination context    */
-/******************************************************************************/
-/* Function:  Process an expression term of the form "target[arg,arg]"        */
-/******************************************************************************/
-{
-  size_t     argCount;                 /* count of function arguments       */
-  RexxObject *_message;                /* new message term                  */
 
-  this->saveObject((RexxObject *)target);   /* save target until it gets connected to message */
-                                       /* process the argument list         */
-  argCount = this->argList(token, ((terminators | TERM_SQRIGHT) & ~TERM_RIGHT));
-                                       /* create a new function item        */
-  _message = (RexxObject *)new (argCount) RexxExpressionMessage(target, (RexxString *)OREF_BRACKETS, (RexxObject *)OREF_NULL, argCount, this->subTerms, false);
-  this->holdObject(_message);          /* hold this here for a while        */
-  this->removeObj((RexxObject *)target);   /* target is now connected to message, remove from savelist without hold */
-  return _message;                     /* return the message item           */
+/**
+ * Parse a collection message expression term.  This is
+ * if the form term[args], and follows much the same
+ * parsing rules as function calls.
+ *
+ * @param token  The token that starts the argument list (the square bracket)
+ * @param target The target for the message term.
+ * @param terminators
+ *               Our terminators.
+ *
+ * @return A message expression object.
+ */
+RexxObject *LanguageParser::collectionMessage(RexxToken *token, RexxObject *target, int terminators )
+{
+    // this was popped from the term stack, so we need to give is a little protection
+    // until we're done parsing.
+    ProtectedObject p(target);
+
+    // TODO:  Need to revisit terminators here in light of the question about
+    // parentheticals and keyword terminators.  I suspect we should not pass these
+    // along, but rather just say what is needed for THIS piece.
+
+    // get the arguments.  Like with builtin function calls, we need to turn off the
+    // right paren from the terminator list to keep the nesting right.
+    size_t argCount = argList(token, ((terminators | TERM_SQRIGHT) & ~TERM_RIGHT));
+
+    // create the message item.
+    RexxObject *msg = (RexxObject *)new (argCount) RexxExpressionMessage(target, (RexxString *)OREF_BRACKETS,
+        (RexxObject *)OREF_NULL, argCount, subTerms, false);
+    // give this a little short-term GC protection.
+    holdObject(msg);
+    return msg;
 }
 
-RexxToken  *LanguageParser::getToken(
-    int   terminators,                 /* expression termination context    */
-    int   errorcode)                   /* expected error code               */
-/******************************************************************************/
-/* Function:  Get a token, checking to see if this is a terminatore token     */
-/******************************************************************************/
+
+/**
+ * Get a token from the clause, combining terminator checks
+ * and error reporting if we don't get a terminator.
+ *
+ * @param terminators
+ *                  The terminators for the current context.
+ * @param errorcode The error to issue if no token is found.  The error code
+ *                  is optional, and if not specified, OREF_NULL is returned.
+ *
+ * @return The parsed off token.
+ */
+RexxToken  *LanguageParser::getToken(int terminators, int errorcode)
 {
-    RexxToken *token = nextToken();                 /* get the next token                */
-    /* this a terminator token?          */
-    if (this->terminator(terminators, token))
+    // get the next token and perform the terminator checks.  If we were
+    // terminated, issue an error message if requested.
+    RexxToken *token = nextToken();
+    if (token->isTerminator(terminators))
     {
-        if (errorcode != 0)                /* want an error raised?             */
+        if (errorcode != 0)
         {
-            syntaxError(errorcode);         /* report this                       */
+            syntaxError(errorcode);
         }
-        return OREF_NULL;                  /* just return a null                */
+        // just return a null if not requested to issue an error.
+        return OREF_NULL;
     }
-    return token;                        /* return the token                  */
+    return token;
 }
 
-RexxObject *LanguageParser::message(
-  RexxObject  *target,                 /* message send target               */
-  bool         doubleTilde,            /* class of message send             */
-  int          terminators )           /* expression termination context    */
-/******************************************************************************/
-/* Function:  Parse a full message send expression term                       */
-/******************************************************************************/
+
+/**
+ * Parse a message send term within an expression.
+ *
+ * @param target The target object term for the message send.
+ * @param doubleTilde
+ *               Indicates whether this is the "~" or "~~" form of operatior.
+ * @param terminators
+ *               Expression terminators.
+ *
+ * @return An object to execute the message send.
+ */
+RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int terminators )
 {
     size_t        argCount;              /* list of function arguments        */
     RexxString   *messagename = OREF_NULL;  /* message name                      */
@@ -2284,51 +2227,64 @@ RexxObject *LanguageParser::message(
     RexxToken    *token;                 /* current working token             */
     RexxExpressionMessage *_message;     /* new message term                  */
 
-    super = OREF_NULL;                   /* default no super class            */
-    argCount = 0;                        /* and no arguments                  */
-    this->saveObject(target);   /* save target until it gets connected to message */
 
-    /* add the term to the term stack so that the calculations */
-    /* include this in the processing. */
+    // this message might have a superclass override...default is none.
+    RexxObject *super = OREF_NULL;
+    // no arguments yet
+    size_t argCount = 0;
+
+    // add the term to the term stack so that stacksize calculations
+    // include this in the processing.  This has the side effect of
+    // protecting this object from GC while we're parsing.
     this->pushTerm(target);
-    /* get the next token                */
-    token = this->getToken(terminators, Error_Symbol_or_string_tilde);
-    /* unexpected type?                  */
-    if (token->isSymbolOrLiteral())
+    // ok, we're expecting a message name next, go get one.
+    RexxToken *token = getToken(terminators, Error_Symbol_or_string_tilde);
+    // this must be a string or symbol
+    if (!token->isSymbolOrLiteral())
     {
-        messagename = token->value;        /* get the message name              */
-    }
-    else
-    {
-        /* error!                            */
         syntaxError(Error_Symbol_or_string_tilde);
     }
-    /* get the next token                */
-    token = this->getToken(terminators, 0);
+
+    // we have a message name
+    RexxString *messagename = token->value();
+
+    // ok, what else do we have.  Nothing additional is required
+    // here, but this could be an argument list, or a superclass
+    // override.
+    token = getToken(terminators);
     if (token != OREF_NULL)
-    {            /* not reached the clause end?       */
-                 /* have a super class?               */
-        if (token->classId == TOKEN_COLON)
+    {
+        // an override is marked with a colon.
+        if (token->isType(TOKEN_COLON))
         {
-            /* get the next token                */
-            token = this->getToken(terminators, Error_Symbol_expected_colon);
-            /* not a variable symbol?            */
-            if (!token->isVariable() && token->subclass != SYMBOL_DOTSYMBOL)
+            // ok, if we have the colon, then we need an override spec.
+            token = getToken(terminators, Error_Symbol_expected_colon);
+            // this must be a variable or a dot symbol.
+            if (!token->isVariableOrDot())
             {
-                /* have an error                     */
                 syntaxError(Error_Symbol_expected_colon);
             }
-            super = this->addText(token);    /* get the variable retriever        */
-                                             /* get the next token                */
-            token = this->getToken(terminators, 0);
+
+            // the super class is either a variable lookup or a dot variable, so
+            // we need a retriever.
+            super = addText(token);
+            // get the next token to check for an argument list.
+            token = getToken(terminators);
+            // NOTE:  We fall through from here to the code
+            // that follows the checks for the superclass override to
+            // the code that checks for the argument list.
         }
     }
+
+    // ok, we might have an argument list here.
     if (token != OREF_NULL)
-    {            /* not reached the clause end?       */
-        if (token->classId == TOKEN_LEFT)  /* have an argument list?            */
+    {
+        // this is only interesting if the text token is an open paren directly
+        // abutted to the name.  Process that as an argument list for the final
+        // created message object
+        if (token->isType(TOKEN_LEFT))
         {
-            /* process the argument list         */
-            argCount = this->argList(token, ((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
+            argCount = argList(token, ((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
         }
         else
         {
@@ -2336,13 +2292,13 @@ RexxObject *LanguageParser::message(
         }
     }
 
-    this->popTerm();                     /* it is now safe to pop the message target */
-                                         /* create a message send node        */
-    _message =  new (argCount) RexxExpressionMessage(target, messagename, super, argCount, this->subTerms, doubleTilde);
-    /* protect for a bit                 */
-    this->holdObject((RexxObject *)_message);
-    this->removeObj(target);   /* target is now connected to message, remove from savelist without hold */
-    return(RexxObject *)_message;        /* return the message item           */
+    // got all of the pieces, now create the message object and give it some short term
+    // protection from GC.
+    RexxObject *msg =  (RexxObject *)new (argCount) RexxExpressionMessage(target, messagename, super, argCount, subTerms, doubleTilde);
+    holdObject(msg);
+    // now safe to pop the message target object we saved.
+    popTerm();
+    return msg;
 }
 
 
@@ -2387,240 +2343,316 @@ RexxObject *LanguageParser::variableOrMessageTerm()
 
 
 
+/**
+ * Parse off an instruction leading message term element. This
+ * is an important step, as it is used to determine what sort of
+ * instruction we have.  If the instruction starts with a
+ * message term, then this is a messaging instruction.  Part of
+ * the instruction type determination at the beginning of each
+ * clause.
+ *
+ * @return The message term execution element.
+ */
 RexxObject *LanguageParser::messageTerm()
-/******************************************************************************/
-/* Function:  Parse off an instruction leading message term element           */
-/******************************************************************************/
 {
-    RexxToken   *token;                  /* current working token             */
-    RexxObject  *term;                   /* working term                      */
-    RexxObject  *start;                  /* starting term                     */
-    int          classId;                /* token class                       */
+    // save the current position so we can reset cleanly
+    size_t mark = markPosition();
 
-    size_t mark = markPosition();       // save the current position so we can reset cleanly
+    // get the first message term
+    RexxObject *start = subTerm(TERM_EOC);
+    // save this on the term stack
+    pushTerm(start);
 
-    start = this->subTerm(TERM_EOC);     /* get the first term of instruction */
-    this->holdObject(start);             /* save the starting term            */
-    term = OREF_NULL;                    /* default to no term                */
-    token = nextToken();                 /* get the next token                */
-    classId = token->classId;            /* get the token class               */
-                                         /* while cascading message sends     */
-    while (classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT )
+    RexxObject *term = OREF_NULL;         // an allocated message term
+    RexxToken *token = nextToken();
+
+    // the leading message term can be a cascade of messages, so
+    // keep processing things until we hit some other type of operation.
+    while (token~isMessageOperator())
     {
-        if (classId == TOKEN_SQLEFT)       /* left bracket form?                */
+        // we need to perform the the message operation on this term to create
+        // an new term which will be the target of the next one.
+        // this could be a bracket lookup, which is a collection message.
+        if (token~isType(TOKEN_SQLEFT))
         {
-            term = this->collectionMessage(token, start, TERM_EOC);
+            term = collectionMessage(token, start, TERM_EOC);
         }
         else
         {
-            /* process a message term            */
-            term = this->message(start, classId == TOKEN_DTILDE, TERM_EOC);
+            // normal message twiddle message
+            term = message(start, token~isType(TOKEN_DTILDE), TERM_EOC);
         }
-        start = term;                      /* set for the next pass             */
-        token = nextToken();               /* get the next token                */
-        classId = token->classId;          /* get the token class               */
+        // this is the target for the next one in the chain.
+        // remove the previous one from the term stack and push a new
+        // one on.
+        start = term;
+        popTerm();
+        pushTerm(start);
+        // and see if we have another.
+        token = nextToken();
     }
-    previousToken();                     /* push this term back               */
-    // if this was not a valid message term, reset the position to the beginning
+
+    // found a token that was not a message send type, so push it back.
+    previousToken();
+    // if we never created a message term from this, we need to take another
+    // path.  Roll the position back to where we started and return.
     if (term == OREF_NULL)
     {
-        resetPosition(mark);                 // reset back to the entry conditions
+        resetPosition(mark);
     }
-    /* return the message term (returns  */
-    return term;                         /* OREF_NULL if not a message term)  */
+    // we still have either the starting term or our last created message
+    // term on the stack...we can remove this now.
+    popTerm();
+
+    // ok, this is either OREF_NULL to indicate we found nothing,
+    // or the last message term we ended up creating.
+    return term;
 }
 
-RexxObject *LanguageParser::messageSubterm(
-  int   terminators )                  /* expression termination context    */
-/******************************************************************************/
-/* Function:  Parse off a message subterm within an expression                */
-/******************************************************************************/
-{
-    RexxToken   *token;                  /* current working token             */
-    RexxObject  *term = OREF_NULL;       /* working term                      */
-    int          classId;                /* token class                       */
 
-    token = nextToken();                 /* get the next token                */
+/**
+ * Handle a potential message subterm in the context of an
+ * expression.  This is similar to messageTerm(), but this
+ * occurs after we've already determined we need an expression
+ * and need an expression term.
+ *
+ * @param terminators
+ *               Terminators for this subexpression context.
+ *
+ * @return An object to represent this message term.  Returns
+ *         OREF_NULL if no suitable term is found.
+ */
+RexxObject *LanguageParser::messageSubterm(int terminators)
+{
+    // get the first token.  If we've hit a terminator here, this could be
+    // the real end of the expression.  The caller context will figure out
+    // how to handle that.
+    RexxToken *token = nextToken();
                                          /* this the expression end?          */
-    if (this->terminator(terminators, token))
+    if (token->isTerminator(terminators))
     {
         return OREF_NULL;                  /* nothing to do here                */
     }
-                                           /* have potential prefix operator?   */
-    if (token->classId == TOKEN_OPERATOR)
+
+    // is this an operator?  I this context, it will need to be a prefix operator.
+    if (token->isOperator())
     {
-
-        /* handle prefix operators as terms  */
-        switch (token->subclass)
+        // prefix operators are handled as expression terms, although they themselves
+        // require a term.
+        switch (token->subtype())
         {
-
-            case OPERATOR_PLUS:              /* prefix plus                       */
-            case OPERATOR_SUBTRACT:          /* prefix minus                      */
-            case OPERATOR_BACKSLASH:         /* prefix backslash                  */
-                /* handle following term             */
-                term = this->messageSubterm(terminators);
-                if (term == OREF_NULL)         /* nothing found?                    */
+            // we only recognize 3 prefix operators, and they are handled in pretty
+            // much the same way.
+            case OPERATOR_PLUS:
+            case OPERATOR_SUBTRACT:
+            case OPERATOR_BACKSLASH:
+            {
+                // we need a term as a target. this is an error
+                // if we don't find anything we can use.  We just recurse
+                // on this, which might find a chain of prefix operators (except,
+                // as I'm sure Walter Pachl will be sure to point out, --, which
+                // will be treated as a line comment :-)
+                RexxObject *term = messageSubterm(terminators);
+                if (term == OREF_NULL)
                 {
-                    /* this is an error                  */
                     syntaxError(Error_Invalid_expression_prefix, token);
                 }
-                /* create the new operator term      */
-                term = (RexxObject *)new RexxUnaryOperator(token->subclass, term);
+                // create a new unary operator using the subtype code.
+                return (RexxObject *)new RexxUnaryOperator(token->subtype(), term);
                 break;
+            }
 
-            default:                         /* other operators not allowed here  */
-                /* this is an error                  */
+            // other operators are invalid
+            default:
                 syntaxError(Error_Invalid_expression_general, token);
         }
     }
-    /* non-prefix operator code          */
+
+    // ok, not an operator character.  Now we need to figure out what sort of
+    // term element is here.
     else
     {
-        previousToken();                   /* put back the first token          */
-        term = this->subTerm(TERM_EOC);    /* get the first term of instruction */
-        this->holdObject(term);            /* save the starting term            */
-        token = nextToken();               /* get the next token                */
-        classId = token->classId;          /* get the token class               */
-                                           /* while cascading message sends     */
-        while (classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT )
+        // put the token back and try parsing off a subTerm (smaller subset, no
+        // prefix stuff allowed).
+        previousToken();
+        RexxObject *term = subTerm(terminators);
+        // protect on the term stack
+        pushTerm(term);
+        // ok, now see if this is actually a message send target by checking
+        // the next token
+        token = nextToken();
+
+        // TODO:  Old code had some bugs in with respect to keyword terminators
+        // because it was not passing along the terminator types.  For example,
+        // do i = -UNTIL .true would not recognize the UNTIL as a terminator because
+        // the prefix code is not passing along the terminator checks. Similarly,
+        // DO i = foo~WHILE will fail for the same reason.
+
+        // we can have a long cascade of message sends.  For expression syntax,
+        // this all one term (just like nested function calls would be).
+        while (token~isMessageOperator())
         {
-            if (classId == TOKEN_SQLEFT)     /* left bracket form?                */
+            // we have two possibilities here, a bracket message or a twiddle form.
+            if (token~isType(TOKEN_SQLEFT))
             {
-                term = this->collectionMessage(token, term, TERM_EOC);
+                term = collectionMessage(token, term, terminators);
             }
             else
             {
-                /* process a message term            */
-                term = this->message(term, classId == TOKEN_DTILDE, TERM_EOC);
+                term = this->message(term, classId == TOKEN_DTILDE, terminators);
             }
-            token = nextToken();             /* get the next token                */
-            classId = token->classId;        /* get the token class               */
+            popTerm();
+            pushTerm(term);
+            // message cascades are considered part of the same expression term.
+            token = nextToken();
         }
-        previousToken();                   /* push this term back               */
+        // back up to the token that stopped the loop
+        previousToken();
+        // pop our term from the stack and return the final version.
+        popTerm()
+        return term;
     }
-    /* return the message term (returns  */
-    return term;                         /* OREF_NULL if not a message term)  */
 }
 
-RexxObject *LanguageParser::subTerm(
-  int   terminators )                  /* expression termination context    */
-/******************************************************************************/
-/* Function:  Parse off a subterm of an expression, from simple ones like     */
-/*            variable names, to more complex such as message sends           */
-/******************************************************************************/
-{
-    RexxToken    *token;                 /* current token being processed     */
-    RexxObject   *term = OREF_NULL;      /* parsed out term                   */
-    RexxToken    *second;                /* second token of term              */
 
-    token = nextToken();                 /* get the next token                */
-                                         /* this the expression end?          */
-    if (this->terminator(terminators, token))
+/**
+ * Parse off a subterm of an expression, from simple ones like
+ * variable names and literals, to more complex such as message
+ * sends.
+ *
+ * @param terminators
+ *               The expression terminator context.
+ *
+ * @return An executable object for the message term.
+ */
+RexxObject *LanguageParser::subTerm(int terminators)
+{
+    // get the first token and make sure we really have something here.
+    // The caller knows how to deal with a missing term.
+    RexxToken *token = nextToken();
+    if (token->isTerminator(terminators))
     {
-        return OREF_NULL;                  /* nothing to do here                */
+        return OREF_NULL;
     }
 
-    switch (token->classId)
+    // ok, process based on the token category
+    switch (token->type())
     {
-
-        case  TOKEN_LEFT:                  /* have a left parentheses           */
-            /* get the subexpression             */
-            term = this->subExpression(((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
-            if (term == OREF_NULL)           /* nothing found?                    */
+        // parenthetical subexpression.  Note, we do not pass along our
+        // terminators when requesting this, since the bracketing within the parens
+        // will disambiguate keywords.  We only look for terminators and a right paren
+        case  TOKEN_LEFT:
+        {
+            // parse off the parenthetical.  This might not return anything if there
+            // are nothing in the parens.  This is an error.
+            RexxObject *term = subExpression(TERM_RIGHT | TERM_EOC);
+            if (term == OREF_NULL)
             {
-                /* this is an error                  */
                 syntaxError(Error_Invalid_expression_general, token);
             }
-            second = nextToken();            /* get the terminator token          */
-                                             /* not terminated by a right paren?  */
-            if (second->classId != TOKEN_RIGHT)
+            // this had better been terminated by a righ paren.
+            if (!nextToken()->isType(TOKEN_RIGHT))
             {
-                /* this is an error                  */
                 syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
             }
-            break;
+            // we're done.
+            return term;
+        }
 
-        case  TOKEN_SYMBOL:                /* Symbol in the expression          */
-        case  TOKEN_LITERAL:               /* Literal in the expression         */
-            second = nextToken();            /* get the next token                */
-                                             /* have a function call?             */
-            if (second->classId == TOKEN_LEFT)
+        // literal or symbol.  These are generally pretty simple, but
+        // we also have to account for function calls.
+        case  TOKEN_SYMBOL:
+        case  TOKEN_LITERAL:
+        {
+            // need to check if the next token is an open paren.  That turns
+            // the symbol or literal token into a function invocation.
+            RexxToken *second = nextToken();
+            if (second->isType(TOKEN_LEFT))
             {
-                /* process the function call         */
-                term = this->function(second, token, terminators);
+                return function(second, token);
             }
             else
             {
-                previousToken();               /* push the token back               */
-                term = this->addText(token);   /* variable or literal access        */
+                // simple text token type...push the next token back
+                // and go resolve how the token is handled.
+                previousToken();
+                return addText(token);
             }
             break;
+        }
 
-        case  TOKEN_RIGHT:                 /* have a right parentheses          */
-            /* this is an error here             */
+        // an operator token.  We do allow prefix operators here, others are
+        // an error
+        case  TOKEN_OPERATOR:
+        {
+             switch (token->type())
+             {
+                 // +, -, and logical NOT variants are permitted here...except
+                 // we don't actually process them here, so back up and say we got nothing.
+                 case OPERATOR_PLUS:
+                 case OPERATOR_SUBTRACT:
+                 case OPERATOR_BACKSLASH:
+                     previousToken();
+                     return OREF_NULL;
+
+                 // other operators we can flag as an error now.
+                 default:
+                     syntaxError(Error_Invalid_expression_general, token);
+             }
+             break;
+        }
+
+        // a few error situations with specific error messages.
+        case  TOKEN_RIGHT:
             syntaxError(Error_Unexpected_comma_paren);
             break;
 
-        case  TOKEN_COMMA:                 /* have a comma                      */
-            /* this is an error here             */
+        case  TOKEN_COMMA:
             syntaxError(Error_Unexpected_comma_comma);
             break;
 
-        case  TOKEN_SQRIGHT:               /* have a right square bracket       */
-            /* this is an error here             */
+        case  TOKEN_SQRIGHT:
             syntaxError(Error_Unexpected_comma_bracket);
             break;
 
-        case  TOKEN_OPERATOR:              /* operator token                    */
-            switch (token->subclass)
-            {       /* handle prefix operators as terms  */
-
-                case OPERATOR_PLUS:            /* prefix plus                       */
-                case OPERATOR_SUBTRACT:        /* prefix minus                      */
-                case OPERATOR_BACKSLASH:       /* prefix backslash                  */
-                    previousToken();             /* put the token back                */
-                    return OREF_NULL;            /* just return null (processed later)*/
-
-                default:                       /* other operators not allowed here  */
-                    /* this is an error                  */
-                    syntaxError(Error_Invalid_expression_general, token);
-            }
-            break;
-
-        default:                           /* unknown thing in expression       */
-            /* this is an error                  */
+        // ok, this is bad
+        default:
             syntaxError(Error_Invalid_expression_general, token);
     }
-    return term;                         /* return this term                  */
+    // never reach here.
+    return OREF_NULL;
 }
 
-void LanguageParser::pushTerm(
-    RexxObject *term )                 /* term to push                      */
-/******************************************************************************/
-/* Function:  Push a term onto the expression term stack                      */
-/******************************************************************************/
+/**
+ * Push a term on to the expression term stack.
+ *
+ * @param term   The term object.
+ */
+void LanguageParser::pushTerm(RexxObject *term )
 {
-    this->terms->push(term);             /* push the term on the stack      */
-    this->currentstack++;                /* step the stack depth              */
-                                         /* new "high water" mark?            */
-    if (this->currentstack > this->maxstack)
-    {
-        /* make it the highest point         */
-        this->maxstack = this->currentstack;
-    }
+    // push the term on to the stack.
+    terms->push(term);
+
+    // we keep track of how large the term stack gets during parsing.  This
+    // tells us how much stack space we need to allocate at run time.
+    currentStack++;
+    maxStack = Numerics::maxVal(currentStack, maxStack);
 }
 
+/**
+ * Pop a term off of the expression stack.
+ *
+ * @return The popped object.
+ */
 RexxObject *LanguageParser::popTerm()
-/******************************************************************************/
-/* Function:  Pop a term off of the expression term stack                     */
-/******************************************************************************/
 {
-  RexxObject *term;                    /* returned term                   */
-
-  this->currentstack--;                /* reduce the size count           */
-  term = this->terms->pop();           /* pop the term                    */
-  this->holdObject(term);              /* give it a little protection     */
-  return term;                         /* and return it                   */
+    // reduce the stack count
+    currentStack--;
+    // pop the object off of the stack and give it some short-term
+    // GC protection.
+    RexxObject *term = terms->pop();
+    holdObject(term);
+    return term;
 }
 
 /**
@@ -2649,20 +2681,29 @@ RexxObject *LanguageParser::requiredTerm(RexxToken *token, int errorCode)
     return term;
 }
 
-RexxObject *LanguageParser::popNTerms(
-     size_t count )                    /* number of terms to pop            */
-/******************************************************************************/
-/* Function:  Pop multiple terms off of the operator stack                    */
-/******************************************************************************/
+/**
+ * Pop multiple items off of the term stack.
+ *
+ * @param count  The count of items to pop.
+ *
+ * @return The last object popped.
+ */
+RexxObject *LanguageParser::popNTerms(size_t count)
 {
-    RexxObject *result = OREF_NULL;                  /* final popped element              */
+    RexxObject *result = OREF_NULL;
 
-    this->currentstack -= count;         /* reduce the size count             */
-    while (count--)                      /* while more to remove              */
+    // reduce the stack size
+    currentStack -= count;
+    // and pop that many elements
+    while (count--)
     {
-        result = this->terms->pop();       /* pop the next item               */
+        result = terms->pop();
     }
-    this->holdObject(result);            /* protect this a little             */
+    // if we have a return item, protect it for a little while.
+    if (result != OREF_NULL)
+    {
+        holdObject(result);
+    }
     return result;                       /* and return it                     */
 }
 

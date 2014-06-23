@@ -66,26 +66,6 @@ class RexxActivation;
 class RexxExpressionStack;
 class StackFrameClass;
 
-/******************************************************************************/
-/* various expression terminator sets                                         */
-/******************************************************************************/
-#define   TERM_EOC     0x00000001u     /* terminate on end of clause        */
-#define   TERM_RIGHT   0x00000002u     /* terminate on left paren           */
-#define   TERM_SQRIGHT 0x00000004u     /* terminate on left square bracket  */
-#define   TERM_TO      0x00000008u     /* terminate on TO keyword           */
-#define   TERM_BY      0x00000010u     /* terminate on BY keyword           */
-#define   TERM_FOR     0x00000020u     /* terminate on FOR keyword          */
-#define   TERM_WHILE   0x00000040u     /* terminate on WHILE/UNTIL keywords */
-#define   TERM_COMMA   0x00000080u     /* terminate on comma                */
-#define   TERM_WITH    0x00000100u     /* terminate on WITH keyword         */
-#define   TERM_THEN    0x00000200u     /* terminate on THEN keyword         */
-#define   TERM_KEYWORD 0x10000000u     /* perform keyword terminator checks */
-                                       /* terminate on DO keywords          */
-#define   TERM_CONTROL (TERM_KEYWORD | TERM_TO | TERM_BY | TERM_FOR | TERM_WHILE | TERM_EOC)
-                                       /* terminate on DO conditionals      */
-#define   TERM_COND    (TERM_KEYWORD | TERM_WHILE | TERM_EOC)
-
-#define   TERM_IF      (TERM_KEYWORD | TERM_THEN | TERM_EOC)
 
 const size_t TRACE_ALL           = 'A';
 const size_t TRACE_COMMANDS      = 'C';
@@ -259,7 +239,7 @@ class LanguageParser: public RexxInternalObject {
     RexxArray  *argArray(RexxToken *, int);
     RexxObject *function(RexxToken *, RexxToken *, int);
     RexxObject *collectionMessage(RexxToken *, RexxObject *, int);
-    RexxToken  *getToken(int, int);
+    RexxToken  *getToken(int term, int error = 0);
     RexxObject *message(RexxObject *, bool, int);
     RexxObject *messageTerm();
     RexxObject *variableOrMessageTerm();

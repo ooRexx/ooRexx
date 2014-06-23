@@ -177,3 +177,128 @@ int RexxToken::precedence()
             break;
     }
 }
+
+
+/**
+ * Test if a token qualifies as a terminator in the current
+ * parsing context.
+ *
+ * @param terminators
+ *               The list of terminators.
+ *
+ * @return true if this is a terminator, false if it doesn't match
+ *         one of the terminator classes.
+ */
+bool LanguageParser::isTerminator(int terminators)
+{
+    // process based on terminator class
+    switch (classId)
+    {
+        case  TOKEN_EOC:                     // end-of-clause is always a terminator
+        {
+            previousToken();
+            return true;
+        }
+        case  TOKEN_RIGHT:                   // found a right paren
+        {
+            if (terminators&TERM_RIGHT)
+            {
+                previousToken();
+                return true;
+            }
+            break;
+        }
+        case  TOKEN_SQRIGHT:                 // closing square bracket?
+        {
+            if (terminators&TERM_SQRIGHT)
+            {
+                previousToken();
+                return true;
+            }
+            break;
+        }
+        case  TOKEN_COMMA:                   // a comma is a terminator in argument subexpressions
+        {
+            if (terminators&TERM_COMMA)
+            {
+                previousToken();
+                return true;
+            }
+            break;
+        }
+        case  TOKEN_SYMBOL:                  // the token is a symbol...need to check on keyword terminators
+        {
+            // keyword terminators all set a special keyword flag.  We only check
+            // symbols that are simple variables.
+            if (terminators&TERM_KEYWORD && isSimpleVariable())
+            {
+                // map the keyword token to a key word code.  This are generally
+                // keyword options on DO/LOOP, although THEN and WHEN are also terminators
+                switch (subclass)
+                {
+                    case SUBKEY_TO:
+                    {
+                        if (terminators&TERM_TO)
+                        {
+                            previousToken();
+                            return true;
+                        }
+                        break;
+                    }
+                    case SUBKEY_BY:
+                    {
+                         if (terminators&TERM_BY)
+                         {
+                             previousToken();
+                             return true;
+                         }
+                         break;
+                    }
+                    case SUBKEY_FOR:
+                    {
+                        if (terminators&TERM_FOR)
+                        {
+                            previousToken();
+                            return true;
+                        }
+                        break;
+                    }
+                    case SUBKEY_WHILE:           // a single terminator type picks up both
+                    case SUBKEY_UNTIL:           // while and until
+                    {
+                        if (terminators&TERM_WHILE)
+                        {
+                            previousToken();
+                            return true;
+                        }
+                        break;
+                    }
+                    case SUBKEY_WITH:            // WITH keyword in PARSE value
+                    {
+                        if (terminators&TERM_WITH)
+                        {
+                            previousToken();
+                            return true;
+                        }
+                        break;
+                    }
+                    case SUBKEY_THEN:            // THEN subkeyword from IF or WHEN
+                    {
+                        if (terminators&TERM_THEN)
+                        {
+                            previousToken();
+                            return true;
+                        }
+                        break;
+                    }
+                    default:                     // not a terminator type
+                        break;
+                }
+            }
+        }
+        default:
+            break;
+    }
+
+    return false;                    // no terminator found
+}

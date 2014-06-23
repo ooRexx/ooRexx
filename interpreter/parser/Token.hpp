@@ -394,6 +394,28 @@ enum {
 } BuiltinCode;
 
 
+/******************************************************************************/
+/* various expression terminator sets                                         */
+/******************************************************************************/
+#define   TERM_EOC     0x00000001u     /* terminate on end of clause        */
+#define   TERM_RIGHT   0x00000002u     /* terminate on left paren           */
+#define   TERM_SQRIGHT 0x00000004u     /* terminate on left square bracket  */
+#define   TERM_TO      0x00000008u     /* terminate on TO keyword           */
+#define   TERM_BY      0x00000010u     /* terminate on BY keyword           */
+#define   TERM_FOR     0x00000020u     /* terminate on FOR keyword          */
+#define   TERM_WHILE   0x00000040u     /* terminate on WHILE/UNTIL keywords */
+#define   TERM_COMMA   0x00000080u     /* terminate on comma                */
+#define   TERM_WITH    0x00000100u     /* terminate on WITH keyword         */
+#define   TERM_THEN    0x00000200u     /* terminate on THEN keyword         */
+#define   TERM_KEYWORD 0x10000000u     /* perform keyword terminator checks */
+                                       /* terminate on DO keywords          */
+#define   TERM_CONTROL (TERM_KEYWORD | TERM_TO | TERM_BY | TERM_FOR | TERM_WHILE | TERM_EOC)
+                                       /* terminate on DO conditionals      */
+#define   TERM_COND    (TERM_KEYWORD | TERM_WHILE | TERM_EOC)
+
+#define   TERM_IF      (TERM_KEYWORD | TERM_THEN | TERM_EOC)
+
+
 class RexxToken : public RexxInternalObject {
  public:
     void        *operator new(size_t);
@@ -412,7 +434,10 @@ class RexxToken : public RexxInternalObject {
     inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
 
     inline bool       isType(TokenClass t) { return classId = t; }
+    inline bool       isType(TokenClass t1, TokenClass t2) { return classId = t1 || classId == t2; }
+    inline bool       isType(TokenClass t1, TokenClass t2, TokenClass t3) { return classId = t1 || classId == t2 || classId == t3; }
     inline bool       isSubtype(TokenSubclass t) { return subclass = t; }
+    inline bool       isSubtype(TokenSubclass t1, TokenSubclass t2) { return subclass = t1 || subclass == t2; }
     inline bool       type() { return classId; }
     inline bool       subtype() { return subclass; }
     inline bool       value() { return stringValue; }
@@ -421,6 +446,7 @@ class RexxToken : public RexxInternalObject {
     inline void       setValue(RexxString *v) { stringValue = v; }
     inline bool       isVariable() { return (subclass == SYMBOL_VARIABLE || subclass == SYMBOL_STEM || subclass == SYMBOL_COMPOUND); };
     inline bool       isSimpleVariable() { return subclass == SYMBOL_VARIABLE; };
+    inline bool       isVariableOrDot() { return isVariable() || subclass == SYMBOL_DOTSYMBOL; };
     inline bool       isDot() { return (subclass == SYMBOL_DOTSYMBOL); }
     inline bool       isLiteral()  { return classId == TOKEN_LITERAL; };
     inline bool       isSymbolOrLiteral()  { return classId == TOKEN_LITERAL || this->classId == TOKEN_SYMBOL; };
@@ -430,11 +456,13 @@ class RexxToken : public RexxInternalObject {
     inline bool       isEndOfClause() { return classId == TOKEN_EOC; }
     inline bool       isBlankSignificant() { return (classId == TOKEN_SYMBOL || classId == TOKEN_LITERAL ||
          classId == TOKEN_RIGHT || classId == TOKEN_SQRIGHT); }
+    inline bool       isMessageOperator() { return classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT; }
     inline void       setNumeric(TokenSubclass v)   { this->numeric = v; };
     inline const SourceLocation &getLocation() { return tokenLocation; }
     inline void       setLocation(SourceLocation &l) { tokenLocation = l; }
            void       checkAssignment(RexxSource *source, RexxString *newValue);
            int        precedence();
+           bool       isTerminator(int);
 
 protected:
     RexxString   *stringValue;             // token string value
