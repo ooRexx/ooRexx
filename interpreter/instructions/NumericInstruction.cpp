@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,144 +48,133 @@
 #include "NumericInstruction.hpp"
 #include "Token.hpp"
 
-RexxInstructionNumeric::RexxInstructionNumeric(
-    RexxObject *_expression,           /* optional expression               */
-    unsigned short type,               /* type of numeric instruction       */
-    size_t      flags)                 /* processing flags                  */
-/****************************************************************************/
-/* Function:  Execute a REXX NUMERIC instruction                            */
-/****************************************************************************/
+/**
+ * Constructor for a NUMERIC instruction
+ *
+ * @param _expression
+ *               An expression that needs evaluation for the specific
+ *               function.
+ * @param flags  A set of flags that drive the execution function.
+ */
+RexxInstructionNumeric::RexxInstructionNumeric(RexxObject *_expression, bitset<32> flags)
 {
-                                       /* copy the expression               */
-  OrefSet(this, this->expression, _expression);
-  instructionFlags = (uint16_t)flags;
-  switch (type)
-  {
-      case SUBKEY_DIGITS:
-          instructionFlags |= numeric_digits;
-          break;
-      case SUBKEY_FUZZ:
-          instructionFlags |= numeric_fuzz;
-          break;
-      case SUBKEY_FORM:
-          instructionFlags |= numeric_form;
-          break;
-  }
+    expression = _expression;
+    numericFlags = flags;
 }
 
-void RexxInstructionNumeric::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX LEAVE instruction                              */
-/****************************************************************************/
+/**
+ * Execute a NUMERIC instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionNumeric::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
     RexxObject  *result;                 /* expression evaluation result      */
     RexxString  *stringResult;           /* converted string                  */
     stringsize_t setting;                /* binary form of the setting        */
 
-    context->traceInstruction(this);     /* trace if necessary                */
-                                         /* process the different types of    */
-    switch (instructionFlags & numeric_type_mask)           /* numeric instruction               */
+    // trace if necessary
+    context->traceInstruction(this);
+
+    // now process the specific functions encoded in the flags
+
+    // NUMERIC DIGITS
+    if (numericFlags[numeric_digits])
     {
-        case numeric_digits:               /* NUMERIC DIGITS instruction        */
-            /* resetting to default digits?      */
-            if (this->expression == OREF_NULL)
-            {
-                /* just set it to the default        */
-                context->setDigits();
-            }
-            else                           /* need to evaluate an expression    */
-            {
-                /* get the expression value          */
-                result = this->expression->evaluate(context, stack);
-                context->traceResult(result);  /* trace if necessary                */
-                                               /* bad value?                        */
-                if (!result->requestUnsignedNumber(setting, number_digits()) || setting < 1)
-                {
-                    /* report an exception               */
-                    reportException(Error_Invalid_whole_number_digits, result);
-                }
-                /* problem with the fuzz setting?    */
-                if (setting <= context->fuzz())
-                {
-                    /* this is an error                  */
-                    reportException(Error_Expression_result_digits, setting, context->fuzz());
-                }
-                context->setDigits(setting);   /* now adjust the setting            */
-            }
-            break;
+        // no expression?  Just set digits back to default
+        if (expression == OREF_NULL)
+        {
+            context->setDigits();
+        }
+        // expression version
+        else
+        {
+            // need to evaluate
+            RexxObject *result = expression->evaluate(context, stack);
+            context->traceResult(result);
 
-        case numeric_fuzz:                 /* NUMERIC FUZZ instruction          */
-            /* resetting to default fuzz?        */
-            if (this->expression == OREF_NULL)
+            // this must be an a positive numeric value
+            if (!result->requestUnsignedNumber(setting, number_digits()) || setting < 1)
             {
-                context->setFuzz();        /* just set it to the default        */
+                reportException(Error_Invalid_whole_number_digits, result);
             }
-            else                           /* need to evaluate an expression    */
+            // digits cannot be less than or equal to fuzz
+            if (setting <= context->fuzz())
             {
-                /* get the expression value          */
-                result = this->expression->evaluate(context, stack);
-                context->traceResult(result);  /* trace if necessary                */
-                                               /* bad value?                        */
-                if (!result->requestUnsignedNumber(setting, number_digits()))
-                {
-                    /* report an exception               */
-                    reportException(Error_Invalid_whole_number_fuzz, result);
-                }
-                /* problem with the digits setting?  */
-                if (setting >= context->digits())
-                {
-                    /* and issue the error               */
-                    reportException(Error_Expression_result_digits, context->digits(), setting);
-                }
-                context->setFuzz(setting);     /* set the new value                 */
+                reportException(Error_Expression_result_digits, setting, context->fuzz());
             }
-            break;
-
-        case numeric_form:                 /* NUMERIC FORM instruction          */
-            /* non-VALUE form?                   */
-            if (this->expression == OREF_NULL)
-            {
-                // if default form, set that
-                if (instructionFlags&numeric_form_default)
-                {
-                    context->setForm();
-                }
-                else
-                {
-
-                    // set it to what was specified.
-                    context->setForm(instructionFlags&numeric_engineering ? Numerics::FORM_ENGINEERING : Numerics::FORM_SCIENTIFIC);
-                }
-            }
-            else                           /* need to evaluate an expression    */
-            {
-                /* get the expression value          */
-                result = this->expression->evaluate(context, stack);
-                /* get the string version            */
-                stringResult = REQUEST_STRING(result);
-                /* trace if necessary                */
-                context->traceResult(stringResult);
-                /* Scientific form?                  */
-                if (stringResult->strCompare(CHAR_SCIENTIFIC))
-                {
-                    /* set the proper form               */
-                    context->setForm(Numerics::FORM_SCIENTIFIC);
-                }
-                /* Scientific form?                  */
-                else if (stringResult->strCompare(CHAR_ENGINEERING))
-                {
-                    /* set the engineering form          */
-                    context->setForm(Numerics::FORM_ENGINEERING);
-                }
-                else
-                {
-                    /* report an exception               */
-                    reportException(Error_Invalid_subkeyword_form, result);
-                }
-            }
-            break;
+            // set the value
+            context->setDigits(setting);
+        }
     }
-    context->pauseInstruction();         /* do debug pause if necessary       */
+    // NUMERIC FUZZ
+    else if (numericFlags[numeric_fuzz])
+    {
+        // no expression resets to default
+        if (expression == OREF_NULL)
+        {
+            context->setFuzz();        /* just set it to the default        */
+        }
+        else                           /* need to evaluate an expression    */
+        {
+            // get the expression value and convert to a numeric
+            RexxObject *result = expression->evaluate(context, stack);
+            context->traceResult(result);  /* trace if necessary                */
+                                           /* bad value?                        */
+            if (!result->requestUnsignedNumber(setting, number_digits()))
+            {
+                reportException(Error_Invalid_whole_number_fuzz, result);
+            }
+            // cannot be greater than or equal to digits
+            if (setting >= context->digits())
+            {
+                reportException(Error_Expression_result_digits, context->digits(), setting);
+            }
+            // change the setting
+            context->setFuzz(setting);
+        }
+    }
+    // NUMERIC FORM
+    else if (numericFlags[numeric_form])
+    {
+        // NON VALUE form?
+        if (expression == OREF_NULL)
+        {
+            // if default form, set that
+            if (numericFlags[numeric_form_default])
+            {
+                context->setForm();
+            }
+            else
+            {
+                // set it to what was specified.
+                context->setForm(numericFlags[numeric_engineering] ? Numerics::FORM_ENGINEERING : Numerics::FORM_SCIENTIFIC);
+            }
+        }
+        else
+        {
+            // evaluate the expression and get as a string value.
+            RexxObject *result = expression->evaluate(context, stack);
+            stringResult = REQUEST_STRING(result);
+            context->traceResult(stringResult);
+
+            //  Scientific form?
+            if (stringResult->strCompare(CHAR_SCIENTIFIC))
+            {
+                context->setForm(Numerics::FORM_SCIENTIFIC);
+            }
+            // Engineering form?                 */
+            else if (stringResult->strCompare(CHAR_ENGINEERING))
+            {
+                context->setForm(Numerics::FORM_ENGINEERING);
+            }
+            else
+            {
+                /* report an exception               */
+                reportException(Error_Invalid_subkeyword_form, result);
+            }
+        }
+    }
+    context->pauseInstruction();         // do debug pause if necessary
 }

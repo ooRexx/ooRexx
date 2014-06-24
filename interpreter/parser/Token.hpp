@@ -136,6 +136,10 @@ enum {
 // various keyword enumerations
 
 // the keyword instruction and directive identifiers
+// IMPORTANT NOTE:  These constants are set into instruction
+// objects.  To preserve release-to-release compiled image
+// compatibility, new constants need to be added to the end
+// of this list.
 enum
 {
     KEYWORD_NONE = 0,
@@ -187,7 +191,12 @@ enum
     KEYWORD_ENDWHEN,
     KEYWORD_INSTRUCTION,
     KEYWORD_FORWARD,
-    KEYWORD_LOOP
+    KEYWORD_LOOP,
+    KEYWORD_SIGNAL_VALUE,
+    KEYWORD_SIGNAL_ON,
+    KEYWORD_CALL_VALUE,
+    KEYWORD_CALL_ON,
+
 } InstructionKeyword;
 
 // instruction subkeyword types

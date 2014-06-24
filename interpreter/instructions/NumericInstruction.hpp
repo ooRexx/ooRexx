@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,23 +45,26 @@
 #define Included_RexxInstructionNumeric
 
 #include "RexxInstruction.hpp"
+#include <bitset>
 
-#define numeric_engineering 0x01       /* this is form engineering          */
-#define numeric_digits      0x02
-#define numeric_fuzz        0x04
-#define numeric_form        0x08
-#define numeric_form_default 0x10      // using default engineering form
-
-#define numeric_type_mask   0x0e
+enum
+{
+    numeric_engineering,
+    numeric_digits,
+    numeric_fuzz,
+    numeric_form_default
+} NumericInstructionFlags;
 
 class RexxInstructionNumeric : public RexxInstructionExpression {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
 
-  RexxInstructionNumeric(RexxObject *, unsigned short, size_t);
-  inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
-  void execute(RexxActivation *, RexxExpressionStack *);
+    RexxInstructionNumeric(RexxObject *, unsigned short, size_t);
+    inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
+    void execute(RexxActivation *, RexxExpressionStack *);
+ protected:
+    bitset<32>    numericFlags;
 };
 #endif

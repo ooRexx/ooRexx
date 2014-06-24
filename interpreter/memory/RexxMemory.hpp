@@ -438,6 +438,8 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 
 /* Following macros are for Flattening and unflattening of objects  */
 #define flatten_reference(oref,envel)  if (oref) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
+// newer, simplified form
+#define flattenRef(oref)  if (newThis->oref) envelope->flattenReference((void *)&newThis, newSelf, (void *)&(newThis->oref))
 
 // declare a class creation routine
 // for classes with their own

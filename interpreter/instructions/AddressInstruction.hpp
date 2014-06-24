@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,19 +48,21 @@
 
 class RexxInstructionAddress : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *ptr) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *ptr) { }
 
-  RexxInstructionAddress(RexxObject *, RexxString *, RexxObject *);
-  inline RexxInstructionAddress(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  void execute(RexxActivation *, RexxExpressionStack *);
+    RexxInstructionAddress(RexxObject *, RexxString *, RexxObject *);
+    inline RexxInstructionAddress(RESTORETYPE restoreType) { ; };
 
-  RexxObject *expression;              /* address value expression          */
-  RexxString *environment;             /* constant environment              */
-  RexxObject *command;                 /* command to issue                  */
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
+    RexxObject *dynamicAddress;              // ADDRESS VALUE expression
+    RexxString *environment;                 // An environment string (static form)
+    RexxObject *command;                     // A command expression
 };
 #endif

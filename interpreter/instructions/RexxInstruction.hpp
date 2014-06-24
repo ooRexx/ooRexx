@@ -50,49 +50,60 @@ class RexxSource;
 class RexxClause;
 
 #include "SourceLocation.hpp"
-#include <bitset>
 
+/**
+ * Base class for all instruction objects.  Defines
+ * behavior common to all instructions, such as having
+ * a successor instruction and recording the instruction
+ * location.
+ */
 class RexxInstruction : public RexxInternalObject {
  public:
-         void *operator new(size_t);
-  inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, void *) { }
+           void *operator new(size_t);
+    inline void *operator new(size_t size, void *objectPtr) { return objectPtr; }
+    inline void  operator delete(void *) { }
+    inline void  operator delete(void *, void *) { }
 
-  RexxInstruction(RexxClause *clause, InstructionKeyword type);
-  inline RexxInstruction(RESTORETYPE restoreType) { ; };
-  inline RexxInstruction() { ; }
+    RexxInstruction(RexxClause *clause, InstructionKeyword type);
+    inline RexxInstruction(RESTORETYPE restoreType) { ; };
+    inline RexxInstruction() { ; }
 
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  inline const SourceLocation &getLocation() { return instructionLocation; }
-  inline void  setLocation(SourceLocation &l) { instructionLocation = l; }
+    void live(size_t);
+    void liveGeneral(int reason);
+    void flatten(RexxEnvelope *);
+    inline const SourceLocation &getLocation() { return instructionLocation; }
+    inline void  setLocation(SourceLocation &l) { instructionLocation = l; }
 
-  virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
+    virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
 
-  // NOTE:  This method is only used during program translation, so we can skip using
-  // OrefSet to set this variable.
-  inline void setNext(RexxInstruction *next) { nextInstruction = next; };
-  void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
-  void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
-  inline      void        setType(InstructionKeyword type) { instructionType = type; };
-  inline      InstructionKeyword getType()     { return instructionType;  };
-  inline      bool        isType(size_t type)  { return instructionType == type; }
-  inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
+    // NOTE:  This method is only used during program translation, so we can skip using
+    // OrefSet to set this variable.
+    inline void setNext(RexxInstruction *next) { nextInstruction = next; };
+    void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
+    void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
+    inline      void        setType(InstructionKeyword type) { instructionType = type; };
+    inline      InstructionKeyword getType()     { return instructionType;  };
+    inline      bool        isType(size_t type)  { return instructionType == type; }
+    inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
 
-  InstructionKeyword  instructionType;    // name of the instruction
-  bitset<32>          instructionFlags;   // general flag area
+ protected:
+    InstructionKeyword  instructionType;    // name of the instruction
 
-  SourceLocation    instructionLocation;  // location of the instruction in its source
-  RexxInstruction  *nextInstruction;      // the next instruction object in the assembled chain.
+    SourceLocation    instructionLocation;  // location of the instruction in its source
+    RexxInstruction  *nextInstruction;      // the next instruction object in the assembled chain.
 };
 
 
 class RexxDoBlock;
 
-class RexxBlockInstruction : public RexxInstruction {
-public:
+/**
+ * Base class for all Block instruction types.  This
+ * defines the interface that all block instructions must
+ * implement to handle resolutions.
+ */
+class RexxBlockInstruction : public RexxInstruction
+{
+ public:
     RexxBlockInstruction() {;};
     RexxBlockInstruction(RESTORETYPE restoreType) { ; };
 
@@ -104,23 +115,35 @@ public:
 };
 
 
-class RexxInstructionSet : public RexxInstruction {
+/**
+ * Base instruction for instructions that need to have
+ * and end position set.
+ */
+class RexxInstructionSet : public RexxInstruction
+{
  public:
-  RexxInstructionSet() {;};
-  RexxInstructionSet(RESTORETYPE restoreType) { ; };
+    RexxInstructionSet() {;};
+    RexxInstructionSet(RESTORETYPE restoreType) { ; };
 
-  virtual void setEndInstruction(RexxInstructionEndIf *) {;}
+    virtual void setEndInstruction(RexxInstructionEndIf *) {;}
 };
 
-class RexxInstructionExpression : public RexxInstruction {
+/**
+ * Common definition for instructions that are a keyword
+ * with a single expression (SAY, INTERPRET, etc.).  This is
+ * common enough to warrant a subclass.
+ */
+class RexxInstructionExpression : public RexxInstruction
+{
  public:
-  RexxInstructionExpression() { ; };
-  RexxInstructionExpression(RESTORETYPE restoreType) { ; };
+    RexxInstructionExpression() { ; };
+    RexxInstructionExpression(RESTORETYPE restoreType) { ; };
 
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
+    void live(size_t);
+    void liveGeneral(int reason);
+    void flatten(RexxEnvelope *);
 
-  RexxObject *expression;              /* expression to evaluate            */
+ protected:
+    RexxObject *expression;              // expression to evaluate
 };
 #endif

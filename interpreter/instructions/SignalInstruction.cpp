@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,146 +48,284 @@
 #include "DirectoryClass.hpp"
 #include "SignalInstruction.hpp"
 
-RexxInstructionSignal::RexxInstructionSignal(
-    RexxObject *_expression,            /* expression for signal value       */
-    RexxString *_condition,             /* signalled condition               */
-    RexxString *_name,                  /* signal target name                */
-    size_t flags )                      /* option flags                      */
-/******************************************************************************/
-/* Initialize a SIGNAL instruction                                            */
-/******************************************************************************/
+/**
+ * Constructor for a SIGNAL instruction.
+ *
+ * @param labelName The name of the target label.
+ */
+RexxInstructionSignal::RexxInstructionSignal(RexxObject *labelName)
 {
-                                       /* save all appropriate info         */
-  OrefSet(this, this->expression, _expression);
-  OrefSet(this, this->condition, _condition);
-  OrefSet(this, this->name, _name);
-  instructionFlags = (uint16_t)flags;
+    targetName = labelName;
 }
 
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionSignal::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->target);
-  memory_mark(this->name);
-  memory_mark(this->condition);
-  memory_mark(this->expression);
+    memory_mark(nextInstruction);  /* must be first one marked          */
+    memory_mark(targetInstruction);
+    memory_mark(targetName);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionSignal::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->target);
-  memory_mark_general(this->name);
-  memory_mark_general(this->condition);
-  memory_mark_general(this->expression);
+    // must be first one marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(targetInstruction);
+    memory_mark_general(targetName);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxInstructionSignal::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionSignal)
+    setUpFlatten(RexxInstructionSignal)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->target, envelope);
-  flatten_reference(newThis->name, envelope);
-  flatten_reference(newThis->condition, envelope);
-  flatten_reference(newThis->expression, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(targetInstruction);
+    flattenRef(targetName);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionSignal::resolve(
-    RexxDirectory *labels)             /* table of program labels           */
-/******************************************************************************/
-/* Function:  Resolve a SIGNAL instruction label target                       */
-/******************************************************************************/
+/**
+ * Resolve a label target at the end of block parsing.
+ *
+ * @param labels The directory of label objects for this code section.
+ */
+void RexxInstructionSignal::resolve(RexxDirectory *labels)
 {
-    if (this->name == OREF_NULL)         /* not a name target form?           */
+    // The section might not have any labels, but if it does, get our
+    // name from the directory.  Note, we don't raise an error now, we
+    // wait until the instruction is actually executed.
+    if (labels != OREF_NULL)
     {
-        return;                            /* just return                       */
-    }
-                                           /* have a labels table?              */
-    if (labels != OREF_NULL && this->name != OREF_NULL)
-    {
-        /* just get this from the table      */
-        OrefSet(this, this->target, (RexxInstruction *)labels->at(this->name));
+        // this links the signal instruction directly to the label
+        // instruction that is the target.
+        targetInstruction = (RexxInstruction *)labels->at(targetName));
     }
 }
 
-void RexxInstructionSignal::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX SIGNAL instruction                               */
-/******************************************************************************/
-{
-    RexxObject *result;                  /* evaluated expression              */
-    RexxString *stringResult;            /* string version of the result      */
 
-    context->traceInstruction(this);     /* trace if necessary                */
-    if (this->condition != OREF_NULL)  /* is this the ON/OFF form?          */
+/**
+ * Execute this instruction
+ *
+ * @param context The current program context.
+ * @param stack   The expression stack
+ */
+void RexxInstructionSignal::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // trace the instruction if necessary
+    context->traceInstruction(this);
+
+    // normal signal instruction
+
+    // the target should have been resolved during the resolve phase.
+    // if we don't have anything, raise the error now
+    if (targetInstructon == OREF_NULL)
     {
-        if (instructionFlags&signal_on)    /* ON form?                          */
-        {
-                                           /* turn on the trap                  */
-            context->trapOn(this->condition, (RexxInstructionCallBase *)this);
-        }
-        else
-        {
-            /* turn off the trap                 */
-            context->trapOff(this->condition);
-        }
-        context->pauseInstruction();       /* do debug pause if necessary       */
+        reportException(Error_Label_not_found_name, name);
     }
-    else                               /* a normal signal?                  */
+    // tell the activation we're changing course.  Debug pauses
+    // are handled after the signal
+    context->signalTo(targetInstruction);
+}
+
+
+/**
+ * Constructor for a dynamic SIGNAL instruction.
+ *
+ * @param labelName The name of the target label.
+ */
+RexxInstructionDynamicSignal::RexxInstructionDynamicSignal(RexxObject *expr)
+{
+    dynamicName = expr;
+}
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionDynamicSignal::live(size_t liveMark)
+{
+    memory_mark(nextInstruction);  /* must be first one marked          */
+    memory_mark(dynamicName);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionDynamicSignal::liveGeneral(int reason)
+{
+    // must be first one marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(dynamicName);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionDynamicSignal::flatten(RexxEnvelope *envelope)
+{
+    setUpFlatten(RexxInstructionDynamicSignal)
+
+    flattenRef(nextInstruction);
+    flattenRef(dynamicName);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Execute this instruction
+ *
+ * @param context The current program context.
+ * @param stack   The expression stack
+ */
+void RexxInstructionDynamicSignal::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // trace the instruction if necessary
+    context->traceInstruction(this);
+
+    // evaluate the expression in the current context.
+    RexxObject *result = dynamicName->evaluate(context, stack);
+    // force to a string value
+    ProtectedObject stringResult = REQUEST_STRING(result);
+    // expression results require tracing
+    context->traceResult((RexxString *)stringResult);
+    // the context handles locating the target label
+    context->signalValue((RexxString *)stringResult);
+}
+
+
+/**
+ * Construct a Signal ON instruction object.
+ *
+ * @param condition The name of the condition trap
+ * @param name      The name of the signal target (NULL if this
+ *                  is SIGNAL OFF)
+ * @param builtin_index
+ *                  An index for a potential builtin function call.
+ */
+RexxInstructionSignalOn::RexxInstructionSignalOn(RexxString *condition, RexxString *name)
+{
+    conditionName = condition;
+    targetName = name;
+    targetInstruction = OREF_NULL;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionSignalOn::live(size_t liveMark)
+{
+    memory_mark(nextInstruction);  // must be first one marked
+    memory_mark(targetInstruction);
+    memory_mark(conditionName);
+    memory_mark(targetName);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionSignalOn::liveGeneral(int reason)
+{
+    // must be first one marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(targetInstruction);
+    memory_mark_general(targetName);
+    memory_mark_general(conditionName);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionSignalOn::flatten(RexxEnvelope *envelope)
+{
+    setUpFlatten(RexxInstructionSignalOn)
+
+    flattenRef(nextInstruction);
+    flattenRef(targetInstruction);
+    flattenRef(targetName);
+    flattenRef(conditionName);
+
+    cleanUpFlatten
+}
+
+/**
+ * Resolve a call target at the end of block processing.
+ *
+ * @param labels The table of label instructions in the current context.
+ */
+void RexxInstructionSignalOn::resolve(RexxDirectory *labels)
+{
+    // if there is a labels table, see if we can find a label object from the context.
+    // SIGNALS only go to labels, but we don't report an error until the trap is triggered.
+    if (labels != OREF_NULL)
     {
-        if (this->expression == OREF_NULL)/* already have the target?          */
-        {
-            if (this->target == OREF_NULL)   /* unknown target?                   */
-            {
-                reportException(Error_Label_not_found_name, this->name);
-            }
-            /* tell the activation to perform    */
-            context->signalTo(this->target); /* the signal                        */
-        }
-        else                             /* need to evaluate an expression    */
-        {
-            /* get the expression value          */
-            result = this->expression->evaluate(context, stack);
-            /* force to a string value           */
-            stringResult = REQUEST_STRING(result);
-            context->traceResult(result);    /* trace if necessary                */
-                                             /* tell the activation to perform    */
-                                             /* the signal                        */
-            context->signalValue(stringResult);
-        }
+        // see if there is a matching label.  If we get something,
+        // we're finished.
+        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName));
     }
 }
 
-void RexxInstructionSignal::trap(
-    RexxActivation *context,           /* current execution context         */
-    RexxDirectory  *conditionObj)      /* associated condition object       */
-/******************************************************************************/
-/* Function:  Process a SIGNAL ON trap                                        */
-/******************************************************************************/
+
+/**
+ * Process a trapped condition.
+ *
+ * @param context The current program context.
+ * @param conditionObj
+ *                The condition object for the trap
+ */
+void RexxInstructionSignalOn::trap(RexxActivation *context, RexxDirectory  *conditionObj)
 {
-    context->trapOff(this->condition);   /* turn off the trap                 */
-    if (this->target == OREF_NULL)       /* unknown target?                   */
+    // trapping a condition turns off the tracp
+    context->trapOff(conditionName);
+    // this should have been resolved already...raise the error now if
+    // we don't have a resolved label.
+    if (targetInstruction == OREF_NULL)
     {
-        reportException(Error_Label_not_found_name, this->name);
+        reportException(Error_Label_not_found_name, targetName);
     }
-    /* set the new condition object      */
+
+    // set the new condition object
     context->setConditionObj(conditionObj);
-    /* tell the activation to perform    */
-    context->signalTo(this->target);     /* the signal                        */
+    // and jump to the condition target
+    context->signalTo(targetInstruction);
 }
 

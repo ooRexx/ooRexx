@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -51,231 +51,248 @@
 #include "RaiseInstruction.hpp"
 #include "Interpreter.hpp"
 
-RexxInstructionRaise::RexxInstructionRaise(
-  RexxString *_condition,               /* condition to raise                */
-  RexxObject *_expression,              /* expressionial value               */
-  RexxObject *_description,             /* description expression            */
-  RexxObject *_additional,              /* additional expression             */
-  RexxObject *_result,                  /* returned result                   */
-  size_t      _arrayCount,             /* size of the array items           */
-  RexxQueue  *array,                   /* array argument information        */
-  bool        raiseReturn )            /* return/exit flag                  */
-/******************************************************************************/
-/* Function:  Initialize a RAISE instruction item                             */
-/******************************************************************************/
+/**
+ * Construct a RAISE instruction object.
+ *
+ * @param _condition The condition name.
+ * @param _expression
+ *                   The RC expression.
+ * @param _description
+ *                   An optional description string.
+ * @param _additional
+ *                   An expression to resolve additional information.
+ * @param _result    A result value to return when the context exits.
+ * @param _arrayCount
+ *                   A count of items specified with the ARRAY() option.
+ * @param array      The subTerm queue holding the ARRAY() option expressions.
+ * @param flags      Additional control flags.
+ */
+RexxInstructionRaise::RexxInstructionRaise(RexxString *_condition, RexxObject *_expression,
+    RexxObject *_description, RexxObject *_additional, RexxObject *_result,
+    bitset<32> flags)
 {
-    /* save the static information       */
-    OrefSet(this, this->condition, _condition);
-    OrefSet(this, this->expression, _expression);
-    OrefSet(this, this->description, _description);
-    OrefSet(this, this->result, _result);
-    if (_arrayCount != (size_t)-1)     /* array form?                       */
+    // just copy the argument information
+    conditionName = _condition;
+    rcValue = _expression;
+    description = _description;
+    resultValue = _result;
+    instructionFlags = flags;
+    // is this the array form?  We need to copy the expressions
+    if (flags[raise_array])
     {
-        instructionFlags |= raise_array;   /* set the array form                */
-        /* get the array size                */
-        arrayCount = _arrayCount;
-        while (_arrayCount > 0)            /* loop through the expression list  */
+        RexxArray *arrayItems = (RexxArray *)_additional;
+
+        arrayCount = arrayItems->size();
+        // copy each of the argument expressions
+        for (size_t i = 0, i < arrayCount; i++)
         {
-                                           /* copying each expression           */
-            OrefSet(this, this->additional[--_arrayCount], array->pop());
+            additional[i] = arrayItems->get(i + 1);
         }
     }
-    else                               /* just the one item                 */
+    // store the expression for retrieving the additional item from the
+    // first additional slot.
+    else
     {
-        OrefSet(this, this->additional[0], _additional);
-        arrayCount = 1;                    /* just the one item                 */
-    }
-    if (raiseReturn)                     /* return form?                      */
-    {
-        instructionFlags |= raise_return;  /* turn on the return flag           */
+        // we have just one item
+        additional[0] = _additional;
+        arrayCount = 1;
     }
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionRaise::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    size_t  count;                       /* count of array expressions        */
-    size_t    i;                         /* loop counter                      */
-
-    memory_mark(this->nextInstruction);  /* must be first one marked          */
-    memory_mark(this->condition);
-    memory_mark(this->expression);
-    memory_mark(this->description);
-    memory_mark(this->result);
-    for (i = 0, count = arrayCount; i < count; i++)
+    memory_mark(nextInstruction);  /* must be first one marked          */
+    memory_mark(conditionName);
+    memory_mark(rcValue);
+    memory_mark(description);
+    memory_mark(resultValue);
+    for (size_t i = 0, i < arrayCount; i++)
     {
-        memory_mark(this->additional[i]);
+        memory_mark(additional[i]);
     }
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionRaise::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    size_t  count;                       /* count of array expressions        */
-    size_t    i;                         /* loop counter                      */
+    // this must be the first one marked.
+    memory_mark_general(nextInstruction);
+    memory_mark_general(conditionName);
+    memory_mark_general(rcValue);
+    memory_mark_general(description);
+    memory_mark_general(resultValue);
 
-                                         /* must be first one marked          */
-    memory_mark_general(this->nextInstruction);
-    memory_mark_general(this->condition);
-    memory_mark_general(this->expression);
-    memory_mark_general(this->description);
-    memory_mark_general(this->result);
-    for (i = 0, count = arrayCount; i < count; i++)
+    for (size_t i = 0, i < arrayCount; i++)
     {
-        memory_mark_general(this->additional[i]);
+        memory_mark_general(additional[i]);
     }
 }
 
-void RexxInstructionRaise::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    size_t  count;                       /* count of array expressions        */
-    size_t    i;                         /* loop counter                      */
 
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionRaise::flatten(RexxEnvelope *envelope)
+{
     setUpFlatten(RexxInstructionRaise)
 
-    flatten_reference(newThis->nextInstruction, envelope);
-    flatten_reference(newThis->condition, envelope);
-    flatten_reference(newThis->expression, envelope);
-    flatten_reference(newThis->description, envelope);
-    flatten_reference(newThis->result, envelope);
-    for (i = 0, count = arrayCount; i < count; i++)
+    flattenRef(nextInstruction);
+    flattenRef(conditionName);
+    flattenRef(rcValue);
+    flattenRef(description);
+    flattenRef(resultValue);
+    for (size_t i = 0, i < arrayCount; i++)
     {
-        flatten_reference(this->additional[i], envelope);
+        flattenRef(additional[i]);
     }
 
     cleanUpFlatten
 }
 
-void RexxInstructionRaise::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX RAISE instruction                                */
-/******************************************************************************/
+/**
+ * Execute a RAISE instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current context evaluation stack.
+ */
+void RexxInstructionRaise::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-    RexxObject    *_result;              /* evaluated expression              */
-    RexxObject    *rc;                   /* RC variable information           */
-    RexxString    *errorcode;            /* converted error code              */
-    RexxString    *_description;         /* condition description             */
-    RexxObject    *_additional;          /* additional state information      */
-    RexxDirectory *conditionobj;         /* propagated condition object       */
-    size_t  count;                       /* count of array expressions        */
-    size_t  i;                           /* loop counter                      */
-    wholenumber_t  msgNum;               /* message number                    */
+    // trace if needed
+    context->traceInstruction(this);
 
-    context->traceInstruction(this);     /* trace if necessary                */
-    _additional = OREF_NULL;             /* no object yet                     */
-    _description = OREF_NULL;            /* no description                    */
-    rc = OREF_NULL;                      /* no extra information              */
-    _result = OREF_NULL;                 /* no result information             */
+    // set defaults for anything we need to evaluate.
+    RexxObject *_additional = OREF_NULL;
+    RexxObject *_description = OREF_NULL;
+    RexxObject *rc = OREF_NULL;
+    RexxObject *_result = OREF_NULL;
 
-    if (this->expression != OREF_NULL)   /* extra information for RC?         */
+    // and start evaluating
+    // extra RC information (SYNTAX, ERROR, and FAILURE only)
+    if (rcValue != OREF_NULL)
     {
                                          /* get the expression value          */
-        rc = this->expression->evaluate(context, stack);
+        rc = rcValue->evaluate(context, stack);
     }
-    /* need to validate the RC value?    */
-    if (this->condition->strCompare(CHAR_SYNTAX))
+    // syntax conditions have some special requirements, so process those
+    // up front.
+    if (instructionFlags[syntax])
     {
-        _additional = TheNullArray->copy(); /* change default additional info    */
-        /* and the default description       */
+        // give this a default additional information of an empty array
+        _additional = TheNullArray->copy();
+        // The description is a null string
         _description = OREF_NULLSTRING;
-        errorcode = REQUEST_STRING(rc);    /* get the string version            */
-        if (errorcode == TheNilObject)     /* didn't convert?                   */
+        // the RC must have a string value...this is an error if it doesn.
+        RexxString *errorcode = REQUEST_STRING(rc);
+        if (errorcode == TheNilObject)
         {
-                                           /* raise an error                    */
             reportException(Error_Conversion_raise, rc);
         }
-        /* convert to a decimal              */
-        /* and get integer object            */
-        msgNum = Interpreter::messageNumber(errorcode);
+
+        // convert this to decimal, then create an integer object
+        // that we replace the input rc value with
+        wholenumber_t msgNum = Interpreter::messageNumber(errorcode);
         rc = (RexxObject *)new_integer(msgNum);
     }
-    if (this->description != OREF_NULL)  /* given a description?              */
+
+    // Reasonable defaults are set up, now see if we have explicit things given
+    if (this->description != OREF_NULL)
     {
-                                         /* get the expression value          */
-        _description = (RexxString *)this->description->evaluate(context, stack);
+        _description = (RexxString *)description->evaluate(context, stack);
     }
-    if (instructionFlags&raise_array)  /* array form of additional?         */
+
+    // is this the ARRAY form of passing information?
+    if (instructionFlags[raise_array])
     {
-        count = arrayCount;                /* get the array size                */
-        _additional = new_array(count);    /* get a result array                */
-        stack->push(_additional);          /* and protect it from collection    */
-        for (i = 0; i < count; i++)      /* loop through the expression list  */
+        // we need to build an array of the additional information
+        size_t count = arrayCount;
+        _additional = new_array(count);
+        // push this on the eval stack for safekeeping
+        stack->push(_additional);
+        for (i = 0; i < count; i++)
         {
-            /* real argument?                    */
+            // we can have ommitted ones here, so only try to evaluate the
+            // ones that have been specified
             if (this->additional[i] != OREF_NULL)
             {
-                /* evaluate the expression           */
-                ((RexxArray *)_additional)->put((this->additional[i])->evaluate(context, stack), i + 1);
+                ((RexxArray *)_additional)->put((additional[i])->evaluate(context, stack), i + 1);
             }
         }
     }
-    /* extra information with ?          */
+    // we might have had this via the ADDITIONAL() option.
     else if (this->additional[0] != OREF_NULL)
     {
-        /* get the expression value          */
-        _additional = this->additional[0]->evaluate(context, stack);
+        // get this expression value
+        _additional = additional[0]->evaluate(context, stack);
     }
-    if (this->result != OREF_NULL)       /* given a result value?             */
+    // given a return result value to pass back to the caller?
+    if (resultValue != OREF_NULL)
     {
-                                         /* get the expression value          */
-        _result = this->result->evaluate(context, stack);
+        _result = resultValue->evaluate(context, stack);
     }
-    /* set default condition object      */
-    conditionobj = (RexxDirectory *)TheNilObject;
-    /* propagating an existing condition?*/
-    if (this->condition->strCompare(CHAR_PROPAGATE))
+
+    // set a default condition object
+    RexxDirectory *conditionobj = (RexxDirectory *)TheNilObject;
+    // propagating an existing condition?
+    if (instructionFlags[raise_propagate])
     {
-        /* get current trapped condition     */
         conditionobj = context->getConditionObj();
         if (conditionobj == OREF_NULL)     /* no current active condition?      */
         {
             reportException(Error_Execution_propagate);
         }
     }
-    if (_additional != OREF_NULL)      /* have additional information?      */
+
+    // if we have additional information, fill in a few more things
+    if (_additional != OREF_NULL)
     {
-        /* propagate condition maybe?        */
-        if (this->condition->strCompare(CHAR_PROPAGATE))
+        // we may need some additional checks based on the syntax
+        // condition.  Since this might come from a PROPAGATE, we
+        // have to rely on the string name of the condition.
+        RexxString *errorCode = conditionName;
+        // if this is a propagate, get CONDITION name from the condition object.
+        if (instructionFlags[raise_propagate])
         {
-            /* get the original condition name   */
-            errorcode = (RexxString *)conditionobj->at(OREF_CONDITION);
+            errorCode = (RexxString *)conditionobj->at(OREF_CONDITION);
         }
-        else
+        // If this is a SYNTAX condition, than the Additional information MUST
+        // be an array of items used for substitutions.
+        if (errorCode->strCompare(CHAR_SYNTAX))
         {
-            errorcode = this->condition;     /* just use the condition name       */
-        }
-                                             /* description a single item?        */
-        if (errorcode->strCompare(CHAR_SYNTAX))
-        {
-            /* get the array version             */
+            // get the array version, and it must be single dimension.
             _additional = REQUEST_ARRAY(_additional);
-            /* not an array item or a multiple   */
-            /* dimension one?                    */
             if (_additional == TheNilObject || ((RexxArray *)_additional)->getDimension() != 1)
             {
-                /* this is an error                  */
                 reportException(Error_Execution_syntax_additional);
             }
         }
     }
-    if (instructionFlags&raise_return)   /* is this the exit form?            */
+
+    // we have two forms, both of which are handled by context
+    // raise return is processed as a return instruction
+    if (instructionFlags[raise_return])
     {
                                          /* let activation handle as return   */
-        context->raise(this->condition, rc, _description, _additional, _result, conditionobj);
+        context->raise(conditionName, rc, _description, _additional, _result, conditionobj);
     }
+    // the default is handled like an EXIT
     else
     {
-        /* activation needs to exit          */
-        context->raiseExit(this->condition, rc, _description, _additional, _result, conditionobj);
+        context->raiseExit(conditionName, rc, _description, _additional, _result, conditionobj);
     }
 }
 

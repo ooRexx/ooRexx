@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,104 +48,135 @@
 #include "AddressInstruction.hpp"
 #include "SystemInterpreter.hpp"
 
-RexxInstructionAddress::RexxInstructionAddress(
-  RexxObject *_expression,              /* variable address expression       */
-  RexxString *_environment,             /* address environment name          */
-  RexxObject *_command)                 /* command to issue                  */
-/******************************************************************************/
-/* Function : Complete address instruction initialization                     */
-/******************************************************************************/
+/**
+ * Constructor for an Address instruction object.
+ *
+ * @param _expression
+ *                 An optional expression for ADDRESS VALUE forms.
+ * @param _environment
+ *                 A static environment name.
+ * @param _command A command expression to be issued.
+ */
+RexxInstructionAddress::RexxInstructionAddress(RexxObject *_expression,
+    RexxString *_environment, RexxObject *_command)
 {
-                                       /* store the instruction state       */
-  OrefSet(this, this->expression, _expression);
-  OrefSet(this, this->environment, _environment);
-  OrefSet(this, this->command, _command);
+
+    dynamicAddress = _expression;
+    environment = environment;
+    command = command);
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionAddress::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->expression);
-  memory_mark(this->environment);
-  memory_mark(this->command);
+    // must be first one marked
+    memory_mark(nextInstruction);
+    memory_mark(dynamicAddress);
+    memory_mark(environment);
+    memory_mark(command);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionAddress::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->expression);
-  memory_mark_general(this->environment);
-  memory_mark_general(this->command);
+    // must be first one marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(dynamicAddress);
+    memory_mark_general(environment);
+    memory_mark_general(command);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionAddress::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionAddress)
+    setUpFlatten(RexxInstructionAddress)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->expression, envelope);
-  flatten_reference(newThis->environment, envelope);
-  flatten_reference(newThis->command, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(dynamicAddress);
+    flattenRef(environment);
+    flattenRef(command);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionAddress::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX LEAVE instruction                              */
-/****************************************************************************/
+/**
+ * Execute an addres instruction.
+ *
+ * @param context The current program execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionAddress::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
-    context->traceInstruction(this);     /* trace if necessary                */
-                                         /* is this an address toggle?        */
-    if (this->environment == OREF_NULL && this->expression == OREF_NULL)
+    // trace if necessary
+    context->traceInstruction(this);
+
+    // Nothing specified is just an address toggle.. this is simple.
+    if (environment == OREF_NULL && dynamicAddress == OREF_NULL)
     {
-        context->toggleAddress();          /* toggle the address settings       */
-        context->pauseInstruction();       /* do debug pause if necessary       */
+        context->toggleAddress();
+        context->pauseInstruction();
     }
-    /* have a constant address name?     */
-    else if (this->environment != OREF_NULL)
+    // have a static address name?  We could also have a command to issue.
+    else if (environment != OREF_NULL)
     {
-        if (this->command != OREF_NULL)
-        {  /* actually the command form?        */
-           /* get the expression value          */
-            RexxObject *result = this->command->evaluate(context, stack);
-            RexxString *_command = REQUEST_STRING(result);/* force to string form              */
-            context->traceResult(_command);  /* trace if necessary                */
-                                             /* validate the address name         */
-            SystemInterpreter::validateAddressName(this->environment);
-            /* go process the command            */
-            context->command(this->environment, _command);
+        // Is this the command form?  Evaluate and issue to the target environment
+        if (command != OREF_NULL)
+        {
+            // evaluate the command expression
+            RexxObject *result = command->evaluate(context, stack);
+            // this must be a string
+            RexxString *_command = REQUEST_STRING(result);
+            // protect this
+            stack->push(_command);
+            // need to trace this if on
+            context->traceResult(_command);
+            // validate the address name using system rules
+            SystemInterpreter::validateAddressName(environment);
+            // and execute the command
+            context->command(environment, _command);
         }
+        // we're just changing the current address target
         else
-        {                             /* just change the address           */
-                                      /* validate the address name         */
-            SystemInterpreter::validateAddressName(this->environment);
-            /* now perform the switch            */
-            context->setAddress(this->environment);
-            context->pauseInstruction();     /* do debug pause if necessary       */
+        {
+            // validate this environment name
+            SystemInterpreter::validateAddressName(environment);
+            // and make that the current address
+            context->setAddress(environment);
+            context->pauseInstruction();
         }
     }
+    // ADDRESS VALUE form
     else
-    {                               /* we have an ADDRESS VALUE form     */
-                                    /* get the expression value          */
-        RexxObject *result = this->expression->evaluate(context, stack);
-        RexxString *_address = REQUEST_STRING(result); /* force to string form              */
-        context->traceResult(_address);    /* trace if necessary                */
-        SystemInterpreter::validateAddressName(_address);  /* validate the address name         */
-        context->setAddress(_address);     /* just change the address           */
-        context->pauseInstruction();       /* do debug pause if necessary       */
+    {
+        // evaluate
+        RexxObject *result = expression->evaluate(context, stack);
+        RexxString *_address = REQUEST_STRING(result);
+        // protect this
+        stack->push(_address);
+        context->traceResult(_address);
+        // validate this using system rules, then set the new address
+        SystemInterpreter::validateAddressName(_address);
+        context->setAddress(_address);
+        context->pauseInstruction();
     }
 }
 

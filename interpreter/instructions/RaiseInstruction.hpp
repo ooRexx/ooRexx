@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,28 +45,40 @@
 #define Included_RexxInstructionRaise
 
 #include "RexxInstruction.hpp"
+#include <bitset>
 
-#define raise_return  0x01             /* doing a return rather than exit   */
-#define raise_array   0x02             /* additional info is an array       */
+// flags to control the execution of a RAISE instruction
+enum
+{
+    raise_return,
+    raise_exit,
+    raise_array,
+    raise_syntax,
+    raise_propagate
+} RaiseInstructionFlags;
 
 class RexxInstructionRaise : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void  operator delete(void *) { }
+    inline void  operator delete(void *, void *) { }
 
-  inline RexxInstructionRaise(RESTORETYPE restoreType) { ; };
-  RexxInstructionRaise(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, size_t, RexxQueue *, bool);
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
+    inline RexxInstructionRaise(RESTORETYPE restoreType) { ; };
+    RexxInstructionRaise(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, size_t, RexxQueue *, bool);
 
-  RexxObject *expression;              /* RC value expression               */
-  RexxString *condition;               /* condition trap name               */
-  RexxObject *description;             /* condition description             */
-  RexxObject *result;                  /* condition result                  */
-  size_t      arrayCount;              // count of additional items
-  RexxObject *additional[1];           /* additional specified information  */
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
+ protected:
+    bitset<32>  instructionFlags;        // instruction control flags
+    RexxObject *rcValue;                 // RC value expression
+    RexxString *conditionName;           // condition trap name
+    RexxObject *description;             // condition description
+    RexxObject *resultValue;             // condition result
+    size_t      arrayCount;              // count of additional items
+    RexxObject *additional[1];           // additional specified information
 };
 #endif

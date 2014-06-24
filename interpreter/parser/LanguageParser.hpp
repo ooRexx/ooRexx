@@ -262,7 +262,7 @@ class LanguageParser: public RexxInternalObject {
     RexxInstruction *sourceNewObject(size_t, RexxBehaviour *, int);
     static bool parseTraceSetting(RexxString *, size_t &, size_t &, char &);
     static RexxString *formatTraceSetting(size_t source);
-    size_t      processVariableList(int);
+    size_t      processVariableList(InstructionKeyword);
     RexxObject *parseConditional(int *, int);
     RexxObject *parseLogical(RexxToken *first, int terminators);
 
@@ -299,6 +299,14 @@ class LanguageParser: public RexxInternalObject {
 
     inline RexxToken  *nextToken() { return clause->next(); }
     inline RexxToken  *nextReal() { return clause->nextRealToken(); }
+    inline void        requiredEndOfClause(size_t error)
+    {
+        RexxToken *token = nextReal();
+        if (!token->isEndOfClause())
+        {
+            syntaxError(error, token);
+        }
+    }
     inline void        previousToken() { clause->previous(); }
     inline void        firstToken() { clause->firstToken(); }
     inline void        trimClause() { clause->trim(); }
@@ -340,7 +348,7 @@ class LanguageParser: public RexxInternalObject {
     RexxInstruction *ifNew(int);
     RexxInstruction *instructionNew(int);
     RexxInstruction *interpretNew();
-    RexxInstruction *labelNew();
+    RexxInstruction *labelNew(RexxToken *name, RexxToken *colon);
     RexxInstruction *leaveNew(int);
     RexxInstruction *messageNew(RexxExpressionMessage *);
     RexxInstruction *messageAssignmentNew(RexxExpressionMessage *, RexxObject *);
@@ -361,16 +369,7 @@ class LanguageParser: public RexxInternalObject {
     RexxInstruction *thenNew(RexxToken *, RexxInstructionIf *);
     RexxInstruction *traceNew();
     RexxInstruction *useNew();
-    void        holdObject(RexxObject *object) { this->holdstack->push(object);};
-    void        saveObject(RexxObject *object) { this->savelist->put(object, object); };
-    void        removeObj(RexxObject *object) { if (object != OREF_NULL) this->savelist->remove(object); };
-    void        setSecurityManager(RexxObject *manager) { OrefSet(this, this->securityManager, new SecurityManager(manager)); }
-    SecurityManager *getSecurityManager() { return securityManager; }
-
-    inline RexxDirectory *getLocalRoutines() { return routines; }
-    inline RexxDirectory *getPublicRoutines() { return public_routines; }
-    inline void setLocalRoutines(RexxDirectory *r) { routines = r; }
-    inline void setPublicRoutines(RexxDirectory *r) { public_routines = r; }
+    void        holdObject(RexxObject *object) { holdStack->push(object);};
 
     static inline bool isSymbolCharacter(unsigned int ch)
     {
@@ -392,20 +391,7 @@ class LanguageParser: public RexxInternalObject {
     void addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
     void addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
 
-    RexxDirectory *getInstalledClasses() { install(); return installed_classes; }
-    RexxDirectory *getInstalledPublicClasses() { install(); return installed_public_classes; }
-    RexxDirectory *getImportedClasses() { install(); return merged_public_classes; }
-    RexxDirectory *getInstalledRoutines() { install(); return routines; }
-    RexxDirectory *getInstalledPublicRoutines() { install(); return public_routines; }
-    RexxDirectory *getImportedRoutines() { install(); return merged_public_routines; }
-    RexxDirectory *getDefinedMethods() { install(); return methods; }
     RexxList      *getPackages() { install(); return loadedPackages; }
-    size_t         getDigits() { return digits; }
-    bool           getForm() { return form; }
-    size_t         getFuzz() { return fuzz; }
-    size_t         getTraceSetting() { return traceSetting; }
-    size_t         getTraceFlags() { return traceFlags; }
-    RexxString    *getTrace() { return formatTraceSetting(traceSetting); }
 
     static pbuiltin builtinTable[];      /* table of builtin function stubs   */
 
@@ -451,7 +437,6 @@ protected:
     size_t lineOffset;                   // current offset with in the line
     size_t interpretAdjust;              // INTERPRET adjustment TODO:  might not need this in the parser.
 
-    RexxIdentityTable *saveList;         /* saved objects                     */
     RexxStack       *holdStack;          /* stack for holding temporaries     */
     RexxDirectory   *literals;           /* root of associated literal list   */
     RexxDirectory   *strings;            /* common pool of created strings    */
@@ -463,14 +448,15 @@ protected:
 
                                          /* start of block parsing section    */
 
-    RexxInstruction *first;              /* first instruction of parse tree   */
-    RexxInstruction *last;               /* last instruction of parse tree    */
+    RexxInstruction *firstInstruction;   /* first instruction of parse tree   */
+    RexxInstruction *lastInstruction;    /* last instruction of parse tree    */
     RexxInstruction *currentInstruction; /* current "protected" instruction   */
     RexxDirectory   *variables;          /* root of associated variable list  */
     RexxDirectory   *labels;             /* root of associated label list     */
     RexxIdentityTable *guardVariables;   /* exposed variables in guard list   */
     RexxDirectory   *exposedVariables;   /* root of exposed variables list    */
     RexxList        *calls;              /* root of call list                 */
+
     size_t           currentStack;       /* current expression stack depth    */
     size_t           maxStack;           /* maximum stack depth               */
     size_t           variableIndex;      /* current variable index slot       */

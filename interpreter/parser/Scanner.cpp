@@ -1212,15 +1212,6 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
     return token;                        /* return the next token             */
 }
 
-/**
- * Scan a symbol from the source and return a token
- * identifying the type of symbol (constant, dot, variable, etc.).
- *
- * @return A token object describing the symbol.
- */
-RexxToken *LanguageParser::scanSymbol()
-{
-
 // different scanning states for scanning numeric symbols
 enum
 {
@@ -1233,6 +1224,16 @@ enum
     EXP_ESIGN,
     EXP_EDIGIT,
 } SymbolScanState;
+
+
+/**
+ * Scan a symbol from the source and return a token
+ * identifying the type of symbol (constant, dot, variable, etc.).
+ *
+ * @return A token object describing the symbol.
+ */
+RexxToken *LanguageParser::scanSymbol()
+{
 
     // we're in a clean scan state now
     SymbolScanState state = EXP_START;

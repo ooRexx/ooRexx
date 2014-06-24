@@ -53,7 +53,9 @@ void RexxInstructionLabel::execute(
 /* Function:  Execute a REXX EXIT instruction                               */
 /****************************************************************************/
 {
-  context->traceLabel(this);           /* trace if necessary                */
-  context->pauseLabel();               /* pause if in debug mode            */
+    // Labels don't really do much directly, but they do trace and they
+    // will pause if in debug mode.
+    context->traceLabel(this);
+    context->pauseLabel();
 }
 
