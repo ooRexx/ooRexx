@@ -98,32 +98,16 @@ const size_t TRACE_DEBUG_MASK  = 0xff00;
 const unsigned int INVALID_CHARACTER = '00000100';
 
                                        /* handy defines to easy coding      */
-#define new_instruction(name, type) this->sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
-#define new_variable_instruction(name, type, size) this->sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
+#define new_instruction(name, type) sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
+#define new_variable_instruction(name, type, size) sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
 
 // context flag values.
 typedef enum {interpret, reclaimed, noClause} ParsingFlags;
 
-                                       /* builtin function prototype        */
+// builtin function code prototype
 typedef RexxObject *builtin_func(RexxActivation *, size_t, RexxExpressionStack *);
-typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
-
-/**
- * A class for intializing the keyword tables.
- */
-class KeywordEntry {
-public:
-    inline KeywordEntry(const char *n, int code)
-    {
-        name = n;
-        length = strlen(name);
-        keyword_code = code;
-    }
-
-    const char *name;                  /* keyword name                      */
-    size_t length;                     /* keyword name length               */
-    int    keyword_code;               /* translated keyword code           */
-};
+// pointer to a builtin function
+typedef builtin_func *pbuiltin;
 
 class LanguageParser: public RexxInternalObject {
  friend class RexxActivation;
@@ -346,7 +330,6 @@ class LanguageParser: public RexxInternalObject {
     void        RexxInstructionForwardCreate(RexxInstructionForward *);
     RexxInstruction *guardNew();
     RexxInstruction *ifNew(int);
-    RexxInstruction *instructionNew(int);
     RexxInstruction *interpretNew();
     RexxInstruction *labelNew(RexxToken *name, RexxToken *colon);
     RexxInstruction *leaveNew(int);
@@ -461,16 +444,6 @@ protected:
     size_t           maxStack;           /* maximum stack depth               */
     size_t           variableIndex;      /* current variable index slot       */
 
-
-
-    // Tables of different keywords using in various contexts.
-    static KeywordEntry directives[];
-    static KeywordEntry keywordInstructions[];
-    static KeywordEntry subKeywords[];
-    static KeywordEntry builtinFunctions[];
-    static KeywordEntry conditionKeywords[];
-    static KeywordEntry parseOptions[];
-    static KeywordEntry subDirectives[];
 
     // table of character values
     static int characterTable[];

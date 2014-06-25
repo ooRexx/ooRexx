@@ -46,6 +46,30 @@
 
 #include "SourceLocation.hpp"
 
+/**
+ * A class for an entry in the various token keyword tables.
+ */
+class KeywordEntry
+{
+public:
+    /**
+     * Constructor for a keyword table entry.
+     *
+     * @param n      The string name of the keyword.
+     * @param code   The associated keyword tag mapping.
+     */
+    inline KeywordEntry(const char *n, int code)
+    {
+        name = n;
+        length = strlen(name);
+        keyword_code = code;
+    }
+
+    const char *name;                       // the keyword name
+    size_t      length;                     // length of the keyword string
+    int         keyword_code;               // the string-to-identifier mapping
+};
+
 
 // major token types
 enum {
@@ -196,6 +220,7 @@ enum
     KEYWORD_SIGNAL_ON,
     KEYWORD_CALL_VALUE,
     KEYWORD_CALL_ON,
+    KEYWORD_SIMPLE_DO,
 
 } InstructionKeyword;
 
@@ -479,6 +504,15 @@ protected:
     TokenSubclass subclass;                // specialized type of token
     TokenSubclass numeric;                 // even further specialization
     SourceLocation tokenLocation;          // token source location
+
+    // Tables of different keywords using in various contexts.
+    static KeywordEntry directives[];
+    static KeywordEntry keywordInstructions[];
+    static KeywordEntry subKeywords[];
+    static KeywordEntry builtinFunctions[];
+    static KeywordEntry conditionKeywords[];
+    static KeywordEntry parseOptions[];
+    static KeywordEntry subDirectives[];
 };
 
 

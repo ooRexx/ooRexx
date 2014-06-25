@@ -258,7 +258,7 @@ RexxInstruction *LanguageParser::instruction()
     {
         // we found something, switch to the appropriate instruction processor.
         switch (keyword)
-
+        {
             // NOP instruction
             case KEYWORD_NOP:
                 return nopNew();
@@ -389,61 +389,107 @@ RexxInstruction *LanguageParser::instruction()
                 return parseNew(SUBKEY_PULL);
                 break;
 
-            case KEYWORD_PARSE:        /* PARSE instruction                 */
-                /* add the instruction to the parse  */
-                _instruction = this->parseNew(KEYWORD_PARSE);
+            // PARSE instruction
+            case KEYWORD_PARSE:
+                return parseNew(KEYWORD_PARSE);
                 break;
 
-            case KEYWORD_SAY:          /* SAY instruction                   */
-                /* add the instruction to the parse  */
-                _instruction = this->sayNew();
+            // SAY instruction
+            case KEYWORD_SAY:
+                return sayNew();
                 break;
 
-            case KEYWORD_OPTIONS:      /* OPTIONS instruction               */
-                /* add the instruction to the parse  */
-                _instruction = this->optionsNew();
+            // OPTIONS instruction
+            case KEYWORD_OPTIONS:
+                return optionsNew();
                 break;
 
-            case KEYWORD_SELECT:       /* SELECT instruction                */
-                /* add the instruction to the parse  */
-                _instruction = this->selectNew();
+            // select instruction
+            case KEYWORD_SELECT:
+                return selectNew();
                 break;
 
-            case KEYWORD_WHEN:         /* WHEN in an SELECT instruction     */
-                /* add the instruction to the parse  */
-                _instruction = this->ifNew(KEYWORD_WHEN);
+            // WHEN instruction in the context of a SELECT
+            case KEYWORD_WHEN:
+                // this parses as if it was an IF, but creates
+                // a differnt target instruction.
+                return ifNew(KEYWORD_WHEN);
                 break;
 
-            case KEYWORD_OTHERWISE:    /* OTHERWISE in a SELECT             */
-                /* add the instruction to the parse  */
-                _instruction = this->otherwiseNew(_first);
+            // OTEHRWISE in a SELECT
+            case KEYWORD_OTHERWISE:
+                return otherwiseNew(first);
                 break;
 
-            case KEYWORD_ELSE:         /* unexpected ELSE                   */
-                /* add the instruction to the parse  */
-                _instruction = this->elseNew(_first);
+            // ELSE instruction...possibly unexpected.
+            case KEYWORD_ELSE:
+                return elseNew(first);
                 break;
 
-            case KEYWORD_END:          /* END for a block construct         */
-                /* add the instruction to the parse  */
-                _instruction = this->endNew();
+            // END instruction for some block instruction (DO, LOOP, SELECT, OTHERWISE).
+            case KEYWORD_END:
+                return endNew();
                 break;
 
-            case KEYWORD_THEN:         /* unexpected THEN                   */
-                /* raise an error                    */
+            // THEN instruction.  IF processing handles THEN directly.  Found
+            // in a naked context like this, we have an invalid THEN.
+            case KEYWORD_THEN:
                 syntaxError(Error_Unexpected_then_then);
                 break;
 
         }
     }
+    // does not begin with a recognized keyword...this is a "command" instruction.
     else
-    {                         /* this is a "command" instruction   */
-        firstToken();                /* reset to the first token          */
-                                     /* process this instruction          */
-        _instruction = this->commandNew();
+    {
+        // the first token is part of the command, put it back.
+        firstToken();
+        return commandNew();
     }
-    return _instruction;                 /* return the created instruction    */
+    // should never reach here.
+    return OREF_NULL;
 }
+
+
+/**
+ * Create a "raw" executable instruction object.
+ * Allocation/creation of instruction objects are handled a
+ * little differently, and goes in stages: 1) Have RexxMemory
+ * allocate a Rexx object of the appropriate size.  2) Set the
+ * object behaviour to be the table for the target instruction.
+ * 3) Call the in-memory new() method on this object using the
+ * RexxInstruction() constructor.  This does base initialization
+ * of the object as an instruction object.  This version is
+ * returned to the caller, with this instruction anchored in the
+ * parser object to protect it from garbage collection, which is
+ * handy if its constructor needs to allocate any additional
+ * objects.
+ *
+ * Step 4) happens once the caller receives this object
+ * instance.  It agains calls the new() in-memory allocator for
+ * the final instruction class.  The constructor fills in any
+ * instruction specific information, as well as changing the
+ * object virtual function table to the final version.  The
+ * information we set up here will remain untouched.
+ *
+ * @param size       The size of the object (can be variable for
+ *                   some instructions).
+ * @param _behaviour The Rexx object behaviour.
+ * @param type       The type identifiers for the instruction
+ *                   (see RexxToken InstructionKeyword enum).
+ *
+ * @return A newly created instruction object with basic instruction initialization.
+ */
+RexxInstruction *LanguageParser::sourceNewObject(size_t size, RexxBehaviour *_behaviour,
+    InstructionKeyword type )
+{
+    RexxObject *newObject = new_object(size);
+    newObject->setBehaviour(_behaviour);
+    new ((void *)newObject) RexxInstruction (clause, type);
+    currentInstruction = newObject;
+    return (RexxInstruction *)newObject;
+}
+
 
 /**
  * Parse an ADDRESS instruction and create an executable instruction object.
@@ -507,24 +553,6 @@ RexxInstruction *LanguageParser::addressNew()
 }
 
 
-RexxInstruction *LanguageParser::sourceNewObject(
-    size_t        size,                /* Object size                       */
-    RexxBehaviour *_behaviour,         /* Object's behaviour                */
-    int            type )              /* Type of instruction               */
-/******************************************************************************/
-/* Function:  Create a "raw" translator instruction object                    */
-/******************************************************************************/
-{
-  RexxObject *newObject = new_object(size);        /* Get new object                    */
-  newObject->setBehaviour(_behaviour); /* Give new object its behaviour     */
-                                       /* do common initialization          */
-  new ((void *)newObject) RexxInstruction (this->clause, type);
-                                       /* now protect this                  */
-  OrefSet(this, this->currentInstruction, (RexxInstruction *)newObject);
-  return (RexxInstruction *)newObject; /* return the new object             */
-}
-
-
 
 /**
  * Create a new variable assignment instruction.
@@ -584,6 +612,14 @@ RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *o
     return newObject; /* done, return this                 */
 }
 
+
+/**
+ * Parse a CALL ON or CALL OFF instruction.
+ *
+ * @param type   The target instruction type (CALL_ON or CALL_OFF).
+ *
+ * @return An executable instruction object for te target instruction.
+ */
 RexxInstruction *LanguageParser::callOnNew(InstructionSubKeyword type)
 {
     // The processing of the CONDITION name is the same for both CALL ON
@@ -728,6 +764,7 @@ RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
     return newObject;
 }
 
+
 /**
  * Finish parsing of a CALL instruction.  There are 3 distinct
  * forms of the Call instruction, with a different execution
@@ -806,19 +843,24 @@ RexxInstruction *LanguageParser::callNew()
     return newObject;
 }
 
+
+/**
+ * Parse and create a COMMAND instruction.
+ *
+ * @return A COMMAND instruction instance.
+ */
 RexxInstruction *LanguageParser::commandNew()
-/****************************************************************************/
-/* Function:  Create a new COMMAND instruction object                       */
-/****************************************************************************/
 {
-    /* process the expression            */
-    RexxObject *_expression = this->expression(TERM_EOC);
-    /* create a new translator object    */
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.  NOTE:  we already know we have something to
+    // parse, so there's no need to check for a missing expression.
+    RexxObject *_expression = expression(TERM_EOC);
+
     RexxInstruction *newObject = new_instruction(COMMAND, Command);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionCommand(_expression);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
+
 
 RexxInstruction *LanguageParser::doNew()
 /****************************************************************************/
@@ -1225,19 +1267,23 @@ RexxInstruction *LanguageParser::endIfNew(
     return newObject; /* done, return this                 */
 }
 
+
+/**
+ * Parse an EXIT instruction and return an executable
+ * instruction object for this exit.
+ *
+ * @return A instance of the EXIT instruction.
+ */
 RexxInstruction *LanguageParser::exitNew()
-/****************************************************************************/
-/* Function:  Create a EXIT instruction object                              */
-/****************************************************************************/
 {
-    /* process the expression            */
-    RexxObject *_expression = this->expression(TERM_EOC);
-    /* create a new translator object    */
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.
+    RexxObject *_expression = expression(TERM_EOC);
     RexxInstruction *newObject = new_instruction(EXIT, Exit);
-    /* now complete this                 */
     new((void *)newObject) RexxInstructionExit(_expression);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
+
 
 RexxInstruction *LanguageParser::exposeNew()
 /****************************************************************************/
@@ -1517,36 +1563,27 @@ RexxInstruction *LanguageParser::ifNew(
 }
 
 
-RexxInstruction *LanguageParser::instructionNew(
-     int type )                        /* instruction type                  */
-/****************************************************************************/
-/* Function:  Create a new INSTRUCTION translator object                    */
-/****************************************************************************/
-{
-    /* create a new translator object    */
-    RexxInstruction *newObject =  this->sourceNewObject(sizeof(RexxInstruction), TheInstructionBehaviour, KEYWORD_INSTRUCTION);
-    newObject->setType(type);            /* set the given type                */
-    return newObject;                    /* done, return this                 */
-}
-
+/**
+ * Create a new interpret instruction instance.
+ *
+ * @return An executable INTERPRET instruction.
+ */
 RexxInstruction *LanguageParser::interpretNew()
-/****************************************************************************/
-/* Function:  Create a new INTERPRET instruction object                     */
-/****************************************************************************/
 {
-    /* process the expression            */
-    RexxObject *_expression = this->expression(TERM_EOC);
-    if (_expression == OREF_NULL)         /* no expression here?               */
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.
+    RexxObject *_expression = expression(TERM_EOC);
+    // the expression is required.
+    if (_expression == OREF_NULL)
     {
-        /* this is invalid                   */
         syntaxError(Error_Invalid_expression_interpret);
     }
-    /* create a new translator object    */
+
     RexxInstruction *newObject = new_instruction(INTERPRET, Interpret);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionInterpret(_expression);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
+
 
 /**
  * Create a new label object.
@@ -1807,22 +1844,29 @@ RexxInstruction *LanguageParser::numericNew()
     return newObject;
 }
 
+
+/**
+ * Parse and create an instance of the OPTIONS instruction.
+ *
+ * @return An executable OPTIONS instance.
+ */
 RexxInstruction *LanguageParser::optionsNew()
-/****************************************************************************/
-/* Function:  Create an OPTIONS instruction object                          */
-/****************************************************************************/
 {
-    /* process the expression            */
-    RexxObject *_expression = this->expression(TERM_EOC);
-    if (_expression == OREF_NULL)         /* no expression here?               */
-        /* this is invalid                   */
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.
+    RexxObject *_expression = expression(TERM_EOC);
+
+    // the expression is required on OPTIONS.
+    if (_expression == OREF_NULL)
+    {
         syntaxError(Error_Invalid_expression_options);
-    /* create a new translator object    */
+    }
+
     RexxInstruction *newObject = new_instruction(OPTIONS, Options);
-    /* now complete this                 */
     new((void *)newObject) RexxInstructionOptions(_expression);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
+
 
 RexxInstruction *LanguageParser::otherwiseNew(
   RexxToken  *token)                   /* OTHERWISE token                   */
@@ -2165,20 +2209,41 @@ RexxInstruction *LanguageParser::procedureNew()
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *LanguageParser::queueNew(
-  int type)                            /* type of queueing operation        */
-/****************************************************************************/
-/* Function:  Create a QUEUE instruction object                             */
-/****************************************************************************/
+
+/**
+ * Create an instance of the QUEUE instruction.
+ *
+ * @return An executable instruction object.
+ */
+RexxInstruction *LanguageParser::queueNew()
 {
-    /* process the expression            */
-    RexxObject *_expression = this->expression(TERM_EOC);
-    /* create a new translator object    */
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.
+    RexxObject *_expression = expression(TERM_EOC);
     RexxInstruction *newObject = new_instruction(QUEUE, Queue);
-    /* now complete this                 */
     new((void *)newObject) RexxInstructionQueue(_expression, type);
-    return newObject;  /* done, return this                 */
+    return newObject;
 }
+
+
+/**
+ * Create an instance of the PUSH instruction.
+ *
+ * @return An executable instruction object.
+ */
+RexxInstruction *LanguageParser::pushNew()
+{
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.
+    RexxObject *_expression = expression(TERM_EOC);
+
+    // NOTE:  PUSH and QUEUE share an implementation class, but the
+    // instruction type identifies which operation is performed.
+    RexxInstruction *newObject = new_instruction(PUSH, Queue);
+    new((void *)newObject) RexxInstructionQueue(_expression, type);
+    return newObject;
+}
+
 
 /**
  * Parse a RAISE instruction and return a new executable object.
@@ -2419,10 +2484,13 @@ RexxInstruction *LanguageParser::raiseNew()
     return newObject;
 }
 
+
+/**
+ * Create an instance of the REPLY instruction.
+ *
+ * @return An executable instruction instance.
+ */
 RexxInstruction *LanguageParser::replyNew()
-/****************************************************************************/
-/* Function:  Create a REPLY instruction object                             */
-/****************************************************************************/
 {
     // reply is not allowed in interpret
     if (isInterpret())
@@ -2430,39 +2498,44 @@ RexxInstruction *LanguageParser::replyNew()
         syntaxError(Error_Translation_reply_interpret);
     }
 
-    RexxObject *_expression = this->expression(TERM_EOC);
-    /* create a new translator object    */
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.
+    RexxObject *_expression = expression(TERM_EOC);
     RexxInstruction *newObject = new_instruction(REPLY, Reply);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionReply(_expression);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
 
+
+/**
+ * Parse and create a RETURN instruction.
+ *
+ * @return An instance of the RETURN instruction.
+ */
 RexxInstruction *LanguageParser::returnNew()
-/****************************************************************************/
-/* Function:  Create a RETURN instruction object                            */
-/****************************************************************************/
 {
-    /* process the expression            */
-    RexxObject *_expression = this->expression(TERM_EOC);
-    /* create a new translator object    */
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.
+    RexxObject *_expression = expression(TERM_EOC);
     RexxInstruction *newObject = new_instruction(RETURN, Return);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionReturn(_expression);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
 
+
+/**
+ * Parse and create a SAY instruction.
+ *
+ * @return An executable instance of the SAY instruction.
+ */
 RexxInstruction *LanguageParser::sayNew()
-/****************************************************************************/
-/* Function:  Create a SAY instruction object                               */
-/****************************************************************************/
 {
-    RexxObject *_expression = this->expression(TERM_EOC);
-    /* create a new translator object    */
+    // this is pretty simple...parse the optional expresson and create the
+    // instruction instance.
+    RexxObject *_expression = expression(TERM_EOC);
     RexxInstruction *newObject = new_instruction(SAY, Say);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionSay(_expression);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
 
 RexxInstruction *LanguageParser::selectNew()

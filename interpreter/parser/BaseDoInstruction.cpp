@@ -1,0 +1,238 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/* REXX Translator                                                            */
+/*                                                                            */
+/* Base methods shared amoung all of the DO/LOOP instruction subclasses       */
+/*                                                                            */
+/******************************************************************************/
+#include <stdlib.h>
+#include "RexxCore.h"
+#include "RexxInstruction.hpp"
+#include "StringClass.hpp"
+#include "EndInstruction.hpp"
+#include "Token.hpp"
+#include "LanguageParser.hpp"
+#include "RexxActivation.hpp"
+
+// NOTE:  some of the DO instructions don't add additional references, so they can
+// just inherit these base marking methods.  Subclasses that do add additional
+// references will need to also mark these objects.
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionBaseDo::live(size_t liveMark)
+{
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(end);
+    memory_mark(label);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionBaseDo::liveGeneral(int reason)
+{
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(end);
+    memory_mark_general(conditional);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionBaseDo::flatten(RexxEnvelope *envelope)
+{
+    setUpFlatten(RexxInstructionDo)
+
+    flattenRef(nextInstruction);
+    flattenRef(end);
+    flattenRef(label);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Verify that the name on an END instructon and
+ * the instruction label match.
+ *
+ * @param _end   The candidate end statement.
+ * @param parser The LanguageParser context (used for error reporting).
+ */
+void RexxInstructionBaseDo::matchLabel(RexxInstructionEnd *_end, LanguageParser *parser)
+{
+    // get the END name.
+    RexxString *name = _end->endName();
+
+    // if there a name on the END?  If no name, we
+    // will always match up ok.
+    if (name != OREF_NULL)
+    {
+
+        // get the location for error reporting
+        SourceLocation location = _end->getLocation();
+        // and we include our line number so they know which two entities don't match.
+        size_t lineNum = getLineNumber();
+        // now get my label for comparisons.
+        RexxString *myLabel = getLabel();
+
+        // if we don't have a label, then the END cannot
+        if (myLabel == OREF_NULL)
+        {
+            // report the error
+            parser->error(Error_Unexpected_end_nocontrol, location, new_array(name, new_integer(lineNum)));
+        }
+        // we both have names, but they mismatch.
+        // NOTE:  We deal with interned names here, so a pointer comparison will suffice for identity.
+        else if (name != myLabel)
+        {
+            parser->error(Error_Unexpected_end_control, location, new_array(name, myLabel, new_integer(lineNum)));
+        }
+    }
+}
+
+
+/**
+ * Perform parse-time match ups between a DO block and
+ * an END instruction.  This performs all appropriate label name
+ * matching and
+ *
+ * @param partner The matched up END instruction.
+ * @param parser  The current parser context.
+ */
+void RexxInstructionBaseDo::matchEnd(RexxInstructionEnd *partner, LanguageParser *parser)
+{
+    // make sure we have a good name match
+    matchLabel(partner, parser);
+    // hook up the END as our partner in crime.
+    end = partner;
+    // let the END instruction know what action it needs to perform at instruction
+    // end.
+    partner->setStyle(getEndStyle());
+}
+
+
+/**
+ * Common method for handling debug pauses at block boundaries.
+ *
+ * @param context The current activation context.
+ * @param doblock The active deblock (if any).
+ */
+void RexxInstructionBaseDo::handleDebugPause(RexxActivation *context, RexxDoBlock *doblock)
+{
+    // do blocks will only do the debug pause on first execution, so
+    // the context needs to determine if we're at a good point.  If this is a
+    // re-execute option, then we need to redo everything from the start.
+    if (context->conditionalPauseInstruction())
+    {
+        // if we have a doblock for this, do termination cleanup
+        if (doblock != OREF_NULL)
+        {
+            this->terminate(context, doblock);
+        }
+        // no block required, just remove the nesting
+        else
+        {
+            context->removeBlock();
+        }
+        // this makes us the next instruction to be executed
+        context->setNext(this);
+    }
+}
+
+
+/**
+ * Base re-execute method for a DO instruction.  The
+ * base version just does nothing...it is a virtual filler only.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock associated with this loop instance.
+ */
+void RexxInstructionBaseDo::reExecute(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
+{
+    // This does nothing in the base class.  Specific subclasses will need to provide this.
+}
+
+
+/**
+ * Terminate a DO or LOOP.  This is really the same for all loop
+ * types, so is implemented in the base class
+ *
+ * @param context The current execution context.
+ * @param doblock Our doblock, provided by the context.
+ */
+void RexxInstructionBaseDo::terminate(RexxActivation *context, RexxDoBlock *doblock )
+{
+    // reset the DO block
+    context->terminateBlock(doblock->getIndent());
+    // The next instruction is the one after the END
+    context->setNext(end->nextInstruction);
+}
+
+
+/**
+ * Perform normal loop end processing.  This occurs
+ * after the loop termination conditions fail.
+ *
+ * @param context The current execution context.
+ */
+void RexxInstructionBaseDo::endLoop(RexxActivation *context)
+{
+    // pop the block instruction and remove the execution nest.
+    context->popBlock();
+    context->removeBlock();
+    // jump to the loop end
+    context->setNext(end->nextInstruction);
+    context->unindent();
+
+}
