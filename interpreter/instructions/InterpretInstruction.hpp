@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,12 +48,13 @@
 
 class RexxInstructionInterpret : public RexxInstructionExpression {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
 
-  RexxInstructionInterpret(RexxObject *);
-  inline RexxInstructionInterpret(RESTORETYPE restoreType) { ; };
-  void execute(RexxActivation *, RexxExpressionStack *);
+    RexxInstructionInterpret(RexxObject *);
+    inline RexxInstructionInterpret(RESTORETYPE restoreType) { ; };
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
 };
 #endif

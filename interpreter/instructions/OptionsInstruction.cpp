@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,41 +46,45 @@
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
 #include "OptionsInstruction.hpp"
+#include "RexxArray.hpp"
 
-RexxInstructionOptions::RexxInstructionOptions(
-    RexxObject *_expression)            /* associated expression object      */
-/******************************************************************************/
-/* Initialize a REXX OPTION instruction                                       */
-/******************************************************************************/
+/**
+ * Constructor for an OPTIONS instruction
+ *
+ * @param _expression
+ *               The expression to evaluate for the options string.
+ */
+RexxInstructionOptions::RexxInstructionOptions(RexxObject *_expression)
 {
-  OrefSet(this, this->expression, _expression);
+    expression = _expression;
 }
 
-void RexxInstructionOptions::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX OPTIONS instruction                              */
-/******************************************************************************/
+/**
+ * Execute an OPTIONS instruction.  NOTE:  Currently, there
+ * are no OPTIONS that we support on this.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionOptions::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-    RexxObject *value;                   /* output value                      */
-    RexxString *stringVal;               /* string version of the value       */
-    size_t i;                            /* loop counter                      */
-    RexxString *word;                    /* current word                      */
+    // even though we don't support anything, we still trace the evaluation and
+    // raise any errors if they occure.
+    context->traceInstruction(this);
 
-    context->traceInstruction(this);     /* trace if necessary                */
-                                         /* get the expression value          */
-    value = this->expression->evaluate(context, stack);
-    stringVal = REQUEST_STRING(value);   /* get the string version            */
-    context->traceResult(value);         /* trace the output value            */
-    for (i = 1; ;i++)                  /* now process each word             */
+    // trace, and get as a string.
+    RexxString *stringValue = evaluateStringExpression(context, stack);
+
+// NOTE:  processing is currently disabled, but if options are reenabled, the
+// processing framework is here.
+#if 0
+    // break up into an array of words
+    RexxArray *words = stringValue->subWords(OREF_NULL, OREF_NULL)l
+    size_t wordCount = words->size();
+
+    for (size_t i = 1; i <= wordCount ;i++)
     {
-        /* get the next word                 */
-        word = (RexxString *)(stringVal->word(new_integer(i)));
-        if (word->getLength() == 0)        /* get the length of the word        */
-        {
-            break;                           /* if length of word = 0 then stop   */
-        }
+        RexxString *word = (RexxString *)words->get(i);
 
 #ifdef _DEBUG
         if (word->strCaselessCompare("DUMPMEMORY"))
@@ -90,6 +94,7 @@ void RexxInstructionOptions::execute(
         }
 #endif
     }
-    context->pauseInstruction();         /* do debug pause if necessary       */
+#endif
+    context->pauseInstruction();
 }
 

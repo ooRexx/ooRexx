@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,92 +46,190 @@
 #include "RexxInstruction.hpp"
 #include "Clause.hpp"
 
-RexxInstruction::RexxInstruction(
-    RexxClause *clause,                /* associated clause object          */
-    int type)                          /* type of instruction               */
-/******************************************************************************/
-/* Function:  Common initialization for instruction objects                   */
-/******************************************************************************/
-{
-                                       /* record the instruction type       */
-  this->instructionType = type;
-  if (clause != OREF_NULL) {           /* have a clause object?             */
-                                       /* fill in default location info     */
-      instructionLocation = clause->getLocation();
-  }
-  else
-  {
-      // zero the location
-      instructionLocation.setStart(0, 0);
-  }
-}
 
-void RexxInstruction::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-  memory_mark(this->nextInstruction);
-}
-
-void RexxInstruction::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-                                       /* do common marking                 */
-  memory_mark_general(this->nextInstruction);
-}
-
-void RexxInstruction::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxInstruction)
-
-  flatten_reference(newThis->nextInstruction, envelope);
-
-  cleanUpFlatten
-}
-
+/**
+ * Allocate a new instruction object.
+ *
+ * @param size   The object size.
+ *
+ * @return A newly allocated instruction object.
+ */
 void * RexxInstruction::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
 {
-  return new_object(size, T_Instruction); /* Get new object                    */
+    return new_object(size, T_Instruction);
 }
 
+
+/**
+ * Base constructor for an instruction execution object.
+ *
+ * @param clause The clause this was created from (gives location information).
+ * @param type   The instruction keyword type.  Note that the type
+ *               does not necessarily map to a keyword name.  There
+ *               are special purpose instructions that do not correspond
+ *               to specific keywords, and some keyword instructions
+ *               may have more that one execution object tailored
+ *               to specific subfunctions.
+ */
+RexxInstruction::RexxInstruction(RexxClause *clause, InstructionKeyword type)
+{
+    instructionType = type;
+    // for instructions that are generated as part of other instructions (for example,
+    // internal branching instructions for an IF instruction), we don't have a clause
+    // to provide location information.  Just zero the location.
+    if (clause != OREF_NULL)
+    {
+        instructionLocation = clause->getLocation();
+    }
+    else
+    {
+        instructionLocation.setStart(0, 0);
+    }
+}
+
+
+/**
+ * Perform garbage collection on a live object.  This is
+ * the default superclass method.  For efficiency, it
+ * is recommended that subclasses mark nextInstruction
+ * directly (and as the first item marked) rather than
+ * forwarding to the superclass method.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstruction::live(size_t liveMark)
+{
+    memory_mark(nextInstruction);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstruction::liveGeneral(int reason)
+{
+    memory_mark_general(nextInstruction);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstruction::flatten(RexxEnvelope *envelope)
+{
+    setUpFlatten(RexxInstruction)
+
+    flattenRef(nextInstruction);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Perform garbage collection on a live object.  Note, many
+ * subclasses of RexxInstructionExpression do not need to
+ * provide their own marking methods unless they have additional
+ * fields that require marking.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionExpression::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);
-  memory_mark(this->expression);
+    memory_mark(nextInstruction);
+    memory_mark(expression);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionExpression::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* do common marking                 */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->expression);
+    memory_mark_general(nextInstruction);
+    memory_mark_general(expression);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxInstructionExpression::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionExpression)
+    setUpFlatten(RexxInstructionExpression)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->expression, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(expression);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
+
+/**
+ * Common method for evaluating the single expression
+ * and tracing the result for subclasses of this
+ * class.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ *
+ * @return The expression result, or OREF_NULL if there is no
+ *         expression to evaluate.
+ */
+RexxObject *RexxInstructionExpression::evaluateExpression(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // if we have an expression value, evaluate it.
+    if (expression != OREF_NULL)
+    {
+        // evaluate this
+        RexxObject *result = expression->evaluate(context, stack);
+        context->traceResult(result);
+        return result;
+    }
+    // no expression, no result
+    return OREF_NULL;
+}
+
+
+/**
+ * Common method for evaluating the single expression
+ * and tracing the result for subclasses of this
+ * class.  The result is forced to string form.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ *
+ * @return The expression result, or OREF_NULL if there is no
+ *         expression to evaluate.
+ */
+RexxString *RexxInstructionExpression::evaluateStringExpression(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // if we have an expression value, evaluate it.
+    if (expression != OREF_NULL)
+    {
+        // evaluate this
+        RexxObject *result = expression->evaluate(context, stack);
+        // force to string form, trace, and return the string version
+        RexxString *stringResult = REQUEST_STRING(result);
+        context->traceResult(stringResult);
+        return stringResult;
+    }
+    // the string expression is required here, so return a NULL string if no
+    // expression.  We still need to trace that.
+    else
+    {
+        context->traceResult(OREF_NULLSTRING);
+        return OREF_NULLSTRING;
+    }
+}

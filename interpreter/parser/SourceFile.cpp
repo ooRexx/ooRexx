@@ -229,6 +229,7 @@ void RexxSource::liveGeneral(int reason)
   memory_mark_general(this->initCode);
 }
 
+
 /**
  * Flatten a source object.
  *

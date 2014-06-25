@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,42 +46,32 @@
 #include "RexxActivation.hpp"
 #include "ReplyInstruction.hpp"
 
-RexxInstructionReply::RexxInstructionReply(
-    RexxObject *_expression)
-/******************************************************************************/
-/* Function:  Initialize a REXX REPLY instruction                             */
-/******************************************************************************/
+RexxInstructionReply::RexxInstructionReply(RexxObject *_expression)
 {
-                                       /* do the common initialization      */
- OrefSet(this, this->expression, _expression);
+    expression = _expression;
 }
 
-void RexxInstructionReply::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX REPLY instruction                                */
-/******************************************************************************/
+
+/**
+ * Execute a REPLY instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionReply::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-    RexxObject *result;                  /* expression result                 */
-    context->traceInstruction(this);     /* trace if necessary                */
-    if (!context->inMethod())            /* is this a method clause?          */
+    context->traceInstruction(this);
+    // REPLY is only valid in a method invocation.
+    if (!context->inMethod())
     {
-                                         /* raise an error                    */
         reportException(Error_Translation_reply);
     }
-    if (this->expression != OREF_NULL) /* given an expression value?        */
-    {
-        /* evaluate the expression           */
-        result = this->expression->evaluate(context, stack);
-        context->traceResult(result);      /* trace if necessary                */
-                                           /* get the expression value and tell */
-        context->reply(result);            /* the activation to reply with it   */
-    }
-    else
-    {
-        context->reply(OREF_NULL);         /* return with no value              */
-    }
-    context->pauseInstruction();         /* do debug pause if necessary       */
+
+    // evaluate the optional expression and have the context process
+    // the reply operation.
+    context->reply(evaluateExpression(context, stack));
+
+    // we can still pause, but we're now pausing on the new thread.
+    context->pauseInstruction();
 }
 

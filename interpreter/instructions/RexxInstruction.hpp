@@ -68,13 +68,14 @@ class RexxInstruction : public RexxInternalObject {
     inline RexxInstruction(RESTORETYPE restoreType) { ; };
     inline RexxInstruction() { ; }
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope *);
-    inline const SourceLocation &getLocation() { return instructionLocation; }
-    inline void  setLocation(SourceLocation &l) { instructionLocation = l; }
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
 
     virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
+
+    inline const SourceLocation &getLocation() { return instructionLocation; }
+    inline void  setLocation(SourceLocation &l) { instructionLocation = l; }
 
     // NOTE:  This method is only used during program translation, so we can skip using
     // OrefSet to set this variable.
@@ -139,9 +140,12 @@ class RexxInstructionExpression : public RexxInstruction
     RexxInstructionExpression() { ; };
     RexxInstructionExpression(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    RexxObject *evaluateExpression(RexxActivation *context, RexxExpressionStack *stack);
+    RexxString *evaluateStringExpression(RexxActivation *context, RexxExpressionStack *stack);
 
  protected:
     RexxObject *expression;              // expression to evaluate

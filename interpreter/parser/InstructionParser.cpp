@@ -299,109 +299,94 @@ RexxInstruction *LanguageParser::instruction()
                 return traceNew();
                 break;
 
-            case KEYWORD_DO:           /* all variations of DO instruction  */
-                /* add the instruction to the parse  */
-                _instruction = this->doNew();
+            // DO instruction, all variants
+            case KEYWORD_DO:
+                return doNew();
                 break;
 
-            case KEYWORD_LOOP:         /* all variations of LOOP instruction  */
-                /* add the instruction to the parse  */
-                _instruction = this->loopNew();
+            // all variants of the LOOP instruction
+            case KEYWORD_LOOP:
+                return loopNew();
                 break;
 
-            case KEYWORD_EXIT:         /* EXIT instruction                  */
-                /* add the instruction to the parse  */
-                _instruction = this->exitNew();
+            // EXIT instruction
+            case KEYWORD_EXIT:
+                return exitNew();
                 break;
 
-            case KEYWORD_INTERPRET:    /* INTERPRET instruction             */
-                /* add the instruction to the parse  */
-                _instruction = this->interpretNew();
+            // INTERPRET instruction
+            case KEYWORD_INTERPRET:
+                return interpretNew();
                 break;
 
-            case KEYWORD_PUSH:         /* PUSH instruction                  */
-                /* add the instruction to the parse  */
-                _instruction = this->queueNew(QUEUE_LIFO);
+            // PUSH instruction
+            case KEYWORD_PUSH:
+                return queueNew(QUEUE_LIFO);
                 break;
 
-            case KEYWORD_QUEUE:        /* QUEUE instruction                 */
-                /* add the instruction to the parse  */
-                _instruction = this->queueNew(QUEUE_FIFO);
+            // QUEUE instruction
+            case KEYWORD_QUEUE:
+                return queueNew(QUEUE_FIFO);
                 break;
 
-            case KEYWORD_REPLY:        /* REPLY instruction                 */
-                /* interpreted?                      */
-                if (this->flags&_interpret)
-                    syntaxError(Error_Translation_reply_interpret);
-                /* add the instruction to the parse  */
-                _instruction = this->replyNew();
+            // REPLY instruction
+            case KEYWORD_REPLY:
+                return replyNew();
                 break;
 
-            case KEYWORD_RETURN:       /* RETURN instruction                */
-                /* add the instruction to the parse  */
-                _instruction = this->returnNew();
+            // RETURN instruction
+            case KEYWORD_RETURN:
+                return returnNew();
                 break;
 
-            case KEYWORD_IF:           /* IF instruction                    */
-                /* add the instruction to the parse  */
-                _instruction = this->ifNew(KEYWORD_IF);
+            // IF instruction
+            case KEYWORD_IF:
+                return ifNew(KEYWORD_IF);
                 break;
 
-            case KEYWORD_ITERATE:      /* ITERATE instruction               */
-                /* add the instruction to the parse  */
-                _instruction = this->leaveNew(KEYWORD_ITERATE);
+            // ITERATE instruction
+            case KEYWORD_ITERATE:
+                return leaveNew(KEYWORD_ITERATE);
                 break;
 
-            case KEYWORD_LEAVE:        /* LEAVE instruction                 */
-                /* add the instruction to the parse  */
-                _instruction = this->leaveNew(KEYWORD_LEAVE);
+            // LEAVE instruction
+            case KEYWORD_LEAVE:
+                return leaveNew(KEYWORD_LEAVE);
                 break;
 
-            case KEYWORD_EXPOSE:       /* EXPOSE instruction                */
-                /* interpreted?                      */
-                if (this->flags&_interpret)
-                    syntaxError(Error_Translation_expose_interpret);
-                /* add the instruction to the parse  */
-                _instruction = this->exposeNew();
+            // EXPOSE instruction
+            case KEYWORD_EXPOSE:
+                return exposeNew();
                 break;
 
-            case KEYWORD_FORWARD:      /* FORWARD instruction               */
-                /* interpreted?                      */
-                if (this->flags&_interpret)
-                    syntaxError(Error_Translation_forward_interpret);
-                /* add the instruction to the parse  */
-                _instruction = this->forwardNew();
+            // FORWARD instruction
+            case KEYWORD_FORWARD:
+                return forwardNew();
                 break;
 
-            case KEYWORD_PROCEDURE:    /* PROCEDURE instruction             */
-                /* add the instruction to the parse  */
-                _instruction = this->procedureNew();
+            // PROCEDURE instruction
+            case KEYWORD_PROCEDURE:
+                return procedureNew();
                 break;
 
-            case KEYWORD_GUARD:        /* GUARD instruction                 */
-                /* interpreted?                      */
-                if (this->flags&_interpret)
-                    syntaxError(Error_Translation_guard_interpret);
-                /* add the instruction to the parse  */
-                _instruction = this->guardNew();
+            // GUARD instruction
+            case KEYWORD_GUARD:
+                return guardNew();
                 break;
 
-            case KEYWORD_USE:          /* USE instruction                   */
-                /* interpreted?                      */
-                if (this->flags&_interpret)
-                    syntaxError(Error_Translation_use_interpret);
-                /* add the instruction to the parse  */
-                _instruction = this->useNew();
+            // USE instruction
+            case KEYWORD_USE:
+                return useNew();
                 break;
 
-            case KEYWORD_ARG:          /* ARG instruction                   */
-                /* add the instruction to the parse  */
-                _instruction = this->parseNew(SUBKEY_ARG);
+            // ARG instruction
+            case KEYWORD_ARG:
+                return parseNew(SUBKEY_ARG);
                 break;
 
-            case KEYWORD_PULL:         /* PULL instruction                  */
-                /* add the instruction to the parse  */
-                _instruction = this->parseNew(SUBKEY_PULL);
+            // PULL instruction
+            case KEYWORD_PULL:
+                return parseNew(SUBKEY_PULL);
                 break;
 
             case KEYWORD_PARSE:        /* PARSE instruction                 */
@@ -1259,7 +1244,14 @@ RexxInstruction *LanguageParser::exposeNew()
 /* Function:  Create a new EXPOSE translator object                         */
 /****************************************************************************/
 {
-    this->isExposeValid();               /* validate the placement            */
+    // not valid in an interpret
+    if (isInterpret())
+    {
+        syntaxError(Error_Translation_expose_interpret);
+    }
+
+    // validate the placement at the beginning of the code block
+    isExposeValid();
                                          /* go process the list               */
     size_t variableCount = this->processVariableList(KEYWORD_EXPOSE);
     /* Get new object                    */
@@ -1399,6 +1391,11 @@ RexxInstruction *LanguageParser::forwardNew()
 /* Function:  Create a new RAISE translator object                             */
 /****************************************************************************/
 {
+    // not permitted in interpret
+    if (isInterpret())
+    {
+        syntaxError(Error_Translation_forward_interpret);
+    }
     /* create a new translator object    */
     RexxInstruction *newObject = new_instruction(FORWARD, Forward);
     new((void *)newObject) RexxInstructionForward;
@@ -1411,6 +1408,12 @@ RexxInstruction *LanguageParser::guardNew()
 /* Function:  Create a new GUARD translator object                            */
 /******************************************************************************/
 {
+    // not permitted in interpret
+    if (this->flags&_interpret)
+    {
+        syntaxError(Error_Translation_guard_interpret);
+    }
+
     RexxObject *_expression = OREF_NULL;             /* default no expression             */
     RexxArray *variable_list = OREF_NULL;           /* no variable either                */
     size_t variable_count = 0;                  /* no variables yet                  */
@@ -2421,6 +2424,12 @@ RexxInstruction *LanguageParser::replyNew()
 /* Function:  Create a REPLY instruction object                             */
 /****************************************************************************/
 {
+    // reply is not allowed in interpret
+    if (isInterpret())
+    {
+        syntaxError(Error_Translation_reply_interpret);
+    }
+
     RexxObject *_expression = this->expression(TERM_EOC);
     /* create a new translator object    */
     RexxInstruction *newObject = new_instruction(REPLY, Reply);
@@ -2740,38 +2749,44 @@ RexxInstruction *LanguageParser::thenNew(
  */
 RexxInstruction *LanguageParser::traceNew()
 {
-    size_t setting = TRACE_NORMAL;              /* set default trace mode            */
-    wholenumber_t debug_skip = 0;               /* no skipping                       */
-    size_t trcFlags = 0;                        /* no translated flags               */
-    RexxObject *_expression = OREF_NULL;        /* not expression form               */
-    RexxToken *token = nextReal();              /* get the next token                */
+    size_t setting = TRACE_NORMAL;              // set default trace mode
+    wholenumber_t debug_skip = 0;               // no skipping
+    size_t trcFlags = 0;                        // no translated flags
+    RexxObject *_expression = OREF_NULL;        // not expression form
 
+    // ok, start processing for real
+    RexxToken *token = nextReal();              // get the next token
+
+    // TRACE by itself is TRACE Normal.  Not really highly used
     if (!token->isEndOfClause())
-    {   /* more than just TRACE?             */
-        /* is this a symbol?                 */
+    {
+        // most trace settings are symbols, but VALUE is a special subkeyword
         if (token->isSymbol())
         {
-            /* TRACE VALUE expr?                 */
-            if (this->subKeyword(token) == SUBKEY_VALUE)
+            // TRACE VALUE expr?
+            if (token->subKeyword() == SUBKEY_VALUE)
             {
-                /* process the expression            */
-                _expression = this->expression(TERM_EOC);
-                if (_expression == OREF_NULL)   /* no expression?                    */
+                // This is an required expression
+                _expression = expression(TERM_EOC);
+                if (_expression == OREF_NULL)
                 {
-                    /* expression is required after value*/
                     syntaxError(Error_Invalid_expression_trace);
                 }
             }
             else
-            {                           /* must have a symbol here           */
-                RexxString *value = token->value;          /* get the string value              */
+            {
+                // we have a symbol here, this should be the trace setting
+                RexxString *value = token->value();
+                // and nothing else after the symbol
                 requiredEndOfClause(Error_Invalid_data_trace);
 
+                // if this is not numeric, this is a TRACE option, with potential
+                // ? prefix.
                 if (!value->requestNumber(debug_skip, number_digits()))
                 {
-                    debug_skip = 0;              /* belt and braces                   */
+                    debug_skip = 0;
                     char badOption = 0;
-                                                 /* process the setting               */
+                    // go parse the trace setting values
                     if (!parseTraceSetting(value, setting, trcFlags, badOption))
                     {
                         syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
@@ -2783,16 +2798,18 @@ RexxInstruction *LanguageParser::traceNew()
                 }
             }
         }
+        // the trace setting can also be a string
         else if (token->isLiteral())
-        {     /* is this a string?                 */
-            RexxString *value = token->value;            /* get the string value              */
+        {
+            RexxString *value = token->value();
+            // again, that can be the only thing
             requiredEndOfClause(Error_Invalid_data_trace);
-
+            // same checks as above
             if (!value->requestNumber(debug_skip, number_digits()))
             {
-                debug_skip = 0;                /* belt and braces                   */
+                debug_skip = 0;
                 char badOption = 0;
-                                             /* process the setting               */
+
                 if (!parseTraceSetting(value, setting, trcFlags, badOption))
                 {
                     syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
@@ -2803,42 +2820,51 @@ RexxInstruction *LanguageParser::traceNew()
                 setting = 0;                   /* not a normal setting situation    */
             }
         }
-        /* is this a minus sign?             */
-        else if (token->subclass == OPERATOR_SUBTRACT || token->subclass == OPERATOR_PLUS)
+        // potential numeric value with a sign?
+        else if (token->isSubtype(OPERATOR_SUBTRACT, OPERATOR_PLUS))
         {
-            setting = 0;                     /* indicate a debug version          */
-            /* minus form?                       */
-            if (token->subclass == OPERATOR_SUBTRACT)
+            setting = 0;
+            // minus form?
+            if (token->isSubtype(OPERATOR_SUBTRACT))
             {
-                setting |= DEBUG_NOTRACE;      // turn on the no tracing flag
+                // turns off tracing entirely
+                setting |= DEBUG_NOTRACE;
             }
-            token = nextReal();              /* get the next token                */
-            if (token->isEndOfClause()) /* end of the instruction?           */
+
+            // we expect to find a number
+            token = nextReal();
+            if (token->isEndOfClause())
             {
-                /* this is an error                  */
                 syntaxError(Error_Invalid_expression_general, token);
             }
-            RexxString *value = token->value;            /* get the string value              */
+            // this must be a symbol or a literal value
+            if (!token->isSymbolOrLiteral())
+            {
+                syntaxError(Error_Invalid_expression_general, token);
+            }
+
+            // this needs to be the end of the clause
+            RexxString *value = token->value();
             requiredEndOfClause(Error_Invalid_data_trace);
 
+            // convert to a binary number
             if (!value->requestNumber(debug_skip, number_digits()))
             {
-                /* have an error                     */
                 syntaxError(Error_Invalid_whole_number_trace, value);
             }
         }
+        // implicit TRACE VALUE form
         else
-        {                             /* implicit value form               */
-            previousToken();                 /* step back a token                 */
-                                             /* process the expression            */
-            _expression = this->expression(TERM_EOC);
+        {
+            // take a step back and parse the expression
+            previousToken();
+            _expression = expression(TERM_EOC);
         }
     }
-    /* create a new translator object    */
+
     RexxInstruction *newObject = new_instruction(TRACE, Trace);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionTrace(_expression, setting, trcFlags, debug_skip);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
 
 /**
@@ -2848,6 +2874,13 @@ RexxInstruction *LanguageParser::traceNew()
  */
 RexxInstruction *LanguageParser::useNew()
 {
+    // TODO:  I'm not sure why this restriction is here...need to check this out.
+
+    if (isInterpret())
+    {
+        syntaxError(Error_Translation_use_interpret);
+    }
+
     bool strictChecking = false;  // no strict checking enabled yet
 
     // The STRICT keyword turns this into a different instruction with different

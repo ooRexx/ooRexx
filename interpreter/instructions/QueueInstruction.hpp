@@ -48,14 +48,16 @@
 
 #define queue_lifo 0x01
 
-class RexxInstructionQueue : public RexxInstructionExpression {
+class RexxInstructionQueue : public RexxInstructionExpression
+{
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void  operator delete(void *) { }
+    inline void  operator delete(void *, void *) { }
 
-  inline RexxInstructionQueue(RESTORETYPE restoreType) { ; };
-  RexxInstructionQueue(RexxObject *, int);
-  void execute(RexxActivation *, RexxExpressionStack *);
+    inline RexxInstructionQueue(RESTORETYPE restoreType) { ; };
+    RexxInstructionQueue(RexxObject *, int);
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
 };
 #endif

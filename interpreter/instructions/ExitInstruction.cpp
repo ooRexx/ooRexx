@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,35 +46,28 @@
 #include "RexxActivation.hpp"
 #include "ExitInstruction.hpp"
 
-RexxInstructionExit::RexxInstructionExit(
-    RexxObject *_expression)            /* associated EXIT expression        */
-/****************************************************************************/
-/* Function:  Complete initialization of an EXIT instruction                */
-/****************************************************************************/
+/**
+ * Construct an exit instruction
+ *
+ * @param _expression
+ *               The optional return value expression.
+ */
+RexxInstructionExit::RexxInstructionExit(RexxObject *_expression)
 {
-                                       /* just save the expression          */
-  OrefSet(this, this->expression, _expression);
+    expression = _expression;
 }
 
-void RexxInstructionExit::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX EXIT instruction                               */
-/****************************************************************************/
+
+/**
+ * Execute an exit instruction.
+ *
+ * @param context The current program activation context.
+ * @param stack   The current expression stack.
+ */
+void RexxInstructionExit::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-    context->traceInstruction(this);     /* trace if necessary                */
-    if (this->expression != OREF_NULL) /* given an expression value?        */
-    {
-        /* evaluate the expression           */
-        RexxObject *result = this->expression->evaluate(context, stack);
-        context->traceResult(result);      /* trace if necessary                */
-                                           /* get the expression value and tell */
-        context->exitFrom(result);         /* the activation to exit with it    */
-    }
-    else
-    {
-        context->exitFrom(OREF_NULL);      /* exit with no value                */
-    }
+    context->traceInstruction(this);
+    // evaluate the optional expression and exit.
+    context->exitFrom(evaluateExpression(context, stack));
 }
 

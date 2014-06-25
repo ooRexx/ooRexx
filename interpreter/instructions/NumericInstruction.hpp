@@ -55,7 +55,8 @@ enum
     numeric_form_default
 } NumericInstructionFlags;
 
-class RexxInstructionNumeric : public RexxInstructionExpression {
+class RexxInstructionNumeric : public RexxInstructionExpression
+{
  public:
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void operator delete(void *) { }
@@ -63,7 +64,8 @@ class RexxInstructionNumeric : public RexxInstructionExpression {
 
     RexxInstructionNumeric(RexxObject *, unsigned short, size_t);
     inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
-    void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
  protected:
     bitset<32>    numericFlags;
 };

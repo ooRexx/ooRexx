@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,34 +47,36 @@
 #include "RexxActivation.hpp"
 #include "InterpretInstruction.hpp"
 
-RexxInstructionInterpret::RexxInstructionInterpret(
-    RexxObject *_expression)            /* associated INTERPRET expression   */
-/****************************************************************************/
-/* Function:  Complete initialization of an INTERPRET instruction           */
-/****************************************************************************/
+
+/**
+ * Constructor for an interpret instruction.
+ *
+ * @param _expression
+ *               The required expression for the instruction to interpret.
+ */
+RexxInstructionInterpret::RexxInstructionInterpret(RexxObject *_expression)
 {
-                                       /* just save the expression          */
-  OrefSet(this, this->expression, _expression);
+    expression = expression;
 }
 
-void RexxInstructionInterpret::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/********************************************************************************/
-/* Function:  Execute a REXX EXIT instruction                               */
-/****************************************************************************/
+
+/**
+ * Execute an INTERPRET instruction.
+ *
+ * @param context The current program execution context.
+ * @param stack   The current expression evaluation stack.
+ */
+void RexxInstructionInterpret::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
-    context->traceInstruction(this);     /* trace if necessary                */
-                                         /* evaluate the expression           */
-    RexxObject *result = this->expression->evaluate(context, stack);
-    /* get the string version            */
-    RexxString *interpretString = REQUEST_STRING(result);
-    /* trace if necessary                */
-    context->traceResult(interpretString);
-    /* no re-execute requested?          */
+    context->traceInstruction(this);
+
+    // evaluate this expression as a string value, tracing if needed.
+    RexxString *interpretString = evaluateStringExpression(context, stack);
+
+    // no re-execute requested?
     if (!context->conditionalPauseInstruction())
     {
-        /* evaluate and interpret            */
+        // parse and execute in the current context.
         context->interpret(interpretString);
     }
 }

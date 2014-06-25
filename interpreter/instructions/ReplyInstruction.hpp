@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,15 +46,17 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionReply : public RexxInstructionExpression {
+class RexxInstructionReply : public RexxInstructionExpression
+{
  public:
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void  operator delete(void *) { }
+    inline void  operator delete(void *, void *) { }
 
-  RexxInstructionReply(RexxObject*);
-  inline RexxInstructionReply(RESTORETYPE restoreType) { ; };
-  void execute(RexxActivation *, RexxExpressionStack *);
+    RexxInstructionReply(RexxObject*);
+    inline RexxInstructionReply(RESTORETYPE restoreType) { ; };
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
 };
 #endif

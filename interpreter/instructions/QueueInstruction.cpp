@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Translator                                                            */
 /*                                                                            */
-/* Primitive Queue Parse Class                                                */
+/* Queue and Push instruction classes.                                        */
 /*                                                                            */
 /******************************************************************************/
 #include <stdlib.h>
@@ -48,45 +48,26 @@
 #include "RexxActivity.hpp"
 #include "QueueInstruction.hpp"
 
-RexxInstructionQueue::RexxInstructionQueue(
-  RexxObject *_expression,              /* expresion to evaluate             */
-  int type)                            /* top of queueing operation         */
-/******************************************************************************/
-/* Function:   Initialize a QUEUE instruction object                          */
-/******************************************************************************/
+RexxInstructionQueue::RexxInstructionQueue(RexxObject *_expression)
 {
-    /* process the expression            */
-    OrefSet(this, this->expression, _expression);
-    if (type == QUEUE_LIFO)
-    {
-        instructionFlags |= queue_lifo;
-    }
+    expression = _expression;
 }
 
-void RexxInstructionQueue::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX QUEUE or PUSH instruction                      */
-/****************************************************************************/
+/**
+ * Execute a PUSH or QUEUE operation (depends on the instruction type.)
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionQueue::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
-    RexxObject *result;                  /* expression result                 */
-    RexxString *value;                   /* output value                      */
+    // trace if necessary.
+    context->traceInstruction(this);
 
-    context->traceInstruction(this);     /* trace if necessary                */
-    if (this->expression != OREF_NULL) /* have an expression value?         */
-    {
-        /* get the expression value          */
-        result = this->expression->evaluate(context, stack);
-        value = REQUEST_STRING(result);    /* get the string version            */
-    }
-    else
-    {
-        value =  OREF_NULLSTRING;          /* use a NULL string                 */
-    }
-    context->traceResult(value);         /* trace if necessary                */
-                                         /* write out the line                */
-    ActivityManager::currentActivity->queue(context, value, ((instructionFlags&queue_lifo) != 0) ? QUEUE_LIFO : QUEUE_FIFO);
-    context->pauseInstruction();         /* do debug pause if necessary       */
+    // evaluate the line to PUSH or QUEUE
+    RexxString *value = evaluateStringExpression(context, stack);
+    // write out the line, using the order dictated by the instruction.
+    ActivityManager::currentActivity->queue(context, value, (instructionType == KEYWORD_PUSH) ? QUEUE_LIFO : QUEUE_FIFO);
+    context->pauseInstruction();
 }
 

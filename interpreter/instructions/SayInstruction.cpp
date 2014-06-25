@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,39 +48,36 @@
 #include "RexxActivation.hpp"
 #include "SayInstruction.hpp"
 
-RexxInstructionSay::RexxInstructionSay(
-    RexxObject *_expression)            /* assciated expression              */
-/******************************************************************************/
-/* Function:  Complete initialization of a SAY instruction                    */
-/******************************************************************************/
+/**
+ * Constructor for a SAY instruction.
+ *
+ * @param _expression
+ *               The optional expression.
+ */
+RexxInstructionSay::RexxInstructionSay(RexxObject *_expression)
 {
-   OrefSet(this, this->expression, _expression);
+    expression = _expression;
 }
 
-void  RexxInstructionSay::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX SAY instruction                                  */
-/******************************************************************************/
-{
-    RexxString *value;                   /* string version of output value    */
 
-    context->traceInstruction(this);     /* trace if necessary                */
-    if (this->expression != OREF_NULL) /* have an expression value?         */
-    {
-        /* get the expression value          */
-        RexxObject *result = this->expression->evaluate(context, stack);
-        value = REQUEST_STRING(result);    /* get the string version            */
-    }
-    else
-    {
-        /* use a NULL string                 */
-        value = OREF_NULLSTRING;
-    }
-    context->traceResult(value);         /* trace the output value            */
-                                         /* write out the line                */
-    context->getActivity()->sayOutput(context, value);
-    context->pauseInstruction();         /* do debug pause if necessary       */
+/**
+ * Execute a SAY instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void  RexxInstructionSay::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // trace if necessary
+    context->traceInstruction(this);
+
+    // TODO:  add a sayOutput() method to activation...should not have to know this
+    // is handled by the activity here.
+
+    // evaluate the optional expression and write out the line.
+    context->getActivity()->sayOutput(context, evaluateStringExpression(context, stack));
+
+    // and handle any debug pause.
+    context->pauseInstruction();
 }
 
