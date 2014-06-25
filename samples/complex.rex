@@ -161,6 +161,9 @@
   expose real imaginary
   use strict arg other
 
+  if other~isA(.string) then                  /* convert to a complex value if  */
+      other = self~class~new(other)           /* just a simple number           */
+
   res = real~compareTo(other~real)
   if res = 0 then return imaginary~compareTo(other~imaginary)
   return res
