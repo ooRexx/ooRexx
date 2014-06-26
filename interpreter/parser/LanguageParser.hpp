@@ -247,7 +247,7 @@ class LanguageParser: public RexxInternalObject {
     static bool parseTraceSetting(RexxString *, size_t &, size_t &, char &);
     static RexxString *formatTraceSetting(size_t source);
     size_t      processVariableList(InstructionKeyword);
-    RexxObject *parseConditional(int *, int);
+    RexxObject *parseLoopConditional(InstructionSubKeyword &, int);
     RexxObject *parseLogical(RexxToken *first, int terminators);
 
     bool        terminator(int, RexxToken *);
@@ -283,7 +283,7 @@ class LanguageParser: public RexxInternalObject {
 
     inline RexxToken  *nextToken() { return clause->next(); }
     inline RexxToken  *nextReal() { return clause->nextRealToken(); }
-    inline void        requiredEndOfClause(size_t error)
+    inline void        requiredEndOfClause(RexxToken *first, int terminators, size_t error)
     {
         RexxToken *token = nextReal();
         if (!token->isEndOfClause())
@@ -291,6 +291,17 @@ class LanguageParser: public RexxInternalObject {
             syntaxError(error, token);
         }
     }
+
+    inline RexxObject *requiredLogicalExpression(RexxToken *first, int terminators, size_t error)
+    {
+        RexxObject *conditional = parseLogical(first, terminators);
+        if (conditional == OREF_NULL)
+        {
+            syntaxError(error);
+        }
+        return conditional;
+    }
+
     inline void        previousToken() { clause->previous(); }
     inline void        firstToken() { clause->firstToken(); }
     inline void        trimClause() { clause->trim(); }

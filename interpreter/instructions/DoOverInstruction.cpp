@@ -104,7 +104,7 @@ void RexxInstructionDoOver::liveGeneral(int reason)
  */
 void RexxInstructionDoOver::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxInstructionDo)
+    setUpFlatten(RexxInstructionDoOver)
 
     flattenRef(nextInstruction);
     flattenRef(end);
@@ -216,7 +216,7 @@ void RexxInstructionDoOverUntil::liveGeneral(int reason)
  */
 void RexxInstructionDoOverUntil::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxInstructionDo)
+    setUpFlatten(RexxInstructionDoUntil)
 
     flattenRef(nextInstruction);
     flattenRef(end);

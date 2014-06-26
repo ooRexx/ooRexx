@@ -115,46 +115,6 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
 
 
 /**
- * The Ultimate DO loop instruction, capable of handling all of
- * the DO LOOP options.  We create one of these to hold
- * everything during parsing and once we determine this is one
- * of our simplier types, we create a version specialied to just
- * that type of instruction.  The specialialed versions save
- * both image size and execution cycle.
- */
-class RexxInstructionDo : public RexxInstructionBaseDo
-{
- public:
-
-     inline void *operator new(size_t size, void *ptr) {return ptr;}
-     inline void operator delete(void *) { }
-     inline void operator delete(void *, void *) { }
-
-     inline RexxInstructionDo(void) { ; }
-     inline RexxInstructionDo(RESTORETYPE restoreType) { ; };
-
-     virtual void live(size_t);
-     virtual void liveGeneral(int reason);
-     virtual void flatten(RexxEnvelope *);
-
-     virtual void execute(RexxActivation *, RexxExpressionStack *);
-
-     // methods required by RexxBlockInstruction;
-     virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
-
-     // required by loop instructions
-     virtual void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
-
-     DoInstructionType type;              // the type of DO instruction
-
-     ForLoop           forLoop;           // used for simple counting loops
-     ControlledLoop    controlLoop;       // our information for a controlled loop
-     OverLoop          overLoop;          // our information for a DO OVER
-     WhileUntilLoop    whileLoop;         // information for WHILE or UNTIL
-};
-
-
-/**
  * The simplest form of DO BLOCK.  This is a non-looping block.
  * It may have a label, but no other expressions to handle.
  */
@@ -247,6 +207,8 @@ class RexxInstructionDoOverUntil : public RexxInstructionDoOver
     // Methods needed for loop iteration
     virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
+protected:
+
     WhileUntilLoop whileLoop;   // handles the conditional part
 };
 
@@ -296,6 +258,8 @@ class RexxInstructionControlledDo: public RexxInstructionBaseDo
     virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
     virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
+ protected:
+
     ControlledLoop controlLoop;          // handles control logic for a controlled loop
 };
 
@@ -321,6 +285,8 @@ class RexxInstructionControlledDoUntil : public RexxInstructionControlledDo
 
     // Methods needed for loop iteration
     virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+ protected:
 
     WhileUntilLoop whileLoop;   // handles the conditional part
 };
@@ -366,6 +332,8 @@ class RexxInstructionDoWhile: public RexxInstructionBaseDo
 
     // Methods needed for loop iteration
     virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+ protected:
 
     WhileUntilLoop whileLoop;                 // handles condition logic
 };
@@ -415,6 +383,8 @@ class RexxInstructionDoCount : public RexxInstructionBaseDo
     virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
     virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
+ protected:
+
     ForLoop forLoop;          // handles control logic for a DO count
 };
 
@@ -440,6 +410,8 @@ class RexxInstructionDoCountUntil : public RexxInstructionDoCount
 
     // Methods needed for loop iteration
     virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+ protected:
 
     WhileUntilLoop whileLoop;   // handles the conditional part
 };

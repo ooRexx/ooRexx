@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,68 +48,83 @@
 #include "LeaveInstruction.hpp"
 #include "Token.hpp"
 
-RexxInstructionLeave::RexxInstructionLeave(
-    int         type,                  /* LEAVE or ITERATE instruction      */
-    RexxString *_name)                  /* associated name                   */
-/******************************************************************************/
-/* Function : Complete LEAVE/ITERATE instruction initialization               */
-/******************************************************************************/
+/**
+ * Constructor for a LEAVE/ITERATE instruction.
+ *
+ * @param _name  The name of the target loop.
+ */
+RexxInstructionLeave::RexxInstructionLeave(RexxString *_name)
 {
-  OrefSet(this, this->name, _name);     /* store the name                    */
-  this->setType(type);                 /* and set the correct type          */
+    name = _name;
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionLeave::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->name);
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(name);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionLeave::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->name);
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(name);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionLeave::flatten (RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionLeave)
+    setUpFlatten(RexxInstructionLeave)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->name, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(name);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionLeave::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX LEAVE instruction                              */
-/****************************************************************************/
+/**
+ * Execute a LEAVE or ITERATE instruction.
+ *
+ * @param context The current excution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionLeave::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
-    context->traceInstruction(this);     /* trace if necessary                */
-                                         /* is it a LEAVE?                    */
-    if (this->instructionType == KEYWORD_LEAVE)
+    context->traceInstruction(this);
+
+    // if this is a LEAVE, we tell the context to leave the appropriate loop.
+    if (instructionType == KEYWORD_LEAVE)
     {
-        /* tell the activation to exit the   */
-        context->leaveLoop(this->name);    /* appopriate loop                   */
+        context->leaveLoop(name);
     }
+    // we are iterating the loop
     else
     {
-        /* tell the activation to iterate    */
-        context->iterate(this->name);      /* the appopriate loop               */
+        context->iterate(name);
     }
-    context->pauseInstruction();         /* do debug pause if necessary       */
+
+    context->pauseInstruction();
 }
 

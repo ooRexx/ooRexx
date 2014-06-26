@@ -104,7 +104,7 @@ void RexxInstructionDoCount::liveGeneral(int reason)
  */
 void RexxInstructionDoCount::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxInstructionDo)
+    setUpFlatten(RexxInstructionDoCount)
 
     flattenRef(nextInstruction);
     flattenRef(end);
@@ -215,7 +215,7 @@ void RexxInstructionDoCountUntil::liveGeneral(int reason)
  */
 void RexxInstructionDoCountUntil::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxInstructionDo)
+    setUpFlatten(RexxInstructionDoCountUntil)
 
     flattenRef(nextInstruction);
     flattenRef(end);

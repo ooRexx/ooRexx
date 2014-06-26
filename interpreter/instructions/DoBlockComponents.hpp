@@ -55,9 +55,15 @@ enum
     EXP_FOR
 } ControlExpressionOrder;
 
+/**
+ * An embedded object that handles the details of a FOR count
+ * loop expression.
+ */
 class ForLoop
 {
  public:
+     inline ForLoop() : forCount(OREF_NULL) { }
+
      // helper memory marking methods for embedding classes to call.
      inline void live(size_t liveMark)
      {
@@ -75,9 +81,15 @@ class ForLoop
 };
 
 
+/**
+ * An embedded object that manages the details of controlled
+ * loop execution (all keywords).
+ */
 class ControlledLoop : public ForLoop
 {
  public:
+    inline ControlledLoop() : control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL), expressions(0,0,0) { }
+
     // helper memory marking methods for embedding classes to call.
     inline void live(size_t liveMark)
     {
@@ -108,9 +120,14 @@ class ControlledLoop : public ForLoop
 };
 
 
+/**
+ * An embedded object that manages the details of a
+ * DO/LOOP OVER type.
+ */
 class OverLoop
 {
  public:
+     inline OverLoop() : control(OREF_NULL), target(OREF_NULL) { }
     // helper memory marking methods for embedding classes to call.
     inline void live(size_t liveMark)
     {
@@ -131,18 +148,24 @@ class OverLoop
 };
 
 
+/**
+ * An embedded object that can process WHILE or UNTIL
+ * loop conditionals.
+ */
 class WhileUntilLoop
 {
 public:
+    inline WhileUntilLoop() : conditional(OREF_NULL) { }
+
     // helper memory marking methods for embedding classes to call.
     inline void live(size_t liveMark)
     {
-        memory_mark(condition);
+        memory_mark(conditional);
     }
 
     inline void liveGeneral(int reason)
     {
-        memory_mark_general(condition);
+        memory_mark_general(conditional);
         memory_mark_general(target);
     }
 

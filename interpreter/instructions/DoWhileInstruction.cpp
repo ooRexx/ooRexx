@@ -104,7 +104,7 @@ void RexxInstructionDoWhile::liveGeneral(int reason)
  */
 void RexxInstructionDoWhile::flatten(RexxEnvelope *envelope)
 {
-    setUpFlatten(RexxInstructionDo)
+    setUpFlatten(RexxInstructionDoWhile)
 
     flattenRef(nextInstruction);
     flattenRef(end);
