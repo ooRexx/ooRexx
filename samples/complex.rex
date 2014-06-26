@@ -161,11 +161,13 @@
   expose real imaginary
   use strict arg other
 
-  if other~isA(.string) then                  /* convert to a complex value if  */
-      other = self~class~new(other)           /* just a simple number           */
-
-  res = real~compareTo(other~real)
-  if res = 0 then return imaginary~compareTo(other~imaginary)
+  -- we need this to be a numeric comparison, so subtract other from
+  -- ourself and check the resulting real and imaginary parts
+  diff = self - other
+  -- the sign of the real part gives us the result we want
+  res = diff~real~sign
+  -- if the real part is zero, then use the imaginary sign
+  if res = 0 then return diff~imaginary~sign
   return res
 
 ::class "Vector" subclass complex public      /* vector subclass of complex     */
