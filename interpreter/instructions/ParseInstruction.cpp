@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -55,104 +55,181 @@
 #include "Interpreter.hpp"
 
 
-RexxInstructionParse::RexxInstructionParse(
-  RexxObject *_expression,             /* string expression source          */
-  unsigned short string_source,        /* source of the parsed string       */
-  size_t      flags,                   /* option flags                      */
-  size_t      templateCount,           /* count of template items           */
-  RexxQueue  *parse_template )         /* parsing template array            */
-/******************************************************************************/
-/* Function:  Complete parse instruction initialization                       */
-/******************************************************************************/
+/**
+ * Initialize a parse instruction.
+ *
+ * @param _expression
+ *               An expression for parse value/parse var.
+ * @param string_source
+ *               A marker for the string source.
+ * @param flags  option flags
+ * @param templateCount
+ *               The number of templates in the parse.
+ * @param parse_template
+ *               The source of the parsing templates.
+ */
+RexxInstructionParse::RexxInstructionParse(RexxObject *_expression, InstructionSubKeyword string_source,
+    bitset<32> flags, size_t templateCount, RexxQueue *parse_template )
 {
-    /* save the expression               */
-    OrefSet(this, this->expression, _expression);
-    instructionFlags = (uint16_t)flags;  /* save the expression               */
-    stringSource = string_source;        // our instruction type is determined by the source
-    this->trigger_count = templateCount; /* save the size                     */
-    while (templateCount > 0)            /* loop through the template list    */
+    expression = expression;
+    parseFlags = flags;
+    stringSource = string_source;
+    trigger_count = templateCount;
+    // copy all of the triggers
+    while (templateCount > 0)
     {
-                                         /* copying each trigger              */
-        OrefSet(this, this->triggers[--templateCount], (RexxTrigger *)parse_template->pop());
+        triggers[--templateCount] = (RexxTrigger *)parse_template->pop();
     }
 }
 
-void RexxInstructionParse::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX PARSE instruction                              */
-/****************************************************************************/
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionParse::live(size_t liveMark)
 {
-    RexxObject       *value;             /* parsed value                      */
-    RexxObject      **argList;           /* current argument list             */
-    size_t            argCount;          /* the argument list size            */
-    RexxTarget        target;            /* created target value              */
-    RexxTrigger      *trigger;           /* current trigger                   */
-    size_t            size;              /* size of template array            */
-    bool              multiple;          /* processing an argument list       */
-    size_t            i;                 /* loop counter                      */
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(expression);
 
-    context->traceInstruction(this);     /* trace if necessary                */
-    multiple = false;                    /* default to no argument list       */
-    value = OREF_NULLSTRING;             /* no value yet                      */
-    argList = OREF_NULL;                 /* neither is there an argument list */
-    argCount = 0;
-
-    switch (stringSource)              /* get data from variaous sources    */
+    for (size_t i = 0; i < trigger_count; i++)
     {
+        memory_mark(triggers[i]);
+    }
+}
 
-        case SUBKEY_PULL:                  /* PARSE PULL instruction            */
-            /* read a line from the queue        */
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionParse::liveGeneral(int reason)
+{
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(expression);
+
+    for (size_t i = 0; i < trigger_count; i++)
+    {
+        memory_mark_general(triggers[i]);
+    }
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionParse::flatten(RexxEnvelope *envelope)
+{
+    setUpFlatten(RexxInstructionParse)
+
+    flattenRef(nextInstruction);
+    for (i = 0; i < trigger_count; i++)
+    {
+        flattenRef(triggers[i]);
+    }
+    flattenRef(expression);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Execute a PARSE instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack *stack )
+{
+    // trace if necessary
+    context->traceInstruction(this);
+
+    // this is our parsing target, which holds the current parsing information.
+    RexxTarget target;
+    // we only have multiple argument lists if this is PARSE ARG
+    bool multiple = false;
+
+    // default different pieces of source data information
+    RexxString *value = OREF_NULLSTRING;
+    RexxArray *argList = OREF_NULL;
+    size_t argCount = 0;
+
+    switch (stringSource)
+    {
+        // PULL or PARSE PULL instruction
+        case SUBKEY_PULL:
+            // pull a line from the queue and push on the stack for safekeeping
             value = ActivityManager::currentActivity->pullInput(context);
-            stack->push(value);              /* add the value to the stack        */
+            stack->push(value);
             break;
 
-        case SUBKEY_LINEIN:                /* PARSE LINEIN instruction          */
-            /* read a line from the stream       */
+        // PARSE LINEIN
+        case SUBKEY_LINEIN:
+            // read a line from the console stream
             value = ActivityManager::currentActivity->lineIn(context);
-            stack->push(value);              /* add the value to the stack        */
+            stack->push(value);
             break;
 
-        case SUBKEY_ARG:                   /* PARSE ARG instruction             */
-            multiple = true;                 /* have an argument list             */
-            /* get the current argument list     */
+        // ARG OR PARSE ARG
+        case SUBKEY_ARG:
+            // we have multiple values
+            multiple = true;
+            // get the argument list information
             argList = context->getMethodArgumentList();
             argCount = context->getMethodArgumentCount();
             break;
 
-        case SUBKEY_SOURCE:                /* PARSE SOURCE instruction          */
-            value = context->sourceString(); /* retrieve the source string        */
-            stack->push(value);              /* add the value to the stack        */
+        // PARSE SOURCE
+        case SUBKEY_SOURCE:
+            // we're using the source string
+            value = context->sourceString();
+            stack->push(value);
             break;
 
-        case SUBKEY_VERSION:               /* PARSE VERSION instruction         */
-            /* retrieve the version string       */
+        // PARSE VERSION
+        case SUBKEY_VERSION:
+            // get the version string
             value = Interpreter::getVersionNumber();
+            stack->push(value);
             break;
 
-        case SUBKEY_VAR:                   /* PARSE VAR name instruction        */
-            /* get the variable value            */
-            value = this->expression->evaluate(context, stack);
-            stack->push(value);              /* add the value to the stack        */
+        // PARSE VAR
+        case SUBKEY_VAR:
+            // our expression is a variable retriever which we can
+            // evaluate to get the value.
+            value = expression->evaluate(context, stack);
+            // The value we just retrieved is safe from garbage collection,
+            // but the parse operation might overwrite the variable and
+            // remove that safety net.  We still push this on the stack for safety.
+            stack->push(value);
             break;
 
-        case SUBKEY_VALUE:                 /* PARSE VALUE expr WITH instruction */
-            /* have an expression?               */
-            if (this->expression != OREF_NULL)
+        // PARSE VALUE expr WITH
+        case SUBKEY_VALUE:
+            // we should have an expression, but if not, use a NULLSTRING
+            if (>expression != OREF_NULL)
             {
-                /* get the expression value          */
-                value = this->expression->evaluate(context, stack);
+                value = expression->evaluate(context, stack);
             }
+            // PARSE VALUE WITH template actually is legal.  Not useful, but legal :-)
             else
             {
-                value = OREF_NULLSTRING;       /* must have been "parse value with" */
+                value = OREF_NULLSTRING;
             }
-            stack->push(value);              /* add the value to the stack        */
+            stack->push(value);
             break;
     }
-    /* create the parse target           */
-    target.init(value, argList, argCount, instructionFlags&parse_translate, multiple, context, stack);
+
+    // create the parse target
+    target.init(value, argList, argCount, parseFlags, multiple, context, stack);
 
     size = this->trigger_count;          /* get the template size             */
     for (i = 0; i < size; i++)         /* loop through the template list    */
@@ -168,57 +245,5 @@ void RexxInstructionParse::execute(
         }
     }
     context->pauseInstruction();         /* do debug pause if necessary       */
-}
-
-void RexxInstructionParse::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-    memory_mark(this->nextInstruction);  /* must be first one marked          */
-    for (i = 0, count = this->trigger_count; i < count; i++)
-    {
-        memory_mark(this->triggers[i]);
-    }
-    memory_mark(this->expression);
-}
-
-void RexxInstructionParse::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-                                         /* must be first one marked          */
-    memory_mark_general(this->nextInstruction);
-    for (i = 0, count = this->trigger_count; i < count; i++)
-    {
-        memory_mark_general(this->triggers[i]);
-    }
-    memory_mark_general(this->expression);
-}
-
-void RexxInstructionParse::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-    setUpFlatten(RexxInstructionParse)
-
-    flatten_reference(newThis->nextInstruction, envelope);
-    for (i = 0, count = this->trigger_count; i < count; i++)
-    {
-        flatten_reference(newThis->triggers[i], envelope);
-    }
-    flatten_reference(newThis->expression, envelope);
-    cleanUpFlatten
 }
 

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -51,91 +51,98 @@
 #include "RexxActivity.hpp"
 #include "BufferClass.hpp"
 
-RexxInstructionDrop::RexxInstructionDrop(
-    size_t     varCount,               /* number of variables to process    */
-    RexxQueue *variable_list)          /* list of variables to drop         */
-/******************************************************************************/
-/* Complete initialization of a DROP instruction                              */
-/******************************************************************************/
+
+/**
+ * Complete construction of a drop instruction.
+ *
+ * @param varCount The count of variables.
+ * @param variable_list
+ *                 The list of variables, a queue with the variables
+ *                 stored in reverse order.
+ */
+RexxInstructionDrop::RexxInstructionDrop(size_t varCount, RexxQueue *variable_list)
 {
-    /* get the variable size             */
-    variableCount = varCount;            /* save the variable count           */
-    while (varCount > 0)                 /* loop through the variable list    */
+    // copy each of the variables from the queue into the object storage.
+    // the copy is done back to front because the queue has them in LIFO order.
+    variableCount = varCount;
+    while (varCount > 0)
     {
-        /* copying each variable             */
-        OrefSet(this, this->variables[--varCount], (RexxVariableBase *)variable_list->pop());
+        variables[--varCount = (RexxVariableBase *)variable_list->pop();
     }
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionDrop::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
-
-    memory_mark(this->nextInstruction);  /* must be first one marked          */
-    for (i = 0, count = variableCount; i < count; i++)
+    // must be first one marked
+    memory_mark(nextInstruction);
+    for (size_t i = 0; i < variableCount; i++)
     {
-        memory_mark(this->variables[i]);
+        memory_mark(variables[i]);
     }
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionDrop::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
-
-                                         /* must be first one marked          */
-    memory_mark_general(this->nextInstruction);
-    for (i = 0, count = variableCount; i < count; i++)
+    // must be first one marked
+    memory_mark_general(nextInstruction);
+    for (size_t i = 0; i < variableCount; i++)
     {
-        memory_mark_general(this->variables[i]);
+        memory_mark_general(variables[i]);
     }
 }
 
-void RexxInstructionDrop::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
 
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionDrop::flatten(RexxEnvelope *envelope)
+{
     setUpFlatten(RexxInstructionDrop)
 
-    flatten_reference(newThis->nextInstruction, envelope);
-    for (i = 0, count = variableCount; i < count; i++)
+    flattenRef(nextInstruction);
+
+    for (size_t i = 0; i < variableCount; i++)
     {
-        flatten_reference(newThis->variables[i], envelope);
+        flattenRef(variables[i]);
     }
 
     cleanUpFlatten
 }
 
-void RexxInstructionDrop::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX DROP instruction                                 */
-/**********************************************************************************/
+/**
+ * Execute a drop instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionDrop::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-    size_t      size;                    /* size of guard variables list      */
-    size_t      i;                       /* loop counter                      */
+    // trace if necessary
+    context->traceInstruction(this);
 
-    context->traceInstruction(this);     /* trace if necessary                */
-                                         /* get the array size                */
-    size = variableCount;                /* get the variable list size        */
-
-    for (i = 0; i < size; i++)         /* loop through the variable list    */
+    // loop through the list telling each variable to drop.
+    for (size_t i = 0; i < variableCount; i++)
     {
-        /* have the variable drop itself */
         variables[i]->drop(context);
     }
-    context->pauseInstruction();         /* do debug pause if necessary       */
+
+    // standard debug pause.
+    context->pauseInstruction();
 }
 

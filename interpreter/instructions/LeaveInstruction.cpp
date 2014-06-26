@@ -88,13 +88,11 @@ void RexxInstructionLeave::liveGeneral(int reason)
 
 
 /**
- * Perform generalized live marking on an object.  This is
- * used when mark-and-sweep processing is needed for purposes
- * other than garbage collection.
+ * Flatten a source object.
  *
- * @param reason The reason for the marking call.
+ * @param envelope The envelope that will hold the flattened object.
  */
-void RexxInstructionLeave::flatten (RexxEnvelope *envelope)
+void RexxInstructionLeave::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(RexxInstructionLeave)
 

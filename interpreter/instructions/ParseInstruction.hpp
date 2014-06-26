@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,30 +46,35 @@
 
 #include "RexxInstruction.hpp"
 #include "ParseTrigger.hpp"
+#include <bitset>
 
-#define parse_upper         0x01       /* doing a parse upper               */
-#define parse_lower         0x02       /* doing a parse lower               */
-#define parse_translate     0x03       /* translation options mask          */
-#define parse_caseless      0x04       /* doing a caseless compare          */
-
-#define parse_string_source i_ushort   /* source of the data                */
+enum
+{
+    parse_upper,               // doing a parse upper
+    parse_lower,               // doing a parse lower
+    parse_caseless             // doing a caseless compare
+} ParseFlags;
 
 class RexxInstructionParse : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
 
-  RexxInstructionParse(RexxObject *, unsigned short, size_t, size_t, RexxQueue *);
-  inline RexxInstructionParse(RESTORETYPE restoreType) { ; };
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
+    RexxInstructionParse(RexxObject *, unsigned short, size_t, size_t, RexxQueue *);
+    inline RexxInstructionParse(RESTORETYPE restoreType) { ; };
 
-  int               stringSource;      // where the parsed data originates
-  RexxObject       *expression;        /* parse value expression            */
-  size_t            trigger_count;     /* number of triggers                */
-  RexxTrigger *triggers[1];            /* parsing triggers                  */
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
+
+    void execute(RexxActivation *, RexxExpressionStack *);
+
+ protected:
+    bitset<32>        parseFlags;        // parsing control flags
+    InstructionSubKeyword stringSource;  // where the parsed data originates
+    RexxObject       *expression;        // parse value expression
+    size_t            trigger_count;     // number of triggers
+    RexxTrigger *triggers[1];            // parsing triggers
 };
 #endif

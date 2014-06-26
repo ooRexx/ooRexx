@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,126 +49,152 @@
 #include "ParseTarget.hpp"
 #include "ParseInstruction.hpp"
 
-void RexxTarget::init(
-    RexxObject     *_string,            /* target string                     */
-    RexxObject    **_arglist,           /* argument list                     */
-    size_t          _argcount,          /* size of the argument list         */
-    size_t          _translate,         /* translation flag                  */
-    bool            multiple,          /* have multiple strings             */
-    RexxActivation *context,           /* execution context                 */
-    RexxExpressionStack *s)            /* current expression stack          */
-/******************************************************************************/
-/* Function:  Initialize a parse target object                                */
-/******************************************************************************/
+/**
+ * Initialize a ParseTarget instance.
+ *
+ * @param _string    The string being parsed.
+ * @param _arglist   The argument list context, if doing PARSE ARG.
+ * @param _argcount  the count of arguments.
+ * @param _translate The translation flags.
+ * @param multiple   Indicates we have multiple strings to parse.
+ * @param context    The current execution context.
+ * @param s          The evaluation stack.
+ */
+void RexxTarget::init(RexxObject *_string, RexxObject **_arglist, size_t _argcount,
+    size_t _translate, bool multiple, RexxActivation *context, RexxExpressionStack *s)
 {
-  this->translate = _translate;         /* save the translation flag         */
-  this->arglist = _arglist;             /* we have an array of strings       */
-  this->argcount = _argcount;
-  this->string = (RexxString *)_string; /* save the string also              */
-  this->next_argument = 1;             /* start with the first argument     */
-  this->stack = s;                     // save the expression stack for saving object references in
-  this->stackTop = s->location();      // save the stack top for resets
-  this->next(context);                 /* go perform needed resets          */
+    translate = _translate;
+    arglist = _arglist;
+    argcount = _argcount;
+    string = (RexxString *)_string;
+    next_argument = 1;
+    stack = s;
+    stackTop = s->location();      // save the stack top for resets
+    next(context);
 }
 
-void RexxTarget::next(
-    RexxActivation *context)           /* current execution context         */
+/**
+ * Step to the "next" string to parse, resetting all of the
+ * cursor movement values.
+ *
+ * @param context The current execution context.
+ */
+void RexxTarget::next(RexxActivation *context)
 /******************************************************************************/
 /* Function:  Step to the "next" string to parse, resetting all of the        */
 /*            cursor movement values.                                         */
 /******************************************************************************/
 {
-    if (this->arglist != OREF_NULL)    /* have an argument list?            */
+    // if we have an argument list and we have an argument value in that
+    // position, grab it.  Otherwise, our target string is just ""
+    if (arglist != OREF_NULL)
     {
-        /* beyond the array bounds?          */
-        if (this->next_argument > this->argcount)
+        if (next_argument > argcount)
         {
-            this->string = OREF_NULLSTRING;  /* just use a null string            */
+            string = OREF_NULLSTRING;
         }
         else
         {
-            /* get the first element             */
-            this->string = (RexxString *)this->arglist[this->next_argument - 1];
-            if (this->string == OREF_NULL)   /* omitted argument?                 */
+            // get the next element
+            string = (RexxString *)arglist[next_argument - 1];
+            // omitted argument? use a null string
+            if (string == OREF_NULL)
             {
-                this->string = OREF_NULLSTRING;/* use the null string               */
+                string = OREF_NULLSTRING;
             }
         }
     }
     else
     {
-        if (this->next_argument != 1)      /* beyond the first argument         */
-            this->string = OREF_NULLSTRING;  /* just use a null string            */
+        // not PARSE ARG, so beyond the first template is always a null string
+        if (next_argument != 1)
+        {
+            string = OREF_NULLSTRING;
+        }
     }
-    this->next_argument++;               /* bump the argument position        */
-                                         /* make sure this is a string        */
-    this->string = (RexxString *)REQUEST_STRING(this->string);
-    if (this->translate == parse_upper)  /* need to uppercase?                */
+    next_argument++;
+    // make sure we have a string
+    string = (RexxString *)REQUEST_STRING(string);
+    // now handle translation options
+    if (translate[parse_upper])
     {
-                                         /* fold it up                        */
-        this->string = this->string->upper();
+        string = string->upper();
     }
-    /* need to lowercase?                */
-    else if (this->translate == parse_lower)
+    else if (translate[parse_lower])
     {
-        /* down we go                        */
-        this->string = this->string->lower();
+        string = string->lower();
     }
 
     // reset the stack to the entry top, and push this value on to protect it.
-    this->stack->setTop(this->stackTop);
-    this->stack->push(string);
+    stack->setTop(stackTop);
+    stack->push(string);
+
     // if tracing results or intermediates, show the string being parsed.
     context->traceResult(string);
-    this->start = 0;                     /* start at the beginning            */
-    this->pattern_end = 0;               /* no pattern done yet               */
-    this->pattern_start = 0;             /* save the pattern start            */
-                                         /* save the over all length          */
-    this->string_length = this->string->getLength();
-    this->subcurrent = 0;                /* no sub piece to process yet       */
+
+    // reset all of the parsing positions
+    start = 0;
+    pattern_end = 0;
+    pattern_start = 0;
+    // get the length for quicker access
+    string_length = string->getLength();
+    subcurrent = 0;                // no sub piece to process yet
 }
 
+/**
+ * Move the current cursor to the string end.
+ */
 void RexxTarget::moveToEnd()
-/******************************************************************************/
-/* Function:  Move the current cursor to the string end                       */
-/******************************************************************************/
 {
-    this->start = this->pattern_end;     /* start from end of last pattern    */
-                                         /* pattern at the end too            */
-    this->pattern_end = this->string_length;
-    /* no pattern length either          */
-    this->pattern_start = this->string_length;
-    this->end = this->string_length;     /* string end is at end also         */
-                                         /* save the over all length          */
-                                         /* no sub piece to process yet       */
-    this->subcurrent = this->start;      /* set starting point                */
+    // start from end of last pattern
+    start = pattern_end;
+    // pattern at the end too
+    pattern_end = string_length;
+    // no pattern length either
+    pattern_start = string_length;
+    // string end is at end also
+    end = string_length;
+    // set starting point
+    subcurrent = start;
 }
 
-void RexxTarget::forward(
-    stringsize_t offset)               /* offset to move                    */
-/******************************************************************************/
-/* Arguments:  distance to move the parse pointer                             */
-/******************************************************************************/
+/**
+ * Move the parse pointer forward
+ *
+ * @param offset The offset to move.
+ */
+void RexxTarget::forward(stringsize_t offset)
 {
-    this->start = this->pattern_start;   /* start position is last position   */
-    this->end = this->start + offset;    /* set the end position              */
-    if (this->end >= this->string_length)/* take us past the end?             */
+    // the start position is the last postion and the end
+    // position is the start position + the offset we're moving
+    start = pattern_start;
+    end = start + offset;
+
+    // if we've gone past the end, trunk to the string length
+    if (end >= string_length)
     {
-        this->end = this->string_length;   /* just use the end position         */
+        end = string_length;
     }
-    if (this->end <= this->start)      /* no forward movement?              */
+
+    // if there was no forward movement, the special Rexx rule kicks in
+    if (end <= start)      /* no forward movement?              */
     {
-        this->end = this->string_length;   /* just use the end position         */
-        this->pattern_start = this->start; /* start here for the next one       */
+        // we match to the end, and start from the current start next time
+        end = string_length;
+        pattern_start = start;
     }
-    else                                 /* normal movement                   */
+    // normal movement, everthing moves from the end
+    else
     {
-        this->pattern_start = this->end;   /* this is new start position        */
+        pattern_start = end;
     }
-                                           /* and have a zero length pattern    */
-    this->pattern_end = this->pattern_start;
-    this->subcurrent = this->start;      /* set the subpiece pointer          */
+
+    // our pattern is zero length because it is not a string match.
+    pattern_end = pattern_start;
+    // set the subpiece pointer
+    subcurrent = start;
 }
+
 
 void RexxTarget::forwardLength(
     stringsize_t offset)               /* offset to move                    */
@@ -176,16 +202,16 @@ void RexxTarget::forwardLength(
 /* Arguments:  distance to move the parse pointer                             */
 /******************************************************************************/
 {
-    this->start = this->pattern_start;   /* start position is last position   */
-    this->end = this->start + offset;    /* set the end position              */
-    if (this->end >= this->string_length)/* take us past the end?             */
+    start = pattern_start;   /* start position is last position   */
+    end = start + offset;    /* set the end position              */
+    if (end >= string_length)/* take us past the end?             */
     {
-        this->end = this->string_length;   /* just use the end position         */
+        end = string_length;   /* just use the end position         */
     }
-    this->pattern_start = this->end;     /* this is new start position        */
+    pattern_start = end;     /* this is new start position        */
                                          /* and have a zero length pattern    */
-    this->pattern_end = this->pattern_start;
-    this->subcurrent = this->start;      /* set the subpiece pointer          */
+    pattern_end = pattern_start;
+    subcurrent = start;      /* set the subpiece pointer          */
 }
 
 
@@ -199,26 +225,26 @@ void RexxTarget::absolute(
     {
         offset--;                          /* make origin zero                  */
     }
-    this->start = this->pattern_end;     /* start position is last position   */
-    if ((size_t)offset <= this->start) /* backward movement?                */
+    start = pattern_end;     /* start position is last position   */
+    if ((size_t)offset <= start) /* backward movement?                */
     {
-        this->end = this->string_length;   /* matches to the end                */
-        this->pattern_start = offset;      /* pattern start is actual position  */
+        end = string_length;   /* matches to the end                */
+        pattern_start = offset;      /* pattern start is actual position  */
     }
     else                               /* forward movement                  */
     {
-        this->end = offset;                /* use the specified position        */
+        end = offset;                /* use the specified position        */
                                            /* take us past the end?             */
-        if (this->end >= this->string_length)
+        if (end >= string_length)
         {
             /* just use the end position         */
-            this->end = this->string_length;
+            end = string_length;
         }
-        this->pattern_start = this->end;   /* this is new start position        */
+        pattern_start = end;   /* this is new start position        */
     }
     /* and have a zero length pattern    */
-    this->pattern_end = this->pattern_start;
-    this->subcurrent = this->start;      /* set the subpiece pointer          */
+    pattern_end = pattern_start;
+    subcurrent = start;      /* set the subpiece pointer          */
 }
 
 void RexxTarget::backward(
@@ -227,20 +253,20 @@ void RexxTarget::backward(
 /* Arguments:  distance to move the parse pointer                             */
 /******************************************************************************/
 {
-    this->start = this->pattern_start;   /* start position is last position   */
-    this->end = this->string_length;     /* negatives always use to the end   */
+    start = pattern_start;   /* start position is last position   */
+    end = string_length;     /* negatives always use to the end   */
     /* go past start of string?          */
-    if (offset > this->pattern_start)
+    if (offset > pattern_start)
     {
-        this->pattern_start = 0;         /* this resets to the start          */
+        pattern_start = 0;         /* this resets to the start          */
     }
     else
     {
-        this->pattern_start -= offset;   /* just back up                      */
+        pattern_start -= offset;   /* just back up                      */
     }
     /* and have a zero length pattern    */
-    this->pattern_end = this->pattern_start;
-    this->subcurrent = this->start;      /* set the subpiece pointer          */
+    pattern_end = pattern_start;
+    subcurrent = start;      /* set the subpiece pointer          */
 }
 
 
@@ -250,21 +276,21 @@ void RexxTarget::backwardLength(
 /* Arguments:  distance to move the parse pointer                             */
 /******************************************************************************/
 {
-    this->start = this->pattern_start;   /* start position is last position   */
-    this->end = this->string_length;     /* negatives always use to the end   */
+    start = pattern_start;   /* start position is last position   */
+    end = string_length;     /* negatives always use to the end   */
                                          /* go past start of string?          */
-    if (offset > this->pattern_start)
+    if (offset > pattern_start)
     {
-        this->start = 0;
+        start = 0;
     }
     else
     {
-        this->start = this->pattern_start - offset;
+        start = pattern_start - offset;
     }
-    this->end = this->pattern_start;     // the end is the starting location
+    end = pattern_start;     // the end is the starting location
                                          /* and have a zero length pattern    */
-    this->pattern_end = this->pattern_start;
-    this->subcurrent = this->start;      /* set the subpiece pointer          */
+    pattern_end = pattern_start;
+    subcurrent = start;      /* set the subpiece pointer          */
 }
 
 
@@ -275,25 +301,25 @@ void RexxTarget::search(
 /******************************************************************************/
 {
     /* start position for strings is the */
-    this->start = this->pattern_end;     /* end of the last pattern           */
+    start = pattern_end;     /* end of the last pattern           */
                                          /* search for the string trigger     */
-    this->end = this->string->pos(needle, this->start);
-    if (this->end == 0)                /* not found?                        */
+    end = string->pos(needle, start);
+    if (end == 0)                /* not found?                        */
     {
-        this->end = this->string_length;   /* that is the end position          */
+        end = string_length;   /* that is the end position          */
                                            /* next pattern is end also          */
-        this->pattern_start = this->string_length;
+        pattern_start = string_length;
         /* and the end pattern is also there */
-        this->pattern_end = this->string_length;
+        pattern_end = string_length;
     }
     else
     {
-        this->end--;                       /* convert to origin zero            */
-        this->pattern_start = this->end;   /* this is the starting point        */
+        end--;                       /* convert to origin zero            */
+        pattern_start = end;   /* this is the starting point        */
                                            /* end is start + trigger length     */
-        this->pattern_end = this->pattern_start + needle->getLength();
+        pattern_end = pattern_start + needle->getLength();
     }
-    this->subcurrent = this->start;      /* set the subpiece pointer          */
+    subcurrent = start;      /* set the subpiece pointer          */
 }
 
 void RexxTarget::caselessSearch(
@@ -303,25 +329,25 @@ void RexxTarget::caselessSearch(
 /******************************************************************************/
 {
     /* start position for strings is the */
-    this->start = this->pattern_end;     /* end of the last pattern           */
+    start = pattern_end;     /* end of the last pattern           */
                                          /* search for the string trigger     */
-    this->end = this->string->caselessPos(needle, this->start);
-    if (this->end == 0)                /* not found?                        */
+    end = string->caselessPos(needle, start);
+    if (end == 0)                /* not found?                        */
     {
-        this->end = this->string_length;   /* that is the end position          */
+        end = string_length;   /* that is the end position          */
                                            /* next pattern is end also          */
-        this->pattern_start = this->string_length;
+        pattern_start = string_length;
         /* and the end pattern is also there */
-        this->pattern_end = this->string_length;
+        pattern_end = string_length;
     }
     else
     {
-        this->end--;                       /* convert to origin zero            */
-        this->pattern_start = this->end;   /* this is the starting point        */
+        end--;                       /* convert to origin zero            */
+        pattern_start = end;   /* this is the starting point        */
                                            /* end is start + trigger length     */
-        this->pattern_end = this->pattern_start + needle->getLength();
+        pattern_end = pattern_start + needle->getLength();
     }
-    this->subcurrent = this->start;      /* set the subpiece pointer          */
+    subcurrent = start;      /* set the subpiece pointer          */
 }
 
 RexxString *RexxTarget::getWord()
@@ -334,16 +360,16 @@ RexxString *RexxTarget::getWord()
     const char *scan;                    /* scan pointer                      */
     const char *endScan;                 /* end of string location            */
 
-    if (this->subcurrent >= this->end)   /* already used up?                  */
+    if (subcurrent >= end)   /* already used up?                  */
     {
         word = OREF_NULLSTRING;            /* just return a null string         */
     }
     else                               /* need to scan off a word           */
     {
         /* point to the current position     */
-        scan = this->string->getStringData() + this->subcurrent;
+        scan = string->getStringData() + subcurrent;
         /* and the scan end point            */
-        endScan = this->string->getStringData() + this->end;
+        endScan = string->getStringData() + end;
         /* NOTE:  All string objects have a terminating NULL, so the */
         /* scan for nonblanks is guaranteed to stop before getting into */
         /* trouble, which eliminates the need to check against the */
@@ -353,8 +379,8 @@ RexxString *RexxTarget::getWord()
             scan++;                          /* step for each match found         */
         }
         /* set the new location              */
-        this->subcurrent = scan - this->string->getStringData();
-        if (this->subcurrent >= this->end) /* already used up?                  */
+        subcurrent = scan - string->getStringData();
+        if (subcurrent >= end) /* already used up?                  */
         {
             word = OREF_NULLSTRING;          /* just return a null string         */
         }
@@ -363,7 +389,7 @@ RexxString *RexxTarget::getWord()
             /* look for the next blank           */
             endScan = NULL;
             const char *scanner = scan;
-            const char *endPosition = string->getStringData() + this->end;
+            const char *endPosition = string->getStringData() + end;
             while (scanner < endPosition)
             {
                 if (*scanner == ' ' || *scanner == '\t')
@@ -376,24 +402,24 @@ RexxString *RexxTarget::getWord()
             if (endScan == NULL)           /* no match?                         */
             {
                 /* calculate the length              */
-                length = this->end - this->subcurrent;
-                this->subcurrent = this->end;  /* use the rest of it                */
+                length = end - subcurrent;
+                subcurrent = end;  /* use the rest of it                */
             }
             else
             {
                 /* set the new location              */
-                this->subcurrent = endScan - this->string->getStringData();
+                subcurrent = endScan - string->getStringData();
                 length = endScan - scan;       /* calculate from the pointers       */
             }
             /* step past terminating blank...note*/
             /* that this is done unconditionally,*/
             /* but safely, since the check at the*/
             /* start will catch the out of bounds*/
-            this->subcurrent++;              /* condition                         */
+            subcurrent++;              /* condition                         */
                                              /* this the entire string?           */
-            if (length == this->string_length)
+            if (length == string_length)
             {
-                word = this->string;           /* just return it directly           */
+                word = string;           /* just return it directly           */
             }
             else
             {
@@ -413,12 +439,12 @@ void RexxTarget::skipWord()
     const char *scan;                    /* scan pointer                      */
     const char *endScan;                 /* end of string location            */
 
-    if (this->subcurrent < this->end)  /* something left?                   */
+    if (subcurrent < end)  /* something left?                   */
     {
         /* point to the current position     */
-        scan = this->string->getStringData() + this->subcurrent;
+        scan = string->getStringData() + subcurrent;
         /* and the scan end point            */
-        endScan = this->string->getStringData() + this->end;
+        endScan = string->getStringData() + end;
         /* NOTE:  All string objects have a terminating NULL, so the */
         /* scan for nonblanks is guaranteed to stop before getting into */
         /* trouble, which eliminates the need to check against the */
@@ -428,13 +454,13 @@ void RexxTarget::skipWord()
             scan++;                          /* step for each match found         */
         }
         /* set the new location              */
-        this->subcurrent = scan - this->string->getStringData();
-        if (this->subcurrent < this->end)/* something left over?              */
+        subcurrent = scan - string->getStringData();
+        if (subcurrent < end)/* something left over?              */
         {
             /* look for the next blank           */
             endScan = NULL;
             const char *scanner = scan;
-            const char *endPosition = string->getStringData() + this->end;
+            const char *endPosition = string->getStringData() + end;
             while (scanner < endPosition)
             {
                 if (*scanner == ' ' || *scanner == '\t')
@@ -446,18 +472,18 @@ void RexxTarget::skipWord()
             }
             if (endScan == NULL)             /* no match?                         */
             {
-                this->subcurrent = this->end;  /* use the rest of it                */
+                subcurrent = end;  /* use the rest of it                */
             }
             else
             {
                 /* set the new location              */
-                this->subcurrent = endScan - this->string->getStringData();
+                subcurrent = endScan - string->getStringData();
             }
             /* step past terminating blank...note*/
             /* that this is done unconditionally,*/
             /* but safely, since the check at the*/
             /* start will catch the out of bounds*/
-            this->subcurrent++;              /* condition                         */
+            subcurrent++;              /* condition                         */
         }
     }
 }
@@ -470,23 +496,23 @@ RexxString *RexxTarget::remainder()
     RexxString *word;                    /* extracted word                    */
     size_t  length;                      /* length to extract                 */
 
-    if (this->subcurrent >= this->end)   /* already used up?                  */
+    if (subcurrent >= end)   /* already used up?                  */
     {
         word = OREF_NULLSTRING;            /* just return a null string         */
     }
     else                               /* extract the remaining piece       */
     {
         /* calculate the length              */
-        length = this->end - this->subcurrent;
-        if (length == this->string_length) /* this the entire string?           */
+        length = end - subcurrent;
+        if (length == string_length) /* this the entire string?           */
         {
-            word = this->string;             /* just return it directly           */
+            word = string;             /* just return it directly           */
         }
         else                               /* need to extract a piece           */
         {
-            word = this->string->extract(this->subcurrent, length);
+            word = string->extract(subcurrent, length);
         }
-        this->subcurrent = this->end;      /* eat the remainder piece           */
+        subcurrent = end;      /* eat the remainder piece           */
     }
     return word;                         /* give this word back               */
 }

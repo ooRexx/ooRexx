@@ -1462,7 +1462,8 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
  */
 RexxInstruction *LanguageParser::dropNew()
 {
-    // process the variable list
+    // process the variable list...variables will be left
+    // in the subterms stack.
     size_t variableCount = processVariableList(KEYWORD_DROP);
 
     RexxInstruction *newObject = new_variable_instruction(DROP, Drop, sizeof(RexxInstructionDrop) + (variableCount - 1) * sizeof(RexxObject *));
@@ -1554,13 +1555,14 @@ RexxInstruction *LanguageParser::exposeNew()
 
     // validate the placement at the beginning of the code block
     isExposeValid();
-                                         /* go process the list               */
-    size_t variableCount = this->processVariableList(KEYWORD_EXPOSE);
-    /* Get new object                    */
+
+    // process the variable list and create an instruction from this.
+    // The variables are placed in the subTerms stack
+    size_t variableCount = processVariableList(KEYWORD_EXPOSE);
+
     RexxInstruction *newObject = new_variable_instruction(EXPOSE, Expose, sizeof(RexxInstructionExpose) + (variableCount - 1) * sizeof(RexxObject *));
-    /* Initialize this new method        */
-    new ((void *)newObject) RexxInstructionExpose(variableCount, this->subTerms);
-    return newObject; /* done, return this                 */
+    new ((void *)newObject) RexxInstructionExpose(variableCount, subTerms);
+    return newObject;
 }
 
 void LanguageParser::RexxInstructionForwardCreate(
@@ -3232,9 +3234,9 @@ RexxInstruction *LanguageParser::useNew()
     // if this is the SIMPLE version, the second queue will be empty.
     size_t variableCount = 0;
     RexxQueue *variable_list = new_queue();         // we might be parsing message terms, so we can't use the subterms list.
-    saveObject(variable_list);
+    ProtectedObject p1(variable_list);
     RexxQueue *defaults_list = new_queue();
-    saveObject(defaults_list);
+    ProtectedObject p2(defaults_list);
     token = nextReal();                  /* get the next token                */
 
     bool allowOptionals = false;  // we don't allow trailing optionals unless the list ends with "..."
@@ -3338,9 +3340,6 @@ RexxInstruction *LanguageParser::useNew()
     RexxInstruction *newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUseStrict) + (variableCount == 0 ? 0 : (variableCount - 1)) * sizeof(UseVariable));
     new ((void *)newObject) RexxInstructionUseStrict(variableCount, strictChecking, allowOptionals, variable_list, defaults_list);
 
-    // release the object locks and return;
-    removeObj(variable_list);
-    removeObj(defaults_list);
     return newObject;
 }
 
@@ -3362,7 +3361,7 @@ void LanguageParser::isExposeValid()
 
     // the last instruction in the chain must be our dummy
     // first instruction
-    if (!last->isType(KEYWORD_FIRST))
+    if (!lastInstruction->isType(KEYWORD_FIRST))
     {
         syntaxError(Error_Translation_expose);
     }

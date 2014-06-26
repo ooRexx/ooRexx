@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Translator                                                            */
 /*                                                                            */
-/* Primitive Expose Parse Class                                               */
+/* Expose instruction class                                                   */
 /*                                                                            */
 /******************************************************************************/
 #include <stdlib.h>
@@ -48,88 +48,100 @@
 #include "ExposeInstruction.hpp"
 #include "ExpressionBaseVariable.hpp"
 
-RexxInstructionExpose::RexxInstructionExpose(
-    size_t      varCount,              /* count of variables                */
-    RexxQueue  *variable_list)         /* list of exposed variables         */
-/******************************************************************************/
-/* Function:  Complete initialization of an EXPOSE instruction object         */
-/******************************************************************************/
- {
-    /* get the variable size             */
+/**
+ * Complete construction of an EXPOSE instruction.
+ *
+ * @param varCount The count of variables to expose.
+ * @param variable_list
+ *                 The queue of the variable retrievers (in reverse order).
+ */
+RexxInstructionExpose::RexxInstructionExpose(size_t varCount, RexxQueue  *variable_list)
+{
+    // get the variable size
     variableCount = varCount;
-    while (varCount > 0)                 /* loop through the variable list    */
+    // now copy all of the retriever references from the queue, back to front.
+    while (varCount > 0)
     {
-                                         /* copying each variable             */
-        OrefSet(this, this->variables[--varCount], (RexxVariableBase *)(variable_list->pop()));
+        variables[--varCount] = (RexxVariableBase *)variable_list->pop();
     }
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionExpose::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
-
-    memory_mark(this->nextInstruction);  /* must be first one marked          */
-    for (i = 0, count = variableCount; i < count; i++)
+    // must be first one marked
+    memory_mark(nextInstruction);
+    for (size_t i = 0; i < variableCount; i++)
     {
-        memory_mark(this->variables[i]);
+        memory_mark(variables[i]);
     }
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionExpose::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
-
-                                         /* must be first one marked          */
-    memory_mark_general(this->nextInstruction);
-    for (i = 0, count = variableCount; i < count; i++)
+    // must be first one marked
+    memory_mark_general(nextInstruction);
+    for (size_t i = 0; i < variableCount; i++)
     {
-        memory_mark_general(this->variables[i]);
+        memory_mark_general(variables[i]);
     }
 }
 
-void RexxInstructionExpose::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
 
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionExpose::flatten(RexxEnvelope *envelope)
+{
     setUpFlatten(RexxInstructionExpose)
 
-    flatten_reference(newThis->nextInstruction, envelope);
-    for (i = 0, count = variableCount; i < count; i++)
+    flattenRef(nextInstruction);
+
+    for (size_t i = 0; i < variableCount; i++)
     {
-        flatten_reference(newThis->variables[i], envelope);
+        flattenRef(variables[i]);
     }
 
     cleanUpFlatten
 }
 
-void RexxInstructionExpose::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX EXPOSE instruction                               */
-/******************************************************************************/
+
+/**
+ * Execute an EXPOSE instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionExpose::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-    context->traceInstruction(this);     /* trace if necessary                */
-    if (!context->inMethod())            /* is this a method clause?          */
+    // standard trace on entry.
+    context->traceInstruction(this);
+
+    // not allowed in a method context.
+    if (!context->inMethod())
     {
-                                         /* raise an error                    */
         reportException(Error_Translation_expose);
     }
 
-    /* have the context expose these */
+    // the context processeses these
     context->expose(variables, variableCount);
-    context->pauseInstruction();         /* do debug pause if necessary       */
+
+    // and standare debug pause.
+    context->pauseInstruction();
 }
 

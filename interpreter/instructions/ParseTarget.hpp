@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -50,36 +50,40 @@
 
 class RexxTarget {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline RexxTarget() { ; }
-  inline RexxTarget (RESTORETYPE restoreType) { ; };
-  void        init (RexxObject *, RexxObject **, size_t, size_t, bool, RexxActivation *, RexxExpressionStack *);
-  void        next(RexxActivation *);
-  void        moveToEnd();
-  void        forward(stringsize_t);
-  void        forwardLength(stringsize_t);
-  void        absolute(stringsize_t);
-  void        backward(stringsize_t);
-  void        backwardLength(stringsize_t);
-  void        search(RexxString *);
-  void        caselessSearch(RexxString *);
-  RexxString *getWord();
-  RexxString *remainder();
-  void        skipRemainder() { this->subcurrent = this->end;      /* eat the remainder piece           */ }
-  void        skipWord();
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
 
-  RexxString * string;                 /* parsed string                     */
-  RexxObject **arglist;                /* argument list for PARSE ARG       */
-  RexxExpressionStack *stack;          // context expression stack (used for anchoring values for GC).
-  size_t  stackTop;                    // top location of the epxression stack
-  size_t  argcount;
-  stringsize_t  start;                 /* start of substring                */
-  stringsize_t  end;                   /* end of the substring              */
-  stringsize_t  string_length;         /* length of the string              */
-  stringsize_t  pattern_end;           /* end of matched pattern            */
-  stringsize_t  pattern_start;         /* start of matched pattern          */
-  stringsize_t  subcurrent;            /* current location for word parse   */
-  size_t  next_argument;               /* next PARSE ARG argument           */
-  size_t  translate;                   /* string translation flag           */
+    inline RexxTarget() { ; }
+    inline RexxTarget (RESTORETYPE restoreType) { ; };
+
+    void        init (RexxObject *, RexxObject **, size_t, size_t, bool, RexxActivation *, RexxExpressionStack *);
+    void        next(RexxActivation *);
+    void        moveToEnd();
+    void        forward(stringsize_t);
+    void        forwardLength(stringsize_t);
+    void        absolute(stringsize_t);
+    void        backward(stringsize_t);
+    void        backwardLength(stringsize_t);
+    void        search(RexxString *);
+    void        caselessSearch(RexxString *);
+    RexxString *getWord();
+    RexxString *remainder();
+    void        skipRemainder() { this->subcurrent = this->end;      /* eat the remainder piece           */ }
+    void        skipWord();
+
+ protected:
+
+    RexxString * string;                 // current string being parsed
+    RexxObject **arglist;                // argument list for PARSE ARG
+    RexxExpressionStack *stack;          // context expression stack (used for anchoring values for GC).
+    size_t  stackTop;                    // top location of the epxression stack
+    size_t  argcount;                    // count of arguments if PARSE ARG
+    stringsize_t  start;                 // start of substring
+    stringsize_t  end;                   // end of the substring
+    stringsize_t  string_length;         // length of the string
+    stringsize_t  pattern_end;           // end of matched pattern
+    stringsize_t  pattern_start;         // start of matched pattern
+    stringsize_t  subcurrent;            // current location for word parse
+    size_t  next_argument;               // next PARSE ARG argument
+    size_t  translate;                   // string translation flag
 };
 #endif
