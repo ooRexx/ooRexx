@@ -69,10 +69,13 @@ class RexxDoBlock : public RexxInternalObject {
     inline void setControl(RexxVariableBase *v) { control = v; }
     inline void setTo(RexxObject * value) {to = value;};
     inline void setBy(RexxObject * value) {by = value;};
-    inline void setCompare(int value) {compare = (unsigned short)value;};
     inline void setFor(wholenumber_t value) {forVount = value;};
-    inline bool testFor() {return (forFount--) <= 0;};
+    inline void setCompare(int value) {compare = (unsigned short)value;};
     inline size_t getIndent() { return indent; };
+    inline bool checkFor() {return (forCount--) <= 0;};
+           bool checkControl(RexxActivation *context, RexxExpressionStack *stack, bool increment);
+           bool checkOver(RexxActivation *context, RexxExpressionStack *stack);
+
 
 protected:
 

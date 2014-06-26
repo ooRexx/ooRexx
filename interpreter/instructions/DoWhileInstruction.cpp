@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Translator                                                            */
 /*                                                                            */
-/* Simple (non-looping) Do instruction                                        */
+/* The simple DO UNTIL/WHILE instruction variants                             */
 /*                                                                            */
 /******************************************************************************/
 #include <stdlib.h>
@@ -49,47 +49,133 @@
 
 
 /**
- * Initialize a SimpleDo block.
+ * Initialize a Do While block
  *
- * @param l      The block label (if any).
+ * @param l      The block label.
+ * @param w      The conditional control information.
  */
-RexxInstructionSimpleDo::RexxInstructionSimpleDo(RexxString *l)
+RexxInstructionDoWhile::RexxInstructionDoWhile(RexxString *l, WhileUntilLoop &w)
 {
     label = l;
+    whileLoop = w;
 }
 
 
 /**
- * Execute a simple block DO instruction.  We have some
- * slightly different setup requirements, so we override
- * the execute() method rather than relying on the
- * default one from the base class.
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionDoWhile::live(size_t liveMark)
+{
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(end);
+    memory_mark(label);
+
+    // helpers for additional types of loops handle marking here
+    whileLoop.live(liveMark);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionDoWhile::liveGeneral(int reason)
+{
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(end);
+    memory_mark_general(label);
+
+    // helpers for additional types of loops handle marking here
+    whileLoop.liveGeneral(reason);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionDoWhile::flatten(RexxEnvelope *envelope)
+{
+    setUpFlatten(RexxInstructionDo)
+
+    flattenRef(nextInstruction);
+    flattenRef(end);
+    flattenRef(label);
+
+    // flatten is a bit of a pain with embedded objects because
+    // everything depends on having correct pointers to object references in
+    // the copied buffer.  We need to directly reference all of the elements here.
+
+    flattenRef(whileLoop.conditional);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Perform a test on whether this loop iteration should
+ * be executed or not.
  *
  * @param context The current execution context.
  * @param stack   The current evaluation stack.
+ * @param doblock The doblock for this instruction instance.
+ * @param first   True if this is the first iteration, false for
+ *                reExecute iterations.
+ *
+ * @return true if we should execute the loop block, false if
+ *         we should terminate the loop.
  */
-void RexxInstructionSimpleDo::execute(RexxActivation *context, RexxExpressionStack *stack)
+bool RexxInstructionDoWhile::iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first)
 {
-    // trace on entry
-    context->traceInstruction(this);
+    whileLoop.checkWhile(context, stack);
+}
 
-    RexxDoBlock *doblock = OREF_NULL;
 
-    // if we have a label then we need to add a block to the control stack
-    // so LEAVE or ITERATE can determine the block bounds.
-    if (getLabel() != OREF_NULL)
+/**
+ * Initialize a Do Until block
+ *
+ * @param l      The block label.
+ * @param w      The conditional control information.
+ */
+RexxInstructionDoUntil::RexxInstructionDoUntil(RexxString *l, WhileUntilLoop &w)
+{
+    label = l;
+    whileLoop = w;
+}
+
+
+// NOTE The UNTIL variant does add not any additional fields, so it can
+// just use the live() methods inherited from the UNTIL version.
+
+
+/**
+ * Perform a test on whether this loop iteration should
+ * be executed or not.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock for this instruction instance.
+ * @param first   True if this is the first iteration, false for
+ *                reExecute iterations.
+ *
+ * @return true if we should execute the loop block, false if
+ *         we should terminate the loop.
+ */
+bool RexxInstructionDoUntil::iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first)
+{
+    // we don't check the UNTIL condition on the first iteration
+    if (!first)
     {
-        // create an active block, and make this the top of the
-        // control stack
-        doblock = new RexxDoBlock (this, context->getIndent());
-        context->newDo(doblock);
+        return !whileLoop.checkUntil(context, stack) && doblock->checkOver(context, stack);
     }
-    else
-    {
-        // this just tells the context to step the nesting level.
-        context->addBlock();
-    }
-
-    // handle a debug pause that might cause re-execution
-    handleDebugPause(context, doblock);
+    // always do the first iteration
+    return true;
 }

@@ -48,63 +48,16 @@
 #include "EndInstruction.hpp"
 
 /**
- * Initialize a DoForever block from a fuller DO instruction.
+ * Initialize a DoForever block.
  *
- * @param parent The parent DO instruction.
+ * @param l      The optional block label.
  */
-RexxInstructionDoForever::RexxInstructionDoForever(RexxInstructionDo *parent)
+RexxInstructionDoForever::RexxInstructionDoForever(RexxString *l)
 {
-    // the label is the only part of the big block that is interesting here.
-    label = parent->label;
+    label = l;
 }
 
-/**
- * Execute a simple block DO instruction.
- *
- * @param context The current execution context.
- * @param stack   The current evaluation stack.
- */
-void RexxInstructionDoForever::execute(RexxActivation *context, RexxExpressionStack *stack)
-{
-    // trace on entry
-    context->traceInstruction(this);
-
-    // all we do here is create a new doblock and make it active
-    RexxDoBlock *doblock = new RexxDoBlock (this, context->getIndent());
-    context->newDo(doblock);
-
-    // handle a debug pause that might cause re-execution
-    handleDebugPause(context, OREF_NULL);
-}
-
-
-/**
- * Base re-execute method for a DO FOREVER instruction.
- *
- * @param context The current execution context.
- * @param stack   The current evaluation stack.
- * @param doblock The doblock associated with this loop instance.
- */
-void RexxInstructionDoForever::reExecute(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
-{
-    // change control to the top of the loop
-    context->setNext(nextInstruction);
-    context->traceInstruction(this);
-    context->indent();
-}
-
-
-/**
- * Terminate a simple do.
- *
- * @param context The current execution context.
- * @param doblock Our doblock, provided by the context.
- */
-void RexxInstructionDoForever::terminate(RexxActivation *context, RexxDoBlock *doblock )
-{
-    // reset the DO block
-    context->terminateBlock(doblock->getIndent());
-    // The next instruction is the one after the END
-    context->setNext(end->nextInstruction);
-}
-
+// NOTE:  Everything else for a DO FOREVER loop is provided by the base
+// DO class.  We could probably get by with just using an instance of that
+// class, but for problem determination purposes, it is useful to have a
+// separately well marked class for this.

@@ -102,6 +102,101 @@ void RexxInstructionBaseDo::flatten(RexxEnvelope *envelope)
 
 
 /**
+ * Base execute method for a DO instruction.  This performs all
+ * common execution steps and delegates the continue tests to
+ * the subclasses
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionBaseDo::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // trace on entry
+    context->traceInstruction(this);
+
+    // all we do here is create a new doblock and make it active
+    RexxDoBlock *doblock = new RexxDoBlock (this, context->getIndent());
+    context->newDo(doblock);
+
+    // perform loop specific initialization
+    setup(context, stack, doblock)
+
+    // now perform the initial iteration checks
+    if (!iterate(context, stack, doblock, true))
+    {
+        // nothing to process, terminate the loop now
+        terminate(context, doblock);
+    }
+
+    // handle a debug pause that might cause re-execution
+    handleDebugPause(context, OREF_NULL);
+}
+
+
+/**
+ * Base re-execute method for do loops.  This does all common
+ * logic, then delegates the continue steps to the subclasses.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock associated with this loop instance.
+ */
+void RexxInstructionBaseDo::reExecute(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
+{
+    // change control to the top of the loop
+    context->setNext(nextInstruction);
+    context->traceInstruction(this);
+    context->indent();
+
+    // now perform the loop iteration checkes now...if we're good, we just return
+    if (iterate(context, stack, doblock, false))
+    {
+        // we're all good.
+        return
+    }
+
+    // we need to terminate this loop
+    endLoop(context);
+}
+
+
+/**
+ * Base setup routine for a loop.  This performs any initial
+ * setup instructions for a loop subclass and is called
+ * before the first iteration test is performed.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock associated with this loop instance.
+ */
+void RexxInstructionBaseDo::setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock)
+{
+    // default is no setup
+    return;
+}
+
+
+/**
+ * Perform a test on whether this loop iteration should
+ * be executed or not.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock for this instruction instance.
+ * @param first   True if this is the first iteration, false for
+ *                reExecute iterations.
+ *
+ * @return true if we should execute the loop block, false if
+ *         we should terminate the loop.
+ */
+bool RexxInstructionBaseDo::iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first)
+{
+    // the default is basically a DO FOREVER loop.
+    return true;
+}
+
+
+/**
  * Verify that the name on an END instructon and
  * the instruction label match.
  *
@@ -234,5 +329,4 @@ void RexxInstructionBaseDo::endLoop(RexxActivation *context)
     // jump to the loop end
     context->setNext(end->nextInstruction);
     context->unindent();
-
 }

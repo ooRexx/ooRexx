@@ -341,10 +341,6 @@ void RexxInstructionDo::reExecute(RexxActivation *context, RexxExpressionStack *
             break;
     }
 
-    // pop the block instruction and remove the execution nest.
-    context->popBlock();
-    context->removeBlock();
-    // jump to the loop end
-    context->setNext(end->nextInstruction);
-    context->unindent();
+    // shut the loop down.
+    endLoop(context);
 }

@@ -89,6 +89,10 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
     virtual void liveGeneral(int reason);
     virtual void flatten(RexxEnvelope *);
 
+    // required by RexxInstruction.  For most subclasses, the default
+    // is sufficient.
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
     // methods required by RexxBlockInstruction;
     virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
     // most DO blocks are loops.  The simple styles will need to override.
@@ -96,9 +100,13 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
     // Most DOs are loops...Simple DO will override again.
     virtual bool isLoop() { return true };
 
-    // specific to Do loops.
+    // specific to Do loops.  Most subclasses can rely on the default
     virtual void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
     virtual void terminate(RexxActivation *, RexxDoBlock *);
+
+    // most loops will want to override these two
+    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
 
     void matchLabel(RexxInstructionEnd *end, RexxSource *source );
     void handleDebugPause(RexxActivation *context, RexxDoBlock *doblock);
@@ -129,9 +137,7 @@ class RexxInstructionDo : public RexxInstructionBaseDo
      virtual void liveGeneral(int reason);
      virtual void flatten(RexxEnvelope *);
 
-     // required by RexxInstruction
      virtual void execute(RexxActivation *, RexxExpressionStack *);
-     void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
 
      // methods required by RexxBlockInstruction;
      virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
@@ -162,7 +168,7 @@ class RexxInstructionSimpleDo : public RexxInstructionBaseDo
 
     inline RexxInstructionSimpleDo(void) { ; }
     inline RexxInstructionSimpleDo(RESTORETYPE restoreType) { ; };
-           RexxInstructionSimpleDo(RexxInstructionDo *parent);
+           RexxInstructionSimpleDo(RexxString *l);
 
     // required by RexxInstruction
     virtual void execute(RexxActivation *, RexxExpressionStack *);
@@ -186,12 +192,276 @@ class RexxInstructionDoForever : public RexxInstructionBaseDo
 
     inline RexxInstructionDoForever(void) { ; }
     inline RexxInstructionDoForever(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoForever(RexxInstructionDo *parent);
+           RexxInstructionDoForever(RexxString *l);
+};
 
-    // required by RexxInstruction
-    virtual void execute(RexxActivation *, RexxExpressionStack *);
 
-    // methods required by RexxBlockInstruction;
-    virtual void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
+/**
+ * The DO OVER instruction.  Takes a snap shot of an object via
+ * makearray method then iterates over the array
+ */
+class RexxInstructionDoOver : public RexxInstructionBaseDo
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoOver(void) { ; }
+    inline RexxInstructionDoOver(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoOver(RexxString *l, OverLoop &o);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // Methods needed for loop iteration
+    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+    OverLoop overLoop;          // handles control logic for a DO OVER
+};
+
+
+/**
+ * The DO OVER UNTIL cond instruction.  Takes a snap shot of an
+ * object via makearray method then iterates over the array
+ */
+class RexxInstructionDoOverUntil : public RexxInstructionDoOver
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoOverUntil(void) { ; }
+    inline RexxInstructionDoOverUntil(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoOverUntil(RexxString *l, OverLoop &o, WhileUntilLoop &w);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // Methods needed for loop iteration
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+    WhileUntilLoop whileLoop;   // handles the conditional part
+};
+
+
+/**
+ * The DO OVER WHILE cond instruction.  Takes a snap shot of an
+ * object via makearray method then iterates over the array
+ */
+class RexxInstructionDoOverWhile : public RexxInstructionDoOverUntil
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoOverWhile(void) { ; }
+    inline RexxInstructionDoOverWhile(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoOverWhile(RexxString *l, OverLoop &o, WhileUntilLoop &w);
+
+    // Methods needed for loop iteration
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+};
+
+
+/**
+ * The controled DO instruction.  Sets an iteration variable on
+ * each pass through the loop.
+ */
+class RexxInstructionControlledDo: public RexxInstructionBaseDo
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionControlledDo(void) { ; }
+    inline RexxInstructionControlledDo(RESTORETYPE restoreType) { ; };
+           RexxInstructionControlledDo(RexxString *l, ControlledLoop &c);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // Methods needed for loop iteration
+    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+    ControlledLoop controlLoop;          // handles control logic for a controlled loop
+};
+
+
+/**
+ * The DO i = x UNTIL cond instruction.
+ */
+class RexxInstructionControlledDoUntil : public RexxInstructionControlledDo
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionControlledDoUntil(void) { ; }
+    inline RexxInstructionControlledDoUntil(RESTORETYPE restoreType) { ; };
+           RexxInstructionControlledDoUntil(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // Methods needed for loop iteration
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+    WhileUntilLoop whileLoop;   // handles the conditional part
+};
+
+
+/**
+ * The DO i = x WHILE cond instruction.
+ */
+class RexxInstructionControlledDoWhile : public RexxInstructionControlledDoUntil
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionControlledDoWhile(void) { ; }
+    inline RexxInstructionControlledDoWhile(RESTORETYPE restoreType) { ; };
+           RexxInstructionControlledDoWhile(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
+
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+};
+
+
+/**
+ * The DO WHILE loop.  Loops while a condition is true.
+ */
+class RexxInstructionDoWhile: public RexxInstructionBaseDo
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoWhile(void) { ; }
+    inline RexxInstructionDoWhile(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoWhile(RexxString *l, WhileUntilLoop &w);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // Methods needed for loop iteration
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+    WhileUntilLoop whileLoop;                 // handles condition logic
+};
+
+
+/**
+ * The DO UNTIL cond instruction.  Loops until a condition is
+ * true
+ */
+class RexxInstructionDoUntil : public RexxInstructionDoWhile
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoUntil(void) { ; }
+    inline RexxInstructionDoUntil(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoUntil(RexxString *l, WhileUntilLoop &w);
+
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+};
+
+
+/**
+ * The DO COUNT instruction.  Just loops for a number of
+ * iterations without setting a control variable.
+ */
+class RexxInstructionDoCount : public RexxInstructionBaseDo
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoCount(void) { ; }
+    inline RexxInstructionDoCount(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoCount(RexxString *l, ForLoop &f);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // Methods needed for loop iteration
+    virtual void setup(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock);
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+    ForLoop forLoop;          // handles control logic for a DO count
+};
+
+
+/**
+ * The DO count UNTIL cond instruction.
+ */
+class RexxInstructionDoCountUntil : public RexxInstructionDoCount
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoCountUntil(void) { ; }
+    inline RexxInstructionDoCountUntil(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoCountUntil(RexxString *l, ForLoop &f, WhileUntilLoop &w);
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // Methods needed for loop iteration
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
+
+    WhileUntilLoop whileLoop;   // handles the conditional part
+};
+
+
+/**
+ * The DO count WHILE cond instruction.  Takes a snap shot of an
+ * object via makearray method then iterates over the array
+ */
+class RexxInstructionDoCountWhile : public RexxInstructionDoCountUntil
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoCountWhile(void) { ; }
+    inline RexxInstructionDoCountWhile(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoCountWhile(RexxString *l, ForLoop &f, WhileUntilLoop &w);
+
+    // Methods needed for loop iteration
+    virtual bool iterate(RexxActivation *context, RexxExpressionStack *stack, RexxDoBlock *doblock, bool first);
 };
 #endif
