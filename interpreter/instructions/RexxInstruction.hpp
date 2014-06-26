@@ -108,17 +108,28 @@ class RexxBlockInstruction : public RexxInstruction
     RexxBlockInstruction() {;};
     RexxBlockInstruction(RESTORETYPE restoreType) { ; };
 
-    virtual bool isLabel(RexxString *) { return false; }
-    virtual RexxString *getLabel() { return OREF_NULL; };
+    // virtual functions required by subclasses to override.
+
+    virtual EndBlockType getEndStyle() = 0;
     virtual bool isLoop() { return false; };
     virtual void matchEnd(RexxInstructionEnd *, RexxSource *) { ; };
     virtual void terminate(RexxActivation *, RexxDoBlock *) { ; };
+
+    // inherited behaviour
+    // NOTE: tokens on ends and label instructions are interned strings, so
+    // we can just do pointer compares
+    bool isLabel(RexxString *name) { return name == label; }
+    RexxString *getLabel() { return label; };
+
+ protected:
+    RexxString *label;         // the block instruction label
+    RexxInstructionEnd *end;   // the END matching the block instruction
 };
 
 
 /**
- * Base instruction for instructions that need to have
- * and end position set.
+ * Base instruction for instructions that need to have an end
+ * position set.
  */
 class RexxInstructionSet : public RexxInstruction
 {

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,59 +46,147 @@
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"
 
-RexxDoBlock::RexxDoBlock(
-    RexxBlockInstruction* _parent,      /* parent DO block                   */
-    size_t             _indent )        /* current indentation level         */
-/******************************************************************************/
-/* Function:  complete BLOCK instruction initialization                       */
-/******************************************************************************/
-{
-  OrefSet(this, this->parent, _parent); /* remember the parent block         */
-  this->indent = _indent;               /* save the indentation level        */
-}
 
-void RexxDoBlock::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-  memory_mark(this->previous);
-  memory_mark(this->parent);
-  memory_mark(this->to);
-  memory_mark(this->by);
-}
 
-void RexxDoBlock::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-  memory_mark_general(this->previous);
-  memory_mark_general(this->parent);
-  memory_mark_general(this->to);
-  memory_mark_general(this->by);
-}
-
-void RexxDoBlock::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxDoBlock)
-
-  flatten_reference(newThis->previous, envelope);
-  flatten_reference(newThis->to, envelope);
-  flatten_reference(newThis->by, envelope);
-
-  cleanUpFlatten
-}
-
+/**
+ * Allocate a new RexxDoBlock object.
+ *
+ * @param size   The object size
+ *
+ * @return Storage for this object allocated from the Rexx object heap.
+ */
 void * RexxDoBlock::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
 {
-                                       /* Get new object                    */
     return new_object(size, T_DoBlock);
 }
 
+
+/**
+ * Construct a runtime DO block instance.
+ *
+ * @param _parent The instruction this represents.
+ * @param _indent The current trace indentation level.
+ */
+RexxDoBlock::RexxDoBlock(RexxBlockInstruction* _parent, size_t  _indent )
+{
+    parent = _parent;
+    indent = _indent;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxDoBlock::live(size_t liveMark)
+{
+    memory_mark(previous);
+    memory_mark(parent);
+    memory_mark(control);
+    memory_mark(to);
+    memory_mark(by);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxDoBlock::liveGeneral(int reason)
+{
+    memory_mark_general(previous);
+    memory_mark_general(parent);
+    memory_mark_general(control);
+    memory_mark_general(to);
+    memory_mark_general(by);
+}
+
+
+
+/**
+ * Process an interation of a DO OVER loop.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ *
+ * @return true if we should perform this iteration of the loop,
+ *         false otherwise.
+ */
+bool RexxDoBlock::checkOver(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // the array was stored in the too field
+    RexxArray *overArray = (RexxArray *)to;
+    // are we past the end of the array?
+    if (overArray->size() < for)
+    {
+        return false;                    // time to get out of here.
+    }
+
+    // get the next element  from the array. This should be a
+    // non-sparse array, but we need to double check anyway.
+    RexxObject *result = overArray->get(forCount);
+    // use .nil for any empty slots
+    if (result == OREF_NULL)
+    {
+        result = TheNilObject;           /* use .nil instead                  */
+    }
+
+    // assign the control variable and trace this result
+    control->assign(context, stack, result);
+    context->traceResult(result);
+    forCount++
+    return true;
+}
+
+
+/**
+ * Perform control variable checks on a DO/LOOP iteration.
+ *
+ * @param context   The current execution context.
+ * @param stack     The current evaluation stack.
+ * @param increment a flag indicating whether to increment the value or
+ *                  not.  This will be true on the first loop iteration and
+ *                  false on all further iterations.
+ *
+ * @return True if the loop should continue, false if we've hit
+ *         a termination condition.
+ */
+bool RexxDoBlock::checkControl(RexxActivation *context, RexxExpressionStack *stack, bool increment )
+{
+    // get the control variable value and trace
+    RexxObject *result = control->getValue(context);
+    context->traceResult(result);
+
+    // if this is time to increment the value, perform the plus operation
+    // to add in the BY increment.
+    if (increment)
+    {
+        result = callOperatorMethod(result, OPERATOR_PLUS, doblock->getBy());
+
+        // the control variable gets set immediately, and we trace this
+        // increment result
+        control->set(context, result);
+        context->traceResult(result);
+    }
+
+    // if we have a termination condition, do the compare now by calling the operator method.
+    if (to != OREF_NULL)
+    {
+        if (callOperatorMethod(result, compare, to) == TheTrueObject)
+        {
+            return false;                  // time to stop if this is true
+        }
+    }
+
+    // do we have a forCount?  perform that test now
+    if (forCount > 0)
+    {
+        return testFor();
+    }
+
+    return true;                         // still looping
+}

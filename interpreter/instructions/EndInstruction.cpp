@@ -49,96 +49,133 @@
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"
 
-RexxInstructionEnd::RexxInstructionEnd(
-    RexxString *_name)                  /* The END instruction name          */
-/****************************************************************************/
-/* Function:  Set the name of an END instruction                            */
-/****************************************************************************/
+/**
+ * Construct an END instruction.
+ *
+ * @param _name  The optional END label, which will need to be matched
+ *               up with the apprpriate block instruction.
+ */
+RexxInstructionEnd::RexxInstructionEnd(RexxString *_name)
 {
-  OrefSet(this, this->name, _name);
+    name = _name;
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionEnd::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->name);
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(name);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionEnd::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->name);
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(name);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxInstructionEnd::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionEnd)
+    setUpFlatten(RexxInstructionEnd)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->name, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(name);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionEnd::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX END instruction                                */
-/****************************************************************************/
-{
-    RexxDoBlock       *doBlock;          /* target DO block                   */
 
-    if (!context->hasActiveBlocks())     /* no possible blocks?               */
+/**
+ * Runtime execution of an END statement.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionEnd::execute(RexxActivation *context, RexxExpressionStack *stack )
+{
+    // SIGNAL will disable all active block instructions, so it is possible that
+    // this END has been encountered without its corresponding block instruction actually
+    // being active.
+    if (!context->hasActiveBlocks())
     {
-        context->traceInstruction(this);     /* trace if necessary                */
-                                         /* this is an error                  */
+        // trace anyway, then give an error
+        context->traceInstruction(this);
         reportException(Error_Unexpected_end_nodo);
     }
 
-    switch (this->getStyle())
-    {          /* process each loop type            */
-
-        case LOOP_BLOCK:                   /* is this a loop?                   */
-            doBlock = context->topBlock();   /* get the top DO block              */
-                                             /* reset the indentation             */
+    // we have different actions depending on the type of instruction
+    // we're hooked to.  Probably not worth trying to create separate END
+    // instruction types.
+    switch (getStyle())
+    {
+        // All types of loops.  There will be a block managed by the
+        // context that holds the state of an active loop.
+        case LOOP_BLOCK:
+        {
+            // get the top block from the context.
+            RexxDoBlock *doBlock = context->topBlock();
+            // For tracing the end, reset the indentation to the block beginning indent.
+            // then trace.
             context->setIndent(doBlock->getIndent());
-            context->traceInstruction(this);     /* trace if necessary                */
-            /* pass on the reexecution           */
+            context->traceInstruction(this);
+            // tell the DO/LOOP instruction we're back around.
             ((RexxInstructionDo *)(doBlock->getParent()))->reExecute(context, stack, doBlock);
             break;
+        }
 
-        case SELECT_BLOCK:                 /* END of a select block             */
-            context->unindent();                 /* remove indentation                */
-            context->traceInstruction(this);     /* trace if necessary                */
-            /* looking for a WHEN match          */
-            /* this is an error                  */
+        // END of a select block.  If we have fallen through to this, then we have an
+        // error with a SELECT instruction that does not have an OTHERWISE section.
+        // This is an error.
+        case SELECT_BLOCK:
+        {
+            // back off the indentation and trace
+            context->unindent();
+            context->traceInstruction(this);
+
+            // we've traced, now raise an error.
             reportException(Error_When_expected_nootherwise);
             break;
+        }
 
-            // for labeled BLOCK types, we need to remove the active marker.
+        // for labeled BLOCK types, we need to remove the active marker.
         case OTHERWISE_BLOCK:
         case LABELED_OTHERWISE_BLOCK:
         case LABELED_DO_BLOCK:
+        {
+            // terminateBlock will also reset the indentation for tracing
             context->terminateBlock();
-            context->traceInstruction(this);     /* trace if necessary                */
+            context->traceInstruction(this);
             break;
+        }
 
-        default:                                 /* all others                        */
-            context->unindent();                 /* remove indentation                */
-            context->removeBlock();              /* just step back next level         */
-            context->traceInstruction(this);     /* trace if necessary                */
+        // probably a simple unlabeled DO...back off and fall through.
+        default:
+        {
+            context->unindent();
+            context->removeBlock();
+            context->traceInstruction(this);
             break;
+        }
     }
 }
 

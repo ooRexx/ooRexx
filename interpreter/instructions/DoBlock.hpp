@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,8 @@
 /******************************************************************************/
 /* REXX Kernel                                                    DoBlock.hpp */
 /*                                                                            */
-/* Primitive Do Block Class Definitions                                       */
+/* Runtime processing of DO/LOOP variations.  This holds the state of active  */
+/* loops and performs loop test operations.                                   */
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_RexxDoBlock
@@ -49,39 +50,43 @@ class RexxBlockInstruction;
 class RexxDoBlock : public RexxInternalObject {
  public:
 
-  void *operator new(size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  RexxDoBlock(RexxBlockInstruction *, size_t);
-  inline RexxDoBlock(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
+    RexxDoBlock(RexxBlockInstruction *, size_t);
+    inline RexxDoBlock(RESTORETYPE restoreType) { ; };
 
-  inline RexxObject * getTo() {return this->to;};
-  inline wholenumber_t getFor() {return this->forcount;};
-  inline int  getCompare() {return (int)(this->compare);};
-  inline RexxObject * getBy() {return this->by;};
-  inline RexxBlockInstruction * getParent() {return this->parent;};
-  inline void setTo(RexxObject * value) {this->to = value;};
-  inline void setBy(RexxObject * value) {this->by = value;};
-  inline void setCompare(int value) {this->compare = (unsigned short)value;};
-  inline void setFor(wholenumber_t value) {this->forcount = value;};
-  inline bool testFor() {return (this->forcount--) <= 0;};
-  inline size_t getIndent() { return this->indent; };
-  inline void setPrevious(RexxDoBlock *block) { this->previous = block; }
-  inline RexxDoBlock *getPrevious() { return previous; }
+    void live(size_t);
+    void liveGeneral(int reason);
+    void flatten(RexxEnvelope *);
+
+    inline RexxBlockInstruction * getParent() {return this->parent;};
+    inline void setPrevious(RexxDoBlock *block) { previous = block; }
+    inline RexxDoBlock *getPrevious() { return previous; }
+
+    inline void setControl(RexxVariableBase *v) { control = v; }
+    inline void setTo(RexxObject * value) {to = value;};
+    inline void setBy(RexxObject * value) {by = value;};
+    inline void setCompare(int value) {compare = (unsigned short)value;};
+    inline void setFor(wholenumber_t value) {forVount = value;};
+    inline bool testFor() {return (forFount--) <= 0;};
+    inline size_t getIndent() { return indent; };
 
 protected:
 
-  RexxDoBlock       *previous;         /* previous stacked Do Block         */
-  RexxBlockInstruction *parent;        /* parent instruction                */
-  RexxObject        *to;               /* final target value                */
-  RexxObject        *by;               /* control increment value           */
-  wholenumber_t      forcount;         /* number of iterations              */
-  size_t             indent;           /* base indentation                  */
-  int                compare;          /* type of comparison                */
+    RexxDoBlock       *previous;         // previous stacked Do Block
+    RexxBlockInstruction *parent;        // parent instruction
+    size_t             indent;           // base indentation
+
+    // start of variables representing control state.  This get
+    // initialized by the loop instruction and are used by block test
+    // operations.
+    RexxVariableBase  *control;          // control variable for controlled loop
+    RexxObject        *to;               // final target TO value
+    RexxObject        *by;               // control increment value
+    wholenumber_t      forCount;         // number of iterations
+    int                compare;          // type of comparison
 };
 #endif

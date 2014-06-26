@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,65 +45,153 @@
 #define Included_RexxInstructionDo
 
 #include "RexxInstruction.hpp"
+#include "EndInstruction.hpp"
 
-#define SIMPLE_DO         1
-#define DO_COUNT          2
-#define DO_FOREVER        3
-#define DO_WHILE          4
-#define DO_UNTIL          5
-#define CONTROLLED_DO     6
-#define CONTROLLED_WHILE  7
-#define CONTROLLED_UNTIL  8
-#define DO_OVER           9
-#define DO_OVER_WHILE    10
-#define DO_OVER_UNTIL    11
-#define DO_COUNT_WHILE   12
-#define DO_COUNT_UNTIL   13
 
-#define EXP_TO           1             /* TO expression                     */
-#define EXP_BY           2             /* BY expression                     */
-#define EXP_FOR          3             /* FOR expression                    */
+/**
+ * Identifier for different DO loop types.
+ */
+enum
+{
+    SIMPLE_DO,
+    DO_COUNT,
+    DO_FOREVER,
+    DO_WHILE,
+    DO_UNTIL,
+    CONTROLLED_DO,
+    CONTROLLED_WHILE,
+    CONTROLLED_UNTIL,
+    DO_OVER,
+    DO_OVER_WHILE,
+    DO_OVER_UNTIL,
+    DO_COUNT_WHILE,
+    DO_COUNT_UNTIL
+} DoInstructionType;
 
-class RexxInstructionDo : public RexxBlockInstruction
+
+/**
+ * The base class for a DO instruction.  This implements all of
+ * the common END-matching behavior and label definitions.
+ *
+ */
+class RexxInstructionBaseDo : public RexxBlockInstruction
 {
  public:
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionBaseDo(void) { ; }
+    inline RexxInstructionBaseDo(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // methods required by RexxBlockInstruction;
+    virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
+    // most DO blocks are loops.  The simple styles will need to override.
+    virtual EndBlockType getEndStyle() { return LOOP_BLOCK; }
+    // Most DOs are loops...Simple DO will override again.
+    virtual bool isLoop() { return true };
+
+    // specific to Do loops.
+    virtual void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
+    virtual void terminate(RexxActivation *, RexxDoBlock *);
+
+    void matchLabel(RexxInstructionEnd *end, RexxSource *source );
+    void handleDebugPause(RexxActivation *context, RexxDoBlock *doblock);
+    void endLoop(RexxActivation *context);
+};
 
 
-  inline RexxInstructionDo(void) { ; }
-  inline RexxInstructionDo(RESTORETYPE restoreType) { ; };
+/**
+ * The Ultimate DO loop instruction, capable of handling all of
+ * the DO LOOP options.  We create one of these to hold
+ * everything during parsing and once we determine this is one
+ * of our simplier types, we create a version specialied to just
+ * that type of instruction.  The specialialed versions save
+ * both image size and execution cycle.
+ */
+class RexxInstructionDo : public RexxInstructionBaseDo
+{
+ public:
 
-  void matchEnd(RexxInstructionEnd *, RexxSource *);
-  bool    isLabel(RexxString *name);
-  RexxString *getLabel();
-  bool    isLoop();
-  void terminate(RexxActivation *, RexxDoBlock *);
+     inline void *operator new(size_t size, void *ptr) {return ptr;}
+     inline void operator delete(void *) { }
+     inline void operator delete(void *, void *) { }
 
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void controlSetup(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
-  bool checkOver(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
-  bool checkControl(RexxActivation *, RexxExpressionStack *, RexxDoBlock *, bool);
-  void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
-  bool whileCondition(RexxActivation *, RexxExpressionStack *);
-  bool untilCondition(RexxActivation *, RexxExpressionStack *);
-  RexxInstruction *getEnd();
-  void matchLabel(RexxInstructionEnd *end, RexxSource *source );
+     inline RexxInstructionDo(void) { ; }
+     inline RexxInstructionDo(RESTORETYPE restoreType) { ; };
 
-  RexxObject       *initial;           /* initial control expression        */
-  RexxObject       *to;                /* final target value                */
-  RexxObject       *by;                /* control increment value           */
-  RexxVariableBase *control;           /* control variable retriever        */
-  RexxString       *label;             /* control variable name             */
-  RexxObject       *conditional;       /* while/until expression            */
-  RexxInstruction  *end;               /* matching END instruction          */
-  RexxObject       *forcount;          /* number of iterations              */
-  uint8_t           type;              /* type of loop                      */
-  uint8_t           expressions[3];    /* controlled loop expression order  */
+     virtual void live(size_t);
+     virtual void liveGeneral(int reason);
+     virtual void flatten(RexxEnvelope *);
+
+     // required by RexxInstruction
+     virtual void execute(RexxActivation *, RexxExpressionStack *);
+     void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
+
+     // methods required by RexxBlockInstruction;
+     virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
+
+     // required by loop instructions
+     virtual void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
+
+     DoInstructionType type;              // the type of DO instruction
+
+     ForLoop           forLoop;           // used for simple counting loops
+     ControlledLoop    controlLoop;       // our information for a controlled loop
+     OverLoop          overLoop;          // our information for a DO OVER
+     WhileUntilLoop    whileLoop;         // information for WHILE or UNTIL
+};
+
+
+/**
+ * The simplest form of DO BLOCK.  This is a non-looping block.
+ * It may have a label, but no other expressions to handle.
+ */
+class RexxInstructionSimpleDo : public RexxInstructionBaseDo
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionSimpleDo(void) { ; }
+    inline RexxInstructionSimpleDo(RESTORETYPE restoreType) { ; };
+           RexxInstructionSimpleDo(RexxInstructionDo *parent);
+
+    // required by RexxInstruction
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
+    // methods required by RexxBlockInstruction;
+    virtual bool isLoop() { return false; }
+};
+
+
+/**
+ * The DO FOREVER instruction.  Checks no state, it just loops
+ * until terminated via other means.
+ */
+class RexxInstructionDoForever : public RexxInstructionBaseDo
+{
+ public:
+
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    inline RexxInstructionDoForever(void) { ; }
+    inline RexxInstructionDoForever(RESTORETYPE restoreType) { ; };
+           RexxInstructionDoForever(RexxInstructionDo *parent);
+
+    // required by RexxInstruction
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
+    // methods required by RexxBlockInstruction;
+    virtual void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
 };
 #endif

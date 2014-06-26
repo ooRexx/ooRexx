@@ -437,9 +437,9 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 #define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
 
 /* Following macros are for Flattening and unflattening of objects  */
-#define flatten_reference(oref,envel)  if (oref) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
+#define flatten_reference(oref,envel)  if ((oref) != OREF_NULL) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
 // newer, simplified form
-#define flattenRef(oref)  if (newThis->oref) envelope->flattenReference((void *)&newThis, newSelf, (void *)&(newThis->oref))
+#define flattenRef(oref)  if ((newThis->oref) != OREF_NULL) envelope->flattenReference((void *)&newThis, newSelf, (void *)&(newThis->oref))
 
 // declare a class creation routine
 // for classes with their own

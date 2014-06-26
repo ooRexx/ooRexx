@@ -57,24 +57,25 @@ public:
 
     RexxInstructionSelect(RexxString *);
     inline RexxInstructionSelect(RESTORETYPE restoreType) { ; };
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
-    void execute(RexxActivation *, RexxExpressionStack *);
 
-    void matchEnd(RexxInstructionEnd *, RexxSource *);
-    bool isLabel(RexxString *name);
-    RexxString *getLabel();
-    bool isLoop();
-    void terminate(RexxActivation *, RexxDoBlock *);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
 
+    // required by RexxInstructon
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
+    // required by RexxBlockinstruction;
+    virtual void matchEnd(RexxInstructionEnd *, RexxSource *);
+    virtual bool isLoop();
+    virtual void terminate(RexxActivation *, RexxDoBlock *);
+
+    // specific to the SELECT instruction
     void setOtherwise(RexxInstructionOtherwise *);
     void addWhen(RexxInstructionIf *);
 
 protected:
     RexxQueue                *when_list; /* list of WHEN end targets          */
-    RexxInstructionEnd       *end;       /* END matching the SELECT           */
     RexxInstructionOtherwise *otherwise; /* OTHERWISE matching the SELECT     */
-    RexxString * label;      // the select label
 };
 #endif

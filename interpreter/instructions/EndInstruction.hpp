@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,32 +45,40 @@
 #define Included_RexxInstructionEnd
 
 #include "RexxInstruction.hpp"
-                                       /* types of block instructions       */
-#define DO_BLOCK         1
-#define SELECT_BLOCK     2
-#define OTHERWISE_BLOCK  3
-#define LOOP_BLOCK       4
-#define LABELED_SELECT_BLOCK 5
-#define LABELED_OTHERWISE_BLOCK 6
-#define LABELED_DO_BLOCK 7
+
+// types of END terminators
+enum
+{
+    DO_BLOCK,
+    SELECT_BLOCK,
+    OTHERWISE_BLOCK,
+    LOOP_BLOCK,
+    LABELED_SELECT_BLOCK,
+    LABELED_OTHERWISE_BLOCK,
+    LABELED_DO_BLOCK,
+} EndBlockType;
 
 class RexxInstructionEnd : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
 
-  inline RexxInstructionEnd(RESTORETYPE restoreType) { ; };
-  RexxInstructionEnd(RexxString *);
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  void execute(RexxActivation *, RexxExpressionStack *);
+    inline RexxInstructionEnd(RESTORETYPE restoreType) { ; };
+    RexxInstructionEnd(RexxString *);
 
-  inline RexxString *endName() { return this->name; };
-  inline void        setStyle(size_t type) { instructionFlags = (uint16_t)type; };
-  inline size_t      getStyle(void)        { return instructionFlags; };
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
 
- RexxString * name;                    /* specified control variable name   */
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
+    inline RexxString  *endName() { return name; };
+    inline void         setStyle(EndBlockType type) { style = type; };
+    inline EndBlockType getStyle() { style; };
+
+ protected:
+    EndBlockType style;     // the type of END we're working with
+    RexxString  *name;      // a specified control variable or label name
 };
 #endif

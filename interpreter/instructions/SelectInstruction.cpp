@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -108,18 +108,6 @@ void RexxInstructionSelect::flatten(RexxEnvelope *envelope)
 }
 
 
-
-/**
- * Return the associated label.
- *
- * @return The select label (which might be OREF_NULL)
- */
-RexxString *RexxInstructionSelect::getLabel()
-{
-    return label;
-}
-
-
 /**
  * Tests to see if this is a loop instruction.
  *
@@ -131,24 +119,11 @@ bool RexxInstructionSelect::isLoop()
 }
 
 
-/**
- * Check for a label match on a block instruction.
- *
- * @param name   The target block name.
- *
- * @return True if this is a name match, false otherwise.
- */
-bool RexxInstructionSelect::isLabel(RexxString *name)
-{
-    return label == name;
-}
-
-
 void RexxInstructionSelect::terminate(
      RexxActivation *context,          /* current execution context         */
      RexxDoBlock    *doblock )         /* active do block                   */
 /******************************************************************************/
-/* Function:  Terminate an active do loop                                     */
+/* Function:  Terminate an active SELECT loop                                 */
 /******************************************************************************/
 {
                                        /* perform cleanup                   */
