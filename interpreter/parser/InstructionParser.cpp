@@ -826,7 +826,7 @@ RexxInstruction *LanguageParser::callNew()
         noInternal = false;
     }
     // is this call (expr) form?
-    else if (token->isType(TOKEN_LEFT))
+    else if (token->isLeftParen())
     {
         // this has its own custom instruction object.
         return dynamicCallNew(token);
@@ -1661,7 +1661,7 @@ void LanguageParser::RexxInstructionForwardCreate(
                 }
                 token = nextReal();            /* get the next token                */
                                                /* not an expression list starter?   */
-                if (token->classId != TOKEN_LEFT)
+                if (!token->isLeftParen())
                 {
                     /* this is invalid                   */
                     syntaxError(Error_Invalid_expression_raise_list);
@@ -2138,279 +2138,325 @@ RexxInstruction *LanguageParser::otherwiseNew(
     return newObject; /* done, return this                 */
 }
 
-RexxInstruction *LanguageParser::parseNew(
-  int argpull)                         /* type of parsing operation         */
-/****************************************************************************/
-/* Function:  Create a PARSE instruction object                             */
-/****************************************************************************/
+
+/**
+ * Parse a PARSE instruction.
+ *
+ * @param argPull Indicates if this is an ARG or PULL operation.
+ *
+ * @return An executable instruction object.
+ */
+RexxInstruction *LanguageParser::parseNew(InstructionKeyword argPull)
 {
+    // initialize the source using our initial call value.
+    InstructionSubKeyword stringSource = argPull;
+    bitset<32> parseFlags;
+    ProtectedObject parseExpression(OREF_NULL);
 
-    RexxToken        *token;             /* current working token             */
-    unsigned short    string_source;     /* source of string data             */
-
-    size_t _flags = 0;                           /* new flag values                   */
-    RexxObject *_expression = OREF_NULL;              /* zero out the expression           */
-    if (argpull != KEYWORD_PARSE)
-    {       /* have one of the short forms?      */
-        string_source = argpull;            /* set the proper source location    */
-        _flags |= parse_upper;              /* we're uppercasing                 */
+    // if we're working on one of the short forms, there are no source
+    // options or other keyword modifiers to worry about.  Both of these
+    // use an uppercase version of the string.
+    if (argPull != SUBKEY_NONE)
+    {
+        parseFlags[parse_upper] = true;
     }
+    // long form, need to figure out the casing and search options + a source
+    // for where the string comes from.
     else
-    {                               /* need to parse source keywords     */
-        int _keyword;
+    {
+        InstructionSubKeyword keyword;
+        RexxToken *token;
+
+        // we first need to parse out any of the option modifiers
         for (;;)
-        {                         /* loop through for multiple keywords*/
-            token = nextReal();              /* get a token                       */
-                                             /* not a symbol here?                */
+        {
+            token = nextReal();
+            // anything not a symbol is an error
             if (!token->isSymbol())
             {
-                /* this is an error                  */
                 syntaxError(Error_Symbol_expected_parse);
             }
-            /* resolve the keyword               */
-            _keyword = this->parseOption(token);
 
-            switch (_keyword)
-            {               /* process potential modifiers       */
+            // resolve this to the indexed form
+            InstructionSubKeyword keyword = token->parseOption();
 
-                case SUBKEY_UPPER:             /* doing uppercasing?                */
-                    if (_flags&parse_translate)   /* already had a translation option? */
+            switch (keyword)
+            {
+                // we only handle the control options here
+
+                // PARSE UPPER ... uppercase the input string(s)
+                case SUBKEY_UPPER:
+                    // if we've already had an UPPER or LOWER option specified,
+                    // we drop through and handle this like an unknown keyword.
+                    if (parseFlags[parse_upper] || parseFlags[parse_lower])
                     {
-                        break;                     /* this is an unrecognized keyword   */
+                        break;
                     }
-                    _flags |= parse_upper;        /* set the translate option          */
-                    continue;                    /* go around for another one         */
+                    // remember the option...passed on when we create the instruction,
+                    // but also helps trap duplicates.
+                    parseFlags[parse_upper] = true;
+                    // go directly to the start of the loop again.
+                    continue;
 
-                case SUBKEY_LOWER:             /* doing lowercasing?                */
-                    if (_flags&parse_translate)   /* already had a translation option? */
+                // PARSE LOWER ... lowercase the input string(s)
+                case SUBKEY_LOWER:
+                    // if we've already had an UPPER or LOWER option specified,
+                    // we drop through and handle this like an unknown keyword.
+                    if (parseFlags[parse_upper] || parseFlags[parse_lower])
                     {
-                        break;                     /* this is an unrecognized keyword   */
+                        break;
                     }
-                                                   /* set the translate option          */
-                    _flags |= parse_lower;        /* set the translate option          */
-                    continue;                    /* go around for another one         */
+                    // remember the option...passed on when we create the instruction,
+                    // but also helps trap duplicates.
+                    parseFlags[parse_lower] = true;
+                    // go directly to the start of the loop again.
+                    continue;
 
-                case SUBKEY_CASELESS:          /* caseless comparisons?             */
-                    if (_flags&parse_caseless)    /* already had this options?         */
+                // PARSE CASELESS ... all string searches are caseless searches.
+                case SUBKEY_CASELESS:
+                    // if we've already had a CASELESS option specified,
+                    // we drop through and handle this like an unknown keyword.
+                    if (parseFlags[parse_caseless])
                     {
-                        break;                     /* this is an unrecognized keyword   */
+                        break;
                     }
-                                                   /* set the translate option          */
-                    _flags |= parse_caseless;     /* set the scan option               */
-                    continue;                    /* go around for another one         */
+                    // remember the option...passed on when we create the instruction,
+                    // but also helps trap duplicates.
+                    parseFlags[parse_lower] = true;
+                    // go directly to the start of the loop again.
+                    continue;
             }
-            break;                           /* fall out into source processing   */
+
+            // if we've reached here, we've found a keyword that is not an option (or rejected
+            // a keyword because it was a duplicate.  Break out of the loop and start handling
+            // the string source options.
+            break;
         }
 
-        string_source = _keyword;          /* set the source                    */
-        switch (_keyword)
-        {                 /* now process the parse option      */
-
-            case SUBKEY_PULL:                /* PARSE PULL instruction            */
-            case SUBKEY_LINEIN:              /* PARSE LINEIN instruction          */
-            case SUBKEY_ARG:                 /* PARSE ARG instruction             */
-            case SUBKEY_SOURCE:              /* PARSE SOURCE instruction          */
-            case SUBKEY_VERSION:             /* PARSE VERSION instruction         */
-                break;                         /* this is already done              */
-
-            case SUBKEY_VAR:                 /* PARSE VAR name instruction        */
-                token = nextReal();            /* get the next token                */
-                                               /* not a symbol token                */
-                if (!token->isSymbol())
-                {
-                    /* this is an error                  */
-                    syntaxError(Error_Symbol_expected_var);
-                }
-                /* get the variable retriever        */
-                _expression = (RexxObject *)this->addVariable(token);
-                this->saveObject(_expression);  /* protect it in the saveTable (required for large PARSE statements) */
+        // the last keyword processed above should be our string source,
+        // now we need to verify.
+        stringSource = keyword;
+        switch (keyword)
+        {
+            // all of these sources are handled internall by the PARSE instruction.  We
+            // remember what to do, then it is on to parsing the template.
+            case SUBKEY_PULL:
+            case SUBKEY_LINEIN:
+            case SUBKEY_ARG:
+            case SUBKEY_SOURCE:
+            case SUBKEY_VERSION:
                 break;
 
-            case SUBKEY_VALUE:               /* need to process an expression     */
-                _expression = this->expression(TERM_WITH | TERM_KEYWORD);
-                if (_expression == OREF_NULL )       /* If script not complete, report error RI0001 */
+            // PARSE VAR must be followed by a variable name.
+            case SUBKEY_VAR:
+                // must be a symbol, or that is an error.
+                token = nextReal();
+                if (!token->isSymbol())
                 {
-                    //syntaxError(Error_Invalid_template_with);
-                    _expression = OREF_NULLSTRING ;             // Set to NULLSTRING if not coded in script
+                    syntaxError(Error_Symbol_expected_var);
                 }
-                this->saveObject(_expression);  /* protecting in the saveTable is better for large PARSE statements */
 
-                token = nextToken();           /* get the terminator                */
-                if (!token->isSymbol() || this->subKeyword(token) != SUBKEY_WITH)
+                // get the variable retriever for this.
+                parseExpression = addVariable(token);
+                break;
+
+            // PARSE VALUE expr WITH ... The expression is optional...we'll replace with
+            // a NULL string if not there.
+            case SUBKEY_VALUE:
+                parseExpression = expression(TERM_WITH | TERM_KEYWORD);
+                if (parseExpression.isNull())
                 {
-                    /* got another error                 */
+                    expression = OREF_NULLSTRING;
+                }
+                // the terminator needs to be a WITH keyword.
+                token = nextToken();
+                if (token->subKeyword(token) != SUBKEY_WITH)
+                {
                     syntaxError(Error_Invalid_template_with);
                 }
                 break;
 
-            default:                         /* unknown (or duplicate) keyword    */
-                /* report an error                   */
+            // UNKNOWN (or duplicate) keyword.
+            default:
                 syntaxError(Error_Invalid_subkeyword_parse, token);
                 break;
         }
     }
 
-    RexxQueue *parse_template = this->subTerms;     /* use the sub terms list template   */
-    int templateCount = 0;                   /* no template items                 */
-    RexxQueue *_variables = this->terms;            /* and the terms list for variables  */
-    int variableCount = 0;                   /* no variable items                 */
-    token = nextReal();                  /* get the next token                */
+    // now we're processing the template(s
 
-    RexxTrigger *trigger;
+    // we create multiple lists here.  The different parsing templates are
+    // pushed on the subTerms stack, while lists of variables are pushed on to the terms
+    // stack.  Referencing them via more descriptive variable names will make this clearer.
+    RexxQueue *parse_template = subTerms;
+    int templateCount = 0;
+    RexxQueue *_variables = terms;
+    int variableCount = 0;
 
+    RexxToken *token = nextReal();
     for (;;)
-    {                           /* while still in the template       */
-                                /* found the end?                    */
+    {
         if (token->isEndOfClause())
         {
-            /* string trigger, null target       */
-            trigger = new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables);
-            variableCount = 0;               /* have a new set of variables       */
-                                             /* add this to the trigger list      */
-            parse_template->push((RexxObject *)trigger);
-            templateCount++;                 /* and step the count                */
-            break;                           /* done processing                   */
+            // we've hit the end of the template, add an END trigger to handle assigning any remaining variables.
+            // HOWEVER, if there are no variables between the end and the previous trigger, we can
+            // skip this because there are no variables to assign.
+            if (variableCount > 0)
+            {
+                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables));
+                templateCount++;
+            }
+            variableCount = 0;               // have a new set of variables (well, we're done, really)
+            break;
         }
-        /* comma in the template?            */
-        else if (token->classId == TOKEN_COMMA)
+        // comma in the template?  Really the same as the end-of-clause case,
+        // but we need to push a NULL on to the trigger stack to cause a switch to the
+        // next parse string
+        else if (token->isType(TOKEN_COMMA))
         {
-            trigger = new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables);
-            variableCount = 0;               /* have a new set of variables       */
-                                             /* add this to the trigger list      */
-            parse_template->push((RexxObject *)trigger);
-            parse_template->push(OREF_NULL); /* add an empty entry in the list    */
-            templateCount += 2;              /* count both of these               */
+            if (variableCount > 0)
+            {
+                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables));
+                templateCount++;
+            }
+            // now add an empty fence item to the list...make sure the count is incremented
+            parse_template->push(OREF_NULL);
+            templateCount++;
+            variableCount = 0;               // have a new set of variables
         }
-        /* some variety of special trigger?  */
-        else if (token->classId == TOKEN_OPERATOR)
+        // some variety of special trigger?
+        else if (token->isOperator())
         {
-            int trigger_type = 0;
-            switch (token->subclass)
-            {       /* process the operator character    */
-
-                case  OPERATOR_PLUS:           /* +num or +(var) form               */
-                    trigger_type = TRIGGER_PLUS; /* positive relative trigger         */
+            ParseTriggerType trigger_type = 0;
+            switch (token->subtype())
+            {
+                // +num or +(expr) positive relative movement
+                case  OPERATOR_PLUS:
+                    trigger_type = TRIGGER_PLUS;
                     break;
 
-                case  OPERATOR_SUBTRACT:       /* -num or -(var) form               */
-                    trigger_type = TRIGGER_MINUS;/* negative relative trigger         */
+                // -num or -(expr) form negative relative movement
+                case  OPERATOR_SUBTRACT:
+                    trigger_type = TRIGGER_MINUS;
                     break;
 
-                case  OPERATOR_EQUAL:          /* =num or =(var) form               */
-                    /* absolute column trigger           */
+                // =num or =(expr) absolute column positioning
+                case  OPERATOR_EQUAL:
                     trigger_type = TRIGGER_ABSOLUTE;
                     break;
 
-                case OPERATOR_LESSTHAN:        // <num or <(var)
+                // <num or <(expr) relative backward movement
+                case OPERATOR_LESSTHAN:
                     trigger_type = TRIGGER_MINUS_LENGTH;
                     break;
 
-                case OPERATOR_GREATERTHAN:     // >num or >(var)
+                // >num or >(expr)
+                case OPERATOR_GREATERTHAN:
                     trigger_type = TRIGGER_PLUS_LENGTH;
                     break;
 
-                default:                       /* something unrecognized            */
-                    /* this is invalid                   */
+                // something unrecognized
+                default:
                     syntaxError(Error_Invalid_template_trigger, token);
                     break;
             }
-            token = nextReal();              /* get the next token                */
-                                             /* have a variable trigger?          */
-            if (token->classId == TOKEN_LEFT)
+
+            // we have an operation.  These will be either a numeric symbol
+            // or an expression in parentheses.
+            token = nextReal();
+            if (token->isLeftParen())
             {
                 // parse off an expression in the parens.
-                RexxObject *subExpr = this->parenExpression(token);
+                ProtectedObject subExpr = parenExpression(token);
                 // an expression is required
-                if (subExpr == OREF_NULL)
+                if (subExpr.isNull())
                 {
                     syntaxError(Error_Invalid_expression_parse);
                 }
-                /* create the appropriate trigger    */
-                trigger = new (variableCount) RexxTrigger(trigger_type, subExpr, variableCount, _variables);
-                variableCount = 0;             /* have a new set of variables       */
-                                               /* add this to the trigger list      */
-                parse_template->push((RexxObject *)trigger);
-                templateCount++;               /* add this one in                   */
+
+                parse_template->push(RexxObject *)new (variableCount) RexxTrigger(trigger_type,
+                    (RexxObject *)subExpr, variableCount, _variables));
+                variableCount = 0;
+                templateCount++;
             }
-            /* have a symbol?                    */
+            // not an expression, we need to find a symbol here.
             else if (token->isSymbol())
             {
-                /* non-variable symbol?              */
-                if (token->subclass != SYMBOL_CONSTANT)
+                // non variable symbol?              */
+                if (token->isVariable())
                 {
-                    /* this is invalid                   */
                     syntaxError(Error_Invalid_template_position, token);
                 }
-                /* set the trigger type              */
-                /* create the appropriate trigger    */
-                trigger = new (variableCount) RexxTrigger(trigger_type, this->addText(token), variableCount, _variables);
-                variableCount = 0;             /* have a new set of variables       */
-                                               /* add this to the trigger list      */
-                parse_template->push((RexxObject *)trigger);
-                templateCount++;               /* step the counter                  */
+
+                // add a trigger of the given type.
+                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(trigger_type,
+                    addText(token), variableCount, _variables));
+                variableCount = 0;
+                templateCount++;
             }
-            /* at the end?                       */
+            // something missing following the operator character?
             else if (token->isEndOfClause())
             {
-                /* report the missing piece          */
                 syntaxError(Error_Invalid_template_missing);
             }
+            // all other errors go here.
             else
             {
-                /* general position error            */
                 syntaxError(Error_Invalid_template_position, token);
             }
         }
-        /* variable string trigger?          */
-        else if (token->classId == TOKEN_LEFT)
+        // could be a variable string search using (expr)
+        else if (token->isLeftParen())
         {
             // parse off an expression in the parens.
-            RexxObject *subExpr = this->parenExpression(token);
+            ProtectedObject subExpr = parenExpression(token);
             // an expression is required
-            if (subExpr == OREF_NULL)
+            if (subExpr.isNull())
             {
                 syntaxError(Error_Invalid_expression_parse);
             }
-            /* create the appropriate trigger    */
-            trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING, subExpr, variableCount, _variables);
-            variableCount = 0;               /* have a new set of variables       */
-                                             /* add this to the trigger list      */
-            parse_template->push((RexxObject *)trigger);
-            templateCount++;                 /* step the counter                  */
+
+            parse_template->push((RexxObject *)new (variableCount) RexxTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
+                (RexxObject *)subExpr, variableCount, _variables));
+            variableCount = 0;
+            templateCount++;
         }
+        // a literal string is a string search.
         else if (token->isLiteral())
-        {     /* non-variable string trigger?      */
-              /* create the appropriate trigger    */
-            trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING,
-                                                      this->addText(token), variableCount, _variables);
-            variableCount = 0;               /* have a new set of variables       */
-                                             /* add this to the trigger list      */
-            parse_template->push((RexxObject *)trigger);
-            templateCount++;                 /* step the counter                  */
+        {
+
+            parse_template->push((RexxObject *)new (variableCount) RexxTrigger(parseFlags[parse_caseless] ? TRIGGER_MIXED : TRIGGER_STRING,
+                addText(token), variableCount, _variables);
+            variableCount = 0;
+            templateCount++;
         }
+        // a symbol in the template?  Several possibilities here:  1) a numeric trigger 2)
         else if (token->isSymbol())
-        {      /* symbol in the template?           */
-               /* non-variable symbol?              */
-            if (token->subclass == SYMBOL_CONSTANT)
+        {
+            // absolute positioning
+            if (token->isNumericSymbol()
             {
-                /* create the appropriate trigger    */
-                trigger = new (variableCount) RexxTrigger(TRIGGER_ABSOLUTE, this->addText(token), variableCount, _variables);
-                variableCount = 0;             /* have a new set of variables       */
-                                               /* add this to the trigger list      */
-                parse_template->push((RexxObject *)trigger);
-                templateCount++;               /* step the counter                  */
+                parse_template->push((RexxObject *)new (variableCount) RexxTrigger(TRIGGER_ABSOLUTE,
+                    addText(token), variableCount, _variables));
+                variableCount = 0;
+
+                templateCount++;
             }
-            /* place holder period?              */
+            // probably some sort of variable
             else
             {
-                if (token->subclass == SYMBOL_DUMMY)
+                // if this is the placeholder period, push a null item on to the stack
+                // to mark this variable position as special
+                if (token->isDot())
                 {
-                    _variables->push(OREF_NULL);   /* just add an empty item            */
-                    variableCount++;               /* step the variable counter         */
+                    _variables->push(OREF_NULL);
+                    variableCount++;
                 }
-                else                           /* have a variable, add to list      */
+                // we have a variable or a message term to process
+                else
                 {
-                    // this is potentially a message term
+                    // this is potentially a message term...step back
+                    // and parse as one. This also catches simple variables
                     previousToken();
                     RexxObject *term = variableOrMessageTerm();
                     if (term == OREF_NULL)
@@ -2418,52 +2464,50 @@ RexxInstruction *LanguageParser::parseNew(
                         syntaxError(Error_Variable_expected_PARSE, token);
                     }
                     _variables->push(term);
-                    variableCount++;               /* step the variable counter         */
+                    variableCount++;
                 }
             }
         }
+        // something entirely unknown
         else
         {
-            /* this is invalid                   */
             syntaxError(Error_Invalid_template_trigger, token);
         }
-        token = nextReal();                /* get the next token                */
+        token = nextReal();
     }
-    /* create a new translator object    */
+
+    // and finally create the instruction from the accumulated information.
     RexxInstruction *newObject = new_variable_instruction(PARSE, Parse, sizeof(RexxInstructionParse) + (templateCount - 1) * sizeof(RexxObject *));
-    /* now complete this                 */
-    new ((void *)newObject) RexxInstructionParse(_expression, string_source, _flags, templateCount, parse_template);
-    this->toss(_expression);             /* release the expression, it is saved by newObject */
-    return newObject;                    /* done, return this                 */
+    new ((void *)newObject) RexxInstructionParse((RexxObject *)parseExpression, stringSource, parseFlags, templateCount, parse_template);
+    return newObject;
 }
 
+/**
+ * Parse a PROCEDURE instruction.
+ *
+ * @return An executable instruction object.
+ */
 RexxInstruction *LanguageParser::procedureNew()
-/****************************************************************************/
-/* Function:  Create a new PROCEDURE translator object                      */
-/****************************************************************************/
 {
-    RexxToken *token = nextReal();                  /* get the next token                */
-    size_t variableCount = 0;                   /* no variables allocated yet        */
+    RexxToken *token = nextReal();
+    size_t variableCount = 0;
+
+    // if we're not at the END, then this might be PROCEDURE expose.
     if (!token->isEndOfClause())
-    {   /* potentially PROCEDURE EXPOSE?     */
-        if (!token->isSymbol())/* not a symbol?                     */
-        {
-            /* must be a symbol here             */
-            syntaxError(Error_Invalid_subkeyword_procedure, token);
-        }
-        /* not the EXPOSE keyword?           */
-        if (this->subKeyword(token) != SUBKEY_EXPOSE)
+    {
+        // not the EXPOSE keyword?  NOTE:  this also takes care of the
+        // non-symbol case since we issue the same error message for both
+        if (token->subKeyword() != SUBKEY_EXPOSE)
         {
             syntaxError(Error_Invalid_subkeyword_procedure, token);
         }
-        /* go process the list               */
-        variableCount = this->processVariableList(KEYWORD_PROCEDURE);
+        // process the list                  */
+        variableCount = processVariableList(KEYWORD_PROCEDURE);
     }
-    /* create a new translator object    */
+
     RexxInstruction *newObject = new_variable_instruction(PROCEDURE, Procedure, sizeof(RexxInstructionProcedure) + (variableCount - 1) * sizeof(RexxObject *));
-    /* Initialize this new method        */
-    new ((void *)newObject) RexxInstructionProcedure(variableCount, this->subTerms);
-    return newObject; /* done, return this                 */
+    new ((void *)newObject) RexxInstructionProcedure(variableCount, subTerms);
+    return newObject;
 }
 
 
@@ -2659,7 +2703,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 // this is not a conditional expression, the items must be
                 // surrounded by parens.
                 token = nextReal();
-                if (!token->isType(TOKEN_LEFT))
+                if (!token->isLeftParen())
                 {
                     syntaxError(Error_Invalid_expression_raise_list);
                 }
@@ -3414,7 +3458,7 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
             listCount++;
         }
         // this could be an indirect reference through a list of form "(var)"
-        else if (token->isType(TOKEN_LEFT))
+        else if (token->isLeftParen())
         {
             listCount++
             // get the next token...which should be a valid variable
@@ -3425,12 +3469,12 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
                 syntaxError(Error_Symbol_expected_varref);
             }
             // non-variable symbol?
-            if (token->isSubtype(SYMBOL_CONSTANT))
+            if (token->isNumericSymbol())
             {
                 syntaxError(Error_Invalid_variable_number, token);
             }
             // the dummy dot?
-            else if (token->isSubtype(SYMBOL_DUMMY))
+            else if (token->isDot())
             {
                 syntaxError(Error_Invalid_variable_period, token);
             }
@@ -3450,7 +3494,7 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
                 syntaxError(Error_Variable_reference_missing);
             }
             // must be a right paren here
-            else if (!token->isSubtype(TOKEN_RIGHT))
+            else if (!token->isRightParen())
             {
                 syntaxError(Error_Variable_reference_extra, token);
             }

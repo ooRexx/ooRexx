@@ -161,4 +161,20 @@ class RexxInstructionExpression : public RexxInstruction
  protected:
     RexxObject *expression;              // expression to evaluate
 };
+
+// a convenience macro for initializing instruction objects.
+// for many of the instructions, they have a variable size array
+// that are initialized in reverse order using items pulled from a
+// provided queue.  This simplifies this initialization process and
+// ensures it is done correctly.  NOTE:  This decrements the count
+// variable so make sure you use the one from the argument list!!!!!!
+
+#define initializeObjectArray(count, array, type, queue) \
+{                                                  \
+    while (count > 0)                              \
+    {                                              \
+        array[--count] = (type *)queue->pop();     \
+    }                                              \
+}
+
 #endif

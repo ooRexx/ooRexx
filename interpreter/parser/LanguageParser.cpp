@@ -224,7 +224,7 @@ void LanguageParser::needVariable(RexxToken  *token)
 void LanguageParser::needVariableOrDotSymbol(RexxToken  *token)
 {
     // check if the correct types
-    if (!token->isVariable() && !token->isDot())
+    if (!token->isVariable() && !token->isDotSymbol())
     {
         syntaxError(Error_Invalid_variable_number, token);
     }
@@ -1607,7 +1607,7 @@ RexxObject *LanguageParser::constantExpression()
     // only other option here is an expression in parens.  If this
     // is not there, raise an error (this is a generic error, so
     // we can do this here.
-    else if (!token->isType(TOKEN_LEFT))
+    else if (!token->isLeftParen())
     {
         syntaxError(Error_Invalid_expression_general, token);
     }
@@ -1619,7 +1619,7 @@ RexxObject *LanguageParser::constantExpression()
         // now verify that the terminator token was a right paren.  If not,
         // issue an error message using the original opening token so we know
         // which one is an issue.
-        if (!nextToken()->isType(TOKEN_RIGHT))
+        if (!nextToken()->isRightParen())
         {
             syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
         }
@@ -1656,14 +1656,14 @@ RexxObject *LanguageParser::constantLogicalExpression()
     }
     else if (token->isConstant())
     {
-        _return addText(token);
+        return addText(token);
     }
     else if (token->isEndOfClause())
     {
         previousToken();
         return OREF_NULL;
     }
-    else if (!token->isType(TOKEN_LEFT))
+    else if (!token->isLeftParen())
     {
         syntaxError(Error_Invalid_expression_general, token);
     }
@@ -1675,7 +1675,7 @@ RexxObject *LanguageParser::constantLogicalExpression()
         // now verify that the terminator token was a right paren.  If not,
         // issue an error message using the original opening token so we know
         // which one is an issue.
-        if (!nextToken()->isType(TOKEN_RIGHT))
+        if (!nextToken()->isRightParen())
         {
             syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
         }
@@ -1705,7 +1705,7 @@ RexxObject *LanguageParser::parenExpression(RexxToken *start)
     RexxObject *exp = subExpression(TERM_EOC | TERM_RIGHT);
 
     // this must be terminated by a right paren
-    if (!nextToken()->isType(TOKEN_RIGHT))
+    if (!nextToken()->isRightParen())
     {
         syntaxErrorAt(Error_Unmatched_parenthesis_paren, start);
     }
@@ -2066,13 +2066,13 @@ size_t LanguageParser::argList(RexxToken *firstToken, int terminators )
     // if this is a function or method invocation, we're expecting this list to be
     // ended by a right parent.  firstToken gives the position of the missing
     // left paren.
-    if (terminators & TERM_RIGHT && !token->isType(TOKEN_RIGHT))
+    if (terminators & TERM_RIGHT && !terminatorToken->isRightParen())
     {
         syntaxErrorAt(Error_Unmatched_parenthesis_paren, firstToken);
     }
 
     // same deal with square brackets, different error message.
-    if (terminators&TERM_SQRIGHT && !token->isType(TOKEN_SQRIGHT))
+    if (terminators&TERM_SQRIGHT && !terminatorToken->isRightBracket())
     {
         syntaxErrorAt(Error_Unmatched_parenthesis_square, firstToken);
     }
@@ -2251,9 +2251,11 @@ RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int te
         // this is only interesting if the text token is an open paren directly
         // abutted to the name.  Process that as an argument list for the final
         // created message object
-        if (token->isType(TOKEN_LEFT))
+        if (token->isLeftParen())
         {
-            argCount = argList(token, ((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
+            // NOTE:  because of the parens, we can ignore our parent terminators...
+            // we only look for the right paren
+            argCount = argList(token, TERM_EOC | TERM_RIGHT);
         }
         else
         {
@@ -2342,7 +2344,7 @@ RexxObject *LanguageParser::messageTerm()
         // we need to perform the the message operation on this term to create
         // an new term which will be the target of the next one.
         // this could be a bracket lookup, which is a collection message.
-        if (token~isType(TOKEN_SQLEFT))
+        if (token~isLeftBracket())
         {
             term = collectionMessage(token, start);
         }
@@ -2462,7 +2464,7 @@ RexxObject *LanguageParser::messageSubterm(int terminators)
         while (token~isMessageOperator())
         {
             // we have two possibilities here, a bracket message or a twiddle form.
-            if (token~isType(TOKEN_SQLEFT))
+            if (token~isRightBracket())
             {
                 term = collectionMessage(token, term);
             }
@@ -2520,7 +2522,7 @@ RexxObject *LanguageParser::subTerm(int terminators)
                 syntaxError(Error_Invalid_expression_general, token);
             }
             // this had better been terminated by a righ paren.
-            if (!nextToken()->isType(TOKEN_RIGHT))
+            if (!nextToken()->isRightParen())
             {
                 syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
             }
@@ -2536,7 +2538,7 @@ RexxObject *LanguageParser::subTerm(int terminators)
             // need to check if the next token is an open paren.  That turns
             // the symbol or literal token into a function invocation.
             RexxToken *second = nextToken();
-            if (second->isType(TOKEN_LEFT))
+            if (second->isLeftParen())
             {
                 return function(second, token);
             }

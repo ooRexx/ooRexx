@@ -44,9 +44,7 @@
 #ifndef Included_RexxInstructionTarget
 #define Included_RexxInstructionTarget
 
-#define PARSE_UPPER     1              /* Uppercase parsed string           */
-#define PARSE_LOWER     2              /* Lowercase parsed string           */
-#define PARSE_CASELESS  1              /* do case insensitive searches      */
+#include <bitset>
 
 class RexxTarget {
  public:
@@ -55,7 +53,7 @@ class RexxTarget {
     inline RexxTarget() { ; }
     inline RexxTarget (RESTORETYPE restoreType) { ; };
 
-    void        init (RexxObject *, RexxObject **, size_t, size_t, bool, RexxActivation *, RexxExpressionStack *);
+    void        init (RexxObject *, RexxObject **, size_t, bitset<32>, bool, RexxActivation *, RexxExpressionStack *);
     void        next(RexxActivation *);
     void        moveToEnd();
     void        forward(stringsize_t);
@@ -67,7 +65,7 @@ class RexxTarget {
     void        caselessSearch(RexxString *);
     RexxString *getWord();
     RexxString *remainder();
-    void        skipRemainder() { this->subcurrent = this->end;      /* eat the remainder piece           */ }
+    inline void skipRemainder() { subcurrent = end; }
     void        skipWord();
 
  protected:
@@ -77,13 +75,15 @@ class RexxTarget {
     RexxExpressionStack *stack;          // context expression stack (used for anchoring values for GC).
     size_t  stackTop;                    // top location of the epxression stack
     size_t  argcount;                    // count of arguments if PARSE ARG
-    stringsize_t  start;                 // start of substring
-    stringsize_t  end;                   // end of the substring
-    stringsize_t  string_length;         // length of the string
-    stringsize_t  pattern_end;           // end of matched pattern
-    stringsize_t  pattern_start;         // start of matched pattern
-    stringsize_t  subcurrent;            // current location for word parse
     size_t  next_argument;               // next PARSE ARG argument
-    size_t  translate;                   // string translation flag
+    bitset<32>  translate;               // string translation flags
+
+    // parsing position state starts here
+    stringsize_t  string_length;         // length of the string
+    stringsize_t  start;                 // This is the start of the substring what will be parsed into variables
+    stringsize_t  end;                   // end of the substring section
+    stringsize_t  pattern_start;         // start of the last matched position
+    stringsize_t  pattern_end;           // end of the last match position (for numeric triggers, same as pattern_start)
+    stringsize_t  subcurrent;            // current location used for parsing into words
 };
 #endif

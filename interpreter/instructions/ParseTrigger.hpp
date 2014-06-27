@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,14 +44,17 @@
 #ifndef Included_RexxInstructionTrigger
 #define Included_RexxInstructionTrigger
 
-#define TRIGGER_END      1
-#define TRIGGER_PLUS     2
-#define TRIGGER_MINUS    3
-#define TRIGGER_ABSOLUTE 4
-#define TRIGGER_STRING   5
-#define TRIGGER_MIXED    6
-#define TRIGGER_PLUS_LENGTH 7
-#define TRIGGER_MINUS_LENGTH 8
+enum
+{
+    TRIGGER_END,
+    TRIGGER_PLUS,
+    TRIGGER_MINUS,
+    TRIGGER_ABSOLUTE,
+    TRIGGER_STRING,
+    TRIGGER_MIXED,
+    TRIGGER_PLUS_LENGTH,
+    TRIGGER_MINUS_LENGTH,
+} ParseTriggerType;
 
 class RexxTarget;
 class RexxVariableBase;
@@ -64,22 +67,22 @@ class RexxTrigger : public RexxInternalObject {
   inline void  operator delete(void *, int) { }
   inline void  operator delete(void *, void *) { ; }
 
-  RexxTrigger(int, RexxObject *, size_t, RexxQueue *);
+  RexxTrigger(ParseTriggerType, RexxObject *, size_t, RexxQueue *);
   inline RexxTrigger(RESTORETYPE restoreType) { ; };
+
+  virtual void live(size_t);
+  virtual void liveGeneral(int reason);
+  virtual void flatten(RexxEnvelope *);
+
   stringsize_t integerTrigger(RexxObject *);
   RexxString *stringTrigger(RexxObject *);
   void        parse(RexxActivation *, RexxExpressionStack *, RexxTarget *);
-  void        live(size_t);
-  void        liveGeneral(int reason);
-  void        flatten(RexxEnvelope *);
-  inline int  getType()     { return this->triggerType; }
-  inline void setType(int v) { this->triggerType = v; }
 
 protected:
 
-  int         triggerType;             // type if trigger
-  size_t      variableCount;           /* count of variables                */
-  RexxObject *value;                   /* value associated with trigger     */
-  RexxVariableBase *variables[1];      /* list of variables to assign       */
+  ParseTriggerType  triggerType;       // type of trigger
+  RexxObject *value;                   // value associated with trigger (can be an expression)
+  size_t      variableCount;           // count of variables to assign after applying trigger
+  RexxVariableBase *variables[1];      // after applying trigger
 };
 #endif

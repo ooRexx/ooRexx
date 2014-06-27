@@ -76,10 +76,7 @@ void RexxInstructionExpose::live(size_t liveMark)
 {
     // must be first one marked
     memory_mark(nextInstruction);
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        memory_mark(variables[i]);
-    }
+    memory_mark_array(variableCount, variables);
 }
 
 
@@ -94,10 +91,7 @@ void RexxInstructionExpose::liveGeneral(int reason)
 {
     // must be first one marked
     memory_mark_general(nextInstruction);
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        memory_mark_general(variables[i]);
-    }
+    memory_mark_general_array(variableCount, variables);
 }
 
 
@@ -111,11 +105,7 @@ void RexxInstructionExpose::flatten(RexxEnvelope *envelope)
     setUpFlatten(RexxInstructionExpose)
 
     flattenRef(nextInstruction);
-
-    for (size_t i = 0; i < variableCount; i++)
-    {
-        flattenRef(variables[i]);
-    }
+    flattenArrayRefs(variableCount, variables);
 
     cleanUpFlatten
 }

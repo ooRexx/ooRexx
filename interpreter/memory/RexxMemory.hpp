@@ -424,6 +424,29 @@ inline RexxObject *new_object(size_t s, size_t t) { return memoryObject.newObjec
 
 inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
 
+
+// memory marking macros
+#define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(liveMark)) )
+#define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
+#define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
+
+// some convenience macros for marking arrays of objects.
+#define memory_mark_array(count, array) \
+  for (size_t i = 0; i < count; i++)    \
+  {                                     \
+      memory_mark(array[i]);            \
+  }
+
+#define memory_mark_general_array(count, array) \
+  for (size_t i = 0; i < count; i++)            \
+  {                                             \
+      memory_mark_general(array[i]);            \
+  }
+
+// Following macros are for Flattening and unflattening of objects
+// Some notes on what is going on here.  The flatten() method gets called on an object
+// after it has been moved
+
 #define setUpFlatten(type)        \
   {                               \
   size_t newSelf = envelope->currentOffset; \
@@ -432,14 +455,16 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 #define cleanUpFlatten                    \
  }
 
-#define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(liveMark)) )
-#define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
-#define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
-
-/* Following macros are for Flattening and unflattening of objects  */
 #define flatten_reference(oref,envel)  if ((oref) != OREF_NULL) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
 // newer, simplified form
 #define flattenRef(oref)  if ((newThis->oref) != OREF_NULL) envelope->flattenReference((void *)&newThis, newSelf, (void *)&(newThis->oref))
+
+// a version for flattening arrays of objects.
+#define flattenArrayRefs(count, array)          \
+  for (size_t i = 0; i < count; i++)            \
+  {                                             \
+      flattenRef(array[i]);                     \
+  }
 
 // declare a class creation routine
 // for classes with their own

@@ -99,10 +99,7 @@ void RexxInstructionCall::live(size_t liveMark)
     memory_mark(nextInstruction);  // must be first one marked
     memory_mark(targetInstruction);
     memory_mark(targetName);
-    for (size_t i = 0, i < argumentCount; i++)
-    {
-        memory_mark(arguments[i]);
-    }
+    memory_mark_array(argumentCount, arguments);
 }
 
 
@@ -119,10 +116,7 @@ void RexxInstructionCall::liveGeneral(int reason)
     memory_mark_general(nextInstruction);
     memory_mark_general(targetInstruction);
     memory_mark_general(targetName);
-    for (size_t i = 0, i < argumentCount; i++)
-    {
-        memory_mark_general(arguments[i]);
-    }
+    memory_mark_general_array(argumentCount, arguments);
 }
 
 
@@ -138,10 +132,7 @@ void RexxInstructionCall::flatten(RexxEnvelope *envelope)
     flattenRef(nextInstruction);
     flattenRef(targetInstruction);
     flattenRef(targetName);
-    for (size_t i = 0i < argumentCount; i++)
-    {
-        flattenRef(arguments[i]);
-    }
+    flattenArrayRefs(argumentCount, arguments);
 
     cleanUpFlatten
 }

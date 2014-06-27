@@ -317,22 +317,21 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 #define GLOBAL_NAME(name, value) EXTERN RexxString * OREF_##name INITGLOBALPTR;
 #include "GlobalNames.h"
 
-#include "ObjectClass.hpp"               /* get real definition of Object     */
+#include "ObjectClass.hpp"               // get real definition of Object
 
- #include "TableClass.hpp"
- #include "StackClass.hpp"
- #include "RexxMemory.hpp"               /* memory next, to get OrefSet       */
- #include "RexxBehaviour.hpp"                /* now behaviours and                */
- #include "ClassClass.hpp"                /* classes, which everything needs   */
- #include "RexxEnvelope.hpp"                /* envelope is needed for flattens   */
- #include "RexxActivity.hpp"               /* activity is needed for errors     */
- #include "NumberStringClass.hpp"               /* added to make 'number_digits()'   */
-                                       /* in 'ArrayClass.c' visible            */
+ #include "TableClass.hpp"               // memory has inline methods to these
+ #include "StackClass.hpp"               // classes, so pull them in next.
+ #include "RexxMemory.hpp"               // memory next, to get OrefSet
+ #include "RexxBehaviour.hpp"            // now behaviours and
+ #include "ClassClass.hpp"               // classes, which everything needs
+ #include "RexxEnvelope.hpp"             // envelope is needed for flattens
+ #include "RexxActivity.hpp"             // activity is needed for errors
+
 /******************************************************************************/
 /* Method arguments special codes                                             */
 /******************************************************************************/
 
-const size_t A_COUNT   = 127;            /* pass arguments as pointer/count pair */
+const size_t A_COUNT   = 127;            // pass arguments as pointer/count pair
 
 /******************************************************************************/
 /* Return codes                                                               */
@@ -341,9 +340,9 @@ const size_t A_COUNT   = 127;            /* pass arguments as pointer/count pair
 const int RC_OK         = 0;
 const int RC_LOGIC_ERROR  = 2;
 
-const int POSITIVE    = 1;             /* integer must be positive          */
-const int NONNEGATIVE = 2;             /* integer must be non-negative      */
-const int WHOLE       = 3;             /* integer must be whole             */
+const int POSITIVE    = 1;             // integer must be positive
+const int NONNEGATIVE = 2;             // integer must be non-negative
+const int WHOLE       = 3;             // integer must be whole
 
 
 // some very common class tests
@@ -356,137 +355,286 @@ inline bool isMethod(RexxObject *o) { return isOfClass(Method, o); }
 
 #include "ActivityManager.hpp"
 
-/* The next macro is specifically for REQUESTing a STRING, since there are    */
-/* four primitive classes that are equivalents for strings.  It will trap on  */
-/* OREF_NULL. */
+/**
+ * A function specifically for REQUESTing a STRING, since there are
+ * four primitive classes that are equivalents for strings.  It will trap on
+ * OREF_NULL.  This always returns a string value, going all the
+ * way down the various methods of providing a string value.
+ * Will also raise NOSTRING conditions.
+ *
+ * @param object The object we need a string value from.
+ *
+ * @return The string value of the object.
+ */
 inline RexxString *REQUEST_STRING(RexxObject *object)
 {
   return (isOfClass(String, object) ? (RexxString *)object : (object)->requestString());
 }
 
 
-// The next routine checks for required arguments and raises a missing argument
-// error for the given position.
+/**
+ * Check for required arguments and raise a missing argument
+ * error for the given position.
+ *
+ * @param object   The reference to check.
+ * @param position the position of the argument for the error message.
+ */
 inline void requiredArgument(RexxObject *object, size_t position)
 {
-    if (object == OREF_NULL)             /* missing argument?                 */
+    if (object == OREF_NULL)
     {
-        missingArgument(position);        /* raise an error                    */
+        missingArgument(position);
     }
 }
 
 
-/* The next routine is specifically for REQUESTing a STRING needed as a method*/
-/* argument.  This raises an error if the object cannot be converted to a     */
-/* string value.                                                              */
+/**
+ * REQUEST a STRING needed as a method
+ * argument.  This raises an error if the object cannot be converted to a
+ * string value.
+ *
+ * @param object   The object argument to check.
+ * @param position The argument position, used for any error messages.
+ *
+ * @return The String value of the object, if it really has a string value.
+ */
 inline RexxString * stringArgument(RexxObject *object, size_t position)
 {
-    if (object == OREF_NULL)             /* missing argument?                 */
+    if (object == OREF_NULL)
     {
-        missingArgument(position);        /* raise an error                    */
+        missingArgument(position);
     }
-                                           /* force to a string value           */
     return object->requiredString(position);
 }
 
 
-/* The next routine is specifically for REQUESTing a STRING needed as a method*/
-/* argument.  This raises an error if the object cannot be converted to a     */
-/* string value.                                                              */
+/**
+ * REQUEST a STRING needed as a method
+ * argument.  This raises an error if the object cannot be converted to a
+ * string value.
+ *
+ * @param object The object to check.
+ * @param name   The parameter name of the argument (used for error reporting.)
+ *
+ * @return The string value of the object if it truely has a string value.
+ */
 inline RexxString * stringArgument(RexxObject *object, const char *name)
 {
-    if (object == OREF_NULL)             /* missing argument?                 */
+    if (object == OREF_NULL)
     {
         reportException(Error_Invalid_argument_noarg, name);
     }
-                                           /* force to a string value           */
+
     return object->requiredString(name);
 }
 
-
+// handle an option string argument where a default argument value is provided.
 inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, size_t p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
 
 
+// handle an option string argument where a default argument value is provided.
 inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, const char *p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
 
 
-// resides in the string class util
+/**
+ * Parse a length method argument.  this must be a non-negative
+ * whole number.  Raises a number if the argument was omitted or
+ * is not a length numeric value.
+ *
+ * @param o      The object to check.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
 size_t lengthArgument(RexxObject *o, size_t p);
 
+
+/**
+ * Parse an optional length method argument.  this must be a
+ * non-negative whole number.  Raises a number if the argument
+ * not a length numeric value.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
 inline size_t optionalLengthArgument(RexxObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : lengthArgument(o, p));
 }
 
-// resides in the string class util
+
+/**
+ * Parse a position method argument.  this must be a positive
+ * whole number.  Raises a number if the argument was omitted or
+ * is not a length numeric value.
+ *
+ * @param o      The object to check.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
 size_t positionArgument(RexxObject *o, size_t p);
 
+
+/**
+ * Parse an optional position method argument.  this must be a
+ * positive whole number.  Raises a number if the argument not a
+ * length numeric value.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
 inline size_t optionalPositionArgument(RexxObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : positionArgument(o, p));
 }
 
+
+/**
+ * Parse a pad argument.  This must a string object and
+ * only a single character long.
+ *
+ * @param o      The object argument to check.  Raises an error if this was
+ *               omitted.
+ * @param p      The argument position, for error reporting.
+ *
+ * @return The pad character from the argument string.
+ */
 char padArgument(RexxObject *o, size_t p);
 
+
+
+/**
+ * Parse an optional pad argument.  This must a string object
+ * and only a single character long.
+ *
+ * @param o      The object argument to check.
+ * @param d      The default pad character if the argument was omitted.
+ * @param p      The argument position, for error reporting.
+ *
+ * @return The pad character from the argument string.
+ */
 inline char optionalPadArgument(RexxObject *o, char d, size_t p)
 {
     return (o == OREF_NULL ? d : padArgument(o, p));
 }
 
+
+/**
+ * Parse an option argument.  This must be a non-zero length string.
+ *
+ * @param o      The object to check.
+ * @param p      The argument position for error messages.
+ *
+ * @return The first character of the option string.
+ */
 char optionArgument(RexxObject *o, size_t p);
 
+
+/**
+ * Parse an optional option argument.  This must be a non-zero
+ * length string.
+ *
+ * @param o      The object to check.
+ * @param d      The default option if this was an omitted argument.
+ * @param p      The argument position for error messages.
+ *
+ * @return The first character of the option string.
+ */
 inline char optionalOptionArgument(RexxObject *o, char d, size_t p)
 {
     return (o == OREF_NULL ? d : optionArgument(o, p));
 }
 
+
+/**
+ * Handle an optional non-negative numeric option.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position used for error reporting.
+ *
+ * @return The converted numeric value.
+ */
 inline size_t optionalNonNegative(RexxObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : o->requiredNonNegative(p));
 }
 
+
+/**
+ * Handle an optional positive numeric option.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position used for error reporting.
+ *
+ * @return The converted numeric value.
+ */
 inline size_t optionalPositive(RexxObject *o, size_t d, size_t p)
 {
     return (o == OREF_NULL ? d : o->requiredPositive(p));
 }
 
-/* The next routine is specifically for REQUESTing an ARRAY needed as a method*/
-/* argument.  This raises an error if the object cannot be converted to a     */
-/* single dimensional array item                                              */
+/**
+ * REQUEST an ARRAY needed as a method
+ * argument.  This raises an error if the object cannot be converted to a
+ * single dimensional array item.
+ *
+ * @param object   The argument object.
+ * @param position The argument position (used for error reporting.)
+ *
+ * @return A converted single-dimension array.
+ */
 inline RexxArray *arrayArgument(RexxObject *object, size_t position)
 {
-    if (object == OREF_NULL)             /* missing argument?                 */
+    // this is required.
+    if (object == OREF_NULL)
     {
-        missingArgument(position);      /* raise an error                    */
+        missingArgument(position);
     }
-    /* force to array form               */
+    // force to array form
     RexxArray *array = object->requestArray();
-    /* not an array?                     */
+    // not an array or not single dimension?  Error!
     if (array == TheNilObject || array->getDimension() != 1)
     {
-        /* raise an error                    */
         reportException(Error_Execution_noarray, object);
     }
     return array;
 }
 
 
+/**
+ * REQUEST an ARRAY needed as a method
+ * argument.  This raises an error if the object cannot be converted to a
+ * single dimensional array item.
+ *
+ * @param object   The argument object.
+ * @param position The argument name (used for error reporting.)
+ *
+ * @return A converted single-dimension array.
+ */
 inline RexxArray * arrayArgument(RexxObject *object, const char *name)
 {
-    if (object == OREF_NULL)             /* missing argument?                 */
+    if (object == OREF_NULL)
     {
         reportException(Error_Invalid_argument_noarg, name);
     }
 
-    /* force to array form               */
+    // get the array form and verify we got a single-dimension array back.
     RexxArray *array = object->requestArray();
-    /* not an array?                     */
     if (array == TheNilObject || array->getDimension() != 1)
     {
         /* raise an error                    */
@@ -496,9 +644,13 @@ inline RexxArray * arrayArgument(RexxObject *object, const char *name)
 }
 
 
-/* The next routine is specifically for REQUESTing a STRING needed as a method*/
-/* argument.  This raises an error if the object cannot be converted to a     */
-/* string value.                                                              */
+/**
+ * Validate that an argument is an instance of a specific class.
+ *
+ * @param object The argument to test.
+ * @param clazz  The class type to check it against.
+ * @param name   The argument name for error reporting.
+ */
 inline void classArgument(RexxObject *object, RexxClass *clazz, const char *name)
 {
     if (object == OREF_NULL)             /* missing argument?                 */
@@ -513,12 +665,26 @@ inline void classArgument(RexxObject *object, RexxClass *clazz, const char *name
 }
 
 
-/* The next macro is specifically for REQUESTing an ARRAY, since there are    */
-/* six primitive classes that can produce array equivalents.  It will trap on */
-/* OREF_NULL. */
+/**
+ * Request an array version for an argument.  Will perform
+ * makearray processing on the object, if needed.
+ *
+ * @param obj    The object to request.
+ *
+ * @return The converted array value of the object or TheNilObject if
+ *         if did not convert.
+ */
 inline RexxArray * REQUEST_ARRAY(RexxObject *obj) { return ((obj)->requestArray()); }
 
-/* The next macro is specifically for REQUESTing an INTEGER,                  */
+/**
+ * Request an object to be converted to a RexxInteger
+ * object.  Return TheNilObject if it could not be converted.
+ *
+ * @param obj    The object to convert.
+ *
+ * @return An Integer object instance representing this object or
+ *         .nil if it cannot be converted.
+ */
 inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(Numerics::ARGUMENT_DIGITS));}
 
 #endif

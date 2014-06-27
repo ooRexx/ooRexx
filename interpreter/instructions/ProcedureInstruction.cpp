@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,83 +48,79 @@
 #include "ProcedureInstruction.hpp"
 #include "ExpressionBaseVariable.hpp"
 
-RexxInstructionProcedure::RexxInstructionProcedure(
-    size_t     varCount,               /* number of variables               */
-    RexxQueue *variable_list)          /* supplied variable list            */
-/******************************************************************************/
-/* Function:  Complete initialization of a PROCEDURE instruction object       */
-/******************************************************************************/
+
+/**
+ * Initialize a PROCEDURE instruction.
+ *
+ * @param varCount The count of variables to expose.
+ * @param variable_list
+ *                 The queue holding the variables (held in reverse order
+ *                 of appearance on the instruction).
+ */
+RexxInstructionProcedure::RexxInstructionProcedure(size_t varCount, RexxQueue *variable_list)
 {
-    /* get the variable size             */
     variableCount = varCount;
-    while (varCount > 0)            /* loop through the variable list    */
-    {
-        /* copying each variable             */
-        OrefSet(this, this->variables[--varCount], (RexxVariableBase *)variable_list->pop());
-    }
+    // get all of the variable retrievers, in reverse order.
+    initializeObjectArray(varCount, variables, RexxVariableBase, variable_list);
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionProcedure::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
-
-    memory_mark(this->nextInstruction);  /* must be first one marked          */
-    for (i = 0, count = variableCount; i < count; i++)
-    {
-        memory_mark(this->variables[i]);
-    }
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark_array(variableCount, variables);
 }
 
 
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionProcedure::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
-
-                                         /* must be first one marked          */
-    memory_mark_general(this->nextInstruction);
-    for (i = 0, count = variableCount; i < count; i++)
-    {
-        memory_mark_general(this->variables[i]);
-    }
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general_array(variableCount, variables);
 }
 
-void RexxInstructionProcedure::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
 
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionProcedure::flatten(RexxEnvelope *envelope)
+{
     setUpFlatten(RexxInstructionProcedure)
 
-    flatten_reference(newThis->nextInstruction, envelope);
-    for (i = 0, count = variableCount; i < count; i++)
-    {
-        flatten_reference(newThis->variables[i], envelope);
-    }
+    flattenRef(nextInstruction);
+    flattenArrayRefs(variableCount, variables);
 
     cleanUpFlatten
 }
 
-void RexxInstructionProcedure::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX PROCEDURE instruction                            */
-/******************************************************************************/
+/**
+ * Execute a PROCEDURE instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionProcedure::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-  context->traceInstruction(this);     /* trace if necessary                */
-  /* have the context expose these */
-  context->procedureExpose(variables, variableCount);
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    context->traceInstruction(this);
+
+    // the context does the heavy lifting here.
+    context->procedureExpose(variables, variableCount);
+
+    context->pauseInstruction();
 }
 

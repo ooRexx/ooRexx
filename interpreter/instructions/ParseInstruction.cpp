@@ -93,11 +93,7 @@ void RexxInstructionParse::live(size_t liveMark)
     // must be first object marked
     memory_mark(nextInstruction);
     memory_mark(expression);
-
-    for (size_t i = 0; i < trigger_count; i++)
-    {
-        memory_mark(triggers[i]);
-    }
+    memory_mark_array(trigger_count, triggers);
 }
 
 
@@ -113,11 +109,7 @@ void RexxInstructionParse::liveGeneral(int reason)
     // must be first object marked
     memory_mark_general(nextInstruction);
     memory_mark_general(expression);
-
-    for (size_t i = 0; i < trigger_count; i++)
-    {
-        memory_mark_general(triggers[i]);
-    }
+    memory_mark_general_array(trigger_count, triggers);
 }
 
 
@@ -131,11 +123,8 @@ void RexxInstructionParse::flatten(RexxEnvelope *envelope)
     setUpFlatten(RexxInstructionParse)
 
     flattenRef(nextInstruction);
-    for (i = 0; i < trigger_count; i++)
-    {
-        flattenRef(triggers[i]);
-    }
     flattenRef(expression);
+    flattenArrayRefs(trigger_count, triggers);
 
     cleanUpFlatten
 }
@@ -231,19 +220,25 @@ void RexxInstructionParse::execute(RexxActivation *context, RexxExpressionStack 
     // create the parse target
     target.init(value, argList, argCount, parseFlags, multiple, context, stack);
 
-    size = this->trigger_count;          /* get the template size             */
-    for (i = 0; i < size; i++)         /* loop through the template list    */
+    // now loop through the triggers, have each perform its configured operation.
+    for (size_t i = 0; i < trigger_count; i++)
     {
-        trigger = this->triggers[i];       /* get the next trigger value        */
-        if (trigger == OREF_NULL)          /* end of this template portion?     */
+        // a NULL trigger marks the boundary between comman delimited template
+        // sections.  For PARSE ARG, this will advance to the next argument.  For
+        // all other sources, this will just use "" as the string value.
+        RexxTrigger *trigger = triggers[i];
+        if (trigger == OREF_NULL)
         {
-            target.next(context);            /* reset for the next string         */
+            target.next(context);
         }
-        else                               /* process this trigger              */
+        else
         {
+            // each trigger handles both movement and variable assignment.
             trigger->parse(context, stack, &target);
         }
     }
-    context->pauseInstruction();         /* do debug pause if necessary       */
+
+    // and the ubiquitous debug pause.
+    context->pauseInstruction();
 }
 

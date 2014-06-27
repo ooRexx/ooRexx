@@ -160,6 +160,11 @@ public:
         return (void *)protectedObject;
     }
 
+    inline isNull()
+    {
+        return protectedObject == OREF_NULL;
+    }
+
 protected:
     RexxObject *protectedObject;       // next in the chain of protected object
     ProtectedObject *next;             // the pointer protected by the object

@@ -61,7 +61,7 @@
  * @param s          The evaluation stack.
  */
 void RexxTarget::init(RexxObject *_string, RexxObject **_arglist, size_t _argcount,
-    size_t _translate, bool multiple, RexxActivation *context, RexxExpressionStack *s)
+    bitset<32>_translate, bool multiple, RexxActivation *context, RexxExpressionStack *s)
 {
     translate = _translate;
     arglist = _arglist;
@@ -80,10 +80,6 @@ void RexxTarget::init(RexxObject *_string, RexxObject **_arglist, size_t _argcou
  * @param context The current execution context.
  */
 void RexxTarget::next(RexxActivation *context)
-/******************************************************************************/
-/* Function:  Step to the "next" string to parse, resetting all of the        */
-/*            cursor movement values.                                         */
-/******************************************************************************/
 {
     // if we have an argument list and we have an argument value in that
     // position, grab it.  Otherwise, our target string is just ""
@@ -141,6 +137,7 @@ void RexxTarget::next(RexxActivation *context)
     subcurrent = 0;                // no sub piece to process yet
 }
 
+
 /**
  * Move the current cursor to the string end.
  */
@@ -154,12 +151,14 @@ void RexxTarget::moveToEnd()
     pattern_start = string_length;
     // string end is at end also
     end = string_length;
-    // set starting point
+    // set starting point for breaking up into words
     subcurrent = start;
 }
 
+
 /**
- * Move the parse pointer forward
+ * Move the parse pointer forward by a relative offset
+ * (unsigned numeric trigger)
  *
  * @param offset The offset to move.
  */
@@ -177,7 +176,7 @@ void RexxTarget::forward(stringsize_t offset)
     }
 
     // if there was no forward movement, the special Rexx rule kicks in
-    if (end <= start)      /* no forward movement?              */
+    if (end <= start)
     {
         // we match to the end, and start from the current start next time
         end = string_length;
@@ -191,94 +190,126 @@ void RexxTarget::forward(stringsize_t offset)
 
     // our pattern is zero length because it is not a string match.
     pattern_end = pattern_start;
-    // set the subpiece pointer
+    // the section we parse into words starts with the last match position.
     subcurrent = start;
 }
 
 
-void RexxTarget::forwardLength(
-    stringsize_t offset)               /* offset to move                    */
-/******************************************************************************/
-/* Arguments:  distance to move the parse pointer                             */
-/******************************************************************************/
+/**
+ * Move the parsing position forward by a relative offset
+ * (>numeric trigger), which uses different rules for end <=
+ * start.
+ *
+ * @param offset The offset amount to move.
+ */
+void RexxTarget::forwardLength(stringsize_t offset)
 {
-    start = pattern_start;   /* start position is last position   */
-    end = start + offset;    /* set the end position              */
-    if (end >= string_length)/* take us past the end?             */
+    // the start position is our last start position (which will
+    // be the beginning of the last string match.
+    start = pattern_start;
+    end = start + offset;    /
+
+    // perform movement past the string end tests.
+    if (end >= string_length)
     {
-        end = string_length;   /* just use the end position         */
+        end = string_length;
     }
-    pattern_start = end;     /* this is new start position        */
-                                         /* and have a zero length pattern    */
+
+    // The match pattern is the end position and is a zero-length
+    // string.
+    pattern_start = end;
     pattern_end = pattern_start;
-    subcurrent = start;      /* set the subpiece pointer          */
+    // The piece we parse into words begins at the last match position.
+    subcurrent = start;
 }
 
 
-void RexxTarget::absolute(
-    stringsize_t offset)               /* offset to move                    */
-/******************************************************************************/
-/* Arguments:  new parse position                                             */
-/******************************************************************************/
+/**
+ * Move to an absolute string postion (unsigned numeric
+ * trigger).
+ *
+ * @param offset The target string position.
+ */
+void RexxTarget::absolute(stringsize_t offset)
 {
-    if (offset > 0)                      /* positive offset?                  */
+    // make the offset origin zero (but be careful of a 0 offset already)
+    if (offset > 0)
     {
-        offset--;                          /* make origin zero                  */
+        offset--;
     }
-    start = pattern_end;     /* start position is last position   */
-    if ((size_t)offset <= start) /* backward movement?                */
+
+    // our parsing start position is the end of the previous match
+    start = pattern_end;
+    // if we are moving backward, we match to the end of the string
+    // and reset things.
+    if (offset <= start)
     {
-        end = string_length;   /* matches to the end                */
-        pattern_start = offset;      /* pattern start is actual position  */
+        end = string_length;
+        pattern_start = offset;
     }
-    else                               /* forward movement                  */
+    // forward movement.  Use the string between the end of the last
+    // match and the current match position
+    else
     {
-        end = offset;                /* use the specified position        */
-                                           /* take us past the end?             */
+        end = offset;
+        // cap at the end of the string
         if (end >= string_length)
         {
-            /* just use the end position         */
             end = string_length;
         }
-        pattern_start = end;   /* this is new start position        */
+
+        pattern_start = end;
     }
-    /* and have a zero length pattern    */
+    // this is a zero length match pattern.
     pattern_end = pattern_start;
-    subcurrent = start;      /* set the subpiece pointer          */
+    subcurrent = start;
 }
 
-void RexxTarget::backward(
-    stringsize_t offset)               /* offset to move                    */
-/******************************************************************************/
-/* Arguments:  distance to move the parse pointer                             */
-/******************************************************************************/
+/**
+ * Move backward by an offset.  This is the -n form, which
+ * employs the backward movement rule to cause a match to the
+ * end of the string.
+ *
+ * @param offset The offset amount to move.
+ */
+void RexxTarget::backward(stringsize_t offset)
 {
-    start = pattern_start;   /* start position is last position   */
-    end = string_length;     /* negatives always use to the end   */
-    /* go past start of string?          */
+    // the current string starts with the last pattern and goes to
+    // the end
+    start = pattern_start;
+    end = string_length;
+
+    // relative movement is from start of last match.  If
+    // this would take us past the beginning, just go to the start.
     if (offset > pattern_start)
     {
-        pattern_start = 0;         /* this resets to the start          */
+        pattern_start = 0;
     }
     else
     {
-        pattern_start -= offset;   /* just back up                      */
+        pattern_start -= offset;
     }
-    /* and have a zero length pattern    */
+    // all numeric patterns are zero length
     pattern_end = pattern_start;
-    subcurrent = start;      /* set the subpiece pointer          */
+    subcurrent = start;
 }
 
 
-void RexxTarget::backwardLength(
-    stringsize_t offset)               /* offset to move                    */
-/******************************************************************************/
-/* Arguments:  distance to move the parse pointer                             */
-/******************************************************************************/
+/**
+ * Backward movement for a <n pattern.  This does not
+ * use the "match to the end of the string" semantics
+ * that the -n pattern used.
+ *
+ * @param offset The offset to move.
+ */
+void RexxTarget::backwardLength(stringsize_t offset)
 {
-    start = pattern_start;   /* start position is last position   */
-    end = string_length;     /* negatives always use to the end   */
-                                         /* go past start of string?          */
+    // the start position will be the final movement postion.
+    // the end position will be the last match position, which
+    // allows parsing characters immediately before a match position.
+
+    // move relative to the last match position, but we cannot
+    // go past the beginning.
     if (offset > pattern_start)
     {
         start = 0;
@@ -287,232 +318,247 @@ void RexxTarget::backwardLength(
     {
         start = pattern_start - offset;
     }
-    end = pattern_start;     // the end is the starting location
-                                         /* and have a zero length pattern    */
+    // the end is the old last match position
+    end = pattern_start;
+    // the new match position is the current start
+    pattern_start = start;
+    // the pattern end is the old pattern start
     pattern_end = pattern_start;
-    subcurrent = start;      /* set the subpiece pointer          */
+    // and set the location for word parsing.
+    subcurrent = start;
 }
 
 
-void RexxTarget::search(
-    RexxString *needle)                /* target search string              */
-/******************************************************************************/
-/* Arguments:  target location string                                         */
-/******************************************************************************/
+/**
+ * Seach the string from the end of the last match.
+ *
+ * @param needle The search needle.
+ */
+void RexxTarget::search(RexxString *needle)
 {
-    /* start position for strings is the */
-    start = pattern_end;     /* end of the last pattern           */
-                                         /* search for the string trigger     */
+    // all searches start from the end of the last match position
+    // and so does the section to be parsed up
+    start = pattern_end;
+    // just use pos to search
     end = string->pos(needle, start);
-    if (end == 0)                /* not found?                        */
+    // if not found, we match to the end of the string
+    if (end == 0)
     {
-        end = string_length;   /* that is the end position          */
-                                           /* next pattern is end also          */
+        end = string_length;
         pattern_start = string_length;
-        /* and the end pattern is also there */
         pattern_end = string_length;
     }
     else
     {
-        end--;                       /* convert to origin zero            */
-        pattern_start = end;   /* this is the starting point        */
-                                           /* end is start + trigger length     */
+        // make origin zero
+        end--;
+        // mark the pattern start
+        pattern_start = end;
+        // the pattern end is start + needle length
         pattern_end = pattern_start + needle->getLength();
     }
-    subcurrent = start;      /* set the subpiece pointer          */
+    // again, prepare for word operations
+    subcurrent = start;
 }
 
-void RexxTarget::caselessSearch(
-    RexxString *needle)                /* target search string              */
-/******************************************************************************/
-/* Arguments:  target location string                                         */
-/******************************************************************************/
+
+/**
+ * Perform a caseless search for pattern (used with
+ * PARSE CASELESS).
+ *
+ * @param needle The target needle.
+ */
+void RexxTarget::caselessSearch(RexxString *needle)
 {
-    /* start position for strings is the */
-    start = pattern_end;     /* end of the last pattern           */
-                                         /* search for the string trigger     */
+    // all searches start from the end of the last match position
+    // and so does the section to be parsed up
+    start = pattern_end;
+    // just use pos to search
     end = string->caselessPos(needle, start);
-    if (end == 0)                /* not found?                        */
+    // if not found, we match to the end of the string
+    if (end == 0)
     {
-        end = string_length;   /* that is the end position          */
-                                           /* next pattern is end also          */
+        end = string_length;
         pattern_start = string_length;
-        /* and the end pattern is also there */
         pattern_end = string_length;
     }
     else
     {
-        end--;                       /* convert to origin zero            */
-        pattern_start = end;   /* this is the starting point        */
-                                           /* end is start + trigger length     */
+        // make origin zero
+        end--;
+        // mark the pattern start
+        pattern_start = end;
+        // the pattern end is start + needle length
         pattern_end = pattern_start + needle->getLength();
     }
-    subcurrent = start;      /* set the subpiece pointer          */
+    // again, prepare for word operations
+    subcurrent = start;
 }
 
-RexxString *RexxTarget::getWord()
-/******************************************************************************/
-/*  Returned:  Next word extracted from parsed substring                      */
-/******************************************************************************/
-{
-    RexxString *word;                    /* extracted word                    */
-    size_t  length;                      /* word length                       */
-    const char *scan;                    /* scan pointer                      */
-    const char *endScan;                 /* end of string location            */
 
-    if (subcurrent >= end)   /* already used up?                  */
+/**
+ * Get the next word from the parsed substring.
+ *
+ * @return The next blank delimited word, or a NULLSTRING if
+ *         we've used up the string section.
+ */
+RexxString *RexxTarget::getWord()
+{
+    // already moved past the end of the string?  This is a NULLSTRING result
+    if (subcurrent >= end)
     {
-        word = OREF_NULLSTRING;            /* just return a null string         */
+        word = OREF_NULLSTRING;
     }
     else                               /* need to scan off a word           */
     {
-        /* point to the current position     */
-        scan = string->getStringData() + subcurrent;
-        /* and the scan end point            */
-        endScan = string->getStringData() + end;
-        /* NOTE:  All string objects have a terminating NULL, so the */
-        /* scan for nonblanks is guaranteed to stop before getting into */
-        /* trouble, which eliminates the need to check against the */
-        /* length */
+        // get some pointers for scanning
+        const char *scan = string->getStringData() + subcurrent;
+        const char *endScan = string->getStringData() + end;
+        // NOTE:  All string objects have a terminating NULL, so the
+        // scan for nonblanks is guaranteed to stop before getting into
+        // trouble, which eliminates the need to check against the
+        // length */
+
+        // we recognize both blanks and tabs as whitespace
         while (*scan == ' ' || *scan == '\t')
         {
-            scan++;                          /* step for each match found         */
+            scan++;
         }
-        /* set the new location              */
+        // set the new location
         subcurrent = scan - string->getStringData();
-        if (subcurrent >= end) /* already used up?                  */
+        // scanned past the end?  just return a null string.
+        if (subcurrent >= end)
         {
-            word = OREF_NULLSTRING;          /* just return a null string         */
+            return OREF_NULLSTRING;
         }
-        else                             /* have a real word                  */
+        // we have the start of a real word here...
+        else
         {
-            /* look for the next blank           */
-            endScan = NULL;
+            // now we're looking for a blank for the end of the string.
+            // scan is the start of the word, endScan remains the same,
+            // endPosition will be the end of the word
             const char *scanner = scan;
-            const char *endPosition = string->getStringData() + end;
-            while (scanner < endPosition)
+            const char *endPosition = NULL;
+            // scan for a blank
+            while (scanner < endScan)
             {
                 if (*scanner == ' ' || *scanner == '\t')
                 {
-                    endScan = scanner;
+                    endPosition = scanner;
                     break;
                 }
                 scanner++;
             }
-            if (endScan == NULL)           /* no match?                         */
+
+            size_t length = 0;
+            // if no blank was found, we use the rest of the pattern piece.
+            if (endPosition == NULL)
             {
-                /* calculate the length              */
                 length = end - subcurrent;
-                subcurrent = end;  /* use the rest of it                */
+                // we've used up this string section
+                subcurrent = end;
             }
+            // consume that piece of the string
             else
             {
-                /* set the new location              */
-                subcurrent = endScan - string->getStringData();
-                length = endScan - scan;       /* calculate from the pointers       */
+                // set the new location parsing location (NOTE: we also consume this
+                // blank character for doing our next scan bit).
+                subcurrent = endPosition - string->getStringData() + 1;
+                length = endPosition - scan;
             }
-            /* step past terminating blank...note*/
-            /* that this is done unconditionally,*/
-            /* but safely, since the check at the*/
-            /* start will catch the out of bounds*/
-            subcurrent++;              /* condition                         */
-                                             /* this the entire string?           */
+
+            // is this the entire string?  Just return it directly rather than
+            // create a new string object.
             if (length == string_length)
             {
-                word = string;           /* just return it directly           */
+                return string;
             }
             else
             {
-                /* extract the subpiece              */
-                word = new_string(scan, length);
+                // extract a subpiece from the string
+                return new_string(scan, length);
             }
         }
     }
-    return word;                         /* give this word back               */
+    // should never get here.
+    return OREF_NULLSTRING;
 }
 
+/**
+ * Skip a word in the parse string section.  This is
+ * used for the placeholder '.' pattern.
+ */
 void RexxTarget::skipWord()
-/******************************************************************************/
-/*  Returned:  Next word extracted from parsed substring                      */
-/******************************************************************************/
 {
-    const char *scan;                    /* scan pointer                      */
-    const char *endScan;                 /* end of string location            */
-
-    if (subcurrent < end)  /* something left?                   */
+    // something left to process?
+    if (subcurrent < end)
     {
-        /* point to the current position     */
-        scan = string->getStringData() + subcurrent;
-        /* and the scan end point            */
-        endScan = string->getStringData() + end;
-        /* NOTE:  All string objects have a terminating NULL, so the */
-        /* scan for nonblanks is guaranteed to stop before getting into */
-        /* trouble, which eliminates the need to check against the */
-        /* length */
+        // get some scanning pointers
+        const char *scan = string->getStringData() + subcurrent;
+        const char *endScan = string->getStringData() + end;
+        // NOTE:  All string objects have a terminating NULL, so the
+        // scan for nonblanks is guaranteed to stop before getting into
+        // trouble, which eliminates the need to check against the
+        // length
         while (*scan == ' ' || *scan == '\t')
         {
-            scan++;                          /* step for each match found         */
+            scan++;
         }
-        /* set the new location              */
+        // set the new location
         subcurrent = scan - string->getStringData();
-        if (subcurrent < end)/* something left over?              */
+        const char *endPosition = NULL;
+        // something left?  Then we need to establish the word end position
+        if (subcurrent < end)
         {
-            /* look for the next blank           */
-            endScan = NULL;
-            const char *scanner = scan;
-            const char *endPosition = string->getStringData() + end;
-            while (scanner < endPosition)
+            // look for the next blank
+            const char *endScan = NULL;
+            while (scann < endScan)
             {
-                if (*scanner == ' ' || *scanner == '\t')
+                if (*scan == ' ' || *scan == '\t')
                 {
-                    endScan = scanner;
+                    endPosition = scan;
                     break;
                 }
-                scanner++;
+                scan++;
             }
-            if (endScan == NULL)             /* no match?                         */
+            // if we did not found anything, this is used up
+            if (endPosition == NULL)
             {
-                subcurrent = end;  /* use the rest of it                */
+                subcurrent = end;
             }
+            // we know the end position...also consume the terminating white space
             else
             {
-                /* set the new location              */
-                subcurrent = endScan - string->getStringData();
+                subcurrent = endPosition - string->getStringData() + 1;
             }
-            /* step past terminating blank...note*/
-            /* that this is done unconditionally,*/
-            /* but safely, since the check at the*/
-            /* start will catch the out of bounds*/
-            subcurrent++;              /* condition                         */
         }
     }
 }
 
+/**
+ * Return the remainder of the parsed section of string.
+ *
+ * @return The string remainder.
+ */
 RexxString *RexxTarget::remainder()
-/******************************************************************************/
-/*  Returned:  Remaining portion of parsed substring                          */
-/******************************************************************************/
 {
-    RexxString *word;                    /* extracted word                    */
-    size_t  length;                      /* length to extract                 */
+    // already used up?  this is ""
+    if (subcurrent >= end)
+    {
+        return OREF_NULLSTRING;
+    }
+    // get the rest of the current piece
 
-    if (subcurrent >= end)   /* already used up?                  */
+    // get the length, and then clear the string section
+    stringsize_t length = end - subcurrent;
+    subcurrent = end;
+    // if this is the entire string, we can just return
+    // the string without making a new string object
+    if (length == string_length)
     {
-        word = OREF_NULLSTRING;            /* just return a null string         */
+        return string;
     }
-    else                               /* extract the remaining piece       */
-    {
-        /* calculate the length              */
-        length = end - subcurrent;
-        if (length == string_length) /* this the entire string?           */
-        {
-            word = string;             /* just return it directly           */
-        }
-        else                               /* need to extract a piece           */
-        {
-            word = string->extract(subcurrent, length);
-        }
-        subcurrent = end;      /* eat the remainder piece           */
-    }
-    return word;                         /* give this word back               */
+
+    // extract a new string piece
+    return string->extract(subcurrent, length);
 }

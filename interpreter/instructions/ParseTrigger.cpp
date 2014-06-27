@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Translator                                          ParseTrigger.cpp  */
 /*                                                                            */
-/* Primitive Procedure Parse Trigger Class                                    */
+/* PARSE instruction trigger operation.                                       */
 /*                                                                            */
 /******************************************************************************/
 #include <stdlib.h>
@@ -50,249 +50,281 @@
 #include "ParseTarget.hpp"
 #include "ExpressionBaseVariable.hpp"
 
-RexxTrigger::RexxTrigger(
-    int        type,                    /* type of trigger                   */
-    RexxObject *_value,                 /* value to evaluatate               */
-    size_t      _variableCount,         /* count of variables                */
-    RexxQueue  *_variables)             /* array of trigger variables        */
-/******************************************************************************/
-/* Function:  Initialize a parse trigger translator object                    */
-/******************************************************************************/
+/**
+ * Initialize a parsing trigger object.
+ *
+ * @param size   The base size of this object.
+ * @param variableCount
+ *               The number of variables associated with this trigger.
+ *
+ * @return A newly allocated Rexx object.
+ */
+void  *RexxTrigger::operator new(size_t size, size_t variableCount)
 {
-    this->setType(type);                 /* set the type (and hashvalue)      */
-    this->variableCount = _variableCount; /* set the number of variables also  */
-    OrefSet(this, this->value, _value);   /* save the associated value         */
-    /* loop through the variable list    */
-    while (_variableCount > 0)            /* copying each variable             */
+    return new_object(size + (variableCount - 1) * sizeof(RexxObject *), T_ParseTrigger);
+}
+
+/**
+ * Construct a PARSING trigger operation.
+ *
+ * @param type       The type of trigger involved.
+ * @param _value     A potential value expression for resolving this
+ *                   trigger.
+ * @param _variableCount
+ *                   The count of variables in this parse section.
+ * @param _variables The list of variables to assign.
+ */
+RexxTrigger::RexxTrigger(ParseTriggerType type, RexxObject *_value, size_t _variableCount,
+    RexxQueue  *_variables)
+{
+    triggerType = type;
+    variableCount = variableCount;
+    value = _value;
+    // copy all of the variables from the queue (stored in reverse order)
+    while (_variableCount > 0)
     {
-        OrefSet(this, this->variables[--_variableCount], (RexxVariableBase *)_variables->pop());
+        variables[--_variableCount] = (RexxVariableBase *)_variables->pop();
     }
 }
 
 
-stringsize_t RexxTrigger::integerTrigger(
-    RexxObject *trigger)               /* value to be converted             */
-/******************************************************************************/
-/* Function:  Convert a trigger value to an integer, with appopriate error    */
-/*            reporting.                                                      */
-/******************************************************************************/
-{
-    stringsize_t result;                 /* converted result                  */
-                                         /* convert the value                 */
-    if (!trigger->requestUnsignedNumber(result, number_digits()))
-    {
-        /* report an exception               */
-        reportException(Error_Invalid_whole_number_parse, trigger);
-    }
-    return result;                       /* finished                          */
-}
-
-
-RexxString *RexxTrigger::stringTrigger(
-    RexxObject *trigger)               /* value to be converted             */
-/******************************************************************************/
-/* Function:  Convert a trigger expression to a String, with appopriate error */
-/*            reporting.                                                      */
-/******************************************************************************/
-{
-                                       /* force to string form              */
-  return REQUEST_STRING(trigger);
-}
-
-
-void RexxTrigger::parse(
-    RexxActivation      *context,      /* current execution context         */
-    RexxExpressionStack *stack,        /* current expression stack          */
-    RexxTarget          *target )      /* current parsing target string     */
-/******************************************************************************/
-/* Function:  Apply a parsing trigger against a parsing target                */
-/******************************************************************************/
-{
-    RexxObject       *_value = OREF_NULL;/* evaluated trigger part            */
-    RexxString       *stringvalue;       /* new string value                  */
-    stringsize_t      integer;           /* target integer value              */
-    size_t            i;                 /* loop counter                      */
-    size_t            size;              /* size of variables array           */
-    RexxVariableBase *variable;          /* current variable processing       */
-
-    if (this->value != OREF_NULL)
-    {      /* need a value processed?           */
-           /* evaluate the expression part      */
-        _value = this->value->evaluate(context, stack);
-        context->traceResult(_value);      /* trace if necessary                */
-        stack->pop();                      /* Get rid of the value off the stack*/
-    }
-    switch (this->getType())
-    {           /* perform the trigger operations    */
-
-        case TRIGGER_END:                  /* just match to the end             */
-            target->moveToEnd();             /* move the pointers                 */
-            break;
-
-        case TRIGGER_PLUS:                 /* positive relative target          */
-            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-            target->forward(integer);        /* move the position                 */
-            break;
-
-        case TRIGGER_MINUS:                /* negative relative target          */
-            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-            target->backward(integer);       /* move the position                 */
-            break;
-
-        case TRIGGER_PLUS_LENGTH:          /* positive length                   */
-            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-            target->forwardLength(integer);  /* move the position                 */
-            break;
-
-        case TRIGGER_MINUS_LENGTH:         /* negative relative target          */
-            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-            target->backwardLength(integer); /* move the position                 */
-            break;
-
-        case TRIGGER_ABSOLUTE:             /* absolute column position          */
-            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-            target->absolute(integer);       /* move the position                 */
-            break;
-
-        case TRIGGER_STRING:               /* string search                     */
-            /* force to string form              */
-            stringvalue = this->stringTrigger(_value);
-            target->search(stringvalue);     /* perform the search                */
-            break;
-
-        case TRIGGER_MIXED:                /* string search                     */
-            /* force to string form              */
-            stringvalue = this->stringTrigger(_value);
-            /* and go search                     */
-            target->caselessSearch(stringvalue);
-            break;
-    }
-    if (context->tracingResults())
-    {     /* are we tracing?                   */
-          /* loop through the entire list      */
-        for (i = 0, size = this->variableCount; i < size; i++)
-        {
-            if (i + 1 == size)               /* last variable?                    */
-            {
-                _value = target->remainder();  /* extract the remainder             */
-            }
-            else
-            {
-                _value = target->getWord();    /* just get the next word            */
-            }
-            ProtectedObject p(_value);   // needs protecting if the assignment is a compound var.
-            variable = this->variables[i];   /* get the next variable retriever   */
-            if (variable != OREF_NULL)
-            {     /* not a place holder dummy?         */
-                  /* set the value                     */
-                // NOTE:  The different variable tpes handle their own assignment tracing
-
-                variable->assign(context, stack, _value);
-                // if only tracing results and not intermediates, then we need to
-                // trace this value explicitly.
-                if (!context->tracingIntermediates())
-                {
-                    context->traceResult(_value);   /* trace if necessary                */
-                }
-            }
-            else                             /* dummy variable, just trace it     */
-            {
-                /* trace if necessary                */
-                context->traceIntermediate(_value, TRACE_PREFIX_DUMMY);
-            }
-        }
-    }
-    else
-    {                               /* not tracing, can optimize         */
-                                    /* loop through the entire list      */
-        for (i = 0, size = this->variableCount; i < size; i++)
-        {
-            variable = this->variables[i];   /* get the next variable retriever   */
-            if (variable != OREF_NULL)
-            {     /* not a place holder dummy?         */
-                if (i + 1 == size)             /* last variable?                    */
-                {
-                    _value = target->remainder(); /* extract the remainder             */
-                }
-                else
-                {
-                    _value = target->getWord();   /* just get the next word            */
-                }
-                ProtectedObject p(_value);   // needs protecting if the assignment is a compound var.
-                /* set the value                     */
-                variable->assign(context, stack, _value);
-            }
-            else
-            {                           /* dummy variable, just skip it      */
-                if (i + 1 == size)              /* last variable?                    */
-                {
-                    target->skipRemainder();     /* skip the remainder                */
-                }
-                else
-                {
-                    target->skipWord();          /* just skip the next word           */
-                }
-            }
-        }
-    }
-}
-
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxTrigger::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-    for (i = 0, count = this->variableCount; i < count; i++)
-    {
-        memory_mark(this->variables[i]);
-    }
-    memory_mark(this->value);
+    memory_mark(value);
+    memory_mark_array(variableCount, variables);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxTrigger::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-    for (i = 0, count = this->variableCount; i < count; i++)
-    {
-        memory_mark_general(this->variables[i]);
-    }
-    memory_mark_general(this->value);
+    memory_mark_general(value);
+    memory_mark_general_array(variableCount, variables);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxTrigger::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
+    setUpFlatten(RexxTrigger)
 
-    setUpFlatten(RexxTrigger)            /* set up for the flatten            */
-
-    flatten_reference(newThis->value, envelope);
-    for (i = 0, count = this->variableCount; i < count; i++)
-    {
-        flatten_reference(newThis->variables[i], envelope);
-    }
+    flattenRef(value);
+    flattenArrayRefs(variableCount, variables);
 
     cleanUpFlatten
 }
 
-void  *RexxTrigger::operator new(size_t size,
-    int    variableCount)              /* list of variables                 */
-/******************************************************************************/
-/* Function:  Create a new parsing trigger object                             */
-/******************************************************************************/
+
+/**
+ * Convert a trigger value to an unsigned integer with
+ * appropriate error reporting.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ *
+ * @return The converted integer value.
+ */
+stringsize_t RexxTrigger::integerTrigger(RexxActivation *context, RexxExpressionStack *stack)
 {
-    /* Get new object                    */
-    return new_object(size + (variableCount - 1) * sizeof(RexxObject *), T_ParseTrigger);
+    // if we have a value that requires evaluation, get the value and trace.
+    RexxObject *trigger = value->evaluate(context, stack);
+    context->traceResult(trigger);
+
+    // NOTE:  We leave this on the stack to protect from GC until after we convert.
+
+    stringsize_t result;
+    // try to convert to an unsigned number...report an error if this failed.
+    if (!trigger->requestUnsignedNumber(result, number_digits()))
+    {
+        reportException(Error_Invalid_whole_number_parse, trigger);
+    }
+    // once we have converted this value, we're done with it.  It no longer
+    // requires protection.
+    stack->pop();
+    return result;
+}
+
+
+/**
+ * Ensure that a string trigger is an actual string object.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ *
+ * @return A true string version of the object.
+ */
+RexxString *RexxTrigger::stringTrigger(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // if we have a value that requires evaluation, get the value and trace.
+    RexxObject *trigger = value->evaluate(context, stack);
+    context->traceResult(trigger);
+
+    // NOTE:  We leave this on the stack to protect from GC until after we are finished with this.
+    // trigger operations that require a string value need to pop this from the stack
+    // once they are finished.
+   return REQUEST_STRING(trigger);
+}
+
+
+/**
+ * Apply a parsing trigger against a parsing context.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param target  The current parsing context.
+ */
+void RexxTrigger::parse(RexxActivation *context, RexxExpressionStack *stack,
+    RexxTarget *target )
+{
+    // perform the trigger operaitons
+    switch (triggerType)
+    {
+        // move to the end of the pattern
+        case TRIGGER_END:
+            target->moveToEnd();
+            break;
+
+        // a positive relative movement.
+        case TRIGGER_PLUS:
+            integer = integerTrigger(context, stack);
+            target->forward(integerTrigger(context, stack));
+            break;
+
+        // negative relative movement
+        case TRIGGER_MINUS:
+            target->backward(integerTrigger(context, stack));
+            break;
+
+        // positive relative movement with length semantics (>n)
+        case TRIGGER_PLUS_LENGTH:
+            target->forwardLength(integerTrigger(context, stack));
+            break;
+
+        // negative relative movement with length semantics (<n)
+        case TRIGGER_MINUS_LENGTH:
+            target->backwardLength(integerTrigger(context, stack));
+            break;
+
+        // absolute string positioning
+        case TRIGGER_ABSOLUTE:
+            target->absolute(integerTrigger(context, stack));
+            break;
+
+        // string search
+        case TRIGGER_STRING:
+            target->search(stringTrigger(context, stack));
+            // the string trigger was protected on the stack.  Remove it now
+            stack->pop();
+            break;
+
+        // caseless string search
+        case TRIGGER_MIXED:
+            target->caselessSearch(stringTrigger(context, stack)));
+            // the string trigger was protected on the stack.  Remove it now
+            stack->pop();
+            break;
+    }
+
+    // if we are tracing, we need to display each assignment result.  We
+    // have two copies of this loop, one optimized for untraced operation and
+    // a second one for traced operation.
+    if (context->tracingResults())
+    {
+        for (size_t i = 0; i < variableCount; i++)
+        {
+            RexxString *variableValue;
+
+            // if this is the last variable on the list, this gets the
+            // remainder of the parsing segment.  Otherwise, we just
+            // extract the next blank delimited word.
+            if (i + 1 == variableCount)
+            {
+                variableValue = target->remainder();
+            }
+            else
+            {
+                variableValue = target->getWord();
+            }
+            // needs protecting
+            ProtectedObject p(variableValue);
+            // get the next variable
+            RexxVariableBase *variable = variables[i];
+            // the '.' dummy placeholder shows up as a NULL value in the list.
+            // the dummy placeholder has a special trace form.
+            if (variable != OREF_NULL)
+            {
+                // NOTE:  The different variable tpes handle their own assignment tracing
+                variable->assign(context, stack, variableValue);
+                // if only tracing results and not intermediates, then we need to
+                // trace this value explicitly.
+                if (!context->tracingIntermediates())
+                {
+                    context->traceResult(variableValue);
+                }
+            }
+            // this is the dummy variable
+            else
+            {
+                context->traceIntermediate(variableValue, TRACE_PREFIX_DUMMY);
+            }
+        }
+    }
+    // not tracing...this version is a bit more optimized.
+    else
+    {
+        for (size_t i = 0; i < variableCount; i++)
+        {
+            // get the next retriever
+            RexxVariableBase *variable = variables[i];
+            // if we have a real variable (not a .), extract the string piece and assign.
+            if (variable != OREF_NULL)
+            {
+                RexxObject *variableValue;
+                // if this is the last variable in the list, grab the remainder,
+                // otherwise, we need to parse word off.
+                if (i + 1 == variableCount)
+                {
+                    variableValue = target->remainder();
+                }
+                else
+                {
+                    variableValue = target->getWord();
+                }
+                // needs protecting if the assignment is a compound var or a message
+                // target.
+                ProtectedObject p(variableValue);
+                // do the assignment                 */
+                variable->assign(context, stack, variableValue);
+            }
+            // dummy variable, we just skip the assignment
+            else
+            {
+                // we need to figure out if we're skipping a word, or skipping everything.
+                if (i + 1 == variableCount)
+                {
+                    target->skipRemainder();
+                }
+                else
+                {
+                    target->skipWord();
+                }
+            }
+        }
+    }
 }
 

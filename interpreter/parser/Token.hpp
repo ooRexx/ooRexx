@@ -491,12 +491,18 @@ class RexxToken : public RexxInternalObject {
     inline bool       isVariable() { return (subclass == SYMBOL_VARIABLE || subclass == SYMBOL_STEM || subclass == SYMBOL_COMPOUND); };
     inline bool       isSimpleVariable() { return subclass == SYMBOL_VARIABLE; };
     inline bool       isVariableOrDot() { return isVariable() || subclass == SYMBOL_DOTSYMBOL; };
-    inline bool       isDot() { return (subclass == SYMBOL_DOTSYMBOL); }
+    inline bool       isDotSymbol() { return (subclass == SYMBOL_DOTSYMBOL); }
+    inline bool       isDot() { return (subclass == SYMBOL_DUMMY); }
     inline bool       isLiteral()  { return classId == TOKEN_LITERAL; };
     inline bool       isSymbolOrLiteral()  { return classId == TOKEN_LITERAL || this->classId == TOKEN_SYMBOL; };
     inline bool       isConstant()  { return (classId == TOKEN_SYMBOL && subclass != SYMBOL_VARIABLE && subclass != SYMBOL_STEM && subclass != SYMBOL_COMPOUND); };
+    inline bool       isNumericSymbol()  { return (subclass == SYMBOL_CONSTANT); }
     inline bool       isSymbol() { return classId == TOKEN_SYMBOL; };
     inline bool       isOperator() { return classId == TOKEN_OPERATOR; }
+    inline bool       isLeftParen() { return classId == TOKEN_LEFT; }
+    inline bool       isRightParen() { return classId == TOKEN_RIGHT; }
+    inline bool       isLeftBracket() { return classId == TOKEN_SQLEFT; }
+    inline bool       isRightBracket() { return classId == TOKEN_SQRIGHT; }
     inline bool       isEndOfClause() { return classId == TOKEN_EOC; }
     inline bool       isBlankSignificant() { return (classId == TOKEN_SYMBOL || classId == TOKEN_LITERAL ||
          classId == TOKEN_RIGHT || classId == TOKEN_SQRIGHT); }
