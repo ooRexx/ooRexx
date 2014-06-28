@@ -66,15 +66,20 @@ void RexxInstructionAssignment::live(size_t liveMark)
     memory_mark(expression);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionAssignment::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->variable);
-  memory_mark_general(this->expression);
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(variable);
+    memory_mark_general(expression);
 }
 
 

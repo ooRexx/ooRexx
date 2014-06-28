@@ -78,6 +78,7 @@ class RexxQueue : public RexxList {
  RexxObject   *sectionSubclass(LISTENTRY *, size_t);
 
  inline RexxObject *pop() { return this->removeFirst();};
+ inline RexxObject *pull() { return this->removeFirst();};
  inline void push(RexxObject *obj) { this->addFirst(obj);};
  inline void queue(RexxObject *obj) { this->addLast(obj);};
 

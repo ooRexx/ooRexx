@@ -41,7 +41,6 @@
 /* Expose instruction class                                                   */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "QueueClass.hpp"

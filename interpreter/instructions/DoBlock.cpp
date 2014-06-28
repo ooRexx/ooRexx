@@ -41,7 +41,6 @@
 /* Primitive DO/SELECT block class                                            */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"
@@ -165,7 +164,7 @@ bool RexxDoBlock::checkControl(RexxActivation *context, RexxExpressionStack *sta
     // to add in the BY increment.
     if (increment)
     {
-        result = callOperatorMethod(result, OPERATOR_PLUS, doblock->getBy());
+        result = callOperatorMethod(result, OPERATOR_PLUS, by);
 
         // the control variable gets set immediately, and we trace this
         // increment result
@@ -185,7 +184,7 @@ bool RexxDoBlock::checkControl(RexxActivation *context, RexxExpressionStack *sta
     // do we have a forCount?  perform that test now
     if (forCount > 0)
     {
-        return testFor();
+        return checkFor();
     }
 
     return true;                         // still looping

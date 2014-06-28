@@ -41,7 +41,6 @@
 /* Primitive logical list evaluator                                           */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "QueueClass.hpp"

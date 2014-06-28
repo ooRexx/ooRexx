@@ -720,14 +720,26 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
             // a WHEN clause.  The top of the Do stack must be a select.
             case KEYWORD_WHEN:
             {
-                // the top of the queue must be a SELECT instruction
+                // the top of the queue must be a SELECT instruction, but
+                // we have TWO varieties of this.  The second requires the
+                // WHEN to be converted to a different type.
                 RexxInstruction *second = topDo();
-                if (!second->isType(KEYWORD_SELECT))
+                if (second->isType(KEYWORD_SELECT))
+                {
+                    // let the select know that another WHEN was added
+                    ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)_instruction);
+                }
+                else if (second->isType(KEYWORD_SELECT_CASE))
+                {
+                    // let the select know that another WHEN was added, but we
+                    // need the special WHEN CASE version.
+                    ((RexxInstructionSelectCase *)second)->addWhen(whenCaseNew(RexxInstructionIf *)_instruction));
+                }
+                // mis-placed WHEN instruction
+                else
                 {
                     syntaxError(Error_Unexpected_when_when);
                 }
-                // let the select know that another WHEN was added
-                ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)_instruction);
                 // just fall into IF logic
             }
 

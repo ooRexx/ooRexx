@@ -41,7 +41,6 @@
 /* Primitive Translator Expression Parsing Compound Variable Reference Class  */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "QueueClass.hpp"

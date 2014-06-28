@@ -84,7 +84,7 @@ class RexxInstruction : public RexxInternalObject {
     void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
     inline      void        setType(InstructionKeyword type) { instructionType = type; };
     inline      InstructionKeyword getType()     { return instructionType;  };
-    inline      bool        isType(size_t type)  { return instructionType == type; }
+    inline      bool        isType(InstructionKeyword type)  { return instructionType == type; }
     inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
 
  protected:

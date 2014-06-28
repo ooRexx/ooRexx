@@ -41,7 +41,6 @@
 /* Primitive Guard Parse Class                                                */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "ArrayClass.hpp"
 #include "RexxActivity.hpp"

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,94 +49,119 @@
 #include "IfInstruction.hpp"
 #include "Token.hpp"
 
-RexxInstructionThen::RexxInstructionThen(
-    RexxToken         *token,          /* THEN keyword token                */
-    RexxInstructionIf *_parent)        /* target parent IF or WHEN clause   */
-/******************************************************************************/
-/* Function:  Initialize a THEN object                                        */
-/******************************************************************************/
-{
-    SourceLocation location;             /* clause token location             */
 
-    OrefSet(this, this->parent, _parent); /* remember the parent IF instruction*/
-    /* parent an IF instruction?         */
-    if (this->parent->instructionType == KEYWORD_IF)
+/**
+ * Initialize a THEN instruction.
+ *
+ * @param token   The token for the keyword (used for location information)
+ * @param _parent The parent IF instruction.
+ */
+RexxInstructionThen::RexxInstructionThen(RexxToken *token, RexxInstructionIf *_parent)
+{
+    parent = _parent;
+    // can be attached to either an IF or WHEN instruction, so make sure
+    // we know which type we really are.
+
+    // IF ... THEN?
+    if (parent->isType(KEYWORD_IF))
     {
-        /* this is an IF ... THEN clause     */
-        this->instructionType = KEYWORD_IFTHEN;
+        setType(KEYWORD_IFTHEN);
     }
-    else                                 /* actually a WHEN                   */
+    // other option is WHEN ... THEN
+    else
     {
-        this->instructionType = KEYWORD_WHENTHEN;
+        setType(KEYWORD_WHENTHEN);
     }
-    location = token->getLocation();     /* get the token location info       */
-    this->setLocation(location);         /* set the clause location also      */
+    // When first created, the location was set to the full clause containing the THEN,
+    // but we want just the location of the THEN keyword for this.
+    setLocation(token->getLocation());
 }
 
-void  RexxInstructionThen::setEndInstruction(
-    RexxInstructionEndIf *end_clause)  /* end of the IF/WHEN construct      */
-/******************************************************************************/
-/* Function:  Set the end target of an IF/WHEN construct                      */
-/******************************************************************************/
-{
-                                       /* hook up with the parent object    */
-  ((RexxInstructionIf *)this->parent)->setEndInstruction(end_clause);
-}
 
-void  RexxInstructionThen::setElse(
-    RexxInstruction *else_clause)      /* else for an IF construct          */
-/******************************************************************************/
-/* Function:  Set an ELSE instruction location                                */
-/******************************************************************************/
-{
-                                       /* hook up with the parent object    */
-  ((RexxInstructionIf *)this->parent)->setEndInstruction((RexxInstructionEndIf *)else_clause);
-                                       /* hook the else to the IF           */
-  ((RexxInstructionElse *)else_clause)->setParent((RexxInstructionEndIf *)this->parent);
-}
-
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionThen::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->parent);
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(parent);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionThen::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->parent);
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(parent);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxInstructionThen::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionThen)
+    setUpFlatten(RexxInstructionThen)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->parent, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(parent);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionThen::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX THEN instruction                               */
-/****************************************************************************/
+
+/**
+ * Execute a THEN instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionThen::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
-  context->indent();                   /* indent a bit                      */
-  context->traceInstruction(this);     /* trace if necessary                */
-  context->indent();                   /* indent a for the next one too     */
-  return;                              /* just fall through to following    */
+    // Like an ELSE, not much going on here.  We indent, trace the instruction,
+    // then bump the indent one more level for the instruction that follows the THEN.
+    context->indent();
+    context->traceInstruction(this);
+    context->indent();
+}
+
+
+/**
+ * Set the end location for this THEN clause.  This tells
+ * us where to go after our following instruction completes.
+ *
+ * @param end_clause The end of control instruction.
+ */
+void  RexxInstructionThen::setEndInstruction(RexxInstructionEndIf *end_clause)
+{
+  // we really just tell the parent IF/WHEN where this is.
+  ((RexxInstructionIf *)parent)->setEndInstruction(end_clause);
+}
+
+
+/**
+ * Tell the THEN that there exists an ELSE clause.
+ *
+ * @param else_clause
+ *               The partner ELSE clause.
+ */
+void  RexxInstructionThen::setElse(RexxInstructionElse *else_clause)
+{
+    // Tell the parent that we have an ELSE.
+    ((RexxInstructionIf *)parent)->setEndInstruction((RexxInstructionEndIf *)else_clause);
+    // and tell the ELSE who we're attached to.
+    else_clause->setParent((RexxInstructionEndIf *)parent);
 }
 

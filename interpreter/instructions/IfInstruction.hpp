@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Kernel                                             IfInstruction.hpp  */
 /*                                                                            */
-/* Primitive IF instruction Class Definitions                                 */
+/* IF instruction executable class.                                           */
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_RexxInstructionIf
@@ -47,22 +47,48 @@
 #include "RexxInstruction.hpp"
 #include "EndIf.hpp"
 
-class RexxInstructionIf : public RexxInstructionSet {
+class RexxInstructionIf : public RexxInstructionSet
+{
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
 
-  RexxInstructionIf(RexxObject *, RexxToken *);
-  inline RexxInstructionIf(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void setEndInstruction(RexxInstructionEndIf *);
-  inline void fixWhen(RexxInstructionEndIf *partner) { this->else_location->setEndInstruction(partner); };
+    RexxInstructionIf(RexxObject *, RexxToken *);
+    inline RexxInstructionIf(RESTORETYPE restoreType) { ; };
 
-  RexxObject           *condition;     /* condition expression to evaluate  */
-  RexxInstructionEndIf *else_location; /* else instruction to process       */
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
+    void setEndInstruction(RexxInstructionEndIf *);
+    inline void fixWhen(RexxInstructionEndIf *partner) { this->else_location->setEndInstruction(partner); };
+
+ protected:
+
+    RexxObject           *condition;     // condition expression to evaluate
+    RexxInstructionEndIf *else_location; // else instruction to process
+};
+
+
+/**
+ * A subclass of the IF instruction for the SELECT CASE
+ * instruction.  The base IF instruction is converted
+ * to one of these if it is determined we're add a WHEN to
+ * a SELECT_CASE instruction.
+ */
+class RexxInstructionCaseWhen : public RexxInstructionIf
+{
+ public:
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+
+    RexxInstructionCaseWhen(RexxObject *, RexxToken *);
+    inline RexxInstructionCaseWhen(RESTORETYPE restoreType) { ; };
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
 };
 #endif

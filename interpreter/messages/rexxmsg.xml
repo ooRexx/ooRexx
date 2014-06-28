@@ -2501,6 +2501,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_expression_call</SymbolicName>
         <Text>Missing expression for calculated CALL name</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>933</Subcode>
+        <MessageNumber>739</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_select_case</SymbolicName>
+        <Text>Missing expression following CASE keyword of a SELECT instruction</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

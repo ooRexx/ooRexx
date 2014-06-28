@@ -41,7 +41,6 @@
 /* Primitive Expression Stack Class                                           */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ExpressionStack.hpp"

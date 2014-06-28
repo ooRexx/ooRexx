@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Translator                                                            */
 /*                                                                            */
-/* Primitive If Parse Class                                                   */
+/* IF instruction executable class                                            */
 /*                                                                            */
 /******************************************************************************/
 #include <stdlib.h>
@@ -48,98 +48,168 @@
 #include "Token.hpp"
 
 
-RexxInstructionIf::RexxInstructionIf(
-    RexxObject *_condition,            /* conditional expression            */
-    RexxToken  *token)                 /* terminating THEN token            */
-/******************************************************************************/
-/* Function:  Complete IF instruction initialization                          */
-/******************************************************************************/
+/**
+ * Construct an IF instructon instance.
+ *
+ * @param _condition The condition expression to evaluate.
+ * @param thenToken  The token for the terminating THEN keyword.
+ *                   This is where we mark the end of the
+ *                   instruction.
+ */
+RexxInstructionIf::RexxInstructionIf(RexxObject *_condition, RexxToken *thenToken)
 {
-  SourceLocation location;             /* clause token location             */
-
-                                       /* save the condition                */
-  OrefSet(this, this->condition, _condition);
-  location = token->getLocation();     /* get the token location info       */
-                                       /* update the end location           */
-  this->setEnd(location.getLineNumber(), location.getOffset());
+    condition = _condition;
+    //get the location from the THEN token and use its location to set
+    // the end of the instruction.  Note that the THEN is traced on its
+    // own, but using the start of the THEN gives a fuller picture of things.
+    SourceLocation location = thenToken->getLocation();
+    this->setEnd(location.getLineNumber(), location.getOffset());
 }
 
-void RexxInstructionIf::setEndInstruction(
-    RexxInstructionEndIf *end_target)  /* targer for the false branch       */
-/******************************************************************************/
-/* Function:  Set the location for the false branch of the IF instruction     */
-/******************************************************************************/
+/**
+ * Set the END location for the false branch of an IF
+ * instruction.  This will either be an ELSE clause, or
+ * the instruction following the instruction on the THEN.
+ *
+ * @param end_target The new end instruction.
+ */
+void RexxInstructionIf::setEndInstruction(RexxInstructionEndIf *end_target)
 {
-                                       /* save the end location             */
-  OrefSet(this, this->else_location, end_target);
+    else_location = end_target;
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionIf::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->condition);
-  memory_mark(this->else_location);
+    // must be first object marked.
+    memory_mark(nextInstruction);
+    memory_mark(condition);
+    memory_mark(else_location);
 }
 
 
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionIf::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->condition);
-  memory_mark_general(this->else_location);
+    // must be first object marked.
+    memory_mark_general(nextInstruction);
+    memory_mark_general(condition);
+    memory_mark_general(else_location);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxInstructionIf::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionIf)
+    setUpFlatten(RexxInstructionIf)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->condition, envelope);
-  flatten_reference(newThis->else_location, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(condition);
+    flattenRef(else_location);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionIf::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX IF instruction                                   */
-/******************************************************************************/
-{
-    context->traceInstruction(this);     /* trace if necessary                */
-                                         /* get the expression value          */
-    RexxObject *result = this->condition->evaluate(context, stack);
-    context->traceResult(result);        /* trace if necessary                */
 
-    /* the comparison methods return either .true or .false, so we */
-    /* can to a quick test against those. */
+/**
+ * Execute an IF/WHEN instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionIf::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    context->traceInstruction(this);
+
+    // evaluate and trace the condition expression.
+    RexxObject *result = condition->evaluate(context, stack);
+    context->traceResult(result);
+
+    // the comparison methods return either .true or .false, so we
+    // can to a quick test against those.
     if (result == TheFalseObject)
     {
-        /* we execute the ELSE branch        */
-        context->setNext(this->else_location->nextInstruction);
+        // we execute the ELSE branch
+        context->setNext(else_location->nextInstruction);
     }
-    /* if it is not the True object, we need to perform a fuller */
-    /* evaluation of the result. */
+
+    // if it is not the .true object, we need to perform a fuller
+    // evaluation of the result.
     else if (result != TheTrueObject)
     {
-        /* is the condition false?           */
+        // evaluate and decide if we take the ELSE branch
         if (!result->truthValue(Error_Logical_value_if))
         {
-            /* we execute the ELSE branch        */
-            context->setNext(this->else_location->nextInstruction);
+            context->setNext(else_location->nextInstruction);
         }
     }
-    context->pauseInstruction();         /* do debug pause if necessary       */
+
+    // We do nothing for true...we just continue on to the next instruction.
+
+    context->pauseInstruction();
+}
+
+
+/**
+ * Execute a WHEN instruction attached to a SELECT CASE.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionIf::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    context->traceInstruction(this);
+
+    // This should be us.  It really isn't possible to jump into a middle of a select
+    // and get to a WHEN without raising an error.
+    RexxDoBlock *doBlock = context->topBlock();
+    // get the case expression
+    RexxObject *caseValue = doBlock->getCase();
+    // and the compare target (which needs tracing, but only as an intermediate
+    RexxObject *compareValue = condition->evaluate(context, stack)
+    context->traceIntermediate(compareValue);
+
+    // now perform the compare using the "==" operator method.
+    // NOTE that the case value is the left hand side.
+    RexxObject *result = callOperatorMethod(caseValue, OPERATOR_PLUS, compareValue);
+    context->traceResult(result);
+
+    // the comparison methods return either .true or .false, so we
+    // can to a quick test against those.
+    if (result == TheFalseObject)
+    {
+        // we execute the ELSE branch
+        context->setNext(else_location->nextInstruction);
+    }
+
+    // if it is not the .true object, we need to perform a fuller
+    // evaluation of the result.
+    else if (result != TheTrueObject)
+    {
+        // evaluate and decide if we take the ELSE branch
+        if (!result->truthValue(Error_Logical_value_if))
+        {
+            context->setNext(else_location->nextInstruction);
+        }
+    }
+
+    // We do nothing for true...we just continue on to the next instruction.
+
+    context->pauseInstruction();
 }
 

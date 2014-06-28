@@ -54,57 +54,95 @@
 #include "DoBlock.hpp"
 
 
+/**
+ * Construct a SELECT instruction.
+ *
+ * @param name   The optional label name.
+ */
 RexxInstructionSelect::RexxInstructionSelect(RexxString *name)
-/******************************************************************************/
-/* Function:  Initialize a SELECT instruction object                          */
-/******************************************************************************/
 {
-                                       /* create a list of WHEN targets     */
-    OrefSet(this, this->when_list, new_queue());
-    // set the label name
-    OrefSet(this, this->label, name);
+    // we keep track of each WHEN that is added to the select.
+    // once we get the END instruction, we can update each of the WHENs
+    // so they know where to branch.
+    whenList = new_queue();
+    label = name;
 }
 
 
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionSelect::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->when_list);
-  memory_mark(this->end);
-  memory_mark(this->otherwise);
-  memory_mark(this->label);
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(whenList);
+    memory_mark(end);
+    memory_mark(otherwise);
+    memory_mark(label);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionSelect::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->when_list);
-  memory_mark_general(this->end);
-  memory_mark_general(this->otherwise);
-  memory_mark_general(this->label);
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(whenList);
+    memory_mark_general(end);
+    memory_mark_general(otherwise);
+    memory_mark_general(label);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxInstructionSelect::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionSelect)
+    setUpFlatten(RexxInstructionSelect)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->when_list, envelope);
-  flatten_reference(newThis->end, envelope);
-  flatten_reference(newThis->otherwise, envelope);
-  flatten_reference(newThis->label, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(whenList);
+    flattenRef(end);
+    flattenRef(otherwise);
+    flattenRef(label);
 
-  cleanUpFlatten
+    cleanUpFlatten
+}
+
+
+/**
+ * Execute a SELECT instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionSelect::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    context->traceInstruction(this);
+
+    // create an active DO block, which marks that we have an active SELECT
+    // in case someone tries do SIGNAL into the middle of the instruction.
+    RexxDoBlock *doblock = new RexxDoBlock (this, context->getIndent());
+    // set the block to the top of the context stack.
+    context->newDo(doblock);
+    // Debug pause requires a conditional pause that terminates the block construct
+    // if we've been asked to re-execute.
+    if (context->conditionalPauseInstruction())
+    {
+        this->terminate(context, doblock);
+    }
 }
 
 
@@ -119,92 +157,75 @@ bool RexxInstructionSelect::isLoop()
 }
 
 
-void RexxInstructionSelect::terminate(
-     RexxActivation *context,          /* current execution context         */
-     RexxDoBlock    *doblock )         /* active do block                   */
-/******************************************************************************/
-/* Function:  Terminate an active SELECT loop                                 */
-/******************************************************************************/
+/**
+ * Terminate the SELECT instruction (usually because of a LEAVE).
+ *
+ * @param context The current execution context.
+ * @param doblock The current doblock context.
+ */
+void RexxInstructionSelect::terminate(RexxActivation *context, RexxDoBlock *doblock )
 {
-                                       /* perform cleanup                   */
-  context->terminateBlock(doblock->getIndent());
-                                       /* jump to the loop end              */
-  context->setNext(this->end->nextInstruction);
+    // we terminate this doblock
+    context->terminateBlock(doblock->getIndent());
+    // and we jump to the instruction after our END
+    context->setNext(end->nextInstruction);
 }
 
 
-void RexxInstructionSelect::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX SELECT instruction                             */
-/****************************************************************************/
+/**
+ * Match an END instruction up with this SELECT.
+ *
+ * @param partner The partner END
+ * @param parser  The language parser environment (used for error reporting)
+ */
+void RexxInstructionSelect::matchEnd(RexxInstructionEnd *partner, LanguageParser *parser)
 {
-    RexxDoBlock *doblock = OREF_NULL;
+    // get some location information for error reporting
+    SourceLocation endLocation = partner->getLocation();
+    size_t lineNum = this->getLineNumber();
 
-    context->traceInstruction(this);     /* trace if necessary                */
-                                       /* create an active DO block         */
-    doblock = new RexxDoBlock (this, context->getIndent());
-    context->newDo(doblock);           /* set the new block                 */
-                                       /* do debug pause if necessary       */
-
-                                       /* have to re-execute?               */
-    if (context->conditionalPauseInstruction())
+    // ok, we need to match up the names. If the END has a label, then it must
+    // match a label on the SELECT.
+    RexxString *name = partner->name;
+    if (name != OREF_NULL)
     {
-        this->terminate(context, doblock); /* cause termination cleanup         */
-    }
-}
-
-
-void RexxInstructionSelect::matchEnd(
-     RexxInstructionEnd *partner,      /* end to match up                   */
-     RexxSource         *source )      /* parsed source file (for errors)   */
-/******************************************************************************/
-/* Function:  Match an END instruction up with a SELECT                       */
-/******************************************************************************/
-{
-    RexxInstructionIf    *when;          /* target WHEN clause                */
-    SourceLocation        location;      /* location of the end               */
-    size_t                lineNum;       /* Instruction line number           */
-
-    location = partner->getLocation();   /* get location of END instruction   */
-    lineNum = this->getLineNumber();     /* get the instruction line number   */
-
-    RexxString *name = partner->name;    /* get then END name                 */
-    if (name != OREF_NULL)             /* was a name given?                 */
-    {
+        // One error if we don't had a label, a different error if the
+        // labels don't match
         RexxString *myLabel = getLabel();
-        if (myLabel == OREF_NULL)          /* name given on non-control form?   */
+        if (myLabel == OREF_NULL)
         {
-            source->error(Error_Unexpected_end_select_nolabel, location, new_array(partner->name, new_integer(lineNum)));
+            parser->error(Error_Unexpected_end_select_nolabel, endLocation, new_array(partner->name, new_integer(lineNum)));
         }
-        else if (name != myLabel)          /* not the same name?                */
+        else if (name != myLabel)
         {
-            source->error(Error_Unexpected_end_select, location, new_array(name, myLabel, new_integer(lineNum)));
+            parser->error(Error_Unexpected_end_select, endLocation, new_array(name, myLabel, new_integer(lineNum)));
         }
     }
-    /* misplaced END instruction         */
-    OrefSet(this, this->end, partner);   /* match up with the END instruction */
-                                         /* get first item off of WHEN list   */
-    when = (RexxInstructionIf *)(this->when_list->pullRexx());
-    /* nothing there?                    */
-    if (when == (RexxInstructionIf *)TheNilObject)
+
+    // record the END instruction, then do some additional validity checks
+    end = partner;
+
+    // if we don't have any WHEN clauses, this is an error
+    size_t whenCount = whenList->items();
+    if (whenCount == 0)
     {
-        location = this->getLocation();    /* get the location info             */
-                                           /* need at least one WHEN here       */
-        source->error(Error_When_expected_when, location, new_array(new_integer(lineNum)));
+        parser->error(Error_When_expected_when, getLocation(), new_array(new_integer(lineNum)));
     }
-    /* link up each WHEN with the END    */
-    while (when != (RexxInstructionIf *)TheNilObject)
+
+    // now link up each of the WHEN clauses with the END
+    while (whenCount--)
     {
-        /* hook up with the partner END      */
+        // pull the next item from the queue
+        RexxInstructionIf *when = (RexxInstructionIf *)whenList->pull();
+        // hook up with the partner END instruction
         when->fixWhen((RexxInstructionEndIf *)partner);
-        /* get the next list item            */
-        when = (RexxInstructionIf *)(this->when_list->pullRexx());
     }
-    /* get rid of the lists              */
-    OrefSet(this, this->when_list, OREF_NULL);
-    if (this->otherwise != OREF_NULL)    /* an other wise block?              */
+
+    // the when list is empty, we can scrap it now
+    whenList = OREF_NULL;
+
+    // do we have an OTHERWISE block?
+    if (otherwise != OREF_NULL)
     {
         // for the END terminator on an OTHERWISE, we need to see if this
         // select has a label.  If it does, this needs special handling.
@@ -220,30 +241,133 @@ void RexxInstructionSelect::matchEnd(
     else
     {
         // the SELECT style will raise an error if hit, since it means
-        // there is not OTHERWISE clause.  This doesn't matter if there
+        // there is no OTHERWISE clause.  This doesn't matter if there
         // is a label or not.
         partner->setStyle(SELECT_BLOCK);
     }
 }
 
 
-void RexxInstructionSelect::addWhen(
-    RexxInstructionIf *when)           /* associated WHEN instruction       */
-/******************************************************************************/
-/* Function:  Associate a WHEN instruction with its surrounding SELECT        */
-/******************************************************************************/
+/**
+ * Add a WHEN instruction to a SELECT.
+ *
+ * @param when   The added When instruction.
+ */
+void RexxInstructionSelect::addWhen(RexxInstructionIf *when)
 {
-                                       /* add to the WHEN list queue        */
-  this->when_list->pushRexx((RexxObject *)when);
+    // just add to the queue
+    whenList->push(((RexxObject *)when);
 }
 
-void RexxInstructionSelect::setOtherwise(
-    RexxInstructionOtherwise *_otherwise) /* partner OTHERWISE for SELECT      */
-/******************************************************************************/
-/* Function:  Associate an OTHERSISE instruction with its surrounding SELECT  */
-/******************************************************************************/
+
+/**
+ * Add an OTHERWISE to a SELECT instruction.
+ *
+ * @param _otherwise
+ */
+void RexxInstructionSelect::setOtherwise(RexxInstructionOtherwise *_otherwise)
 {
-                                       /* save the otherwise partner        */
-  OrefSet(this, this->otherwise, _otherwise);
+    otherwise = _otherwise;
+}
+
+
+/**
+ * Construct a SELECT CASE instruction.
+ *
+ * @param name   The optional label name.
+ */
+RexxInstructionSelect::RexxInstructionSelectCase(RexxString *name, RexxObject *expr)
+{
+    // we keep track of each WHEN that is added to the select.
+    // once we get the END instruction, we can update each of the WHENs
+    // so they know where to branch.
+    whenList = new_queue();
+    label = name;
+    caseExpr = expr;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionSelectCase::live(size_t liveMark)
+{
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(caseExpr)
+    memory_mark(whenList);
+    memory_mark(end);
+    memory_mark(otherwise);
+    memory_mark(label);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionSelectCase::liveGeneral(int reason)
+{
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(caseExpr);
+    memory_mark_general(whenList);
+    memory_mark_general(end);
+    memory_mark_general(otherwise);
+    memory_mark_general(label);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionSelectCase::flatten(RexxEnvelope *envelope)
+{
+    setUpFlatten(RexxInstructionSelect)
+
+    flattenRef(nextInstruction);
+    flattenRef(whenList);
+    flattenRef(caseExpr);
+    flattenRef(end);
+    flattenRef(otherwise);
+    flattenRef(label);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Execute a SELECT CASE instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionSelectCase::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    context->traceInstruction(this);
+
+    // create an active DO block, which marks that we have an active SELECT
+    // in case someone tries do SIGNAL into the middle of the instruction.
+    RexxDoBlock *doblock = new RexxDoBlock (this, context->getIndent());
+    // set the block to the top of the context stack.
+    context->newDo(doblock);
+
+    // evaluate the CASE instruction and store in the doblock so the WHEN
+    // instructions can retrieve it.
+    doblock->setCase(caseExpr->evaluate(context, stack));
+
+    // Debug pause requires a conditional pause that terminates the block construct
+    // if we've been asked to re-execute.
+    if (context->conditionalPauseInstruction())
+    {
+        this->terminate(context, doblock);
+    }
 }
 

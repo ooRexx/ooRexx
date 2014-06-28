@@ -41,7 +41,6 @@
 /* Primitive End Parse Class                                                  */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
@@ -139,7 +138,7 @@ void RexxInstructionEnd::execute(RexxActivation *context, RexxExpressionStack *s
             context->setIndent(doBlock->getIndent());
             context->traceInstruction(this);
             // tell the DO/LOOP instruction we're back around.
-            ((RexxInstructionDo *)(doBlock->getParent()))->reExecute(context, stack, doBlock);
+            ((RexxInstructionBaseDo *)(doBlock->getParent()))->reExecute(context, stack, doBlock);
             break;
         }
 

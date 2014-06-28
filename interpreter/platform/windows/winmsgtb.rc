@@ -642,7 +642,8 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_sourceless_method_invocation    "Method &1 with scope ""&2"" in package ""&3"" (no source available)"
    Message_Translations_sourceless_routine_invocation    "Routine &1 in package ""&2"" (no source available)"
    Message_Translations_sourceless_program_invocation    "Program in ""&1"" (no source available)"
-
+   Error_Invalid_expression_select_case    "Missing expression following CASE keyword of a SELECT instruction"
+   
 END
 
 1 VERSIONINFO
@@ -683,3 +684,4 @@ END
 /* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
 /* --            ==================================================        -- */
 /* -------------------------------------------------------------------------- */
+   

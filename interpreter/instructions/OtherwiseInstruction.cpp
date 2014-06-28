@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,39 +41,27 @@
 /* Primitive Otherwise Parse Class                                            */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
-#include "StringClass.hpp"
 #include "RexxActivation.hpp"
 #include "Token.hpp"
 #include "OtherwiseInstruction.hpp"
 
-RexxInstructionOtherwise::RexxInstructionOtherwise(
-    RexxToken *token)                  /* actual otherwise token            */
-/******************************************************************************/
-/* Function:  Complete initialization of an OTHERWISE                         */
-/******************************************************************************/
+RexxInstructionOtherwise::RexxInstructionOtherwise(RexxToken *token)
 {
-  SourceLocation location;             /* clause location information       */
-
-  location = token->getLocation();     /* get the token location info       */
-  this->setLocation(location);         /* set the clause location also      */
+    setLocation(token->getLocation());
 }
 
-void RexxInstructionOtherwise::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX OTHERWISE instruction                          */
-/****************************************************************************/
+void RexxInstructionOtherwise::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
-  if (!context->hasActiveBlocks())      /* no possible blocks?               */
-  {
-                                         /* this is an error                  */
-      reportException(Error_Unexpected_when_otherwise);
-  }
-  context->traceInstruction(this);     /* trace if necessary                */
-  context->indent();
-  return;                              /* do nothing at all (honest)        */
+    // if there are no blocks active, we've probably had a SIGNAL instruction that
+    // jumped into the middle of something.
+    if (!context->hasActiveBlocks())
+    {
+        reportException(Error_Unexpected_when_otherwise);
+    }
+    // trace, and adjust the indent.  And that's all she wrote for
+    // executing one of these.
+    context->traceInstruction(this);
+    context->indent();
 }
 

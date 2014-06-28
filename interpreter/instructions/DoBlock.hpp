@@ -47,7 +47,8 @@
 
 class RexxBlockInstruction;
 
-class RexxDoBlock : public RexxInternalObject {
+class RexxDoBlock : public RexxInternalObject
+{
  public:
 
     void *operator new(size_t);
@@ -69,8 +70,10 @@ class RexxDoBlock : public RexxInternalObject {
     inline void setControl(RexxVariableBase *v) { control = v; }
     inline void setTo(RexxObject * value) {to = value;};
     inline void setBy(RexxObject * value) {by = value;};
-    inline void setFor(wholenumber_t value) {forVount = value;};
+    inline void setFor(wholenumber_t value) {forCount = value;};
+    inline void setCase(RexxObject * value) {to = value;};
     inline void setCompare(int value) {compare = (unsigned short)value;};
+    inline void getCase() { return to; }
     inline size_t getIndent() { return indent; };
     inline bool checkFor() {return (forCount--) <= 0;};
            bool checkControl(RexxActivation *context, RexxExpressionStack *stack, bool increment);

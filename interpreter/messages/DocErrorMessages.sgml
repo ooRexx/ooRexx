@@ -1789,6 +1789,12 @@ special character (such as a parenthesis).
 <para>Missing expression for calculated CALL name</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>933</term>
+<listitem>
+<para>Missing expression following CASE keyword of a SELECT instruction</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR36">

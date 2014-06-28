@@ -232,6 +232,8 @@ enum
     KEYWORD_LOOP_COUNT_UNTIL,
     KEYWORD_LOOP_COUNT_WHILE,
     KEYWORD_MESSAGE_DOUBLE,
+    KEYWORD_SELECT_CASE,
+    KEYWORD_WHEN_CASE,
 
 } InstructionKeyword;
 
@@ -284,7 +286,8 @@ enum {
     SUBKEY_LABEL,
     SUBKEY_STRICT,
     SUBKEY_TRUE,
-    SUBKEY_FALSE
+    SUBKEY_FALSE,
+    SUBKEY_CASE
 } InstructionSubKeyword;
 
 

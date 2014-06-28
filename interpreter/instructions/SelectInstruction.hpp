@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,6 +48,10 @@
 
 class RexxInstructionOtherwise;
 
+/**
+ * Base SELECT instruction.  The WHEN clauses really do
+ * all of the work.
+ */
 class RexxInstructionSelect : public RexxBlockInstruction
 {
 public:
@@ -71,11 +75,39 @@ public:
     virtual void terminate(RexxActivation *, RexxDoBlock *);
 
     // specific to the SELECT instruction
-    void setOtherwise(RexxInstructionOtherwise *);
     void addWhen(RexxInstructionIf *);
+    void setOtherwise(RexxInstructionOtherwise *);
 
 protected:
-    RexxQueue                *when_list; /* list of WHEN end targets          */
-    RexxInstructionOtherwise *otherwise; /* OTHERWISE matching the SELECT     */
+
+    RexxQueue                *whenList;  // list of WHEN end targets
+    RexxInstructionOtherwise *otherwise; // OTHERWISE matching the SELECT
+};
+
+
+/**
+ * A SELECT CASE instruction.  This evaluates an expression
+ * that all of the WHEN clauses use to compare.
+ */
+class RexxInstructionSelectCase : public RexxInstructionSelect
+{
+public:
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void  operator delete(void *) { }
+    inline void  operator delete(void *, void *) { }
+
+    RexxInstructionSelectCase(RexxString *, RexxObject *);
+    inline RexxInstructionSelectCase(RESTORETYPE restoreType) { ; };
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
+
+    // required by RexxInstructon
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+
+protected:
+
+    RexxObject *caseExpr;  // the SELECT CASE expression.
 };
 #endif

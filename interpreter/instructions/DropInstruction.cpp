@@ -41,7 +41,6 @@
 /* Primitive Drop Parse Class                                                 */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "QueueClass.hpp"
 #include "RexxActivation.hpp"

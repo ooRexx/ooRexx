@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,88 +41,108 @@
 /* Primitive Else Parse Class                                                 */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "ElseInstruction.hpp"
 #include "IfInstruction.hpp"
 #include "Token.hpp"
 
-RexxInstructionElse::RexxInstructionElse(
-    RexxToken  *token)                 /* actual ELSE token                 */
-/******************************************************************************/
-/* Function:  Complete ELSE instruction initialization                        */
-/******************************************************************************/
+/**
+ * Initialize an ELSE clause.
+ *
+ * @param token  The token for the ELSE (used to set the location);
+ */
+RexxInstructionElse::RexxInstructionElse(RexxToken  *token)
 {
-  SourceLocation location;             /* clause token location             */
-
-  location = token->getLocation();     /* get the token location info       */
-  this->setLocation(location);         /* set the clause location also      */
+    // override the location information from the full clause to
+    // be just the ELSE keyword.
+    setLocation(token->getLocation());
 }
 
-void  RexxInstructionElse::setParent(
-    RexxInstructionEndIf *ifthen)      /* link back to associated then      */
-/******************************************************************************/
-/* Function:  Hook an ELSE instruction back to its parent IF                  */
-/******************************************************************************/
-{
-                                       /* link up with the THEN             */
-  OrefSet(this, this->parent, (RexxInstructionIf *)ifthen);
-}
 
-void  RexxInstructionElse::setEndInstruction(
-    RexxInstructionEndIf *end_clause)
-/******************************************************************************/
-/* Function:  complete links between the IF, THEN, and ELSE constructs now    */
-/*            that the full scoping has been resolved.                        */
-/******************************************************************************/
-{
-                                       /* tell the THEN where to finish up  */
-  this->parent->setEndInstruction(end_clause);
-}
-
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionElse::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->parent);
+    // must be first object marked.
+    memory_mark(nextInstruction);
+    memory_mark(parent);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionElse::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->parent);
+    // must be first object marked.
+    memory_mark_general(nextInstruction);
+    memory_mark_general(parent);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxInstructionElse::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionElse)
+    setUpFlatten(RexxInstructionElse)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->parent, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(parent);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionElse::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX ELSE instruction                               */
-/****************************************************************************/
+
+/**
+ * Execute an ELSE instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionElse::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
-  context->indent();                   /* indent a bit                      */
-  context->traceInstruction(this);     /* trace if necessary                */
-  context->indent();                   /* indent for the next one too       */
-  return;                              /* just fall through to following    */
+    // executing an ELSE is not very complicated.  We indent a little, trace the instruction
+    // then indent again for the instruction that follows the ELSE.
+    context->indent();
+    context->traceInstruction(this);
+    context->indent();
 }
+
+
+/**
+ * Hook the ELSE instruction back to is parent IF.
+ *
+ * @param ifthen The parent IF instruction.
+ */
+void  RexxInstructionElse::setParent(RexxInstructionEndIf *ifthen)
+{
+    parent = (RexxInstructionIf *)ifthen;
+}
+
+/**
+ * complete links between the IF, THEN, and ELSE constructs now
+ * that the full scoping has been resolved.
+ *
+ * @param end_clause The instruction that marks the end of the instruction
+ *                   afer the instruction on the ELSE.  This is where the
+ *                   THEN instruction will branch to when finished.
+ */
+void  RexxInstructionElse::setEndInstruction(RexxInstructionEndIf *end_clause)
+{
+    // the ELSE doesn't really need this, but we poke the THEN so it knows where
+    // control goes after its instruction completes.
+    parent->setEndInstruction(end_clause);
+}
+
 

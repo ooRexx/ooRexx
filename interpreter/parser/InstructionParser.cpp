@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -62,7 +62,7 @@
 #include "ExpressionOperator.hpp"
 #include "RexxInstruction.hpp"                /* base REXX instruction class       */
 
-#include "AssignmentInstruction.hpp"                /* keyword <expression> instructions */
+#include "AssignmentInstruction.hpp"          /* keyword <expression> instructions */
 #include "CommandInstruction.hpp"
 #include "ExitInstruction.hpp"
 #include "InterpretInstruction.hpp"
@@ -71,7 +71,7 @@
 #include "ReturnInstruction.hpp"
 #include "SayInstruction.hpp"
 
-#include "AddressInstruction.hpp"                 /* other instructions                */
+#include "AddressInstruction.hpp"             /* other instructions                */
 #include "DropInstruction.hpp"
 #include "ExposeInstruction.hpp"
 #include "ForwardInstruction.hpp"
@@ -99,7 +99,7 @@
 #include "IfInstruction.hpp"
 #include "ThenInstruction.hpp"
 
-#include "DoBlock.hpp"                /* block type instructions           */
+#include "DoBlock.hpp"                         /* block type instructions           */
 #include "DoInstruction.hpp"
 #include "EndInstruction.hpp"
 #include "OtherwiseInstruction.hpp"
@@ -416,7 +416,7 @@ RexxInstruction *LanguageParser::instruction()
             // WHEN instruction in the context of a SELECT
             case KEYWORD_WHEN:
                 // this parses as if it was an IF, but creates
-                // a differnt target instruction.
+                // a different target instruction.
                 return ifNew(KEYWORD_WHEN);
                 break;
 
@@ -612,8 +612,8 @@ RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *o
 
     // now everything is the same as an assignment operator
     RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
-    new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)variable, _expression);
-    return newObject; /* done, return this                 */
+    new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)variable, expr);
+    return newObject;
 }
 
 
@@ -1474,54 +1474,78 @@ RexxInstruction *LanguageParser::dropNew()
     return newObject;
 }
 
-RexxInstruction *LanguageParser::elseNew(
-     RexxToken  *token)                /* ELSE keyword token                */
-/****************************************************************************/
-/* Function:  Create a new ELSE translator object                           */
-/****************************************************************************/
+
+/**
+ * We've encountered an ELSE in the source.  Just create
+ * an ELSE instruction object.  Wiring this up with
+ * the corresponding IF/THEN takes place when this
+ * is added to the instruction chain, as well as handling
+ * errors for misplaced instructions.
+ *
+ * @param token  The token for the ELSE keyword.  Used for setting
+ *               the instruction location.
+ *
+ * @return A new ELSE instruction object.
+ */
+RexxInstruction *LanguageParser::elseNew(RexxToken  *token)
 {
-    /* create a new translator object    */
     RexxInstruction *newObject = new_instruction(ELSE, Else);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionElse(token);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
 
+
+/**
+ * Create a new END instruction.  This only parses the
+ * instruction syntax and creates the new instruction
+ * object.  Matching up with its matching block instruction
+ * occurs when it is added to the instruction chain.
+ *
+ * @return An END instruction object.
+ */
 RexxInstruction *LanguageParser::endNew()
-/****************************************************************************/
-/* Function:  Create a new END translator object                            */
-/****************************************************************************/
 {
-    RexxString *name = OREF_NULL;                    /* no name yet                       */
-    RexxToken *token = nextReal();                  /* get the next token                */
+    // The block name is optional
+    RexxString *name = OREF_NULL;
+
+    // see if we have a label or control variable name specified
+    RexxToken *token = nextReal();
     if (!token->isEndOfClause())
-    {   /* have a name specified?            */
-        if (!token->isSymbol())/* must have a symbol here           */
+    {
+        if (!token->isSymbol())
         {
-            /* this is an error                  */
             syntaxError(Error_Symbol_expected_end);
         }
-        name = token->value;               /* get the name pointer              */
+        // get the name and verify that's all there is.
+        name = token->value();
         requiredEndOfClause(Error_Invalid_data_end);
     }
-    /* create a new translator object    */
+
     RexxInstruction *newObject = new_instruction(END, End);
-    /* now complete this                 */
     new((void *)newObject) RexxInstructionEnd(name);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
 
-RexxInstruction *LanguageParser::endIfNew(
-     RexxInstructionIf *parent )       /* target parent IF or WHEN clause   */
-/****************************************************************************/
-/* Function:  Create a new DUMMY END IF translator object                   */
-/****************************************************************************/
+
+/**
+ * Create an END IF instruction.  The EndIf is a dummy
+ * instruction that is attached to the end of the
+ * instruction following the THEN of an IF or WHEN.
+ * This branches to the appropriate location after
+ * that instruction completes.  For example, branching
+ * around an ELSE or to the end of a SELECT block.
+ *
+ * This is created when the pending control stack is processed
+ * when the previous instruction completes.
+ *
+ * @param parent The parent instruction.
+ *
+ * @return The new instruction object.
+ */
+RexxInstruction *LanguageParser::endIfNew(RexxInstructionIf *parent)
 {
-    /* create a new translator object    */
     RexxInstruction *newObject = new_instruction(ENDIF, EndIf);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionEndIf(parent);
-    return newObject; /* done, return this                 */
 }
 
 
@@ -1567,135 +1591,13 @@ RexxInstruction *LanguageParser::exposeNew()
     return newObject;
 }
 
-void LanguageParser::RexxInstructionForwardCreate(
-    RexxInstructionForward *newObject) /* target FORWARD instruction        */
-/****************************************************************************/
-/* Function:  Create a FORWARD instruction object                           */
-/****************************************************************************/
-{
-    bool returnContinue = false;              /* no return or continue yet         */
-    RexxToken *token = nextReal();                  /* get the next token                */
 
-    while (!token->isEndOfClause())
-    {/* while still more to process       */
-        if (!token->isSymbol())/* not a symbol token?               */
-        {
-            /* this is an error                  */
-            syntaxError(Error_Invalid_subkeyword_forward_option, token);
-        }
-        switch (this->subKeyword(token))
-        { /* get the keyword value             */
-
-            case SUBKEY_TO:                  /* FORWARD TO expr                   */
-                /* have a description already?       */
-                if (newObject->target != OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_subkeyword_to);
-                }
-                /* get the keyword value             */
-                OrefSet(newObject, newObject->target, this->constantExpression());
-                /* no expression here?               */
-                if (newObject->target == OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_expression_forward_to);
-                }
-                break;
-
-            case SUBKEY_CLASS:               /* FORWARD CLASS expr                */
-                /* have a class over ride already?   */
-                if (newObject->superClass != OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_subkeyword_forward_class);
-                }
-                /* get the keyword value             */
-                OrefSet(newObject, newObject->superClass, this->constantExpression());
-                /* no expression here?               */
-                if (newObject->superClass == OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_expression_forward_class);
-                }
-                break;
-
-            case SUBKEY_MESSAGE:             /* FORWARD MESSAGE expr              */
-                /* have a message over ride already? */
-                if (newObject->message != OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_subkeyword_message);
-                }
-                /* get the keyword value             */
-                OrefSet(newObject, newObject->message, this->constantExpression());
-                /* no expression here?               */
-                if (newObject->message == OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_expression_forward_message);
-                }
-                break;
-
-            case SUBKEY_ARGUMENTS:           /* FORWARD ARGUMENTS expr            */
-                /* have a additional already?        */
-                if (newObject->arguments != OREF_NULL || newObject->array != OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_subkeyword_arguments);
-                }
-                /* get the keyword value             */
-                OrefSet(newObject, newObject->arguments, this->constantExpression());
-                /* no expression here?               */
-                if (newObject->arguments == OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_expression_forward_arguments);
-                }
-                break;
-
-            case SUBKEY_ARRAY:               /* FORWARD ARRAY (expr, expr)        */
-                /* have arguments already?           */
-                if (newObject->arguments != OREF_NULL || newObject->array != OREF_NULL)
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_subkeyword_arguments);
-                }
-                token = nextReal();            /* get the next token                */
-                                               /* not an expression list starter?   */
-                if (!token->isLeftParen())
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_expression_raise_list);
-                }
-                /* process the array list            */
-                OrefSet(newObject, newObject->array, this->argArray(token, TERM_RIGHT));
-                break;
-
-            case SUBKEY_CONTINUE:            /* FORWARD CONTINUE                  */
-                if (returnContinue)            /* already had the return action?    */
-                {
-                    /* this is invalid                   */
-                    syntaxError(Error_Invalid_subkeyword_continue);
-                }
-                returnContinue = true;         /* not valid again                   */
-                                               /* remember this                     */
-                newObject->instructionFlags |= forward_continue;
-                break;
-
-            default:                         /* invalid subkeyword                */
-                /* this is a sub keyword error       */
-                syntaxError(Error_Invalid_subkeyword_forward_option, token);
-                break;
-        }
-        token = nextReal();                /* step to the next keyword          */
-    }
-}
-
+/**
+ * Parse and create a new FORWARD instruction object.
+ *
+ * @return The new instruction object.
+ */
 RexxInstruction *LanguageParser::forwardNew()
-/****************************************************************************/
-/* Function:  Create a new RAISE translator object                             */
-/****************************************************************************/
 {
     // not permitted in interpret
     if (isInterpret())
@@ -1940,35 +1842,47 @@ RexxInstruction *LanguageParser::guardNew()
     return newObject;
 }
 
-RexxInstruction *LanguageParser::ifNew(
-    int   type )                       /* type of instruction (IF or WHEN)  */
-/****************************************************************************/
-/* Function:  Create a new INTERPRET instruction object                     */
-/****************************************************************************/
+
+/**
+ * Create a new IF or WHEN instruction object.  These
+ * share the same implementation class, but get wired
+ * together differently.
+ *
+ * @param type   The type of instruction to create.
+ *
+ * @return A an executable IF instruction object.
+ */
+RexxInstruction *LanguageParser::ifNew(InstructionKeyword type )
 {
-    /* process the expression            */
-    RexxObject *_condition = this->parseLogical(OREF_NULL, TERM_IF);
+    // ok, get a conditional expression
+    RexxObject *_condition = parseLogical(OREF_NULL, TERM_IF);
+    // this is required...and, of course, we have different error
+    // messages for IF and WHEN
     if (_condition == OREF_NULL)
-    {        /* no expression here?               */
-        if (type == KEYWORD_IF)            /* IF form?                          */
+    {
+        if (type == KEYWORD_IF)
         {
-            /* issue the IF message              */
             syntaxError(Error_Invalid_expression_if);
         }
         else
         {
-            /* issue the WHEN message            */
             syntaxError(Error_Invalid_expression_when);
         }
     }
-    RexxToken *token = nextReal();                  /* get terminator token              */
-    previousToken();                     /* push the terminator back          */
-                                         /* create a new translator object    */
+
+    // get to the terminator token for this (likely a THEN, but it could
+    // be an EOC.  We use this to update the end location for the instruction since
+    // a THEN on the same line would include the THEN (and potentially the following)
+    // instruction in the instruction location.  This ensures we truncate at
+    // the end of the IF portion.
+    RexxToken *token = nextReal();
+    previousToken();
+
     RexxInstruction *newObject =  new_instruction(IF, If);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionIf(_condition, token);
-    newObject->setType(type);            /* set the IF/WHEN type              */
-    return newObject; /* done, return this                 */
+    // set the IF/WHEN type after construction.
+    newObject->setType(type);
+    return newObject;
 }
 
 
@@ -2295,17 +2209,18 @@ RexxInstruction *LanguageParser::optionsNew()
 }
 
 
-RexxInstruction *LanguageParser::otherwiseNew(
-  RexxToken  *token)                   /* OTHERWISE token                   */
-/****************************************************************************/
-/* Function:  Create an OTHERWISE instruction object                        */
-/****************************************************************************/
+/**
+ * Create a new Otherwise instruction object.
+ *
+ * @param token  The token for the OTHERWISE keyword.
+ *
+ * @return An executable OTHERWISE instruction object.
+ */
+RexxInstruction *LanguageParser::otherwiseNew(RexxToken  *token)
 {
-    /* create a new translator object    */
     RexxInstruction *newObject = new_instruction(OTHERWISE, Otherwise);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionOtherwise(token);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
 
 
@@ -3009,50 +2924,93 @@ RexxInstruction *LanguageParser::sayNew()
     return newObject;
 }
 
+
+/**
+ * Parse and create a suitable SELECT instruction object.
+ * This has different objects for standard SELECT and
+ * SELECT CASE instructions.
+ *
+ * @return An executable SELECT instruction object.
+ */
 RexxInstruction *LanguageParser::selectNew()
-/****************************************************************************/
-/* Function:  Create a SELECT instruction object                            */
-/****************************************************************************/
 {
-    // SELECT can be either SELECT; or SELECT LABEL name;
-    // for saved image compatibility, we have different classes for this
-    // depending on the form used.
+    // SELECT can be either SELECT; or SELECT CASE.  We have different
+    // classes for the two different functions.
     RexxToken *token = nextReal();
-    // easy version, no LABEL.
-    if (token->isEndOfClause())
+    RexxString *label = OREF_NULL;
+    RexxObject *caseExpr = OREF_NULL;
+
+    // ok, if this is more than just SELECT, we need to handle both a LABEL option
+    // (which must be first) and a potential CASE option, which creates a completely different
+    // instruction type.
+    if (!token->isEndOfClause())
     {
-        // just a simple SELECT type
+        if (!token->isSymbol())
+        {
+            // not a LABEL keyword, this is bad
+            syntaxError(Error_Invalid_data_select, token);
+        }
+
+        // potentially a label.  At this point, not being the label keyword is
+        // not an error...it could be CASE.  We just handle LABEL here.
+        if (token>subKeyword() == SUBKEY_LABEL)
+        {
+            // ok, get the label now
+            token = nextReal();
+            // this is required, and must be a symbol
+            if (!token->isSymbol())
+            {
+                syntaxError(Error_Symbol_expected_LABEL);
+            }
+
+            label = token->value();
+            // step to the next token and handle a potential
+            // CASE instruction
+            token = nextReal();
+        }
+        // if we have anything left, this must be a CASE option
+        if (token->isSymbol())
+        {
+            // potentially a CASE option.  Anything else is an error here
+            if (token>subKeyword() != SUBKEY_CASE)
+            {
+                syntaxError(Error_Invalid_data_select, token);
+            }
+
+            // eat the rest of the expression for the CASE, which is
+            // required
+            caseExpr = expression(TERM_EOC);
+            if (caseExpr != OREF_NULL)
+            {
+                syntaxError(Error_Invalid_expression_case);
+            }
+            // get the terminator token
+            token = nextReal();
+        }
+        // this must be the end token here.
+        if (!token->isEndOfClause())
+        {
+            syntaxError(Error_Invalid_data_select, token);
+        }
+    }
+
+    // normal SELECT instruction?
+    if (caseExpr == OREF_NULL)
+    {
+        // ok, finally allocate this and return
         RexxInstruction *newObject = new_instruction(SELECT, Select);
-        new ((void *)newObject) RexxInstructionSelect(OREF_NULL);
-        return newObject;
+        new ((void *)newObject) RexxInstructionSelect(label);
+        return  newObject;
     }
-    else if (!token->isSymbol())
+    // this the SELECT CASE version.  Fundamentally a different instruction.
+    else
     {
-        // not a LABEL keyword, this is bad
-        syntaxError(Error_Invalid_data_select, token);
+        // ok, finally allocate this and return
+        RexxInstruction *newObject = new_instruction(SELECT_CASE, SelectCase);
+        new ((void *)newObject) RexxInstructionSelectCase(label, caseExpr);
+        return  newObject;
     }
 
-    // potentially a label.  Check the keyword value
-    if (this->subKeyword(token) != SUBKEY_LABEL)
-    {
-                                       /* raise an error                    */
-        syntaxError(Error_Invalid_subkeyword_select, token);
-    }
-    // ok, get the label now
-    token = nextReal();
-    // this is required, and must be a symbol
-    if (!token->isSymbol())
-    {
-        syntaxError(Error_Symbol_expected_LABEL);
-    }
-
-    RexxString *label = token->value;
-    requiredEndOfClause(Error_Invalid_data_select);
-
-    // ok, finally allocate this and return
-    RexxInstruction *newObject = new_instruction(SELECT, Select);
-    new ((void *)newObject) RexxInstructionSelect(label);
-    return  newObject;
 }
 
 
@@ -3272,19 +3230,49 @@ RexxInstruction *LanguageParser::signalNew()
     return newObject;
 }
 
-RexxInstruction *LanguageParser::thenNew(
-     RexxToken         *token,         /* THEN keyword token                */
-     RexxInstructionIf *parent )       /* target parent IF or WHEN clause   */
-/****************************************************************************/
-/* Function:  Create a THEN instruction object                              */
-/****************************************************************************/
+
+/**
+ * Create a new THEN instruction object.
+ *
+ * @param token  The THEN token (used for location information).
+ * @param parent The parent IF or WHEN instruction we're part of.
+ *
+ * @return An executable instruction object.
+ */
+RexxInstruction *LanguageParser::thenNew(RexxToken *token, RexxInstructionIf *parent )
 {
-    /* create a new translator object    */
+    // no additional parsing needed here, we just create the instruction object.
     RexxInstruction *newObject = new_instruction(THEN, Then);
-    /* now complete this                 */
     new ((void *)newObject) RexxInstructionThen(token, parent);
-    return newObject; /* done, return this                 */
+    return newObject;
 }
+
+
+/**
+ * Convert a WHEN instruction into a WHEN CASE instruction
+ * for a SELECT WHEN.
+ *
+ * @param original The original instruction.
+ *
+ * @return The converted instruction object.
+ */
+RexxInstruction *LanguageParser::whenCaseNew(RexxInstructionIf *original)
+{
+    // We are going to build on the processing that is done when
+    // instruction object are originally created.  We're just going
+    // to invoke the RexxInstructionCaseWhen constructor over the storage
+    // allocated to the orignal IF instruction.  This will update
+    // the virtual function table pointer of the object to the new class
+    // without modifying any of the instruction data.  Since the
+    // WHEN CASE class does not add or change any fields, this just
+    // switches the class of the object.
+
+    new ((void *)original) RexxInstructionCaseWhen();
+    // change the type field and return the original object.
+    original->setType(KEYWORD_SELECT_CASE);
+    return original;
+}
+
 
 /**
  * Parse and create a new Trace instruction object.
@@ -3475,7 +3463,7 @@ RexxInstruction *LanguageParser::useNew()
             if (token->isSymbol())
             {
                 // is this an ellipsis symbol?
-                if (token->value->strCompare(CHAR_ELLIPSIS))
+                if (token->value()->strCompare(CHAR_ELLIPSIS))
                 {
                     // ok, this is the end of everything.  Tell the instructions to not enforce the max rules
                     allowOptionals = true;

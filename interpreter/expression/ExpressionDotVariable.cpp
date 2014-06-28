@@ -41,7 +41,6 @@
 /* Primitive Translator Expression Parsing Dot Variable Reference Class       */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
