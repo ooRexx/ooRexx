@@ -73,6 +73,7 @@ class RexxInstructionRaise : public RexxInstruction {
     virtual void execute(RexxActivation *, RexxExpressionStack *);
 
  protected:
+
     bitset<32>  instructionFlags;        // instruction control flags
     RexxObject *rcValue;                 // RC value expression
     RexxString *conditionName;           // condition trap name

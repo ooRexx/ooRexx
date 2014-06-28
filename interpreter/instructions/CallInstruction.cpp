@@ -278,10 +278,7 @@ void RexxInstructionDynamicCall::live(size_t liveMark)
 {
     memory_mark(nextInstruction);  // must be first one marked
     memory_mark(dynamicName);
-    for (size_t i = 0, i < argumentCount; i++)
-    {
-        memory_mark(arguments[i]);
-    }
+    memory_mark_array(argumentCount, arguments);
 }
 
 
@@ -297,10 +294,7 @@ void RexxInstructionDynamicCall::liveGeneral(int reason)
     // must be first one marked
     memory_mark_general(nextInstruction);
     memory_mark_general(dynamicName);
-    for (size_t i = 0, i < argumentCount; i++)
-    {
-        memory_mark_general(arguments[i]);
-    }
+    memory_mark_general_array(argumentCount, arguments);
 }
 
 
@@ -315,11 +309,7 @@ void RexxInstructionDynamicCall::flatten(RexxEnvelope *envelope)
 
     flattenRef(nextInstruction);
     flattenRef(dynamicName);
-
-    for (size_t i = 0i < argumentCount; i++)
-    {
-        flattenRef(arguments[i]);
-    }
+    flattenArrayRefs(argumentCount, arguments);
 
     cleanUpFlatten
 }

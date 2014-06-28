@@ -445,21 +445,31 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 
 // Following macros are for Flattening and unflattening of objects
 // Some notes on what is going on here.  The flatten() method gets called on an object
-// after it has been moved
+// after it has been moved into the envelope buffer, so the this pointer is
+// to the copied object, not the original.  On a call to flattenReference(), it might
+// be necessary to allocate a larger buffer.  When that happens, the copied object gets
+// moved to a new location and the newThis pointer gets updated to the new object location.
+// it is necessary to copy the this pointer and also declare the newThis pointer as volatile
+// so that the change in pointer value doesn't get optimized out by the compiler.
 
+// set up for flattening.  This sets up the newThis pointer and also gets some
+// information from the envelope.  The type argument allows newThis to be declared with
+// the correct type.
 #define setUpFlatten(type)        \
   {                               \
   size_t newSelf = envelope->currentOffset; \
   type * volatile newThis = (type *)this;   // NB:  This is declared volatile to avoid optimizer problems.
 
+// just a block closer for the block created by setUpFlatten.
 #define cleanUpFlatten                    \
  }
 
+// flatten an individual reference.  This version is deprecated, use flattenRef instead.
 #define flatten_reference(oref,envel)  if ((oref) != OREF_NULL) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
-// newer, simplified form
+// newer, simplified form.  Just give the name of the field.
 #define flattenRef(oref)  if ((newThis->oref) != OREF_NULL) envelope->flattenReference((void *)&newThis, newSelf, (void *)&(newThis->oref))
 
-// a version for flattening arrays of objects.
+// a version for flattening arrays of objects.  Give the count field and the name of the array.
 #define flattenArrayRefs(count, array)          \
   for (size_t i = 0; i < count; i++)            \
   {                                             \

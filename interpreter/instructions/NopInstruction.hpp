@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,14 +47,16 @@
 #include "RexxInstruction.hpp"
 #include "RexxActivation.hpp"
 
-class RexxInstructionNop : public RexxInstruction {
+class RexxInstructionNop : public RexxInstruction
+{
  public:
-  inline void *operator new(size_t size, void *newObject) {return newObject;}
-  inline void operator delete(void *) { }
-  inline void operator delete(void *, void *) { }
+    inline void *operator new(size_t size, void *newObject) {return newObject;}
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
 
-  inline RexxInstructionNop() { ; };
-  inline RexxInstructionNop(RESTORETYPE restoreType) { ; };
-  void execute(RexxActivation *, RexxExpressionStack *);
+    inline RexxInstructionNop() { ; };
+    inline RexxInstructionNop(RESTORETYPE restoreType) { ; };
+
+    void execute(RexxActivation *, RexxExpressionStack *);
 };
 #endif

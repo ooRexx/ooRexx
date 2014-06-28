@@ -59,6 +59,7 @@ class RexxInstructionCallBase : public RexxInstruction
     virtual void resolve(RexxDirectory *) = 0;
 
  protected:
+
     RexxString      *targetName;              // name to call
     RexxInstruction *targetInstruction;       // resolved instruction target if this is internal
 };
@@ -74,6 +75,7 @@ class RexxInstructionDynamicCallBase : public RexxInstruction
     inline RexxInstructionDynamicCallBase() { ; };
 
  protected:
+
     RexxObject      *dynamicName;             // we don't have a static name or resolved target for this.
 };
 
@@ -88,6 +90,7 @@ class RexxTrapInstructionBase : public RexxInstructionCallBase
     virtual void trap(RexxActivation *, RexxDirectory *) { ; };
 
  protected:
+
     RexxString *conditionName;         // the condition trap name
 };
 
@@ -106,12 +109,13 @@ class RexxInstructionCall : public RexxInstructionCallBase
 
     RexxInstructionCall(RexxObject *, RexxString *, size_t, RexxQueue *, bool, BuiltinCode);
     inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
 
-    void execute(RexxActivation *, RexxExpressionStack *);
-    void resolve(RexxDirectory *);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void resolve(RexxDirectory *);
 
 protected:
 
@@ -125,7 +129,8 @@ protected:
  * A call instruction that resolves the target at runtime
  * based on a resolved expression.
  */
-class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase {
+class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
+{
  public:
 
     inline void *operator new(size_t size, void *ptr) {return ptr;}
@@ -134,11 +139,12 @@ class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase {
 
     RexxInstructionDynamicCall(RexxObject *, size_t, RexxQueue *);
     inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
-    void live(size_t);
-    void liveGeneral(int reason);
 
-    void flatten(RexxEnvelope*);
-    void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
 
 protected:
 

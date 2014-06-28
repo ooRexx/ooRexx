@@ -58,7 +58,8 @@ enum
     LABELED_DO_BLOCK,
 } EndBlockType;
 
-class RexxInstructionEnd : public RexxInstruction {
+class RexxInstructionEnd : public RexxInstruction
+{
  public:
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void operator delete(void *) { }
@@ -78,6 +79,7 @@ class RexxInstructionEnd : public RexxInstruction {
     inline EndBlockType getStyle() { style; };
 
  protected:
+
     EndBlockType style;     // the type of END we're working with
     RexxString  *name;      // a specified control variable or label name
 };

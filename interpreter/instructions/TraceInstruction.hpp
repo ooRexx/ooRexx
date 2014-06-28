@@ -46,7 +46,8 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionTrace : public RexxInstruction {
+class RexxInstructionTrace : public RexxInstruction
+{
 public:
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { }
@@ -62,6 +63,7 @@ public:
     virtual void execute(RexxActivation *, RexxExpressionStack *);
 
 protected:
+
     RexxObject *expression;              // trace value expression
     wholenumber_t debugskip;             // clauses to skip
     size_t      traceSetting;            // new trace setting

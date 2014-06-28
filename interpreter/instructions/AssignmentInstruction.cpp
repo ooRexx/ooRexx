@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,27 +47,23 @@
 #include "RexxActivation.hpp"
 #include "AssignmentInstruction.hpp"
 
-RexxInstructionAssignment::RexxInstructionAssignment(
-    RexxVariableBase *target,          /* target variable instruction       */
-    RexxObject       *_expression)      /* assigned expression value         */
-/******************************************************************************/
-/* Function:  complete ASSIGNMENT instruction initialization                  */
-/******************************************************************************/
+RexxInstructionAssignment::RexxInstructionAssignment(RexxVariableBase *target, RexxObject *_expression)
 {
-                                       /* get the variable target           */
-  OrefSet(this, this->variable, target);
-                                       /* process the expression            */
-  OrefSet(this, this->expression, _expression);
+    variable = target;
+    expression = _expression;
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionAssignment::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->variable);
-  memory_mark(this->expression);
+    memory_mark(nextInstruction);
+    memory_mark(variable);
+    memory_mark(expression);
 }
 
 void RexxInstructionAssignment::liveGeneral(int reason)
@@ -81,45 +77,54 @@ void RexxInstructionAssignment::liveGeneral(int reason)
   memory_mark_general(this->expression);
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionAssignment::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionAssignment)
+    setUpFlatten(RexxInstructionAssignment)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->variable, envelope);
-  flatten_reference(newThis->expression, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(variable);
+    flattenRef(expression);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionAssignment::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX assignment instruction                           */
-/*            NOTE:  This instruction is implemented using two seperate paths */
-/*            for traced vs. non-traced execution.  This reduces the checks   */
-/*            for non-traced execution to a single check in this very         */
-/*            heavily executed instruction.                                   */
-/******************************************************************************/
+/**
+ * Execute a REXX assignment instruction
+ * NOTE:  This instruction is implemented using two seperate paths
+ * for traced vs. non-traced execution.  This reduces the checks
+ * for non-traced execution to a single check in this very
+ * heavily executed instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionAssignment::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-    if (context->tracingInstructions())/* tracing?                          */
+    // if tracing?  handle this via the slower path
+    if (context->tracingInstructions())
     {
-        context->traceInstruction(this);   /* trace if necessary                */
-                                           /* get the expression value          */
-        RexxObject *result = this->expression->evaluate(context, stack);
-        context->traceResult(result);      /* trace if necessary                */
-                                           /* do the assignment                 */
-        this->variable->assign(context, stack, result);
-        context->pauseInstruction();       /* do debug pause if necessary       */
+        context->traceInstruction(this);
+        // get the expression value
+        RexxObject *result = expression->evaluate(context, stack);
+        // trace the result
+        context->traceResult(result);
+        // assign the variable
+        variable->assign(context, stack, result);
+        // do debug pause
+        context->pauseInstruction();
     }
-    else                                 /* non-traced execution              */
+    // fast path for non-traced execution
+    else
     {
-                                         /* do the assignment                 */
-        this->variable->assign(context, stack, this->expression->evaluate(context, stack));
+        // TODO:  Consider having an method here that is optimized for the non-trace
+        // situation....
+        variable->assign(context, stack, expression->evaluate(context, stack));
     }
 }
 

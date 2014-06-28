@@ -52,7 +52,8 @@
  * Instruction object for a "normal" SIGNAL instruction
  * that jumps to a label location.
  */
-class RexxInstructionSignal : public RexxInstructionCallBase {
+class RexxInstructionSignal : public RexxInstructionCallBase
+{
  public:
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { }
@@ -61,12 +62,12 @@ class RexxInstructionSignal : public RexxInstructionCallBase {
     RexxInstructionSignal(RexxString *);
     inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
 
-    void execute(RexxActivation *, RexxExpressionStack *);
-    void resolve (RexxDirectory *);
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void resolve (RexxDirectory *);
 };
 
 
@@ -75,7 +76,8 @@ class RexxInstructionSignal : public RexxInstructionCallBase {
  * (SIGNAL VALUE or SIGNAL expr).  This resolves the
  * target label from an expression result at run time.
  */
-class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase {
+class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase
+{
  public:
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { }
@@ -83,11 +85,12 @@ class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase {
 
     RexxInstructionSignal(RexxObject *);
     inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
 
-    void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
+
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
 };
 
 
@@ -95,7 +98,8 @@ class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase {
  * An instruction object to handle the basics of the SIGNAL
  * ON/OFF instruction.
  */
-class RexxInstructionSignalOn : public RexxTrapInstructionBase {
+class RexxInstructionSignalOn : public RexxTrapInstructionBase
+{
  public:
 
     inline void *operator new(size_t size, void *ptr) {return ptr;}
@@ -105,11 +109,11 @@ class RexxInstructionSignalOn : public RexxTrapInstructionBase {
     RexxInstructionSignalOn(RexxString*, RexxString *);
     inline RexxInstructionSignalOn(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
 
-    void execute(RexxActivation *, RexxExpressionStack *);
-    void resolve(RexxDirectory *);
+    virtual void execute(RexxActivation *, RexxExpressionStack *);
+    virtual void resolve(RexxDirectory *);
 };
 #endif

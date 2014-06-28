@@ -112,10 +112,7 @@ void RexxInstructionRaise::live(size_t liveMark)
     memory_mark(rcValue);
     memory_mark(description);
     memory_mark(resultValue);
-    for (size_t i = 0, i < arrayCount; i++)
-    {
-        memory_mark(additional[i]);
-    }
+    memory_mark_array(arrayCount, additional);
 }
 
 
@@ -134,11 +131,7 @@ void RexxInstructionRaise::liveGeneral(int reason)
     memory_mark_general(rcValue);
     memory_mark_general(description);
     memory_mark_general(resultValue);
-
-    for (size_t i = 0, i < arrayCount; i++)
-    {
-        memory_mark_general(additional[i]);
-    }
+    memory_mark_general_array(arrayCount, additional);
 }
 
 
@@ -156,10 +149,7 @@ void RexxInstructionRaise::flatten(RexxEnvelope *envelope)
     flattenRef(rcValue);
     flattenRef(description);
     flattenRef(resultValue);
-    for (size_t i = 0, i < arrayCount; i++)
-    {
-        flattenRef(additional[i]);
-    }
+    flattenArrayRefs(arrayCount, additional);
 
     cleanUpFlatten
 }

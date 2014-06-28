@@ -60,10 +60,7 @@ RexxInstructionExpose::RexxInstructionExpose(size_t varCount, RexxQueue  *variab
     // get the variable size
     variableCount = varCount;
     // now copy all of the retriever references from the queue, back to front.
-    while (varCount > 0)
-    {
-        variables[--varCount] = (RexxVariableBase *)variable_list->pop();
-    }
+    initializeObjectArray(varCount, variables, RexxVariableBase, variable_list);
 }
 
 

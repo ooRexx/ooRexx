@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Translator                                                            */
 /*                                                                            */
-/* Primitive Forward Translator Class                                         */
+/* Forward instruction implementation class                                   */
 /*                                                                            */
 /******************************************************************************/
 #include <stdlib.h>
@@ -49,162 +49,198 @@
 #include "RexxActivation.hpp"
 #include "ForwardInstruction.hpp"
 
-void RexxInstructionForward::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Process live calls                                              */
-/******************************************************************************/
+
+/**
+ * Initialize a FORWARD instruction.
+ *
+ * @param t      The target object.
+ * @param m      The message name.
+ * @param s      The superclass override
+ * @param args   The args specified via ARGUMENTS option.
+ * @param a      The args specified via the ARRAY() option.
+ * @param c      the continue/return flag.
+ */
+RexxInstructionForward::RexxInstructionForward(RexxObject * t, RexxObject *m, RexxObject *s, RexxObject *args, RexxArray *a, bool c)
 {
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->target);
-  memory_mark(this->message);
-  memory_mark(this->superClass);
-  memory_mark(this->arguments);
-  memory_mark(this->array);
+    target = t;
+    message = m;
+    superClass = s;
+    arguments = args;
+    array = a;
+    continueExecution = c;
 }
 
-void RexxInstructionForward::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Process general live calls                                      */
-/******************************************************************************/
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxInstructionForward::live(size_t liveMark)
 {
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->target);
-  memory_mark_general(this->message);
-  memory_mark_general(this->superClass);
-  memory_mark_general(this->arguments);
-  memory_mark_general(this->array);
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(target);
+    memory_mark(message);
+    memory_mark(superClass);
+    memory_mark(arguments);
+    memory_mark(array);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxInstructionForward::liveGeneral(int reason)
+{
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(target);
+    memory_mark_general(message);
+    memory_mark_general(superClass);
+    memory_mark_general(arguments);
+    memory_mark_general(array);
 }
 
 void RexxInstructionForward::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an instruction object                                   */
-/******************************************************************************/
 {
-  setUpFlatten(RexxInstructionForward)
+    setUpFlatten(RexxInstructionForward)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->target, envelope);
-  flatten_reference(newThis->message, envelope);
-  flatten_reference(newThis->superClass, envelope);
-  flatten_reference(newThis->arguments, envelope);
-  flatten_reference(newThis->array, envelope);
+    flattenRef(nextInstruction);
+    flattenRef(target);
+    flattenRef(message);
+    flattenRef(superClass);
+    flattenRef(arguments);
+    flattenRef(array);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-void RexxInstructionForward::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a forward instruction                                   */
-/******************************************************************************/
+/**
+ * Execute a FORWARD instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionForward::execute(RexxActivation *context, RexxExpressionStack *stack)
 {
-    RexxObject *_target;                  /* evaluated target                  */
-    RexxString *_message;                 /* evaluated message                 */
-    RexxObject *_superClass;              /* evaluated super class             */
-    RexxObject *result;                  /* message result                    */
-    RexxObject *temp;                    /* temporary object                  */
-    size_t      count = 0;               /* count of array expressions        */
-    size_t      i;                       /* loop counter                      */
-    RexxObject **_arguments;
-
-    context->traceInstruction(this);     /* trace if necessary                */
-    if (!context->inMethod())            /* is this a method clause?          */
+    context->traceInstruction(this);
+    // only allowed in method contexts.
+    if (!context->inMethod())
     {
-                                         /* raise an error                    */
         reportException(Error_Execution_forward);
     }
-    _target = OREF_NULL;                  /* no object yet                     */
-    _message = OREF_NULL;                 /* no message over ride              */
-    _superClass = OREF_NULL;              /* no super class over ride          */
-    _arguments = OREF_NULL;               /* no argument over ride             */
 
-    if (this->target != OREF_NULL)       /* sent to a different object?       */
+    // intialize each of the pieces and process what has been specified on the command.
+    // the context figures out what has been overridden from the current context, so
+    // we only set the pieces we've been given
+    RexxObject *_target = OREF_NULL;
+    RexxObject *_message = OREF_NULL;
+    RexxObject *_superClass = OREF_NULL;
+    RexxObject **_arguments = OREF_NULL;
+    size_t      count = 0;
+
+    // sent to a different object target?
+    if (target != OREF_NULL)
     {
-                                         /* get the expression value          */
-        _target = this->target->evaluate(context, stack);
+        _target = target->evaluate(context, stack);
     }
-    if (this->message != OREF_NULL)    /* sending a different message?      */
+
+    // sending a different message?
+    if (message != OREF_NULL)
     {
-        /* get the expression value          */
-        temp = this->message->evaluate(context, stack);
-        _message = REQUEST_STRING(temp);    /* get the string version            */
-        _message = _message->upper();       /* and force to uppercase            */
+        // we need this as a string value...and in upper case.
+        RexxObject *temp = message->evaluate(context, stack);
+        _message = REQUEST_STRING(temp)->upper();
+        // leave this on the stack.
+        stack->push(_message);
     }
-    if (this->superClass != OREF_NULL)   /* overriding the super class?       */
+
+    // have a superclass override?
+    if (this->superClass != OREF_NULL)
     {
-                                         /* get the expression value          */
-        _superClass = this->superClass->evaluate(context, stack);
+        _superClass = superClass->evaluate(context, stack);
     }
-    if (this->arguments != OREF_NULL)  /* overriding the arguments?         */
+
+    // overriding the arguments?
+    if (arguments != OREF_NULL)
     {
-        /* get the expression value          */
-        temp = this->arguments->evaluate(context, stack);
-        /* get an array version              */
+        // we need to evaluate this argument, then get as an array
+        RexxObject *temp = arguments->evaluate(context, stack);
         RexxArray *argArray = REQUEST_ARRAY(temp);
-        stack->push(argArray);           /* protect this on the stack         */
-        /* not an array item or a multiple   */
-        /* dimension one?                    */
+        // protect this on the stack too
+        stack->push(argArray);
+        // make sure we got an acceptable array back.
         if (argArray == TheNilObject || argArray->getDimension() != 1)
         {
-            /* this is an error                  */
             reportException(Error_Execution_forward_arguments);
         }
-        count = argArray->size();          /* get the size                      */
-                                           /* omitted trailing arguments?       */
+        // get the size...
+        count = argArray->size();
+        // now we need to find the last real argument in this array
         if (count != 0 && argArray->get(count) == OREF_NULL)
         {
-            count--;                         /* decrement the count               */
-            while (count > 0)              /* loop down to first full one       */
+            count--;
+            while (count > 0)
             {
-                /* find a real argument              */
+                // done if we find a non-null argument
                 if (argArray->get(count) != OREF_NULL)
                 {
-                    break;                       /* break out of here                 */
+                    break;
                 }
-                count--;                       /* step back the count               */
+                count--;
             }
         }
-        _arguments = argArray->data();    /* point directly to the argument data */
+        // point to the data in the argument array.
+        _arguments = argArray->data();
     }
-    if (this->array != OREF_NULL)      /* have an array of extra info?      */
+
+    // have we been overridden via the ARRAY keyword?  We only have
+    // one of ARGUMENTS or ARRAY.
+    if (array != OREF_NULL)
     {
-        count = this->array->size();       /* get the expression count          */
-        for (i = 1; i <= count; i++)     /* loop through the expression list  */
+        // this is an array of expressions, so we need to evaluate all of these
+        count = array->size();
+        for (i = 1; i <= count; i++)
         {
-            RexxObject *argElement = this->array->get(i);
-            /* real argument?                    */
+            RexxObject *argElement = array->get(i);
+            // a real argument?                  */
             if (argElement != OREF_NULL)
             {
-                /* evaluate the expression           */
                 argElement->evaluate(context, stack);
             }
             else
             {
-                /* just push a null reference for the missing ones */
+                // just push a null reference for the missing ones
                 stack->push(OREF_NULL);
             }
         }
-        /* now point at the stacked values */
+        // note that we evaluated this one last, so that other
+        // values pushed on the stack will not interfere with the arguments.
         _arguments = stack->arguments(count);
     }
-    /* go forward this                   */
-    result = context->forward(_target, _message, _superClass, _arguments, count, instructionFlags&forward_continue);
-    if (instructionFlags&forward_continue)  /* not exiting?                      */
+    // now have the context forward this
+    ProtectedObject result = context->forward(_target, _message, _superClass, _arguments, count, continueExecution);
+    // if we continued, then we may need to set the RESULT variable in the current context.
+    if (continueExecution)
     {
-        if (result != OREF_NULL)         /* result returned?                  */
+        // if we have a result, then we need to trace this and set the result variable
+        if (!result.isNull())
         {
-            context->traceResult(result);    /* trace if necessary                */
-                                             /* set the RESULT variable to the    */
-                                             /* message return value              */
-            context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, result);
+            context->traceResult((RexxObject *)result);
+            context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *result);
         }
-        else                               /* drop the variable RESULT          */
+        // ne result returned, so we drop the RESULT variable
+        else
         {
             context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
         }
-        context->pauseInstruction();       /* do debug pause if necessary       */
+        // and finally, pause
+        context->pauseInstruction();
     }
 }
 

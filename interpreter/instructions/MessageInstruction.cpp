@@ -41,7 +41,6 @@
 /* Primitive Message Instruction Parse Class                                  */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
@@ -50,203 +49,180 @@
 #include "ExpressionMessage.hpp"
 #include "ProtectedObject.hpp"
 
-RexxInstructionMessage::RexxInstructionMessage(
-    RexxExpressionMessage *message)    /* templace message to process       */
-/******************************************************************************/
-/* Function:  Initialize a message instruction                                */
-/******************************************************************************/
+/**
+ * Construct a Message instruction from an already
+ * constructed message expression.
+ *
+ * @param message The source message expression object.
+ */
+RexxInstructionMessage::RexxInstructionMessage(RexxExpressionMessage *message)
 {
-    RexxObject **argument_pointer;       /* pointer to message args           */
-    size_t       i;                      /* loop counter                      */
-
-                                         /* copy the message info             */
-    OrefSet(this, this->target, message->target);
-    OrefSet(this, this->super, message->super);
-    /* get the name                      */
-    OrefSet(this, this->name, message->messageName);
-    /* get the argument count            */
+    target = message->target;
+    super = message->super;
+    name = message->messageName;
     argumentCount = message->argumentCount;
-    /* and pointer to arguments          */
-    argument_pointer = (RexxObject **)message->arguments;
-    /* copy each argument                */
-    for (i = 0; i < argumentCount; i++)
+    for (size_t i = 0; i < argumentCount; i++)
     {
-        /* into the message instruction      */
-        OrefSet(this, this->arguments[i], argument_pointer[i]);
-    }
-    if (message->doubleTilde)            /* double twiddle form?              */
-    {
-        instructionFlags |= message_i_double;   /* turn this on                      */
+        arguments[i] = message->arguments[i];
     }
 }
 
-RexxInstructionMessage::RexxInstructionMessage(
-    RexxExpressionMessage *message,    /* templace message to process       */
-    RexxObject *expression)            /* associated expression             */
-/******************************************************************************/
-/* Function:  Initialize an assignment message instruction                    */
-/******************************************************************************/
+/**
+ * Create an assignment message object from a source message expression object.
+ *
+ * @param message    The source message expression object.
+ * @param expression The expression assignment value (passed as the first object).
+ */
+RexxInstructionMessage::RexxInstructionMessage(RexxExpressionMessage *message, RexxObject *expression)
 {
-    RexxObject  **argument_pointer;      /* pointer to message args           */
-    size_t i;                            /* loop counter                      */
-
-                                         /* copy the message info             */
-    OrefSet(this, this->target, message->target);
-    OrefSet(this, this->super, message->super);
-    OrefSet(this, this->name, message->messageName);  /* get the name                      */
-    /* get the argument count            */
+    target = message->target;
+    super = message->super;
+    name = message->messageName;
+    // we add an additional first argument here, so add one to the argument count
     argumentCount = message->argumentCount + 1;
-    /* and the argument pointer          */
-    argument_pointer = (RexxObject **)message->arguments;
-    /* make the expression the first     */
-    OrefSet(this, this->arguments[0], expression);
-    /* copy each argument                */
-    for (i = 1; i < argumentCount; i++)
+    // the assignment expression is the first argument
+    arguments[0] = expresson;
+    for (size_t i = 1; i < argumentCount; i++)
     {
-        /* into the message instruction      */
-        OrefSet(this, this->arguments[i], argument_pointer[i - 1]);
-    }
-    if (message->doubleTilde)            /* double twiddle form?              */
-    {
-        instructionFlags |= message_i_double; /* turn this on                      */
+        arguments[i] = message->arguments[i - 1];
     }
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxInstructionMessage::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-    memory_mark(this->nextInstruction);  /* must be first one marked          */
-    memory_mark(this->name);
-    memory_mark(this->target);
-    memory_mark(this->super);
-    for (i = 0, count = argumentCount; i < count; i++)
-    {
-        memory_mark(this->arguments[i]);
-    }
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(name);
+    memory_mark(target);
+    memory_mark(super);
+    memory_mark_array(argumentCount, arguments);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxInstructionMessage::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-                                         /* must be first one marked          */
-    memory_mark_general(this->nextInstruction);
-    memory_mark_general(this->name);
-    memory_mark_general(this->target);
-    memory_mark_general(this->super);
-    for (i = 0, count = argumentCount; i < count; i++)
-    {
-        memory_mark_general(this->arguments[i]);
-    }
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(name);
+    memory_mark_general(target);
+    memory_mark_general(super);
+    memory_mark_general_array(argumentCount, arguments);
 }
 
-void RexxInstructionMessage::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
 
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionMessage::flatten(RexxEnvelope *envelope)
+{
     setUpFlatten(RexxInstructionMessage)
 
-    flatten_reference(newThis->nextInstruction, envelope);
-    flatten_reference(newThis->name, envelope);
-    flatten_reference(newThis->target, envelope);
-    flatten_reference(newThis->super, envelope);
-    for (i = 0, count = argumentCount; i < count; i++)
-    {
-        flatten_reference(newThis->arguments[i], envelope);
-    }
+    flattenRef(nextInstruction);
+    flattenRef(name);
+    flattenRef(target);
+    flattenRef(super);
+    flattenArrayRefs(argumentCount, arguments);
 
     cleanUpFlatten
 }
 
-void RexxInstructionMessage::execute (
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX THEN instruction                               */
-/****************************************************************************/
-{
-    ProtectedObject result;              /* message expression result         */
-    RexxObject *_super;                  /* target super class                */
-    size_t      argcount;                /* count of arguments                */
-    RexxObject *_target;                 /* message target                    */
-    size_t      i;                       /* loop counter                      */
 
-    context->traceInstruction(this);     /* trace if necessary                */
-                                         /* evaluate the target               */
-    _target = this->target->evaluate(context, stack);
-    if (this->super != OREF_NULL)      /* have a message lookup override?   */
+/**
+ * Execute a message instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionMessage::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    context->traceInstruction(this);
+
+    // evaluate the target object
+    RexxObject *_target = target->evaluate(context, stack);
+    RexxObject *super = OREF_NULL;
+
+    // do we have a superclass override?
+    if (super != OREF_NULL)
     {
-        if (_target != context->getReceiver())  /* sender and receiver different?    */
+        // this is only allow if the target object is the same
+        // as the receiver object
+        if (_target != context->getReceiver())
         {
-            /* this is an error                  */
             reportException(Error_Execution_super);
         }
-        /* get the variable value            */
-        _super = this->super->evaluate(context, stack);
-        stack->toss();                     /* pop the top item                  */
-    }
-    else
-    {
-        _super = OREF_NULL;                 /* use the default lookup            */
+        // get the superclass target
+        _super = super->evaluate(context, stack);
     }
 
-    argcount = argumentCount;            /* get the argument count            */
-    for (i = 0; i < argcount; i++)     /* loop through the argument list    */
+    // loop through the argument list evaluating the arguments
+    for (size_t i = 0; i < argumentCount; i++)
     {
-        /* real argument?                    */
-        if (this->arguments[i] != OREF_NULL)
+        // is this a realy argument?  evaluate and trace if needed
+        if (arguments[i] != OREF_NULL)
         {
-            /* evaluate the expression           */
-            result = this->arguments[i]->evaluate(context, stack);
-            /* trace if necessary                */
+            // NOTE: this leaves the argument on the evaluation stack
+            // We'll build up the entire list there.
+            RexxObject *result = arguments[i]->evaluate(context, stack);
             context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
         }
+        // omitted argument...push a null value on to the stack and trace
+        // as a null string.
         else
         {
-            stack->push(OREF_NULL);          /* push an non-existent argument     */
-                                             /* trace if necessary                */
+            stack->push(OREF_NULL);
             context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
         }
     }
-    if (super == OREF_NULL)              /* no super class override?          */
+
+    ProtectedObject result;
+    // issue the send with or without a superclass override
+    if (super == OREF_NULL)
     {
-                                         /* issue the fast message            */
-        stack->send(this->name, argcount, result);
+        stack->send(name, argumentCount, result);
     }
     else
     {
-        /* evaluate the message w/override   */
-        stack->send(this->name, _super, argcount, result);
+        stack->send(name, _super, argumentCount, result);
     }
-    stack->popn(argcount);               /* remove any arguments              */
-    if (instructionFlags&message_i_double) /* double twiddle form?              */
+
+    // for the instruction version, we don't worry about popping
+    // anything off of the evaluation stack...that will be cleared automatically
+    // when we complete.
+
+    // if this is the double message version, replace the result object
+    // with the target object.
+    if (instructionType == KEYWORD_MESSAGE_DOUBLE)
     {
-        result = _target;                  /* get the target element            */
+        result = _target;
     }
-    if ((RexxObject *)result != OREF_NULL)   /* result returned?                  */
+
+    // if we have a result, trace it and assign it to the variable result.
+    if ((RexxObject *)result != OREF_NULL)
     {
-        context->traceResult((RexxObject *)result);  /* trace if necessary                */
-        /* set the RESULT variable to the    */
-        /* message return value              */
+        context->traceResult((RexxObject *)result);
         context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
     }
-    else                                 /* drop the variable RESULT          */
+    // for no result, we drop the RESULT variable
+    else
     {
         context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
     }
-    context->pauseInstruction();         /* do debug pause if necessary       */
+
+    context->pauseInstruction();
 }
 

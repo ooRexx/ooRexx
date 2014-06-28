@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,17 +41,17 @@
 /* Primitive Label Parse Class                                                */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivation.hpp"
 #include "LabelInstruction.hpp"
 
-void RexxInstructionLabel::execute(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Execute a REXX EXIT instruction                               */
-/****************************************************************************/
+/**
+ * Execute a label instruction.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxInstructionLabel::execute(RexxActivation *context, RexxExpressionStack *stack )
 {
     // Labels don't really do much directly, but they do trace and they
     // will pause if in debug mode.

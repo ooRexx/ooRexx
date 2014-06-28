@@ -46,6 +46,12 @@
 #include "RexxActivation.hpp"
 #include "ReplyInstruction.hpp"
 
+/**
+ * Initialize a REPLY object.
+ *
+ * @param _expression
+ *               The optional return result expression.
+ */
 RexxInstructionReply::RexxInstructionReply(RexxObject *_expression)
 {
     expression = _expression;

@@ -55,7 +55,6 @@
 class RexxInstruction;
 class RexxInstructionDo;
 class RexxInstructionIf;
-class RexxInstructionForward;
 class RexxExpressionMessage;
 class RexxCompoundVariable;
 class RoutineClass;
@@ -338,7 +337,6 @@ class LanguageParser: public RexxInternalObject {
     RexxInstruction *exitNew();
     RexxInstruction *exposeNew();
     RexxInstruction *forwardNew();
-    void        RexxInstructionForwardCreate(RexxInstructionForward *);
     RexxInstruction *guardNew();
     RexxInstruction *ifNew(int);
     RexxInstruction *interpretNew();

@@ -46,7 +46,8 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionInterpret : public RexxInstructionExpression {
+class RexxInstructionInterpret : public RexxInstructionExpression
+{
  public:
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void operator delete(void *) { }

@@ -208,7 +208,9 @@ RexxInstruction *LanguageParser::instruction()
         // if parsing the message term consumed everything, this is a message instruction
         if (second->isEndOfClause())
         {
-            return messageNew((RexxExpressionMessage *)term);
+            RexxExpressionMessage *msgTerm = (RexxExpressionMessage *)term;
+
+            return msgTerm->doubleTilde ? doubleMessageNew(term) : messageNew(msgTerm);
         }
         else if (second->isSubtype(OPERATOR_STRICT_EQUAL))
         {
@@ -579,7 +581,7 @@ RexxInstruction *LanguageParser::assignmentNew(RexxToken  *target )
 
     // build an instruction object and return it.
     RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
-    new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)(addText(target)), expr);
+    new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)(addVariable(target)), expr);
     return newObject;
 }
 
@@ -1700,93 +1702,242 @@ RexxInstruction *LanguageParser::forwardNew()
     {
         syntaxError(Error_Translation_forward_interpret);
     }
-    /* create a new translator object    */
+
+    // variables for all of the instruction pieces.
+    bool returnContinue = false;
+    RexxObject *target = OREF_NULL;
+    RexxObject *message = OREF_NULL;
+    RexxObject *superClass = OREF_NULL;
+    RexxObject *arguments = OREF_NULL;
+    RexxArray  *array = OREF_NULL;
+
+    // and start parsing
+    RexxToken *token = nextReal();
+
+    // keep processing keywords until we reach the end of the clause
+    while (!token->isEndOfClause())
+    {
+        // all keywords are symbols, so not finding a symbol is an error
+        if (!token->isSymbol())
+        {
+            syntaxError(Error_Invalid_subkeyword_forward_option, token);
+        }
+
+        // process each of the options
+        switch (token->subKeyword())
+        {
+            // FORWARD TO expr
+            case SUBKEY_TO:
+            {
+                // can only be specified once
+                if (target != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_subkeyword_to);
+                }
+                // get the expression, which is required
+                target = constantExpression();
+                if (target == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_forward_to);
+                }
+                subTerms->push(target);
+                break;
+            }
+
+            // FORWARD CLASS expr
+            case SUBKEY_CLASS:
+            {
+                // have a class over ride already?
+                if (superClass != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_subkeyword_forward_class);
+                }
+                // get the value, which is a required expression
+                superClass = constantExpression();
+                if (superClass == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_forward_class);
+                }
+                subTerms->push(superClass);
+                break;
+            }
+
+            // FORWARD MESSAGE expr
+            case SUBKEY_MESSAGE:
+            {
+                // have a message over ride already?
+                if (message != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_subkeyword_message);
+                }
+                // this is a required expression     */
+                message = constantExpression();
+                if (message == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_forward_message);
+                }
+                subTerms->push(message);
+                break;
+            }
+
+            // FORWARD ARGUMENTS expr
+            case SUBKEY_ARGUMENTS:
+            {
+                // only one of ARGUMENS or ARRAY allowed
+                if (arguments != OREF_NULL || array != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_subkeyword_arguments);
+                }
+                // single, required expression
+                arguments = constantExpression();
+                if (arguments == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_forward_arguments);
+                }
+                break;
+            }
+
+            // FORWARD ARRAY (expr, expr, ...)
+            case SUBKEY_ARRAY:
+            {
+                // only one of ARRAY ARGUMENTS allowed
+                if (arguments != OREF_NULL || array != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_subkeyword_arguments);
+                }
+                // we need a list of expression here...process as an argument array
+                token = nextReal();
+                if (!token->isLeftParen())
+                {
+                    syntaxError(Error_Invalid_expression_raise_list);
+                }
+                array = argArray(token, TERM_RIGHT);
+                break;
+            }
+
+            // FORWARD CONTINUE
+            case SUBKEY_CONTINUE:
+            {
+                // can only be specified once
+                if (returnContinue)
+                {
+                    syntaxError(Error_Invalid_subkeyword_continue);
+                }
+                returnContinue = true;
+                break;
+            }
+
+            // something invalie
+            default:
+                syntaxError(Error_Invalid_subkeyword_forward_option, token);
+                break;
+        }
+        // go process another keyword
+        token = nextReal();
+    }
+    // and create the forward object
     RexxInstruction *newObject = new_instruction(FORWARD, Forward);
-    new((void *)newObject) RexxInstructionForward;
-    this->RexxInstructionForwardCreate((RexxInstructionForward *)newObject);
-    return newObject; /* done, return this                 */
+    new((void *)newObject) RexxInstructionForward(target, message, superClass, arguments, array, returnContinue);
+    return newObject;
 }
 
+/**
+ * Parse and create a guard expression.
+ *
+ * @return A constructed executable GUARD instruction.
+ */
 RexxInstruction *LanguageParser::guardNew()
-/******************************************************************************/
-/* Function:  Create a new GUARD translator object                            */
-/******************************************************************************/
 {
     // not permitted in interpret
-    if (this->flags&_interpret)
+    if (isInterpret())
     {
         syntaxError(Error_Translation_guard_interpret);
     }
 
-    RexxObject *_expression = OREF_NULL;             /* default no expression             */
-    RexxArray *variable_list = OREF_NULL;           /* no variable either                */
-    size_t variable_count = 0;                  /* no variables yet                  */
-    RexxToken *token = nextReal();                  /* get the next token                */
-    if (!token->isSymbol())  /* must have a symbol here           */
+    RexxObject *_expression = OREF_NULL;
+    RexxArray *variable_list = OREF_NULL;
+    size_t variable_count = 0;
+
+
+    RexxToken *token = nextReal();
+
+    // first token must be either GUARD ON or GUARD OFF.
+    if (!token->isSymbol())
     {
-        /* raise the error                   */
         syntaxError(Error_Symbol_expected_numeric, token);
     }
 
-    bool on_off = false;
+    // this tells us which way to set
+    bool guardOn = false;
 
-    /* resolve the subkeyword and        */
-    /* process the subkeyword            */
-    switch (this->subKeyword(token))
+    // and figure out which case we have
+    switch (token->subKeyword(token))
     {
-        case SUBKEY_OFF:                   /* GUARD OFF instruction             */
-            on_off = false;                  /* this is the guard off form        */
+        // GUARD OFF
+        case SUBKEY_OFF:
+            guardOn = false;
             break;
 
-        case SUBKEY_ON:                    /* GUARD ON instruction              */
-            on_off = true;                   /* remember it is the on form        */
+        // GUARD OFF
+        case SUBKEY_ON:
+            guardOn = true;
             break;
 
+        // anything else is an error
         default:
-            /* raise an error                    */
             syntaxError(Error_Invalid_subkeyword_guard, token);
             break;
     }
-    token = nextReal();                  /* get the next token                */
-    if (token->isSymbol())
-    {/* have the keyword form?            */
-        /* resolve the subkeyword            */
-        switch (this->subKeyword(token))
-        { /* and process                       */
 
-            case SUBKEY_WHEN:                /* GUARD ON WHEN expr                */
-                this->setGuard();              /* turn on guard variable collection */
-                                               /* process the expression            */
-                _expression = this->expression(TERM_EOC);
-                if (_expression == OREF_NULL)   /* no expression?                    */
+    // we can have a WHEN expression after this.
+    token = nextReal();
+
+    // we could have a WHEN expression
+    if (token->isSymbol())
+    {
+        switch (token->subKeyword())
+        {
+            // GUARD XXX WHEN expr
+            case SUBKEY_WHEN:
+            {
+                // turn on variable tracking during expression evaluation
+                setGuard();
+                // evaluate the WHEN expression, which is required
+                _expression = expression(TERM_EOC);
+                if (_expression == OREF_NULL)
                 {
-                    /* expression is required after value*/
                     syntaxError(Error_Invalid_expression_guard);
                 }
-                /* retrieve the guard variable list  */
-                variable_list = this->getGuard();
-                /* get the size                      */
-                variable_count = variable_list->size();
-                break;
 
-            default:                         /* invalid subkeyword                */
-                /* raise an error                    */
+                // get the guard expression variable list
+                RexxArray *variable_list = getGuard();
+                variable_count = variable_list->size();
+
+                // if using GUARD WHEN, we will never wake up if there are
+                // not at least one object variable accessed.
+                if (variable_count = 0)
+                {
+                    syntaxError(Error_Translation_guard_expose);
+                }
+                break;
+            }
+
+            // any other keyword is an error
+            default:
                 syntaxError(Error_Invalid_subkeyword_guard_on, token);
                 break;
         }
     }
-    else if (!token->isEndOfClause())/* not the end?                      */
+    // anything other than the end is an error
+    else if (!token->isEndOfClause())
     {
-        /* raise an error                    */
         syntaxError(Error_Invalid_subkeyword_guard_on, token);
     }
 
-    /* Get new object                    */
-    RexxInstruction *newObject = new_variable_instruction(GUARD, Guard, sizeof(RexxInstructionGuard)
-                                                       + (variable_count - 1) * sizeof(RexxObject *));
-    /* Initialize this new method        */
-    new ((void *)newObject) RexxInstructionGuard(_expression, variable_list, on_off);
-    return newObject; /* done, return this                 */
+    RexxInstruction *newObject = new_variable_instruction(GUARD, Guard,
+        sizeof(RexxInstructionGuard) + (variable_count - 1) * sizeof(RexxObject *));
+    new ((void *)newObject) RexxInstructionGuard(_expression, variable_list, guardOn);
+    return newObject;
 }
 
 RexxInstruction *LanguageParser::ifNew(
@@ -1921,6 +2072,24 @@ RexxInstruction *LanguageParser::messageNew(RexxExpressionMessage *msg)
 
 
 /**
+ * Create a new Message instruction object for a double tilde
+ * message type.
+ *
+ * @param _message the message expression term...used as a standalone instruction.
+ *
+ * @return A message object.
+ */
+RexxInstruction *LanguageParser::doubleMessageNew(RexxExpressionMessage *msg)
+{
+    ProtectedObject p(msg);
+    // just allocate and initialize the object.
+    RexxInstruction *newObject = new_variable_instruction(MESSAGE_DOUBLE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount - 1) * sizeof(RexxObject *));
+    new ((void *)newObject) RexxInstructionMessage(msg);
+    return newObject;
+}
+
+
+/**
  * Create a new message assignment object.
  *
  * @param msg    The message term that is the expression target.
@@ -1932,6 +2101,7 @@ RexxInstruction *LanguageParser::messageAssignmentNew(RexxExpressionMessage *msg
 {
     ProtectedObject p(msg);               // protect this
     msg->makeAssignment(this);            // convert into an assignment message
+
     // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
     RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (msg->argumentCount) * sizeof(RexxObject *));
     new ((void *)newObject) RexxInstructionMessage(msg, expr);
