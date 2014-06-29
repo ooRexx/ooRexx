@@ -48,6 +48,83 @@
 
 
 /**
+ * Parse a directive instruction.
+ */
+void LanguageParser::directive()
+{
+    // we are in a context where everthing we check is expected to be a
+    // directive.
+
+    // step to the next clause
+    nextClause();
+
+    // if we've hit the end, we're done.
+    if (noClauseAvailable())
+    {
+        return;
+    }
+
+    RexxToken *token = nextReal();
+    // we expect anything found here to be the start of a directive
+    if (!token->isType(TOKEN_DCOLON))
+    {
+        syntaxError(Error_Translation_bad_directive);
+    }
+
+    // and this needs to be followed by a symbol keyword
+    token = nextReal();
+    if (!token->isSymbol())
+    {
+        syntaxError(Error_Symbol_expected_directive);
+    }
+
+    // and process each of the named directives
+    switch (token->keyDirective())
+    {
+        // define a class
+        case DIRECTIVE_CLASS:
+            classDirective();
+            break;
+
+        // create a method
+        case DIRECTIVE_METHOD:
+            methodDirective();
+            break;
+
+        // create a routine
+        case DIRECTIVE_ROUTINE:
+            routineDirective();
+            break;
+
+        // require a package file or library
+        case DIRECTIVE_REQUIRES:
+            requiresDirective();
+            break;
+
+        // define an attribute
+        case DIRECTIVE_ATTRIBUTE:
+            attributeDirective();
+            break;
+
+        // define a constant
+        case DIRECTIVE_CONSTANT:
+            constantDirective();
+            break;
+
+        // define package-wide options
+        case DIRECTIVE_OPTIONS:
+            optionsDirective();
+            break;
+
+        // an unknown directive
+        default:
+            syntaxError(Error_Translation_bad_directive);
+            break;
+    }
+}
+
+
+/**
  * Verify that no code follows a directive except for more
  * directive instructions.
  *
@@ -140,6 +217,20 @@ enum
 bool LanguageParser::isDuplicateClass(RexxString *name)
 {
     return classDependencies->hasEntry(name);
+}
+
+
+/**
+ * Test if a routine directive is defining a duplicate routine.
+ *
+ * @param name   The name from the ::routine directive.
+ *
+ * @return true if routine with this name has already been
+ *         encounterd.
+ */
+bool LanguageParser::isDuplicateRoutine(RexxString *name)
+{
+    return routines->hasEntry(name);
 }
 
 
@@ -669,7 +760,7 @@ void LanguageParser::optionsDirective()
                     size_t digits;
 
                     // convert to a binary number
-                    if (!value->requestUnsignedNumber(digits, number_digits()) || digits < 1)
+                    if (!token->value()->requestUnsignedNumber(digits, number_digits()) || digits < 1)
                     {
                         syntaxError(Error_Invalid_whole_number_digits, value);
                     }
@@ -1392,96 +1483,97 @@ void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *va
  */
 void LanguageParser::routineDirective()
 {
-    RexxToken *token = nextReal();   /* get the next token                */
-                                     /* not a symbol or a string          */
+    // must start with a name token
+    RexxToken *token = nextReal();
+
     if (!token->isSymbolOrLiteral())
     {
-        /* report an error                   */
         syntaxError(Error_Symbol_or_string_routine, token);
     }
-    RexxString *name = token->value; /* get the routine name              */
-                                     /* does this already exist?          */
-    if (this->routines->entry(name) != OREF_NULL)
+
+    // NOTE:  routine lookups are case sensitive if the name
+    // is quoted, so we don't uppercase this name.
+    RexxString *name = token->value();
+    if (isDuplicateRoutine(name))
     {
-        /* have an error here                */
         syntaxError(Error_Translation_duplicate_routine);
     }
-    this->flags |= _install;         /* have information to install       */
-    RexxString *externalname = OREF_NULL;        /* no external name yet              */
-    int Public = DEFAULT_ACCESS_SCOPE;      /* not a public routine yet          */
-    for (;;)                         /* now loop on the option keywords   */
+
+    // setup option defaults and then process any remaining options.
+    RexxString *externalname = OREF_NULL;
+    AccessFlag accessFlag = DEFAULT_ACCESS_SCOPE;
+    for (;;)
     {
-        token = nextReal();            /* get the next token                */
-                                       /* reached the end?                  */
+        token = nextReal();
+        // finished?
         if (token->isEndOfClause())
         {
-            break;                       /* get out of here                   */
+            break;
         }
-        /* not a symbol token?               */
+        // all options must be symbols
         else if (!token->isSymbol())
         {
-            /* report an error                   */
             syntaxError(Error_Invalid_subkeyword_routine, token);
         }
-        /* process each sub keyword          */
-        switch (this->subDirective(token))
+
+        switch (token->subDirective())
         {
-            /* ::ROUTINE name EXTERNAL []*/
+            // written in native code backed by an external library
             case SUBDIRECTIVE_EXTERNAL:
-                /* already had an external?          */
                 if (externalname != OREF_NULL)
                 {
-                    /* duplicates are invalid            */
                     syntaxError(Error_Invalid_subkeyword_class, token);
                 }
-                token = nextReal();        /* get the next token                */
-                /* not a string?                     */
+                token = nextReal();
+                // this is a compound string descriptor, so it must be a literal
                 if (!token->isLiteral())
                 {
-                    /* report an error                   */
                     syntaxError(Error_Symbol_or_string_requires, token);
                 }
-                /* external name is token value      */
-                externalname = token->value;
+
+                externalname = token->value();
                 break;
-                /* ::ROUTINE name PUBLIC             */
+
+            // publicly available to programs that require this
             case SUBDIRECTIVE_PUBLIC:
-                if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
+                if (accessFlag != DEFAULT_ACCESS_SCOPE)
                 {
-                    /* duplicates are invalid            */
                     syntaxError(Error_Invalid_subkeyword_routine, token);
 
                 }
-                Public = PUBLIC_SCOPE;     /* turn on the seen flag             */
+                accessFlag = PUBLIC_SCOPE;
                 break;
-                /* ::ROUTINE name PUBLIC             */
+
+            // this has private scope (the default)
             case SUBDIRECTIVE_PRIVATE:
-                if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
+                if (accessFlag != DEFAULT_ACCESS_SCOPE)
                 {
-                    /* duplicates are invalid            */
                     syntaxError(Error_Invalid_subkeyword_routine, token);
-
                 }
-                Public = PRIVATE_SCOPE;    /* turn on the seen flag             */
+                accessFlag = PRIVATE_SCOPE;
                 break;
 
-            default:                     /* invalid keyword                   */
-                /* this is an error                  */
+            // something invalid
+            default:
                 syntaxError(Error_Invalid_subkeyword_routine, token);
                 break;
         }
     }
     {
-        this->saveObject(name);          /* protect the name                  */
-
-        if (externalname != OREF_NULL)   /* have an external routine?         */
+        // is this mapped to an external library?
+        if (externalname != OREF_NULL)
         {
-            /* convert external into words       */
-            RexxArray *_words = this->words(externalname);
+            // convert external into words (this also adds the strings
+            // to the common string pool)
+            RexxArray *_words = words(externalname);
             // ::ROUTINE foo EXTERNAL "LIBRARY libbar [foo]"
+            // NOTE:  decodeMethodLibrary doesn't really work for routines
+            // because we have a second form.  Not really worth writing
+            // a second version just for one use.
             if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
             {
                 RexxString *library = OREF_NULL;
+
                 // the default entry point name is the internal name
                 RexxString *entry = name;
 
@@ -1497,13 +1589,12 @@ void LanguageParser::routineDirective()
                 }
                 else  // wrong number of tokens
                 {
-                    /* this is an error                  */
                     syntaxError(Error_Translation_bad_external, externalname);
                 }
 
-                /* go check the next clause to make  */
-                this->checkDirective(Error_Translation_external_routine);      /* sure no code follows              */
-                                             /* create a new native method        */
+                // make sure this is followed by a directive or end of file
+                checkDirective(Error_Translation_external_routine);
+                // create a new native method.
                 RoutineClass *routine = PackageManager::resolveRoutine(library, entry);
                 // raise an exception if this entry point is not found.
                 if (routine == OREF_NULL)
@@ -1511,17 +1602,19 @@ void LanguageParser::routineDirective()
                      syntaxError(Error_External_name_not_found_routine, entry);
                 }
                 // make sure this is attached to the source object for context information
-                routine->setSourceObject(this);
-                /* add to the routine directory      */
-                this->routines->setEntry(name, routine);
-                if (Public == PUBLIC_SCOPE)    /* a public routine?                 */
+                routine->setSourceObject(package);
+                // add to the routine directory
+                routines->setEntry(name, routine);
+                // if this is a public routine, add to the public directory as well.
+                if (accessFlag == PUBLIC_SCOPE)
                 {
-                    /* add to the public directory too   */
-                    this->public_routines->setEntry(name, routine);
+                    // add to the public directory too
+                    publicRoutines->setEntry(name, routine);
                 }
             }
 
             // ::ROUTINE foo EXTERNAL "REGISTERED libbar [foo]"
+            // this is an old-style external function.
             else if (((RexxString *)(_words->get(1)))->strCompare(CHAR_REGISTERED))
             {
                 RexxString *library = OREF_NULL;
@@ -1540,13 +1633,12 @@ void LanguageParser::routineDirective()
                 }
                 else  // wrong number of tokens
                 {
-                    /* this is an error                  */
                     syntaxError(Error_Translation_bad_external, externalname);
                 }
 
-                /* go check the next clause to make  */
-                this->checkDirective(Error_Translation_external_routine);      /* sure no code follows              */
-                                             /* create a new native method        */
+                // go check the next clause to make
+                checkDirective(Error_Translation_external_routine);
+                // resolve the native routine
                 RoutineClass *routine = PackageManager::resolveRoutine(name, library, entry);
                 // raise an exception if this entry point is not found.
                 if (routine == OREF_NULL)
@@ -1554,18 +1646,19 @@ void LanguageParser::routineDirective()
                      syntaxError(Error_External_name_not_found_routine, entry);
                 }
                 // make sure this is attached to the source object for context information
-                routine->setSourceObject(this);
-                /* add to the routine directory      */
-                this->routines->setEntry(name, routine);
-                if (Public == PUBLIC_SCOPE)    /* a public routine?                 */
+                routine->setSourceObject(package);
+                // add to the routine directory
+                routines->setEntry(name, routine);
+                // if this is a public routine, add to the public directory as well.
+                if (accessFlag == PUBLIC_SCOPE)
                 {
-                    /* add to the public directory too   */
-                    this->public_routines->setEntry(name, routine);
+                    // add to the public directory too
+                    publicRoutines->setEntry(name, routine);
                 }
             }
             else
             {
-                /* unknown external type             */
+                // unknown external type
                 syntaxError(Error_Translation_bad_external, externalname);
             }
         }
@@ -1578,127 +1671,98 @@ void LanguageParser::routineDirective()
             // there's a high probability that the method object can get garbage collected before
             // there is any opportunity to protect the object.
             RexxCode *code = this->translateBlock(OREF_NULL);
-            this->saveObject((RexxObject *)code);
+            ProtectedObject p(code);
             RoutineClass *routine = new RoutineClass(name, code);
-            /* add to the routine directory      */
-            this->routines->setEntry(name, routine);
-            if (Public == PUBLIC_SCOPE)    /* a public routine?                 */
+            // add to the routine directory
+            routines->setEntry(name, routine);
+            // if this is a public routine, add to the public directory as well.
+            if (accessFlag == PUBLIC_SCOPE)
             {
-                /* add to the public directory too   */
-                this->public_routines->setEntry(name, routine);
-
+                // add to the public directory too
+                publicRoutines->setEntry(name, routine);
             }
         }
-        this->toss(name);                /* release the "Gary Cole" (GC) lock */
     }
 }
+
 
 /**
  * Process a ::REQUIRES directive.
  */
 void LanguageParser::requiresDirective()
 {
-    RexxToken *token = nextReal();   /* get the next token                */
-                                     /* not a symbol or a string          */
+    bool isLibrary = false;
+    RexxString *label = OREF_NULL;
+
+    // the required entity name is a string or symbol
+    RexxToken *token = nextReal();
     if (!token->isSymbolOrLiteral())
     {
-        /* report an error                   */
         syntaxError(Error_Symbol_or_string_requires, token);
     }
-    RexxString *name = token->value; /* get the requires name             */
-    token = nextReal();              /* get the next token                */
-    if (!token->isEndOfClause()) /* something appear after this?      */
+    // we have the name, and we have a couple options we can process.
+    RexxString *name = token->value();
+    for (;;)
     {
-        // this is potentially a library directive
-        libraryDirective(name, token);
-        return;
+        token = nextReal();
+        // finished?
+        if (token->isEndOfClause())
+        {
+            break;
+        }
+        // all options must be symbols
+        else if (!token->isSymbol())
+        {
+            syntaxError(Error_Invalid_subkeyword_requires, token);
+        }
+
+        switch (token->subDirective())
+        {
+            // this identifies a library
+            case SUBDIRECTIVE_LIBRARY:
+                // can only specify library once and for now, at least,
+                // the LABEL keyword is not allowed on a LIBRARY requires.
+                // this might have some meaning eventually for resolving
+                // external routines, but for now, this is a restriction.
+                if (isLibrary || label != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_subkeyword_requires, token);
+                }
+                isLibrary = true;
+                break:
+
+            case SUBDIRECTIVE_LABEL:
+                // can only have one of these and cannot have this with the LIBRARY option
+                if (isLibrary || label != OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_subkeyword_requires, token);
+                }
+                // get the label token
+                token = nextReal();
+                if (!token->isSymbol())
+                {
+                    syntaxError(Error_Symbol_expected_LABEL);
+                }
+                // NOTE:  since this is a symbol, the label will be an
+                // uppercase name.
+                label = token->value();
+                break:
+
+            default:
+                syntaxError(Error_Invalid_subkeyword_requires, token);
+                break;
+        }
     }
-    this->flags |= _install;         /* have information to install       */
-    /* save the ::requires location      */
-    this->requires->append((RexxObject *)new RequiresDirective(name, this->clause));
+
+    // this is either a library directive or a requires directive
+    if (isLibrary)
+    {
+        libraries->append((RexxObject *)new LibraryDirective(name, clause));
+    }
+    else
+    {
+        requires->append((RexxObject *)new RequiresDirective(name, label, clause));
+    }
 }
 
 
-/**
- * Process a ::REQUIRES name LIBRARY directive.
- */
-void LanguageParser::libraryDirective(RexxString *name, RexxToken *token)
-{
-    // we have an extra token on a ::REQUIRES directive.  The only thing accepted here
-    // is the token LIBRARY.
-    if (!token->isSymbol())
-    {
-        syntaxError(Error_Invalid_subkeyword_requires, token);
-    }
-                                   /* process each sub keyword          */
-    if (subDirective(token) != SUBDIRECTIVE_LIBRARY)
-    {
-        syntaxError(Error_Invalid_subkeyword_requires, token);
-    }
-    token = nextReal();              /* get the next token                */
-    if (!token->isEndOfClause()) /* something appear after this?      */
-    {
-        // nothing else allowed after this
-        syntaxError(Error_Invalid_subkeyword_requires, token);
-    }
-    this->flags |= _install;         /* have information to install       */
-    // add this to the library list
-    this->libraries->append((RexxObject *)new LibraryDirective(name, this->clause));
-}
-
-
-void LanguageParser::directive()
-/********************************************************************/
-/* Function:  parse a directive statement                           */
-/********************************************************************/
-{
-    RexxToken    *token;                 /* current token under processing    */
-
-    this->nextClause();                  /* get the directive clause          */
-    if (this->flags&no_clause)           /* reached the end?                  */
-        return;                          /* all finished                      */
-    token = nextReal();                  /* skip the leading ::               */
-    if (token->classId != TOKEN_DCOLON)  /* reached the end of a block?       */
-                                         /* have an error here                */
-        syntaxError(Error_Translation_bad_directive);
-    token = nextReal();                  /* get the keyword token             */
-    if (!token->isSymbol())  /* not a symbol?                     */
-                                         /* have an error here                */
-        syntaxError(Error_Symbol_expected_directive);
-
-    switch (this->keyDirective(token))
-    { /* match against the directive list  */
-
-        case DIRECTIVE_CLASS:              /* ::CLASS directive                 */
-            classDirective();
-            break;
-
-        case DIRECTIVE_METHOD:             /* ::METHOD directive                */
-            methodDirective();
-            break;
-
-        case DIRECTIVE_ROUTINE:            /* ::ROUTINE directive               */
-            routineDirective();
-            break;
-
-        case DIRECTIVE_REQUIRES:           /* ::REQUIRES directive              */
-            requiresDirective();
-            break;
-
-        case DIRECTIVE_ATTRIBUTE:          /* ::ATTRIBUTE directive             */
-            attributeDirective();
-            break;
-
-        case DIRECTIVE_CONSTANT:           /* ::CONSTANT directive              */
-            constantDirective();
-            break;
-
-        case DIRECTIVE_OPTIONS:            /* ::OPTIONS directive               */
-            optionsDirective();
-            break;
-
-        default:                           /* unknown directive                 */
-            syntaxError(Error_Translation_bad_directive);
-            break;
-    }
-}

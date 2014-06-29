@@ -441,6 +441,9 @@ protected:
     ClassDirective  *activeClass;        // currently active ::CLASS directive
     RexxDirectory   *classDependencies;  // directory of named ::class directives
     RexxDirectory   *unattachedMethods;  // methods not associated with any class
+    RexxDirectory   *routines;           // routines defined by ::routine directives.
+    RexxDirectory   *publicRoutines;     // routines defined by ::routine directives.
+    RexxArray       *requires;           // list of ::requires directories, in order of appearance.
 
                                          // start of block parsing section
 

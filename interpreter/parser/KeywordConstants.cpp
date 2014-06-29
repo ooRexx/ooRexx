@@ -354,6 +354,7 @@ KeywordEntry RexxToken::subDirectives[] =
     KeywordEntry(CHAR_GET,         SUBDIRECTIVE_GET),
     KeywordEntry(CHAR_GUARDED,     SUBDIRECTIVE_GUARDED),
     KeywordEntry(CHAR_INHERIT,     SUBDIRECTIVE_INHERIT),
+    KeywordEntry(CHAR_LABEL,       SUBDIRECTIVE_LABEL),
     KeywordEntry(CHAR_LIBRARY,     SUBDIRECTIVE_LIBRARY),
     KeywordEntry(CHAR_METACLASS,   SUBDIRECTIVE_METACLASS),
     KeywordEntry(CHAR_MIXINCLASS,  SUBDIRECTIVE_MIXINCLASS),

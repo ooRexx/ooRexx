@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,6 +49,19 @@
 
 
 /**
+ * Allocate a new requires directive.
+ *
+ * @param size   The size of the object.
+ *
+ * @return The memory for the new object.
+ */
+void *LibraryDirective::operator new(size_t size)
+{
+    return new_object(size, T_LibraryDirective); /* Get new object                    */
+}
+
+
+/**
  * Construct a LibraryDirective.
  *
  * @param n      The name of the requires target.
@@ -66,8 +79,9 @@ LibraryDirective::LibraryDirective(RexxString *n, RexxClause *clause) : RexxDire
  */
 void LibraryDirective::live(size_t liveMark)
 {
-    memory_mark(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark(this->name);
+    // must be first one marked (though normally null)
+    memory_mark(nextInstruction);
+    memory_mark(name);
 }
 
 
@@ -78,8 +92,9 @@ void LibraryDirective::live(size_t liveMark)
  */
 void LibraryDirective::liveGeneral(int reason)
 {
-    memory_mark_general(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark_general(this->name);
+    // must be first one marked (though normally null)
+    memory_mark_general(nextInstruction);
+    memory_mark_general(name);
 }
 
 
@@ -92,23 +107,10 @@ void LibraryDirective::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(LibraryDirective)
 
-        flatten_reference(newThis->nextInstruction, envelope);
-        flatten_reference(newThis->name, envelope);
+        flattenRef(nextInstruction);
+        flattenRef(name);
 
     cleanUpFlatten
-}
-
-
-/**
- * Allocate a new requires directive.
- *
- * @param size   The size of the object.
- *
- * @return The memory for the new object.
- */
-void *LibraryDirective::operator new(size_t size)
-{
-    return new_object(size, T_LibraryDirective); /* Get new object                    */
 }
 
 

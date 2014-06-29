@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,11 +41,25 @@
 /* Primitive Translator Abstract Directive Code                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "RequiresDirective.hpp"
 #include "Clause.hpp"
 #include "RexxActivation.hpp"
+
+
+
+
+/**
+ * Allocate a new requires directive.
+ *
+ * @param size   The size of the object.
+ *
+ * @return The memory for the new object.
+ */
+void *RequiresDirective::operator new(size_t size)
+{
+    return new_object(size, T_RequiresDirective);
+}
 
 
 /**
@@ -54,9 +68,10 @@
  * @param n      The name of the requires target.
  * @param clause The source file clause containing the directive.
  */
-RequiresDirective::RequiresDirective(RexxString *n, RexxClause *clause) : RexxDirective(clause, KEYWORD_REQUIRES)
+RequiresDirective::RequiresDirective(RexxString *n, RexxString *l, RexxClause *clause) : RexxDirective(clause, KEYWORD_REQUIRES)
 {
     name = n;
+    label = l
 }
 
 /**
@@ -66,8 +81,10 @@ RequiresDirective::RequiresDirective(RexxString *n, RexxClause *clause) : RexxDi
  */
 void RequiresDirective::live(size_t liveMark)
 {
-    memory_mark(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark(this->name);
+    // must be first one marked (though normally null)
+    memory_mark(nextInstruction);
+    memory_mark(name);
+    memory_mark(label);
 }
 
 
@@ -78,8 +95,10 @@ void RequiresDirective::live(size_t liveMark)
  */
 void RequiresDirective::liveGeneral(int reason)
 {
-    memory_mark_general(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark_general(this->name);
+    // must be first one marked (though normally null)
+    memory_mark_general(nextInstruction);
+    memory_mark_general(name);
+    memory_mark_general(label);
 }
 
 
@@ -92,22 +111,11 @@ void RequiresDirective::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(RequiresDirective)
 
-        flatten_reference(newThis->nextInstruction, envelope);
-        flatten_reference(newThis->name, envelope);
+        flattenRef(nextInstruction);
+        flattenRef(name);
+        flattenRef(label);
+
     cleanUpFlatten
-}
-
-
-/**
- * Allocate a new requires directive.
- *
- * @param size   The size of the object.
- *
- * @return The memory for the new object.
- */
-void *RequiresDirective::operator new(size_t size)
-{
-    return new_object(size, T_RequiresDirective); /* Get new object                    */
 }
 
 
@@ -120,5 +128,5 @@ void *RequiresDirective::operator new(size_t size)
  */
 void RequiresDirective::install(RexxActivation *context)
 {
-    context->loadRequires(name, this);
+    context->loadRequires(name, label, this);
 }
