@@ -884,7 +884,7 @@ if (XALAN_EXECUTABLE)
     macro (generate_message_file target xsl)
         ADD_CUSTOM_COMMAND(
            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${target}
-           COMMAND xalan -o ${CMAKE_CURRENT_SOURCE_DIR}/${target} ${build_messages_dir}/rexxmsg.xml ${xsl}
+           COMMAND ${XALAN_EXECUTABLE} -o ${CMAKE_CURRENT_SOURCE_DIR}/${target} ${build_messages_dir}/rexxmsg.xml ${xsl}
            DEPENDS ${build_messages_dir}/rexxmsg.xml ${xsl}
            COMMENT "Generating ${CMAKE_CURRENT_SOURCE_DIR}/${target}"
            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -895,7 +895,7 @@ if (XALAN_EXECUTABLE)
     macro (generate_class_header target xsl)
         ADD_CUSTOM_COMMAND(
            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${build_behaviour_dir}/${target}
-           COMMAND xalan -o ${build_behaviour_dir}/${target} ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
+           COMMAND ${XALAN_EXECUTABLE} -o ${build_behaviour_dir}/${target} ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
            DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
            COMMENT "Generating ${CMAKE_CURRENT_SOURCE_DIR}/${target}"
            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
