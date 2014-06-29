@@ -89,6 +89,12 @@ endif ()
 
 message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
 
+if (WIN32)
+# find a xalan executable, but only on windows for now.
+    FIND_PROGRAM(XALAN_EXECUTABLE xalan
+       DOC "xalan command line xslt converter")
+endif()
+
 # The following supports the versioning of the rexx shared libraries
 # This defines the oorexx library version. For ooRexx this should always be the
 # same as the ORX_MAJOR number.
@@ -422,7 +428,6 @@ endif ()
 #/* Build targets                                                              */
 #/*----------------------------------------------------------------------------*/
 
-
 #################### librexxapi.so ##########################
 # Full set of files used in all platforms.
 set (common_rexxapi_sources
@@ -471,6 +476,7 @@ target_include_directories(rexxapi PUBLIC
             ${build_lib_dir})
 # Extra link library definitions
 target_link_libraries(rexxapi ${platform_rexxapi_libs})
+
 install(TARGETS rexxapi RUNTIME DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
                         LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core
                         ARCHIVE DESTINATION ${INSTALL_INCLUDE_DIR} COMPONENT DevLib)
@@ -868,6 +874,71 @@ if (WIN32)
    add_dependencies(rxapi kill_rexxapi)
 endif ()
 install(TARGETS rxapi RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+
+#################### message_headers #########################
+# Autogenerate the message header files and the primitive classes files, but
+# only if the xalan executable is available.
+if (XALAN_EXECUTABLE)
+
+    # handy macro for generating a file from the rexxmsg.xml file
+    macro (generate_message_file target xsl)
+        ADD_CUSTOM_COMMAND(
+           OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${target}
+           COMMAND xalan -o ${CMAKE_CURRENT_SOURCE_DIR}/${target} ${build_messages_dir}/rexxmsg.xml ${xsl}
+           DEPENDS ${build_messages_dir}/rexxmsg.xml ${xsl}
+           COMMENT "Generating ${CMAKE_CURRENT_SOURCE_DIR}/${target}"
+           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+           )
+    endmacro (generate_message_file)
+
+    # handy macro for generating a file from the PrimitiveClasses.xml file
+    macro (generate_class_header target xsl)
+        ADD_CUSTOM_COMMAND(
+           OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${build_behaviour_dir}/${target}
+           COMMAND xalan -o ${build_behaviour_dir}/${target} ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
+           DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
+           COMMENT "Generating ${CMAKE_CURRENT_SOURCE_DIR}/${target}"
+           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+           )
+    endmacro (generate_class_header)
+
+    generate_message_file(${build_messages_dir}/RexxErrorCodes.h ${build_messages_dir}/RexxErrorCodes.xsl)
+    generate_message_file(${build_messages_dir}/RexxMessageNumbers.h ${build_messages_dir}/RexxMessageNumbers.xsl)
+    generate_message_file(${build_api_dir}/oorexxerrors.h ${build_messages_dir}/ApiErrorCodes.xsl)
+    generate_message_file(${build_messages_dir}/errnums.xml ${build_messages_dir}/errnums.xsl)
+    generate_message_file(${build_messages_dir}/errnumsrxqueue.xml ${build_messages_dir}/errnumsrxqueue.xsl)
+    generate_message_file(${build_messages_dir}/errnumssubcom.xml ${build_messages_dir}/errnumssubcom.xsl)
+    generate_message_file(${build_messages_dir}/errnumsrexxc.xml ${build_messages_dir}/errnumsrexxc.xsl)
+    generate_message_file(${build_interpreter_platform_dir}/winmsgtb.rc ${build_interpreter_platform_dir}/WinMessageResource.xsl)
+    generate_message_file(${build_interpreter_dir}/platform/windows/winmsgtb.rc ${build_interpreter_dir}/platform/windows/WinMessageResource.xsl)
+    generate_message_file(${build_interpreter_dir}/platform/unix/rexx.cat ${build_interpreter_dir}/platform/unix/UnixGencat.xsl)
+
+    generate_class_header(PrimitiveBehaviourNames.h PrimitiveBehaviourNames.xsl)
+    generate_class_header(PrimitiveBehaviours.cpp PrimitiveBehaviours.xsl)
+    generate_class_header(VirtualFunctionTable.cpp VirtualFunctionTable.xsl)
+    generate_class_header(ClassTypeCodes.h ClassTypeCodes.xsl)
+
+    set (REXXMSG_FILES ${build_messages_dir}/RexxErrorCodes.h
+                       ${build_messages_dir}/RexxMessageNumbers.h
+                       ${build_api_dir}/oorexxerrors.h
+                       ${build_messages_dir}/errnums.xml
+                       ${build_messages_dir}/errnumsrxqueue.xml
+                       ${build_messages_dir}/errnumssubcom.xml
+                       ${build_messages_dir}/errnumsrexxc.xml
+                       ${build_interpreter_platform_dir}/winmsgtb.rc
+                       ${build_behaviour_dir}/PrimitiveBehaviourNames.h
+                       ${build_behaviour_dir}/PrimitiveBehaviours.cpp
+                       ${build_behaviour_dir}/VirtualFunctionTable.cpp
+                       ${build_behaviour_dir}/ClassTypeCodes.h)
+
+    add_custom_target(message_headers ALL DEPENDS ${REXXMSG_FILES})
+
+    # add dependencies to the main build pieces
+    add_dependencies(rexx message_headers)
+    add_dependencies(rexxapi message_headers)
+
+endif()
+
 
 #################### rexxc (executable) #########################
 # additional source files required by specific platforms
@@ -1695,8 +1766,8 @@ if (BUILD_RPM)
      execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${ORX_DESKTOP_DIR}/rexxtry.desktop application/x-ooRexx-item)
      ")
    # This pevents the rpm from generating these subdirectories in the install.
-   set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION 
-      ${CMAKE_INSTALL_PREFIX}/share/man 
+   set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
+      ${CMAKE_INSTALL_PREFIX}/share/man
       ${CMAKE_INSTALL_PREFIX}/share/man/man1
       ${CMAKE_INSTALL_PREFIX}/share/applications
       ${CMAKE_INSTALL_PREFIX}/share/icons)
