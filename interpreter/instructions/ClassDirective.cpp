@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,7 +41,6 @@
 /* Primitive Translator Abstract Directive Code                               */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "ClassDirective.hpp"
 #include "Clause.hpp"
@@ -49,7 +48,6 @@
 #include "TableClass.hpp"
 #include "ListClass.hpp"
 #include "RexxActivation.hpp"
-
 
 
 /**
@@ -72,15 +70,16 @@ ClassDirective::ClassDirective(RexxString *n, RexxString *p, RexxClause *clause)
  */
 void ClassDirective::live(size_t liveMark)
 {
-    memory_mark(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark(this->publicName);
-    memory_mark(this->idName);
-    memory_mark(this->metaclassName);
-    memory_mark(this->subclassName);
-    memory_mark(this->inheritsClasses);
-    memory_mark(this->instanceMethods);
-    memory_mark(this->classMethods);
-    memory_mark(this->dependencies);
+    // must be first one marked (though normally null)
+    memory_mark(nextInstruction);
+    memory_mark(publicName);
+    memory_mark(idName);
+    memory_mark(metaclassName);
+    memory_mark(subclassName);
+    memory_mark(inheritsClasses);
+    memory_mark(instanceMethods);
+    memory_mark(classMethods);
+    memory_mark(dependencies);
 }
 
 
@@ -91,15 +90,16 @@ void ClassDirective::live(size_t liveMark)
  */
 void ClassDirective::liveGeneral(int reason)
 {
-    memory_mark_general(this->nextInstruction);  // must be first one marked (though normally null)
-    memory_mark_general(this->publicName);
-    memory_mark_general(this->idName);
-    memory_mark_general(this->metaclassName);
-    memory_mark_general(this->subclassName);
-    memory_mark_general(this->inheritsClasses);
-    memory_mark_general(this->instanceMethods);
-    memory_mark_general(this->classMethods);
-    memory_mark_general(this->dependencies);
+    // must be first one marked (though normally null)
+    memory_mark_general(nextInstruction);
+    memory_mark_general(publicName);
+    memory_mark_general(idName);
+    memory_mark_general(metaclassName);
+    memory_mark_general(subclassName);
+    memory_mark_general(inheritsClasses);
+    memory_mark_general(instanceMethods);
+    memory_mark_general(classMethods);
+    memory_mark_general(dependencies);
 }
 
 
@@ -112,14 +112,14 @@ void ClassDirective::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(ClassDirective)
 
-        flatten_reference(newThis->nextInstruction, envelope);
-        flatten_reference(newThis->publicName, envelope);
-        flatten_reference(newThis->idName, envelope);
-        flatten_reference(newThis->metaclassName, envelope);
-        flatten_reference(newThis->subclassName, envelope);
-        flatten_reference(newThis->inheritsClasses, envelope);
-        flatten_reference(newThis->instanceMethods, envelope);
-        flatten_reference(newThis->classMethods, envelope);
+        flatten(nextInstruction, envelope);
+        flatten(publicName, envelope);
+        flatten(idName, envelope);
+        flatten(metaclassName, envelope);
+        flatten(subclassName, envelope);
+        flatten(inheritsClasses, envelope);
+        flatten(instanceMethods, envelope);
+        flatten(classMethods, envelope);
         // by this time, we should be finished with this, and it should
         // already be null.  Make sure this is the case.
         newThis->dependencies = OREF_NULL;
@@ -137,7 +137,7 @@ void ClassDirective::flatten(RexxEnvelope *envelope)
  */
 void *ClassDirective::operator new(size_t size)
 {
-    return new_object(size, T_ClassDirective); /* Get new object                    */
+    return new_object(size, T_ClassDirective);
 }
 
 
@@ -158,22 +158,22 @@ RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activatio
 
     if (metaclassName != OREF_NULL)
     {
-        /* resolve the class                 */
+        // resolve the class.. This must be locatable in the
+        // context of the package.
         metaclass = source->findClass(metaclassName);
-        if (metaclass == OREF_NULL)    /* nothing found?                    */
+        if (metaclass == OREF_NULL)
         {
-            /* not found in environment, error!  */
             reportException(Error_Execution_nometaclass, metaclassName);
         }
     }
 
-    if (subclassName != OREF_NULL)  /* no subclass?                      */
+    // do we have an explicit subclass
+    if (subclassName != OREF_NULL)
     {
-        /* resolve the class                 */
+        // resolve the explicit subclass
         subclass = source->findClass(subclassName);
-        if (subclass == OREF_NULL)     /* nothing found?                    */
+        if (subclass == OREF_NULL)
         {
-            /* not found in environment, error!  */
             reportException(Error_Execution_noclass, subclassName);
         }
     }
@@ -181,42 +181,49 @@ RexxClass *ClassDirective::install(RexxSource *source, RexxActivation *activatio
     RexxClass *classObject;       // the class object we're creating
 
     // create the class object using the appropriate mechanism
+
+    // creating a mixing
     if (mixinClass)
     {
         classObject = subclass->mixinclass(source, idName, metaclass, classMethods);
     }
+    // creating a direct subclass
     else
     {
-        /* doing a subclassing               */
         classObject = subclass->subclass(source, idName, metaclass, classMethods);
     }
-    /* add the class to the directory    */
+    // add the class to the directory, which also protects it from GC for the
+    // subsequent steps
     source->addInstalledClass(publicName, classObject, publicClass);
 
-    if (inheritsClasses != OREF_NULL)       /* have inherits to process?         */
+    // using multiple inheritance?  Process each one in turn.
+    if (inheritsClasses != OREF_NULL)
     {
         // now handle the multiple inheritance issues
-        for (size_t i = inheritsClasses->firstIndex(); i != LIST_END; i = inheritsClasses->nextIndex(i))
+        size_t count = inheritsClasses->items();
+
+        for (size_t i = 1; i <= count; i++)
         {
-            /* get the next inherits name        */
-            RexxString *inheritsName = (RexxString *)inheritsClasses->getValue(i);
-            /* go resolve the entry              */
+            // get the next mixin class name and resolve...again, this
+            // is required.
+            RexxString *inheritsName = (RexxString *)inheritsClasses->get(i);
             RexxClass *mixin = source->findClass(inheritsName);
-            if (mixin == OREF_NULL)   /* not found?                        */
+            if (mixin == OREF_NULL)
             {
-                /* not found in environment, error!  */
                 reportException(Error_Execution_noclass, inheritsName);
             }
-            /* do the actual inheritance         */
+
+            // inherit from the mixin
             classObject->sendMessage(OREF_INHERIT, mixin);
         }
     }
 
-    if (instanceMethods != OREF_NULL) /* have instance methods to add?     */
+    // have instance methods to add?  have the class define them
+    if (instanceMethods != OREF_NULL)
     {
-        /* define them to the class object   */
         classObject->defineMethods(instanceMethods);
     }
+
     // the source needs this at the end so it call call the activate methods
     return classObject;
 }
@@ -234,14 +241,14 @@ void ClassDirective::checkDependency(RexxString *name, RexxDirectory *class_dire
 {
     if (name != OREF_NULL)
     {
-        // if this is in install?           */
+        // if this is in install?
         if (class_directives->entry(name) != OREF_NULL)
         {
             if (dependencies == OREF_NULL)
             {
-                OrefSet(this, this->dependencies, new_directory());
+                dependencies = new_directory();
             }
-            /* add to our pending list           */
+            // to our pending list
             dependencies->setEntry(name, name);
         }
     }
@@ -265,10 +272,11 @@ void ClassDirective::addDependencies(RexxDirectory *class_directives)
     // process each inherits item the same way
     if (inheritsClasses != OREF_NULL)
     {
-        for (size_t i = inheritsClasses->firstIndex(); i != LIST_END; i = inheritsClasses->nextIndex(i))
+        size_t count = inheritsClasses->items();
+
+        for (size_t i = 1; i <= count; i++)
         {
-            /* get the next inherits name        */
-            RexxString *inheritsName = (RexxString *)inheritsClasses->getValue(i);
+            RexxString *inheritsName = (RexxString *)inheritsClasses->get(i);
             checkDependency(inheritsName, class_directives);
         }
     }
@@ -301,7 +309,7 @@ void ClassDirective::removeDependency(RexxString *name)
         dependencies->remove(name);
         if (dependencies->items() == 0)
         {
-            OrefSet(this, this->dependencies, OREF_NULL);
+            dependencies = OREF_NULL;
         }
     }
 }
@@ -316,7 +324,7 @@ void ClassDirective::addInherits(RexxString *name)
 {
     if (inheritsClasses == OREF_NULL)
     {
-        OrefSet(this, this->inheritsClasses, new_list());
+        inheritsClasses = new_array());
     }
     inheritsClasses->append(name);
 }
@@ -331,7 +339,7 @@ RexxTable *ClassDirective::getClassMethods()
 {
     if (classMethods == OREF_NULL)
     {
-        OrefSet(this, this->classMethods, new_table());
+        classMethods = new_table();
     }
     return classMethods;
 }
@@ -346,14 +354,14 @@ RexxTable *ClassDirective::getInstanceMethods()
 {
     if (instanceMethods == OREF_NULL)
     {
-        OrefSet(this, this->instanceMethods, new_table());
+        instanceMethods = new_table();
     }
     return instanceMethods;
 }
 
 
 /**
- * Check for a duplicate method defined om this class.
+ * Check for a duplicate method defined on this class.
  *
  * @param name   The method name.
  * @param classMethod

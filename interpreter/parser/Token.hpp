@@ -489,6 +489,7 @@ class RexxToken : public RexxInternalObject {
     inline bool       type() { return classId; }
     inline bool       subtype() { return subclass; }
     inline bool       value() { return stringValue; }
+    inline bool       upperValue() { return stringValue->upper(); }
     inline void       setType(TokenClass t) { classId = t; }
     inline void       setSubtype(TokenSubclass t) { subclass = t; }
     inline void       setValue(RexxString *v) { stringValue = v; }

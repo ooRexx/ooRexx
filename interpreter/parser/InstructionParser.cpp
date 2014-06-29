@@ -50,13 +50,11 @@
 /*            class.  They are in a seperate source file for locational       */
 /*            convenience.                                                    */
 /******************************************************************************/
-#include <ctype.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxActivation.hpp"
-#include "LanguageParser.cpp"
+#include "LanguageParser.hpp"
 
 #include "ExpressionMessage.hpp"
 #include "ExpressionOperator.hpp"

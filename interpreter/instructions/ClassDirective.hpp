@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Kernel                                          ClassDirective.hpp    */
 /*                                                                            */
-/* Primitive Abstract Directive Class Definitions                             */
+/* A class definition stored in a package to manage class creation.           */
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_ClassDirective
@@ -61,9 +61,9 @@ class ClassDirective : public RexxDirective
     ClassDirective(RexxString *, RexxString *, RexxClause *);
     inline ClassDirective(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope *);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
 
     inline RexxString *getName() { return publicName; }
     RexxClass *install(RexxSource *source, RexxActivation *activation);
@@ -90,12 +90,11 @@ protected:
     RexxTable *getClassMethods();
     RexxTable *getInstanceMethods();
 
-
     RexxString *publicName;         // the published name of the class
     RexxString *idName;             // the internal ID name
     RexxString *metaclassName;      // name of the class meta class
     RexxString *subclassName;       // the class used for the subclassing operation.
-    RexxList   *inheritsClasses;    // the names of inherited classes
+    RexxArray  *inheritsClasses;    // the names of inherited classes
     RexxTable  *instanceMethods;    // the methods attached to this class
     RexxTable  *classMethods;       // the set of class methods
     bool        publicClass;        // this is a public class

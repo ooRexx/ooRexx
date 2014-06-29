@@ -194,10 +194,15 @@ class RexxSource: public RexxInternalObject {
     inline RexxDirectory *getImportedRoutines() { install(); return mergedPublicRoutines; }
     inline RexxDirectory *getDefinedMethods() { install(); return methods; }
     inline RexxList      *getPackages() { install(); return loadedPackages; }
+    inline void           setDigits(size_t d) { digits = d; }
     inline size_t         getDigits() { return digits; }
+    inline void           setForm(bool f) { form = f; }
     inline bool           getForm() { return form; }
+    inline void           setFuzz(size_t f) { fuzz = f; }
     inline size_t         getFuzz() { return fuzz; }
+    inline void           setTraceSetting(size_t t) { traceSetting = t; }
     inline size_t         getTraceSetting() { return traceSetting; }
+    inline void           setTraceFlags(size_t t) { traceFlags = t; }
     inline size_t         getTraceFlags() { return traceFlags; }
     inline RexxString    *getTrace() { return formatTraceSetting(traceSetting); }
     inline void           setInitCode(RexxCode *c) { initCode = c: }

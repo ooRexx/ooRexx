@@ -632,7 +632,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
         _instruction = OREF_NULL;
         // At this point, we want to consume any label clauses, since they are
         // not real instructions.
-        while (!(flags.test(noClause))
+        while (!noClauseAvailable())
         {
             // resolve this clause into an instruction
             _instruction = instruction();
@@ -654,7 +654,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
             _instruction = OREF_NULL;
         }
         // ok, have we hit the end of the file or the end of the block?
-        if (flags.test(noClause) || _instruction == OREF_NULL)
+        if (noClauseAvailable() || _instruction == OREF_NULL)
         {
             // see what we have at the top of the control stack, we probably
             // have some cleanup to do.

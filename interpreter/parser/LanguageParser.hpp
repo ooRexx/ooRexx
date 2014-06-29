@@ -252,6 +252,8 @@ class LanguageParser: public RexxInternalObject {
     bool        terminator(int, RexxToken *);
     bool        isTraceable();
     inline bool isInterpret() { return (flags.test(interpret); }
+    inline bool noClauseAvailable() { return (flags.test(noClause); }
+    inline bool clauseAvailable() { return !(flags.test(noClause); }
 
     inline bool        needsInstallation() { return (this->flags&_install) != 0; }
     inline void        install(RexxActivation *activation) { if (needsInstallation()) this->processInstall(activation); };
@@ -429,29 +431,31 @@ protected:
     size_t lineOffset;                   // current offset with in the line
     size_t interpretAdjust;              // INTERPRET adjustment TODO:  might not need this in the parser.
 
-    RexxStack       *holdStack;          /* stack for holding temporaries     */
-    RexxDirectory   *literals;           /* root of associated literal list   */
-    RexxDirectory   *strings;            /* common pool of created strings    */
-    RexxQueue       *control;            /* queue of control structures       */
-    RexxQueue       *terms;              /* stack of expression terms         */
-    RexxQueue       *subTerms;           /* stack for arguments lists, et al. */
-    RexxQueue       *operators;          /* stack of expression terms         */
-    ClassDirective  *activeClass;        /* currently active ::CLASS directive*/
+    RexxStack       *holdStack;          // stack for holding temporaries
+    RexxDirectory   *literals;           // root of associated literal list
+    RexxDirectory   *strings;            // common pool of created strings
+    RexxQueue       *control;            // queue of control structures
+    RexxQueue       *terms;              // stack of expression terms
+    RexxQueue       *subTerms;           // stack for arguments lists, et al.
+    RexxQueue       *operators;          // stack of expression terms
+    ClassDirective  *activeClass;        // currently active ::CLASS directive
+    RexxDirectory   *classDependencies;  // directory of named ::class directives
+    RexxDirectory   *unattachedMethods;  // methods not associated with any class
 
-                                         /* start of block parsing section    */
+                                         // start of block parsing section
 
-    RexxInstruction *firstInstruction;   /* first instruction of parse tree   */
-    RexxInstruction *lastInstruction;    /* last instruction of parse tree    */
-    RexxInstruction *currentInstruction; /* current "protected" instruction   */
-    RexxDirectory   *variables;          /* root of associated variable list  */
-    RexxDirectory   *labels;             /* root of associated label list     */
-    RexxIdentityTable *guardVariables;   /* exposed variables in guard list   */
-    RexxDirectory   *exposedVariables;   /* root of exposed variables list    */
-    RexxList        *calls;              /* root of call list                 */
+    RexxInstruction *firstInstruction;   // first instruction of parse tree
+    RexxInstruction *lastInstruction;    // last instruction of parse tree
+    RexxInstruction *currentInstruction; // current "protected" instruction
+    RexxDirectory   *variables;          // root of associated variable list
+    RexxDirectory   *labels;             // root of associated label list
+    RexxIdentityTable *guardVariables;   // exposed variables in guard list
+    RexxDirectory   *exposedVariables;   // root of exposed variables list
+    RexxList        *calls;              // root of call list
 
-    size_t           currentStack;       /* current expression stack depth    */
-    size_t           maxStack;           /* maximum stack depth               */
-    size_t           variableIndex;      /* current variable index slot       */
+    size_t           currentStack;       // current expression stack depth
+    size_t           maxStack;           // maximum stack depth
+    size_t           variableIndex;      // current variable index slot
 
 
     // table of character values

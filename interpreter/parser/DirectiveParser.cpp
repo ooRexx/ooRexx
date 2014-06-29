@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -40,30 +40,39 @@
 /* Parsing methods for processing directive instructions.                     */
 /*                                                                            */
 /******************************************************************************/
+#include "RexxCore.h"
+#include "StringClass.hpp"
+#include "ArrayClass.hpp"
+#include "RexxActivation.hpp"
+#include "LanguageParser.hpp"
 
 
+/**
+ * Verify that no code follows a directive except for more
+ * directive instructions.
+ *
+ * @param errorCode The error code to issue if this condition was violated.
+ */
 void LanguageParser::checkDirective(int errorCode)
-/******************************************************************************/
-/* Function:  Verify that no code follows a directive except for more         */
-/*            directive instructions.                                         */
-/******************************************************************************/
 {
     // save the clause location so we can reset for errors
     SourceLocation location = clauseLocation;
 
-    this->nextClause();                  /* get the next clause               */
-    /* have a next clause?               */
-    if (!(this->flags&no_clause))
+    // step to the next clause...if there is one, it must
+    // be a directive.
+    nextClause();
+    if (clauseAvailable())
     {
-        RexxToken *token = nextReal();     /* get the first token               */
-                                           /* not a directive start?            */
-        if (token->classId != TOKEN_DCOLON)
+        // The first token of the next instruction must be a ::
+        RexxToken *token = nextReal();
+
+        if (!token->isType(TOKEN_DCOLON))
         {
-            /* this is an error                  */
             syntaxError(errorCode);
         }
-        firstToken();                      /* reset to the first token          */
-        this->reclaimClause();             /* give back to the source object    */
+        // back up and push the clause back
+        firstToken();
+        reclaimClause();
     }
     // this resets the current clause location so that any errors on the current
     // clause detected after the clause check reports this on the correct line
@@ -85,184 +94,219 @@ bool LanguageParser::hasBody()
     bool result = false;
 
     // if we have anything to look at, see if it is a directive or not.
-    this->nextClause();
-    if (!(this->flags&no_clause))
+    nextClause();
+    if (clauseAvailable())
     {
         // we have a clause, now check if this is a directive or not
         RexxToken *token = nextReal();
         // not a "::", not a directive, which means we have real code to deal with
-        result = token->classId != TOKEN_DCOLON;
+        result = token->isType(TOKEN_DCOLON);
         // reset this clause entirely so we can start parsing for real.
         firstToken();
-        this->reclaimClause();
+        reclaimClause();
     }
     return result;
 }
 
+enum
+{
+    DEFAULT_GUARD,                 // default guard
+    GUARDED_METHOD,                // guard specified
+    UNGUARDED_METHOD,              // unguarded specified
+} GuardFlag;
 
-#define DEFAULT_GUARD    0             /* using defualt guarding            */
-#define GUARDED_METHOD   1             /* method is a guarded one           */
-#define UNGUARDED_METHOD 2             /* method is unguarded               */
+enum
+{
+    DEFAULT_PROTECTION,            // using defualt protection
+    PROTECTED_METHOD,              // security manager permission needed
+    UNPROTECTED_METHOD,            // no protection.
+} ProtectedFlag;
 
-#define DEFAULT_PROTECTION 0           /* using defualt protection          */
-#define PROTECTED_METHOD   1           /* security manager permission needed*/
-#define UNPROTECTED_METHOD 2           /* no protection.                    */
+enum
+{
+    DEFAULT_ACCESS_SCOPE,          // using defualt scope
+    PUBLIC_SCOPE,                  // publicly accessible
+    PRIVATE_SCOPE,                 // private scope
+} AccessFlag;
 
-#define DEFAULT_ACCESS_SCOPE      0    /* using defualt scope               */
-#define PUBLIC_SCOPE       1           /* publicly accessible               */
-#define PRIVATE_SCOPE      2           /* private scope                     */
+
+/**
+ * Test if a class directive is defining a duplicate class.
+ *
+ * @param name   The name from the ::class directive.
+ *
+ * @return true if a class with this name has already been encounterd.
+ */
+bool LanguageParser::isDuplicateClass(RexxString *name)
+{
+    return classDependencies->hasEntry(name);
+}
+
+
+void LanguageParser::addClassDirective(RexxString *name, ClassDirective *directive)
+{
+    classDependencies->put(name, directive);
+}
+
 
 /**
  * Process a ::CLASS directive for a source file.
  */
 void LanguageParser::classDirective()
 {
-    RexxToken *token = nextReal();       /* get the next token                */
-    /* not a symbol or a string          */
+    // first token is the name, which must be a symbol or string name
+    RexxToken *token = nextReal();
     if (!token->isSymbolOrLiteral())
     {
-        /* report an error                   */
         syntaxError(Error_Symbol_or_string_class);
     }
-    RexxString *name = token->value;             /* get the routine name              */
-                                     /* get the exposed name version      */
-    RexxString *public_name = this->commonString(name->upper());
-    /* does this already exist?          */
-    if (this->class_dependencies->entry(public_name) != OREF_NULL)
+
+    // get the class name
+    RexxString *name = token->value();
+    // and we export this name in uppercase
+
+    RexxString *public_name = commonString(name->upper());
+    // check for a duplicate class
+    if (isDuplicateClass(public_name))
     {
-        /* have an error here                */
         syntaxError(Error_Translation_duplicate_class);
     }
-    /* create a dependencies list        */
-    this->flags |= _install;         /* have information to install       */
+
+    // TODO:  figure this out at the end.
+//  this->flags |= _install;         /* have information to install       */
 
     // create a class directive and add this to the dependency list
-    OrefSet(this, this->active_class, new ClassDirective(name, public_name, this->clause));
-    this->class_dependencies->put((RexxObject *)active_class, public_name);
-    // and also add to the classes list
-    this->classes->append((RexxObject *)this->active_class);
+    activeClass = new ClassDirective(name, pulic_name, clause));
+    // add this to our directives list.
+    addClassDirective(public_name, activeClass);
 
-    int  Public = DEFAULT_ACCESS_SCOPE;   /* haven't seen the keyword yet      */
+    // we're using default scope.
+    AccessFlag accessFlag = DEFAULT_ACCESS_SCOPE;
+
+    // now we have a bunch of option keywords to handle, which can
+    // only be specified once each.
     for (;;)
-    {                       /* now loop on the option keywords   */
-        token = nextReal();            /* get the next token                */
-                                       /* reached the end?                  */
+    {
+        // real simple class definition.
+        token = nextReal();
         if (token->isEndOfClause())
         {
             break;                       /* get out of here                   */
         }
-                                         /* not a symbol token?               */
+        // all options are symbols
         else if (!token->isSymbol())
         {
-            /* report an error                   */
             syntaxError(Error_Invalid_subkeyword_class, token);
         }
         else
-        {                         /* have some sort of option keyword  */
-                                  /* get the keyword type              */
-            int type = this->subDirective(token);
+        {
+            // directive sub keywords are also table based
+            DirectiveSubKeyword type = token->subDirective();
             switch (type)
-            {              /* process each sub keyword          */
-                    /* ::CLASS name METACLASS metaclass  */
+            {
+                // ::CLASS name METACLASS metaclass
                 case SUBDIRECTIVE_METACLASS:
-                    /* already had a METACLASS?          */
-                    if (active_class->getMetaClass() != OREF_NULL)
+                    // can't be a duplicate
+                    if (activeClass->getMetaClass() != OREF_NULL)
                     {
                         syntaxError(Error_Invalid_subkeyword_class, token);
                     }
-                    token = nextReal();      /* get the next token                */
-                                             /* not a symbol or a string          */
+
+                    // this is a required string or symbol value
+                    token = nextReal();
                     if (!token->isSymbolOrLiteral())
                     {
-                        /* report an error                   */
                         syntaxError(Error_Symbol_or_string_metaclass, token);
                     }
-                                             /* tag the active class              */
-                    this->active_class->setMetaClass(token->value);
+                    // set the meta class...use the upper case name
+                    activeClass->setMetaClass(commonString(token->upperValue());
                     break;
 
-
-                case SUBDIRECTIVE_PUBLIC:  /* ::CLASS name PUBLIC               */
-                    if (Public != DEFAULT_ACCESS_SCOPE)  /* already had one of these?         */
+                // ::CLASS name PUBLIC
+                case SUBDIRECTIVE_PUBLIC:
+                    // have we already seen an ACCESS flag?  This is an error
+                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_class, token);
                     }
-                    Public = PUBLIC_SCOPE;   /* turn on the seen flag             */
-                                             /* just set this as a public object  */
-                    this->active_class->setPublic();
+                    accessflag = PUBLIC_SCOPE;
+                    // set the access in the active class.
+                    activeClass->setPublic();
                     break;
 
-                case SUBDIRECTIVE_PRIVATE: /* ::CLASS name PUBLIC               */
-                    if (Public != DEFAULT_ACCESS_SCOPE)  /* already had one of these?         */
+                // ::CLASS name PRIVATE
+                case SUBDIRECTIVE_PRIVATE:
+                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_class, token);
                     }
-                    Public = PRIVATE_SCOPE;  /* turn on the seen flag             */
+                    accessFlag = PRIVATE_SCOPE;
+
+                    // don't need to set anything in the directive...this is the default
                     break;
-                    /* ::CLASS name SUBCLASS sclass      */
+
+                // ::CLASS name SUBCLASS sub
                 case SUBDIRECTIVE_SUBCLASS:
                     // If we have a subclass set already, this is an error
-                    if (active_class->getSubClass() != OREF_NULL)
+                    if (activeClass->getSubClass() != OREF_NULL)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_class, token);
                     }
-                    token = nextReal();      /* get the next token                */
-                                             /* not a symbol or a string          */
+
+                    // the subclass must be a symbol or string
+                    token = nextReal();
                     if (!token->isSymbolOrLiteral())
                     {
-                        /* report an error                   */
                         syntaxError(Error_Symbol_or_string_subclass);
                     }
-                    /* set the subclass information      */
-                    this->active_class->setSubClass(token->value);
-                    break;
-                    /* ::CLASS name MIXINCLASS mclass    */
-                case SUBDIRECTIVE_MIXINCLASS:
-                    // If we have a subclass set already, this is an error
-                    if (active_class->getSubClass() != OREF_NULL)
-                    {
-                                             /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_class, token);
-                    }
-                    token = nextReal();      /* get the next token                */
-                                             /* not a symbol or a string          */
-                    if (!token->isSymbolOrLiteral())
-                    {
-                        /* report an error                   */
-                        syntaxError(Error_Symbol_or_string_mixinclass);
-                    }
-                    /* set the subclass information      */
-                    this->active_class->setMixinClass(token->value);
-                    break;
-                    /* ::CLASS name INHERIT iclasses     */
-                case SUBDIRECTIVE_INHERIT:
-                    token = nextReal();      /* get the next token                */
-                                             /* nothing after the keyword?        */
-                    if (token->isEndOfClause())
-                    {
-                        /* report an error                   */
-                        syntaxError(Error_Symbol_or_string_inherit, token);
-                    }
-                    while (!token->isEndOfClause())
-                    {
-                        /* not a symbol or a string          */
-                        if (!token->isSymbolOrLiteral())
-                        {
-                            /* report an error                   */
-                            syntaxError(Error_Symbol_or_string_inherit, token);
-                        }
-                        /* add to the inherit list           */
-                        this->active_class->addInherits(token->value);
-                        token = nextReal();    /* step to the next token            */
-                    }
-                    previousToken();         /* step back a token                 */
+                    // set the subclass
+                    activeClass->setSubClass(commonString(token->upperValue()));
                     break;
 
-                default:                   /* invalid keyword                   */
-                    /* this is an error                  */
+                // ::CLASS name MIXINCLASS mclass
+                case SUBDIRECTIVE_MIXINCLASS:
+                    // If we have a subclass set already, this is an error
+                    // NOTE:  setting a mixin class also defines the subclass...
+                    if (activeClass->getSubClass() != OREF_NULL)
+                    {
+                        syntaxError(Error_Invalid_subkeyword_class, token);
+                    }
+                    token = nextReal();
+                    if (!token->isSymbolOrLiteral())
+                    {
+                        syntaxError(Error_Symbol_or_string_mixinclass);
+                    }
+
+                    // set the subclass information      */
+                    activeClass->setMixinClass(commonString(token->upperValue()));
+                    break;
+
+                // ::CLASS name INHERIT classes
+                case SUBDIRECTIVE_INHERIT:
+                    // all tokens after the keyword will be consumed by the INHERIT keyword.
+                    token = nextReal();
+                    if (token->isEndOfClause())
+                    {
+                        syntaxError(Error_Symbol_or_string_inherit, token);
+                    }
+
+                    while (!token->isEndOfClause())
+                    {
+                        // must be a symbol or string        */
+                        if (!token->isSymbolOrLiteral())
+                        {
+                            syntaxError(Error_Symbol_or_string_inherit, token);
+                        }
+                        // add to the inherit list
+                        activeClass->addInherits(commonString(token->upperValue()));
+                        token = nextReal();
+                    }
+                    // step back a token for final completion checks
+                    previousToken();
+                    break;
+
+                // invalid keyword
+                default:
                     syntaxError(Error_Invalid_subkeyword_class, token);
                     break;
             }
@@ -282,26 +326,25 @@ void LanguageParser::classDirective()
  */
 void LanguageParser::checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg)
 {
-    /* no previous ::CLASS directive?    */
-    if (this->active_class == OREF_NULL)
+    // no previous ::CLASS directive?
+    if (activeClass == OREF_NULL)
     {
-        if (classMethod)             /* supposed to be a class method?    */
+        // cannot create unattached class methods.
+        if (classMethod)
         {
-                                     /* this is an error                  */
             syntaxError(Error_Translation_missing_class);
         }
-        /* duplicate method name?            */
-        if (this->methods->entry(name) != OREF_NULL)
+        // duplicate method name?
+        if (unattachedMethods->entry(name) != OREF_NULL)
         {
-            /* this is an error                  */
             syntaxError(errorMsg);
         }
     }
     else
     {                                /* add the method to the active class*/
-        if (active_class->checkDuplicateMethod(name, classMethod))
+        // adding the method to the active class
+        if (activeClass->checkDuplicateMethod(name, classMethod))
         {
-            /* this is an error                  */
             syntaxError(errorMsg);
         }
     }
@@ -318,16 +361,16 @@ void LanguageParser::checkDuplicateMethod(RexxString *name, bool classMethod, in
  */
 void LanguageParser::addMethod(RexxString *name, RexxMethod *method, bool classMethod)
 {
-    if (this->active_class == OREF_NULL)
+    // if no active class yet, these are unattached methods.
+    if (activeClass == OREF_NULL)
     {
-        this->methods->setEntry(name, method);
+        unattachedMethods->setEntry(name, method);
     }
     else
     {
-        active_class->addMethod(name, method, classMethod);
+        activeClass->addMethod(name, method, classMethod);
     }
 }
-
 
 
 /**
@@ -335,161 +378,167 @@ void LanguageParser::addMethod(RexxString *name, RexxMethod *method, bool classM
  */
 void LanguageParser::methodDirective()
 {
-    int  Private = DEFAULT_ACCESS_SCOPE;    /* this is a public method           */
-    int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
-    int guard = DEFAULT_GUARD;       /* default is guarding               */
-    bool Class = false;              /* default is an instance method     */
-    bool Attribute = false;          /* init Attribute flag               */
-    bool abstractMethod = false;     // this is an abstract method
-    RexxToken *token = nextReal();   /* get the next token                */
-    RexxString *externalname = OREF_NULL;       /* not an external method yet        */
+    // set default modifiers
+    AccessFlag accessFlag = DEFAULT_ACCESS_SCOPE;
+    ProtectedFlag protectedFlag = DEFAULT_PROTECTION;
+    GuardFlag guardFlag = DEFAULT_GUARD;
+    // other attributes of methods
+    bool isClass = false;
+    bool isAttribute = false;
+    bool isAbstract = false;
+    RexxString *externalname = OREF_NULL;       // not an external method yet
 
-                                     /* not a symbol or a string          */
+    // method name must be a symbol or string
+    RexxToken *token = nextReal();
     if (!token->isSymbolOrLiteral())
     {
-        /* report an error                   */
         syntaxError(Error_Symbol_or_string_method, token);
     }
-    RexxString *name = token->value; /* get the string name               */
-                                     /* and the name form also            */
-    RexxString *internalname = this->commonString(name->upper());
+    // this is the method internal name
+    RexxString *name = token->value();
+    // this is the look up name
+    RexxString *internalname = commonString(name->upper());
+
+    // now process any additional option keywords
     for (;;)
-    {                       /* now loop on the option keywords   */
-        token = nextReal();            /* get the next token                */
-                                       /* reached the end?                  */
+    {
+        // finished on EOC
+        token = nextReal();
         if (token->isEndOfClause())
         {
-            break;                       /* get out of here                   */
+            break;
         }
-                                         /* not a symbol token?               */
+        // option keywords must be symbols
         else if (!token->isSymbol())
         {
-            /* report an error                   */
             syntaxError(Error_Invalid_subkeyword_method, token);
         }
         else
-        {                         /* have some sort of option keyword  */
-                                  /* process each sub keyword          */
-            switch (this->subDirective(token))
+        {
+            // potential option keyword
+            switch (token->subDirective())
             {
-                /* ::METHOD name CLASS               */
+                // ::METHOD name CLASS
                 case SUBDIRECTIVE_CLASS:
-                    if (Class)               /* had one of these already?         */
+                    // no dups
+                    if (isClass)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    Class = true;            /* flag this for later processing    */
+                    isClass = true;
                     break;
-                    /* ::METHOD name EXTERNAL extname    */
+
+                // ::METHOD name EXTERNAL extname
                 case SUBDIRECTIVE_EXTERNAL:
-                    /* already had an external?          */
-                    if (externalname != OREF_NULL || abstractMethod)
+                    // no dup on external and abstract is mutually exclusive
+                    if (externalname != OREF_NULL || isAbstract)
                     {
-                        /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    token = nextReal();      /* get the next token                */
-                                             /* not a string?                     */
+                    token = nextReal();
+                    // external name must be a string value
                     if (!token->isLiteral())
                     {
-                        /* report an error                   */
                         syntaxError(Error_Symbol_or_string_external, token);
                     }
-                    externalname = token->value;
+                    // this will be parsed at install time
+                    externalname = token->value();
                     break;
-                    /* ::METHOD name PRIVATE             */
+
+                // ::METHOD name PRIVATE
                 case SUBDIRECTIVE_PRIVATE:
-                    if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
+                    // has an access flag already been specified?
+                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    Private = PRIVATE_SCOPE;           /* flag for later processing         */
+                    accessFlag = PRIVATE_SCOPE;
                     break;
-                    /* ::METHOD name PUBLIC             */
+
+                // ::METHOD name PUBLIC
                 case SUBDIRECTIVE_PUBLIC:
-                    if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
+                    // has an access flag already been specified?
+                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    Private = PUBLIC_SCOPE;        /* flag for later processing         */
+
+                    accessFlag = PUBLIC_SCOPE;
                     break;
-                    /* ::METHOD name PROTECTED           */
+
+                // ::METHOD name PROTECTED
                 case SUBDIRECTIVE_PROTECTED:
-                    if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
+                    // had a protection flag specified already?
+                    if (protectedFlag != DEFAULT_PROTECTION)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    Protected = PROTECTED_METHOD;        /* flag for later processing         */
+                    protectedFlag = PROTECTED_METHOD;
                     break;
-                    /* ::METHOD name UNPROTECTED           */
+
+                // ::METHOD name UNPROTECTED
                 case SUBDIRECTIVE_UNPROTECTED:
-                    if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
+                    // had a protection flag specified already?
+                    if (protectedFlag != DEFAULT_PROTECTION)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    Protected = UNPROTECTED_METHOD;      /* flag for later processing         */
+                    protectedFlag = UNPROTECTED_METHOD;
                     break;
-                    /* ::METHOD name UNGUARDED           */
+
+                // ::METHOD name UNGUARDED
                 case SUBDIRECTIVE_UNGUARDED:
-                    /* already seen one of these?        */
-                    if (guard != DEFAULT_GUARD)
+                    // already had a guard specification?
+                    if (guardFlag != DEFAULT_GUARD)
                     {
-                        /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    guard = UNGUARDED_METHOD;/* flag for later processing         */
+
+                    guardFlag = UNGUARDED_METHOD;
                     break;
-                    /* ::METHOD name GUARDED             */
+
+                // ::METHOD name GUARDED
                 case SUBDIRECTIVE_GUARDED:
-                    /* already seen one of these?        */
-                    if (guard != DEFAULT_GUARD)
+                    // already had a guard specification?
+                    if (guardFlag != DEFAULT_GUARD)
                     {
-                        /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    guard = GUARDED_METHOD;  /* flag for later processing         */
+
+                    guardFlag = GUARDED_METHOD;
                     break;
-                    /* ::METHOD name ATTRIBUTE           */
+
+                // ::METHOD name ATTRIBUTE
                 case SUBDIRECTIVE_ATTRIBUTE:
+                    // check for duplicates
+                    if (isAttribute)
+                    {
+                        syntaxError(Error_Invalid_subkeyword_method, token);
+                    }
 
-                    if (Attribute)           /* already seen one of these?        */
+                    // cannot have an abstract attribute here...this can
+                    // be defined with ::ATTRIBUTE.
+                    if (isAbstract)
                     {
-                                             /* duplicates are invalid            */
+                        // ABSTRACT and ATTRIBUTE are mutually exclusive
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    // cannot have an abstract attribute
-                    if (abstractMethod)
-                    {
-                        /* EXTERNAL and ATTRIBUTE are        */
-                        /* mutually exclusive                */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
-                    Attribute = true;        /* flag for later processing         */
+                    isAttribute = true;
                     break;
 
-                                           /* ::METHOD name ABSTRACT            */
+                // ::METHOD name ABSTRACT
                 case SUBDIRECTIVE_ABSTRACT:
+                    // can't have dups or external name or be an attributed
+                    if (isAbstract || externalname != OREF_NULL || isAttribute)
+                    {
+                        syntaxError(Error_Invalid_subkeyword_method, token);
+                    }
 
-                    if (abstractMethod || externalname != OREF_NULL)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
-                    // not compatible with ATTRIBUTE or EXTERNAL
-                    if (externalname != OREF_NULL || Attribute)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
-                    abstractMethod = true;   /* flag for later processing         */
+                    isAbstract = true;
                     break;
 
-
-                default:                   /* invalid keyword                   */
-                    /* this is an error                  */
+                // something invalid
+                default:
                     syntaxError(Error_Invalid_subkeyword_method, token);
                     break;
             }
@@ -497,20 +546,19 @@ void LanguageParser::methodDirective()
     }
 
     // go check for a duplicate and validate the use of the CLASS modifier
-    checkDuplicateMethod(internalname, Class, Error_Translation_duplicate_method);
-
+    checkDuplicateMethod(internalname, isClass, Error_Translation_duplicate_method);
 
     RexxMethod *_method = OREF_NULL;
     // is this an attribute method?
-    if (Attribute)
+    if (isAttribute)
     {
         // now get this as the setter method.
         RexxString *setterName = commonString(internalname->concatWithCstring("="));
         // need to check for duplicates on that too
         checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_method);
 
-                                       /* Go check the next clause to make  */
-        this->checkDirective(Error_Translation_attribute_method);        /* sure that no code follows         */
+        // cannot have code following an method with the attribute keyword
+        checkDirective(Error_Translation_attribute_method);
         // this might be externally defined setters and getters.
         if (externalname != OREF_NULL)
         {
@@ -519,38 +567,38 @@ void LanguageParser::methodDirective()
             decodeExternalMethod(internalname, externalname, library, procedure);
             // now create both getter and setting methods from the information.
             _method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
-            _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
             // add to the compilation
-            addMethod(internalname, _method, Class);
+            addMethod(internalname, _method, isClass);
 
             _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
-            _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
             // add to the compilation
-            addMethod(setterName, _method, Class);
+            addMethod(setterName, _method, isClass);
         }
         else
         {
             // now get a variable retriever to get the property
-            RexxVariableBase *retriever = this->getRetriever(name);
+            RexxVariableBase *retriever = getRetriever(name);
 
             // create the method pair and quit.
-            createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-                Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
-            createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-                Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            createAttributeGetterMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
+                protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+            createAttributeSetterMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
+                protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
         }
         return;
     }
     // abstract method?
-    else if (abstractMethod)
+    else if (isAbstract)
     {
-                                       /* Go check the next clause to make  */
-        this->checkDirective(Error_Translation_abstract_method);        /* sure that no code follows         */
+        // check that there is no code following this method.
+        checkDirective(Error_Translation_abstract_method);
         // this uses a special code block
         BaseCode *code = new AbstractCode();
         _method = new RexxMethod(name, code);
     }
-    /* not an external method?           */
+    // regular Rexx code method?
     else if (externalname == OREF_NULL)
     {
         // NOTE:  It is necessary to translate the block and protect the code
@@ -559,28 +607,28 @@ void LanguageParser::methodDirective()
         // Since the translateBlock() call will allocate a lot of new objects before returning,
         // there's a high probability that the method object can get garbage collected before
         // there is any opportunity to protect the object.
-        RexxCode *code = this->translateBlock(OREF_NULL);
-        this->saveObject((RexxObject *)code);
+        RexxCode *code = translateBlock(OREF_NULL);
+        ProtectedObject p(code);
 
-        /* go do the next block of code      */
+        // go do the next block of code
         _method = new RexxMethod(name, code);
     }
+    // external method
     else
     {
         RexxString *library = OREF_NULL;
         RexxString *procedure = OREF_NULL;
         decodeExternalMethod(internalname, externalname, library, procedure);
 
-        /* go check the next clause to make  */
-        this->checkDirective(Error_Translation_external_method);
+        // check that there this is only followed by other directives.
+        checkDirective(Error_Translation_external_method);
         // and make this into a method object.
         _method = createNativeMethod(name, library, procedure);
     }
-    _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+    _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
     // add to the compilation
-    addMethod(internalname, _method, Class);
+    addMethod(internalname, _method, isClass);
 }
-
 
 
 /**
@@ -591,130 +639,138 @@ void LanguageParser::optionsDirective()
     // all options are of a keyword/value pattern
     for (;;)
     {
-        RexxToken *token = nextReal(); /* get the next token                */
-                                       /* reached the end?                  */
+
+        RexxToken *token = nextReal();
+        // finish up if we've hit EOC
         if (token->isEndOfClause())
         {
-            break;                       /* get out of here                   */
+            break;
         }
-                                         /* not a symbol token?               */
+        // non-symbol is an error
         else if (!token->isSymbol())
         {
-            /* report an error                   */
             syntaxError(Error_Invalid_subkeyword_options, token);
         }
         else
-        {                         /* have some sort of option keyword  */
-                                  /* process each sub keyword          */
-            switch (this->subDirective(token))
+        {
+            // potential options keyword
+            switch (token->subDirective(token))
             {
                 // ::OPTIONS DIGITS nnnn
                 case SUBDIRECTIVE_DIGITS:
                 {
-                    token = nextReal();      /* get the next token                */
-                                             /* not a string?                     */
+                    token = nextReal();
+                    // we'll accept this as a symbol or a string...as long as it's a number
                     if (!token->isSymbolOrLiteral())
                     {
-                        /* report an error                   */
                         syntaxError(Error_Symbol_or_string_digits_value, token);
                     }
-                    RexxString *value = token->value;          /* get the string value              */
 
+                    size_t digits;
+
+                    // convert to a binary number
                     if (!value->requestUnsignedNumber(digits, number_digits()) || digits < 1)
                     {
-                        /* report an exception               */
                         syntaxError(Error_Invalid_whole_number_digits, value);
                     }
-                    /* problem with the fuzz setting?    */
-                    if (digits <= fuzz)
+                    // problem with the fuzz setting?
+                    if (digits <= package->getFuzz())
                     {
-                        /* this is an error                  */
-                        reportException(Error_Expression_result_digits, digits, fuzz);
+                        reportException(Error_Expression_result_digits, digits, package->getFuzz());
                     }
+                    // set this in the package object
+                    package->setDigits(digits);
                     break;
                 }
                 // ::OPTIONS FORM ENGINEERING/SCIENTIFIC
                 case SUBDIRECTIVE_FORM:
-                    token = nextReal();      /* get the next token                */
-                                             /* not a string?                     */
+                {
+                    token = nextReal();
                     if (!token->isSymbol())
                     {
-                        /* report an error                   */
                         syntaxError(Error_Invalid_subkeyword_form, token);
                     }
-                    /* resolve the subkeyword            */
-                    /* and process                       */
-                    switch (this->subKeyword(token))
+
+                    switch (token->subKeyword())
                     {
-
-                        case SUBKEY_SCIENTIFIC:        /* NUMERIC FORM SCIENTIFIC           */
-                            form = Numerics::FORM_SCIENTIFIC;
+                        // FORM SCIENTIFIC
+                        case SUBKEY_SCIENTIFIC:
+                            package->setForm(Numerics::FORM_SCIENTIFIC);
                             break;
 
+                        // FORM ENGINEERING
                         case SUBKEY_ENGINEERING:     /* NUMERIC FORM ENGINEERING          */
-                            form = Numerics::FORM_ENGINEERING;
+                            package->setForm(Numerics::FORM_ENGINEERING);
                             break;
 
-                        default:                     /* invalid subkeyword                */
-                            /* raise an error                    */
+                        // bad keyword
+                        default:
                             syntaxError(Error_Invalid_subkeyword_form, token);
                             break;
-
-                    }
-                    break;
-                // ::OPTIONS FUZZ nnnn
-                case SUBDIRECTIVE_FUZZ:
-                {
-                    token = nextReal();      /* get the next token                */
-                                             /* not a string?                     */
-                    if (!token->isSymbolOrLiteral())
-                    {
-                        /* report an error                   */
-                        syntaxError(Error_Symbol_or_string_fuzz_value, token);
-                    }
-                    RexxString *value = token->value;          /* get the string value              */
-
-                    if (!value->requestUnsignedNumber(fuzz, number_digits()))
-                    {
-                        /* report an exception               */
-                        syntaxError(Error_Invalid_whole_number_fuzz, value);
-                    }
-                    /* problem with the digits setting?  */
-                    if (fuzz >= digits)
-                    {
-                        /* and issue the error               */
-                        reportException(Error_Expression_result_digits, digits, fuzz);
                     }
                     break;
                 }
+
+                // ::OPTIONS FUZZ nnnn
+                case SUBDIRECTIVE_FUZZ:
+                {
+                    token = nextReal();
+                    if (!token->isSymbolOrLiteral())
+                    {
+                        syntaxError(Error_Symbol_or_string_fuzz_value, token);
+                    }
+
+                    RexxString *value = token->value();          /* get the string value              */
+
+                    size_t fuzz;
+
+                    if (!value->requestUnsignedNumber(fuzz, number_digits()))
+                    {
+                        syntaxError(Error_Invalid_whole_number_fuzz, value);
+                    }
+                    // validate with the digits setting
+                    if (fuzz >= package->getDigits())
+                    {
+                        reportException(Error_Expression_result_digits, package->getDigits(), fuzz);
+                    }
+                    package->setFuzz(fuzz);
+                    break;
+                }
+
                 // ::OPTIONS TRACE setting
                 case SUBDIRECTIVE_TRACE:
                 {
-                    token = nextReal();      /* get the next token                */
-                                             /* not a string?                     */
+                    token = nextReal();
                     if (!token->isSymbolOrLiteral())
                     {
-                        /* report an error                   */
                         syntaxError(Error_Symbol_or_string_trace_value, token);
                     }
-                    RexxString *value = token->value;          /* get the string value              */
+
+                    RexxString *value = token->value();
                     char badOption = 0;
-                                                 /* process the setting               */
+                    size_t traceSetting;
+                    size_t traceFlags;
+
+                    // validate the setting
                     if (!parseTraceSetting(value, traceSetting, traceFlags, badOption))
                     {
                         syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                     }
+                    // poke into the package
+                    package->setTraceSetting(traceSetting);
+                    package->setTraceFlags(traceFlags);
                     break;
                 }
 
-                default:                   /* invalid keyword                   */
-                    /* this is an error                  */
+                // invalid keyword
+                default:
                     syntaxError(Error_Invalid_subkeyword_options, token);
                     break;
             }
         }
     }
 }
+
 
 /**
  * Create a native method from a specification.
@@ -727,7 +783,6 @@ void LanguageParser::optionsDirective()
  */
 RexxMethod *LanguageParser::createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure)
 {
-                                 /* create a new native method        */
     RexxNativeCode *nmethod = PackageManager::resolveMethod(library, procedure);
     // raise an exception if this entry point is not found.
     if (nmethod == OREF_NULL)
@@ -735,10 +790,11 @@ RexxMethod *LanguageParser::createNativeMethod(RexxString *name, RexxString *lib
          syntaxError(Error_External_name_not_found_method, procedure);
     }
     // this might return a different object if this has been used already
-    nmethod = (RexxNativeCode *)nmethod->setSourceObject(this);
-    /* turn into a real method object    */
+    nmethod = (RexxNativeCode *)nmethod->setSourceObject(package);
+    // turn into a real method object
     return new RexxMethod(name, nmethod);
 }
+
 
 /**
  * Decode an external library method specification.
@@ -755,9 +811,11 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
     procedure = methodName;
     library = OREF_NULL;
 
-                            /* convert external into words       */
-    RexxArray *_words = this->words(externalSpec);
-    /* not 'LIBRARY library [entry]' form? */
+    // convert into an array of words
+    // NOTE:  This method makes all of the words part of the
+    // common string pool
+    RexxArray *_words = words(externalSpec);
+    // not 'LIBRARY library [entry]' form?
     if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
     {
         // full library with entry name version?
@@ -765,6 +823,7 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
         {
             library = (RexxString *)_words->get(2);
             procedure = (RexxString *)_words->get(3);
+
         }
         else if (_words->size() == 2)
         {
@@ -772,20 +831,21 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
         }
         else  // wrong number of tokens
         {
-                                     /* this is an error                  */
             syntaxError(Error_Translation_bad_external, externalSpec);
         }
     }
     else
     {
-        /* unknown external type             */
         syntaxError(Error_Translation_bad_external, externalSpec);
     }
 }
 
-#define ATTRIBUTE_BOTH 0
-#define ATTRIBUTE_GET  1
-#define ATTRIBUTE_SET  2
+enum
+{
+    ATTRIBUTE_BOTH,
+    ATTRIBUTE_GET,
+    ATTRIBUTE_SET,
+} AttributeType;
 
 
 /**
@@ -793,46 +853,48 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
  */
 void LanguageParser::attributeDirective()
 {
-    int  Private = DEFAULT_ACCESS_SCOPE;    /* this is a public method           */
-    int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
-    int  guard = DEFAULT_GUARD;       /* default is guarding               */
-    int  style = ATTRIBUTE_BOTH;      // by default, we create both methods for the attribute.
-    bool Class = false;              /* default is an instance method     */
-    bool abstractMethod = false;     // by default, creating a concrete method
-    RexxToken *token = nextReal();   /* get the next token                */
+    // set the default attributes
+    AccessFlag accessFlag = DEFAULT_ACCESS_SCOPE;
+    ProtectedFlag  protectedFlag = DEFAULT_PROTECTION;
+    GuardFlag guardFlag = DEFAULT_GUARD;
+    // by default, we create both methods for the attribute.
+    AttributeType style = ATTRIBUTE_BOTH;
+    bool isClass = false;            // default is an instance method
+    bool isAbstract = false;         // by default, creating a concrete method
 
-                                     /* not a symbol or a string          */
+    RexxToken *token = nextReal();
+    // the name must be a string or a symbol
     if (!token->isSymbolOrLiteral())
     {
-        /* report an error                   */
         syntaxError(Error_Symbol_or_string_attribute, token);
     }
-    RexxString *name = token->value; /* get the string name               */
-                                     /* and the name form also            */
-    RexxString *internalname = this->commonString(name->upper());
+
+    // get the attribute name and the internal value that we create the method names with
+    RexxString *name = token->value();
+    RexxString *internalname = commonString(name->upper());
     RexxString *externalname = OREF_NULL;
 
+    // process options
     for (;;)
-    {                       /* now loop on the option keywords   */
-        token = nextReal();            /* get the next token                */
-                                       /* reached the end?                  */
+    {
+        // if last token we're out of here.
+        token = nextReal();
         if (token->isEndOfClause())
         {
-            break;                       /* get out of here                   */
+            break;
         }
-                                         /* not a symbol token?               */
+        // all options must be symbols
         else if (!token->isSymbol())
         {
-            /* report an error                   */
             syntaxError(Error_Invalid_subkeyword_attribute, token);
         }
         else
-        {                         /* have some sort of option keyword  */
-                                  /* process each sub keyword          */
-            switch (this->subDirective(token))
+        {
+            switch (token->subDirective())
             {
+                // GET define this as a attribute get method
                 case SUBDIRECTIVE_GET:
-                    // only one of GET/SET allowed
+                    // only one per customer
                     if (style != ATTRIBUTE_BOTH)
                     {
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
@@ -840,6 +902,7 @@ void LanguageParser::attributeDirective()
                     style = ATTRIBUTE_GET;
                     break;
 
+                // SET create an attribute assignment method
                 case SUBDIRECTIVE_SET:
                     // only one of GET/SET allowed
                     if (style != ATTRIBUTE_BOTH)
@@ -850,99 +913,104 @@ void LanguageParser::attributeDirective()
                     break;
 
 
-                /* ::ATTRIBUTE name CLASS               */
+                // ::ATTRIBUTE name CLASS  creating class methods
                 case SUBDIRECTIVE_CLASS:
-                    if (Class)               /* had one of these already?         */
+                    // no dups allowed
+                    if (isClass)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    Class = true;            /* flag this for later processing    */
+                    isClass = true;
                     break;
+
+                // private access?
                 case SUBDIRECTIVE_PRIVATE:
-                    if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
+                    // can have just one of PUBLIC or PRIVATE
+                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    Private = PRIVATE_SCOPE;           /* flag for later processing         */
+                    accessFlag = PRIVATE_SCOPE;
                     break;
-                    /* ::METHOD name PUBLIC             */
+
+                // define with public access (the default)
                 case SUBDIRECTIVE_PUBLIC:
-                    if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
+                    // must be first access specifier
+                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    Private = PUBLIC_SCOPE;        /* flag for later processing         */
+                    accessFlag = PUBLIC_SCOPE;
                     break;
-                    /* ::METHOD name PROTECTED           */
+
+                // ::METHOD name PROTECTED
                 case SUBDIRECTIVE_PROTECTED:
-                    if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
+                    // only one of PROTECTED UNPROTECTED
+                    if (protectedFlag != DEFAULT_PROTECTION)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    Protected = PROTECTED_METHOD;        /* flag for later processing         */
+                    protectedFlag = PROTECTED_METHOD;
                     break;
+
+                // unprotected method (the default)
                 case SUBDIRECTIVE_UNPROTECTED:
-                    if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
+                    // only one of PROTECTED UNPROTECTED
+                    if (protectedFlag != DEFAULT_PROTECTION)
                     {
-                                             /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    Protected = UNPROTECTED_METHOD;      /* flag for later processing         */
+                    protectedFlag = UNPROTECTED_METHOD;
                     break;
-                    /* ::METHOD name UNGUARDED           */
+
+                // unguarded access to an object
                 case SUBDIRECTIVE_UNGUARDED:
-                    /* already seen one of these?        */
-                    if (guard != DEFAULT_GUARD)
+                    if (guardFlag != DEFAULT_GUARD)
                     {
-                        /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    guard = UNGUARDED_METHOD;/* flag for later processing         */
+                    guardFlag = UNGUARDED_METHOD;
                     break;
-                    /* ::METHOD name GUARDED             */
+
+                // guarded access to a method (the default)
                 case SUBDIRECTIVE_GUARDED:
-                    /* already seen one of these?        */
-                    if (guard != DEFAULT_GUARD)
+                    if (guardFlag != DEFAULT_GUARD)
                     {
-                        /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    guard = GUARDED_METHOD;  /* flag for later processing         */
+                    guardFlag = GUARDED_METHOD;
                     break;
-                    /* ::METHOD name ATTRIBUTE           */
+
+                // external attributes?
                 case SUBDIRECTIVE_EXTERNAL:
-                    /* already had an external?          */
-                    if (externalname != OREF_NULL || abstractMethod)
+                    // can't be abstract and external
+                    if (externalname != OREF_NULL || isAbstract)
                     {
-                        /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    token = nextReal();      /* get the next token                */
-                                             /* not a string?                     */
+
+                    // the external specifier must be a string
+                    token = nextReal();
                     if (!token->isLiteral())
                     {
-                        /* report an error                   */
                         syntaxError(Error_Symbol_or_string_external, token);
                     }
-                    externalname = token->value;
-                    break;
-                                           /* ::METHOD name ABSTRACT            */
-                case SUBDIRECTIVE_ABSTRACT:
 
-                    if (abstractMethod || externalname != OREF_NULL)
+                    externalname = token->value();
+                    break;
+
+                // abstract method
+                case SUBDIRECTIVE_ABSTRACT:
+                    // abstract and external conflict
+                    if (isAbstract || externalname != OREF_NULL)
                     {
                         syntaxError(Error_Invalid_subkeyword_attribute, token);
                     }
-                    abstractMethod = true;   /* flag for later processing         */
+                    isAbstract = true;
                     break;
 
-
-                default:                   /* invalid keyword                   */
-                    /* this is an error                  */
+                // some invalid keyword
+                default:
                     syntaxError(Error_Invalid_subkeyword_attribute, token);
                     break;
             }
@@ -953,19 +1021,21 @@ void LanguageParser::attributeDirective()
 
     // now get a variable retriever to get the property (do this before checking the body
     // so errors get diagnosed on the correct line),
-    RexxVariableBase *retriever = this->getRetriever(name);
+    RexxVariableBase *retriever = getRetriever(name);
 
     switch (style)
     {
+        // creating both a setter and getter.  These cannot have
+        // following bodies
         case ATTRIBUTE_BOTH:
         {
-            checkDuplicateMethod(internalname, Class, Error_Translation_duplicate_attribute);
+            checkDuplicateMethod(internalname, isClass, Error_Translation_duplicate_attribute);
             // now get this as the setter method.
             RexxString *setterName = commonString(internalname->concatWithCstring("="));
-            checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_attribute);
+            checkDuplicateMethod(setterName, isClass, Error_Translation_duplicate_attribute);
 
             // no code can follow the automatically generated methods
-            this->checkDirective(Error_Translation_body_error);
+            checkDirective(Error_Translation_body_error);
             if (externalname != OREF_NULL)
             {
                 RexxString *library = OREF_NULL;
@@ -973,44 +1043,44 @@ void LanguageParser::attributeDirective()
                 decodeExternalMethod(internalname, externalname, library, procedure);
                 // now create both getter and setting methods from the information.
                 RexxMethod *_method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
-                _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(internalname, _method, Class);
 
                 _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
-                _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(setterName, _method, Class);
             }
             // abstract method?
-            else if (abstractMethod)
+            else if (isAbstract)
             {
                 // create the method pair and quit.
-                createAbstractMethod(internalname, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
-                createAbstractMethod(setterName, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                createAbstractMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                createAbstractMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
             }
             else
             {
                 // create the method pair and quit.
-                createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                createAttributeGetterMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
             }
             break;
 
         }
-
-        case ATTRIBUTE_GET:       // just the getter method
+        // just need a getter method
+        case ATTRIBUTE_GET:
         {
-            checkDuplicateMethod(internalname, Class, Error_Translation_duplicate_attribute);
+            checkDuplicateMethod(internalname, isClass, Error_Translation_duplicate_attribute);
             // external?  resolve the method
             if (externalname != OREF_NULL)
             {
                 // no code can follow external methods
-                this->checkDirective(Error_Translation_external_attribute);
+                checkDirective(Error_Translation_external_attribute);
                 RexxString *library = OREF_NULL;
                 RexxString *procedure = OREF_NULL;
                 decodeExternalMethod(internalname, externalname, library, procedure);
@@ -1021,45 +1091,48 @@ void LanguageParser::attributeDirective()
                 }
                 // now create both getter and setting methods from the information.
                 RexxMethod *_method = createNativeMethod(internalname, library, procedure);
-                _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(internalname, _method, Class);
             }
             // abstract method?
-            else if (abstractMethod)
+            else if (isAbstract)
             {
                 // no code can follow abstract methods
-                this->checkDirective(Error_Translation_abstract_attribute);
+                checkDirective(Error_Translation_abstract_attribute);
                 // create the method pair and quit.
-                createAbstractMethod(internalname, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                createAbstractMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
             }
             // either written in ooRexx or is automatically generated.
-            else {
+            else
+            {
+                // written in Rexx?  go create
                 if (hasBody())
                 {
-                    createMethod(internalname, Class, Private == PRIVATE_SCOPE,
-                        Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                    createMethod(internalname, isClass, accessFlags == PRIVATE_SCOPE,
+                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 }
                 else
                 {
-                    createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-                        Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                    createAttributeGetterMethod(internalname, retriever, isClass, accessFlags == PRIVATE_SCOPE,
+                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 }
             }
             break;
         }
 
+        // just a setter method
         case ATTRIBUTE_SET:
         {
             // now get this as the setter method.
             RexxString *setterName = commonString(internalname->concatWithCstring("="));
-            checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_attribute);
+            checkDuplicateMethod(setterName, isClass, Error_Translation_duplicate_attribute);
             // external?  resolve the method
             if (externalname != OREF_NULL)
             {
                 // no code can follow external methods
-                this->checkDirective(Error_Translation_external_attribute);
+                checkDirective(Error_Translation_external_attribute);
                 RexxString *library = OREF_NULL;
                 RexxString *procedure = OREF_NULL;
                 decodeExternalMethod(internalname, externalname, library, procedure);
@@ -1070,30 +1143,30 @@ void LanguageParser::attributeDirective()
                 }
                 // now create both getter and setting methods from the information.
                 RexxMethod *_method = createNativeMethod(setterName, library, procedure);
-                _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
-                addMethod(setterName, _method, Class);
+                addMethod(setterName, _method, isClass);
             }
             // abstract method?
-            else if (abstractMethod)
+            else if (isAbstract)
             {
                 // no code can follow abstract methods
-                this->checkDirective(Error_Translation_abstract_attribute);
+                checkDirective(Error_Translation_abstract_attribute);
                 // create the method pair and quit.
-                createAbstractMethod(setterName, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                createAbstractMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
+                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
             }
             else
             {
                 if (hasBody())        // just the getter method
                 {
-                    createMethod(setterName, Class, Private == PRIVATE_SCOPE,
-                        Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                    createMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
+                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 }
                 else
                 {
-                    createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-                        Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                    createAttributeSetterMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
+                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 }
             }
             break;
@@ -1107,53 +1180,58 @@ void LanguageParser::attributeDirective()
  */
 void LanguageParser::constantDirective()
 {
-    RexxToken *token = nextReal();   /* get the next token                */
-                                     /* not a symbol or a string          */
+
+    RexxToken *token = nextReal();
     if (!token->isSymbolOrLiteral())
     {
-        /* report an error                   */
         syntaxError(Error_Symbol_or_string_constant, token);
     }
-    RexxString *name = token->value; /* get the string name               */
-                                     /* and the name form also            */
-    RexxString *internalname = this->commonString(name->upper());
+
+    // get the expressed name and the name we use for the methods
+    RexxString *name = token->value();
+    RexxString *internalname = commonString(name->upper());
 
     // we only expect just a single value token here
-    token = nextReal();                /* get the next token                */
+    token = nextReal();
     RexxObject *value;
-                                       /* not a symbol or a string          */
-    if (!token->isSymbolOrLiteral())
+
+    // the value omitted?  Just use the literal name of the constant.
+    if (token->isEndOfClause())
+    {
+        value = name;
+        // push the EOC token back
+        previousToken();
+    }
+    // no a symbol or literal...we have special checks for signed numbers
+    else if (!token->isSymbolOrLiteral())
     {
         // if not a "+" or "-" operator, this is an error
-        if (!token->isOperator() || (token->subclass != OPERATOR_SUBTRACT && token->subclass != OPERATOR_PLUS))
+        if (!token->isOperator() || (!token->isSubtype(OPERATOR_SUBTRACT, OPERATOR_PLUS)))
         {
-            /* report an error                   */
             syntaxError(Error_Symbol_or_string_constant_value, token);
         }
         RexxToken *second = nextReal();
         // this needs to be a constant symbol...we check for
         // numeric below
-        if (!second->isSymbol() || second->subclass != SYMBOL_CONSTANT)
+        if (!second->isSymbol() || !second->isSubtype(SYMBOL_CONSTANT))
         {
-            /* report an error                   */
             syntaxError(Error_Symbol_or_string_constant_value, token);
         }
         // concat with the sign operator
-        value = token->value->concat(second->value);
+        value = token->value()->concat(second->value());
         // and validate that this a valid number
         if (value->numberString() == OREF_NULL)
         {
-            /* report an error                   */
             syntaxError(Error_Symbol_or_string_constant_value, token);
         }
     }
     else
     {
         // this will be some sort of literal value
-        value = this->commonString(token->value);
+        value = token->value;
     }
 
-    token = nextReal();                /* get the next token                */
+    token = nextReal();
     // No other options on this instruction
     if (!token->isEndOfClause())
     {
@@ -1161,12 +1239,12 @@ void LanguageParser::constantDirective()
         syntaxError(Error_Invalid_data_constant_dir, token);
     }
     // this directive does not allow a body
-    this->checkDirective(Error_Translation_constant_body);
+    checkDirective(Error_Translation_constant_body);
 
     // check for duplicates.  We only do the class duplicate check if there
     // is an active class, otherwise we'll get a syntax error
     checkDuplicateMethod(internalname, false, Error_Translation_duplicate_constant);
-    if (this->active_class != OREF_NULL)
+    if (activeClass != OREF_NULL)
     {
         checkDuplicateMethod(internalname, true, Error_Translation_duplicate_constant);
     }
@@ -1198,10 +1276,10 @@ void LanguageParser::createMethod(RexxString *name, bool classMethod,
     // Since the translateBlock() call will allocate a lot of new objects before returning,
     // there's a high probability that the method object can get garbage collected before
     // there is any opportunity to protect the object.
-    RexxCode *code = this->translateBlock(OREF_NULL);
-    this->saveObject((RexxObject *)code);
+    RexxCode *code = translateBlock(OREF_NULL);
+    ProtectedObject p(code);
 
-    /* go do the next block of code      */
+    // convert into a method object
     RexxMethod *_method = new RexxMethod(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // go add the method to the accumulator
@@ -1298,13 +1376,13 @@ void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *va
     // add this as an unguarded method
     RexxMethod *method = new RexxMethod(name, code);
     method->setUnguarded();
-    if (active_class == OREF_NULL)
+    if (activeClass == OREF_NULL)
     {
         addMethod(name, method, false);
     }
     else
     {
-        active_class->addConstantMethod(name, method);
+        activeClass->addConstantMethod(name, method);
     }
 }
 
