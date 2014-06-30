@@ -377,7 +377,7 @@ void RexxMemory::buildVirtualFunctionTable()
    objectPtr = new (objectLoc) RexxVariableDictionary(RESTOREIMAGE);
    virtualFunctionTable[T_VariableDictionary] = getVftPointer(objectLoc);
 
-   objectPtr = new (objectLoc) RexxParseVariable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxSimpleVariable(RESTOREIMAGE);
    virtualFunctionTable[T_VariableTerm] = getVftPointer(objectLoc);
 
    objectPtr = new (objectLoc) RexxCompoundVariable(RESTOREIMAGE);

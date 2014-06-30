@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,143 +48,158 @@
 #include "Clause.hpp"
 #include "ProtectedObject.hpp"
 
-#define INITIAL_SIZE  50               /* initial size of the token cache   */
-#define EXTEND_SIZE   25               /* size to extend when table fills   */
+#define INITIAL_SIZE  100              // initial size of the token cache
+#define EXTEND_SIZE   25               // size to extend when table fills
 
+
+/**
+ * Allocate storage for a new Clause object.
+ *
+ * @param size   The base object size.
+ *
+ * @return Storage for a new clause object.
+ */
+void *RexxClause::operator new(size_t size)
+{
+    return new_object(size, T_Clause);
+}
+
+
+/**
+ * Initialize a RexxClause object.
+ */
 RexxClause::RexxClause()
-/******************************************************************************/
-/* Function:  Finish initialization of a REXX clause object                   */
-/******************************************************************************/
 {
-                                         /* an array for the tokens           */
-    OrefSet(this, this->tokens, new_arrayOfObject(sizeof(RexxToken), INITIAL_SIZE, T_Token));
-    this->first = 1;                     /* first token is the start          */
-    this->current = 1;                   /* no current token                  */
-    this->size = INITIAL_SIZE;           /* set the token cache size          */
-    this->free = 1;                      /* we have a free token              */
+    // allocate an entire array of tokens for use.  We reuse these
+    tokens = new_arrayOfObject(sizeof(RexxToken), INITIAL_SIZE, T_Token);
+    first = 1;                     // first token is the start
+    current = 1;                   // no current token
+    size = INITIAL_SIZE;           // set the token cache size
+    free = 1;                      // we have a free token
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxClause::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    memory_mark(this->tokens);
+    memory_mark(tokens);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxClause::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    memory_mark_general(this->tokens);
+    memory_mark_general(tokens);
 }
 
-void RexxClause::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Set the start location for a clause.
+ *
+ * @param line   The starting line number.
+ * @param offset The line offset.
+ */
+void RexxClause::setStart(size_t line, size_t offset)
 {
-  setUpFlatten(RexxClause);
-
-    flatten_reference(newThis->tokens, envelope);
-
-  cleanUpFlatten
+    clauseLocation.setStart(line, offset);
 }
 
-void RexxClause::setStart(
-    size_t  line,                      /* starting line number              */
-    size_t  offset)                    /* starting line offset              */
-/******************************************************************************/
-/* Function:  Set a clause's starting position as a line/offset pair          */
-/******************************************************************************/
-{
-    this->clauseLocation.setStart(line, offset);
-}
-
-void RexxClause::setEnd(
-    size_t  line,                      /* ending line number                */
-    size_t  offset)                    /* ending line offset                */
-/******************************************************************************/
-/* Function:  Set a clause's ending position as a line/offset pair            */
-/******************************************************************************/
+/**
+ * Set the clause end location
+ *
+ * @param line   The ending line.
+ * @param offset The ending offset.
+ */
+void RexxClause::setEnd(size_t line, size_t offset)
 {
     clauseLocation.setEnd(line, offset);
 }
 
+
+/**
+ * Remove all tokens that precede the current token from the
+ * clause.  Used to break a physical clause into mulitple logical
+ * clauses (such as a "label: procedure", which is two clauses.
+ */
 void RexxClause::trim()
-/******************************************************************************/
-/* Function:  Remove all tokens that precede the current token from the       */
-/*            clause.  Used to break a physical clause into mulitple logical  */
-/*            clauses (such as a "label: procedure", which is two clauses.    */
-/******************************************************************************/
 {
-    this->first = this->current;         /* set first item to current         */
-                                         /* get first token location          */
-    SourceLocation l = ((RexxToken *)((this->tokens)->get(this->current)))->getLocation();
-    /* update the clause location info   */
+    first = current;         // set the first item to the current one
+    // update the clause start location to be that of the first token.
+    SourceLocation l = ((RexxToken *)((tokens)->get(current)))->getLocation();
     clauseLocation.setStart(l);
 }
 
+
+/**
+ * Reset to a new clause.  this just resets
+ * the pointers and reuses all of the previous
+ * clause tokens.
+ */
 void RexxClause::newClause()
-/******************************************************************************/
-/* Function :  Reset a clause object for the "next" clause of the program.    */
-/*             This involves resetting all of the caching information for     */
-/*             token allocation.                                              */
-/******************************************************************************/
 {
-    this->first = 1;                     /* first token is the start          */
-    this->current = 1;                   /* no current token                  */
-    this->free = 1;                      /* we have a free token              */
+    first = 1;
+    current = 1;
+    free = 1;
 }
 
-RexxToken *RexxClause::newToken(
-    int            classId,            /* class of the token                */
-    int            subclass,           /* subclass of the token             */
-    RexxString    *value,              /* associated string value           */
-    SourceLocation &l)                 /* location of the token             */
-/******************************************************************************/
-/* Function :  Return a new token object, with information appropriately      */
-/*             filled in                                                      */
-/******************************************************************************/
+
+/**
+ * Return a new token object, with information appropriately
+ * filled in
+ *
+ * @param classId  The token class identifier.
+ * @param subclass The token subclass
+ * @param value    The (optional) string value.
+ * @param l        The token location.
+ *
+ * @return A filled in token object.
+ */
+RexxToken *RexxClause::newToken(TokenClass classId, TokenSubclass subclass, RexxString *value, SourceLocation &l)
 {
-    if (this->free > this->size)
-    {       /* need to extend our cache?         */
-            /* allocate a larger array  */
-            /* first a bulk array of tokens      */
+
+    //. do we need to extend our cache?
+    if (free > size)
+    {
+        // allocate a bunch of additional token objects.
         RexxArray *newTokens = new_arrayOfObject(sizeof(RexxToken), EXTEND_SIZE, T_Token);
         ProtectedObject p(newTokens);
-        RexxArray *newarray = (RexxArray *)this->tokens->join(newTokens);
-        this->size += EXTEND_SIZE;         /* bump the cache size               */
-                                           /* replace the old array             */
-        OrefSet(this, this->tokens, newarray);
+        // join this to our existing array
+        tokens = (RexxArray *)tokens->join(newTokens);
+        size += EXTEND_SIZE;
     }
+
+    // get the first free token and call the in-memory constructor for this
     /* get the first free token          */
-    RexxToken *token = (RexxToken *)this->tokens->get(this->free);
-    this->free++;                        /* step the free location            */
-                                         /* fill in the token                 */
+    RexxToken *token = (RexxToken *)tokens->get(free++);
+    // construct the token and return
     new ((void *)token) RexxToken(classId, subclass, value, l);
-    return token;                        /* send the token back               */
+    return token;
 }
 
+/**
+ * Return the next non-while space token in the clause
+ * list.
+ *
+ * @return The next meaningful token.
+ */
 RexxToken *RexxClause::nextRealToken()
-/******************************************************************************/
-/*  Function:  Return next non-blank token in the clause list                 */
-/******************************************************************************/
 {
-    RexxToken *token = this->next();                /* get the next token                */
-    while (token->classId == TOKEN_BLANK)/* now loop until get a non-blank    */
+    // loop until we hit a non-blank
+    RexxToken *token = next();
+    while (token->isBlank())
     {
-        token = this->next();              /* get the next token                */
+        token = next();
     }
-    return token;                        /* return retrieved token            */
-}
-
-void *RexxClause::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
-{
-    return new_object(size, T_Clause);
+    return token;
 }
 

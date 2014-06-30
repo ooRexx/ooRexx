@@ -459,11 +459,11 @@ enum {
 #define   TERM_THEN    0x00000200u     /* terminate on THEN keyword         */
 #define   TERM_KEYWORD 0x10000000u     /* perform keyword terminator checks */
                                        /* terminate on DO keywords          */
-#define   TERM_CONTROL (TERM_KEYWORD | TERM_TO | TERM_BY | TERM_FOR | TERM_WHILE | TERM_EOC)
+#define   TERM_CONTROL (TERM_KEYWORD | TERM_TO | TERM_BY | TERM_FOR | TERM_WHILE)
                                        /* terminate on DO conditionals      */
-#define   TERM_COND    (TERM_KEYWORD | TERM_WHILE | TERM_EOC)
+#define   TERM_COND    (TERM_KEYWORD | TERM_WHILE)
 
-#define   TERM_IF      (TERM_KEYWORD | TERM_THEN | TERM_EOC)
+#define   TERM_IF      (TERM_KEYWORD | TERM_THEN)
 
 
 class RexxToken : public RexxInternalObject {
@@ -506,6 +506,7 @@ class RexxToken : public RexxInternalObject {
     inline bool       isNumericSymbol()  { return (subclass == SYMBOL_CONSTANT); }
     inline bool       isSymbol() { return classId == TOKEN_SYMBOL; };
     inline bool       isOperator() { return classId == TOKEN_OPERATOR; }
+    inline bool       isBlank() { return classId == TOKEN_BLANK; }
     inline bool       isLeftParen() { return classId == TOKEN_LEFT; }
     inline bool       isRightParen() { return classId == TOKEN_RIGHT; }
     inline bool       isLeftBracket() { return classId == TOKEN_SQLEFT; }

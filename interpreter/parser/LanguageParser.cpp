@@ -1086,13 +1086,13 @@ RexxVariableBase *LanguageParser::addVariable(RexxString *varname)
         if (!isInterpret())
         {
             variableIndex++;
-            retriever = new RexxParseVariable(varname, variableIndex);
+            retriever = new RexxSimpleVariable(varname, variableIndex);
         }
         else
         {
             // a slot index of zero tells the retriever to perform a dynamic
             // lookup
-            retriever = new RexxParseVariable(varname, 0);
+            retriever = new RexxSimpleVariable(varname, 0);
         }
         // and add this to the table.
         variables->put((RexxObject *)retriever, varname);
@@ -1453,7 +1453,7 @@ RexxVariableBase *LanguageParser::getRetriever(RexxString *name)
 
         // simple variable name
         case STRING_NAME:
-            return (RexxVariableBase *)new RexxParseVariable(name, 0);
+            return (RexxVariableBase *)new RexxSimpleVariable(name, 0);
             break;
 
         // stem name.
@@ -1627,7 +1627,7 @@ RexxObject *LanguageParser::constantExpression()
     {
         // parse our a subexpression, terminating on the end of clause or
         // a right paren (the right paren is actually the required terminator)
-        RexxObject *exp = this->subExpression(TERM_EOC | TERM_RIGHT);
+        RexxObject *exp = this->subExpression(TERM_RIGHT);
         // now verify that the terminator token was a right paren.  If not,
         // issue an error message using the original opening token so we know
         // which one is an issue.
@@ -1683,7 +1683,7 @@ RexxObject *LanguageParser::constantLogicalExpression()
     {
         // we use a different method for parsing the expression that knows
         // about the logical lists
-        RexxObject *expression = parseLogical(token, TERM_EOC | TERM_RIGHT);
+        RexxObject *expression = parseLogical(token, TERM_RIGHT);
         // now verify that the terminator token was a right paren.  If not,
         // issue an error message using the original opening token so we know
         // which one is an issue.
@@ -1714,7 +1714,7 @@ RexxObject *LanguageParser::parenExpression(RexxToken *start)
     // NB, the opening paren has already been parsed off and is in
     // the start token, which we only need for error reporting.
 
-    RexxObject *exp = subExpression(TERM_EOC | TERM_RIGHT);
+    RexxObject *exp = subExpression(TERM_RIGHT);
 
     // this must be terminated by a right paren
     if (!nextToken()->isRightParen())
@@ -2114,17 +2114,22 @@ RexxObject *LanguageParser::function(RexxToken *token, RexxToken *name)
     // parse off the argument list, leaving the arguments in the subterm stack.
     // NOTE:  Because we have a closed () construct delimiting the function arguments,
     // we can ignore any terminators specified from the parent context.
-    size_t argCount = argList(token, (TERM_EOC | TERM_RIGHT));
+    size_t argCount = argList(token, (TERM_RIGHT));
 
     // create a function item.  This will also pull the argument items from the
     // subterm stack
     RexxObject *func = (RexxObject *)new (argCount) RexxExpressionFunction(name->value(), argCount,
-        subTerms, name->builtin(), name->isLiteral());
+        subTerms, name->builtin());
 
     // at this point, we can't resolve the final target of this call.  It could be
     // a builtin, a call to an internal label, or an external call.  We'll resolve this
-    // once we've finished this code block and have all of the labels.
-    addReference(func);
+    // once we've finished this code block and have all of the labels.  But note that
+    // if this was specified as a literal, we can skip the resolution step since
+    // this can never resolve to an internal label.
+    if (!name->isLiteral())
+    {
+        addReference(func);
+    }
     return func;
 }
 
@@ -2149,7 +2154,7 @@ RexxObject *LanguageParser::collectionMessage(RexxToken *token, RexxObject *targ
 
     // get the arguments.  Like with builtin function calls, we just ignore any
     // prior terminator context and rely on the fact that the brackes must match.
-    size_t argCount = argList(token, (TERM_EOC | TERM_SQRIGHT));
+    size_t argCount = argList(token, (TERM_SQRIGHT));
 
     // create the message item.
     RexxObject *msg = (RexxObject *)new (argCount) RexxExpressionMessage(target, (RexxString *)OREF_BRACKETS,
@@ -2202,12 +2207,7 @@ RexxToken  *LanguageParser::getToken(int terminators, int errorcode)
  */
 RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int terminators )
 {
-    size_t        argCount;              /* list of function arguments        */
     RexxString   *messagename = OREF_NULL;  /* message name                      */
-    RexxObject   *super;                 /* super class target                */
-    RexxToken    *token;                 /* current working token             */
-    RexxExpressionMessage *_message;     /* new message term                  */
-
 
     // this message might have a superclass override...default is none.
     RexxObject *super = OREF_NULL;
@@ -2217,7 +2217,7 @@ RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int te
     // add the term to the term stack so that stacksize calculations
     // include this in the processing.  This has the side effect of
     // protecting this object from GC while we're parsing.
-    this->pushTerm(target);
+    pushTerm(target);
     // ok, we're expecting a message name next, go get one.
     RexxToken *token = getToken(terminators, Error_Symbol_or_string_tilde);
     // this must be a string or symbol
@@ -2228,6 +2228,8 @@ RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int te
 
     // we have a message name
     RexxString *messagename = token->value();
+    // upper case this here and add to the common pool.
+    messagename = commonString(messagename->upper());
 
     // ok, what else do we have.  Nothing additional is required
     // here, but this could be an argument list, or a superclass
@@ -2267,7 +2269,7 @@ RexxObject *LanguageParser::message(RexxObject *target, bool doubleTilde, int te
         {
             // NOTE:  because of the parens, we can ignore our parent terminators...
             // we only look for the right paren
-            argCount = argList(token, TERM_EOC | TERM_RIGHT);
+            argCount = argList(token, TERM_RIGHT);
         }
         else
         {
@@ -2528,7 +2530,7 @@ RexxObject *LanguageParser::subTerm(int terminators)
         {
             // parse off the parenthetical.  This might not return anything if there
             // are nothing in the parens.  This is an error.
-            RexxObject *term = subExpression(TERM_RIGHT | TERM_EOC);
+            RexxObject *term = subExpression(TERM_RIGHT);
             if (term == OREF_NULL)
             {
                 syntaxError(Error_Invalid_expression_general, token);

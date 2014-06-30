@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,7 +41,6 @@
 /* Primitive Translator Expression Parsing Stem Reference Class               */
 /*                                                                            */
 /******************************************************************************/
-/******************************************************************************/
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
@@ -51,87 +50,118 @@
 #include "StemClass.hpp"
 #include "ExpressionStem.hpp"
 
-RexxStemVariable::RexxStemVariable(
-     RexxString * stemName,            /* stem name to access               */
-     size_t       var_index)           /* lookaside index for stem          */
-/******************************************************************************/
-/* Function:  Initialize a translator STEM object                             */
-/******************************************************************************/
+
+/**
+ * Allocate a new stem variable object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return Storage for creating the object.
+ */
+void *RexxStemVariable::operator new(size_t size)
 {
-                                       /* set the name                      */
-  OrefSet(this, this->stem, stemName); /* set the name                      */
-  this->index = var_index;             /* and the index                     */
+    return new_object(size, T_StemVariableTerm);
 }
 
+
+/**
+ * Construct a Stem variable expression object.
+ *
+ * @param name      The name of the stem (including the period)
+ * @param var_index The index of the variable slot in the current stack frame.
+ */
+RexxStemVariable::RexxStemVariable(RexxString *name, size_t var_index)
+{
+    stemName = name;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxStemVariable::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->stem);
+    memory_mark(stem);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxStemVariable::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-  memory_mark_general(this->stem);
+    memory_mark_general(stem);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxStemVariable::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxStemVariable)
+    setUpFlatten(RexxStemVariable)
 
-  flatten_reference(newThis->stem, envelope);
+    flattenRef(stem);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-RexxObject  *RexxStemVariable::evaluate(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Evaluate a REXX stem variable                                   */
-/******************************************************************************/
+
+/**
+ * Evaluate a Rexx Stem variable.
+ *
+ * @param context The current execution context
+ * @param stack   The current evaluation stack.
+ *
+ * @return The variable value (which will be a Stem object instance.)
+ */
+RexxObject  *RexxStemVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack )
 {
-    /* look up the name                  */
-    RexxObject *value = context->getLocalStem(this->stem, this->index);
-    /* NOTE:  stem accesses do NOT       */
-    /* report NOVALUE so that DO OVER,   */
-    /* call-by-reference with a stem and */
-    /* return with a stem does not       */
-    /* trigger a novalue trap            */
-    /* unexpectedly                      */
-    stack->push(value);                  /* place on the evaluation stack     */
-                                         /* trace if necessary                */
-    context->traceVariable(stem, value);
-    return value;                        /* return the located variable       */
+    // look up the name
+    RexxObject *value = context->getLocalStem(stemName, stemIndex);
+    // NOTE:  stem accesses do NOT report NOVALUE so that DO OVER,
+    // call-by-reference with a stem and return with a stem does not
+    // trigger a novalue trap unexpectedly
+
+    // evaluate always pushes on the stack.
+    stack->push(value);
+    context->traceVariable(stemName, value);
+    return value;
 }
 
-RexxObject  *RexxStemVariable::getValue(
-  RexxVariableDictionary *dictionary)  /* current activation dictionary     */
-/******************************************************************************/
-/* Function:  retrieve a stem variable's value (notready condition will       */
-/*            not be raised)                                                  */
-/******************************************************************************/
+
+/**
+ * Retrieve a stem variable value from a variable dictionary.
+ *
+ * @param dictionary The source dictionary.
+ *
+ * @return The current stem variable contents.
+ */
+RexxObject  *RexxStemVariable::getValue(RexxVariableDictionary *dictionary)
 {
-                                       /* look up the name                  */
-    return dictionary->getStem(this->stem);
+    // just look up the stem
+    return dictionary->getStem(stemName);
 }
 
-RexxObject  *RexxStemVariable::getValue(
-  RexxActivation *context)             /* current activation context        */
-/******************************************************************************/
-/* Function:  retrieve a stem variable's value (notready condition will       */
-/*            not be raised)                                                  */
-/******************************************************************************/
+
+/**
+ * Retrieve a stem variable value from a given program context.
+ *
+ * @param context The source context.
+ *
+ * @return The variable value (a stem object).
+ */
+RexxObject  *RexxStemVariable::getValue(RexxActivation *context)
 {
-                                       /* look up the name                  */
-    return context->getLocalStem(stem, index);
+    return context->getLocalStem(stemName, stemIndex);
 }
 
 /**
@@ -145,7 +175,7 @@ RexxObject  *RexxStemVariable::getValue(
  */
 RexxObject  *RexxStemVariable::getRealValue(RexxVariableDictionary *dictionary)
 {
-    return dictionary->getStem(this->stem);
+    return dictionary->getStem(stemName);
 }
 
 /**
@@ -159,98 +189,82 @@ RexxObject  *RexxStemVariable::getRealValue(RexxVariableDictionary *dictionary)
  */
 RexxObject  *RexxStemVariable::getRealValue(RexxActivation *context)
 {
-    return context->getLocalStem(stem, index);
-}
-
-void RexxStemVariable::set(
-  RexxActivation *context,             /* current activation context        */
-  RexxObject *value )                  /* new value to be assigned          */
-/******************************************************************************/
-/* Function:  Fast set of a stem variable value                               */
-/******************************************************************************/
-{
-    /* look up the name                  */
-    RexxVariable *variable = context->getLocalStemVariable(stem, index);
-    if (isOfClass(Stem, value))
-    {            /* stem to stem assignment           */
-        variable->set(value);              /* overlay the reference stem object */
-    }
-    else
-    {
-        /* create a new stem object as value */
-        RexxStem *stem_table = new RexxStem (this->stem);
-        variable->set(stem_table);         /* overlay the reference stem object */
-        stem_table->setValue(value);       /* set the default value             */
-    }
+    return context->getLocalStem(stemName, stemIndex);
 }
 
 
-void RexxStemVariable::set(
-  RexxVariableDictionary  *dictionary, /* current activation dictionary     */
-  RexxObject *value )                  /* new value to be assigned          */
-/******************************************************************************/
-/* Function:  Fast set of a stem variable value                               */
-/******************************************************************************/
+/**
+ * Set a value in a stem variable...this is more direct
+ * than an assign operation.
+ *
+ * @param context The variable context.
+ * @param value   The new value.
+ */
+void RexxStemVariable::set(RexxActivation *context, RexxObject *value )
 {
-    /* look up the name                  */
-    RexxVariable *variable = dictionary->getStemVariable(this->stem);
-    if (isOfClass(Stem, value))
-    {            /* stem to stem assignment           */
-        variable->set(value);              /* overlay the reference stem object */
-    }
-    else
-    {
-        /* create a new stem object as value */
-        RexxStem *stem_table = new RexxStem (this->stem);
-        variable->set(stem_table);         /* overlay the reference stem object */
-        stem_table->setValue(value);       /* set the default value             */
-    }
+    // Look up the stem
+    RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
+    // the variable object handles the setting details
+    variable->setStem(value);
 }
 
 
-bool RexxStemVariable::exists(
-  RexxActivation *context)             /* current activation context        */
-/******************************************************************************/
-/*  Function:  Check the existance of a REXX stem variable                    */
-/******************************************************************************/
+/**
+ * Set a variable using a variable dictionary context.
+ *
+ * @param dictionary The target variable dictionary.
+ * @param value      The new variable value.
+ */
+void RexxStemVariable::set(RexxVariableDictionary  *dictionary, RexxObject *value )
 {
-                                       /* retrieve the variable value       */
-    return context->localStemVariableExists(stem, index);
+    // look up the stem variable in the dictionary
+    RexxVariable *variable = dictionary->getStemVariable(stemName);
+    // the variable object handles the setting details
+    variable->setStem(value);
 }
 
-void RexxStemVariable::assign(
-    RexxActivation *context,           /* current activation context        */
-    RexxExpressionStack *stack,        /* current evaluation stack          */
-    RexxObject     *value )            /* new value to assign               */
-/******************************************************************************/
-/* Function:  Assign a value to a stem variable                               */
-/******************************************************************************/
+
+/**
+ * Test if a stem variable exists in the current context.
+ *
+ * @param context The current execution context.
+ *
+ * @return true if the variable exists, false otherwise.
+ */
+bool RexxStemVariable::exists(RexxActivation *context)
 {
-    RexxVariable *variable = context->getLocalStemVariable(stem, index);
-    if (isOfClass(Stem, value))
-    {            /* stem to stem assignment           */
-        variable->set(value);              /* overlay the reference stem object */
-    }
-    else
-    {
-        /* create a new stem object as value */
-        RexxStem *stem_table = new RexxStem (this->stem);
-        variable->set(stem_table);         /* overlay the reference stem object */
-        stem_table->setValue(value);       /* set the default value             */
-    }
+    return context->localStemVariableExists(stemName, stemIndex)
+}
+
+
+/**
+ * Assign a new value to a stem object (used by assignment
+ * instructions).
+ *
+ * @param context The current execution context.
+ * @param value   The new value.
+ */
+void RexxStemVariable::assign(RexxActivation *context, RexxObject *value )
+{
+    // get the stem variable
+    RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
+    // the variable object handles the setting details
+    variable->setStem(value);
     // trace the assignment
     context->traceAssignment(stem, value);
 }
 
-void RexxStemVariable::drop(
-  RexxActivation *context)             /* target variable dictionary        */
-/******************************************************************************/
-/* Function:  Drop a variable object                                          */
-/******************************************************************************/
+
+/**
+ * Drop a stem variable from the current context.
+ *
+ * @param context The current execution context.
+ */
+void RexxStemVariable::drop(RexxActivation *context)
 {
-    /* drop the stem value */
-    context->dropLocalStem(stem, index);
+    context->dropLocalStem(stemName, stemIndex);
 }
+
 
 /**
  * Drop a variable that's directly in a variable dictionary.
@@ -260,90 +274,98 @@ void RexxStemVariable::drop(
 void RexxStemVariable::drop(RexxVariableDictionary *dictionary)
 {
     // dropping the stem name is sufficient
-    dictionary->dropStemVariable(stem);
+    dictionary->dropStemVariable(stemName);
 }
 
-void RexxStemVariable::procedureExpose(
-  RexxActivation      *context,        /* current activation context        */
-  RexxActivation      *parent,         /* the parent activation context     */
-  RexxExpressionStack *stack)          /* current evaluation stack          */
-/******************************************************************************/
-/* Function:  Expose a stem variable                                          */
-/******************************************************************************/
-{
-    /* get the old variable entry        */
-    RexxVariable *old_variable = parent->getLocalStemVariable(stem, index);
 
-    /* set the entry in the new table    */
-    if (index == 0)
+/**
+ * Handle procedure expose for a stem variable.
+ *
+ * @param context The current execution context.
+ * @param parent  The parent execution context (source of the variable.)
+ */
+void RexxStemVariable::procedureExpose(RexxActivation *context, RexxActivation *parent)
+{
+    // get the old variable entry
+    RexxVariable *old_variable = parent->getLocalStemVariable(stemName, stemIndex);
+
+    // if we have an index (and generally we should because expose cannot
+    // be interpreted), we just put this variable into the local context.
+    // otherwise, we need to do a dynamic search to update this.
+    if (stemIndex == 0)
     {
         context->updateLocalVariable(old_variable);
     }
     else
     {
-        context->putLocalVariable(old_variable, index);
+        context->putLocalVariable(old_variable, stemIndex);
     }
 }
 
 
-void RexxStemVariable::expose(
-  RexxActivation      *context,        /* current activation context        */
-  RexxExpressionStack *stack,          /* current evaluation stack          */
-                                       /* variable scope we're exposing from*/
-  RexxVariableDictionary *object_dictionary)
-/******************************************************************************/
-/* Function:  Expose a stem variable                                          */
-/******************************************************************************/
+/**
+ * Expose a variable in a specific object variable scope.
+ *
+ * @param context The current execution context.
+ * @param object_dictionary
+ *                The source object scope variable dictionary.
+ */
+void RexxStemVariable::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
 {
-                                         /* get the old variable entry        */
+    // get the old variable entry (will create if first request)
     RexxVariable *old_stem = object_dictionary->getStemVariable(stem);
-                                         /* set the entry in the new table    */
-    context->putLocalVariable(old_stem, index);
+    // and make this a local variable
+    context->putLocalVariable(old_stem, stemIndex);
 }
 
 
-void RexxStemVariable::setGuard(
-  RexxActivation *context )            /* current activation context        */
-/******************************************************************************/
-/* Set a guard variable notification on a stem variable                       */
-/******************************************************************************/
+/**
+ * Set a GUARD WHEN watch on a stem variable.
+ *
+ * @param context The current execution context.
+ */
+void RexxStemVariable::setGuard(RexxActivation *context)
 {
-                                       /* look up the name                  */
-    RexxVariable *variable = context->getLocalStemVariable(this->stem, this->index);
-    variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
-}
-
-void RexxStemVariable::clearGuard(
-  RexxActivation *context )            /* current activation context        */
-/******************************************************************************/
-/* Remove a guard variable notification on an object variable                 */
-/******************************************************************************/
-{
-                                       /* look up the name                  */
-    RexxVariable *variable = context->getLocalStemVariable(this->stem, this->index);
-    variable->uninform(ActivityManager::currentActivity); /* mark the variable entry           */
+    // get the variable and ask for our activity to be notified.
+    RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
+    variable->inform(context->activity());
 }
 
 
-bool RexxStemVariable::sort(
-    RexxActivation *context, RexxString *prefix, int order, int type, size_t start,
-    size_t end, size_t firstcol, size_t lastcol)
-/******************************************************************************/
-/* Sort the elements of a stem variable as if they were an array.             */
-/******************************************************************************/
+/**
+ * Remove a guard notification from a variable.
+ *
+ * @param context The current execution context.
+ */
+void RexxStemVariable::clearGuard(RexxActivation *context )
 {
-    /* get the stem object */
-    RexxStem *stem_table = context->getLocalStem(stem, index);
-    /* the stem object handles the sorting. */
+    // look up the variable and remove the inform status for this activity.
+    RexxVariable *variable = context->getLocalStemVariable(stemName, stemIndex);
+    variable->uninform(context->activity());
+}
+
+
+/**
+ * Sort the elements of a stem object using the old
+ * stem array convention.
+ *
+ * @param context  The current execution context.
+ * @param prefix   The stem name prefix for sub variable sorts.
+ * @param order    The sort order.
+ * @param type     The type of sort (ascending vs. descending).
+ * @param start    The starting position.
+ * @param end      The end position.
+ * @param firstcol The first column to sort on.
+ * @param lastcol  the last column to sort on.
+ *
+ * @return The success/failure indicator.
+ */
+bool RexxStemVariable::sort(RexxActivation *context, RexxString *prefix,
+    int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol)
+{
+    // get the stem variable and ask it's value to perform the sort
+    RexxStem *stem_table = context->getLocalStem(stemName, stemIndex);
+    // the stem object handles the sorting.
     return stem_table->sort(prefix, order, type, start, end, firstcol, lastcol);
-}
-
-void *RexxStemVariable::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
-{
-                                         /* Get new object                    */
-    return new_object(size, T_StemVariableTerm);
 }
 

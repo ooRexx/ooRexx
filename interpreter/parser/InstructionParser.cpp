@@ -836,12 +836,17 @@ RexxInstruction *LanguageParser::callNew()
     {
         syntaxError(Error_Symbol_or_string_call);
     }
+
     // create a new Call instruction.  This only handles the simple calles.
     RexxInstruction *newObject = new_variable_instruction(CALL, Call, sizeof(RexxInstructionCall) + (argCount - 1) * sizeof(RexxObject *));
     new ((void *)newObject) RexxInstructionCall(targetName, argCount, subTerms, noInternal, builtin_index);
 
-    // add to our references list
-    addReference((RexxObject *)newObject);
+    // add to our references list, but only if this is a form where
+    // internal calls are allowed.
+    if (!noInternal)
+    {
+        addReference((RexxObject *)newObject);
+    }
     return newObject;
 }
 

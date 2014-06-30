@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,100 +49,145 @@
 #include "RexxVariable.hpp"
 #include "ExpressionVariable.hpp"
 
-RexxParseVariable::RexxParseVariable(
-  RexxString *variable_name,           /* variable name to access           */
-  size_t var_index)                    /* dictionary lookaside index        */
-/******************************************************************************/
-/* Complete initialization of a variable object                               */
-/******************************************************************************/
+
+/**
+ * Allocate storage for a simple variable retriever.
+ *
+ * @param size   The base object size.
+ *
+ * @return Rexx object storage for the object.
+ */
+void *RexxSimpleVariable::operator new(size_t size)
 {
-                                       /* set the name value                */
-  OrefSet(this, this->variableName, variable_name);
-  this->index = var_index;             /* save the index                    */
+    return new_object(size, T_VariableTerm);
 }
 
-void RexxParseVariable::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
+
+/**
+ * Construct a simple variable instance.
+ *
+ * @param variable_name
+ *                  The name of the variable.
+ * @param var_index The variable index in the local context.
+ */
+RexxSimpleVariable::RexxSimpleVariable(RexxString *variable_name, size_t var_index)
 {
-  memory_mark(this->variableName);
+    variableName = variable_name;
+    index = var_index;
 }
 
-void RexxParseVariable::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxSimpleVariable::live(size_t liveMark)
 {
-  memory_mark_general(this->variableName);
+    memory_mark(variableName);
 }
 
-void RexxParseVariable::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxSimpleVariable::liveGeneral(int reason)
 {
-  setUpFlatten(RexxParseVariable)
-
-  flatten_reference(newThis->variableName, envelope);
-
-  cleanUpFlatten
+    memory_mark_general(variableName);
 }
 
-RexxObject  *RexxParseVariable::evaluate(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Evaluate a REXX simple variable                                 */
-/******************************************************************************/
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxSimpleVariable::flatten(RexxEnvelope *envelope)
 {
-    /* look up the name                  */
+    setUpFlatten(RexxSimpleVariable)
+
+    flattenRef(variableName);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Evaluate a simple variable in an expression.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ *
+ * @return The variable value (also pushed on stack)
+ */
+RexxObject  *RexxSimpleVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack)
+{
+    // look up the variable
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    RexxObject *value = variable->getVariableValue();/* get the value                     */
-    if (value == OREF_NULL)              /* no value yet?                     */
+    RexxObject *value = variable->getVariableValue();
+    // we need to do novalue checks.
+    if (value == OREF_NULL)
     {
         // try the various novalue mechanisms
         value = context->handleNovalueEvent(variableName, variableName, variable);
     }
-    stack->push(value);                  /* place on the evaluation stack     */
-                                         /* trace if necessary                */
+    // stack, trace, and return
+    stack->push(value);
+
     context->traceVariable(variableName, value);
-    return value;                        /* return the located variable       */
+    return value;
 }
 
-RexxObject  *RexxParseVariable::getValue(
-    RexxVariableDictionary *dictionary)/* current activation dictionary     */
+
+/**
+ * retrieve a simple variable's value (notready condition will
+ * not be raised)
+ *
+ * @param dictionary The source variable dictionary.
+ *
+ * @return The variable value.
+ */
+RexxObject *RexxSimpleVariable::getValue(RexxVariableDictionary *dictionary)
 /******************************************************************************/
 /* Function:  retrieve a simple variable's value (notready condition will     */
 /*            not be raised)                                                  */
 /******************************************************************************/
 {
-    /* look up the name                  */
     RexxVariable *variable = dictionary->getVariable(variableName);
-    RexxObject *value = variable->getVariableValue();/* get the value                     */
-    if (value == OREF_NULL)              /* no value yet?                     */
+    RexxObject *value = variable->getVariableValue();
+    // if no variable yet, return the name.
+    if (value == OREF_NULL)
     {
-        value = this->variableName;        /* just use the name                 */
+        value = variableName;
     }
-    return value;                        /* return the located variable       */
+    return value;
 }
 
-RexxObject  *RexxParseVariable::getValue(
-    RexxActivation *context)           /* current activation context        */
-/******************************************************************************/
-/* Function:  retrieve a simple variable's value (notready condition will     */
-/*            not be raised)                                                  */
-/******************************************************************************/
+
+/**
+ * retrieve a simple variable's value (notready condition will
+ * not be raised)
+ *
+ * @param context The current execution context.
+ *
+ * @return The variable value.
+ */
+RexxObject  *RexxSimpleVariable::getValue(RexxActivation *context)
 {
-    /* look up the name                  */
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    RexxObject *value = variable->getVariableValue();/* get the value                     */
-    if (value == OREF_NULL)              /* no value yet?                     */
+    RexxObject *value = variable->getVariableValue();
+    // use the variable name if not set.
+    if (value == OREF_NULL)
     {
-        value = this->variableName;        /* just use the name                 */
+        value = variableName;
     }
-    return value;                        /* return the located variable       */
+    return value;
 }
+
 
 /**
  * Retrieve an object variable value, returning OREF_NULL if
@@ -153,11 +198,10 @@ RexxObject  *RexxParseVariable::getValue(
  * @return The variable value, or OREF_NULL if the variable is not
  *         assigned.
  */
-RexxObject  *RexxParseVariable::getRealValue(RexxVariableDictionary *dictionary)
+RexxObject  *RexxSimpleVariable::getRealValue(RexxVariableDictionary *dictionary)
 {
-                                       /* look up the name                  */
     RexxVariable *variable = dictionary->getVariable(variableName);
-    return variable->getVariableValue();/* get the value                     */
+    return variable->getVariableValue();
 }
 
 
@@ -171,147 +215,151 @@ RexxObject  *RexxParseVariable::getRealValue(RexxVariableDictionary *dictionary)
  * @return The value of the variable.  Returns OREF_NULL if the variable
  *         has not been assigned a value.
  */
-RexxObject  *RexxParseVariable::getRealValue(RexxActivation *context)
+RexxObject  *RexxSimpleVariable::getRealValue(RexxActivation *context)
 {
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    return variable->getVariableValue();/* get the value                     */
+    return variable->getVariableValue();
 }
 
-void RexxParseVariable::set(
-  RexxVariableDictionary  *dictionary, /* current activation dictionary     */
-  RexxObject *value )
-/******************************************************************************/
-/* Function:  Fast set of a variable value                                    */
-/******************************************************************************/
+
+/**
+ * Set a simple variable.
+ *
+ * @param dictionary The target variable dictionary.
+ * @param value      The new value.
+ */
+void RexxSimpleVariable::set(RexxVariableDictionary *dictionary, RexxObject *value )
 {
-                                       /* look up the name                  */
     RexxVariable *variable = dictionary->getVariable(variableName);
-    variable->set(value);                /* and perform the set               */
+    variable->set(value);
 }
 
-void RexxParseVariable::set(
-  RexxActivation *context,             /* current activation context        */
-  RexxObject *value )
-/******************************************************************************/
-/* Function:  Fast set of a variable value                                    */
-/******************************************************************************/
+/**
+ * Set a variable value in the current context.
+ *
+ * @param context The current execution context.
+ * @param value   The value to set.
+ */
+void RexxSimpleVariable::set(RexxActivation *context, RexxObject *value )
 {
-    /* The context handles the details of this */
+    // The context handles the details of this
     context->setLocalVariable(variableName, index, value);
 }
 
-bool RexxParseVariable::exists(
-  RexxActivation *context)             /* current activation context        */
-/******************************************************************************/
-/*  Function:  Check the existance of a REXX variable                         */
-/******************************************************************************/
+
+/**
+ * Test if a variable exists in the current context.
+ *
+ * @param context The target execution context.
+ *
+ * @return true if the variable exists, false otherwise.
+ */
+bool RexxSimpleVariable::exists(RexxActivation *context)
 {
     return context->localVariableExists(variableName, index);
 }
 
-void RexxParseVariable::assign(
-    RexxActivation *context,           /* current activation context        */
-    RexxExpressionStack *stack,        /* current evaluation stack          */
-    RexxObject     *value )            /* new value to assign               */
-/******************************************************************************/
-/* Function:  Assign a value to a simple variable                             */
-/******************************************************************************/
+/**
+ * Assign a value to a simple variable.
+ *
+ * @param context The current execution context.
+ * @param value   The value to assign.
+ */
+void RexxSimpleVariable::assign(RexxActivation *context, RexxObject *value)
 {
-    /* The context handles the details of this */
+    // The context handles the details of this
     context->setLocalVariable(variableName, index, value);
     context->traceAssignment(variableName, value);
 }
 
-void RexxParseVariable::drop(
-  RexxActivation *context)             /* target variable dictionary        */
-/******************************************************************************/
-/* Function:  Drop a variable object                                          */
-/******************************************************************************/
+
+/**
+ * Drop a variable in the current execution context.
+ *
+ * @param context The current execution context.
+ */
+void RexxSimpleVariable::drop(RexxActivation *context)
 {
-                                       /* drop the variable value           */
-  context->dropLocalVariable(variableName, index);
+    // the context handles all of this
+    context->dropLocalVariable(variableName, index);
 }
+
 
 /**
  * Drop a variable that's directly in a variable dictionary.
  *
  * @param dictionary The target dictionary
  */
-void RexxParseVariable::drop(RexxVariableDictionary *dictionary)
+void RexxSimpleVariable::drop(RexxVariableDictionary *dictionary)
 {
-                                       /* look up the name                  */
     RexxVariable *variable = dictionary->getVariable(variableName);
-    variable->drop();                    /* and perform the set               */
+    variable->drop();
 }
 
-void RexxParseVariable::setGuard(
-  RexxActivation *context )            /* current activation context        */
-/******************************************************************************/
-/* Set a guard variable notification on an object variable                    */
-/******************************************************************************/
+
+/**
+ * Set a guard notification on a simple variable.
+ *
+ * @param context The current execution context.
+ */
+void RexxSimpleVariable::setGuard(RexxActivation *context )
 {
-                                       /* look up the name                  */
     RexxVariable *variable = context->getLocalVariable(variableName, index);
-    variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
+    variable->inform(ActivityManager::currentActivity);
 }
 
-void RexxParseVariable::clearGuard(
-  RexxActivation *context )            /* current activation context        */
-/******************************************************************************/
-/* Remove a guard variable notification on an object variable                 */
-/******************************************************************************/
+
+/**
+ * Remove a GUARD WHEN watch from a simple variable.
+ *
+ * @param context The current execution context.
+ */
+void RexxSimpleVariable::clearGuard(RexxActivation *context)
 {
                                        /* look up the name                  */
     RexxVariable *variable = context->getLocalVariable(variableName, index);
     variable->uninform(ActivityManager::currentActivity); /* remove the notification           */
 }
 
-void RexxParseVariable::procedureExpose(
-  RexxActivation      *context,        /* current activation context        */
-  RexxActivation      *parent,         /* the parent activation context     */
-  RexxExpressionStack *stack)          /* current evaluation stack          */
-/******************************************************************************/
-/* Function:  Expose a variable                                               */
-/******************************************************************************/
+
+/**
+ * Perform a PROCEDURE EXPOSE operation on a simple variable.
+ *
+ * @param context The current execution context.
+ * @param parent  The parent execution context.
+ */
+void RexxSimpleVariable::procedureExpose(RexxActivation *context, RexxActivation *parent)
 {
-                                         /* get the old variable entry        */
+    // get this from the old context.
     RexxVariable *old_variable = parent->getLocalVariable(variableName, index);
-                                         /* set the entry in the new table    */
+    // and poke it into our new table.
     context->putLocalVariable(old_variable, index);
 }
 
 
-void RexxParseVariable::expose(
-  RexxActivation      *context,        /* current activation context        */
-  RexxExpressionStack *stack,          /* current evaluation stack          */
-                                       /* variable scope we're exposing from*/
-  RexxVariableDictionary *object_dictionary)
-/******************************************************************************/
-/* Function:  Expose a variable                                               */
-/******************************************************************************/
+/**
+ * Expose a simple object variable.
+ *
+ * @param context The current execution context.
+ * @param object_dictionary
+ *                The target variable dictionary from the method scope.
+ */
+void RexxSimpleVariable::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
 {
-    /* get the old variable entry        */
+    // get the old variable entry
     RexxVariable *old_variable = object_dictionary->getVariable(variableName);
-    /* set the entry in the new table    */
+    // set the entry in the new table
     context->putLocalVariable(old_variable, index);
 }
+
 
 /**
  * Return the name of this variable.
  *
  * @return The string value of the variable name.
  */
-RexxString *RexxParseVariable::getName()
+RexxString *RexxSimpleVariable::getName()
 {
     return variableName;
-}
-
-
-void *RexxParseVariable::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a REXX variable translator object                        */
-/******************************************************************************/
-{
-    return new_object(size, T_VariableTerm);        /* Get new object                    */
 }
 

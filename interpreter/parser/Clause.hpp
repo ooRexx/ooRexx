@@ -49,40 +49,43 @@
 #include "ArrayClass.hpp"
 #include "Token.hpp"
 
-class RexxClause : public RexxInternalObject {
+class RexxClause : public RexxInternalObject
+{
  public:
-  void        *operator new(size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void        *operator new(size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  RexxClause();
-  inline RexxClause(RESTORETYPE restoreType) { ; };
+    RexxClause();
+    inline RexxClause(RESTORETYPE restoreType) { ; };
 
-  void        live(size_t);
-  void        liveGeneral(int reason);
-  void        flatten(RexxEnvelope *);
-  void        setStart(size_t, size_t);
-  void        setEnd(size_t, size_t);
-  void        trim();
-  void        newClause();
-  RexxToken  *newToken(TokenClass, TokenSubclass, RexxString *, SourceLocation &);
-  inline RexxToken  *newToken(TokenClass c, TokenSubclass sc, SourceLocation &l) { return newToken(c, sc, OREF_NULL, l); }
-  inline RexxToken  *newToken(TokenClass c, SourceLocation &l) { return newToken(c, SUBTYPE_NONE, OREF_NULL, l); }
-  RexxToken  *nextRealToken();
-  inline void        firstToken() {this->current = this->first;};
-  inline const SourceLocation &getLocation() { return clauseLocation; }
-  inline void  setLocation(SourceLocation &l) { clauseLocation = l; }
-  inline void        previous() { this->current--; }
-  inline RexxToken  *next() { return (RexxToken *)this->tokens->get(this->current++); }
-  inline size_t      mark() { return current; }
-  inline void        reset(size_t position) { current = position; }
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
 
-  SourceLocation clauseLocation;       /* position of the clause            */
-  size_t current;                      /* index of current token of clause  */
-  size_t first;                        /* first token of clause             */
-  RexxArray  *tokens;                  /* array of tokens in the clause     */
-  size_t size;                         /* size of token array               */
-  size_t free;                         /* location of first free token      */
+    void        setStart(size_t, size_t);
+    void        setEnd(size_t, size_t);
+    void        trim();
+    void        newClause();
+    RexxToken  *newToken(TokenClass, TokenSubclass, RexxString *, SourceLocation &);
+    inline RexxToken  *newToken(TokenClass c, TokenSubclass sc, SourceLocation &l) { return newToken(c, sc, OREF_NULL, l); }
+    inline RexxToken  *newToken(TokenClass c, SourceLocation &l) { return newToken(c, SUBTYPE_NONE, OREF_NULL, l); }
+    RexxToken  *nextRealToken();
+    inline void        firstToken() {current = first;};
+    inline const SourceLocation &getLocation() { return clauseLocation; }
+    inline void  setLocation(SourceLocation &l) { clauseLocation = l; }
+    inline void        previous() { current--; }
+    inline RexxToken  *next() { return (RexxToken *)tokens->get(current++); }
+    inline size_t      mark() { return current; }
+    inline void        reset(size_t position) { current = position; }
+
+ protected:
+
+    SourceLocation clauseLocation;       // position of the clause
+    size_t current;                      // index of current token of clause
+    size_t first;                        // first token of clause
+    RexxArray  *tokens;                  // array of tokens in the clause
+    size_t size;                         // size of token array
+    size_t free;                         // location of first free token
 };
 #endif

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,8 +41,6 @@
 /* Primitive Translator Source File Class                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <ctype.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
@@ -52,6 +50,18 @@
 #include "RexxActivation.hpp"
 #include "SourceFile.hpp"
 
+
+/**
+ * Create a new source package object.
+ *
+ * @param size   the size of the source object.
+ *
+ * @return Storage for creating a source object.
+ */
+void *RexxSource::operator new (size_t size)
+{
+    return new_object(sizeof(RexxSource), T_RexxSource);
+}
 
 // start of static methods for creating source objects from different program
 // sources.
@@ -152,14 +162,11 @@ RexxSource::RexxSource(RexxString *p, ProgramSource *s)
 void RexxSource::live(size_t liveMark)
 {
   memory_mark(this->parentSource);
-  memory_mark(this->sourceArray);
   memory_mark(this->programName);
   memory_mark(this->programDirectory);
   memory_mark(this->programExtension);
   memory_mark(this->programFile);
   memory_mark(this->securityManager);
-  memory_mark(this->sourceBuffer);
-  memory_mark(this->sourceIndices);
   memory_mark(this->routines);
   memory_mark(this->public_routines);
   memory_mark(this->requires);
@@ -188,9 +195,6 @@ void RexxSource::liveGeneral(int reason)
 #ifndef KEEPSOURCE
   if (memoryObject.savingImage()) {    /* save image time?                  */
                                        /* don't save the source image       */
-    OrefSet(this, this->sourceArray, OREF_NULL);
-    OrefSet(this, this->sourceBuffer, OREF_NULL);
-    OrefSet(this, this->sourceIndices, OREF_NULL);
                                        /* don't save the install information*/
     OrefSet(this, this->methods, OREF_NULL);
     OrefSet(this, this->requires, OREF_NULL);
@@ -201,18 +205,14 @@ void RexxSource::liveGeneral(int reason)
     OrefSet(this, this->installed_public_classes, OREF_NULL);
     OrefSet(this, this->merged_public_classes, OREF_NULL);
     OrefSet(this, this->merged_public_routines, OREF_NULL);
-    this->flags &= ~reclaim_possible;  /* can't recover source immediately  */
   }
 #endif
-  memory_mark_general(this->sourceArray);
   memory_mark_general(this->parentSource);
   memory_mark_general(this->programName);
   memory_mark_general(this->programDirectory);
   memory_mark_general(this->programExtension);
   memory_mark_general(this->programFile);
   memory_mark_general(this->securityManager);
-  memory_mark_general(this->sourceBuffer);
-  memory_mark_general(this->sourceIndices);
   memory_mark_general(this->labels);
   memory_mark_general(this->routines);
   memory_mark_general(this->public_routines);
@@ -242,19 +242,13 @@ void RexxSource::flatten (RexxEnvelope *envelope)
                                        /* don't need to to keep source info   */
                                        /* so ask the envelope if this is a    */
                                        /*  flatten to save the method image   */
-    this->sourceArray = OREF_NULL;
-    this->sourceBuffer = OREF_NULL;
-    this->sourceIndices = OREF_NULL;
     this->securityManager = OREF_NULL;
-    flatten_reference(newThis->sourceArray, envelope);
     flatten_reference(newThis->parentSource, envelope);
     flatten_reference(newThis->programName, envelope);
     flatten_reference(newThis->programDirectory, envelope);
     flatten_reference(newThis->programExtension, envelope);
     flatten_reference(newThis->programFile, envelope);
     flatten_reference(newThis->securityManager, envelope);
-    flatten_reference(newThis->sourceBuffer, envelope);
-    flatten_reference(newThis->sourceIndices, envelope);
     flatten_reference(newThis->labels, envelope);
     flatten_reference(newThis->routines, envelope);
     flatten_reference(newThis->public_routines, envelope);
@@ -286,9 +280,11 @@ void RexxSource::extractNameInformation()
         return;
     }
 
-    OrefSet(this, this->programDirectory, SysFileSystem::extractDirectory(programName));
-    OrefSet(this, this->programExtension, SysFileSystem::extractExtension(programName));
-    OrefSet(this, this->programFile, SysFileSystem::extractFile(programName));
+    // NOTE:  only done during source initialization, so this safe
+    // to not use OrefSet
+    programDirectory = SysFileSystem::extractDirectory(programName);
+    programExtension = SysFileSystem::extractExtension(programName);
+    programFile = SysFileSystem::extractFile(programName);
 }
 
 
@@ -943,15 +939,6 @@ void RexxSource::processInstall(
     }
 }
 
-void *RexxSource::operator new (size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object from an array                    */
-/******************************************************************************/
-{
-    /* Get new object                    */
-    return new_object(sizeof(RexxSource), T_RexxSource);
-}
-
 /**
  * Parse a trace setting value into a decoded setting
  * and the RexxActivation debug flag set to allow
@@ -1250,54 +1237,5 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
             OrefSet(this, public_routines, new_directory());
         }
         public_routines->setEntry(name, routineObject);
-    }
-}
-
-
-/**
- * Initialize the source object for having directives added.
- */
-void RexxSource::initializeForDirectives()
-{
-    // create objects to hold the package specifics.
-    routines = new_directory();
-    publicRoutines = new_directory();
-    requires = new_list();
-    libraries = new_list();
-    classes = new_list();
-}
-
-/**
- * After all directives have been processed, check to see
- * which collections we can get rid of because they are
- * unnecessary overhead.
- */
-void RexxSource::clearEmptyDependencies()
-{
-
-    // clear out any other lists that might be empty
-    if (requires->isEmpty())
-    {
-        requires = OREF_NULL;
-    }
-
-    if (libraries->isEmpty())
-    {
-        libraries = OREF_NULL;
-    }
-
-    if (routines->isEmpty())
-    {
-        routines = OREF_NULL;
-    }
-
-    if (publicRoutines->isEmpty())
-    {
-        publicRoutines = OREF_NULL;
-    }
-
-    if (methods->isEmpty())
-    {
-        methods = OREF_NULL;
     }
 }

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,17 +44,18 @@
 #ifndef Included_RexxExpressionOperator
 #define Included_RexxExpressionOperator
 
-class RexxExpressionOperator : public RexxInternalObject {
+class RexxExpressionOperator : public RexxInternalObject
+{
  public:
-  inline RexxExpressionOperator() { ; }
+    inline RexxExpressionOperator() { ; }
 
-  RexxExpressionOperator(TokenSubclass, RexxObject *, RexxObject *);
-  inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
-  void   live(size_t);
-  void   liveGeneral(int reason);
-  void   flatten(RexxEnvelope *);
+    RexxExpressionOperator(TokenSubclass, RexxObject *, RexxObject *);
+    inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
+    virtual void   live(size_t);
+    virtual void   liveGeneral(int reason);
+    virtual void   flatten(RexxEnvelope *);
 
-  inline const char *operatorName() { return operatorNames[oper]; }
+    inline const char *operatorName() { return operatorNames[oper]; }
 
 protected:
     // table of operator names
@@ -65,30 +66,33 @@ protected:
     RexxObject *left_term;               // left term of the operator
 };
 
-class RexxBinaryOperator : public RexxExpressionOperator {
+class RexxBinaryOperator : public RexxExpressionOperator
+{
  public:
-  void  *operator new(size_t);
-  inline void  *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void  *operator new(size_t);
+    inline void  *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  inline RexxBinaryOperator(TokenSubclass op, RexxObject *left, RexxObject *right)
-      : RexxExpressionOperator(op, left, right) { ; }
-  inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
-  RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    inline RexxBinaryOperator(TokenSubclass op, RexxObject *left, RexxObject *right)
+        : RexxExpressionOperator(op, left, right) { ; }
+    inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
+
+    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
 };
 
 
 class RexxUnaryOperator : public RexxExpressionOperator {
  public:
-  void  *operator new(size_t);
-  inline void  *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void  *operator new(size_t);
+    inline void  *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  inline RexxUnaryOperator(int op, RexxObject *left)
-      : RexxExpressionOperator(op, left, OREF_NULL) { ; }
-  inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
-  RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    inline RexxUnaryOperator(int op, RexxObject *left)
+        : RexxExpressionOperator(op, left, OREF_NULL) { ; }
+    inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
+
+    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
 };
 #endif

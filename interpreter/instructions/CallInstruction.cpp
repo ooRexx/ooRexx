@@ -67,25 +67,15 @@
  *                   An index for a potential builtin function call.
  */
 RexxInstructionCall::RexxInstructionCall(RexxString *name, size_t argCount,
-    RexxQueue  *argList, bool noInternal, BuiltinCode builtin_index)
+    RexxQueue  *argList, BuiltinCode builtin_index)
 {
     targetName = name;
     builtinIndex = builtin_index;
     argumentCount = argCount;
 
-    // if internal calls are not allowed, set .nil as the target
-    // instruction to tell us to skip resolving this later.
-    if (noInternal)
-    {
-        targetInstruction = (RexxInstruction *)TheNilObject;
-    }
-
     // now copy any arguments from the sub term stack
     // NOTE:  The arguments are in last-to-first order on the stack.
-    while (argCount > 0)
-    {
-        arguments[--argCount] = argList->pop();
-    }
+    initializeObjectArray(argCount, arguments, RexxObject, argList);
 }
 
 
@@ -144,37 +134,18 @@ void RexxInstructionCall::flatten(RexxEnvelope *envelope)
  */
 void RexxInstructionCall::resolve(RexxDirectory *labels)
 {
-    // if we're allowed to have internal calls, look for an internal label with this
-    // name.  Internal calls are disallowed if the name was originally a quoted string.
-    if (targetInstruction == OREF_NULL)
+    // Note, if we are not allowed to have internal calls, we never get added to the
+    // resolution list.  If we get a resolve call, then we need to check for this.
+    // if there is a labels table, see if we can find a label object from the context.
+    if (labels != OREF_NULL)
     {
-        // if there is a labels table, see if we can find a label object from the context.
-        if (labels != OREF_NULL)
-        {
-            // see if there is a matching label.  If we get something,
-            // we're finished.
-            targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName));
-            if (targetInstruction != OREF_NULL)
-            {
-                return;
-            }
-        }
+        // see if there is a matching label.  If we get something,
+        // we're finished.
+        targetInstruction = (RexxInstruction *)labels->at((RexxString *)targetName));
     }
 
-    // Either the internal call was disable, or it could not resolve to a target
-    // label.  Make sure the instruction is null so we know this is not an
-    // internal call at run time.
-    targetInstruction = OREF_NULL;
-
-    // if we've resolved to a builtin target, we can just scrap the name.
-    // in addition to saving a little space in the saved image, this will
-    // double as an indicator that this is a builtin call.
-    if (builtinIndex != NO_BUILTIN)
-    {
-        targetName = OREF_NULL;
-    }
-
-    // if none of the above resolved anything, this is an external call.
+    // really nothing else required here.  If we did not resolve a label location, then
+    // the next step depends on whether we have a valid builtin index or not.
 }
 
 
@@ -220,8 +191,8 @@ void RexxInstructionCall::execute(RexxActivation *context, RexxExpressionStack *
     {
         context->internalCall(targetName, targetInstruction, argumentCount, stack, result);
     }
-    // if this was resolved to a builtin, we got rid of the name.
-    else if (targetName == OREF_NULL)
+    // if this was resolved to a builtin, call directly
+    else if (builtinIndex != NO_BUILTIN)
     {
         result = (*(RexxSource::builtinTable[builtinIndex]))(context, argumentCount, stack);
 

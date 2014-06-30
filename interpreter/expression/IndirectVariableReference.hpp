@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,23 +46,30 @@
 
 #include "ExpressionBaseVariable.hpp"
 
-class RexxVariableReference : public RexxVariableBase {
+class RexxVariableReference : public RexxVariableBase
+{
  public:
-  void *operator new(size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  inline RexxVariableReference(RESTORETYPE restoreType) { ; };
-  RexxVariableReference(RexxVariableBase *);
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  RexxList *list(RexxActivation *, RexxExpressionStack *);
-  void drop(RexxActivation *);
-  void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *);
-  void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *);
+    inline RexxVariableReference(RESTORETYPE restoreType) { ; };
+    RexxVariableReference(RexxVariableBase *);
 
-  RexxVariableBase *variableObject;   // The variable lookup object
+    void live(size_t);
+    void liveGeneral(int reason);
+    void flatten(RexxEnvelope *);
+
+    // methods implementd from RexxVariableBase
+    void drop(RexxActivation *);
+    void expose(RexxActivation *, RexxVariableDictionary *);
+    void procedureExpose(RexxActivation *, RexxActivation *);
+
+    RexxList *list(RexxActivation *, RexxExpressionStack *);
+
+ protected:
+
+    RexxVariableBase *variableObject;   // The variable lookup object
 };
 #endif

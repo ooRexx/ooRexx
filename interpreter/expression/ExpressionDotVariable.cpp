@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -47,97 +47,126 @@
 #include "ExpressionDotVariable.hpp"
 #include "SourceFile.hpp"
 
-RexxDotVariable::RexxDotVariable(
-    RexxString * variable_name )       /* dExpressionBaseVariableiable name to access       */
-/******************************************************************************/
-/* Function:  Initialize a DOTVARIABLE retriever item                         */
-/******************************************************************************/
-{
-                                       /* store the name                    */
-  OrefSet(this, this->variableName, variable_name);
-}
 
-void RexxDotVariable::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-  memory_mark(this->variableName);
-}
-
-void RexxDotVariable::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-  memory_mark_general(this->variableName);
-}
-
-void RexxDotVariable::flatten(RexxEnvelope * envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxDotVariable)
-
-  flatten_reference(newThis->variableName, envelope);
-
-  cleanUpFlatten
-}
-
-RexxObject * RexxDotVariable::evaluate(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/****************************************************************************/
-/* Function:  Evaluate a REXX dot variable                                  */
-/****************************************************************************/
-{
-    /* get this from the source          */
-    RexxObject *result = context->resolveDotVariable(this->variableName);
-    if (result == OREF_NULL)             /* not there?                        */
-    {
-        /* try for a REXX defined name       */
-        result = context->rexxVariable(this->variableName);
-    }
-    if (result == OREF_NULL)             /* not there?                        */
-    {
-        /* add a period to the name          */
-        result = this->variableName->concatToCstring(CHAR_PERIOD);
-    }
-    stack->push(result);                 /* place on the evaluation stack     */
-                                         /* trace if necessary                */
-    context->traceDotVariable(variableName, result);
-    return result;                       /* also return the result            */
-}
-
-
-RexxObject * RexxDotVariable::getValue(
-    RexxActivation      *context)
-/****************************************************************************/
-/* Function:  Evaluate a REXX dot variable                                  */
-/****************************************************************************/
-{
-    /* get this from the source          */
-    RexxObject *result = context->resolveDotVariable(this->variableName);
-    if (result == OREF_NULL)             /* not there?                        */
-    {
-        /* try for a REXX defined name       */
-        result = context->rexxVariable(this->variableName);
-    }
-    if (result == OREF_NULL)             /* not there?                        */
-    {
-        /* add a period to the name          */
-        result = this->variableName->concatToCstring(CHAR_PERIOD);
-    }
-    return result;                       /* also return the result            */
-}
-
+/**
+ * Allocate a new Dot Variable expression object.
+ *
+ * @param size   The size of object.
+ *
+ * @return Storage for creating a dot variable object.
+ */
 void * RexxDotVariable::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
 {
-                                       /* Get new object                    */
     return new_object(size, T_DotVariableTerm);
+}
+
+
+/**
+ * Construct a Dot variable retriever.
+ *
+ * @param variable_name
+ *               The name of the symbol.
+ */
+RexxDotVariable::RexxDotVariable(RexxString *variable_name )
+{
+    variableName = variable_name;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxDotVariable::live(size_t liveMark)
+{
+    memory_mark(variableName);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxDotVariable::liveGeneral(int reason)
+{
+    memory_mark_general(variableName);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxDotVariable::flatten(RexxEnvelope * envelope)
+{
+    setUpFlatten(RexxDotVariable)
+
+    flattenRef(variableName);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Evaluate a dot variable symbol.
+ *
+ * @param context The current evaluation context.
+ * @param stack   The current evaluation stack.
+ *
+ * @return The dot symbol value.
+ */
+RexxObject * RexxDotVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack )
+{
+    // try first from the environment
+    RexxObject *result = context->resolveDotVariable(variableName);
+    if (result == OREF_NULL)
+    {
+        // might be a special rexx name
+        result = context->rexxVariable(variableName);
+
+        if (result == OREF_NULL)
+        {
+            // add a period to the name
+            result = variableName->concatToCstring(CHAR_PERIOD);
+        }
+    }
+    // evaluate always pushes on the stack.
+    stack->push(result);
+    // trace this if tracing intermediates
+    context->traceDotVariable(variableName, result);
+    return result;
+}
+
+
+/**
+ * Just retrieve a value for a dotvariable object without
+ * pushing on the stack.
+ *
+ * @param context The current execution context.
+ *
+ * @return The dotvariable value.
+ */
+RexxObject * RexxDotVariable::getValue(RexxActivation *context)
+{
+    // try first from the environment
+    RexxObject *result = context->resolveDotVariable(variableName);
+    if (result == OREF_NULL)
+    {
+        // might be a special rexx name
+        result = context->rexxVariable(variableName);
+
+        if (result == OREF_NULL)
+        {
+            // add a period to the name
+            result = variableName->concatToCstring(CHAR_PERIOD);
+        }
+    }
+    // this just returns without pusing on the stack
+    return result;
 }
 

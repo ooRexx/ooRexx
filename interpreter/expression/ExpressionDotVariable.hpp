@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,22 +46,32 @@
 
 #include "ExpressionBaseVariable.hpp"
 
-class RexxDotVariable : public RexxVariableBase {
+/**
+ * Expression element for a "dot variable" or environment
+ * symbol of the form ".name".
+ */
+class RexxDotVariable : public RexxVariableBase
+{
  public:
-  void *operator new(size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  RexxDotVariable(RexxString *);
-  inline RexxDotVariable(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
-  RexxObject *getValue(RexxActivation *);
+    RexxDotVariable(RexxString *);
+    inline RexxDotVariable(RESTORETYPE restoreType) { ; };
 
-  RexxString *variableName;     // name of the environment symbol
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // part ov RexxVariableBase...rest of the methods default
+    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *getValue(RexxActivation *);
+
+ protected:
+
+    RexxString *variableName;     // name of the environment symbol
 
 };
 #endif

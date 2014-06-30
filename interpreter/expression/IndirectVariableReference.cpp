@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,7 +41,6 @@
 /* Primitive Translator Expression Parsing Variable Indirect Reference Class  */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
@@ -50,171 +49,192 @@
 #include "RexxVariableDictionary.hpp"
 #include "IndirectVariableReference.hpp"
 
-RexxVariableReference::RexxVariableReference(
-     RexxVariableBase *variable)       /* variable retriever for reference  */
-/******************************************************************************/
-/* Function:  Complete initialization of a variable reference object          */
-/******************************************************************************/
+
+/**
+ * Allocate memory for a RexxVariableReference item.
+ *
+ * @param size   The base object size.
+ *
+ * @return Storage for creating a new variable instance.
+ */
+void *RexxVariableReference::operator new(size_t size)
 {
-                                       /* set the name value                */
-  OrefSet(this, this->variableObject, variable);
+    return new_object(size, T_IndirectVariableTerm);
 }
 
+
+/**
+ * Construct an indirect variable reference.
+ *
+ * @param variable The variable instance used for retrieval and
+ *                 sub operations.
+ */
+RexxVariableReference::RexxVariableReference(RexxVariableBase *variable)
+{
+    variableObject = variable;
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxVariableReference::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  memory_mark(this->variableObject);
+    memory_mark(variableObject);
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxVariableReference::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-  memory_mark_general(this->variableObject);
+    memory_mark_general(variableObject);
 }
 
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
 void RexxVariableReference::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(RexxVariableReference)
+    setUpFlatten(RexxVariableReference)
 
-  flatten_reference(newThis->variableObject, envelope);
+    flattenRef(variableObject);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
-RexxList *RexxVariableReference::list(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack)        /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Parse a variables contents into an array of "good" variable     */
-/*            retrievers.                                                     */
-/******************************************************************************/
+
+/**
+ * Parse a variable's string contents into an array of
+ * "good" variable retrievers.
+ *
+ * @param context The current execution context.
+ *
+ * @return An array of variable retrievers.
+ */
+RexxArray *RexxVariableReference::list(RexxActivation *context)
 {
-                                         /* get the variable value            */
-    RexxObject *value = this->variableObject->evaluate(context, stack);
-    stack->toss();                       /* remove the stack item             */
-    RexxString *name_string = REQUEST_STRING(value); /* force to string form              */
-    stack->push(name_string);            /* protect this on the stack         */
-    RexxList *name_list = new_list();    /* create a new list item            */
-    stack->push(name_list);              /* protect this also                 */
-    size_t i = 1;                        /* start with the first word         */
-                                         /* get the next variable             */
-    RexxString *variable_name = (RexxString *)name_string->word(new_integer(i));
-    i++;                                 /* step the index                    */
-    while (variable_name->getLength() != 0)
+    // get the variable value
+    RexxObject *value = variableObject->getValue(context);
+    // force to string form
+    ProtectedObject nameString = REQUEST_STRING(value);
+    // get this as a list of words
+    ProtectedObject nameList = ((RexxString *)nameString)->subWords(OREF_NULL, OREF_NULL);
+    RexxArray *list = (RexxArray *)nameList;
+
+    size_t count = list->size();
+
+    // now process all of the names, replacing them with retrievers
+    for (size_t i = 1; i <= count; i++)
     {
-        /* get the first character           */
+        // get the next name
+        RexxString *variable_name = list(i);
+
+        // get the first character
         int character = variable_name->getChar(0);
-        if (character == '.')              /* start with a period?              */
+        // report obvious non-variable names
+        // start with a period
+        if (character == '.')
         {
-                                           /* report that error                 */
             reportException(Error_Invalid_variable_period, variable_name);
         }
-        /* how about a digit?                */
+        // or a digit
         else if (character >= '0' && character <= '9')
         {
             /* constant symbol                   */
             reportException(Error_Invalid_variable_number, variable_name);
         }
-        /* convert into a variable reference */
+        // now convert into a variable reference
         RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(variable_name);
-        if (retriever == OREF_NULL)        /* not converted ok?                 */
+        // if it did not convert (invalid characters, for example), report this
+        if (retriever == OREF_NULL)
         {
             reportException(Error_Symbol_expected_expose);
         }
-        /* add to the processing list        */
-        name_list->addLast((RexxObject *)retriever);
-        /* get the next variable             */
-        variable_name = (RexxString *)name_string->word(new_integer(i));
-        i++;                               /* and step the index                */
+        // replace the name with the retriever
+        list->put((RexxObject *)retriever, i);
     }
-    return name_list;                    /* return the list directly          */
+    return list;
 }
 
-void RexxVariableReference::drop(
-  RexxActivation *context)             /* the context we're dropping in     */
-/******************************************************************************/
-/* Function:  Drop a subsidiary list of variables                             */
-/******************************************************************************/
+
+/**
+ * Perform a drop operation using an indirect name.
+ *
+ * @param context The current execution context.
+ */
+void RexxVariableReference::drop(RexxActivation *context)
 {
-    RexxExpressionStack *stack = context->getStack();         /* get the stack from the context    */
-    /* evaluate into a variable list     */
-    RexxList *name_list = this->list(context, stack);
-    /* get the first list item           */
-    RexxVariableBase *variable = (RexxVariableBase *)name_list->removeFirst();
-    /* while more list items             */
-    while (variable != (RexxVariableBase *)TheNilObject)
+    // evaluate into a variable list
+    RexxArray *variables = list(context);
+    ProtectedObject p(variables);
+
+    size_t count = variables->size();
+    // perform the drop on all of the list variables
+    for (size_t i = 1; i <= count; i++)
     {
-        variable->drop(context);           /* drop the this variable            */
-                                           /* get the next list item            */
-        variable = (RexxVariableBase *)name_list->removeFirst();
+        RexxVariableBase *variable = (RexxVariableBase *)variables->get(i);
+        variable->drop(context);
     }
 }
 
 
-void RexxVariableReference::procedureExpose(
-  RexxActivation      *context,        /* current activation context        */
-  RexxActivation      *parent,         /* the parent activation context     */
-  RexxExpressionStack *stack)          /* current evaluation stack          */
-/******************************************************************************/
-/* Function:  Expose a subsidiary list of variables                           */
-/******************************************************************************/
+/**
+ * Expose a subsidiary list of variables.
+ *
+ * @param context The current execution context.
+ * @param parent  The parent execution context.
+ */
+void RexxVariableReference::procedureExpose(RexxActivation *context, RexxActivation *parent)
 {
-    /* expose the variable first         */
-    variableObject->procedureExpose(context, parent, stack);
-    /* evaluate into a variable list     */
-    RexxList *name_list = this->list(context, stack);
-    /* get the first list item           */
-    RexxVariableBase *variable = (RexxVariableBase *)name_list->removeFirst();
-    /* while more list items             */
-    while (variable != (RexxVariableBase *)TheNilObject)
+    // expose this variable first
+    variableObject->procedureExpose(context, parent);
+
+    // evaluate into a variable list
+    RexxArray *variables = list(context);
+    ProtectedObject p(variables);
+
+    size_t count = variables->size();
+    // perform the expose on all of the list variables
+    for (size_t i = 1; i <= count; i++)
     {
-        /* expose this variable              */
-        variable->procedureExpose(context, parent, stack);
-        /* get the next list item            */
-        variable = (RexxVariableBase *)name_list->removeFirst();
+        RexxVariableBase *variable = (RexxVariableBase *)variables->get(i);
+        variable->procedureExpose(context, parent);
     }
 }
 
 
-void RexxVariableReference::expose(
-  RexxActivation      *context,        /* current activation context        */
-  RexxExpressionStack *stack,          /* current evaluation stack          */
-                                       /* variable scope we're exposing from*/
-  RexxVariableDictionary *object_dictionary)
-/******************************************************************************/
-/* Function:  Expose a subsidiary list of variables                           */
-/******************************************************************************/
+/**
+ * Expose a subsidiary list of variables.
+ *
+ * @param context The current execution context.
+ * @param object_dictionary
+ *                The source object scope variable dictionary.
+ */
+void RexxVariableReference::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
 {
-    /* expose the variable first         */
+    // expose the variable first
     variableObject->expose(context, stack, object_dictionary);
-    /* evaluate into a variable list     */
-    RexxList *name_list = this->list(context, stack);
-    /* get the first list item           */
-    RexxVariableBase *variable = (RexxVariableBase *)name_list->removeFirst();
-    /* while more list items             */
-    while (variable != (RexxVariableBase *)TheNilObject)
+    // evaluate into a variable list
+    RexxArray *variables = list(context);
+    ProtectedObject p(variables);
+
+    size_t count = variables->size();
+    // perform the expose on all of the list variables
+    for (size_t i = 1; i <= count; i++)
     {
-        /* expose this variable              */
-        variable->expose(context, stack, object_dictionary);
-        /* get the next list item            */
-        variable = (RexxVariableBase *)name_list->removeFirst();
+        RexxVariableBase *variable = (RexxVariableBase *)variables->get(i);
+        variable->expose(context, object_dictionary);
     }
-}
-
-
-void *RexxVariableReference::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
-{
-                                       /* Get new object                        */
-    return new_object(size, T_IndirectVariableTerm);
 }
 

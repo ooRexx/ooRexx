@@ -626,7 +626,7 @@ RexxVariableBase  *RexxVariableDictionary::getVariableRetriever(
             /* if it is a simple                 */
         case STRING_NAME:
             /* create a new variable retriever   */
-            return(RexxVariableBase *)new RexxParseVariable(variable, 0);
+            return(RexxVariableBase *)new RexxSimpleVariable(variable, 0);
             /* if we don't know what it is       */
         default:
             return OREF_NULL;                /* don't return a retriever object   */
@@ -732,7 +732,7 @@ RexxVariableBase  *RexxVariableDictionary::getDirectVariableRetriever(
     else                                 /* simple variable                   */
     {
         /* create a new variable retriever   */
-        return(RexxVariableBase *)new RexxParseVariable(variable, 0);
+        return(RexxVariableBase *)new RexxSimpleVariable(variable, 0);
     }
 }
 
@@ -795,7 +795,7 @@ RexxObject *RexxVariableDictionary::buildCompoundVariable(
             else
             {
                 /* create a new variable retriever   */
-                tailPart = (RexxObject *)new RexxParseVariable(tail, 0);
+                tailPart = (RexxObject *)new RexxSimpleVariable(tail, 0);
             }
             tails->push(tailPart);           /* add to the tail piece list        */
             position++;                      /* step past previous period         */

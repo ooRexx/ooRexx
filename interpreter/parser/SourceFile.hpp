@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -51,6 +51,7 @@
 #include "Token.hpp"
 #include "Clause.hpp"
 #include "SecurityManager.hpp"
+#include "ProgramSource.hpp"
 
 class RexxInstruction;
 class RexxInstructionDo;
@@ -97,14 +98,8 @@ const int DEBUG_NOTRACE     =  0x0800;
 // the mask for accessing just the debug flags
 const size_t TRACE_DEBUG_MASK  = 0xff00;
 
-#define _interpret       0x00000002    /* this is interpret translation     */
-#define _install         0x00000004    /* installation stuff required       */
-#define reclaimed        0x00000008    /* last clause only partially used   */
-#define reclaim_possible 0x00000020    /* can re-establish source connect   */
-#define no_clause        0x00000040    /* last clause of a block reached    */
-
-
-class RexxSource: public RexxInternalObject {
+class RexxSource: public RexxInternalObject
+{
  public:
     static RexxSource *createSource(RexxString *filename, ProgramSource *s);
     static RexxSource *createSource(RexxString *filename);
@@ -115,6 +110,7 @@ class RexxSource: public RexxInternalObject {
     // We do the real work in the setup() method.
     RexxSource(RexxString *p, ProgramSource *s) : programName(p), source(s) { }
     inline RexxSource(RESTORETYPE restoreType) { ; };
+
     virtual void live(size_t);
     virtual void liveGeneral(int reason);
     virtual void flatten(RexxEnvelope *);
@@ -125,9 +121,6 @@ class RexxSource: public RexxInternalObject {
     void        setReconnect();
     void        setBufferedSource(RexxBuffer *newSource) { this->initBuffered(newSource); }
     void        interpretLine(size_t);
-    void        live(size_t);
-    void        liveGeneral(int reason);
-    void        flatten(RexxEnvelope *);
     size_t      sourceSize();
     RexxString *get(size_t);
     RexxString *traceBack(RexxActivation *, SourceLocation &, size_t, bool);

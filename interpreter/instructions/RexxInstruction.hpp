@@ -162,7 +162,7 @@ class RexxInstructionExpression : public RexxInstruction
     RexxObject *expression;              // expression to evaluate
 };
 
-// a convenience macro for initializing instruction objects.
+// a convenience macro for initializing instruction/expression objects.
 // for many of the instructions, they have a variable size array
 // that are initialized in reverse order using items pulled from a
 // provided queue.  This simplifies this initialization process and

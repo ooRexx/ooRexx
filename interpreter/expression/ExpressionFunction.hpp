@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,36 +44,31 @@
 #ifndef Included_RexxExpressionFunction
 #define Included_RexxExpressionFunction
 
-#define function_nointernal  0x01      /* bypass internal routine calls     */
-#define function_type_mask   0x0e      /* type of call                      */
-#define function_internal    0x02      /* internal call                     */
-#define function_builtin     0x06      /* builtin call                      */
-#define function_external    0x0e      /* external call                     */
-#define function_on_off      0x20      /* call ON/OFF instruction           */
-
 class RexxExpressionFunction : public RexxInternalObject {
  public:
-  void *operator new(size_t, size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, size_t) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t, size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  RexxExpressionFunction(RexxString *, size_t, RexxQueue *, size_t, bool);
-  inline RexxExpressionFunction(RESTORETYPE restoreType) { ; };
-  void        resolve(RexxDirectory *);
-  void        live(size_t);
-  void        liveGeneral(int reason);
-  void        flatten(RexxEnvelope *);
-  RexxObject *evaluate(RexxActivation*, RexxExpressionStack *);
+    RexxExpressionFunction(RexxString *, size_t, RexxQueue *, size_t, bool);
+    inline RexxExpressionFunction(RESTORETYPE restoreType) { ; };
+
+    virtual void        live(size_t);
+    virtual void        liveGeneral(int reason);
+    virtual void        flatten(RexxEnvelope *);
+
+    virtual RexxObject *evaluate(RexxActivation*, RexxExpressionStack *);
+
+    virtual void        resolve(RexxDirectory *);
 
 protected:
 
-  RexxString *functionName;            // the name of the function
-  RexxInstruction *target;             /* routine to call                   */
-  int16_t builtin_index;               /* builtin function index            */
-  uint8_t flags;                       /* bypass internal routine calls     */
-  uint8_t argument_count;              /* count of arguments                */
-  RexxObject * arguments[1];           /* argument list                     */
+    RexxString *functionName;            // the name of the function
+    RexxInstruction *target;             // internal routine to call
+    size_t  builtinIndex;                // resolved builtin function index
+    size_t  argumentCount;               // count of arguments
+    RexxObject *arguments[1];            // argument list
 };
 #endif

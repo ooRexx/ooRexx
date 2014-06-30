@@ -1221,7 +1221,7 @@ void RexxActivation::procedureExpose(
     /* now expose each individual variable */
     for (size_t i = 0; i < count; i++)
     {
-        variables[i]->procedureExpose(this, parent, &stack);
+        variables[i]->procedureExpose(this, parent);
     }
 }
 
@@ -1238,7 +1238,7 @@ void RexxActivation::expose(
     /* now expose each individual variable */
     for (size_t i = 0; i < count; i++)
     {
-        variables[i]->expose(this, &stack, object_variables);
+        variables[i]->expose(this, object_variables);
     }
 }
 

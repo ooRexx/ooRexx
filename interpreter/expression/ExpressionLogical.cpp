@@ -50,7 +50,23 @@
 #include "StackClass.hpp"
 #include "RexxActivity.hpp"
 #include "BuiltinFunctions.hpp"
-#include "SourceFile.hpp"
+#include "LanguageParser.hpp"
+
+
+/**
+ * Create a new logical list object.
+ *
+ * @param size   The size of the class object.
+ * @param count  The count of logical expressions.  Used to adjust the
+ *               allocated size to the requirements.
+ *
+ * @return A new RexxExpressionLogical object.
+ */
+void *RexxExpressionLogical::operator new(size_t size, size_t  count)
+{
+    return new_object(size + (count - 1) * sizeof(RexxObject *), T_LogicalTerm);
+}
+
 
 /**
  * Constructor for a RexxExpressionLogical object.
@@ -59,12 +75,13 @@
  * @param count  The number of expressions in the list.
  * @param list   The accumulated list of expressions.
  */
-RexxExpressionLogical::RexxExpressionLogical(RexxSource *source, size_t count, RexxQueue  *list)
+RexxExpressionLogical::RexxExpressionLogical(LanguageParser *parser, size_t count, RexxQueue  *list)
 {
     expressionCount = count;
 
     // the parsed expressions are stored in a queue, so we process them in
-    // reverse order.
+    // reverse order.  Note that we cannot use the macro to copy these here
+    // because we need to validate these as well.
     while (count > 0)
     {
         RexxObject *condition = list->pop();
@@ -72,23 +89,19 @@ RexxExpressionLogical::RexxExpressionLogical(RexxSource *source, size_t count, R
         {
             source->syntaxError(Error_Invalid_expression_logical_list);
         }
-        OrefSet(this, this->expressions[--count], condition);
+        expressions[--count] = condition;
     }
 }
+
 
 /**
  * The runtime, non-debug live marking routine.
  */
 void RexxExpressionLogical::live(size_t liveMark)
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
-
-  for (i = 0, count = this->expressionCount; i < count; i++)
-  {
-      memory_mark(this->expressions[i]);
-  }
+    memory_mark_array(expressionCount, expressions);
 }
+
 
 /**
  * The generalized live marking routine used for non-performance
@@ -96,14 +109,9 @@ void RexxExpressionLogical::live(size_t liveMark)
  */
 void RexxExpressionLogical::liveGeneral(int reason)
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
-
-  for (i = 0, count = this->expressionCount; i < count; i++)
-  {
-      memory_mark_general(this->expressions[i]);
-  }
+    memory_mark_general_array(expressionCount, expressions);
 }
+
 
 /**
  * The flattening routine, used for serializing object trees.
@@ -112,17 +120,11 @@ void RexxExpressionLogical::liveGeneral(int reason)
  */
 void RexxExpressionLogical::flatten(RexxEnvelope *envelope)
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    setUpFlatten(RexxExpressionLogical)
 
-  setUpFlatten(RexxExpressionLogical)
+    flattenArrayRefs(expressionCount, expressons);
 
-  for (i = 0, count = this->expressionCount; i < count; i++)
-  {
-      flatten_reference(newThis->expressions[i], envelope);
-  }
-
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 /**
@@ -162,20 +164,5 @@ RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, RexxExpress
         }
     }
     return TheTrueObject;      // all is truth
-}
-
-/**
- * Create a new logical list object.
- *
- * @param size   The size of the class object.
- * @param count  The count of logical expressions.  Used to adjust the
- *               allocated size to the requirements.
- *
- * @return A new RexxExpressionLogical object.
- */
-void *RexxExpressionLogical::operator new(size_t size, size_t  count)
-{
-                                         /* Get new object                    */
-    return new_object(size + (count - 1) * sizeof(RexxObject *), T_LogicalTerm);
 }
 

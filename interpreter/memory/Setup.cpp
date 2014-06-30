@@ -224,11 +224,11 @@ void RexxMemory::createImage()
                                        /* build the common retriever tables */
   TheCommonRetrievers = (RexxDirectory *)new_directory();
                                        /* add all of the special variables  */
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_SELF, VARIABLE_SELF), OREF_SELF);
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_SUPER, VARIABLE_SUPER), OREF_SUPER);
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_SIGL, VARIABLE_SIGL), OREF_SIGL);
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_RC, VARIABLE_RC), OREF_RC);
-  TheCommonRetrievers->put((RexxObject *)new RexxParseVariable(OREF_RESULT, VARIABLE_RESULT), OREF_RESULT);
+  TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_SELF, VARIABLE_SELF), OREF_SELF);
+  TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_SUPER, VARIABLE_SUPER), OREF_SUPER);
+  TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_SIGL, VARIABLE_SIGL), OREF_SIGL);
+  TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_RC, VARIABLE_RC), OREF_RC);
+  TheCommonRetrievers->put((RexxObject *)new RexxSimpleVariable(OREF_RESULT, VARIABLE_RESULT), OREF_RESULT);
   memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
 
 /******************************************************************************/

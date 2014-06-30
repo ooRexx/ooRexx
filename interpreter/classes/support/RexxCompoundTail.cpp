@@ -74,7 +74,7 @@ void RexxCompoundTail::buildUnresolvedTail(
             // if this is a variable, just copy the name.  Otherwixe, copy the value
             if (isOfClass(VariableTerm, part))
             {
-                ((RexxParseVariable *)part)->getName()->copyIntoTail(this);
+                ((RexxSimpleVariable *)part)->getName()->copyIntoTail(this);
             }
             else
             {

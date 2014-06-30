@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -54,186 +54,225 @@
 #include "ProtectedObject.hpp"
 #include "RexxCompoundTail.hpp"
 
-RexxCompoundVariable::RexxCompoundVariable(
-    RexxString * _stemName,            /* stem retriever                    */
-    size_t       stemIndex,            /* stem lookaside index              */
-    RexxQueue  * tailList,             /* list of tails                     */
-    size_t       TailCount)            /* count of tails                    */
-/******************************************************************************/
-/* Function:  Complete compound variable initialization                       */
-/******************************************************************************/
+
+/**
+ * Allocate storage for a compound variable object.
+ *
+ * @param size      The base object size
+ * @param tailCount The number of tail elements in the variable.
+ *
+ * @return storage for the object.
+ */
+void * RexxCompoundVariable::operator new(size_t size, size_t tailCount)
 {
-    this->tailCount= TailCount;          /* set the count (and hash value)    */
-    OrefSet(this, this->stemName, _stemName); /* save the associate value          */
-    this->index = stemIndex;             /* set the stem index                */
-
-    while (TailCount > 0)              /* loop through the variable list    */
+    // belt-and-braces...it would be a strange compound variable indeed with
+    // no tail pieces.
+    if (tailCount == 0)
     {
-        /* copying each variable             */
-        OrefSet(this, this->tails[--TailCount], tailList->pop());
-    }
-}
-
-RexxObject * build(
-    RexxString * variable_name,         /* full variable name of compound    */
-    bool direct )                       /* this is direct access             */
-/******************************************************************************/
-/* Function:  Build a dynamically created compound variable                   */
-/******************************************************************************/
-{
-    RexxString *   stem;                 /* stem part of compound variable    */
-    RexxString *   tail;                 /* tail section string value         */
-    RexxQueue  *   tails;                /* tail elements                     */
-    RexxObject *   tailPart;             /* tail element retriever            */
-    size_t  position;                    /* scan position within compound name*/
-    size_t  start;                       /* starting scan position            */
-    size_t  length;                      /* length of tail section            */
-
-    length = variable_name->getLength(); /* get the string length             */
-    position = 0;                        /* start scanning at first character */
-                                         /* scan to the first period          */
-    while (variable_name->getChar(position) != '.')
-    {
-        position++;                        /* step to the next character        */
-        length--;                          /* reduce the length also            */
-    }
-    /* extract the stem part             */
-    stem = variable_name->extract(0, position + 1);
-    ProtectedObject p1(stem);
-    /* processing to decompose the name  */
-    /* into its component parts          */
-
-    tails = new_queue();                 /* get a new list for the tails      */
-    ProtectedObject p2(tails);
-    position++;                          /* step past previous period         */
-    length--;                            /* adjust the length                 */
-    if (direct == true)                /* direct access?                    */
-    {
-        /* extract the tail part             */
-        tail = variable_name->extract(position, length);
-        tails->push(tail);                 /* add to the tail piece list        */
+        // this object is normal sized, minus the dummy tail element
+        return new_object(size - sizeof(RexxObject *), T_CompoundVariableTerm);
     }
     else
     {
-        while (length > 0)               /* process rest of the variable      */
-        {
-            start = position;                /* save the start position           */
-                                             /* scan for the next period          */
-            while (length > 0 && variable_name->getChar(position) != '.')
-            {
-                position++;                    /* step to the next character        */
-                length--;                      /* reduce the length also            */
-            }
-            /* extract the tail part             */
-            tail = variable_name->extract(start, position - start);
-            /* have a null tail piece or         */
-            /* section begin with a digit?       */
-            /* CHM - defect 87: change index start to 0 and compare for range     */
-            /* ASCII '0' to '9' to recognize a digit                              */
-            if (tail->getLength() == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
-            {
-                tailPart = (RexxObject *)tail; /* this is a literal piece           */
-            }
-            else
-            {
-                /* create a new variable retriever   */
-                tailPart = (RexxObject *)new RexxParseVariable(tail, 0);
-            }
-            tails->push(tailPart);           /* add to the tail piece list        */
-            position++;                      /* step past previous period         */
-            length--;                        /* adjust the length                 */
-        }
-        /* have a trailing period?           */
-        if (variable_name->getChar(position - 1) == '.')
-        {
-            tails->push(OREF_NULLSTRING);    /* add to the tail piece list        */
-        }
+        // adjust the size based on the number of tail elements.
+        return new_object(size + ((tailCount - 1) * sizeof(RexxObject *)), T_CompoundVariableTerm);
     }
-    /* create and return a new compound  */
-    return(RexxObject *)new (tails->getSize()) RexxCompoundVariable(stem, 0, tails, tails->getSize());
 }
 
+
+/**
+ * Construct a retriever object for a compound variable
+ * instance.
+ *
+ * @param _stemName The string stem name.
+ * @param stemIndex The stem variable stack frame cache.
+ * @param tailList  The queue for obtaining the tail elements (pushed on in reverse order)
+ * @param _tailCount The count of the tail elements.
+ */
+RexxCompoundVariable::RexxCompoundVariable(RexxString * _stemName,
+    size_t index, RexxQueue *tailList, size_t _tailCount)
+{
+    tailCount = _tailCount;
+    stemName = _stemName;
+    stemIndex = index;
+
+    // initialize the list of tails
+    initializeObjectArray(_tailCount, tails, RexxObject, tailList);
+}
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxCompoundVariable::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-    for (i = 0, count = this->tailCount; i < count; i++)
-    {
-        memory_mark(this->tails[i]);
-    }
-    memory_mark(this->stemName);
+    memory_mark(stemName);
+    memory_mark_array(tailCount, tails)
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
 void RexxCompoundVariable::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
-
-    for (i = 0, count = this->tailCount; i < count; i++)
-    {
-        memory_mark_general(this->tails[i]);
-    }
-    memory_mark_general(this->stemName);
+    memory_mark_general(stemName);
+    memory_mark_general_array(tailCount, tails)
 }
 
-void RexxCompoundVariable::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    size_t  i;                           /* loop counter                      */
-    size_t  count;                       /* argument count                    */
 
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxCompoundVariable::flatten(RexxEnvelope *envelope)
+{
     setUpFlatten(RexxCompoundVariable)
 
-    flatten_reference(newThis->stemName, envelope);
-    for (i = 0, count = this->tailCount; i < count; i++)
-    {
-        flatten_reference(newThis->tails[i], envelope);
-    }
+    flattenRef(stemName);
+    flattenArrayRefs(tailCount, tails);
 
     cleanUpFlatten
 }
 
-RexxObject * RexxCompoundVariable::evaluate(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Evaluate a REXX compound variable                               */
-/******************************************************************************/
-{
-    /* and ask it for the value          */
-    RexxObject *value = context->evaluateLocalCompoundVariable(stemName, index, &tails[0], tailCount);
 
-    stack->push(value);                  /* place on the evaluation stack     */
-    return value;                        /* return the located variable       */
+/**
+ * Build a dynamically created compound variable.
+ *
+ * @param variable_name
+ *               The full compound variable name.
+ * @param direct true if the tail portion should be used directly, false
+ *               if we perform symbolic sustitution with the tail.
+ *
+ * @return A compound variable retriever object.
+ */
+RexxObject *build(RexxString * variable_name, bool direct )
+{
+    // get data for variable scanning
+    size_t length = variable_name->getLength();
+    size_t position = 0;
+
+    // scan to the first period (note, we've already established that this is a
+    // compound variable name before calling, so at least in theory, we don't
+    // need to check for a buffer overrun)
+    while (variable_name->getChar(position) != '.')
+    {
+        position++;
+        length--;
+    }
+
+    // extract the stem name part
+    ProtectedObject stem = variable_name->extract(0, position + 1);
+    // now decompose the tail into its component pieces.
+    // storing them in a queue object that will be used to create a
+    // new compound variable instance.
+    RexxQueue *tails = new_queue();
+    ProtectedObject p2(tails);
+
+    // step over the period
+    position++;
+    length--;
+    // if this is direct access, then the tail is used as-is.
+    if (direct == true)
+    {
+        tails->push(variable_name->extract(position, length));
+    }
+    // symbolic access...we need to break apart the tail
+    else
+    {
+        // loop through everything
+        while (length > 0)
+        {
+            // start position of the tail piece
+            size_t start = position;
+            // find the next period or the end of the tail
+            while (length > 0 && variable_name->getChar(position) != '.')
+            {
+                position++;
+                length--;
+            }
+
+            // get the next piece
+            RexxString *tail = variable_name->extract(start, position - start);
+            // have a null tail piece or section begin with a digit?
+            // this is a constant tail section and can be used directly
+            if (tail->getLength() == 0 || isdigit(tail->getChar(0))
+            {
+                tails->push(tail);
+            }
+            else
+            {
+                // create a retriever for this section as a variable
+                tails->push((RexxObject *)new RexxSimpleVariable(tail, 0));
+            }
+
+            if (length > 0)
+            {
+                // step over the period
+                position++;
+                length--;
+            }
+        }
+        // have a trailing period?  We need a trailing nulltring
+        if (variable_name->getChar(position - 1) == '.')
+        {
+            tails->push(OREF_NULLSTRING);
+        }
+    }
+    // create and return a new compound
+    return(RexxObject *)new (tails->getSize()) RexxCompoundVariable((RexxString *)stem, 0, tails, tails->getSize());
 }
 
-RexxObject  *RexxCompoundVariable::getValue(
-  RexxVariableDictionary *dictionary)  /* current activation dictionary     */
-/******************************************************************************/
-/* Function:  Direct value retrieve of a compound variable                    */
-/******************************************************************************/
+
+/**
+ * Evaluate a compound variable in an expression.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ *
+ * @return The compound variable value.
+ */
+RexxObject * RexxCompoundVariable::evaluate(RexxActivation *context, RexxExpressionStack *stack )
 {
-                                       /* resolve the tail element          */
+    // the context does the real evaluation work
+    RexxObject *value = context->evaluateLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+    // expression values need to be pushed on to the stack before returning
+    stack->push(value);
+    return value;
+}
+
+/**
+ * retrieve the value of a compound variable from a variable dictionary
+ *
+ * @param dictionary The variable dictionary context for the retrieval.
+ *
+ * @return The compound variable value (note, no stack pushing here).
+ */
+RexxObject  *RexxCompoundVariable::getValue(RexxVariableDictionary *dictionary)
+{
+    // the dictionary handles the details
     return dictionary->getCompoundVariableValue(stemName, &tails[0], tailCount);
 }
 
-RexxObject  *RexxCompoundVariable::getValue(
-  RexxActivation *context)             /* current activation dictionary     */
-/******************************************************************************/
-/* Function:  Direct value retrieve of a compound variable                    */
-/******************************************************************************/
+
+/**
+ * Direct value retrieval of a compound variable value.
+ *
+ * @param context The execution context to retrieve the value from.
+ *
+ * @return The compound variable value.
+ */
+RexxObject  *RexxCompoundVariable::getValue(RexxActivation *context)
 {
                                        /* resolve the tail element          */
-  return context->getLocalCompoundVariableValue(stemName, index, &tails[0], tailCount);
+    return context->getLocalCompoundVariableValue(stemName, stemIndex, &tails[0], tailCount);
 }
 
 /**
@@ -247,8 +286,7 @@ RexxObject  *RexxCompoundVariable::getValue(
  */
 RexxObject  *RexxCompoundVariable::getRealValue(RexxVariableDictionary *dictionary)
 {
-                                       /* resolve the tail element          */
-  return dictionary->getCompoundVariableRealValue(stemName, &tails[0], tailCount);
+    return dictionary->getCompoundVariableRealValue(stemName, &tails[0], tailCount);
 }
 
 
@@ -262,69 +300,74 @@ RexxObject  *RexxCompoundVariable::getRealValue(RexxVariableDictionary *dictiona
  * @return The value of the variable.  Returns OREF_NULL if the variable
  *         has not been assigned a value.
  */
-RexxObject  *RexxCompoundVariable::getRealValue(RexxActivation *context)
+RexxObject *RexxCompoundVariable::getRealValue(RexxActivation *context)
 {
-                                       /* resolve the tail element          */
-  return context->getLocalCompoundVariableRealValue(stemName, index, &tails[0], tailCount);
+    return context->getLocalCompoundVariableRealValue(stemName, stemIndex, &tails[0], tailCount);
 }
 
 
-void RexxCompoundVariable::set(
-  RexxActivation *context,             /* current activation context        */
-  RexxObject *value )                  /* new value to assign               */
-/******************************************************************************/
-/* Function:  Assign a new value to a compound variable                       */
-/******************************************************************************/
-{
-                                       /* the dictionary manages all of these details */
-  context->setLocalCompoundVariable(stemName, index, &tails[0], tailCount, value);
-}
-
-
-void RexxCompoundVariable::set(
-  RexxVariableDictionary *dictionary,  /* an object variable dictionary     */
-  RexxObject *value )                  /* new value to assign               */
-/******************************************************************************/
-/* Function:  Assign a new value to a compound variable                       */
-/******************************************************************************/
+/**
+ * Set the value of a compound variable.
+ *
+ * @param context The variable context to operate in.
+ * @param value   The new value to assign.
+ */
+void RexxCompoundVariable::set(RexxActivation *context, RexxObject *value)
 {
                                        /* the dictionary manages all of these details */
-  dictionary->setCompoundVariable(stemName, &tails[0], tailCount, value);
+    context->setLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount, value);
 }
 
 
-bool RexxCompoundVariable::exists(
-  RexxActivation *context)             /* current execution context         */
-/******************************************************************************/
-/* Function:  Check to see if a compound variable exists in a directory       */
-/******************************************************************************/
+/**
+ * Set the value of a compound variable.
+ *
+ * @param dictionary The variable dictionary context for the set operation.
+ * @param value      The new variable value.
+ */
+void RexxCompoundVariable::set(RexxVariableDictionary *dictionary, RexxObject *value)
 {
-                                       /* retrieve the variable value, and  */
-                                       /* see it really exists              */
-  return context->localCompoundVariableExists(stemName, index, &tails[0], tailCount);
+    dictionary->setCompoundVariable(stemName, &tails[0], tailCount, value);
 }
 
-void RexxCompoundVariable::assign(
-    RexxActivation *context,           /* current activation context        */
-    RexxExpressionStack *stack,        /* current evaluation stack          */
-    RexxObject     *value )            /* new value to assign               */
-/******************************************************************************/
-/* Function:  Assign a value to a compound variable                           */
-/******************************************************************************/
+
+/**
+ * Test if a compound variable exists.
+ *
+ * @param context The variable context.
+ *
+ * @return True if the variable has an assigned value, false
+ *         otherwise.
+ */
+bool RexxCompoundVariable::exists(RexxActivation *context)
 {
-    /* the context manages the assignment details */
-    context->assignLocalCompoundVariable(stemName, index, (RexxObject **)&tails[0], tailCount, value);
+    return context->localCompoundVariableExists(stemName, stemIndex, &tails[0], tailCount);
 }
 
-void RexxCompoundVariable::drop(
-    RexxActivation *context)           /* current activation context        */
-/******************************************************************************/
-/* Function:  Drop a compound variable                                        */
-/******************************************************************************/
+
+/**
+ * Perform a variable assignment operation (in the context of an assignment instruction)
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param value   The new variable value.
+ */
+void RexxCompoundVariable::assign(RexxActivation *context, RexxExpressionStack *stack, RexxObject *value )
 {
-                                       /* set the compound value            */
-  context->dropLocalCompoundVariable(stemName, index, &tails[0], tailCount);
+    context->assignLocalCompoundVariable(stemName, stemIndex, (RexxObject **)&tails[0], tailCount, value);
 }
+
+
+/**
+ * Drop a compound variable.
+ *
+ * @param context The current execution context.
+ */
+void RexxCompoundVariable::drop(RexxActivation *context)
+{
+    context->dropLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+}
+
 
 /**
  * Drop a variable that's directly in a variable dictionary.
@@ -333,98 +376,79 @@ void RexxCompoundVariable::drop(
  */
 void RexxCompoundVariable::drop(RexxVariableDictionary *dictionary)
 {
-                                       /* the dictionary manages all of these details */
     dictionary->dropCompoundVariable(stemName, &tails[0], tailCount);
 }
 
 
-void RexxCompoundVariable::procedureExpose(
-  RexxActivation      *context,        /* current activation context        */
-  RexxActivation      *parent,         /* the parent activation context     */
-  RexxExpressionStack *stack)          /* current evaluation stack          */
-/******************************************************************************/
-/* Function:  Expose a compound variable                                      */
-/******************************************************************************/
+/**
+ * Expose a compound variable as part of a PROCEDURE
+ * instruction.
+ *
+ * @param context The current execution context.
+ * @param parent  The parent (calling) context.
+ * @param stack   The current evaluation stack.
+ */
+void RexxCompoundVariable::procedureExpose(RexxActivation *context, RexxActivation *parent)
 {
-    /* first get (and possible create) the compound variable in the */
-    /* parent context. */
-    RexxCompoundElement *variable = parent->exposeLocalCompoundVariable(stemName, index, (RexxObject **)&tails[0], tailCount);
-    /* get the stem index from the current level.  This may end up */
-    /* creating the stem that holds the exposed value. */
-    RexxStem *stem_table = context->getLocalStem(stemName, index);
-    /* have the stem expose this */
+    // first get (and possible create) the compound variable in the parent context.
+    RexxCompoundElement *variable = parent->exposeLocalCompoundVariable(stemName, stemIndex, (RexxObject **)&tails[0], tailCount);
+    // get the stem index from the current level.  This may end up
+    // creating the stem that holds the exposed value.
+    RexxStem *stem_table = context->getLocalStem(stemName, stemIndex);
+    // have the stem expose this
     stem_table->expose(variable);
-    /* trace resolved compound name */
+    // trace resolved compound name
     context->traceCompoundName(stemName, (RexxObject **)&tails[0], tailCount, variable->getName());
 }
 
 
-void RexxCompoundVariable::expose(
-  RexxActivation      *context,        /* current activation context        */
-  RexxExpressionStack *stack,          /* current evaluation stack          */
-                                       /* variable scope we're exposing from*/
-  RexxVariableDictionary *object_dictionary)
-/******************************************************************************/
-/* Function:  Expose a compound variable                                      */
-/******************************************************************************/
+/**
+ * Expose an object compound variable in a method.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param object_dictionary
+ */
+void RexxCompoundVariable::expose(RexxActivation *context, RexxVariableDictionary *object_dictionary)
 {
-    /* get the stem in the source dictionary */
+    // get the stem in the source dictionary
     RexxStem *source_stem = object_dictionary->getStem(stemName);
-                                          /* new tail for compound             */
+    // new tail for the compound variable
     RexxCompoundTail resolved_tail(context, &tails[0], tailCount);
-    /* first get (and possible create) the compound variable in the */
-    /* object context. */
+    // first get (and possible create) the compound variable in the
+    // object context.
     RexxCompoundElement *variable = source_stem->exposeCompoundVariable(&resolved_tail);
-    /* get the stem index from the current level.  This may end up */
-    /* creating the stem that holds the exposed value. */
-    RexxStem *stem_table = context->getLocalStem(stemName, index);
-    /* have the stem expose this */
+    // get the stem index from the current level.  This may end up
+    // creating the stem that holds the exposed value.
+    RexxStem *stem_table = context->getLocalStem(stemName, stemIndex);
+    // have the stem expose this
     stem_table->expose(variable);
-    /* tracing intermediate values?      */
-    if (context->tracingIntermediates()) {
-        /* trace resolved compound name */
-        context->traceCompoundName(stemName, (RexxObject **)&tails[0], tailCount, variable->getName());
-    }
+    // trace resolved compound name
+    context->traceCompoundName(stemName, (RexxObject **)&tails[0], tailCount, variable->getName());
 }
 
 
-void RexxCompoundVariable::setGuard(
-  RexxActivation *context )            /* current activation context        */
-/******************************************************************************/
-/* Function:  Set a guard wait in a compound variable                         */
-/******************************************************************************/
+/**
+ * Set a guard wait on a compound variable.
+ *
+ * @param context The current execution context.
+ */
+void RexxCompoundVariable::setGuard(RexxActivation *context )
 {
-                                       /* get the variable item             */
-  RexxCompoundElement *variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
-  variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
+    // get the variable element and add our activity to the inform list.
+    RexxCompoundElement *variable = context->getLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+    variable->inform(ActivityManager::currentActivity);
 }
 
-void RexxCompoundVariable::clearGuard(
-  RexxActivation *context )            /* current activation context        */
-/******************************************************************************/
-/* Function:  Clear a guard wait on a compound variable                       */
-/******************************************************************************/
+/**
+ * Clear the guard watch on a compound variable instance.
+ *
+ * @param context The current execution context.
+ */
+void RexxCompoundVariable::clearGuard(RexxActivation *context )
 {
-                                       /* get the variable item             */
-  RexxCompoundElement *variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
-  variable->uninform(ActivityManager::currentActivity); /* mark the variable entry           */
-}
-
-void * RexxCompoundVariable::operator new(size_t size,
-    size_t tailCount)                   /* count of tails                    */
-/******************************************************************************/
-/* Function:  Create a new compound variable object                           */
-/******************************************************************************/
-{
-    if (tailCount == 0)
-    {
-        // this object is normal sized, minus the dummy tail element
-        return new_object(size - sizeof(RexxObject *), T_CompoundVariableTerm);
-    }
-    else
-    {
-        /* Get new object                    */
-        return new_object(size + ((tailCount - 1) * sizeof(RexxObject *)), T_CompoundVariableTerm);
-    }
+    // get the variable context and remove this activity from the watch list.
+    RexxCompoundElement *variable = context->getLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+    variable->uninform(ActivityManager::currentActivity);
 }
 

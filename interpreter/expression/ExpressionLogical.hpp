@@ -47,23 +47,28 @@
 class RexxSource;
 class RexxQueue;
 
-class RexxExpressionLogical : public RexxInternalObject {
+class RexxExpressionLogical : public RexxInternalObject
+{
  public:
-  inline void *operator new(size_t, void *ptr) {return ptr;}
-         void *operator new(size_t, size_t);
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, void *) {;}
-  inline void  operator delete(void *, size_t) {;}
+    inline void *operator new(size_t, void *ptr) {return ptr;}
+           void *operator new(size_t, size_t);
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) {;}
+    inline void  operator delete(void *, size_t) {;}
 
-  RexxExpressionLogical(RexxSource *, size_t, RexxQueue *);
-  inline RexxExpressionLogical(RESTORETYPE restoreType) { ; };
-  void        live(size_t);
-  void        liveGeneral(int reason);
-  void        flatten(RexxEnvelope *);
-  RexxObject *evaluate(RexxActivation*, RexxExpressionStack *);
+    RexxExpressionLogical(RexxSource *, size_t, RexxQueue *);
+    inline RexxExpressionLogical(RESTORETYPE restoreType) { ; };
 
-  size_t  expressionCount;      // the number of expressions in our list
-  RexxObject *expressions[1];   // the list of epxressions to validate
+    virtual void        live(size_t);
+    virtual void        liveGeneral(int reason);
+    virtual void        flatten(RexxEnvelope *);
+
+    RexxObject *evaluate(RexxActivation*, RexxExpressionStack *);
+
+protected:
+
+    size_t  expressionCount;      // the number of expressions in our list
+    RexxObject *expressions[1];   // the list of epxressions to validate
 };
 #endif
 

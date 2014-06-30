@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,41 +48,54 @@
 
 class RexxQueue;
 
-/* Prototypes of external subroutine */
-
-class RexxCompoundVariable : public RexxVariableBase {
+/**
+ * Expression object representing a compound variable.  This
+ * handles all expression evaluation as well as all
+ * variable operations.
+ */
+class RexxCompoundVariable : public RexxVariableBase
+{
  public:
-  void *operator new(size_t, size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, size_t) { ; }
-  inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t, size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-  RexxCompoundVariable(RexxString *, size_t, RexxQueue *, size_t);
-  inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
-  RexxObject *getValue(RexxActivation *context);
-  RexxObject *getValue(RexxVariableDictionary *context);
-  RexxObject *getRealValue(RexxVariableDictionary *);
-  RexxObject *getRealValue(RexxActivation *);
-  bool exists(RexxActivation *);
-  void set(RexxActivation *, RexxObject *) ;
-  void set(RexxVariableDictionary *, RexxObject *);
-  void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
-  void drop(RexxActivation *);
-  void drop(RexxVariableDictionary *);
-  void setGuard(RexxActivation *);
-  void clearGuard(RexxActivation *);
-  void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *);
-  void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *);
-  inline RexxString * variableStem() {return this->stemName;};
+    RexxCompoundVariable(RexxString *, size_t, RexxQueue *, size_t);
+    inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };
 
-  RexxString *stemName;                // the stem variable name
-  size_t      index;                   /* lookaside table index             */
-  size_t      tailCount;               /* count of tails.                   */
-  RexxObject *tails[1];                /* array of tail elements            */
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    // evaluation method from RexxInternalObject
+    virtual RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+    virtual RexxObject *getValue(RexxActivation *context);
+    virtual RexxObject *getValue(RexxVariableDictionary *context);
+    virtual RexxObject *getRealValue(RexxVariableDictionary *);
+    virtual RexxObject *getRealValue(RexxActivation *);
+
+    // RexxVariabeBase methods to perform variable operations
+    virtual bool exists(RexxActivation *);
+    virtual void set(RexxActivation *, RexxObject *) ;
+    virtual void set(RexxVariableDictionary *, RexxObject *);
+    virtual void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
+    virtual void drop(RexxActivation *);
+    virtual void drop(RexxVariableDictionary *);
+    virtual void setGuard(RexxActivation *);
+    virtual void clearGuard(RexxActivation *);
+    virtual void expose(RexxActivation *,  RexxVariableDictionary *);
+    virtual void procedureExpose(RexxActivation *, RexxActivation *);
+
+    // implemented only for compound variables.
+    inline RexxString * variableStem() {return stemName;};
+
+protected:
+
+    RexxString *stemName;                // the stem variable name
+    size_t      stemIndex;               // stem variable lookaside table index
+    size_t      tailCount;               // count of tails.
+    RexxObject *tails[1];                // array of tail elements
 };
 #endif

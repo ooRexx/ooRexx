@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,203 +46,218 @@
 #include "ExpressionStack.hpp"
 #include "ActivityManager.hpp"
 
+
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxExpressionStack::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-   RexxObject **entry;                 /* marked stack entry                */
-
-                                       /* loop through the stack entries    */
-   for (entry = this->stack; entry <= this->top; entry++)
-   {
-       memory_mark(*entry);              /* marking each one                  */
-   }
-}
-
-void RexxExpressionStack::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-   RexxObject **entry;                 /* marked stack entry                */
-
-   for (entry = this->stack; entry <= this->top; entry++)
-   {
-       memory_mark_general(*entry);      /* marking each one                  */
-   }
-}
-
-void RexxExpressionStack::flatten(RexxEnvelope * envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    setUpFlatten(RexxExpressionStack)
-
-    size_t i;                            /* pointer for scanning stack entries*/
-    size_t count;                        /* number of elements                */
-
-    count = this->top - this->stack;     /* get the total count               */
-                                         /* loop through the stack entries    */
-    for (i = 0; i < count; i++)
+    // mark all current entries on the stack.
+    for (RexxObject **entry = stack; entry <= top; entry++)
     {
-        flatten_reference(newThis->stack[i], envelope);
+        memory_mark(*entry);
     }
-
-    cleanUpFlatten
 }
 
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxExpressionStack::liveGeneral(int reason)
+{
+    // mark all current entries on the stack.
+    for (RexxObject **entry = stack; entry <= top; entry++)
+    {
+        memory_mark_general(*entry);
+    }
+}
+
+
+/**
+ * Migrate this expression stack to a new activity.
+ *
+ * @param activity The new activity.
+ */
 void RexxExpressionStack::migrate(RexxActivity *activity)
-/******************************************************************************/
-/* Function:  Migrate the expression stack to a new activity                  */
-/******************************************************************************/
 {
     RexxObject **oldFrame = stack;
-    /* allocate a new frame */
+    // allocate a new frame
     activity->allocateStackFrame(this, size);
-    /* copy the enties over to the new stack. */
+    // copy the enties over to the new stack.
     memcpy(stack, oldFrame, sizeof(RexxObject *) * size);
 }
 
-void RexxExpressionStack::expandArgs(
-     size_t argcount,                  /* count of arguments                */
-     size_t min,                       /* minimum required arguments        */
-     size_t max,                       /* maximum required arguments        */
-     const char *function )            /* function being processed          */
-/******************************************************************************/
-/* Function:  Verify that a function has received all of its required         */
-/*            arguments, and did not receive extras.                          */
-/******************************************************************************/
-{
-    size_t       i;                      /* loop counter                      */
-    size_t       j;
-    RexxObject **current;                /* pointer to the current stack item */
 
-    if (argcount < min)                  /* too few arguments?                */
+/**
+ * Verify that a function has received all of its required
+ * arguments, and did not receive extras.
+ *
+ * @param argcount The argument count.
+ * @param min      The min count for this function.
+ * @param max      The max count for this expression.
+ * @param function The function name.
+ */
+void RexxExpressionStack::expandArgs(size_t argcount, size_t min, size_t max, const char *function )
+{
+    // handle checks for min and max argument counts
+    if (argcount < min)
     {
-                                         /* report an error                   */
         reportException(Error_Incorrect_call_minarg, function, min);
     }
-    else if (argcount > max)             /* too many arguments?               */
+    else if (argcount > max)
     {
-                                         /* report an error                   */
         reportException(Error_Incorrect_call_maxarg, function, max);
     }
-    else                               /* need to expand number of args     */
+    else
     {
-        /* address the stack elements        */
-        current = this->pointer(argcount - 1);
-        for (i = min; i; i--)            /* check on required arguments       */
+        // now check all of the arguments up to the min count
+        // to verify none of them have been omitted.
+        RexxObject **current = pointer(argcount - 1);
+        for (size_t i = min; i; i--)
         {
-            if (*current++ == OREF_NULL)   /* omitted argument?                 */
+            // an omitted value?
+            if (*current++ == OREF_NULL)
             {
-                j = min - i + 1;               /* argument location                 */
-                                               /* missing required argument         */
-                reportException(Error_Incorrect_call_noarg, function, j);
+                reportException(Error_Incorrect_call_noarg, function, min - i + 1);
             }
         }
     }
 }
 
-RexxString *RexxExpressionStack::requiredStringArg(
-    size_t position)                   /* position of argument              */
-/******************************************************************************/
-/* Function:  Retrieve an object from the expression stack and potentially    */
-/*            convert it into a string argument.                              */
-/******************************************************************************/
+
+/**
+ * Retrieve an object from the expression stack and potentially
+ * convert it into a string argument.
+ *
+ * @param position The argument position.
+ *
+ * @return The argument String value.
+ */
+RexxString *RexxExpressionStack::requiredStringArg(size_t position)
 {
-    RexxObject *argument = this->peek(position);     /* get the argument in question      */
-    if (isOfClass(String, argument))         /* string object already?            */
+    // get the argument from the stack.  If this is a true
+    // string, just return directly.
+    RexxObject *argument = peek(position);
+    if (isOfClass(String, argument))
     {
-        return(RexxString *)argument;     /* finished                          */
+        return(RexxString *)argument;
     }
-                                          /* get the string form, raising a    */
-                                          /* NOSTRING condition if necessary   */
+    // get the string form, raising a NOSTRING condition if necessary
     RexxString *newStr = argument->requestString();
-    this->replace(position, newStr);     /* replace the argument              */
-    return newStr;                       /* return the replacement value      */
+    // we replace the original stack object with the string value
+    replace(position, newStr);
+    return newStr;
 }
 
-RexxString *RexxExpressionStack::optionalStringArg(
-    size_t  position)                   /* position of argument              */
-/******************************************************************************/
-/* Function:  Retrieve an object from the expression stack and potentially    */
-/*            convert it into a string argument.                              */
-/******************************************************************************/
+
+/**
+ * Retrieve an object from the expression stack and potentially
+ * convert it into a string argument.
+ *
+ * @param position The argument position.
+ *
+ * @return The string version of this object.
+ */
+RexxString *RexxExpressionStack::optionalStringArg(size_t  position)
 {
-    RexxObject *argument = this->peek(position);     /* get the argument in question      */
-    if (argument == OREF_NULL)           /* missing a required argument?      */
+    // this is an optional argument, we just return the null value if it
+    // isn't there.
+    RexxObject *argument = peek(position);
+    if (argument == OREF_NULL)
     {
-        return OREF_NULL;                  /* finished already                  */
+        return OREF_NULL;
     }
-    if (isOfClass(String, argument))     /* string object already?            */
+
+    // quick return if this is a string
+    if (isOfClass(String, argument))
     {
-        return(RexxString *)argument;     /* finished                          */
+        return(RexxString *)argument;
     }
-                                          /* get the string form, raising a    */
-                                          /* NOSTRING condition if necessary   */
+    // get the string form, raising a NOSTRING condition if necessary
     RexxString *newStr = argument->requestString();
-    this->replace(position, newStr);     /* replace the argument              */
-    return newStr;                       /* return the replacement value      */
+    // we replace the original stack object with the string value
+    replace(position, newStr);
+    return newStr;
 }
 
-RexxInteger *RexxExpressionStack::requiredIntegerArg(
-     size_t position,                  /* position of argument              */
-     size_t argcount,                  /* count of arguments                */
-     const char *function)             /* function being processed          */
-/******************************************************************************/
-/* Function:  Retrieve an object from the expression stack and potentially    */
-/*            convert it into an integer argument.                            */
-/******************************************************************************/
-{
 
-    RexxObject *argument = this->peek(position);     /* get the argument in question      */
-    if (isOfClass(Integer, argument))    /* integer object already?           */
+/**
+ * Retrieve an object from the expression stack and potentially
+ * convert it into an integer argument.
+ *
+ * @param position The argument position.
+ * @param argcount The argument count (used for error reporting)
+ * @param function The function name.
+ *
+ * @return The argument as an integer object.
+ */
+RexxInteger *RexxExpressionStack::requiredIntegerArg(size_t position,
+     size_t argcount, const char *function)
+{
+    // if the argument is an integer already, this is a quick return.
+    RexxObject *argument = peek(position);
+    if (isOfClass(Integer, argument))
     {
-        return(RexxInteger *)argument;    /* finished                          */
+        return(RexxInteger *)argument;
     }
-    /* return the string form of argument*/
-    wholenumber_t numberValue;           /* converted long value              */
+
+    // convert to an integer value, give an error if it did not convert.
+    wholenumber_t numberValue;
     if (!argument->requestNumber(numberValue, Numerics::ARGUMENT_DIGITS))
     {
-        /* report an exception               */
         reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
     }
-    RexxInteger *newInt = new_integer(numberValue);   /* create an integer object          */
-    this->replace(position, newInt);     /* replace the argument              */
-    return newInt;                       /* return the replacement value      */
+
+    // replace the slot with the new value
+    RexxInteger *newInt = new_integer(numberValue);
+    replace(position, newInt);
+    return newInt;
 }
 
 
-RexxInteger *RexxExpressionStack::optionalIntegerArg(
-     size_t position,                  /* position of argument              */
-     size_t argcount,                  /* count of arguments                */
-     const char *function)             /* function being processed          */
-/******************************************************************************/
-/* Function:  Retrieve an object from the expression stack and potentially    */
-/*            convert it into an integer argument.                            */
-/******************************************************************************/
+
+
+/**
+ * Retrieve an object from the expression stack and potentially
+ * convert it into an integer argument.
+ *
+ * @param position The argument position.
+ * @param argcount The argument count (used for error reporting)
+ * @param function The function name.
+ *
+ * @return The argument as an integer object.
+ */
+RexxInteger *RexxExpressionStack::optionalIntegerArg(size_t position, size_t argcount, const char *function)
 {
-    RexxObject *argument = this->peek(position);     /* get the argument in question      */
-    if (argument == OREF_NULL)           /* missing an optional argument?     */
+    // this is optional, so we can return null.
+    RexxObject *argument = peek(position);
+    if (argument == OREF_NULL)
     {
-        return OREF_NULL;                  /* nothing there                     */
+        return OREF_NULL;
     }
-    if (isOfClass(Integer, argument))    /* integer object already?           */
+    if (isOfClass(Integer, argument))
     {
-        return(RexxInteger *)argument;    /* finished                          */
+        return(RexxInteger *)argument;
     }
-    /* return the string form of argument*/
-    wholenumber_t numberValue;           /* converted long value              */
+
+    // convert to an integer value, give an error if it did not convert.
+    wholenumber_t numberValue;
     if (!argument->requestNumber(numberValue, Numerics::ARGUMENT_DIGITS))
     {
-        /* report an exception               */
         reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
     }
-    RexxInteger *newInt = new_integer(numberValue);   /* create an integer object          */
-    this->replace(position, newInt);     /* replace the argument              */
-    return newInt;                       /* return the replacement value      */
+
+    // replace the slot with the new value
+    RexxInteger *newInt = new_integer(numberValue);
+    replace(position, newInt);
+    return newInt;
 }
 
 
@@ -259,18 +274,17 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(
  */
 RexxObject *RexxExpressionStack::requiredBigIntegerArg(size_t position, size_t argcount, const char *function)
 {
-
-    RexxObject *argument = this->peek(position);     /* get the argument in question      */
+    RexxObject *argument = peek(position);
     // get this in the form of an object that is valid as a 64-bit integer, ready to
     // be passed along as an argument to native code.
     RexxObject *newArgument = Numerics::int64Object(argument);
     // returns a null value if it doesn't convert properly
     if (newArgument == OREF_NULL)
     {
-        /* report an exception               */
         reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
     }
-    this->replace(position, newArgument);   /* replace the argument              */
+    // replace original object on the stack
+    replace(position, newArgument);
     return newArgument;
 }
 
@@ -288,10 +302,10 @@ RexxObject *RexxExpressionStack::requiredBigIntegerArg(size_t position, size_t a
  */
 RexxObject *RexxExpressionStack::optionalBigIntegerArg(size_t position, size_t argcount, const char *function)
 {
-    RexxObject *argument = this->peek(position);     /* get the argument in question      */
-    if (argument == OREF_NULL)           /* missing an optional argument?     */
+    RexxObject *argument = peek(position);
+    if (argument == OREF_NULL)
     {
-        return OREF_NULL;                  /* nothing there                     */
+        return OREF_NULL;
     }
     // get this in the form of an object that is valid as a 64-bit integer, ready to
     // be passed along as an argument to native code.
@@ -299,9 +313,9 @@ RexxObject *RexxExpressionStack::optionalBigIntegerArg(size_t position, size_t a
     // returns a null value if it doesn't convert properly
     if (newArgument == OREF_NULL)
     {
-        /* report an exception               */
         reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
     }
-    this->replace(position, newArgument);   /* replace the argument              */
+    // replace original object on the stack
+    replace(position, newArgument);
     return newArgument;
 }

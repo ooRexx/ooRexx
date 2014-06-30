@@ -154,7 +154,7 @@ void RexxInstructionMessage::execute(RexxActivation *context, RexxExpressionStac
 
     // evaluate the target object
     RexxObject *_target = target->evaluate(context, stack);
-    RexxObject *super = OREF_NULL;
+    RexxObject *_super = OREF_NULL;
 
     // do we have a superclass override?
     if (super != OREF_NULL)

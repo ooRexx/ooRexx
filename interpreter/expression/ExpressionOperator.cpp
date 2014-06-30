@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -134,8 +134,8 @@ RexxExpressionOperator::RexxExpressionOperator(TokenSubclass op, RexxObject *lef
  */
 void RexxExpressionOperator::live(size_t liveMark)
 {
-  memory_mark(this->left_term);
-  memory_mark(this->right_term);
+    memory_mark(left_term);
+    memory_mark(right_term);
 }
 
 /**
@@ -147,8 +147,8 @@ void RexxExpressionOperator::live(size_t liveMark)
  */
 void RexxExpressionOperator::liveGeneral(int reason)
 {
-  memory_mark_general(this->left_term);
-  memory_mark_general(this->right_term);
+  memory_mark_general(left_term);
+  memory_mark_general(right_term);
 }
 
 
@@ -161,8 +161,8 @@ void RexxExpressionOperator::flatten(RexxEnvelope *envelope)
 {
    setUpFlatten(RexxExpressionOperator)
 
-   flatten_reference(newThis->left_term, envelope);
-   flatten_reference(newThis->right_term, envelope);
+   flattenRef(left_term);
+   flattenRef(right_term);
 
    cleanUpFlatten
 }
