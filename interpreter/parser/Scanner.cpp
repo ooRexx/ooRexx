@@ -199,7 +199,7 @@ bool LanguageParser::nextSpecial(unsigned int target, SourceLocation &location )
  * Scan over a Rexx comment, including checking for
  * comment nesting.
  */
-void LanguageParser::comment()
+void LanguageParser::scanComment()
 {
     // comments can nest, so we need to keep track of our nesting level while
     // parsing.
@@ -361,7 +361,7 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
                 // holds.
                 if (inch2 == '/' && followingChar() == '*')
                 {
-                    this->comment();
+                    scanComment();
                     continue;
                 }
 
@@ -386,14 +386,14 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
         // are always ignored.  Note that his could leave us on a new line.
         else if (inch == '/' && followingChar() == '*')
         {
-            comment();                /* go skip over the comment          */
+            scanComment();
         }
         else
         {
             // got a normal character, so we're done.
             character = inch;
             return NORMAL_CHAR;
-            break;                          /* done looping                      */
+            break;
         }
     }
 
@@ -807,7 +807,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
             // what we find in the first character.
 
             // translate this character to see if we have a good symbol character.
-            tran = translateChar(inch);
+            unsigned int tran = translateChar(inch);
             if (tran != 0)
             {
                 // scan off a symbol and return it.

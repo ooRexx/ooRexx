@@ -674,7 +674,7 @@ RexxVariableBase  *RexxVariableDictionary::getDirectVariableRetriever(
                 }
             }
             /* may have a special character      */
-            else if (!RexxSource::isSymbolCharacter(character))
+            else if (!LanguageParser::isSymbolCharacter(character))
             {
                 /* maybe exponential form?           */
                 if (character == '+' || character == '-')
@@ -715,7 +715,7 @@ RexxVariableBase  *RexxVariableDictionary::getDirectVariableRetriever(
                 nonnumeric++;                  /* count the non-numeric             */
             }
                                                /* lower case character?             */
-            else if (RexxSource::translateChar(character) != character)
+            else if (LanguageParser::translateChar(character) != character)
             {
                 return OREF_NULL;              /* this is bad, return               */
             }

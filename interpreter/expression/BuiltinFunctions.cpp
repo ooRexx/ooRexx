@@ -2558,13 +2558,11 @@ BUILTIN(QUALIFY)
     return new_string(qualified_name);
 }
 
-/* the following builtin function    */
-/* table must maintain the same order*/
-/* as the builtin function codes used*/
-/* in the token class builtin        */
-/* builtin function lookup           */
-pbuiltin RexxSource::builtinTable[] = {
-    NULL,                                /* NULL first entry as dummy         */
+// the following builtin function table must maintain the same order
+// as the BuiltinCode type defined by the RexxToken class.
+pbuiltin LanguageParser::builtinTable[] =
+{
+    NULL,    // NULL first entry as dummy
     &builtin_function_ABBREV           ,
     &builtin_function_ABS              ,
     &builtin_function_ADDRESS          ,

@@ -194,7 +194,7 @@ void RexxInstructionCall::execute(RexxActivation *context, RexxExpressionStack *
     // if this was resolved to a builtin, call directly
     else if (builtinIndex != NO_BUILTIN)
     {
-        result = (*(RexxSource::builtinTable[builtinIndex]))(context, argumentCount, stack);
+        result = (*(LanguageParser::builtinTable[builtinIndex]))(context, argumentCount, stack);
 
     }
     // an external call...this is handled elsewhere.
@@ -356,7 +356,7 @@ void RexxInstructionDynamicCall::execute(RexxActivation *context, RexxExpression
         BuiltinCode builtinIndex = RexxToken::resolveBuiltin(targetName);
         if (builtinIndex != NO_BUILTIN)
         {
-            result = (*(RexxSource::builtinTable[builtinIndex]))(context, argumentCount, stack);
+            result = (*(LanguageParser::builtinTable[builtinIndex]))(context, argumentCount, stack);
         }
         // an external call...this is handled elsewhere.
         else
@@ -533,7 +533,7 @@ void RexxInstructionCallOn::trap(RexxActivation *context, RexxDirectory  *condit
     // likely give an error, since we call with no arguments
     else if (builtinIndex != NO_BUILTIN)
     {
-        (*(RexxSource::builtinTable[builtinIndex]))(context, 0, context->getStack());
+        (*(LanguageParser::builtinTable[builtinIndex]))(context, 0, context->getStack());
     }
     // this is an external call.
     else

@@ -194,14 +194,13 @@ RexxMethod::RexxMethod(RexxString *name)
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
     ProtectedObject p(this);
-    OrefSet(this, this->executableName, name);
+    executableName = name;
     // get a source object to generat this from
     RexxSource *_source = RexxSource::createSource(name);
     ProtectedObject p2(_source);
 
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode(true);
-    OrefSet(this, this->code, codeObj);
+    code =_source->generateCode(true);
 }
 
 

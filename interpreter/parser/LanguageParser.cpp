@@ -2972,3 +2972,111 @@ RexxObject *LanguageParser::parseLogical(RexxToken *_first, int terminators)
                                        /* create a new function item        */
     return (RexxObject *)new (count) RexxExpressionLogical(this, count, subTerms);
 }
+
+
+/**
+ * Parse a trace setting value into a decoded setting
+ * and the RexxActivation debug flag set to allow
+ * new trace settings to be processed more quickly.
+ *
+ * @param value      The string source of the trace setting.
+ * @param newSetting The returned setting in binary form.
+ * @param debugFlags The debug flag representation of the trace setting.
+ */
+bool LanguageParser::parseTraceSetting(RexxString *value, size_t &newSetting, size_t &debugFlags, char &badOption)
+{
+    size_t setting = TRACE_IGNORE;       /* don't change trace setting yet    */
+    size_t debug = DEBUG_IGNORE;         /* and the default debug change      */
+
+    size_t length = value->getLength();  /* get the string length             */
+    /* null string?                      */
+    if (length == 0)
+    {
+        setting = TRACE_NORMAL;           /* use default trace setting         */
+        debug = DEBUG_OFF;                /* turn off debug mode               */
+    }
+    else
+    {
+        /* start at the beginning            */
+        /* while more length to process      */
+        /* step one each character           */
+        for (size_t _position = 0; _position < length; _position++)
+        {
+
+            /* process the next character        */
+            switch (value->getChar(_position))
+            {
+
+                case '?':                      /* debug toggle character            */
+                    /* already toggling?                 */
+                    if (debug == DEBUG_TOGGLE)
+                    {
+                        debug = DEBUG_IGNORE;     /* this is back to no change at all  */
+                    }
+                    else
+                    {
+                        debug = DEBUG_TOGGLE;     /* need to toggle the debug mode     */
+                    }
+                    continue;                    /* go loop again                     */
+
+                case 'a':                      /* TRACE ALL                         */
+                case 'A':
+                    setting = TRACE_ALL;
+                    break;
+
+                case 'c':                      /* TRACE COMMANDS                    */
+                case 'C':
+                    setting = TRACE_COMMANDS;
+                    break;
+
+                case 'l':                      /* TRACE LABELS                      */
+                case 'L':
+                    setting = TRACE_LABELS;
+                    break;
+
+                case 'e':                      /* TRACE ERRORS                      */
+                case 'E':
+                    setting = TRACE_ERRORS;
+                    break;
+
+                case 'f':                      /* TRACE FAILURES                    */
+                case 'F':
+                    setting = TRACE_FAILURES;
+                    break;
+
+                case 'n':                      /* TRACE NORMAL                      */
+                case 'N':
+                    setting = TRACE_NORMAL;
+                    break;
+
+                case 'o':                      /* TRACE OFF                         */
+                case 'O':
+                    setting = TRACE_OFF;
+                    break;
+
+                case 'r':                      /* TRACE RESULTS                     */
+                case 'R':
+                    setting = TRACE_RESULTS;
+                    break;
+
+                case 'i':                      /* TRACE INTERMEDIATES               */
+                case 'I':
+                    setting = TRACE_INTERMEDIATES;
+                    break;
+
+                default:                       /* unknown trace setting             */
+                    // each context handles it's own error reporting, so give back the
+                    // information needed for the message.
+                    badOption = value->getChar(_position);
+                    return false;
+                    break;
+            }
+            break;                           /* non-prefix char found             */
+        }
+    }
+    // return the merged setting
+    newSetting = setting | debug;
+    // create the activation-specific flags
+    debugFlags = RexxActivation::processTraceSetting(newSetting);
+    return true;
+}

@@ -80,7 +80,7 @@ StringSymbolType RexxString::isSymbol()
     Compound = 0;                        /* set compound name is no           */
     Scan = this->getStringData();        /* save start position               */
                                          /* while still part of symbol        */
-    while (Scan < Linend && RexxSource::isSymbolCharacter(*Scan))
+    while (Scan < Linend && LanguageParser::isSymbolCharacter(*Scan))
     {
 
         if (*Scan == '.')                  /* a dot found..                     */

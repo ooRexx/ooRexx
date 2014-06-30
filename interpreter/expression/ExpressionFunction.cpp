@@ -206,7 +206,7 @@ RexxObject *RexxExpressionFunction::evaluate(RexxActivation *context, RexxExpres
     // if this was resolved to a builtin, call directly
     else if (builtinIndex != NO_BUILTIN)
     {
-        result = (RexxObject *) (*(RexxSource::builtinTable[builtinIndex]))(context, argumentCount, stack);
+        result = (RexxObject *) (*(LanguageParser::builtinTable[builtinIndex]))(context, argumentCount, stack);
     }
     else
     {

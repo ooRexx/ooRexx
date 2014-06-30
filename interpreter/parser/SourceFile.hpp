@@ -98,6 +98,18 @@ const int DEBUG_NOTRACE     =  0x0800;
 // the mask for accessing just the debug flags
 const size_t TRACE_DEBUG_MASK  = 0xff00;
 
+/**
+ * An enum for the flag positions in the flags bitset.
+ * We currently only have a single flag defined, but
+ * using a bitset allows us to define additional attributes
+ * if required.
+ */
+enum
+{
+    installRequired;                // this requirements that require an install step
+} SourceFlag;
+
+
 class RexxSource: public RexxInternalObject
 {
     // grant the language parser full access to our
@@ -203,38 +215,8 @@ class RexxSource: public RexxInternalObject
     inline RexxString    *getTrace() { return formatTraceSetting(traceSetting); }
     inline void           setInitCode(RexxCode *c) { initCode = c: }
 
-    static pbuiltin builtinTable[];      /* table of builtin function stubs   */
-
-    static const size_t TRACE_ALL           = 'A';
-    static const size_t TRACE_COMMANDS      = 'C';
-    static const size_t TRACE_LABELS        = 'L';
-    static const size_t TRACE_NORMAL        = 'N';
-    static const size_t TRACE_FAILURES      = 'F';
-    static const size_t TRACE_ERRORS        = 'E';
-    static const size_t TRACE_RESULTS       = 'R';
-    static const size_t TRACE_INTERMEDIATES = 'I';
-    static const size_t TRACE_OFF           = 'O';
-    static const size_t TRACE_IGNORE        = '0';
-
-    static const size_t DEFAULT_TRACE_SETTING = TRACE_NORMAL;
-
-// a mask for accessing just the setting information
-    static const size_t TRACE_SETTING_MASK  = 0xff;
-
-/******************************************************************************/
-/*     static constants used for setting trace interactive debug.  These get merged      */
-/* in with the setting value, so they must be > 256                           */
-/******************************************************************************/
-    static const size_t DEBUG_IGNORE      =  0x0000;
-    static const size_t DEBUG_ON          =  0x0100;
-    static const size_t DEBUG_OFF         =  0x0200;
-    static const size_t DEBUG_TOGGLE      =  0x0400;
-    static const size_t DEBUG_NOTRACE     =  0x0800;
-
-// the mask for accessing just the debug flags
-    static const size_t TRACE_DEBUG_MASK  = 0xff00;
-
 protected:
+
     size_t requiredLanguageVersion;      // the language version required to run this program
     ProgramSource *source;               // the reader for the program source...different flavors of this
     RexxString *programName;             // name of the source program        */
@@ -250,9 +232,11 @@ protected:
     RexxSource    *parentSource;         // a parent source context environment;
     RexxDirectory *routines;             // routines found on directives
     RexxDirectory *publicRoutines;       // PUBLIC routines directive routines
-    RexxList      *libraries;            // packages requiring loading
-    RexxList      *requires;             // requires directives
-    RexxList      *classes;              // classes found on directives
+    RexxArray     *libraries;            // packages requiring loading
+    RexxArray     *requires;             // requires directives
+    RexxArray     *classes;              // classes found on directives
+    RexxDirectory *dataAssets;           // assets defined in the package
+
                                          // all public installed classes
     RexxDirectory *installedPublicClasses;
     RexxDirectory *installedClasses;    // entire list of installed classes
@@ -261,15 +245,14 @@ protected:
     RexxDirectory *mergedPublicRoutines;
     RexxDirectory *methods;              // methods found on directives
 
+    bitset<32>     flags;                // flag settings.  Make it big enough for some expansion.
+
     // settings inherited from ::options statements
     size_t digits;                       // numeric digits setting
     size_t fuzz;                         // numeric fuzz setting
     bool form;                           // numeric form setting
     size_t traceSetting;                 // the package trace setting
     size_t traceFlags;                   // version optimized for quick setting at startup
-    intptr_t reserved1;                  // some reserved values for compatible expansion
-    intptr_t reserved2;                  // some reserved values for compatible expansion
-    intptr_t reserved3;                  // some reserved values for compatible expansion
-    intptr_t reserved4;                  // some reserved values for compatible expansion
+    intptr_t reserved[12];               // some reserved values for compatible expansion
 };
 #endif

@@ -122,90 +122,58 @@ class LanguageParser: public RexxInternalObject
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    LanguageParser(RexxSource *p, ProgramSource *s);
+    LanguageParser(RexxSource *p, ProgramSource *s, RexxDirectory *labels = OREF_NULL);
 
-    void        initBuffered(RexxBuffer *);
-    void        initFile();
-    void        extractNameInformation();
-    bool        reconnect();
-    void        setReconnect();
-    void        setBufferedSource(RexxBuffer *newSource) { this->initBuffered(newSource); }
-    void        interpretLine(size_t);
-    void        comment();
-    void        needVariable(RexxToken *);
-    void        needVariableOrDotSymbol(RexxToken *);
-    bool        terminator(int, RexxObject *);
-    static int  resolveKeyword(RexxString *token, KeywordEntry *Table, int Table_Size);
-    static int  subKeyword(RexxToken *);
-    static int  keyword(RexxToken *);
-    static int  builtin(RexxToken *);
-    static size_t resolveBuiltin(RexxString *);
-    static int  condition(RexxToken *);
-    static int  parseOption(RexxToken *);
-    static int  keyDirective(RexxToken *);
-    static int  subDirective(RexxToken *);
-    void        nextLine();
-    void        position(size_t, size_t);
-    void        live(size_t);
-    void        liveGeneral(int reason);
-    size_t      sourceSize();
-    RexxString *get(size_t);
-    void        nextClause();
-    RexxToken  *sourceNextToken(RexxToken *);
-    RexxString *traceBack(RexxActivation *, SourceLocation &, size_t, bool);
-    RexxString *extract(SourceLocation &);
-    RexxArray  *extractSource(SourceLocation &);
-    RexxArray  *extractSource();
-    void        getLocation(SourceLocation &);
-    void        startLocation(SourceLocation &);
-    void        endLocation(SourceLocation &);
-    bool        nextSpecial(unsigned int, SourceLocation &);
-    unsigned int locateToken(bool);
-    void        globalSetup();
-    RexxString *packLiteral(size_t, size_t, int);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+
+    // main execution methods
     RexxCode   *generateCode(bool isMethod);
     RexxCode   *interpretMethod(RexxDirectory *);
     RexxCode   *interpret(RexxString *, RexxDirectory *, size_t);
-    void        checkDirective(int errorCode);
-    bool        hasBody();
-    void        mergeRequired(RexxSource *);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *target);
-    PackageClass *loadRequires(RexxActivity *activity, RexxString *target, RexxArray *s);
-    void        addPackage(PackageClass *package);
-    PackageClass *getPackage();
-    void        inheritSourceContext(RexxSource *source);
-    RoutineClass *findRoutine(RexxString *);
-    RoutineClass *findLocalRoutine(RexxString *);
-    RoutineClass *findPublicRoutine(RexxString *);
-    RexxClass  *findClass(RexxString *);
-    RexxClass  *findInstalledClass(RexxString *name);
-    RexxClass  *findPublicClass(RexxString *name);
-    RexxString *resolveProgramName(RexxActivity *activity, RexxString *name);
-    void        processInstall(RexxActivation *);
-    void        install();
+    void        globalSetup();
     RexxCode   *translate(RexxDirectory *);
     void        resolveDependencies();
-    void        directive();
-    void        routineDirective();
-    void        requiresDirective();
-    void        libraryDirective(RexxString *name, RexxToken *token);
-    void        methodDirective();
-    void        classDirective();
-    void        attributeDirective();
-    void        constantDirective();
-    void        optionsDirective();
-    void        decodeExternalMethod(RexxString *methodName, RexxString *externalSpec, RexxString *&library, RexxString *&procedure);
-    RexxMethod *createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure);
-    void        createMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
-    void        createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
-    void        createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
-    void        createConstantGetterMethod(RexxString *name, RexxObject *value);
-    void        createAbstractMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
-    void        checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg);
-    void        addMethod(RexxString *name, RexxMethod *method, bool classMethod);
     void        flushControl(RexxInstruction *);
     RexxCode   *translateBlock(RexxDirectory *);
-    RexxInstruction *instruction();
+
+    StackFrameClass *createStackFrame();
+    void        holdObject(RexxObject *object) { holdStack->push(object);};
+
+    // token scanning methods
+    void        scanComment();
+    void        nextLine();
+    void        position(size_t, size_t);
+    void        nextClause();
+    RexxToken  *sourceNextToken(RexxToken *);
+    bool        nextSpecial(unsigned int, SourceLocation &);
+    unsigned int locateToken(bool);
+    RexxString *packLiteral(size_t, size_t, int);
+    RexxToken  *getToken(int term, int error = 0);
+    inline unsigned int getChar() { return (unsigned char)(current[lineOffset]); }
+    inline unsigned int getChar(size_t o) { return (unsigned char)(current[o]); }
+    inline unsigned int nextChar() { return (unsigned char)(current[lineOffset++]); }
+    inline unsigned int getNextChar() { return (unsigned char)(current[lineOffset + 1]); }
+    inline unsigned int followingChar() { return haveNextChar() ? getNextChar() : INVALID_CHARACTER; }
+    inline void        stepPosition() { lineOffset++; }
+    inline void        stepPosition(size_t o) { lineOffset += o; }
+    inline bool        moreChars() { return lineOffset < currentLength; }
+    inline bool        haveNextChar() {  return lineOffset < currentLength; }
+    inline bool        moreLines() { return (lineNumber <= lineCount); }
+    inline void        truncateLine() { lineOffset = currentLength; }
+
+    // general parsing methods
+    void        needVariable(RexxToken *);
+    void        needVariableOrDotSymbol(RexxToken *);
+    void        getLocation(SourceLocation &);
+    void        startLocation(SourceLocation &);
+    void        endLocation(SourceLocation &);
+    inline void        previousToken() { clause->previous(); }
+    inline void        firstToken() { clause->firstToken(); }
+    inline void        trimClause() { clause->trim(); }
+    inline size_t      markPosition() { return clause->mark(); }
+    inline void        resetPosition(size_t p) { clause->reset(p); }
+
     RexxVariableBase *addVariable(RexxString *);
     RexxStemVariable  *addStem(RexxString *);
     RexxCompoundVariable *addCompound(RexxString *);
@@ -220,77 +188,14 @@ class LanguageParser: public RexxInternalObject
     RexxArray  *getGuard();
     void        addBlock(void);
     RexxVariableBase *getRetriever(RexxString *);
-    RexxObject *constantExpression();
-    RexxObject *constantLogicalExpression();
-    RexxObject *parenExpression(RexxToken *);
-    RexxObject *expression(int);
-    RexxObject *subExpression(int);
-    size_t      argList(RexxToken *, int);
-    RexxArray  *argArray(RexxToken *, int);
-    RexxObject *function(RexxToken *, RexxToken *);
-    RexxObject *collectionMessage(RexxToken *, RexxObject *);
-    RexxToken  *getToken(int term, int error = 0);
-    RexxObject *message(RexxObject *, bool, int);
-    RexxObject *messageTerm();
-    RexxObject *variableOrMessageTerm();
-    RexxObject *messageSubterm(int);
-    RexxObject *subTerm(int);
-    void        pushTerm(RexxObject *);
-    RexxObject *requiredTerm(RexxToken *token, int errorCode = Error_Invalid_expression_general);
-    RexxObject *popTerm();
-    RexxObject *popNTerms(size_t);
-    void        isExposeValid();
     RexxArray  *words(RexxString *);
-    void        errorCleanup();
-    void        error(int);
-    void        error(int, RexxObject *);
-    void        error(int, RexxObject *, RexxObject *);
-    void        error(int, RexxObject *, RexxObject *, RexxObject *);
-    void        error(int errorcode, SourceLocation &location, RexxArray *subs);
-    void        errorLine(int, RexxInstruction *);
-    void        errorPosition(int, RexxToken *);
-    void        errorToken(int, RexxToken *);
-    void        blockError(RexxInstruction *);
-    RexxInstruction *sourceNewObject(size_t, RexxBehaviour *, int);
-    static bool parseTraceSetting(RexxString *, size_t &, size_t &, char &);
-    static RexxString *formatTraceSetting(size_t source);
-    size_t      processVariableList(InstructionKeyword);
-    RexxObject *parseLoopConditional(InstructionSubKeyword &, int);
-    RexxObject *parseLogical(RexxToken *first, int terminators);
-
-    bool        terminator(int, RexxToken *);
-    bool        isTraceable();
-    inline bool isInterpret() { return (flags.test(interpret); }
-    inline bool noClauseAvailable() { return (flags.test(noClause); }
-    inline bool clauseAvailable() { return !(flags.test(noClause); }
-
-    inline bool        needsInstallation() { return (this->flags&_install) != 0; }
-    inline void        install(RexxActivation *activation) { if (needsInstallation()) this->processInstall(activation); };
-    inline void        addReference(RexxObject *reference) { calls->addLast(reference); }
-    inline void        pushDo(RexxInstruction *i) { control->pushRexx((RexxObject *)i); }
-    inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pullRexx()); };
-    inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); };
-    inline InstructionKeyword topDoType() { return ((RexxInstruction *)(control->peek()))->getType(); };
-    inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); };
-           void        setProgramName(RexxString *name);
-    inline void        pushOperator(RexxToken *operatorToken) { operators->pushRexx((RexxObject *)operatorToken); };
-    inline RexxToken  *popOperator() { return (RexxToken *)(operators->pullRexx()); };
-    inline RexxToken  *topOperator() { return (RexxToken *)(operators->peek()); };
+    RexxInstruction *parserNewObject(size_t, RexxBehaviour *, int);
     inline void        reclaimClause()  { flags.set(reclaimed); };
     inline bool        atEnd(void) { return (!(flags.test(reclaimed)) && !moreLines); };
 
-    inline unsigned int getChar() { return (unsigned char)(current[lineOffset]); }
-    inline unsigned int getChar(size_t o) { return (unsigned char)(current[o]); }
-    inline unsigned int nextChar() { return (unsigned char)(current[lineOffset++]); }
-    inline unsigned int getNextChar() { return (unsigned char)(current[lineOffset + 1]); }
-    inline unsigned int followingChar() { return haveNextChar() ? getNextChar() : INVALID_CHARACTER; }
-    inline void        stepPosition() { lineOffset++; }
-    inline void        stepPosition(size_t o) { lineOffset += o; }
-    inline bool        moreChars() { return lineOffset < currentLength; }
-    inline bool        haveNextChar() {  return lineOffset < currentLength; }
-    inline bool        moreLines() { return (lineNumber <= lineCount); }
-    inline void        truncateLine() { lineOffset = currentLength; }
-
+    inline bool isInterpret() { return (flags.test(interpret); }
+    inline bool noClauseAvailable() { return (flags.test(noClause); }
+    inline bool clauseAvailable() { return !(flags.test(noClause); }
     inline RexxToken  *nextToken() { return clause->next(); }
     inline RexxToken  *nextReal() { return clause->nextRealToken(); }
     inline void        requiredEndOfClause(RexxToken *first, int terminators, size_t error)
@@ -311,25 +216,15 @@ class LanguageParser: public RexxInternalObject
         }
         return conditional;
     }
+    inline bool capturingGuardVariables() { return guardVariables != OREF_NULL; }
+           bool isExposed(RexxString *varName);
 
-    inline void        previousToken() { clause->previous(); }
-    inline void        firstToken() { clause->firstToken(); }
-    inline void        trimClause() { clause->trim(); }
-    inline size_t      markPosition() { return clause->mark(); }
-    inline void        resetPosition(size_t p) { clause->reset(p); }
-    inline void        syntaxError(int errorcode, RexxInstruction *i) { this->errorLine(errorcode, i); }
-    inline void        blockSyntaxError(RexxInstruction *i) { this->blockError(i); }
-    inline void        syntaxErrorAt(int errorcode, RexxToken *token) { this->errorPosition(errorcode, token); }
-    inline void        syntaxError(int errorcode, RexxObject *a1) { this->error(errorcode, a1); }
-    inline void        syntaxError(int errorcode, RexxObject *a1, RexxObject *a2) { this->error(errorcode, a1, a2); }
-    inline void        syntaxError(int errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { this->error(errorcode, a1, a2, a3); }
-    inline void        syntaxError(int errorcode, RexxToken *token) { this->errorToken(errorcode, token); }
-    inline void        syntaxError(int errorcode) { this->error(errorcode); }
-    inline bool        isInternalCode() { return this->isOldSpace(); }
-    inline bool        capturingGuardVariables() { return guardVariables != OREF_NULL; }
-           bool        isExposed(RexxString *varName);
-
-    StackFrameClass *createStackFrame();
+    // instruction parsing methods
+    RexxInstruction *parseInstruction();
+    void        isExposeValid();
+    static bool parseTraceSetting(RexxString *, size_t &, size_t &, char &);
+    static RexxString *formatTraceSetting(size_t source);
+    size_t      processVariableList(InstructionKeyword);
 
     RexxInstruction *addressNew();
     RexxInstruction *assignmentNew(RexxToken *);
@@ -372,7 +267,84 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *thenNew(RexxToken *, RexxInstructionIf *);
     RexxInstruction *traceNew();
     RexxInstruction *useNew();
-    void        holdObject(RexxObject *object) { holdStack->push(object);};
+
+    inline void        addReference(RexxObject *reference) { calls->addLast(reference); }
+    inline void        pushDo(RexxInstruction *i) { control->pushRexx((RexxObject *)i); }
+    inline RexxInstruction *popDo() { return (RexxInstruction *)(control->pullRexx()); };
+    inline RexxInstruction *topDo() { return (RexxInstruction *)(control->peek()); };
+    inline InstructionKeyword topDoType() { return ((RexxInstruction *)(control->peek()))->getType(); };
+    inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); };
+
+    // directive parsing methods
+    void        parseDirective();
+    void        routineDirective();
+    void        requiresDirective();
+    void        libraryDirective(RexxString *name, RexxToken *token);
+    void        methodDirective();
+    void        classDirective();
+    void        attributeDirective();
+    void        constantDirective();
+    void        optionsDirective();
+    void        addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
+    void        addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
+
+    // methods to support directive parsing
+    void        checkDirective(int errorCode);
+    bool        hasBody();
+    void        decodeExternalMethod(RexxString *methodName, RexxString *externalSpec, RexxString *&library, RexxString *&procedure);
+    RexxMethod *createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure);
+    void        createMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
+    void        createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
+    void        createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
+    void        createConstantGetterMethod(RexxString *name, RexxObject *value);
+    void        createAbstractMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
+    void        checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg);
+    void        addMethod(RexxString *name, RexxMethod *method, bool classMethod);
+
+    // expression parsing methods
+    RexxObject *constantExpression();
+    RexxObject *constantLogicalExpression();
+    RexxObject *parenExpression(RexxToken *);
+    RexxObject *parseExpression(int);
+    RexxObject *parseSubExpression(int);
+    size_t      parseArgList(RexxToken *, int);
+    RexxArray  *parseArgArray(RexxToken *, int);
+    RexxObject *parseFunction(RexxToken *, RexxToken *);
+    RexxObject *parseCollectionMessage(RexxToken *, RexxObject *);
+    RexxObject *parseMessage(RexxObject *, bool, int);
+    RexxObject *parseMessageTerm();
+    RexxObject *parseVariableOrMessageTerm();
+    RexxObject *parseMessageSubterm(int);
+    RexxObject *parseSubTerm(int);
+    RexxObject *parseLoopConditional(InstructionSubKeyword &, int);
+    RexxObject *parseLogical(RexxToken *first, int terminators);
+    inline void        pushOperator(RexxToken *operatorToken) { operators->pushRexx((RexxObject *)operatorToken); };
+    inline RexxToken  *popOperator() { return (RexxToken *)(operators->pullRexx()); };
+    inline RexxToken  *topOperator() { return (RexxToken *)(operators->peek()); };
+    void        pushTerm(RexxObject *);
+    RexxObject *requiredTerm(RexxToken *token, int errorCode = Error_Invalid_expression_general);
+    RexxObject *popTerm();
+    RexxObject *popNTerms(size_t);
+
+    // various error processing methods
+    void        error(int);
+    void        error(int, RexxObject *);
+    void        error(int, RexxObject *, RexxObject *);
+    void        error(int, RexxObject *, RexxObject *, RexxObject *);
+    void        error(int errorcode, SourceLocation &location, RexxArray *subs);
+    void        errorLine(int, RexxInstruction *);
+    void        errorPosition(int, RexxToken *);
+    void        errorToken(int, RexxToken *);
+    void        blockError(RexxInstruction *);
+
+    inline void syntaxError(int errorcode, RexxInstruction *i) { errorLine(errorcode, i); }
+    inline void blockSyntaxError(RexxInstruction *i) { blockError(i); }
+    inline void syntaxErrorAt(int errorcode, RexxToken *token) { errorPosition(errorcode, token); }
+    inline void syntaxError(int errorcode, RexxObject *a1) { error(errorcode, a1); }
+    inline void syntaxError(int errorcode, RexxObject *a1, RexxObject *a2) { error(errorcode, a1, a2); }
+    inline void syntaxError(int errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { error(errorcode, a1, a2, a3); }
+    inline void syntaxError(int errorcode, RexxToken *token) { errorToken(errorcode, token); }
+    inline void syntaxError(int errorcode) { error(errorcode); }
 
     static inline bool isSymbolCharacter(unsigned int ch)
     {
@@ -390,11 +362,6 @@ class LanguageParser: public RexxInternalObject
         // assumes were're working with a good character already.
         return characterTable[ch & 0xff];
     }
-
-    void addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
-    void addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
-
-    RexxList      *getPackages() { install(); return loadedPackages; }
 
     static pbuiltin builtinTable[];      /* table of builtin function stubs   */
 
@@ -415,8 +382,8 @@ class LanguageParser: public RexxInternalObject
     static const size_t TRACE_SETTING_MASK  = 0xff;
 
 /******************************************************************************/
-/*     static constants used for setting trace interactive debug.  These get merged      */
-/* in with the setting value, so they must be > 256                           */
+/* static constants used for setting trace interactive debug.  These get      */
+/* merged in with the setting value, so they must be > 256                    */
 /******************************************************************************/
     static const size_t DEBUG_IGNORE      =  0x0000;
     static const size_t DEBUG_ON          =  0x0100;

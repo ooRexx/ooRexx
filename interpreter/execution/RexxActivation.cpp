@@ -753,7 +753,7 @@ void RexxActivation::setTrace(RexxString *setting)
 
     char   traceOption = 0;              // a potential bad character
 
-    if (!RexxSource::parseTraceSetting(setting, newsetting, traceFlags, traceOption))
+    if (!LanguageParser::parseTraceSetting(setting, newsetting, traceFlags, traceOption))
     {
         reportException(Error_Invalid_trace_trace, new_string(&traceOption, 1));
     }
