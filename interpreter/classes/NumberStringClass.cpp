@@ -3531,7 +3531,7 @@ RexxString *RexxNumberString::d2xD2c(
     Scan = Accumulator;                  /* start at first digit again        */
     while (Scan > HighDigit)
     {           /* convert all the nibbles           */
-        *Scan = IntToHexDigit(*Scan);      /* one digit at a time               */
+        *Scan = RexxString::intToHexDigit(*Scan);      /* one digit at a time               */
         Scan--;                            /* step to next digit                */
     }
     Scan = HighDigit + 1;                /* point to first digit              */

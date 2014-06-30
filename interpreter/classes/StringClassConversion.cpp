@@ -238,12 +238,12 @@ RexxString *RexxString::c2x()
             /* logical ANDING with F to convert to integer then convert*/
             /* to hex value and put it in destination                  */
             /***********************************************************/
-            *Destination++ = IntToHexDigit((ch>>4) & 0xF);
+            *Destination++ = intToHexDigit((ch>>4) & 0xF);
             /***********************************************************/
             /* logical AND with F to convert lower nibble to integer   */
             /* then convert to hex value and put it in destination     */
             /***********************************************************/
-            *Destination++ = IntToHexDigit(ch  & 0xF);
+            *Destination++ = intToHexDigit(ch  & 0xF);
         }
     }
     return Retval;                       /* return converted string           */

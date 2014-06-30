@@ -117,24 +117,6 @@ const char ch_NINE   = '9';
 #define  UPPER_ALPHA    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
-// TODO: make this a static method.
-/*********************************************************************/
-/*                                                                   */
-/*      Name:                   IntToHexdigit                        */
-/*                                                                   */
-/*      Descriptive name:       convert int to hexadecimal digit     */
-/*                                                                   */
-/*      Returns:                A hexadecimal digit representing n.  */
-/*                                                                   */
-/*********************************************************************/
-
-                                       /* convert the number                */
-inline char IntToHexDigit(int n)
-{
-    return "0123456789ABCDEF"[n];
-}
-
-
 class RexxString : public RexxObject
 {
  public:
@@ -358,13 +340,13 @@ class RexxString : public RexxObject
     inline void set(size_t s,int c, size_t l) { memset((this->stringData+s), c, l); };
     inline char getChar(size_t p) { return *(this->stringData+p); };
     inline char putChar(size_t p,char c) { return *(this->stringData+p) = c; };
-    inline bool upperOnly() {return (this->Attributes&STRING_NOLOWER) != 0;};
-    inline bool hasLower() {return (this->Attributes&STRING_HASLOWER) != 0;};
-    inline void  setUpperOnly() { this->Attributes |= STRING_NOLOWER;};
-    inline void  setHasLower() { this->Attributes |= STRING_HASLOWER;};
-    inline bool  nonNumeric() {return (this->Attributes&STRING_NONNUMERIC) != 0;};
-    inline void  setNonNumeric() { this->Attributes |= STRING_NONNUMERIC;};
-    inline bool  strCompare(const char * s) {return this->memCompare((s), strlen(s));};
+    inline bool upperOnly() {return (attributes&STRING_NOLOWER) != 0;};
+    inline bool hasLower() {return (attributes&STRING_HASLOWER) != 0;};
+    inline void  setUpperOnly() { attributes |= STRING_NOLOWER;};
+    inline void  setHasLower() { attributes |= STRING_HASLOWER;};
+    inline bool  nonNumeric() {return (attributes&STRING_NONNUMERIC) != 0;};
+    inline void  setNonNumeric() { attributes |= STRING_NONNUMERIC;};
+    inline bool  strCompare(const char * s) {return memCompare((s), strlen(s));};
     inline bool  strCaselessCompare(const char * s) { return (size_t)this->length == strlen(s) && Utilities::strCaselessCompare(s, this->stringData) == 0;}
     inline bool  memCompare(const char * s, size_t l) { return l == this->length && memcmp(s, this->stringData, l) == 0; }
     inline bool  memCompare(RexxString *other) { return other->length == this->length && memcmp(other->stringData, this->stringData, length) == 0; }
@@ -488,6 +470,11 @@ class RexxString : public RexxObject
         return result;
     }
 
+    static inline char intToHexDigit(int n)
+    {
+        return "0123456789ABCDEF"[n];
+    }
+
 
     static RexxString *newString(const char *, size_t);
     static RexxString *rawString(size_t);
@@ -505,40 +492,11 @@ class RexxString : public RexxObject
   protected:
 
     HashCode hashValue;                 // stored has value
-    size_t length;                      /* string length                   */
-    RexxNumberString *NumberString;     /* lookaside information           */
-    size_t Attributes;                  /* string attributes               */
-    char stringData[4];                 /* Start of the string data part   */
+    size_t length;                      // string length
+    RexxNumberString *numberString;     // lookaside information
+    size_t attributes;                  // string attributes
+    char stringData[4];                 // Start of the string data part
 };
-
-
-// some handy functions for doing cstring/RexxString manipulations
-
-// TODO:  Get rid of these and make methods of string class.
- inline void * rmemcpy(void *t, RexxString *s, size_t len)
- {
-     return memcpy(t, s->getStringData(), len);
- }
-
- inline int rmemcmp(const void *t, RexxString *s, size_t len)
- {
-     return memcmp(t, s->getStringData(), len);
- }
-
- inline char * rstrcpy(char *t, RexxString *s)
- {
-     return strcpy(t, s->getStringData());
- }
-
- inline char * rstrcat(char *t, RexxString *s)
- {
-     return strcat(t, s->getStringData());
- }
-
- inline int rstrcmp(const char *t, RexxString *s)
- {
-     return strcmp(t, s->getStringData());
- }
 
 
 // String creation inline functions

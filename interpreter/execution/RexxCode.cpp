@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,9 +41,6 @@
 /* Primitive Method Class                                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "RexxCode.hpp"
 #include "ArrayClass.hpp"
@@ -52,26 +49,40 @@
 #include "SourceFile.hpp"
 #include "ActivityManager.hpp"
 #include "RexxActivation.hpp"
-#include <ctype.h>
 
 
-
-RexxCode::RexxCode(
-     RexxSource      * _source,        /* source object                     */
-     RexxInstruction * _start,         /* start of the code tree            */
-     RexxDirectory   * _labels,        /* method labels                     */
-     size_t            maxstack,       /* max operator stack size           */
-     size_t            variable_index) /* save of the vdict                 */
-/******************************************************************************/
-/* Function:  Initialize a rexxmethod code object                             */
-/******************************************************************************/
+/**
+ * Allocate storage for a new RexxCode object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return Memory for creating this object.
+ */
+void * RexxCode::operator new(size_t size)
 {
-  OrefSet(this, this->source, _source); /* save the program source         */
-  OrefSet(this, this->start, _start);   /* the parse tree                    */
-  OrefSet(this, this->labels, _labels); /* the method's labels               */
-  /* save the stack info               */
-  this->maxStack = maxstack;
-  this->vdictSize = variable_index;    /* save the initial vdict size       */
+    return new_object(size, T_RexxCode);
+}
+
+
+/**
+ * Initialize a RexxCode unit that can be attached to
+ * a method or routine object and execute Rexx code.
+ *
+ * @param _source  The source object this was compiled from.
+ * @param _start   The first instruction object in the execution chain.
+ * @param _labels  The directory of labels in this code unit (can be null)
+ * @param maxstack The maximum expression stack required to execute this code.
+ * @param variable_index The number of pre-assigned variable
+ *                       slots.
+ */
+RexxCode::RexxCode(RexxSource *_source, RexxInstruction *_start, RexxDirectory *_labels,
+     size_t maxstack, size_t  variable_index)
+{
+    source = _source;
+    start = _start;
+    labels = _labels;
+    maxStack = maxstack;
+    vdictSize = variable_index;
 }
 
 
@@ -88,135 +99,95 @@ RexxCode::RexxCode(
 void RexxCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *msgname, RexxObject**argPtr, size_t argcount, ProtectedObject &result)
 {
     // just forward to the more general method
-    this->call(activity, routine, msgname, argPtr, argcount, OREF_SUBROUTINE, OREF_NULL, EXTERNALCALL, result);
+    call(activity, routine, msgname, argPtr, argcount, OREF_SUBROUTINE, OREF_NULL, EXTERNALCALL, result);
 }
 
 
-void RexxCode::call(
-    RexxActivity *activity,            /* activity running under            */
-    RoutineClass *routine,             // top level routine instance
-    RexxString *msgname,               /* message to be run                 */
-    RexxObject**argPtr,                /* arguments to the method           */
-    size_t      argcount,              /* the count of arguments            */
-    RexxString *calltype,              /* COMMAND/ROUTINE/FUNCTION          */
-    RexxString *environment,           /* initial command environment       */
-    int   context,                     /* type of context                   */
-    ProtectedObject &result)           // the method result
-/******************************************************************************/
-/* Function:  Call a method as a top level program or external function call  */
-/******************************************************************************/
+/**
+ * Call a unit of Rexx code as a routine or top-level call.
+ *
+ * @param activity The activity this is running on.
+ * @param routine  The routine object this code is attached to.
+ * @param routineName  The name of the call.
+ * @param argPtr   Pointer to the call arguments.
+ * @param argcount The number of arguments being passed.
+ * @param calltype The type of call (used in parse source)
+ * @param environment
+ *                 The initial address environment.
+ * @param context  The call context indicator (program, routine, internalcall, etc.)
+ * @param result   A protected object for passing the return
+ *                 value back.
+ */
+void RexxCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *routineName,
+    RexxObject**argPtr, size_t argcount, RexxString *calltype, RexxString *environment,
+    int context, ProtectedObject &result)
 {
     // check the stack space before proceeding
-    activity->checkStackSpace();       /* have enough stack space?          */
-                                       /* add to the activity stack         */
+    activity->checkStackSpace();
+    // create a new activity to run this and add to the stack.
     RexxActivation *newacta = ActivityManager::newActivation(activity, routine, this, calltype, environment, context);
     activity->pushStackFrame(newacta);
-                /* run the method and return result  */
-    newacta->run(OREF_NULL, msgname, argPtr, argcount, OREF_NULL, result);
+    // have the activation run this code.  The return result is passed back through result.
+    newacta->run(OREF_NULL, routineName, argPtr, argcount, OREF_NULL, result);
 }
 
 
-void RexxCode::run(
-    RexxActivity *activity,            /* activity running under            */
-    RexxMethod *method,                // the method object getting invoked
-    RexxObject *receiver,              /* object receiving the message      */
-    RexxString *msgname,               /* message to be run                 */
-    RexxObject**argPtr,                /* arguments to the method           */
-    size_t      argcount,              /* the count of arguments            */
-    ProtectedObject &result)           // the method result
-/******************************************************************************/
-/* Function:  Call a method as a top level program or external function call  */
-/******************************************************************************/
+/**
+ * Call a unit of Rexx code as a method invocation.
+ *
+ * @param activity The activity this is running on.
+ * @param method   The method object this is attached to.
+ * @param receiver The target object for the message.
+ * @param msgname  The name of the message.
+ * @param argPtr   Pointer to the call arguments.
+ * @param argcount The number of arguments being passed.
+ * @param result   A protected object for passing the return
+ *                 value back.
+ */
+void RexxCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver,
+    RexxString *msgname, RexxObject**argPtr, size_t argcount, ProtectedObject &result)
 {
+    // create a new activation object and push it on the top of the stack.
     RexxActivation *newacta = ActivityManager::newActivation(activity, method, this);
-                                       /* add to the activity stack         */
     activity->pushStackFrame(newacta);
-                                       /* run the method and return result  */
+    // run the method.  The result is returned via the ProtectedObject reference.
     newacta->run(receiver, msgname, argPtr, argcount, OREF_NULL, result);
-    activity->relinquish();            /* yield control now */
+    // yield control now.
+    activity->relinquish();
 }
 
 
-void RexxCode::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-  memory_mark(this->source);
-  memory_mark(this->start);
-  memory_mark(this->labels);
-}
-
-void RexxCode::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-  memory_mark_general(this->source);
-  memory_mark_general(this->start);
-  memory_mark_general(this->labels);
-}
-
-void RexxCode::flatten(RexxEnvelope * envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxCode)
-
-   flatten_reference(newThis->source, envelope);
-   flatten_reference(newThis->start, envelope);
-   flatten_reference(newThis->labels, envelope);
-
-  cleanUpFlatten
-}
-
+/**
+ * Extract from the source code for the span represented
+ * by this code block.
+ *
+ * @return An array of the code source lines.
+ */
 RexxArray *RexxCode::getSource()
-/******************************************************************************/
-/* Function:  Extract the source from a method from the source object as an   */
-/*            array of strings.                                               */
-/******************************************************************************/
 {
-  SourceLocation   location;           /* location information              */
-  SourceLocation   end_location;       /* ending location                   */
-  RexxInstruction *current;            /* current instruction               */
-
-  if (this->start == OREF_NULL)        /* empty method?                     */
-    return new_array((size_t)0);       /* just return an empty array        */
-  location = start->getLocation();     /* get its location info             */
-  current = this->start;               /* point to the beginning            */
-                                       /* while not at the last one         */
-  while (current->nextInstruction != OREF_NULL) {
-    current = current->nextInstruction;/* step to the next one              */
-  }
-
-  end_location = current->getLocation(); /* get the end location              */
-                                       /* copy over the ending position     */
-  location.setEndLine(end_location.getEndLine());
-  location.setEndOffset(end_location.getEndOffset());
-                                       /* go extract the source array       */
-  return this->source->extractSource(location);
+    // the source package handles this.
+    return source->extractSourceLines(location);
 }
 
+
+/**
+ * Get the code program name.
+ *
+ * @return The string name of the program.
+ */
 RexxString * RexxCode::getProgramName()
-/******************************************************************************/
-/* Function:  Return the name of the program that contains this method.       */
-/**REXX****************************************************************************/
 {
-                                       /* retrieve this from the source     */
-  return this->source->getProgramName();
+    return source->getProgramName();
 }
 
 
-void * RexxCode::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new rexx method code instance                          */
-/******************************************************************************/
-{
-    return new_object(size, T_RexxCode);        /* Get new object                    */
-}
-
-
+/**
+ * Set a security manager on this code object (actually sets it on the package.)
+ *
+ * @param manager The security manager object.
+ *
+ * @return always returns true.
+ */
 RexxObject *RexxCode::setSecurityManager(RexxObject *manager)
 /******************************************************************************/
 /* Function:  Associate a security manager with a method's source             */

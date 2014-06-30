@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,16 +45,12 @@
 #define Included_RexxCode
 
 #include "SourceFile.hpp"
-#include "MethodClass.hpp"
-#include "RoutineClass.hpp"
 
-                                       /* various types of call or function */
-                                       /* calls                             */
-#define INTERNAL_ROUTINE 1
-#define BUILTIN_ROUTINE  2
-#define EXTERNAL_ROUTINE 3
-#define DYNAMIC_ROUTINE  4
 
+/**
+ * The fundamental unit of Rexx code execution.  This
+ * anchors the pieces that allow Rexx code to run.
+ */
 class RexxCode : public BaseCode
 {
   public:
@@ -65,12 +61,15 @@ class RexxCode : public BaseCode
 
    RexxCode(RexxSource *, RexxInstruction *, RexxDirectory *, size_t, size_t);
    inline RexxCode(RESTORETYPE restoreType) { ; };
-   void live(size_t);
-   void liveGeneral(int reason);
-   void flatten(RexxEnvelope *);
+
+   virtual void live(size_t);
+   virtual void liveGeneral(int reason);
+   virtual void flatten(RexxEnvelope *);
+
    RexxArray      * getSource();
    RexxObject     * setSecurityManager(RexxObject *);
    RexxString     * getProgramName();
+
    inline RexxSource *getSourceObject() { return source; }
    inline RexxInstruction *getFirstInstruction() { return start; }
    inline RexxDirectory   *getLabels() { return labels; }
@@ -91,17 +90,19 @@ class RexxCode : public BaseCode
    inline RoutineClass *findRoutine(RexxString *n) { return source->findRoutine(n); }
    inline RexxString *resolveProgramName(RexxActivity *activity, RexxString *name) { return source->resolveProgramName(activity, name); }
    inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
+
+   // overrides for BaseCode classes
    virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
    virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
    virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
 
-  RexxSource      * source;            // the source this code belongs to.
-  RexxInstruction * start;             /* root of parse tree                */
-  RexxDirectory   * labels;            /* root of label list                */
-  size_t            maxStack;          /* maximum stack depth               */
-  size_t            vdictSize;         /* size of variable dictionary       */
-
+    RexxSource      * source;            // the source this code belongs to.
+    RexxInstruction * start;             // root of instruction tree
+    SourceLocation    location;          // the full location of the code.
+    RexxDirectory   * labels;            // list of labels in this code block
+    size_t            maxStack;          // maximum stack depth
+    size_t            vdictSize;         // size of variable dictionary
 };
 #endif

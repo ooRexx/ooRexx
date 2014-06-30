@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -58,15 +58,15 @@ public:
     RoutineClass(RexxString *name, RexxArray *source);
     inline RoutineClass(RESTORETYPE restoreType) { ; };
 
-    void execute(RexxObject *, RexxObject *);
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
+    virtual void execute(RexxObject *, RexxObject *);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
 
-    void          call(RexxActivity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
-    void          call(RexxActivity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    void          runProgram(RexxActivity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
-    void          runProgram(RexxActivity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
+    virtual void call(RexxActivity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+    virtual void call(RexxActivity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void runProgram(RexxActivity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
+    virtual void runProgram(RexxActivity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
 
     RexxObject   *callRexx(RexxObject **, size_t);
     RexxObject   *callWithRexx(RexxArray *);
