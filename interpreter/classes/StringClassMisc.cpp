@@ -52,7 +52,7 @@
 #include "ActivityManager.hpp"
 #include "StringUtil.hpp"
 
-int RexxString::isSymbol()
+StringSymbolType RexxString::isSymbol()
 /*********************************************************************/
 /*                                                                   */
 /*   Function:         determines valid rexx symbols and returns     */
@@ -65,7 +65,7 @@ int RexxString::isSymbol()
     size_t     Compound;                 /* count of periods                  */
     size_t     i;                        /* loop counter                      */
     const char *Linend;                  /* end of line                       */
-    int        Type;                     /* return type                       */
+    StringSymbolType Type;               /* return type                       */
 
                                          /* name too long                     */
                                          /* or too short                      */

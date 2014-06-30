@@ -1090,7 +1090,6 @@ RexxObject *StringUtil::dataType(RexxString *String, char Option )
     RexxObject *Temp;                    /* temporary value                   */
     const char *Scanp;                   /* string data pointer               */
     size_t      Count;                   /* hex nibble count                  */
-    int         Type;                    /* validated symbol type             */
     RexxNumberString *TempNum;
 
     Len = String->getLength();           /* get validated string len          */
@@ -1197,18 +1196,19 @@ RexxObject *StringUtil::dataType(RexxString *String, char Option )
             break;
 
         case DATATYPE_VARIABLE:            /* Variable                          */
-
-            /* validate the symbol               */
-            Type = String->isSymbol();
+        {
+            // validate the symbol
+            StringSymbolType type = String->isSymbol();
             /* a valid variable type?            */
-            if (Type == STRING_NAME ||
-                Type == STRING_STEM ||
-                Type == STRING_COMPOUND_NAME)
+            if (type == STRING_NAME ||
+                type == STRING_STEM ||
+                type == STRING_COMPOUND_NAME)
             {
                 /* is a valid symbol                 */
                 Answer = TheTrueObject;
             }
             break;
+        }
 
         case DATATYPE_LOGICAL:           // Test for a valid logical.
             if (Len != 1 || (*Scanp != '1' && *Scanp != '0'))

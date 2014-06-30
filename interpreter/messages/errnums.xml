@@ -3733,6 +3733,12 @@ special character (such as a parenthesis).
 <para>Abstract attributes cannot have a method body</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>941</term>
+<listitem>
+<para>Method or routine code may not contain directive instructions</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 </section>

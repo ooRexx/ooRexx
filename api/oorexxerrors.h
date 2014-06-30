@@ -598,6 +598,7 @@
 #define Rexx_Error_Translation_constant_body                    99938
 #define Rexx_Error_Translation_external_routine                 99939
 #define Rexx_Error_Translation_abstract_attribute               99940
+#define Rexx_Error_Translation_directive_method_routine         99941
 
 
 #endif

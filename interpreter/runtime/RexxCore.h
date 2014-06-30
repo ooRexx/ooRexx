@@ -175,12 +175,35 @@ const int ARG_NINE   = 9;
 const int ARG_TEN    = 10;
 
 
-/* Object Reference Assignment */
+// Object Reference Assignment
+// OrefSet handles reference assignment for situations where an
+// object exists in the oldspace (rexx image) area and the fields is being updated
+// to point to an object in the normal Rexx heap.  Since oldspace objects do
+// not participate in the mark-and-sweep operation, we need to keep track of these
+// references in a special table.
+//
+// OrefSet (or the setField() shorter version) needs to be used to set values in any object that
+// a) might be part of the saved imaged (transient objects like the LanguageParser, RexxActivation,
+// and RexxActivity are examples of classes that are not...any class that is visible to the Rexx programmer
+// are classes that will be part of the image, as well as any of the instruction/expresson objects
+// created by the LanguageParser).  Note that as a general rule, fields that are set in an object's constructor
+// do not need this...the object, by definition, is being newly created and cannot be part of the saved image.
+// Other notible exceptions are the instruction/expression objects.  These object, once created, are immutable.
+// Therefore, any fields that are set in these objects can only occur while a program is getting translated.  Once
+// the translation is complete, all of the references are set and these can be safely included in the image
+// without needing to worry about oldspace issues.  If you are uncertain how a given set should be happen,
+// use OrefSet().  It is never an error to use in places where it is not required, but it certainly can be an
+// error to use in places where it is required.
+
 #ifndef CHECKOREFS
 #define OrefSet(o,r,v) ((o)->isOldSpace() ? memoryObject.setOref((void *)&(r),(RexxObject *)v) : (RexxObject *)(r=v))
 #else
 #define OrefSet(o,r,v) memoryObject.checkSetOref((RexxObject *)o, (RexxObject **)&(r), (RexxObject *)v, __FILE__, __LINE__)
 #endif
+
+// short cut version of OrefSet().  99% of the uses specify this as the object pointer...this version
+// saves a little typing :-)
+#define setField(r, v)  OrefSet(this, this->r, v)
 
 
 // forward declaration of commonly used classes

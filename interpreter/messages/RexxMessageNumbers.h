@@ -643,6 +643,7 @@
 #define Message_Translations_sourceless_routine_invocation_msg       737
 #define Message_Translations_sourceless_program_invocation_msg       738
 #define Error_Invalid_expression_select_case_msg                     739
+#define Error_Translation_directive_method_routine_msg               740
 
 
 #endif

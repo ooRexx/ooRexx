@@ -100,6 +100,9 @@ const size_t TRACE_DEBUG_MASK  = 0xff00;
 
 class RexxSource: public RexxInternalObject
 {
+    // grant the language parser full access to our
+    // protected data.
+    friend class LanguageParser;
  public:
     static RexxSource *createSource(RexxString *filename, ProgramSource *s);
     static RexxSource *createSource(RexxString *filename);

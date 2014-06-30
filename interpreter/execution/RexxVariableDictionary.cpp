@@ -593,9 +593,8 @@ RexxVariableBase  *RexxVariableDictionary::getVariableRetriever(
 /******************************************************************************/
 {
     variable = variable->upper();        /* upper case the variable           */
-    int type = variable->isSymbol();         /* validate the symbol               */
     /* create a retriever object         */
-    switch (type)
+    switch (variable->isSymbol())
     {
         case STRING_BAD_VARIABLE:          /* if it didn't validate             */
             return OREF_NULL;                /* don't return a retriever object   */

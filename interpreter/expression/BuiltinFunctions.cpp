@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -1637,7 +1637,7 @@ BUILTIN(VALUE)
     /* and the selector                  */
     RexxString *selector = optional_string(VALUE, selector);
     // get the variable type
-    int variableType = variable->isSymbol();
+    StringSymbolType variableType = variable->isSymbol();
     bool assignable = variableType == STRING_NAME || variableType == STRING_STEM || variableType == STRING_COMPOUND_NAME;
 
     if (selector == OREF_NULL)           /* have a selector?                  */

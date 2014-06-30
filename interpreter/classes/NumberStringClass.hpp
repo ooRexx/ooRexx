@@ -47,39 +47,28 @@
 #include "Numerics.hpp"
 #include "NumberStringMath.hpp"
 
-/* Define char data used in OKNUMSTR   */
-#define ch_BLANK  ' '                       /* Define a Blank character.            */
-#define ch_MINUS  '-'                       /* Define the MINUS character           */
-#define ch_PLUS   '+'                       /* Define the PLUS character.           */
-#define ch_PERIOD '.'                       /* Define the DOT/PERIOD character.     */
-#define ch_ZERO   '0'                       /* Define the Zero  character.          */
-#define ch_ONE    '1'                       /* Define the One   character.          */
-#define ch_FIVE   '5'                       /* Define the Five  character.          */
-#define ch_NINE   '9'                       /* Define the Nine  character.          */
-#define ch_TAB    '\t'                      /* Define the alternate whitespace char */
 
 #define NumFormScientific  0x00000001       /* Define Numeric form setting at Object*/
                                             /*  creation time.                      */
 #define NumberRounded      0x00000010       /* Indicate the number was rounded once */
                                             /*  at NumDigits, avoid double rounding */
 
-#define OVERFLOWSPACE 2                /* space for numeric buffer overflow */
-
-#define SetNumberStringZero()                                           \
-      this->number[0] = '\0';               /* Make value a zero.*/     \
-      this->length = 1;                     /* Length is 1       */     \
-      this->sign = 0;                       /* Make sign Zero.   */     \
-      this->exp = 0;                        /* exponent is zero. */
+#define OVERFLOWSPACE 2                     /* space for numeric buffer overflow */
 
 
+// TODO: figure out what this does...should probably just be a method
 #define NumberStringRound(s,d) s->roundUp(s,d)
 
- class RexxNumberStringBase : public RexxObject {
-   public:
+class RexxNumberStringBase : public RexxObject
+{
+public:
     inline RexxNumberStringBase() { ; }
+
     void   mathRound(char *);
     char  *stripLeadingZeros(char *);
     char * adjustNumber(char *, char *, size_t, size_t);
+
+  protected:
 
     RexxString *stringObject;          /* converted string value          */
     short NumFlags;                    /* Flags for use by the Numberstring met*/
@@ -90,7 +79,9 @@
     size_t  length;
  };
 
- class RexxNumberString : public RexxNumberStringBase {
+
+class RexxNumberString : public RexxNumberStringBase
+{
    public:
     void         *operator new(size_t, size_t);
     inline void  *operator new(size_t size, void *ptr) {return ptr;}
@@ -269,6 +260,7 @@
     char  number[4];
 };
 
+// TODO:  Why is this a function rather than a method?
 void AdjustPrecision(RexxNumberString *, char *, int);
 
 inline RexxNumberString *new_numberstring(const char *s, stringsize_t l)

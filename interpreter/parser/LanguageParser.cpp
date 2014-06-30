@@ -42,6 +42,26 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include "LanguageParser.hpp"
+#include "SourceFile.hpp"
+#include "ProgramSource.hpp"
+
+
+/**
+ * Construct a program source object.
+ *
+ * @param p      The source package we're parsing code for.
+ * @param s      The provider for the actual program source.
+ */
+LanguageParser::LanguageParser(RexxSource *p, ProgramSource *s)
+{
+    // at this point, we just save the link back to the
+    // package and source objects.  We hold off creating
+    // more objects until we start parsing.
+    package = p;
+    source = s;
+}
+
 /**
  * Perform garbage collection on a live object.
  *
@@ -49,23 +69,25 @@
  */
 void LanguageParser::live(size_t liveMark)
 {
-    memory_mark(this->clause);
-    memory_mark(this->first);
-    memory_mark(this->currentInstruction);
-    memory_mark(this->last);
-    memory_mark(this->holdStack);
-    memory_mark(this->variables);
-    memory_mark(this->literals);
-    memory_mark(this->labels);
-    memory_mark(this->strings);
-    memory_mark(this->guardVariables);
-    memory_mark(this->exposedVariables);
-    memory_mark(this->control);
-    memory_mark(this->terms);
-    memory_mark(this->subTerms);
-    memory_mark(this->operators);
-    memory_mark(this->calls);
-    memory_mark(this->activeClass);
+    memory_mark(package);
+    memory_mark(source);
+    memory_mark(clause);
+    memory_mark(firstInstruction);
+    memory_mark(lastInstruction);
+    memory_mark(currentInstruction);
+    memory_mark(holdStack);
+    memory_mark(variables);
+    memory_mark(literals);
+    memory_mark(labels);
+    memory_mark(strings);
+    memory_mark(guardVariables);
+    memory_mark(exposedVariables);
+    memory_mark(control);
+    memory_mark(terms);
+    memory_mark(subTerms);
+    memory_mark(operators);
+    memory_mark(calls);
+    memory_mark(activeClass);
 }
 
 /**
@@ -77,23 +99,25 @@ void LanguageParser::live(size_t liveMark)
  */
 void LanguageParser::liveGeneral(int reason)
 {
-    memory_mark_general(this->clause);
-    memory_mark_general(this->first);
-    memory_mark_general(this->currentInstruction);
-    memory_mark_general(this->last);
-    memory_mark_general(this->holdStack);
-    memory_mark_general(this->variables);
-    memory_mark_general(this->literals);
-    memory_mark_general(this->labels);
-    memory_mark_general(this->strings);
-    memory_mark_general(this->guardVariables);
-    memory_mark_general(this->exposedVariables);
-    memory_mark_general(this->control);
-    memory_mark_general(this->terms);
-    memory_mark_general(this->subTerms);
-    memory_mark_general(this->operators);
-    memory_mark_general(this->calls);
-    memory_mark_general(this->activeClass);
+    memory_mark_general(package);
+    memory_mark_general(source);
+    memory_mark_general(clause);
+    memory_mark_general(firstInstruction);
+    memory_mark_general(lastInstruction);
+    memory_mark_general(currentInstruction);
+    memory_mark_general(holdStack);
+    memory_mark_general(variables);
+    memory_mark_general(literals);
+    memory_mark_general(labels);
+    memory_mark_general(strings);
+    memory_mark_general(guardVariables);
+    memory_mark_general(exposedVariables);
+    memory_mark_general(control);
+    memory_mark_general(terms);
+    memory_mark_general(subTerms);
+    memory_mark_general(operators);
+    memory_mark_general(calls);
+    memory_mark_general(activeClass);
 }
 
 
@@ -106,14 +130,14 @@ void LanguageParser::initialize()
 {
     // handy stack for temporary values...this is a push through
     holdStack = new (HOLDSIZE, false) RexxStack(HOLDSIZE);
-    // a save table for holding on to things longer
-    saveList = new_identity_table();
 
-    control = new_queue();
-    terms = new_queue();
-    subTerms = new_queue();
-    operators = new_queue();
-    literals = new_directory();
+    // general parsing control setups
+    control = new_queue();        // our stack of control instructions
+    terms = new_queue();          // expression term stack
+    subTerms = new_queue();       // temporary stack for holding lists of terms
+    operators = new_queue();      // the operator queue
+    literals = new_directory();   // table of literal values
+
     // during an image build, we have a global string table.  If this is
     // available now, use it.
     strings = memoryObject.getGlobalStrings();
@@ -122,6 +146,7 @@ void LanguageParser::initialize()
         // no global string table, use a local copy
         strings = new_directory();
     }
+
     // create the singleton clause object for parsing
     clause = new RexxClause();
 }
@@ -186,7 +211,7 @@ StackFrameClass *LanguageParser::createStackFrame()
     // arguments.
     RexxString *traceback = package->traceBack(OREF_NULL, clauseLocation, 0, true);
     ProtectedObject p(traceback);
-    return new StackFrameClass(FRAME_PARSE, programName, OREF_NULL, OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber());
+    return new StackFrameClass(FRAME_PARSE, package->programName, OREF_NULL, OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber());
 }
 
 
@@ -203,7 +228,7 @@ void LanguageParser::needVariable(RexxToken  *token)
     {
         // the error message depends on whether this begins with a dot
         // or is a numeric value
-        if (token->value->getChar(0) == '.')
+        if (token->value()->getChar(0) == '.')
         {
             syntaxError(Error_Invalid_variable_period, token);
         }
@@ -367,29 +392,37 @@ RexxCode *LanguageParser::translate(RexxDirectory *_labels)
     package->traceSetting = DEFAULT_TRACE_SETTING;
     package->traceFlags = RexxActivation::default_trace_flags;
 
-    /* go translate the lead block       */
-    RexxCode *newMethod = this->translateBlock(_labels);
+    // go translate the lead block and set this explicitly
+    // in the the requesting source.
+    RexxCode *newMethod = translateBlock(_labels);
     // we save this in case we need to explicitly run this at install time
     package->setInitCode(newMethod);
     // we might have directives to process, which adds additional stuff
     // to the package.
     if (!atEnd())                  /* have directives to process?       */
     {
-        // we store a lot of stuff in the package object we're building.  Have
-        // it set up to receive that information.
-        package->initializeForDirectives();
+        // we store a lot of stuff that we only need if there are directives.
+        // set up to handle this now.
+        initializeForDirectives();
         // for us to manage the class dependencies
         classDependencies = new_directory();
         // no active class definition
         activeClass = OREF_NULL;
 
-        // translation must have been stopped by a directive.  If this is an
-        // interpret, this is an error.
-        if (flags.set(interpret))
+        // We only allow directives when translating full source, so an
+        // interpret, routine, or method compilation does not apply.
+        if (flags.test(noDirectives))
         {
             // step to the next clause to report the error
             nextClause();
-            syntaxError(Error_Translation_directive_interpret);
+            if (isInterpret())
+            {
+                syntaxError(Error_Translation_directive_interpret);
+            }
+            else
+            {
+                syntaxError(Error_Translation_directive_method_routinem);
+            }
         }
 
         // now loop until we hit the end of the source processing directives.
@@ -1449,8 +1482,6 @@ RexxVariableBase *LanguageParser::getRetriever(RexxString *name)
     // first validate that this is a symbol and get the type of symbol.
     switch (name->isSymbol())
     {
-        // TODO:  make this constants an enum type.
-
         // simple variable name
         case STRING_NAME:
             return (RexxVariableBase *)new RexxSimpleVariable(name, 0);

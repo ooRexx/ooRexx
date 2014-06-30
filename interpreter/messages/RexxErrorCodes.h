@@ -598,6 +598,7 @@
 #define Error_Translation_constant_body                    99938
 #define Error_Translation_external_routine                 99939
 #define Error_Translation_abstract_attribute               99940
+#define Error_Translation_directive_method_routine         99941
 #define Error_at_line                                      101000
 #define Message_Translations_error                         101001
 #define Message_Translations_running                       101002

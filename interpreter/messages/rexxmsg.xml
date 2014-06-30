@@ -5214,6 +5214,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Translation_abstract_attribute</SymbolicName>
         <Text>Abstract attributes cannot have a method body</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>941</Subcode>
+        <MessageNumber>740</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_directive_method_routine</SymbolicName>
+        <Text>Method or routine code may not contain directive instructions</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

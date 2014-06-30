@@ -643,6 +643,7 @@ Error_Program_unreadable    "Failure during initialization"
    Message_Translations_sourceless_routine_invocation    "Routine &1 in package ""&2"" (no source available)"
    Message_Translations_sourceless_program_invocation    "Program in ""&1"" (no source available)"
    Error_Invalid_expression_select_case    "Missing expression following CASE keyword of a SELECT instruction"
+   Error_Translation_directive_method_routine    "Method or routine code may not contain directive instructions"
    
 END
 

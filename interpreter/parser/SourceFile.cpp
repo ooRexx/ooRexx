@@ -49,6 +49,8 @@
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "SourceFile.hpp"
+#include "ProgramSource.hpp"
+#include "LanguageParser.hpp"
 
 
 /**
@@ -161,25 +163,25 @@ RexxSource::RexxSource(RexxString *p, ProgramSource *s)
  */
 void RexxSource::live(size_t liveMark)
 {
-  memory_mark(this->parentSource);
-  memory_mark(this->programName);
-  memory_mark(this->programDirectory);
-  memory_mark(this->programExtension);
-  memory_mark(this->programFile);
-  memory_mark(this->securityManager);
-  memory_mark(this->routines);
-  memory_mark(this->public_routines);
-  memory_mark(this->requires);
-  memory_mark(this->libraries);
-  memory_mark(this->loadedPackages);
-  memory_mark(this->package);
-  memory_mark(this->classes);
-  memory_mark(this->installed_public_classes);
-  memory_mark(this->installed_classes);
-  memory_mark(this->merged_public_classes);
-  memory_mark(this->merged_public_routines);
-  memory_mark(this->methods);
-  memory_mark(this->initCode);
+    memory_mark(parentSource);
+    memory_mark(programName);
+    memory_mark(programDirectory);
+    memory_mark(programExtension);
+    memory_mark(programFile);
+    memory_mark(securityManager);
+    memory_mark(routines);
+    memory_mark(publicRoutines);
+    memory_mark(requires);
+    memory_mark(libraries);
+    memory_mark(loadedPackages);
+    memory_mark(package);
+    memory_mark(classes);
+    memory_mark(installedPublicClasses);
+    memory_mark(installedClasses);
+    memory_mark(mergedPublicClasses);
+    memory_mark(mergedPublicRoutines);
+    memory_mark(methods);
+    memory_mark(initCode);
 }
 
 
@@ -193,40 +195,40 @@ void RexxSource::live(size_t liveMark)
 void RexxSource::liveGeneral(int reason)
 {
 #ifndef KEEPSOURCE
-  if (memoryObject.savingImage()) {    /* save image time?                  */
-                                       /* don't save the source image       */
-                                       /* don't save the install information*/
-    OrefSet(this, this->methods, OREF_NULL);
-    OrefSet(this, this->requires, OREF_NULL);
-    OrefSet(this, this->classes, OREF_NULL);
-    OrefSet(this, this->routines, OREF_NULL);
-    OrefSet(this, this->libraries, OREF_NULL);
-    OrefSet(this, this->installed_classes, OREF_NULL);
-    OrefSet(this, this->installed_public_classes, OREF_NULL);
-    OrefSet(this, this->merged_public_classes, OREF_NULL);
-    OrefSet(this, this->merged_public_routines, OREF_NULL);
-  }
+    if (memoryObject.savingImage())
+    {
+        // NOTE:  more work required here!
+        // don't need to use OrefSet here because there's no oldspace when saving the image.
+        methods = OREF_NULL;
+        requires = OREF_NULL;
+        classes = OREF_NULL;
+        routines = OREF_NULL;
+        libraries = OREF_NULL;
+        installedClasses = OREF_NULL;
+        installedPublicClasses = OREF_NULL;
+        mergedPublicClasses = OREF_NULL;
+        mergedPublicRoutines = OREF_NULL;
+    }
 #endif
-  memory_mark_general(this->parentSource);
-  memory_mark_general(this->programName);
-  memory_mark_general(this->programDirectory);
-  memory_mark_general(this->programExtension);
-  memory_mark_general(this->programFile);
-  memory_mark_general(this->securityManager);
-  memory_mark_general(this->labels);
-  memory_mark_general(this->routines);
-  memory_mark_general(this->public_routines);
-  memory_mark_general(this->requires);
-  memory_mark_general(this->libraries);
-  memory_mark_general(this->loadedPackages);
-  memory_mark_general(this->package);
-  memory_mark_general(this->classes);
-  memory_mark_general(this->installed_public_classes);
-  memory_mark_general(this->installed_classes);
-  memory_mark_general(this->merged_public_classes);
-  memory_mark_general(this->merged_public_routines);
-  memory_mark_general(this->methods);
-  memory_mark_general(this->initCode);
+    memory_mark_general(parentSource);
+    memory_mark_general(programName);
+    memory_mark_general(programDirectory);
+    memory_mark_general(programExtension);
+    memory_mark_general(programFile);
+    memory_mark_general(securityManager);
+    memory_mark_general(routines);
+    memory_mark_general(publicRoutines);
+    memory_mark_general(requires);
+    memory_mark_general(libraries);
+    memory_mark_general(loadedPackages);
+    memory_mark_general(package);
+    memory_mark_general(classes);
+    memory_mark_general(installedPublicClasses);
+    memory_mark_general(installedClasses);
+    memory_mark_general(mergedPublicClasses);
+    memory_mark_general(mergedPublicRoutines);
+    memory_mark_general(methods);
+    memory_mark_general(initCode);
 }
 
 
@@ -238,33 +240,57 @@ void RexxSource::liveGeneral(int reason)
 void RexxSource::flatten (RexxEnvelope *envelope)
 {
   setUpFlatten(RexxSource)
-                                       /* if we are flattening for EA's, we   */
-                                       /* don't need to to keep source info   */
-                                       /* so ask the envelope if this is a    */
-                                       /*  flatten to save the method image   */
-    this->securityManager = OREF_NULL;
-    flatten_reference(newThis->parentSource, envelope);
-    flatten_reference(newThis->programName, envelope);
-    flatten_reference(newThis->programDirectory, envelope);
-    flatten_reference(newThis->programExtension, envelope);
-    flatten_reference(newThis->programFile, envelope);
-    flatten_reference(newThis->securityManager, envelope);
-    flatten_reference(newThis->labels, envelope);
-    flatten_reference(newThis->routines, envelope);
-    flatten_reference(newThis->public_routines, envelope);
-    flatten_reference(newThis->requires, envelope);
-    flatten_reference(newThis->libraries, envelope);
-    flatten_reference(newThis->loadedPackages, envelope);
-    flatten_reference(newThis->package, envelope);
-    flatten_reference(newThis->classes, envelope);
-    flatten_reference(newThis->installed_public_classes, envelope);
-    flatten_reference(newThis->installed_classes, envelope);
-    flatten_reference(newThis->merged_public_classes, envelope);
-    flatten_reference(newThis->merged_public_routines, envelope);
-    flatten_reference(newThis->methods, envelope);
-    flatten_reference(newThis->initCode, envelope);
+
+    securityManager = OREF_NULL;
+    flattenRef(parentSource);
+    flattenRef(programName);
+    flattenRef(programDirectory);
+    flattenRef(programExtension);
+    flattenRef(programFile);
+    flattenRef(securityManager);
+    flattenRef(routines);
+    flattenRef(publicRoutines);
+    flattenRef(requires);
+    flattenRef(libraries);
+    flattenRef(loadedPackages);
+    flattenRef(package);
+    flattenRef(classes);
+    flattenRef(installedPublicClasses);
+    flattenRef(installedClasses);
+    flattenRef(mergedPublicClasses);
+    flattenRef(mergedPublicRoutines);
+    flattenRef(methods);
+    flattenRef(initCode);
 
   cleanUpFlatten
+}
+
+
+/**
+ * Process an interpret instruction.
+ *
+ * @param string  The string value to interpret.
+ * @param _labels The labels inherited from the parent source context.
+ * @param _line_number
+ *                The line number of the interpret instruction (used for
+ *                line number offsets).
+ *
+ * @return A translated code object.
+ */
+RexxCode *RexxSource::interpret(RexxString *string, RexxDirectory *_labels,
+    size_t _line_number )
+{
+    // TODO:  lots of work needed here, specifically creating the source object
+    // with a program source configured with the interpret ovvset.
+
+
+    RexxSource *source = RexxSource::createSource(programName, new_array(string));
+    ProtectedObject p(source);
+    // have the source fudge the line numbering
+    source->interpretLine(_line_number);
+
+    // now convert this to executable form
+    return interpretMethod(_labels);
 }
 
 
@@ -280,11 +306,13 @@ void RexxSource::extractNameInformation()
         return;
     }
 
-    // NOTE:  only done during source initialization, so this safe
-    // to not use OrefSet
-    programDirectory = SysFileSystem::extractDirectory(programName);
-    programExtension = SysFileSystem::extractExtension(programName);
-    programFile = SysFileSystem::extractFile(programName);
+    // NOTE:  This is normally done during source translation, but
+    // this is also performed after a compiled source restore to update
+    // the name to the restored file version.  Therefore, the guarded
+    // version needs to be performed.
+    setField(programDirectory, SysFileSystem::extractDirectory(programName));
+    setField(programExtension, SysFileSystem::extractExtension(programName));
+    setField(programFile, SysFileSystem::extractFile(programName));
 }
 
 
@@ -309,25 +337,9 @@ void RexxSource::setup()
  */
 void RexxSource::setProgramName(RexxString *name)
 {
-    OrefSet(this, this->programName, name);
+    // NOTE...still need the guarded version here.
+    setField(programName, name);
     extractNameInformation();
-}
-
-void RexxSource::interpretLine(size_t _line_number)
-/******************************************************************************/
-/* Arguments:  interpret line location                                        */
-/*                                                                            */
-/* Function:  Adjust the source object so that it thinks it is scanning a     */
-/*            1-line source file with a line number other than 1 so that      */
-/*            errors and trace of an interpreted instruction will display     */
-/*            the interpret instructions line number.                         */
-/******************************************************************************/
-{
-                                       /* fill in the source size           */
-  this->line_count = _line_number;     /* size is now the line number       */
-  this->line_number = _line_number;    /* we are now on line "nn of nn"     */
-                                       /* remember for positioning          */
-  this->interpret_adjust = _line_number - 1;
 }
 
 
@@ -372,22 +384,33 @@ RexxString *RexxSource::get(size_t _position)
     return souce->getStringLine(position);
 }
 
-                                       /* extra space required to format a  */
-                                       /* result line.  This overhead is    */
-                                       /* 8 leading spaces for the line     */
-                                       /* number, + 1 space + length of the */
-                                       /* message prefix (3) + 1 space +    */
-                                       /* 2 for an indent + 2 for the       */
-                                       /* quotes surrounding the value      */
-#define TRACE_OVERHEAD 16
-                                       /* overhead for a traced instruction */
-                                       /* (8 digit line number, blank,      */
-                                       /* 3 character prefix, and a blank   */
-#define INSTRUCTION_OVERHEAD 11
-#define LINENUMBER 6                   /* size of a line number             */
-#define PREFIX_OFFSET (LINENUMBER + 1) /* location of the prefix field      */
-#define PREFIX_LENGTH 3                /* length of the prefix flag         */
-#define INDENT_SPACING 2               /* spaces per indentation amount     */
+// extra space required to format a result line.  This overhead is
+//
+//   8 leading spaces for the line number +
+//   1 space +
+//   3 (length of the message prefix +
+//   1 space +
+//   2 for an indent +
+//   2 for the quotes surrounding the value
+const size_t TRACE_OVERHEAD = 16;
+
+// overhead for a traced instruction
+//
+//   8 digit line number +
+//   1 space +
+//   3 character prefix +
+//   1 blank
+const size_t INSTRUCTION_OVERHEAD = 11;
+
+// size of a line number
+const size_t LINENUMBER = 6
+
+// offset of the prefix information
+const size_t PREFIX_OFFSET = (LINENUMBER + 1);
+// length of the prefix flag
+const size_t PREFIX_LENGTH = 3;
+// amount of indent spacing for results lines
+const size_t INDENT_SPACING = 2;
 
 
 /**
@@ -404,10 +427,7 @@ RexxString *RexxSource::get(size_t _position)
 RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &location,
      size_t indent, bool trace)
 {
-    RexxString  *buffer;                 /* buffer for building result        */
-    RexxString  *line;                   /* actual line data                  */
     size_t       outlength;              /* output length                     */
-    char        *linepointer;            /* pointer to the line number        */
     char         linenumber[11];         /* formatted line number             */
 
     // format the line number as a string
@@ -415,7 +435,7 @@ RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &lo
 
     // get the line from the source string...this can return "" if the source is
     // not available or this string is somehow out of bounds.
-    line = source->extract(location);
+    RexxString *line = source->extract(location);
 
     // not available...we provide some sort of information about what is there, even
     // if we can't display the source line.
@@ -423,27 +443,29 @@ RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &lo
     {
         // old space code means this is part of the interpreter image.  Don't include
         // the package name in the message
-        if (this->isOldSpace())
+        if (isOldSpace())
         {
             line = ActivityManager::currentActivity->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
         }
+
         // if we have an activation (and we should, since the only time we won't would be for a
         // translation time error...and we have source then), ask it to provide a line describing
         // the invocation situation
         if (activation != OREF_NULL)
         {
-            line = activation->formatSourcelessTraceLine(isInternalCode() ? OREF_REXX : this->programName);
+            line = activation->formatSourcelessTraceLine(isInternalCode() ? OREF_REXX : programName);
         }
+
         // this could be part of the internal code...give a generic message that doesn't identify
         // the actual package.
-        else if (this->isInternalCode())
+        else if (isInternalCode())
         {
             line = ActivityManager::currentActivity->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
         }
         else
         {
             // generic package message.
-            RexxArray *args = new_array(this->programName);
+            RexxArray *args = new_array(programName);
             ProtectedObject p(args);
             line = ActivityManager::currentActivity->buildMessage(Message_Translations_no_source_available, args);
         }
@@ -452,7 +474,7 @@ RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &lo
     ProtectedObject p(line);
 
     // get a raw empty string so we can build this trace up.
-    buffer = raw_string(line->getLength() + INSTRUCTION_OVERHEAD + indent * INDENT_SPACING);
+    RexxString *buffer = raw_string(line->getLength() + INSTRUCTION_OVERHEAD + indent * INDENT_SPACING);
     // blank out the first part
     buffer->set(0, ' ', INSTRUCTION_OVERHEAD + indent * INDENT_SPACING);
 
@@ -461,8 +483,8 @@ RexxString *RexxSource::traceBack(RexxActivation *activation, SourceLocation &lo
 
     // now add in the line number.  If the number is two large to add, we just overlay a question mark.
     // I have never seen that happen!
-    outlength = strlen(linenumber);
-    linepointer = linenumber;
+    size_t outlength = strlen(linenumber);
+    char *linepointer = linenumber;
     if (outlength > LINENUMBER)
     {
         linepointer += outlength - LINENUMBER;
@@ -511,31 +533,6 @@ RexxArray *RexxSource::extractSource(SourceLocation &location )
     return source->extractSourceLines(location);
 }
 
-/**
- * Process an interpret instruction.
- *
- * @param string  The string value to interpret.
- * @param _labels The labels inherited from the parent source context.
- * @param _line_number
- *                The line number of the interpret instruction (used for
- *                line number offsets).
- *
- * @return A translated code object.
- */
-RexxCode *RexxSource::interpret(RexxString *string, RexxDirectory *_labels,
-    size_t _line_number )
-{
-    // TODO:  lots of work needed here, specifically creating the source object
-    // with a program source configured with the interpret ovvset.
-
-
-    RexxSource *source = RexxSource::createSource(programName, new_array(string));
-    ProtectedObject p(source);
-    source->interpretLine(_line_number);  /* fudge the line numbering          */
-                                       /* convert to executable form        */
-    return source->interpretMethod(_labels);
-}
-
 
 /**
  * Merge a parent source context into our context so all of the
@@ -547,7 +544,7 @@ RexxCode *RexxSource::interpret(RexxString *string, RexxDirectory *_labels,
 void RexxSource::inheritSourceContext(RexxSource *source)
 {
     // set this as a parent
-    OrefSet(this, this->parentSource, source);
+    setField(parentSource, source);
 }
 
 
@@ -559,71 +556,71 @@ void RexxSource::mergeRequired(RexxSource *source)
 {
     // has the source already merged in some public routines?  pull those in first,
     // so that the direct set will override
-    if (source->merged_public_routines != OREF_NULL)
+    if (source->mergedPublicRoutines != OREF_NULL)
     {
         /* first merged attempt?             */
-        if (this->merged_public_routines == OREF_NULL)
+        if (mergedPublicRoutines == OREF_NULL)
         {
             /* get the directory                 */
-            OrefSet(this, this->merged_public_routines, new_directory());
+            setField(mergedPublicRoutines, new_directory());
         }
         /* loop through the list of routines */
-        for (HashLink i = source->merged_public_routines->first(); source->merged_public_routines->available(i); i = source->merged_public_routines->next(i))
+        for (HashLink i = source->mergedPublicRoutines->first(); source->mergedPublicRoutines->available(i); i = source->mergedPublicRoutines->next(i))
         {
             /* copy the routine over             */
-            this->merged_public_routines->setEntry((RexxString *)source->merged_public_routines->index(i), source->merged_public_routines->value(i));
+            mergedPublicRoutines->setEntry((RexxString *)source->mergedPublicRoutines->index(i), source->mergedPublicRoutines->value(i));
         }
 
     }
 
     // now process the direct set
-    if (source->public_routines != OREF_NULL)
+    if (source->publicRoutines != OREF_NULL)
     {
         /* first merged attempt?             */
-        if (this->merged_public_routines == OREF_NULL)
+        if (mergedPublicRoutines == OREF_NULL)
         {
             /* get the directory                 */
-            OrefSet(this, this->merged_public_routines, new_directory());
+            setField(mergedPublicRoutines, new_directory());
         }
         /* loop through the list of routines */
-        for (HashLink i = source->public_routines->first(); source->public_routines->available(i); i = source->public_routines->next(i))
+        for (HashLink i = source->publicRoutines->first(); source->publicRoutines->available(i); i = source->publicRoutines->next(i))
         {
             /* copy the routine over             */
-            this->merged_public_routines->setEntry((RexxString *)source->public_routines->index(i), source->public_routines->value(i));
+            mergedPublicRoutines->setEntry((RexxString *)source->publicRoutines->index(i), source->publicRoutines->value(i));
         }
     }
 
 
     // now do the same process for any of the class contexts
-    if (source->merged_public_classes != OREF_NULL)
+    if (source->mergedPublicClasses != OREF_NULL)
     {
-        if (this->merged_public_classes == OREF_NULL)
+        if (mergedPublicClasses == OREF_NULL)
         {
             /* get the directory                 */
-            OrefSet(this, this->merged_public_classes, new_directory());
+            setField(mergedPublicClasses, new_directory());
         }
         /* loop through the list of classes, */
-        for (HashLink i = source->merged_public_classes->first(); source->merged_public_classes->available(i); i = source->merged_public_classes->next(i))
+        for (HashLink i = source->mergedPublicClasses->first(); source->mergedPublicClasses->available(i); i = source->mergedPublicClasses->next(i))
         {
             /* copy the routine over             */
-            this->merged_public_classes->setEntry((RexxString *)source->merged_public_classes->index(i), source->merged_public_classes->value(i));
+            mergedPublicClasses->setEntry((RexxString *)source->mergedPublicClasses->index(i), source->mergedPublicClasses->value(i));
         }
     }
 
     // the installed ones are processed second as they will overwrite the imported one, which
     // is the behaviour we want
-    if (source->installed_public_classes != OREF_NULL)
+    if (source->installedPublicClasses != OREF_NULL)
     {
-        if (this->merged_public_classes == OREF_NULL)
+        if (mergedPublicClasses == OREF_NULL)
         {
             /* get the directory                 */
-            OrefSet(this, this->merged_public_classes, new_directory());
+            setField(mergedPublicClasses, new_directory());
         }
         /* loop through the list of classes, */
-        for (HashLink i = source->installed_public_classes->first(); source->installed_public_classes->available(i); i = source->installed_public_classes->next(i))
+        for (HashLink i = source->installedPublicClasses->first(); source->installedPublicClasses->available(i); i = source->installedPublicClasses->next(i))
         {
             /* copy the routine over             */
-            this->merged_public_classes->setEntry((RexxString *)source->installed_public_classes->index(i), source->installed_public_classes->value(i));
+            mergedPublicClasses->setEntry((RexxString *)source->installedPublicClasses->index(i), source->installedPublicClasses->value(i));
         }
     }
 }
@@ -640,10 +637,10 @@ void RexxSource::mergeRequired(RexxSource *source)
 RoutineClass *RexxSource::findLocalRoutine(RexxString *name)
 {
     // if we have one locally, then return it.
-    if (this->routines != OREF_NULL)
+    if (routines != OREF_NULL)
     {
         /* try for a local one first         */
-        RoutineClass *result = (RoutineClass *)(this->routines->fastAt(name));
+        RoutineClass *result = (RoutineClass *)(routines->fastAt(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -670,10 +667,10 @@ RoutineClass *RexxSource::findLocalRoutine(RexxString *name)
 RoutineClass *RexxSource::findPublicRoutine(RexxString *name)
 {
     // if we have one locally, then return it.
-    if (this->merged_public_routines != OREF_NULL)
+    if (mergedPublicRoutines != OREF_NULL)
     {
         /* try for a local one first         */
-        RoutineClass *result = (RoutineClass *)(this->merged_public_routines->fastAt(name));
+        RoutineClass *result = (RoutineClass *)(mergedPublicRoutines->fastAt(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -744,10 +741,10 @@ RexxString *RexxSource::resolveProgramName(RexxActivity *activity, RexxString *n
 RexxClass *RexxSource::findInstalledClass(RexxString *name)
 {
     // if we have one locally, then return it.
-    if (this->installed_classes != OREF_NULL)
+    if (installedClasses != OREF_NULL)
     {
         /* try for a local one first         */
-        RexxClass *result = (RexxClass *)(this->installed_classes->fastAt(name));
+        RexxClass *result = (RexxClass *)(installedClasses->fastAt(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -767,10 +764,10 @@ RexxClass *RexxSource::findInstalledClass(RexxString *name)
 RexxClass *RexxSource::findPublicClass(RexxString *name)
 {
     // if we have one locally, then return it.
-    if (this->merged_public_classes != OREF_NULL)
+    if (mergedPublicClasses != OREF_NULL)
     {
         /* try for a local one first         */
-        RexxClass *result = (RexxClass *)(this->merged_public_classes->fastAt(name));
+        RexxClass *result = (RexxClass *)(mergedPublicClasses->fastAt(name));
         if (result != OREF_NULL)
         {
             return result;
@@ -814,7 +811,7 @@ RexxClass *RexxSource::findClass(RexxString *className)
     }
 
     // give the security manager a go
-    if (this->securityManager != OREF_NULL)
+    if (securityManager != OREF_NULL)
     {
         classObject = (RexxClass *)securityManager->checkLocalAccess(internalName);
         if (classObject != OREF_NULL)
@@ -831,7 +828,7 @@ RexxClass *RexxSource::findClass(RexxString *className)
     }
 
     /* normal execution?                 */
-    if (this->securityManager != OREF_NULL)
+    if (securityManager != OREF_NULL)
     {
         classObject = (RexxClass *)securityManager->checkEnvironmentAccess(internalName);
         if (classObject != OREF_NULL)
@@ -877,18 +874,18 @@ void RexxSource::processInstall(
     /* run into a recursion problem      */
     /* when class init methods are       */
     /* processed                         */
-    this->flags &= ~_install;            /* we are now installed              */
+    flags &= ~_install;            /* we are now installed              */
 
     // native packages are processed first.  The requires might actually need
     // functons loaded by the packages
-    if (this->libraries != OREF_NULL)
+    if (libraries != OREF_NULL)
     {
         /* classes and routines              */
         // now loop through the requires items
         for (size_t i = libraries->firstIndex(); i != LIST_END; i = libraries->nextIndex(i))
         {
             // and have it do the installs processing
-            LibraryDirective *library = (LibraryDirective *)this->libraries->getValue(i);
+            LibraryDirective *library = (LibraryDirective *)libraries->getValue(i);
             library->install(activation);
         }
     }
@@ -896,7 +893,7 @@ void RexxSource::processInstall(
     // native methods and routines are lazy resolved on first use, so we don't
     // need to process them here.
 
-    if (this->requires != OREF_NULL)     /* need to process ::requires?       */
+    if (requires != OREF_NULL)     /* need to process ::requires?       */
     {
         /* classes and routines              */
         // now loop through the requires items
@@ -905,18 +902,18 @@ void RexxSource::processInstall(
             // and have it do the installs processing.  This is a little roundabout, but
             // we end up back in our own context while processing this, and the merge
             // of the information happens then.
-            RequiresDirective *_requires = (RequiresDirective *)this->requires->getValue(i);
+            RequiresDirective *_requires = (RequiresDirective *)requires->getValue(i);
             _requires->install(activation);
         }
     }
 
     // and finally process classes
-    if (this->classes != OREF_NULL)
+    if (classes != OREF_NULL)
     {
         /* get an installed classes directory*/
-        OrefSet(this, this->installed_classes, new_directory());
+        setField(installedClasses, new_directory());
         /* and the public classes            */
-        OrefSet(this, this->installed_public_classes, new_directory());
+        setField(installedPublicClasses, new_directory());
         RexxArray *createdClasses = new_array(classes->items());
 
         ProtectedObject p(createdClasses);
@@ -924,7 +921,7 @@ void RexxSource::processInstall(
         for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
         {
             /* get the class info                */
-            ClassDirective *current_class = (ClassDirective *)this->classes->getValue(i);
+            ClassDirective *current_class = (ClassDirective *)classes->getValue(i);
             // save the newly created class in our array so we can send the activate
             // message at the end
             RexxClass *newClass = current_class->install(this, activation);
@@ -1173,7 +1170,7 @@ PackageClass *RexxSource::getPackage()
 {
     if (package == OREF_NULL)
     {
-        OrefSet(this, this->package, new PackageClass(this));
+        setField(package, new PackageClass(this));
     }
     return package;
 }
@@ -1193,19 +1190,19 @@ void RexxSource::addInstalledClass(RexxString *name, RexxClass *classObject, boo
     // force the directives to be processed first
     install();
     // make sure we have this created
-    if (installed_classes == OREF_NULL)
+    if (installedClasses == OREF_NULL)
     {
-        OrefSet(this, installed_classes, new_directory());
+        setField(installedClasses, new_directory());
     }
-    installed_classes->setEntry(name, classObject);
+    installedClasses->setEntry(name, classObject);
     if (publicClass)
     {
         // make sure we have this created also
-        if (installed_public_classes == OREF_NULL)
+        if (installedPublicClasses == OREF_NULL)
         {
-            OrefSet(this, installed_public_classes, new_directory());
+            setField(installedPublicClasses, new_directory());
         }
-        installed_public_classes->setEntry(name, classObject);
+        installedPublicClasses->setEntry(name, classObject);
     }
 }
 
@@ -1226,16 +1223,16 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
     // make sure we have this created
     if (routines == OREF_NULL)
     {
-        OrefSet(this, routines, new_directory());
+        setField(routines, new_directory());
     }
     routines->setEntry(name, routineObject);
     if (publicRoutine)
     {
         // make sure we have this created
-        if (public_routines == OREF_NULL)
+        if (publicRoutines == OREF_NULL)
         {
-            OrefSet(this, public_routines, new_directory());
+            setField(publicRoutines, new_directory());
         }
-        public_routines->setEntry(name, routineObject);
+        publicRoutines->setEntry(name, routineObject);
     }
 }

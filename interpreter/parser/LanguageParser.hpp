@@ -101,20 +101,29 @@ const unsigned int INVALID_CHARACTER = '00000100';
 #define new_variable_instruction(name, type, size) sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
 
 // context flag values.
-typedef enum {interpret, reclaimed, noClause} ParsingFlags;
+typedef enum
+{
+    interpret,            // interpreting code...
+    reclaimed,            // we have a reclaimed clause
+    noClause,             // no additional clauses are available
+    noDirectives          // parsing cannot include directives.
+} ParsingFlags;
 
 // builtin function code prototype
 typedef RexxObject *builtin_func(RexxActivation *, size_t, RexxExpressionStack *);
 // pointer to a builtin function
 typedef builtin_func *pbuiltin;
 
-class LanguageParser: public RexxInternalObject {
- friend class RexxActivation;
+class LanguageParser: public RexxInternalObject
+{
  public:
     void        *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
+
+    LanguageParser(RexxSource *p, ProgramSource *s);
+
     void        initBuffered(RexxBuffer *);
     void        initFile();
     void        extractNameInformation();

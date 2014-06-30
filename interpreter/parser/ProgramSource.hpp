@@ -43,17 +43,19 @@
 #ifndef Included_ProgramSource
 #define Included_ProgramSource
 
-#define line_delimiters "\r\n"         /* stream file line end characters   */
+#define line_delimiters "\r\n"         // stream file line end characters
 #define ctrl_z 0x1a                    // the end of file marker
+
 /**
  * A descriptor for a single source line.
  */
-class LineDescriptor : position(0), length(0)
+class LineDescriptor
 {
-    size_t position;                     // position with the buffer
-    size_t length;                       // length of the line
+public:
+    LineDescriptor() : position(0), length(0) { }
 
-    inline void clear()                  // clear the descriptor
+    // clear the descriptor
+    inline void clear()
     {
         position = 0;
         length = 0;
@@ -65,6 +67,9 @@ class LineDescriptor : position(0), length(0)
         linePointer = dataPointer + position;
         lineLength = length;
     }
+
+    size_t position;                     // position with the buffer
+    size_t length;                       // length of the line
 };
 
 
@@ -82,9 +87,11 @@ public:
     // each subclass will need to implement this.
     // default setup is to do nothing.
     virtual void setup() { }
+    // a default implementation that returns nothing.
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length)
     {
-        data = NULL; length = 0; a default implementation
+        data = NULL;
+        length = 0;
     }
 
     // provides with real source need to override this
@@ -95,6 +102,7 @@ public:
     RexxString *extract(SourceLocation &location);
 
 protected:
+
     size_t lineCount;               // count of lines in the source file.
     size_t interpretAdjust;         // if this is an interpret, we fudge the line positions
 };
@@ -106,6 +114,7 @@ protected:
  */
 class BufferProgramSource: public ProgramSource
 {
+ public:
     void        *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { ; }
@@ -128,8 +137,9 @@ class BufferProgramSource: public ProgramSource
     LineDescriptor &getDescriptor(size_t l);
 
 protected:
-    RexxBuffer  *descriptorArea;        // our table of line descriptors
-    RexxBuffer *buffer;      // the buffer where the source data is installed
+
+    RexxBuffer *descriptorArea;   // our table of line descriptors
+    RexxBuffer *buffer;           // the buffer where the source data is installed
 };
 
 
@@ -139,10 +149,12 @@ protected:
  */
 class FileProgramSource: public BufferProgramSource
 {
+ public:
     void        *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
+
     // we provide the buffer source after we've read the file information in from
     // the target file.
     FileProgramSource(RexxString *f) : fileName(f), BufferProgramSource(OREF_NULL, 0) { }
@@ -156,6 +168,7 @@ class FileProgramSource: public BufferProgramSource
     virtual void getBuffer(const char *&data, size_t &length);
 
 protected:
+
     RexxString *fileName;      // file for the program source
 };
 
@@ -165,11 +178,12 @@ protected:
  */
 class ArrayProgramSource: public ProgramSource
 {
+ public:
     void        *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, void *) { ; }
-    StringProgramSource(RexxArray *a, size_t adjust) : array(a) : ProgramSource(adjust) { }
+    ArrayProgramSource(RexxArray *a, size_t adjust) : array(a) : ProgramSource(adjust) { }
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);
@@ -178,7 +192,8 @@ class ArrayProgramSource: public ProgramSource
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length);
     virtual bool isTraceable() { return true; }
 
-protected:
+ protected:
+
     RexxArray  *array;       // the array where the source data is installed
 };
 
