@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=4.3
+Name=RexxTry
+Comment=RexxTry
+Exec=@CMAKE_INSTALL_PREFIX@/bin/rexxtry.rex
+Icon=oorexx
+Terminal=true
+Type=Application
+Categories=Development
+MimeType=application/x-ooRexx-item;
+GenericName=RexxTry

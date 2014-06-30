@@ -5,7 +5,7 @@
 @REM /* This program and the accompanying materials are made available under       */
 @REM /* the terms of the Common Public License v1.0 which accompanies this         */
 @REM /* distribution. A copy is also available at the following address:           */
-@REM /* http://www.oorexx.org/license.html                          */
+@REM /* http://www.oorexx.org/license.html                                         */
 @REM /*                                                                            */
 @REM /* Redistribution and use in source and binary forms, with or                 */
 @REM /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 @REM /*----------------------------------------------------------------------------*/
 @ECHO Off
 REM  This  build program needs to be run any time the file interpreter/messages/rexxmsg.xml
-REM  is updated.  This must be run from the root build directory, and will update
+REM  is updated.  This must be run from the root source directory, and will update
 REM  the different message files that are generated from rexxmsg.xml directly into
 REM  the source tree so they can be checked into SVN.
 REM
