@@ -68,6 +68,17 @@ string(TIMESTAMP ORX_YEAR %Y)
 set (ORX_COPY_YEAR 2005-${ORX_YEAR})
 string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR)
 
+# Platform independent architecture test
+if (CMAKE_SIZEOF_VOID_P MATCHES 8)
+    set(ORX_ARCHITECTURE "x64")
+    message("Building for a 64-bit architecture")
+else ()
+    set(ORX_ARCHITECTURE "x32")
+    message("Building for a 32-bit architecture")
+endif ()
+
+
+
 # Get the SVN revision number of an svn command line client is
 # available.  This version will run at build time rather than only
 # at configuration generation time.
@@ -215,7 +226,7 @@ if (WIN32)
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
-   if ("$ENV{Platform}" STREQUAL "X64")
+   if (${ORX_ARCHITECTURE} STREQUAL "x64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
       set (NSIS_CPU "x86_64")
    else ()
