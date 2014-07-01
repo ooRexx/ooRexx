@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -73,14 +73,6 @@ RexxInteger *RexxInteger::integerSeven = OREF_NULL;
 RexxInteger *RexxInteger::integerEight = OREF_NULL;
 RexxInteger *RexxInteger::integerNine = OREF_NULL;
 RexxInteger *RexxInteger::integerMinusOne = OREF_NULL;
-                                       /* define an operator forwarding     */
-                                       /* method                            */
-
-#define string_forwarder_cpp(method)\
-RexxObject *RexxInteger::##method(RexxObject *operand)\
- {\
-     return (RexxObject *)this->string()->method(operand);\
- }
 
 
 /**
@@ -1198,69 +1190,67 @@ RexxObject  *RexxInteger::getRealValue(
   return (RexxObject *)this;           /* just return this value            */
 }
 
-/* **************************************** */
-/*  Integer class methods begin here .....  */
-/* **************************************** */
 
-RexxIntegerClass::RexxIntegerClass()
-/******************************************************************************/
-/* This method will pre-allocate 100 integer objects, 0-99.  These will then  */
-/*  be used when ever a request for an integer between 0 and 99 is requested  */
-/*  this should help reduce some of our memory requirements and trips through */
-/*  memory_new.                                                               */
-/******************************************************************************/
+// Integer Class class methods start here.
+
+
+/**
+ * This method will pre-allocate 100 integer objects, 0-99.  These will then
+ * be used when ever a request for an integer between 0 and 99 is requested
+ * this should help reduce some of our memory requirements and trips through
+ * memory_new.
+ */
+void RexxIntegerClass::initCache()
 {
- int i;                                /* loop counter                      */
-
- for (i=INTEGERCACHELOW; i<INTEGERCACHESIZE; i++ ) {  /* now create all our cached integers*/
-   OrefSet(this, this->integercache[i - INTEGERCACHELOW], new  RexxInteger (i));
-   /* force the item to create its string value too.  This can save */
-   /* us a lot of time when string indices are used for compound */
-   /* variables and also eliminate a bunch of old-new table */
-   /* references. */
-   this->integercache[i - INTEGERCACHELOW]->stringValue();
- }
+     for (int i=INTEGERCACHELOW; i<INTEGERCACHESIZE; i++ )
+     {
+         integercache[i - INTEGERCACHELOW] = new  RexxInteger (i);
+         // force the item to create its string value too.  This can save
+         // us a lot of time when string indices are used for compound
+         // variables and also eliminate a bunch of old-new table
+         // references.
+         integercache[i - INTEGERCACHELOW]->stringValue();
+     }
 }
 
+
+/**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
 void RexxIntegerClass::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-  int i;                               /* loop counter                      */
+    RexxClass::live(liveMark);     // do RexxClass level marking
 
-  this->RexxClass::live(liveMark);     /* do RexxClass level marking        */
-
-                                       /* now mark the cached integers      */
-  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
-  {
-       memory_mark(this->integercache[i - INTEGERCACHELOW]);
-  }
+    // mark the cache array
+    for (int i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
+    {
+         memory_mark(integercache[i - INTEGERCACHELOW]);
+    }
 }
 
 void RexxIntegerClass::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-  int  i;                              /* loop counter                      */
+    RexxClass::liveGeneral(reason);// do RexxClass level marking
 
-  this->RexxClass::liveGeneral(reason); /* do RexxClass level marking        */
-
-                                       /* now mark the cached integers      */
-  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
-  {
-      memory_mark_general(this->integercache[i - INTEGERCACHELOW]);
-  }
+    // mark the cache array
+    for (int i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
+    {
+         memory_mark_general(integercache[i - INTEGERCACHELOW]);
+    }
 }
 
-RexxClass   *RexxInteger::classObject()
-/******************************************************************************/
-/* Function:  Return the String class object for integer instances            */
-/******************************************************************************/
+
+/**
+ * An override for retrieving the class object.  We
+ * lie and pretend we're the string class.
+ *
+ * @return The associated class object.
+ */
+RexxClass *RexxInteger::classObject()
 {
-                                       /* just return class from behaviour  */
-  return TheStringClass;
+    return TheStringClass;
 }
 
 void *RexxInteger::operator new(size_t size)
@@ -1268,9 +1258,10 @@ void *RexxInteger::operator new(size_t size)
 /* Function:  Create a new integer object                                     */
 /******************************************************************************/
 {
-    RexxObject *newObject = new_object(size, T_Integer);        /* get a new object                  */
-    newObject->setHasNoReferences();     /* Tell GC, not to bother with Live  */
-    return newObject;                    /* return the new object.            */
+    RexxObject *newObject = new_object(size, T_Integer);
+    // initially, no references.
+    newObject->setHasNoReferences();
+    return newObject;
 }
 
 void RexxInteger::createInstance()
@@ -1278,17 +1269,9 @@ void RexxInteger::createInstance()
 /* Function:  Create the integer class and set up the integer cache           */
 /******************************************************************************/
 {
-    /* Create the Integer class object   */
-    /*  its asubclass of the CLASS class,*/
-    /*  and needs to override the NEW    */
-    /*  method to provide caching        */
-    /*  support for integers.            */
     CLASS_CREATE(Integer, "String", RexxIntegerClass);
-    /*  initialize our static array of   */
-    /*  cached integers                  */
-    new (TheIntegerClass) RexxIntegerClass();
+    TheIntegerClass->initCache()
 }
-
 
 PCPPM RexxInteger::operatorMethods[] =
 {

@@ -65,24 +65,59 @@
 RexxClass *RexxClass::classInstance = OREF_NULL;
 
 
+/**
+ * Allocate new memory for a class object.
+ *
+ * @param size   the size of the class object.
+ *
+ * @return Storage for creating a new class object.
+ */
+void  *RexxClass::operator new(size_t size)
+{
+    (RexxClass *)new_object(size, T_Class);
+}
+
+
+/**
+ * Initialize a new class instance.
+ *
+ * @param className The id of class
+ * @param classBehaviour
+ *                  The class behaviour pointer.
+ * @param instanceBehaviour
+ *                  The class instance behaviour pointer.
+ */
+RexxClass::RexxClass(const char *className, RexxBehaviour *classBehaviour,
+    RexxBehaviour *_instanceBehaviour)
+{
+    id = new_string(className);
+    setBehaviour(classBehaviour);
+    behaviour->setOwningClass(this);
+    instanceBehaviour = instanceBehaviour;
+    instanceBehaviour->setOwningClass(this);
+    // class objects need to be proxied
+    makeProxiedObject();
+}
+
+
 void RexxClass::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->objectVariables);
-    memory_mark(this->id);
-    memory_mark(this->classMethodDictionary);
-    memory_mark(this->instanceBehaviour);
-    memory_mark(this->instanceMethodDictionary);
-    memory_mark(this->baseClass);
-    memory_mark(this->metaClass);
-    memory_mark(this->metaClassMethodDictionary);
-    memory_mark(this->metaClassScopes);
-    memory_mark(this->classSuperClasses);
-    memory_mark(this->instanceSuperClasses);
-    memory_mark(this->subClasses);
-    memory_mark(this->source);
+    memory_mark(objectVariables);
+    memory_mark(id);
+    memory_mark(classMethodDictionary);
+    memory_mark(instanceBehaviour);
+    memory_mark(instanceMethodDictionary);
+    memory_mark(baseClass);
+    memory_mark(metaClass);
+    memory_mark(metaClassMethodDictionary);
+    memory_mark(metaClassScopes);
+    memory_mark(classSuperClasses);
+    memory_mark(instanceSuperClasses);
+    memory_mark(subClasses);
+    memory_mark(source);
 }
 
 void RexxClass::liveGeneral(int reason)
@@ -90,27 +125,19 @@ void RexxClass::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->objectVariables);
-    memory_mark_general(this->id);
-    memory_mark_general(this->classMethodDictionary);
-    memory_mark_general(this->instanceBehaviour);
-    memory_mark_general(this->instanceMethodDictionary);
-    memory_mark_general(this->baseClass);
-    memory_mark_general(this->metaClass);
-    memory_mark_general(this->metaClassMethodDictionary);
-    memory_mark_general(this->metaClassScopes);
-    memory_mark_general(this->classSuperClasses);
-    memory_mark_general(this->instanceSuperClasses);
-    memory_mark_general(this->subClasses);
-    memory_mark_general(this->source);
-}
-
-void RexxClass::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
- ;
+    memory_mark_general(objectVariables);
+    memory_mark_general(id);
+    memory_mark_general(classMethodDictionary);
+    memory_mark_general(instanceBehaviour);
+    memory_mark_general(instanceMethodDictionary);
+    memory_mark_general(baseClass);
+    memory_mark_general(metaClass);
+    memory_mark_general(metaClassMethodDictionary);
+    memory_mark_general(metaClassScopes);
+    memory_mark_general(classSuperClasses);
+    memory_mark_general(instanceSuperClasses);
+    memory_mark_general(subClasses);
+    memory_mark_general(source);
 }
 
 RexxObject *RexxClass::unflatten(RexxEnvelope *envelope)
@@ -131,7 +158,7 @@ RexxObject *RexxClass::makeProxy(RexxEnvelope *envelope)
                                        /*  object_primitive, to get class id*/
                                        /*  as a string object.              */
                                        /* get the class id                  */
-   return new_proxy(this->id->getStringData());
+     return new_proxy(id->getStringData());
 }
 
 
@@ -1626,44 +1653,6 @@ RexxObject *RexxClass::getPackage()
     return package;
 }
 
-
-void  *RexxClass::operator new(size_t size,
-    size_t size1,                      /* additional size                   */
-    const char *className,             // The id string of the class
-    RexxBehaviour *class_behaviour,    /* new class behaviour               */
-    RexxBehaviour *instanceBehaviour)  /* instance behaviour info           */
-/*****************************************************************************/
-/* Function:  Create a new primitive class                                   */
-/*            for the subclassable classes the rest of the class information */
-/*            will be filled in when oksetup.c is run                        */
-/*****************************************************************************/
-{
-    RexxClass  *new_class;               /* newly create class                */
-
-    if (size1 == 0)                      /* want the default?                 */
-    {
-        /* Get new class object              */
-        new_class = (RexxClass *)new_object(size);
-    }
-    else
-    {
-        /* use the specified size            */
-        new_class = (RexxClass *)new_object(size1);
-    }
-                                         // set this value immediately
-    new_class->id = new_string(className);
-    /* set the class specific behaviour  */
-    new_class->setBehaviour(class_behaviour);
-    /* set the class into the behaviour  */
-    new_class->behaviour->setOwningClass(new_class);
-    /* set the instance behaviour        */
-    OrefSet(new_class, new_class->instanceBehaviour, instanceBehaviour);
-    /* and the class of this behaviour   */
-    new_class->instanceBehaviour->setOwningClass(new_class);
-    /* tell the mobile support to just   */
-    new_class->makeProxiedObject();      /* make a proxy for this class       */
-    return(void *)new_class;            /* should be ready                   */
-}
 
 RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
 /*****************************************************************************/

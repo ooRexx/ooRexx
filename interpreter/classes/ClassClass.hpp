@@ -51,14 +51,14 @@
 class RexxClass : public RexxObject
 {
  public:
-    void *operator new(size_t, size_t, const char *, RexxBehaviour *, RexxBehaviour *);
+    void *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;};
     inline void operator delete(void *) { }
     inline void operator delete(void *, void *) { }
-    inline void operator delete(void *, size_t, const char *, RexxBehaviour *, RexxBehaviour *) { }
 
     inline RexxClass(){;};
     inline RexxClass(RESTORETYPE restoreType) { ; };
+           RexxClass(const char *id , RexxBehaviour *classBehaviour, RexxBehaviour *instanceBehaviour);
 
     void live(size_t);
     void liveGeneral(int reason);

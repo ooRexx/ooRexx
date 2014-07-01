@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -67,14 +67,6 @@ void RexxNumberString::createInstance()
 {
     CLASS_CREATE(NumberString, "String", RexxClass);
 }
-
-
-/* MHES 20050108 deprecated */
-#define string_forwarder(method)\
-RexxObject *RexxNumberString::##method(RexxObject *operand)\
- {\
-     return (RexxObject *)this->stringValue()->##method(operand);\
- }
 
 
 /**

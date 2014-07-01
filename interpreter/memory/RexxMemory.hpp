@@ -479,6 +479,6 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 // declare a class creation routine
 // for classes with their own
 // explicit class objects
-#define CLASS_CREATE(name, id, className) The##name##Class = (className *)new (sizeof(className), id, The##name##ClassBehaviour, The##name##Behaviour) RexxClass;
+#define CLASS_CREATE(name, id, className) The##name##Class = new className(id, The##name##ClassBehaviour, The##name##Behaviour);
 
 #endif
