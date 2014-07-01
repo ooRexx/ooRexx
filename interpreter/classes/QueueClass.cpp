@@ -587,17 +587,18 @@ RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
 /* Function:  Create an instance of a queue                                   */
 /******************************************************************************/
 {
-    RexxObject *newObj =  new RexxQueue;             /* get a new queue                   */
-    ProtectedObject p(newObj);
-    /* Initialize the new list instance  */
-    newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newObj->hasUninit();
-    }
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
 
-    newObj->sendMessage(OREF_INIT, init_args, argCount);
-    return(RexxObject *)newObj;         /* return the new object             */
+    RexxObject *newObj =  new RexxQueue;
+    ProtectedObject p(newObj);
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, args, argCount);
+    return newObj;
 }
 
 RexxQueue *RexxQueue::ofRexx(
@@ -635,6 +636,8 @@ RexxQueue *RexxQueue::ofRexx(
         ProtectedObject result;
         arraysize = argCount;              /* get the array size                */
                                            /* get a new list                    */
+
+        // TODO: fix this up
         this->sendMessage(OREF_NEW, result);
         RexxQueue *newQueue = (RexxQueue *)(RexxObject *)result;
         for (i = 0; i < arraysize; i++)

@@ -190,23 +190,24 @@ RexxObject *WeakReference::newRexx(RexxObject **init_args, size_t argCount)
 /* Function:  Create a new string value (used primarily for subclasses)       */
 /******************************************************************************/
 {
-  RexxObject *refObj;                  /* string value                      */
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
 
-                                       /* break up the arguments            */
-  RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, &refObj, NULL);
-  // must have a value
-  requiredArgument(refObj, ARG_ONE);
-  // create a new weakReference
-  RexxObject *newObj = new WeakReference(refObj);
-  ProtectedObject p(newObj);
-  // override the behaviour in case this is a subclass
-  newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-  if (((RexxClass *)this)->hasUninitDefined())
-  {
-      newObj->hasUninit();
-  }
+    RexxObject *refObj;
 
-                                       /* Initialize the new instance       */
-  newObj->sendMessage(OREF_INIT, init_args, argCount);
-  return newObj;                       /* return the new instance           */
+                                         /* break up the arguments            */
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, &refObj, NULL);
+    // must have a value
+    requiredArgument(refObj, ARG_ONE);
+    // create a new weakReference
+    RexxObject *newObj = new WeakReference(refObj);
+    ProtectedObject p(newObj);
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, init_args, argCount);
+
+    return newObj;
 }

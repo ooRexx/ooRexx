@@ -2451,7 +2451,7 @@ RexxArray *RexxNativeActivation::getArguments()
     if (argArray == OREF_NULL)
     {
         /* create the argument array */
-        argArray = new (argcount, arglist) RexxArray;
+        argArray = new_array(argcount, arglist);
         // make sure the array is anchored in our activation
         createLocalReference(argArray);
     }

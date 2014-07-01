@@ -781,21 +781,18 @@ RexxObject *RexxDirectory::newRexx(
 /* Function:  Create a new directory for a REXX program                       */
 /******************************************************************************/
 {
-    /* get a new directory               */
-    /* NOTE:  this does not use the      */
-    /* macro version because the class   */
-    /* object might actually be for a    */
-    /* subclass                          */
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxDirectory *newDirectory = new_directory();
     ProtectedObject p(newDirectory);
-    newDirectory->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    /* does object have an UNINT method  */
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newDirectory->hasUninit();         /* Make sure everyone is notified.   */
-    }
-    /* call any rexx level init's        */
-    newDirectory->sendMessage(OREF_INIT, init_args, argCount);
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newDirectory, init_args, argCount);
+
     return newDirectory;                 /* return the new directory          */
 }
 

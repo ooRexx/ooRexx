@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -80,6 +80,9 @@ typedef size_t HashCode;            // a hash code value
 typedef enum {RESTOREIMAGE, MOBILEUNFLATTEN, METHODUNFLATTEN} RESTORETYPE;
 
 
+/**
+ * The header that is at the beginning of every object instanct.
+ */
 class ObjectHeader
 {
 public:
@@ -91,7 +94,7 @@ public:
         return *this;
     }
 
-    inline size_t getObjectSize() { return (size_t)objectSize; }
+    inline size_t getObjectSize() { return objectSize; }
     inline void setObjectSize(size_t l)
     {
         objectSize = l;
@@ -132,8 +135,7 @@ public:
 
 protected:
     enum
-
-      {
+    {
         MarkBit1         =  0x0001,    // location of the first mark bit.  Note:  shared with IsNonPrimitive
         MarkBit2         =  0x0002,    // Second of the mark bits
         ProxiedObject    =  0x0004,    // This requires a proxy
@@ -146,36 +148,38 @@ protected:
     size_t    objectSize;              // allocated size of the object
     union
     {
-        uint16_t   flags;              // the object flag/type information
-        size_t     sizePadding;        // padding to make sure this is a full pointer size
+        uint16_t      flags;           // the object flag/type information
+        uintptr_t     sizePadding;     // padding to make sure this is a full pointer size
     };
 
 };
 
 
-  class RexxVirtualBase {              /* create first base level class     */
-                                       /* dummy virtual function to force   */
-                                       /* the virtual function table to a   */
-                                       /* specific location.  Different     */
-                                       /* compilers place the virtual       */
-                                       /* function table pointer at         */
-                                       /* different locations.  This forces */
-                                       /* to the front location             */
-     protected:
-        virtual ~RexxVirtualBase() { ; }
-        virtual void      baseVirtual() {;}
+/**
+ * create first base level class dummy virtual function to force
+ * the virtual function table to a specific location.  Different
+ * compilers place the virtual function table pointer at
+ * different locations.  By having virtual methods defined on
+ * the very first class level, we can get things where we expect
+ * to find it.
+ */
+class RexxVirtualBase
+{
+ protected:
+    virtual ~RexxVirtualBase() { ; }
+    virtual void      baseVirtual() {;}
 
-     public:
-        // the following need to be defined at the base virtual level.  When
-        // an exception is thrown from within an object constructor, the destructors
-        // unwind and the constructed object just ends up with a virtual base
-        // vft.  If the garbage collector sees this, it will crash unless these
-        // are defined at this level.
-        virtual void         live(size_t) {;}
-        virtual void         liveGeneral(int reason) {;}
-        virtual void         flatten(RexxEnvelope *) {;}
-        virtual RexxObject  *unflatten(RexxEnvelope *) { return (RexxObject *)this; };
-  };
+ public:
+    // the following need to be defined at the base virtual level.  When
+    // an exception is thrown from within an object constructor, the destructors
+    // unwind and the constructed object just ends up with a virtual base
+    // vft.  If the garbage collector sees this, it will crash unless these
+    // are defined at this level.
+    virtual void         live(size_t) {;}
+    virtual void         liveGeneral(int reason) {;}
+    virtual void         flatten(RexxEnvelope *) {;}
+    virtual RexxObject  *unflatten(RexxEnvelope *) { return (RexxObject *)this; };
+};
 
 class RexxObject;
 
@@ -183,377 +187,393 @@ class RexxObject;
 /* Method pointer special types                                               */
 /******************************************************************************/
 
- typedef RexxObject *  (RexxObject::*PCPPM0)();
- typedef RexxObject *  (RexxObject::*PCPPM1)(RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM2)(RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM3)(RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPMA1)(RexxArray *);
- typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
+typedef RexxObject *  (RexxObject::*PCPPM0)();
+typedef RexxObject *  (RexxObject::*PCPPM1)(RexxObject *);
+typedef RexxObject *  (RexxObject::*PCPPM2)(RexxObject *, RexxObject *);
+typedef RexxObject *  (RexxObject::*PCPPM3)(RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject *  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject *  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject *  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject *  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject *  (RexxObject::*PCPPMA1)(RexxArray *);
+typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
 
-                                       /* pointer to method function        */
- typedef RexxObject *  (RexxObject::*PCPPM)();
- #define CPPM(n) ((PCPPM)&n)
+// pointer to a method function
+typedef RexxObject *  (RexxObject::*PCPPM)();
+#define CPPM(n) ((PCPPM)&n)
 
 
+// the shift amount for generating a hash value from an object reference.
 #define OREFSHIFT 3
                                        /* generate hash value from OREF     */
 inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHIFT; }
-                                       /* Base Object REXX class            */
-  class RexxInternalObject : public RexxVirtualBase{
-    public:
 
-     void * operator new(size_t, RexxClass *);
-     void * operator new(size_t, RexxClass *, RexxObject **, size_t);
-     inline void *operator new(size_t size, void *ptr) {return ptr;}
-     inline void   operator delete(void *) { ; }
-     inline void operator delete(void *p, void *ptr) { }
-     inline RexxInternalObject() {;};
-                                       /* Following constructor used to     */
-                                       /*  reconstruct the Virtual          */
-                                       /*  Functiosn table.                 */
-                                       /* So it doesn't need to do anything */
-     inline RexxInternalObject(RESTORETYPE restoreType) { ; };
-     virtual ~RexxInternalObject() {;};
+/**
+ * Base class for an object Rexx object.  This class
+ * is used for internal objects only.  An internal object
+ * is one that is not exposed to the Rexx programmer and
+ * are only used internal to the interpreter.  Objects
+ * of this type are allocated from the ooRexx object heap
+ * and participate in garbage collection.
+ */
+class RexxInternalObject : public RexxVirtualBase
+{
+ public:
+    inline RexxInternalObject() {;};
+    /**
+     * Following constructor used to reconstruct the Virtual
+     * Functions table, o it doesn't need to do anything.
+     * Every class defined in PrimitiveClasses.xml will need
+     * to provide one of these.
+     *
+     * @param restoreType
+     *               Dummy argument used for contstructor signature matches.
+     */
+    inline RexxInternalObject(RESTORETYPE restoreType) { ; };
+    virtual ~RexxInternalObject() {;};
 
-     inline operator RexxObject*() { return (RexxObject *)this; };
+    inline operator RexxObject*() { return (RexxObject *)this; };
 
-     inline size_t getObjectSize() { return header.getObjectSize(); }
-     inline void   setObjectSize(size_t s) { header.setObjectSize(s); }
-     // NB:  I hope this doesn't add any padding
-     static inline size_t getObjectHeaderSize() { return sizeof(RexxInternalObject); }
-     inline size_t getObjectDataSize() { return getObjectSize() - getObjectHeaderSize(); }
-     inline void  *getObjectDataSpace() { return ((char *)this) + getObjectHeaderSize(); }
-     // these clear everything after the hash value.
-     inline void   clearObject() { memset(getObjectDataSpace(), '\0', getObjectDataSize()); }
-     inline void   clearObject(size_t l) { memset(getObjectDataSpace(), '\0', l - getObjectHeaderSize()); }
-     inline void   setVirtualFunctions(void *t) { *((void **)this) = t; }
+    inline size_t getObjectSize() { return header.getObjectSize(); }
+    inline void   setObjectSize(size_t s) { header.setObjectSize(s); }
+    // NB:  I hope this doesn't add any padding
+    static inline size_t getObjectHeaderSize() { return sizeof(RexxInternalObject); }
+    inline size_t getObjectDataSize() { return getObjectSize() - getObjectHeaderSize(); }
+    inline void  *getObjectDataSpace() { return ((char *)this) + getObjectHeaderSize(); }
+    // these clear everything after the hash value.
+    inline void   clearObject() { memset(getObjectDataSpace(), '\0', getObjectDataSize()); }
+    inline void   clearObject(size_t l) { memset(getObjectDataSpace(), '\0', l - getObjectHeaderSize()); }
+    inline void   setVirtualFunctions(void *t) { *((void **)this) = t; }
 
-     inline void   setInitHeader(size_t s, size_t markword)  { header.initHeader(s, markword); }
-     inline void   setInitHeader(size_t markword)  { header.initHeader(markword); }
+    inline void   setInitHeader(size_t s, size_t markword)  { header.initHeader(s, markword); }
+    inline void   setInitHeader(size_t markword)  { header.initHeader(markword); }
 
-     inline void   setObjectLive(size_t markword)  { header.setObjectMark(markword); }
-     inline void   setHasReferences() { header.setHasReferences(); }
-     inline void   setHasNoReferences() { header.setHasNoReferences(); }
-     inline bool   hasReferences() { return header.hasReferences(); }
-     inline bool   hasNoReferences() { return header.hasNoReferences(); }
-     inline void   setPrimitive() { header.setPrimitive(); }
-     inline void   setNonPrimitive() { header.setNonPrimitive(); }
-     inline bool   isPrimitive() { return header.isPrimitive(); }
-     inline bool   isNonPrimitive() { return header.isNonPrimitive(); }
-     inline bool   isObjectMarked(size_t markword) { return header.isObjectMarked(markword); }
-     inline void   setObjectMark(size_t markword) { header.setObjectMark(markword); }
-     inline void   clearObjectMark() { header.clearObjectMark(); }
-     inline bool   isObjectLive(size_t mark) { return header.isObjectLive(mark); }
-     inline bool   isObjectDead(size_t mark) { return header.isObjectDead(mark); }
-     inline bool   isOldSpace() { return header.isOldSpace(); }
-     inline bool   isNewSpace() { return header.isNewSpace(); }
-     inline void   setNewSpace() { header.setNewSpace(); }
-     inline void   setOldSpace() { header.setOldSpace(); }
-     inline void   makeProxiedObject() { header.makeProxiedObject(); }
-     inline bool   isProxyObject() { return header.isProxyObject(); }
-            bool   isSubClassOrEnhanced();
-            bool   isBaseClass();
-            size_t getObjectTypeNumber();
-     inline RexxBehaviour *getObjectType() { return behaviour; }
-     inline bool   isObjectType(RexxBehaviour *b) { return b == behaviour; }
-     inline bool   isObjectType(size_t t) { return getObjectTypeNumber() == t; }
-     inline bool   isSameType(RexxInternalObject *o) { return behaviour == o->getObjectType(); }
-     inline void   setBehaviour(RexxBehaviour *b) { behaviour = b; }
+    inline void   setObjectLive(size_t markword)  { header.setObjectMark(markword); }
+    inline void   setHasReferences() { header.setHasReferences(); }
+    inline void   setHasNoReferences() { header.setHasNoReferences(); }
+    inline bool   hasReferences() { return header.hasReferences(); }
+    inline bool   hasNoReferences() { return header.hasNoReferences(); }
+    inline void   setPrimitive() { header.setPrimitive(); }
+    inline void   setNonPrimitive() { header.setNonPrimitive(); }
+    inline bool   isPrimitive() { return header.isPrimitive(); }
+    inline bool   isNonPrimitive() { return header.isNonPrimitive(); }
+    inline bool   isObjectMarked(size_t markword) { return header.isObjectMarked(markword); }
+    inline void   setObjectMark(size_t markword) { header.setObjectMark(markword); }
+    inline void   clearObjectMark() { header.clearObjectMark(); }
+    inline bool   isObjectLive(size_t mark) { return header.isObjectLive(mark); }
+    inline bool   isObjectDead(size_t mark) { return header.isObjectDead(mark); }
+    inline bool   isOldSpace() { return header.isOldSpace(); }
+    inline bool   isNewSpace() { return header.isNewSpace(); }
+    inline void   setNewSpace() { header.setNewSpace(); }
+    inline void   setOldSpace() { header.setOldSpace(); }
+    inline void   makeProxiedObject() { header.makeProxiedObject(); }
+    inline bool   isProxyObject() { return header.isProxyObject(); }
+           bool   isSubClassOrEnhanced();
+           bool   isBaseClass();
+           size_t getObjectTypeNumber();
+    inline RexxBehaviour *getObjectType() { return behaviour; }
+    inline bool   isObjectType(RexxBehaviour *b) { return b == behaviour; }
+    inline bool   isObjectType(size_t t) { return getObjectTypeNumber() == t; }
+    inline bool   isSameType(RexxInternalObject *o) { return behaviour == o->getObjectType(); }
+    inline void   setBehaviour(RexxBehaviour *b) { behaviour = b; }
 
-     virtual RexxObject  *makeProxy(RexxEnvelope *);
-     virtual RexxObject  *copy();
-     virtual RexxObject  *evaluate(RexxActivation *, RexxExpressionStack *) { return OREF_NULL; }
-     virtual RexxObject  *getValue(RexxActivation *) { return OREF_NULL; }
-     virtual RexxObject  *getValue(RexxVariableDictionary *) { return OREF_NULL; }
-     virtual RexxObject  *getRealValue(RexxActivation *) { return OREF_NULL; }
-     virtual RexxObject  *getRealValue(RexxVariableDictionary *) { return OREF_NULL; }
-     virtual void         uninit() {;}
-     virtual HashCode     hash()  { return getHashValue(); }
-     virtual HashCode     getHashValue()  { return identityHash(); }
+    virtual RexxObject  *makeProxy(RexxEnvelope *);
+    virtual RexxObject  *copy();
+    virtual RexxObject  *evaluate(RexxActivation *, RexxExpressionStack *) { return OREF_NULL; }
+    virtual RexxObject  *getValue(RexxActivation *) { return OREF_NULL; }
+    virtual RexxObject  *getValue(RexxVariableDictionary *) { return OREF_NULL; }
+    virtual RexxObject  *getRealValue(RexxActivation *) { return OREF_NULL; }
+    virtual RexxObject  *getRealValue(RexxVariableDictionary *) { return OREF_NULL; }
+    virtual void         uninit() {;}
+    virtual HashCode     hash()  { return getHashValue(); }
+    virtual HashCode     getHashValue()  { return identityHash(); }
 
-     inline  HashCode     identityHash() { return HASHOREF(this); }
+    inline  HashCode     identityHash() { return HASHOREF(this); }
 
-     virtual bool         truthValue(int);
-     virtual bool         logicalValue(logical_t &);
-     virtual RexxString  *makeString();
-     virtual void         copyIntoTail(RexxCompoundTail *buffer);
-     virtual RexxString  *primitiveMakeString();
-     virtual RexxArray   *makeArray();
-     virtual RexxString  *stringValue();
-     virtual RexxInteger *integerValue(size_t);
-     virtual bool         numberValue(wholenumber_t &result, size_t precision);
-     virtual bool         numberValue(wholenumber_t &result);
-     virtual bool         unsignedNumberValue(stringsize_t &result, size_t precision);
-     virtual bool         unsignedNumberValue(stringsize_t &result);
-     virtual bool         doubleValue(double &result);
-     virtual RexxNumberString *numberString();
+    virtual bool         truthValue(int);
+    virtual bool         logicalValue(logical_t &);
+    virtual RexxString  *makeString();
+    virtual void         copyIntoTail(RexxCompoundTail *buffer);
+    virtual RexxString  *primitiveMakeString();
+    virtual RexxArray   *makeArray();
+    virtual RexxString  *stringValue();
+    virtual RexxInteger *integerValue(size_t);
+    virtual bool         numberValue(wholenumber_t &result, size_t precision);
+    virtual bool         numberValue(wholenumber_t &result);
+    virtual bool         unsignedNumberValue(stringsize_t &result, size_t precision);
+    virtual bool         unsignedNumberValue(stringsize_t &result);
+    virtual bool         doubleValue(double &result);
+    virtual RexxNumberString *numberString();
 
-     virtual bool         isEqual(RexxObject *);
-     virtual bool         isInstanceOf(RexxClass *);
-     virtual MethodClass   *instanceMethod(RexxString *);
-     virtual RexxSupplier *instanceMethods(RexxClass *);
+    virtual bool         isEqual(RexxObject *);
+    virtual bool         isInstanceOf(RexxClass *);
+    virtual MethodClass   *instanceMethod(RexxString *);
+    virtual RexxSupplier *instanceMethods(RexxClass *);
 
-             void         hasUninit();
-             void         removedUninit();
-             void         printObject();
-             RexxObject  *clone();
+            void         hasUninit();
+            void         removedUninit();
+            void         printObject();
+            RexxObject  *clone();
 
-     ObjectHeader header;              /* memory management header          */
-     RexxBehaviour *behaviour;         /* the object's behaviour            */
-  };
-
-
-
-class RexxObject : public RexxInternalObject {
-  public:
-     void * operator new(size_t, RexxClass *);
-     void * operator new(size_t, RexxClass *, RexxObject **, size_t);
-     void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-     inline void  operator delete(void *, void *) {;}
-     inline void  operator delete(void *) {;}
-     inline void operator delete(void *, RexxClass *) {;}
-     inline void operator delete(void *, RexxClass *, RexxObject **, size_t) {;}
-                                       // Followin are used to create new objects.
-                                       // Assumed that the message is sent to a class Object
-                                       // These may move to RexxClass in the future......
-     RexxObject *newRexx(RexxObject **arguments, size_t argCount);
-     RexxObject *newObject() {return new ((RexxClass *)this) RexxObject; };
-
-     operator RexxInternalObject*() { return (RexxInternalObject *)this; };
-     inline RexxObject(){;};
-                                       /* Following constructor used to   */
-                                       /*  reconstruct the Virtual        */
-                                       /*  Functiosn table.               */
-                                       /* So it doesn't need to do anythin*/
-     inline RexxObject(RESTORETYPE restoreType) { ; };
-
-
-     // The following two methods probably should be on RexxInternalObject, but they
-     // need to reference the objectVariables field.  That field could be moved to
-     // RexxInternalObject, but it would increase the size of all internal objects
-     // by 4 bytes.  Since the minimum object size is large enough to always have
-     // that field, it's safe to clear this here.
-     inline void initializeNewObject(size_t size, size_t mark, void *vft, RexxBehaviour *b)
-     {
-         // we need to make this a function object of some type in case
-         // a GC cycle gets triggered before this is complete.  By default,
-         // we make this a generic object
-         setVirtualFunctions(vft);
-         setBehaviour(b);
-         // this has a clean set of flags, except for the live mark
-         header.initHeader(size, mark);
-         // make sure the object is cleared in case this gets marked out of any of
-         // the constructors.
-         clearObject();
-     }
-
-     inline void initializeNewObject(size_t mark, void *vft, RexxBehaviour *b)
-     {
-         // we need to make this a function object of some type in case
-         // a GC cycle gets triggered before this is complete.  By default,
-         // we make this a generic object
-         setVirtualFunctions(vft);
-         setBehaviour(b);
-         // this has a clean set of flags, except for the live mark
-         header.initHeader(mark);
-         // make sure the object is cleared in case this gets marked out of any of
-         // the constructors.
-         clearObject();
-     }
-
-     virtual ~RexxObject(){;};
-
-     virtual RexxObject  *defMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
-     virtual RexxString  *defaultName();
-     virtual RexxObject  *unknown(RexxString *msg, RexxArray *args){return OREF_NULL;};
-     virtual RexxInteger *hasMethod(RexxString *msg);
-             bool         hasUninitMethod();
-
-     RexxObject *init();
-     void        uninit();
-     void live(size_t);
-     void liveGeneral(int reason);
-     void flatten(RexxEnvelope *);
-     RexxObject  *copy();
-     HashCode     hash();
-     bool         truthValue(int);
-     virtual bool logicalValue(logical_t &);
-     virtual bool numberValue(wholenumber_t &result, size_t precision);
-     virtual bool numberValue(wholenumber_t &result);
-     virtual bool unsignedNumberValue(stringsize_t &result, size_t precision);
-     virtual bool unsignedNumberValue(stringsize_t &result);
-     virtual bool doubleValue(double &result);
-     RexxNumberString *numberString();
-     RexxInteger *integerValue(size_t);
-     RexxString  *makeString();
-     RexxString  *primitiveMakeString();
-     void         copyIntoTail(RexxCompoundTail *buffer);
-     RexxArray   *makeArray();
-     RexxString  *stringValue();
-     RexxString  *requestString();
-     RexxString  *requestStringNoNOSTRING();
-     RexxInteger *requestInteger(size_t);
-     bool         requestNumber(wholenumber_t &, size_t);
-     bool         requestUnsignedNumber(stringsize_t &, size_t);
-     RexxArray   *requestArray();
-     RexxString  *requiredString(size_t);
-     RexxString  *requiredString(const char *);
-     RexxString  *requiredString();
-     RexxInteger *requiredInteger(size_t, size_t);
-     wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-     stringsize_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-     stringsize_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
-
-     bool         isEqual(RexxObject *);
-     bool         isInstanceOf(RexxClass *);
-     RexxObject  *isInstanceOfRexx(RexxClass *);
-     MethodClass   *instanceMethod(RexxString *);
-     RexxSupplier *instanceMethods(RexxClass *);
-     MethodClass   *instanceMethodRexx(RexxString *);
-     RexxSupplier *instanceMethodsRexx(RexxClass *);
-     RexxString  *objectName();
-     RexxObject  *objectNameEquals(RexxObject *);
-     RexxClass   *classObject();
-     RexxObject  *setMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
-     RexxObject  *unsetMethod(RexxString *);
-     RexxObject  *requestRexx(RexxString *);
-     RexxMessage *start(RexxObject **, size_t);
-     RexxMessage *startWith(RexxObject *, RexxArray *);
-     RexxObject  *send(RexxObject **, size_t);
-     RexxObject  *sendWith(RexxObject *, RexxArray *);
-     RexxMessage *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
-     static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope);
-     RexxString  *oref();
-     RexxObject  *pmdict();
-     RexxObject  *run(RexxObject **, size_t);
-
-     void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
-     void         messageSend(RexxString *, RexxObject **, size_t, RexxObject *, ProtectedObject &);
-     MethodClass  *checkPrivate(MethodClass *);
-     void         processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
-     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
-     void         sendMessage(RexxString *, RexxArray *, ProtectedObject &);
-     inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, OREF_NULL, 0, result); };
-     inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, args, argCount, result); };
-     inline void  sendMessage(RexxString *message, RexxObject *argument1, ProtectedObject &result)
-         { this->messageSend(message, &argument1, 1, result); }
-     void         sendMessage(RexxString *, RexxObject *, RexxObject *, ProtectedObject &);
-     void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
-     void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
-     void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject&);
-
-     RexxObject  *sendMessage(RexxString *, RexxArray *);
-     RexxObject  *sendMessage(RexxString *message);
-     RexxObject  *sendMessage(RexxString *message, RexxObject **args, size_t argCount);
-     RexxObject  *sendMessage(RexxString *message, RexxObject *argument1);
-     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *);
-     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *);
-     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-     RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-
-                                       // Following are internal OREXX methods
-     RexxObject  *defMethods(RexxDirectory *);
-     void         setObjectVariable(RexxString *, RexxObject *, RexxObject *);
-     RexxObject  *getObjectVariable(RexxString *);
-     RexxObject  *getObjectVariable(RexxString *, RexxObject *);
-     void         addObjectVariables(RexxVariableDictionary *);
-     void         copyObjectVariables(RexxObject *newObject);
-     RexxObject  *superScope(RexxObject *);
-     MethodClass  *superMethod(RexxString *, RexxObject *);
-     RexxObject  *mdict();
-     RexxObject  *setMdict(RexxObject *);
-     inline RexxBehaviour *behaviourObject() { return this->behaviour; }
-
-     const char  *idString();
-     RexxString  *id();
-     MethodClass  *methodLookup(RexxString *name );
-     RexxVariableDictionary *getObjectVariables(RexxObject *);
-     void guardOn(RexxActivity *activity, RexxObject *scope);
-     void guardOff(RexxActivity *activity, RexxObject *scope);
-     RexxObject  *equal(RexxObject *);
-     RexxObject  *notEqual(RexxObject *other);
-     RexxObject  *strictEqual(RexxObject *);
-     RexxObject  *strictNotEqual(RexxObject *other);
-
-     RexxInteger *identityHashRexx();
-
-     RexxObject  *hashCode();
-
-     RexxString  *stringRexx();
-     RexxString  *concatRexx(RexxObject *);
-     RexxString  *concatBlank(RexxObject *);
-     RexxObject  *makeStringRexx();
-     RexxObject  *makeArrayRexx();
-     RexxString  *defaultNameRexx();
-     RexxObject  *copyRexx();
-     RexxObject  *unknownRexx(RexxString *, RexxArray *);
-     RexxObject  *hasMethodRexx(RexxString *);
-     void *getCSelf();
-     void *getCSelf(RexxObject *scope);
-     // compare 2 values for equality, potentially falling back on the
-     // "==" method for the test.
-     bool inline equalValue(RexxObject *other)
-     {
-         // test first for direct equality, followed by value equality.
-         return (this == other) || this->isEqual(other);
-     }
-     virtual wholenumber_t compareTo(RexxObject *);
-
- // Define operator methods here.
-
-   koper  (operator_plus)
-   koper  (operator_minus)
-   koper  (operator_multiply)
-   koper  (operator_divide)
-   koper  (operator_integerDivide)
-   koper  (operator_remainder)
-   koper  (operator_power)
-   koper  (operator_abuttal)
-   koper  (operator_concat)
-   koper  (operator_concatBlank)
-   koper  (operator_equal)
-   koper  (operator_notEqual)
-   koper  (operator_isGreaterThan)
-   koper  (operator_isBackslashGreaterThan)
-   koper  (operator_isLessThan)
-   koper  (operator_isBackslashLessThan)
-   koper  (operator_isGreaterOrEqual)
-   koper  (operator_isLessOrEqual)
-   koper  (operator_strictEqual)
-   koper  (operator_strictNotEqual)
-   koper  (operator_strictGreaterThan)
-   koper  (operator_strictBackslashGreaterThan)
-   koper  (operator_strictLessThan)
-   koper  (operator_strictBackslashLessThan)
-   koper  (operator_strictGreaterOrEqual)
-   koper  (operator_strictLessOrEqual)
-   koper  (operator_lessThanGreaterThan)
-   koper  (operator_greaterThanLessThan)
-   koper  (operator_and)
-   koper  (operator_or)
-   koper  (operator_xor)
-   koper  (operator_not)
-
-   RexxVariableDictionary *objectVariables;   /* set of object variables           */
-   static PCPPM operatorMethods[];
-
-   static void createInstance();
-   static RexxClass *classInstance;
+    ObjectHeader header;              /* memory management header          */
+    RexxBehaviour *behaviour;         /* the object's behaviour            */
 };
 
 
+/**
+ * This is the base class for all objects visible to
+ * the Rexx programmer (e.g., String, Array, etc.).  These
+ * classes add an objectVariables field to the base layout
+ * that will anchor any object variables created by methods.
+ */
+class RexxObject : public RexxInternalObject
+{
+ public:
+    void * operator new(size_t);
+    void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+
+    inline void  operator delete(void *, void *) {;}
+    inline void  operator delete(void *) {;}
+
+    // Following are used to create new objects.
+    // Assumed that the message is sent to a class Object
+    // These may move to RexxClass in the future......
+    RexxObject *newRexx(RexxObject **arguments, size_t argCount);
+
+    operator RexxInternalObject*() { return (RexxInternalObject *)this; };
+
+    inline RexxObject(){;};
+    inline RexxObject(RESTORETYPE restoreType) { ; };
 
 
-class RexxNilObject : public RexxObject {
+    // The following two methods probably should be on RexxInternalObject, but they
+    // need to reference the objectVariables field.  That field could be moved to
+    // RexxInternalObject, but it would increase the size of all internal objects
+    // by 4 bytes.  Since the minimum object size is large enough to always have
+    // that field, it's safe to clear this here.
+    inline void initializeNewObject(size_t size, size_t mark, void *vft, RexxBehaviour *b)
+    {
+        // we need to make this a function object of some type in case
+        // a GC cycle gets triggered before this is complete.  By default,
+        // we make this a generic object
+        setVirtualFunctions(vft);
+        setBehaviour(b);
+        // this has a clean set of flags, except for the live mark
+        header.initHeader(size, mark);
+        // make sure the object is cleared in case this gets marked out of any of
+        // the constructors.
+        clearObject();
+    }
+
+    inline void initializeNewObject(size_t mark, void *vft, RexxBehaviour *b)
+    {
+        // we need to make this a function object of some type in case
+        // a GC cycle gets triggered before this is complete.  By default,
+        // we make this a generic object
+        setVirtualFunctions(vft);
+        setBehaviour(b);
+        // this has a clean set of flags, except for the live mark
+        header.initHeader(mark);
+        // make sure the object is cleared in case this gets marked out of any of
+        // the constructors.
+        clearObject();
+    }
+
+    virtual ~RexxObject(){;};
+
+    virtual RexxObject  *defMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
+    virtual RexxString  *defaultName();
+    virtual RexxObject  *unknown(RexxString *msg, RexxArray *args){return OREF_NULL;};
+    virtual RexxInteger *hasMethod(RexxString *msg);
+            bool         hasUninitMethod();
+
+    RexxObject *init();
+    void        uninit();
+
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
+
+    RexxObject  *copy();
+    HashCode     hash();
+    bool         truthValue(int);
+    virtual bool logicalValue(logical_t &);
+    virtual bool numberValue(wholenumber_t &result, size_t precision);
+    virtual bool numberValue(wholenumber_t &result);
+    virtual bool unsignedNumberValue(stringsize_t &result, size_t precision);
+    virtual bool unsignedNumberValue(stringsize_t &result);
+    virtual bool doubleValue(double &result);
+    RexxNumberString *numberString();
+    RexxInteger *integerValue(size_t);
+    RexxString  *makeString();
+    RexxString  *primitiveMakeString();
+    void         copyIntoTail(RexxCompoundTail *buffer);
+    RexxArray   *makeArray();
+    RexxString  *stringValue();
+    RexxString  *requestString();
+    RexxString  *requestStringNoNOSTRING();
+    RexxInteger *requestInteger(size_t);
+    bool         requestNumber(wholenumber_t &, size_t);
+    bool         requestUnsignedNumber(stringsize_t &, size_t);
+    RexxArray   *requestArray();
+    RexxString  *requiredString(size_t);
+    RexxString  *requiredString(const char *);
+    RexxString  *requiredString();
+    RexxInteger *requiredInteger(size_t, size_t);
+    wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+    stringsize_t requiredPositive(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+    stringsize_t requiredNonNegative(size_t position, size_t precision = Numerics::ARGUMENT_DIGITS);
+
+    bool         isEqual(RexxObject *);
+    bool         isInstanceOf(RexxClass *);
+    RexxObject  *isInstanceOfRexx(RexxClass *);
+    MethodClass   *instanceMethod(RexxString *);
+    RexxSupplier *instanceMethods(RexxClass *);
+    MethodClass   *instanceMethodRexx(RexxString *);
+    RexxSupplier *instanceMethodsRexx(RexxClass *);
+    RexxString  *objectName();
+    RexxObject  *objectNameEquals(RexxObject *);
+    RexxClass   *classObject();
+    RexxObject  *setMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
+    RexxObject  *unsetMethod(RexxString *);
+    RexxObject  *requestRexx(RexxString *);
+    RexxMessage *start(RexxObject **, size_t);
+    RexxMessage *startWith(RexxObject *, RexxArray *);
+    RexxObject  *send(RexxObject **, size_t);
+    RexxObject  *sendWith(RexxObject *, RexxArray *);
+    RexxMessage *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
+    static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope);
+    RexxString  *oref();
+    RexxObject  *pmdict();
+    RexxObject  *run(RexxObject **, size_t);
+
+    void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    void         messageSend(RexxString *, RexxObject **, size_t, RexxObject *, ProtectedObject &);
+    MethodClass  *checkPrivate(MethodClass *);
+    void         processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
+    void         sendMessage(RexxString *, RexxArray *, ProtectedObject &);
+    inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, OREF_NULL, 0, result); };
+    inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, args, argCount, result); };
+    inline void  sendMessage(RexxString *message, RexxObject *argument1, ProtectedObject &result)
+        { this->messageSend(message, &argument1, 1, result); }
+    void         sendMessage(RexxString *, RexxObject *, RexxObject *, ProtectedObject &);
+    void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
+    void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
+    void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject&);
+
+    RexxObject  *sendMessage(RexxString *, RexxArray *);
+    RexxObject  *sendMessage(RexxString *message);
+    RexxObject  *sendMessage(RexxString *message, RexxObject **args, size_t argCount);
+    RexxObject  *sendMessage(RexxString *message, RexxObject *argument1);
+    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *);
+    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *);
+    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+    RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+
+                                      // Following are internal OREXX methods
+    RexxObject  *defMethods(RexxDirectory *);
+    void         setObjectVariable(RexxString *, RexxObject *, RexxObject *);
+    RexxObject  *getObjectVariable(RexxString *);
+    RexxObject  *getObjectVariable(RexxString *, RexxObject *);
+    void         addObjectVariables(RexxVariableDictionary *);
+    void         copyObjectVariables(RexxObject *newObject);
+    RexxObject  *superScope(RexxObject *);
+    MethodClass  *superMethod(RexxString *, RexxObject *);
+    RexxObject  *mdict();
+    RexxObject  *setMdict(RexxObject *);
+    inline RexxBehaviour *behaviourObject() { return this->behaviour; }
+
+    const char  *idString();
+    RexxString  *id();
+    MethodClass  *methodLookup(RexxString *name );
+    RexxVariableDictionary *getObjectVariables(RexxObject *);
+    void guardOn(RexxActivity *activity, RexxObject *scope);
+    void guardOff(RexxActivity *activity, RexxObject *scope);
+    RexxObject  *equal(RexxObject *);
+    RexxObject  *notEqual(RexxObject *other);
+    RexxObject  *strictEqual(RexxObject *);
+    RexxObject  *strictNotEqual(RexxObject *other);
+
+    RexxInteger *identityHashRexx();
+
+    RexxObject  *hashCode();
+
+    RexxString  *stringRexx();
+    RexxString  *concatRexx(RexxObject *);
+    RexxString  *concatBlank(RexxObject *);
+    RexxObject  *makeStringRexx();
+    RexxObject  *makeArrayRexx();
+    RexxString  *defaultNameRexx();
+    RexxObject  *copyRexx();
+    RexxObject  *unknownRexx(RexxString *, RexxArray *);
+    RexxObject  *hasMethodRexx(RexxString *);
+    void *getCSelf();
+    void *getCSelf(RexxObject *scope);
+    // compare 2 values for equality, potentially falling back on the
+    // "==" method for the test.
+    bool inline equalValue(RexxObject *other)
+    {
+        // test first for direct equality, followed by value equality.
+        return (this == other) || this->isEqual(other);
+    }
+    virtual wholenumber_t compareTo(RexxObject *);
+
+ // Define operator methods here.
+
+    koper  (operator_plus)
+    koper  (operator_minus)
+    koper  (operator_multiply)
+    koper  (operator_divide)
+    koper  (operator_integerDivide)
+    koper  (operator_remainder)
+    koper  (operator_power)
+    koper  (operator_abuttal)
+    koper  (operator_concat)
+    koper  (operator_concatBlank)
+    koper  (operator_equal)
+    koper  (operator_notEqual)
+    koper  (operator_isGreaterThan)
+    koper  (operator_isBackslashGreaterThan)
+    koper  (operator_isLessThan)
+    koper  (operator_isBackslashLessThan)
+    koper  (operator_isGreaterOrEqual)
+    koper  (operator_isLessOrEqual)
+    koper  (operator_strictEqual)
+    koper  (operator_strictNotEqual)
+    koper  (operator_strictGreaterThan)
+    koper  (operator_strictBackslashGreaterThan)
+    koper  (operator_strictLessThan)
+    koper  (operator_strictBackslashLessThan)
+    koper  (operator_strictGreaterOrEqual)
+    koper  (operator_strictLessOrEqual)
+    koper  (operator_lessThanGreaterThan)
+    koper  (operator_greaterThanLessThan)
+    koper  (operator_and)
+    koper  (operator_or)
+    koper  (operator_xor)
+    koper  (operator_not)
+
+    RexxVariableDictionary *objectVariables;   // set of object variables
+
+    static PCPPM operatorMethods[];
+
+    static void createInstance();
+    static RexxClass *classInstance;
+};
+
+
+/**
+ * Hidden internal class used to create the NIL object.
+ */
+class RexxNilObject : public RexxObject
+{
 public:
     void * operator new(size_t);
     void * operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void   operator delete(void *) { ; }
     inline void   operator delete(void *, void *) { ; }
+
     RexxNilObject();
     inline RexxNilObject(RESTORETYPE restoreType) { ; };
     virtual ~RexxNilObject() {;};
@@ -563,6 +583,7 @@ public:
     static RexxObject *nilObject;
 
 protected:
+
     // we want .NIL to have a static hash value after the image restore, so
     // this needs to be included in the object state
     HashCode hashValue;
@@ -571,7 +592,13 @@ protected:
 class RexxList;
 
 
-class RexxActivationBase : public RexxInternalObject{
+/**
+ * Base class for the different activation types.  This
+ * defines the common interface that the activation subclasses
+ * must implement.
+ */
+class RexxActivationBase : public RexxInternalObject
+{
 public:
     inline RexxActivationBase() {;};
     inline RexxActivationBase(RESTORETYPE restoreType) { ; };
@@ -599,14 +626,17 @@ public:
     RexxObject *getExecutableObject() { return (RexxObject *)executable; }
 
 protected:
-    RexxActivationBase *previous;
-    BaseExecutable     *executable;
+
+    RexxActivationBase *previous;        // previous activation in the chain
+    BaseExecutable     *executable;      // the executable associated with this activation.
 
 };
 
 
 /**
- * Block guard lock on an object instance.
+ * Block guard lock on an object instance.  This allows us to
+ * grab a guard lock, while ensuring that the lock is released
+ * during exception unwind.
  */
 class GuardLock
 {
@@ -623,6 +653,7 @@ public:
     }
 
 private:
+
     RexxActivity *activity;  // the activity we're running on
     RexxObject *target;      // the target object for the lock
     RexxObject *scope;       // the scope of the required guard lock

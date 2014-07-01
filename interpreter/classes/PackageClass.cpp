@@ -544,6 +544,12 @@ PackageClass *PackageClass::newRexx(
 /*            array                                                           */
 /******************************************************************************/
 {
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxObject *pgmname;                 /* method name                       */
     RexxObject *_source;                  /* Array or string object            */
     size_t initCount = 0;                /* count of arguments we pass along  */
@@ -575,14 +581,8 @@ PackageClass *PackageClass::newRexx(
 
     ProtectedObject p(package);
 
-    /* Give new object its behaviour     */
-    package->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        package->hasUninit();         /* Make sure everyone is notified.   */
-    }
-    /* now send an INIT message          */
-    package->sendMessage(OREF_INIT, init_args, initCount);
+    // handle Rexx class completion
+    classThis->completeNewObject(package, init_args, initCount);
     return package;                      /* return the new method             */
 }
 

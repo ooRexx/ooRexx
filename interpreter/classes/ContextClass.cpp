@@ -240,7 +240,7 @@ RexxObject *RexxContext::getArgs()
     checkValid();
     RexxObject **arglist = activation->getMethodArgumentList();
     size_t size = activation->getMethodArgumentCount();
-    return new (size, arglist) RexxArray;
+    return new_array(size, arglist);
 }
 
 

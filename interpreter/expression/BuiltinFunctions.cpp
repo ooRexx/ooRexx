@@ -904,7 +904,7 @@ BUILTIN(ARG)
                 if (position == 1)
                 {           /* want it all?                      */
                     /* create an array result for the return */
-                    return new (size, arglist) RexxArray;
+                    return new_array(size, arglist);
                 }
                 else if (position > size)      /* beyond bounds of argument list?   */
                 {
@@ -913,7 +913,7 @@ BUILTIN(ARG)
                 }
                 else
                 {                         /* need to extract a sub array       */
-                    return new (size - position + 1, &arglist[position - 1]) RexxArray;
+                    return new_array(size - position + 1, &arglist[position - 1]);
                 }
                 break;
 

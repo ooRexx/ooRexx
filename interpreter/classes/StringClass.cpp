@@ -2144,6 +2144,12 @@ RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
 /* Function:  Create a new string value (used primarily for subclasses)       */
 /******************************************************************************/
 {
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxObject *stringObj;               /* string value                      */
 
                                          /* break up the arguments            */
@@ -2153,14 +2159,10 @@ RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
     /* create a new string object        */
     string = new_string(string->getStringData(), string->getLength());
     ProtectedObject p(string);
-    string->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        string->hasUninit();
-    }
-    /* Initialize the new instance       */
-    string->sendMessage(OREF_INIT, init_args, argCount);
-    return string;                       /* return the new string             */
+
+    // handle Rexx class completion
+    classThis->completeNewObject(string, init_args, argCount);
+    return string;
 }
 
 

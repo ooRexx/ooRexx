@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,135 +48,138 @@
  class RexxSource;
  class PackageClass;
 
- class RexxClass : public RexxObject {
-  public:
-   void *operator new(size_t, size_t, const char *, RexxBehaviour *, RexxBehaviour *);
-   inline void *operator new(size_t size, void *ptr) {return ptr;};
-   inline void operator delete(void *) { }
-   inline void operator delete(void *, void *) { }
-   inline void operator delete(void *, size_t, const char *, RexxBehaviour *, RexxBehaviour *) { }
+class RexxClass : public RexxObject
+{
+ public:
+    void *operator new(size_t, size_t, const char *, RexxBehaviour *, RexxBehaviour *);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void operator delete(void *) { }
+    inline void operator delete(void *, void *) { }
+    inline void operator delete(void *, size_t, const char *, RexxBehaviour *, RexxBehaviour *) { }
 
-   inline RexxClass(){;};
-   inline RexxClass(RESTORETYPE restoreType) { ; };
+    inline RexxClass(){;};
+    inline RexxClass(RESTORETYPE restoreType) { ; };
 
-   void live(size_t);
-   void liveGeneral(int reason);
-   void flatten(RexxEnvelope*);
-   RexxObject *unflatten(RexxEnvelope*);
-   RexxObject *makeProxy(RexxEnvelope*);
-   bool        isEqual(RexxObject *);
+    void live(size_t);
+    void liveGeneral(int reason);
+    void flatten(RexxEnvelope*);
+    RexxObject *unflatten(RexxEnvelope*);
+    RexxObject *makeProxy(RexxEnvelope*);
+    bool        isEqual(RexxObject *);
 
-   HashCode     hash();
-   HashCode     getHashValue();
-   RexxObject * equal(RexxObject *);
-   RexxObject * strictEqual(RexxObject *);
-   RexxObject * notEqual(RexxObject *);
-   RexxObject * setRexxDefined();
-   RexxInteger *queryMixinClass();
-   RexxString  *getId();
-   RexxClass   *getBaseClass();
-   RexxClass   *getMetaClass();
-   RexxClass   *getSuperClass();
-   RexxArray   *getSuperClasses();
-   RexxArray   *getClassSuperClasses() { return classSuperClasses; }
-   RexxArray   *getSubClasses();
-   void         defmeths(RexxTable *);
-   void         setInstanceBehaviour(RexxBehaviour *);
-   RexxTable  *getInstanceBehaviourDictionary();
-   RexxTable  *getBehaviourDictionary();
-   RexxString *defaultName();
-   void        subClassable(bool);
-   void        subClassable(RexxClass *superClass, bool restricted);
-   void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
-   RexxObject *defineMethod(RexxString *, MethodClass *);
-   RexxObject *defineMethods(RexxTable *);
-   RexxObject *deleteMethod(RexxString *);
-   RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
-   void        removeClassMethod(RexxString *method_name);
-   MethodClass *method(RexxString *);
-   RexxSupplier *methods(RexxClass *);
-   void        updateSubClasses();
-   void        updateInstanceSubClasses();
-   void        createClassBehaviour(RexxBehaviour *);
-   void        createInstanceBehaviour(RexxBehaviour *);
-   void        methodDictionaryMerge(RexxTable *, RexxTable *);
-   RexxTable  *methodDictionaryCreate(RexxTable *, RexxClass *);
-   RexxObject *inherit(RexxClass *, RexxClass *);
-   RexxObject *uninherit(RexxClass *);
-   RexxObject *enhanced(RexxObject **, size_t);
-   RexxClass  *mixinclass(RexxSource *, RexxString *, RexxClass *, RexxTable *);
-   RexxClass  *subclass(RexxSource *, RexxString *, RexxClass *, RexxTable *);
-   RexxClass  *mixinclassRexx(RexxString *, RexxClass *, RexxTable *);
-   RexxClass  *subclassRexx(RexxString *, RexxClass *, RexxTable *);
-   RexxClass  *newRexx(RexxObject **args, size_t argCount);
-   void        setMetaClass(RexxClass *);
-   bool        isCompatibleWith(RexxClass *other);
-   RexxObject *isSubclassOf(RexxClass *other);
-   RexxString  *defaultNameRexx();
-   void        setSource(RexxSource *s);
-   RexxSource *getSource();
-   RexxObject *getPackage();
+    HashCode     hash();
+    HashCode     getHashValue();
+    RexxObject * equal(RexxObject *);
+    RexxObject * strictEqual(RexxObject *);
+    RexxObject * notEqual(RexxObject *);
+    RexxObject * setRexxDefined();
+    RexxInteger *queryMixinClass();
+    RexxString  *getId();
+    RexxClass   *getBaseClass();
+    RexxClass   *getMetaClass();
+    RexxClass   *getSuperClass();
+    RexxArray   *getSuperClasses();
+    RexxArray   *getClassSuperClasses() { return classSuperClasses; }
+    RexxArray   *getSubClasses();
+    void         defmeths(RexxTable *);
+    void         setInstanceBehaviour(RexxBehaviour *);
+    RexxTable  *getInstanceBehaviourDictionary();
+    RexxTable  *getBehaviourDictionary();
+    RexxString *defaultName();
+    void        subClassable(bool);
+    void        subClassable(RexxClass *superClass, bool restricted);
+    void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
+    RexxObject *defineMethod(RexxString *, MethodClass *);
+    RexxObject *defineMethods(RexxTable *);
+    RexxObject *deleteMethod(RexxString *);
+    RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
+    void        removeClassMethod(RexxString *method_name);
+    MethodClass *method(RexxString *);
+    RexxSupplier *methods(RexxClass *);
+    void        updateSubClasses();
+    void        updateInstanceSubClasses();
+    void        createClassBehaviour(RexxBehaviour *);
+    void        createInstanceBehaviour(RexxBehaviour *);
+    void        methodDictionaryMerge(RexxTable *, RexxTable *);
+    RexxTable  *methodDictionaryCreate(RexxTable *, RexxClass *);
+    RexxObject *inherit(RexxClass *, RexxClass *);
+    RexxObject *uninherit(RexxClass *);
+    RexxObject *enhanced(RexxObject **, size_t);
+    RexxClass  *mixinclass(RexxSource *, RexxString *, RexxClass *, RexxTable *);
+    RexxClass  *subclass(RexxSource *, RexxString *, RexxClass *, RexxTable *);
+    RexxClass  *mixinclassRexx(RexxString *, RexxClass *, RexxTable *);
+    RexxClass  *subclassRexx(RexxString *, RexxClass *, RexxTable *);
+    RexxClass  *newRexx(RexxObject **args, size_t argCount);
+    void        setMetaClass(RexxClass *);
+    bool        isCompatibleWith(RexxClass *other);
+    RexxObject *isSubclassOf(RexxClass *other);
+    RexxString  *defaultNameRexx();
+    void        setSource(RexxSource *s);
+    RexxSource *getSource();
+    RexxObject *getPackage();
+    void        competeNewObject(RexxObject *obj, RexxObject **initArgs = OREF_NULL, size_t argCount = 0);
 
 
-   inline bool         isRexxDefined() { return (classFlags & REXX_DEFINED) != 0; };
-   inline bool         isMixinClass()  { return (classFlags & MIXIN) != 0; };
-   inline bool         isMetaClass() { return (classFlags & META_CLASS) != 0; };
-   inline bool         hasUninitDefined()   { return (classFlags & HAS_UNINIT) != 0; };
-   inline void         setHasUninitDefined()   { classFlags |= HAS_UNINIT; };
-   inline void         clearHasUninitDefined()   { classFlags &= ~HAS_UNINIT; };
-   // NB:  This clears every flag BUT the UNINIT flag
-   inline void         setInitialFlagState()   { classFlags &= HAS_UNINIT; };
-   inline bool         parentHasUninitDefined()   { return (classFlags & PARENT_HAS_UNINIT) != 0; };
-   inline void         setParentHasUninitDefined()   { classFlags |= PARENT_HAS_UNINIT; };
-   inline bool         isPrimitiveClass() { return (classFlags & PRIMITIVE_CLASS) != 0; }
-   inline void         setMixinClass() { classFlags |= MIXIN; }
-   inline void         setNonPrimitive() { classFlags &= ~PRIMITIVE_CLASS; };
-   inline RexxBehaviour *getInstanceBehaviour() {return this->instanceBehaviour;};
-   inline void         setMetaClass() { classFlags |= META_CLASS; }
-          void         addSubClass(RexxClass *);
-          void         removeSubclass(RexxClass *c);
+    // TODO:  Use bitset for class flags.
+    inline bool         isRexxDefined() { return (classFlags & REXX_DEFINED) != 0; };
+    inline bool         isMixinClass()  { return (classFlags & MIXIN) != 0; };
+    inline bool         isMetaClass() { return (classFlags & META_CLASS) != 0; };
+    inline bool         hasUninitDefined()   { return (classFlags & HAS_UNINIT) != 0; };
+    inline void         setHasUninitDefined()   { classFlags |= HAS_UNINIT; };
+    inline void         clearHasUninitDefined()   { classFlags &= ~HAS_UNINIT; };
+    // NB:  This clears every flag BUT the UNINIT flag
+    inline void         setInitialFlagState()   { classFlags &= HAS_UNINIT; };
+    inline bool         parentHasUninitDefined()   { return (classFlags & PARENT_HAS_UNINIT) != 0; };
+    inline void         setParentHasUninitDefined()   { classFlags |= PARENT_HAS_UNINIT; };
+    inline bool         isPrimitiveClass() { return (classFlags & PRIMITIVE_CLASS) != 0; }
+    inline void         setMixinClass() { classFlags |= MIXIN; }
+    inline void         setNonPrimitive() { classFlags &= ~PRIMITIVE_CLASS; };
+    inline RexxBehaviour *getInstanceBehaviour() {return instanceBehaviour;};
+    inline void         setMetaClass() { classFlags |= META_CLASS; }
+           void         addSubClass(RexxClass *);
+           void         removeSubclass(RexxClass *c);
 
-   static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
+    static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
 
-   static void createInstance();
-   // singleton class instance;
-   static RexxClass *classInstance;
+    static void createInstance();
+    // singleton class instance;
+    static RexxClass *classInstance;
 
  protected:
-     enum
-     {
+    enum
+    {
         REXX_DEFINED      = 0x00000001,   // this class is a native rexx class
         MIXIN             = 0x00000004,   // this is a mixin class
         HAS_UNINIT        = 0x00000008,   // this class has an uninit method
         META_CLASS        = 0x00000010,   // this class is a meta class
         PRIMITIVE_CLASS   = 0x00000020,   // this is a primitive class
         PARENT_HAS_UNINIT = 0x00000040
-     };
+    };
 
-                                        /* Subclassable and subclassed       */
-     RexxString    *id;                 /* classes will have a name string   */
-                                        /* class methods specific to this    */
-                                        /* class                             */
-     RexxTable     *classMethodDictionary;
-                                        /* instances of this class inherit   */
-     RexxBehaviour *instanceBehaviour;  /* this behaviour                    */
-                                        /* methods added to this class       */
-     RexxTable     *instanceMethodDictionary;
-     RexxClass     *baseClass;          /* Baseclass of this class           */
-     RexxArray     *metaClass;          /* Metaclass of this class           */
-                                        /* Metaclass mdict                   */
-     RexxArray     *metaClassMethodDictionary;
-     RexxIdentityTable *metaClassScopes;  /* Metaclass scopes                  */
-                                        /* The superclass and any inherited  */
-     RexxArray     *classSuperClasses;  /* mixins for class behaviour        */
-                                        /* The superclass and any inherited  */
-                                        /* mixins for instance behaviour     */
-     RexxArray     *instanceSuperClasses;
-                                        /* class specific information        */
-                                        /* defines for this field are at the */
-     uint32_t       classFlags;         /* top of this header file           */
+                                       /* Subclassable and subclassed       */
+    RexxString    *id;                 /* classes will have a name string   */
+                                       /* class methods specific to this    */
+                                       /* class                             */
+    RexxTable     *classMethodDictionary;
+                                       /* instances of this class inherit   */
+    RexxBehaviour *instanceBehaviour;  /* this behaviour                    */
+                                       /* methods added to this class       */
+    RexxTable     *instanceMethodDictionary;
+    RexxClass     *baseClass;          /* Baseclass of this class           */
+    RexxArray     *metaClass;          /* Metaclass of this class           */
+                                       /* Metaclass mdict                   */
+    RexxArray     *metaClassMethodDictionary;
+    RexxIdentityTable *metaClassScopes;  /* Metaclass scopes                  */
+                                       /* The superclass and any inherited  */
+    RexxArray     *classSuperClasses;  /* mixins for class behaviour        */
+                                       /* The superclass and any inherited  */
+                                       /* mixins for instance behaviour     */
+    RexxArray     *instanceSuperClasses;
+                                       /* class specific information        */
+                                       /* defines for this field are at the */
+    uint32_t       classFlags;         /* top of this header file           */
 
-     RexxList      *subClasses;         // our list of weak referenced subclasses
-     RexxSource    *source;             // source we're defined in (if any)
- };
- #endif
+    RexxList      *subClasses;         // our list of weak referenced subclasses
+    RexxSource    *source;             // source we're defined in (if any)
+};
+#endif

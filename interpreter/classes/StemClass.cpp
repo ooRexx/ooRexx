@@ -509,22 +509,21 @@ RexxObject *RexxStem::newRexx(
 /* Function:  Create an instance of a stem                                    */
 /******************************************************************************/
 {
-    RexxObject * newObj;              /* newly created queue object        */
-    RexxObject * name;                   /* name of the stem item             */
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+    RexxObject *name;                   /* name of the stem item             */
 
                                          /* break up the arguments            */
     RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&name, NULL);
-    newObj = new RexxStem ((RexxString *)name);   /* get a new stem                    */
+    RexxObject *newObj = new RexxStem ((RexxString *)name);   /* get a new stem                    */
     ProtectedObject p(newObj);
-    newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    /* does object have an UNINT method  */
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newObj->hasUninit();              /* Make sure everyone is notified.   */
-    }
-                                          /* Initialize the new instance       */
-    newObj->sendMessage(OREF_INIT, init_args, argCount);
-    return newObj;                       /* return the new object             */
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, init_args, argCount);
+    return newObj;
 }
 
 void *RexxStem::operator new(size_t size)

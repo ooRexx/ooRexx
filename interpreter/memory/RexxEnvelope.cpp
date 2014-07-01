@@ -42,7 +42,6 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include <stdlib.h>
 #include "RexxCore.h"
 #include "StackClass.hpp"
 #include "StringClass.hpp"
@@ -197,7 +196,7 @@ RexxBuffer *RexxEnvelope::pack(
 
     // the header is just a dummy minimal object instance.  We don't bother adding
     // this to the dup table, as it won't ever be duped.
-    this->copyBuffer(TheObjectClass->newObject());
+    copyBuffer(new RexxObject);
     // we start the flattening process with the received object
     firstObject = this->receiver;
 

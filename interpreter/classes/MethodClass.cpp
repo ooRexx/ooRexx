@@ -306,8 +306,7 @@ PackageClass *BaseCode::getPackage()
  */
 void *MethodClass::operator new (size_t size)
 {
-    RexxObject *newObj = new_object(size, T_Method);
-    return newObj;
+    return new_object(size, T_Method);
 }
 
 // TODO:  Redo the method creation stuff...this should not be done
@@ -698,6 +697,12 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
  */
 MethodClass *MethodClass::newRexx(RexxObject **init_args, size_t argCount)
 {
+    // this method is defined as an instance method, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxObject *pgmname;                 // method name
     RexxObject *_source;                 // Array or string object
     MethodClass *newMethod;               // newly created method object
@@ -749,13 +754,7 @@ MethodClass *MethodClass::newRexx(RexxObject **init_args, size_t argCount)
     // finish up the object creation.  Set the correct instance behavior (this could
     // be a subclass), check for uninit methods, and finally, send an init message using any
     // left over arguments.
-    newMethod->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())          /* does object have an UNINT method  */
-    {
-        newMethod->hasUninit();              /* Make sure everyone is notified.   */
-    }
-    // now send an INIT message
-    newMethod->sendMessage(OREF_INIT, init_args, initCount);
+    classThis->completeNewObject(newMethod, init_args, initCount);
     return newMethod;
 }
 
@@ -769,6 +768,11 @@ MethodClass *MethodClass::newRexx(RexxObject **init_args, size_t argCount)
  */
 MethodClass *MethodClass::newFileRexx(RexxString *filename)
 {
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
     // get the method name as a string
     filename = stringArgument(filename, ARG_ONE);
 
@@ -779,13 +783,7 @@ MethodClass *MethodClass::newFileRexx(RexxString *filename)
     ProtectedObject p(newMethod);
 
     newMethod->setScope((RexxClass *)TheNilObject);
-    // finish the class setup
-    newMethod->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newMethod->hasUninit();
-    }
-    newMethod->sendMessage(OREF_INIT);
+    classThis->completeNewObject(newMethod);
     return newMethod;
 }
 

@@ -79,7 +79,7 @@ class RexxExpressionStack
     inline void         push(RexxObject *value) { *(++top) = value; };
     inline RexxObject * pop() { return *(top--); };
     inline RexxObject * fastPop() { return *(top--); };
-    inline RexxArray  * argumentArray(size_t count) { return (new (count, (RexxObject **)(top - (count - 1))) RexxArray); };
+    inline RexxArray  * argumentArray(size_t count) { return new_array(count, (RexxObject **)(top - (count - 1))); };
     inline RexxObject **arguments(size_t count) { return (RexxObject **)(top - (count - 1)); };
     inline void         replace(size_t offset, RexxObject *value) { *(top - offset) = value; };
     inline size_t       getSize() {return size;};

@@ -75,12 +75,25 @@ void RexxObject::createInstance()
 }
 
 
+/**
+ * Allocate a new object.
+ *
+ * @param size   The base size of the method object.
+ *
+ * @return The storage for a method object.
+ */
+void *RexxObject::operator new (size_t size)
+{
+    return new_object(size, T_Method);
+}
+
+
 void RexxObject::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->objectVariables);
+    memory_mark(objectVariables);
 }
 
 void RexxObject::liveGeneral(int reason)
@@ -88,7 +101,7 @@ void RexxObject::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->objectVariables);
+    memory_mark_general(objectVariables);
 }
 
 void RexxObject::flatten(RexxEnvelope *envelope)
@@ -98,7 +111,7 @@ void RexxObject::flatten(RexxEnvelope *envelope)
 {
   setUpFlatten(RexxObject)
 
-    flatten_reference(newThis->objectVariables, envelope);
+    flattenRef(objectVariables);
 
   cleanUpFlatten
 }
@@ -475,89 +488,80 @@ bool RexxObject::truthValue(
    return REQUEST_STRING(this)->truthValue(errorCode);
 }
 
+
+/**
+ * First level primitive copy of an object.  This just copies
+ * the object storage, and nothing else.
+ *
+ * @return A copy of the target internal object.
+ */
 RexxObject * RexxInternalObject::copy()
-/******************************************************************************/
-/* Function:  First level primitive copy of an object.  This just copies      */
-/*            the object storage, and nothing else.                           */
-/******************************************************************************/
 {
-  /* Instead of calling new_object and memcpy, ask the memory object to make  */
-  /* a copy of ourself.  This way, any header information can be correctly    */
-  /* initialized by memory.                                                   */
-  return (RexxObject *)this->clone();
+    // Instead of calling new_object and memcpy, ask the memory object to make
+    // a copy of ourself.  This way, any header information can be correctly
+    // initialized by memory.
+    return (RexxObject *)clone();
 }
 
-void *RexxInternalObject::operator new(size_t size,
-    RexxClass *classObject)            /* class of the object               */
-/******************************************************************************/
-/* Function:  Create a new primitive object                                   */
-/******************************************************************************/
-{
-    /* get storage for a new object      */
-    RexxObject *newObject = (RexxObject *)new_object(size);
-    /* use the class instance behaviour  */
-    newObject->setBehaviour(classObject->getInstanceBehaviour());
-    return(void *)newObject;            /* and return the new object         */
-}
 
-void *RexxInternalObject::operator new(size_t size,
-    RexxClass * classObject,           /* class of the object               */
-    RexxObject **arguments,            /* arguments to the new method       */
-    size_t       argCount)             /* the count of arguments            */
-/******************************************************************************/
-/* Function:  Create a new instance of object (with arguments)                */
-/******************************************************************************/
-{
-    /* Get storage for a new object      */
-    RexxObject *newObject = (RexxObject *)new_object(size);
-    /* use the classes instance behaviour*/
-    newObject->setBehaviour(classObject->getInstanceBehaviour());
-    return newObject;                    /* and return the object             */
-}
-
+/**
+ * Copy an object that is visible to the Rexx programmer.
+ * This copy ensures that all object variables are copied,
+ * as well as ensuring that the new instance has the
+ * same behaviour as the initial object.
+ *
+ * @return A new instance of this object.
+ */
 RexxObject * RexxObject::copy()
-/******************************************************************************/
-/* Function:  Copy an object that has an Object Variable Dictionary (OVD)     */
-/******************************************************************************/
 {
-    /* Instead of calling new_object and memcpy, ask the memory object to make  */
-    /* a copy of ourself.  This way, any header information can be correctly    */
-    /* initialized by memory.                                                   */
-    RexxObject *newObj = (RexxObject *)this->clone();
-    /* have object variables?            */
-    if (this->objectVariables != OREF_NULL)
+    // Instead of calling new_object and memcpy, ask the memory object to make
+    // a copy of ourself.  This way, any header information can be correctly
+    // initialized by memory.
+    RexxObject *newObj = clone();
+    ProtectedObject p(newObj);
+
+    // do we have object variables?  We need to give that opject
+    // a copy of the variables
+    if (objectVariables != OREF_NULL)
     {
-        ProtectedObject p(newObj);
         copyObjectVariables(newObj);       /* copy the object variables into the new object */
     }
-    /* have instance methods?            */
-    if (this->behaviour->getInstanceMethodDictionary() != OREF_NULL)
+    // have instance methods?
+    if (behaviour->getInstanceMethodDictionary() != OREF_NULL)
     {
-        /* need to copy the behaviour        */
+        // need to copy the behaviour
         newObj->setBehaviour((RexxBehaviour *)newObj->behaviour->copy());
     }
     return newObj;                       /* return the copied version         */
 }
 
+
+/**
+ * Copy an object's object variable dictionaries into another obj.
+ * The variable dictionaries are copied so that they
+ * are different variable trees, but none of the objects
+ * stored in the dictionary are copied.
+ *
+ * @param newObj The target new object.
+ */
 void RexxObject::copyObjectVariables(RexxObject *newObj)
-/******************************************************************************/
-/* Function:  Copy an object's object variable dictionaries into another obj. */
-/******************************************************************************/
 {
     RexxVariableDictionary *dictionary = objectVariables;
     /* clear out the existing object variable pointer */
     newObj->objectVariables = OREF_NULL;
 
+    // TODO:   This really should be done internally in RexxVariableDictionary.
+    // Double TODO:  There's something about this that doesn't really make sense to me.
     while (dictionary != OREF_NULL)
     {
-        /* copy the dictionary */
+        // copy the dictionary
         RexxVariableDictionary *newDictionary = (RexxVariableDictionary *)dictionary->copy();
-        /* add this to the variable set */
+        // add this to the variable set
         newObj->addObjectVariables(newDictionary);
-        /* now that the dictionary is anchored in the new object, */
-        /* copy the variable objects inside. */
+        // now that the dictionary is anchored in the new object,
+        // copy the variable objects inside. //
         newDictionary->copyValues();
-        /* and repeat for each one */
+        // and repeat for each one //
         dictionary = dictionary->getNextDictionary();
     }
 }
@@ -1792,7 +1796,7 @@ RexxMessage *RexxObject::startCommon(RexxObject *message, RexxObject **arguments
     decodeMessageName(this, message, messageName, startScope);
 
     /* Create the new message object.    */
-    RexxMessage *newMessage = new RexxMessage(this, messageName, startScope, new (argCount, arguments) RexxArray);
+    RexxMessage *newMessage = new_ RexxMessage(this, messageName, startScope, new_array(argCount, arguments));
     ProtectedObject p(newMessage);
     newMessage->start(OREF_NULL);        /* Tell the message object to start  */
     return newMessage;                   /* return the new message object     */
@@ -2297,25 +2301,47 @@ bool RexxObject::hasUninitMethod()
   return TheTrueObject == this->hasMethod(OREF_UNINIT);
 }
 
+
+/**
+ * Default new method for creating an object from Rexx
+ * code.  This is the version inherited by all subclasses
+ * of the Object class.
+ *
+ * @param arguments Pointer to the arguments of the new() method.  These
+ *                  are passed on to the init method.
+ * @param argCount  The count of the arguments.
+ *
+ * @return An initialized object instance.  If this is a subclass,
+ *         the object will have all of the subclass behaviour.
+ */
 RexxObject *RexxObject::newRexx(RexxObject **arguments, size_t argCount)
-/******************************************************************************/
-/* Function:  Exposed REXX NEW method                                         */
-/******************************************************************************/
 {
-  return new ((RexxClass *)this, arguments, argCount) RexxObject;
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
+    RexxObject *newObj =  new RexxObject;
+    ProtectedObject p(newObj);
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, args, argCount);
+
+    return newObj;
 }
 
 
+/**
+ * Copy the storage of an object and set up its header.
+ * This method should be called by other copy() methods
+ * instead ov using new_object and memcpy so that the
+ * memory can properly initialize the new object's header
+ * will be garbage collected properly.
+ *
+ * @return A new object copied for the source object.
+ */
 RexxObject *RexxInternalObject::clone()
-/******************************************************************************/
-/* Arguments:  Clone an object, and set up its header.  This method should    */
-/*             be called by other _copy methods instead of using new_object   */
-/*             and memcpy, so that memory can properly initialize the new     */
-/*             object's header to avoid early gc.                             */
-/*                                                                            */
-/*  Returned:  A new object copied from objr, but set to be live to avoid     */
-/*             being garbage collected on a pending sweep.                    */
-/******************************************************************************/
 {
     // we need an identically sized object
     size_t size = getObjectSize();
@@ -2327,8 +2353,12 @@ RexxObject *RexxInternalObject::clone()
     memcpy((char *)cloneObj, (char *)this, size);
     // restore the new header to the cloned object
     cloneObj->header = newHeader;
+    // we might be copying an oldspace object.  The new object, by definition,
+    // will not be oldspace.
+    cloneObj~clearOldSpace();
     return cloneObj;
 }
+
 
 #undef operatorMethod
 #define operatorMethod(name, message) RexxObject * RexxObject::name(RexxObject *operand) \
@@ -2392,40 +2422,6 @@ operatorMethod(operator_and                       , AND)
 operatorMethod(operator_or                        , OR)
 operatorMethod(operator_xor                       , XOR)
 prefixOperatorMethod(operator_not                 , BACKSLASH)
-
-void *RexxObject::operator new(size_t size, RexxClass *classObject)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
-{
-    /* get storage for new object        */
-    RexxObject *newObject = (RexxObject *)new_object(size);
-    // the virtual function table is still object, but the behaviour is whatever
-    // the class object defines.
-    newObject->setBehaviour(classObject->getInstanceBehaviour());
-    // the hash value and nulled object table was handled by new_object();
-
-    if (classObject->hasUninitDefined() || classObject->parentHasUninitDefined())
-    {  /* or parent has one */
-        newObject->hasUninit();
-    }
-
-    return(void *)newObject;            /* Initialize the new object         */
-}
-
-
-void *RexxObject::operator new(size_t size, RexxClass *classObject, RexxObject **args, size_t argCount)
-/******************************************************************************/
-/* Function:  Create a new instance of object                                  */
-/******************************************************************************/
-{
-    /* create a new object               */
-    ProtectedObject newObject = new (classObject) RexxObject;
-    /* now drive the user INIT           */
-    ((RexxObject *)newObject)->sendMessage(OREF_INIT, args, argCount);
-    return(RexxObject *)newObject;      /* and returnthe new object          */
-}
-
 
 /**
  * Concatentation operation supported by the Object class.  This

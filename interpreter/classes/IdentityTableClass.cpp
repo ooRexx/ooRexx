@@ -71,17 +71,19 @@ void RexxIdentityTable::createInstance()
  */
 RexxObject *RexxIdentityTable::newRexx(RexxObject **args, size_t argCount)
 {
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxIdentityTable *newObj = new_identity_table();
     ProtectedObject p(newObj);
-    newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    /* does object have an UNINT method  */
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newObj->hasUninit();              /* Make sure everyone is notified.   */
-    }
-    /* call any rexx level init's        */
-    newObj->sendMessage(OREF_INIT, args, argCount);
-    return newObj;                       /* return the new object             */
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, args, argCount);
+
+    return newObj;
 }
 
 

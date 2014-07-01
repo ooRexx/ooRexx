@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -1785,6 +1785,31 @@ void RexxClass::createInstance()
     /* make a proxy for this class        */
     TheClassClass->makeProxiedObject();
     new (TheClassClass) RexxClass;
+}
+
+/**
+ * Perform common initialization steps on an object created
+ * by a new method from Rexx.  This handles subclass
+ * behaviour issues, uninit processing, etc.
+ *
+ * @param obj      The newly created object.  NOTE:  this assumes the
+ *                 caller has protected this object from garbage collection.
+ * @param initArgs A pointer to arguments intended for the INIT method.
+ * @param argCount The count of arguments.
+ */
+void RexxClass::completeNewObject(RexxObject *obj, RexxObject **initArgs, size_t argCount)
+{
+    // set the behaviour (this might be a subclass, so don't assume the
+    // one from the base class is correct).
+    obj->setBehaviour(getInstanceBehaviour());
+    // a subclass might defined an uninit method, so we need to
+    // check that also.
+    if (hasUninitDefined())
+    {
+        obj->hasUninit();
+    }
+    // now send an INIT message to complete initialization.
+    obj->sendMessage(OREF_INIT, initArgs, argCount);
 }
 
 

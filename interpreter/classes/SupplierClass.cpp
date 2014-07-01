@@ -249,14 +249,17 @@ RexxObject  *RexxSupplierClass::newRexx(
 /* Function:  Public REXX supplier new method                               */
 /****************************************************************************/
 {
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxObject *newObj = new RexxSupplier();
     ProtectedObject p(newObj);
-    newObj->setBehaviour(this->getInstanceBehaviour());
-    if (this->hasUninitDefined())
-    {
-        newObj->hasUninit();
-    }
-                                       /* Initialize the new instance       */
-    newObj->sendMessage(OREF_INIT, init_args, argCount);
-    return newObj;                       /* return the new supplier           */
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, args, argCount);
+
+    return newObj;
 }

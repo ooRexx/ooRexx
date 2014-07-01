@@ -458,6 +458,12 @@ RoutineClass *RoutineClass::newRoutineObject(RexxString *pgmname, RexxArray *sou
  */
 RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
 {
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxObject *pgmname;                 // method name
     RexxObject *_source;                 // Array or string object
     RexxObject *option = OREF_NULL;
@@ -511,13 +517,7 @@ RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
     // finish up the object creation.  Set the correct instance behavior (this could
     // be a subclass), check for uninit methods, and finally, send an init message using any
     // left over arguments.
-    newRoutine->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newRoutine->hasUninit();
-    }
-    // now send an INIT message
-    newRoutine->sendMessage(OREF_INIT, init_args, initCount);
+    classThis->completeNewObject(newRoutine, init_args, initCount);
     return newRoutine;
 }
 
@@ -531,22 +531,20 @@ RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
  */
 RoutineClass *RoutineClass::newFileRexx(RexxString *filename)
 {
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     // get the method name as a string
     filename = stringArgument(filename, ARG_ONE);
-
-// TODO:  Use new creation method
-//  MethodClass *newMethod = new MethodClass(filename);
 
     RoutineClass *newRoutine = LanguageParser::createRoutineFromFile(filename);
     ProtectedObject p(newRoutine);
 
-    // finish the class setup
-    newRoutine->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newRoutine->hasUninit();
-    }
-    newRoutine->sendMessage(OREF_INIT);
+    // complete the initialization
+    classThis->completeNewObject(newRoutine);
     return newRoutine;
 }
 

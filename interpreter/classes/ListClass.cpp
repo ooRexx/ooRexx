@@ -1216,22 +1216,18 @@ RexxList *RexxList::newRexx(
 /* Function:  Construct and initialized a new list item                       */
 /******************************************************************************/
 {
-    /* get a new directory               */
-    /* NOTE:  this does not use the      */
-    /* macro version because the class   */
-    /* object might actually be for a    */
-    /* subclass                          */
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxList *newList = new RexxList;
     ProtectedObject p(newList);
-    /* Give new object its behaviour     */
-    newList->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-    if (((RexxClass *)this)->hasUninitDefined())
-    {
-        newList->hasUninit();
-    }
 
-    /* Initialize the new list instance  */
-    newList->sendMessage(OREF_INIT, init_args, argCount);
+    // handle Rexx class completion
+    classThis->completeNewObject(newList, args, argCount);
+
     return newList;                      /* return the new list item          */
 }
 
@@ -1243,6 +1239,7 @@ RexxList *RexxList::classOf(
 /******************************************************************************/
 {
     RexxList *newList;                   /* newly created list                */
+
 
     if (TheListClass == (RexxClass *)this )
     {         /* creating an internel list item?   */
@@ -1266,6 +1263,8 @@ RexxList *RexxList::classOf(
         size_t _size = argCount;                   /* get the array size                */
         ProtectedObject p;
         /* get a new list                    */
+
+        // TODO:  This can be improved by directly invoking newRexx()
         this->sendMessage(OREF_NEW, p);
         newList = (RexxList *)(RexxObject *)p;
         for (size_t i = 0; i < _size; i++)

@@ -503,6 +503,12 @@ RexxObject *RexxMessage::newRexx(
 /* Function:  Rexx level new routine                                          */
 /******************************************************************************/
 {
+    // this class is defined on the object class, but this is actually attached
+    // to a class object instance.  Therefore, any use of the this pointer
+    // will be touching the wrong data.  Use the classThis pointer for calling
+    // any methods on this object from this method.
+    RexxClass *classThis = (RexxClass *)this;
+
     RexxArray  *argPtr = NULL;           // the arguments used with the message.
 
     size_t num_args = argCount;          /* get number of args passed         */
@@ -574,7 +580,7 @@ RexxObject *RexxMessage::newRexx(
             else if (option == 'i' )         /* specified as individual?          */
             {
                 /* yes, build array of all arguments */
-                argPtr = new (argCount - 3, msgArgs + 3) RexxArray;
+                argPtr = new_array(argCount - 3, msgArgs + 3);
             }
             else
             {
@@ -590,14 +596,11 @@ RexxObject *RexxMessage::newRexx(
     /* all args are parcelled out, go    */
     /*create the new message object...   */
     RexxMessage *newMessage = new RexxMessage(_target, msgName, _startScope, argPtr);
-    /* actually a subclassed item?       */
-    if (((RexxClass *)this)->isPrimitive())
-    {
-        ProtectedObject p(newMessage);
-        /* Give new object its behaviour     */
-        newMessage->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-        newMessage->sendMessage(OREF_INIT);/* call any rexx inits               */
-    }
+    ProtectedObject p(newMessage);
+
+    // handle Rexx class completion
+    classThis->completeNewObject(newObj, args, argCount);
+
     return newMessage;                   /* return the new message            */
 }
 
