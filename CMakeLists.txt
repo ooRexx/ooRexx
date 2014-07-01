@@ -77,26 +77,12 @@ else ()
     message(STATUS "Building for a 32-bit architecture")
 endif ()
 
+find_package(Subversion)
+if(SUBVERSION_FOUND)
+  Subversion_WC_INFO(${PROJECT_SOURCE_DIR} ORX)
+  set(ORX_BLD_LVL ${ORX_WC_REVISION})
+endif()
 
-
-# Get the SVN revision number of an svn command line client is
-# available.  This version will run at build time rather than only
-# at configuration generation time.
-FIND_PROGRAM(SVN_EXECUTABLE svn
-  DOC "subversion command line client")
-
-# only do this if we have an svn client.
-if (SVN_EXECUTABLE)
-    MACRO(Subversion_GET_REVISION dir variable)
-      EXECUTE_PROCESS(COMMAND ${SVN_EXECUTABLE} info ${dir}
-        OUTPUT_VARIABLE ${variable}
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-      STRING(REGEX REPLACE "^(.*\n)?Revision: ([^\n]+).*"
-        "\\2" ${variable} "${${variable}}")
-    ENDMACRO(Subversion_GET_REVISION)
-
-    Subversion_GET_REVISION(${CMAKE_SOURCE_DIR} ORX_BLD_LVL)
-endif ()
 
 message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
 
