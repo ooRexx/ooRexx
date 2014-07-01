@@ -70,11 +70,11 @@ string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR)
 
 # Platform independent architecture test
 if (CMAKE_SIZEOF_VOID_P MATCHES 8)
-    set(ORX_ARCHITECTURE "x64")
-    message("Building for a 64-bit architecture")
+    set(ORX_ARCHITECTURE "64")
+    message(STATUS "Building for a 64-bit architecture")
 else ()
-    set(ORX_ARCHITECTURE "x32")
-    message("Building for a 32-bit architecture")
+    set(ORX_ARCHITECTURE "32")
+    message(STATUS "Building for a 32-bit architecture")
 endif ()
 
 
@@ -226,7 +226,7 @@ if (WIN32)
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
-   if (${ORX_ARCHITECTURE} STREQUAL "x64")
+   if (${ORX_ARCHITECTURE} STREQUAL "64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
       set (NSIS_CPU "x86_64")
    else ()
@@ -1665,7 +1665,7 @@ if (WIN32)
       set(INSTALLER_SCRIPT "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.nsi")
 
       # create an installer file from the template
-      message("Building NSIS template ${INSTALLER_SCRIPT}")
+      message(STATUS "Building NSIS template ${INSTALLER_SCRIPT}")
       configure_file(${NSIS_INSTALLER_SOURCE_DIR}/cpack.nsi.template.in ${NSIS_INSTALLER_DIR}/${INSTALLER_SCRIPT} @ONLY)
 
    # handy macro for copying files from the source into the source directory.
