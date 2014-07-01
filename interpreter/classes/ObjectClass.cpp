@@ -252,9 +252,9 @@ RexxObject *RexxObject::isInstanceOfRexx(RexxClass *other)
  *
  * @return The method object that implements the object method.
  */
-RexxMethod *RexxInternalObject::instanceMethod(RexxString  *method_name)
+MethodClass *RexxInternalObject::instanceMethod(RexxString  *method_name)
 {
-    return (RexxMethod *)TheNilObject;
+    return (MethodClass *)TheNilObject;
 }
 
 
@@ -266,16 +266,16 @@ RexxMethod *RexxInternalObject::instanceMethod(RexxString  *method_name)
  *
  * @return The method object that implements the object method.
  */
-RexxMethod *RexxObject::instanceMethod(RexxString  *method_name)
+MethodClass *RexxObject::instanceMethod(RexxString  *method_name)
 {
     // the name must be a string...and we use it in upper case
     method_name = stringArgument(method_name, ARG_ONE)->upper();
     // retrieve the method from the dictionary
-    RexxMethod *method_object = (RexxMethod *)this->behaviour->getMethodDictionary()->stringGet(method_name);
+    MethodClass *method_object = (MethodClass *)this->behaviour->getMethodDictionary()->stringGet(method_name);
     // We return .nil if the method doesn't exist.
     if (method_object == OREF_NULL)
     {
-        return (RexxMethod *)TheNilObject;
+        return (MethodClass *)TheNilObject;
     }
     return method_object;    // got a live one
 }
@@ -324,7 +324,7 @@ RexxSupplier *RexxObject::instanceMethods(RexxClass *class_object)
  *
  * @return The method object that implements the object method.
  */
-RexxMethod *RexxObject::instanceMethodRexx(RexxString  *method_name)
+MethodClass *RexxObject::instanceMethodRexx(RexxString  *method_name)
 {
     return instanceMethod(method_name);
 }
@@ -562,8 +562,8 @@ void RexxObject::copyObjectVariables(RexxObject *newObj)
     }
 }
 
-RexxMethod * RexxObject::checkPrivate(
-    RexxMethod       * method )        /* method to check                   */
+MethodClass * RexxObject::checkPrivate(
+    MethodClass       * method )        /* method to check                   */
 /******************************************************************************/
 /* Function:  Check a private method for accessibility.                       */
 /******************************************************************************/
@@ -768,20 +768,21 @@ void RexxObject::messageSend(
 {
     ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
     /* grab the method from this level   */
-    RexxMethod *method_save = this->behaviour->methodLookup(msgname);
+    MethodClass *method_save = behaviour->methodLookup(msgname);
+
     /* method exists...special processing*/
     if (method_save != OREF_NULL && method_save->isSpecial())
     {
         if (method_save->isPrivate())      /* actually private method?          */
         {
             /* go validate a private method      */
-            method_save = this->checkPrivate(method_save);
+            method_save = checkPrivate(method_save);
         }
         /* now process protected methods     */
         if (method_save != OREF_NULL && method_save->isProtected())
         {
             /* really a protected method         */
-            this->processProtectedMethod(msgname, method_save, arguments, count, result);
+            processProtectedMethod(msgname, method_save, arguments, count, result);
             return;
         }
     }
@@ -793,7 +794,7 @@ void RexxObject::messageSend(
     else
     {
         /* go process an unknown method      */
-        this->processUnknown(msgname, arguments, count, result);
+        processUnknown(msgname, arguments, count, result);
     }
 }
 
@@ -810,7 +811,7 @@ void RexxObject::messageSend(
 {
     ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
     /* go to the higher level            */
-    RexxMethod *method_save = this->superMethod(msgname, startscope);
+    MethodClass *method_save = this->superMethod(msgname, startscope);
     if (method_save != OREF_NULL && method_save->isProtected())
     {
         if (method_save->isPrivate())      /* actually private method?          */
@@ -839,7 +840,7 @@ void RexxObject::messageSend(
 
 void RexxObject::processProtectedMethod(
     RexxString   * messageName,        /* message to issue                  */
-    RexxMethod   * targetMethod,       // the method to run
+    MethodClass   * targetMethod,       // the method to run
     RexxObject  ** arguments,          /* actual message arguments          */
     size_t         count,              /* count of arguments                */
     ProtectedObject &result)           // returned result
@@ -871,7 +872,7 @@ void RexxObject::processUnknown(
 {
     /* no method for this msgname        */
     /* find the unknown method           */
-    RexxMethod *method_save = this->behaviour->methodLookup(OREF_UNKNOWN);
+    MethodClass *method_save = this->behaviour->methodLookup(OREF_UNKNOWN);
     if (method_save == OREF_NULL)        /* "unknown" method exists?          */
     /* no unknown method - try to raise  */
     /* a NOMETHOD condition, and if that */
@@ -894,7 +895,7 @@ void RexxObject::processUnknown(
     method_save->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, unknown_arguments, 2, result);
 }
 
-RexxMethod * RexxObject::methodLookup(
+MethodClass * RexxObject::methodLookup(
     RexxString *msgname)               /* name of the target message        */
 /******************************************************************************/
 /* Function:  Return the method object associated with a message name         */
@@ -1575,7 +1576,7 @@ RexxClass   *RexxObject::classObject()
 
 RexxObject  *RexxObject::setMethod(
     RexxString *msgname,               /* name of the new method            */
-    RexxMethod *methobj,               /* associated method object/code     */
+    MethodClass *methobj,               /* associated method object/code     */
     RexxString *option)
 /******************************************************************************/
 /* Function:  Add a new method to an object instance                          */
@@ -1604,12 +1605,12 @@ RexxObject  *RexxObject::setMethod(
     if (methobj == OREF_NULL)            /* we weren't passed a method,       */
     {
         /* add a dummy method                */
-        methobj = (RexxMethod *)TheNilObject;
+        methobj = (MethodClass *)TheNilObject;
     }
     else if (!isOfClass(Method, methobj))    /* not a method type already?        */
     {
         /* make one from a string or array   */
-        methobj = RexxMethod::newMethodObject(msgname, (RexxObject *)methobj, IntegerTwo, OREF_NULL);
+        methobj = MethodClass::newMethodObject(msgname, (RexxObject *)methobj, IntegerTwo, OREF_NULL);
     }
     this->defMethod(msgname, methobj, option);   /* defMethod handles all the details */
     return OREF_NULL;                    /* no return value                   */
@@ -1646,7 +1647,7 @@ RexxObject  *RexxObject::requestRexx(
     /* Get "MAKE"||class methodname      */
     RexxString *make_method = className->concatToCstring(CHAR_MAKE);
     /* find the MAKExxxx method          */
-    RexxMethod *method = this->behaviour->methodLookup(make_method);
+    MethodClass *method = this->behaviour->methodLookup(make_method);
     /* have this method?                 */
     if (method != OREF_NULL)
     {
@@ -1893,12 +1894,12 @@ RexxObject  *RexxObject::run(
     size_t argcount = 0;
 
     /* get the method object             */
-    RexxMethod *methobj = (RexxMethod *)arguments[0];
+    MethodClass *methobj = (MethodClass *)arguments[0];
     requiredArgument(methobj, ARG_ONE);          /* make sure we have a method        */
     if (!isOfClass(Method, methobj))         /* this a method object?             */
     {
         /* create a method object            */
-        methobj = RexxMethod::newMethodObject(OREF_RUN, (RexxObject *)methobj, IntegerOne, OREF_NULL);
+        methobj = MethodClass::newMethodObject(OREF_RUN, (RexxObject *)methobj, IntegerOne, OREF_NULL);
         /* set the correct scope             */
         methobj->setScope((RexxClass *)TheNilObject);
     }
@@ -1981,7 +1982,7 @@ RexxObject  *RexxObject::defMethods(
     for (HashLink i = methods->first(); methods->available(i); i = methods->next(i))
     {
         /* Get the methjod Object            */
-        RexxMethod *method = (RexxMethod *)methods->value(i);
+        MethodClass *method = (MethodClass *)methods->value(i);
         if (method != TheNilObject)        /* not a removal?                    */
         {
             /* set a new scope on this           */
@@ -2003,13 +2004,13 @@ RexxObject  *RexxObject::defMethods(
 
 RexxObject  *RexxObject::defMethod(
     RexxString *msgname,               /* new method name                   */
-    RexxMethod *methobj,               /* associated method object          */
+    MethodClass *methobj,               /* associated method object          */
     RexxString *option)
 /****************************************************************************/
 /* Function:  Add a method to an object's behaviour                         */
 /****************************************************************************/
 {
-    RexxMethod *methcopy;                /* copy of the original method       */
+    MethodClass *methcopy;                /* copy of the original method       */
                                          /* default scope "FLOAT"             */
     RexxClass  *targetClass = (RexxClass*) TheNilObject;
 
@@ -2034,7 +2035,7 @@ RexxObject  *RexxObject::defMethod(
     else
     {
         /* no real method added              */
-        methcopy = (RexxMethod *)TheNilObject;
+        methcopy = (MethodClass *)TheNilObject;
     }
     /* is this the first added method?   */
     if (this->behaviour->getInstanceMethodDictionary() == OREF_NULL)
@@ -2157,7 +2158,7 @@ RexxObject * RexxObject::superScope(
   return this->behaviour->superScope(startScope);
 }
 
-RexxMethod * RexxObject::superMethod(
+MethodClass * RexxObject::superMethod(
   RexxString *msgName,                 /* target message name             */
   RexxObject *startScope)              /* starting lookup scope           */
 /******************************************************************************/

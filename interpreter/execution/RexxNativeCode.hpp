@@ -85,7 +85,7 @@ class RexxNativeMethod : public RexxNativeCode
 
    inline PNATIVEMETHOD getEntry() { return entry; }
 
-   virtual void run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+   virtual void run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
        RexxObject **argPtr, size_t count, ProtectedObject &result);
 
 protected:

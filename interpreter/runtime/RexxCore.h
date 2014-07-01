@@ -260,7 +260,7 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 #define TheIntegerClass RexxInteger::classInstance
 #define TheListClass RexxList::classInstance
 #define TheMessageClass RexxMessage::classInstance
-#define TheMethodClass RexxMethod::classInstance
+#define TheMethodClass MethodClass::classInstance
 #define TheRoutineClass RoutineClass::classInstance
 #define ThePackageClass PackageClass::classInstance
 #define TheRexxContextClass RexxContext::classInstance

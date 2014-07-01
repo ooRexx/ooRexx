@@ -65,18 +65,18 @@ class RexxBehaviour : public RexxInternalObject
 
     RexxObject *copy();
     void        copyBehaviour(RexxBehaviour *source);
-    RexxObject *define(RexxString *, RexxMethod *);
-    RexxMethod *define(const char *, PCPPM, size_t);
-    void        addMethod(RexxString *, RexxMethod *);
+    RexxObject *define(RexxString *, MethodClass *);
+    MethodClass *define(const char *, PCPPM, size_t);
+    void        addMethod(RexxString *, MethodClass *);
     void        removeMethod(RexxString *);
-    RexxMethod *methodObject(RexxString *);
-    RexxMethod *methodLookup( RexxString *);
-    RexxMethod *getMethod( RexxString *);
+    MethodClass *methodObject(RexxString *);
+    MethodClass *methodLookup( RexxString *);
+    MethodClass *getMethod( RexxString *);
     RexxObject *deleteMethod(RexxString *);
     void        restore(RexxBehaviour *);
     RexxClass  *restoreClass();
     RexxObject *superScope( RexxObject *);
-    RexxMethod *superMethod(RexxString *, RexxObject *);
+    MethodClass *superMethod(RexxString *, RexxObject *);
     void        setMethodDictionaryScope( RexxObject *);
     RexxObject *setScopes( RexxIdentityTable *);
     RexxObject *addScope( RexxObject *);

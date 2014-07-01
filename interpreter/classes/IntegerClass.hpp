@@ -80,7 +80,7 @@ class RexxInteger : public RexxObject {
   bool         truthValue(int);
   virtual bool logicalValue(logical_t &);
   bool         isInstanceOf(RexxClass *);
-  RexxMethod   *instanceMethod(RexxString *);
+  MethodClass   *instanceMethod(RexxString *);
   RexxSupplier *instanceMethods(RexxClass *);
 
   bool        isEqual(RexxObject *);

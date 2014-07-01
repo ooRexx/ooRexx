@@ -180,14 +180,14 @@ RexxSupplier *RexxDirectory::supplier(void)
     /* have a method table?              */
     if (this->method_table != OREF_NULL)
     {
-        RexxTable *methodTable = this->method_table;
+        RexxTable *methodTable = method_table;
         /* need to extract method values     */
         for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
         {
             /* get the directory index           */
             RexxString *name = (RexxString *)methodTable->index(i);
             /* get the method                    */
-            RexxMethod *method = (RexxMethod *)methodTable->value(i);
+            MethodClass *method = (MethodClass *)methodTable->value(i);
             ProtectedObject v;
             /* run the method                    */
             method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
@@ -276,16 +276,16 @@ RexxArray *RexxDirectory::allItems()
         result->put(hashTab->value(j), i++);
     }
     /* have a method table?              */
-    if (this->method_table != OREF_NULL)
+    if (method_table != OREF_NULL)
     {
-        RexxTable *methodTable = this->method_table;  /* grab the table                    */
+        RexxTable *methodTable = method_table;  /* grab the table                    */
         /* need to extract method values     */
         for (HashLink j = methodTable->first(); methodTable->available(j); j = methodTable->next(j))
         {
             /* get the directory index           */
             RexxString *name = (RexxString *)methodTable->index(j);
             /* need to extract method values     */
-            RexxMethod *method = (RexxMethod *)methodTable->value(j);
+            MethodClass *method = (MethodClass *)methodTable->value(j);
             ProtectedObject v;
             /* run the method                    */
             method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
@@ -335,7 +335,7 @@ RexxObject *RexxDirectory::hasIndex(
         if (this->method_table != OREF_NULL)
         {
             /* look for a method                 */
-            RexxMethod *method = (RexxMethod *)this->method_table->stringGet(indexName);
+            MethodClass *method = (MethodClass *)this->method_table->stringGet(indexName);
             if (method != OREF_NULL)         /* have a method?                    */
             {
                 /* then we have the index            */
@@ -367,7 +367,7 @@ RexxObject *RexxDirectory::hasEntry(
         if (this->method_table != OREF_NULL)
         {
             /* look for a method                 */
-            RexxMethod *method = (RexxMethod *)this->method_table->stringGet(entryName);
+            MethodClass *method = (MethodClass *)this->method_table->stringGet(entryName);
             if (method != OREF_NULL)         /* have a method?                    */
             {
                 /* then we have the index            */
@@ -492,7 +492,7 @@ RexxObject *RexxDirectory::unknown(
 
 RexxObject *RexxDirectory::setMethod(
     RexxString *entryname,             /* name to set this under            */
-    RexxMethod *methodobj)             /* new method argument               */
+    MethodClass *methodobj)             /* new method argument               */
 /******************************************************************************/
 /* Function:  Add a method to the directory method table.                     */
 /******************************************************************************/
@@ -504,7 +504,7 @@ RexxObject *RexxDirectory::setMethod(
         if (!isOfClass(Method, methodobj))     /* given as a string?                */
         {
             /* convert to a method               */
-            methodobj = RexxMethod::newMethodObject(entryname, methodobj, IntegerTwo, OREF_NULL);
+            methodobj = MethodClass::newMethodObject(entryname, methodobj, IntegerTwo, OREF_NULL);
             /* set a new scope on this           */
             methodobj->setScope((RexxClass *)this);
         }
@@ -578,7 +578,7 @@ RexxObject *RexxDirectory::at(
         if (this->method_table != OREF_NULL)
         {
             /* look for a method                 */
-            RexxMethod *method = (RexxMethod *)this->method_table->stringGet(_index);
+            MethodClass *method = (MethodClass *)this->method_table->stringGet(_index);
             if (method != OREF_NULL)         /* have a method?                    */
             {
                 ProtectedObject v;
@@ -723,7 +723,7 @@ RexxObject *RexxDirectory::indexRexx(RexxObject *target)
             {
                 // we need to run each method, looking for a value that matches
                 RexxString *name = (RexxString *)methodTable->index(i);
-                RexxMethod *method = (RexxMethod *)methodTable->value(i);
+                MethodClass *method = (MethodClass *)methodTable->value(i);
                 ProtectedObject v;
                 method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
                 // got a match?

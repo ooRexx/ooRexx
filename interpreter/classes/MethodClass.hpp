@@ -48,7 +48,7 @@
 
 class RexxSource;
 class RexxActivity;
-class RexxMethod;
+class MethodClass;
 class ProtectedObject;
 class RexxArray;
 class RexxClass;
@@ -62,7 +62,7 @@ class PackageClass;
 class BaseCode : public RexxInternalObject
 {
 public:
-    virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
     virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     virtual RexxArray *getSource();
@@ -108,19 +108,19 @@ protected:
  * Base class for method object.  This is the frontend for
  * The different types of executable code objects.
  */
-class RexxMethod : public BaseExecutable
+class MethodClass : public BaseExecutable
 {
  public:
     void *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) { return ptr; };
 
-    RexxMethod(RexxString *name, BaseCode *_code);
-    RexxMethod(RexxString *name, RexxSource *source);
-    RexxMethod(RexxString *name);
-    RexxMethod(RexxString *name, RexxBuffer *source);
-    RexxMethod(RexxString *name, const char *data, size_t length);
-    RexxMethod(RexxString *name, RexxArray *source);
-    inline RexxMethod(RESTORETYPE restoreType) { ; };
+    MethodClass(RexxString *name, BaseCode *_code);
+    MethodClass(RexxString *name, RexxSource *source);
+    MethodClass(RexxString *name);
+    MethodClass(RexxString *name, RexxBuffer *source);
+    MethodClass(RexxString *name, const char *data, size_t length);
+    MethodClass(RexxString *name, RexxArray *source);
+    inline MethodClass(RESTORETYPE restoreType) { ; };
 
     virtual void execute(RexxObject *, RexxObject *);
     virtual void live(size_t);
@@ -128,7 +128,7 @@ class RexxMethod : public BaseExecutable
     virtual void flatten(RexxEnvelope*);
 
     void         run(RexxActivity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    RexxMethod  *newScope(RexxClass  *);
+    MethodClass  *newScope(RexxClass  *);
     void         setScope(RexxClass  *);
     RexxSmartBuffer  *saveMethod();
     RexxObject  *setUnguardedRexx();
@@ -154,12 +154,12 @@ class RexxMethod : public BaseExecutable
     inline RexxClass *getScope() {return this->scope;}
 
     inline BaseCode  *getCode()     { return this->code; }
-    RexxMethod  *newRexx(RexxObject **, size_t);
-    RexxMethod  *newFileRexx(RexxString *);
-    RexxMethod  *loadExternalMethod(RexxString *name, RexxString *descriptor);
+    MethodClass  *newRexx(RexxObject **, size_t);
+    MethodClass  *newFileRexx(RexxString *);
+    MethodClass  *loadExternalMethod(RexxString *name, RexxString *descriptor);
 
-    static RexxMethod  *newMethodObject(RexxString *, RexxObject *, RexxObject *, RexxSource *a);
-    static RexxMethod  *restore(RexxBuffer *, char *, size_t length);
+    static MethodClass  *newMethodObject(RexxString *, RexxObject *, RexxObject *, RexxSource *a);
+    static MethodClass  *restore(RexxBuffer *, char *, size_t length);
 
     static void createInstance();
     static RexxClass *classInstance;

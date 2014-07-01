@@ -2225,10 +2225,10 @@ BUILTIN(STREAM)
                 /* get the stream description        */
                 ProtectedObject p(command);
 
-                /* I have to check the command twice because in the RexxMethods (i.g. query_exists)
+                /* I have to check the command twice because in the Rexx methods (i.g. query_exists)
                    I don't have access to the activation and thus not to the streamtable.
                    It's also not possible to pass context as the second argument because
-                   stream is a RexxMethod and USE ARG RexxActivation is not possible */
+                   stream is a MethodClass and USE ARG RexxActivation is not possible */
                 RexxString *command_upper = command->upper();
                 ProtectedObject p1(command_upper);
 

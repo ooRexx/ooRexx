@@ -73,7 +73,7 @@ class RexxDirectory : public RexxHashTableCollection {
   RexxObject   *remove(RexxString *);
   RexxObject   *removeRexx(RexxString *);
   RexxObject   *setEntry(RexxString *, RexxObject *);
-  RexxObject   *setMethod(RexxString *, RexxMethod *);
+  RexxObject   *setMethod(RexxString *, MethodClass *);
   RexxObject   *unknown(RexxString *, RexxArray *);
   RexxSupplier *supplier();
   RexxArray    *allItems();
@@ -88,7 +88,7 @@ class RexxDirectory : public RexxHashTableCollection {
   RexxObject   *newRexx(RexxObject **init_args, size_t);
 
   RexxTable  *method_table;            /* table of added methods            */
-  RexxMethod *unknown_method;          /* unknown method entry              */
+  MethodClass *unknown_method;          /* unknown method entry              */
 
   static RexxDirectory *newInstance();
 

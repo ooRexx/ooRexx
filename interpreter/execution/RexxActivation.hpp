@@ -105,7 +105,7 @@ class ActivationSettings
       RexxDirectory * conditionObj;        // current condition object
       RexxObject   ** parent_arglist;      // arguments to top level program
       size_t          parent_argcount;     // number of arguments to the top level program
-      RexxMethod    * parent_method;       // method object for top level
+      MethodClass    * parent_method;       // method object for top level
       RexxCode      * parent_code;         // source of the parent method
       RexxString    * current_env;         // current address environment
       RexxString    * alternate_env;       // alternate address environment
@@ -163,7 +163,7 @@ class ActivationSettings
 
    inline RexxActivation(RESTORETYPE restoreType) { ; };
    RexxActivation();
-   RexxActivation(RexxActivity* _activity, RexxMethod *_method, RexxCode *_code);
+   RexxActivation(RexxActivity* _activity, MethodClass *_method, RexxCode *_code);
    RexxActivation(RexxActivity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, int context);
    RexxActivation(RexxActivity *_activity, RexxActivation *_parent, RexxCode *_code, int context);
 
@@ -288,7 +288,7 @@ class ActivationSettings
 
    void              unwindTrap(RexxActivation *);
    RexxString      * sourceString();
-   void              addLocalRoutine(RexxString *name, RexxMethod *method);
+   void              addLocalRoutine(RexxString *name, MethodClass *method);
    RexxDirectory    *getPublicRoutines();
    void              debugInterpret(RexxString *);
    bool              debugPause(RexxInstruction * instr=OREF_NULL);

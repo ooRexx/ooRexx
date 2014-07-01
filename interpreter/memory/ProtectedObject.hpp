@@ -139,9 +139,9 @@ public:
         return (RexxString *)protectedObject;
     }
 
-    inline operator RexxMethod *()
+    inline operator MethodClass *()
     {
-        return (RexxMethod *)protectedObject;
+        return (MethodClass *)protectedObject;
     }
 
     inline operator RexxArray *()

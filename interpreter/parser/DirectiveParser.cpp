@@ -450,7 +450,7 @@ void LanguageParser::checkDuplicateMethod(RexxString *name, bool classMethod, in
  * @param classMethod
  *               The class/instance method indicator.
  */
-void LanguageParser::addMethod(RexxString *name, RexxMethod *method, bool classMethod)
+void LanguageParser::addMethod(RexxString *name, MethodClass *method, bool classMethod)
 {
     // if no active class yet, these are unattached methods.
     if (activeClass == OREF_NULL)
@@ -639,7 +639,7 @@ void LanguageParser::methodDirective()
     // go check for a duplicate and validate the use of the CLASS modifier
     checkDuplicateMethod(internalname, isClass, Error_Translation_duplicate_method);
 
-    RexxMethod *_method = OREF_NULL;
+    MethodClass *_method = OREF_NULL;
     // is this an attribute method?
     if (isAttribute)
     {
@@ -687,13 +687,13 @@ void LanguageParser::methodDirective()
         checkDirective(Error_Translation_abstract_method);
         // this uses a special code block
         BaseCode *code = new AbstractCode();
-        _method = new RexxMethod(name, code);
+        _method = new MethodClass(name, code);
     }
     // regular Rexx code method?
     else if (externalname == OREF_NULL)
     {
         // NOTE:  It is necessary to translate the block and protect the code
-        // before allocating the RexxMethod object.  The new operator allocates the
+        // before allocating the MethodClass object.  The new operator allocates the
         // the object first, then evaluates the constructor arguments after the allocation.
         // Since the translateBlock() call will allocate a lot of new objects before returning,
         // there's a high probability that the method object can get garbage collected before
@@ -702,7 +702,7 @@ void LanguageParser::methodDirective()
         ProtectedObject p(code);
 
         // go do the next block of code
-        _method = new RexxMethod(name, code);
+        _method = new MethodClass(name, code);
     }
     // external method
     else
@@ -872,7 +872,7 @@ void LanguageParser::optionsDirective()
  *
  * @return A method object representing this method.
  */
-RexxMethod *LanguageParser::createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure)
+MethodClass *LanguageParser::createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure)
 {
     RexxNativeCode *nmethod = PackageManager::resolveMethod(library, procedure);
     // raise an exception if this entry point is not found.
@@ -883,7 +883,7 @@ RexxMethod *LanguageParser::createNativeMethod(RexxString *name, RexxString *lib
     // this might return a different object if this has been used already
     nmethod = (RexxNativeCode *)nmethod->setSourceObject(package);
     // turn into a real method object
-    return new RexxMethod(name, nmethod);
+    return new MethodClass(name, nmethod);
 }
 
 
@@ -1133,7 +1133,7 @@ void LanguageParser::attributeDirective()
                 RexxString *procedure = OREF_NULL;
                 decodeExternalMethod(internalname, externalname, library, procedure);
                 // now create both getter and setting methods from the information.
-                RexxMethod *_method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
+                MethodClass *_method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(internalname, _method, Class);
@@ -1181,7 +1181,7 @@ void LanguageParser::attributeDirective()
                     procedure = procedure->concatToCstring("GET");
                 }
                 // now create both getter and setting methods from the information.
-                RexxMethod *_method = createNativeMethod(internalname, library, procedure);
+                MethodClass *_method = createNativeMethod(internalname, library, procedure);
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(internalname, _method, Class);
@@ -1233,7 +1233,7 @@ void LanguageParser::attributeDirective()
                     procedure = procedure->concatToCstring("SET");
                 }
                 // now create both getter and setting methods from the information.
-                RexxMethod *_method = createNativeMethod(setterName, library, procedure);
+                MethodClass *_method = createNativeMethod(setterName, library, procedure);
                 _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
                 // add to the compilation
                 addMethod(setterName, _method, isClass);
@@ -1362,7 +1362,7 @@ void LanguageParser::createMethod(RexxString *name, bool classMethod,
     bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
     // NOTE:  It is necessary to translate the block and protect the code
-    // before allocating the RexxMethod object.  The new operator allocates the
+    // before allocating the MethodClass object.  The new operator allocates the
     // the object first, then evaluates the constructor arguments after the allocation.
     // Since the translateBlock() call will allocate a lot of new objects before returning,
     // there's a high probability that the method object can get garbage collected before
@@ -1371,7 +1371,7 @@ void LanguageParser::createMethod(RexxString *name, bool classMethod,
     ProtectedObject p(code);
 
     // convert into a method object
-    RexxMethod *_method = new RexxMethod(name, code);
+    MethodClass *_method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // go add the method to the accumulator
     addMethod(name, _method, classMethod);
@@ -1397,7 +1397,7 @@ void LanguageParser::createAttributeGetterMethod(RexxString *name, RexxVariableB
 {
     // create the kernel method for the accessor
     BaseCode *code = new AttributeGetterCode(retriever);
-    RexxMethod *_method = new RexxMethod(name, code);
+    MethodClass *_method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // add this to the target
     addMethod(name, _method, classMethod);
@@ -1422,7 +1422,7 @@ void LanguageParser::createAttributeSetterMethod(RexxString *name, RexxVariableB
 {
     // create the kernel method for the accessor
     BaseCode *code = new AttributeSetterCode(retriever);
-    RexxMethod *_method = new RexxMethod(name, code);
+    MethodClass *_method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // add this to the target
     addMethod(name, _method, classMethod);
@@ -1448,7 +1448,7 @@ void LanguageParser::createAbstractMethod(RexxString *name,
     // create the kernel method for the accessor
     // this uses a special code block
     BaseCode *code = new AbstractCode();
-    RexxMethod * _method = new RexxMethod(name, code);
+    MethodClass * _method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // add this to the target
     addMethod(name, _method, classMethod);
@@ -1465,7 +1465,7 @@ void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *va
 {
     ConstantGetterCode *code = new ConstantGetterCode(value);
     // add this as an unguarded method
-    RexxMethod *method = new RexxMethod(name, code);
+    MethodClass *method = new MethodClass(name, code);
     method->setUnguarded();
     if (activeClass == OREF_NULL)
     {
@@ -1665,7 +1665,7 @@ void LanguageParser::routineDirective()
         else
         {
             // NOTE:  It is necessary to translate the block and protect the code
-            // before allocating the RexxMethod object.  The new operator allocates the
+            // before allocating the MethodClass object.  The new operator allocates the
             // the object first, then evaluates the constructor arguments after the allocation.
             // Since the translateBlock() call will allocate a lot of new objects before returning,
             // there's a high probability that the method object can get garbage collected before

@@ -108,7 +108,7 @@ RexxObject *CPPCode::unflatten(RexxEnvelope *envelope)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void CPPCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void CPPCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     InternalActivationFrame frame(activity, messageName, receiver, method, argPtr, count);
@@ -233,7 +233,7 @@ void AttributeGetterCode::flatten(RexxEnvelope *envelope)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AttributeGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void AttributeGetterCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -283,7 +283,7 @@ void *AttributeSetterCode::operator new(size_t size)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AttributeSetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void AttributeSetterCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -369,7 +369,7 @@ void ConstantGetterCode::flatten(RexxEnvelope *envelope)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void ConstantGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void ConstantGetterCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
@@ -407,7 +407,7 @@ void *AbstractCode::operator new(size_t size)
  * @param count    The argument count.
  * @param result   The returned result.
  */
-void AbstractCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void AbstractCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     reportException(Error_Incorrect_method_abstract, messageName);
@@ -648,20 +648,20 @@ CPPM(RexxMessage::arguments),
 
 CPPM(RexxMessage::newRexx),
 
-CPPM(RexxMethod::setUnguardedRexx),    /* Method methods                    */
-CPPM(RexxMethod::setGuardedRexx),
+CPPM(MethodClass::setUnguardedRexx),    /* Method methods                    */
+CPPM(MethodClass::setGuardedRexx),
 CPPM(BaseExecutable::source),
 CPPM(BaseExecutable::getPackage),
-CPPM(RexxMethod::setPrivateRexx),
-CPPM(RexxMethod::setProtectedRexx),
-CPPM(RexxMethod::setSecurityManager),
-CPPM(RexxMethod::isGuardedRexx),
-CPPM(RexxMethod::isPrivateRexx),
-CPPM(RexxMethod::isProtectedRexx),
+CPPM(MethodClass::setPrivateRexx),
+CPPM(MethodClass::setProtectedRexx),
+CPPM(MethodClass::setSecurityManager),
+CPPM(MethodClass::isGuardedRexx),
+CPPM(MethodClass::isPrivateRexx),
+CPPM(MethodClass::isProtectedRexx),
 
-CPPM(RexxMethod::newFileRexx),
-CPPM(RexxMethod::newRexx),
-CPPM(RexxMethod::loadExternalMethod),
+CPPM(MethodClass::newFileRexx),
+CPPM(MethodClass::newRexx),
+CPPM(MethodClass::loadExternalMethod),
 
 CPPM(RoutineClass::setSecurityManager),
 CPPM(RoutineClass::callRexx),

@@ -42,14 +42,16 @@
 
 class RexxActivation;
 class RexxNativeActivation;
-class RexxMethod;
+class MethodClass;
 class StackFrameClass;
 class RexxSource;
 
+
+// TODO: document what each of these frame classes do.
 class ActivationFrame
 {
 friend class RexxActivity;
-public:
+ public:
     inline ActivationFrame(RexxActivity *a) : activity(a)
     {
         // it would be better to have the activity class do this, but because
@@ -67,11 +69,12 @@ public:
     }
 
     virtual RexxString *messageName() = 0;
-    virtual RexxMethod *method() = 0;
+    virtual MethodClass *method() = 0;
     virtual StackFrameClass *createStackFrame() = 0;
     virtual RexxSource *getSource() = 0;
 
-protected:
+ protected:
+
     ActivationFrame *next;             // the next activation frame in the chain
     RexxActivity *activity;            // the activity we're running on
 };
@@ -79,48 +82,51 @@ protected:
 
 class RexxActivationFrame : public ActivationFrame
 {
-public:
+ public:
     inline RexxActivationFrame(RexxActivity *a, RexxActivation *context) : ActivationFrame(a), activation(context) { }
 
     virtual RexxString *messageName();
-    virtual RexxMethod *method();
+    virtual MethodClass *method();
     virtual StackFrameClass *createStackFrame();
     virtual RexxSource *getSource();
 
-protected:
+ protected:
+
     RexxActivation *activation;        // the activation backing this frame
 };
 
 
 class NativeActivationFrame : public ActivationFrame
 {
-public:
+ public:
     inline NativeActivationFrame(RexxActivity *a, RexxNativeActivation *context) : ActivationFrame(a), activation(context) { }
 
     virtual RexxString *messageName();
-    virtual RexxMethod *method();
+    virtual MethodClass *method();
     virtual StackFrameClass *createStackFrame();
     virtual RexxSource *getSource();
 
-protected:
+ protected:
+
     RexxNativeActivation *activation;        // the activation backing this frame
 };
 
 
 class InternalActivationFrame : public ActivationFrame
 {
-public:
-    inline InternalActivationFrame(RexxActivity *a, RexxString *n, RexxObject *t, RexxMethod *m, RexxObject **args, size_t c)
+ public:
+    inline InternalActivationFrame(RexxActivity *a, RexxString *n, RexxObject *t, MethodClass *m, RexxObject **args, size_t c)
         : ActivationFrame(a), name(n), target(t), frameMethod(m), argPtr(args), count(c) { }
 
     virtual RexxString *messageName();
-    virtual RexxMethod *method();
+    virtual MethodClass *method();
     virtual StackFrameClass *createStackFrame();
     virtual RexxSource *getSource();
 
-protected:
+ protected:
+
     RexxString *name;                        // message name associated with the invocation
-    RexxMethod *frameMethod;                 // the backing method object
+    MethodClass *frameMethod;                // the backing method object
     RexxObject *target;                      // method target
     RexxObject **argPtr;                     // arguments passed to this instance
     size_t       count;                      // count of arguments
@@ -129,15 +135,17 @@ protected:
 
 class ParseActivationFrame : public ActivationFrame
 {
-public:
+ public:
     inline ParseActivationFrame(RexxActivity *a, RexxSource *s) : ActivationFrame(a), source(s) { }
 
     virtual RexxString *messageName();
-    virtual RexxMethod *method();
+    // TODO:  Why is there a method in this interface rather than an excutable?
+    virtual MethodClass *method();
     virtual StackFrameClass *createStackFrame();
     virtual RexxSource *getSource();
 
 protected:
+
     RexxSource *source;                      // the source object being parsed.
 };
 

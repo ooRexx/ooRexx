@@ -59,7 +59,7 @@
   class RexxEnvelope;
   class RexxVariableDictionary;
   class RexxNumberString;
-  class RexxMethod;
+  class MethodClass;
   class RexxMessage;
   class ProtectedObject;
   class SecurityManager;
@@ -294,7 +294,7 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
 
      virtual bool         isEqual(RexxObject *);
      virtual bool         isInstanceOf(RexxClass *);
-     virtual RexxMethod   *instanceMethod(RexxString *);
+     virtual MethodClass   *instanceMethod(RexxString *);
      virtual RexxSupplier *instanceMethods(RexxClass *);
 
              void         hasUninit();
@@ -367,7 +367,7 @@ class RexxObject : public RexxInternalObject {
 
      virtual ~RexxObject(){;};
 
-     virtual RexxObject  *defMethod(RexxString *, RexxMethod *, RexxString *a = OREF_NULL);
+     virtual RexxObject  *defMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
      virtual RexxString  *defaultName();
      virtual RexxObject  *unknown(RexxString *msg, RexxArray *args){return OREF_NULL;};
      virtual RexxInteger *hasMethod(RexxString *msg);
@@ -411,14 +411,14 @@ class RexxObject : public RexxInternalObject {
      bool         isEqual(RexxObject *);
      bool         isInstanceOf(RexxClass *);
      RexxObject  *isInstanceOfRexx(RexxClass *);
-     RexxMethod   *instanceMethod(RexxString *);
+     MethodClass   *instanceMethod(RexxString *);
      RexxSupplier *instanceMethods(RexxClass *);
-     RexxMethod   *instanceMethodRexx(RexxString *);
+     MethodClass   *instanceMethodRexx(RexxString *);
      RexxSupplier *instanceMethodsRexx(RexxClass *);
      RexxString  *objectName();
      RexxObject  *objectNameEquals(RexxObject *);
      RexxClass   *classObject();
-     RexxObject  *setMethod(RexxString *, RexxMethod *, RexxString *a = OREF_NULL);
+     RexxObject  *setMethod(RexxString *, MethodClass *, RexxString *a = OREF_NULL);
      RexxObject  *unsetMethod(RexxString *);
      RexxObject  *requestRexx(RexxString *);
      RexxMessage *start(RexxObject **, size_t);
@@ -433,9 +433,9 @@ class RexxObject : public RexxInternalObject {
 
      void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
      void         messageSend(RexxString *, RexxObject **, size_t, RexxObject *, ProtectedObject &);
-     RexxMethod  *checkPrivate(RexxMethod *);
+     MethodClass  *checkPrivate(MethodClass *);
      void         processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
-     void         processProtectedMethod(RexxString *, RexxMethod *, RexxObject **, size_t, ProtectedObject &);
+     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
      void         sendMessage(RexxString *, RexxArray *, ProtectedObject &);
      inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, OREF_NULL, 0, result); };
      inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, args, argCount, result); };
@@ -463,14 +463,14 @@ class RexxObject : public RexxInternalObject {
      void         addObjectVariables(RexxVariableDictionary *);
      void         copyObjectVariables(RexxObject *newObject);
      RexxObject  *superScope(RexxObject *);
-     RexxMethod  *superMethod(RexxString *, RexxObject *);
+     MethodClass  *superMethod(RexxString *, RexxObject *);
      RexxObject  *mdict();
      RexxObject  *setMdict(RexxObject *);
      inline RexxBehaviour *behaviourObject() { return this->behaviour; }
 
      const char  *idString();
      RexxString  *id();
-     RexxMethod  *methodLookup(RexxString *name );
+     MethodClass  *methodLookup(RexxString *name );
      RexxVariableDictionary *getObjectVariables(RexxObject *);
      void guardOn(RexxActivity *activity, RexxObject *scope);
      void guardOff(RexxActivity *activity, RexxObject *scope);

@@ -155,7 +155,7 @@ RexxActivation::RexxActivation()
  * @param _method   The method being invoked.
  * @param _code     The code to execute.
  */
-RexxActivation::RexxActivation(RexxActivity* _activity, RexxMethod * _method, RexxCode *_code)
+RexxActivation::RexxActivation(RexxActivity* _activity, MethodClass * _method, RexxCode *_code)
 {
     this->clearObject();                 /* start with a fresh object         */
     this->activity = _activity;          /* save the activity pointer         */
@@ -376,7 +376,7 @@ RexxObject * RexxActivation::dispatch()
 {
     ProtectedObject r;
                                        /* go run this                       */
-    return this->run(receiver, settings.msgname, arglist, argcount, OREF_NULL, r);
+    return run(receiver, settings.msgname, arglist, argcount, OREF_NULL, r);
 }
 
 
@@ -2566,11 +2566,14 @@ bool RexxActivation::callMacroSpaceFunction(RexxString * target, RexxObject **_a
         }
         /* unflatten the method now          */
         RoutineClass *routine = getMacroCode(target);
+
         // not restoreable is a call failure
         if (routine == OREF_NULL)
         {
             return false;
         }
+        // need to anchor this while calling
+        ProtectedObject *p(routine);
         /* run as a call                     */
         routine->call(activity, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, _result);
         // merge (class) definitions from macro with current settings
@@ -2679,10 +2682,10 @@ bool RexxActivation::callExternalRexx(
     RexxString *filename = resolveProgramName(target);
     if (filename != OREF_NULL)           /* found something?                  */
     {
-        this->stack.push(filename);        /* protect the file name here        */
+        stack.push(filename);            /* protect the file name here        */
         // try for a saved program or translate anew.
         RoutineClass *routine = RoutineClass::fromFile(filename);
-        this->stack.pop();                 /* remove the protected name         */
+        stack.pop();                       /* remove the protected name         */
         if (routine == OREF_NULL)          /* Do we have a method???            */
         {
             return false;                    /* No, return not found              */
@@ -2693,7 +2696,7 @@ bool RexxActivation::callExternalRexx(
             /* run as a call                     */
             routine->call(this->activity, target, _arguments, _argcount, calltype, this->settings.current_env, EXTERNALCALL, resultObj);
             /* now merge all of the public info  */
-            this->settings.parent_code->mergeRequired(routine->getSourceObject());
+            settings.parent_code->mergeRequired(routine->getSourceObject());
             return true;                     /* Return routine found flag         */
         }
     }
@@ -3996,7 +3999,7 @@ RexxString * RexxActivation::sourceString()
  * @param name   The name to add this under.
  * @param method The method associated with the name.
  */
-void RexxActivation::addLocalRoutine(RexxString *name, RexxMethod *_method)
+void RexxActivation::addLocalRoutine(RexxString *name, MethodClass *_method)
 {
     // get the directory of external functions
     RexxDirectory *routines = settings.parent_code->getLocalRoutines();

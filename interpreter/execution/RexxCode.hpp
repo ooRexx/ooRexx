@@ -92,7 +92,7 @@ class RexxCode : public BaseCode
    inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
 
    // overrides for BaseCode classes
-   virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
+   virtual void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
    virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
    virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 

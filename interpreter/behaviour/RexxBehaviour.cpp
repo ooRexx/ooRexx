@@ -237,10 +237,10 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
  *
  * @return The created method object.
  */
-RexxMethod *RexxBehaviour::define(const char *name, PCPPM entryPoint, size_t arguments)
+MethodClass *RexxBehaviour::define(const char *name, PCPPM entryPoint, size_t arguments)
 {
     RexxString *n = RexxMemory::getGlobalName(name);
-    RexxMethod *method = new RexxMethod(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments));
+    MethodClass *method = new MethodClass(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments));
     define(n, method);
     return method;
 }
@@ -248,12 +248,12 @@ RexxMethod *RexxBehaviour::define(const char *name, PCPPM entryPoint, size_t arg
 
 RexxObject *RexxBehaviour::define(
     RexxString *methodName,            /* name of the defined method        */
-    RexxMethod *method)                /* method to add to the behaviour    */
+    MethodClass *method)                /* method to add to the behaviour    */
 /******************************************************************************/
 /* Function:  Add or remove a method from an object's behaviour               */
 /******************************************************************************/
 {
-    RexxMethod  * tableMethod;           /* method from the table             */
+    MethodClass  * tableMethod;           /* method from the table             */
 
                                          /* no method dictionary yet?         */
     if (methodDictionary == OREF_NULL)
@@ -272,7 +272,7 @@ RexxObject *RexxBehaviour::define(
     else
     {
         /* already have this method?         */
-        if ((tableMethod = (RexxMethod *)methodDictionary->stringGet(methodName)) == OREF_NULL)
+        if ((tableMethod = (MethodClass *)methodDictionary->stringGet(methodName)) == OREF_NULL)
         {
             /* No, just add this directly        */
             methodDictionary->stringAdd(method, methodName);
@@ -318,7 +318,7 @@ void RexxBehaviour::removeMethod(
 
 void RexxBehaviour::addMethod(
     RexxString *methodName,            /* name of the defined method        */
-    RexxMethod *method)                /* method to add to the behaviour    */
+    MethodClass *method)                /* method to add to the behaviour    */
 /******************************************************************************/
 /* Function:  Add a method to an object's behaviour                           */
 /******************************************************************************/
@@ -348,7 +348,7 @@ void RexxBehaviour::addMethod(
     instanceMethodDictionary->stringPut(method, methodName);
 }
 
-RexxMethod *RexxBehaviour::methodObject(
+MethodClass *RexxBehaviour::methodObject(
     RexxString *messageName )          /* name of method to retrieve        */
 /******************************************************************************/
 /* Function:  Retrieve a method associated with the given name                */
@@ -361,7 +361,7 @@ RexxMethod *RexxBehaviour::methodObject(
     return methodLookup(messageName);
 }
 
-RexxMethod *RexxBehaviour::methodLookup(
+MethodClass *RexxBehaviour::methodLookup(
     RexxString *messageName )          /* name of method to retrieve        */
 /******************************************************************************/
 /* Function:  Perform lowest level method lookup on an object                 */
@@ -373,7 +373,7 @@ RexxMethod *RexxBehaviour::methodLookup(
         // just get the object directly.  Unknown methods will return OREF_NULL.  However,
         // explicit overrides are indicated by putting .nil in the table.  Our callers
         // are dependent upon getting OREF_NULL back for unknown methods.
-        RexxMethod *method = (RexxMethod *)methodDictionary->stringGet(messageName);
+        MethodClass *method = (MethodClass *)methodDictionary->stringGet(messageName);
         if (method != TheNilObject)
         {
             return method;
@@ -382,7 +382,7 @@ RexxMethod *RexxBehaviour::methodLookup(
     return OREF_NULL;
 }
 
-RexxMethod *RexxBehaviour::getMethod(
+MethodClass *RexxBehaviour::getMethod(
     RexxString *messageName )          /* name of method to retrieve        */
 /******************************************************************************/
 /* Function:  Retrieve a method object from the method dictionary.  This      */
@@ -392,7 +392,7 @@ RexxMethod *RexxBehaviour::getMethod(
     if (methodDictionary != OREF_NULL)
     {
         /* try to get the method             */
-        return(RexxMethod *)methodDictionary->stringGet(messageName);
+        return(MethodClass *)methodDictionary->stringGet(messageName);
     }
     return OREF_NULL;                    /* return the method object          */
 }
@@ -482,7 +482,7 @@ RexxObject * RexxBehaviour::superScope(
     return scopes->findSuperScope(start_scope);
 }
 
-RexxMethod *RexxBehaviour::superMethod(
+MethodClass *RexxBehaviour::superMethod(
     RexxString * messageName,          /* target method name                */
     RexxObject * startScope)           /* starting scope                    */
 /******************************************************************************/
@@ -508,7 +508,7 @@ RexxMethod *RexxBehaviour::superMethod(
             for (size_t i = 1; i <= methods_size; i++)
             {
                 /* get the next method               */
-                RexxMethod *method = (RexxMethod *)methods->get(i);
+                MethodClass *method = (MethodClass *)methods->get(i);
                 /* now loop through the scopes list  */
                 for (size_t j = 1; j <= scopes_size; j++)
                 {
@@ -542,7 +542,7 @@ void RexxBehaviour::setMethodDictionaryScope(
           i = methodDictionary->next(i))
     {
                                          /* setting each scope                */
-        ((RexxMethod *)methodDictionary->value(i))->setScope((RexxClass *)scope);
+        ((MethodClass *)methodDictionary->value(i))->setScope((RexxClass *)scope);
     }
 }
 
@@ -571,7 +571,7 @@ RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
     // travese the method dictionary, searching for methods with the target scope
     for (i = methodDictionary->first(); methodDictionary->index(i) != OREF_NULL; i = methodDictionary->next(i))
     {
-        if (((RexxMethod *)methodDictionary->value(i))->getScope() == scope)
+        if (((MethodClass *)methodDictionary->value(i))->getScope() == scope)
         {
             count++;
         }
@@ -584,7 +584,7 @@ RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
     // pass two, copy the entries into the array
     for (i = methodDictionary->first(); methodDictionary->index(i) != OREF_NULL; i = methodDictionary->next(i))
     {
-        if (((RexxMethod *)methodDictionary->value(i))->getScope() == scope)
+        if (((MethodClass *)methodDictionary->value(i))->getScope() == scope)
         {
             names->put(methodDictionary->index(i), count);
             methods->put(methodDictionary->value(i), count);

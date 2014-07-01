@@ -88,12 +88,12 @@
    void        subClassable(bool);
    void        subClassable(RexxClass *superClass, bool restricted);
    void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
-   RexxObject *defineMethod(RexxString *, RexxMethod *);
+   RexxObject *defineMethod(RexxString *, MethodClass *);
    RexxObject *defineMethods(RexxTable *);
    RexxObject *deleteMethod(RexxString *);
-   RexxObject *defineClassMethod(RexxString *method_name, RexxMethod *newMethod);
+   RexxObject *defineClassMethod(RexxString *method_name, MethodClass *newMethod);
    void        removeClassMethod(RexxString *method_name);
-   RexxMethod *method(RexxString *);
+   MethodClass *method(RexxString *);
    RexxSupplier *methods(RexxClass *);
    void        updateSubClasses();
    void        updateInstanceSubClasses();

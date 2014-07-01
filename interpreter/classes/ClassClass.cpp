@@ -360,7 +360,7 @@ void RexxClass::defmeths(
         /* class behaviour                   */
 
         // if this is the Nil object, that's an override.  Make it OREF_NULL.
-        RexxObject *_method = (RexxMethod *)newMethods->value(i);
+        RexxObject *_method = (MethodClass *)newMethods->value(i);
         if (_method == TheNilObject)
         {
             _method = OREF_NULL;
@@ -621,7 +621,7 @@ void RexxClass::subClassable(RexxClass *superClass, bool restricted)
 
 RexxObject *RexxClass::defineMethod(
     RexxString * method_name,          /*define method name                 */
-    RexxMethod *method_object)         /* returned method object            */
+    MethodClass *method_object)         /* returned method object            */
 /*****************************************************************************/
 /* Function:  Define an instance method on this class object                 */
 /*****************************************************************************/
@@ -644,14 +644,14 @@ RexxObject *RexxClass::defineMethod(
         /* to be .nil at this class level, so*/
         /* when message lookup is attempted  */
         /* we get .nil, telling us not found */
-        method_object = (RexxMethod *)TheNilObject;
+        method_object = (MethodClass *)TheNilObject;
     }
     /* not a method type already?        */
     /* and not TheNilObject              */
     else if (TheNilObject != method_object && !isOfClass(Method, method_object))
     {
         /* make one from a string            */
-        method_object = RexxMethod::newMethodObject(method_name, method_object, IntegerTwo, OREF_NULL);
+        method_object = MethodClass::newMethodObject(method_name, method_object, IntegerTwo, OREF_NULL);
     }
     if (TheNilObject != method_object)   /* if the method is not TheNilObject */
     {
@@ -691,7 +691,7 @@ RexxObject *RexxClass::defineMethods(
     for (HashLink i = newMethods->first(); (index = (RexxString *)newMethods->index(i)) != OREF_NULL; i = newMethods->next(i))
     {
         /* get the method                    */
-        RexxMethod *newMethod = (RexxMethod *)newMethods->value(i);
+        MethodClass *newMethod = (MethodClass *)newMethods->value(i);
         if (isOfClass(Method, newMethod))      /* if this is a method object        */
         {
             newMethod->setScope(this);        /* change the scope                  */
@@ -723,7 +723,7 @@ RexxObject *RexxClass::defineMethods(
  *
  * @return always returns OREF_NULL
  */
-RexxObject *RexxClass::defineClassMethod(RexxString *method_name, RexxMethod *newMethod)
+RexxObject *RexxClass::defineClassMethod(RexxString *method_name, MethodClass *newMethod)
 {
     // validate the arguments
     method_name = stringArgument(method_name, ARG_ONE)->upper();
@@ -783,7 +783,7 @@ RexxObject *RexxClass::deleteMethod(
     return OREF_NULL;                    /* returns nothing                   */
 }
 
-RexxMethod *RexxClass::method(
+MethodClass *RexxClass::method(
     RexxString  *method_name)
 /*****************************************************************************/
 /* Function:  Return the method object for the method name                   */
@@ -791,7 +791,7 @@ RexxMethod *RexxClass::method(
 {
     /* make sure we have a proper name    */
     method_name = stringArgument(method_name, ARG_ONE)->upper();
-    RexxMethod *method_object = (RexxMethod *)this->instanceBehaviour->getMethodDictionary()->stringGet(method_name);
+    MethodClass *method_object = (MethodClass *)this->instanceBehaviour->getMethodDictionary()->stringGet(method_name);
     /* check if it is in the mdict        */
     if ( OREF_NULL == method_object)
     {
@@ -1060,7 +1060,7 @@ void RexxClass::methodDictionaryMerge(
         /* get the method name               */
         RexxString *method_name = REQUEST_STRING(source_mdict->index(i));
         /* get the method                    */
-        RexxMethod *method_instance = (RexxMethod *)source_mdict->value(i);
+        MethodClass *method_instance = (MethodClass *)source_mdict->value(i);
         /* add the method to the target mdict */
         target_mdict->stringAdd(method_instance, method_name);
         /* check if the method that was added */
@@ -1094,15 +1094,15 @@ RexxTable *RexxClass::methodDictionaryCreate(
         /* get the method name (uppercased)  */
         RexxString *method_name = REQUEST_STRING(supplier->index())->upper();
         /* get the method                    */
-        RexxMethod *newMethod = (RexxMethod *)supplier->value();
+        MethodClass *newMethod = (MethodClass *)supplier->value();
         /* if the method is not TheNilObject */
-        if (newMethod != (RexxMethod *)TheNilObject)
+        if (newMethod != (MethodClass *)TheNilObject)
         {
             /* and it isn't a primitive method   */
             if (!isOfClass(Method, newMethod))   /* object                            */
             {
                 /* make it into a method object      */
-                newMethod = RexxMethod::newMethodObject(method_name, newMethod, IntegerOne, OREF_NULL);
+                newMethod = MethodClass::newMethodObject(method_name, newMethod, IntegerOne, OREF_NULL);
                 newMethod->setScope(scope);   /* and set the scope to the given    */
             }
             else

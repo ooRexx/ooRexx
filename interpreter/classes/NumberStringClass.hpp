@@ -151,7 +151,7 @@ class RexxNumberString : public RexxNumberStringBase
     RexxObject *roundInternal();
     RexxObject *unknown(RexxString *, RexxArray *);
     bool        isInstanceOf(RexxClass *);
-    RexxMethod   *instanceMethod(RexxString *);
+    MethodClass   *instanceMethod(RexxString *);
     RexxSupplier *instanceMethods(RexxClass *);
     RexxClass  *classObject();
     inline RexxNumberString *checkNumber(size_t digits)

@@ -3247,7 +3247,7 @@ RexxString *RexxActivity::getLastMessageName()
  *
  * @return The last message name.
  */
-RexxMethod *RexxActivity::getLastMethod()
+MethodClass *RexxActivity::getLastMethod()
 {
     return activationFrames->method();
 }

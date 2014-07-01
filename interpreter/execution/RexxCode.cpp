@@ -144,7 +144,7 @@ void RexxCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *r
  * @param result   A protected object for passing the return
  *                 value back.
  */
-void RexxCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver,
+void RexxCode::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver,
     RexxString *msgname, RexxObject**argPtr, size_t argcount, ProtectedObject &result)
 {
     // create a new activation object and push it on the top of the stack.

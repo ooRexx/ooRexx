@@ -391,7 +391,7 @@ bool ClassDirective::checkDuplicateMethod(RexxString *name, bool classMethod)
  * @param classMethod
  *               Indicates whether this is a new class or instance method.
  */
-void ClassDirective::addMethod(RexxString *name, RexxMethod *method, bool classMethod)
+void ClassDirective::addMethod(RexxString *name, MethodClass *method, bool classMethod)
 {
     if (classMethod)
     {
@@ -410,7 +410,7 @@ void ClassDirective::addMethod(RexxString *name, RexxMethod *method, bool classM
  * @param name   The name to add.
  * @param method The method object that maps to this name.
  */
-void ClassDirective::addConstantMethod(RexxString *name, RexxMethod *method)
+void ClassDirective::addConstantMethod(RexxString *name, MethodClass *method)
 {
     // this gets added as both a class and instance method
     addMethod(name, method, false);

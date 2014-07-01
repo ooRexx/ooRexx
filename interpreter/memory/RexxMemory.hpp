@@ -99,7 +99,7 @@ inline size_t roundObjectResize(size_t n) { return RXROUNDUP(n, ObjectGrain); }
 class RexxActivationFrameBuffer;
 class MemorySegment;
 class MemorySegmentPool;
-class RexxMethod;
+class MethodClass;
 class RexxVariable;
 class WeakReference;
 class RexxIdentityTable;

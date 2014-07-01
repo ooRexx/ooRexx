@@ -2681,7 +2681,7 @@ bool RexxNumberString::isInstanceOf(RexxClass *other)
  *
  * @return The method object that implements the object method.
  */
-RexxMethod *RexxNumberString::instanceMethod(RexxString  *method_name)
+MethodClass *RexxNumberString::instanceMethod(RexxString  *method_name)
 {
     return stringValue()->instanceMethod(method_name);
 }

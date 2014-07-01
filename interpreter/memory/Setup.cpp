@@ -109,7 +109,7 @@ void RexxMemory::defineProtectedKernelMethod(
 /* Function:  Add a C++ method to an object's behaviour                       */
 /******************************************************************************/
 {
-    RexxMethod *method = behaviour->define(name, entryPoint, arguments);
+    MethodClass *method = behaviour->define(name, entryPoint, arguments);
     method->setProtected();              /* make this protected               */
 }
 
@@ -123,7 +123,7 @@ void RexxMemory::definePrivateKernelMethod(
 /* Function:  Add a C++ method to an object's behaviour                       */
 /******************************************************************************/
 {
-    RexxMethod *method = behaviour->define(name, entryPoint, arguments);
+    MethodClass *method = behaviour->define(name, entryPoint, arguments);
     method->setProtected();              /* make this protected               */
     method->setPrivate();                /* make this protected               */
 }
@@ -205,8 +205,8 @@ void RexxMemory::createImage()
   TheKernel->makeProxiedObject();
   TheSystem->makeProxiedObject();
 
-                                       /* RexxMethod                        */
-  RexxMethod::createInstance();
+                                       /* MethodClass                        */
+  MethodClass::createInstance();
   RoutineClass::createInstance();
   PackageClass::createInstance();
   RexxContext::createInstance();
@@ -537,23 +537,23 @@ void RexxMemory::createImage()
 
                                        /* Add the NEW methods to the        */
                                        /* class behaviour                   */
-  defineKernelMethod(CHAR_NEW     , TheMethodClassBehaviour, CPPM(RexxMethod::newRexx), A_COUNT);
-  defineKernelMethod(CHAR_NEWFILE , TheMethodClassBehaviour, CPPM(RexxMethod::newFileRexx), 1);
-  defineKernelMethod("LOADEXTERNALMETHOD" , TheMethodClassBehaviour, CPPM(RexxMethod::loadExternalMethod), 2);
+  defineKernelMethod(CHAR_NEW     , TheMethodClassBehaviour, CPPM(MethodClass::newRexx), A_COUNT);
+  defineKernelMethod(CHAR_NEWFILE , TheMethodClassBehaviour, CPPM(MethodClass::newFileRexx), 1);
+  defineKernelMethod("LOADEXTERNALMETHOD" , TheMethodClassBehaviour, CPPM(MethodClass::loadExternalMethod), 2);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheMethodClassBehaviour->setMethodDictionaryScope(TheMethodClass);
 
                                        /* Add the instance methods to the   */
                                        /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_SETUNGUARDED ,TheMethodBehaviour, CPPM(RexxMethod::setUnguardedRexx), 0);
-  defineKernelMethod(CHAR_SETGUARDED   ,TheMethodBehaviour, CPPM(RexxMethod::setGuardedRexx), 0);
-  defineKernelMethod(CHAR_SETPRIVATE   ,TheMethodBehaviour, CPPM(RexxMethod::setPrivateRexx), 0);
-  defineKernelMethod(CHAR_ISGUARDED    ,TheMethodBehaviour, CPPM(RexxMethod::isGuardedRexx), 0);
-  defineKernelMethod(CHAR_ISPRIVATE    ,TheMethodBehaviour, CPPM(RexxMethod::isPrivateRexx), 0);
-  defineKernelMethod(CHAR_ISPROTECTED  ,TheMethodBehaviour, CPPM(RexxMethod::isProtectedRexx), 0);
-  defineProtectedKernelMethod(CHAR_SETPROTECTED ,TheMethodBehaviour, CPPM(RexxMethod::setProtectedRexx), 0);
-  defineProtectedKernelMethod(CHAR_SETSECURITYMANAGER ,TheMethodBehaviour, CPPM(RexxMethod::setSecurityManager), 1);
+  defineKernelMethod(CHAR_SETUNGUARDED ,TheMethodBehaviour, CPPM(MethodClass::setUnguardedRexx), 0);
+  defineKernelMethod(CHAR_SETGUARDED   ,TheMethodBehaviour, CPPM(MethodClass::setGuardedRexx), 0);
+  defineKernelMethod(CHAR_SETPRIVATE   ,TheMethodBehaviour, CPPM(MethodClass::setPrivateRexx), 0);
+  defineKernelMethod(CHAR_ISGUARDED    ,TheMethodBehaviour, CPPM(MethodClass::isGuardedRexx), 0);
+  defineKernelMethod(CHAR_ISPRIVATE    ,TheMethodBehaviour, CPPM(MethodClass::isPrivateRexx), 0);
+  defineKernelMethod(CHAR_ISPROTECTED  ,TheMethodBehaviour, CPPM(MethodClass::isProtectedRexx), 0);
+  defineProtectedKernelMethod(CHAR_SETPROTECTED ,TheMethodBehaviour, CPPM(MethodClass::setProtectedRexx), 0);
+  defineProtectedKernelMethod(CHAR_SETSECURITYMANAGER ,TheMethodBehaviour, CPPM(MethodClass::setSecurityManager), 1);
   defineKernelMethod(CHAR_SOURCE       ,TheMethodBehaviour, CPPM(BaseExecutable::source), 0);
   defineKernelMethod(CHAR_PACKAGE      ,TheMethodBehaviour, CPPM(BaseExecutable::getPackage), 0);
                                        /* set the scope of the methods to   */
@@ -1446,12 +1446,12 @@ void RexxMemory::createImage()
 /******************************************************************************/
 
   /* set up the kernel methods that will be defined on OBJECT classes in  */
-  /*  BaseClasses.ORX and ORYXJ.ORX.                                            */
+  /* CoreClasses.orx
   {
                                            /* create a kernel methods directory */
       RexxDirectory *kernel_methods = new_directory();
       ProtectedObject p1(kernel_methods);   // protect from GC
-      kernel_methods->put(new RexxMethod(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(RexxLocal::local), 0)), getGlobalName(CHAR_LOCAL));
+      kernel_methods->put(new MethodClass(getGlobalName(CHAR_LOCAL), CPPCode::resolveExportedMethod(CHAR_LOCAL, CPPM(RexxLocal::local), 0)), getGlobalName(CHAR_LOCAL));
 
                                            /* create the BaseClasses method and run it*/
       RexxString *symb = getGlobalName(BASEIMAGELOAD);   /* get a name version of the string  */
@@ -1463,6 +1463,7 @@ void RexxMemory::createImage()
       {
                                                /* create a method object out of this*/
           RoutineClass *loader = new RoutineClass(programName);
+          ProtectedObject p(loader);
 
 
           RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
@@ -1479,9 +1480,9 @@ void RexxMemory::createImage()
   }
 
   /* define and suppress methods in the nil object */
-  TheNilObject->defMethod(getGlobalName(CHAR_COPY), (RexxMethod *)TheNilObject);
-  TheNilObject->defMethod(getGlobalName(CHAR_START), (RexxMethod *)TheNilObject);
-  TheNilObject->defMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (RexxMethod *)TheNilObject);
+  TheNilObject->defMethod(getGlobalName(CHAR_COPY), (MethodClass *)TheNilObject);
+  TheNilObject->defMethod(getGlobalName(CHAR_START), (MethodClass *)TheNilObject);
+  TheNilObject->defMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (MethodClass *)TheNilObject);
 
   // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
   // the type identifier in the behaviour so that this will get the correct virtual function table

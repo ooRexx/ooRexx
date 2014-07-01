@@ -511,7 +511,7 @@ RexxMethodObject RexxEntry NewMethod(RexxThreadContext *c, CSTRING n, CSTRING s,
         RexxBuffer *source = new_buffer(s, l);
         ProtectedObject p2(source);
         // convert the name to a string instance, and check the environments.
-        return (RexxMethodObject)context.ret(new RexxMethod(name, source));
+        return (RexxMethodObject)context.ret(new MethodClass(name, source));
     }
     catch (RexxNativeActivation *)
     {
@@ -590,7 +590,7 @@ RexxPackageObject RexxEntry GetMethodPackage(RexxThreadContext *c, RexxMethodObj
     try
     {
         // convert the name to a string instance, and check the environments.
-        return (RexxPackageObject)context.ret(((RexxMethod *)o)->getPackage());
+        return (RexxPackageObject)context.ret(((MethodClass *)o)->getPackage());
     }
     catch (RexxNativeActivation *)
     {

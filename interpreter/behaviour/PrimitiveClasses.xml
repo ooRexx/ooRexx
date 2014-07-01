@@ -78,7 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Integer" class="RexxInteger" classclass="RexxIntegerClass" operators="true" include="IntegerClass.hpp"/>
 <Class id="List" class="RexxList" include="ListClass.hpp"/>
 <Class id="Message" class="RexxMessage" include="MessageClass.hpp"/>
-<Class id="Method" class="RexxMethod" include="MethodClass.hpp"/>
+<Class id="Method" class="MethodClass" include="MethodClass.hpp"/>
 <Class id="NumberString" class="RexxNumberString" operators="true" include="NumberStringClass.hpp"/>
 <Class id="Queue" class="RexxQueue" include="QueueClass.hpp"/>
 <Class id="Stem" class="RexxStem" include="StemClass.hpp"/>

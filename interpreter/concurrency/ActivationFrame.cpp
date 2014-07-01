@@ -47,9 +47,9 @@ RexxString *RexxActivationFrame::messageName()
     return activation->getMessageName();
 }
 
-RexxMethod *RexxActivationFrame::method()
+MethodClass *RexxActivationFrame::method()
 {
-    return (RexxMethod *)activation->getExecutableObject();
+    return (MethodClass *)activation->getExecutableObject();
 }
 
 StackFrameClass *RexxActivationFrame::createStackFrame()
@@ -67,9 +67,9 @@ RexxString *NativeActivationFrame::messageName()
     return activation->getMessageName();
 }
 
-RexxMethod *NativeActivationFrame::method()
+MethodClass *NativeActivationFrame::method()
 {
-    return (RexxMethod *)activation->getExecutableObject();
+    return (MethodClass *)activation->getExecutableObject();
 }
 
 StackFrameClass *NativeActivationFrame::createStackFrame()
@@ -87,7 +87,7 @@ RexxString *InternalActivationFrame::messageName()
     return name;
 }
 
-RexxMethod *InternalActivationFrame::method()
+MethodClass *InternalActivationFrame::method()
 {
     return frameMethod;
 }
@@ -112,7 +112,7 @@ RexxString *ParseActivationFrame::messageName()
     return OREF_NULL;
 }
 
-RexxMethod *ParseActivationFrame::method()
+MethodClass *ParseActivationFrame::method()
 {
     return OREF_NULL;
 }

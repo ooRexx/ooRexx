@@ -139,6 +139,8 @@ void RexxStartDispatcher::run()
         }
     }
 
+    ProtectedObject p(program);
+
     RexxString *initial_address = activity->getInstance()->getDefaultEnvironment();
     /* actually need to run this?        */
     if (program != OREF_NULL)

@@ -292,14 +292,14 @@ class LanguageParser: public RexxInternalObject
     void        checkDirective(int errorCode);
     bool        hasBody();
     void        decodeExternalMethod(RexxString *methodName, RexxString *externalSpec, RexxString *&library, RexxString *&procedure);
-    RexxMethod *createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure);
+    MethodClass *createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure);
     void        createMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        createConstantGetterMethod(RexxString *name, RexxObject *value);
     void        createAbstractMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
     void        checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg);
-    void        addMethod(RexxString *name, RexxMethod *method, bool classMethod);
+    void        addMethod(RexxString *name, MethodClass *method, bool classMethod);
 
     // expression parsing methods
     RexxObject *constantExpression();

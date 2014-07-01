@@ -71,7 +71,7 @@ public:
     static void init();
     static RexxActivation *newActivation(RexxActivity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, int context);
     static RexxActivation *newActivation(RexxActivity *activity, RexxActivation *parent, RexxCode *code, int context);
-    static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code);
+    static RexxActivation *newActivation(RexxActivity *activity, MethodClass *method, RexxCode *code);
     static RexxNativeActivation *newNativeActivation(RexxActivity *activity, RexxActivation *parent);
     static RexxNativeActivation *newNativeActivation(RexxActivity *activity);
     static RexxActivity *createNewActivity();
@@ -262,7 +262,7 @@ inline RexxString *lastMessageName()
   return ActivityManager::currentActivity->getLastMessageName();
 }
 
-inline RexxMethod *lastMethod()
+inline MethodClass *lastMethod()
 /******************************************************************************/
 /* Function:  Return last invoked method object (for use by kernel methods    */
 /*            only)                                                           */

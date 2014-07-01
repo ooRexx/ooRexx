@@ -63,7 +63,7 @@ ThreadDispatcher::ThreadDispatcher(OrxScript *e, int start)
 void ThreadDispatcher::run()
 {
     RexxThreadContext *context = ScriptProcessEngine::getThreadContext();
-    this->run(context);
+    run(context);
     context->DetachThread();
 }
 

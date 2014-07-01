@@ -80,8 +80,8 @@ class ClassDirective : public RexxDirective
     inline void setMixinClass(RexxString *m) { OrefSet(this, this->subclassName, m); mixinClass = true; }
     inline void setPublic() { publicClass = true; }
     void addInherits(RexxString *name);
-    void addMethod(RexxString *name, RexxMethod *method, bool classMethod);
-    void addConstantMethod(RexxString *name, RexxMethod *method);
+    void addMethod(RexxString *name, MethodClass *method, bool classMethod);
+    void addConstantMethod(RexxString *name, MethodClass *method);
     bool checkDuplicateMethod(RexxString *name, bool classMethod);
 
 

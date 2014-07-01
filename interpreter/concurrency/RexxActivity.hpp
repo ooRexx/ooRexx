@@ -59,7 +59,7 @@
 
 class ProtectedObject;                 // needed for look aheads
 class RexxSource;
-class RexxMethod;
+class MethodClass;
 class InterpreterInstance;
 class ActivityDispatcher;
 class CallbackDispatcher;
@@ -291,7 +291,7 @@ typedef enum
    inline uint64_t    getRandomSeed() { return randomSeed; }
    inline void setRandomSeed(uint64_t seed) { randomSeed = seed; };
           RexxString *getLastMessageName();
-          RexxMethod *getLastMethod();
+          MethodClass *getLastMethod();
 
    inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }
    inline RexxNativeActivation *getApiContext() { return (RexxNativeActivation *)topStackFrame; }

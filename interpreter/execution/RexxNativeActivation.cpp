@@ -1208,7 +1208,7 @@ void RexxNativeActivation::removeLocalReference(RexxObject *objr)
  * @param _arglist  The list of arguments.
  * @param resultObj The returned result object.
  */
-void RexxNativeActivation::run(RexxMethod *_method, RexxNativeMethod *_code, RexxObject  *_receiver,
+void RexxNativeActivation::run(MethodClass *_method, RexxNativeMethod *_code, RexxObject  *_receiver,
     RexxString  *_msgname, RexxObject **_arglist, size_t _argcount, ProtectedObject &resultObj)
 {
     // add the frame to the execution stack
@@ -1771,7 +1771,7 @@ RexxVariableDictionary *RexxNativeActivation::methodVariables()
         }
         else
         {
-            RexxMethod *method = (RexxMethod *)executable;
+            MethodClass *method = (MethodClass *)executable;
             /* must be wanting the ovd set of    */
             /*variables                          */
             this->objectVariables = this->receiver->getObjectVariables(method->getScope());
@@ -1966,7 +1966,7 @@ void *RexxNativeActivation::cself()
         // this is necessary to get turn on a guard lock if the method
         // is guarded.  Failure to do this can cause multithreading problems.
         methodVariables();
-        return receiver->getCSelf(((RexxMethod *)executable)->getScope());
+        return receiver->getCSelf(((MethodClass *)executable)->getScope());
     }
     // nope, call context doesn't allow this
     return OREF_NULL;
@@ -1994,7 +1994,7 @@ RexxObject *RexxNativeActivation::dispatch()
 /******************************************************************************/
 {
     ProtectedObject r;
-    this->run((RexxMethod *)executable, (RexxNativeMethod *)code, receiver, msgname, arglist, argcount, r);  /* just do a method run              */
+    run((MethodClass *)executable, (RexxNativeMethod *)code, receiver, msgname, arglist, argcount, r);  /* just do a method run              */
     return (RexxObject *)r;
 }
 
@@ -2250,7 +2250,7 @@ void RexxNativeActivation::guardOn()
     if (this->objectVariables == OREF_NULL)
     {
         /* grab the object variables associated with this object */
-        this->objectVariables = this->receiver->getObjectVariables(((RexxMethod *)executable)->getScope());
+        this->objectVariables = this->receiver->getObjectVariables(((MethodClass *)executable)->getScope());
     }
     /* not currently holding the lock? */
     if (this->object_scope == SCOPE_RELEASED)
@@ -2482,7 +2482,7 @@ RexxObject *RexxNativeActivation::getArgument(size_t index)
  */
 RexxObject *RexxNativeActivation::getSuper()
 {
-    return receiver->superScope(((RexxMethod *)executable)->getScope());
+    return receiver->superScope(((MethodClass *)executable)->getScope());
 }
 
 /**
@@ -2492,7 +2492,7 @@ RexxObject *RexxNativeActivation::getSuper()
  */
 RexxObject *RexxNativeActivation::getScope()
 {
-    return ((RexxMethod *)executable)->getScope();
+    return ((MethodClass *)executable)->getScope();
 }
 
 /**
@@ -3317,7 +3317,7 @@ StackFrameClass *RexxNativeActivation::createStackFrame()
     }
     else
     {
-        RexxArray *info = new_array(getMessageName(), ((RexxMethod *)getExecutableObject())->getScope()->getId());
+        RexxArray *info = new_array(getMessageName(), ((MethodClass *)getExecutableObject())->getScope()->getId());
         ProtectedObject p(info);
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);

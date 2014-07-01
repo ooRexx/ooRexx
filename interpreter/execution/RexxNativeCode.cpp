@@ -261,7 +261,7 @@ void RegisteredRoutine::flatten(RexxEnvelope *envelope)
  * @param argPtr   The pointer to the arguments.
  * @param result   The protected object used to return the result.
  */
-void RexxNativeMethod::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+void RexxNativeMethod::run(RexxActivity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // if this is NULL currently, we need to lazy resolve this entry

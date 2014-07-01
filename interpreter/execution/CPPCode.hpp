@@ -57,7 +57,7 @@ public:
     void liveGeneral(int reason);
     RexxObject *unflatten(RexxEnvelope *envelope);
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
+    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
     static CPPCode *resolveExportedMethod(const char *, PCPPM targetMethod, size_t argcount);
     // The table of exported methods.
@@ -86,7 +86,7 @@ public:
     void liveGeneral(int reason);
     void flatten(RexxEnvelope*);
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
     RexxVariableBase *attribute;      /* method attribute info             */
@@ -106,7 +106,7 @@ public:
     inline AttributeSetterCode(RexxVariableBase *a) : AttributeGetterCode(a) { }
     inline AttributeSetterCode(RESTORETYPE restoreType) : AttributeGetterCode(restoreType) { }
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
+    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
 };
 
 
@@ -126,7 +126,7 @@ public:
     void liveGeneral(int reason);
     void flatten(RexxEnvelope*);
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
     RexxObject *constantValue;        // the returned constant value
@@ -146,7 +146,7 @@ public:
     inline AbstractCode() { }
     inline AbstractCode(RESTORETYPE restoreType) { }
 
-    void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(RexxActivity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 };
 
 #endif

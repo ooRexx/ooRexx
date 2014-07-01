@@ -289,7 +289,7 @@ RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxActiv
  *
  * @return The newly created activation.
  */
-RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code)
+RexxActivation *ActivityManager::newActivation(RexxActivity *activity, MethodClass *method, RexxCode *code)
 {
     // in heavily multithreaded environments, the activation cache is a source for race conditions
     // that can lead to crashes.  Just unconditionally create a new actvation

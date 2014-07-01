@@ -73,7 +73,7 @@ class RexxNativeActivation : public RexxActivationBase
          RexxNativeActivation(RexxActivity *_activity);
   void live(size_t);
   void liveGeneral(int reason);
-  void run(RexxMethod *_method, RexxNativeMethod *_code, RexxObject  *_receiver,
+  void run(MethodClass *_method, RexxNativeMethod *_code, RexxObject  *_receiver,
       RexxString  *_msgname, RexxObject **_arglist, size_t _argcount, ProtectedObject &resultObj);
   void run(ActivityDispatcher &dispatcher);
   void run(CallbackDispatcher &dispatcher);
