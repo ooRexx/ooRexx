@@ -215,7 +215,7 @@ if (WIN32)
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
-   if ($ENV{Platform} STREQUAL "X64")
+   if ("$ENV{Platform}" STREQUAL "X64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
       set (NSIS_CPU "x86_64")
    else ()
@@ -897,7 +897,7 @@ if (XALAN_EXECUTABLE)
            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${build_behaviour_dir}/${target}
            COMMAND ${XALAN_EXECUTABLE} -o ${build_behaviour_dir}/${target} ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
            DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
-           COMMENT "Generating ${CMAKE_CURRENT_SOURCE_DIR}/${target}"
+           COMMENT "Generating ${CMAKE_CURRENT_SOURCE_DIR}/${build_behaviour_dir}/${target}"
            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
            )
     endmacro (generate_class_header)
