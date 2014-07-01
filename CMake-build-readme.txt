@@ -26,9 +26,34 @@ ooRexx on multiple platforms (Windows, Linux, etc) using CMake.
 4. You are now ready to create everything necessary in building ooRexx on your
    platform. On Windows run the following commands:
 
-   cmake -G "NMake Makefiles" -DBUILD_NSIS=1 C:\ooRexx\source location
-   nmake
-   cpack ./
+     cmake -G "NMake Makefiles" C:\ooRexx\source location
+     nmake
+
+   Note that after you have used the cmake command to configure a build directory,
+   it is only necessary to issue the nmake command from the root of the build
+   directory to perform the build.  You should not need to issue the cmake command
+   again.
+
+   The version above does not build an installer.  If you wish to also build the
+   installer, you need to configure your build by specifying the location of the
+   built document files:
+
+     cmake -G "NMake Makefiles" -DDOC_SOURCE_DIR=C:\doc location C:\source location
+
+   The DOC_SOURCE_DIR directory must have the installed doc .pdf files in that location.
+   A recent build version can be downloaded from here:
+
+      http://build.oorexx.org/builds/docs/
+
+   Or, if you are not building a real release installer, you can just create dummy .pdf
+   files in the source directory for the installer compiler to pick up.
+
+   To build the interpreter, you still use the nmake command.  Once you have built, you
+   can create the installer by issuing
+
+     nmake nsis_template_installer
+
+   We do not use the CPack command on Windows.
 
    On Linux run the following commands to build an rpm:
 
@@ -49,4 +74,8 @@ ooRexx on multiple platforms (Windows, Linux, etc) using CMake.
    After the completion of these commands there should be a bin subdirectory
    created in your current directory. It should contain all the binaries
    and install files (if the build succeeded).
+
+   Note, once you have issued the cmake command, you should not have to
+   issue this again for that build directory.  Use nmake to build the code,
+   and cpack to create the package files.
 

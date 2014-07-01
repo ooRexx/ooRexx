@@ -173,7 +173,9 @@ if (WIN32)
 
    # The DOC source dir is usually specified in native form...need to convert it
    # to the CMAKE format for the install commands.
-   file(TO_CMAKE_PATH ${DOC_SOURCE_DIR} DOC_SOURCE_DIR)
+   if (DOC_SOURCE_DIR)
+      file(TO_CMAKE_PATH ${DOC_SOURCE_DIR} DOC_SOURCE_DIR)
+   endif()
 
    # location where we assemble everything to build the installer
    set (NSIS_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
@@ -1494,7 +1496,9 @@ add_subdirectory (samples samples)
 #################### NSIS Package Targets ##########################
 #################### NSIS Package Targets ##########################
 
-if (WIN32)
+# The Windows installer assumes we have the docs available.  Don't try building
+# any of the installer stuff if this is not available.
+if (WIN32 AND DOC_SOURCE_DIR)
    # Add the install directory to the module path so the custom template can be located.
    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
 
@@ -1748,7 +1752,6 @@ if (WIN32)
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "Removing NSIS installer build files")
    endif()
-
 endif ()
 
 
