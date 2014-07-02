@@ -42,22 +42,6 @@
 
 #include "ProgramSource.hpp"
 
-
-
-/**
- * Get a specific descriptor for a line.  NOTE:  this does
- * not do any validity checking on the line position.
- *
- * @param l      The target line position.
- *
- * @return The descriptor for that line.
- */
-LineDescriptor &getDescriptor(size_t l)
-{
-    return BufferedProgramSource::getDescriptors()[l];
-}
-
-
 /**
  * Retrieve a source line as a string object.
  *
@@ -113,16 +97,21 @@ RexxString *ProgramSource::getStringLine(size_t position, size_t startOffset, si
         return OREF_NULLSTRING;
     }
 
+    // protect from an overrun
+    startOffset = Numerics::maxVal(startOffset, lineLength);
+    endOffset = Numerics::maxVal(endOffset, lineLength);
+
     // we can use this to extract from a position to the end by
     // specifying an end offset of 0
     if (endOffset < startOffset)
     {
-        endOffset = lineLength
+        endOffset = lineLength;
     }
 
     // convert to a string object.
     return new_string(linePointer + startOffset, endOffset - startOffset);
 }
+
 
 /**
  * Extract a line from the source given a source location.
@@ -134,7 +123,7 @@ RexxString *ProgramSource::getStringLine(size_t position, size_t startOffset, si
 RexxString *ProgramSource::extract(SourceLocation &location )
 {
     // not traceable means no source, so just return a null string regardless
-    if (\isTraceable())
+    if (!isTraceable())
     {
         return OREF_NULLSTRING;
     }
@@ -146,23 +135,24 @@ RexxString *ProgramSource::extract(SourceLocation &location )
     }
     // easiest situation is all on one line.
     else if (location.getLineNumber() >= location.getEndLine())
+    {
         return getStringLine(location.getLineNumber(), location.getOffset(), location.getEndOffset());
+    }
     else
     {
         // multiple line case...sigh.  We need to build this up
         // start with the first line, which might be a partial
-        RexxString *line = getStringLine(location.getLineNumber(), location.getOffset(), location.getEndOffset());
+        ProtectedObject line = getStringLine(location.getLineNumber(), location.getOffset(), location.getEndOffset());
         // now concatentate all of the full lines onto this until we get to the final line, which is likely
         // a partial line again.
         for (counter = location.getLineNumber() + 1; counter < location.getEndLine(); counter++)
         {
-            line = line->concat(getStringLine(counter));
+            line = ((RexxString *)line)->concat(getStringLine(counter));
         }
         // and finally add the partial last line
-        return line->concat(getStringLine(counter, 0, location.getEndOffset()));
+        return ((RexxString *)line)->concat(getStringLine(counter, 0, location.getEndOffset()));
     }
 }
-
 
 
 /**
@@ -176,15 +166,16 @@ RexxString *ProgramSource::extract(SourceLocation &location )
 RexxArray *ProgramSource::extractSourceLines(SourceLocation &location )
 {
     // not traceable means no source, so just return a null string regardless
-    if (\isTraceable())
+    if (!isTraceable())
     {
-        // return a copy of our null array.
-        return(RexxArray *)TheNullArray->copy();
+        // return a zero length array
+        return new_array((size_t)0);
     }
+
     // is the start location out of bounds?  Also a null array
     if (location.getLineNumber() == 0 || location.getLineNumber() > lineCount)
     {
-        return(RexxArray *)TheNullArray->copy();
+        return new_array((size_t)0);
     }
     else
     {
@@ -204,7 +195,7 @@ RexxArray *ProgramSource::extractSourceLines(SourceLocation &location )
         else if (location.getEndOffset() == 0)
         {
             // step back a line, and set the location to the line length
-            location.setEndLine(location.getEndLine() - 1)
+            location.setEndLine(location.getEndLine() - 1);
 
             const char *linePointer;
             size_t lineLength;
@@ -222,7 +213,7 @@ RexxArray *ProgramSource::extractSourceLines(SourceLocation &location )
             // get the single line and add to the source array.  Then we're done
             RexxString *line = extract(location);
             source->put(source, 1);
-            return source;                   /* all done                          */
+            return source;
         }
 
         // extract everything from the starting offset to the end. and add it to the array
@@ -251,7 +242,7 @@ RexxArray *ProgramSource::extractSourceLines(SourceLocation &location )
  */
 void *BufferProgramSource::operator new(size_t size)
 {
-    return new_object(size, T_BufferedProgramSource);  // Get new object
+    return new_object(size, T_BufferProgramSource);  // Get new object
 }
 
 
@@ -289,8 +280,8 @@ void BufferProgramSource::liveGeneral(int reason)
 void BufferProgramSource::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(BufferProgramSource)
-      flatten_reference(newThis->descriptorArea, envelope);
-      flatten_reference(newThis->buffer, envelope);
+      flattenRef(descriptorArea);
+      flattenRef(buffer);
     cleanUpFlatten
 }
 
@@ -430,6 +421,21 @@ void BufferProgramSource::buildDescriptors()
     }
 }
 
+
+/**
+ * Get a specific descriptor for a line.  NOTE:  this does
+ * not do any validity checking on the line position.
+ *
+ * @param l      The target line position.
+ *
+ * @return The descriptor for that line.
+ */
+LineDescriptor &BufferProgramSource::getDescriptor(size_t l)
+{
+    return getDescriptors()[l];
+}
+
+
 /**
  * Get a pointer to the buffer descriptors.
  *
@@ -446,8 +452,7 @@ LineDescriptor *BufferProgramSource::getDescriptors()
  * Retrieve the line information for a specific line
  * position.
  *
- * @param lineNumber The target line number (which will be adjusted with
- *                   the interpret adjustment).
+ * @param lineNumber The target line number
  * @param linePointer
  *                   A returned line pointer for the line.
  *
@@ -455,10 +460,8 @@ LineDescriptor *BufferProgramSource::getDescriptors()
  */
 void BufferProgramSource::getLine(size_t lineNumber, const char *&linePointer, size_t lineLength)
 {
-    // adjust for the interpret offset, then check to see if
-    // the requested number is still in bounds
-    size_t targetLine = lineNumber - interpretAdjust;
-    if (targetLine > lineCount)
+    // check to see if  the requested number in bounds
+    if (lineNumber > lineCount)
     {
         // null out the line information and quit
         linePointer = NULL;
@@ -481,7 +484,7 @@ void BufferProgramSource::getLine(size_t lineNumber, const char *&linePointer, s
  */
 void *ArrayProgramSource::operator new(size_t size)
 {
-    return new_object(size, T_StringProgramSource);  // Get new object
+    return new_object(size, T_ArrayProgramSource);  // Get new object
 }
 
 
@@ -516,7 +519,7 @@ void ArrayProgramSource::liveGeneral(int reason)
 void ArrayProgramSource::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(BufferProgramSource)
-      flatten_reference(newThis->array, envelope);
+      flattenRef(array);
     cleanUpFlatten
 }
 
@@ -556,7 +559,7 @@ void ArrayProgramSource::getLine(size_t lineNumber, const char *&linePointer, si
     }
 
     // get the line from the array, making sure we adjust for interpret line numbers.
-    RexxString *line = (RexxString *)(array->get(lineNumber - interpretAdjust));
+    RexxString *line = (RexxString *)(array->get(targetLine));
     // A missing line?  We could have been handed a sparse array.  This is an error
     if (line == OREF_NULL)
     {
@@ -628,9 +631,9 @@ void FileProgramSource::liveGeneral(int reason)
 void FileProgramSource::flatten(RexxEnvelope *envelope)
 {
     setUpFlatten(FileProgramSource)
-      flatten_reference(newThis->descriptorArea, envelope);
-      flatten_reference(newThis->buffer, envelope);
-      flatten_reference(newThis->fileName, envelope);
+      flattenRef(descriptorArea);
+      flattenRef(buffer);
+      flattenRef(fileName);
     cleanUpFlatten
 }
 

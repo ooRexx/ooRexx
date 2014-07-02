@@ -53,7 +53,7 @@ class RexxTarget {
     inline RexxTarget() { ; }
     inline RexxTarget (RESTORETYPE restoreType) { ; };
 
-    void        init (RexxObject *, RexxObject **, size_t, bitset<32>, bool, RexxActivation *, RexxExpressionStack *);
+    void        init (RexxObject *, RexxObject **, size_t, std::bitset<32>, bool, RexxActivation *, RexxExpressionStack *);
     void        next(RexxActivation *);
     void        moveToEnd();
     void        forward(stringsize_t);
@@ -76,7 +76,7 @@ class RexxTarget {
     size_t  stackTop;                    // top location of the epxression stack
     size_t  argcount;                    // count of arguments if PARSE ARG
     size_t  next_argument;               // next PARSE ARG argument
-    bitset<32>  translate;               // string translation flags
+    std::bitset<32>  translate;          // string translation flags
 
     // parsing position state starts here
     stringsize_t  string_length;         // length of the string

@@ -441,8 +441,6 @@ RoutineClass *RoutineClass::newRoutineObject(RexxString *pgmname, RexxArray *sou
         }
     }
 
-    // TODO:  use new conversion method here.
-
     return LanguageParser::createRoutine(pgmname, newSourceArray);
 }
 
@@ -510,9 +508,6 @@ RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
     // go create a method from whatever we were given for source.
     RoutineClass *newRoutine = newRoutineObject(nameString, _source, IntegerTwo, sourceContext);
     ProtectedObject p(newRoutine);
-
-    // TODO:  We really should have a common method on the Class class to handle this
-    // sort of setup.
 
     // finish up the object creation.  Set the correct instance behavior (this could
     // be a subclass), check for uninit methods, and finally, send an init message using any

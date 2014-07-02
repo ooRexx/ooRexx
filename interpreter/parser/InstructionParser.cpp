@@ -112,7 +112,7 @@
  * @return An executable instruction object, or OREF_NULL if
  *         we've reached the end of a code block.
  */
-RexxInstruction *LanguageParser::instruction()
+RexxInstruction *LanguageParser::nextInstruction()
 {
     RexxInstruction *workingInstruction = OREF_NULL;
     // get the first token of the clause
@@ -2085,7 +2085,7 @@ RexxInstruction *LanguageParser::nopNew()
 RexxInstruction *LanguageParser::numericNew()
 {
     RexxObject *_expression = OREF_NULL;
-    bitset<32> _flags = 0;
+    std::bitset<32> _flags = 0;
 
     // get to the first real token of the instruction
     RexxToken *token = nextReal();
@@ -2238,7 +2238,7 @@ RexxInstruction *LanguageParser::parseNew(InstructionKeyword argPull)
 {
     // initialize the source using our initial call value.
     InstructionSubKeyword stringSource = argPull;
-    bitset<32> parseFlags;
+    std::bitset<32> parseFlags;
     ProtectedObject parseExpression(OREF_NULL);
 
     // if we're working on one of the short forms, there are no source
@@ -2646,7 +2646,7 @@ RexxInstruction *LanguageParser::raiseNew()
     RexxObject *description = OREF_NULL;
     RexxObject *additional = OREF_NULL;
     RexxObject *result = OREF_NULL;
-    bitset<32> flags;
+    std::bitset<32> flags;
 
     // ok, get the first TOKEN
     RexxToken *token = nextReal();

@@ -69,7 +69,7 @@
  */
 RexxInstructionRaise::RexxInstructionRaise(RexxString *_condition, RexxObject *_expression,
     RexxObject *_description, RexxObject *_additional, RexxObject *_result,
-    bitset<32> flags)
+    std::bitset<32> flags)
 {
     // just copy the argument information
     conditionName = _condition;

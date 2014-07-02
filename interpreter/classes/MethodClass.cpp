@@ -41,9 +41,6 @@
 /* Primitive Method Class                                                     */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
@@ -309,8 +306,6 @@ void *MethodClass::operator new (size_t size)
     return new_object(size, T_Method);
 }
 
-// TODO:  Redo the method creation stuff...this should not be done
-// via the constructors.
 
 /**
  * Initialize a Routine object from a generated code object. Generally
@@ -659,9 +654,6 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
         }
     }
 
-    // TODO:  use new conversion method here.
-
-//  MethodClass *result = new MethodClass(pgmname, newSourceArray);
     MethodClass *result = LanguageParser::createMethod(pgmname, newSourceArray);
     ProtectedObject p(result);
 
@@ -775,9 +767,6 @@ MethodClass *MethodClass::newFileRexx(RexxString *filename)
     RexxClass *classThis = (RexxClass *)this;
     // get the method name as a string
     filename = stringArgument(filename, ARG_ONE);
-
-// TODO:  Use new creation method
-//  MethodClass *newMethod = new MethodClass(filename);
 
     MethodClass *newMethod = LanguageParser::createMethodFromFile(filename);
     ProtectedObject p(newMethod);

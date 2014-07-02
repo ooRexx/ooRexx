@@ -45,6 +45,83 @@
 #include "LanguageParser.hpp"
 #include "SourceFile.hpp"
 #include "ProgramSource.hpp"
+#include "MethodClass.hpp"
+#include "RoutineClass.hpp"
+#include "PackageClass.hpp"
+
+
+/**
+ * Static method for creating a new MethodClass instance.
+ *
+ * @param name   The name given to the method and package.
+ * @param source The code source as an array of strings.
+ *
+ * @return An executable method object.
+ */
+MethodClass *LanguageParser::createMethod(RexxString *name, RexxArray *source)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProtectedObject p = new ArrayProgramSource(source);
+    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
+    return ((LanguageParser *)(RexxInternalObject *)p)->generateMethod();
+}
+
+
+/**
+ * Static method for creating a new MethodClass instance from a
+ * file.
+ *
+ * @param name   The name given to the method and package.
+ * @param source The code source as an array of strings.
+ *
+ * @return An executable method object.
+ */
+MethodClass *LanguageParser::createMethodFromFile(name)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProtectedObject p = new FileProgramSource(name)
+    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
+    return ((LanguageParser *)(RexxInternalObject *)p)->generateMethod();
+}
+
+
+/**
+ * Static method for creating a new RoutineClass instance.
+ *
+ * @param name   The name given to the routine and package.
+ * @param source The code source as an array of strings.
+ *
+ * @return An executable method object.
+ */
+RoutineClass *LanguageParser::createRoutine(RexxString *name, RexxArray *source)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProtectedObject p = new ArrayProgramSource(source);
+    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
+    return ((LanguageParser *)(RexxInternalObject *)p)->generateRoutine();
+}
+
+
+/**
+ * Static method for creating a new RoutineClass instance from a
+ * file.
+ *
+ * @param name   The name given to the routine and package.
+ * @param source The code source as an array of strings.
+ *
+ * @return An executable method object.
+ */
+RoutineClass *LanguageParser::createRoutineFromFile(name)
+{
+    // create the appropriate array source, then the parser, then generate the
+    // code.
+    ProtectedObject p = new FileProgramSource(name)
+    p = new LanguageParser(name, (ProgramSource *)(RexxInternalObject *)p);
+    return ((LanguageParser *)(RexxInternalObject *)p)->generateRoutine();
+}
 
 
 /**
@@ -53,7 +130,7 @@
  * @param p      The source package we're parsing code for.
  * @param s      The provider for the actual program source.
  */
-LanguageParser::LanguageParser(RexxSource *p, ProgramSource *s)
+LanguageParser::LanguageParser(RexxString *p, ProgramSource *s)
 {
     // at this point, we just save the link back to the
     // package and source objects.  We hold off creating
@@ -69,12 +146,17 @@ LanguageParser::LanguageParser(RexxSource *p, ProgramSource *s)
  */
 void LanguageParser::live(size_t liveMark)
 {
-    memory_mark(package);
-    memory_mark(source);
-    memory_mark(clause);
+    // because of the way garbage collection works, it is a good
+    // idea to mark these first because they are chained.
+    memory_mark(mainSection);
     memory_mark(firstInstruction);
     memory_mark(lastInstruction);
     memory_mark(currentInstruction);
+
+    memory_mark(package);
+    memory_mark(source);
+    memory_mark(name);
+    memory_mark(clause);
     memory_mark(holdStack);
     memory_mark(variables);
     memory_mark(literals);
@@ -99,12 +181,17 @@ void LanguageParser::live(size_t liveMark)
  */
 void LanguageParser::liveGeneral(int reason)
 {
-    memory_mark_general(package);
-    memory_mark_general(source);
-    memory_mark_general(clause);
+    // because of the way garbage collection works, it is a good
+    // idea to mark these first because they are chained.
+    memory_mark(mainSection);
     memory_mark_general(firstInstruction);
     memory_mark_general(lastInstruction);
     memory_mark_general(currentInstruction);
+
+    memory_mark_general(package);
+    memory_mark_general(source);
+    memory_mark_general(name);
+    memory_mark_general(clause);
     memory_mark_general(holdStack);
     memory_mark_general(variables);
     memory_mark_general(literals);
@@ -122,12 +209,102 @@ void LanguageParser::liveGeneral(int reason)
 
 
 /**
+ * Generate a method object from a source collection.
+ *
+ * @return A method object represented by the leading code block
+ *         of the source.  Ideally, this code should not contain directives,
+ *         but since this was allowed in the past, we need to continue
+ *         to allow this.
+ */
+MethodClass *LanguageParser::generateMethod()
+{
+    // initialize, and compile all of the source.
+    compileSource();
+    // get the main section of the source package and make a method
+    // object from it.  This is the package "main" executable.
+    package->mainExecutable = new MethodClass(name, mainSection);
+    // since we've explicitly made this a method, there is no
+    // longer an init code section to this package.
+    package->initCode = OREF_NULL;
+    // force the package to resolve classes/libraries now.
+    installPackage();
+    // return the main executable.
+    return (MethodClass *)package->mainExecutable();
+}
+
+
+/**
+ * Generate a routine object from a source collection.
+ *
+ * @return A routine object represented by the leading code
+ *         block of the source.  Ideally, this code should not
+ *         contain directives, but since this was allowed in the
+ *         past, we need to continue to allow this.
+ */
+RoutineClass *LanguageParser::generateRoutine()
+{
+    // initialize, and compile all of the source.
+    compileSource();
+    // get the main section of the source package and make a method
+    // object from it.  This is the package "main" executable.
+    package->mainExecutable = new RoutineClass(name, mainSection);
+    // since we've explicitly made this a method, there is no
+    // longer an init code section to this package.
+    package->initCode = OREF_NULL;
+    // force the package to resolve classes/libraries now.
+    installPackage();
+    // return the main executable.
+    return (RoutineClass *)package->mainExecutable();
+}
+
+
+/**
+ * Load a package and return the source object for the package.
+ * We create the main executable as a Routine object, but also
+ * leave the initialization code in place for the package loader
+ * to use.
+ *
+ * @return A RexxSource object representing the package.
+ */
+RexxSource *LanguageParser::generatePackage()
+{
+    // initialize, and compile all of the source.
+    compileSource();
+    // get the main section of the source package and make a method
+    // object from it.  This is the package "main" executable.
+    package->mainExecutable = new RoutineClass(name, mainSection);
+    // The main section is also set into the package init code to be
+    // run as part of package loading.
+    package->initCode = mainSection;
+    // return the package.
+    return package;
+}
+
+
+/**
+ * Compile our configured source into executable code.
+ */
+void LanguageParser::compileSource()
+{
+    // initialize the global environment for parsing this source
+    // into an executable.
+    initializeForParsing();
+
+    // now translate the code
+    translate();
+}
+
+
+/**
  * Initialize the parser before starting the parse operation.
  * NOTE:  This is a transient object, which will never be stored
  * in the oldspace, so we don't need to use OrefSet.
  */
-void LanguageParser::initialize()
+void LanguageParser::initializeForParsing()
 {
+    // create a package object that we'll be filling in.
+    package = new RexxSource(name, source);
+
     // handy stack for temporary values...this is a push through
     holdStack = new (HOLDSIZE, false) RexxStack(HOLDSIZE);
 
@@ -153,48 +330,29 @@ void LanguageParser::initialize()
 
 
 /**
- * Convert a source object into executable form.
- *
- * @param isMethod Indicates if we're processing a method context or not.
- *                 We do additional directive installs in that situation.
- *
- * @return A code object that represents this compiled source.
+ * Initialize the global tables used for keeping track of
+ * directive information.
  */
-RexxCode *LanguageParser::generateCode(bool isMethod)
+void LanguageParser::initializeForDirectives()
 {
-    // initialized the parsing tables.
-    initialize();
-    // now translate the code
-    RexxCode *newCode = translate(OREF_NULL);
-
-    ProtectedObject p(newCode);
-    // TODO:  Not sure install belongs in this context.
-    // if generating a method object, then process the directive installation now
-    if (isMethod)
-    {
-        // force this to install now
-        install();
-    }
-    return newCode;                      /* return the method                 */
+    routines = new_directory();
+    publicRoutines = new_directory();
+    classDependencies = new_directory();
+    requires = new_array();
+    libraries = new_array();
+    classes = new_array();
+    activeClass = OREF_NULL;
+    unattachedMethods = new_directory();
 }
 
 
 /**
- * Handle translating an interpret instruction.
- *
- * @param _labels Labels inherited from the parent source context.
- *
- * @return A translated code object.
+ * Have the generated package process the package
+ * installation step at completion of parsing.
  */
-RexxCode *LanguageParser::translateInterpret(RexxDirectory *_labels )
+void LanguageParser::installPackage()
 {
-    // setup the environment
-    initialize();
-    // make sure interpret is set up.
-    flags.set(interpret);
-
-    // translate, using the inherited labels
-    return translate(_labels);
+    package->install();
 }
 
 
@@ -373,14 +531,13 @@ bool LanguageParser::nextClause()
 
 
 /**
- * Translate a source object into executable code.
- *
- * @param _labels labels inherited from the caller's context. Used only
- *                for compiling interpret instruction code.
- *
- * @return The compile code object.
+ * Translate a source object into executable code.  This translates
+ * the main code section and stores it in the mainSection
+ * field.  If permitted (i.e, not an interpret), this will
+ * also process any additional directives and associated
+ * code sections.
  */
-RexxCode *LanguageParser::translate(RexxDirectory *_labels)
+void LanguageParser::translate()
 {
     // create a stack frame so errors can display the parsing location.
     ParseActivationFrame frame(ActivityManager::currentActivity, this);
@@ -392,213 +549,34 @@ RexxCode *LanguageParser::translate(RexxDirectory *_labels)
     package->traceSetting = DEFAULT_TRACE_SETTING;
     package->traceFlags = RexxActivation::default_trace_flags;
 
-    // go translate the lead block and set this explicitly
-    // in the the requesting source.
-    RexxCode *newMethod = translateBlock(_labels);
-    // we save this in case we need to explicitly run this at install time
-    package->setInitCode(newMethod);
+    // go translate the lead block.  We will figure out what type of
+    // object this gets turned into later.
+    mainSection = translateBlock();
     // we might have directives to process, which adds additional stuff
     // to the package.
-    if (!atEnd())                  /* have directives to process?       */
+    if (!atEnd())
     {
         // we store a lot of stuff that we only need if there are directives.
         // set up to handle this now.
         initializeForDirectives();
-        // for us to manage the class dependencies
-        classDependencies = new_directory();
         // no active class definition
         activeClass = OREF_NULL;
 
-        // We only allow directives when translating full source, so an
-        // interpret, routine, or method compilation does not apply.
+        // We only allow directives when translating ... interpret need not apply
         if (flags.test(noDirectives))
         {
             // step to the next clause to report the error
             nextClause();
-            if (isInterpret())
-            {
-                syntaxError(Error_Translation_directive_interpret);
-            }
-            else
-            {
-                syntaxError(Error_Translation_directive_method_routinem);
-            }
+            syntaxError(Error_Translation_directive_interpret);
         }
 
         // now loop until we hit the end of the source processing directives.
         while (!atEnd())
         {
-            directive();
+            parseDirective();
         }
         // resolve any class dependencies
         resolveDependencies();
-    }
-    // we return the first section of code, but the package was updated with
-    // all other pieces.
-    return newMethod;
-}
-
-
-/**
- * Resolve dependencies between ::CLASS directives,
- * rearranging the order of the directives to preserve
- * relative ordering wherever possible.  Classes with no
- * dependencies in this source file will be done first,
- * followed by those with dependencies in the appropriate
- * order
- */
-void LanguageParser::resolveDependencies()
-{
-    // get our class list
-    if (package->classes->items() == 0)
-    {
-        // if the package doesn't have any classes, clear out the directory
-        // so we don't have to carry this around.
-        package->classes = OREF_NULL;
-        return;
-    }
-    else                                 /* have classes to process           */
-    {
-        // get a local variable for easier processing
-        RexxList *classes = package->classes;
-
-        // create a directory for managing the dependencies between the classes
-        RexxDirectory *classDependencies = new_directory();
-        ProtectedObject p1(classDependencies);
-
-
-        // run through the class list having each directive set up its
-        // dependencies
-        for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
-        {
-            ClassDirective *currentClass = (ClassDirective *)(classes->getValue(i));
-            currentClass->addDependencies(classDependencies);
-        }
-
-        RexxList *classOrder = new_list();  // get a list for doing the order
-        ProtectedObject p2(classOrder);
-
-        // now we repeatedly scan the pending directory looking for a class
-        // with no in-program dependencies - it's an error if there isn't one
-        // as we build the classes we have to remove them (their names) from
-        // pending list and from the remaining dependencies
-        while (classes->items() > 0)
-        {
-            // this is the next one we process
-            ClassDirective *nextInstall = OREF_NULL;
-            for (i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
-            {
-                // get the next directive
-                ClassDirective *currentClass = (ClassDirective *)(classes->getValue(i));
-                // if this class doesn't have any additional dependencies, pick it next.
-                if (currentClass->dependenciesResolved())
-                {
-                    nextInstall = currentClass;
-                    // add this to the class ordering
-                    classOrder->append((RexxObject *)nextInstall);
-                    // remove this from the processing list
-                    classes->removeIndex(i);
-                }
-            }
-
-            // if nothing was located during this pass, we must have circular dependencies
-            // this is an error.
-            if (nextInstall == OREF_NULL)
-            {
-                // directive line where we can give as the source of the error
-                ClassDirective *errorClass = (ClassDirective *)(classes->getValue(classes->firstIndex()));
-                clauseLocation = errorClass->getLocation();
-                syntaxError(Error_Execution_cyclic, package->programName);
-            }
-
-            // ok, now go remove these from the dependencies
-            RexxString *className = nextInstall->getName();
-
-            // now go through the pending list telling each of the remaining classes that
-            // they can remove this dependency from their list
-            for (i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
-            {
-                ClassDirective *currentClass = (ClassDirective *)classes->getValue(i);
-                currentClass->removeDependency(className);
-            }
-        }
-
-        // replace the original class list
-        package->classes = classOrder;
-    }
-
-    // clear out any directories in the package that don't hold anything.
-    package->clearEmptyDependencies();
-}
-
-
-/**
- * Flush an pending instructions from the control stack
- * for a new added instruction.
- *
- * @param _instruction
- *               The newly added instruction.
- */
-void LanguageParser::flushControl(RexxInstruction *_instruction)
-{
-    // loop through the control stack
-    for (;;)
-    {
-        // get the type of the instruction at the top of the control
-        // stack.
-        InstructionKeyword type = topDoType();   /* get the instruction type          */
-        // is this a pending ELSE clause?    */
-        if (type == KEYWORD_ELSE)
-        {
-            // pop the instruction off of the stack
-            RexxInstruction *second = popDo();
-            // and create a new end marker for that instruction.
-            RexxInstruction second = endIfNew((RexxInstructionIf *)second);
-            // have an instruction to add?
-            if (_instruction != OREF_NULL)
-            {
-                // add to the current location and don't process any additional
-                // instructions.
-                addClause(_instruction);
-                _instruction = OREF_NULL;
-            }
-            // now add the else terminator behind this.
-            addClause(second);
-            // we can go around again on this one.
-        }
-        // nested IF-THEN situation?
-        else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
-        {
-            // get the top item
-            RexxInstruction *second = popDo();
-            // have an instruction to add?
-            if (_instruction != OREF_NULL)
-            {
-                // insert this here and null it out.
-                addClause(_instruction);
-                _instruction = OREF_NULL;
-            }
-            // we need a new end marker
-            second = endIfNew((RexxInstructionIf *)second);
-            // we add this clause behine the new one, and also add this
-            // to the control stack as a pending instruction
-            this->addClause(second);
-            this->pushDo(second);
-
-            // we're done with this
-            break;
-        }
-        // some other type of construct.  We just add the instruction to the
-        // execution stream
-        else
-        {
-            if (_instruction != OREF_NULL)
-            {
-                addClause(_instruction);
-            }
-            // all done flushing
-            break;
-        }
     }
 }
 
@@ -612,37 +590,30 @@ void LanguageParser::flushControl(RexxInstruction *_instruction)
  *
  * @return A RexxCode object for this block.
  */
-RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
+RexxCode *LanguageParser::translateBlock()
 {
-    RexxInstruction *_instruction;        /* created instruction item          */
-    RexxInstruction *second;             /* secondary clause for IF/WHEN      */
-    RexxToken       *token;              /* current working token             */
-    size_t           type;               /* instruction type information      */
-    size_t           controltype;        /* type on the control stack         */
-
     // initialize the parsing environment.
-    first = OREF_NULL;
-    last = OREF_NULL;
+    firstInstruction = OREF_NULL;
+    lastInstruction = OREF_NULL;
     // get a list of all calls that might need resolution
-    calls = new_list()
+    calls = new_array()
     // a table of variables...starting with the special variables we allocated space for.
     variables = (RexxDirectory *)TheCommonRetrievers->copy();
     // restart the variable index        */
     variableIndex = FIRST_VARIABLE_INDEX;
     exposedVariables = new_directory();
 
-    // is this an interpret instruction?  use the provided labels
-    if (flags.test(interpret))
-    {
-        labels = _labels;
-    }
-    // we need to keep a new labels directory
-    else
+    // do we have labels from an interpret?
+    // only create a new set if we're not reusing.
+    if (labels == OREF_NULL)
     {
         labels = new_directory();
     }
+
     // until we need guard variables, we don't need the table
-    guardVariables = OREF_NULL
+    guardVariables = OREF_NULL;
+    // and we need a new set of exposed variables for each code section
+    exposedVariables = OREF_NULL;
 
     // clear the stack accounting fields
     maxStack = 0;
@@ -651,43 +622,45 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
     flags.reset(noClause);
 
     // add a dummy instruction at the front.  All other instructions get chained off of this.
-    _instruction = new RexxInstruction(OREF_NULL, KEYWORD_FIRST);
+    RexxInstruction *instruction = new RexxInstruction(OREF_NULL, KEYWORD_FIRST);
     // this is the bottom of the control stack, and also the
     // first clause of the code stream.
-    pushDo(_instruction);
-    addClause(_instruction);
+    firstInstruction = instruction;
+    lastInstruction = instruction;
+
+    pushDo(instruction);
 
     // time to start actual parsing.  Continue until we reach the end
     nextClause();
     for (;;)
     {
-        // start with on instruction
-        _instruction = OREF_NULL;
+        // start with no instruction
+        instruction = OREF_NULL;
         // At this point, we want to consume any label clauses, since they are
         // not real instructions.
         while (!noClauseAvailable())
         {
             // resolve this clause into an instruction
-            _instruction = instruction();
+            instruction = nextInstruction();
             // if nothing is returned, this must be a directive, which terminates
             // parsing of this block.
-            if (_instruction == OREF_NULL)
+            if (instruction == OREF_NULL)
             {
                 break;
             }
             // not a label, break out of the loop
-            if (!_instruction->isType(KEYWORD_LABEL))
+            if (!instruction->isType(KEYWORD_LABEL))
             {
                 break;
             }
             // append the label and try again
-            addClause(_instruction);
+            addClause(instruction);
             nextClause();
             // need to zero this out in case we break the loop for an end of file
-            _instruction = OREF_NULL;
+            instruction = OREF_NULL;
         }
         // ok, have we hit the end of the file or the end of the block?
-        if (noClauseAvailable() || _instruction == OREF_NULL)
+        if (noClauseAvailable() || instruction == OREF_NULL)
         {
             // see what we have at the top of the control stack, we probably
             // have some cleanup to do.
@@ -712,7 +685,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
         }
 
         // now check if we need to adjust the control stack for this new instruction.
-        InstructionKeyword type = _instruction->getType();
+        InstructionKeyword type = instruction->getType();
         // if this is not an ELSE, we might have a pending THEN to finish.
         if (type != KEYWORD_ELSE)
         {
@@ -731,13 +704,13 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
         // add it immediately to the stream
         if (type == KEYWORD_IF || type == KEYWORD_SELECT || type == KEYWORD_DO || type == KEYWORD_LOOP)
         {
-            addClause(_instruction);
+            addClause(instruction);
         }
         // if this is an ELSE, we don't add a new level, but rather flush
         // any pending control levels.
         else if (type != KEYWORD_ELSE)
         {
-            this->flushControl(_instruction);
+            this->flushControl(instruction);
         }
         // validate allowed instructions in a SELECT
         if (topDoType(KEYWORD_SELECT) &&
@@ -760,13 +733,13 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                 if (second->isType(KEYWORD_SELECT))
                 {
                     // let the select know that another WHEN was added
-                    ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)_instruction);
+                    ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)instruction);
                 }
                 else if (second->isType(KEYWORD_SELECT_CASE))
                 {
                     // let the select know that another WHEN was added, but we
                     // need the special WHEN CASE version.
-                    ((RexxInstructionSelectCase *)second)->addWhen(whenCaseNew(RexxInstructionIf *)_instruction));
+                    ((RexxInstructionSelectCase *)second)->addWhen(whenCaseNew(RexxInstructionIf *)instruction));
                 }
                 // mis-placed WHEN instruction
                 else
@@ -782,6 +755,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                 // we need to finish the IF instruction.
                 // get the next token
                 RexxToken *token = nextReal();
+                RexxInstruction *second;
                 // Did the line end with no THEN?  It must be on the next
                 // line,
                 if (token->isEndOfClause())
@@ -791,7 +765,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                     // did we hit the end of file?, this is an error
                     if (!nextClause())
                     {
-                        syntaxError(Error_Then_expected_if, _instruction);
+                        syntaxError(Error_Then_expected_if, instruction);
                     }
 
                     // now check the next token and ensure it is a THEN keyword.
@@ -799,10 +773,10 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                     // Not a THEN keyword?  This is an error
                     if (token->keyword() != KEYWORD_THEN)
                     {
-                        syntaxError(Error_Then_expected_if, _instruction);
+                        syntaxError(Error_Then_expected_if, instruction);
                     }
                     // create a new then clause attached to the IF
-                    RexxInstruction *second = thenNew(token, (RexxInstructionIf *)_instruction);
+                    second = thenNew(token, (RexxInstructionIf *)instruction);
                     // now get the next token.. and ensure is something after the THEN
                     token = nextReal();
 
@@ -812,7 +786,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                     {
                         if (!nextClause())
                         {
-                            syntaxError(Error_Incomplete_do_then, _instruction);
+                            syntaxError(Error_Incomplete_do_then, instruction);
                         }
                     }
                     else
@@ -826,7 +800,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                 else
                 {
                     // attach a THEN to the IF
-                    RexxInstruction *second = thenNew(token, (RexxInstructionIf *)_instruction);
+                    second = thenNew(token, (RexxInstructionIf *)instruction);
                     // there might not be anything after the THEN, so we have to check
 
                     token = nextReal();
@@ -837,7 +811,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                         // we must have a clause, else there is an error
                         if (!nextClause())
                         {
-                            syntaxError(Error_Incomplete_do_then, _instruction);
+                            syntaxError(Error_Incomplete_do_then, instruction);
                         }
                     }
                     else
@@ -861,7 +835,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
             {
                 // ok, the top instruction is the key.  It must be the
                 // tail end of a THEN instruction that we can attach to.
-                second = topDo();
+                RexxInstruction *second = topDo();
                 if (!second->isType(KEYWORD_ENDTHEN))
                 {
                     syntaxError(Error_Unexpected_then_else);
@@ -871,16 +845,16 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                 // THEN off of the control stack, push the ELSE on to the stack,
                 // and hook them together.  The ELSE will need to be completed
                 // once the next instruction has been parsed off.
-                addClause(_instruction);
+                addClause(instruction);
                 second = popDo();
                 // this is the ELSE
-                pushDo(_instruction);
+                pushDo(instruction);
                 // join the THEN and ELSE together
-                ((RexxInstructionElse *)_instruction)->setParent((RexxInstructionEndIf *)second);
-                ((RexxInstructionEndIf *)second)->setEndInstruction((RexxInstructionEndIf *)_instruction);
+                ((RexxInstructionElse *)instruction)->setParent((RexxInstructionEndIf *)second);
+                ((RexxInstructionEndIf *)second)->setEndInstruction((RexxInstructionEndIf *)instruction);
 
                 // check for a dangling ELSE now.
-                token = nextReal();
+                RexxToken *token = nextReal();
 
                 // if the next token is the end of the line (or potentially, a semicolon)
                 // we're not at the end.
@@ -889,7 +863,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                     // dangling ELSE if we can't get another clause.
                     if (!nextClause())
                     {
-                        syntaxError(Error_Incomplete_do_else, _instruction);
+                        syntaxError(Error_Incomplete_do_else, instruction);
                     }
                 }
                 // ELSE followed by an instruction on the same line.  We need to
@@ -910,7 +884,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
             case  KEYWORD_OTHERWISE:
             {
                 // we must have a SELECT at the top of the control stack
-                second = topDo();
+                RexxInstruction *second = topDo();
                 if (!second->isType(KEYWORD_SELECT))
                 {
                     syntaxError(Error_Unexpected_when_otherwise);
@@ -918,12 +892,12 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
 
                 // hook the otherwise up to the SELECT and push the otherwise
                 // on to the top of the stack until we find an END.
-                ((RexxInstructionSelect *)second)->setOtherwise((RexxInstructionOtherwise *)_instruction);
-                pushDo(_instruction);
+                ((RexxInstructionSelect *)second)->setOtherwise((RexxInstructionOtherwise *)instruction);
+                pushDo(instruction);
 
                 // we could have the OTHERWISE on the same line as its following instruction, so
                 // we need to trim the instruction
-                token = nextReal();
+                RexxToken *token = nextReal();
                 if (!token->isEndOfClause())
                 {
                     previousToken();
@@ -943,7 +917,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                 // ok, pop the top instruction.  If this is the
                 // correct type, we're finished with this.  If not the
                 // correct type, we have an error.
-                second = popDo();
+                RexxInstruction *second = popDo();
                 type = second->getType();
                 // verity the type
                 if (type != KEYWORD_SELECT && type != KEYWORD_OTHERWISE && type != KEYWORD_DO && type != KEYWORD_LOOP)
@@ -979,11 +953,11 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
                 // Now do the apprpriate closure action based on the instruction type.
                 if (second->isType(KEYWORD_SELECT))
                 {
-                    ((RexxInstructionSelect *)second)->matchEnd((RexxInstructionEnd *)_instruction, this);
+                    ((RexxInstructionSelect *)second)->matchEnd((RexxInstructionEnd *)instruction, this);
                 }
                 else                           /* must be a DO block                */
                 {
-                    ((RexxInstructionDo *)second)->matchEnd((RexxInstructionEnd *)_instruction, this);
+                    ((RexxInstructionBaseDo *)second)->matchEnd((RexxInstructionEnd *)instruction, this);
                 }
 
                 // We've just completed a large block instruction.  It is possible that
@@ -1000,7 +974,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
             case  KEYWORD_DO:
             case  KEYWORD_LOOP:
             {
-                pushDo(_instruction);
+                pushDo(instruction);
                 break;
             }
 
@@ -1008,7 +982,7 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
             // while it awaits its associated WHEN, OTHERWISE, and END bits.
             case  KEYWORD_SELECT:
             {
-                pushDo(_instruction);
+                pushDo(instruction);
                 break;
             }
 
@@ -1023,39 +997,230 @@ RexxCode *LanguageParser::translateBlock(RexxDirectory *_labels )
     // ok, we have a stack of pending call/function calls to handle.
     // now that we've got all of the labels scanned off, we can figure out
     // what sort of targets these calls will resolve to.
-    _instruction = (RexxInstruction *)(calls->removeFirst());
 
-    // loop through the entire call list
-    while (_instruction != (RexxInstruction *)TheNilObject)
+    for (size_t i = 1, size_t count = calls->items(); i <- count; i++)
     {
+        instruction = (RexxInstruction *)calls->get(i);
         // function calls are expression objects, while CALLs
         // are instructions. Similar, but have different
         // processing methods
-        if (isOfClass(FunctionCallTerm, _instruction))
+        if (isOfClass(FunctionCallTerm, instruction))
         {
-            ((RexxExpressionFunction *)_instruction)->resolve(labels);
+            ((RexxExpressionFunction *)instruction)->resolve(labels);
         }
         else
         {
             // ok, technically, this could be either a CALL or a SIGNAL.
-            ((RexxInstructionCallBase *)_instruction)->resolve(labels);
+            ((RexxInstructionCallBase *)instruction)->resolve(labels);
         }
-        _instruction = (RexxInstruction *)(calls->removeFirst());
     }
 
     // the first instruction is just a dummy we use to anchor
-    // everything will parsing.  We can unchaind that now.
-    first = first->nextInstruction;
+    // everything will parsing.  We can unchain that now.
+    firstInstruction = firstInstruction->nextInstruction;
     // if this code block does not contain labels (pretty common if
     // using an oo style), get rid of those too
-    if (labels != OREF_NULL && labels->isEmpty())
+    if (labels->isEmpty())
     {
         labels = OREF_NULL;
     }
     // now create a code object that is attached to the package.
     // this will have all of the information needed to execute this code.
-    return new RexxCode(package, first, labels, (maxStack + 10), variableIndex);
+    RexxCode *code = new RexxCode(package, firstInstruction, labels, maxStack, variableIndex);
+
+    // we don't automatically create the labels when we translate the block because
+    // they might have been provided by an interpret.  So always clear them out at the
+    // end of a block.
+    labels = OREF_NULL;
 }
+
+
+/**
+ * Resolve dependencies between ::CLASS directives,
+ * rearranging the order of the directives to preserve
+ * relative ordering wherever possible.  Classes with no
+ * dependencies in this source file will be done first,
+ * followed by those with dependencies in the appropriate
+ * order
+ */
+void LanguageParser::resolveDependencies()
+{
+    // if we have classes, here, we need to sort out the install order
+    // and configure the source package with this.
+    if (!classes->isEmpty())
+    {
+        // create a directory for managing the dependencies between the classes
+        RexxDirectory *classDependencies = new_directory();
+        ProtectedObject p1(classDependencies);
+
+        // get the count of classes we need to process.
+        size_t classCount = classes->items();
+
+        // run through the class list having each directive set up its
+        // dependencies
+        for (size_t i = 1; i <= classCount; i++)
+        {
+            ClassDirective *currentClass = (ClassDirective *)classes->get(i);
+            currentClass->addDependencies(classDependencies);
+        }
+
+        // get a array for handling the ordering
+        RexxArray *classOrder = new_array(classCount);
+        ProtectedObject p2(classOrder);
+
+        // now we repeatedly scan the pending directory looking for a class
+        // with no in-program dependencies - it's an error if there isn't one
+        // as we build the classes we have to remove them (their names) from
+        // pending list and from the remaining dependencies
+        while (!classes->isEmpty())
+        {
+            // this is the next one we process
+            ClassDirective *nextInstall = OREF_NULL;
+
+            // the count will update each time through.
+            classCount = classes->items();
+            for (size_t i = 1; i <= classCount; i++)
+            {
+                // get the next directive
+                ClassDirective *currentClass = (ClassDirective *)classes->get(i);
+                // if this class doesn't have any additional dependencies, pick it next.
+                if (currentClass->dependenciesResolved())
+                {
+                    nextInstall = currentClass;
+                    // add this to the class ordering
+                    classOrder->append((RexxObject *)nextInstall);
+                    // remove this from the processing list
+                    classes->deleteItem(i);
+                }
+            }
+
+            // if nothing was located during this pass, we must have circular dependencies
+            // this is an error.
+            if (nextInstall == OREF_NULL)
+            {
+                // directive line where we can give as the source of the error
+                ClassDirective *errorClass = (ClassDirective *)(classes->getValue(classes->firstIndex()));
+                clauseLocation = errorClass->getLocation();
+                syntaxError(Error_Execution_cyclic, name);
+            }
+
+            // ok, now go remove these from the dependencies
+            RexxString *className = nextInstall->getName();
+
+            // now go through the pending list telling each of the remaining classes that
+            // they can remove this dependency from their list
+
+            // the count will update each time through.
+            classCount = classes->items();
+            for (size_t i = 1; i <= classCount; i++)
+            {
+                ClassDirective *currentClass = (ClassDirective *)classes->get(i);
+                currentClass->removeDependency(className);
+            }
+        }
+
+        // now add this to the package
+        package->classes = classOrder;
+        // this requires an install step
+        package->setNeedsInstallation();
+    }
+
+    // ok, now we need to fill in any additional bits needed by the package
+    if (!requires->isEmpty())
+    {
+        package->requires = requires;
+        // this requires an install step
+        package->setNeedsInstallation();
+    }
+    if (!libraries->isEmpty())
+    {
+        package->libraries = libraries;
+    }
+    if (!routines->isEmpty())
+    {
+        package->routines = routines;
+    }
+    if (!publicRoutines->isEmpty())
+    {
+        package->publicRoutines = publicRoutines;
+    }
+    if (!unattachedMethods->isEmpty())
+    {
+        package->unattachedMethods = unattachedMethods;
+    }
+}
+
+
+/**
+ * Flush an pending instructions from the control stack
+ * for a new added instruction.
+ *
+ * @param instruction
+ *               The newly added instruction.
+ */
+void LanguageParser::flushControl(RexxInstruction *instruction)
+{
+    // loop through the control stack
+    for (;;)
+    {
+        // get the type of the instruction at the top of the control
+        // stack.
+        InstructionKeyword type = topDoType();   /* get the instruction type          */
+        // is this a pending ELSE clause?    */
+        if (type == KEYWORD_ELSE)
+        {
+            // pop the instruction off of the stack
+            RexxInstruction *second = popDo();
+            // and create a new end marker for that instruction.
+            RexxInstruction second = endIfNew((RexxInstructionIf *)second);
+            // have an instruction to add?
+            if (instruction != OREF_NULL)
+            {
+                // add to the current location and don't process any additional
+                // instructions.
+                addClause(instruction);
+                instruction = OREF_NULL;
+            }
+            // now add the else terminator behind this.
+            addClause(second);
+            // we can go around again on this one.
+        }
+        // nested IF-THEN situation?
+        else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
+        {
+            // get the top item
+            RexxInstruction *second = popDo();
+            // have an instruction to add?
+            if (instruction != OREF_NULL)
+            {
+                // insert this here and null it out.
+                addClause(instruction);
+                instruction = OREF_NULL;
+            }
+            // we need a new end marker
+            second = endIfNew((RexxInstructionIf *)second);
+            // we add this clause behine the new one, and also add this
+            // to the control stack as a pending instruction
+            this->addClause(second);
+            this->pushDo(second);
+
+            // we're done with this
+            break;
+        }
+        // some other type of construct.  We just add the instruction to the
+        // execution stream
+        else
+        {
+            if (instruction != OREF_NULL)
+            {
+                addClause(instruction);
+            }
+            // all done flushing
+            break;
+        }
+    }
+}
+
 
 /**
  * Test if a named variable has been previously
@@ -1511,31 +1676,15 @@ RexxVariableBase *LanguageParser::getRetriever(RexxString *name)
  * are a linear chain of instruction objects, with all
  * branching handled by additional links within instructions.
  *
- * @param _instruction
+ * @param instruction
  *               The new instruction to add.
  */
-void LanguageParser::addClause(RexxInstruction *_instruction)
+void LanguageParser::addClause(RexxInstruction *instruction)
 {
-    // is this the first one in the chain?
-    if (first == OREF_NULL)
-    {
-        // we keep track of both the first and last members
-        // of the chain.
-        first = _instruction;
-        last =  _instruction;
-    }
-    // adding on to the chain.  We just need to chain these and
-    // update the last pointer
-    else
-    {
-        last->setNext(_instruction);
-        last = _instruction);
-    }
-
-    // we add the instruction objects to the global table to
-    // protect them from garbage collection until they are protected...
-    // we can remove this now.
-    toss((RexxObject *)_instruction);
+    // NOTE:  the first instruction is set manually, so we should ALWAYS
+    // have non-null values here.
+    lastInstruction->setNext(instruction);
+    lastInstruction = instruction);
 }
 
 
@@ -2776,13 +2925,13 @@ void LanguageParser::error(int errorcode, SourceLocation &location, RexxArray *s
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, subs, OREF_NULL);
 }
 
-void LanguageParser::errorLine(int errorcode, RexxInstruction *_instruction)
+void LanguageParser::errorLine(int errorcode, RexxInstruction *instruction)
 /******************************************************************************/
 /* Function:  Raise an error where one of the error message substitutions is  */
 /*            the line number of another instruction object                   */
 /******************************************************************************/
 {
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(instruction->getLineNumber())), OREF_NULL);
 }
 
 void LanguageParser::errorPosition(int errorcode, RexxToken *token )
@@ -2891,7 +3040,7 @@ void LanguageParser::error(int errorcode, RexxObject *value1, RexxObject *value2
     ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
-void LanguageParser::blockError(RexxInstruction *_instruction)
+void LanguageParser::blockError(RexxInstruction *instruction)
 /******************************************************************************/
 /* Function:  Raise an error for an unclosed block instruction.               */
 /******************************************************************************/
@@ -2899,40 +3048,40 @@ void LanguageParser::blockError(RexxInstruction *_instruction)
     // get the last instruction location and set as the current error location
     clauseLocation = last->getLocation();
 
-    switch (_instruction->getType())
+    switch (instruction->getType())
     {
         // each type of block instruction has its own message
 
         // DO instruction
         case KEYWORD_DO:
-            syntaxError(Error_Incomplete_do_do, _instruction);
+            syntaxError(Error_Incomplete_do_do, instruction);
             break;
 
         // LOOP instruction
         case KEYWORD_LOOP:
-            syntaxError(Error_Incomplete_do_loop, _instruction);
+            syntaxError(Error_Incomplete_do_loop, instruction);
             break;
 
         // SELECT instruction
         case KEYWORD_SELECT:
-            syntaxError(Error_Incomplete_do_select, _instruction);
+            syntaxError(Error_Incomplete_do_select, instruction);
             break;
 
         // OTHERWISE section of a SELECT
         case KEYWORD_OTHERWISE:
-            syntaxError(Error_Incomplete_do_otherwise, _instruction);
+            syntaxError(Error_Incomplete_do_otherwise, instruction);
             break;
 
         // different variants of an IF
         case KEYWORD_IF:
         case KEYWORD_IFTHEN:
         case KEYWORD_WHENTHEN:
-            syntaxError(Error_Incomplete_do_then, _instruction);
+            syntaxError(Error_Incomplete_do_then, instruction);
             break;
 
         // ELSE problem
         case KEYWORD_ELSE:
-            syntaxError(Error_Incomplete_do_else, _instruction);
+            syntaxError(Error_Incomplete_do_else, instruction);
             break;
     }
 }

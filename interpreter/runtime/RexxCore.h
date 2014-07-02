@@ -78,7 +78,7 @@ public:
     }
 
     // flip the value of a bit
-    inline void reset(const TEnum flag)
+    inline void flip(const TEnum flag)
     {
         flags.flip(flag);
     }
@@ -138,7 +138,8 @@ public:
     }
 
 private:
-    std:bitset < 32 > flags;
+
+    std::bitset<TMaxFlags> flags;
 };
 
 

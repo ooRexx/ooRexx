@@ -220,7 +220,7 @@ class LanguageParser: public RexxInternalObject
            bool isExposed(RexxString *varName);
 
     // instruction parsing methods
-    RexxInstruction *parseInstruction();
+    RexxInstruction *nextInstruction();
     void        isExposeValid();
     static bool parseTraceSetting(RexxString *, size_t &, size_t &, char &);
     static RexxString *formatTraceSetting(size_t source);
@@ -276,7 +276,7 @@ class LanguageParser: public RexxInternalObject
     inline bool topDoIsType(InstructionKeyword t) { return ((RexxInstruction *)(control->peek()))->isType(t); };
 
     // directive parsing methods
-    void        parseDirective();
+    void        nextDirective();
     void        routineDirective();
     void        requiresDirective();
     void        libraryDirective(RexxString *name, RexxToken *token);
@@ -396,8 +396,9 @@ class LanguageParser: public RexxInternalObject
 
 protected:
 
-    RexxSource *package;                 // the source package we're translating
+    RexxString *name;                    // the name of the code we're translating (frequently a file name)
     ProgramSource *source;               // the source we're translating.
+    RexxSource *package;                 // the source package we're translating
     FlagSet<ParsingFlags, 32> flags;     // a set of flags with parse state
     const char *current;                 // current working line
     size_t currentLength;                // length of current line
@@ -407,6 +408,7 @@ protected:
     size_t lineOffset;                   // current offset with in the line
     size_t interpretAdjust;              // INTERPRET adjustment TODO:  might not need this in the parser.
 
+    RexxCode        *mainSection;        // the main section of code before any directives
     RexxStack       *holdStack;          // stack for holding temporaries
     RexxDirectory   *literals;           // root of associated literal list
     RexxDirectory   *strings;            // common pool of created strings
@@ -430,12 +432,11 @@ protected:
     RexxDirectory   *labels;             // root of associated label list
     RexxIdentityTable *guardVariables;   // exposed variables in guard list
     RexxDirectory   *exposedVariables;   // root of exposed variables list
-    RexxList        *calls;              // root of call list
+    RexxArray       *calls;              // root of call list
 
     size_t           currentStack;       // current expression stack depth
     size_t           maxStack;           // maximum stack depth
     size_t           variableIndex;      // current variable index slot
-
 
     // table of character values
     static int characterTable[];

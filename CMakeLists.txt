@@ -68,24 +68,21 @@ string(TIMESTAMP ORX_YEAR %Y)
 set (ORX_COPY_YEAR 2005-${ORX_YEAR})
 string(TOUPPER ${CMAKE_SYSTEM_NAME} ORX_SYS_STR)
 
-# Get the SVN revision number of an svn command line client is
-# available.  This version will run at build time rather than only
-# at configuration generation time.
-FIND_PROGRAM(SVN_EXECUTABLE svn
-  DOC "subversion command line client")
-
-# only do this if we have an svn client.
-if (SVN_EXECUTABLE)
-    MACRO(Subversion_GET_REVISION dir variable)
-      EXECUTE_PROCESS(COMMAND ${SVN_EXECUTABLE} info ${dir}
-        OUTPUT_VARIABLE ${variable}
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-      STRING(REGEX REPLACE "^(.*\n)?Revision: ([^\n]+).*"
-        "\\2" ${variable} "${${variable}}")
-    ENDMACRO(Subversion_GET_REVISION)
-
-    Subversion_GET_REVISION(${CMAKE_SOURCE_DIR} ORX_BLD_LVL)
+# Platform independent architecture test
+if (CMAKE_SIZEOF_VOID_P MATCHES 8)
+    set(ORX_ARCHITECTURE "64")
+    message(STATUS "Building for a 64-bit architecture")
+else ()
+    set(ORX_ARCHITECTURE "32")
+    message(STATUS "Building for a 32-bit architecture")
 endif ()
+
+find_package(Subversion)
+if(SUBVERSION_FOUND)
+  Subversion_WC_INFO(${PROJECT_SOURCE_DIR} ORX)
+  set(ORX_BLD_LVL ${ORX_WC_REVISION})
+endif()
+
 
 message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
 
@@ -162,7 +159,9 @@ if (WIN32)
 
    # The DOC source dir is usually specified in native form...need to convert it
    # to the CMAKE format for the install commands.
-   file(TO_CMAKE_PATH ${DOC_SOURCE_DIR} DOC_SOURCE_DIR)
+   if (DOC_SOURCE_DIR)
+      file(TO_CMAKE_PATH ${DOC_SOURCE_DIR} DOC_SOURCE_DIR)
+   endif()
 
    # location where we assemble everything to build the installer
    set (NSIS_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
@@ -215,7 +214,7 @@ if (WIN32)
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
-   if ($ENV{Platform} STREQUAL "X64")
+   if (${ORX_ARCHITECTURE} STREQUAL "64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
       set (NSIS_CPU "x86_64")
    else ()
@@ -904,7 +903,7 @@ if (XALAN_EXECUTABLE)
            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${build_behaviour_dir}/${target}
            COMMAND ${XALAN_EXECUTABLE} -o ${build_behaviour_dir}/${target} ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
            DEPENDS ${build_behaviour_dir}/PrimitiveClasses.xml ${build_behaviour_dir}/${xsl}
-           COMMENT "Generating ${CMAKE_CURRENT_SOURCE_DIR}/${target}"
+           COMMENT "Generating ${CMAKE_CURRENT_SOURCE_DIR}/${build_behaviour_dir}/${target}"
            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
            )
     endmacro (generate_class_header)
@@ -1490,7 +1489,9 @@ add_subdirectory (samples samples)
 #################### NSIS Package Targets ##########################
 #################### NSIS Package Targets ##########################
 
-if (WIN32)
+# The Windows installer assumes we have the docs available.  Don't try building
+# any of the installer stuff if this is not available.
+if (WIN32 AND DOC_SOURCE_DIR)
    # Add the install directory to the module path so the custom template can be located.
    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
 
@@ -1661,7 +1662,7 @@ if (WIN32)
       set(INSTALLER_SCRIPT "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.nsi")
 
       # create an installer file from the template
-      message("Building NSIS template ${INSTALLER_SCRIPT}")
+      message(STATUS "Building NSIS template ${INSTALLER_SCRIPT}")
       configure_file(${NSIS_INSTALLER_SOURCE_DIR}/cpack.nsi.template.in ${NSIS_INSTALLER_DIR}/${INSTALLER_SCRIPT} @ONLY)
 
    # handy macro for copying files from the source into the source directory.
@@ -1744,7 +1745,6 @@ if (WIN32)
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "Removing NSIS installer build files")
    endif()
-
 endif ()
 
 

@@ -843,7 +843,9 @@ RexxClass *RexxSource::findClass(RexxString *className)
 
 
 /**
- * Perform a non-contextual install of a package.
+ * Perform a non-contextual install of a package.  This
+ * processes the install without calling any leading code
+ * section.
  */
 void RexxSource::install()
 {
@@ -851,41 +853,36 @@ void RexxSource::install()
     {
         // In order to install, we need to call something.  We manage this by
         // creating a dummy stub routine that we can call to force things to install
-        RexxCode *stub = new RexxCode(this, OREF_NULL, OREF_NULL, 10, FIRST_VARIABLE_INDEX);
-        ProtectedObject p2(stub);
-        RoutineClass *code = new RoutineClass(programName, stub);
-        p2 = code;
+        Protected<RexxCode> code = new RoutineClass(programName, new RexxCode(this, OREF_NULL));
         ProtectedObject dummy;
         code->call(ActivityManager::currentActivity, programName, NULL, 0, dummy);
     }
 }
 
 
-void RexxSource::processInstall(
-    RexxActivation *activation)        /* invoking activation               */
-/******************************************************************************/
-/* Function:  Process directive information contained within a method, calling*/
-/*            all ::requires routines, creating all ::class methods, and      */
-/*            processing all ::routines.                                      */
-/******************************************************************************/
+/**
+ * Process directive information contained within a method, calling
+ * all ::requires routines, creating all ::class objects, and
+ * loading all required libraries.
+ *
+ * @param activation
+ */
+void RexxSource::processInstall(RexxActivation *activation)
 {
-    /* turn the install flag off         */
-    /* immediately, otherwise we may     */
-    /* run into a recursion problem      */
-    /* when class init methods are       */
-    /* processed                         */
-    flags &= ~_install;            /* we are now installed              */
+    // turn the install flag off immediately, otherwise we may
+    // run into a recursion problem when class init methods are  processed
+    flags[installRequired] = false;
 
     // native packages are processed first.  The requires might actually need
     // functons loaded by the packages
     if (libraries != OREF_NULL)
     {
-        /* classes and routines              */
         // now loop through the requires items
-        for (size_t i = libraries->firstIndex(); i != LIST_END; i = libraries->nextIndex(i))
+
+        for (size_t i = 1, size_t count = libraries->items(); i <= count; i++)
         {
             // and have it do the installs processing
-            LibraryDirective *library = (LibraryDirective *)libraries->getValue(i);
+            LibraryDirective *library = (LibraryDirective *)libraries->get(i);
             library->install(activation);
         }
     }
@@ -893,16 +890,16 @@ void RexxSource::processInstall(
     // native methods and routines are lazy resolved on first use, so we don't
     // need to process them here.
 
-    if (requires != OREF_NULL)     /* need to process ::requires?       */
+    // do we have requires to process?
+    if (requires != OREF_NULL)
     {
-        /* classes and routines              */
         // now loop through the requires items
-        for (size_t i = requires->firstIndex(); i != LIST_END; i = requires->nextIndex(i))
+        for (size_t i = 1, size_t count = requires->items(); i <= count; i++)
         {
             // and have it do the installs processing.  This is a little roundabout, but
             // we end up back in our own context while processing this, and the merge
             // of the information happens then.
-            RequiresDirective *_requires = (RequiresDirective *)requires->getValue(i);
+            RequiresDirective *_requires = (RequiresDirective *)requires->get(i);
             _requires->install(activation);
         }
     }
@@ -914,21 +911,19 @@ void RexxSource::processInstall(
         setField(installedClasses, new_directory());
         /* and the public classes            */
         setField(installedPublicClasses, new_directory());
-        RexxArray *createdClasses = new_array(classes->items());
+        Protected<RexxArray> createdClasses = new_array(classes->items());
 
-        ProtectedObject p(createdClasses);
-        size_t index = 1;       // used for keeping track of install order
-        for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+        for (size_t i = 1, size_t count = classes->items(); i <= count; i++)
         {
             /* get the class info                */
-            ClassDirective *current_class = (ClassDirective *)classes->getValue(i);
+            ClassDirective *current_class = (ClassDirective *)classes->get(i);
             // save the newly created class in our array so we can send the activate
             // message at the end
             RexxClass *newClass = current_class->install(this, activation);
-            createdClasses->put(newClass, index++);
+            createdClasses->put(newClass, i);
         }
         // now send an activate message to each of these classes
-        for (size_t j = 1; j < index; j++)
+        for (size_t i = 1, size_t count = createdClasses->items(); i <= count; i++)
         {
             RexxClass *clz = (RexxClass *)createdClasses->get(j);
             clz->sendMessage(OREF_ACTIVATE);

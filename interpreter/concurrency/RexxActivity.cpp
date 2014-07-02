@@ -1338,6 +1338,7 @@ void RexxActivity::live(size_t liveMark)
   ProtectedObject *p = protectedObjects;
   while (p != NULL)
   {
+      p->mark(liveMark);
       memory_mark(p->protectedObject);
       p = p->next;
   }
@@ -1361,24 +1362,9 @@ void RexxActivity::liveGeneral(int reason)
   ProtectedObject *p = protectedObjects;
   while (p != NULL)
   {
-      memory_mark_general(p->protectedObject);
-      p = p->next;
+      p->markGeneral(reason);
   }
 }
-
-void RexxActivity::flatten(RexxEnvelope* envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-                                       /* Activities don't get moved,       */
-                                       /*  we just return OREF_NULL. we may */
-                                       /*  create a special proxy for this  */
-                                       /*  to re-establish an activation on */
-                                       /*  system.                          */
-  return;
-}
-
 
 
 void RexxActivity::run()

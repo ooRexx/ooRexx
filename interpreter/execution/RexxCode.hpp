@@ -46,7 +46,6 @@
 
 #include "SourceFile.hpp"
 
-
 /**
  * The fundamental unit of Rexx code execution.  This
  * anchors the pieces that allow Rexx code to run.
@@ -55,11 +54,11 @@ class RexxCode : public BaseCode
 {
   public:
    void *operator new(size_t);
-   inline void *operator new(size_t size, void *ptr) {return ptr;};
    inline void  operator delete(void *) { ; }
-   inline void  operator delete(void *, void *) { ; }
 
-   RexxCode(RexxSource *, RexxInstruction *, RexxDirectory *, size_t, size_t);
+   const size_t MINIMUM_STACK_FRAME = 0;
+
+   RexxCode(RexxSource *s, RexxInstruction *i, RexxDirectory *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
    inline RexxCode(RESTORETYPE restoreType) { ; };
 
    virtual void live(size_t);

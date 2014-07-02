@@ -50,7 +50,7 @@
 /**
  * Parse a directive instruction.
  */
-void LanguageParser::directive()
+void LanguageParser::nextDirective()
 {
     // we are in a context where everthing we check is expected to be a
     // directive.

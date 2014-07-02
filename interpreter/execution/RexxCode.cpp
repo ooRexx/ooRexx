@@ -81,7 +81,8 @@ RexxCode::RexxCode(RexxSource *_source, RexxInstruction *_start, RexxDirectory *
     source = _source;
     start = _start;
     labels = _labels;
-    maxStack = maxstack;
+    // we add in a reasonable extra just in case the calculation got a little off.
+    maxStack = maxstack + MINIMUM_STACK_FRAME;
     vdictSize = variable_index;
 }
 

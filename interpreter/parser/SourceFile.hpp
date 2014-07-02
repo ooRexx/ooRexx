@@ -44,6 +44,7 @@
 #ifndef Included_RexxSource
 #define Included_RexxSource
 
+#include <bitset>
 #include "SourceLocation.hpp"
 #include "ListClass.hpp"
 #include "QueueClass.hpp"
@@ -133,18 +134,11 @@ class RexxSource: public RexxInternalObject
     void        setup();
     void        extractNameInformation();
     bool        reconnect();
-    void        setReconnect();
-    void        setBufferedSource(RexxBuffer *newSource) { this->initBuffered(newSource); }
-    void        interpretLine(size_t);
     size_t      sourceSize();
-    RexxString *get(size_t);
     RexxString *traceBack(RexxActivation *, SourceLocation &, size_t, bool);
     RexxString *extract(SourceLocation &);
     RexxArray  *extractSource(SourceLocation &);
     RexxArray  *extractSource();
-    void        globalSetup();
-    RexxCode   *interpretMethod(RexxDirectory *);
-    RexxCode   *interpret(RexxString *, RexxDirectory *, size_t);
     void        mergeRequired(RexxSource *);
     PackageClass *loadRequires(RexxActivity *activity, RexxString *target);
     PackageClass *loadRequires(RexxActivity *activity, RexxString *target, RexxArray *s);
@@ -160,30 +154,24 @@ class RexxSource: public RexxInternalObject
     RexxString *resolveProgramName(RexxActivity *activity, RexxString *name);
     void        processInstall(RexxActivation *);
     void        install();
-    RexxCode   *translate(RexxDirectory *);
-    void        setGuard();
-    RexxArray  *getGuard();
-    RexxVariableBase *getRetriever(RexxString *);
     RexxInstruction *sourceNewObject(size_t, RexxBehaviour *, int);
 
     bool        isTraceable();
-    inline bool isInterpret() { return (flags & _interpret) != 0; }
 
-    inline bool        needsInstallation() { return (this->flags&_install) != 0; }
-    inline void        install(RexxActivation *activation) { if (needsInstallation()) this->processInstall(activation); };
-    inline void        addReference(RexxObject *reference) { this->calls->addLast(reference); }
+    inline bool        needsInstallation() { return flags[installRequired]; }
+    inline bool        setNeedsInstallation() { flags[installRequired] = true; }
+    inline void        install(RexxActivation *activation) { if (needsInstallation()) processInstall(activation); };
            void        setProgramName(RexxString *name);
-    inline RexxString *getProgramName() { return this->programName; }
-    inline RexxString *getProgramDirectory() { return this->programDirectory; }
-    inline RexxString *getProgramExtension() { return this->programExtension; }
-    inline RexxString *getProgramFile() { return this->programFile; }
-    inline RexxDirectory *getMethods() { return this->methods; };
-    inline RexxDirectory *getRoutines() { return this->routines; };
+    inline RexxString *getProgramName() { return programName; }
+    inline RexxString *getProgramDirectory() { return programDirectory; }
+    inline RexxString *getProgramExtension() { return programExtension; }
+    inline RexxString *getProgramFile() { return programFile; }
+    inline RexxDirectory *getMethods() { return unattachedMethods; };
+    inline RexxDirectory *getRoutines() { return routines; };
 
-    inline bool        isInternalCode() { return this->isOldSpace(); }
-    StackFrameClass *createStackFrame();
+    inline bool        isInternalCode() { return isOldSpace(); }
 
-    void        setSecurityManager(RexxObject *manager) { OrefSet(this, this->securityManager, new SecurityManager(manager)); }
+    void        setSecurityManager(RexxObject *manager) { setField(securityManager, new SecurityManager(manager)); }
     SecurityManager *getSecurityManager() { return securityManager; }
 
     inline RexxDirectory *getLocalRoutines() { return routines; }
@@ -200,7 +188,7 @@ class RexxSource: public RexxInternalObject
     inline RexxDirectory *getInstalledRoutines() { install(); return routines; }
     inline RexxDirectory *getInstalledPublicRoutines() { install(); return publicRoutines; }
     inline RexxDirectory *getImportedRoutines() { install(); return mergedPublicRoutines; }
-    inline RexxDirectory *getDefinedMethods() { install(); return methods; }
+    inline RexxDirectory *getDefinedMethods() { install(); return unattachedMethods; }
     inline RexxList      *getPackages() { install(); return loadedPackages; }
     inline void           setDigits(size_t d) { digits = d; }
     inline size_t         getDigits() { return digits; }
@@ -225,27 +213,33 @@ protected:
     RexxString *programExtension;        // optional program extension
     SecurityManager *securityManager;    // source execution time security
 
-    RexxCode *initCode;                  // the initialization code
+    RexxCode *initCode;                  // the initialization code (can be null)
+    BaseExecutable *mainExecutable;      // main execution unit for this package (a method or routine)
 
-    RexxList      *loadedPackages;       // packages imported by this package
     PackageClass  *package;              // our package wrapper
     RexxSource    *parentSource;         // a parent source context environment;
+
+    // sections derived from directives
+
     RexxDirectory *routines;             // routines found on directives
     RexxDirectory *publicRoutines;       // PUBLIC routines directive routines
     RexxArray     *libraries;            // packages requiring loading
     RexxArray     *requires;             // requires directives
     RexxArray     *classes;              // classes found on directives
     RexxDirectory *dataAssets;           // assets defined in the package
+    RexxDirectory *unattachedMethods;    // methods found on directives
 
+    // sections resolved from the install process.
+
+    RexxArray     *loadedPackages;       // packages imported by this package
                                          // all public installed classes
     RexxDirectory *installedPublicClasses;
     RexxDirectory *installedClasses;    // entire list of installed classes
     RexxDirectory *mergedPublicClasses;  // entire merged set of classes
                                          // all public required routines
     RexxDirectory *mergedPublicRoutines;
-    RexxDirectory *methods;              // methods found on directives
 
-    bitset<32>     flags;                // flag settings.  Make it big enough for some expansion.
+    std::bitset<32>     flags;           // flag settings.  Make it big enough for some expansion.
 
     // settings inherited from ::options statements
     size_t digits;                       // numeric digits setting

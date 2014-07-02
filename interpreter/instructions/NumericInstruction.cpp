@@ -56,7 +56,7 @@
  *               function.
  * @param flags  A set of flags that drive the execution function.
  */
-RexxInstructionNumeric::RexxInstructionNumeric(RexxObject *_expression, bitset<32> flags)
+RexxInstructionNumeric::RexxInstructionNumeric(RexxObject *_expression, std::bitset<32> flags)
 {
     expression = _expression;
     numericFlags = flags;

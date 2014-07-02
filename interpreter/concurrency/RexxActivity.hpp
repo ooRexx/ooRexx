@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -115,16 +115,8 @@ typedef enum
 // used only internally, can be moved to a differnet value, if the using code is adapted accordingly
 #define LAST_EXIT (RXNOOFEXITS - 1)    /* top bound of the exits            */
 
-                                       /* NOTE:  The following object       */
-                                       /* definitions are only included in  */
-                                       /* a module if the define            */
-                                       /* INCL_ACTIVITY_DEFINITIONS is used */
-                                       /* since they include data types that*/
-                                       /* are not generally required (or    */
-                                       /* available in other classes that   */
-                                       /* might be using the activity class */
-                                       /* methods                           */
- class RexxActivity : public RexxInternalObject {
+class RexxActivity : public RexxInternalObject
+{
   friend class ProtectedObject;
   friend class ActivationFrame;
   public:
@@ -136,6 +128,9 @@ typedef enum
    inline RexxActivity(RESTORETYPE restoreType) { ; };
    RexxActivity();
    RexxActivity(bool);
+
+   virtual void live(size_t);
+   virtual void liveGeneral(int reason);
 
    void reset();
    void runThread();
@@ -172,9 +167,6 @@ typedef enum
    RexxObject *displayDebug(RexxDirectory *);
    RexxString *buildMessage(wholenumber_t, RexxArray *);
    RexxString *messageSubstitution(RexxString *, RexxArray *);
-   void        live(size_t);
-   void        liveGeneral(int reason);
-   void        flatten(RexxEnvelope *);
    void        run();
    void        run(RexxMessage *target);
    void        checkActivationStack();

@@ -51,7 +51,7 @@
  */
 class LineDescriptor
 {
-public:
+ public:
     LineDescriptor() : position(0), length(0) { }
 
     // clear the descriptor
@@ -80,9 +80,9 @@ public:
 class ProgramSource: public RexxInternalObject
 {
 public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void  operator delete(void *, void *) { ; }
-    ProgramSource(size_t adjust) : interpretAdjust(adjust), lineCount(0) { }
+    void *operator new(size_t);
+    inline void  operator delete(void *) { ; }
+    ProgramSource() : lineCount(0) { };
 
     // each subclass will need to implement this.
     // default setup is to do nothing.
@@ -104,7 +104,6 @@ public:
 protected:
 
     size_t lineCount;               // count of lines in the source file.
-    size_t interpretAdjust;         // if this is an interpret, we fudge the line positions
 };
 
 
@@ -116,10 +115,8 @@ class BufferProgramSource: public ProgramSource
 {
  public:
     void        *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
-    BufferProgramSource(RexxBuffer *b, size_t adjust) : buffer(b), descriptorArea(OREF_NULL) : ProgramSource(adjust) { }
+    BufferProgramSource(RexxBuffer *b) : buffer(b), descriptorArea(OREF_NULL) : ProgramSource() { }
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);
@@ -151,13 +148,11 @@ class FileProgramSource: public BufferProgramSource
 {
  public:
     void        *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
     inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
 
     // we provide the buffer source after we've read the file information in from
     // the target file.
-    FileProgramSource(RexxString *f) : fileName(f), BufferProgramSource(OREF_NULL, 0) { }
+    FileProgramSource(RexxString *f) : fileName(f), BufferProgramSource(OREF_NULL) { }
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);
@@ -180,10 +175,8 @@ class ArrayProgramSource: public ProgramSource
 {
  public:
     void        *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
-    ArrayProgramSource(RexxArray *a, size_t adjust) : array(a) : ProgramSource(adjust) { }
+    inline void  operator delete(void *) { ; };
+    ArrayProgramSource(RexxArray *a, size_t adjust) : interpretAdjust(adjust), array(a), ProgramSource() { };
 
     virtual void live(size_t);
     virtual void liveGeneral(int reason);
@@ -194,6 +187,7 @@ class ArrayProgramSource: public ProgramSource
 
  protected:
 
+    size_t interpretAdjust;  // if this is an interpret, we fudge the line positions
     RexxArray  *array;       // the array where the source data is installed
 };
 

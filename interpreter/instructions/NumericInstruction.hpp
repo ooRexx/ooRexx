@@ -67,6 +67,6 @@ class RexxInstructionNumeric : public RexxInstructionExpression
     virtual void execute(RexxActivation *, RexxExpressionStack *);
 
  protected:
-    bitset<32>    numericFlags;
+    std::bitset<32>    numericFlags;
 };
 #endif

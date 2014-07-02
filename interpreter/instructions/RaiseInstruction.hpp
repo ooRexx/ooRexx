@@ -74,7 +74,7 @@ class RexxInstructionRaise : public RexxInstruction {
 
  protected:
 
-    bitset<32>  instructionFlags;        // instruction control flags
+    std::bitset<32>  instructionFlags;   // instruction control flags
     RexxObject *rcValue;                 // RC value expression
     RexxString *conditionName;           // condition trap name
     RexxObject *description;             // condition description
