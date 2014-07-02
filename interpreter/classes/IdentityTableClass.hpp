@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,28 +46,29 @@
 
 #include "TableClass.hpp"
 
-class RexxIdentityTable : public RexxTable {
-  public:
-   void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-                                       /* So it doesn't need to do anythin*/
-   inline RexxIdentityTable(RESTORETYPE restoreType) { ; };
+class RexxIdentityTable : public RexxTable
+{
+ public:
+    void * operator new(size_t size, void *objectPtr) { return objectPtr; };
 
-   virtual RexxObject *remove(RexxObject *key);
-   virtual RexxObject *get(RexxObject *key);
-   virtual RexxObject *put(RexxObject *, RexxObject *);
-   virtual RexxObject *add(RexxObject *, RexxObject *);
-   virtual RexxObject *removeItem(RexxObject *value);
-   virtual RexxObject *hasItem(RexxObject *targetIndex);
-   virtual RexxObject *getIndex(RexxObject * value);
+    inline RexxIdentityTable(RESTORETYPE restoreType) { ; };
 
-   inline RexxObject  *hasItem(RexxObject *newValue, RexxObject *targetIndex) {return this->contents->primitiveHasItem(newValue, targetIndex); };
-   inline RexxArray   *allAt(RexxObject *key) {return this->contents->primitiveGetAll(key);}
-   inline RexxObject  *findSuperScope(RexxObject *v) { return this->contents->primitiveNextItem(v, TheNilObject); };
+    virtual RexxObject *remove(RexxObject *key);
+    virtual RexxObject *get(RexxObject *key);
+    virtual RexxObject *put(RexxObject *, RexxObject *);
+    virtual RexxObject *add(RexxObject *, RexxObject *);
+    virtual RexxObject *removeItem(RexxObject *value);
+    virtual RexxObject *hasItem(RexxObject *targetIndex);
+    virtual RexxObject *getIndex(RexxObject * value);
 
-   RexxObject *newRexx(RexxObject **, size_t);
-   static void createInstance();
-   static RexxIdentityTable *newInstance(size_t size);
-   static RexxClass *classInstance;
+    inline RexxObject  *hasItem(RexxObject *newValue, RexxObject *targetIndex) {return this->contents->primitiveHasItem(newValue, targetIndex); };
+    inline RexxArray   *allAt(RexxObject *key) {return this->contents->primitiveGetAll(key);}
+    inline RexxObject  *findSuperScope(RexxObject *v) { return this->contents->primitiveNextItem(v, TheNilObject); };
+
+    RexxObject *newRexx(RexxObject **, size_t);
+    static void createInstance();
+    static RexxIdentityTable *newInstance(size_t size);
+    static RexxClass *classInstance;
 };
 
 

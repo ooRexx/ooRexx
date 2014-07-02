@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -53,9 +53,9 @@ public:
     PackageClass(RexxSource *source);
     inline PackageClass(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
 
     static void createInstance();
     static RexxClass *classInstance;
@@ -97,8 +97,6 @@ public:
 
 protected:
     RexxSource *source;             // the wrappered source object
-
-
 };
 
 

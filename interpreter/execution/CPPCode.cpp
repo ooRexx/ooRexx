@@ -902,7 +902,7 @@ CPPM(RexxString::caselessCompareToRexx),
 CPPM(RexxString::makeArrayRexx),
 
 CPPM(RexxString::newRexx),
-CPPM(RexxMutableBufferClass::newRexx),
+CPPM(RexxMutableBuffer::newRexx),
 CPPM(RexxMutableBuffer::lengthRexx),
 CPPM(RexxMutableBuffer::makeArrayRexx),
 CPPM(RexxMutableBuffer::append),

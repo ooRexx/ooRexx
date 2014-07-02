@@ -774,12 +774,16 @@ RexxObject *RexxDirectory::removeItem(RexxObject *target)
     return TheNilObject;     // nothing removed.
 }
 
-RexxObject *RexxDirectory::newRexx(
-    RexxObject **init_args,
-    size_t       argCount)
-/******************************************************************************/
-/* Function:  Create a new directory for a REXX program                       */
-/******************************************************************************/
+
+/**
+ * Create a directory object from Rexx code.
+ *
+ * @param init_args The arguments to the NEW method.
+ * @param argCount  The argument count.
+ *
+ * @return A new directory object.
+ */
+RexxObject *RexxDirectory::newRexx(RexxObject **init_args, size_t       argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -795,6 +799,7 @@ RexxObject *RexxDirectory::newRexx(
 
     return newDirectory;                 /* return the new directory          */
 }
+
 
 RexxDirectory *RexxDirectory::newInstance()
 /******************************************************************************/

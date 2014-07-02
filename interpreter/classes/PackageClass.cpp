@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -65,54 +65,55 @@ void PackageClass::createInstance()
 }
 
 
+/**
+ * Allocate storage for a PackageClass instance.
+ *
+ * @param size   The size of the object.
+ *
+ * @return Object storage for a new instance.
+ */
 void *PackageClass::operator new (size_t size)
 /******************************************************************************/
 /* Function:  create a new method instance                                    */
 /******************************************************************************/
 {
-                                         /* get a new method object           */
     return new_object(size, T_Package);
 }
 
 
+/**
+ * Initialize a package class instance.
+ *
+ * @param s      The source object we're attached to.
+ */
 PackageClass::PackageClass(RexxSource *s)
-/******************************************************************************/
-/* Function:  Initialize a method object                                      */
-/******************************************************************************/
 {
-    OrefSet(this, this->source, s);      /* store the code                    */
+    source = s;
 }
 
 
 void PackageClass::live(size_t liveMark)
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
 {
-    memory_mark(this->source);
-    memory_mark(this->objectVariables);
+    memory_mark(source);
+    memory_mark(objectVariables);
 }
+
 
 void PackageClass::liveGeneral(int reason)
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
 {
-    memory_mark_general(this->source);
-    memory_mark_general(this->objectVariables);
+    memory_mark_general(source);
+    memory_mark_general(objectVariables);
 }
 
+
 void PackageClass::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
 {
-  setUpFlatten(PackageClass)
+    setUpFlatten(PackageClass)
 
-   flatten_reference(newThis->source, envelope);
-  flatten_reference(newThis->objectVariables, envelope);
+     flattenRef(source);
+     flattenRef(objectVariables);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 
@@ -344,7 +345,6 @@ RexxArray *PackageClass::getImportedPackages()
     {
         return new_array((size_t)0);
     }
-
 }
 
 
@@ -536,13 +536,16 @@ RexxObject *PackageClass::setSecurityManager(RexxObject *manager)
 }
 
 
-PackageClass *PackageClass::newRexx(
-    RexxObject **init_args,            /* subclass init arguments           */
-    size_t       argCount)             /* number of arguments passed        */
-/******************************************************************************/
-/* Function:  Create a new packag from REXX code contained in a file or an    */
-/*            array                                                           */
-/******************************************************************************/
+/**
+ * Create a new package from code contained in a file
+ * or array.
+ *
+ * @param init_args The pointer to the new arguments.
+ * @param argCount  The count of arguments.
+ *
+ * @return A new package object.
+ */
+PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -550,19 +553,19 @@ PackageClass *PackageClass::newRexx(
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxObject *pgmname;                 /* method name                       */
-    RexxObject *_source;                  /* Array or string object            */
-    size_t initCount = 0;                /* count of arguments we pass along  */
+    RexxObject *pgmname;                 // source name
+    RexxObject *_source;                 //  Array or string object
+    size_t initCount = 0;                // count of arguments we pass along
+
     RexxActivity *activity = ActivityManager::currentActivity;
     InterpreterInstance *instance = activity->getInstance();
 
-                                         /* break up the arguments            */
-
+    // parse the arguments
     RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
 
     PackageClass *package = OREF_NULL;
 
-    /* get the package name as a string   */
+    // get the package name as a string
     RexxString *nameString = stringArgument(pgmname, "name");
     if (_source == OREF_NULL)
     {
@@ -583,7 +586,7 @@ PackageClass *PackageClass::newRexx(
 
     // handle Rexx class completion
     classThis->completeNewObject(package, init_args, initCount);
-    return package;                      /* return the new method             */
+    return package;
 }
 
 

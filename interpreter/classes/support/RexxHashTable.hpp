@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -48,109 +48,110 @@
 /* The type for the reference links */
 typedef size_t HashLink;
 
- typedef struct tabentry {
-  RexxObject *value;                   /* item value object                 */
-  RexxObject *index;                   /* item index object                 */
-  HashLink next;                       /* next item in overflow bucket      */
- } TABENTRY;
+typedef class
+{
+    RexxObject *value;                   // item value object
+    RexxObject *index;                   // item index object
+    HashLink next;                       // next item in overflow bucket
+} TABENTRY;
 
- class RexxHashTableCollection;
- class RexxTable;
+class RexxHashTableCollection;
+class RexxTable;
 
- class RexxHashTable : public RexxInternalObject {
-  public:
-   enum
-   {
-       DEFAULT_HASH_SIZE = 22,
-       STRING_TABLE      = 1,
-       PRIMITIVE_TABLE   = 2,
-       FULL_TABLE        = 3,
-   };
+class RexxHashTable : public RexxInternalObject {
+ public:
+    enum
+    {
+        DEFAULT_HASH_SIZE = 22,
+        STRING_TABLE      = 1,
+        PRIMITIVE_TABLE   = 2,
+        FULL_TABLE        = 3,
+    };
 
-   inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-   inline void  operator delete(void *) { ; }
-   inline void  operator delete(void *, void *) { ; }
+    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
 
-   inline RexxHashTable(RESTORETYPE restoreType) { ; };
-   inline RexxHashTable() { ; }
+    inline RexxHashTable(RESTORETYPE restoreType) { ; };
+    inline RexxHashTable() { ; }
 
-   void         live(size_t);
-   void         liveGeneral(int reason);
-   void         flatten(RexxEnvelope *);
-   RexxArray  * makeArray();
-   void         empty();
-   bool         isEmpty();
-   size_t       items();
-   void         emptySlot(HashLink);
+    void         live(size_t);
+    void         liveGeneral(int reason);
+    void         flatten(RexxEnvelope *);
+    RexxArray  * makeArray();
+    void         empty();
+    bool         isEmpty();
+    size_t       items();
+    void         emptySlot(HashLink);
 
-   HashLink       next(HashLink position);
-   RexxObject    *value(HashLink position);
-   RexxObject    *index(HashLink position);
-   RexxObject    *merge(RexxHashTableCollection *target);
-   RexxObject    *mergeItem(RexxObject *value, RexxObject *index);
-   RexxHashTable *add(RexxObject *value, RexxObject *key);
-   RexxObject    *remove(RexxObject *key);
-   RexxObject    *removeAll(RexxObject *key);
-   RexxArray     *getAll(RexxObject *key);
-   size_t         countAll(RexxObject *key);
-   RexxObject    *get(RexxObject *key);
-   RexxHashTable *put(RexxObject *value, RexxObject *key);
-   RexxHashTable *primitiveAdd(RexxObject *value, RexxObject *key);
-   RexxObject    *primitiveRemove(RexxObject *key);
-   RexxArray     *primitiveGetAll(RexxObject *key);
-   RexxObject    *primitiveGet(RexxObject *key);
-   RexxHashTable *primitivePut(RexxObject *value, RexxObject *key);
-   RexxObject    *primitiveRemoveItem(RexxObject *value, RexxObject *key);
-   RexxObject    *primitiveRemoveItem(RexxObject *value);
-   RexxObject    *primitiveHasItem(RexxObject *, RexxObject *);
-   RexxObject    *primitiveHasItem(RexxObject *);
-   RexxObject    *primitiveGetIndex(RexxObject *value);
-   size_t         totalEntries();
-   HashLink       first();
-   RexxObject    *replace(RexxObject *value, HashLink position);
-   RexxArray     *allIndex(RexxObject *key);
-   RexxObject    *getIndex(RexxObject *value);
-   RexxHashTable *reHash();
-   RexxHashTable *putNodupe(RexxObject *value, RexxObject *key);
-   RexxSupplier  *supplier();
-   RexxArray     *allItems();
-   RexxArray     *allIndexes();
-   RexxArray     *uniqueIndexes();
-   RexxObject    *removeItem(RexxObject *value, RexxObject *key);
-   RexxObject    *removeItem(RexxObject *value);
-   RexxObject    *stringGet(RexxString *key);
-   RexxHashTable *stringPut(RexxObject *value, RexxString *key);
-   RexxHashTable *stringAdd(RexxObject *value, RexxString *key);
-   RexxArray     *stringGetAll(RexxString *key);
-   RexxObject    *stringMerge(RexxHashTable *target);
-   RexxObject    *hasItem(RexxObject * value, RexxObject *key);
-   RexxObject    *hasItem(RexxObject * value);
-   void           reMerge(RexxHashTable *target);
-   void           primitiveMerge(RexxHashTable *target);
-   RexxHashTable *insert(RexxObject *value, RexxObject *index, HashLink position, int type);
-   RexxObject    *nextItem(RexxObject *, RexxObject *);
-   RexxObject    *primitiveNextItem(RexxObject *, RexxObject *);
-   inline size_t  mainSlotsSize()  { return this->size; };
-   inline size_t  totalSlotsSize() { return this->size * 2; };
-   inline bool    available(HashLink position) { return (size_t)position < this->totalSlotsSize(); };
-   inline HashLink hashIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
-   // NB:  Ideally, hashPrimitiveIndex() would be best served by using the identityHash().  Unfortunately,
-   // the identity hash value is derived directly from the object reference.  This means that objects that
-   // are in the saved image (or restored as part of saved programs) will have different identity hashes before
-   // and after the store, which will cause hash table lookup failures.  We'll use whatever value is stored
-   // in the hashvalue field.
-   inline HashLink hashPrimitiveIndex(RexxObject *obj) { return (HashLink)(obj->getHashValue() % this->mainSlotsSize()); }
-   inline HashLink hashStringIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
+    HashLink       next(HashLink position);
+    RexxObject    *value(HashLink position);
+    RexxObject    *index(HashLink position);
+    RexxObject    *merge(RexxHashTableCollection *target);
+    RexxObject    *mergeItem(RexxObject *value, RexxObject *index);
+    RexxHashTable *add(RexxObject *value, RexxObject *key);
+    RexxObject    *remove(RexxObject *key);
+    RexxObject    *removeAll(RexxObject *key);
+    RexxArray     *getAll(RexxObject *key);
+    size_t         countAll(RexxObject *key);
+    RexxObject    *get(RexxObject *key);
+    RexxHashTable *put(RexxObject *value, RexxObject *key);
+    RexxHashTable *primitiveAdd(RexxObject *value, RexxObject *key);
+    RexxObject    *primitiveRemove(RexxObject *key);
+    RexxArray     *primitiveGetAll(RexxObject *key);
+    RexxObject    *primitiveGet(RexxObject *key);
+    RexxHashTable *primitivePut(RexxObject *value, RexxObject *key);
+    RexxObject    *primitiveRemoveItem(RexxObject *value, RexxObject *key);
+    RexxObject    *primitiveRemoveItem(RexxObject *value);
+    RexxObject    *primitiveHasItem(RexxObject *, RexxObject *);
+    RexxObject    *primitiveHasItem(RexxObject *);
+    RexxObject    *primitiveGetIndex(RexxObject *value);
+    size_t         totalEntries();
+    HashLink       first();
+    RexxObject    *replace(RexxObject *value, HashLink position);
+    RexxArray     *allIndex(RexxObject *key);
+    RexxObject    *getIndex(RexxObject *value);
+    RexxHashTable *reHash();
+    RexxHashTable *putNodupe(RexxObject *value, RexxObject *key);
+    RexxSupplier  *supplier();
+    RexxArray     *allItems();
+    RexxArray     *allIndexes();
+    RexxArray     *uniqueIndexes();
+    RexxObject    *removeItem(RexxObject *value, RexxObject *key);
+    RexxObject    *removeItem(RexxObject *value);
+    RexxObject    *stringGet(RexxString *key);
+    RexxHashTable *stringPut(RexxObject *value, RexxString *key);
+    RexxHashTable *stringAdd(RexxObject *value, RexxString *key);
+    RexxArray     *stringGetAll(RexxString *key);
+    RexxObject    *stringMerge(RexxHashTable *target);
+    RexxObject    *hasItem(RexxObject * value, RexxObject *key);
+    RexxObject    *hasItem(RexxObject * value);
+    void           reMerge(RexxHashTable *target);
+    void           primitiveMerge(RexxHashTable *target);
+    RexxHashTable *insert(RexxObject *value, RexxObject *index, HashLink position, int type);
+    RexxObject    *nextItem(RexxObject *, RexxObject *);
+    RexxObject    *primitiveNextItem(RexxObject *, RexxObject *);
+    inline size_t  mainSlotsSize()  { return this->size; };
+    inline size_t  totalSlotsSize() { return this->size * 2; };
+    inline bool    available(HashLink position) { return (size_t)position < this->totalSlotsSize(); };
+    inline HashLink hashIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
+    // NB:  Ideally, hashPrimitiveIndex() would be best served by using the identityHash().  Unfortunately,
+    // the identity hash value is derived directly from the object reference.  This means that objects that
+    // are in the saved image (or restored as part of saved programs) will have different identity hashes before
+    // and after the store, which will cause hash table lookup failures.  We'll use whatever value is stored
+    // in the hashvalue field.
+    inline HashLink hashPrimitiveIndex(RexxObject *obj) { return (HashLink)(obj->getHashValue() % this->mainSlotsSize()); }
+    inline HashLink hashStringIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
 
-   static RexxTable *newInstance(size_t, size_t, size_t);
-   static RexxHashTable *newInstance(size_t);
+    static RexxTable *newInstance(size_t, size_t, size_t);
+    static RexxHashTable *newInstance(size_t);
 
- protected:
+protected:
 
-   size_t   size;                      // size of the hash table
-   HashLink free;                      /* first free element                */
-   TABENTRY entries[1];                /* hash table entries                */
- };
+    size_t   size;                      // size of the hash table
+    HashLink free;                      // first free element
+    TABENTRY entries[1];                // hash table entries
+};
 
 
 inline RexxTable *new_hashCollection(size_t s, size_t s2, size_t t) { return RexxHashTable::newInstance(s, s2, t); }

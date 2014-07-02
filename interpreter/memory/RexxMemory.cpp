@@ -2345,7 +2345,7 @@ void RexxMemory::restore()
     RESTORE_CLASS(Table, RexxClass);
     RESTORE_CLASS(IdentityTable, RexxClass);
     RESTORE_CLASS(Relation, RexxClass);
-    RESTORE_CLASS(MutableBuffer, RexxMutableBufferClass);
+    RESTORE_CLASS(MutableBuffer, RexxClass);
     RESTORE_CLASS(Pointer, RexxClass);
     RESTORE_CLASS(Buffer, RexxClass);
     RESTORE_CLASS(WeakReference, RexxClass);

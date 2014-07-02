@@ -94,8 +94,8 @@ void *RexxBuffer::operator new(size_t size, size_t _length)
 /* Function:  Create a new buffer object                                      */
 /******************************************************************************/
 {
-                                         /* Get new object                    */
-    RexxBuffer *newBuffer = (RexxBuffer *) new_object(size + _length, T_Buffer);
+
+    return new_object(size + _length, T_Buffer);
     /* Initialize this new buffer        */
     newBuffer->bufferSize = _length;     /* set the length of the buffer      */
     newBuffer->dataLength = _length;     // by default, the data length and size are the same
@@ -104,10 +104,16 @@ void *RexxBuffer::operator new(size_t size, size_t _length)
 }
 
 
+/**
+ * New method for the buffer class.  This always raises
+ * an error if called.
+ *
+ * @param args   The new arguments.
+ * @param argc   The argument count.
+ *
+ * @return Always raises an error.
+ */
 RexxObject *RexxBuffer::newRexx(RexxObject **args, size_t argc)
-/******************************************************************************/
-/* Function:  Allocate a buffer  object from Rexx code.                       */
-/******************************************************************************/
 {
     // we do not allow these to be allocated from Rexx code...
     reportException(Error_Unsupported_new_method, ((RexxClass *)this)->getId());

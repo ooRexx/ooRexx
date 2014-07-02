@@ -41,21 +41,19 @@
 /* Primitive Pointer Class                                                    */
 /*                                                                            */
 /******************************************************************************/
-#include <stdlib.h>
-#include <string.h>
 #include "RexxCore.h"
 #include "PointerClass.hpp"
 #include "ActivityManager.hpp"
 
 
 RexxClass *RexxPointer::classInstance = OREF_NULL;   // singleton class instance
-RexxPointer *RexxPointer::nullPointer = OREF_NULL;  // single version of a null pointer
+RexxPointer *RexxPointer::nullPointer = OREF_NULL;   // single version of a null pointer
 
 
+/**
+ * Perform class bootstrap activities.
+ */
 void RexxPointer::createInstance()
-/******************************************************************************/
-/* Function:  Create initial bootstrap objects                                */
-/******************************************************************************/
 {
     CLASS_CREATE(Pointer, "Pointer", RexxClass);
     TheNullPointer = new_pointer(NULL);       // a NULL pointer object
@@ -113,22 +111,31 @@ HashCode RexxPointer::getHashValue()
 }
 
 
+/**
+ * Allocate memory for a pointer object.
+ *
+ * @param size   The size of the object.
+ *
+ * @return A new object configured for a pointer object.
+ */
 void *RexxPointer::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new pointer object                                     */
-/******************************************************************************/
 {
-                                       /* Get new object                    */
-  RexxObject *newObject = new_object(size, T_Pointer);
-  newObject->setHasNoReferences();     /* this has no references            */
-  return (void *)newObject;            /* return the new object             */
+    RexxObject *newObject = new_object(size, T_Pointer);
+    newObject->setHasNoReferences();     // this has no references
+    return (void *)newObject;
 }
 
 
+/**
+ * The Rexx version of the new method.  This just raises
+ * an error.
+ *
+ * @param args   The argument pointer.
+ * @param argc   The count of arguments.
+ *
+ * @return No return, raises an exception.
+ */
 RexxObject *RexxPointer::newRexx(RexxObject **args, size_t argc)
-/******************************************************************************/
-/* Function:  Allocate a pointer object from Rexx code.                       */
-/******************************************************************************/
 {
     // we do not allow these to be allocated from Rexx code...
     reportException(Error_Unsupported_new_method, ((RexxClass *)this)->getId());

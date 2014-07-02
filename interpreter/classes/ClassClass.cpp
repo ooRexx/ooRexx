@@ -1654,104 +1654,99 @@ RexxObject *RexxClass::getPackage()
 }
 
 
+/**
+ * Create a new class for a rexx class
+ * A copy of this class object is made
+ * This class' behaviour, class_mdict, metaclass, and class_info
+ * are used in the new class. All the rest of the object state
+ * data is updated to reflect a new class object
+ *
+ * @param args     The args to the new method.
+ * @param argCount The argument count.
+ *
+ * @return A new class object.
+ */
 RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
-/*****************************************************************************/
-/* Function:  Create a new class for a rexx class                            */
-/*            A copy of this class object is made                            */
-/*            This class' behaviour, class_mdict, metaclass, and class_info  */
-/*             are used in the new class. All the rest of the object state   */
-/*             data is updated to reflect a new class object                 */
-/*****************************************************************************/
 {
-    if (argCount == 0)                   /* make sure an arg   was passed in  */
+    // we need at least one argument
+    if (argCount == 0)
     {
-        /* if not report an error            */
         reportException(Error_Incorrect_method_minarg, IntegerOne);
     }
-    RexxString *class_id = (RexxString *)args[0];    /* get the id parameter              */
-    class_id = stringArgument(class_id, ARG_ONE);   /* and that it can be a string       */
-    /* get a copy of this class object   */
-    RexxClass *new_class = (RexxClass *)this->clone();
+    // first argument is the class id...make sure it is a string value
+    RexxString *class_id = (RexxString *)args[0];
+    class_id = stringArgument(class_id, ARG_ONE);
+    // get a copy of this class object
+    RexxClass *new_class = (RexxClass *)clone();
 
-    // NOTE:  we do this before save() is called.  The class object hash value
-    // is based off of the string name, so we need to set this before we
-    // attempt putting this into a hash collection.
-    OrefSet(new_class, new_class->id, class_id);
-    /* update cloned hashvalue           */
-    ProtectedObject p(new_class);        /* better protect this               */
-                                         /* make this into an instance of the */
-                                         /* meta class                        */
-    OrefSet(new_class, new_class->behaviour, (RexxBehaviour *)new_class->instanceBehaviour->copy());
-    /* don't give access to this class'   */
-    /* class mdict                        */
-    OrefSet(new_class, new_class->classMethodDictionary, new_table());
-    /* make this class the superclass     */
-    OrefSet(new_class, new_class->classSuperClasses, new_array(this));
-    new_class->behaviour->setOwningClass(this);/* and set the behaviour class       */
-    /* if this is a primitive class then  */
-    /* there isn't any metaclass info     */
-    if (this->isPrimitiveClass())        /* set up yet                        */
+    ProtectedObject p(new_class);
+    new_class->id = class_id;
+
+    // make this into an instance of the
+    // meta class
+    new_class->behaviour = (RexxBehaviour *)new_class->instanceBehaviour->copy();
+    // don't give access to this class' class mdict
+    new_class->classMethodDictionary = new_table();
+    // make this class the superclass
+    new_class->classSuperClasses = new_array(this);
+    // and set the behaviour class
+    new_class->behaviour->setOwningClass(this);
+    // if this is a primitive class then there isn't any metaclass info ye
+    if (isPrimitiveClass())
     {
-        /* set up the new metaclass list      */
-        OrefSet(new_class, new_class->metaClass, new_array(TheClassClass));
-        /* the metaclass mdict list           */
-        OrefSet(new_class, new_class->metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
-        /* and the metaclass scopes list      */
-        OrefSet(new_class, new_class->metaClassScopes, (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy());
+        // set up the new metaclass list
+        new_class->metaClass = new_array(TheClassClass);
+        // the metaclass mdict list
+        new_class->metaClassMethodDictionary = new_array(TheClassClass->instanceMethodDictionary->copy());
+        // and the metaclass scopes list
+        new_class->metaClassScopes = (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy();
     }
     else
     {
-        /* add this class to the new class    */
-        /* metaclass list                     */
-        OrefSet(new_class, new_class->metaClass, (RexxArray *)new_class->metaClass->copy());
+        // add this class to the new class metaclass list
+        new_class->metaClass = (RexxArray *)new_class->metaClass->copy();
         new_class->metaClass->addFirst(this);
-        /* the metaclass mdict list           */
-        OrefSet(new_class, new_class->metaClassMethodDictionary, (RexxArray *)new_class->metaClassMethodDictionary->copy());
+        // the metaclass mdict list
+        new_class->metaClassMethodDictionary = (RexxArray *)new_class->metaClassMethodDictionary->copy();
         new_class->metaClassMethodDictionary->addFirst(this->instanceMethodDictionary);
-        /* and the metaclass scopes list      */
-        /* this is done by adding all the     */
-        /* scope information of the new class */
-        OrefSet(new_class, new_class->metaClassScopes, (RexxIdentityTable *)new_class->metaClassScopes->copy());
-        /* and update the scopes to include   */
-        /* the metaclass scopes               */
+        // and the metaclass scopes list
+        // this is done by adding all the
+        // scope information of the new class
+        new_class->metaClassScopes = (RexxIdentityTable *)new_class->metaClassScopes->copy();
+        // and update the scopes to include the metaclass scopes
         new_class->metaClassScopes->add(this, TheNilObject);
         new_class->metaClassScopes->add(this->behaviour->getScopes()->allAt(TheNilObject), this);
     }
 
     // create the subclasses list
-    OrefSet(new_class, new_class->subClasses, new_list());
-    /* set up the instance behaviour with */
-    /*  object's instance methods         */
-    OrefSet(new_class, new_class->instanceBehaviour, (RexxBehaviour *)TheObjectClass->instanceBehaviour->copy());
-    /* don't give access to this class'   */
-    /*  instance mdict                    */
-    OrefSet(new_class, new_class->instanceMethodDictionary, new_table());
-    /* make the instance_superclass list  */
-    /* with OBJECT in it                  */
-    OrefSet(new_class, new_class->instanceSuperClasses, new_array(TheObjectClass));
-    /* and set the behaviour class        */
+    new_class->subClasses = new_list();
+    // set up the instance behaviour with object's instance methods
+    new_class->instanceBehaviour = (RexxBehaviour *)TheObjectClass->instanceBehaviour->copy();
+    // don't give access to this class' instance mdict
+    new_class->instanceMethodDictionary = new_table();
+    // make the instance_superclass list with OBJECT in it
+    new_class->instanceSuperClasses = new_array(TheObjectClass);
+    // and set the behaviour class
     new_class->instanceBehaviour->setOwningClass(TheObjectClass);
-    /* and the instance behaviour scopes  */
+    // and the instance behaviour scopes
     new_class->instanceBehaviour->setScopes(new_identity_table());
-    /* set the scoping info               */
+    // set the scoping info
     new_class->instanceBehaviour->addScope(TheObjectClass);
-    /* don't give access to this class'   */
-    /*  ovd's                             */
-    OrefSet(new_class, new_class->objectVariables, OREF_NULL);
-    /* set the new class as it's own      */
-    /* baseclass                          */
-    OrefSet(new_class, new_class->baseClass, new_class);
-    /* clear the info area except for     */
-    /* uninit                             */
+    // don't give access to this class' ovd's
+    new_class->objectVariables = OREF_NULL;
+    // set the new class as it's own baseclass
+    new_class->baseClass = new_class;
+    // clear the info area except for uninit
     new_class->setInitialFlagState();
-    /* if the class object has an UNINIT method defined, make sure we */
-    /* add this to the table of classes to be processed. */
+    // if the class object has an UNINIT method defined, make sure we
+    // add this to the table of classes to be processed.
     if (new_class->hasUninitDefined())
     {
         new_class->setHasUninitDefined();
     }
+    // send the new class the INIT method
     new_class->sendMessage(OREF_INIT, args + 1, argCount - 1);
-    return new_class;                    /* return the new class              */
+    return new_class;
 }
 
 void RexxClass::createInstance()

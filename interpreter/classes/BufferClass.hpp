@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -93,11 +93,18 @@ class RexxBuffer : public RexxBufferBase
 public:
     void *operator new(size_t, size_t);
     inline void *operator new(size_t size, void *ptr) {return ptr;};
-    inline void  operator delete(void *) { ; }
     inline void  operator delete(void *, size_t) { ; }
     inline void  operator delete(void *, void *) { ; }
 
-    inline RexxBuffer() {;}
+    inline RexxBuffer(size_t length)
+    {
+        // initialize the length values
+        bufferSize = _length;
+        dataLength = _length;
+        // buffers have no references.
+        setHasNoReferences();
+    }
+
     inline RexxBuffer(RESTORETYPE restoreType) { ; }
 
     RexxBuffer *expand(size_t);
@@ -113,7 +120,7 @@ protected:
 };
 
 
- inline RexxBuffer *new_buffer(size_t s) { return new (s) RexxBuffer; }
+ inline RexxBuffer *new_buffer(size_t s) { return new (s) RexxBuffer(s); }
  inline RexxBuffer *new_buffer(CONSTRXSTRING &r)
  {
      RexxBuffer *b = new_buffer(r.strlength);

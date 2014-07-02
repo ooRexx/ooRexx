@@ -964,7 +964,7 @@ void RexxMemory::createImage()
 
                                        /* Add the NEW method to the class   */
                                        /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheMutableBufferClassBehaviour, CPPM(RexxMutableBufferClass::newRexx), A_COUNT);
+  defineKernelMethod(CHAR_NEW, TheMutableBufferClassBehaviour, CPPM(RexxMutableBuffer::newRexx), A_COUNT);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

@@ -1735,7 +1735,7 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
     RexxObject *item;                     /* inserted value item               */
     int i_form = 0;                       /* 1 == line, 2 == char              */
 
-    mutbuffer = ((RexxMutableBufferClass*) TheMutableBufferClass)->newRexx(NULL, 0);
+    mutbuffer = new RexxMutableBuffer();
     ProtectedObject p1(mutbuffer);
 
     newArray = this->makeArray();          /* maybe multidimensional, make onedimensional  */

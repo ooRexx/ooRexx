@@ -68,7 +68,15 @@ void RexxMutableBuffer::createInstance()
 
 #define DEFAULT_BUFFER_LENGTH 256
 
-RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t argc)
+/**
+ * Allocate a MutableBuffer object from Rexx code.
+ *
+ * @param args   The pointer to the arrays.
+ * @param argc   The count of arguments.
+ *
+ * @return A new mutable buffer object.
+ */
+RexxMutableBuffer *RexxMutableBuffer::newRexx(RexxObject **args, size_t argc)
 /******************************************************************************/
 /* Function:  Allocate (and initialize) a string object                       */
 /******************************************************************************/
@@ -79,49 +87,42 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
 
-    RexxString        *string;
-    RexxMutableBuffer *newBuffer;         /* new mutable buffer object         */
-    size_t            bufferLength = DEFAULT_BUFFER_LENGTH;
-    size_t            defaultSize;
+    // default string value
+    RexxString *string = OREF_NULLSTRING;
+    size_t bufferLength = DEFAULT_BUFFER_LENGTH;
+    size_t defaultSize = 0;
+    // if we have at least one argument, then the first
+    // argument is an initial string value
     if (argc >= 1)
     {
         if (args[0] != NULL)
         {
-            /* force argument to string value    */
             string = stringArgument(args[0], ARG_ONE);
         }
-        else
-        {
-            string = OREF_NULLSTRING;           /* default to empty content          */
-        }
-    }
-    else                                      /* minimum buffer size given?        */
-    {
-        string = OREF_NULLSTRING;
     }
 
+    // have a minimum buffer size specified
     if (argc >= 2)
     {
         bufferLength = optionalLengthArgument(args[1], DEFAULT_BUFFER_LENGTH, ARG_TWO);
     }
 
-    defaultSize = bufferLength;           /* remember initial default size     */
+    // remember this as the default
+    defaultSize = bufferLength;
 
-                                          /* input string longer than demanded */
-                                          /* minimum size? expand accordingly  */
+    // input string longer than demanded minimum size? expand accordingly
     if (string->getLength() > bufferLength)
     {
         bufferLength = string->getLength();
     }
-    /* allocate the new object           */
+    // allocate the new object
+    RexxBuffer *newBuffer = new RexxMutableBuffer(bufferLength, defaultSize);
+    ProtectedObject p(newBuffer);
 
-    // TODO:  Yet another way of something something common...clean this up.
-    newBuffer = new (classThis) RexxMutableBuffer(bufferLength, defaultSize);
     newBuffer->dataLength = string->getLength();
-    /* copy the content                  */
+    // copy the content
     newBuffer->copyData(0, string->getStringData(), string->getLength());
 
-    ProtectedObject p(newBuffer);
     // handle Rexx class completion
     classThis->completeNewObject(newBuffer, args, argc > 2 ? argc - 2 : 0);
     return newBuffer;
@@ -173,24 +174,6 @@ void *RexxMutableBuffer::operator new(size_t size)
 {
     return new_object(size, T_MutableBuffer);
 }
-
-/**
- * Create a new mutable buffer object from a potential subclass.
- *
- * @param size   The size of the buffer object.
- * @param bufferClass
- *               The class of the buffer object.
- *
- * @return A new instance of a mutable buffer, with the target class
- *         behaviour.
- */
-void *RexxMutableBuffer::operator new(size_t size, RexxClass *bufferClass)
-{
-    RexxObject * newObj = new_object(size, T_MutableBuffer);
-    newObj->setBehaviour(bufferClass->getInstanceBehaviour());
-    return newObj;
-}
-
 
 void RexxMutableBuffer::live(size_t liveMark)
 /******************************************************************************/

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,57 +44,66 @@
 #ifndef Included_RexxStack
 #define Included_RexxStack
 
- class RexxStack : public RexxInternalObject {
-  public:
-   inline void *operator new(size_t size, void *ptr) { return ptr; }
-   void        *operator new(size_t, size_t, bool temporary);
-   inline void  operator delete(void *) { }
-   inline void  operator delete(void *, void *) { }
-   inline void  operator delete(void *, size_t, bool temporary) { };
+class RexxStack : public RexxInternalObject
+{
+ public:
+    inline void *operator new(size_t size, void *ptr) { return ptr; }
+    void        *operator new(size_t, size_t, bool temporary);
+    inline void  operator delete(void *, void *) { }
+    inline void  operator delete(void *, size_t, bool temporary) { };
 
-   inline RexxStack(RESTORETYPE restoreType) { ; };
-   RexxStack(size_t size);
+    inline RexxStack(RESTORETYPE restoreType) { ; };
+    RexxStack(size_t size);
 
-   void        init(size_t);
-   void        live(size_t);
-   void        liveGeneral(int reason);
-   void        flatten(RexxEnvelope *);
-   RexxObject *get(size_t pos);
-   inline RexxObject *push(RexxObject *obj)
-                   { incrementTop();
-                     return *(this->stack + this->top) = obj;
-                   }
-   RexxObject *pop();
-   RexxObject *fpop();
+    void        init(size_t);
 
-   inline void        fastPush(RexxObject *element) { this->stack[++(this->top)] = element; };
-   inline bool        checkRoom() { return this->top < this->size-1; }
-   inline RexxObject *fastPop() { return this->stack[(this->top)--]; };
-   inline size_t      stackSize() { return this->size; };
-   inline RexxObject *stackTop() { return (*(this->stack + this->top)); };
-   inline void        decrementTop() { top = (top == 0) ? size - 1 : top - 1; }
-   inline void        incrementTop() { if (++top >= size) top = 0; }
-                                                                                                                                                          /* (other->size + 1) was wrong !? */
-   inline void        copyEntries(RexxStack *other) { memcpy((char *)this->stack, other->stack, other->size * sizeof(RexxObject *)); this->top = other->top; }
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope *);
 
-   size_t   size;                      // the stack size
-   size_t   top;                       /* top position on the stack         */
-   RexxObject *stack[1];               /* stack entries                     */
- };
+    RexxObject *get(size_t pos);
+    inline RexxObject *push(RexxObject *obj)
+    {
+        incrementTop();
+        return *(this->stack + this->top) = obj;
+    }
 
- class RexxSaveStack : public RexxStack {
-  public:
-   void       *operator new(size_t, size_t);
-   inline void operator delete(void *) { ; }
-   inline void operator delete(void *, size_t) { }
+    RexxObject *pop();
+    RexxObject *fpop();
 
-   RexxSaveStack(size_t, size_t);
-   void        live(size_t);
-   void        init(size_t, size_t);
-   void        extend(size_t);
-   void        remove(RexxObject *, bool search = false);
+    inline void        fastPush(RexxObject *element) { this->stack[++(this->top)] = element; };
+    inline bool        checkRoom() { return this->top < this->size-1; }
+    inline RexxObject *fastPop() { return this->stack[(this->top)--]; };
+    inline size_t      stackSize() { return this->size; };
+    inline RexxObject *stackTop() { return (*(this->stack + this->top)); };
+    inline void        decrementTop() { top = (top == 0) ? size - 1 : top - 1; }
+    inline void        incrementTop() { if (++top >= size) top = 0; }
+                                                                                                                                                           /* (other->size + 1) was wrong !? */
+    inline void        copyEntries(RexxStack *other) { memcpy((char *)this->stack, other->stack, other->size * sizeof(RexxObject *)); this->top = other->top; }
 
-   size_t allocSize;
- };
+ protected:
+
+    size_t   size;                      // the stack size
+    size_t   top;                       /* top position on the stack         */
+    RexxObject *stack[1];               /* stack entries                     */
+};
+
+class RexxSaveStack : public RexxStack
+{
+ public:
+     void       *operator new(size_t, size_t);
+     inline void operator delete(void *) { ; }
+     inline void operator delete(void *, size_t) { }
+
+     RexxSaveStack(size_t, size_t);
+     virtual void live(size_t);
+     void        init(size_t, size_t);
+     void        extend(size_t);
+     void        remove(RexxObject *, bool search = false);
+
+ protected:
+
+     size_t allocSize;
+};
 
 #endif

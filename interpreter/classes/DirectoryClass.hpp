@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,55 +46,57 @@
 
 #include "RexxCollection.hpp"
 
-class RexxDirectory : public RexxHashTableCollection {
+class RexxDirectory : public RexxHashTableCollection
+{
  public:
-  inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-  inline RexxDirectory(RESTORETYPE restoreType) { ; };
+    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline RexxDirectory(RESTORETYPE restoreType) { ; };
 
-  void          live(size_t);
-  void          liveGeneral(int reason);
-  void          flatten(RexxEnvelope *);
-  RexxObject   *unflatten(RexxEnvelope *);
-  RexxObject   *copy();
-  RexxArray    *makeArray();
+    virtual void          live(size_t);
+    virtual void          liveGeneral(int reason);
+    virtual void          flatten(RexxEnvelope *);
+    virtual RexxObject   *unflatten(RexxEnvelope *);
 
-  RexxArray    *requestArray();
-  RexxObject   *mergeItem(RexxObject *, RexxObject *);
-  RexxObject   *at(RexxString *);
-  RexxObject   *fastAt(RexxString *name) { return this->contents->stringGet(name);}
-  RexxObject   *atRexx(RexxString *);
-  RexxObject   *put(RexxObject *, RexxString *);
-  RexxObject   *entry(RexxString *);
-  RexxObject   *entryRexx(RexxString *);
-  RexxObject   *hasEntry(RexxString *);
-  RexxObject   *hasIndex(RexxString *);
-  size_t        items();
-  RexxObject   *itemsRexx();
-  RexxObject   *remove(RexxString *);
-  RexxObject   *removeRexx(RexxString *);
-  RexxObject   *setEntry(RexxString *, RexxObject *);
-  RexxObject   *setMethod(RexxString *, MethodClass *);
-  RexxObject   *unknown(RexxString *, RexxArray *);
-  RexxSupplier *supplier();
-  RexxArray    *allItems();
-  RexxArray    *allIndexes();
-  void          reset();
-  RexxObject   *empty();
-  RexxObject   *isEmpty();
-  RexxObject   *indexRexx(RexxObject *);
-  RexxObject   *hasItem(RexxObject *);
-  RexxObject   *removeItem(RexxObject *);
+    RexxObject   *copy();
+    RexxArray    *makeArray();
 
-  RexxObject   *newRexx(RexxObject **init_args, size_t);
+    RexxArray    *requestArray();
+    RexxObject   *mergeItem(RexxObject *, RexxObject *);
+    RexxObject   *at(RexxString *);
+    RexxObject   *fastAt(RexxString *name) { return this->contents->stringGet(name);}
+    RexxObject   *atRexx(RexxString *);
+    RexxObject   *put(RexxObject *, RexxString *);
+    RexxObject   *entry(RexxString *);
+    RexxObject   *entryRexx(RexxString *);
+    RexxObject   *hasEntry(RexxString *);
+    RexxObject   *hasIndex(RexxString *);
+    size_t        items();
+    RexxObject   *itemsRexx();
+    RexxObject   *remove(RexxString *);
+    RexxObject   *removeRexx(RexxString *);
+    RexxObject   *setEntry(RexxString *, RexxObject *);
+    RexxObject   *setMethod(RexxString *, MethodClass *);
+    RexxObject   *unknown(RexxString *, RexxArray *);
+    RexxSupplier *supplier();
+    RexxArray    *allItems();
+    RexxArray    *allIndexes();
+    void          reset();
+    RexxObject   *empty();
+    RexxObject   *isEmpty();
+    RexxObject   *indexRexx(RexxObject *);
+    RexxObject   *hasItem(RexxObject *);
+    RexxObject   *removeItem(RexxObject *);
 
-  RexxTable  *method_table;            /* table of added methods            */
-  MethodClass *unknown_method;          /* unknown method entry              */
+    RexxObject   *newRexx(RexxObject **init_args, size_t);
 
-  static RexxDirectory *newInstance();
+    RexxTable  *method_table;            /* table of added methods            */
+    MethodClass *unknown_method;          /* unknown method entry              */
 
-  static void createInstance();
-  // singleton class instance;
-  static RexxClass *classInstance;
+    static RexxDirectory *newInstance();
+
+    static void createInstance();
+    // singleton class instance;
+    static RexxClass *classInstance;
 };
 
 

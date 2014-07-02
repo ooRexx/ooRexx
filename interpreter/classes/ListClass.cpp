@@ -1196,25 +1196,33 @@ RexxArray *RexxList::weakReferenceArray()
     return array;                        /* return the array element          */
 }
 
+
+/**
+ * Construct and initialize a List item
+ *
+ * @param size   The size of the item.
+ *
+ * @return The storage for a list item.
+ */
 void *RexxList::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Construct and initialized a new list item                       */
-/******************************************************************************/
 {
-    /* Get new object                    */
+    // we get a list table, then we convert into a list item
     RexxList *newList = (RexxList *)new (INITIAL_LIST_SIZE, size) RexxListTable;
-    /* Give new object its behaviour     */
     newList->setBehaviour(TheListBehaviour);
-    newList->init();                     /* finish initializing               */
-    return newList;                      /* return the new list item          */
+    newList->init();
+    return newList;
 }
 
-RexxList *RexxList::newRexx(
-    RexxObject **init_args,
-    size_t       argCount)
-/******************************************************************************/
-/* Function:  Construct and initialized a new list item                       */
-/******************************************************************************/
+
+/**
+ * Rexx method for allocating a List item.
+ *
+ * @param init_args The new args.
+ * @param argCount  The count of arguments.
+ *
+ * @return A new List instance.
+ */
+RexxList *RexxList::newRexx(RexxObject **init_args, size_t  argCount)
 {
     // this class is defined on the object class, but this is actually attached
     // to a class object instance.  Therefore, any use of the this pointer
@@ -1231,54 +1239,32 @@ RexxList *RexxList::newRexx(
     return newList;                      /* return the new list item          */
 }
 
-RexxList *RexxList::classOf(
-     RexxObject **args,                /* array of list items               */
-     size_t       argCount)            /* size of the argument array        */
-/******************************************************************************/
-/* Function:  Create a new list containing the given list items               */
-/******************************************************************************/
+
+/**
+ * Create a list item and populate with the argument items.
+ *
+ * @param args     Pointer to the arguments.
+ * @param argCount The number of arguments.
+ *
+ * @return The populated list object.
+ */
+RexxList *RexxList::classOf(RexxObject **args, size_t  argCount)
 {
-    RexxList *newList;                   /* newly created list                */
+    // create a list item of the appopriate type.
+    RexxList *newList = newRexx(NULL, 0);
+    ProtectedObject p(newList);
 
-
-    if (TheListClass == (RexxClass *)this )
-    {         /* creating an internel list item?   */
-        size_t _size = argCount;           /* get the array size                */
-        newList  = new RexxList;           /* get a new list                    */
-        ProtectedObject p(newList);
-        for (size_t i = 0; i < _size; i++)
-        {       /* step through the array            */
-            RexxObject *item = args[i];                  /* get the next item                 */
-            if (item == OREF_NULL)
-            {         /* omitted item?                     */
-                      /* raise an error on this            */
-                reportException(Error_Incorrect_method_noarg, i + 1);
-            }
-            /* add this to the list end          */
-            newList->addLast(item);
-        }
-    }
-    else
+    // add all of the arguments
+    for (size_t i = 0; i < argCount; i++)
     {
-        size_t _size = argCount;                   /* get the array size                */
-        ProtectedObject p;
-        /* get a new list                    */
-
-        // TODO:  This can be improved by directly invoking newRexx()
-        this->sendMessage(OREF_NEW, p);
-        newList = (RexxList *)(RexxObject *)p;
-        for (size_t i = 0; i < _size; i++)
-        {       /* step through the array            */
-            RexxObject *item = args[i];                  /* get the next item                 */
-            if (item == OREF_NULL)
-            {         /* omitted item?                     */
-                      /* raise an error on this            */
-                reportException(Error_Incorrect_method_noarg, i + 1);
-            }
-            /* add this to the list end          */
-            newList->sendMessage(OREF_INSERT, item);
+        RexxObject *item = args[i];
+        // omitted arguments not allowed here.
+        if (item == OREF_NULL)
+        {
+            reportException(Error_Incorrect_method_noarg, i + 1);
         }
+        newList->addLast(item);
     }
-    return newList;                      /* give back the list                */
+    return newList;
 }
 

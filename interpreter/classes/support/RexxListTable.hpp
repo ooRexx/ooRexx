@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,13 +46,15 @@
 
 #include "ObjectClass.hpp"
 
-typedef struct listentry {
-  RexxObject *value;                   /* list element value                */
-  size_t next;                         /* next list element in chain        */
-  size_t previous;                     /* previous list element in chain    */
+typedef class listentry
+{
+    RexxObject *value;                   // list element value                //
+    size_t next;                         // next list element in chain        //
+    size_t previous;                     // previous list element in chain    //
 } LISTENTRY;
 
- class RexxListTable : public RexxInternalObject {
+class RexxListTable : public RexxInternalObject
+{
   public:
    void * operator new(size_t, size_t);
    void * operator new(size_t, size_t, size_t);
@@ -68,7 +70,9 @@ typedef struct listentry {
    void         live(size_t);
    void         liveGeneral(int reason);
    void         flatten(RexxEnvelope *);
-   inline LISTENTRY   *getData() {return this->elements; };
+   inline LISTENTRY   *getData() {return elements; };
+
+ protected:
 
    size_t size;                        /* count of list elements            */
    LISTENTRY elements[1];              /* entry elements                    */

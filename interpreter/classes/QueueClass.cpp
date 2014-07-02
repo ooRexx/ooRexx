@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -58,6 +58,23 @@ RexxClass *RexxQueue::classInstance = OREF_NULL;
 void RexxQueue::createInstance()
 {
     CLASS_CREATE(Queue, "Queue", RexxClass);
+}
+
+
+/**
+ * Create an instance of the Queue class.
+ *
+ * @param size   The base size of the object.
+ *
+ * @return An initialized queue object.
+ */
+void *RexxQueue::operator new(size_t size)
+{
+    RexxQueue *newQueue = (RexxQueue *)new (INITIAL_LIST_SIZE, size) RexxListTable;
+    // these are handled a little differently, so we have to explicitly set our behavior (for now)
+    newQueue->setBehaviour(TheQueueBehaviour);
+    newQueue->init();
+    return newQueue;
 }
 
 
@@ -179,7 +196,6 @@ RexxObject *RexxQueue::put(
 }
 
 RexxObject *RexxQueue::at(RexxObject *_index)
-                                                                                                                    /* queue index item                  */
 /******************************************************************************/
 /* Function:  Retrieve the value for a given queue index                      */
 /******************************************************************************/
@@ -303,7 +319,6 @@ RexxObject *RexxQueue::remove(RexxObject *_index)
 }
 
 RexxObject *RexxQueue::hasindex(RexxObject *_index)
-                                                                                                                    /* queue index item                  */
 /******************************************************************************/
 /* Function:  Return an index existence flag                                  */
 /******************************************************************************/
@@ -582,6 +597,14 @@ RexxObject *RexxQueue::sectionSubclass(LISTENTRY *element, size_t counter)
 }
 
 
+/**
+ * Create an instance of a queue object from Rexx code.
+ *
+ * @param init_args The pointer to the arguments.
+ * @param argCount  The count of arguments.
+ *
+ * @return A new instance of the queue class.
+ */
 RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
 /******************************************************************************/
 /* Function:  Create an instance of a queue                                   */
@@ -601,72 +624,34 @@ RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
     return newObj;
 }
 
-RexxQueue *RexxQueue::ofRexx(
-     RexxObject **args,                /* array of list items               */
-     size_t       argCount)            /* size of the argument array        */
-/******************************************************************************/
-/* Function:  Create a new queue containing the given items                   */
-/******************************************************************************/
-{
-    size_t   arraysize;                  /* size of the array                 */
-    size_t   i;                          /* loop counter                      */
-    RexxObject *item;                    /* item to add                       */
 
-    if (TheQueueClass == ((RexxClass *)this))
-    {        /* creating an internel list item?   */
-        RexxQueue *newQueue;                 /* newly created list                */
-        arraysize = argCount;              /* get the array size                */
-        newQueue = new RexxQueue;          /* get a new list                    */
-        ProtectedObject p(newQueue);
-        for (i = 0; i < arraysize; i++)
-        {  /* step through the array            */
-            item = args[i];                  /* get the next item                 */
-            if (item == OREF_NULL)
-            {         /* omitted item?                     */
-                      /* raise an error on this            */
-                reportException(Error_Incorrect_method_noarg, i + 1);
-            }
-            /* add this to the list end          */
-            newQueue->addLast(item);
-        }
-        return newQueue;
-    }
-    else
+/**
+ * Create an instance of the queue class and fill it with objects.
+ *
+ * @param args     The argument pointer.
+ * @param argCount The count of arguments.
+ *
+ * @return An instance of the queue class populated with objects.
+ */
+RexxQueue *RexxQueue::ofRexx(RexxObject **args, size_t argCount)
+{
+    // create a queue object.
+    RexxQueue *newQueue = RexxQueue::newRexx(NULL, 0);
+    ProtectedObject p(newQueue);
+
+    for (size_t i = 0; i < argCount; i++)
     {
-        ProtectedObject result;
-        arraysize = argCount;              /* get the array size                */
-                                           /* get a new list                    */
-
-        // TODO: fix this up
-        this->sendMessage(OREF_NEW, result);
-        RexxQueue *newQueue = (RexxQueue *)(RexxObject *)result;
-        for (i = 0; i < arraysize; i++)
-        {  /* step through the array            */
-            item = args[i];                  /* get the next item                 */
-            if (item == OREF_NULL)
-            {         /* omitted item?                     */
-                      /* raise an error on this            */
-                reportException(Error_Incorrect_method_noarg, i + 1);
-            }
-            /* add this to the list end          */
-            newQueue->sendMessage(OREF_QUEUENAME, item);
+        // add each item, but ommitted arguments are an error.
+        RexxObject *item = args[i];
+        if (item == OREF_NULL)
+        {
+            reportException(Error_Incorrect_method_noarg, i + 1);
         }
-        return newQueue;                     /* give back the list                */
+        newQueue->addLast(item);
     }
+    return newQueue;
 }
 
 
 
-void *RexxQueue::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create an instance of a queue                                   */
-/******************************************************************************/
-{
-    /* Get new object                    */
-    RexxQueue *newQueue = (RexxQueue *)new (INITIAL_LIST_SIZE, size) RexxListTable;
-    /* Give new object its behaviour     */
-    newQueue->setBehaviour(TheQueueBehaviour);
-    newQueue->init();                    /* finish initializing               */
-    return newQueue;                     /* return the new list item          */
-}
 

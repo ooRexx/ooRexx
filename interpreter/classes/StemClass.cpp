@@ -514,11 +514,11 @@ RexxObject *RexxStem::newRexx(
     // will be touching the wrong data.  Use the classThis pointer for calling
     // any methods on this object from this method.
     RexxClass *classThis = (RexxClass *)this;
-    RexxObject *name;                   /* name of the stem item             */
+    RexxObject *name;
 
-                                         /* break up the arguments            */
+
     RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&name, NULL);
-    RexxObject *newObj = new RexxStem ((RexxString *)name);   /* get a new stem                    */
+    RexxObject *newObj = new RexxStem ((RexxString *)name);
     ProtectedObject p(newObj);
 
     // handle Rexx class completion

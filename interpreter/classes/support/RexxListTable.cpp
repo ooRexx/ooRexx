@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,10 +49,10 @@ void RexxListTable::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    for (size_t index = 0; index < this->size; index++)
+    for (size_t index = 0; index < size; index++)
     {
         /* mark an element                   */
-        memory_mark(this->elements[index].value);
+        memory_mark(elements[index].value);
     }
 }
 
@@ -62,10 +62,10 @@ void RexxListTable::liveGeneral(int reason)
 /******************************************************************************/
 {
     /* loop through our table            */
-    for (size_t index = 0; index < this->size; index++)
+    for (size_t index = 0; index < size; index++)
     {
         /* mark an element                   */
-        memory_mark_general(this->elements[index].value);
+        memory_mark_general(elements[index].value);
     }
 }
 
@@ -74,14 +74,14 @@ void   RexxListTable::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
- setUpFlatten(RexxListTable)
+    setUpFlatten(RexxListTable)
 
-   for (size_t i = this->size; i > 0 ; i--)
-   {
-       flatten_reference(newThis->elements[i - 1].value, envelope);
-   }
+    for (size_t i = this->size; i > 0 ; i--)
+    {
+       flattenRef(elements[i - 1].value);
+    }
 
- cleanUpFlatten
+    cleanUpFlatten
 }
 
 

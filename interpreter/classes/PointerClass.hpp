@@ -71,10 +71,11 @@ public:
     static void createInstance();
 
     static RexxClass *classInstance;   // singleton class instance
-    static RexxPointer *nullPointer;  // single version of a null pointer
+    static RexxPointer *nullPointer;   // single version of a null pointer
 
 protected:
-    void *pointerData;               /* actual pointer value              */
+
+    void *pointerData;               // actual pointer value              //
 };
 
 
