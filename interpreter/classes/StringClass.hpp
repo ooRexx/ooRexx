@@ -53,7 +53,7 @@
 /**
  * Return type from string isSymbol() method.
  */
-enum
+typedef enum
 {
     STRING_BAD_VARIABLE,
     STRING_STEM,
@@ -61,7 +61,7 @@ enum
     STRING_LITERAL,
     STRING_LITERAL_DOT,
     STRING_NUMERIC,
-    STRING_NAME,
+    STRING_NAME
 } StringSymbolType;
 
 #define  STRING_HASLOWER       0x01    /* string does contain lowercase     */
@@ -358,14 +358,21 @@ class RexxString : public RexxObject
 
     RexxNumberString *createNumberString();
 
-    inline RexxNumberString *fastNumberString() {
-        if (this->nonNumeric())              /* Did we already try and convert to */
-                                             /* to a numberstring and fail?       */
-         return OREF_NULL;                   /* Yes, no need to try agian.        */
+    inline RexxNumberString *fastNumberString()
+    {
+        // already converted?  Done!
+        if (numberStringValue != OREF_NULL)
+        {
+            return numberStringValue;
+        }
+        // did we already try to convert and fail?
+        if (nonNumeric())
+        {
+            return OREF_NULL;
+        }
 
-        if (this->NumberString != OREF_NULL) /* see if we have already converted  */
-          return this->NumberString;         /* return the numberString Object.   */
-        return createNumberString();         /* go build the number string version */
+        // build the value (if possible)
+        return createNumberString();
     }
 
     inline int sortCompare(RexxString *other) {
@@ -491,11 +498,11 @@ class RexxString : public RexxObject
 
   protected:
 
-    HashCode hashValue;                 // stored has value
-    size_t length;                      // string length
-    RexxNumberString *numberString;     // lookaside information
-    size_t attributes;                  // string attributes
-    char stringData[4];                 // Start of the string data part
+    HashCode hashValue;                      // stored has value
+    size_t length;                           // string length
+    RexxNumberString *numberStringValue;     // lookaside information
+    size_t attributes;                       // string attributes
+    char stringData[4];                      // Start of the string data part
 };
 
 

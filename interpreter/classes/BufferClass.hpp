@@ -99,8 +99,8 @@ public:
     inline RexxBuffer(size_t length)
     {
         // initialize the length values
-        bufferSize = _length;
-        dataLength = _length;
+        bufferSize = length;
+        dataLength = length;
         // buffers have no references.
         setHasNoReferences();
     }

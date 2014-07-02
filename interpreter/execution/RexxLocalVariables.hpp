@@ -77,7 +77,7 @@ class RexxLocalVariables
     /* NOTE:  we add one because the size is actually the index */
     /* number of the last variable in the cache.   The zero-th */
     /* element is used to trigger cache lookup failures. */
-    inline void init(RexxActivation *creator, size_t poolSize) { this->owner = creator; this->size = poolSize + 1; dictionary = OREF_NULL; flags = 0; }
+    inline void init(RexxActivation *creator, size_t poolSize) { owner = creator; size = poolSize + 1; dictionary = OREF_NULL; flags = 0; }
     inline void setFrame(RexxObject **frame)
     {
         locals = (RexxVariable **)frame;
@@ -132,14 +132,15 @@ class RexxLocalVariables
         return variable;
     }
 
-    inline void       setNovalueOn() { this->flags |= VDICT_NOVALUE; };
-    inline void       setNovalueOff() { this->flags &= ~VDICT_NOVALUE; };
-    inline bool       getNovalue() {return (this->flags & VDICT_NOVALUE) != 0; };
+    inline size_t     getSize() { return size; }
+    inline void       setNovalueOn() { flags |= VDICT_NOVALUE; };
+    inline void       setNovalueOff() { flags &= ~VDICT_NOVALUE; };
+    inline bool       getNovalue() {return (flags & VDICT_NOVALUE) != 0; };
     inline void       setNested()  { flags |= NESTED_INTERNAL; }
     inline void       clearNested()  { flags &= ~NESTED_INTERNAL; }
     inline bool       isNested() { return (flags&NESTED_INTERNAL) != 0; }
 
-    inline void       procedure(RexxActivation *activation) { this->owner = activation; dictionary = OREF_NULL;  flags &= ~NESTED_INTERNAL; }
+    inline void       procedure(RexxActivation *activation) { owner = activation; dictionary = OREF_NULL;  flags &= ~NESTED_INTERNAL; }
     inline void       setDictionary(RexxVariableDictionary *dict) { dictionary = dict; }
     inline RexxVariableDictionary *getNestedDictionary() { return dictionary; }
 

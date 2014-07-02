@@ -128,7 +128,7 @@ RexxObject * RexxArray::newRexx(RexxObject **arguments, size_t argCount)
     // Special case for 1-dimensional
     if (argCount == 1)
     {
-        RexxObject *current_dim = args[0];
+        RexxObject *current_dim = arguments[0];
         // specified as an array of dimensions?
         // this gets special handling
         if (current_dim != OREF_NULL && isOfClass(Array, current_dim))
@@ -158,7 +158,7 @@ RexxObject * RexxArray::newRexx(RexxObject **arguments, size_t argCount)
         classThis->completeNewObject(temp);
     }
 
-    return RexxArray::createMultidimensional(args, argCount, classThis);
+    return RexxArray::createMultidimensional(arguments, argCount, classThis);
 }
 
 
@@ -266,7 +266,7 @@ void *RexxArray::operator new(size_t size, size_t items, size_t maxSize)
     // the first item is contained in the base object allocation.
     bytes += sizeof(RexxObject *) * (maxSize - 1);
     // now allocate the new object with that size.
-    newArray = (RexxArray *)new_object(bytes, T_Method);
+    RexxArray *newArray = (RexxArray *)new_object(bytes, T_Method);
 
     // now fill in the various control bits
     newArray->arraySize = size;
@@ -288,24 +288,21 @@ void *RexxArray::operator new(size_t size, size_t items, size_t maxSize)
  */
 RexxArray::RexxArray(RexxObject **objs, size_t count)
 {
-    // allocate an array with the target size
-    RexxArray *newArray = new (count) RexxArray;
     // if we have array items, do a quick copy of the object references
     if (count != 0)
     {
-        memcpy(newArray->data(), objs, (sizeof(RexxObject *) * count));
+        memcpy(data(), objs, (sizeof(RexxObject *) * count));
         // we need to make sure the lastElement field is set to the
         // new arg position.
         for (;count > 0; count--)
         {
-            if (newArray->get(items) != OREF_NULL)
+            if (get(count) != OREF_NULL)
             {
-                newArray->lastElement = count;
+                lastElement = count;
                 break;
             }
         }
     }
-    return newArray;
 }
 
 
@@ -326,7 +323,7 @@ RexxObject *RexxArray::copy(void)
     if (expansionArray != this)
     {
         // yes, so get a copy of that array
-        newArray->expansionArray = expansionArray->copy();
+        newArray->expansionArray = (RexxArray *)expansionArray->copy();
     }
     else
     {
@@ -2306,7 +2303,7 @@ RexxArray *RexxArray::extendMulti(     /* Extend multi array                */
     }
     /* Now create the new array for this */
     /*  dimension.                       */
-    newArray = new array(newDimArraySize, newDimArray->data());
+    newArray = new_array(newDimArraySize, newDimArray->data());
     ProtectedObject p1(newArray);
     /* Anything in original?             */
     if (this->size())

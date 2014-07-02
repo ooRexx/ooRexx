@@ -117,7 +117,7 @@ class RexxClass : public RexxObject
     void        setSource(RexxSource *s);
     RexxSource *getSource();
     RexxObject *getPackage();
-    void        competeNewObject(RexxObject *obj, RexxObject **initArgs = OREF_NULL, size_t argCount = 0);
+    void        completeNewObject(RexxObject *obj, RexxObject **initArgs = OREF_NULL, size_t argCount = 0);
 
 
     // TODO:  Use bitset for class flags.

@@ -50,11 +50,9 @@ class RexxVariable : public RexxInternalObject
 {
  public:
     void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) { return ptr; }
     inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
 
-    inline RexxVariable() : variable_name(OREF_NULL), variableValue(OREF_NULL), , creator(OREF_NULL), dependents(OREF_NULL) {;};
+    inline RexxVariable() : variable_name(OREF_NULL), variableValue(OREF_NULL), creator(OREF_NULL), dependents(OREF_NULL) {;};
     inline RexxVariable(RexxString *n) : variable_name(n), variableValue(OREF_NULL), creator(OREF_NULL), dependents(OREF_NULL) {;};
     inline RexxVariable(RESTORETYPE restoreType) { ; };
 
@@ -66,7 +64,7 @@ class RexxVariable : public RexxInternalObject
     void         drop();
     void         notify();
     void         uninform(RexxActivity *);
-    void         setStem(RexxObject *)
+    void         setStem(RexxObject *);
 
     inline void set(RexxObject *value)
     {

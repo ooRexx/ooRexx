@@ -78,13 +78,13 @@ public:
         activity->protectedObjects = next;
     }
 
-    virtual mark(size_t liveMark) = 0;
-    virtual markGeneral(int reason) = 0;
+    virtual void mark(size_t liveMark) = 0;
+    virtual void markGeneral(int reason) = 0;
 
 protected:
 
-    ProtectedObject *next;             // the pointer protected by the object
-    RexxActivity *activity;            // the activity we're running on
+    ProtectedBase  *next;                // the pointer protected by the object
+    RexxActivity   *activity;            // the activity we're running on
 };
 
 
@@ -107,8 +107,8 @@ class ProtectedObject : public ProtectedBase
         }
     }
 
-    virtual mark(size_t liveMark) { memory_mark(protectedObject); }
-    virtual markGeneral(int reason) { memory_mark_general(protectedObject); }
+    virtual void mark(size_t liveMark) { memory_mark(protectedObject); }
+    virtual void markGeneral(int reason) { memory_mark_general(protectedObject); }
 
     inline ProtectedObject & operator=(RexxInternalObject *o)
     {
@@ -163,7 +163,7 @@ class ProtectedObject : public ProtectedBase
         return (void *)protectedObject;
     }
 
-    inline isNull()
+    inline bool isNull()
     {
         return protectedObject == OREF_NULL;
     }
@@ -208,8 +208,8 @@ public:
         }
     }
 
-    virtual mark(size_t liveMark) { memory_mark(protectedObject); }
-    virtual markGeneral(int reason) { memory_mark_general(protectedObject); }
+    virtual void mark(size_t liveMark) { memory_mark(protectedObject); }
+    virtual void markGeneral(int reason) { memory_mark_general(protectedObject); }
 
     inline ProtectedObject & operator=(objType *o)
     {
@@ -243,7 +243,7 @@ public:
         return (void *)protectedObject;
     }
 
-    inline isNull()
+    inline bool isNull()
     {
         return protectedObject == OREF_NULL;
     }

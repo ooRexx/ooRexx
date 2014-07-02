@@ -118,23 +118,23 @@ enum
     FLATTENINGOBJECT,
     UNFLATTENINGOBJECT,
 };
-                                       /* This class is implemented in      */
-                                       /*OS2MEM.C, since the function is    */
-                                       /*system dependant.                  */
+
+
 typedef char MEMORY_POOL_STATE;
 
-class MemorySegmentPoolHeader {
+class MemorySegmentPoolHeader
+{
 #ifdef _DEBUG
  friend class RexxMemory;
 #endif
 
  protected:
-   MemorySegmentPool *next;
-   MemorySegment     *spareSegment;
-   char  *nextAlloc;
-   char  *nextLargeAlloc;
-   size_t uncommitted;
-   size_t reserved;            // force aligment of the state data....
+     MemorySegmentPool *next;
+     MemorySegment     *spareSegment;
+     char  *nextAlloc;
+     char  *nextLargeAlloc;
+     size_t uncommitted;
+     size_t reserved;            // force aligment of the state data....
 };
 
 class MemorySegmentPool : public MemorySegmentPoolHeader
@@ -144,23 +144,23 @@ class MemorySegmentPool : public MemorySegmentPoolHeader
 #endif
  friend bool SysAccessPool(MemorySegmentPool **);
  public:
-   void          *operator new(size_t size, size_t minSize);
-   void          *operator new(size_t size, void *pool) { return pool;}
-   inline void    operator delete(void *) { }
-   inline void    operator delete(void *, size_t) { }
-   inline void    operator delete(void *, void *) { }
+    void          *operator new(size_t size, size_t minSize);
+    void          *operator new(size_t size, void *pool) { return pool;}
+    inline void    operator delete(void *) { }
+    inline void    operator delete(void *, size_t) { }
+    inline void    operator delete(void *, void *) { }
 
-   static MemorySegmentPool *createPool();
+    static MemorySegmentPool *createPool();
 
-   MemorySegmentPool();
-   MemorySegment *newSegment(size_t minSize);
-   MemorySegment *newLargeSegment(size_t minSize);
-   void               freePool(void);
-   MemorySegmentPool *nextPool() {return this->next;}
-   void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
+    MemorySegmentPool();
+    MemorySegment *newSegment(size_t minSize);
+    MemorySegment *newLargeSegment(size_t minSize);
+    void               freePool(void);
+    MemorySegmentPool *nextPool() {return this->next;}
+    void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
 
  private:
-   char           state[8];    // must be at the end of the structure.
+    char           state[8];    // must be at the end of the structure.
 };
 
 #include "MemoryStats.hpp"
@@ -172,133 +172,127 @@ class RexxMemory : public RexxInternalObject
   friend class RexxInstructionOptions;
 #endif
  public:
-  inline RexxMemory();
-  inline RexxMemory(RESTORETYPE restoreType) { ; };
+    inline RexxMemory();
+    inline RexxMemory(RESTORETYPE restoreType) { ; };
 
-  inline operator RexxObject*() { return (RexxObject *)this; };
-  inline RexxObject *operator=(DeadObject *d) { return (RexxObject *)this; };
+    inline operator RexxObject*() { return (RexxObject *)this; };
+    inline RexxObject *operator=(DeadObject *d) { return (RexxObject *)this; };
 
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope *);
-  RexxObject  *makeProxy(RexxEnvelope *);
+    void live(size_t);
+    void liveGeneral(int reason);
+    void flatten(RexxEnvelope *);
+    RexxObject  *makeProxy(RexxEnvelope *);
 
-  void        initialize(bool restoringImage);
-  MemorySegment *newSegment(size_t requestLength, size_t minLength);
-  MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
-  RexxObject *oldObject(size_t size);
-  inline RexxObject *newObject(size_t size) { return newObject(size, T_Object); }
-  RexxObject *newObject(size_t size, size_t type);
-  RexxObject *temporaryObject(size_t size);
-  RexxArray  *newObjects(size_t size, size_t count, size_t objectType);
-  void        reSize(RexxObject *, size_t);
-  void        checkUninit();
-  void        runUninits();
-  void        removeUninitObject(RexxObject *obj);
-  void        addUninitObject(RexxObject *obj);
-  bool        isPendingUninit(RexxObject *obj);
-  inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
+    void        initialize(bool restoringImage);
+    MemorySegment *newSegment(size_t requestLength, size_t minLength);
+    MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
+    RexxObject *oldObject(size_t size);
+    inline RexxObject *newObject(size_t size) { return newObject(size, T_Object); }
+    RexxObject *newObject(size_t size, size_t type);
+    RexxObject *temporaryObject(size_t size);
+    RexxArray  *newObjects(size_t size, size_t count, size_t objectType);
+    void        reSize(RexxObject *, size_t);
+    void        checkUninit();
+    void        runUninits();
+    void        removeUninitObject(RexxObject *obj);
+    void        addUninitObject(RexxObject *obj);
+    bool        isPendingUninit(RexxObject *obj);
+    inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
 
-  void        markObjects(void);
-  void        markObjectsMain(RexxObject *);
-  void        killOrphans(RexxObject *);
-  void        mark(RexxObject *);
-  void        markGeneral(void *);
-  void        collect();
-  inline RexxObject *saveObject(RexxInternalObject *saveObj) {this->saveTable->add((RexxObject *)saveObj, (RexxObject *)saveObj); return (RexxObject *)saveObj;}
-  inline void        discardObject(RexxInternalObject *obj) {this->saveTable->remove((RexxObject *)obj);};
-  inline void        removeHold(RexxInternalObject *obj) { this->saveStack->remove((RexxObject *)obj); }
-  void        discardHoldObject(RexxInternalObject *obj);
-  RexxObject *holdObject(RexxInternalObject *obj);
-  void        saveImage();
-  bool        savingImage() { return saveimage; }
-  bool        restoringImage() { return restoreimage; }
-  RexxObject *setDump(RexxObject *);
-  inline bool queryDump() {return this->dumpEnable;};
-  RexxObject *dump();
-  void        dumpObject(RexxObject *objectRef, FILE *outfile);
-  void        setObjectOffset(size_t offset);
-  void        setEnvelope(RexxEnvelope *);
-  inline void        setMarkTable(RexxTable *marktable) {this->markTable = marktable;};
-  inline void        setOrphanCheck(bool orphancheck) {this->orphanCheck = orphancheck; };
-  RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, const char *, int);
-  RexxObject *setOref(void *index, RexxObject *value);
-  RexxStack  *getFlattenStack();
-  void        returnFlattenStack();
-  RexxObject *reclaim();
-  RexxObject *setParms(RexxObject *, RexxObject *);
-  RexxObject *gutCheck();
-  void        memoryPoolAdded(MemorySegmentPool *);
-  void        shutdown();
-  void        liveStackFull();
-  void        dumpMemoryProfile();
-  char *      allocateImageBuffer(size_t size);
-  void        logVerboseOutput(const char *message, void *sub1, void *sub2);
-  inline void verboseMessage(const char *message) {
-#ifdef VERBOSE_GC
-      logVerboseOutput(message, NULL, NULL);
-#endif
-  }
+    void        markObjects(void);
+    void        markObjectsMain(RexxObject *);
+    void        killOrphans(RexxObject *);
+    void        mark(RexxObject *);
+    void        markGeneral(void *);
+    void        collect();
+    inline RexxObject *saveObject(RexxInternalObject *saveObj) {this->saveTable->add((RexxObject *)saveObj, (RexxObject *)saveObj); return (RexxObject *)saveObj;}
+    inline void        discardObject(RexxInternalObject *obj) {this->saveTable->remove((RexxObject *)obj);};
+    inline void        removeHold(RexxInternalObject *obj) { this->saveStack->remove((RexxObject *)obj); }
+    void        discardHoldObject(RexxInternalObject *obj);
+    RexxObject *holdObject(RexxInternalObject *obj);
+    void        saveImage();
+    bool        savingImage() { return saveimage; }
+    bool        restoringImage() { return restoreimage; }
+    RexxObject *setDump(RexxObject *);
+    inline bool queryDump() {return this->dumpEnable;};
+    RexxObject *dump();
+    void        dumpObject(RexxObject *objectRef, FILE *outfile);
+    void        setObjectOffset(size_t offset);
+    void        setEnvelope(RexxEnvelope *);
+    inline void        setMarkTable(RexxTable *marktable) {this->markTable = marktable;};
+    inline void        setOrphanCheck(bool orphancheck) {this->orphanCheck = orphancheck; };
+    RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, const char *, int);
+    RexxObject *setOref(void *index, RexxObject *value);
+    RexxStack  *getFlattenStack();
+    void        returnFlattenStack();
+    RexxObject *reclaim();
+    RexxObject *setParms(RexxObject *, RexxObject *);
+    RexxObject *gutCheck();
+    void        memoryPoolAdded(MemorySegmentPool *);
+    void        shutdown();
+    void        liveStackFull();
+    void        dumpMemoryProfile();
+    char *      allocateImageBuffer(size_t size);
+    void        logVerboseOutput(const char *message, void *sub1, void *sub2);
+    inline void verboseMessage(const char *message) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, NULL, NULL);
+  #endif
+    }
 
-  inline void verboseMessage(const char *message, size_t sub1) {
-#ifdef VERBOSE_GC
-      logVerboseOutput(message, (void *)sub1, NULL);
-#endif
-  }
+    inline void verboseMessage(const char *message, size_t sub1) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, (void *)sub1, NULL);
+  #endif
+    }
 
-  inline void verboseMessage(const char *message, size_t sub1, size_t sub2) {
-#ifdef VERBOSE_GC
-      logVerboseOutput(message, (void *)sub1, (void *)sub2);
-#endif
-  }
+    inline void verboseMessage(const char *message, size_t sub1, size_t sub2) {
+  #ifdef VERBOSE_GC
+        logVerboseOutput(message, (void *)sub1, (void *)sub2);
+  #endif
+    }
 
-  inline void logObjectStats(RexxObject *obj) { imageStats->logObject(obj); }
-  inline void pushSaveStack(RexxObject *obj) { saveStack->push(obj); }
-  inline void removeSavedObject(RexxObject *obj) { saveStack->remove(obj); }
-  inline void disableOrefChecks() { checkSetOK = false; }
-  inline void enableOrefChecks() { checkSetOK = true; }
-  inline void clearSaveStack() {
-                                       /* remove all objects from the save- */
-                                       /* stack. to be really oo, this      */
-                                       /* should be done in RexxSaveStack,  */
-                                       /* but we do it here for speed...    */
-    memset(saveStack->stack, 0, sizeof(RexxObject*) * saveStack->size);
-  }
+    inline void logObjectStats(RexxObject *obj) { imageStats->logObject(obj); }
+    inline void pushSaveStack(RexxObject *obj) { saveStack->push(obj); }
+    inline void removeSavedObject(RexxObject *obj) { saveStack->remove(obj); }
+    inline void disableOrefChecks() { checkSetOK = false; }
+    inline void enableOrefChecks() { checkSetOK = true; }
+    inline void clearSaveStack() { saveStack->clear(); }
 
-  void        checkAllocs();
-  RexxObject *dumpImageStats();
-  static void createLocks();
-  static void closeLocks();
-  void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
-  void        setUpMemoryTables(RexxIdentityTable *old2newTable);
-  void        collectAndUninit(bool clearStack);
-  void        lastChanceUninit();
-  inline RexxDirectory *getGlobalStrings() { return globalStrings; }
-  void        addWeakReference(WeakReference *ref);
-  void        checkWeakReferences();
+    void        checkAllocs();
+    RexxObject *dumpImageStats();
+    static void createLocks();
+    static void closeLocks();
+    void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
+    void        setUpMemoryTables(RexxIdentityTable *old2newTable);
+    void        collectAndUninit(bool clearStack);
+    void        lastChanceUninit();
+    inline RexxDirectory *getGlobalStrings() { return globalStrings; }
+    void        addWeakReference(WeakReference *ref);
+    void        checkWeakReferences();
 
-  static void restore();
-  static void buildVirtualFunctionTable();
-  static void create();
-  static void createImage();
-  static RexxString *getGlobalName(const char *value);
-  static void createStrings();
-  static RexxArray *saveStrings();
-  static void restoreStrings(RexxArray *stringArray);
+    static void restore();
+    static void buildVirtualFunctionTable();
+    static void create();
+    static void createImage();
+    static RexxString *getGlobalName(const char *value);
+    static void createStrings();
+    static RexxArray *saveStrings();
+    static void restoreStrings(RexxArray *stringArray);
 
-  static void *virtualFunctionTable[];             /* table of virtual functions        */
-  static PCPPM exportedMethods[];      /* start of exported methods table   */
+    static void *virtualFunctionTable[];             /* table of virtual functions        */
+    static PCPPM exportedMethods[];      /* start of exported methods table   */
 
-  size_t markWord;                     /* current marking counter           */
-  int    markReason;                   // reason for calling liveGeneral()
-  RexxVariable *variableCache;         /* our cache of variable objects     */
-  GlobalProtectedObject *protectedObjects;  // specially protected objects
+    size_t markWord;                     /* current marking counter           */
+    int    markReason;                   // reason for calling liveGeneral()
+    RexxVariable *variableCache;         /* our cache of variable objects     */
+    GlobalProtectedObject *protectedObjects;  // specially protected objects
 
-  static RexxDirectory *environment;      // global environment
-  static RexxDirectory *functionsDir;     // statically defined requires
-  static RexxDirectory *commonRetrievers; // statically defined requires
-  static RexxDirectory *kernel;           // the kernel directory
-  static RexxDirectory *system;           // the system directory
+    static RexxDirectory *environment;      // global environment
+    static RexxDirectory *functionsDir;     // statically defined requires
+    static RexxDirectory *commonRetrievers; // statically defined requires
+    static RexxDirectory *kernel;           // the kernel directory
+    static RexxDirectory *system;           // the system directory
 
 private:
 
@@ -328,83 +322,83 @@ enum
 };
 
 
-  inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
-  inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->fastPush(obj); }
-  inline RexxObject * popLiveStack() { return (RexxObject *)liveStack->fastPop(); }
-  inline void bumpMarkWord() { markWord ^= MarkMask; }
-  inline void restoreMark(RexxObject *markObject, RexxObject **pMarkObject) {
-                                       /* we update the object's location   */
-      *pMarkObject = (RexxObject *)((size_t)markObject + relocation);
-  }
+    inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
+    inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->fastPush(obj); }
+    inline RexxObject * popLiveStack() { return (RexxObject *)liveStack->fastPop(); }
+    inline void bumpMarkWord() { markWord ^= MarkMask; }
+    inline void restoreMark(RexxObject *markObject, RexxObject **pMarkObject) {
+                                         /* we update the object's location   */
+        *pMarkObject = (RexxObject *)((size_t)markObject + relocation);
+    }
 
-  inline void unflattenMark(RexxObject *markObject, RexxObject **pMarkObject) {
-                                       /* do the unflatten                  */
-      *pMarkObject = markObject->unflatten(this->envelope);
-  }
+    inline void unflattenMark(RexxObject *markObject, RexxObject **pMarkObject) {
+                                         /* do the unflatten                  */
+        *pMarkObject = markObject->unflatten(this->envelope);
+    }
 
-  inline void restoreObjectMark(RexxObject *markObject, RexxObject **pMarkObject) {
-                                         /* update the object reference       */
-      markObject = (RexxObject *)((char *)markObject + objOffset);
-      markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
-      *pMarkObject = markObject;         /* now set this back again           */
-  }
+    inline void restoreObjectMark(RexxObject *markObject, RexxObject **pMarkObject) {
+                                           /* update the object reference       */
+        markObject = (RexxObject *)((char *)markObject + objOffset);
+        markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
+        *pMarkObject = markObject;         /* now set this back again           */
+    }
 
 
-/* object validation method --used to find and diagnose broken object references       */
-  void saveImageMark(RexxObject *markObject, RexxObject **pMarkObject);
-  void orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObject);
+  /* object validation method --used to find and diagnose broken object references       */
+    void saveImageMark(RexxObject *markObject, RexxObject **pMarkObject);
+    void orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObject);
 
-  bool inObjectStorage(RexxObject *obj);
-  bool inSharedObjectStorage(RexxObject *obj);
-  bool objectReferenceOK(RexxObject *o);
-  void restoreImage();
+    bool inObjectStorage(RexxObject *obj);
+    bool inSharedObjectStorage(RexxObject *obj);
+    bool objectReferenceOK(RexxObject *o);
+    void restoreImage();
 
-  static void defineKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-  static void defineProtectedKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-  static void definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+    static void defineKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+    static void defineProtectedKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+    static void definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
 
-  RexxStack  *liveStack;
-  RexxStack  *flattenStack;
-  RexxSaveStack      *saveStack;
-  RexxIdentityTable  *saveTable;
-  RexxTable  *markTable;               /* tabobjects to start a memory mark */
-                                       /*  if building/restoring image,     */
-                                       /*OREF_ENV, else old2new             */
-  RexxIdentityTable  *old2new;           /* remd set                          */
-  RexxIdentityTable  *uninitTable;       // the table of objects with uninit methods
-  size_t            pendingUninits;    // objects waiting to have uninits run
-  bool              processingUninits; // true when we are processing the uninit table
+    RexxStack  *liveStack;
+    RexxStack  *flattenStack;
+    RexxSaveStack      *saveStack;
+    RexxIdentityTable  *saveTable;
+    RexxTable  *markTable;               /* tabobjects to start a memory mark */
+                                         /*  if building/restoring image,     */
+                                         /*OREF_ENV, else old2new             */
+    RexxIdentityTable  *old2new;           /* remd set                          */
+    RexxIdentityTable  *uninitTable;       // the table of objects with uninit methods
+    size_t            pendingUninits;    // objects waiting to have uninits run
+    bool              processingUninits; // true when we are processing the uninit table
 
-  MemorySegmentPool *firstPool;        /* First segmentPool block.          */
-  MemorySegmentPool *currentPool;      /* Curent segmentPool being carved   */
-  OldSpaceSegmentSet oldSpaceSegments;
-  NormalSegmentSet newSpaceNormalSegments;
-  LargeSegmentSet  newSpaceLargeSegments;
-  char *image_buffer;                  /* the buffer used for image save/restore operations */
-  size_t image_offset;                 /* the offset information for the image */
-  size_t relocation;                   /* image save/restore relocation factor */
-  bool dumpEnable;                     /* enabled for dumps?                */
-  bool saveimage;                      /* we're saving the image */
-  bool restoreimage;                   /* we're restoring the image */
-  bool checkSetOK;                     /* OREF checking is enabled          */
-                                       /* enabled for checking for bad      */
-                                       /*OREF's?                            */
-  bool orphanCheck;
-  size_t objOffset;                    /* offset of arriving mobile objects */
-                                       /* envelope for arriving mobile      */
-                                       /*objects                            */
-  RexxEnvelope *envelope;
-  RexxStack *originalLiveStack;        /* original live stack allocation    */
-  MemoryStats *imageStats;             /* current statistics collector      */
+    MemorySegmentPool *firstPool;        /* First segmentPool block.          */
+    MemorySegmentPool *currentPool;      /* Curent segmentPool being carved   */
+    OldSpaceSegmentSet oldSpaceSegments;
+    NormalSegmentSet newSpaceNormalSegments;
+    LargeSegmentSet  newSpaceLargeSegments;
+    char *image_buffer;                  /* the buffer used for image save/restore operations */
+    size_t image_offset;                 /* the offset information for the image */
+    size_t relocation;                   /* image save/restore relocation factor */
+    bool dumpEnable;                     /* enabled for dumps?                */
+    bool saveimage;                      /* we're saving the image */
+    bool restoreimage;                   /* we're restoring the image */
+    bool checkSetOK;                     /* OREF checking is enabled          */
+                                         /* enabled for checking for bad      */
+                                         /*OREF's?                            */
+    bool orphanCheck;
+    size_t objOffset;                    /* offset of arriving mobile objects */
+                                         /* envelope for arriving mobile      */
+                                         /*objects                            */
+    RexxEnvelope *envelope;
+    RexxStack *originalLiveStack;        /* original live stack allocation    */
+    MemoryStats *imageStats;             /* current statistics collector      */
 
-  size_t allocations;                  /* number of allocations since last GC */
-  size_t collections;                  /* number of garbage collections     */
-  WeakReference *weakReferenceList;    // list of active weak references
+    size_t allocations;                  /* number of allocations since last GC */
+    size_t collections;                  /* number of garbage collections     */
+    WeakReference *weakReferenceList;    // list of active weak references
 
-  static RexxDirectory *globalStrings; // table of global strings
-  static SysMutex flattenMutex;        /* locks for various memory processes */
-  static SysMutex unflattenMutex;
-  static SysMutex envelopeMutex;
+    static RexxDirectory *globalStrings; // table of global strings
+    static SysMutex flattenMutex;        /* locks for various memory processes */
+    static SysMutex unflattenMutex;
+    static SysMutex envelopeMutex;
 };
 
 

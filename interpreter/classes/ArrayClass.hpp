@@ -114,10 +114,10 @@ class RexxArray : public RexxObject {
 
     inline RexxArray(RESTORETYPE restoreType) { ; };
     inline RexxArray() { ; };
-    inline RexxArray(RexxObject *o1) { put(o1); }
-    inline RexxArray(RexxObject *o1, RexxObject *o2) { put(o1); put(o2); }
-    inline RexxArray(RexxObject *o1, RexxObject *o2, RexxObject *o3) { put(o1); put(o2); put(o3); }
-    inline RexxArray(RexxObject *o1, RexxObject *o2, RexxObject *o3, RexxObject *o4) { put(o1); put(o2); put(o3); put(o4); }
+    inline RexxArray(RexxObject *o1) { put(o1, 1); }
+    inline RexxArray(RexxObject *o1, RexxObject *o2) { put(o1, 1); put(o2, 2); }
+    inline RexxArray(RexxObject *o1, RexxObject *o2, RexxObject *o3) { put(o1, 1); put(o2, 2); put(o3, 3); }
+    inline RexxArray(RexxObject *o1, RexxObject *o2, RexxObject *o3, RexxObject *o4) { put(o1, 1); put(o2, 2); put(o3, 3); put(o4, 4); }
            RexxArray(RexxObject **o, size_t c);
 
     inline ~RexxArray() { ; };
@@ -132,10 +132,11 @@ class RexxArray : public RexxObject {
     RexxArray   *allIndexes();
     RexxString  *toString(RexxString *, RexxString *);
     RexxString  *makeString(RexxString *, RexxString *);
-// Temporary bypass for BUG #1700606
-if 0
+// Temporary bypass for problems with arrays being automatically coerced to
+// string objects.
+#if 0
     RexxString  *primitiveMakeString();
-endif
+#endif
     RexxObject  *getRexx(RexxObject **, size_t);
     RexxObject  *getApi(size_t pos);
     void         put(RexxObject * eref, size_t pos);

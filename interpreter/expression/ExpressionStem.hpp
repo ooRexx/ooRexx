@@ -87,7 +87,7 @@ class RexxStemVariable : public RexxVariableBase
 
     // class-specific methods
     bool sort(RexxActivation *context, RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
-    inline size_t getIndex() {return this->index;};
+    inline size_t getIndex() {return stemIndex;};
 
  protected:
 

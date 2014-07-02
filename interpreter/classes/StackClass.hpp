@@ -65,21 +65,22 @@ class RexxStack : public RexxInternalObject
     inline RexxObject *push(RexxObject *obj)
     {
         incrementTop();
-        return *(this->stack + this->top) = obj;
+        return *(stack + top) = obj;
     }
 
     RexxObject *pop();
     RexxObject *fpop();
 
-    inline void        fastPush(RexxObject *element) { this->stack[++(this->top)] = element; };
-    inline bool        checkRoom() { return this->top < this->size-1; }
-    inline RexxObject *fastPop() { return this->stack[(this->top)--]; };
-    inline size_t      stackSize() { return this->size; };
-    inline RexxObject *stackTop() { return (*(this->stack + this->top)); };
+    inline void        fastPush(RexxObject *element) { stack[++(top)] = element; };
+    inline bool        checkRoom() { return top < size-1; }
+    inline RexxObject *fastPop() { return stack[(top)--]; };
+    inline size_t      stackSize() { return size; };
+    inline RexxObject *stackTop() { return (*(stack + top)); };
     inline void        decrementTop() { top = (top == 0) ? size - 1 : top - 1; }
     inline void        incrementTop() { if (++top >= size) top = 0; }
                                                                                                                                                            /* (other->size + 1) was wrong !? */
-    inline void        copyEntries(RexxStack *other) { memcpy((char *)this->stack, other->stack, other->size * sizeof(RexxObject *)); this->top = other->top; }
+    inline void        copyEntries(RexxStack *other) { memcpy((char *)stack, other->stack, other->size * sizeof(RexxObject *)); top = other->top; }
+    inline void        clear() { memset(stack, 0, sizeof(RexxObject*) * size); }
 
  protected:
 
